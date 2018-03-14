@@ -1,0 +1,177 @@
+<!--
+  Copyright 2018 The Outline Authors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<link rel='import' href='../bower_components/polymer/polymer.html'>
+<link rel='import' href='../bower_components/paper-button/paper-button.html'>
+
+
+<link rel="import" href="./cloud-install-styles.html">
+<link rel="import" href="./cities.html">
+
+<dom-module id="outline-region-picker-step">
+  <template>
+    <style include="cloud-install-styles"></style>
+
+    <style>
+      :host {
+        text-align: center;
+      }
+
+      input[type="radio"] {
+        display: none;
+      }
+
+      input[type="radio"]:checked+label.city-button {
+        /* from #00bfa5 */
+        background-color: rgba(0, 191, 165, 0.12);
+        border: 1px solid rgb(0, 191, 165);
+        color: var(--paper-button-ink-color);
+      }
+
+      input[type="radio"]:checked+label.city-button:hover {
+        background: #FFFFFF;
+        box-shadow: 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px 0 rgba(0,0,0,0.20);
+        border-radius: 3px;
+        /* from #00bfa5 */
+        background-color: rgba(0, 191, 165, 0.12);
+        border: 1px solid rgb(0, 191, 165);
+        box-shadow: 1px 1px 23px 0px rgba(0, 0, 0, 0);
+      }
+
+      input[type="radio"]+label.city-button:hover {
+        border: 1px solid rgb(0, 191, 165);
+        border-color: rgba(0, 0, 0, .12);
+        box-shadow: 1px 1px 23px 0px rgba(0, 0, 0, 0.12);
+      }
+
+      input[type="radio"]+label.city-button {
+        display: inline-block;
+        width: 22%;
+        min-width: 100px;
+        margin: 20px 0px 10px 0px;
+        padding: 24px 0px 24px 0px;
+        text-align: center;
+        border: 1px solid;
+        border-color: rgba(0, 0, 0, .00);
+        cursor: pointer;
+        border-radius: 2px;
+        transition: .5s;
+      }
+
+      input[type="radio"]:disabled+label.city-button {
+        filter: grayscale(100%);
+      }
+
+      .cityNameShort {
+        font-size: 24px;
+        color: rgba(0, 0, 0, 0.87);
+        padding:12px 0px 4px 0px;
+      }
+      paper-button.primary {
+        margin-top: 24px;
+      }
+      .flag {
+        width: 78px;
+        height: 78px;
+      }
+
+      .walkthrough h3 a {
+        color: rgba(0, 0, 0, 0.54);
+      }
+
+    </style>
+    <div class='card-content'>
+      <div class = "walkthrough">
+       <h3>Select a server location. This is where your internet <br> connection will come from. <a class="learnMoreLink" href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/serverLocation">Learn more</a></h3>
+      </div>
+      <template is="dom-repeat" items="{{cities}}">
+        <input type='radio' city$='{{item}}' name='city' id$='{{item}}' disabled$='{{!isAvailable(availableRegionIds, item)}}' on-change='citySelected'>
+          <label for$='{{item}}' class='city-button'>
+            <img class='flag' src$='{{getFlag(item)}}'>
+            <div class='cityNameShort'>{{getCityNameShort(item)}}</div>
+            <div>{{getCityName(item)}}</div>
+          </label>
+        </input>
+      </template>
+        <paper-button id="createServerButton" class="primary" on-tap='handleCreateServerTap' disabled$='[[!isCreateButtonEnabled(creatingServer, selectedCityId)]]'>Set up Outline</paper-button>
+    </div>
+  </template>
+  <script>
+    const FLAG_IMAGE_DIR = 'images/flags';
+    const flagById = {
+      ams: `${FLAG_IMAGE_DIR}/netherlands.png`,
+      sgp: `${FLAG_IMAGE_DIR}/singapore.png`,
+      blr: `${FLAG_IMAGE_DIR}/india.png`,
+      fra: `${FLAG_IMAGE_DIR}/germany.png`,
+      lon: `${FLAG_IMAGE_DIR}/uk.png`,
+      sfo: `${FLAG_IMAGE_DIR}/us.png`,
+      tor: `${FLAG_IMAGE_DIR}/canada.png`,
+      nyc: `${FLAG_IMAGE_DIR}/us.png`
+    };
+
+    Polymer({
+      is: 'outline-region-picker-step',
+      properties: {
+        cities: {
+          type: Array,
+          value: Object.keys(flagById)
+        },
+        availableRegionIds: {  // One-to-one map from cityIds to regionIds.
+          type: Object,
+          value: {}
+        },
+        selectedCityId: String,
+        creatingServer: Boolean
+      },
+      handleCreateServerTap: function () {
+        this.creatingServer = true;
+        this.fire('RegionSelected');
+      },
+      getCityName: function (cityId) {
+        return cityEnglishNameById[cityId] || '';
+      },
+      getCityNameShort: function (cityId) {
+        return cityId.toUpperCase();
+      },
+      getFlag: function (cityId) {
+        return flagById[cityId] || '';
+      },
+      isAvailable: function (map, cityId) {
+        if (!map) {
+          return false;
+        }
+        return cityId in map;
+      },
+      citySelected: function (event) {
+        this.selectedCityId = event.model.get('item');
+      },
+      getSelectedRegionId: function() {
+        return this.availableRegionIds[this.selectedCityId];
+      },
+      init: function() {
+        this.creatingServer = false;
+        this.selectedCityId = null;
+        // Ensure that no radio button is checked.
+        const checkedCityElement = this.querySelector('input[name="city"]:checked');
+        if (checkedCityElement) {
+          checkedCityElement.checked = false;
+        }
+      },
+      isCreateButtonEnabled: function(creatingServer, selectedCityId) {
+        return !creatingServer && selectedCityId;
+      }
+    });
+  </script>
+</dom-module>

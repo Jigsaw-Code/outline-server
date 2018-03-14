@@ -1,0 +1,25 @@
+{
+  "name": "outline-server",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Outline server",
+  "main": "build/server/main.js",
+  "author": "Outline",
+  "license": "Apache",
+  "__COMMENTS__": [
+    "Using https:// for ShadowsocksConfig to avoid adding git in the Docker image"
+  ],
+  "dependencies": {
+    "ShadowsocksConfig": "https://github.com/Jigsaw-Code/outline-shadowsocksconfig/archive/v0.0.6.tar.gz",
+    "ipaddr.js": "^1.4.0",
+    "randomstring": "^1.1.5",
+    "request-lite": "^2.40.1",
+    "restify": "^4.3.0",
+    "uuid": "^3.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^7.0.16",
+    "@types/randomstring": "^1.1.6",
+    "@types/restify": "^2.0.41"
+  }
+}

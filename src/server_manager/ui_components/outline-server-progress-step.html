@@ -1,0 +1,131 @@
+<!--
+  Copyright 2018 The Outline Authors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<link rel='import' href='../bower_components/polymer/polymer.html'>
+<link rel='import' href='../bower_components/paper-progress/paper-progress.html'>
+<link rel='import' href='../bower_components/paper-button/paper-button.html'>
+
+<link rel="import" href="./cloud-install-styles.html">
+<link rel="import" href="./outline-progress-spinner.html">
+<link rel="import" href="./style.css">
+
+<dom-module id="outline-server-progress-step">
+  <template>
+    <style include="cloud-install-styles"></style>
+
+    <style>
+       :host {
+        text-align: center;
+      }
+
+      .servername {
+        margin-top: 24px;
+        text-align: center;
+      }
+
+      .servername img {
+        height: 96px;
+      }
+
+      h3 {
+        font-size: 18px;
+        margin-bottom: 0px;
+        color: rgba(0,0,0,0.54);
+        margin: 0px 0px 0px 0px;
+        padding: 14px 0 14px 0;
+      }
+
+      .servername p {
+        text-align: center;
+        margin-top: 12px;
+        margin-bottom: 64px;
+      }
+
+      .message {
+        width: 100%;
+        position: initial;
+      }
+
+      outline-progress-spinner {
+        margin-top: 20%;
+      }
+      paper-progress {
+         background: #ffffff;
+        --paper-progress-active-color: #1DE9B6;
+        --paper-progress-container-color: #ffffff;
+        --paper-progress-transition-duration: 1.0s;
+        --paper-progress-transition-timing-function: linear;
+        width: 100%;
+        margin-top: 0px;
+      }
+
+</style>
+
+    <div class='card-content'>
+      <div class='walkthrough'>
+        <h3>Setting up Outline. <br> This could take up to two minutes.</h3>
+            <paper-progress id='bar' class='transiting'></paper-progress>
+      </div>
+      <outline-progress-spinner></outline-progress-spinner>
+      <div class='servername'>
+        <h3>{{serverName}}</h3>
+      </div>
+      <paper-button id='cancelButton' hidden$='{{!showCancelButton}}' on-tap='handleCancelTapped'>Cancel</paper-button>
+    </div>
+
+  </template>
+
+  <script>
+    Polymer({
+      is: 'outline-server-progress-step',
+      properties: {
+        serverName: String,
+        showCancelButton: Boolean,
+        updateIntervalId: Number
+      },
+      start: function() {
+        if (this.updateIntervalId) {
+          this.stop();
+        }
+        this.$.bar.value = 0;
+        const expected = 90; // seconds
+        const uncertainty = 30; // seconds
+        const startTime = Date.now() / 1000;
+        // For smoothness, this should match the CSS transition duration.
+        const updateInterval = 1.0; // seconds.
+        this.updateIntervalId = setInterval(() => {
+          const elapsed = Date.now() / 1000 - startTime;
+          // This heuristic happens to correspond to a Weibull distribution.
+          const k = expected / uncertainty;
+          const lambda = expected / Math.pow(Math.log(2), 1 / k);
+          const conditionalMedian = lambda *
+              Math.pow(Math.pow(elapsed / lambda, k) + Math.log(2), 1 / k);
+          this.$.bar.value = 100 * (elapsed / conditionalMedian);
+        }, updateInterval * 1000);
+      },
+      stop: function() {
+        if (!this.updateIntervalId) {
+          return;
+        }
+        clearInterval(this.updateIntervalId);
+        this.updateIntervalId = null;
+      },
+      handleCancelTapped: function() {
+        this.fire('CancelServerCreationRequested');
+      }
+    });
+  </script>
+
+</dom-module>

@@ -1,0 +1,164 @@
+<!--
+  Copyright 2018 The Outline Authors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<link rel='import' href='../bower_components/polymer/polymer.html'>
+<link rel='import' href='../bower_components/iron-icon/iron-icon.html'>
+<link rel='import' href='../bower_components/iron-icons/iron-icons.html'>
+<link rel='import' href='../bower_components/paper-button/paper-button.html'>
+<link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
+<link rel='import' href='../bower_components/paper-progress/paper-progress.html'>
+<link rel="import" href="./cloud-install-styles.html">
+<link rel="import" href="./style.css">
+
+<dom-module id="outline-manual-server-entry">
+  <template>
+    <style include="cloud-install-styles"></style>
+    <style>
+      :host {
+        text-align: center;
+      }
+      .card {
+        background: #FFFFFF;
+        box-shadow: 0 0 2px 0 rgba(0,0,0,0.14), 0 2px 2px 0 rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
+        border-radius: 2px;
+        margin: 31px;
+        text-align: left;
+        padding: 24px;
+      }
+      .instructions {
+        color: black;
+      }
+      .code {
+        background-color: #ECEFF1;
+        color: black;
+        font-size: 14px;
+        font-family: RobotoMono-Regular, monospace;
+        margin: 20px 0 40px 0;
+        padding: 14px;
+        word-break: break-all;
+      }
+      textarea {
+        width: 100%;
+        border: none;
+        outline: none;
+        box-sizing: border-box;
+        border-bottom: 2px solid #263238;
+      }
+      iron-icon {
+        display: inline-block;
+        vertical-align: top;
+        color: black;
+      }
+      .stepContent {
+        display: inline-block;
+        vertical-align: top;
+        width: 442px;
+        margin-left: 20px;
+      }
+      #buttonRow {
+        text-align: right;
+        position: relative;
+        width: 100%;
+      }
+      #cancelButton {
+        width: 75px;
+        left: 0;
+        position: absolute;
+      }
+      #doneButton {
+        width: 139px;
+      }
+      #terminalIcon {
+        width: 20px;
+      }
+    </style>
+    <div class='walkthrough'>
+      <div hidden$='[[showConnection]]'>
+        <h3>Follow these instructions to install on whichever cloud provider you want.  You can also install on your own infrastructure.</h3>
+      </div>
+      <div hidden$='[[!showConnection]]'>
+        <h3>Attempting to connect...</h3>
+        <paper-progress indeterminate class="slow"></paper-progress>
+      </div>
+    </div>
+
+    <div class='card'>
+      <div>
+        <iron-icon src="images/terminal.svg" id="terminalIcon"></iron-icon>
+        <div class='stepContent'>
+          <div class='instructions'>First, log into your server, and run the following command:</div>
+          <div id='command' class='code'>wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh | bash</div>
+        </div>
+      </div>
+      <div>
+        <iron-icon icon="content-paste"></iron-icon>
+        <div class='stepContent'>
+          <div class='instructions'>Second, paste the output from the installation process here and click 'Done'.</div>
+          <textarea id='serverConfig' type='text' placeholder$='[[placeholderText]]' class='code' rows='4'></textarea>
+        </div>
+      </div>
+      <div id='buttonRow'>
+        <paper-button id='cancelButton' on-tap="cancelTapped" class="secondary">CANCEL</paper-button>
+        <paper-button id='doneButton' on-tap="doneTapped" class="primary">DONE</paper-button>
+      </div>
+    </div>  <!-- end of .card -->
+
+    <paper-dialog id='errorDialog' modal>
+      <h3>Unable to connect to your Outline Server</h3>
+      <div style="text-align: left">[[errorText]]</div>
+      <div class="buttons">
+        <paper-button dialog-dismiss autofocus>Cancel</paper-button>
+        <paper-button on-tap='retryTapped' dialog-dismiss>Retry</paper-button>
+      </div>
+    </paper-dialog>
+  </template>
+  <script>
+    Polymer({
+      is: 'outline-manual-server-entry',
+      properties: {
+        errorText: String,
+        placeholderText: {
+          type: String,
+          value: '{\n  "apiUrl": "https://xxxxxxxxxxxxxxxxx...”,\n  "certSha256": “xxxxxxxxxxxxxxxxxxxxxx...”\n}'
+        },
+        showConnection: Boolean
+      },
+      showError: function(errorMessage) {
+        this.showConnection = false;
+        this.$.errorDialog.open();
+        this.errorText = errorMessage;
+      },
+      doneTapped: function() {
+        this.showConnection = true;
+        this.fire('ManualServerEntered', {
+          userInputConfig: this.$.serverConfig.value
+        });
+      },
+      cancelTapped: function() {
+        this.fire('ManualServerEntryCancelled');
+      },
+      retryTapped: function() {
+        this.showConnection = false;
+        this.doneTapped();
+      },
+      clear: function() {
+        this.$.serverConfig.value = '';
+        this.errorText = '';
+        this.showConnection = false;
+        this.$.errorDialog.close();
+      }
+    });
+  </script>
+</dom-module>

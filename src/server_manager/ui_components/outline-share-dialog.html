@@ -1,0 +1,143 @@
+<!--
+  Copyright 2018 The Outline Authors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
+<link rel='import' href='../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html'>
+
+<dom-module id='outline-share-dialog'>
+  <template>
+    <style include='cloud-install-styles'></style>
+    <style>
+      :host {
+        margin: 0px;
+      }
+      #dialog {
+        display: flex;
+        flex-flow: column nowrap;
+        width: 100%;
+      }
+      #shareHeader {
+        background-color: #445a65;
+        display: flex;
+        flex-flow: column nowrap;
+        align-items: center;
+        margin: 0;
+      }
+      #shareHeader h3 {
+        color: #f1f2f3;
+        padding: 0;
+        margin: 25px;
+        max-width: 325px;
+        display: inline-block;
+        text-align: center;
+      }
+      #shareHeader p {
+        color: #97a3a8;
+      }
+      #instructions-icons {
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: space-between;
+        align-items: flex-end;
+        width: 100%;
+        max-width: 325px;
+      }
+      #selectableText {
+        max-height: 400px;
+        overflow: auto;
+        border: 1px solid #445a65;
+        margin: 0;
+        padding: 24px;
+        background-color: #ebedee;
+      }
+      #selectableText p {
+        color: black;
+        padding: 0;
+        margin-top: 0;
+        margin-bottom: 14px;
+      }
+      #selectableText a {
+        text-decoration: underline;
+        color: #009485;
+        font-weight: 500;
+        border: none;
+        padding: 4px;
+      }
+      #copyText {
+        text-align: center;
+        color: rgba(0, 0, 0, 0.54);
+        margin-top: 0;
+      }
+      #buttonRow {
+        margin: 24px 24px 20px 24px;
+        padding: 0;
+      }
+      #copyButton {
+        color: #f1f2f3;
+        background-color: #263238;
+        width: 50%;
+      }
+      #doneButton {
+        color: #009485;
+        right: 0;
+        position: absolute;
+      }
+    </style>
+    <paper-dialog id='dialog'>
+      <div id='shareHeader'>
+        <h3>To share a connection to this server, copy the invitation and send it over email or chat</h3>
+        <div id='instructions-icons'>
+          <div><img src='images/share_copy.svg'><p>Copy invite</p></div>
+          <div><img src='images/share_email.svg'><p>Email invite</p></div>
+          <div><img src='images/share_chat.svg'><p>Invite via chat</p></div>
+        </div>
+      </div>
+      <div>
+        <div contenteditable id='selectableText' style= "-webkit-text-size-adjust: 100%;">
+          <p>Hello,</p>
+          <p>I'm inviting you to connect to my personal Outline server, which you can use to access the open internet, no matter where you are. Follow the instructions on your invitation link below to download the Outline App and get connected.</p>
+          <p><a href$='{{s3Url}}'>{{s3Url}}</a></p>
+        </div>
+      </div>
+      <div id='buttonRow'>
+        <paper-button id='copyButton' on-tap="copyClicked">Copy to clipboard</paper-button>
+        <paper-button id='doneButton' dialog-confirm>Done</paper-button>
+      </div>
+      <div id='copyText' hidden>Copied to clipboard</div>
+    </paper-dialog>
+  </template>
+  <script>
+    Polymer({
+      is: 'outline-share-dialog',
+      created: function () {
+        this.clipboard = require('clipboard-polyfill');
+      },
+      open: function(accessUrl) {
+        // If updating this URL, must also update it in outline-server-view.html. TODO: deduplicate
+        this.s3Url = 'https://s3.amazonaws.com/outline-vpn/index.html#/invite/' +
+            encodeURIComponent(accessUrl);
+        this.$.copyText.setAttribute('hidden', true);
+        this.$.dialog.open();
+      },
+      copyClicked: function() {
+        var dt = new this.clipboard.DT();
+        dt.setData("text/plain", this.$.selectableText.innerText);
+        dt.setData("text/html", this.$.selectableText.innerHTML);
+        this.clipboard.write(dt);
+        this.$.copyText.removeAttribute('hidden');
+      }
+    });
+  </script>
+</dom-module>

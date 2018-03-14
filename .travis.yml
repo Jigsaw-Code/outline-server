@@ -1,0 +1,135 @@
+language: node_js
+
+node_js:
+  - "8"
+
+cache:
+  yarn: true
+  directories:
+    - $HOME/.cache/bower
+    - $HOME/.cache/electron
+    - $HOME/.cache/electron-builder
+
+before_install:
+  # https://docs.travis-ci.com/user/languages/javascript-with-nodejs#Travis-CI-supports-yarn
+  - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.3.2
+  - export PATH="$HOME/.yarn/bin:$PATH"
+
+stages:
+  - build and unit test
+  - integration test
+  - name: tag
+    if: type = cron
+  - name: deploy
+    if: tag =~ ^daily
+  - name: release
+    if: tag =~ ^v[0-9]
+
+# Stages with the same name define multiple jobs which run in parallel.
+# To make it more apparent in the Travis UI exactly what each job is
+# doing, we add a descriptive environment variable.
+jobs:
+  include:
+    # Ideally, we would split this stage in some way, e.g. by component or by
+    # build/test commands, to make it clearer in the Travis UI exactly which
+    # command failed. However, since each stage incurs a significantly start-up
+    # cost, we combine test and build commands for all components into one fast
+    # stage.
+    - stage: build and unit test
+      script:
+        - yarn shadowbox_install
+        - yarn do shadowbox/server/build
+        - yarn do shadowbox/test
+        - yarn do server_manager/electron_app/build
+        - yarn do server_manager/web_app/build
+        - yarn do server_manager/web_app/test
+
+    - stage: integration test
+      sudo: required
+      services: docker
+      script:
+        # https://docs.travis-ci.com/user/docker/
+        - |
+          sudo rm -f /usr/local/bin/docker-compose
+          curl -L https://github.com/docker/compose/releases/download/1.17.1/docker-compose-$(uname -s)-$(uname -m) > docker-compose
+          chmod +x docker-compose
+          sudo mv docker-compose /usr/local/bin
+        - yarn shadowbox_install
+        - yarn do shadowbox/integration_test/run
+
+    - stage: tag
+      script:
+        - RELEASE_NAME=daily-$(date -I)
+        - curl --data '{"tag_name":"'$RELEASE_NAME'","name":"'$RELEASE_NAME'","prerelease":true}' https://api.github.com/repos/Jigsaw-Code/outline-server/releases?access_token=$CI_USER_TOKEN
+
+    - stage: deploy
+      env:
+        - DESC=shadowbox docker image
+      sudo: required
+      services: docker
+      script:
+        - yarn shadowbox_install
+        - yarn do shadowbox/docker/build
+        - docker login quay.io -u="$QUAY_IO_USERNAME" -p="$QUAY_IO_PASSWORD"
+        - docker tag outline/shadowbox quay.io/outline/shadowbox:$TRAVIS_TAG
+        - docker push quay.io/outline/shadowbox:$TRAVIS_TAG
+        - docker tag outline/shadowbox quay.io/outline/shadowbox:daily
+        - docker push quay.io/outline/shadowbox:daily
+
+    - stage: deploy
+      env:
+        - DESC=linux manager
+      addons:
+        apt:
+          packages:
+          - rpm
+      script: yarn do server_manager/electron_app/package_linux
+
+    # https://www.electron.build/multi-platform-build
+    - stage: deploy
+      env:
+        - DESC=windows manager
+      sudo: required
+      services: docker
+      script:
+        - yarn do server_manager/electron_app/build
+        - docker pull electronuserland/builder:wine
+        - docker run --rm
+            -v ${PWD}:/project
+            -v ~/.cache/electron:/root/.cache/electron
+            -v ~/.cache/electron-builder:/root/.cache/electron-builder
+            electronuserland/builder:wine
+            /bin/bash -c "yarn do server_manager/electron_app/package_only_windows" || travis_terminate $?
+
+    - stage: deploy
+      env:
+        - DESC=macos manager
+      os: osx
+      script: yarn do server_manager/electron_app/package_macos
+
+    # Note that because we cannot currently build signed macOS or Windows
+    # binaries on Travis, those builds must be manually built and uploaded
+    # to the release page.
+    - stage: release
+      env:
+        - DESC=linux manager
+      addons:
+        apt:
+          packages:
+          - rpm
+      script: yarn do server_manager/electron_app/release_linux
+
+deploy:
+  provider: releases
+  api_key:
+    secure: "a7JJwbwgWQpXAaGCKbMf/HySyhiBOPeyjZZkSeZBECpqS671j6rbZ2MHvXp7QfU3LZ+Z7MYwkl/DTgbdOZ8ndbwWMn5yJjeIBnreQqZlbyR5jh1G66vu+r55aBxd6+svGp2VynGlWLI+1+4L6U33VHNXnkH6D7fwSKze1glu1XqeUzUkNEPRkWCg/Y6/WGMh19yOgoxulN3mTL65s5FzFpXKdDT7F8J6BPzoz5cWXTMiZM+fs0BjTIfNNabkIWdRvVFJ5s2Cx3EJM0BU1NDRVxGeYJsvli/gkYW82ZTeQdXfn9KQxAK1n6lQsUQJUnErH6jSfrv6QJkSnnKjVogXcP/SSj0p73UAcZuUZ7hRW/TX0HAtgCxnY7dkMaxyBHiNwxprSm4+83VRHIALzUqmcJ28b6VvXo1znD3r9frDsY5PuNAmew3VbpQyxit515tZRpiRXzzSnrFqAovWl6wY0UIkQEFLpi18PGOhUFcewKBpN4W4PszGvWkPgdPNBq5nizUtaHX62lPFoPjGkhcunD4Tn9RIrUcbRTfWVokI5qT8oLZM3mgBS8H85N80ngq1tQBUCJ1Xfd3vqJ+xE0x6boIzYHs4cz0Qoao1vmo1wsycRhr1PAqvtBztAkq+pwOwd9qI9VL8QCJErHBd56I3jkPTsPgMx8K3M8N4/EtOsA0="
+  file_glob: true
+  file: "build/server_manager/electron_app/static/dist/*.*"
+  skip_cleanup: true
+  on:
+    tags: true
+
+env:
+  global:
+    - ELECTRON_CACHE=$HOME/.cache/electron
+    - ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder

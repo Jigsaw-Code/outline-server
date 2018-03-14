@@ -1,0 +1,307 @@
+<!--
+  Copyright 2018 The Outline Authors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<link rel='import' href='../bower_components/polymer/polymer.html'>
+<link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel='import' href='../bower_components/iron-icon/iron-icon.html'>
+<link rel='import' href='../bower_components/iron-icons/iron-icons.html'>
+<link rel='import' href='../bower_components/iron-pages/iron-pages.html'>
+<link rel='import' href='../bower_components/paper-icon-button/paper-icon-button.html'>
+<link rel='import' href='../bower_components/paper-toast/paper-toast.html'>
+<link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
+<link rel='import' href='../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html'>
+
+<link rel="import" href="./cloud-install-styles.html">
+<link rel="import" href="./outline-about-dialog.html">
+<link rel="import" href="./outline-feedback-dialog.html">
+<link rel="import" href="./outline-modal-dialog.html">
+<link rel="import" href="./outline-server-creator.html">
+<link rel="import" href="./outline-server-view.html">
+
+<dom-module id="app-root">
+  <template>
+    <style include='cloud-install-styles'></style>
+    <style>
+      :host {
+        width: 100%;
+        --primary-green: #00bfa5;
+      }
+
+      /* CONTENT */
+
+      #contentColumn {
+        align-items: stretch;
+        display: flex;
+        flex-direction: column;
+        margin: auto;
+        position: relative;
+      }
+
+      @media only screen and (max-device-width: 500px) {
+         #contentColumn {
+          width: 95%;
+        }
+      }
+
+      /* BOTTOM NOTIFICATION */
+
+      #toast {
+        align-items: center;
+        display: flex;
+        justify-content: space-between;
+        padding: 24px;
+        max-width: 450px;
+      }
+      #toast paper-icon-button {
+        /* prevents the icon from resizing when there is a long message in
+           the toast */
+        flex-shrink: 0;
+        padding: 0;
+        height: 20px;
+        width: 20px;
+      }
+      #settingsDrawer {
+        z-index: 1000;
+        margin-top: 12px;
+      }
+      #settingsDrawer iron-icon {
+        margin-right: 12px;
+      }
+      #settingsDrawer .settingsMenuItem {
+        cursor: pointer;
+        padding: 12px 24px 12px 24px;
+        font-size: 14px;
+      }
+      #settingsDrawer .settingsMenuItem:hover {
+        color: var(--primary-green);
+      }
+      #settingsDrawer #signedIn {
+        text-align: center;
+      }
+      #settingsDrawer #signedIn img {
+        height: 65px;
+        margin-top: 12px;
+      }
+      #settingsDrawer #signOutButton  {
+        font-weight: bold;
+        margin-bottom: 24px;
+        cursor: pointer;
+        text-transform: uppercase;
+      }
+      #settingsDrawer #signOutButton:hover {
+        color: var(--primary-green);
+      }
+      app-toolbar [main-title] {
+        font-family: 'Google Sans', 'Roboto', sans-serif;
+        font-size: 20px;
+        text-align: center;
+      }
+      app-toolbar paper-icon-button {
+        /* needed so the "Outline Manager" title appears centered in the window. */
+        position: absolute;
+      }
+    </style>
+
+    <app-drawer id="settingsDrawer">
+      <div id='signedIn' hidden$='{{!isSignedIn}}'>
+        <img src='images/manager-profile-2x.png'>
+        <p>{{adminEmail}}</p>
+        <div id='signOutButton' on-tap='signOutTapped'>Sign Out</div>
+        <hr>
+      </div>
+      <div on-tap='dataCollectionTapped' class='settingsMenuItem' paper-drawer-toggle>
+        <iron-icon icon="lock"></iron-icon>Data Collection
+      </div>
+      <div on-tap='privacyTapped' class='settingsMenuItem' paper-drawer-toggle>
+        <iron-icon icon="lock"></iron-icon>Privacy
+      </div>
+      <div on-tap='termsTapped' class='settingsMenuItem' paper-drawer-toggle>
+        <iron-icon icon="info"></iron-icon>Terms
+      </div>
+      <div on-tap='submitFeedbackTapped' class='settingsMenuItem' paper-drawer-toggle>
+        <iron-icon icon="feedback"></iron-icon>Submit Feedback
+      </div>
+      <div on-tap='helpTapped' class='settingsMenuItem' paper-drawer-toggle>
+        <iron-icon icon="help"></iron-icon>Help Center
+      </div>
+      <div on-tap='aboutTapped' class='settingsMenuItem' paper-drawer-toggle>
+        <iron-icon icon="info"></iron-icon>About Outline
+      </div>
+      <div on-tap='showLicensesTapped' class='settingsMenuItem' paper-drawer-toggle>
+        <iron-icon icon="info"></iron-icon>Show Licenses
+      </div>
+    </app-drawer>
+
+    <app-toolbar class='toolbar'>
+      <paper-icon-button icon="menu" on-tap="toggleSettingsDrawer"></paper-icon-button>
+      <div main-title>Outline Manager</div>
+    </app-toolbar>
+
+    <div id='contentColumn'>
+      <iron-pages id='content' attr-for-selected="id">
+        <outline-server-creator id='serverCreator'></outline-server-creator>
+        <outline-server-view id='serverView'></outline-server-view>
+      </iron-pages>
+    </div>
+
+    <paper-toast id='toast'><paper-icon-button icon='icons:close' on-tap='closeError'></paper-icon-button></paper-toast>
+
+    <outline-feedback-dialog id='feedbackDialog'></outline-feedback-dialog>
+    <outline-about-dialog id='aboutDialog' outline-version='[[outlineVersion]]'></outline-about-dialog>
+    <outline-modal-dialog id='modalDialog'></outline-modal-dialog>
+
+    <paper-dialog id="licenses" restoreFocusOnClose>
+      <paper-dialog-scrollable>
+        <code id="licensesText">
+          Could not load license.txt.
+        </code>
+      </paper-dialog-scrollable>
+      <div class="buttons">
+        <paper-button dialog-dismiss autofocus>Close</paper-button>
+      </div>
+    </paper-dialog>
+  </template>
+  <script>
+    Polymer({
+      is: 'app-root',
+      properties: {
+        adminEmail: {
+          type: String,
+          value: ''
+        },
+        isSignedIn: {
+          type: Boolean,
+          computed: '_isSignedIn(adminEmail)'
+        },
+        outlineVersion: String
+      },
+      getAndShowServerCreator: function () {
+        this.$.content.select('serverCreator');
+        return this.$.serverCreator;
+      },
+      getServerCreator: function() {
+        return this.$.serverCreator;
+      },
+      getAndShowServerView: function (server) {
+        this.server = server;
+        this.$.content.select('serverView');
+        this.$.serverCreator.stop();
+        this.$.serverView.initHelpBubbles();
+        return this.$.serverView;
+      },
+      getServerView: function() {
+        return this.$.serverView;
+      },
+      showError: function (errorMsg) {
+        this.showToast(errorMsg, Infinity);
+      },
+      showNotification: function (message) {
+        const NOTIFICATION_TOAST_DURATION_MS = 3000;
+        this.showToast(message, NOTIFICATION_TOAST_DURATION_MS);
+      },
+      showToast: function(message, duration) {
+        const toast = this.$.toast;
+        toast.close();
+        // Defer in order to trigger the toast animation, otherwise the
+        // update happens in place.
+        setTimeout(() => {
+          toast.show({
+            text: message,
+            duration: duration,
+            noOverlap: true
+          });
+        }, 0);
+      },
+      closeError: function () {
+        this.$.toast.close();
+      },
+      // cb is a function which accepts a single boolean which is true iff
+      // the user chose to retry the failing operation.
+      showConnectivityDialog: function (cb) {
+        const dialogTitle = 'Connection problem';
+        const dialogText = 'We\'re having trouble connecting with your DigitalOcean account. This is often a temporary problem with DigitalOcean or with your internet connection. In some cases, logging into DigitalOcean again will fix the problem.';
+        this.showModalDialog(dialogTitle, dialogText, ['login', 'retry'])
+        .then((clickedButtonIndex) => {
+          cb(clickedButtonIndex === 1);  // pass true if user clicked retry
+        });
+      },
+      getConfirmation: function(title, text, confirmButtonText, continueFunc) {
+        this.showModalDialog(title, text, ['Cancel', confirmButtonText])
+        .then((clickedButtonIndex) => {
+          if (clickedButtonIndex === 1) {  // user clicked to confirm.
+            continueFunc();
+          }
+        });
+      },
+      _isSignedIn: function (adminEmail) {
+        return Boolean(adminEmail);
+      },
+      toggleSettingsDrawer: function() {
+        this.$.settingsDrawer.toggle();
+      },
+      closeSettingsDrawer: function() {
+        this.$.settingsDrawer.close();
+      },
+      submitFeedbackTapped: function () {
+        this.closeSettingsDrawer();
+        this.$.feedbackDialog.open();
+      },
+      termsTapped: function () {
+        this.closeSettingsDrawer();
+        window.open('https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html');
+      },
+      privacyTapped: function () {
+        this.closeSettingsDrawer();
+        window.open('https://www.google.com/policies/privacy/');
+      },
+      dataCollectionTapped: function () {
+        this.closeSettingsDrawer();
+        window.open('https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection');
+      },
+      aboutTapped: function() {
+        this.closeSettingsDrawer();
+        this.$.aboutDialog.open();
+      },
+      helpTapped: function() {
+        this.closeSettingsDrawer();
+        window.open('https://s3.amazonaws.com/outline-vpn/index.html#/en/support/');
+      },
+      signOutTapped: function() {
+        this.closeSettingsDrawer();
+        this.fire('SignOutRequested');
+      },
+      openManualInstallFeedback: function(prepopulatedMessage) {
+        this.$.feedbackDialog.open(prepopulatedMessage, true);
+      },
+      // Returns a Promise which fulfills with the index of the button clicked.
+      showModalDialog: function(title, text, buttons) {
+        return this.$.modalDialog.open(title, text, buttons);
+      },
+      showLicensesTapped: function () {
+        this.closeSettingsDrawer();
+        var xhr = new XMLHttpRequest();
+        xhr.onload = () => {
+          this.$.licensesText.innerText = xhr.responseText;
+          this.$.licenses.open();
+        };
+        xhr.onerror = () => {
+          console.error('could not load license.txt');
+        };
+        xhr.open('GET', '/ui_components/licenses/licenses.txt', true);
+        xhr.send();
+      }
+    });
+  </script>
+</dom-module>

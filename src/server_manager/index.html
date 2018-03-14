@@ -1,0 +1,63 @@
+<!--
+  Copyright 2018 The Outline Authors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <!--<base href=".">-->
+    <meta name="google" content="notranslate">
+    <meta http-equiv="Content-Language" content="en">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
+    <!-- TODO: remove this once launched to a broader audience -->
+    <meta name="robots" content="noindex,noarchive">
+    <!-- TODO: update this description -->
+    <!-- <meta name="descripton" content="Outline is a browser extension that makes it easy to set up and access proxy services for your trusted friends and family.">
+    <meta property="og:description" content="Outline is a browser extension that makes it easy to set up and access proxy services for your trusted friends and family." /> -->
+
+    <link rel="shortcut icon" href="/ui_components/images/favicon.png">
+    <link rel="stylesheet" href="/ui_components/style.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed:400" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Google+Sans" rel="stylesheet">
+    <script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
+    <link rel="import" href="/bower_components/app-layout/app-toolbar/app-toolbar.html">
+    <link rel="import" href="/ui_components/app-root.html">
+
+    <!-- Only allow links in the Outline invite and DigitalOcean pages to be included as an iframe -->
+    <meta http-equiv="Content-Security-Policy" content="frame-src ss://* macappstore://* https://s3.amazonaws.com/outline-vpn/ https://cloud.digitalocean.com https://github.com/;">
+    <script src="server_manager/web_app/main.js"></script>
+
+    <style>
+      body {
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Show gray background when a dialog is opened */
+      core-overlay-layer.core-opened {
+        background-color: rgba(0, 0, 0, 0.5);
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+
+    <title>Outline Manager</title>
+  </head>
+
+<body dir='ltr' class='page-cloud-install'>
+  <app-root id="appRoot"></app-root>
+</body>
+</html>
