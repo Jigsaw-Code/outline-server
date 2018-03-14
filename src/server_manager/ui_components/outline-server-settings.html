@@ -1,0 +1,188 @@
+<!--
+  Copyright 2018 The Outline Authors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<link rel='import' href='../bower_components/polymer/polymer.html'>
+<link rel='import' href='../bower_components/paper-button/paper-button.html'>
+<link rel='import' href='../bower_components/paper-input/paper-input.html'>
+<link rel='import' href='../bower_components/paper-toggle-button/paper-toggle-button.html'>
+
+<link rel='import' href='./cloud-install-styles.html'>
+
+<dom-module id='outline-server-settings'>
+  <template>
+    <style include='cloud-install-styles'></style>
+    <style>
+      .fullScreenOverlay {
+        height: 100vh;
+        width: 100vw;
+        position: fixed;
+        top: 0;
+        z-index: 101;  /* must be higher than the outline-help-bubble */
+        background: white;
+      }
+      app-toolbar h2 {
+        margin-left: 30px;
+      }
+      .content {
+        flex-grow: 1;
+      }
+      .setting {
+        padding: 20px;
+        display: flex;
+        align-items: flex-start;
+      }
+      .setting:not(:first-child) {
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+      }
+      .setting > iron-icon {
+        margin-right: 20px;
+        width: 40px;
+      }
+      .setting > div {
+        width: 100%;
+      }
+      .setting h3 {
+        font-size: 16px;
+        margin: 0;
+        padding: 0;
+      }
+      .setting p {
+        margin-bottom: 0;
+      }
+      #metricsHeader {
+        display: flex;
+        justify-content: space-between;
+      }
+      #metricsStatus {
+        margin-top: 0px;
+        font-size: 12px;
+      }
+      .footer {
+        height: 65px;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+      }
+      .footer paper-button {
+        width: 75px;
+      }
+      .footer .saveButton {
+        color: var(--primary-green);
+      }
+      .clickable {
+        cursor: pointer;
+      }
+      paper-toggle-button {
+        --paper-toggle-button-checked-bar-color: var(--primary-green);
+        --paper-toggle-button-checked-button-color: var(--primary-green);
+        --paper-toggle-button-checked-ink-color: var(--primary-green);
+      }
+      paper-input {
+        /* Removes extra padding added by children of paper-input */
+        margin-top: -8px;
+      }
+    </style>
+    <div class='fullScreenOverlay' hidden$='[[!visible]]'>
+      <app-toolbar>
+        <h2>Server Settings</h2>
+      </app-toolbar>
+      <div class='content'>
+        <!-- Rename controls -->
+        <div class='setting'>
+          <iron-icon icon="create"></iron-icon>
+          <div>
+            <paper-input value='{{name}}' label='name' always-float-label maxlength='100'></paper-input>
+            <p>Set a new name for your server. Note that this will not be reflected on the devices of the users that you invited to connect to it.</p>
+          </div>
+        </div>
+        <!-- Metrics controls -->
+        <div class='setting'>
+          <iron-icon icon="editor:insert-chart"></iron-icon>
+          <div>
+            <div id='metricsHeader'>
+              <h3>Share anonymous metrics</h3>
+              <paper-toggle-button checked='{{metricsEnabled}}'></paper-toggle-button>
+            </div>
+            <p id='metricsStatus'>
+              <span hidden$='[[metricsEnabled]]'>Anonymous metrics sharing is disabled</span>
+              <span hidden$='[[!metricsEnabled]]'>Anonymous metrics sharing is enabled</span>
+            </p>
+            <p>Share anonymized metrics to help improve the reliability and performance of Outline, for you and for those you share your server with. <a class="learnMoreLink" href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">Learn more</a>.</p>
+            <p hidden$='[[!metricsEnabled]]'>Server ID: [[serverId]]</p>
+          </div>
+        </div>
+        <!-- Delete/forget. -->
+        <div class='setting'>
+          <iron-icon icon="delete"></iron-icon>
+          <div hidden$='[[!deleteEnabled]]'>
+            <h3 on-tap='delete' class='clickable'>Destroy server</h3>
+          </div>
+          <div hidden$='[[!forgetEnabled]]'>
+            <h3 on-tap='forget' class='clickable'>Forget server</h3>
+          </div>
+        </div>
+      </div>
+      <div class='footer'>
+        <paper-button on-tap="close">Cancel</paper-button>
+        <paper-button on-tap="save" class='saveButton'>Save</paper-button>
+      </div>
+    </div>
+  </template>
+  <script>
+    Polymer({
+      is: 'outline-server-settings',
+      properties: {
+        deleteEnabled: Boolean,
+        forgetEnabled: Boolean,
+        name: String,
+        metricsEnabled: Boolean,
+        visible: {type: Boolean, value: false},
+        serverId: String
+      },
+      open: function(name, metricsEnabled) {
+        this.visible = true;
+        this.initialName = name;
+        this.name = name;
+        this.initialMetricsEnabled = metricsEnabled;
+        this.metricsEnabled = metricsEnabled;
+      },
+      close: function() {
+        this.visible = false;
+      },
+      save: function() {
+        // Fire signal if name has changed.
+        if (this.name !== this.initialName) {
+          const DEFAULT_SERVER_NAME = 'Outline Server';
+          const newName = this.name || DEFAULT_SERVER_NAME;
+          this.fire('ServerRenameRequested', {newName});
+        }
+        // Fire signal if metrics have changed.
+        if (this.metricsEnabled !== this.initialMetricsEnabled) {
+          const metricsSignal = this.metricsEnabled ?
+              'EnableMetricsRequested' : 'DisableMetricsRequested';
+          this.fire(metricsSignal);
+        }
+        this.close();
+      },
+      delete: function() {
+        this.fire('DeleteServerRequested');
+      },
+      forget: function() {
+        this.fire('ForgetServerRequested');
+      }
+    });
+  </script>
+</dom-module>

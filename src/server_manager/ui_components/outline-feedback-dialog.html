@@ -1,0 +1,165 @@
+<!--
+  Copyright 2018 The Outline Authors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
+<link rel='import' href='../bower_components/paper-dropdown-menu/paper-dropdown-menu.html'>
+<link rel='import' href='../bower_components/paper-item/paper-item.html'>
+<link rel='import' href='../bower_components/paper-listbox/paper-listbox.html'>
+<link rel='import' href='../bower_components/paper-input/paper-input.html'>
+<link rel='import' href='../bower_components/paper-input/paper-textarea.html'>
+
+<!-- this is needed to fix the "KeyframeEffect is not defined"
+see https://github.com/PolymerElements/paper-swatch-picker/issues/36 -->
+<link rel='import' href='../bower_components/web-animations-js/web-animations-next.min.html'>
+
+<dom-module id='outline-feedback-dialog'>
+  <template>
+    <style include='cloud-install-styles'></style>
+    <style>
+      :host {
+        margin: 0px;
+      }
+      #feedbackWrapper {
+        margin-top: 0;
+      }
+
+      /*
+        This element is tricky to size.
+
+        We need to constrain its height because paper-dialog doesn't handle things well when its
+        height exceeds that of the page. max-rows isn't a reliable way to constrain the element's
+        height because it does not consider line wrapping:
+        https://github.com/PolymerElements/paper-input/issues/158
+
+        By configuring a max-height and setting overflow-y:scroll on the paper-textarea we get its
+        autogrow behaviour, at the cost of always showing a vertical scrollbar (even when there is
+        just one line).
+      */
+      #userFeedback {
+        max-height: 150px;
+        overflow-x: hidden;
+        overflow-y: scroll;
+      }
+
+      #userEmail {
+        /* compensate for extra space added for #userFeedback's error label */
+        margin-top: -10px;
+      }
+      p a {
+        color: var(--primary-green);
+      }
+      paper-input, paper-textarea, paper-dropdown-menu {
+        --paper-input-container-focus-color: var(--primary-green);
+      }
+      #feedbackExplanation {
+        display: none;
+      }
+      .installationFailed #feedbackCategory {
+        display: none;
+      }
+      .installationFailed #userFeedback {
+        background-color: #ECEFF1;
+        margin-top: 1em;
+      }
+      .installationFailed #feedbackExplanation {
+        display: block;
+      }
+    </style>
+    <paper-dialog id='dialog' modal>
+      <h2>[[title]]</h2>
+      <div id='feedbackWrapper'>
+        <p id='feedbackExplanation'>[[feedbackExplanation]]</p>
+        <paper-dropdown-menu id='feedbackCategory' horizontal-align='left'>
+          <paper-listbox id='feedbackCategoryListbox' slot='dropdown-content'class='dropdown-content' selected='0'>
+            <paper-item>General Feedback</paper-item>
+            <paper-item>Performance</paper-item>
+            <paper-item>Server Connection</paper-item>
+            <paper-item>Installation Failed</paper-item>
+          </paper-listbox>
+        </paper-dropdown-menu>
+        <paper-textarea id='userFeedback' type='text' placeholder='Your feedback' error-message='Please enter feedback.' on-value-changed='userFeedbackValueChanged'></paper-textarea>
+        <paper-input id='userEmail' type='text' placeholder='Email address (optional)'></paper-input>
+        <p>
+          Your feedback, email address (if provided) and additional information
+          referred to in the <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">privacy policy</a>
+          will be sent to the Outline team.
+        </p>
+      </div>  <!-- end of #feedbackWrapper -->
+      <p class="buttons">
+        <paper-button dialog-dismiss>Cancel</paper-button>
+        <paper-button autofocus on-tap='submitTappedHandler'>Submit</paper-button>
+      </p>
+    </paper-dialog>
+  </template>
+  <script>
+    Polymer({
+      is: 'outline-feedback-dialog',
+      properties: {
+        title: String,
+        feedbackExplanation: String,
+        feedbackCategories: {
+          type: Object,
+          readonly: true,
+          value: { // Maps a category to its `feedbackCategoryListbox` item index.
+            GENERAL: 0,
+            PERFORMANCE: 1,
+            CONNECTION: 2,
+            INSTALLATION: 3
+          }
+        }
+      },
+      open: function(prepopulatedMessage, showInstallationFailed, feedbackCategory = 0) {
+        // Clear all fields, in case feedback had already been entered.
+        if (showInstallationFailed) {
+          this.title = 'Outline Server Installation Failed';
+          this.feedbackExplanation = 'An error occurred while attempting to install Outline on your server. If you haven\'t been able to figure out a solution, please consider sending us feedback and telling us your email address (optional) so that we can get back to you.';
+          this.$.dialog.classList.add('installationFailed');
+          this.$.feedbackCategoryListbox.selected = 3;
+        } else {
+          this.title = 'Send Feedback';
+          this.feedbackExplanation = '';
+          this.$.dialog.classList.remove('installationFailed');
+          this.$.feedbackCategoryListbox.selected = feedbackCategory;
+        }
+        this.$.userFeedback.invalid = false;
+        this.$.userFeedback.value = prepopulatedMessage || '';
+        this.$.userEmail.value = '';
+        this.$.dialog.open();
+      },
+      submitTappedHandler: function() {
+        // Verify that userFeedback is entered.
+        if (!this.$.userFeedback.value) {
+          this.$.userFeedback.invalid = true;
+          return;
+        }
+        const data = {
+          feedbackCategory: this.$.feedbackCategory.selectedItemLabel,
+          userFeedback: this.$.userFeedback.value,
+          userEmail: this.$.userEmail.value,
+        };
+        this.fire('SubmitFeedback', data);
+        this.$.dialog.close();
+      },
+      userFeedbackValueChanged: function() {
+        // Hides any error message when the user starts typing feedback.
+        this.$.userFeedback.invalid = false;
+
+        // Make the paper-dialog (vertically) re-center.
+        this.$.dialog.notifyResize();
+      }
+    });
+  </script>
+</dom-module>

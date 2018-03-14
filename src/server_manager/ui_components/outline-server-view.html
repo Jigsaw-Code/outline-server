@@ -1,0 +1,585 @@
+<!--
+  Copyright 2018 The Outline Authors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<link rel='import' href='../bower_components/polymer/polymer.html'>
+<link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
+<link rel='import' href='../bower_components/iron-icons/iron-icons.html'>
+<link rel='import' href='../bower_components/iron-icons/editor-icons.html'>
+<link rel='import' href='../bower_components/iron-icons/social-icons.html'>
+<link rel='import' href='../bower_components/paper-icon-button/paper-icon-button.html'>
+<link rel='import' href='../bower_components/paper-item/paper-item.html'>
+<link rel='import' href='../bower_components/paper-listbox/paper-listbox.html'>
+<link rel='import' href='../bower_components/paper-menu-button/paper-menu-button.html'>
+<link rel='import' href='../bower_components/paper-progress/paper-progress.html'>
+
+<link rel='import' href='./cloud-install-styles.html'>
+<link rel='import' href='./outline-help-bubble.html'>
+<link rel='import' href='./outline-metrics-option-dialog.html'>
+<link rel='import' href='./outline-server-settings.html'>
+<link rel='import' href='./outline-share-dialog.html'>
+
+<script src='../node_modules.js'></script>
+
+<dom-module id='outline-server-view'>
+  <template>
+    <style include='cloud-install-styles'></style>
+    <style>
+      paper-listbox iron-icon {
+        margin-right: 10px;
+      }
+      .card-header {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        background-color: #263238;
+      }
+      .card-header .headerContents {
+        padding: 24px 24px 0px 32px;
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .card-header .headerContents paper-icon-button {
+        color: rgba(255, 255, 255, 0.54);
+      }
+      .card-header paper-menu-button {
+        color: rgba(255, 255, 255, 0.54);
+      }
+      .access-key-list {
+        display: table;
+        width: 100%;
+      }
+      .access-key-row {
+        display: flex;
+        align-items: center;
+        padding: 6px 12px 6px 10px;
+        padding-top: 6px;
+        padding-right: 12px;
+        padding-left: 10px;
+        padding-bottom: 6px;
+      }
+      .access-key-row .connectButton,
+      .access-key-row .shareButton {
+        height: 32px;
+        text-align: right;
+        color: rgba(0, 0, 0, 0.54);
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 13px;
+        letter-spacing: normal;
+        padding-left: 24px;
+        padding-right: 24px;
+        margin: 0;
+        justify-content: flex-end;
+      }
+      .header-row {
+        font-size: 12px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        background-color: #ffffff;
+      }
+      .header-row .serverAccessKeys {
+        flex-grow: 1;
+        padding-left: 16px;
+      }
+      .header-row paper-button {
+        color: white;
+        height: 32px;
+        font-size: 13px;
+        padding: 0 28px 0px 28px;
+        background-color: #00bfa5;
+        margin: 0px 12px 0px 96px;
+        height: 36px;
+    }
+
+      .measurement {
+        /* We don't want numbers separated from their units */
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .my-connection-row {
+        display: flex;
+        align-items: center;
+        padding: 12px 12px 12px 10px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+        /* Shift to align Get Connected with Share buttons */
+      }
+      .manager-access-key-icon {
+        width: 42px;
+        height: 42px;
+        margin: 0 18px 0px 12px;
+      }
+      .access-key-icon {
+        width: 40px;
+        height: 33px;
+        margin: 0 16px;
+      }
+      #serverAvatar {
+        width: 100%;
+        max-width: 90px;
+        height: auto;
+        margin-right: 32px;
+      }
+      @media (max-width: 400px) {
+        #serverAvatar {
+          display: none;
+        }
+      }
+      .access-key-name {
+        flex-grow: 1;
+        opacity: 0.87;
+        color: #000000;
+        font-weight: 500;
+        width: 50px;
+      }
+      input.access-key-name {
+        font-family: inherit;
+        font-size: inherit;
+        border-top: none;
+        border-left: none;
+        border-right: none;
+        border-bottom: 2px solid transparent;
+        border-radius: 2px;
+        padding: 4px 7px;
+        position: relative;
+        margin-right: 24px;
+        /* Align with padding */
+        left: -7px;
+        background-color: #FAFAFA;  /* Match existing background color */
+      }
+      input.access-key-name::placeholder {
+        opacity: inherit;
+        color: inherit;
+      }
+      input.access-key-name:hover {
+        border-bottom-color: #e5e5e5
+      }
+      input.access-key-name:focus {
+        border-bottom-color: var(--primary-green);
+        border-radius: 0px;
+        outline: none;
+        font-weight: normal;
+      }
+      #titleWrapper {
+        flex-grow: 1;
+      }
+      #titleWrapper h3 {
+        margin: 0;
+        padding: 0 0 4px 0;
+        color: white;
+        font-size: 20px;
+      }
+      #titleWrapper p {
+        margin: 0;
+        padding: 0 0 6px 0;
+        color: rgba(255, 255, 255, 0.54);
+        font-weight: lighter;
+      }
+      .overflowMenu {
+        display: inline-block;
+        position: relative;
+        outline: none;
+        float: right;
+      }
+      .overflowMenu paper-item {
+        cursor: pointer;
+      }
+      paper-dropdown {
+        box-shadow: 0px 0px 20px #999999;
+      }
+      .access-key-row paper-progress {
+        width: 50px;
+        margin: 0 12px 0 24px;
+        --paper-progress-active-color: var(--primary-green);
+        --paper-progress-container-color: #FAFAFA;
+      }
+      .card-header paper-progress {
+        --paper-progress-active-color: var(--primary-green);
+        --paper-progress-container-color: #263238;
+      }
+      .share-button {
+        margin-right: 15px;
+      }
+      .totalBytes {
+        color: var(--primary-green);
+        font-size: 14px;
+      }
+      #shareInstructions {
+        width: 100%;
+        text-align: center;
+      }
+      #shareInstructions img {
+        margin-top: 190px;
+        height: 20px;
+      }
+      #getConnectedDialog {
+        height: 562px;
+        background: white;
+      }
+      #getConnectedDialog iframe {
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid #ccc;
+        height: 500px;
+      }
+      #getConnectedDialog .buttons {
+         margin-top: -5px;  /* undo spacing added after iframe */
+      }
+      #myAccessKeyDescription {
+        font-size: 12px;
+        font-weight: 400;
+        margin-top: 4px;
+        color: rgba(0,0,0,0.54);
+      }
+      outline-help-bubble {
+        text-align: center;
+      }
+      outline-help-bubble h3 {
+        padding-bottom :0;
+        font-weight: 500;
+        line-height: 28px;
+        font-size: 16px;
+        margin: 0px 0px 12px 0px;
+      }
+
+      outline-help-bubble paper-button {
+        color: white;
+      }
+      outline-help-bubble img {
+        width: 76px;
+        height: auto;
+        margin: 12px 0px 24px 0px;
+      }
+    </style>
+
+    <outline-share-dialog id='shareDialog'></outline-share-dialog>
+    <outline-metrics-option-dialog id='metricsDialog'></outline-metrics-option-dialog>
+
+    <paper-dialog id='getConnectedDialog' modal>
+        <iframe src='[[getS3InviteUrl(myConnection.accessUrl)]]'></iframe>
+        <div class="buttons">
+          <paper-button on-tap="closeGetConnectedDialog" autofocus>Close</paper-button>
+        </div>
+    </paper-dialog>
+    <outline-server-settings id='serverSettings' forget-enabled='[[forgetEnabled]]' delete-enabled='[[deleteEnabled]]' server-id='[[serverId]]'></outline-server-settings>
+
+    <div class='card-header'>
+      <div class='headerContents'>
+        <img id='serverAvatar' src='images/server_avatar.png'>
+        <div id='titleWrapper'>
+          <h3>{{serverName}}</h3>
+          <p>
+            <span class='totalBytes measurement'>[[_formatBytesTransferred(totalBytesTransferred, '0')]]</span>
+            <span hidden$='{{!monthlyTransferBytes}}'>of [[_formatBytesTransferred(monthlyTransferBytes)]] Transfer</span>
+            <span hidden$='{{!monthlyCost}}'>, ${{monthlyCost}} US/Mo</span>
+          </p>
+        </div>
+        <paper-icon-button icon='settings' on-tap='showServerSettings'></paper-icon-button>
+      </div>
+      <!-- TODO: hide or modify progress bars for manual servers -->
+      <paper-progress value='[[_getTotalTransferredPercent(transferStats)]]'></paper-progress>
+    </div>
+
+    <div class='access-key-list'>
+      <!-- header row -->
+      <div class="access-key-row header-row">
+        <span class="serverAccessKeys">Server access keys</span>
+        <span>Data usage</span>
+        <paper-button on-tap='_handleAddAccessKeyPressed' id='addAccessKeyButton'>Add key</paper-button>
+      </div>
+      <!-- admin row -->
+      <div class='access-key-row my-connection-row' hidden$="{{ !myConnection }}">
+        <img class='manager-access-key-icon' src='images/manager-key-avatar.svg'>
+        <span class='access-key-name'>
+          <div>My access key</div>
+          <div id='myAccessKeyDescription'>Connect your personal devices.</div>
+        </span>
+        <span class='measurement'>[[_formatBytesTransferred(myConnection.transferredBytes, '...')]]</span>
+        <paper-progress value='[[myConnection.relativeTraffic]]'></paper-progress>
+        <paper-button class='connectButton' id='getConnectedText' on-tap='_handleConnectPressed'>GET CONNECTED</paper-button>
+      </div>
+      <!-- rows for each access key -->
+      <template is='dom-repeat' items='{{accessKeyRows}}' filter='isRegularConnection'>
+        <div class='access-key-row access-key'>
+          <img class='access-key-icon' src='images/key-avatar.svg'>
+          <input type='text' class='access-key-name'
+              placeholder='{{item.placeholderName}}'
+              value='[[item.name]]'
+              on-blur='_handleNameInputBlur'
+              on-keydown='_handleNameInputKeyDown'>
+          </input>
+          <span class='measurement'>[[_formatBytesTransferred(item.transferredBytes, '...')]]</span>
+          <paper-progress value='[[item.relativeTraffic]]'></paper-progress>
+          <paper-button class='shareButton' on-tap='_handleShareCodePressed'>Share</paper-button>
+          <paper-menu-button horizontal-align='right' class='overflowMenu' close-on-activate no-animations dynamic-align>
+            <paper-icon-button icon='more-vert' slot='dropdown-trigger'></paper-icon-button>
+            <paper-listbox slot='dropdown-content'>
+            <paper-item on-tap='_handleRenameAccessKeyPressed'>
+              <iron-icon icon='icons:create'></iron-icon>Rename
+            </paper-item>
+              <paper-item on-tap='_handleRemoveAccessKeyPressed'>
+                <iron-icon icon='icons:delete'></iron-icon>Remove
+              </paper-item>
+            </paper-listbox>
+          </paper-menu-button>
+        </div>
+      </template>
+    </div>
+
+    <div id='shareInstructions' hidden$='{{ hasNonAdminAccessKeys }}'>
+        <img src='images/key-empty.svg'>
+    </div>
+
+    <outline-help-bubble id='getConnectedHelpBubble' vertical-align='top' horizontal-align='auto'>
+      <img src='images/connect-tip-2x.png'>
+      <h3>You are not connected yet!</h3>
+      <p>Click here to install the Outline client app, using your personal access key to your Outline server</p>
+      <paper-button on-tap='closeGetConnectedHelpBubble'>Okay, got it!</paper-button>
+    </outline-help-bubble>
+    <outline-help-bubble id='addAccessKeyHelpBubble' vertical-align='top' horizontal-align='auto'>
+      <img src='images/key-tip-2x.png'>
+      <h3>Create keys, share access</h3>
+      <p>Share access keys with friends, so they can connect to your Outline server. They can use the same access key on all their devices</p>
+      <paper-button on-tap='showGetConnectedHelpBubble'>Next</paper-button>
+    </outline-help-bubble>
+
+  </template>
+  <script>
+    const MY_CONNECTION_USER_ID = '0';
+
+    Polymer({
+      is: 'outline-server-view',
+      created: function () {
+        this.bytes = require('bytes');
+      },
+      properties: {
+        serverName: String,
+        // myConnection has the same fields as each item in accessKeyRows.  It may
+        // be unset in some old versions of Outline that allowed deleting this
+        // row.
+        myConnection: Object,
+        totalBytesTransferred: Number,
+        accessKeyRows: {type: Array, value: []},
+        hasNonAdminAccessKeys: Boolean,
+        deleteEnabled: Boolean,
+        forgetEnabled: Boolean,
+        metricsEnabled: Boolean,
+        serverId: String,
+        // Initialize monthlyTransferBytes and monthlyCost to 0, so they can
+        // be bound to hidden attributes.  Initializing to undefined does not
+        // cause hidden$=... expressions to be evaluated and so elements may be
+        // shown incorrectly.  See:
+        //   https://stackoverflow.com/questions/33700125/polymer-1-0-hidden-attribute-negate-operator
+        //   https://www.polymer-project.org/1.0/docs/devguide/data-binding.html
+        monthlyTransferBytes: {type: Number, value: 0},
+        monthlyCost: {type: Number, value: 0}
+      },
+      observers: [
+        '_accessKeysAddedOrRemoved(accessKeyRows.splices)',
+        '_myConnectionChanged(myConnection)'
+      ],
+      // Parameter `accessKey` has the format {
+      //   id: string,
+      //   placeholderName: string,
+      //   name: string,
+      //   accessUrl: string,
+      //   transferredBytes: number;
+      //   relativeTraffic: number;
+      // }
+      addAccessKey: function(accessKey) {
+        // TODO(fortuna): Restore loading animation.
+        // TODO(fortuna): Restore highlighting.
+        // Push to array using Polymer in order to propagate changes. See
+        // https://www.polymer-project.org/1.0/docs/devguide/model-data#array-mutation
+        this.push('accessKeyRows', accessKey);
+      },
+      removeAccessKey: function(accessKeyId) {
+        for (let ui in this.accessKeyRows) {
+          if (this.accessKeyRows[ui].id === accessKeyId) {
+            this.splice('accessKeyRows', ui, 1);
+            return;
+          }
+        }
+      },
+      _handleAddAccessKeyPressed: function() {
+        this.fire('AddAccessKeyRequested');
+        this.$.addAccessKeyHelpBubble.hide();
+      },
+      _handleNameInputKeyDown: function(event) {
+        const input = event.target;
+        if (event.key === 'Escape') {
+          const accessKey = event.model.item;
+          input.value = accessKey.name;
+          input.blur();
+        } else if (event.key === 'Enter') {
+          input.blur();
+        }
+      },
+      _handleNameInputBlur: function(event) {
+        const input = event.target;
+        const accessKey = event.model.item;
+        const displayName = input.value;
+        if (displayName === accessKey.name) {
+          return;
+        }
+        input.disabled = true;
+        this.fire('RenameAccessKeyRequested', {
+          accessKeyId: accessKey.id,
+          newName: displayName,
+          entry: {
+            commitName: () => {
+              accessKey.name = displayName;
+              input.disabled = false;
+            },
+            revertName: () => {
+              input.value = accessKey.name;
+              input.disabled = false;
+            }
+          }
+        });
+      },
+      _handleRenameAccessKeyPressed: function(event) {
+        const input = this.querySelectorAll('.access-key-row.access-key > input')[event.model.index];
+        // This need to be deferred because the closing menu messes up with the focus.
+        window.setTimeout(() => { input.focus() }, 0);
+      },
+      _handleConnectPressed: function() {
+        this.$.getConnectedDialog.open();
+        this.$.getConnectedHelpBubble.hide();
+      },
+      _handleShareCodePressed: function(event) {
+        const accessKey = event.model.item;
+        this.$.shareDialog.open(accessKey.accessUrl);
+      },
+      _handleRemoveAccessKeyPressed: function(e) {
+        const accessKey = e.model.item;
+        this.fire('RemoveAccessKeyRequested', {accessKeyId: accessKey.id});
+      },
+      _encodeURIComponent: encodeURIComponent,
+      setServerTransferredData(total_bytes) {
+        this.totalBytesTransferred = total_bytes
+      },
+      updateAccessKeyRow(accessKeyId, fields) {
+        if (accessKeyId === MY_CONNECTION_USER_ID) {
+          newAccessKeyRow = Object.assign({}, this.get('myConnection'), fields);
+          this.set('myConnection', newAccessKeyRow);
+        }
+        for (let ui in this.accessKeyRows) {
+          if (this.accessKeyRows[ui].id === accessKeyId) {
+            newAccessKeyRow = Object.assign({}, this.get(['accessKeyRows', ui]), fields);
+            this.set(['accessKeyRows', ui], newAccessKeyRow);
+            return;
+          }
+        }
+      },
+      _formatBytesTransferred: function(numBytes, emptyValue = '') {
+        if (numBytes === undefined || numBytes === null || numBytes === 0) {
+          // numBytes may not be set for manual servers, or may be 0 for
+          // unused access keys.
+          return emptyValue;
+        }
+        // Show 0 decimals for < 1MB, 1 decimal for >= 1MB, 2 decimals for >= 1GB.
+        let numDecimals = 0;
+        if (numBytes >= Math.pow(2, 30)) {
+          numDecimals = 2;
+        } else if (numBytes >= Math.pow(2, 20)) {
+          numDecimals = 1;
+        }
+
+        const bytesOptions = {unitSeparator: ' ', decimalPlaces: numDecimals};
+        // Use uppercase to convert kB to KB (kB incorrectly implies 1000B)
+        return this.bytes(numBytes, bytesOptions).toUpperCase();
+      },
+      _accessKeysAddedOrRemoved: function(changeRecord) {
+        // Check for myConnection and regular access keys.
+        let hasNonAdminAccessKeys = false;
+        for (let ui in this.accessKeyRows) {
+          if (this.accessKeyRows[ui].id === MY_CONNECTION_USER_ID) {
+            this.myConnection = this.accessKeyRows[ui];
+          } else {
+            hasNonAdminAccessKeys = true;
+          }
+        }
+        this.hasNonAdminAccessKeys = hasNonAdminAccessKeys;
+      },
+      _myConnectionChanged: function(myConnection) {
+        if (!myConnection) {
+          this.$.getConnectedHelpBubble.hide();
+        }
+      },
+      showGetConnectedHelpBubble: function() {
+        if (this.myConnection) {
+          this.$.addAccessKeyHelpBubble.hide();
+          this.showHelpBubbleOnce('getConnectedHelpBubble', 'getConnectedText');
+        }
+      },
+      closeGetConnectedHelpBubble: function() {
+        this.$.getConnectedHelpBubble.hide();
+      },
+      getS3InviteUrl: function(accessUrl) {
+        // If updating this URL, must also update it in outline-share-dialog.html.
+        // TODO: deduplicate and move this to the TypeScript app code.
+        return 'https://s3.amazonaws.com/outline-vpn/index.html?admin_embed#/invite/' +
+            encodeURIComponent(accessUrl);
+      },
+      // initHelpBubbles should be called after this outline-server-view
+      // is on the screen (e.g. selected in iron-pages).  If help bubbles
+      // are initialized before this point, setPosition will not work and
+      // they will appear in the top left of the view.
+      initHelpBubbles: function() {
+        this.showHelpBubbleOnce('addAccessKeyHelpBubble', 'addAccessKeyButton');
+      },
+      showHelpBubbleOnce: function(helpBubbleId, positionTargetId) {
+        const storageKey = helpBubbleId + '-dismissed';
+        if (window.localStorage.getItem(storageKey)) {
+          // Help bubble has already been dismissed, nothing to show.
+          return;
+        }
+        const helpBubble = this.$[helpBubbleId];
+        helpBubble.show(this.$[positionTargetId], 'up', 'right');
+        helpBubble.addEventListener('outline-help-bubble-dismissed', function(e) {
+          window.localStorage.setItem(storageKey, true);
+        }.bind(this));
+      },
+      showMetricsDialogForNewServer: function() {
+        this.$.metricsDialog.showMetricsOptInDialog();
+      },
+      showServerSettings: function() {
+        this.$.serverSettings.open(this.serverName, this.metricsEnabled);
+      },
+      closeServerSettings: function() {
+        this.$.serverSettings.close();
+      },
+      isRegularConnection: function(item) {
+        return item.id !== MY_CONNECTION_USER_ID;
+      },
+      closeGetConnectedDialog: function() {
+        const dialog = this.$.getConnectedDialog;
+        dialog.close();
+        // Reset the iframe's state, by replacing it with a newly constructed
+        // iframe using the same src.  Unfortunately the location.reload API
+        // does not work in our case due to this Chrome error:
+        // "Blocked a frame with origin "outline://web_app" from accessing a cross-origin frame."
+        const oldIframe = dialog.children[0];
+        dialog.removeChild(oldIframe);
+        const newIframe = document.createElement('iframe');
+        newIframe.src = oldIframe.src;
+        newIframe.className = oldIframe.className;
+        dialog.insertBefore(newIframe, dialog.children[0]);
+      }
+    });
+  </script>
+</dom-module>

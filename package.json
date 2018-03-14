@@ -1,0 +1,20 @@
+{
+  "name": "outline-server",
+  "devDependencies": {
+    "@types/jasmine": "^2.5.53",
+    "clang-format": "^1.2.2",
+    "husky": "^0.14.3",
+    "jasmine": "^2.6.0",
+    "tslint": "^5.9.1",
+    "typescript": "^2.6.2"
+  },
+  "scripts": {
+    "postinstall": "yarn run server_manager_install",
+    "server_manager_install": "cd src/server_manager && yarn install --modules-folder ../../node_modules && yarn bower install",
+    "clean": "rm -rf src/server_manager/bower_components/ src/{metrics_server,server_manager}/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts",
+    "shadowbox_install": "cd src/shadowbox && yarn install --modules-folder ../../node_modules --no-bin-links",
+    "metrics_server_install": "cd src/metrics_server && yarn install --modules-folder ../../node_modules",
+    "do": "bash ./scripts/do_action.sh",
+    "precommit": "for i in . src/server_manager/electron_app src/metrics_server src/shadowbox; do tslint -p $i --fix; done; git-clang-format"
+  }
+}

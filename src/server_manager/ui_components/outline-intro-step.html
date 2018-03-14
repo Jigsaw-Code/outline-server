@@ -1,0 +1,189 @@
+<!--
+  Copyright 2018 The Outline Authors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<link rel='import' href='../bower_components/polymer/polymer.html'>
+<link rel='import' href='../bower_components/paper-button/paper-button.html'>
+<link rel="import" href="./cloud-install-styles.html">
+<link rel="import" href="./style.css">
+
+<dom-module id="outline-intro-step">
+  <template>
+    <style include="cloud-install-styles"></style>
+    <style>
+      :host {
+        text-align: center;
+      }
+      hr {
+        position: absolute;
+        width: 1px;
+        height: 24px;
+        top: 309px;
+        left: 97px;
+        border: 1px;
+        height: 24px;
+        border-left: 1px solid #e1e1e1;
+      }
+      a {
+        cursor: pointer;
+      }
+      .card {
+        padding: 32px;
+        margin: 32px;
+        border-radius: 3px;
+        text-align: left;
+        color: white;
+        font-weight: normal;
+      }
+      .card paper-button {
+        width: 100%;
+        margin:32px 0 0 0;
+        background-color: white;
+      }
+      .card#digitalOcean {
+        background-color: #066CFF;
+      }
+      .card#digitalOcean paper-button {
+        color: #0069FF;
+      }
+      .card#manualServer {
+        background: linear-gradient(to right, #263238, #37474F);
+        padding-bottom: 38px;
+      }
+      .card#manualServer paper-button {
+        color: #263238;
+      }
+      .card .difficultyLevel {
+        font-weight: 400;
+        letter-spacing: .05em;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.54);
+      }
+      .card .cardLeftColumn {
+        display: inline-block;
+        vertical-align: top;
+        width: 200px;
+      }
+      .card .cardLeftColumn .title {
+        font-size: 20px;
+        margin-top: 22px;
+        line-height: 32px;
+      }
+      .card .cardLeftColumn img {
+        margin-top: 11px;
+      }
+      .card .cardLeftColumn .description {
+        line-height: 24px;
+        color: rgba(255, 255, 255, 0.54);
+        margin-top: 16px;
+      }
+      .card p {
+        margin: 16px 0 0 0;
+        color: rgba(255, 255, 255, 0.54);
+      }
+      .card .cardRightColumn {
+        display: inline-block;
+        vertical-align: top;
+        width: 200px;
+        line-height: 32px;
+        color: rgba(255, 255, 255, 0.54);
+        margin: 24px 0px 0px 50px;
+      }
+      .card .cardRightColumn ul {
+        margin-top: 0px;
+        color: rgba(255, 255, 255, 0.87);
+        padding-left: 16px;
+        /* NOTE: this URL must be relative to the ui_components sub dir,
+           unlike our <img src="..."> attributes */
+        list-style-image: url('../images/check.svg');
+      }
+      #existingAccount {
+        color: rgba(255, 255, 255, 0.54);
+      }
+      #existingAccount a {
+        color: rgba(255, 255, 255, 0.87);
+      }
+      #alreadyHaveAServer {
+        text-align: center;
+      }
+    </style>
+    <div class='walkthrough'>
+      <h3>You need a server to set up Outline.  If you don't have a server, we recommend creating an account with DigitalOcean to secure one.</h3>
+    </div>
+
+    <div id='digitalOcean' class='card'>
+      <div class='difficultyLevel'>RECOMMENDED</div>
+      <div class='cardLeftColumn'>
+        <div class='title'>Set up Outline on DigitalOcean</div>
+        <img src="images/digital_ocean_logo.svg">
+      </div>
+      <div class='cardRightColumn'>
+        <ul>
+          <li>Easiest setup process</li>
+          <li>Only $5 a month</li>
+          <li>500 GB of data transfer</li>
+          <li>Cancel at anytime</li>
+        </ul>
+      </div>
+      <a href='{{accountCreationUrl}}'><paper-button id="createDigitalOceanAccountButton" class="primary">Create an account</paper-button></a>
+      <p style="text-align: center;">
+        <span id="existingAccount">I have an account, <a href='{{oauthUrl}}'>sign me in</a></span>
+      </p>
+    </div>  <!-- end of #digitalOcean -->
+
+    <div id='alreadyHaveAServer'>Already have a server?</div>
+
+    <div id='manualServer' class='card'>
+      <div class='difficultyLevel'>ADVANCED</div>
+      <div class='cardLeftColumn'>
+        <div class='title'>Set up Outline anywhere</div>
+        <div class='description'>Outline can run on all major cloud providers. You can also deploy it on your own infrastructure.</div>
+      </div>
+      <div class='cardRightColumn'>
+        <div>Tested on:</div>
+        <ul>
+          <li>Amazon EC2</li>
+          <li>Google Compute Engine</li>
+          <li>Vultr</li>
+          <li>Linode</li>
+          <li>Liquid Web</li>
+        </ul>
+      </div>
+      <paper-button on-tap='manualServerTapped'>Get started</paper-button>
+    </div>   <!-- end of #manualServer -->
+  </template>
+  <script>
+    Polymer({
+      is: 'outline-intro-step',
+      properties: {
+        oauthUrl: String,
+        referralCode: String,
+        accountCreationUrl: {
+          type: String,
+          computed: '_makeAccountCreationUrl(referralCode)'
+        }
+      },
+      _makeAccountCreationUrl: function () {
+        let url = 'https://cloud.digitalocean.com/registrations/new';
+        if (this.referralCode) {
+          url += `?refcode=${encodeURIComponent(this.referralCode)}`;
+        }
+        return url;
+      },
+      manualServerTapped: function() {
+        this.fire('OpenManualServerEntry');
+      }
+    });
+  </script>
+</dom-module>

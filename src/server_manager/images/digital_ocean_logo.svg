@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 47 (45396) - http://www.bohemiancoding.com/sketch -->
+    <title>DO_Logo_icon_white</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Desktop" transform="translate(-294.000000, -585.000000)" fill="#FFFFFE">
+            <g id="DO_Logo_icon_white" transform="translate(294.000000, 585.000000)">
+                <g id="Group-3">
+                    <path d="M11.959322,23.9288071 L11.959322,19.291519 C16.8677966,19.291519 20.6779661,14.4237224 18.7932203,9.25762071 C18.1016949,7.3457563 16.5694915,5.81355291 14.6576271,5.12202748 C9.49152542,3.25084104 4.62372881,7.04745121 4.62372881,11.9559258 L0,11.9559258 C0,4.13219698 7.56610169,-1.96949794 15.7694915,0.593213925 C19.3491525,1.71863765 22.2101695,4.56609528 23.3220339,8.1457563 C25.8847458,16.3627055 19.7966102,23.9288071 11.959322,23.9288071" id="Fill-1"></path>
+                </g>
+                <polygon id="Fill-4" points="7 19 12 19 12 14 7 14"></polygon>
+                <polygon id="Fill-5" points="4 22 7 22 7 19 4 19"></polygon>
+                <polygon id="Fill-6" points="1 19 4 19 4 16 1 16"></polygon>
+            </g>
+        </g>
+    </g>
+</svg>

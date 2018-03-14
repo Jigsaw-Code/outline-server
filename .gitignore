@@ -1,0 +1,8 @@
+.DS_Store
+**/bower_components
+/build
+/node_modules/
+/src/metrics_server/node_modules/
+/src/server_manager/node_modules/
+/src/server_manager/install_scripts/do_install_script.ts
+yarn-error.log
