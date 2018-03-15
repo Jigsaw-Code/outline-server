@@ -152,34 +152,26 @@ describe('getHourlyServerMetricsReport', () => {
           done();
         });
   });
-  it('Does not propagate location service connection errors', (done) => {
+  it('Does not propagate location service connection errors', () => {
     const lastHourUserStats = new Map();
     lastHourUserStats.set('some_user_id', getPerUserStats(['127.0.0.1']));
-    metrics
+    return metrics
         .getHourlyServerMetricsReport(
             SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
             new FailConnectionIpLocationService())
         .then((report) => {
           expect(report.userReports.length).toEqual(1);
-          done();
-        })
-        .catch((e) => {
-          done.fail(`'getHourlyServerMetricsReport promise was rejected: ${e}`);
         });
   });
-  it('Does not propagate location service promise rejection', (done) => {
+  it('Does not propagate location service promise rejection', () => {
     const lastHourUserStats = new Map();
     lastHourUserStats.set('some_user_id', getPerUserStats(['127.0.0.1']));
-    metrics
+    return metrics
         .getHourlyServerMetricsReport(
             SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
             new AlwaysRejectIpLocationService())
         .then((report) => {
           expect(report.userReports.length).toEqual(1);
-          done();
-        })
-        .catch((e) => {
-          done.fail(`'getHourlyServerMetricsReport promise was rejected: ${e}`);
         });
   });
 });
@@ -213,6 +205,8 @@ class FailConnectionIpLocationService implements ip_util.IpLocationService {
         response.on('end', () => {
           fulfill('SHOULD_NOT_HAPPEN');
         });
+      }).on('error', (e) => {
+        reject(new Error(`Failed to contact location service: ${e}`));
       });
     });
     return countryPromise;
