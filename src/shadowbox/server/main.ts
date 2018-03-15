@@ -17,9 +17,9 @@ import * as path from 'path';
 import * as process from 'process';
 import * as restify from 'restify';
 
+import * as ip_location from '../infrastructure/ip_location';
 import {FilesystemTextFile} from '../infrastructure/filesystem_text_file';
 
-import * as ip_util from './ip_util';
 import {LibevShadowsocksServer} from './libev_shadowsocks_server';
 import {createManagedAccessKeyRepository} from './managed_user';
 import {ShadowsocksManagerService} from './manager_service';
@@ -53,7 +53,7 @@ function main() {
   const statsFilename = getPersistentFilename('shadowbox_stats.json');
   const stats = new metrics.PersistentStats(statsFilename);
   const ipLocationService =
-      new ip_util.CachedIpLocationService(new ip_util.FreegeoIpLocationService());
+      new ip_location.CachedIpLocationService(new ip_location.FreegeoIpLocationService());
   stats.onLastHourMetricsReady((startDatetime, endDatetime, lastHourUserStats) => {
     if (serverConfig.getMetricsEnabled()) {
       metrics
