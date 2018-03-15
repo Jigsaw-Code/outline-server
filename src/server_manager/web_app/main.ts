@@ -32,7 +32,8 @@ function ensureString(queryParam: string | string[]): string | null {
   if (typeof(queryParam) === 'string') {
     return queryParam;
   } else {
-    return queryParam[-1];
+    // We pick the last one if the parameter appears multiple times.
+    return queryParam[queryParam.length - 1];
   }
 }
 
