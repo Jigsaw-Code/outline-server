@@ -25,7 +25,7 @@ import {ManualServerRepository} from './manual_server';
 
 const DEFAULT_SENTRY_DSN = 'https://533e56d1b2d64314bd6092a574e6d0f1@sentry.io/215496';
 
-function ensureString(queryParam: string | string[]): string {
+function ensureString(queryParam: string|string[]): string {
   if (Array.isArray(queryParam)) {
     // We pick the last one if the parameter appears multiple times.
     return queryParam[queryParam.length - 1];
