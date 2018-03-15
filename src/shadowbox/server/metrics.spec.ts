@@ -162,7 +162,8 @@ describe('getHourlyServerMetricsReport', () => {
         .then((report) => {
           expect(report.userReports.length).toEqual(1);
           done();
-        }).catch((e) => {
+        })
+        .catch((e) => {
           done.fail(`'getHourlyServerMetricsReport promise was rejected: ${e}`);
         });
   });
@@ -176,7 +177,8 @@ describe('getHourlyServerMetricsReport', () => {
         .then((report) => {
           expect(report.userReports.length).toEqual(1);
           done();
-        }).catch((e) => {
+        })
+        .catch((e) => {
           done.fail(`'getHourlyServerMetricsReport promise was rejected: ${e}`);
         });
   });
@@ -204,13 +206,6 @@ class HardcodedIpLocationService implements ip_util.IpLocationService {
   }
 }
 
-class AlwaysRejectIpLocationService implements ip_util.IpLocationService {
-  countryForIp(ipAddress: string): Promise<string> {
-    return Promise.reject(
-        new Error(`This IpLocationService always rejects. ipAddress: ${ipAddress}`));
-  }
-}
-
 class FailConnectionIpLocationService implements ip_util.IpLocationService {
   countryForIp(ipAddress: string): Promise<string> {
     const countryPromise = new Promise<string>((fulfill, reject) => {
@@ -221,5 +216,12 @@ class FailConnectionIpLocationService implements ip_util.IpLocationService {
       });
     });
     return countryPromise;
+  }
+}
+
+class AlwaysRejectIpLocationService implements ip_util.IpLocationService {
+  countryForIp(ipAddress: string): Promise<string> {
+    return Promise.reject(
+        new Error(`This IpLocationService always rejects. ipAddress: ${ipAddress}`));
   }
 }
