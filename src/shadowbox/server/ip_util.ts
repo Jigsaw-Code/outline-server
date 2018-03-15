@@ -35,6 +35,7 @@ export function anonymizeIp(ip: string): string {
 
 export interface IpLocationService { countryForIp(ipAddress: string): Promise<string>; }
 
+// An IpLocationService that uses the freegeoip.io service.
 export class FreegeoIpLocationService implements IpLocationService {
   countryForIp(ipAddress: string): Promise<string> {
     const countryPromise = new Promise<string>((fulfill, reject) => {
@@ -57,7 +58,7 @@ export class FreegeoIpLocationService implements IpLocationService {
                       fulfill('ZZ');
                     }
                   } catch (e) {
-                    reject(new Error(`Error loading country from reponse: ${e}`));
+                    reject(new Error(`Error loading country from freegeoip.io reponse`));
                   }
                 });
               })
@@ -69,7 +70,9 @@ export class FreegeoIpLocationService implements IpLocationService {
   }
 }
 
+// An IpLocationService that caches the responses of another IpLocationService.
 export class CachedIpLocationService implements IpLocationService {
+  // TODO: Make this cache bounded in size. Possibly use lru-cache.
   private countryCache: Map<string, Promise<string>>;
 
   constructor(private locationService: IpLocationService) {
