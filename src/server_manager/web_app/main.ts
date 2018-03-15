@@ -25,14 +25,25 @@ import {ManualServerRepository} from './manual_server';
 
 const DEFAULT_SENTRY_DSN = 'https://533e56d1b2d64314bd6092a574e6d0f1@sentry.io/215496';
 
+function ensureString(queryParam: string | string[]): string | null {
+  if (!queryParam) {
+    return null;
+  }
+  if (typeof(queryParam) === 'string') {
+    return queryParam;
+  } else {
+    return queryParam[-1];
+  }
+}
+
 document.addEventListener('WebComponentsReady', () => {
   // Parse URL query params.
   const queryParams = url.parse(document.URL, true).query;
-  const debugMode = queryParams.outlineDebugMode === 'true';
-  const metricsUrl = queryParams.metricsUrl;
-  const shadowboxImage = queryParams.image;
-  const version = queryParams.version;
-  const sentryDsn = queryParams.sentryDsn || DEFAULT_SENTRY_DSN;
+  const debugMode = ensureString(queryParams.outlineDebugMode) === 'true';
+  const metricsUrl = ensureString(queryParams.metricsUrl);
+  const shadowboxImage = ensureString(queryParams.image);
+  const version = ensureString(queryParams.version);
+  const sentryDsn = ensureString(queryParams.sentryDsn) || DEFAULT_SENTRY_DSN;
 
   // Initialize error reporting.
   SentryErrorReporter.init(sentryDsn, version);
