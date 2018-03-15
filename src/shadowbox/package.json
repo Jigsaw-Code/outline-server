@@ -18,7 +18,7 @@
     "uuid": "^3.1.0"
   },
   "devDependencies": {
-    "@types/node": "^7.0.16",
+    "@types/node": "^8",
     "@types/randomstring": "^1.1.6",
     "@types/restify": "^2.0.41"
   }
