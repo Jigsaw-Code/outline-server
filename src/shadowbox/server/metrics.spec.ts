@@ -161,6 +161,8 @@ describe('getHourlyServerMetricsReport', () => {
             new FailConnectionIpLocationService())
         .then((report) => {
           expect(report.userReports.length).toEqual(1);
+          expect(report.userReports[0].countries.length).toEqual(1);
+          expect(report.userReports[0].countries[0]).toEqual('ERROR');
         });
   });
   it('Does not propagate location service promise rejection', () => {
@@ -172,6 +174,8 @@ describe('getHourlyServerMetricsReport', () => {
             new AlwaysRejectIpLocationService())
         .then((report) => {
           expect(report.userReports.length).toEqual(1);
+          expect(report.userReports[0].countries.length).toEqual(1);
+          expect(report.userReports[0].countries[0]).toEqual('ERROR');
         });
   });
 });
