@@ -12,8 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as https from 'https';
+
+import {PerUserStats} from '../model/metrics';
+
+import * as ip_util from './ip_util';
 import * as metrics from './metrics';
-import { PerUserStats } from '../model/metrics';
 
 const SERVER_ID = 'serverId';
 const USER_ID_1 = 'userId1';
@@ -31,45 +35,51 @@ describe('getHourlyServerMetricsReport', () => {
     const lastHourUserStats = new Map();
     lastHourUserStats.set(USER_ID_1, getPerUserStats([IP_ADDRESS_IN_US_1]));
 
-    metrics.getHourlyServerMetricsReport(
-        SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats, stubIpLookup)
-    .then((report) => {
-      expect(report.userReports.length).toEqual(1);
-      expect(report.userReports[0].countries.length).toEqual(1);
-      expect(report.userReports[0].countries[0]).toEqual('US');
-      done();
-    });
+    metrics
+        .getHourlyServerMetricsReport(
+            SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
+            new HardcodedIpLocationService())
+        .then((report) => {
+          expect(report.userReports.length).toEqual(1);
+          expect(report.userReports[0].countries.length).toEqual(1);
+          expect(report.userReports[0].countries[0]).toEqual('US');
+          done();
+        });
   });
   it('Supports multiple countries per user report', (done) => {
     const lastHourUserStats = new Map();
     lastHourUserStats.set(USER_ID_1, getPerUserStats([IP_ADDRESS_IN_US_1, IP_ADDRESS_IN_GB]));
     lastHourUserStats.set(USER_ID_2, getPerUserStats([IP_ADDRESS_IN_US_1]));
 
-    metrics.getHourlyServerMetricsReport(
-        SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats, stubIpLookup)
-    .then((report) => {
-      expect(report.userReports.length).toEqual(2);
-      expect(report.userReports[0].countries.length).toEqual(2);
-      expect(report.userReports[0].countries[0]).toEqual('US');
-      expect(report.userReports[0].countries[1]).toEqual('GB');
-      expect(report.userReports[1].countries.length).toEqual(1);
-      expect(report.userReports[1].countries[0]).toEqual('US');
-      done();
-    });
+    metrics
+        .getHourlyServerMetricsReport(
+            SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
+            new HardcodedIpLocationService())
+        .then((report) => {
+          expect(report.userReports.length).toEqual(2);
+          expect(report.userReports[0].countries.length).toEqual(2);
+          expect(report.userReports[0].countries[0]).toEqual('US');
+          expect(report.userReports[0].countries[1]).toEqual('GB');
+          expect(report.userReports[1].countries.length).toEqual(1);
+          expect(report.userReports[1].countries[0]).toEqual('US');
+          done();
+        });
   });
   it('Does not include duplicate countries', (done) => {
     const lastHourUserStats = new Map();
     lastHourUserStats.set(USER_ID_1,
         getPerUserStats([IP_ADDRESS_IN_US_1, IP_ADDRESS_IN_US_2]));
 
-    metrics.getHourlyServerMetricsReport(
-        SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats, stubIpLookup)
-    .then((report) => {
-      expect(report.userReports.length).toEqual(1);
-      expect(report.userReports[0].countries.length).toEqual(1);
-      expect(report.userReports[0].countries[0]).toEqual('US');
-      done();
-    });
+    metrics
+        .getHourlyServerMetricsReport(
+            SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
+            new HardcodedIpLocationService())
+        .then((report) => {
+          expect(report.userReports.length).toEqual(1);
+          expect(report.userReports[0].countries.length).toEqual(1);
+          expect(report.userReports[0].countries[0]).toEqual('US');
+          done();
+        });
   });
   it('userReports matches input size for unsanctioned countries', (done) => {
     const lastHourUserStats = new Map();
@@ -77,16 +87,18 @@ describe('getHourlyServerMetricsReport', () => {
         getPerUserStats([IP_ADDRESS_IN_US_1]));
     lastHourUserStats.set(USER_ID_2, getPerUserStats([IP_ADDRESS_IN_US_2]));
 
-    metrics.getHourlyServerMetricsReport(
-        SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats, stubIpLookup)
-    .then((report) => {
-      expect(report.userReports.length).toEqual(2);
-      expect(report.userReports[0].countries.length).toEqual(1);
-      expect(report.userReports[0].countries[0]).toEqual('US');
-      expect(report.userReports[1].countries.length).toEqual(1);
-      expect(report.userReports[1].countries[0]).toEqual('US');
-      done();
-    });
+    metrics
+        .getHourlyServerMetricsReport(
+            SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
+            new HardcodedIpLocationService())
+        .then((report) => {
+          expect(report.userReports.length).toEqual(2);
+          expect(report.userReports[0].countries.length).toEqual(1);
+          expect(report.userReports[0].countries[0]).toEqual('US');
+          expect(report.userReports[1].countries.length).toEqual(1);
+          expect(report.userReports[1].countries[0]).toEqual('US');
+          done();
+        });
   });
   it('Filters sanctioned countries from userReports', (done) => {
     const lastHourUserStats = new Map();
@@ -94,16 +106,18 @@ describe('getHourlyServerMetricsReport', () => {
         getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA, IP_ADDRESS_IN_US_1]));
     lastHourUserStats.set(USER_ID_2, getPerUserStats([IP_ADDRESS_IN_US_1]));
 
-    metrics.getHourlyServerMetricsReport(
-        SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats, stubIpLookup)
-    .then((report) => {
-      expect(report.userReports.length).toEqual(2);
-      expect(report.userReports[0].countries.length).toEqual(1);
-      expect(report.userReports[0].countries[0]).toEqual('US');
-      expect(report.userReports[1].countries.length).toEqual(1);
-      expect(report.userReports[1].countries[0]).toEqual('US');
-      done();
-    });
+    metrics
+        .getHourlyServerMetricsReport(
+            SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
+            new HardcodedIpLocationService())
+        .then((report) => {
+          expect(report.userReports.length).toEqual(2);
+          expect(report.userReports[0].countries.length).toEqual(1);
+          expect(report.userReports[0].countries[0]).toEqual('US');
+          expect(report.userReports[1].countries.length).toEqual(1);
+          expect(report.userReports[1].countries[0]).toEqual('US');
+          done();
+        });
   });
   it('Removes userReports that contain only sanctioned countries', (done) => {
     const lastHourUserStats = new Map();
@@ -111,14 +125,16 @@ describe('getHourlyServerMetricsReport', () => {
         getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA, IP_ADDRESS_IN_CUBA]));
     lastHourUserStats.set(USER_ID_2, getPerUserStats([IP_ADDRESS_IN_US_1]));
 
-    metrics.getHourlyServerMetricsReport(
-        SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats, stubIpLookup)
-    .then((report) => {
-      expect(report.userReports.length).toEqual(1);
-      expect(report.userReports[0].countries.length).toEqual(1);
-      expect(report.userReports[0].countries[0]).toEqual('US');
-      done();
-    });
+    metrics
+        .getHourlyServerMetricsReport(
+            SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
+            new HardcodedIpLocationService())
+        .then((report) => {
+          expect(report.userReports.length).toEqual(1);
+          expect(report.userReports[0].countries.length).toEqual(1);
+          expect(report.userReports[0].countries[0]).toEqual('US');
+          done();
+        });
   });
   it('Does not generate any report if all users in sanctioned countries', (done) => {
     const lastHourUserStats = new Map();
@@ -127,12 +143,40 @@ describe('getHourlyServerMetricsReport', () => {
     lastHourUserStats.set(USER_ID_2,
         getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA]));
 
-    metrics.getHourlyServerMetricsReport(
-        SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats, stubIpLookup)
-    .then((report) => {
-      expect(report).toBeNull();
-      done();
-    });
+    metrics
+        .getHourlyServerMetricsReport(
+            SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
+            new HardcodedIpLocationService())
+        .then((report) => {
+          expect(report).toBeNull();
+          done();
+        });
+  });
+  it('Does not propagate location service connection errors', () => {
+    const lastHourUserStats = new Map();
+    lastHourUserStats.set('some_user_id', getPerUserStats(['127.0.0.1']));
+    return metrics
+        .getHourlyServerMetricsReport(
+            SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
+            new FailConnectionIpLocationService())
+        .then((report) => {
+          expect(report.userReports.length).toEqual(1);
+          expect(report.userReports[0].countries.length).toEqual(1);
+          expect(report.userReports[0].countries[0]).toEqual('ERROR');
+        });
+  });
+  it('Does not propagate location service promise rejection', () => {
+    const lastHourUserStats = new Map();
+    lastHourUserStats.set('some_user_id', getPerUserStats(['127.0.0.1']));
+    return metrics
+        .getHourlyServerMetricsReport(
+            SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
+            new AlwaysRejectIpLocationService())
+        .then((report) => {
+          expect(report.userReports.length).toEqual(1);
+          expect(report.userReports[0].countries.length).toEqual(1);
+          expect(report.userReports[0].countries[0]).toEqual('ERROR');
+        });
   });
 });
 
@@ -143,16 +187,39 @@ function getPerUserStats(ipAddresses: string[]): PerUserStats {
   };
 }
 
-function stubIpLookup(ipAddress: string) {
-  if (ipAddress === IP_ADDRESS_IN_US_1 ||
-      ipAddress === IP_ADDRESS_IN_US_2) {
-    return Promise.resolve('US');
-  } else if (ipAddress === IP_ADDRESS_IN_NORTH_KOREA) {
-    return Promise.resolve('KP');
-  } else if (ipAddress === IP_ADDRESS_IN_CUBA) {
-    return Promise.resolve('CU');
-  } else if (ipAddress === IP_ADDRESS_IN_GB) {
-    return Promise.resolve('GB');
+class HardcodedIpLocationService implements ip_util.IpLocationService {
+  countryForIp(ipAddress: string) {
+    if (ipAddress === IP_ADDRESS_IN_US_1 || ipAddress === IP_ADDRESS_IN_US_2) {
+      return Promise.resolve('US');
+    } else if (ipAddress === IP_ADDRESS_IN_NORTH_KOREA) {
+      return Promise.resolve('KP');
+    } else if (ipAddress === IP_ADDRESS_IN_CUBA) {
+      return Promise.resolve('CU');
+    } else if (ipAddress === IP_ADDRESS_IN_GB) {
+      return Promise.resolve('GB');
+    }
+    return Promise.reject(new Error('IP address not found: ' + ipAddress));
   }
-  return Promise.reject(new Error('IP address not found: ' + ipAddress));
+}
+
+class FailConnectionIpLocationService implements ip_util.IpLocationService {
+  countryForIp(ipAddress: string): Promise<string> {
+    const countryPromise = new Promise<string>((fulfill, reject) => {
+      https.get('https://0.0.0.0', (response) => {
+        response.on('end', () => {
+          fulfill('SHOULD_NOT_HAPPEN');
+        });
+      }).on('error', (e) => {
+        reject(new Error(`Failed to contact location service: ${e}`));
+      });
+    });
+    return countryPromise;
+  }
+}
+
+class AlwaysRejectIpLocationService implements ip_util.IpLocationService {
+  countryForIp(ipAddress: string): Promise<string> {
+    return Promise.reject(
+        new Error(`This IpLocationService always rejects. ipAddress: ${ipAddress}`));
+  }
 }

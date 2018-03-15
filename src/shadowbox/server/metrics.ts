@@ -280,11 +280,9 @@ class ConnectionStats {
 }
 
 export function getHourlyServerMetricsReport(
-    serverId: string,
-    startDatetime: Date,
-    endDatetime: Date,
+    serverId: string, startDatetime: Date, endDatetime: Date,
     lastHourUserStats: Map<AccessKeyId, PerUserStats>,
-    lookupCountry: ((ip: string) => Promise<string>) = ip_util.lookupCountry): Promise<HourlyServerMetricsReport|null> {
+    ipLocationService: ip_util.IpLocationService): Promise<HourlyServerMetricsReport|null> {
   if (lastHourUserStats.size === 0) {
     // Stats are empty, no need to post a report
     return Promise.resolve(null);
@@ -292,7 +290,7 @@ export function getHourlyServerMetricsReport(
   // convert lastHourUserStats to an array HourlyUserMetricsReport
   const userReportPromises = [];
   lastHourUserStats.forEach((perUserStats, userId) => {
-    userReportPromises.push(getHourlyUserMetricsReport(userId, perUserStats, lookupCountry));
+    userReportPromises.push(getHourlyUserMetricsReport(userId, perUserStats, ipLocationService));
   });
   return Promise.all(userReportPromises).then((userReports: HourlyUserMetricsReport[]) => {
     // Remove any userReports containing sanctioned countries, and return
@@ -356,12 +354,15 @@ interface HourlyUserMetricsReport {
 }
 
 function getHourlyUserMetricsReport(
-    userId: AccessKeyId,
-    perUserStats: PerUserStats,
-    lookupCountry: ((ip: string) => Promise<string>) = ip_util.lookupCountry): Promise<HourlyUserMetricsReport> {
+    userId: AccessKeyId, perUserStats: PerUserStats,
+    ipLocationService: ip_util.IpLocationService): Promise<HourlyUserMetricsReport> {
   const countryPromises = [];
   for (const ip of perUserStats.anonymizedIpAddresses) {
-    countryPromises.push(lookupCountry(ip));
+    const countryPromise = ipLocationService.countryForIp(ip).catch((e) => {
+      console.warn('Failed countryForIp call: ', e);
+      return 'ERROR';
+    });
+    countryPromises.push(countryPromise);
   }
   return Promise.all(countryPromises).then((countries: string[]) => {
     return {
