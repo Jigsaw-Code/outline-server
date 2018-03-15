@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import * as ipaddr from 'ipaddr.js';
-import * as https from 'https';
 
 // Returns anonymized IP address, by setting the last octet to 0 for ipv4,
 // or setting the last 80 bits to 0 for ipv6.
@@ -30,61 +29,5 @@ export function anonymizeIp(ip: string): string {
       addr.parts[i] = 0;
     }
     return addr.toNormalizedString();
-  }
-}
-
-export interface IpLocationService { countryForIp(ipAddress: string): Promise<string>; }
-
-// An IpLocationService that uses the freegeoip.io service.
-export class FreegeoIpLocationService implements IpLocationService {
-  countryForIp(ipAddress: string): Promise<string> {
-    const countryPromise = new Promise<string>((fulfill, reject) => {
-      const options = {host: 'freegeoip.io', path: '/json/' + ipAddress};
-      https
-          .get(
-              options,
-              (response) => {
-                let body = '';
-                response.on('data', (data) => {
-                  body += data;
-                });
-                response.on('end', () => {
-                  try {
-                    const jsonResponse = JSON.parse(body);
-                    if (jsonResponse.country_code) {
-                      fulfill(jsonResponse.country_code);
-                    } else {
-                      // ZZ is user-assigned and used by CLDR for "Uknown" regions.
-                      fulfill('ZZ');
-                    }
-                  } catch (e) {
-                    reject(new Error(`Error loading country from freegeoip.io reponse`));
-                  }
-                });
-              })
-          .on('error', (e) => {
-            reject(new Error(`Failed to contact location service: ${e}`));
-          });
-    });
-    return countryPromise;
-  }
-}
-
-// An IpLocationService that caches the responses of another IpLocationService.
-export class CachedIpLocationService implements IpLocationService {
-  // TODO: Make this cache bounded in size. Possibly use lru-cache.
-  private countryCache: Map<string, Promise<string>>;
-
-  constructor(private locationService: IpLocationService) {
-    this.countryCache = new Map<string, Promise<string>>();
-  }
-
-  countryForIp(ipAddress: string): Promise<string> {
-    if (this.countryCache.has(ipAddress)) {
-      return this.countryCache.get(ipAddress);
-    }
-    const promise = this.locationService.countryForIp(ipAddress);
-    this.countryCache.set(ipAddress, promise);
-    return promise;
   }
 }

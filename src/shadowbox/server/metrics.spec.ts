@@ -14,9 +14,9 @@
 
 import * as https from 'https';
 
+import * as ip_location from '../infrastructure/ip_location';
 import {PerUserStats} from '../model/metrics';
 
-import * as ip_util from './ip_util';
 import * as metrics from './metrics';
 
 const SERVER_ID = 'serverId';
@@ -152,10 +152,10 @@ describe('getHourlyServerMetricsReport', () => {
           done();
         });
   });
-  it('Does not propagate location service connection errors', () => {
+  it('Does not propagate location service connection errors', (done) => {
     const lastHourUserStats = new Map();
     lastHourUserStats.set('some_user_id', getPerUserStats(['127.0.0.1']));
-    return metrics
+    metrics
         .getHourlyServerMetricsReport(
             SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
             new FailConnectionIpLocationService())
@@ -163,9 +163,13 @@ describe('getHourlyServerMetricsReport', () => {
           expect(report.userReports.length).toEqual(1);
           expect(report.userReports[0].countries.length).toEqual(1);
           expect(report.userReports[0].countries[0]).toEqual('ERROR');
+          done();
+        }).catch((e) => {
+          fail(e);
+          done();
         });
   });
-  it('Does not propagate location service promise rejection', () => {
+  it('Does not propagate location service promise rejection', (done) => {
     const lastHourUserStats = new Map();
     lastHourUserStats.set('some_user_id', getPerUserStats(['127.0.0.1']));
     return metrics
@@ -176,6 +180,10 @@ describe('getHourlyServerMetricsReport', () => {
           expect(report.userReports.length).toEqual(1);
           expect(report.userReports[0].countries.length).toEqual(1);
           expect(report.userReports[0].countries[0]).toEqual('ERROR');
+          done();
+        }).catch((e) => {
+          fail(e);
+          done();
         });
   });
 });
@@ -187,7 +195,7 @@ function getPerUserStats(ipAddresses: string[]): PerUserStats {
   };
 }
 
-class HardcodedIpLocationService implements ip_util.IpLocationService {
+class HardcodedIpLocationService implements ip_location.IpLocationService {
   countryForIp(ipAddress: string) {
     if (ipAddress === IP_ADDRESS_IN_US_1 || ipAddress === IP_ADDRESS_IN_US_2) {
       return Promise.resolve('US');
@@ -202,7 +210,7 @@ class HardcodedIpLocationService implements ip_util.IpLocationService {
   }
 }
 
-class FailConnectionIpLocationService implements ip_util.IpLocationService {
+class FailConnectionIpLocationService implements ip_location.IpLocationService {
   countryForIp(ipAddress: string): Promise<string> {
     const countryPromise = new Promise<string>((fulfill, reject) => {
       https.get('https://0.0.0.0', (response) => {
@@ -217,7 +225,7 @@ class FailConnectionIpLocationService implements ip_util.IpLocationService {
   }
 }
 
-class AlwaysRejectIpLocationService implements ip_util.IpLocationService {
+class AlwaysRejectIpLocationService implements ip_location.IpLocationService {
   countryForIp(ipAddress: string): Promise<string> {
     return Promise.reject(
         new Error(`This IpLocationService always rejects. ipAddress: ${ipAddress}`));

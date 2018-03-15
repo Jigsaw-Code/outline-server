@@ -12,14 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as ip_util from './ip_util';
-import * as file_read from '../infrastructure/file_read';
-import { AccessKeyId } from '../model/access_key';
-import { Stats, DataUsageByUser, PerUserStats, LastHourMetricsReadyCallback } from '../model/metrics';
 import * as events from 'events';
 import * as fs from 'fs';
-import * as follow_redirects from '../infrastructure/follow_redirects';
 import * as url from 'url';
+
+import * as file_read from '../infrastructure/file_read';
+import * as follow_redirects from '../infrastructure/follow_redirects';
+import * as ip_location from '../infrastructure/ip_location';
+import {AccessKeyId} from '../model/access_key';
+import {DataUsageByUser, LastHourMetricsReadyCallback, PerUserStats, Stats} from '../model/metrics';
+
+import * as ip_util from './ip_util';
 
 const MS_PER_HOUR = 60 * 60 * 1000;
 
@@ -282,7 +285,7 @@ class ConnectionStats {
 export function getHourlyServerMetricsReport(
     serverId: string, startDatetime: Date, endDatetime: Date,
     lastHourUserStats: Map<AccessKeyId, PerUserStats>,
-    ipLocationService: ip_util.IpLocationService): Promise<HourlyServerMetricsReport|null> {
+    ipLocationService: ip_location.IpLocationService): Promise<HourlyServerMetricsReport|null> {
   if (lastHourUserStats.size === 0) {
     // Stats are empty, no need to post a report
     return Promise.resolve(null);
@@ -355,7 +358,7 @@ interface HourlyUserMetricsReport {
 
 function getHourlyUserMetricsReport(
     userId: AccessKeyId, perUserStats: PerUserStats,
-    ipLocationService: ip_util.IpLocationService): Promise<HourlyUserMetricsReport> {
+    ipLocationService: ip_location.IpLocationService): Promise<HourlyUserMetricsReport> {
   const countryPromises = [];
   for (const ip of perUserStats.anonymizedIpAddresses) {
     const countryPromise = ipLocationService.countryForIp(ip).catch((e) => {
