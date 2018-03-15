@@ -165,8 +165,7 @@ describe('getHourlyServerMetricsReport', () => {
           expect(report.userReports[0].countries[0]).toEqual('ERROR');
           done();
         }).catch((e) => {
-          fail(e);
-          done();
+          done.fail(e);
         });
   });
   it('Does not propagate location service promise rejection', (done) => {
@@ -182,8 +181,7 @@ describe('getHourlyServerMetricsReport', () => {
           expect(report.userReports[0].countries[0]).toEqual('ERROR');
           done();
         }).catch((e) => {
-          fail(e);
-          done();
+          done.fail(e);
         });
   });
 });
