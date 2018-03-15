@@ -17,8 +17,8 @@ import * as path from 'path';
 import * as process from 'process';
 import * as restify from 'restify';
 
-import * as ip_location from '../infrastructure/ip_location';
 import {FilesystemTextFile} from '../infrastructure/filesystem_text_file';
+import * as ip_location from '../infrastructure/ip_location';
 
 import {LibevShadowsocksServer} from './libev_shadowsocks_server';
 import {createManagedAccessKeyRepository} from './managed_user';

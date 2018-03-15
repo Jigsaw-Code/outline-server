@@ -14,9 +14,9 @@
 
 import * as https from 'https';
 
+import * as ip_location from '../infrastructure/ip_location';
 import {PerUserStats} from '../model/metrics';
 
-import * as ip_location from '../infrastructure/ip_location';
 import * as metrics from './metrics';
 
 const SERVER_ID = 'serverId';

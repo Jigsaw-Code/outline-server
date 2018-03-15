@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as ip_util from './ip_util';
-import * as ip_location from '../infrastructure/ip_location';
-import * as file_read from '../infrastructure/file_read';
-import { AccessKeyId } from '../model/access_key';
-import { Stats, DataUsageByUser, PerUserStats, LastHourMetricsReadyCallback } from '../model/metrics';
 import * as events from 'events';
 import * as fs from 'fs';
-import * as follow_redirects from '../infrastructure/follow_redirects';
 import * as url from 'url';
+
+import * as file_read from '../infrastructure/file_read';
+import * as follow_redirects from '../infrastructure/follow_redirects';
+import * as ip_location from '../infrastructure/ip_location';
+import {AccessKeyId} from '../model/access_key';
+import {DataUsageByUser, LastHourMetricsReadyCallback, PerUserStats, Stats} from '../model/metrics';
+
+import * as ip_util from './ip_util';
 
 const MS_PER_HOUR = 60 * 60 * 1000;
 
