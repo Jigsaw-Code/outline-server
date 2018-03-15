@@ -33,35 +33,55 @@ export function anonymizeIp(ip: string): string {
   }
 }
 
-// Cache country lookups per IP address.
-const countryCache = new Map<string, Promise<string>>();
+export interface IpLocationService { countryForIp(ipAddress: string): Promise<string>; }
 
-export function lookupCountry(ipAddress: string) : Promise<string> {
-  if (countryCache.has(ipAddress)) {
-    // Return cached promise to prevent duplicate lookups.
-    return countryCache.get(ipAddress);
+export class FreegeoIpLocationService implements IpLocationService {
+  countryForIp(ipAddress: string): Promise<string> {
+    const countryPromise = new Promise<string>((fulfill, reject) => {
+      const options = {host: 'freegeoip.io', path: '/json/' + ipAddress};
+      https
+          .get(
+              options,
+              (response) => {
+                let body = '';
+                response.on('data', (data) => {
+                  body += data;
+                });
+                response.on('end', () => {
+                  try {
+                    const jsonResponse = JSON.parse(body);
+                    if (jsonResponse.country_code) {
+                      fulfill(jsonResponse.country_code);
+                    } else {
+                      // ZZ is user-assigned and used by CLDR for "Uknown" regions.
+                      fulfill('ZZ');
+                    }
+                  } catch (e) {
+                    reject(new Error(`Error loading country from reponse: ${e}`));
+                  }
+                });
+              })
+          .on('error', (e) => {
+            reject(new Error(`Failed to contact location service: ${e}`));
+          });
+    });
+    return countryPromise;
+  }
+}
+
+export class CachedIpLocationService implements IpLocationService {
+  private countryCache: Map<string, Promise<string>>;
+
+  constructor(private locationService: IpLocationService) {
+    this.countryCache = new Map<string, Promise<string>>();
   }
 
-  const promise = new Promise<string>((fulfill, reject) => {
-    const options = {host: 'freegeoip.io', path: '/json/' + ipAddress};
-    https.get(options, (response) => {
-      let body = '';
-      response.on('data', (data) => {
-        body += data;
-      });
-      response.on('end', () => {
-        try {
-          fulfill(JSON.parse(body).country_code);
-        } catch (err) {
-          console.error('Error loading country: ', err);
-          reject(err);
-        }
-      });
-    });
-  });
-
-  // Prevent multiple lookups of the same country.
-  countryCache.set(ipAddress, promise);
-
-  return promise;
+  countryForIp(ipAddress: string): Promise<string> {
+    if (this.countryCache.has(ipAddress)) {
+      return this.countryCache.get(ipAddress);
+    }
+    const promise = this.locationService.countryForIp(ipAddress);
+    this.countryCache.set(ipAddress, promise);
+    return promise;
+  }
 }

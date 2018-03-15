@@ -17,12 +17,14 @@ import * as path from 'path';
 import * as process from 'process';
 import * as restify from 'restify';
 
-import * as server_config from './server_config';
-import { createManagedAccessKeyRepository } from './managed_user';
-import { ShadowsocksManagerService } from './manager_service';
+import {FilesystemTextFile} from '../infrastructure/filesystem_text_file';
+
+import * as ip_util from './ip_util';
+import {LibevShadowsocksServer} from './libev_shadowsocks_server';
+import {createManagedAccessKeyRepository} from './managed_user';
+import {ShadowsocksManagerService} from './manager_service';
 import * as metrics from './metrics';
-import { LibevShadowsocksServer } from './libev_shadowsocks_server';
-import { FilesystemTextFile } from '../infrastructure/filesystem_text_file';
+import * as server_config from './server_config';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
 
@@ -50,14 +52,19 @@ function main() {
 
   const statsFilename = getPersistentFilename('shadowbox_stats.json');
   const stats = new metrics.PersistentStats(statsFilename);
+  const ipLocationService =
+      new ip_util.CachedIpLocationService(new ip_util.FreegeoIpLocationService());
   stats.onLastHourMetricsReady((startDatetime, endDatetime, lastHourUserStats) => {
     if (serverConfig.getMetricsEnabled()) {
-      metrics.getHourlyServerMetricsReport(serverConfig.serverId, startDatetime, endDatetime, lastHourUserStats)
-      .then((report) => {
-        if (report) {
-          metrics.postHourlyServerMetricsReports(report, process.env.SB_METRICS_URL);
-        }
-      });
+      metrics
+          .getHourlyServerMetricsReport(
+              serverConfig.serverId, startDatetime, endDatetime, lastHourUserStats,
+              ipLocationService)
+          .then((report) => {
+            if (report) {
+              metrics.postHourlyServerMetricsReports(report, process.env.SB_METRICS_URL);
+            }
+          });
     }
   });
 
