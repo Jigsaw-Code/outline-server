@@ -14,7 +14,10 @@
 
 import * as https from 'https';
 
-export interface IpLocationService { countryForIp(ipAddress: string): Promise<string>; }
+export interface IpLocationService {
+  // Returns the 2-digit country code for the IP address.
+  countryForIp(ipAddress: string): Promise<string>;
+}
 
 // An IpLocationService that uses the ipinfo.io service.
 // See https://ipinfo.io/developers for API.
@@ -50,7 +53,7 @@ export class FreegeoIpLocationService implements IpLocationService {
       const url = `https://freegeoip.net/json/${encodeURIComponent(ipAddress)}`;
       https.get(url, (response) => {
         if (500 <= response.statusCode && response.statusCode <= 599) {
-          reject(new Error(`Got server error ${response.statusCode} from freegeoip.io`));
+          reject(new Error(`Got server error ${response.statusCode} from freegeoip.net`));
           response.resume();
           return;
         }

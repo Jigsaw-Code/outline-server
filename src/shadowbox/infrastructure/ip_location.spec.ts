@@ -14,7 +14,8 @@
 
 import * as ip_location from './ip_location';
 
-function testIpLocationServive(name: string, service: ip_location.IpLocationService) {
+function testIpLocationServive(name: string,
+                               service: ip_location.IpLocationService) {
     describe(name, () => {
         it('returns ZZ on unknown country', (done) => {
             service.countryForIp('127.0.0.1').then((countryCode) => {
@@ -32,8 +33,10 @@ function testIpLocationServive(name: string, service: ip_location.IpLocationServ
                 done.fail(e);
             });
         });
-    });    
+    });
 }
 
-testIpLocationServive('IpInfoIpLocationService', new ip_location.IpInfoIpLocationService());
-testIpLocationServive('FreegeoIpLocationService', new ip_location.FreegeoIpLocationService());
+testIpLocationServive('IpInfoIpLocationService',
+                      new ip_location.IpInfoIpLocationService());
+testIpLocationServive('FreegeoIpLocationService',
+                      new ip_location.FreegeoIpLocationService());
