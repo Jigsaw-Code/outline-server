@@ -30,13 +30,18 @@ const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
 
 function main() {
   const verbose = process.env.LOG_LEVEL === 'debug';
-
   const publicAddress = process.env.SB_PUBLIC_IP;
+  const metricsUrl = process.env.SB_METRICS_URL;
+
   if (!publicAddress) {
     console.error('Need to specify SB_PUBLIC_IP for invite links');
     process.exit(1);
   }
-  console.info('Public address is %s', publicAddress);
+
+  console.log(`=== Config ===`);
+  console.log(`SB_PUBLIC_IP: ${publicAddress}`);
+  console.log(`SB_METRICS_URL: ${metricsUrl}`);
+  console.log(`==============`);
 
   const DEFAULT_PORT = 8081;
   const portNumber = Number(process.env.SB_API_PORT || DEFAULT_PORT);
@@ -62,7 +67,7 @@ function main() {
               ipLocationService)
           .then((report) => {
             if (report) {
-              metrics.postHourlyServerMetricsReports(report, process.env.SB_METRICS_URL);
+              metrics.postHourlyServerMetricsReports(report, metricsUrl);
             }
           });
     }
