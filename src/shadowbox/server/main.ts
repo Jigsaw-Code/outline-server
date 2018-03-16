@@ -44,10 +44,10 @@ function main() {
     process.exit(1);
   }
 
-  logging.info(`=== Config ===`);
-  logging.info(`SB_PUBLIC_IP: ${publicAddress}`);
-  logging.info(`SB_METRICS_URL: ${metricsUrl}`);
-  logging.info(`==============`);
+  logging.debug(`=== Config ===`);
+  logging.debug(`SB_PUBLIC_IP: ${publicAddress}`);
+  logging.debug(`SB_METRICS_URL: ${metricsUrl}`);
+  logging.debug(`==============`);
 
   const DEFAULT_PORT = 8081;
   const portNumber = Number(process.env.SB_API_PORT || DEFAULT_PORT);
