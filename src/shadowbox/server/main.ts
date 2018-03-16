@@ -31,12 +31,11 @@ const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
 function main() {
   const verbose = process.env.LOG_LEVEL === 'debug';
   const publicAddress = process.env.SB_PUBLIC_IP;
-  const metricsUrl = process.env.SB_METRICS_URL;
-  if (!metricsUrl) {
-    // Default to production metrics, as some old Docker images may not have
-    // SB_METRICS_URL properly set.
+  // Default to production metrics, as some old Docker images may not have
+  // SB_METRICS_URL properly set.
+  const metricsUrl = process.env.SB_METRICS_URL || 'https://metrics-prod.uproxy.org';
+  if (!process.env.SB_METRICS_URL) {
     console.warn('process.env.SB_METRICS_URL not set, using default');
-    metricsUrl = 'https://metrics-prod.uproxy.org';
   }
 
   if (!publicAddress) {
