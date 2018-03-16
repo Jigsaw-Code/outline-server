@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-SB_PUBLIC_IP=${SB_PUBLIC_IP:-$(curl https://ipinfo.io/ip)}
-SB_METRICS_URL=${SB_METRICS_URL:-https://metrics-prod.uproxy.org}
+export SB_PUBLIC_IP=${SB_PUBLIC_IP:-$(curl https://ipinfo.io/ip)}
+export SB_METRICS_URL=${SB_METRICS_URL:-https://metrics-prod.uproxy.org}
 
 # The maximum number of files that can be opened by ss-server greatly
 # influence on performance, as described here:
