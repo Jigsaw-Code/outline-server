@@ -19,6 +19,7 @@ import * as restify from 'restify';
 
 import {FilesystemTextFile} from '../infrastructure/filesystem_text_file';
 import * as ip_location from '../infrastructure/ip_location';
+import * as logging from '../infrastructure/logging';
 
 import {LibevShadowsocksServer} from './libev_shadowsocks_server';
 import {createManagedAccessKeyRepository} from './managed_user';
@@ -35,23 +36,23 @@ function main() {
   // SB_METRICS_URL properly set.
   const metricsUrl = process.env.SB_METRICS_URL || 'https://metrics-prod.uproxy.org';
   if (!process.env.SB_METRICS_URL) {
-    console.warn('process.env.SB_METRICS_URL not set, using default');
+    logging.warn('process.env.SB_METRICS_URL not set, using default');
   }
 
   if (!publicAddress) {
-    console.error('Need to specify SB_PUBLIC_IP for invite links');
+    logging.error('Need to specify SB_PUBLIC_IP for invite links');
     process.exit(1);
   }
 
-  console.log(`=== Config ===`);
-  console.log(`SB_PUBLIC_IP: ${publicAddress}`);
-  console.log(`SB_METRICS_URL: ${metricsUrl}`);
-  console.log(`==============`);
+  logging.info(`=== Config ===`);
+  logging.info(`SB_PUBLIC_IP: ${publicAddress}`);
+  logging.info(`SB_METRICS_URL: ${metricsUrl}`);
+  logging.info(`==============`);
 
   const DEFAULT_PORT = 8081;
   const portNumber = Number(process.env.SB_API_PORT || DEFAULT_PORT);
   if (isNaN(portNumber)) {
-    console.error(`Invalid SB_API_PORT: ${process.env.SB_API_PORT}`);
+    logging.error(`Invalid SB_API_PORT: ${process.env.SB_API_PORT}`);
     process.exit(1);
   }
 
@@ -78,7 +79,7 @@ function main() {
     }
   });
 
-  console.info('Starting...');
+  logging.info('Starting...');
   const userConfigFilename = getPersistentFilename('shadowbox_config.json');
   createManagedAccessKeyRepository(
       new FilesystemTextFile(userConfigFilename),
@@ -106,7 +107,7 @@ function main() {
 
     // TODO(fortuna): Bind to localhost or unix socket to avoid external access.
     apiServer.listen(portNumber, () => {
-      console.info(`Manager listening at ${apiServer.url}${apiPrefix}`);
+      logging.info(`Manager listening at ${apiServer.url}${apiPrefix}`);
     });
   });
 }
@@ -172,7 +173,7 @@ function getPersistentFilename(file: string): string {
 }
 
 process.on('unhandledRejection', (error) => {
-  console.error('unhandledRejection', error);
+  logging.error(`unhandledRejection: ${error}`);
 });
 
 main();
