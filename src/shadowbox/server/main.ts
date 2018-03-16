@@ -32,6 +32,12 @@ function main() {
   const verbose = process.env.LOG_LEVEL === 'debug';
   const publicAddress = process.env.SB_PUBLIC_IP;
   const metricsUrl = process.env.SB_METRICS_URL;
+  if (!metricsUrl) {
+    // Default to production metrics, as some old Docker images may not have
+    // SB_METRICS_URL properly set.
+    console.warn('process.env.SB_METRICS_URL not set, using default');
+    metricsUrl = 'https://metrics-prod.uproxy.org';
+  }
 
   if (!publicAddress) {
     console.error('Need to specify SB_PUBLIC_IP for invite links');
