@@ -14,6 +14,8 @@
 
 
 function makeLogMessage(level: string, message: string): string {
+  // This creates a string in the UTC timezone
+  // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
   return `${level}:${new Date().toISOString()}] ${message}`;
 }
 
