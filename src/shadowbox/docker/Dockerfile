@@ -44,25 +44,6 @@ RUN /opt/yarn-v$YARN_VERSION/bin/yarn install --prod
 # Create default state directory.
 RUN mkdir -p /root/shadowbox/persisted-state
 
-# The maximum number of files that can be opened by ss-server greatly
-# influence on performance, as described here:
-#   https://shadowsocks.org/en/config/advanced.html
-#
-# The steps described in that page do *not* work for processes running
-# under Docker, at least on modern Debian/Ubuntu-like systems whose init
-# daemons allow per-service limits and ignore completely
-# /etc/security/limits.conf. On those systems, the Shadowbox container
-# will, by default, inherit the limits configured for the Docker service:
-#   https://docs.docker.com/engine/reference/commandline/run/#set-ulimits-in-container-ulimit
-#
-# Interestingly, we observed poor performance with large values such as 524288
-# and 1048576, the default values in recent releases of Ubuntu. Our
-# non-exhaustive testing indicates a performance cliff for Outline after values
-# around 270k; to stay well bekow of this cliff we've semi-handwaved-ly settled
-# upon a limit of 32k files.
-#
-# By configuring this limit via the Docker image's CMD line we are able to
-# propagate the value to current users and change it in the future via our
-# normal Watchtower-based update mechanism (this is *not* the case with
-# docker run --ulimit) without changing the host system's configuration.
-CMD SB_PUBLIC_IP=${SB_PUBLIC_IP:-$(curl https://ipinfo.io/ip)} SB_METRICS_URL=${SB_METRICS_URL:-https://metrics-prod.uproxy.org} sh -c 'ulimit -n 32768; node app/server/main.js'
+COPY src/shadowbox/docker/cmd.sh /
+
+CMD /cmd.sh
