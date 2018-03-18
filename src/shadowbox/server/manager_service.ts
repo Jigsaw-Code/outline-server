@@ -14,6 +14,7 @@
 
 import * as restify from 'restify';
 
+import * as logging from '../infrastructure/logging';
 import { AccessKey, AccessKeyRepository } from '../model/access_key';
 
 // Creates a AccessKey response.
@@ -52,12 +53,12 @@ export class ShadowsocksManagerService {
 
   // Lists all access keys
   public listAccessKeys(req: RequestType, res: ResponseType, next: restify.Next): void {
-    console.log('listAccessKeys request', req.params);
+    logging.debug(`listAccessKeys request ${req.params}`);
     const response = {accessKeys: [], users: []};
     for (const accessKey of this.accessKeys.listAccessKeys()) {
       response.accessKeys.push(accessKeyToJson(accessKey));
     }
-    console.log('listAccessKeys response', response);
+    logging.debug(`listAccessKeys response ${response}`);
     res.send(200, response);
     return next();
   }
@@ -65,14 +66,14 @@ export class ShadowsocksManagerService {
   // Creates a new access key
   public createNewAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
     try {
-      console.log('createNewAccessKey request', req.params);
+      logging.debug(`createNewAccessKey request ${req.params}`);
       this.accessKeys.createNewAccessKey().then((accessKey) => {
         const accessKeyJson = accessKeyToJson(accessKey);
         res.send(201, accessKeyJson);
         return next();
       });
     } catch (error) {
-      console.error(error);
+      logging.error(error);
       return next(new restify.InternalServerError());
     }
   }
@@ -80,7 +81,7 @@ export class ShadowsocksManagerService {
   // Removes an existing access key
   public removeAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
     try {
-      console.log('removeAccessKey request', req.params);
+      logging.debug(`removeAccessKey request ${req.params}`);
       const accessKeyId = req.params.id;
       if (!this.accessKeys.removeAccessKey(accessKeyId)) {
         return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
@@ -88,14 +89,14 @@ export class ShadowsocksManagerService {
       res.send(204);
       return next();
     } catch (error) {
-      console.error(error);
+      logging.error(error);
       return next(new restify.InternalServerError());
     }
   }
 
   public renameAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
     try {
-      console.log('renameAccessKey request', req.params);
+      logging.debug(`renameAccessKey request ${req.params}`);
       const accessKeyId = req.params.id;
       if (!this.accessKeys.renameAccessKey(accessKeyId, req.params.name)) {
         return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
@@ -103,7 +104,7 @@ export class ShadowsocksManagerService {
       res.send(204);
       return next();
     } catch (error) {
-      console.error(error);
+      logging.error(error);
       return next(new restify.InternalServerError());
     }
   }

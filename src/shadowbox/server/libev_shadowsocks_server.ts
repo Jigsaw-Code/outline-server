@@ -16,7 +16,10 @@ import * as child_process from 'child_process';
 import * as dgram from 'dgram';
 import * as dns from 'dns';
 import * as events from 'events';
+
 import {SIP002_URI, makeConfig} from 'ShadowsocksConfig/shadowsocks_config';
+
+import * as logging from '../infrastructure/logging';
 import {ShadowsocksInstance, ShadowsocksServer} from '../model/shadowsocks_server';
 
 // Runs shadowsocks-libev server instances.
@@ -30,7 +33,7 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
   public startInstance(
       portNumber: number, password: string, statsSocket: dgram.Socket,
       encryptionMethod = this.DEFAULT_METHOD): Promise<ShadowsocksInstance> {
-    console.info(`Starting server on port ${portNumber}`);
+    logging.info(`Starting server on port ${portNumber}`);
 
     const statsAddress = statsSocket.address();
     const commandArguments = [
@@ -40,7 +43,7 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
       '-p', portNumber.toString(), '-k', password, '--manager-address',
       `${statsAddress.address}:${statsAddress.port}`
     ];
-    console.info('starting ss-server with args: ' + commandArguments.join(' '));
+    logging.info('starting ss-server with args: ' + commandArguments.join(' '));
     // Add the system DNS servers.
     // TODO(fortuna): Add dns.getServers to @types/node.
     for (const dnsServer of dns.getServers()) {
@@ -54,11 +57,11 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
     const childProcess = child_process.spawn('ss-server', commandArguments);
 
     childProcess.on('error', (error) => {
-      console.error(`Error spawning server on port ${portNumber}: ${error}`);
+      logging.error(`Error spawning server on port ${portNumber}: ${error}`);
     });
     // TODO(fortuna): Add restart logic.
     childProcess.on('exit', (code, signal) => {
-      console.info(`Server on port ${portNumber} has exited. Code: ${code}, Signal: ${signal}`);
+      logging.info(`Server on port ${portNumber} has exited. Code: ${code}, Signal: ${signal}`);
     });
     // TODO(fortuna): Disable this for production.
     // TODO(fortuna): Consider saving the output and expose it through the manager service.
@@ -89,7 +92,7 @@ class LibevShadowsocksServerInstance implements ShadowsocksInstance {
       public accessUrl: string, private statsSocket: dgram.Socket) {}
 
   public stop() {
-    console.info(`Stopping server on port ${this.portNumber}`);
+    logging.info(`Stopping server on port ${this.portNumber}`);
     this.childProcess.kill();
   }
 
@@ -107,7 +110,7 @@ class LibevShadowsocksServerInstance implements ShadowsocksInstance {
       try {
         statsMessage = parseStatsMessage(buf);
       } catch (err) {
-        console.error('error parsing stats: ' + buf + ', ' + err);
+        logging.error('error parsing stats: ' + buf + ', ' + err);
         return;
       }
       if (statsMessage.portNumber !== this.portNumber) {
@@ -122,7 +125,7 @@ class LibevShadowsocksServerInstance implements ShadowsocksInstance {
               this.eventEmitter.emit(this.BYTES_TRANSFERRED_EVENT, delta, ipAddresses);
             })
             .catch((err) => {
-              console.error('Unable to get client IP addresses ', err);
+              logging.error(`Unable to get client IP addresses ${err}`);
             });
       }
     });

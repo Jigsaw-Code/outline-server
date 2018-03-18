@@ -16,9 +16,10 @@ import * as events from 'events';
 import * as fs from 'fs';
 import * as url from 'url';
 
+import * as ip_location from '../infrastructure/ip_location';
 import * as file_read from '../infrastructure/file_read';
 import * as follow_redirects from '../infrastructure/follow_redirects';
-import * as ip_location from '../infrastructure/ip_location';
+import * as logging from '../infrastructure/logging';
 import {AccessKeyId} from '../model/access_key';
 import {DataUsageByUser, LastHourMetricsReadyCallback, PerUserStats, Stats} from '../model/metrics';
 
@@ -105,7 +106,7 @@ export class PersistentStats implements Stats {
       fs.renameSync(tempFilename, this.filename);
       this.dirty = false;
     } catch (err) {
-      console.error('error writing stats file ', err);
+      logging.error(`Error writing stats file ${err}`);
     }
   }
 
@@ -319,13 +320,13 @@ export function postHourlyServerMetricsReports(report: HourlyServerMetricsReport
     method: 'POST',
     body: JSON.stringify(report)
   };
-  console.info('Posting metrics: ' + JSON.stringify(options));
+  logging.info('Posting metrics: ' + JSON.stringify(options));
   return follow_redirects.requestFollowRedirectsWithSameMethodAndBody(options, (error, response, body) => {
     if (error) {
-      console.error('Error posting metrics: ', error);
+      logging.error(`Error posting metrics: ${error}`);
       return;
     }
-    console.info('Metrics server responded with status ' + response.statusCode);
+    logging.info('Metrics server responded with status ' + response.statusCode);
   });
 }
 
@@ -362,7 +363,7 @@ function getHourlyUserMetricsReport(
   const countryPromises = [];
   for (const ip of perUserStats.anonymizedIpAddresses) {
     const countryPromise = ipLocationService.countryForIp(ip).catch((e) => {
-      console.warn('Failed countryForIp call: ', e);
+      logging.warn(`Failed countryForIp call: ${e}`);
       return 'ERROR';
     });
     countryPromises.push(countryPromise);
@@ -382,7 +383,7 @@ function getAnonymizedAndDedupedIpAddresses(ipAddresses: string[]): Set<string> 
     try {
       s.add(ip_util.anonymizeIp(ip));
     } catch (err) {
-      console.error('error anonymizing IP address: ' + ip + ', ' + err);
+      logging.error('error anonymizing IP address: ' + ip + ', ' + err);
     }
   }
   return s;
