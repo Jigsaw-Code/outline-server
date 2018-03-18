@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as file_read from '../infrastructure/file_read';
 import * as fs from 'fs';
 import * as uuidv4 from 'uuid/v4';
+
+import * as file_read from '../infrastructure/file_read';
+import * as logging from '../infrastructure/logging';
 
 export class ServerConfig {
   public serverId: string;
@@ -41,7 +43,7 @@ export class ServerConfig {
           this.createdTimestampMs = savedState.createdTimestampMs;
         }
       } catch (err) {
-        console.error('error parsing config', err);
+        logging.error(`Error parsing config ${err}`);
       }
     }
 
