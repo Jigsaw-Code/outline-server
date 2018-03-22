@@ -10,7 +10,7 @@
   },
   "scripts": {
     "postinstall": "yarn run server_manager_install",
-    "server_manager_install": "cd src/server_manager && yarn install --modules-folder ../../node_modules && yarn bower install",
+    "server_manager_install": "cd src/server_manager && yarn install --modules-folder ../../node_modules",
     "clean": "rm -rf src/server_manager/bower_components/ src/{metrics_server,server_manager}/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts",
     "shadowbox_install": "cd src/shadowbox && yarn install --modules-folder ../../node_modules --no-bin-links",
     "metrics_server_install": "cd src/metrics_server && yarn install --modules-folder ../../node_modules",
