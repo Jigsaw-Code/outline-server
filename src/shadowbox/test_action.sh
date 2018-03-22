@@ -16,3 +16,4 @@
 
 do_action shadowbox/server/build
 jasmine --config=$ROOT_DIR/jasmine.json
+ 
