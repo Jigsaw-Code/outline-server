@@ -19,6 +19,7 @@ describe('anonymizeIp', () => {
     expect(ip_util.anonymizeIp('128.128.128.128')).toEqual('128.128.128.0');
   });
   it('Removes last bytes of IPv6', () => {
-    expect(ip_util.anonymizeIp('aaaa:aaaa:aaaa:aaaa:aaaa:aaaa:aaaa:aaaa')).toEqual('aaaa:aaaa:aaaa:0:0:0:0:0');
+    expect(ip_util.anonymizeIp('aaaa:aaaa:aaaa:aaaa:aaaa:aaaa:aaaa:aaaa'))
+        .toEqual('aaaa:aaaa:aaaa:0:0:0:0:0');
   });
 });
