@@ -33,6 +33,9 @@ Install dependencies:
 yarn
 ```
 
+If you are using root (not recommended on your dev machine, maybe in a container), you need to add `{ "allow_root": true }` to your `/root/.bowerrc` file.
+
+
 ### Electron App
 
 To run the electron app:
