@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -eux
+set -eu
 
 # TODO: Because Node.js on Cygwin doesn't handle absolute paths very
 #       well, it would be worth pushd-ing to ROOT_DIR before invoking
@@ -29,7 +29,9 @@ function do_action() {
   local action=$1
   echo -e "$STYLE_BOLD_WHITE[Running $action]$STYLE_RESET"
   shift
+  set -x
   $ROOT_DIR/src/${action}_action.sh "$@"
+  set +x
   echo -e "$STYLE_BOLD_WHITE[Done $action]$STYLE_RESET"
 }
 export -f do_action
