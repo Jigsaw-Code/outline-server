@@ -21,4 +21,11 @@ describe('anonymizeIp', () => {
     expect(ip_util.anonymizeIp('aaaa:aaaa:aaaa:aaaa:aaaa:aaaa:aaaa:aaaa'))
         .toEqual('aaaa:aaaa:aaaa:0:0:0:0:0');
   });
+  it('Throws on bad input', () => {
+    try {
+      ip_util.anonymizeIp('BAD');
+      return Error('Should throw on bad input');
+    } catch (e) {
+    }
+  });
 });
