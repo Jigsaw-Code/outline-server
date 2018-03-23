@@ -345,7 +345,7 @@ function getCityId(slug: server.RegionId): string {
   return slug.substr(0, 3).toLowerCase();
 }
 
-const MACHINE_SIZE = '512mb';
+const MACHINE_SIZE = 's-1vcpu-1gb';
 
 export class DigitaloceanServerRepository implements server.ManagedServerRepository {
   constructor(
