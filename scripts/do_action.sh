@@ -14,23 +14,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -eux
+set -eu
 
 # TODO: Because Node.js on Cygwin doesn't handle absolute paths very
 #       well, it would be worth pushd-ing to ROOT_DIR before invoking
 #       them and making BUILD_DIR a relative path, viz. just "build".
 
-export ROOT_DIR=${ROOT_DIR:-$(git rev-parse --show-toplevel)}
-export BUILD_DIR=${BUILD_DIR:-$ROOT_DIR/build}
+declare -rx ROOT_DIR=${ROOT_DIR:-$(git rev-parse --show-toplevel)}
+declare -rx BUILD_DIR=${BUILD_DIR:-$ROOT_DIR/build}
+
+declare -rx STYLE_BOLD_WHITE='\033[1;37m'
+declare -rx STYLE_RESET='\033[0m'
 
 function do_action() {
-  readonly STYLE_BOLD_WHITE='\033[1;37m'
-  readonly STYLE_RESET='\033[0m'
+  set +x
   local action=$1
   echo -e "$STYLE_BOLD_WHITE[Running $action]$STYLE_RESET"
   shift
-  $ROOT_DIR/src/${action}_action.sh "$@"
+  # Start a subprocess, so it has it's own settings.
+  (bash -x $ROOT_DIR/src/${action}_action.sh "$@")
   echo -e "$STYLE_BOLD_WHITE[Done $action]$STYLE_RESET"
+  set -x
 }
 export -f do_action
 
