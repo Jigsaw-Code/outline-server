@@ -31,7 +31,8 @@ function do_action() {
   local action=$1
   echo -e "$STYLE_BOLD_WHITE[Running $action]$STYLE_RESET"
   shift
-  bash -x $ROOT_DIR/src/${action}_action.sh "$@"
+  # Start a subprocess, so it has it's own settings.
+  (bash -x $ROOT_DIR/src/${action}_action.sh "$@")
   echo -e "$STYLE_BOLD_WHITE[Done $action]$STYLE_RESET"
   set -x
 }
