@@ -107,9 +107,8 @@ jobs:
       os: osx
       script: yarn do server_manager/electron_app/package_macos
 
-    # Note that because we cannot currently build signed macOS or Windows
-    # binaries on Travis, those builds must be manually built and uploaded
-    # to the release page.
+    # Note that because we cannot currently sign Windows binaries on Travis,
+    # these must be manually built and uploaded to the releases page.
     - stage: release
       env:
         - DESC=linux manager
@@ -118,6 +117,16 @@ jobs:
           packages:
           - rpm
       script: yarn do server_manager/electron_app/release_linux
+
+    - stage: release
+      os: osx
+      env:
+        - DESC=macos manager
+      script:
+        - openssl aes-256-cbc -K $encrypted_61a49da75942_key -iv $encrypted_61a49da75942_iv -in macos-signing-certificate.p12.enc -out macos-signing-certificate.p12 -d
+        - export CSC_LINK=$(pwd)/macos-signing-certificate.p12
+        # Must run yarn again due to the OS change, required for signing to work.
+        - yarn && yarn do server_manager/electron_app/release_macos
 
 deploy:
   provider: releases
