@@ -101,12 +101,6 @@ jobs:
             electronuserland/builder:wine
             /bin/bash -c "yarn do server_manager/electron_app/package_only_windows" || travis_terminate $?
 
-    - stage: deploy
-      env:
-        - DESC=macos manager
-      os: osx
-      script: yarn do server_manager/electron_app/package_macos
-
     # Note that because we cannot currently sign Windows binaries on Travis,
     # these must be manually built and uploaded to the releases page.
     - stage: release
