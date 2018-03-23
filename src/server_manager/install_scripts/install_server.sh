@@ -270,7 +270,8 @@ install_shadowbox() {
 CONGRATULATIONS! Your Outline Server is up and running.
 
 ${FIREWALL_STATUS}
-To manage your Outline Server, please copy the following text (including curly brackets) into Step 2 of the Outline Manager interface:
+To manage your Outline Server, please copy the following text (including curly
+brackets) into Step 2 of the Outline Manager interface:
 
 {
   "apiUrl": "$(get_field_value apiUrl)",
