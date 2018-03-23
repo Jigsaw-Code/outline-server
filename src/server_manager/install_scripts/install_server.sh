@@ -35,24 +35,30 @@ set -euo pipefail
 readonly SENTRY_LOG_FILE=${SENTRY_LOG_FILE:-}
 
 function log_error() {
-  readonly ERROR_TEXT="\033[0;31m"  # red
-  readonly NO_COLOR="\033[0m"
+  local -r ERROR_TEXT="\033[0;31m"  # red
+  local -r NO_COLOR="\033[0m"
   >&2 printf "${ERROR_TEXT}${1}${NO_COLOR}\n"
 }
 
 # Pretty prints text to stdout, and also writes to sentry log file if set.
-function log_step() {
-  log_for_sentry $1
-  str="> $1"
-  okStr=" OK"
-  lineLength=50
+function log_start_step() {
+  log_for_sentry "$@"
+  str="> $@"
+  lineLength=47
   echo -n "$str"
-  numDots=$(expr $lineLength - ${#str} - ${#okStr} - 1)
+  numDots=$(expr $lineLength - ${#str} - 1)
   if [[ $numDots > 0 ]]; then
     echo -n " "
     for i in $(seq 1 "$numDots"); do echo -n .; done
   fi
-  echo "$okStr"
+}
+
+function run_step() {
+  local -r msg=$1
+  log_start_step $msg
+  shift 1
+  "$@"
+  echo " OK"
 }
 
 function command_exists {
@@ -66,11 +72,14 @@ function log_for_sentry() {
 }
 
 # Check to see if docker is installed.
-log_step "Verifying that Docker is installed"
-if ! command_exists docker; then
-  log_error "Docker must be installed, please run \"curl -sS https://get.docker.com/ | sh\" or visit https://www.docker.com/"
-  exit 1
-fi
+function verify_docker() {
+  if ! command_exists docker; then
+    log_error "Docker must be installed, please run \"curl -sS https://get.docker.com/ | sh\" or visit https://www.docker.com/"
+    exit 1
+  fi 
+}
+
+run_step "Verifying that Docker is installed" verify_docker
 
 # Set trap which publishes error tag only if there is an error.
 function finish {
@@ -90,6 +99,100 @@ function get_random_port {
   echo $num;
 }
 
+function create_persisted_state_dir() {
+  readonly STATE_DIR="$SHADOWBOX_DIR/persisted-state"
+  mkdir -p "${STATE_DIR}"  
+}
+
+# Generate a secret key for access to the shadowbox API and store it in a tag.
+# 16 bytes = 128 bits of entropy should be plenty for this use.
+function safe_base64() {
+  # Implements URL-safe base64 of stdin, stripping trailing = chars.
+  # Writes result to stdout.
+  # TODO: this gives the following errors on Mac:
+  #   base64: invalid option -- w
+  #   tr: illegal option -- -
+  local url_safe="$(base64 -w 0 - | tr '/+' '_-')"
+  echo -n "${url_safe%%=*}"  # Strip trailing = chars
+}
+
+function generate_secret_key() {
+  readonly SB_API_PREFIX=$(head -c 16 /dev/urandom | safe_base64)
+}
+
+function generate_certificate() {
+  # Generate self-signed cert and store it in the persistent state directory.
+  readonly CERTIFICATE_NAME="${STATE_DIR}/shadowbox-selfsigned"
+  readonly SB_CERTIFICATE_FILE="${CERTIFICATE_NAME}.crt"
+  readonly SB_PRIVATE_KEY_FILE="${CERTIFICATE_NAME}.key"
+  declare -a openssl_req_flags=(
+    -x509 -nodes -days 36500 -newkey rsa:2048
+    -subj "/CN=${SB_PUBLIC_IP}"
+    -keyout "${SB_PRIVATE_KEY_FILE}" -out "${SB_CERTIFICATE_FILE}"
+  )
+  openssl req "${openssl_req_flags[@]}" >/dev/null 2>&1
+}
+
+function generate_certificate_fingerprint() {
+  # Add a tag with the SHA-256 fingerprint of the certificate.
+  # (Electron uses SHA-256 fingerprints: https://github.com/electron/electron/blob/9624bc140353b3771bd07c55371f6db65fd1b67e/atom/common/native_mate_converters/net_converter.cc#L60)
+  # Example format: "SHA256 Fingerprint=BD:DB:C9:A4:39:5C:B3:4E:6E:CF:18:43:61:9F:07:A2:09:07:37:35:63:67"
+  CERT_OPENSSL_FINGERPRINT=$(openssl x509 -in "${SB_CERTIFICATE_FILE}" -noout -sha256 -fingerprint)
+  # Example format: "BDDBC9A4395CB34E6ECF1843619F07A2090737356367"
+  CERT_HEX_FINGERPRINT=$(echo ${CERT_OPENSSL_FINGERPRINT#*=} | tr --delete :)
+  output_config "certSha256:$CERT_HEX_FINGERPRINT"
+}
+
+function start_shadowbox() {
+  declare -a docker_shadowbox_flags=(
+    --name shadowbox --restart=always --net=host
+    -v "${STATE_DIR}:${STATE_DIR}"
+    -e "SB_STATE_DIR=${STATE_DIR}"
+    -e "SB_PUBLIC_IP=${SB_PUBLIC_IP}"
+    -e "SB_API_PORT=${SB_API_PORT}"
+    -e "SB_API_PREFIX=${SB_API_PREFIX}"
+    -e "SB_CERTIFICATE_FILE=${SB_CERTIFICATE_FILE}"
+    -e "SB_PRIVATE_KEY_FILE=${SB_PRIVATE_KEY_FILE}"
+    -e "SB_METRICS_URL=${SB_METRICS_URL:-}"
+    -e "SB_DEFAULT_SERVER_NAME=${SB_DEFAULT_SERVER_NAME:-}"
+  )
+  docker run -d "${docker_shadowbox_flags[@]}" "${SB_IMAGE}" >/dev/null
+}
+
+function start_watchtower() {
+  # Start watchtower to automatically fetch docker image updates.
+  # Set watchtower to refresh every 30 seconds if a custom SB_IMAGE is used (for
+  # testing).  Otherwise refresh every hour.
+  readonly WATCHTOWER_REFRESH_SECONDS=$([ $SB_IMAGE ] && echo 30 || echo 3600)
+  declare -a docker_watchtower_flags=(--name watchtower --restart=always)
+  docker_watchtower_flags+=(-v /var/run/docker.sock:/var/run/docker.sock)
+  docker run -d "${docker_watchtower_flags[@]}" v2tec/watchtower --cleanup --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS >/dev/null
+}
+
+# Waits for Shadowbox to be up and healthy
+function wait_shadowbox() {
+  until curl --insecure -s "${LOCAL_API_URL}/access-keys" >/dev/null; do sleep 1; done
+}
+
+function create_first_user() {
+  curl --insecure -X POST -s "${LOCAL_API_URL}/access-keys" >/dev/null
+}
+
+function output_config() {
+  echo "$@" >> $ACCESS_CONFIG
+}
+
+function add_api_url_to_config() {
+  output_config "apiUrl:${PUBLIC_API_URL}"
+}
+
+function check_firewall() {
+  if ! curl --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" -s "${PUBLIC_API_URL}/access-keys" >/dev/null; then
+     log_error "Your firewall prevents external connections. Shadowbox requires ports 1024-65535 to be open."
+     exit 1
+  fi
+}
+
 install_shadowbox() {
   log_for_sentry "Creating shadowbox directory"
   export SHADOWBOX_DIR="${SHADOWBOX_DIR:-${HOME:-/root}/.shadowbox}"
@@ -104,7 +207,6 @@ install_shadowbox() {
   # TODO(fortuna): Make sure this is IPv4
   readonly SB_PUBLIC_IP=${SB_PUBLIC_IP:-$(curl -4s https://ipinfo.io/ip)}
 
-  log_step "Setting up key functions and constants"
 
   if [[ ! "$SB_PUBLIC_IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo "Invalid IP lookup result: $SB_PUBLIC_IP"
@@ -112,116 +214,32 @@ install_shadowbox() {
     exit 1
   fi
 
-  function output_config() {
-    echo "$@" >> $ACCESS_CONFIG
-  }
-
   # If $ACCESS_CONFIG already exists, copy it to backup then clear it.
   # Note we can't do "mv" here as do_install_server.sh may already be tailing
   # this file.
   log_for_sentry "Initializing ACCESS_CONFIG"
   [[ -f $ACCESS_CONFIG ]] && cp $ACCESS_CONFIG $ACCESS_CONFIG.bak && > $ACCESS_CONFIG
 
-  # Set watchtower to refresh every 30 seconds if a custom SB_IMAGE is used (for
-  # testing).  Otherwise refresh every hour.
-  readonly WATCHTOWER_REFRESH_SECONDS=$([ $SB_IMAGE ] && echo 30 || echo 3600)
-
   # Make a directory for persistent state
-  log_step "Creating persistent state dir"
-  readonly STATE_DIR="$SHADOWBOX_DIR/persisted-state"
-  mkdir -p "${STATE_DIR}"
-
-  log_step "Setting up directory"
-
-  # Generate a secret key for access to the shadowbox API and store it in a tag.
-  # 16 bytes = 128 bits of entropy should be plenty for this use.
-  function safe_base64() {
-    # Implements URL-safe base64 of stdin, stripping trailing = chars.
-    # Writes result to stdout.
-    # TODO: this gives the following errors on Mac:
-    #   base64: invalid option -- w
-    #   tr: illegal option -- -
-    local url_safe="$(base64 -w 0 - | tr '/+' '_-')"
-    echo -n "${url_safe%%=*}"  # Strip trailing = chars
-  }
-  readonly SB_API_PREFIX=$(head -c 16 /dev/urandom | safe_base64)
-
-  log_step "Generating secret key"
-
-  # Generate self-signed cert and store it in the persistent state directory.
-  readonly CERTIFICATE_NAME="${STATE_DIR}/shadowbox-selfsigned"
-  readonly SB_CERTIFICATE_FILE="${CERTIFICATE_NAME}.crt"
-  readonly SB_PRIVATE_KEY_FILE="${CERTIFICATE_NAME}.key"
-  declare -a openssl_req_flags=(
-    -x509 -nodes -days 36500 -newkey rsa:2048
-    -subj "/CN=${SB_PUBLIC_IP}"
-    -keyout "${SB_PRIVATE_KEY_FILE}" -out "${SB_CERTIFICATE_FILE}"
-  )
-  openssl req "${openssl_req_flags[@]}" >/dev/null 2>&1
-
-  log_step "Generating self-signed certificate"
-
-  # Add a tag with the SHA-256 fingerprint of the certificate.
-  # (Electron uses SHA-256 fingerprints: https://github.com/electron/electron/blob/9624bc140353b3771bd07c55371f6db65fd1b67e/atom/common/native_mate_converters/net_converter.cc#L60)
-  # Example format: "SHA256 Fingerprint=BD:DB:C9:A4:39:5C:B3:4E:6E:CF:18:43:61:9F:07:A2:09:07:37:35:63:67"
-  CERT_OPENSSL_FINGERPRINT=$(openssl x509 -in "${SB_CERTIFICATE_FILE}" -noout -sha256 -fingerprint)
-  # Example format: "BDDBC9A4395CB34E6ECF1843619F07A2090737356367"
-  CERT_HEX_FINGERPRINT=$(echo ${CERT_OPENSSL_FINGERPRINT#*=} | tr --delete :)
-  output_config "certSha256:$CERT_HEX_FINGERPRINT"
-
-  log_step "Generating SHA-256 fingerprint"
-
-  # Start Shadowbox.
-  declare -a docker_shadowbox_flags=(
-    --name shadowbox --restart=always --net=host
-    -v "${STATE_DIR}:${STATE_DIR}"
-    -e "SB_STATE_DIR=${STATE_DIR}"
-    -e "SB_PUBLIC_IP=${SB_PUBLIC_IP}"
-    -e "SB_API_PORT=${SB_API_PORT}"
-    -e "SB_API_PREFIX=${SB_API_PREFIX}"
-    -e "SB_CERTIFICATE_FILE=${SB_CERTIFICATE_FILE}"
-    -e "SB_PRIVATE_KEY_FILE=${SB_PRIVATE_KEY_FILE}"
-    -e "SB_METRICS_URL=${SB_METRICS_URL:-}"
-    -e "SB_DEFAULT_SERVER_NAME=${SB_DEFAULT_SERVER_NAME:-}"
-  )
-  docker run -d "${docker_shadowbox_flags[@]}" "${SB_IMAGE}" >/dev/null
-
-  log_step "Starting Shadowbox"
-
+  run_step "Creating persistent state dir" create_persisted_state_dir
+  run_step "Generating secret key" generate_secret_key
+  run_step "Generating TLS certificate" generate_certificate
+  run_step "Generating SHA-256 certificate fingerprint" generate_certificate_fingerprint
   # TODO(dborkan): if the script fails after docker run, it will continue to fail
   # as the names shadowbox and watchtower will already be in use.  Consider
   # deleting the container in the case of failure (e.g. using a trap, or
   # deleting existing containers on each run).
-
-  # Start watchtower to automatically fetch docker image updates.
+  run_step "Starting Shadowbox" start_shadowbox
   # TODO(fortuna): Don't wait for Shadowbox to run this.
-  declare -a docker_watchtower_flags=(--name watchtower --restart=always)
-  docker_watchtower_flags+=(-v /var/run/docker.sock:/var/run/docker.sock)
-  docker run -d "${docker_watchtower_flags[@]}" v2tec/watchtower --cleanup --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS >/dev/null
+  run_step "Starting Watchtower" start_watchtower
 
-  log_step "Starting Watchtower"
+  readonly PUBLIC_API_URL="https://${SB_PUBLIC_IP}:${SB_API_PORT}/${SB_API_PREFIX}"
+  readonly LOCAL_API_URL="https://localhost:${SB_API_PORT}/${SB_API_PREFIX}"
+  run_step "Waiting for Shadowsocks to be healthy" wait_shadowbox
+  run_step "Creating first user" create_first_user
+  run_step "Adding API URL to config" add_api_url_to_config
 
-  readonly SB_API_URL="https://${SB_PUBLIC_IP}:${SB_API_PORT}/${SB_API_PREFIX}"
-  # Wait for server to be ready
-  until curl --cacert "${SB_CERTIFICATE_FILE}" -s "${SB_API_URL}/access-keys" >/dev/null; do sleep 1; done
-  # Create a new user
-  curl --cacert "${SB_CERTIFICATE_FILE}" -X POST -s "${SB_API_URL}/access-keys" >/dev/null
-
-  log_step "Creating first user"
-
-  # API is ready. Output the config.
-  output_config "apiUrl:${SB_API_URL}"
-
-  log_step "Generating final output"
-
-  # TODO: Figure out how to perform more firewall tests.  Unfortunately making a
-  # request to the manager from within the host machine may not detect
-  # a firewall, even if the public IP address is used.
-  if command_exists ufw && [[ $(ufw status) !=  "Status: inactive" ]]; then
-    log_error "You have ufw enabled on your machine, please check your configuration to ensure access to high numbered ports."
-  else
-    log_step "Cursory firewalls detection"
-  fi
+  run_step "Checking firewall" check_firewall
 
   # Echos the value of the specified field from ACCESS_CONFIG.
   # e.g. if ACCESS_CONFIG contains the line "certSha256:1234",
@@ -234,12 +252,13 @@ install_shadowbox() {
   # no string escaping.  TODO: look for a way to generate JSON that doesn't
   # require new dependencies.
   cat <<END_OF_SERVER_OUTPUT
-
-Please copy the following configuration to your Outline Manager:
+Please copy what's in between the dotted lines to your Outline Manager:
+======================================================================
 {
   "apiUrl": "$(get_field_value apiUrl)",
   "certSha256": "$(get_field_value certSha256)"
 }
+======================================================================
 END_OF_SERVER_OUTPUT
 } # end of install_shadowbox
 
