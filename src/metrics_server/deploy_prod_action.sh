@@ -1,4 +1,4 @@
-#!/bin/bash -eux
+#!/bin/bash -eu
 #
 # Copyright 2018 The Outline Authors
 #
