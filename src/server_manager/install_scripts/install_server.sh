@@ -57,8 +57,9 @@ function run_step() {
   local -r msg=$1
   log_start_step $msg
   shift 1
-  "$@"
-  echo " OK"
+  if "$@"; then
+    echo " OK"
+  fi
 }
 
 function command_exists {
@@ -188,14 +189,26 @@ function add_api_url_to_config() {
 
 function check_firewall() {
   if ! curl --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" -s "${PUBLIC_API_URL}/access-keys" >/dev/null; then
-     log_error "Your firewall prevents external connections. Shadowbox requires ports 1024-65535 to be open."
-     exit 1
+     echo "BLOCKED"
+     local -r ACCESS_KEY_PORT=$(docker exec shadowbox node -e "console.log($(curl --insecure -s ${LOCAL_API_URL}/access-keys)['accessKeys'][0]['port'])")
+     FIREWALL_STATUS="\
+You won’t be able to access it externally, despite your server being correctly
+set up, because this host machine has a firewall that is preventing incoming
+connections to ports ${SB_API_PORT} and ${ACCESS_KEY_PORT}.
+
+If you plan to have a single Access Key to access your server, opening those 
+ports on TCP and UDP should suffice. If you plan on adding additional Access
+Keys, you’ll have to open ports 1024 through 65535 on your firewall since the
+Outline Server may allocate any of those ports to new Access Keys.
+
+"
+     return 1
   fi
 }
 
 install_shadowbox() {
   log_for_sentry "Creating shadowbox directory"
-  export SHADOWBOX_DIR="${SHADOWBOX_DIR:-${HOME:-/root}/.shadowbox}"
+  export SHADOWBOX_DIR="${SHADOWBOX_DIR:-${HOME:-/root}/shadowbox}"
   mkdir -p $SHADOWBOX_DIR
 
   log_for_sentry "Setting API port"
@@ -239,6 +252,7 @@ install_shadowbox() {
   run_step "Creating first user" create_first_user
   run_step "Adding API URL to config" add_api_url_to_config
 
+  FIREWALL_STATUS=""
   run_step "Checking firewall" check_firewall
 
   # Echos the value of the specified field from ACCESS_CONFIG.
@@ -252,13 +266,17 @@ install_shadowbox() {
   # no string escaping.  TODO: look for a way to generate JSON that doesn't
   # require new dependencies.
   cat <<END_OF_SERVER_OUTPUT
-Please copy what's in between the dotted lines to your Outline Manager:
-======================================================================
+
+CONGRATULATIONS! Your Outline Server is up and running.
+
+${FIREWALL_STATUS}
+To manage your Outline Server, please copy the following text (including curly brackets) into Step 2 of the Outline Manager interface:
+
 {
   "apiUrl": "$(get_field_value apiUrl)",
   "certSha256": "$(get_field_value certSha256)"
 }
-======================================================================
+
 END_OF_SERVER_OUTPUT
 } # end of install_shadowbox
 
