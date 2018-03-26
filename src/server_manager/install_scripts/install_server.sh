@@ -60,6 +60,9 @@ function run_step() {
   shift 1
   if "$@"; then
     echo "OK"
+  else
+    # Propagates the error code
+    return
   fi
 }
 
