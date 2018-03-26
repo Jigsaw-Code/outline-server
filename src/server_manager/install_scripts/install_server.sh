@@ -74,14 +74,19 @@ function log_for_sentry() {
 }
 
 # Check to see if docker is installed.
-function verify_docker() {
+function verify_docker_installed() {
   if ! command_exists docker; then
-    log_error "Docker must be installed, please run \"curl -sS https://get.docker.com/ | sh\" or visit https://www.docker.com/"
+    log_error "Docker CE must be installed, please run \"curl -sS https://get.docker.com/ | sh\" or visit https://docs.docker.com/install/"
     exit 1
   fi 
 }
 
-run_step "Verifying that Docker is installed" verify_docker
+function verify_docker_running() {
+  if ! docker info |> /dev/null; then
+    log_error "dockerd is not running."
+    exit 1
+  fi 
+}
 
 # Set trap which publishes error tag only if there is an error.
 function finish {
@@ -221,6 +226,9 @@ them.
 }
 
 install_shadowbox() {
+  run_step "Verifying that Docker is installed" verify_docker_installed
+  run_step "Verifying that Docker daemon is running" verify_docker_running
+
   log_for_sentry "Creating shadowbox directory"
   export SHADOWBOX_DIR="${SHADOWBOX_DIR:-${HOME:-/root}/shadowbox}"
   mkdir -p $SHADOWBOX_DIR
