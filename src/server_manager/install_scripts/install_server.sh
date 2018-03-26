@@ -82,10 +82,10 @@ function verify_docker_installed() {
 }
 
 function verify_docker_running() {
-  if ! docker info |> /dev/null; then
+  if ! docker info > /dev/null 2>&1 ; then
     log_error "dockerd is not running."
     exit 1
-  fi 
+  fi
 }
 
 # Set trap which publishes error tag only if there is an error.
