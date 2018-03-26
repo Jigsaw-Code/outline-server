@@ -181,6 +181,8 @@ function start_watchtower() {
 
 # Waits for Shadowbox to be up and healthy
 function wait_shadowbox() {
+  # We use insecure connection because our threat model doesn't include localhost port
+  # interception and our certificate doesn't have localhost as a subject alternative name
   until curl --insecure -s "${LOCAL_API_URL}/access-keys" >/dev/null; do sleep 1; done
 }
 
