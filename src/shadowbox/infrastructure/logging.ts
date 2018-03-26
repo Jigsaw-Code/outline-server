@@ -32,5 +32,5 @@ export function info(message: string) {
 }
 
 export function debug(message: string) {
-  console.debug(makeLogMessage('D', message));
+  console.info(makeLogMessage('D', message));
 }

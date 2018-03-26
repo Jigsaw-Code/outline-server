@@ -18,7 +18,7 @@ import * as ipaddr from 'ipaddr.js';
 // or setting the last 80 bits to 0 for ipv6.
 // Throws an exception when passed an invalid IP address.
 export function anonymizeIp(ip: string): string {
-  const addr = ipaddr.parse(ip);
+  const addr = ipaddr.parse(ip) as any;
   if (addr.kind() === 'ipv4') {
     // Replace last octet of ipv4 address with a 0.
     addr.octets[3] = 0;

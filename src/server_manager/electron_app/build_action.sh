@@ -19,8 +19,6 @@
 readonly OUT_DIR=$BUILD_DIR/server_manager/electron_app
 rm -rf $OUT_DIR
 
-readonly NODE_MODULES_BIN_DIR=$ROOT_DIR/src/server_manager/node_modules/.bin
-
 # Build the Web App.
 do_action server_manager/web_app/build
 
@@ -50,4 +48,4 @@ yarn install --prod --ignore-scripts
 
 # Icons.
 cd $ROOT_DIR
-$NODE_MODULES_BIN_DIR/electron-icon-maker --input=src/server_manager/images/launcher-icon.png --output=build/server_manager/electron_app/static
+electron-icon-maker --input=src/server_manager/images/launcher-icon.png --output=build/server_manager/electron_app/static
