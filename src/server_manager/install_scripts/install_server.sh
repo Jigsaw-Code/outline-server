@@ -51,6 +51,7 @@ function log_start_step() {
     echo -n " "
     for i in $(seq 1 "$numDots"); do echo -n .; done
   fi
+  echo -n " "
 }
 
 function run_step() {
@@ -58,7 +59,7 @@ function run_step() {
   log_start_step $msg
   shift 1
   if "$@"; then
-    echo " OK"
+    echo "OK"
   fi
 }
 
