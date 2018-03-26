@@ -76,7 +76,7 @@ To run all the tests, run `yarn test`
 
 ## Build System
 
-We have a very simple build system based on package.json scripts that are called called using `yarn`
+We have a very simple build system based on package.json scripts that are called using `yarn`
 and a thin wrapper for what we call build "actions".
 
 We've defined a `do` package.json script that takes an `action` parameter:
