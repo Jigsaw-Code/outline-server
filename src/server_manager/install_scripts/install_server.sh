@@ -21,7 +21,7 @@
 # SHADOWBOX_DIR: Directory for persistent Shadowbox state.
 # SB_PUBLIC_IP: The public IP address for Shadowbox.
 # ACCESS_CONFIG: The location of the access config text file.
-# SB_DEFAULT_SERVER_NAME: Default name for this server, e.g. "Outline Server New York".
+# SB_DEFAULT_SERVER_NAME: Default name for this server, e.g. "Outline server New York".
 #     This name will be used for the server until the admins updates the name
 #     via the REST API.
 # SENTRY_LOG_FILE: File for writing logs which may be reported to Sentry, in case
@@ -197,13 +197,26 @@ You won’t be able to access it externally, despite your server being correctly
 set up, because this host machine has a firewall that is preventing incoming
 connections to ports ${SB_API_PORT} and ${ACCESS_KEY_PORT}.
 
-If you plan to have a single Access Key to access your server, opening those 
-ports on TCP and UDP should suffice. If you plan on adding additional Access
-Keys, you’ll have to open ports 1024 through 65535 on your firewall since the
-Outline Server may allocate any of those ports to new Access Keys.
-
+- If you plan to have a single access key to access your server, opening those 
+  ports for TCP and UDP should suffice.
+- If you plan on adding additional access keys, you’ll have to open ports 1024
+  through 65535 on your firewall since the Outline server may allocate any of
+  those ports to new access keys.
 "
      return 1
+  else
+    FIREWALL_STATUS="\
+If have connection problems, it may be that your router or cloud provider
+blocks inbound connections, even though your host firewall seems to allow
+them.
+
+- If you plan to have a single access key to access your server make sure
+  ports ${SB_API_PORT} and ${ACCESS_KEY_PORT} are open for TCP and UDP on
+  your router or cloud provider.
+- If you plan on adding additional access keys, you’ll have to open ports
+  1024 through 65535 on your router or cloud provider since the Outline
+  Server may allocate any of those ports to new access keys.
+"
   fi
 }
 
@@ -221,9 +234,8 @@ install_shadowbox() {
   # TODO(fortuna): Make sure this is IPv4
   readonly SB_PUBLIC_IP=${SB_PUBLIC_IP:-$(curl -4s https://ipinfo.io/ip)}
 
-
   if [[ ! "$SB_PUBLIC_IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    echo "Invalid IP lookup result: $SB_PUBLIC_IP"
+    log_error "Invalid IP lookup result: $SB_PUBLIC_IP"
     log_for_sentry "Invalid IP lookup result"
     exit 1
   fi
@@ -249,12 +261,12 @@ install_shadowbox() {
 
   readonly PUBLIC_API_URL="https://${SB_PUBLIC_IP}:${SB_API_PORT}/${SB_API_PREFIX}"
   readonly LOCAL_API_URL="https://localhost:${SB_API_PORT}/${SB_API_PREFIX}"
-  run_step "Waiting for Shadowsocks to be healthy" wait_shadowbox
+  run_step "Waiting for Outline server to be healthy" wait_shadowbox
   run_step "Creating first user" create_first_user
   run_step "Adding API URL to config" add_api_url_to_config
 
   FIREWALL_STATUS=""
-  run_step "Checking firewall" check_firewall
+  run_step "Checking host firewall" check_firewall
 
   # Echos the value of the specified field from ACCESS_CONFIG.
   # e.g. if ACCESS_CONFIG contains the line "certSha256:1234",
@@ -268,10 +280,9 @@ install_shadowbox() {
   # require new dependencies.
   cat <<END_OF_SERVER_OUTPUT
 
-CONGRATULATIONS! Your Outline Server is up and running.
+CONGRATULATIONS! Your Outline server is up and running.
 
-${FIREWALL_STATUS}
-To manage your Outline Server, please copy the following text (including curly
+To manage your Outline server, please copy the following text (including curly
 brackets) into Step 2 of the Outline Manager interface:
 
 {
@@ -279,6 +290,7 @@ brackets) into Step 2 of the Outline Manager interface:
   "certSha256": "$(get_field_value certSha256)"
 }
 
+${FIREWALL_STATUS}
 END_OF_SERVER_OUTPUT
 } # end of install_shadowbox
 
