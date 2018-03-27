@@ -197,9 +197,9 @@ function add_api_url_to_config() {
 }
 
 function check_firewall() {
+  local -r ACCESS_KEY_PORT=$(docker exec shadowbox node -e "console.log($(curl --insecure -s ${LOCAL_API_URL}/access-keys)['accessKeys'][0]['port'])")
   if ! curl --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" -s "${PUBLIC_API_URL}/access-keys" >/dev/null; then
      echo "BLOCKED"
-     local -r ACCESS_KEY_PORT=$(docker exec shadowbox node -e "console.log($(curl --insecure -s ${LOCAL_API_URL}/access-keys)['accessKeys'][0]['port'])")
      FIREWALL_STATUS="\
 You won’t be able to access it externally, despite your server being correctly
 set up, because this host machine has a firewall that is preventing incoming
