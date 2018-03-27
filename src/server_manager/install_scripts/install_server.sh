@@ -181,6 +181,8 @@ function start_watchtower() {
 
 # Waits for Shadowbox to be up and healthy
 function wait_shadowbox() {
+  # We use insecure connection because our threat model doesn't include localhost port
+  # interception and our certificate doesn't have localhost as a subject alternative name
   until curl --insecure -s "${LOCAL_API_URL}/access-keys" >/dev/null; do sleep 1; done
 }
 
@@ -202,8 +204,9 @@ function check_firewall() {
      echo "BLOCKED"
      FIREWALL_STATUS="\
 You won’t be able to access it externally, despite your server being correctly
-set up, because this host machine has a firewall that is preventing incoming
-connections to ports ${SB_API_PORT} and ${ACCESS_KEY_PORT}.
+set up, because there's a firewall (in this machine, your router or cloud
+provider) that is preventing incoming connections to ports ${SB_API_PORT} and
+${ACCESS_KEY_PORT}.
 
 - If you plan to have a single access key to access your server, opening those 
   ports for TCP and UDP should suffice.
@@ -215,8 +218,7 @@ connections to ports ${SB_API_PORT} and ${ACCESS_KEY_PORT}.
   else
     FIREWALL_STATUS="\
 If have connection problems, it may be that your router or cloud provider
-blocks inbound connections, even though your host firewall seems to allow
-them.
+blocks inbound connections, even though your machine seems to allow them.
 
 - If you plan to have a single access key to access your server make sure
   ports ${SB_API_PORT} and ${ACCESS_KEY_PORT} are open for TCP and UDP on
