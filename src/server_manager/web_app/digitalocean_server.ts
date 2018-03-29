@@ -424,7 +424,8 @@ function getInstallScript(
   const sanitizezedAccessToken = sanitizeDigitaloceanToken(accessToken);
   return '#!/bin/bash -eu\n' +
       `export DO_ACCESS_TOKEN=${sanitizezedAccessToken}\n` +
-      (image ? `export SB_IMAGE=${image}\n` : '') +
+      // Set watchtower to 30 second refresh rate when overriding image.
+      (image ? `export SB_IMAGE=${image}\nexport WATCHTOWER_REFRESH_SECONDS=30\n` : '') +
       (sentryApiUrl ? `export SENTRY_API_URL="${sentryApiUrl}"\n` : '') +
       (metricsUrl ? `export SB_METRICS_URL=${metricsUrl}\n` : '') +
       `export SB_DEFAULT_SERVER_NAME="${name}"\n` + do_install_script.SCRIPT;

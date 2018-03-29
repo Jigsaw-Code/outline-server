@@ -27,6 +27,8 @@
 # SENTRY_LOG_FILE: File for writing logs which may be reported to Sentry, in case
 #     of an install error. No PII should be written to this file. Intended to be set
 #     only by do_install_server.sh.
+# WATCHTOWER_REFRESH_SECONDS: refresh interval in seconds to check for updates,
+#     defaults to 3600.
 
 # Requires curl and docker to be installed
 
@@ -81,7 +83,7 @@ function verify_docker_installed() {
   if ! command_exists docker; then
     log_error "Docker CE must be installed, please run \"curl -sS https://get.docker.com/ | sh\" or visit https://docs.docker.com/install/"
     exit 1
-  fi 
+  fi
 }
 
 function verify_docker_running() {
@@ -111,7 +113,7 @@ function get_random_port {
 
 function create_persisted_state_dir() {
   readonly STATE_DIR="$SHADOWBOX_DIR/persisted-state"
-  mkdir -p "${STATE_DIR}"  
+  mkdir -p "${STATE_DIR}"
 }
 
 # Generate a secret key for access to the shadowbox API and store it in a tag.
@@ -173,7 +175,7 @@ function start_watchtower() {
   # Start watchtower to automatically fetch docker image updates.
   # Set watchtower to refresh every 30 seconds if a custom SB_IMAGE is used (for
   # testing).  Otherwise refresh every hour.
-  readonly WATCHTOWER_REFRESH_SECONDS=$([ $SB_IMAGE ] && echo 30 || echo 3600)
+  readonly WATCHTOWER_REFRESH_SECONDS="${WATCHTOWER_REFRESH_SECONDS:-3600}"
   declare -a docker_watchtower_flags=(--name watchtower --restart=always)
   docker_watchtower_flags+=(-v /var/run/docker.sock:/var/run/docker.sock)
   docker run -d "${docker_watchtower_flags[@]}" v2tec/watchtower --cleanup --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS >/dev/null
@@ -208,7 +210,7 @@ set up, because there's a firewall (in this machine, your router or cloud
 provider) that is preventing incoming connections to ports ${SB_API_PORT} and
 ${ACCESS_KEY_PORT}.
 
-- If you plan to have a single access key to access your server, opening those 
+- If you plan to have a single access key to access your server, opening those
   ports for TCP and UDP should suffice.
 - If you plan on adding additional access keys, you’ll have to open ports 1024
   through 65535 on your firewall since the Outline server may allocate any of
