@@ -21,6 +21,8 @@
 # SB_IMAGE: Shadowbox Docker image to install, e.g. quay.io/outline/shadowbox:nightly
 # SB_API_PORT: The port number of the management API.
 # SENTRY_API_URL: Url to post Sentry report to on error.
+# WATCHTOWER_REFRESH_SECONDS: refresh interval in seconds to check for updates,
+#     defaults to 3600.
 
 set -euxo pipefail
 

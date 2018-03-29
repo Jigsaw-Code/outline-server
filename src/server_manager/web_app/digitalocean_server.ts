@@ -375,8 +375,9 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
     console.time('activeServer');
     console.time('servingServer');
     const keyPair = crypto.generateKeyPair();
+    const watchtowerRefreshSeconds = this.image ? 30 : undefined;
     const installCommand = getInstallScript(
-        this.digitalOcean.accessToken, name, this.image, this.metricsUrl, this.sentryApiUrl);
+        this.digitalOcean.accessToken, name, this.image, watchtowerRefreshSeconds, this.metricsUrl, this.sentryApiUrl);
 
     const dropletSpec = {
       installCommand,
@@ -419,12 +420,14 @@ function sanitizeDigitaloceanToken(input: string): string {
 
 // cloudFunctions needs to define cloud::public_ip and cloud::add_tag.
 function getInstallScript(
-    accessToken: string, name: string, image?: string, metricsUrl?: string,
-    sentryApiUrl?: string): string {
+    accessToken: string, name: string, image?: string, watchtowerRefreshSeconds?: number,
+    metricsUrl?: string, sentryApiUrl?: string): string {
   const sanitizezedAccessToken = sanitizeDigitaloceanToken(accessToken);
+  // TODO: consider shell escaping these variables.
   return '#!/bin/bash -eu\n' +
       `export DO_ACCESS_TOKEN=${sanitizezedAccessToken}\n` +
       (image ? `export SB_IMAGE=${image}\n` : '') +
+      (watchtowerRefreshSeconds ? `export WATCHTOWER_REFRESH_SECONDS=${watchtowerRefreshSeconds}\n` : '') +
       (sentryApiUrl ? `export SENTRY_API_URL="${sentryApiUrl}"\n` : '') +
       (metricsUrl ? `export SB_METRICS_URL=${metricsUrl}\n` : '') +
       `export SB_DEFAULT_SERVER_NAME="${name}"\n` + do_install_script.SCRIPT;
