@@ -234,17 +234,31 @@ function updateUIForEmailVerification() {
 
 function updateUIForOAuth() {
   onceWindowOnload.then(() => {
-    // Remove minimum width so everything can fit inside our electron window.
-    $$('#aurora-container').forEach((el) => el.style.minWidth = '0');
-    // Fix word break of titles.
-    $$('h1').forEach((el) => el.style.wordBreak = 'normal');
-    // Hide nav-bar to remove welcome link.
-    hideBySelector('.nav-bar');
-    // Widen column so more text fits above-the-fold.
-    $$('div.small-8.columns.small-centered.u-textAlignCenter').forEach((el) => {
-      el.style.width = '100%';
-      el.style.padding = '20px';
-    });
+    const style = document.createElement('style');
+    style.innerHTML = `
+      /* Remove minimum width so everything can fit inside our electron window. */
+      #aurora-container, #aurora-container .nav_controls_v2 {
+        min-width: 0;
+      }
+      /* Set a reasonable padding. */
+      .fleets-container #aurora-container {
+        padding-bottom: 75px;
+      }
+      /* Widen column so more text fits above-the-fold. */
+      #aurora-container .aurora-body .small-8.columns.small-centered.u-textAlignCenter {
+        width: 100%;
+        padding: 20px;
+      }
+      /* Fix word break of titles. */
+      #aurora-container .aurora-body .small-8.columns.small-centered.u-textAlignCenter h1 {
+        word-break: normal;
+      }
+      /* Hide nav-bar and bottom container. */
+      .nav-bar, .cloud-container.nav-has-loaded {
+        display: none;
+      }
+    `;
+    document.body.appendChild(style);
     const bannerText =
         'Give Outline permission to use your DigitalOcean account.  This will only be used to install the Outline server software.';
     addDigitalOceanSignupBanner(bannerText);
