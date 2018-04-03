@@ -81,16 +81,14 @@ function log_for_sentry() {
 # Check to see if docker is installed.
 function verify_docker_installed() {
   if ! command_exists docker; then
-    log_error "\
-Docker CE must be installed, please run \"curl -sS https://get.docker.com/ | sh\" or visit https://docs.docker.com/install/
-After installing Docker you will need to add your user to the docker group, for example by running \"sudo usermod -a -G docker \$USER && newgrp docker\""
+    log_error "Docker CE must be installed, please run \"curl -sS https://get.docker.com/ | sh\" or visit https://docs.docker.com/install/"
     exit 1
   fi
 }
 
 function verify_docker_running() {
   if ! docker info > /dev/null 2>&1 ; then
-    log_error "dockerd is not running.  You may need to add your user to the docker group, for example by running \"sudo usermod -a -G docker \$USER && newgrp docker\""
+    log_error "It seems like you don't have permissions to run Docker.  To solve this, you may need to add your user to the docker group. We recommend running \"sudo usermod -a -G docker $USER && newgrp docker\" and then attempting to install again."
     exit 1
   fi
 }
