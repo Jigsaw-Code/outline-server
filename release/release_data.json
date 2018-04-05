@@ -1,0 +1,20 @@
+{
+  "latestVersions": {
+    "outline-manager-darwin-x64": {
+      "location": "https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/Outline-Manager.dmg",
+      "version": "1.0.4"
+    },
+    "outline-manager-linux-ia32": {
+      "location": "https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/Outline-Manager.AppImage",
+      "version": "1.0.4"
+    },
+    "outline-manager-linux-x64": {
+      "location": "https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/Outline-Manager.AppImage",
+      "version": "1.0.4"
+    },
+    "outline-manager-win32-ia32": {
+      "location": "https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/Outline-Manager.exe",
+      "version": "1.0.4"
+    }
+  }
+}
