@@ -124,16 +124,36 @@ class RestApiSession implements DigitalOceanSession {
     // confusing email with their droplet password, which could get mistaken for
     // an invite.
     return this.registerKey_(dropletName, publicKeyForSSH).then((keyId: number) => {
-      return this.request<{droplet: DropletInfo}>('POST', 'droplets', {
-        name: dropletName,
-        region,
-        size: dropletSpec.size,
-        image: dropletSpec.image,
-        ssh_keys: [keyId],
-        user_data: dropletSpec.installCommand,
-        tags: dropletSpec.tags,
-        ipv6: true,
-      });
+      return this.makeCreateDropletRequest(dropletName, region, keyId, dropletSpec);
+    });
+  }
+
+  private makeCreateDropletRequest(dropletName: string, region: string, keyId: number, dropletSpec: DigitalOceanDropletSpecification): Promise<{droplet: DropletInfo}>  {
+    let requestCount = 0;
+    const MAX_REQUESTS = 10;
+    return new Promise((fulfill, reject) => {
+      const makeRequestRecursive = () => {
+        ++requestCount;
+        this.request<{droplet: DropletInfo}>('POST', 'droplets', {
+          name: dropletName,
+          region,
+          size: dropletSpec.size,
+          image: dropletSpec.image,
+          ssh_keys: [keyId],
+          user_data: dropletSpec.installCommand,
+          tags: dropletSpec.tags,
+          ipv6: true,
+        }).then(fulfill).catch((e) => {
+          const ABUSE_ERROR_TEXT = 'TODO: find the text for the abuse error';
+          if (e.message === ABUSE_ERROR_TEXT && requestCount < MAX_REQUESTS) {  // TODO: figure out exactly how to detect this.
+            const RETRY_TIMEOUT_MS = 5000;
+            setTimeout(makeRequestRecursive, RETRY_TIMEOUT_MS);
+          } else {
+            reject(e);
+          }
+        });
+      };
+      makeRequestRecursive();
     });
   }
 
