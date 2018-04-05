@@ -1,4 +1,4 @@
 {
-  "version": "0.0.4",
-  "releaseDataUrl": "https://raw.githubusercontent.com/Jigsaw-Code/outline-server/dborkan-release-cleanup/release/release_data.json"
+  "version": "1.0.4",
+  "releaseDataUrl": "https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/release/release_data.json"
 }
