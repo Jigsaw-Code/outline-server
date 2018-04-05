@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as errors from 'restify-errors';
+
 import { ShadowsocksManagerService } from './manager_service';
 import { MockAccessKeyRepository } from './mocks/mocks';
 import { AccessKey, AccessKeyRepository } from '../model/access_key';

@@ -14,12 +14,14 @@
     "ipaddr.js": "^1.6.0",
     "randomstring": "^1.1.5",
     "request-lite": "^2.40.1",
-    "restify": "^4.3.0",
+    "restify": "^7",
+    "restify-cors-middleware": "^1.1",
+    "restify-errors": "^4",
     "uuid": "^3.2.1"
   },
   "devDependencies": {
     "@types/node": "^8",
     "@types/randomstring": "^1.1.6",
-    "@types/restify": "^2.0.41"
+    "@types/restify-errors": "^4"
   }
 }

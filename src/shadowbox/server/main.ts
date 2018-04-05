@@ -16,6 +16,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as process from 'process';
 import * as restify from 'restify';
+import cors = require('restify-cors-middleware');
 
 import {FilesystemTextFile} from '../infrastructure/filesystem_text_file';
 import * as ip_location from '../infrastructure/ip_location';
@@ -89,20 +90,21 @@ function main() {
     const certificateFilename = process.env.SB_CERTIFICATE_FILE;
     const privateKeyFilename = process.env.SB_PRIVATE_KEY_FILE;
 
-    // TODO(bemasc): Remove casts once https://github.com/DefinitelyTyped/DefinitelyTyped/pull/15229 lands
     const apiServer = restify.createServer({
       certificate: fs.readFileSync(certificateFilename),
       key: fs.readFileSync(privateKeyFilename)
     });
 
     // Pre-routing handlers
-    apiServer.pre(restify.CORS());
+    const corsMiddleware = cors();
+    apiServer.pre(corsMiddleware.preflight);
 
     // All routes handlers
     const apiPrefix = process.env.SB_API_PREFIX ? `/${process.env.SB_API_PREFIX}` : '';
-    apiServer.pre(restify.pre.sanitizePath());
-    apiServer.use(restify.jsonp());
-    apiServer.use(restify.bodyParser());
+    apiServer.pre(restify.plugins.sanitizePath());
+    apiServer.pre(corsMiddleware.actual);
+    apiServer.use(restify.plugins.jsonp());
+    apiServer.use(restify.plugins.bodyParser());
     setApiHandlers(apiServer, apiPrefix, managerService, stats, serverConfig);
 
     // TODO(fortuna): Bind to localhost or unix socket to avoid external access.

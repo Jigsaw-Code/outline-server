@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as restify from 'restify';
+import * as errors from 'restify-errors';
 
 import * as logging from '../infrastructure/logging';
 import { AccessKey, AccessKeyRepository } from '../model/access_key';
@@ -74,7 +75,7 @@ export class ShadowsocksManagerService {
       });
     } catch (error) {
       logging.error(error);
-      return next(new restify.InternalServerError());
+      return next(new errors.InternalServerError());
     }
   }
 
@@ -84,13 +85,13 @@ export class ShadowsocksManagerService {
       logging.debug(`removeAccessKey request ${req.params}`);
       const accessKeyId = req.params.id;
       if (!this.accessKeys.removeAccessKey(accessKeyId)) {
-        return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
+        return next(new errors.NotFoundError(`No access key found with id ${accessKeyId}`));
       }
       res.send(204);
       return next();
     } catch (error) {
       logging.error(error);
-      return next(new restify.InternalServerError());
+      return next(new errors.InternalServerError());
     }
   }
 
@@ -99,13 +100,13 @@ export class ShadowsocksManagerService {
       logging.debug(`renameAccessKey request ${req.params}`);
       const accessKeyId = req.params.id;
       if (!this.accessKeys.renameAccessKey(accessKeyId, req.params.name)) {
-        return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
+        return next(new errors.NotFoundError(`No access key found with id ${accessKeyId}`));
       }
       res.send(204);
       return next();
     } catch (error) {
       logging.error(error);
-      return next(new restify.InternalServerError());
+      return next(new errors.InternalServerError());
     }
   }
 }
