@@ -397,25 +397,25 @@ export class App {
             // it again.
             return;
           }
-          // This server has already been successfully installed, however
-          // we may have failed to reach it - this could be due to bad wifi,
-          // firewalls, etc.  Notify the user and only delete if the user requests it.
-          const errorMessage = managedServer.isInstallCompleted()
-              ? 'We are unable to connect to your Outline server at the moment.  This may be due to a firewall on your network or temporary connectivity issues with digitalocean.com.'
-              : 'There was an error creating your Outline server.  This may be due to a firewall on your network or temporary connectivity issues with digitalocean.com.';
-          this.appRoot.showModalDialog(
-              null,  // Don't display any title.
-              errorMessage,
-              ['Delete this server', 'Try again'])
-          .then((clickedButtonIndex: number) => {
-            if (clickedButtonIndex === 0) {  // user clicked 'Delete this server'
-              managedServer.getHost().delete().then(() => {
-                this.showCreateServer();
+          const errorMessage = managedServer.isInstallCompleted() ?
+              'We are unable to connect to your Outline server at the moment.  This may be due to a firewall on your network or temporary connectivity issues with digitalocean.com.' :
+              'There was an error creating your Outline server.  This may be due to a firewall on your network or temporary connectivity issues with digitalocean.com.';
+          SentryErrorReporter.logError(errorMessage);
+          this.appRoot
+              .showModalDialog(
+                  null,  // Don't display any title.
+                  errorMessage, ['Delete this server', 'Try again'])
+              .then((clickedButtonIndex: number) => {
+                if (clickedButtonIndex === 0) {  // user clicked 'Delete this server'
+                  SentryErrorReporter.logInfo('Deleting unreachable server');
+                  managedServer.getHost().delete().then(() => {
+                    this.showCreateServer();
+                  });
+                } else if (clickedButtonIndex === 1) {  // user clicked 'Try again'.
+                  SentryErrorReporter.logInfo('Retrying unreachable server');
+                  this.showManagedServer(managedServer, true);
+                }
               });
-            } else if (clickedButtonIndex === 1) {  // user clicked 'Try again'.
-              this.showManagedServer(managedServer, true);
-            }
-          });
         });
   }
 
