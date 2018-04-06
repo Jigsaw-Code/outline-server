@@ -9,6 +9,9 @@
     "tslint": "^5.9.1",
     "typescript": "^2.6.2"
   },
+  "engines": {
+    "yarn": ">=1.0"
+  },
   "scripts": {
     "clean": "rm -rf src/server_manager/bower_components/ src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts",
     "do": "bash ./scripts/do_action.sh",
