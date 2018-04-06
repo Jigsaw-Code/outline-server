@@ -18,6 +18,7 @@ do_action shadowbox/server/build
 
 export LOG_LEVEL="${LOG_LEVEL:-debug}"
 export SB_PUBLIC_IP="${SB_PUBLIC_IP:-$(curl https://ipinfo.io/ip)}"
+# WARNING: The SB_API_PREFIC should be kept secret!
 export SB_API_PREFIX=TestApiPrefix
 export SB_METRICS_URL=https://metrics-test.uproxy.org
 export SB_STATE_DIR=/tmp
