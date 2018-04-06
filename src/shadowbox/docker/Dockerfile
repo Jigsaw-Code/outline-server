@@ -36,7 +36,7 @@ WORKDIR /root/shadowbox
 # Install management service
 COPY build/shadowbox/app app/
 COPY src/shadowbox/package.json .
-COPY src/shadowbox/yarn.lock .
+COPY yarn.lock .
 # TODO: Replace with plain old "yarn" once the base image is fixed:
 #       https://github.com/nodejs/docker-node/pull/639
 RUN /opt/yarn-v$YARN_VERSION/bin/yarn install --prod
