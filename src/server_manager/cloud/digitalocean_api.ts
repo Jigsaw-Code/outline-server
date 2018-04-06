@@ -148,9 +148,12 @@ class RestApiSession implements DigitalOceanSession {
             })
             .then(fulfill)
             .catch((e) => {
-              const ABUSE_ERROR_TEXT = 'We\'re finalizing your account setup. Please try again in 30 seconds.';
-              if (e.message === ABUSE_ERROR_TEXT &&
-                  requestCount < MAX_REQUESTS) {
+              const ACCOUNT_NOT_YET_FINALIZED_ERROR =
+                  'We\'re finalizing your account setup. Please try again in 30 seconds.';
+              if (e.message === ACCOUNT_NOT_YET_FINALIZED_ERROR && requestCount < MAX_REQUESTS) {
+                // DigitalOcean is still validating this account and may take
+                // up to 30 seconds.  We can retry more frequently to see when
+                // this error goes away.
                 const RETRY_TIMEOUT_MS = 5000;
                 setTimeout(makeRequestRecursive, RETRY_TIMEOUT_MS);
               } else {
