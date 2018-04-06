@@ -14,6 +14,15 @@
 
 import * as ipaddr from 'ipaddr.js';
 
+// Missing fields from typings.
+interface IPv4 extends ipaddr.IPv4 {
+  octets: number[];
+}
+
+interface IPv6 extends ipaddr.IPv6 {
+  parts: number[];
+}
+
 // Returns anonymized IP address, by setting the last octet to 0 for ipv4,
 // or setting the last 80 bits to 0 for ipv6.
 // Throws an exception when passed an invalid IP address.
@@ -21,12 +30,12 @@ export function anonymizeIp(ip: string): string {
   const addr = ipaddr.parse(ip);
   if (addr.kind() === 'ipv4') {
     // Replace last octet of ipv4 address with a 0.
-    addr.octets[3] = 0;
+    (addr as IPv4).octets[3] = 0;
     return addr.toString();
   } else {
     // Replace last 80 bits (5 groups of 4 hex characters) with 0s.
     for (let i = 3; i < 8; ++i) {
-      addr.parts[i] = 0;
+      (addr as IPv6).parts[i] = 0;
     }
     return addr.toNormalizedString();
   }
