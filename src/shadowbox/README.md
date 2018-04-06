@@ -1,45 +1,85 @@
-# Introduction
+# Outline Server
 
-Shadowbox is a server set up that runs a user management API and starts Shadowsocks
-instances on demand.
+The internal name for the Outline server is "Shadowbox". It is a server set up
+that runs a user management API and starts Shadowsocks instances on demand.
 
-It aims to make it as easy as possible to set up and share a Shadowsocks server. It's
-used by the Outline server launcher.
+It aims to make it as easy as possible to set up and share a Shadowsocks
+server. It's managed by the Outline Manager and used as proxy by the Outline
+client apps. Shadowbox is also compatible with standard Shadowsocks clients.
 
-## Requirements
+## Self-hosted installation
 
-1. [Node](https://nodejs.org/en/download/)
-1. [Yarn](https://yarnpkg.com/en/docs/install)
+To install and run Shadowbox on your own server, run
+```
+wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh | bash
+```
+
+Use `bash -x` instead at the end of the command if you need to debug the installation.
+
+## Running from source code
+
+### Prerequisites
+
+Besides [Node](https://nodejs.org/en/download/) and [Yarn](https://yarnpkg.com/en/docs/install), you will also need:
+
 1. [Docker 1.13+](https://docs.docker.com/engine/installation/)
 1. [docker-compose 1.11+](https://docs.docker.com/compose/install/)
 
-Run `docker info` and make sure `Storage Driver` is `devicemapper`. If it is not, you can override it by
-editting `/etc/default/docker` or by passing another storage driver in the daemon commandline:
+Run `docker info` and make sure `Storage Driver` is `devicemapper`. If it is
+not, you can override it by editting `/etc/default/docker` or by passing
+another storage driver in the daemon commandline:
 ```
 sudo dockerd --storage-driver=devicemapper
 ```
 
-## Development
+### Running Shadowbox as a Node.js app
 
-Set up
-```
-yarn
-```
-
-Start the server
-```
-yarn do shadowbox/server/run
-```
-
-If you just want to build the server:
+Build the server as a Node.js app:
 ```
 yarn do shadowbox/server/build
 ```
-
 The output will be at `build/shadowbox/app`.
 
 
-## Queries
+You can see how to run the server at [`shadowbox/server/run_action.sh`](server/run_action.sh).
+
+
+### Running Shadowbox as a Docker container
+
+> **NOTE**: This does not currently work in Docker on Mac due to use of
+`--host=net` and integrity checks failing. For now, please see the Manual
+testing section below.
+
+### With docker command
+
+Build the `outline/shadowbox` Docker image:
+```
+yarn do shadowbox/docker/build
+```
+
+Run server:
+```
+yarn do shadowbox/docker/run
+```
+
+Debug image:
+```
+docker run --rm -it --entrypoint=sh outline/shadowbox
+```
+
+Or a running container:
+```
+docker exec -it shadowbox sh
+```
+
+
+Delete dangling images:
+```
+docker rmi $(docker images -f dangling=true -q)
+```
+
+
+## Access Keys Management API
 
 List users
 ```
@@ -98,39 +138,6 @@ $ curl --insecure https://localhost:8081/TestApiPrefix/access-keys
 ```
 </details>
 
-## Docker Deployment
-
-**NOTE**: This does not currently work in Docker on Mac due to use of
-`--host=net` and integrity checks failing. For now, please see the Manual
-testing section below.
-
-### With docker command
-
-Build Docker image:
-```
-yarn do shadowbox/docker/build
-```
-
-Run server:
-```
-yarn do shadowbox/docker/run
-```
-
-Debug image:
-```
-docker run --rm -it --entrypoint=sh quay.io/outline/shadowbox
-```
-
-or
-```
-docker exec -it shadowbox sh
-```
-
-
-Delete dangling images:
-```
-docker rmi $(docker images -f dangling=true -q)
-```
 
 ## Testing
 
