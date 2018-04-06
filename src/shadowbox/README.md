@@ -23,7 +23,7 @@ sudo dockerd --storage-driver=devicemapper
 
 Set up
 ```
-yarn shadowbox_install
+yarn
 ```
 
 Start the server
