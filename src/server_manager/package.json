@@ -26,5 +26,8 @@
     "electron": "^1.7.9",
     "electron-builder": "^20.4.1",
     "electron-icon-maker": "^0.0.4"
+  },
+  "scripts": {
+    "postinstall": "bower install"
   }
 }
