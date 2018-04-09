@@ -6,7 +6,7 @@ This repository has all the code needed to create and manage Outline servers on
 DigitalOcean. An Outline server runs instances of Shadowsocks proxies and
 provides an API used by the Outline Manager application.
 
-Go to https://getoutline.com for ready-to-use versions of the software.
+Go to https://getoutline.org for ready-to-use versions of the software.
 
 ## Components
 
