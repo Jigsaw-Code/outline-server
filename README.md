@@ -1,77 +1,50 @@
-# Outline Server Creator
+# Outline Server
 
 [![Build Status](https://travis-ci.org/Jigsaw-Code/outline-server.svg?branch=master)](https://travis-ci.org/Jigsaw-Code/outline-server)
 
-This repository has all the code needed to create and manage Outline servers on DigitalOcean. An Outline server runs
-instances of Shadowsocks proxies and provides an API used by the Outline Manager application.
+This repository has all the code needed to create and manage Outline servers on
+DigitalOcean. An Outline server runs instances of Shadowsocks proxies and
+provides an API used by the Outline Manager application.
 
+Go to https://getoutline.org for ready-to-use versions of the software.
 
 ## Components
 
 The system comprises the following components:
 
-- **Server Manager Electron App:** an Election application that wraps the Server Manager web application and runs
-  natively on Desktop. It adds some extra functionality, like validation of the server self-signed certificate and interception of the DigitalOcean registration flow.
+- **Outline Server**: a proxy server that runs a Shadowsocks instance for each
+  access key and a REST API to manage the access keys. The Outline Server runs
+  in a Docker container in the host machine.
 
-  Code: `src/server_manager/electron_app`
-- **Proxy Server**: a server that runs the Shadowsocks instances and a REST API to manage its users. Used as backend by the
-  Server Manager app.
+  See [`src/shadowbox`](src/shadowbox)
 
-  Code: `src/shadowbox`
+- **Outline Manager:** an [Electron](https://electronjs.org/) application that
+  can create Outline Servers on the cloud and talks to their access key
+  management API to manage who has access to the server.
 
-## Server Manager
+  See [`src/server_manager`](src/server_manager)
 
-### Setup
+- **Metrics Server:** a REST service that the Outline Server talks to
+  if the user opts-in to anonymous metrics sharing.
 
-Ensure you have the following installed:
+  See [`src/metrics_server`](src/metrics_server)
+
+
+## Code Prerequisites
+
+In order to build and run the code, you need the following installed:
   - [Node](https://nodejs.org/)
   - [Yarn](https://yarnpkg.com/en/docs/install)
   - [Wine](https://www.winehq.org/download), if you would like to generate binaries for Windows.
 
-Install dependencies:
+Then you need to install all the NPM package dependencies:
 ```
 yarn
 ```
 
-If you are using root (not recommended on your dev machine, maybe in a container), you need to add `{ "allow_root": true }` to your `/root/.bowerrc` file.
+Note: If you are using root (not recommended on your dev machine, maybe in a container), you need to add `{ "allow_root": true }` to your `/root/.bowerrc` file.
 
-
-### Electron App
-
-To run the electron app:
-```
-yarn do server_manager/electron_app/run
-```
-
-To build the app for all platforms:
-```
-yarn do server_manager/electron_app/package
-```
-
-The per-platform standalone apps will be at `build/electron_app/bundled`.
-
-The per-platform standalone apps packaged for distribution will be at
-`build/electron_app/packaged` in the following formats:
-
-- Windows: zip files. Only generated if you have [wine](https://www.winehq.org/download) installed.
-- Linux: tar.gz files.
-- macOS: dmg files if built from macOS, zip files otherwise.
-
-To perform a release, use
-```
-yarn do server_manager/electron_app/release
-```
-
-This will perform a clean and reinstall all dependencies to make sure the build is not tainted.
-
-
-## Proxy Server
-
-See [`src/shadowbox/README.md`](src/shadowbox/README.md).
-
-## Unit Tests
-
-To run all the tests, run `yarn test`
+This project uses [Yarn workspaces](https://yarnpkg.com/blog/2017/08/02/introducing-workspaces/).
 
 
 ## Build System
