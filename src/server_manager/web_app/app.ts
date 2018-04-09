@@ -132,10 +132,16 @@ export class App {
             manualServerEntryEl.showConnection = false;
             // Display either error dialog or feedback depending on error type.
             if (e instanceof errors.UnreachableServerError) {
-              manualServerEntryEl.showError(e.message);
+              manualServerEntryEl.showError('Unable to connect to your Outline Server', e.message);
             } else {
-              appRoot.openManualInstallFeedback(
-                  e.message + (userInputConfig ? `\n${userInputConfig}` : ''));
+              let errorMessage = '';
+              if (e.message) {
+                errorMessage += `${e.message}\n`;
+              }
+              if (userInputConfig) {
+                errorMessage += userInputConfig;
+              }
+              appRoot.openManualInstallFeedback(errorMessage);
             }
           });
     });
@@ -604,9 +610,8 @@ export class App {
       userInputConfig = userInputConfig.substr(0, userInputConfig.lastIndexOf('}') + 1);
       serverConfig = JSON.parse(userInputConfig);
     } catch (e) {
-      const msg = 'Invalid server configuration: could not parse JSON.';
-      SentryErrorReporter.logError(msg);
-      return Promise.reject(new Error(msg));
+      SentryErrorReporter.logError('Invalid server configuration: could not parse JSON.');
+      return Promise.reject(new Error(''));
     }
     if (!serverConfig.apiUrl) {
       const msg = 'Invalid server configuration: apiUrl is missing.';
