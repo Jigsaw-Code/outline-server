@@ -88,7 +88,7 @@ function verify_docker_installed() {
 
 function verify_docker_running() {
   if ! docker info > /dev/null 2>&1 ; then
-    log_error "It seems like you may not have permissions to run Docker.  To solve this, you may need to add your user to the docker group. We recommend running \"sudo usermod -a -G docker $USER && newgrp docker\" and then attempting to install again."
+    log_error "It seems like you may not have permission to run Docker.  To solve this, you may need to add your user to the docker group. We recommend running \"sudo usermod -a -G docker $USER && newgrp docker\" and then attempting to install again."
     exit 1
   fi
 }
