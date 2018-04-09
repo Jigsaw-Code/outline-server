@@ -129,6 +129,7 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
               // Server has been installed (Api Url and Certificate have been)
               // set, but is not healthy.  This could occur if the server
               // is behind a firewall.
+              SentryErrorReporter.logError('digitalocean_server: Server is unreachable, possibly due to firewall.');
               reject(new errors.UnreachableServerError());
             }
           });
@@ -154,11 +155,16 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
         // State is already known, so it cannot be changed.
         return;
       }
-      if (this.getTagValue(INSTALL_ERROR_TAG) || Date.now() - startTimestamp >= TIMEOUT_MS) {
+      if (this.getTagValue(INSTALL_ERROR_TAG)) {
+        SentryErrorReporter.logError('digitalocean_server: Got error tag ' + this.getTagValue(INSTALL_ERROR_TAG));
+        this.installState = InstallState.ERROR;
+      } else if (Date.now() - startTimestamp >= TIMEOUT_MS) {
+        SentryErrorReporter.logError('digitalocean_server: hit timeout while waiting for installation');
         this.installState = InstallState.ERROR;
       } else if (this.setApiUrlAndCertificate()) {
         // API Url and Certificate have been set, so we have successfully
         // installed the server and can now make API calls.
+        SentryErrorReporter.logInfo('digitalocean_server: Successfully found API and cert tags');
         this.installState = InstallState.SUCCESS;
       }
     };
