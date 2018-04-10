@@ -132,10 +132,16 @@ export class App {
             manualServerEntryEl.showConnection = false;
             // Display either error dialog or feedback depending on error type.
             if (e instanceof errors.UnreachableServerError) {
-              manualServerEntryEl.showError(e.message);
+              manualServerEntryEl.showError('Unable to connect to your Outline Server', e.message);
             } else {
-              appRoot.openManualInstallFeedback(
-                  e.message + (userInputConfig ? `\n${userInputConfig}` : ''));
+              let errorMessage = '';
+              if (e.message) {
+                errorMessage += `${e.message}\n`;
+              }
+              if (userInputConfig) {
+                errorMessage += userInputConfig;
+              }
+              appRoot.openManualInstallFeedback(errorMessage);
             }
           });
     });
@@ -397,27 +403,25 @@ export class App {
             // it again.
             return;
           }
-          if (managedServer.isInstallCompleted()) {
-            // This server has already been successfully installed, however
-            // we may have failed to reach it - this could be due to bad wifi,
-            // firewalls, etc.  Notify the user and only delete if the user requests it.
-            this.appRoot.showModalDialog(
-                null,  // Don't display any title.
-                'We are unable to reach your Outline server at the moment.',
-                ['Delete this server', 'Try again'])
-            .then((clickedButtonIndex: number) => {
-              if (clickedButtonIndex === 0) {  // user clicked 'Delete this server'
-                this.cancelServerCreation(managedServer);
-              } else if (clickedButtonIndex === 1) {  // user clicked 'Try again'.
-                this.showManagedServer(managedServer, true);
-              }
-            });
-            return;
-          }
-          // An error occured while installing this server.
-          // Show an error and cancel the server creation (e.g. delete the droplet).
-          this.handleServerCreationFailure('Got an error while waiting on server installation', e);
-          this.cancelServerCreation(managedServer);
+          const errorMessage = managedServer.isInstallCompleted() ?
+              'We are unable to connect to your Outline server at the moment.  This may be due to a firewall on your network or temporary connectivity issues with digitalocean.com.' :
+              'There was an error creating your Outline server.  This may be due to a firewall on your network or temporary connectivity issues with digitalocean.com.';
+          SentryErrorReporter.logError(errorMessage);
+          this.appRoot
+              .showModalDialog(
+                  null,  // Don't display any title.
+                  errorMessage, ['Delete this server', 'Try again'])
+              .then((clickedButtonIndex: number) => {
+                if (clickedButtonIndex === 0) {  // user clicked 'Delete this server'
+                  SentryErrorReporter.logInfo('Deleting unreachable server');
+                  managedServer.getHost().delete().then(() => {
+                    this.showCreateServer();
+                  });
+                } else if (clickedButtonIndex === 1) {  // user clicked 'Try again'.
+                  SentryErrorReporter.logInfo('Retrying unreachable server');
+                  this.showManagedServer(managedServer, true);
+                }
+              });
         });
   }
 
@@ -432,10 +436,10 @@ export class App {
           this.showManagedServer(managedServer);
         })
         .catch((e) => {
-          // Don't show a dialog on the login screen.
-          if (!(e instanceof digitalocean_api.XhrError)) {
-            this.handleServerCreationFailure('Failed to create DigitalOcean server', e);
-          }
+          // Sanity check - this error is not expected to occur, as showManagedServer
+          // has it's own error handling.
+          console.error('error from showManagedServer', e);
+          return Promise.reject(e);
         });
   }
 
@@ -606,9 +610,8 @@ export class App {
       userInputConfig = userInputConfig.substr(0, userInputConfig.lastIndexOf('}') + 1);
       serverConfig = JSON.parse(userInputConfig);
     } catch (e) {
-      const msg = 'Invalid server configuration: could not parse JSON.';
-      SentryErrorReporter.logError(msg);
-      return Promise.reject(new Error(msg));
+      SentryErrorReporter.logError('Invalid server configuration: could not parse JSON.');
+      return Promise.reject(new Error(''));
     }
     if (!serverConfig.apiUrl) {
       const msg = 'Invalid server configuration: apiUrl is missing.';

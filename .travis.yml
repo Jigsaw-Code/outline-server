@@ -37,7 +37,6 @@ jobs:
     # stage.
     - stage: build and unit test
       script:
-        - yarn shadowbox_install
         - yarn do shadowbox/server/build
         - yarn do shadowbox/test
         - yarn do server_manager/electron_app/build
@@ -54,7 +53,6 @@ jobs:
           curl -L https://github.com/docker/compose/releases/download/1.17.1/docker-compose-$(uname -s)-$(uname -m) > docker-compose
           chmod +x docker-compose
           sudo mv docker-compose /usr/local/bin
-        - yarn shadowbox_install
         - yarn do shadowbox/integration_test/run
 
     - stage: tag
@@ -68,7 +66,6 @@ jobs:
       sudo: required
       services: docker
       script:
-        - yarn shadowbox_install
         - yarn do shadowbox/docker/build
         - docker login quay.io -u="$QUAY_IO_USERNAME" -p="$QUAY_IO_PASSWORD"
         - docker tag outline/shadowbox quay.io/outline/shadowbox:$TRAVIS_TAG
