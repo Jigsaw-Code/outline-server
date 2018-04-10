@@ -216,7 +216,6 @@ ${ACCESS_KEY_PORT}.
   through 65535 on your firewall since the Outline server may allocate any of
   those ports to new access keys.
 "
-     return 1
   else
     FIREWALL_STATUS="\
 If have connection problems, it may be that your router or cloud provider
