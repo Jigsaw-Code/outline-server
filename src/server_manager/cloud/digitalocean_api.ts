@@ -133,6 +133,7 @@ class RestApiSession implements DigitalOceanSession {
       dropletSpec: DigitalOceanDropletSpecification): Promise<{droplet: DropletInfo}> {
     let requestCount = 0;
     const MAX_REQUESTS = 10;
+    const RETRY_TIMEOUT_MS = 5000;
     return new Promise((fulfill, reject) => {
       const makeRequestRecursive = () => {
         ++requestCount;
@@ -154,7 +155,6 @@ class RestApiSession implements DigitalOceanSession {
                 // DigitalOcean is still validating this account and may take
                 // up to 30 seconds.  We can retry more frequently to see when
                 // this error goes away.
-                const RETRY_TIMEOUT_MS = 5000;
                 setTimeout(makeRequestRecursive, RETRY_TIMEOUT_MS);
               } else {
                 reject(e);
