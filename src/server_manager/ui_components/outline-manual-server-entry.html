@@ -116,7 +116,7 @@
     </div>  <!-- end of .card -->
 
     <paper-dialog id='errorDialog' modal>
-      <h3>Unable to connect to your Outline Server</h3>
+      <h3 hidden$='[[!errorTitle]]'>[[errorTitle]]</h3>
       <div style="text-align: left">[[errorText]]</div>
       <div class="buttons">
         <paper-button dialog-dismiss autofocus>Cancel</paper-button>
@@ -135,12 +135,22 @@
         },
         showConnection: Boolean
       },
-      showError: function(errorMessage) {
+      showError: function(errorTitle, errorMessage) {
         this.showConnection = false;
         this.$.errorDialog.open();
         this.errorText = errorMessage;
+        this.errorTitle = errorTitle;
+      },
+      clearError: function() {
+        this.errorTitle = '';
+        this.errorText = '';
       },
       doneTapped: function() {
+        if (!this.$.serverConfig.value) {
+          this.showError('',
+              'Please paste the output from the installation process before proceeding.');
+          return;
+        }
         this.showConnection = true;
         this.fire('ManualServerEntered', {
           userInputConfig: this.$.serverConfig.value
@@ -155,7 +165,7 @@
       },
       clear: function() {
         this.$.serverConfig.value = '';
-        this.errorText = '';
+        this.clearError();
         this.showConnection = false;
         this.$.errorDialog.close();
       }
