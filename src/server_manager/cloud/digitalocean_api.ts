@@ -151,8 +151,8 @@ class RestApiSession implements DigitalOceanSession {
             .then(fulfill)
             .catch((e) => {
               SentryErrorReporter.logError('Error from droplet creation: ' + e.message);
-              if (e.message.toLowerCase().indexOf('finalizing') >= 0
-                  && requestCount < MAX_REQUESTS) {
+              if (e.message.toLowerCase().indexOf('finalizing') >= 0 &&
+                  requestCount < MAX_REQUESTS) {
                 // DigitalOcean is still validating this account and may take
                 // up to 30 seconds.  We can retry more frequently to see when
                 // this error goes away.
