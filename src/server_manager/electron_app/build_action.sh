@@ -50,4 +50,4 @@ yarn install --prod --ignore-scripts
 
 # Icons.
 cd $ROOT_DIR
-#$NODE_MODULES_BIN_DIR/electron-icon-maker --input=src/server_manager/images/launcher-icon.png --output=build/server_manager/electron_app/static
+$NODE_MODULES_BIN_DIR/electron-icon-maker --input=src/server_manager/images/launcher-icon.png --output=build/server_manager/electron_app/static
