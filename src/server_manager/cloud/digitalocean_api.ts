@@ -15,6 +15,7 @@
 import * as events from 'events';
 
 import * as errors from '../infrastructure/errors';
+import {SentryErrorReporter} from '../web_app/error_reporter';
 
 export interface DigitalOceanDropletSpecification {
   installCommand: string;
@@ -111,6 +112,7 @@ class RestApiSession implements DigitalOceanSession {
   constructor(public accessToken: string) {}
 
   public getAccount(): Promise<Account> {
+    SentryErrorReporter.logInfo('Requesting account');
     return this.request<{account: Account}>('GET', 'account/').then((response) => {
       return response.account;
     });
@@ -124,24 +126,54 @@ class RestApiSession implements DigitalOceanSession {
     // confusing email with their droplet password, which could get mistaken for
     // an invite.
     return this.registerKey_(dropletName, publicKeyForSSH).then((keyId: number) => {
-      return this.request<{droplet: DropletInfo}>('POST', 'droplets', {
-        name: dropletName,
-        region,
-        size: dropletSpec.size,
-        image: dropletSpec.image,
-        ssh_keys: [keyId],
-        user_data: dropletSpec.installCommand,
-        tags: dropletSpec.tags,
-        ipv6: true,
-      });
+      return this.makeCreateDropletRequest(dropletName, region, keyId, dropletSpec);
+    });
+  }
+
+  private makeCreateDropletRequest(
+      dropletName: string, region: string, keyId: number,
+      dropletSpec: DigitalOceanDropletSpecification): Promise<{droplet: DropletInfo}> {
+    let requestCount = 0;
+    const MAX_REQUESTS = 10;
+    const RETRY_TIMEOUT_MS = 5000;
+    return new Promise((fulfill, reject) => {
+      const makeRequestRecursive = () => {
+        ++requestCount;
+        SentryErrorReporter.logInfo(`Requesting droplet creation ${requestCount}/${MAX_REQUESTS}`);
+        this.request<{droplet: DropletInfo}>('POST', 'droplets', {
+              name: dropletName,
+              region,
+              size: dropletSpec.size,
+              image: dropletSpec.image,
+              ssh_keys: [keyId],
+              user_data: dropletSpec.installCommand,
+              tags: dropletSpec.tags,
+              ipv6: true,
+            })
+            .then(fulfill)
+            .catch((e) => {
+              if (e.message.toLowerCase().indexOf('finalizing') >= 0 &&
+                  requestCount < MAX_REQUESTS) {
+                // DigitalOcean is still validating this account and may take
+                // up to 30 seconds.  We can retry more frequently to see when
+                // this error goes away.
+                setTimeout(makeRequestRecursive, RETRY_TIMEOUT_MS);
+              } else {
+                reject(e);
+              }
+            });
+      };
+      makeRequestRecursive();
     });
   }
 
   public deleteDroplet(dropletId: number): Promise<void> {
+    SentryErrorReporter.logInfo('Requesting droplet deletion');
     return this.request<void>('DELETE', 'droplets/' + dropletId);
   }
 
   public getRegionInfo(): Promise<RegionInfo[]> {
+    SentryErrorReporter.logInfo('Requesting region info');
     return this.request<{regions: RegionInfo[]}>('GET', 'regions').then((response) => {
       return response.regions;
     });
@@ -149,6 +181,7 @@ class RestApiSession implements DigitalOceanSession {
 
   // Registers a SSH key with DigitalOcean.
   private registerKey_(keyName: string, publicKeyForSSH: string): Promise<number> {
+    SentryErrorReporter.logInfo('Requesting key registration');
     return this
         .request<{ssh_key: {id: number}}>(
             'POST', 'account/keys', {name: keyName, public_key: publicKeyForSSH})
@@ -158,6 +191,7 @@ class RestApiSession implements DigitalOceanSession {
   }
 
   public getDroplet(dropletId: number): Promise<DropletInfo> {
+    SentryErrorReporter.logInfo('Requesting droplet');
     return this.request<{droplet: DropletInfo}>('GET', 'droplets/' + dropletId).then((response) => {
       return response.droplet;
     });
@@ -170,6 +204,7 @@ class RestApiSession implements DigitalOceanSession {
   }
 
   public getDropletsByTag(tag: string): Promise<DropletInfo[]> {
+    SentryErrorReporter.logInfo('Requesting droplet by tag');
     return this.request<{droplets: DropletInfo[]}>('GET', `droplets/?tag_name=${encodeURI(tag)}`)
         .then((response) => {
           return response.droplets;
@@ -177,6 +212,7 @@ class RestApiSession implements DigitalOceanSession {
   }
 
   public getDroplets(): Promise<DropletInfo[]> {
+    SentryErrorReporter.logInfo('Requesting droplets');
     return this.request<{droplets: DropletInfo[]}>('GET', 'droplets/').then((response) => {
       return response.droplets;
     });
@@ -200,6 +236,7 @@ class RestApiSession implements DigitalOceanSession {
         } else {
           // this.response is a JSON object, whose message is an error string.
           const responseJson = JSON.parse(xhr.response);
+          SentryErrorReporter.logError(`DigitalOcean request failed with status ${xhr.status}`);
           reject(new Error(
               `XHR ${responseJson.id} failed with ${xhr.status}: ${responseJson.message}`));
         }
@@ -213,6 +250,7 @@ class RestApiSession implements DigitalOceanSession {
         // DigitalOcean (this isn't so bad because application-level
         // errors, e.g. bad request parameters and even 404s, do *not* raise
         // an onerror event).
+        SentryErrorReporter.logError('Failed to perform DigitalOcean request');
         reject(new XhrError());
       };
       xhr.send(data ? JSON.stringify(data) : undefined);
