@@ -20,7 +20,6 @@ import * as url from 'url';
 
 import {LoadingWindow} from './loading_window';
 import * as menu from './menu';
-import {checkForUpdates} from './update_checker';
 
 const app = electron.app;
 const ipcMain = electron.ipcMain;
@@ -244,5 +243,3 @@ if (app.setAboutPanelOptions) {
     applicationVersion: config.version
   });
 }
-
-checkForUpdates(config.version, config.releaseDataUrl);
