@@ -68,6 +68,19 @@ function run_step() {
   fi
 }
 
+function run_step_with_user_confirmation() {
+  local readonly MSG=$1
+  shift 1
+  local readonly CMD=$@
+  local RESPONSE
+  read RESPONSE
+  RESPONSE=$(echo "$RESPONSE" | tr '[A-Z]' '[a-z]')
+  if [[ -z "$RESPONSE" ]] || [[ "$RESPONSE" = "y" ]] || [[ "$RESPONSE" = "yes" ]]; then
+    run_step "$MSG" "$CMD"
+  else
+    return
+  fi
+}
 function command_exists {
   command -v "$@" > /dev/null 2>&1
 }
@@ -81,16 +94,55 @@ function log_for_sentry() {
 # Check to see if docker is installed.
 function verify_docker_installed() {
   if ! command_exists docker; then
-    log_error "Docker CE must be installed, please run \"curl -sS https://get.docker.com/ | sh\" or visit https://docs.docker.com/install/"
-    exit 1
+    log_error "Docker not installed."
+    echo -n "> Would you like to install Docker? [Y/n] "
+    if ! run_step_with_user_confirmation "Installing Docker" install_docker; then
+      log_error "Docker installation failed, please visit https://docs.docker.com/install for instructions."
+      exit 1
+    fi
   fi
 }
 
 function verify_docker_running() {
-  if ! docker info > /dev/null 2>&1 ; then
-    log_error "It seems like you may not have permission to run Docker.  To solve this, you may need to add your user to the docker group. We recommend running \"sudo usermod -a -G docker $USER && newgrp docker\" and then attempting to install again."
-    exit 1
+  local readonly STDERR_OUTPUT
+  STDERR_OUTPUT=$(sg docker -c "docker info 2>&1 >/dev/null")
+  local readonly RET=$?
+  if [[ $RET -eq 0 ]]; then
+    return 0
+  elif [[ $STDERR_OUTPUT = *"Is the docker daemon running"* ]]; then
+    start_docker
   fi
+}
+
+function verify_docker_permissions() {
+  local readonly STDERR_OUTPUT
+  STDERR_OUTPUT=$(docker info 2>&1 >/dev/null)
+  local RET=$?
+  if [[ $RET -eq 0 ]]; then
+    return 0
+  elif [[ $STDERR_OUTPUT = *"permission denied"* ]]; then
+    log_error "FAILED"
+    echo -n "> It seems like you may not have permission to run Docker. To solve this, we will attempt to add your user to the docker group. Would you like to proceed? [Y/n] "
+    if run_step_with_user_confirmation "Adding $USER to docker group" add_user_to_docker_group; then
+      echo -n "> Docker ready................................. "
+    else
+      log_error "Failed to verify Docker permissions."
+      return 1
+    fi
+  fi
+}
+
+function install_docker() {
+  curl -sS https://get.docker.com/ | sh > /dev/null 2>&1
+}
+
+function add_user_to_docker_group() {
+  sudo usermod -a -G docker $USER
+}
+
+function start_docker() {
+  sudo systemctl start docker.service > /dev/null 2>&1
+  sudo systemctl enable docker.service > /dev/null 2>&1
 }
 
 # Set trap which publishes error tag only if there is an error.
@@ -155,6 +207,32 @@ function generate_certificate_fingerprint() {
   output_config "certSha256:$CERT_HEX_FINGERPRINT"
 }
 
+function remove_shadowbox_container() {
+  remove_docker_container shadowbox
+}
+
+function remove_watchtower_container() {
+  remove_docker_container watchtower
+}
+
+function remove_docker_container() {
+  sg docker -c "docker rm -f $1 >/dev/null"
+}
+
+function handle_docker_container_conflict() {
+  local readonly CONTAINER_NAME=$1
+  local readonly ERROR_TEXT="> The container name \"$CONTAINER_NAME\" is already in use by another container. \
+This may happen when running this script multiple times. We will attempt to remove the existing container and \
+and restart it. Would you like to proceed? [Y/n] "
+  echo -n $ERROR_TEXT
+  if run_step_with_user_confirmation "Removing $CONTAINER_NAME container" remove_"$CONTAINER_NAME"_container ; then
+    echo -n "> Restarting $CONTAINER_NAME ........................ "
+    start_"$CONTAINER_NAME"
+    return $?
+  fi
+  return 1
+}
+
 function start_shadowbox() {
   declare -a docker_shadowbox_flags=(
     --name shadowbox --restart=always --net=host
@@ -168,17 +246,43 @@ function start_shadowbox() {
     -e "SB_METRICS_URL=${SB_METRICS_URL:-}"
     -e "SB_DEFAULT_SERVER_NAME=${SB_DEFAULT_SERVER_NAME:-}"
   )
-  docker run -d "${docker_shadowbox_flags[@]}" "${SB_IMAGE}" >/dev/null
+  local readonly RUN_DOCKER="docker run -d ${docker_shadowbox_flags[@]} ${SB_IMAGE}"
+  local readonly STDERR_OUTPUT
+  STDERR_OUTPUT=$(sg docker -c "$RUN_DOCKER 2>&1 >/dev/null")
+  local readonly RET=$?
+  if [[ $RET -eq 0 ]]; then
+    return 0
+  fi
+  log_error "FAILED"
+  if [[ $STDERR_OUTPUT = *"Conflict"* ]]; then
+    handle_docker_container_conflict shadowbox
+  else
+    log_error "$STDERR_OUTPUT"
+    return 1
+  fi
 }
 
 function start_watchtower() {
   # Start watchtower to automatically fetch docker image updates.
   # Set watchtower to refresh every 30 seconds if a custom SB_IMAGE is used (for
   # testing).  Otherwise refresh every hour.
-  readonly WATCHTOWER_REFRESH_SECONDS="${WATCHTOWER_REFRESH_SECONDS:-3600}"
+  local WATCHTOWER_REFRESH_SECONDS="${WATCHTOWER_REFRESH_SECONDS:-3600}"
   declare -a docker_watchtower_flags=(--name watchtower --restart=always)
   docker_watchtower_flags+=(-v /var/run/docker.sock:/var/run/docker.sock)
-  docker run -d "${docker_watchtower_flags[@]}" v2tec/watchtower --cleanup --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS >/dev/null
+  local readonly RUN_DOCKER="docker run -d ${docker_watchtower_flags[@]} v2tec/watchtower --cleanup --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS"
+  local readonly STDERR_OUTPUT
+  STDERR_OUTPUT=$(sg docker -c "$RUN_DOCKER 2>&1 >/dev/null")
+  local readonly RET=$?
+  if [[ $RET -eq 0 ]]; then
+    return 0
+  fi
+  log_error "FAILED"
+  if [[ $STDERR_OUTPUT = *"Conflict"* ]]; then
+    handle_docker_container_conflict watchtower
+  else
+    log_error "$STDERR_OUTPUT"
+    return 1
+  fi
 }
 
 # Waits for Shadowbox to be up and healthy
@@ -201,9 +305,11 @@ function add_api_url_to_config() {
 }
 
 function check_firewall() {
-  local -r ACCESS_KEY_PORT=$(docker exec shadowbox node -e "console.log($(curl --insecure -s ${LOCAL_API_URL}/access-keys)['accessKeys'][0]['port'])")
+  local readonly GET_ACCESS_KEYS=$(curl --insecure -s ${LOCAL_API_URL}/access-keys)
+  local readonly GET_ACCESS_KEY_PORT="docker exec shadowbox node -e 'console.log($GET_ACCESS_KEYS[\"accessKeys\"][0][\"port\"])'"
+  local -r ACCESS_KEY_PORT=$(sg docker -c "$GET_ACCESS_KEY_PORT")
   if ! curl --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" -s "${PUBLIC_API_URL}/access-keys" >/dev/null; then
-     echo "BLOCKED"
+     log_error "BLOCKED"
      FIREWALL_STATUS="\
 You won’t be able to access it externally, despite your server being correctly
 set up, because there's a firewall (in this machine, your router or cloud
@@ -218,7 +324,7 @@ ${ACCESS_KEY_PORT}.
 "
   else
     FIREWALL_STATUS="\
-If have connection problems, it may be that your router or cloud provider
+If you have connection problems, it may be that your router or cloud provider
 blocks inbound connections, even though your machine seems to allow them.
 
 - If you plan to have a single access key to access your server make sure
@@ -233,6 +339,7 @@ blocks inbound connections, even though your machine seems to allow them.
 
 install_shadowbox() {
   run_step "Verifying that Docker is installed" verify_docker_installed
+  run_step "Verifying Docker permissions" verify_docker_permissions
   run_step "Verifying that Docker daemon is running" verify_docker_running
 
   log_for_sentry "Creating shadowbox directory"
