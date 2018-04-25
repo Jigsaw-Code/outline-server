@@ -107,7 +107,7 @@ function verify_docker_installed() {
 
 function verify_docker_running() {
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(sg docker -c "docker info 2>&1 >/dev/null")
+  STDERR_OUTPUT=$(safe_docker "docker info 2>&1 >/dev/null")
   local readonly RET=$?
   if [[ $RET -eq 0 ]]; then
     return 0
@@ -145,6 +145,10 @@ function add_user_to_docker_group() {
 function start_docker() {
   sudo systemctl start docker.service > /dev/null 2>&1
   sudo systemctl enable docker.service > /dev/null 2>&1
+}
+
+function safe_docker() {
+  sg docker -c "$@"
 }
 
 # Set trap which publishes error tag only if there is an error.
@@ -218,7 +222,7 @@ function remove_watchtower_container() {
 }
 
 function remove_docker_container() {
-  sg docker -c "docker rm -f $1 >/dev/null"
+  safe_docker "docker rm -f $1 >/dev/null"
 }
 
 function handle_docker_container_conflict() {
@@ -250,7 +254,7 @@ function start_shadowbox() {
   )
   local readonly RUN_DOCKER="docker run -d ${docker_shadowbox_flags[@]} ${SB_IMAGE}"
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(sg docker -c "$RUN_DOCKER 2>&1 >/dev/null")
+  STDERR_OUTPUT=$(safe_docker "$RUN_DOCKER 2>&1 >/dev/null")
   local readonly RET=$?
   if [[ $RET -eq 0 ]]; then
     return 0
@@ -273,7 +277,7 @@ function start_watchtower() {
   docker_watchtower_flags+=(-v /var/run/docker.sock:/var/run/docker.sock)
   local readonly RUN_DOCKER="docker run -d ${docker_watchtower_flags[@]} v2tec/watchtower --cleanup --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS"
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(sg docker -c "$RUN_DOCKER 2>&1 >/dev/null")
+  STDERR_OUTPUT=$(safe_docker "$RUN_DOCKER 2>&1 >/dev/null")
   local readonly RET=$?
   if [[ $RET -eq 0 ]]; then
     return 0
