@@ -94,12 +94,14 @@ function log_for_sentry() {
 # Check to see if docker is installed.
 function verify_docker_installed() {
   if ! command_exists docker; then
-    log_error "Docker not installed."
+    log_error "FAILED"
     echo -n "> Would you like to install Docker? [Y/n] "
     if ! run_step_with_user_confirmation "Installing Docker" install_docker; then
       log_error "Docker installation failed, please visit https://docs.docker.com/install for instructions."
       exit 1
     fi
+    echo -n "> Verifying Docker installation................ "
+    command_exists docker
   fi
 }
 
