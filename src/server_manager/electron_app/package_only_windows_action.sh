@@ -21,6 +21,8 @@
 $ROOT_DIR/src/server_manager/node_modules/.bin/electron-builder \
   --projectDir=build/server_manager/electron_app/static \
   --publish=never \
+  --config.publish.provider=generic \
+  --config.publish.url=https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/ \
   --ia32 \
   --win nsis \
   --config.win.icon=icons/win/icon.ico \

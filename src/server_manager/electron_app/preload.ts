@@ -20,14 +20,23 @@ const ipcRenderer = electron.ipcRenderer;
 interface ElectronGlobal extends NodeJS.Global {
   whitelistCertificate: (fingerprint: string) => void;
   clearDigitalOceanCookies: () => void;
+  onElectronEvent: (event: string, listener: () => void) => void;
+  sendElectronEvent: (event: string) => void;
 }
 
 process.once('loaded', () => {
-  (global as ElectronGlobal).whitelistCertificate = (fingerprint: string) => {
+  const electronGlobal = (global as ElectronGlobal);
+  electronGlobal.whitelistCertificate = (fingerprint: string) => {
     return ipcRenderer.sendSync('whitelist-certificate', fingerprint);
   };
-  (global as ElectronGlobal).clearDigitalOceanCookies = () => {
+  electronGlobal.clearDigitalOceanCookies = () => {
     return ipcRenderer.sendSync('clear-digital-ocean-cookies');
+  };
+  electronGlobal.onElectronEvent = (event: string, listener: () => void) => {
+    ipcRenderer.on(event, listener);
+  };
+  electronGlobal.sendElectronEvent = (event: string) => {
+    ipcRenderer.send(event);
   };
 });
 

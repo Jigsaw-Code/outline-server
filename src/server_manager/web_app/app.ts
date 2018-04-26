@@ -33,8 +33,10 @@ interface PolymerEvent extends Event {
 //   https://www.digitalocean.com/help/referral-program/
 const DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
 
-// This function is defined in electron_app/preload.ts.
+// These functions are defined in electron_app/preload.ts.
 declare function clearDigitalOceanCookies(): boolean;
+declare function onElectronEvent(event: string, listener: () => void): void;
+declare function sendElectronEvent(event: string): void;
 
 interface UiAccessKey {
   id: string;
@@ -171,6 +173,9 @@ export class App {
     appRoot.addEventListener('CancelServerCreationRequested', (event: PolymerEvent) => {
       this.cancelServerCreation(this.selectedServer);
     });
+
+    onElectronEvent('update-downloaded', this.displayAppUpdateNotification.bind(this));
+    sendElectronEvent('app-ui-ready');
   }
 
   // Returns a Promise that fulfills once the correct UI screen is shown.
@@ -310,6 +315,12 @@ export class App {
   private showIntro() {
     this.appRoot.getAndShowServerCreator().showIntro(
         getOauthUrl(this.appUrl), DIGITALOCEAN_REFERRAL_CODE);
+  }
+
+  private displayAppUpdateNotification() {
+    const msg =
+        'An updated version of the Outline Manager has been downloaded. It will be installed when you restart the application.';
+    this.appRoot.showToast(msg, 60000);
   }
 
   // Clears the credentials and returns to the intro screen.
