@@ -68,19 +68,17 @@ function run_step() {
   fi
 }
 
-function run_step_with_user_confirmation() {
-  local readonly MSG=$1
-  shift 1
-  local readonly CMD=$@
+function confirm() {
+  echo -n "$1"
   local RESPONSE
   read RESPONSE
   RESPONSE=$(echo "$RESPONSE" | tr '[A-Z]' '[a-z]')
   if [[ -z "$RESPONSE" ]] || [[ "$RESPONSE" = "y" ]] || [[ "$RESPONSE" = "yes" ]]; then
-    run_step "$MSG" "$CMD"
-  else
-    return
+    return 0
   fi
+  return 1
 }
+
 function command_exists {
   command -v "$@" > /dev/null 2>&1
 }
@@ -93,21 +91,25 @@ function log_for_sentry() {
 
 # Check to see if docker is installed.
 function verify_docker_installed() {
-  if ! command_exists docker; then
-    log_error "FAILED"
-    echo -n "> Would you like to install Docker? This will run 'curl -sS https://get.docker.com/ | sh'. [Y/n] "
-    if ! run_step_with_user_confirmation "Installing Docker" install_docker; then
-      log_error "Docker installation failed, please visit https://docs.docker.com/install for instructions."
-      exit 1
-    fi
-    echo -n "> Verifying Docker installation................ "
-    command_exists docker
+  if command_exists docker; then
+    return 0
   fi
+  log_error "NOT INSTALLED"
+  echo -n
+  if ! confirm "> Would you like to install Docker? This will run 'curl -sS https://get.docker.com/ | sh'. [Y/n] "; then
+    exit 0
+  fi
+  if ! run_step "Installing Docker" install_docker; then
+    log_error "Docker installation failed, please visit https://docs.docker.com/install for instructions."
+    exit 1
+  fi
+  echo -n "> Verifying Docker installation................ "
+  command_exists docker
 }
 
 function verify_docker_running() {
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(safe_docker "docker info 2>&1 >/dev/null")
+  STDERR_OUTPUT=$(safe_docker info 2>&1 >/dev/null)
   local readonly RET=$?
   if [[ $RET -eq 0 ]]; then
     return 0
@@ -121,8 +123,11 @@ function verify_docker_permissions() {
     return 0
   fi
   log_error "FAILED"
-  echo -n "> It seems like you may not have permission to run Docker. To solve this, we will attempt to add your user to the docker group by running 'sudo usermod -a -G docker $USER'. Would you like to proceed? [Y/n] "
-  if run_step_with_user_confirmation "Adding $USER to docker group" add_user_to_docker_group; then
+  local readonly PROMPT="> It seems like you may not have permission to run Docker. To solve this, we will attempt to add your user to the docker group by running 'sudo usermod -a -G docker $USER'. Would you like to proceed? [Y/n] "
+  if ! confirm "$PROMPT"; then
+    exit 0
+  fi
+  if run_step "Adding $USER to docker group" add_user_to_docker_group; then
     echo -n "> Docker ready................................. "
   else
     log_error "FAILED"
@@ -135,7 +140,7 @@ function install_docker() {
 }
 
 function user_in_docker_group() {
-  groups $USER | grep -E '(^|\s)docker(\s|$)'
+  groups $USER | grep -E '(^|\s)docker(\s|$)' > /dev/null 2>&1
 }
 
 function add_user_to_docker_group() {
@@ -149,11 +154,11 @@ function start_docker() {
 
 # Runs commands in the docker group.
 function safe_docker() {
-  sg docker -c "$@"
+  sg docker -c "docker $@"
 }
 
 function docker_container_exists() {
-  safe_docker "docker ps" | grep $1 >/dev/null 2>&1
+  safe_docker ps | grep $1 >/dev/null 2>&1
 }
 
 function remove_shadowbox_container() {
@@ -165,16 +170,18 @@ function remove_watchtower_container() {
 }
 
 function remove_docker_container() {
-  safe_docker "docker rm -f $1 >/dev/null"
+  safe_docker "rm -f $1 >/dev/null"
 }
 
 function handle_docker_container_conflict() {
   local readonly CONTAINER_NAME=$1
-  local readonly ERROR_TEXT="> The container name \"$CONTAINER_NAME\" is already in use by another container. \
+  local readonly PROMPT="> The container name \"$CONTAINER_NAME\" is already in use by another container. \
 This may happen when running this script multiple times. We will attempt to remove the existing container and \
 and restart it. Would you like to proceed? [Y/n] "
-  echo -n $ERROR_TEXT
-  if run_step_with_user_confirmation "Removing $CONTAINER_NAME container" remove_"$CONTAINER_NAME"_container ; then
+  if ! confirm "$PROMPT"; then
+    exit 0
+  fi
+  if run_step "Removing $CONTAINER_NAME container" remove_"$CONTAINER_NAME"_container ; then
     echo -n "> Restarting $CONTAINER_NAME ........................ "
     start_"$CONTAINER_NAME"
     return $?
@@ -257,9 +264,9 @@ function start_shadowbox() {
     -e "SB_METRICS_URL=${SB_METRICS_URL:-}"
     -e "SB_DEFAULT_SERVER_NAME=${SB_DEFAULT_SERVER_NAME:-}"
   )
-  local readonly RUN_DOCKER="docker run -d ${docker_shadowbox_flags[@]} ${SB_IMAGE}"
+  local readonly RUN_DOCKER_ARGS="run -d ${docker_shadowbox_flags[@]} ${SB_IMAGE}"
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(safe_docker "$RUN_DOCKER 2>&1 >/dev/null")
+  STDERR_OUTPUT=$(safe_docker "$RUN_DOCKER_ARGS" 2>&1 >/dev/null)
   local readonly RET=$?
   if [[ $RET -eq 0 ]]; then
     return 0
@@ -280,9 +287,9 @@ function start_watchtower() {
   local WATCHTOWER_REFRESH_SECONDS="${WATCHTOWER_REFRESH_SECONDS:-3600}"
   declare -a docker_watchtower_flags=(--name watchtower --restart=always)
   docker_watchtower_flags+=(-v /var/run/docker.sock:/var/run/docker.sock)
-  local readonly RUN_DOCKER="docker run -d ${docker_watchtower_flags[@]} v2tec/watchtower --cleanup --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS"
+  local readonly RUN_DOCKER_ARGS="run -d ${docker_watchtower_flags[@]} v2tec/watchtower --cleanup --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS"
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(safe_docker "$RUN_DOCKER 2>&1 >/dev/null")
+  STDERR_OUTPUT=$(safe_docker "$RUN_DOCKER_ARGS" 2>&1 >/dev/null)
   local readonly RET=$?
   if [[ $RET -eq 0 ]]; then
     return 0
@@ -317,7 +324,7 @@ function add_api_url_to_config() {
 
 function check_firewall() {
   local readonly GET_ACCESS_KEYS=$(curl --insecure -s ${LOCAL_API_URL}/access-keys)
-  local readonly GET_ACCESS_KEY_PORT="docker exec shadowbox node -e 'console.log($GET_ACCESS_KEYS[\"accessKeys\"][0][\"port\"])'"
+  local readonly GET_ACCESS_KEY_PORT="exec shadowbox node -e 'console.log($GET_ACCESS_KEYS[\"accessKeys\"][0][\"port\"])'"
   local -r ACCESS_KEY_PORT=$(safe_docker "$GET_ACCESS_KEY_PORT")
   if ! curl --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" -s "${PUBLIC_API_URL}/access-keys" >/dev/null; then
      log_error "BLOCKED"
