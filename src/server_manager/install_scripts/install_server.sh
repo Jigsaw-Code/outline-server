@@ -95,7 +95,7 @@ function log_for_sentry() {
 function verify_docker_installed() {
   if ! command_exists docker; then
     log_error "FAILED"
-    echo -n "> Would you like to install Docker? [Y/n] "
+    echo -n "> Would you like to install Docker? This will run 'curl -sS https://get.docker.com/ | sh'. [Y/n] "
     if ! run_step_with_user_confirmation "Installing Docker" install_docker; then
       log_error "Docker installation failed, please visit https://docs.docker.com/install for instructions."
       exit 1
@@ -117,25 +117,25 @@ function verify_docker_running() {
 }
 
 function verify_docker_permissions() {
-  local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(docker info 2>&1 >/dev/null)
-  local RET=$?
-  if [[ $RET -eq 0 ]]; then
+  if user_in_docker_group; then
     return 0
-  elif [[ $STDERR_OUTPUT = *"permission denied"* ]]; then
+  fi
+  log_error "FAILED"
+  echo -n "> It seems like you may not have permission to run Docker. To solve this, we will attempt to add your user to the docker group by running 'sudo usermod -a -G docker $USER'. Would you like to proceed? [Y/n] "
+  if run_step_with_user_confirmation "Adding $USER to docker group" add_user_to_docker_group; then
+    echo -n "> Docker ready................................. "
+  else
     log_error "FAILED"
-    echo -n "> It seems like you may not have permission to run Docker. To solve this, we will attempt to add your user to the docker group. Would you like to proceed? [Y/n] "
-    if run_step_with_user_confirmation "Adding $USER to docker group" add_user_to_docker_group; then
-      echo -n "> Docker ready................................. "
-    else
-      log_error "Failed to verify Docker permissions."
-      return 1
-    fi
+    return 1
   fi
 }
 
 function install_docker() {
   curl -sS https://get.docker.com/ | sh > /dev/null 2>&1
+}
+
+function user_in_docker_group() {
+  groups $USER | grep -E '(^|\s)docker(\s|$)'
 }
 
 function add_user_to_docker_group() {
@@ -147,8 +147,39 @@ function start_docker() {
   sudo systemctl enable docker.service > /dev/null 2>&1
 }
 
+# Runs commands in the docker group.
 function safe_docker() {
   sg docker -c "$@"
+}
+
+function docker_container_exists() {
+  safe_docker "docker ps" | grep $1 >/dev/null 2>&1
+}
+
+function remove_shadowbox_container() {
+  remove_docker_container shadowbox
+}
+
+function remove_watchtower_container() {
+  remove_docker_container watchtower
+}
+
+function remove_docker_container() {
+  safe_docker "docker rm -f $1 >/dev/null"
+}
+
+function handle_docker_container_conflict() {
+  local readonly CONTAINER_NAME=$1
+  local readonly ERROR_TEXT="> The container name \"$CONTAINER_NAME\" is already in use by another container. \
+This may happen when running this script multiple times. We will attempt to remove the existing container and \
+and restart it. Would you like to proceed? [Y/n] "
+  echo -n $ERROR_TEXT
+  if run_step_with_user_confirmation "Removing $CONTAINER_NAME container" remove_"$CONTAINER_NAME"_container ; then
+    echo -n "> Restarting $CONTAINER_NAME ........................ "
+    start_"$CONTAINER_NAME"
+    return $?
+  fi
+  return 1
 }
 
 # Set trap which publishes error tag only if there is an error.
@@ -213,32 +244,6 @@ function generate_certificate_fingerprint() {
   output_config "certSha256:$CERT_HEX_FINGERPRINT"
 }
 
-function remove_shadowbox_container() {
-  remove_docker_container shadowbox
-}
-
-function remove_watchtower_container() {
-  remove_docker_container watchtower
-}
-
-function remove_docker_container() {
-  safe_docker "docker rm -f $1 >/dev/null"
-}
-
-function handle_docker_container_conflict() {
-  local readonly CONTAINER_NAME=$1
-  local readonly ERROR_TEXT="> The container name \"$CONTAINER_NAME\" is already in use by another container. \
-This may happen when running this script multiple times. We will attempt to remove the existing container and \
-and restart it. Would you like to proceed? [Y/n] "
-  echo -n $ERROR_TEXT
-  if run_step_with_user_confirmation "Removing $CONTAINER_NAME container" remove_"$CONTAINER_NAME"_container ; then
-    echo -n "> Restarting $CONTAINER_NAME ........................ "
-    start_"$CONTAINER_NAME"
-    return $?
-  fi
-  return 1
-}
-
 function start_shadowbox() {
   declare -a docker_shadowbox_flags=(
     --name shadowbox --restart=always --net=host
@@ -260,7 +265,7 @@ function start_shadowbox() {
     return 0
   fi
   log_error "FAILED"
-  if [[ $STDERR_OUTPUT = *"Conflict"* ]]; then
+  if docker_container_exists shadowbox; then
     handle_docker_container_conflict shadowbox
   else
     log_error "$STDERR_OUTPUT"
@@ -283,7 +288,7 @@ function start_watchtower() {
     return 0
   fi
   log_error "FAILED"
-  if [[ $STDERR_OUTPUT = *"Conflict"* ]]; then
+  if docker_container_exists watchtower; then
     handle_docker_container_conflict watchtower
   else
     log_error "$STDERR_OUTPUT"
@@ -313,7 +318,7 @@ function add_api_url_to_config() {
 function check_firewall() {
   local readonly GET_ACCESS_KEYS=$(curl --insecure -s ${LOCAL_API_URL}/access-keys)
   local readonly GET_ACCESS_KEY_PORT="docker exec shadowbox node -e 'console.log($GET_ACCESS_KEYS[\"accessKeys\"][0][\"port\"])'"
-  local -r ACCESS_KEY_PORT=$(sg docker -c "$GET_ACCESS_KEY_PORT")
+  local -r ACCESS_KEY_PORT=$(safe_docker "$GET_ACCESS_KEY_PORT")
   if ! curl --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" -s "${PUBLIC_API_URL}/access-keys" >/dev/null; then
      log_error "BLOCKED"
      FIREWALL_STATUS="\
