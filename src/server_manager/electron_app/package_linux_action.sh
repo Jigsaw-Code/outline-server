@@ -16,9 +16,13 @@
 
 yarn do server_manager/electron_app/build
 
+# Auto-updates only work for AppImage:
+# https://github.com/electron-userland/electron-builder/issues/2498
 $ROOT_DIR/src/server_manager/node_modules/.bin/electron-builder \
   --projectDir=build/server_manager/electron_app/static \
   --publish=never \
+  --config.publish.provider=generic \
+  --config.publish.url=https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/ \
   --x64 \
   --linux AppImage \
   --config.linux.icon=icons/png \
@@ -34,4 +38,5 @@ for arch in ia32 x64; do
     --config.linux.icon=icons/png \
     --config.linux.category=Network \
     --config.artifactName='Outline-Manager-'${arch}'.${ext}'
+
 done
