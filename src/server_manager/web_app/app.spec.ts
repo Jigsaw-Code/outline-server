@@ -21,6 +21,12 @@ import {TokenManager} from './digitalocean_oauth';
 const TOKEN_WITH_NO_SERVERS = 'no-server-token';
 const TOKEN_WITH_ONE_SERVER = 'one-server-token';
 
+// Define Electron's global  functions used by App. See server_manager/electron_app/preload.ts
+// tslint:disable-next-line:no-any
+const GLOBAL = global as any;
+GLOBAL.onElectronEvent = (event: string, listener: () => void) => {};
+GLOBAL.sendElectronEvent = (event: string) => {};
+
 describe('App', () => {
   it('Shows intro when starting with no manual servers or DigitalOcean token', (done) => {
     const polymerAppRoot = new FakePolymerAppRoot();

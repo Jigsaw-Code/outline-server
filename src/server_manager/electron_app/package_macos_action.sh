@@ -16,9 +16,12 @@
 
 yarn do server_manager/electron_app/build
 
+# Produces dmg and zip images. The latter is required for auto-update.
 $ROOT_DIR/src/server_manager/node_modules/.bin/electron-builder \
   --projectDir=build/server_manager/electron_app/static \
   --publish=never \
-  --mac dmg \
+  --config.publish.provider=generic \
+  --config.publish.url=https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/ \
+  --mac default \
   --config.mac.icon=icons/mac/icon.icns \
   --config.artifactName='Outline-Manager.${ext}'
