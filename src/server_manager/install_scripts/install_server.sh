@@ -176,9 +176,12 @@ function remove_docker_container() {
 function handle_docker_container_conflict() {
   local readonly CONTAINER_NAME=$1
   local readonly EXIT_ON_NEGATIVE_USER_RESPONSE=$2
-  local readonly PROMPT="> The container name \"$CONTAINER_NAME\" is already in use by another container. \
-This may happen when running this script multiple times. We will attempt to remove the existing container and \
-and restart it. Would you like to proceed? [Y/n] "
+  local PROMPT="> The container name \"$CONTAINER_NAME\" is already in use by another container. This may happen when running this script multiple times."
+  if $EXIT_ON_NEGATIVE_USER_RESPONSE; then
+    PROMPT="$PROMPT We will attempt to remove the existing container and restart it. Would you like to proceed? [Y/n] "
+  else
+    PROMPT="$PROMPT Would you like to replace this container? If you answer no, we will proceed with the remainder of the installation. [Y/n] "
+  fi
   if ! confirm "$PROMPT"; then
     if $EXIT_ON_NEGATIVE_USER_RESPONSE; then
       exit 0
