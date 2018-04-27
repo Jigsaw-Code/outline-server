@@ -170,16 +170,20 @@ function remove_watchtower_container() {
 }
 
 function remove_docker_container() {
-  safe_docker "rm -f $1 >/dev/null"
+  safe_docker "rm -f $1" >/dev/null 2>&1
 }
 
 function handle_docker_container_conflict() {
   local readonly CONTAINER_NAME=$1
+  local readonly EXIT_ON_NEGATIVE_USER_RESPONSE=$2
   local readonly PROMPT="> The container name \"$CONTAINER_NAME\" is already in use by another container. \
 This may happen when running this script multiple times. We will attempt to remove the existing container and \
 and restart it. Would you like to proceed? [Y/n] "
   if ! confirm "$PROMPT"; then
-    exit 0
+    if $EXIT_ON_NEGATIVE_USER_RESPONSE; then
+      exit 0
+    fi
+    return 0
   fi
   if run_step "Removing $CONTAINER_NAME container" remove_"$CONTAINER_NAME"_container ; then
     echo -n "> Restarting $CONTAINER_NAME ........................ "
@@ -273,7 +277,7 @@ function start_shadowbox() {
   fi
   log_error "FAILED"
   if docker_container_exists shadowbox; then
-    handle_docker_container_conflict shadowbox
+    handle_docker_container_conflict shadowbox true
   else
     log_error "$STDERR_OUTPUT"
     return 1
@@ -296,7 +300,7 @@ function start_watchtower() {
   fi
   log_error "FAILED"
   if docker_container_exists watchtower; then
-    handle_docker_container_conflict watchtower
+    handle_docker_container_conflict watchtower false
   else
     log_error "$STDERR_OUTPUT"
     return 1
