@@ -99,7 +99,7 @@
         <iron-icon src="images/terminal.svg" id="terminalIcon"></iron-icon>
         <div class='stepContent'>
           <div class='instructions'>First, log into your server, and run the following command:</div>
-          <div id='command' class='code'>wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh | bash</div>
+          <div id='command' class='code'>bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"</div>
         </div>
       </div>
       <div>
