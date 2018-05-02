@@ -333,8 +333,9 @@ function addDigitalOceanSignupBanner(text?: string) {
   // we should not rely on any frameworks like Polymer, as they might conflict with
   // existing frameworks on those pages.
   // All class names should begin with Outline to ensure no collisions.
+  // The outline:// protocol should be marked secure to avoid mixed content warnings.
   bannerDiv.innerHTML = `
-      <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
+      <link href="outline://web_app/bower_components/font-roboto/roboto.html" rel="import">
       <style>
         #outlineBanner {
           font-family: "Roboto", sans-serif;

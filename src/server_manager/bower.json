@@ -16,6 +16,7 @@
   ],
   "dependencies": {
     "app-layout": "PolymerElements/app-layout#^2.0.4",
+    "font-roboto": "PolymerElements/font-roboto-local#^1.1.0",
     "iron-autogrow-textarea": "PolymerElements/iron-autogrow-textarea#^2.1.1",
     "iron-icons": "PolymerElements/iron-icons#^2.0.1",
     "iron-fit-behavior": "PolymerElements/iron-fit-behavior#^2.1.0",

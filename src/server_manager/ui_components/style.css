@@ -123,20 +123,6 @@ pre {
   font-family: monospace;
 }
 
-/* "logo" stuff */
-
-/* header */
-#header {
-  padding: 15px 0 8px 20px;
-  background-color: #263238;
-  text-align: left;
-  height: 133px;
-}
-
-#header img {
-    height: 48px;
-}
-
 paper-menu {
   white-space: nowrap;
 }
