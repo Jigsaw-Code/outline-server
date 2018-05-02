@@ -103,14 +103,16 @@
       #settingsDrawer #signOutButton:hover {
         color: var(--primary-green);
       }
-      app-toolbar [main-title] {
-        font-family: 'Google Sans', 'Roboto', sans-serif;
-        font-size: 20px;
-        text-align: center;
-      }
       app-toolbar paper-icon-button {
         /* needed so the "Outline Manager" title appears centered in the window. */
         position: absolute;
+      }
+      app-toolbar [main-title] {
+        text-align: center;
+      }
+      app-toolbar [main-title] img {
+        height: 20px;
+        margin-top: 10px;
       }
     </style>
 
@@ -146,7 +148,7 @@
 
     <app-toolbar class='toolbar'>
       <paper-icon-button icon="menu" on-tap="toggleSettingsDrawer"></paper-icon-button>
-      <div main-title>Outline Manager</div>
+      <div main-title><img src="images/outline-manager-logo.svg"></div>
     </app-toolbar>
 
     <div id='contentColumn'>

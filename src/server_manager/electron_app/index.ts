@@ -30,7 +30,8 @@ const debugMode = process.env.OUTLINE_DEBUG === 'true';
 // prevent window being garbage collected
 let mainWindow: Electron.BrowserWindow;
 
-electron.protocol.registerStandardSchemes(['outline']);
+// Mark secure to avoid mixed content warnings when loading DigitalOcean pages via https://.
+electron.protocol.registerStandardSchemes(['outline'], {secure: true});
 
 app.on('ready', () => {
   const menuTemplate = menu.getMenuTemplate(debugMode);
