@@ -37,26 +37,31 @@ export class ShadowboxServer implements server.Server {
   constructor() {}
 
   listAccessKeys(): Promise<server.AccessKey[]> {
+    SentryErrorReporter.logInfo('Listing access keys');
     return this.apiRequest<{accessKeys: server.AccessKey[]}>('access-keys').then((response) => {
       return response.accessKeys;
     });
   }
 
   addAccessKey(): Promise<server.AccessKey> {
+    SentryErrorReporter.logInfo('Adding access key');
     return this.apiRequest<server.AccessKey>('access-keys', {method: 'POST'});
   }
 
   renameAccessKey(accessKeyId: server.AccessKeyId, name: string): Promise<void> {
+    SentryErrorReporter.logInfo('Renaming access key');
     const body = new FormData();
     body.append('name', name);
     return this.apiRequest<void>('access-keys/' + accessKeyId + '/name', {method: 'PUT', body});
   }
 
   removeAccessKey(accessKeyId: server.AccessKeyId): Promise<void> {
+    SentryErrorReporter.logInfo('Removing access key');
     return this.apiRequest<void>('access-keys/' + accessKeyId, {method: 'DELETE'});
   }
 
   getDataUsage(): Promise<server.DataUsageByAccessKey> {
+    SentryErrorReporter.logInfo('Retrieving data usage');
     return this.apiRequest<server.DataUsageByAccessKey>('metrics/transfer');
   }
 
@@ -65,6 +70,7 @@ export class ShadowboxServer implements server.Server {
   }
 
   setName(name: string): Promise<void> {
+    SentryErrorReporter.logInfo('Setting server name');
     const requestOptions: RequestInit = {
       method: 'PUT',
       headers: new Headers({'Content-Type': 'application/json'}),
@@ -80,6 +86,8 @@ export class ShadowboxServer implements server.Server {
   }
 
   setMetricsEnabled(metricsEnabled: boolean): Promise<void> {
+    const action = metricsEnabled ? 'Enabling' : 'Disabling';
+    SentryErrorReporter.logInfo(`${action} metrics`);
     const requestOptions: RequestInit = {
       method: 'PUT',
       headers: new Headers({'Content-Type': 'application/json'}),
@@ -118,6 +126,7 @@ export class ShadowboxServer implements server.Server {
   }
 
   private getServerConfig(): Promise<ServerConfig> {
+    SentryErrorReporter.logInfo('Retrieving server configuration');
     return this.apiRequest<ServerConfig>('server');
   }
 

@@ -13,13 +13,13 @@
 // limitations under the License.
 
 import * as electron from 'electron';
+import {autoUpdater} from 'electron-updater';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as url from 'url';
 
 import {LoadingWindow} from './loading_window';
 import * as menu from './menu';
-import {checkForUpdates} from './update_checker';
 
 const app = electron.app;
 const ipcMain = electron.ipcMain;
@@ -58,6 +58,13 @@ app.on('ready', () => {
   mainWindow = createMainWindow();
 });
 
+const UPDATE_DOWNLOADED_EVENT = 'update-downloaded';
+autoUpdater.on(UPDATE_DOWNLOADED_EVENT, (ev, info) => {
+  if (!!mainWindow) {
+    mainWindow.webContents.send(UPDATE_DOWNLOADED_EVENT);
+  }
+});
+
 // Set of fingerprints.  All values are true.
 const trustedFingerprints = new Set<string>();
 
@@ -85,6 +92,14 @@ ipcMain.on('bring-to-front', (event: IpcEvent) => {
     mainWindow.restore();
   }
   mainWindow.focus();
+});
+
+ipcMain.on('app-ui-ready', () => {
+  // Check for updates after the UI is loaded; otherwise the UI may miss the
+  //'update-downloaded' event.
+  if (!debugMode) {
+    autoUpdater.checkForUpdates();
+  }
 });
 
 app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
@@ -229,5 +244,3 @@ if (app.setAboutPanelOptions) {
     applicationVersion: config.version
   });
 }
-
-checkForUpdates(config.version, config.releaseDataUrl);
