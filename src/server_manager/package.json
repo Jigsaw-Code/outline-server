@@ -1,7 +1,7 @@
 {
   "name": "outline-manager",
   "productName": "Outline Manager",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Create and manage access to Outline servers",
   "homepage": "https://getoutline.org/",
   "author": {
@@ -15,13 +15,11 @@
     "eventemitter3": "^2.0.3",
     "node-forge": "^0.7.1",
     "raven-js": "^3.17.0",
-    "request-lite": "^2.40.1",
-    "semver": "^5.4.1"
+    "request-lite": "^2.40.1"
   },
   "devDependencies": {
     "@types/bytes": "^2.5.1",
     "@types/node-forge": "^0.6.9",
-    "@types/semver": "^5.4.0",
     "bower": "^1.8.0",
     "browserify": "^14.5.0",
     "electron": "^1.7.9",

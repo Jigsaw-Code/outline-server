@@ -195,7 +195,7 @@ function isWhitelistedUrl(url: string): boolean {
 
 function getWebAppUrl() {
   const queryParams = new url.URLSearchParams();
-  queryParams.set('version', config.version);
+  queryParams.set('version', electron.app.getVersion());
 
   // Set queryParams from environment variables.
   if (process.env.SB_IMAGE) {
@@ -215,32 +215,10 @@ function getWebAppUrl() {
     console.log(`Enabling Outline debug mode`);
   }
 
-
   // Append arguments to URL if any.
   const webAppUrl = new url.URL('outline://web_app/index.html');
   webAppUrl.search = queryParams.toString();
   const webAppUrlString = webAppUrl.toString();
   console.log('Launching web app from ' + webAppUrlString);
   return webAppUrlString;
-}
-
-interface Config {
-  version: string;
-  releaseDataUrl: string;
-}
-
-function loadConfig(): Config {
-  const configText = fs.readFileSync(path.join(__dirname, 'config.json'), {encoding: 'utf8'});
-  return JSON.parse(configText);
-}
-
-const config = loadConfig();
-
-// Override version in Mac about panel.
-if (app.setAboutPanelOptions) {
-  app.setAboutPanelOptions({
-    // Sets version # outside of parenthesis, the version inside the parens will
-    // be the version from package.json.
-    applicationVersion: config.version
-  });
 }
