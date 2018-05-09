@@ -140,7 +140,11 @@ function install_docker() {
 }
 
 function user_in_docker_group() {
-  groups $USER | grep -E '(^|\s)docker(\s|$)' > /dev/null 2>&1
+  # Assume root has docker access; test with $UID because it's one of the few
+  # environment variables available in DigitalOcean's CloudInit environment.
+  if [[ $UID -ne 0 ]]; then
+    groups $USER | grep -E '(^|\s)docker(\s|$)' > /dev/null 2>&1
+  fi
 }
 
 function add_user_to_docker_group() {
@@ -152,13 +156,22 @@ function start_docker() {
   sudo systemctl enable docker.service > /dev/null 2>&1
 }
 
-# Runs commands in the docker group.
-function safe_docker() {
-  sg docker -c "docker $@"
-}
+# If not running as root then run docker with sg to ensure the command has
+# membership of the docker group, membership of which may only have been
+# acquired during the session. Otherwise, don't do anything fancy with
+# positional parameters because they're a nightmare to get right with
+# subshells in both regular and the DigitalOcean CloudInit environment.
+# See also comments for user_in_docker_group.
+DOCKER_CMD=docker
+if [[ $UID -ne 0 ]]; then
+  function safe_docker() {
+    sg docker -c "docker $*"
+  }
+  DOCKER_CMD=safe_docker
+fi
 
 function docker_container_exists() {
-  safe_docker ps | grep $1 >/dev/null 2>&1
+  $DOCKER_CMD ps | grep $1 >/dev/null 2>&1
 }
 
 function remove_shadowbox_container() {
@@ -170,7 +183,7 @@ function remove_watchtower_container() {
 }
 
 function remove_docker_container() {
-  safe_docker "rm -f $1" >/dev/null 2>&1
+  $DOCKER_CMD rm -f $1
 }
 
 function handle_docker_container_conflict() {
@@ -271,9 +284,9 @@ function start_shadowbox() {
     -e "SB_METRICS_URL=${SB_METRICS_URL:-}"
     -e "SB_DEFAULT_SERVER_NAME=${SB_DEFAULT_SERVER_NAME:-}"
   )
-  local readonly RUN_DOCKER_ARGS="run -d ${docker_shadowbox_flags[@]} ${SB_IMAGE}"
+  # By itself, local messes up the return code.
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(safe_docker "$RUN_DOCKER_ARGS" 2>&1 >/dev/null)
+  STDERR_OUTPUT=$($DOCKER_CMD run -d "${docker_shadowbox_flags[@]}" ${SB_IMAGE} 2>&1 >/dev/null)
   local readonly RET=$?
   if [[ $RET -eq 0 ]]; then
     return 0
@@ -294,9 +307,9 @@ function start_watchtower() {
   local WATCHTOWER_REFRESH_SECONDS="${WATCHTOWER_REFRESH_SECONDS:-3600}"
   declare -a docker_watchtower_flags=(--name watchtower --restart=always)
   docker_watchtower_flags+=(-v /var/run/docker.sock:/var/run/docker.sock)
-  local readonly RUN_DOCKER_ARGS="run -d ${docker_watchtower_flags[@]} v2tec/watchtower --cleanup --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS"
+  # By itself, local messes up the return code.
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(safe_docker "$RUN_DOCKER_ARGS" 2>&1 >/dev/null)
+  STDERR_OUTPUT=$($DOCKER_CMD run -d "${docker_watchtower_flags[@]}" v2tec/watchtower --cleanup --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS 2>&1 >/dev/null)
   local readonly RET=$?
   if [[ $RET -eq 0 ]]; then
     return 0
