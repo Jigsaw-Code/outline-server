@@ -393,9 +393,10 @@ install_shadowbox() {
   # TODO(fortuna): Make sure this is IPv4
   readonly SB_PUBLIC_IP=${SB_PUBLIC_IP:-$(curl -4s https://ipinfo.io/ip)}
 
-  if [[ ! "$SB_PUBLIC_IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    log_error "Invalid IP lookup result: $SB_PUBLIC_IP"
-    log_for_sentry "Invalid IP lookup result"
+  if [[ -z $SB_PUBLIC_IP ]]; then
+    local readonly MSG="Failed to determine the server's IP address."
+    log_error "$MSG"
+    log_for_sentry "$MSG"
     exit 1
   fi
 
