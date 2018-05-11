@@ -1,20 +1,24 @@
 {
+  "__COMMENTS__": [
+    "There is no version 100; this file exists now only to prompt users of versions 1.0.5 and ",
+    "earlier to update to the latest, auto-updates-by-electron-builder, version."
+  ],
   "latestVersions": {
     "outline-manager-darwin-x64": {
       "location": "https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/Outline-Manager.dmg",
-      "version": "1.0.4"
+      "version": "100.0.0"
     },
     "outline-manager-linux-ia32": {
       "location": "https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/Outline-Manager.AppImage",
-      "version": "1.0.4"
+      "version": "100.0.0"
     },
     "outline-manager-linux-x64": {
       "location": "https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/Outline-Manager.AppImage",
-      "version": "1.0.4"
+      "version": "100.0.0"
     },
     "outline-manager-win32-ia32": {
       "location": "https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/Outline-Manager.exe",
-      "version": "1.0.4"
+      "version": "100.0.0"
     }
   }
 }
