@@ -29,6 +29,7 @@
 <link rel="import" href="./outline-modal-dialog.html">
 <link rel="import" href="./outline-server-creator.html">
 <link rel="import" href="./outline-server-view.html">
+<link rel="import" href="./outline-tos-view.html">
 
 <dom-module id="app-root">
   <template>
@@ -116,66 +117,71 @@
       }
     </style>
 
-    <app-drawer id="settingsDrawer">
-      <div id='signedIn' hidden$='{{!isSignedIn}}'>
-        <img src='images/manager-profile-2x.png'>
-        <p>{{adminEmail}}</p>
-        <div id='signOutButton' on-tap='signOutTapped'>Sign Out</div>
-        <hr>
-      </div>
-      <div on-tap='dataCollectionTapped' class='settingsMenuItem' paper-drawer-toggle>
-        <iron-icon icon="lock"></iron-icon>Data Collection
-      </div>
-      <div on-tap='privacyTapped' class='settingsMenuItem' paper-drawer-toggle>
-        <iron-icon icon="lock"></iron-icon>Privacy
-      </div>
-      <div on-tap='termsTapped' class='settingsMenuItem' paper-drawer-toggle>
-        <iron-icon icon="info"></iron-icon>Terms
-      </div>
-      <div on-tap='submitFeedbackTapped' class='settingsMenuItem' paper-drawer-toggle>
-        <iron-icon icon="feedback"></iron-icon>Submit Feedback
-      </div>
-      <div on-tap='helpTapped' class='settingsMenuItem' paper-drawer-toggle>
-        <iron-icon icon="help"></iron-icon>Help Center
-      </div>
-      <div on-tap='aboutTapped' class='settingsMenuItem' paper-drawer-toggle>
-        <iron-icon icon="info"></iron-icon>About Outline
-      </div>
-      <div on-tap='showLicensesTapped' class='settingsMenuItem' paper-drawer-toggle>
-        <iron-icon icon="info"></iron-icon>Show Licenses
-      </div>
-    </app-drawer>
+    <outline-tos-view id="tosView" has-accepted-terms-of-service={{userAcceptedTos}} hidden$="{{hasAcceptedTos}}"></outline-tos-view>
 
-    <app-toolbar class='toolbar'>
-      <paper-icon-button icon="menu" on-tap="toggleSettingsDrawer"></paper-icon-button>
-      <div main-title><img src="images/outline-manager-logo.svg"></div>
-    </app-toolbar>
+    <div hidden$="{{!hasAcceptedTos}}">
+      <app-drawer id="settingsDrawer">
+        <div id='signedIn' hidden$='{{!isSignedIn}}'>
+          <img src='images/manager-profile-2x.png'>
+          <p>{{adminEmail}}</p>
+          <div id='signOutButton' on-tap='signOutTapped'>Sign Out</div>
+          <hr>
+        </div>
+        <div on-tap='dataCollectionTapped' class='settingsMenuItem' paper-drawer-toggle>
+          <iron-icon icon="lock"></iron-icon>Data Collection
+        </div>
+        <div on-tap='privacyTapped' class='settingsMenuItem' paper-drawer-toggle>
+          <iron-icon icon="lock"></iron-icon>Privacy
+        </div>
+        <div on-tap='termsTapped' class='settingsMenuItem' paper-drawer-toggle>
+          <iron-icon icon="info"></iron-icon>Terms
+        </div>
+        <div on-tap='submitFeedbackTapped' class='settingsMenuItem' paper-drawer-toggle>
+          <iron-icon icon="feedback"></iron-icon>Submit Feedback
+        </div>
+        <div on-tap='helpTapped' class='settingsMenuItem' paper-drawer-toggle>
+          <iron-icon icon="help"></iron-icon>Help Center
+        </div>
+        <div on-tap='aboutTapped' class='settingsMenuItem' paper-drawer-toggle>
+          <iron-icon icon="info"></iron-icon>About Outline
+        </div>
+        <div on-tap='showLicensesTapped' class='settingsMenuItem' paper-drawer-toggle>
+          <iron-icon icon="info"></iron-icon>Show Licenses
+        </div>
+      </app-drawer>
 
-    <div id='contentColumn'>
-      <iron-pages id='content' attr-for-selected="id">
-        <outline-server-creator id='serverCreator'></outline-server-creator>
-        <outline-server-view id='serverView'></outline-server-view>
-      </iron-pages>
+      <app-toolbar class='toolbar'>
+        <paper-icon-button icon="menu" on-tap="toggleSettingsDrawer"></paper-icon-button>
+        <div main-title><img src="images/outline-manager-logo.svg"></div>
+      </app-toolbar>
+
+      <div id='contentColumn'>
+        <iron-pages id='content' attr-for-selected="id">
+          <outline-server-creator id='serverCreator'></outline-server-creator>
+          <outline-server-view id='serverView'></outline-server-view>
+        </iron-pages>
+      </div>
+
+      <paper-toast id='toast'><paper-icon-button icon='icons:close' on-tap='closeError'></paper-icon-button></paper-toast>
+
+      <outline-feedback-dialog id='feedbackDialog'></outline-feedback-dialog>
+      <outline-about-dialog id='aboutDialog' outline-version='[[outlineVersion]]'></outline-about-dialog>
+      <outline-modal-dialog id='modalDialog'></outline-modal-dialog>
+
+      <paper-dialog id="licenses" restoreFocusOnClose>
+        <paper-dialog-scrollable>
+          <code id="licensesText">
+            Could not load license.txt.
+          </code>
+        </paper-dialog-scrollable>
+        <div class="buttons">
+          <paper-button dialog-dismiss autofocus>Close</paper-button>
+        </div>
+      </paper-dialog>
     </div>
-
-    <paper-toast id='toast'><paper-icon-button icon='icons:close' on-tap='closeError'></paper-icon-button></paper-toast>
-
-    <outline-feedback-dialog id='feedbackDialog'></outline-feedback-dialog>
-    <outline-about-dialog id='aboutDialog' outline-version='[[outlineVersion]]'></outline-about-dialog>
-    <outline-modal-dialog id='modalDialog'></outline-modal-dialog>
-
-    <paper-dialog id="licenses" restoreFocusOnClose>
-      <paper-dialog-scrollable>
-        <code id="licensesText">
-          Could not load license.txt.
-        </code>
-      </paper-dialog-scrollable>
-      <div class="buttons">
-        <paper-button dialog-dismiss autofocus>Close</paper-button>
-      </div>
-    </paper-dialog>
   </template>
   <script>
+    const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
     Polymer({
       is: 'app-root',
       properties: {
@@ -187,7 +193,16 @@
           type: Boolean,
           computed: '_isSignedIn(adminEmail)'
         },
-        outlineVersion: String
+        outlineVersion: String,
+        userAcceptedTos: {
+          type: Boolean,
+           // Get notified when the user clicks the OK button in the ToS view
+          observer: '_userAcceptedTosChanged',
+        },
+        hasAcceptedTos: {
+          type: Boolean,
+          computed: '_computeHasAcceptedTermsOfService(userAcceptedTos)'
+        },
       },
       getAndShowServerCreator: function () {
         this.$.content.select('serverCreator');
@@ -249,6 +264,14 @@
       },
       _isSignedIn: function (adminEmail) {
         return Boolean(adminEmail);
+      },
+      _userAcceptedTosChanged: function(userAcceptedTos) {
+        if (userAcceptedTos) {
+          window.localStorage[TOS_ACK_LOCAL_STORAGE_KEY] = Date.now();
+        }
+      },
+      _computeHasAcceptedTermsOfService: function(userAcceptedTos) {
+        return userAcceptedTos || !!window.localStorage[TOS_ACK_LOCAL_STORAGE_KEY];
       },
       toggleSettingsDrawer: function() {
         this.$.settingsDrawer.toggle();
