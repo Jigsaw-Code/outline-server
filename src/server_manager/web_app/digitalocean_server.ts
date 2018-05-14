@@ -324,7 +324,9 @@ class DigitalOceanHost implements server.ManagedServerHost {
       private digitalOcean: DigitalOceanSession, private dropletInfo: DropletInfo,
       private deleteCallback: Function) {}
 
-  getMonthlyTransferLimit(): server.DataAmount {
+  getMonthlyOutboundTransferLimit(): server.DataAmount {
+    // Details on the bandwidth limits can be found at
+    // https://www.digitalocean.com/community/tutorials/digitalocean-bandwidth-billing-faq
     return {terabytes: this.dropletInfo.size.transfer};
   }
 
