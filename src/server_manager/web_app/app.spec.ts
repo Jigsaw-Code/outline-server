@@ -297,7 +297,7 @@ class FakeManagedServer extends FakeServer implements server.ManagedServer {
   }
   getHost() {
     return {
-      getMonthlyTransferLimit: () => ({terabytes: 1}),
+      getMonthlyOutboundTransferLimit: () => ({terabytes: 1}),
       getMonthlyCost: () => ({usd: 5}),
       getRegionId: () => 'fake-region',
       delete: () => Promise.resolve(),

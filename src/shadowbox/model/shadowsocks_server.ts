@@ -28,6 +28,6 @@ export interface ShadowsocksInstance {
   // Registers a callback to be invoked when the ShadowsocksInstance has
   // transferred data (inbound and outbond).  bytes is the number of
   // bytes transferred since the last callback.
-  onBytesTransferred(callback: (bytes: number, ipAddresses: string[]) => void);
+  onInboundBytes(callback: (bytes: number, ipAddresses: string[]) => void);
   stop();
 }

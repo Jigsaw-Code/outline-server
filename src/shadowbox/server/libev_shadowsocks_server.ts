@@ -96,7 +96,16 @@ class LibevShadowsocksServerInstance implements ShadowsocksInstance {
     this.childProcess.kill();
   }
 
-  public onBytesTransferred(callback: (bytes: number, ipAddresses: string[]) => void) {
+  // onBytesTransferred only reports inbound bytes, received from the client or from the target.
+  //
+  // This measure under-estimates outbound traffic because:
+  // 1) The traffic to and from the client has overhead from Shadowsocks
+  // 2) The overhead on the traffic to the client is larger than on the traffic from the client
+  //    because, from the client perspective, download traffic is usually larger than upload.
+  //
+  // The measure is calculated here:
+  // https://github.com/shadowsocks/shadowsocks-libev/blob/a16826b83e73af386806d1b51149f8321820835e/src/server.c#L172
+  public onInboundBytes(callback: (bytes: number, ipAddresses: string[]) => void) {
     if (this.eventEmitter.listenerCount(this.BYTES_TRANSFERRED_EVENT) === 0) {
       this.createStatsListener();
     }
@@ -104,7 +113,7 @@ class LibevShadowsocksServerInstance implements ShadowsocksInstance {
   }
 
   private createStatsListener() {
-    let lastBytesTransferred = 0;
+    let lastInboundBytes = 0;
     this.statsSocket.on('message', (buf: Buffer) => {
       let statsMessage;
       try {
@@ -117,11 +126,11 @@ class LibevShadowsocksServerInstance implements ShadowsocksInstance {
         // Ignore stats for other ss-servers, which post to the same statsSocket.
         return;
       }
-      const delta = statsMessage.totalBytesTransferred - lastBytesTransferred;
+      const delta = statsMessage.totalInboundBytes - lastInboundBytes;
       if (delta > 0) {
         this.getConnectedClientIPAddresses()
             .then((ipAddresses: string[]) => {
-              lastBytesTransferred = statsMessage.totalBytesTransferred;
+              lastInboundBytes = statsMessage.totalInboundBytes;
               this.eventEmitter.emit(this.BYTES_TRANSFERRED_EVENT, delta, ipAddresses);
             })
             .catch((err) => {
@@ -159,20 +168,20 @@ class LibevShadowsocksServerInstance implements ShadowsocksInstance {
 
 interface StatsMessage {
   portNumber: number;
-  totalBytesTransferred: number;
+  totalInboundBytes: number;
 }
 
 function parseStatsMessage(buf): StatsMessage {
   const jsonString = buf.toString()
                          .substr('stat: '.length)  // remove leading "stat: "
                          .replace(/\0/g, '');      // remove trailing null terminator
-  // statObj is in the form {"port#": totalBytesTransferred}, where
+  // statObj is in the form {"port#": totalInboundBytes}, where
   // there is always only 1 port# per JSON object. If there are multiple
   // ss-servers communicating to the same manager, we will get multiple
   // message events.
   const statObj = JSON.parse(jsonString);
   // Object.keys is used here because node doesn't support Object.values.
   const portNumber = parseInt(Object.keys(statObj)[0], 10);
-  const totalBytesTransferred = statObj[portNumber];
-  return {portNumber, totalBytesTransferred};
+  const totalInboundBytes = statObj[portNumber];
+  return {portNumber, totalInboundBytes};
 }
