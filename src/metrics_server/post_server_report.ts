@@ -98,7 +98,7 @@ export function isValidServerReport(testObject: any): boolean {
 
   const requiredUserReportFields = ['userId', 'countries', 'bytesTransferred'];
   const MIN_BYTES_TRANSFERRED = 0;
-  const MAX_BYTES_TRANSFERRED = 500 * Math.pow(2, 30);  // 500 GB.
+  const MAX_BYTES_TRANSFERRED = 1 * Math.pow(2, 40);  // 1 TB.
   for (const userReport of testObject.userReports) {
     // Test that each userReport contains valid fields.
     for (const fieldName of requiredUserReportFields) {
