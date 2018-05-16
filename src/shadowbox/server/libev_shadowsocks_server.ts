@@ -84,7 +84,7 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
 
 class LibevShadowsocksServerInstance implements ShadowsocksInstance {
   private eventEmitter = new events.EventEmitter();
-  private BYTES_TRANSFERRED_EVENT = 'bytesTransferred';
+  private INBOUND_BYTES_EVENT = 'inboundBytes';
 
   constructor(
       private childProcess: child_process.ChildProcess,
@@ -96,7 +96,7 @@ class LibevShadowsocksServerInstance implements ShadowsocksInstance {
     this.childProcess.kill();
   }
 
-  // onBytesTransferred only reports inbound bytes, received from the client or from the target.
+  // onInboundBytes only reports inbound bytes, received from the client or from the target.
   //
   // This measure under-estimates outbound traffic because:
   // 1) The traffic to and from the client has overhead from Shadowsocks
@@ -106,10 +106,10 @@ class LibevShadowsocksServerInstance implements ShadowsocksInstance {
   // The measure is calculated here:
   // https://github.com/shadowsocks/shadowsocks-libev/blob/a16826b83e73af386806d1b51149f8321820835e/src/server.c#L172
   public onInboundBytes(callback: (bytes: number, ipAddresses: string[]) => void) {
-    if (this.eventEmitter.listenerCount(this.BYTES_TRANSFERRED_EVENT) === 0) {
+    if (this.eventEmitter.listenerCount(this.INBOUND_BYTES_EVENT) === 0) {
       this.createStatsListener();
     }
-    this.eventEmitter.on(this.BYTES_TRANSFERRED_EVENT, callback);
+    this.eventEmitter.on(this.INBOUND_BYTES_EVENT, callback);
   }
 
   private createStatsListener() {
@@ -131,7 +131,7 @@ class LibevShadowsocksServerInstance implements ShadowsocksInstance {
         this.getConnectedClientIPAddresses()
             .then((ipAddresses: string[]) => {
               lastInboundBytes = statsMessage.totalInboundBytes;
-              this.eventEmitter.emit(this.BYTES_TRANSFERRED_EVENT, delta, ipAddresses);
+              this.eventEmitter.emit(this.INBOUND_BYTES_EVENT, delta, ipAddresses);
             })
             .catch((err) => {
               logging.error(`Unable to get client IP addresses ${err}`);
