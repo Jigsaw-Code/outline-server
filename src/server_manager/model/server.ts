@@ -69,8 +69,8 @@ export interface ManagedServer extends Server {
 
 // The managed machine where the Outline Server is running.
 export interface ManagedServerHost {
-  // Returns the monthly transfer limit.
-  getMonthlyTransferLimit(): DataAmount;
+  // Returns the monthly outbound transfer limit.
+  getMonthlyOutboundTransferLimit(): DataAmount;
   // Returns the monthly cost.
   getMonthlyCost(): MonetaryCost;
   // Returns the server region.

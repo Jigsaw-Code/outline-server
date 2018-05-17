@@ -271,7 +271,7 @@ function updateUIForRegistration() {
     hideBySelector('.logo');
     hideBySelector('.registration-message');
     const bannerText =
-        'Sign up with DigitalOcean to get a server with 500 GB of data transfer for $5 USD per month.  Cancel at anytime.';
+        'Sign up with DigitalOcean to get a server with 1 TB of data transfer for $5 USD per month.  Cancel at anytime.';
     addDigitalOceanSignupBanner(bannerText);
     addDigitalOceanFooter();
     // Add topMargin to #new_user

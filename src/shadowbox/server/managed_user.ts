@@ -125,7 +125,7 @@ class ManagedAccessKeyRepository implements AccessKeyRepository {
                     accessKeyJson.port, accessKeyJson.password, statsSocket,
                     accessKeyJson.encryptionMethod)
                 .then((ssInstance) => {
-                  ssInstance.onBytesTransferred(this.handleBytesTransferred.bind(
+                  ssInstance.onInboundBytes(this.handleInboundBytes.bind(
                       this, accessKeyJson.id, accessKeyJson.metricsId));
                   const accessKey = new ManagedAccessKey(
                       accessKeyJson.id, accessKeyJson.metricsId, accessKeyJson.name, ssInstance);
@@ -148,7 +148,7 @@ class ManagedAccessKeyRepository implements AccessKeyRepository {
             this.reservedPorts.add(port);
             const id = this.allocateId();
             const metricsId = uuidv4();
-            ssInstance.onBytesTransferred(this.handleBytesTransferred.bind(this, id, metricsId));
+            ssInstance.onInboundBytes(this.handleInboundBytes.bind(this, id, metricsId));
             const accessKey = new ManagedAccessKey(id, metricsId, '', ssInstance);
             this.accessKeys.set(accessKey.id, accessKey);
             this.persistState();
@@ -182,8 +182,8 @@ class ManagedAccessKeyRepository implements AccessKeyRepository {
     return true;
   }
 
-  private handleBytesTransferred(accessKeyId: AccessKeyId, metricsId: AccessKeyId, bytesTransferred: number, ipAddresses: string[]) {
-    this.stats.recordBytesTransferred(accessKeyId, metricsId, bytesTransferred, ipAddresses);
+  private handleInboundBytes(accessKeyId: AccessKeyId, metricsId: AccessKeyId, inboundBytes: number, ipAddresses: string[]) {
+    this.stats.recordBytesTransferred(accessKeyId, metricsId, inboundBytes, ipAddresses);
   }
 
   private allocateId(): AccessKeyId {

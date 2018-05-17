@@ -26,8 +26,8 @@ export interface ShadowsocksInstance {
   encryptionMethod: string;
   accessUrl: string;
   // Registers a callback to be invoked when the ShadowsocksInstance has
-  // transferred data (inbound and outbond).  bytes is the number of
-  // bytes transferred since the last callback.
-  onBytesTransferred(callback: (bytes: number, ipAddresses: string[]) => void);
+  // inbound data (from the client or the target).  bytes is the number of
+  // bytes received since the last callback.
+  onInboundBytes(callback: (bytes: number, ipAddresses: string[]) => void);
   stop();
 }

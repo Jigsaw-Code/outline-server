@@ -22,4 +22,4 @@ readonly CONFIG_FILE=$MODULE_DIR/config_test.json
 $MODULE_DIR/build.sh $OUT_DIR $CONFIG_FILE
 
 # Deploy as "reportHourlyConnectionMetricsTest"
-gcloud beta functions deploy reportHourlyConnectionMetricsTest --stage-bucket uproxy-cloud-functions --trigger-http --source=$OUT_DIR --entry-point=reportHourlyConnectionMetrics
+gcloud --project=uproxysite beta functions deploy reportHourlyConnectionMetricsTest --stage-bucket uproxy-cloud-functions --trigger-http --source=$OUT_DIR --entry-point=reportHourlyConnectionMetrics

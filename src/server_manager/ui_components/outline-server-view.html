@@ -282,8 +282,8 @@
         <div id='titleWrapper'>
           <h3>{{serverName}}</h3>
           <p>
-            <span class='totalBytes measurement'>[[_formatBytesTransferred(totalBytesTransferred, '0')]]</span>
-            <span hidden$='{{!monthlyTransferBytes}}'>of [[_formatBytesTransferred(monthlyTransferBytes)]] Transfer</span>
+            <span class='totalBytes measurement'>[[_formatBytesTransferred(totalInboundBytes, '0')]]</span>
+            <span hidden$='{{!monthlyOutboundTransferBytes}}'>of [[_formatBytesTransferred(monthlyOutboundTransferBytes)]] Transfer</span>
             <span hidden$='{{!monthlyCost}}'>, ${{monthlyCost}} US/Mo</span>
           </p>
         </div>
@@ -371,20 +371,20 @@
         // be unset in some old versions of Outline that allowed deleting this
         // row.
         myConnection: Object,
-        totalBytesTransferred: Number,
+        totalInboundBytes: Number,
         accessKeyRows: {type: Array, value: []},
         hasNonAdminAccessKeys: Boolean,
         deleteEnabled: Boolean,
         forgetEnabled: Boolean,
         metricsEnabled: Boolean,
         serverId: String,
-        // Initialize monthlyTransferBytes and monthlyCost to 0, so they can
+        // Initialize monthlyOutboundTransferBytes and monthlyCost to 0, so they can
         // be bound to hidden attributes.  Initializing to undefined does not
         // cause hidden$=... expressions to be evaluated and so elements may be
         // shown incorrectly.  See:
         //   https://stackoverflow.com/questions/33700125/polymer-1-0-hidden-attribute-negate-operator
         //   https://www.polymer-project.org/1.0/docs/devguide/data-binding.html
-        monthlyTransferBytes: {type: Number, value: 0},
+        monthlyOutboundTransferBytes: {type: Number, value: 0},
         monthlyCost: {type: Number, value: 0}
       },
       observers: [
@@ -470,7 +470,7 @@
       },
       _encodeURIComponent: encodeURIComponent,
       setServerTransferredData(total_bytes) {
-        this.totalBytesTransferred = total_bytes
+        this.totalInboundBytes = total_bytes
       },
       updateAccessKeyRow(accessKeyId, fields) {
         if (accessKeyId === MY_CONNECTION_USER_ID) {
