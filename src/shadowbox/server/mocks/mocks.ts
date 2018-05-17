@@ -68,7 +68,7 @@ class MockShadowsocksInstance implements ShadowsocksInstance {
       public password = 'password',
       public encryptionMethod = 'encryption',
       public accessUrl = 'ss://somethingsomething') {}
-  onBytesTransferred(callback: (bytes: number, ipAddresses: string[]) => void) {}
+  onInboundBytes(callback: (bytes: number, ipAddresses: string[]) => void) {}
   stop() {}
 }
 
