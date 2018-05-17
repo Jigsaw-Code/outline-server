@@ -10,9 +10,10 @@ The Outline Metrics Server is built using [Google Cloud Functions](https://cloud
 Run `yarn do metrics_server/build`
 
 ## Deploying
-To deploy
+You must have access to the project `uproxysite`.
+
+To deploy:
 * Authenticate with gcloud: `gcloud auth login`
-* Select the gcloud project to uproxysite: `gcloud config set project uproxysite`
 * Run the deploy script:
   * to deploy to test: `yarn do metrics_server/deploy_test`
   * to deploy to prod: `yarn do metrics_server/deploy_prod`
