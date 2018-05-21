@@ -22,9 +22,10 @@
     "@types/node-forge": "^0.6.9",
     "bower": "^1.8.0",
     "browserify": "^14.5.0",
-    "electron": "^1.7.9",
-    "electron-builder": "^20.4.1",
-    "electron-icon-maker": "^0.0.4"
+    "electron": "^1.8.7",
+    "electron-builder": "^20.13.4",
+    "electron-icon-maker": "^0.0.4",
+    "spectron": "^3.8.0"
   },
   "scripts": {
     "postinstall": "bower install"
