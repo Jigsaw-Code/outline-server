@@ -442,13 +442,10 @@ install_shadowbox() {
 
 CONGRATULATIONS! Your Outline server is up and running.
 
-To manage your Outline server, please copy the following text (including curly
+To manage your Outline server, please copy the following line (including curly
 brackets) into Step 2 of the Outline Manager interface:
 
-{
-  "apiUrl": "$(get_field_value apiUrl)",
-  "certSha256": "$(get_field_value certSha256)"
-}
+$(echo -e "\033[1;32m{\"apiUrl\":\"$(get_field_value apiUrl)\",\"certSha256\":\"$(get_field_value certSha256)\"}\033[0m")
 
 ${FIREWALL_STATUS}
 END_OF_SERVER_OUTPUT
