@@ -24,8 +24,7 @@
     "browserify": "^14.5.0",
     "electron": "^1.8.7",
     "electron-builder": "^20.13.4",
-    "electron-icon-maker": "^0.0.4",
-    "spectron": "^3.8.0"
+    "electron-icon-maker": "^0.0.4"
   },
   "scripts": {
     "postinstall": "bower install"
