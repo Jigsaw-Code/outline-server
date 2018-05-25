@@ -121,7 +121,8 @@ function createMainWindow() {
     webPreferences: {
       nodeIntegration: false,
       preload: path.join(__dirname, 'preload.js'),
-      nativeWindowOpen: true
+      nativeWindowOpen: true,
+      webviewTag: false
     }
   });
   const webAppUrl = getWebAppUrl();
