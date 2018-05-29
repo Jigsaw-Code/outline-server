@@ -109,7 +109,7 @@ function verify_docker_installed() {
 
 function verify_docker_running() {
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(safe_docker info 2>&1 >/dev/null)
+  STDERR_OUTPUT=$($DOCKER_CMD info 2>&1 >/dev/null)
   local readonly RET=$?
   if [[ $RET -eq 0 ]]; then
     return 0
@@ -344,8 +344,8 @@ function add_api_url_to_config() {
 
 function check_firewall() {
   local readonly GET_ACCESS_KEYS=$(curl --insecure -s ${LOCAL_API_URL}/access-keys)
-  local readonly GET_ACCESS_KEY_PORT="exec shadowbox node -e 'console.log($GET_ACCESS_KEYS[\"accessKeys\"][0][\"port\"])'"
-  local -r ACCESS_KEY_PORT=$(safe_docker "$GET_ACCESS_KEY_PORT")
+  local readonly GET_ACCESS_KEY_PORT="$DOCKER_CMD exec shadowbox node -e 'console.log($GET_ACCESS_KEYS[\"accessKeys\"][0][\"port\"])'"
+  local -r ACCESS_KEY_PORT=$($GET_ACCESS_KEY_PORT)
   if ! curl --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" -s "${PUBLIC_API_URL}/access-keys" >/dev/null; then
      log_error "BLOCKED"
      FIREWALL_STATUS="\
