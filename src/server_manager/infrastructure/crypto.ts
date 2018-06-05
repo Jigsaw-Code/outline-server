@@ -22,7 +22,7 @@ export class KeyPair {
 
 // Generates an RSA keypair using forge
 export function generateKeyPair(): KeyPair {
-  const pair = forge.pki.rsa.generateKeyPair({bits: 1538});
+  const pair = forge.pki.rsa.generateKeyPair({bits: 2048});
   // trim() the string because forge adds a trailing space to
   // public keys which really messes things up later.
   return {
