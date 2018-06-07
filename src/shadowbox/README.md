@@ -91,11 +91,17 @@ Create a user
 curl --insecure -X POST https://localhost:8081/TestApiPrefix/access-keys
 ```
 
+Rename a user
+(e.g. rename user ID 2 to 'albion')
+```
+curl --insecure -X PUT https://localhost:8081/TestApiPrefix/access-keys/2/albion
+```
+
 Remove a user
+(e.g. remove user ID 2)
 ```
 curl --insecure -X DELETE https://localhost:8081/TestApiPrefix/access-keys/2
 ```
-
 
 <details>
 <summary>
