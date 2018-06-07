@@ -26,6 +26,10 @@
 
 set -euxo pipefail
 
+# Re-enable password login, since DigitalOcean disables it when we create a server
+# with a SSH key.
+sed -i 's/PasswordAuthentication no/# PasswordAuthentication no  # Commented out by the Outline installer/' /etc/ssh/sshd_config
+
 export SHADOWBOX_DIR="${SHADOWBOX_DIR:-${HOME:-/root}/shadowbox}"
 mkdir -p $SHADOWBOX_DIR
 
