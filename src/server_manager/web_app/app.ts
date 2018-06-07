@@ -122,7 +122,8 @@ export class App {
     });
 
     appRoot.addEventListener('ManualServerEntered', (event: PolymerEvent) => {
-      const userInputConfig = event.detail.userInputConfig;
+      const userInputConfig =
+          event.detail.userInputConfig.replace(/\s+/g, '');  // Remove whitespace
       const manualServerEntryEl = appRoot.getServerCreator().getManualServerEntry();
       this.createManualServer(userInputConfig)
           .then(() => {
