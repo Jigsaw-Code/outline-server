@@ -382,7 +382,7 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
     const name = MakeEnglishNameForServer(region);
     console.time('activeServer');
     console.time('servingServer');
-    const keyPair = crypto.generateKeyPair();
+    const onceKeyPair = crypto.generateKeyPair();
     const watchtowerRefreshSeconds = this.image ? 30 : undefined;
     const installCommand = getInstallScript(
         this.digitalOcean.accessToken, name, this.image, watchtowerRefreshSeconds, this.metricsUrl, this.sentryApiUrl);
@@ -393,18 +393,19 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
       image: 'docker',
       tags: [SHADOWBOX_TAG],
     };
-    return this.digitalOcean.createDroplet(name, region, keyPair.public, dropletSpec)
-        .then((response) => {
-          if (this.debugMode) {
-            // Strip carriage returns. They produce annoying blank lines when pasting
-            // into a terminal.
-            console.log(
-                `private key for SSH access to new droplet:\n${
-                    keyPair.private.replace(/\r/g, '')}\n\n` +
-                'Use "ssh -i keyfile root@[ip_address]" to connect to the machine');
-          }
-          return new DigitaloceanServer(this.digitalOcean, response.droplet);
-        });
+    return onceKeyPair.then((keyPair) => {
+      if (this.debugMode) {
+        // Strip carriage returns. They produce annoying blank lines when pasting
+        // into a terminal.
+        console.log(
+            `private key for SSH access to new droplet:\n${
+                keyPair.private.replace(/\r/g, '')}\n\n` +
+            'Use "ssh -i keyfile root@[ip_address]" to connect to the machine');
+      }
+      return this.digitalOcean.createDroplet(name, region, keyPair.public, dropletSpec);
+    }).then((response) => {
+      return new DigitaloceanServer(this.digitalOcean, response.droplet);
+    });
   }
 
   listServers(): Promise<server.ManagedServer[]> {
