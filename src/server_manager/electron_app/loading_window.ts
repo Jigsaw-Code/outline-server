@@ -28,7 +28,13 @@ export class LoadingWindow {
 
     this.timeoutId = global.setTimeout(() => {
       this.timeoutId = null;
-      this.loadingBrowserWindow = new electron.BrowserWindow();
+      this.loadingBrowserWindow = new electron.BrowserWindow({
+        webPreferences: {
+          nodeIntegration: false,
+          nativeWindowOpen: true,
+          webviewTag: false
+        }
+      });
       this.loadingBrowserWindow.loadURL(this.url);
       this.loadingBrowserWindow.setBounds(this.mainWindow.getBounds());
       this.mainWindow.hide();
