@@ -33,6 +33,20 @@ let mainWindow: Electron.BrowserWindow;
 // Mark secure to avoid mixed content warnings when loading DigitalOcean pages via https://.
 electron.protocol.registerStandardSchemes(['outline'], {secure: true});
 
+const isSecondInstance = app.makeSingleInstance((argv, workingDirectory) => {
+  // Someone tried to run a second instance, we should focus our window.
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    }
+    mainWindow.focus();
+  }
+});
+
+if (isSecondInstance) {
+  app.quit();
+}
+
 app.on('ready', () => {
   const menuTemplate = menu.getMenuTemplate(debugMode);
   if (menuTemplate.length > 0) {
