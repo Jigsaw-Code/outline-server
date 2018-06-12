@@ -229,6 +229,12 @@ class FakeServer implements server.Server {
   removeAccessKey(accessKeyId: server.AccessKeyId) {
     return Promise.reject('FakeServer.removeAccessKey not implemented');
   }
+  getHostname() {
+    return 'fake-server';
+  }
+  getManagementPort() {
+    return 8080;
+  }
 }
 
 class FakeManualServer extends FakeServer implements server.ManualServer {

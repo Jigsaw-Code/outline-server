@@ -125,6 +125,23 @@ export class ShadowboxServer implements server.Server {
     return new Date(this.serverConfig.createdTimestampMs);
   }
 
+  getHostname(): string {
+    try {
+      return new URL(this.managementApiAddress).hostname;
+    } catch (e) {
+      return '';
+    }
+  }
+
+  getManagementPort(): number {
+    try {
+      // Convert URL port string to number
+      return +(new URL(this.managementApiAddress).port);
+    } catch (e) {
+      return undefined;
+    }
+  }
+
   private getServerConfig(): Promise<ServerConfig> {
     SentryErrorReporter.logInfo('Retrieving server configuration');
     return this.apiRequest<ServerConfig>('server');
