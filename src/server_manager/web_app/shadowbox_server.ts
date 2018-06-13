@@ -135,8 +135,7 @@ export class ShadowboxServer implements server.Server {
 
   getManagementPort(): number {
     try {
-      // Convert URL port string to number
-      return +(new URL(this.managementApiAddress).port);
+      return parseInt(new URL(this.managementApiAddress).port, 10);
     } catch (e) {
       return undefined;
     }

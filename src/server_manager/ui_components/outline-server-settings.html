@@ -125,10 +125,10 @@
             <h3>Information</h3>
             <paper-input value='{{name}}' label='Name' always-float-label maxlength='100'></paper-input>
             <p class='detail'>Set a new name for your server. Note that this will not be reflected on the devices of the users that you invited to connect to it.</p>
-            <paper-input disabled value='[[serverHostname]]' label='Hostname' always-float-label maxlength='100'></paper-input>
-            <paper-input disabled value='[[serverManagementPort]]' label='Management Port' always-float-label maxlength='100'></paper-input>
-            <paper-input disabled value='[[serverCreationDate]]' label='Created' always-float-label maxlength='100'></paper-input>
-            <paper-input disabled value='[[serverId]]' label='Server ID' always-float-label maxlength='100'></paper-input>
+            <paper-input disabled value='[[serverHostname]]' label='Hostname' hidden$='[[!serverHostname]]' always-float-label maxlength='100'></paper-input>
+            <paper-input disabled value='[[serverManagementPort]]' label='Management Port' hidden$='[[!serverManagementPort]]' always-float-label maxlength='100'></paper-input>
+            <paper-input disabled value='[[serverCreationDate]]' label='Created' hidden$='[[!serverCreationDate]]' always-float-label maxlength='100'></paper-input>
+            <paper-input disabled value='[[serverId]]' label='Server ID' hidden$='[[!serverId]]' always-float-label maxlength='100'></paper-input>
           </div>
         </div>
         <!-- Metrics controls -->
@@ -154,10 +154,11 @@
         name: String,
         metricsEnabled: Boolean,
         visible: {type: Boolean, value: false},
-        serverId: String,
-        serverHostname: String,
-        serverManagementPort: Number,
-        serverCreationDate: String
+        // Initialize to null so we can use the hidden attribute, which does not work well with undefined values.
+        serverId: {type: String, value: null},
+        serverHostname: {type: String, value: null},
+        serverManagementPort: {type: Number, value: null},
+        serverCreationDate: {type: String, value: null}
       },
       open: function(name, metricsEnabled) {
         this.visible = true;
