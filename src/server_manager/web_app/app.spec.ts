@@ -221,19 +221,19 @@ class FakeServer implements server.Server {
     return Promise.resolve({bytesTransferredByUserId: {}});
   }
   addAccessKey() {
-    return Promise.reject('FakeServer.addAccessKey not implemented');
+    return Promise.reject(new Error('FakeServer.addAccessKey not implemented'));
   }
   renameAccessKey(accessKeyId: server.AccessKeyId, name: string) {
-    return Promise.reject('FakeServer.renameAccessKey not implemented');
+    return Promise.reject(new Error('FakeServer.renameAccessKey not implemented'));
   }
   removeAccessKey(accessKeyId: server.AccessKeyId) {
-    return Promise.reject('FakeServer.removeAccessKey not implemented');
+    return Promise.reject(new Error('FakeServer.removeAccessKey not implemented'));
   }
 }
 
 class FakeManualServer extends FakeServer implements server.ManualServer {
   forget() {
-    return Promise.reject('FakeManualServer.forget not implemented');
+    return Promise.reject(new Error('FakeManualServer.forget not implemented'));
   }
 }
 
@@ -283,10 +283,10 @@ class FakeDigitalOceanSession implements digitalocean_api.DigitalOceanSession {
       (displayName: string, region: string, publicKeyForSSH: string,
        dropletSpec: digitalocean_api.DigitalOceanDropletSpecification) =>
           Promise.reject('createDroplet not implemented');
-  deleteDroplet = (dropletId: number) => Promise.reject('deleteDroplet not implemented');
-  getDroplet = (dropletId: number) => Promise.reject('getDroplet not implemented');
-  getDropletTags = (dropletId: number) => Promise.reject('getDropletTags not implemented');
-  getDroplets = () => Promise.reject('getDroplets not implemented');
+  deleteDroplet = (dropletId: number) => Promise.reject(new Error('deleteDroplet not implemented'));
+  getDroplet = (dropletId: number) => Promise.reject(new Error('getDroplet not implemented'));
+  getDropletTags = (dropletId: number) => Promise.reject(new Error('getDropletTags not implemented'));
+  getDroplets = () => Promise.reject(new Error('getDroplets not implemented'));
 }
 
 class FakeManagedServer extends FakeServer implements server.ManagedServer {
