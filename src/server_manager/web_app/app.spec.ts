@@ -282,7 +282,7 @@ class FakeDigitalOceanSession implements digitalocean_api.DigitalOceanSession {
   createDroplet =
       (displayName: string, region: string, publicKeyForSSH: string,
        dropletSpec: digitalocean_api.DigitalOceanDropletSpecification) =>
-          Promise.reject('createDroplet not implemented');
+          Promise.reject(new Error('createDroplet not implemented'));
   deleteDroplet = (dropletId: number) => Promise.reject(new Error('deleteDroplet not implemented'));
   getDroplet = (dropletId: number) => Promise.reject(new Error('getDroplet not implemented'));
   getDropletTags = (dropletId: number) => Promise.reject(new Error('getDropletTags not implemented'));
