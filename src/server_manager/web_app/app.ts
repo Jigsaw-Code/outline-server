@@ -191,7 +191,7 @@ export class App {
       // User has no manual servers - check if they are logged into DigitalOcean.
       const accessToken = this.digitalOceanTokenManager.getStoredToken();
       if (accessToken) {
-        this.enterDigitalOceanMode(accessToken);
+        return this.enterDigitalOceanMode(accessToken);
       }
 
       // User has no manual servers or DigitalOcean token.
