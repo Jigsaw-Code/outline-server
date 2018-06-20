@@ -25,7 +25,7 @@ export function generateKeyPair(): Promise<KeyPair> {
   return new Promise((resolve, reject) => {
     forge.pki.rsa.generateKeyPair({bits: 4096, workers: -1}, (forgeError, keypair) => {
       if (forgeError) {
-        reject(`Failed to generate SSH key: ${forgeError}`);
+        reject(new Error(`Failed to generate SSH key: ${forgeError}`));
       }
       // trim() the string because forge adds a trailing space to
       // public keys which really messes things up later.

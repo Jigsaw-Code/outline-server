@@ -522,6 +522,10 @@ export class App {
     // Show view and initialize fields from selectedServer.
     const view = this.appRoot.getAndShowServerView();
     view.serverName = selectedServer.getName();
+    view.serverHostname = selectedServer.getHostname();
+    view.serverManagementPort = selectedServer.getManagementPort();
+    view.serverCreationDate = selectedServer.getCreatedDate().toLocaleString(
+        'en-US', {year: 'numeric', month: 'long', day: 'numeric'});
 
     if (isManagedServer(selectedServer)) {
       const host = selectedServer.getHost();
@@ -730,7 +734,7 @@ export class App {
   private forgetSelectedServer() {
     const serverToForget = this.selectedServer;
     if (!isManualServer(serverToForget)) {
-      const msg = 'cannot delete non-ManualServer';
+      const msg = 'cannot forget non-ManualServer';
       SentryErrorReporter.logError(msg);
       throw new Error(msg);
     }
