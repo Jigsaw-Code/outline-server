@@ -70,9 +70,9 @@ export function runOauth(): Promise<string> {
 
       const targetUrl = `http://localhost:${encodeURIComponent(address.port.toString())}?secret=${
           encodeURIComponent(secret)}`;
-      const oauthUrl =
-          `https://cloud.digitalocean.com/v1/oauth/authorize?client_id=${encodeURIComponent(CLIENT_ID)}&response_type=token&scope=read%20write&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=${
-              encodeURIComponent(targetUrl)}`;
+      const oauthUrl = `https://cloud.digitalocean.com/v1/oauth/authorize?client_id=${
+          encodeURIComponent(CLIENT_ID)}&response_type=token&scope=read%20write&redirect_uri=${
+          encodeURIComponent(REDIRECT_URI)}&state=${encodeURIComponent(targetUrl)}`;
       console.log(`Opening OAuth URL ${oauthUrl}`);
       electron.shell.openExternal(oauthUrl);
     });
