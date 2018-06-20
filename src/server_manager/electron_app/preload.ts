@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import * as electron from 'electron';
-// import * as digital_ocean_modifications from './digital_ocean_modifications';
 
 import * as digitalocean_oauth from './digitalocean_oauth';
 
@@ -39,5 +38,3 @@ process.once('loaded', () => {
   };
   electronGlobal.runDigitalOceanOauth = digitalocean_oauth.runOauth;
 });
-
-// digital_ocean_modifications.modifyUiIfDigitalOcean();
