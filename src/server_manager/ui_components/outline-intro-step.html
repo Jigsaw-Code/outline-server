@@ -108,11 +108,8 @@
            unlike our <img src="..."> attributes */
         list-style-image: url('../images/check.svg');
       }
-      #existingAccount {
+      .dimmed {
         color: rgba(255, 255, 255, 0.54);
-      }
-      #existingAccount a {
-        color: rgba(255, 255, 255, 0.87);
       }
       #alreadyHaveAServer {
         text-align: center;
@@ -136,9 +133,9 @@
           <li>Cancel at anytime</li>
         </ul>
       </div>
-      <a href='{{accountCreationUrl}}'><paper-button id="createDigitalOceanAccountButton" class="primary">Create an account</paper-button></a>
+      <paper-button on-tap="connectToDigitalOceanTapped" class="primary">Connect to DigitalOcean</paper-button>
       <p style="text-align: center;">
-        <span id="existingAccount">I have an account, <a href='{{oauthUrl}}'>sign me in</a></span>
+        <span class="dimmed">This will open on your browser for authentication</span>
       </p>
     </div>  <!-- end of #digitalOcean -->
 
@@ -166,20 +163,8 @@
   <script>
     Polymer({
       is: 'outline-intro-step',
-      properties: {
-        oauthUrl: String,
-        referralCode: String,
-        accountCreationUrl: {
-          type: String,
-          computed: '_makeAccountCreationUrl(referralCode)'
-        }
-      },
-      _makeAccountCreationUrl: function () {
-        let url = 'https://cloud.digitalocean.com/registrations/new';
-        if (this.referralCode) {
-          url += `?refcode=${encodeURIComponent(this.referralCode)}`;
-        }
-        return url;
+      connectToDigitalOceanTapped: function() {
+        this.fire('ConnectToDigitalOcean');
       },
       manualServerTapped: function() {
         this.fire('OpenManualServerEntry');

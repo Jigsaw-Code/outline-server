@@ -13,15 +13,17 @@
 // limitations under the License.
 
 import * as electron from 'electron';
-import * as digital_ocean_modifications from './digital_ocean_modifications';
+//import * as digital_ocean_modifications from './digital_ocean_modifications';
+
+import * as digitalocean_oauth from './digitalocean_oauth';
 
 const ipcRenderer = electron.ipcRenderer;
 
 interface ElectronGlobal extends NodeJS.Global {
   whitelistCertificate: (fingerprint: string) => void;
-  clearDigitalOceanCookies: () => void;
   onElectronEvent: (event: string, listener: () => void) => void;
   sendElectronEvent: (event: string) => void;
+  runDigitalOceanOauth: () => Promise<string>;
 }
 
 process.once('loaded', () => {
@@ -29,15 +31,13 @@ process.once('loaded', () => {
   electronGlobal.whitelistCertificate = (fingerprint: string) => {
     return ipcRenderer.sendSync('whitelist-certificate', fingerprint);
   };
-  electronGlobal.clearDigitalOceanCookies = () => {
-    return ipcRenderer.sendSync('clear-digital-ocean-cookies');
-  };
   electronGlobal.onElectronEvent = (event: string, listener: () => void) => {
     ipcRenderer.on(event, listener);
   };
   electronGlobal.sendElectronEvent = (event: string) => {
     ipcRenderer.send(event);
   };
+  electronGlobal.runDigitalOceanOauth = digitalocean_oauth.runOauth;
 });
 
-digital_ocean_modifications.modifyUiIfDigitalOcean();
+//digital_ocean_modifications.modifyUiIfDigitalOcean();
