@@ -20,8 +20,8 @@ import * as http from 'http';
 import * as path from 'path';
 
 
-const CLIENT_ID = '453';
-const REDIRECT_URI = 'https://www.getoutline.org/digitalocean_oauth';
+const CLIENT_ID = 'f744f93b192f6b5280129db478897111984181f45b3d42afd7a159c786899825';
+const REDIRECT_URI = 'https://fortuna.users.x20web.corp.google.com/jigsaw/outline/post_oauth.html';
 
 function randomValueHex(len: number): string {
   return crypto.randomBytes(Math.ceil(len / 2))
@@ -71,7 +71,7 @@ export function runOauth(): Promise<string> {
       const targetUrl = `http://localhost:${encodeURIComponent(address.port.toString())}?secret=${
           encodeURIComponent(secret)}`;
       const oauthUrl =
-          `https://cloud.digitalocean.com/v1/oauth/authorize?client_id=f744f93b192f6b5280129db478897111984181f45b3d42afd7a159c786899825&response_type=token&scope=read%20write&redirect_uri=https://fortuna.users.x20web.corp.google.com/jigsaw/outline/post_oauth.html&state=${
+          `https://cloud.digitalocean.com/v1/oauth/authorize?client_id=${encodeURIComponent(CLIENT_ID)}&response_type=token&scope=read%20write&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=${
               encodeURIComponent(targetUrl)}`;
       console.log(`Opening OAuth URL ${oauthUrl}`);
       electron.shell.openExternal(oauthUrl);
