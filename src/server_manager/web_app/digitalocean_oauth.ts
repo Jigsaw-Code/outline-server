@@ -16,8 +16,8 @@ import * as digitalocean_api from '../cloud/digitalocean_api';
 import {SentryErrorReporter} from './error_reporter';
 
 export interface TokenManager {
-  // Returns the Oauth token, or null if unavailable, and clears the URL.
-  extractTokenFromUrl(): string;
+  // Returns the Oauth token, or null if unavailable.
+  getStoredToken(): string;
   // Writes the token to storage.
   writeTokenToStorage(token: string): void;
   // Removes the token from storage.
@@ -34,17 +34,7 @@ export class DigitalOceanTokenManager implements TokenManager {
   // Searches the current URL (post-OAuth) and local storage for a DigitalOcean
   // access token. The token is not checked for validity as this would require
   // an extra roundtrip to DigitalOcean.
-  extractTokenFromUrl(): string {
-    const tokenFromUrl = this.getTokenFromUrl();
-    if (tokenFromUrl) {
-      const msg = 'found access token in URL';
-      console.log(msg);
-      SentryErrorReporter.logInfo(msg);
-      // Clear the access_token param it doesn't get sent along with error reports.
-      this.clearUrl();
-      return tokenFromUrl;
-    }
-
+  getStoredToken(): string {
     const tokenFromStorage = this.getTokenFromStorage();
     if (tokenFromStorage) {
       const msg = 'found access token in local storage';
@@ -65,42 +55,9 @@ export class DigitalOceanTokenManager implements TokenManager {
     localStorage.removeItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
   }
 
-  private getTokenFromUrl(): string {
-    const urlMatches = window.location.hash.match(/access_token=([^&]*)/);
-    if (urlMatches && urlMatches[1]) {
-      return urlMatches[1];
-    }
-    return null;
-  }
-
-  private clearUrl(): void {
-    window.location.hash = '';
-  }
-
   private getTokenFromStorage(): string {
     return localStorage.getItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
   }
-}
-
-export function getOauthUrl(currentUrl: string) {
-  let redirectUrl = currentUrl;
-  // Running on Electron
-  if (currentUrl.substr(0, 'outline:'.length) === 'outline:') {
-    redirectUrl = 'https://www.getoutline.org/digitalocean_oauth';
-  }
-  // Remove trailing '#'
-  const hashIndex = redirectUrl.indexOf('#');
-  if (hashIndex !== -1) {
-    redirectUrl = redirectUrl.substr(0, hashIndex);
-  }
-  const clientId = CLIENT_ID_BY_URL[redirectUrl];
-  if (!clientId) {
-    const msg = 'could not find client ID for redirect url';
-    SentryErrorReporter.logError(msg);
-    throw new Error(`${msg}: ${redirectUrl}`);
-  }
-  // Redirects back to the current URL.
-  return digitalocean_api.getOauthUrl(clientId, redirectUrl);
 }
 
 // DigitalOcean client IDs can be found at

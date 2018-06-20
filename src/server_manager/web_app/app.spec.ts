@@ -253,7 +253,7 @@ class FakeManualServerRepository implements server.ManualServerRepository {
 
 class InMemoryDigitalOceanTokenManager implements TokenManager {
   public token: string;
-  extractTokenFromUrl(): string {
+  getStoredToken(): string {
     return this.token;
   }
   removeTokenFromStorage() {

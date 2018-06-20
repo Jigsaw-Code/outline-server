@@ -24,16 +24,6 @@ export interface DigitalOceanDropletSpecification {
   tags: string[];
 }
 
-// Returns an OAuth redirect URL for DigitalOcean.
-export function getOauthUrl(clientId: string, redirectUri: string, state?: string): string {
-  return 'https://cloud.digitalocean.com/v1/oauth/authorize?' +
-      'client_id=' + clientId + '&' +
-      'response_type=token&' +
-      'redirect_uri=' + encodeURIComponent(redirectUri) + '&' +
-      'state=' + encodeURIComponent(state || '') + '&' +
-      'scope=read%20write';
-}
-
 // See definition and example at
 // https://developers.digitalocean.com/documentation/v2/#retrieve-an-existing-droplet-by-id
 export type DropletInfo = Readonly < {
