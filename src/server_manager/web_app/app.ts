@@ -274,8 +274,7 @@ export class App {
 
     events.addEventListener('cancel', () => {
       cancelled = true;
-      // TODO: Stop polling and sign out.
-      this.showIntro();
+      this.clearCredentialsAndShowIntro();
     }, {passive: true});
 
     query();
