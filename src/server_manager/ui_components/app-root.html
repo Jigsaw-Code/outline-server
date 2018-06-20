@@ -314,6 +314,9 @@
       showModalDialog: function(title, text, buttons) {
         return this.$.modalDialog.open(title, text, buttons);
       },
+      closeModalDialog: function(title, text, buttons) {
+        return this.$.modalDialog.close();
+      },
       showLicensesTapped: function () {
         this.closeSettingsDrawer();
         var xhr = new XMLHttpRequest();
