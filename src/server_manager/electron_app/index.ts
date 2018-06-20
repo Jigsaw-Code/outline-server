@@ -13,12 +13,12 @@
 // limitations under the License.
 
 import * as electron from 'electron';
-import { autoUpdater } from 'electron-updater';
+import {autoUpdater} from 'electron-updater';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as url from 'url';
 
-import { LoadingWindow } from './loading_window';
+import {LoadingWindow} from './loading_window';
 import * as menu from './menu';
 
 const app = electron.app;
@@ -108,7 +108,7 @@ function main() {
   let mainWindow: Electron.BrowserWindow;
 
   // Mark secure to avoid mixed content warnings when loading DigitalOcean pages via https://.
-  electron.protocol.registerStandardSchemes(['outline'], { secure: true });
+  electron.protocol.registerStandardSchemes(['outline'], {secure: true});
 
   const isSecondInstance = app.makeSingleInstance((argv, workingDirectory) => {
     // Someone tried to run a second instance, we should focus our window.
@@ -135,17 +135,17 @@ function main() {
     // the user's filesystem (important for the DigitalOcean pages we customise).
     // Hostnames are ignored.
     electron.protocol.registerFileProtocol(
-      'outline',
-      (request, callback) => {
-        const appPath = new url.URL(request.url).pathname;
-        const filesystemPath = path.join(__dirname, 'server_manager/web_app', appPath);
-        callback(filesystemPath);
-      },
-      (error) => {
-        if (error) {
-          throw new Error('Failed to register outline protocol');
-        }
-      });
+        'outline',
+        (request, callback) => {
+          const appPath = new url.URL(request.url).pathname;
+          const filesystemPath = path.join(__dirname, 'server_manager/web_app', appPath);
+          callback(filesystemPath);
+        },
+        (error) => {
+          if (error) {
+            throw new Error('Failed to register outline protocol');
+          }
+        });
     mainWindow = createMainWindow();
   });
 

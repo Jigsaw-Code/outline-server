@@ -204,21 +204,21 @@ export class App {
   private enterDigitalOceanMode(accessToken: string): Promise<void> {
     // TODO: Check the state of the account and handle incomplete registration.
     return this.getDigitalOceanServerList(accessToken)
-      .then((serverList) => {
-        // Check if this user already has a shadowsocks server, if so show that.
-        // This assumes we only allow one shadowsocks server per DigitalOcean user.
-        if (serverList.length > 0) {
-          this.showManagedServer(serverList[0]);
-        } else {
-          this.showCreateServer();
-        }
-      })
-      .catch((e) => {
-        const msg = 'could not fetch account details and/or server list';
-        console.error(msg, e);
-        SentryErrorReporter.logError(msg);
-        this.showIntro();
-      });
+        .then((serverList) => {
+          // Check if this user already has a shadowsocks server, if so show that.
+          // This assumes we only allow one shadowsocks server per DigitalOcean user.
+          if (serverList.length > 0) {
+            this.showManagedServer(serverList[0]);
+          } else {
+            this.showCreateServer();
+          }
+        })
+        .catch((e) => {
+          const msg = 'could not fetch account details and/or server list';
+          console.error(msg, e);
+          SentryErrorReporter.logError(msg);
+          this.showIntro();
+        });
   }
 
   private showManualServerIfHealthy(manualServer: server.ManualServer) {
@@ -322,19 +322,21 @@ export class App {
 
   private connectToDigitalOcean() {
     // TODO: Show a progress screen indicating OAuth is under way.
-    runDigitalOceanOauth().then((accessToken) => {
-      // Save accessToken to storage. DigitalOcean tokens
-      // expire after 30 days, unless they are manually revoked by the user.
-      // After 30 days the user will have to sign into DigitalOcean again.
-      // Note we cannot yet use DigitalOcean refresh tokens, as they require
-      // a client_secret to be stored on a server and not visible to end users
-      // in client-side JS.  More details at:
-      // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
-      this.digitalOceanTokenManager.writeTokenToStorage(accessToken);
-      this.enterDigitalOceanMode(accessToken);
-    }).catch((error) => {
-      this.displayError('Authentication with DigitalOcean failed', error);
-    });
+    runDigitalOceanOauth()
+        .then((accessToken) => {
+          // Save accessToken to storage. DigitalOcean tokens
+          // expire after 30 days, unless they are manually revoked by the user.
+          // After 30 days the user will have to sign into DigitalOcean again.
+          // Note we cannot yet use DigitalOcean refresh tokens, as they require
+          // a client_secret to be stored on a server and not visible to end users
+          // in client-side JS.  More details at:
+          // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
+          this.digitalOceanTokenManager.writeTokenToStorage(accessToken);
+          this.enterDigitalOceanMode(accessToken);
+        })
+        .catch((error) => {
+          this.displayError('Authentication with DigitalOcean failed', error);
+        });
   }
 
   // Clears the credentials and returns to the intro screen.
