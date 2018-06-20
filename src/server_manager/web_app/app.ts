@@ -201,9 +201,37 @@ export class App {
   }
 
   // Show the DigitalOcean server creator or the existing server, if there's one.
-  private enterDigitalOceanMode(accessToken: string): Promise<void> {
-    // TODO: Check the state of the account and handle incomplete registration.
-    return this.getDigitalOceanServerList(accessToken)
+  private enterDigitalOceanMode(accessToken: string) {
+    const doSession = this.createDigitalOceanSession(accessToken);
+    // We create a <div>, but all we really need is an EventTarget.
+    const events = document.createElement('div');
+    let cancelled = false;
+
+    const query = () => {
+      if (cancelled) {
+        return;
+      }
+      this.digitalOceanRetry(() => doSession.getAccount()).then((account) => {
+        events.dispatchEvent(new CustomEvent('account-update', {detail: account}));
+      }).catch((error) => {
+        this.appRoot.hideModalDialog();
+        this.showIntro();
+        this.displayError('Failed to get DigitalOcean account information', error);
+      });
+    };
+
+    events.addEventListener('account-update', (event: PolymerEvent) => {
+      if (cancelled) {
+        return;
+      }
+      const account = event.detail;
+      this.appRoot.adminEmail = account.email;
+      if (account.status === 'active') {
+        this.appRoot.closeModalDialog();
+        sendElectronEvent('bring-to-front');
+        this.digitalOceanRepository =
+          this.createDigitalOceanServerRepository(doSession);
+        this.digitalOceanRepository.listServers()
         .then((serverList) => {
           // Check if this user already has a shadowsocks server, if so show that.
           // This assumes we only allow one shadowsocks server per DigitalOcean user.
@@ -214,11 +242,32 @@ export class App {
           }
         })
         .catch((e) => {
-          const msg = 'could not fetch account details and/or server list';
+          const msg = 'Could not fetch server list from DigitalOcean';
           console.error(msg, e);
           SentryErrorReporter.logError(msg);
           this.showIntro();
         });
+      } else {
+        if (account.email_verified) {
+          this.appRoot.showModalDialog("Complete your DigitalOcean Registration",
+          "Please go to digitalocean.com to enter your billing information and complete your registration",
+          ['Sign Out']).then(() => { events.dispatchEvent(new Event('cancel'));});
+        } else {
+          this.appRoot.showModalDialog("Verify your email",
+          `Go to your ${account.email} email and open the email confirmation link sent by DigitalOcean`,
+          ['Sign Out']).then(() => { events.dispatchEvent(new Event('cancel'));});
+        }
+        setTimeout(query, 1000);
+      }
+    }, {passive: true});
+
+    events.addEventListener('cancel', () => {
+      cancelled = true;
+      // TODO: Stop polling and sign out.
+      this.showIntro();
+    }, {passive: true});
+
+    query();
   }
 
   private showManualServerIfHealthy(manualServer: server.ManualServer) {
@@ -247,24 +296,6 @@ export class App {
             }
           });
     });
-  }
-
-  // Returns a Promise that fulfills once the correct UI screen is shown.
-  private getDigitalOceanServerList(accessToken: string): Promise<server.ManagedServer[]> {
-    // Fetch the user's email address and list of servers then change to
-    // either the region picker or management screen, depending on whether
-    // they have a server.
-    const digitalOceanSession = this.createDigitalOceanSession(accessToken);
-    return this
-        .digitalOceanRetry(() => {
-          return digitalOceanSession.getAccount().then((account) => {
-            this.appRoot.adminEmail = account.email;
-
-            this.digitalOceanRepository =
-                this.createDigitalOceanServerRepository(digitalOceanSession);
-            return this.digitalOceanRepository.listServers();
-          });
-        });
   }
 
   // Intended to add a "retry or re-authenticate?" prompt to DigitalOcean
