@@ -211,13 +211,15 @@ export class App {
       if (cancelled) {
         return;
       }
-      this.digitalOceanRetry(() => doSession.getAccount()).then((account) => {
-        events.dispatchEvent(new CustomEvent('account-update', {detail: account}));
-      }).catch((error) => {
-        this.appRoot.hideModalDialog();
-        this.showIntro();
-        this.displayError('Failed to get DigitalOcean account information', error);
-      });
+      this.digitalOceanRetry(() => doSession.getAccount())
+          .then((account) => {
+            events.dispatchEvent(new CustomEvent('account-update', {detail: account}));
+          })
+          .catch((error) => {
+            this.appRoot.hideModalDialog();
+            this.showIntro();
+            this.displayError('Failed to get DigitalOcean account information', error);
+          });
     };
 
     events.addEventListener('account-update', (event: PolymerEvent) => {
@@ -229,33 +231,42 @@ export class App {
       if (account.status === 'active') {
         this.appRoot.closeModalDialog();
         sendElectronEvent('bring-to-front');
-        this.digitalOceanRepository =
-          this.createDigitalOceanServerRepository(doSession);
+        this.digitalOceanRepository = this.createDigitalOceanServerRepository(doSession);
         this.digitalOceanRepository.listServers()
-        .then((serverList) => {
-          // Check if this user already has a shadowsocks server, if so show that.
-          // This assumes we only allow one shadowsocks server per DigitalOcean user.
-          if (serverList.length > 0) {
-            this.showManagedServer(serverList[0]);
-          } else {
-            this.showCreateServer();
-          }
-        })
-        .catch((e) => {
-          const msg = 'Could not fetch server list from DigitalOcean';
-          console.error(msg, e);
-          SentryErrorReporter.logError(msg);
-          this.showIntro();
-        });
+            .then((serverList) => {
+              // Check if this user already has a shadowsocks server, if so show that.
+              // This assumes we only allow one shadowsocks server per DigitalOcean user.
+              if (serverList.length > 0) {
+                this.showManagedServer(serverList[0]);
+              } else {
+                this.showCreateServer();
+              }
+            })
+            .catch((e) => {
+              const msg = 'Could not fetch server list from DigitalOcean';
+              console.error(msg, e);
+              SentryErrorReporter.logError(msg);
+              this.showIntro();
+            });
       } else {
         if (account.email_verified) {
-          this.appRoot.showModalDialog("Complete your DigitalOcean Registration",
-          "Please go to digitalocean.com to enter your billing information and complete your registration",
-          ['Sign Out']).then(() => { events.dispatchEvent(new Event('cancel'));});
+          this.appRoot
+              .showModalDialog(
+                  'Complete your DigitalOcean Registration',
+                  'Please go to digitalocean.com to enter your billing information and complete your registration',
+                  ['Sign Out'])
+              .then(() => {
+                events.dispatchEvent(new Event('cancel'));
+              });
         } else {
-          this.appRoot.showModalDialog("Verify your email",
-          `Go to your ${account.email} email and open the email confirmation link sent by DigitalOcean`,
-          ['Sign Out']).then(() => { events.dispatchEvent(new Event('cancel'));});
+          this.appRoot
+              .showModalDialog(
+                  'Verify your email',
+                  `Go to your ${account.email} email and open the email confirmation link sent by DigitalOcean`,
+                  ['Sign Out'])
+              .then(() => {
+                events.dispatchEvent(new Event('cancel'));
+              });
         }
         setTimeout(query, 1000);
       }
