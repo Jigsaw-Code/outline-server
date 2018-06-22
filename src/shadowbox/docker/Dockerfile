@@ -29,7 +29,10 @@ LABEL shadowbox.github.release="${GITHUB_RELEASE}"
 RUN apk add --no-cache lsof curl
 
 COPY src/shadowbox/scripts scripts/
+COPY src/shadowbox/scripts/update_mmdb.sh /etc/periodic/weekly/
+
 RUN sh ./scripts/install_shadowsocks.sh $SS_VERSION
+RUN /etc/periodic/weekly/update_mmdb.sh
 
 WORKDIR /root/shadowbox
 
