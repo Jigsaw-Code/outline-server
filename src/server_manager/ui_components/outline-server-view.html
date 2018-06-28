@@ -553,7 +553,7 @@
       getS3InviteUrl: function(accessUrl) {
         // If updating this URL, must also update it in outline-share-dialog.html.
         // TODO: deduplicate and move this to the TypeScript app code.
-        return 'https://s3.amazonaws.com/outline-vpn/invite.html?admin_embed#/invite/' +
+        return 'https://s3.amazonaws.com/outline-vpn/invite.html?admin_embed#' +
             encodeURIComponent(accessUrl);
       },
       // initHelpBubbles should be called after this outline-server-view
