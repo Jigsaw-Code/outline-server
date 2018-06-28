@@ -167,7 +167,7 @@ export function runOauth(): OauthSession {
         getAccount(accessToken)
             .then((account) => {
               if (account.status === 'active') {
-                response.send('Authentication successful');
+                response.send(`<html><script>window.close()</script></html>`);
               } else {
                 response.redirect('https://cloud.digitalocean.com');
               }
