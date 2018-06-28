@@ -20,9 +20,6 @@ import * as http from 'http';
 import * as path from 'path';
 import * as request from 'request';
 
-const CLIENT_ID = '7f84935771d49c2331e1cfb60c7827e20eaf128103435d82ad20b3c53253b721';
-const REDIRECT_URI = 'http://localhost:55189/';
-
 const REGISTERED_REDIRECTS = [
   {clientId: '7f84935771d49c2331e1cfb60c7827e20eaf128103435d82ad20b3c53253b721', port: 55189},
   {clientId: '4af51205e8d0d8f4a5b84a6b5ca9ea7124f914a5621b6a731ce433c2c7db533b', port: 60434},
