@@ -157,12 +157,11 @@ function main() {
   });
   const UPDATE_DOWNLOADED_EVENT = 'update-downloaded';
   autoUpdater.on(UPDATE_DOWNLOADED_EVENT, (ev, info) => {
-    if (!!mainWindow) {
+    if (mainWindow) {
       mainWindow.webContents.send(UPDATE_DOWNLOADED_EVENT);
     }
   });
 
-  // Set of fingerprints.  All values are true.
   const trustedFingerprints = new Set<string>();
   ipcMain.on('whitelist-certificate', (event: IpcEvent, fingerprint: string) => {
     const prefix = 'sha256/';
