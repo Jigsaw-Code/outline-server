@@ -63,8 +63,7 @@ function main() {
 
   const statsFilename = getPersistentFilename('shadowbox_stats.json');
   const stats = new metrics.PersistentStats(statsFilename);
-  const ipLocationService =
-      new ip_location.CachedIpLocationService(new ip_location.FreegeoIpLocationService());
+  const ipLocationService = new ip_location.MmdbLocationService();
   stats.onLastHourMetricsReady((startDatetime, endDatetime, lastHourUserStats) => {
     if (serverConfig.getMetricsEnabled()) {
       metrics
