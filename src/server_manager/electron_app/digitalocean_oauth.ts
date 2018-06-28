@@ -68,8 +68,12 @@ function listenOnFirstPort(server: http.Server, portList: number[]): Promise<num
 
 
 export interface OauthSession {
+  // The result of the OAuth session, with the authentication token.
   result: Promise<string>;
+  // Checks if the OauthSession has been cancelled.
   isCancelled(): boolean;
+  // Cancels the OAuth session. The result promise is automatically rejected
+  // and isCancelled() will return true.
   cancel(): void;
 }
 
