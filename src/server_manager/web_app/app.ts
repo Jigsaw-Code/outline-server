@@ -36,7 +36,12 @@ const DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
 // These functions are defined in electron_app/preload.ts.
 declare function onElectronEvent(event: string, listener: () => void): void;
 declare function sendElectronEvent(event: string): void;
-declare function runDigitalOceanOauth(): Promise<string>;
+interface OauthSession {
+  result: Promise<string>;
+  isCancelled(): boolean;
+  cancel(): void;
+}
+declare function runDigitalOceanOauth(): OauthSession;
 
 interface UiAccessKey {
   id: string;
@@ -362,32 +367,33 @@ export class App {
   }
 
   private connectToDigitalOcean() {
-    // TODO: Show a progress screen indicating OAuth is under way.
+    const session = runDigitalOceanOauth();
     this.appRoot.showModalDialog(
       'Awaiting authorization',  // Don't display any title.
       'On the DigitalOcean window that was opened on your browser, sign in or create a new account, then authorize the Outline Manager application',
       ['Cancel'])
       .then(() => {
-        // TODO: Cancel OAuth
+        session.cancel();
       });
-    runDigitalOceanOauth()
-      .then((accessToken) => {
-        this.appRoot.closeModalDialog();
-        sendElectronEvent('bring-to-front');
-        // Save accessToken to storage. DigitalOcean tokens
-        // expire after 30 days, unless they are manually revoked by the user.
-        // After 30 days the user will have to sign into DigitalOcean again.
-        // Note we cannot yet use DigitalOcean refresh tokens, as they require
-        // a client_secret to be stored on a server and not visible to end users
-        // in client-side JS.  More details at:
-        // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
-        this.digitalOceanTokenManager.writeTokenToStorage(accessToken);
-        this.enterDigitalOceanMode(accessToken);
-      })
+    session.result.then((accessToken) => {
+      this.appRoot.closeModalDialog();
+      sendElectronEvent('bring-to-front');
+      // Save accessToken to storage. DigitalOcean tokens
+      // expire after 30 days, unless they are manually revoked by the user.
+      // After 30 days the user will have to sign into DigitalOcean again.
+      // Note we cannot yet use DigitalOcean refresh tokens, as they require
+      // a client_secret to be stored on a server and not visible to end users
+      // in client-side JS.  More details at:
+      // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
+      this.digitalOceanTokenManager.writeTokenToStorage(accessToken);
+      this.enterDigitalOceanMode(accessToken);
+    })
       .catch((error) => {
-        this.appRoot.closeModalDialog();
-        sendElectronEvent('bring-to-front');
-        this.displayError('Authentication with DigitalOcean failed', error);
+        if (!session.isCancelled()) {
+          this.appRoot.closeModalDialog();
+          sendElectronEvent('bring-to-front');
+          this.displayError('Authentication with DigitalOcean failed', error);
+        }
       });
   }
 
