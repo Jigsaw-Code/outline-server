@@ -188,8 +188,7 @@ export function runOauth(): OauthSession {
     // the first port is in use.
     listenOnFirstPort(server, REGISTERED_REDIRECTS.map(e => e.port))
         .then((index) => {
-          const port = REGISTERED_REDIRECTS[index].port;
-          const clientId = REGISTERED_REDIRECTS[index].clientId;
+          const {port, clientId} = REGISTERED_REDIRECTS[index];
           const address = server.address();
           console.log(`OAuth target listening on ${address.address}:${address.port}`);
 
