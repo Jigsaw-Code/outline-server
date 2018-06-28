@@ -14,9 +14,9 @@
 
 import * as ip_location from './ip_location';
 
-function testIpLocationServive(name: string,
-                               service: ip_location.IpLocationService) {
-    describe(name, () => {
+function testIpLocationService(name: string, service: ip_location.IpLocationService) {
+  describe(
+      name, () => {
         it('returns ZZ on unknown country', (done) => {
             service.countryForIp('127.0.0.1').then((countryCode) => {
                 expect(countryCode).toEqual('ZZ');
@@ -33,10 +33,10 @@ function testIpLocationServive(name: string,
                 done.fail(e);
             });
         });
-    });
+      });
 }
 
-testIpLocationServive('IpInfoIpLocationService',
-                      new ip_location.IpInfoIpLocationService());
-testIpLocationServive('FreegeoIpLocationService',
-                      new ip_location.FreegeoIpLocationService());
+testIpLocationService('IpInfoIpLocationService', new ip_location.IpInfoIpLocationService());
+testIpLocationService('FreegeoIpLocationService', new ip_location.FreegeoIpLocationService());
+const testDbPath = 'third_party/maxmind/GeoLite2-Country_20180327/GeoLite2-Country.mmdb';
+testIpLocationService('MmdbLocationService', new ip_location.MmdbLocationService(testDbPath));
