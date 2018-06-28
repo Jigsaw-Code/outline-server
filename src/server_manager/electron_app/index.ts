@@ -132,8 +132,7 @@ function main() {
 
     // Register a custom protocol so we can use absolute paths in the web app.
     // This also acts as a kind of chroot for the web app, so it cannot access
-    // the user's filesystem (important for the DigitalOcean pages we customise).
-    // Hostnames are ignored.
+    // the user's filesystem. Hostnames are ignored.
     electron.protocol.registerFileProtocol(
         'outline',
         (request, callback) => {
