@@ -22,7 +22,7 @@ interface ElectronGlobal extends NodeJS.Global {
   whitelistCertificate: (fingerprint: string) => void;
   onElectronEvent: (event: string, listener: () => void) => void;
   sendElectronEvent: (event: string) => void;
-  runDigitalOceanOauth: () => Promise<string>;
+  runDigitalOceanOauth: () => digitalocean_oauth.OauthSession;
 }
 
 process.once('loaded', () => {
