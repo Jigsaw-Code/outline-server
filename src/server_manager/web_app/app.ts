@@ -216,15 +216,20 @@ export class App {
       if (cancelled) {
         return;
       }
-      this.digitalOceanRetry(() => doSession.getAccount())
-          .then((account) => {
-            events.dispatchEvent(new CustomEvent('account-update', {detail: account}));
-          })
-          .catch((error) => {
-            this.appRoot.hideModalDialog();
-            this.showIntro();
-            this.displayError('Failed to get DigitalOcean account information', error);
-          });
+      this.digitalOceanRetry(() => {
+        if (cancelled) {
+          return Promise.reject("Authorization cancelled");
+        }
+        return doSession.getAccount();
+      }).then((account) => {
+        events.dispatchEvent(new CustomEvent('account-update', { detail: account }));
+      }).catch((error) => {
+        if (!cancelled) {
+          this.appRoot.hideModalDialog();
+          this.showIntro();
+          this.displayError('Failed to get DigitalOcean account information', error);
+        }
+      });
     };
 
     events.addEventListener('account-update', (event: PolymerEvent) => {
