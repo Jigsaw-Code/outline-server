@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as crypto from 'crypto';
-import * as http from 'http';
-import * as path from 'path';
-
 import * as bodyParser from 'body-parser';
+import * as crypto from 'crypto';
 import * as electron from 'electron';
 import * as express from 'express';
+import * as http from 'http';
+import * as path from 'path';
 import * as request from 'request';
 
 const CLIENT_ID = '7f84935771d49c2331e1cfb60c7827e20eaf128103435d82ad20b3c53253b721';
@@ -79,20 +78,22 @@ interface Account {
 
 function getAccount(accessToken: string): Promise<Account> {
   return new Promise((resolve, reject) => {
-      request({
+    request(
+        {
           url: 'https://api.digitalocean.com/v2/account',
           headers: {
-              'User-Agent': 'Outline Manager',
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${accessToken}`
+            'User-Agent': 'Outline Manager',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
           }
-      }, (error, response, body) => {
+        },
+        (error, response, body) => {
           if (error) {
-              return reject(error);
+            return reject(error);
           }
           const bodyJson: {account: Account} = JSON.parse(body);
           return resolve(bodyJson.account as Account);
-      });
+        });
   });
 }
 
@@ -163,40 +164,44 @@ export function runOauth(): OauthSession {
       }
       const accessToken = params.get('access_token');
       if (accessToken) {
-        getAccount(accessToken).then((account) => {
-          if (account.status === 'active') {
-            response.send('Authentication successful');
-          } else {
-            response.redirect('https://cloud.digitalocean.com');
-          }
-          resolve(accessToken);
-        }).catch(reject);
+        getAccount(accessToken)
+            .then((account) => {
+              if (account.status === 'active') {
+                response.send('Authentication successful');
+              } else {
+                response.redirect('https://cloud.digitalocean.com');
+              }
+              resolve(accessToken);
+            })
+            .catch(reject);
       } else {
         response.status(400).send('Authentication failed');
         reject(new Error('No access_token on OAuth response'));
       }
     });
 
-    listenOnFirstPort(server, REGISTERED_REDIRECTS.map(e => e.port)).then((index) => {
-      const port = REGISTERED_REDIRECTS[index].port;
-      const clientId = REGISTERED_REDIRECTS[index].clientId;
-      const address = server.address();
-      console.log(`OAuth target listening on ${address.address}:${address.port}`);
+    listenOnFirstPort(server, REGISTERED_REDIRECTS.map(e => e.port))
+        .then((index) => {
+          const port = REGISTERED_REDIRECTS[index].port;
+          const clientId = REGISTERED_REDIRECTS[index].clientId;
+          const address = server.address();
+          console.log(`OAuth target listening on ${address.address}:${address.port}`);
 
-      const targetUrl = `http://localhost:${encodeURIComponent(address.port.toString())}?secret=${
-          encodeURIComponent(secret)}`;
-      const oauthUrl = `https://cloud.digitalocean.com/v1/oauth/authorize?client_id=${
-          encodeURIComponent(
-              clientId)}&response_type=token&scope=read%20write&redirect_uri=http://localhost:${
-          encodeURIComponent(port.toString())}/&state=${encodeURIComponent(targetUrl)}`;
-      console.log(`Opening OAuth URL ${oauthUrl}`);
-      electron.shell.openExternal(oauthUrl);
-    }).catch((error) => {
-      if (error.code && error.code === 'EADDRINUSE') {
-        return reject(new Error('All OAuth ports are in use'));
-      }
-      reject(error);
-    });
+          const targetUrl = `http://localhost:${
+              encodeURIComponent(address.port.toString())}?secret=${encodeURIComponent(secret)}`;
+          const oauthUrl = `https://cloud.digitalocean.com/v1/oauth/authorize?client_id=${
+              encodeURIComponent(
+                  clientId)}&response_type=token&scope=read%20write&redirect_uri=http://localhost:${
+              encodeURIComponent(port.toString())}/&state=${encodeURIComponent(targetUrl)}`;
+          console.log(`Opening OAuth URL ${oauthUrl}`);
+          electron.shell.openExternal(oauthUrl);
+        })
+        .catch((error) => {
+          if (error.code && error.code === 'EADDRINUSE') {
+            return reject(new Error('All OAuth ports are in use'));
+          }
+          reject(error);
+        });
   });
   return {
     result,
