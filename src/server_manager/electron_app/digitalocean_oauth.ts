@@ -63,6 +63,7 @@ function listenOnFirstPort(server: http.Server, portList: number[]): Promise<num
   });
 }
 
+// See https://developers.digitalocean.com/documentation/v2/#get-user-information
 interface Account {
   droplet_limit: number;
   floating_ip_limit: number;
