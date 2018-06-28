@@ -379,7 +379,6 @@ export class App {
     session.result
         .then((accessToken) => {
           this.appRoot.closeModalDialog();
-          sendElectronEvent('bring-to-front');
           // Save accessToken to storage. DigitalOcean tokens
           // expire after 30 days, unless they are manually revoked by the user.
           // After 30 days the user will have to sign into DigitalOcean again.
