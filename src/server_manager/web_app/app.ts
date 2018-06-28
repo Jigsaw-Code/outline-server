@@ -401,8 +401,6 @@ export class App {
 
   // Clears the credentials and returns to the intro screen.
   private clearCredentialsAndShowIntro() {
-    // Remove credential from URL and local storage.
-    location.hash = '';
     this.digitalOceanTokenManager.removeTokenFromStorage();
     // Reset UI
     this.appRoot.adminEmail = '';
