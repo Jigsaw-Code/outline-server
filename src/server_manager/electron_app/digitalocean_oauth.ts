@@ -74,6 +74,7 @@ interface Account {
   status_message: string;
 }
 
+// Queries the DigitalOcean API for the user account information.
 function getAccount(accessToken: string): Promise<Account> {
   return new Promise((resolve, reject) => {
     request(
@@ -106,7 +107,7 @@ export interface OauthSession {
 }
 
 // Runs the DigitalOcean oauth flow and returns the access token.
-// See https://developers.digitalocean.com/documentation/oauth/ for the API.
+// See https://developers.digitalocean.com/documentation/oauth/ for the OAuth API.
 export function runOauth(): OauthSession {
   const secret = randomValueHex(16);
 
@@ -123,6 +124,8 @@ export function runOauth(): OauthSession {
     }
   });
 
+  // This is the callback for the DigitalOcean callback. It serves Javascript that will
+  // extract the access token from the hash and post it back to our http server.
   app.get('/', (request, response) => {
     response.send(`<html>
           <head><title>Authenticating...</title></head>
@@ -145,6 +148,8 @@ export function runOauth(): OauthSession {
   const rejectWrapper = {reject: (error: Error) => {}};
   const result = new Promise<string>((resolve, reject) => {
     rejectWrapper.reject = reject;
+    // This is the POST endpoint that receives the access token and redirects to either DigitalOcean
+    // for the user to complete their account creation, or to a page that closes the window.
     app.post('/', bodyParser.urlencoded({type: '*/*', extended: false}), (request, response) => {
       server.close();
 
@@ -178,6 +183,9 @@ export function runOauth(): OauthSession {
       }
     });
 
+    // Unfortunately DigitalOcean matches the port in the redirect url against the registered ones.
+    // We registered the application 3 times with different ports, so we have fallbacks in case
+    // the first port is in use.
     listenOnFirstPort(server, REGISTERED_REDIRECTS.map(e => e.port))
         .then((index) => {
           const port = REGISTERED_REDIRECTS[index].port;
