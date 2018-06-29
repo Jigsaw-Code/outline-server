@@ -133,7 +133,7 @@
       open: function(accessUrl) {
         this.accessUrl = accessUrl;
         // If updating this URL, must also update it in outline-server-view.html. TODO: deduplicate
-        this.s3Url = 'https://s3.amazonaws.com/outline-vpn/index.html#/invite/' +
+        this.s3Url = 'https://s3.amazonaws.com/outline-vpn/invite.html#' +
             encodeURIComponent(accessUrl);
         this.$.copyText.setAttribute('hidden', true);
         this.$.dialog.open();
