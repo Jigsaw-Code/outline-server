@@ -24,45 +24,51 @@
     <style>
       :host {
         text-align: center;
-      }
-      hr {
-        position: absolute;
-        width: 1px;
-        height: 24px;
-        top: 309px;
-        left: 97px;
-        border: 1px;
-        height: 24px;
-        border-left: 1px solid #e1e1e1;
+        --do-blue: #1637FF;
+        --manual-server-green: #00BFA5;
       }
       a {
         cursor: pointer;
       }
       .card {
-        padding: 32px;
-        margin: 32px;
+        padding: 24px 0;
+        margin: 24px;
         border-radius: 3px;
         text-align: left;
-        color: white;
+        color: rgba(0,0,0,0.87);
         font-weight: normal;
+        box-shadow: 0 0 2px 0 rgba(0,0,0,0.14), 0 2px 2px 0 rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
+        border-radius: 2px;
       }
       .card paper-button {
         width: 100%;
-        margin:32px 0 0 0;
-        background-color: white;
-      }
-      .card#digitalOcean {
-        background-color: #066CFF;
+        margin: 24px 0 0 0;
+        letter-spacing: 0.75px;
       }
       .card#digitalOcean paper-button {
-        color: #0069FF;
+        color: #FFF;
+        background-color: var(--do-blue);
+
       }
-      .card#manualServer {
-        background: linear-gradient(to right, #263238, #37474F);
-        padding-bottom: 38px;
+      .card#digitalOcean .difficultyLevel {
+        color: var(--do-blue);
       }
       .card#manualServer paper-button {
-        color: #263238;
+        color: #FFF;
+        background-color: var(--manual-server-green);
+      }
+      .card#manualServer .difficultyLevel {
+        color: var(--manual-server-green);
+      }
+      .card .cardHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 24px 12px;
+        border-bottom: 1px solid rgba(0, 0, 0, .12);
+      }
+      .card .cardBody {
+        padding: 0 24px;
       }
       .card .difficultyLevel {
         font-weight: 400;
@@ -84,8 +90,8 @@
         margin-top: 11px;
       }
       .card .cardLeftColumn .description {
-        line-height: 24px;
-        color: rgba(255, 255, 255, 0.54);
+        color: rgba(0,0,0,0.54);
+        line-height: 22px;
         margin-top: 16px;
       }
       .card p {
@@ -97,22 +103,26 @@
         vertical-align: top;
         width: 190px;
         line-height: 32px;
-        color: rgba(255, 255, 255, 0.54);
+        color: rgba(0,0,0,0.87);
+        letter-spacing: 0;
+        line-height: 32px;
         margin: 24px 0px 0px 50px;
       }
       .card .cardRightColumn ul {
         margin-top: 0px;
-        color: rgba(255, 255, 255, 0.87);
+        /*color: rgba(255, 255, 255, 0.87);*/
         padding-left: 16px;
+      }
+      #digitalOcean .cardRightColumn ul {
         /* NOTE: this URL must be relative to the ui_components sub dir,
            unlike our <img src="..."> attributes */
-        list-style-image: url('../images/check.svg');
+        list-style-image: url('../images/check_blue.svg');
+      }
+      #manualServer .cardRightColumn ul {
+        list-style-image: url('../images/check_green.svg');
       }
       .dimmed {
         color: rgba(255, 255, 255, 0.54);
-      }
-      #alreadyHaveAServer {
-        text-align: center;
       }
     </style>
     <div class='walkthrough'>
@@ -120,44 +130,48 @@
     </div>
 
     <div id='digitalOcean' class='card'>
-      <div class='difficultyLevel'>RECOMMENDED</div>
-      <div class='cardLeftColumn'>
-        <div class='title'>Set up Outline on DigitalOcean</div>
+      <div class="cardHeader">
+        <div class='difficultyLevel'>RECOMMENDED</div>
         <img src="images/digital_ocean_logo.svg">
       </div>
-      <div class='cardRightColumn'>
-        <ul>
-          <li>Easiest setup process</li>
-          <li>Only $5 a month</li>
-          <li>1 TB of data transfer</li>
-          <li>Cancel at anytime</li>
-        </ul>
+      <div class="cardBody">
+        <div class='cardLeftColumn'>
+          <div class='title'>Set up Outline on DigitalOcean</div>
+        </div>
+        <div class='cardRightColumn'>
+          <ul>
+            <li>Easiest setup process</li>
+            <li>Only $5 a month</li>
+            <li>1 TB of data transfer</li>
+            <li>Cancel at anytime</li>
+          </ul>
+        </div>
+        <paper-button on-tap="connectToDigitalOceanTapped" class="primary">Connect with DigitalOcean</paper-button>
       </div>
-      <paper-button on-tap="connectToDigitalOceanTapped" class="primary">Connect to DigitalOcean</paper-button>
-      <p style="text-align: center;">
-        <span class="dimmed">This will open in your browser for authentication</span>
-      </p>
     </div>  <!-- end of #digitalOcean -->
 
-    <div id='alreadyHaveAServer'>Already have a server?</div>
-
     <div id='manualServer' class='card'>
-      <div class='difficultyLevel'>ADVANCED</div>
-      <div class='cardLeftColumn'>
-        <div class='title'>Set up Outline anywhere</div>
-        <div class='description'>Outline can run on all major cloud providers. You can also deploy it on your own infrastructure.</div>
+      <div class="cardHeader">
+        <div class='difficultyLevel'>ADVANCED</div>
+        <img src="images/cloud.svg">
       </div>
-      <div class='cardRightColumn'>
-        <div>Tested on:</div>
-        <ul>
-          <li>Amazon EC2</li>
-          <li>Google Compute Engine</li>
-          <li>Vultr</li>
-          <li>Linode</li>
-          <li>Liquid Web</li>
-        </ul>
+      <div class="cardBody">
+        <div class='cardLeftColumn'>
+          <div class='title'>Set up Outline anywhere</div>
+          <div class='description'>Outline can run on all major cloud providers. You can also deploy it on your own infrastructure.</div>
+        </div>
+        <div class='cardRightColumn'>
+          <div>Tested on:</div>
+          <ul>
+            <li>Amazon EC2</li>
+            <li>Google Compute Engine</li>
+            <li>Vultr</li>
+            <li>Linode</li>
+            <li>Liquid Web</li>
+          </ul>
+        </div>
+        <paper-button on-tap='manualServerTapped'>Get started</paper-button>
       </div>
-      <paper-button on-tap='manualServerTapped'>Get started</paper-button>
     </div>   <!-- end of #manualServer -->
   </template>
   <script>
