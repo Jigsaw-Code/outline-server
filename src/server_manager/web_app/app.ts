@@ -227,26 +227,26 @@ export class App {
           })
           .catch((error) => {
             if (!cancelled) {
-              this.appRoot.hideModalDialog();
               this.showIntro();
               this.displayError('Failed to get DigitalOcean account information', error);
             }
           });
     };
 
+    const oauthUi = this.appRoot.getAndShowServerCreator().getAndShowDigitalOceanOauthFlow();
     authEvents.on('account-update', (account: digitalocean_api.Account) => {
       if (cancelled) {
         return;
       }
       this.appRoot.adminEmail = account.email;
       if (account.status === 'active') {
-        this.appRoot.closeModalDialog();
+        oauthUi.showAccountActive();
         sendElectronEvent('bring-to-front');
         this.digitalOceanRepository = this.createDigitalOceanServerRepository(doSession);
         this.digitalOceanRepository.listServers()
             .then((serverList) => {
-              // Check if this user already has a shadowsocks server, if so show that.
-              // This assumes we only allow one shadowsocks server per DigitalOcean user.
+              // Check if this user already has a Shadowsocks server, if so show that.
+              // This assumes we only allow one Shadowsocks server per DigitalOcean user.
               if (serverList.length > 0) {
                 this.showManagedServer(serverList[0]);
               } else {
@@ -261,32 +261,37 @@ export class App {
             });
       } else {
         if (account.email_verified) {
-          this.appRoot
-              .showModalDialog(
-                  'Complete your DigitalOcean Registration',
-                  'Please go to digitalocean.com to enter your billing information and complete your registration',
-                  ['Sign Out'])
-              .then(() => {
-                authEvents.emit('cancel');
-              });
+        //   this.appRoot
+        //       .showModalDialog(
+        //           'Complete your DigitalOcean Registration',
+        //           'Please go to digitalocean.com to enter your billing information and complete your registration',
+        //           ['Sign Out'])
+        //       .then(() => {
+        //         authEvents.emit('cancel');
+        //       });
+        // } else {
+          // this.appRoot
+          //     .showModalDialog(
+          //         'Verify your email',
+          //         `Go to your ${account.email} email and open the email confirmation link sent by DigitalOcean`,
+          //         ['Sign Out'])
+          //     .then(() => {
+          //       authEvents.emit('cancel');
+          //     });
+          oauthUi.showBilling();
         } else {
-          this.appRoot
-              .showModalDialog(
-                  'Verify your email',
-                  `Go to your ${account.email} email and open the email confirmation link sent by DigitalOcean`,
-                  ['Sign Out'])
-              .then(() => {
-                authEvents.emit('cancel');
-              });
+          oauthUi.showEmailVerification();
         }
         setTimeout(query, 1000);
       }
     });
 
-    authEvents.once('cancel', () => {
+    const oauthFlowCancelled = () => {
       cancelled = true;
       this.clearCredentialsAndShowIntro();
-    });
+    };
+    oauthUi.cancelCallback = oauthFlowCancelled;
+    authEvents.once('cancel', oauthFlowCancelled);
 
     query();
   }
@@ -373,18 +378,14 @@ export class App {
   }
 
   private connectToDigitalOcean() {
+    const oauthUi = this.appRoot.getAndShowServerCreator().getAndShowDigitalOceanOauthFlow();
     const session = runDigitalOceanOauth();
-    this.appRoot
-        .showModalDialog(
-            'Awaiting authorization',  // Don't display any title.
-            'On the DigitalOcean window that was opened on your browser, sign in or create a new account, then authorize the Outline Manager application',
-            ['Cancel'])
-        .then(() => {
-          session.cancel();
-        });
+    oauthUi.cancelCallback = () => {
+      session.cancel();
+      this.clearCredentialsAndShowIntro();
+    };
     session.result
         .then((accessToken) => {
-          this.appRoot.closeModalDialog();
           // Save accessToken to storage. DigitalOcean tokens
           // expire after 30 days, unless they are manually revoked by the user.
           // After 30 days the user will have to sign into DigitalOcean again.
@@ -397,7 +398,7 @@ export class App {
         })
         .catch((error) => {
           if (!session.isCancelled()) {
-            this.appRoot.closeModalDialog();
+            this.clearCredentialsAndShowIntro();
             sendElectronEvent('bring-to-front');
             this.displayError('Authentication with DigitalOcean failed', error);
           }
