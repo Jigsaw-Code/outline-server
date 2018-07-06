@@ -16,6 +16,7 @@
 <link rel='import' href='../bower_components/polymer/polymer.html'>
 <link rel='import' href='../bower_components/iron-pages/iron-pages.html'>
 
+<link rel="import" href="./outline-do-oauth-step.html">
 <link rel="import" href="./outline-intro-step.html">
 <link rel="import" href="./outline-manual-server-entry.html">
 <link rel="import" href="./outline-region-picker-step.html">
@@ -28,174 +29,74 @@
       :host {
         display: block;
       }
-
-      .completed-icon {
-        display: none;
-        color: #fff;
-        height: 20px;
-        margin-top: 3px;
-        margin-left: 1px;
-      }
-
-      .step-completed .stepnumber {
-        display: none;
-      }
-
-      .step-completed .completed-icon {
-        display: inline-block;
-      }
-
-      .stepheader {
-        padding: 24px 0px 24px 0px;
+      .step-header {
+        padding: 48px 24px 24px;
         vertical-align: middle;
         height: auto;
-        text-align: center;
-        background-color: #ffffff;
+        text-align: left;
+        background-color: #263238;
       }
-
-      .step-container {
-        vertical-align: middle;
-        display: inline-block;
+      .step-title {
+        color: rgba(255, 255, 255, 0.87);
+        font-size: 18px;
+        line-height: 28px;
+        max-width: 75%;
       }
-
-      .step-container.first-step {
-        vertical-align: middle;
-      }
-
-      .stepcircle {
-        height: 26px;
-        width: 26px;
-        border-radius: 999px;
-        font-size: 14px;
-        background-color: rgba(0, 0, 0, 0.34);
-        border-radius: 50%;
-        float: left;
-        vertical-align: middle;
-      }
-
-      .stepnumber {
-        vertical-align: -webkit-baseline-middle;
-        color: #fff;
-        margin: auto;
-        z-index: 500;
-        text-align: center;
-        font-size: 12px;
-        line-height: 27px;
-      }
-
-      .steptitle {
-        font-weight: 500;
-        vertical-align: -webkit-baseline-middle;
-        display: inline-block;
-        color: rgba(0, 0, 0, 0.34)B8;
-        padding-left: 14px;
-      }
-
-      .step-selected .stepcircle {
-        vertical-align: middle;
-        height: 26px;
-        width: 26px;
-        border-radius: 999px;
-        font-size: 14px;
-        background-color: rgba(0, 0, 0, 0.87);
-        border-radius: 50%;
-        float: left;
-      }
-
-      .step-selected .number {
-        vertical-align: -webkit-baseline-middle;
-        color: #fff;
-        margin: auto;
-        z-index: 500;
-        text-align: center;
-      }
-
-      .step-selected .steptitle {
-        vertical-align: -webkit-baseline-middle;
-        color: rgba(0, 0, 0, .87);
-        padding-left: 14px;
-        display: inline-block;
-      }
-
-      .step-completed .stepcircle {
-        vertical-align: middle;
-        height: 26px;
-        width: 26px;
-        border-radius: 999px;
-        font-size: 14px;
-        background-color: rgba(0, 0, 0, 0.87);
-        border-radius: 50%;
-        float: left;
-      }
-
-      .step-completed .number {
-        vertical-align: -webkit-baseline-middle;
-        color: #fff;
-        margin: auto;
-        z-index: 500;
-        text-align: center;
-      }
-
-      .step-completed .steptitle {
-        vertical-align: -webkit-baseline-middle;
-        color: rgba(0, 0, 0, .87);
-        padding-left: 14px;
-        display: inline-block;
-      }
-
-      hr {
-        width: 46px;
-        border-width: 0px 0px 1px 0px;
-        border-style: solid;
-        border-color: rgba(0, 0, 0, 0.24);
-        margin: 0px 24px 2px 24px;
-        border: 1px, 1px, 1px, 1px;
-        display: inline-block;
-      }
-
-      @media only screen and (max-device-width: 500px) {
-        .stepheader {
-          display: none;
-        }
+      .step-description {
+        font-size: 16px;
+        color: rgba(255, 255, 255, 0.54);
+        padding: 6px 0;
+        max-width: 60%;
       }
 </style>
     <paper-card>
-      <div id="stepsContainer" class="stepheader">
+      <div id="stepsContainer" class="step-header">
         <div class="step-container first-step" data-step="1">
-          <div class="stepcircle">
-            <span class="stepnumber">1</span>
-            <iron-icon class="completed-icon" icon="check"></iron-icon>
-          </div>
-          <div class="steptitle">Choose a server</div>
+          <div class="step-title">Choose a server, set up Outline.</div>
+          <div class="step-description">Don't have a server? Create an account with DigitalOcean.</div>
         </div>
-        <hr></hr>
-        <div class="step-container" data-step="2">
-          <div class="stepcircle">
-            <span class="stepnumber">2</span>
-            <iron-icon class="completed-icon" icon="check"></iron-icon>
-          </div>
-          <div class="steptitle">Set up Outline</div>
+        <div class="step-container" data-step="2" hidden>
+          <div class="step-title">Sign in or create an account with DigitalOcean.</div>
+          <div class="step-description">With your account, Outline makes it easy to create a server and get connected.</div>
+        </div>
+        <div class="step-container" data-step="3" hidden>
+          <div class="step-title">Activate you DigitalOcean account.</div>
+          <div class="step-description">Once your account is authorized, you can create new servers and start connecting.</div>
+        </div>
+        <div class="step-container" data-step="4" hidden>
+          <div class="step-title">Select the location of your server.</div>
+          <div class="step-description">This is where your internet experience will come from.</div>
+        </div>
+        <div class="step-container" data-step="5" hidden>
+          <div class="step-title">Setting up Outline.</div>
+          <div class="step-description">This could take up to two minutes. You can destroy this server at anytime.</div>
+        </div>
+        <div class="step-container" data-step="6" hidden>
+          <div class="step-title">Set up Outline on your server.</div>
+          <div class="step-description">Follow these instructions to install Outline with a cloud provider or on your own infrastructure.</div>
         </div>
       </div>
     <paper-card>
 
     <iron-pages id='overlap' attr-for-selected='id' selected='{{ currentPage }}'>
       <outline-intro-step id='intro'></outline-intro-step>
+      <outline-do-oauth-step id='digitalOceanOauth'></outline-do-oauth-step>
       <outline-manual-server-entry id='manualEntry'></outline-manual-server-entry>
       <outline-region-picker-step id='regionPicker'></outline-region-picker-step>
       <outline-server-progress-step id='serverProgressStep'></outline-server-progress-step>
     </iron-pages>
   </template>
-
   <script>
     const SHOW_METRICS_OPT_IN = true;
     Polymer({
       is: 'outline-server-creator',
       stepnumByPage: {
         intro: '1',
-        regionPicker: '2',
-        serverProgressStep: '2',
-        manualEntry: '2'
+        digitalOceanOauth: '2',
+        digitalOceanAccountCreated: '3',
+        regionPicker: '4',
+        serverProgressStep: '5',
+        manualEntry: '6'
       },
       properties: {
         currentPage: {
@@ -205,21 +106,14 @@
         }
       },
       _currentPageChanged: function (newPage, oldPage) {
-        // Update step classes to indicate which steps are completed.
         const oldStep = this.stepnumByPage[oldPage];
         const newStep = this.stepnumByPage[newPage];
         const stepChanged = oldStep !== newStep;
-        if (!stepChanged) return;
+        if (!stepChanged || !oldStep) return;
         const steps = Array.from(this.$.stepsContainer.querySelectorAll('.step-container')).reverse();
-        let foundCurrent = false;
         for (let step of steps) {
           const stepnum = step.dataset.step;
-          const currentStep = stepnum === newStep;
-          foundCurrent = foundCurrent || currentStep;
-          step.classList[currentStep ? 'add' : 'remove']('step-selected');
-          if (foundCurrent && !currentStep) {
-            step.classList.add('step-completed');
-          }
+          step.hidden = stepnum !== newStep;
         }
       },
       _computeCurrentStepClass: function (currentPage) {
@@ -229,10 +123,17 @@
         'RegionSelected': 'handleRegionSelected',
         'MetricsChoiceSelected': 'handleMetricsChoiceSelected',
         'OpenManualServerEntry': 'handleManualServerSelected',
-        'ManualServerEntryCancelled': 'handleManualCancelled'
+        'ManualServerEntryCancelled': 'handleManualCancelled',
+        'DigitalOceanAccountCreated': 'handleDigitalOceanAccountCreated'
       },
       showIntro: function () {
         this.$.overlap.select('intro');
+      },
+      getAndShowDigitalOceanOauthFlow: function () {
+        this.$.overlap.select('digitalOceanOauth');
+        const oauthFlow = this.$.digitalOceanOauth;
+        oauthFlow.showConnectAccount();
+        return oauthFlow;
       },
       getAndShowRegionPicker: function () {
         this.$.overlap.select('regionPicker');
@@ -259,6 +160,12 @@
       },
       handleManualCancelled: function() {
         this.$.overlap.select('intro');
+      },
+      handleDigitalOceanAccountCreated: function() {
+        const accountCreatedStepnum = this.stepnumByPage['digitalOceanAccountCreated'];
+        for (let step of Array.from(this.$.stepsContainer.querySelectorAll('.step-container'))) {
+          step.hidden = step.dataset.step !== accountCreatedStepnum;
+        }
       },
       stop: function() {
         this.$.serverProgressStep.stop();

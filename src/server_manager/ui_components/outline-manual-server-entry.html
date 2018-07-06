@@ -33,7 +33,7 @@
         background: #FFFFFF;
         box-shadow: 0 0 2px 0 rgba(0,0,0,0.14), 0 2px 2px 0 rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
         border-radius: 2px;
-        margin: 31px;
+        margin: 24px;
         text-align: left;
         padding: 24px;
       }
@@ -68,26 +68,28 @@
         margin-left: 20px;
       }
       #buttonRow {
-        text-align: right;
-        position: relative;
         width: 100%;
+        display: flex;
+        justify-content: space-between;
+      }
+      paper-button {
+        width: 45%;
       }
       #cancelButton {
-        width: 75px;
-        left: 0;
-        position: absolute;
+        border: 1px solid rgba(0,0,0,0.12);
+        border-radius: 2px;
+        width: 45%;
       }
       #doneButton {
-        width: 139px;
+        box-shadow: 0 0 2px 0 rgba(0,0,0,0.14), 0 2px 2px 0 rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
+        border-radius: 2px;
+        width: 45%;
       }
       #terminalIcon {
         width: 20px;
       }
     </style>
     <div class='walkthrough'>
-      <div hidden$='[[showConnection]]'>
-        <h3>Follow these instructions to install on whichever cloud provider you want.  You can also install on your own infrastructure.</h3>
-      </div>
       <div hidden$='[[!showConnection]]'>
         <h3>Attempting to connect...</h3>
         <paper-progress indeterminate class="slow"></paper-progress>
