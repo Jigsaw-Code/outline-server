@@ -20,7 +20,7 @@ import * as http from 'http';
 import * as path from 'path';
 import * as request from 'request';
 
-const REGISTERED_REDIRECTS = [
+const REGISTERED_REDIRECTS: Array<{clientId: string, port: number}> = [
   {clientId: '7f84935771d49c2331e1cfb60c7827e20eaf128103435d82ad20b3c53253b721', port: 55189},
   {clientId: '4af51205e8d0d8f4a5b84a6b5ca9ea7124f914a5621b6a731ce433c2c7db533b', port: 60434},
   {clientId: '706928a1c91cbd646c4e0d744c8cbdfbf555a944b821ac7812a7314a4649683a', port: 61437}
@@ -138,15 +138,27 @@ export function runOauth(): OauthSession {
     response.send(`<html>
           <head><title>Authenticating...</title></head>
           <body>
+              <noscript>You need to enable Javascript in order for the DigitalOcean authentication to work.</noscript>
               <form id="form" method="POST">
                   <input id="params" type="hidden" name="params"></input>
               </form>
               <script>
-                  let params = new URLSearchParams(location.hash.substr(1));
-                  let form = document.getElementById("form");
-                  let targetUrl = params.get("state");
+                  // We can't use URLSearchParams in IE :-(
+                  function splitParams(paramsStr) {
+                    params = {}
+                    var kvs = paramsStr.split("&");
+                    for (var i in kvs) {
+                      pair = kvs[i].split("=");
+                      params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+                    }
+                    return params;
+                  }
+                  var paramsStr = location.hash.substr(1);
+                  var params = splitParams(paramsStr);
+                  var form = document.getElementById("form");
+                  var targetUrl = params["state"];
                   form.setAttribute("action", targetUrl);
-                  document.getElementById("params").setAttribute("value", params);
+                  document.getElementById("params").setAttribute("value", paramsStr);
                   form.submit();
               </script>
           </body>
