@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as events from 'events';
+
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import * as server from '../model/server';
@@ -208,8 +210,7 @@ export class App {
   // Show the DigitalOcean server creator or the existing server, if there's one.
   private enterDigitalOceanMode(accessToken: string) {
     const doSession = this.createDigitalOceanSession(accessToken);
-    // We create a <div>, but all we really need is an EventTarget.
-    const events = document.createElement('div');
+    const authEvents = new events.EventEmitter();
     let cancelled = false;
 
     const query = () => {
@@ -223,7 +224,7 @@ export class App {
             return doSession.getAccount();
           })
           .then((account) => {
-            events.dispatchEvent(new CustomEvent('account-update', {detail: account}));
+            authEvents.emit('account-update', account);
           })
           .catch((error) => {
             if (!cancelled) {
@@ -234,11 +235,10 @@ export class App {
           });
     };
 
-    events.addEventListener('account-update', (event: PolymerEvent) => {
+    authEvents.on('account-update', (account: digitalocean_api.Account) => {
       if (cancelled) {
         return;
       }
-      const account = event.detail;
       this.appRoot.adminEmail = account.email;
       if (account.status === 'active') {
         this.appRoot.closeModalDialog();
@@ -268,7 +268,7 @@ export class App {
                   'Please go to digitalocean.com to enter your billing information and complete your registration',
                   ['Sign Out'])
               .then(() => {
-                events.dispatchEvent(new Event('cancel'));
+                authEvents.emit('cancel');
               });
         } else {
           this.appRoot
@@ -277,17 +277,17 @@ export class App {
                   `Go to your ${account.email} email and open the email confirmation link sent by DigitalOcean`,
                   ['Sign Out'])
               .then(() => {
-                events.dispatchEvent(new Event('cancel'));
+                authEvents.emit('cancel');
               });
         }
         setTimeout(query, 1000);
       }
-    }, {passive: true});
+    });
 
-    events.addEventListener('cancel', () => {
+    authEvents.on('cancel', () => {
       cancelled = true;
       this.clearCredentialsAndShowIntro();
-    }, {passive: true});
+    });
 
     query();
   }
