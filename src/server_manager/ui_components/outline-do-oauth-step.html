@@ -61,7 +61,7 @@
         </div>
         <div class="container" id="verifyEmail">
           <img src="images/do_oauth_email.svg" />
-          <p>Verify your email...</p>
+          <p>Confirm your email...</p>
         </div>
         <div class="container" id="enterBilling">
           <img src="images/do_oauth_billing.svg" />
@@ -87,8 +87,7 @@
         cancelButtonText: {
           type: String,
           value: 'Cancel'
-        },
-        cancelCallback: Function
+        }
       },
       _pageChanged: function(newPage, oldPage) {
         if (newPage === 'connectAccount') {
@@ -98,12 +97,7 @@
         }
       },
       _cancelTapped: function() {
-        if (this.cancelCallback) {
-          this.cancelCallback();
-        } else {
-          this.fire('SignOutRequested');
-        }
-        this.showConnectAccount();  // Reset UI.
+        this.fire('DigitalOceanOauthCancelRequested');
       },
       showEmailVerification: function() {
         this.currentPage = 'verifyEmail';

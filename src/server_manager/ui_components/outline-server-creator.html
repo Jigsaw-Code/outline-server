@@ -36,44 +36,42 @@
         text-align: left;
         background-color: #263238;
       }
+      .step-title, .step-description {
+        font-size: 20px;
+        line-height: 28px;
+      }
       .step-title {
         color: rgba(255, 255, 255, 0.87);
-        font-size: 18px;
-        line-height: 28px;
-        max-width: 75%;
       }
       .step-description {
-        font-size: 16px;
         color: rgba(255, 255, 255, 0.54);
-        padding: 6px 0;
-        max-width: 60%;
       }
 </style>
     <paper-card>
       <div id="stepsContainer" class="step-header">
         <div class="step-container first-step" data-step="1">
           <div class="step-title">Choose a server, set up Outline.</div>
-          <div class="step-description">Don't have a server? Create an account with DigitalOcean.</div>
+          <div class="step-description">Don't have a server? Create an account<br/> with DigitalOcean.</div>
         </div>
         <div class="step-container" data-step="2" hidden>
           <div class="step-title">Sign in or create an account with DigitalOcean.</div>
-          <div class="step-description">With your account, Outline makes it easy to create a server and get connected.</div>
+          <div class="step-description">With your account, Outline makes it easy to<br/> create a server and get connected.</div>
         </div>
         <div class="step-container" data-step="3" hidden>
           <div class="step-title">Activate you DigitalOcean account.</div>
-          <div class="step-description">Once your account is authorized, you can create new servers and start connecting.</div>
+          <div class="step-description">Once your account is authorized, you can<br/> create new servers and start connecting.</div>
         </div>
         <div class="step-container" data-step="4" hidden>
           <div class="step-title">Select the location of your server.</div>
-          <div class="step-description">This is where your internet experience will come from.</div>
+          <div class="step-description">This is where your internet experience<br/> will come from.</div>
         </div>
         <div class="step-container" data-step="5" hidden>
           <div class="step-title">Setting up Outline.</div>
-          <div class="step-description">This could take up to two minutes. You can destroy this server at anytime.</div>
+          <div class="step-description">This could take up to two minutes. You can<br/> destroy this server at anytime.</div>
         </div>
         <div class="step-container" data-step="6" hidden>
           <div class="step-title">Set up Outline on your server.</div>
-          <div class="step-description">Follow these instructions to install Outline with a cloud provider or on your own infrastructure.</div>
+          <div class="step-description">Follow these instructions to install Outline with a<br/> cloud provider or on your own infrastructure.</div>
         </div>
       </div>
     <paper-card>
@@ -90,53 +88,29 @@
     const SHOW_METRICS_OPT_IN = true;
     Polymer({
       is: 'outline-server-creator',
-      stepnumByPage: {
-        intro: '1',
-        digitalOceanOauth: '2',
-        digitalOceanAccountCreated: '3',
-        regionPicker: '4',
-        serverProgressStep: '5',
-        manualEntry: '6'
-      },
       properties: {
         currentPage: {
           type: String,
-          value: 'intro',
-          observer: '_currentPageChanged'
+          value: 'intro'
         }
-      },
-      _currentPageChanged: function (newPage, oldPage) {
-        const oldStep = this.stepnumByPage[oldPage];
-        const newStep = this.stepnumByPage[newPage];
-        const stepChanged = oldStep !== newStep;
-        if (!stepChanged || !oldStep) return;
-        const steps = Array.from(this.$.stepsContainer.querySelectorAll('.step-container')).reverse();
-        for (let step of steps) {
-          const stepnum = step.dataset.step;
-          step.hidden = stepnum !== newStep;
-        }
-      },
-      _computeCurrentStepClass: function (currentPage) {
-        return 'selected-' + currentPage;
       },
       listeners: {
         'RegionSelected': 'handleRegionSelected',
         'MetricsChoiceSelected': 'handleMetricsChoiceSelected',
         'OpenManualServerEntry': 'handleManualServerSelected',
-        'ManualServerEntryCancelled': 'handleManualCancelled',
-        'DigitalOceanAccountCreated': 'handleDigitalOceanAccountCreated'
+        'ManualServerEntryCancelled': 'handleManualCancelled'
       },
       showIntro: function () {
-        this.$.overlap.select('intro');
+        this.currentPage = 'intro';
       },
       getAndShowDigitalOceanOauthFlow: function () {
-        this.$.overlap.select('digitalOceanOauth');
+        this.currentPage = 'digitalOceanOauth';
         const oauthFlow = this.$.digitalOceanOauth;
         oauthFlow.showConnectAccount();
         return oauthFlow;
       },
       getAndShowRegionPicker: function () {
-        this.$.overlap.select('regionPicker');
+        this.currentPage = 'regionPicker';
         this.$.regionPicker.init();
         return this.$.regionPicker;
       },
@@ -144,7 +118,7 @@
         return this.$.manualEntry;
       },
       showProgress: function (serverName, showCancelButton) {
-        this.$.overlap.select('serverProgressStep');
+        this.currentPage = 'serverProgressStep';
         this.$.serverProgressStep.serverName = serverName;
         this.$.serverProgressStep.showCancelButton = showCancelButton;
         this.$.serverProgressStep.start();
@@ -156,16 +130,10 @@
       },
       handleManualServerSelected: function() {
         this.$.manualEntry.clear();
-        this.$.overlap.select('manualEntry');
+        this.currentPage = 'manualEntry';
       },
       handleManualCancelled: function() {
-        this.$.overlap.select('intro');
-      },
-      handleDigitalOceanAccountCreated: function() {
-        const accountCreatedStepnum = this.stepnumByPage['digitalOceanAccountCreated'];
-        for (let step of Array.from(this.$.stepsContainer.querySelectorAll('.step-container'))) {
-          step.hidden = step.dataset.step !== accountCreatedStepnum;
-        }
+        this.currentPage = 'intro';
       },
       stop: function() {
         this.$.serverProgressStep.stop();

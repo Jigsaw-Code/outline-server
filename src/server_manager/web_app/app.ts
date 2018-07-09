@@ -286,12 +286,13 @@ export class App {
       }
     });
 
-    const oauthFlowCancelled = () => {
+    const handleOauthFlowCanceled = () => {
       cancelled = true;
       this.clearCredentialsAndShowIntro();
+      this.appRoot.removeEventListener('DigitalOceanOauthCancelRequested', handleOauthFlowCanceled);
     };
-    oauthUi.cancelCallback = oauthFlowCancelled;
-    authEvents.once('cancel', oauthFlowCancelled);
+    authEvents.once('cancel', handleOauthFlowCanceled);
+    this.appRoot.addEventListener('DigitalOceanOauthCancelRequested', handleOauthFlowCanceled);
 
     query();
   }
@@ -380,10 +381,13 @@ export class App {
   private connectToDigitalOcean() {
     const oauthUi = this.appRoot.getAndShowServerCreator().getAndShowDigitalOceanOauthFlow();
     const session = runDigitalOceanOauth();
-    oauthUi.cancelCallback = () => {
+    const handleOauthFlowCanceled = () => {
       session.cancel();
       this.clearCredentialsAndShowIntro();
+      this.appRoot.removeEventListener('DigitalOceanOauthCancelRequested', handleOauthFlowCanceled);
     };
+    this.appRoot.addEventListener('DigitalOceanOauthCancelRequested', handleOauthFlowCanceled);
+
     session.result
         .then((accessToken) => {
           // Save accessToken to storage. DigitalOcean tokens
