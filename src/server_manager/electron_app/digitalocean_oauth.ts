@@ -145,7 +145,7 @@ export function runOauth(): OauthSession {
               <script>
                   // We can't use URLSearchParams in IE :-(
                   function splitParams(paramsStr) {
-                    params = {}
+                    var params = {};
                     var kvs = paramsStr.split("&");
                     for (var i in kvs) {
                       pair = kvs[i].split("=");
