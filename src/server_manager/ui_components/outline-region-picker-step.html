@@ -86,16 +86,8 @@
         width: 78px;
         height: 78px;
       }
-
-      .walkthrough h3 a {
-        color: rgba(0, 0, 0, 0.54);
-      }
-
     </style>
     <div class='card-content'>
-      <div class = "walkthrough">
-       <h3>Select a server location. This is where your internet <br> connection will come from. <a class="learnMoreLink" href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/serverLocation">Learn more</a></h3>
-      </div>
       <template is="dom-repeat" items="{{cities}}">
         <input type='radio' city$='{{item}}' name='city' id$='{{item}}' disabled$='{{!isAvailable(availableRegionIds, item)}}' on-change='citySelected'>
           <label for$='{{item}}' class='city-button'>

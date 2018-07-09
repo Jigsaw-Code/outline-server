@@ -1,0 +1,123 @@
+<!--
+  Copyright 2018 The Outline Authors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<link rel='import' href='../bower_components/polymer/polymer.html'>
+<link rel='import' href='../bower_components/iron-pages/iron-pages.html'>
+<link rel="import" href="./cloud-install-styles.html">
+
+<dom-module id="outline-do-oauth-step">
+  <template>
+    <style include="cloud-install-styles">
+      :host {
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100%;
+        align-items: center;
+        padding: 132px 0;
+        font-size: 14px;
+        color: rgba(0,0,0,0.87);
+      }
+      #connectAccount img {
+        width: 36px;
+        height: 36px;
+      }
+      paper-card {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: space-between;
+        margin: 24px;
+        padding: 24px;
+        background: #FFFFFF;
+        box-shadow: 0 0 2px 0 rgba(0,0,0,0.14), 0 2px 2px 0 rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
+        border-radius: 2px;
+      }
+      paper-button {
+        width: 100%;
+        border: 1px solid rgba(0,0,0,0.12);
+        border-radius: 2px;
+      }
+    </style>
+    <paper-card>
+      <iron-pages id='pages' attr-for-selected='id' selected='{{ currentPage }}'>
+        <div class="container" id="connectAccount">
+          <img src="images/digital_ocean_logo.svg" />
+          <p>Waiting to connect your account...</p>
+        </div>
+        <div class="container" id="verifyEmail">
+          <img src="images/do_oauth_email.svg" />
+          <p>Verify your email...</p>
+        </div>
+        <div class="container" id="enterBilling">
+          <img src="images/do_oauth_billing.svg" />
+          <p>Enter billing information...</p>
+        </div>
+        <div class="container" id="accountActive">
+          <img src="images/do_oauth_done.svg" />
+          <p>Account activated!</p>
+        </div>
+      </iron-pages>
+      <paper-button on-tap="_cancelTapped">[[cancelButtonText]]</paper-button>
+    </paper-card>
+  </template>
+  <script>
+    Polymer({
+      is: 'outline-do-oauth-step',
+      properties: {
+        currentPage: {
+          type: String,
+          value: 'connectAccount',
+          observer: '_pageChanged'
+        },
+        cancelButtonText: {
+          type: String,
+          value: 'Cancel'
+        },
+        cancelCallback: Function
+      },
+      _pageChanged: function(newPage, oldPage) {
+        if (newPage === 'connectAccount') {
+          this.cancelButtonText = 'Cancel';
+        } else {
+          this.cancelButtonText = 'Sign out';
+        }
+      },
+      _cancelTapped: function() {
+        if (this.cancelCallback) {
+          this.cancelCallback();
+        } else {
+          this.fire('SignOutRequested');
+        }
+        this.showConnectAccount();  // Reset UI.
+      },
+      showEmailVerification: function() {
+        this.currentPage = 'verifyEmail';
+        this.fire('DigitalOceanAccountCreated');
+      },
+      showBilling: function() {
+        this.currentPage = 'enterBilling'
+      },
+      showAccountActive: function() {
+        this.currentPage = 'accountActive';
+      },
+      showConnectAccount: function() {
+        this.currentPage = 'connectAccount';
+      }
+    });
+  </script>
+</dom-module>

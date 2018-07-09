@@ -26,40 +26,35 @@
     <style include="cloud-install-styles"></style>
 
     <style>
-       :host {
+      :host {
         text-align: center;
       }
-
+      .card {
+        padding: 24px;
+        margin: 24px;
+        box-shadow: 0 0 2px 0 rgba(0,0,0,0.14), 0 2px 2px 0 rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
+        border-radius: 2px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
       .servername {
-        margin-top: 24px;
+        margin: 24px 0 72px 0;
         text-align: center;
       }
-
-      .servername img {
-        height: 96px;
-      }
-
       h3 {
         font-size: 18px;
-        margin-bottom: 0px;
+        margin-bottom: 12px;
         color: rgba(0,0,0,0.54);
         margin: 0px 0px 0px 0px;
         padding: 14px 0 14px 0;
       }
-
       .servername p {
-        text-align: center;
-        margin-top: 12px;
-        margin-bottom: 64px;
+        font-size: 14px;
+        color: rgba(0,0,0,0.54);
       }
-
-      .message {
-        width: 100%;
-        position: initial;
-      }
-
       outline-progress-spinner {
-        margin-top: 20%;
+        margin-top: 72px;
       }
       paper-progress {
          background: #ffffff;
@@ -70,14 +65,15 @@
         width: 100%;
         margin-top: 0px;
       }
+      paper-button {
+        width: 100%;
+        border: 1px solid rgba(0,0,0,0.12);
+        border-radius: 2px;
+      }
+    </style>
 
-</style>
-
-    <div class='card-content'>
-      <div class='walkthrough'>
-        <h3>Setting up Outline. <br> This could take up to two minutes.</h3>
-            <paper-progress id='bar' class='transiting'></paper-progress>
-      </div>
+    <paper-progress id='bar' class='transiting'></paper-progress>
+    <div class='card'>
       <outline-progress-spinner></outline-progress-spinner>
       <div class='servername'>
         <h3>{{serverName}}</h3>
