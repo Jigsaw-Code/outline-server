@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as digitalocean_api from '../cloud/digitalocean_api';
 import {SentryErrorReporter} from './error_reporter';
 
 export interface TokenManager {
@@ -59,13 +58,3 @@ export class DigitalOceanTokenManager implements TokenManager {
     return localStorage.getItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
   }
 }
-
-// DigitalOcean client IDs can be found at
-// https://cloud.digitalocean.com/settings/api/applications
-// using the App creator's DigitalOcean account.  Note each client ID
-// only allows for 1 redirect URI.
-const CLIENT_ID_BY_URL: {[key: string]: string} = {
-  // https://cloud.digitalocean.com/settings/api/applications/details/28204
-  'https://www.getoutline.org/digitalocean_oauth':
-      'd1879633d5f426356345ae7d46be9b900b1bd58208a72edc8df9e9162be69d9a'
-};
