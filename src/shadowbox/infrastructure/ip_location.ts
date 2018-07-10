@@ -46,37 +46,6 @@ export class IpInfoIpLocationService implements IpLocationService {
   }
 }
 
-// An IpLocationService that uses the freegeoip.net service.
-// See https://freegeoip.net/
-export class FreegeoIpLocationService implements IpLocationService {
-  countryForIp(ipAddress: string): Promise<string> {
-    const countryPromise = new Promise<string>((fulfill, reject) => {
-      const url = `https://freegeoip.net/json/${encodeURIComponent(ipAddress)}`;
-      https.get(url, (response) => {
-        if (500 <= response.statusCode && response.statusCode <= 599) {
-          reject(new Error(`Got server error ${response.statusCode} from freegeoip.net`));
-          response.resume();
-          return;
-        }
-        let body = '';
-        response.on('data', (data) => { body += data; });
-        response.on('end', () => {
-          try {
-            const jsonResponse = JSON.parse(body);
-            // ZZ is user-assigned and used by CLDR for "Uknown" regions.
-            fulfill(jsonResponse.country_code || 'ZZ');
-          } catch (e) {
-            reject(new Error(`Error loading country from freegeoip.net reponse`));
-          }
-        });
-      }).on('error', (e) => {
-        reject(new Error(`Failed to contact freegeoip.net: ${e}`));
-      });
-    });
-    return countryPromise;
-  }
-}
-
 // An IpLocationService that uses the node-maxmind package.
 // The database is downloaded by scripts/update_mmdb.sh.
 // The Dockerfile runs this script on boot and configures the system to run it weekly.
