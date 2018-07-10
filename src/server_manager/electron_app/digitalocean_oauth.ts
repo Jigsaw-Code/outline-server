@@ -106,7 +106,9 @@ export interface OauthSession {
   cancel(): void;
 }
 
-const CLOSE_WINDOW_HTML = `<html><script>window.close()</script></html>`;
+function closeWindowHtml(messageHtml: string) {
+  return `<html><script>window.close()</script><body>${messageHtml}. You can close this window.</body></html>`;
+}
 
 // Runs the DigitalOcean oauth flow and returns the access token.
 // See https://developers.digitalocean.com/documentation/oauth/ for the OAuth API.
@@ -126,7 +128,7 @@ export function runOauth(): OauthSession {
   // Check for cancellation.
   app.use((req, res, next) => {
     if (isCancelled) {
-      res.status(503).send('Authentication cancelled');
+      res.status(503).send(closeWindowHtml('Authentication cancelled'));
     } else {
       next();
     }
@@ -175,13 +177,13 @@ export function runOauth(): OauthSession {
 
       const requestSecret = request.query.secret;
       if (requestSecret !== secret) {
-        response.status(400).send(CLOSE_WINDOW_HTML);
+        response.status(400).send(closeWindowHtml('Authentication failed'));
         reject(new Error(`Expected secret ${secret}. Got ${requestSecret}`));
         return;
       }
       const params = new URLSearchParams(request.body.params);
       if (params.get('error')) {
-        response.status(400).send(CLOSE_WINDOW_HTML);
+        response.status(400).send(closeWindowHtml('Authentication failed'));
         reject(new Error(`DigitalOcean OAuth error: ${params.get('error_description')}`));
         return;
       }
@@ -190,7 +192,7 @@ export function runOauth(): OauthSession {
         getAccount(accessToken)
             .then((account) => {
               if (account.status === 'active') {
-                response.send(CLOSE_WINDOW_HTML);
+                response.send(closeWindowHtml('Authentication successful'));
               } else {
                 response.redirect('https://cloud.digitalocean.com');
               }
@@ -198,7 +200,7 @@ export function runOauth(): OauthSession {
             })
             .catch(reject);
       } else {
-        response.status(400).send(CLOSE_WINDOW_HTML);
+        response.status(400).send(closeWindowHtml('Authentication failed'));
         reject(new Error('No access_token on OAuth response'));
       }
     });
