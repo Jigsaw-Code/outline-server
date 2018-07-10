@@ -13,7 +13,6 @@
   "include": [
     "index.ts",
     "preload.ts",
-    "digital_ocean_modifications.ts",
     "../types/*.d.ts"
   ],
   "exclude": [
