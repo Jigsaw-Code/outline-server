@@ -185,25 +185,24 @@ export class App {
     sendElectronEvent('app-ui-ready');
   }
 
-  // Returns a Promise that fulfills once the correct UI screen is shown.
-  start(): Promise<void> {
+  start(): void {
     // Load manual servers from storage.
-    return this.manualServerRepository.listServers().then((manualServers) => {
+    this.manualServerRepository.listServers().then((manualServers) => {
       // Show any manual servers if they exist.
       if (manualServers.length > 0) {
         this.showManualServerIfHealthy(manualServers[0]);
-        return Promise.resolve();
+        return;
       }
 
       // User has no manual servers - check if they are logged into DigitalOcean.
       const accessToken = this.digitalOceanTokenManager.getStoredToken();
       if (accessToken) {
-        return this.enterDigitalOceanMode(accessToken);
+        this.enterDigitalOceanMode(accessToken);
+        return;
       }
 
       // User has no manual servers or DigitalOcean token.
       this.showIntro();
-      return Promise.resolve();
     });
   }
 
@@ -284,7 +283,7 @@ export class App {
       }
     });
 
-    authEvents.on('cancel', () => {
+    authEvents.once('cancel', () => {
       cancelled = true;
       this.clearCredentialsAndShowIntro();
     });
