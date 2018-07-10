@@ -35,4 +35,7 @@ export SB_METRICS_URL=${SB_METRICS_URL:-https://metrics-prod.uproxy.org}
 # upon a limit of 32k files.
 ulimit -n 32768
 
+# Start cron, which is used to check for updates to the GeoIP database
+crond
+
 node app/server/main.js
