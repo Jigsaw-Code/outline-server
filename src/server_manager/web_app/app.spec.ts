@@ -114,24 +114,25 @@ describe('App', () => {
     app.start();
   });
 
-  it('Shows progress screen when starting with DigitalOcean servers still being created', (done) => {
-    // Start the app with a fake DigitalOcean token.
-    const polymerAppRoot = new FakePolymerAppRoot();
-    const tokenManager = new InMemoryDigitalOceanTokenManager();
-    tokenManager.token = TOKEN_WITH_ONE_SERVER;
-    const app = createTestApp(polymerAppRoot, tokenManager);
-    polymerAppRoot.events.once('screen-change', (currentScreen) => {
-      // Servers should initially show the progress screen, until their
-      // "waitOnInstall" promise fulfills.  For DigitalOcean, server objects
-      // are returned by the repository as soon as the droplet exists with the
-      // "shadowbox" tag, however shadowbox installation may not yet be complete.
-      // This is needed in case the user restarts the manager after the droplet
-      // is created but before shadowbox installation finishes.
-      expect(currentScreen).toEqual(AppRootScreen.INSTALL_PROGRESS);
-      done();
-    });
-    app.start();
-  });
+  it('Shows progress screen when starting with DigitalOcean servers still being created',
+     (done) => {
+       // Start the app with a fake DigitalOcean token.
+       const polymerAppRoot = new FakePolymerAppRoot();
+       const tokenManager = new InMemoryDigitalOceanTokenManager();
+       tokenManager.token = TOKEN_WITH_ONE_SERVER;
+       const app = createTestApp(polymerAppRoot, tokenManager);
+       polymerAppRoot.events.once('screen-change', (currentScreen) => {
+         // Servers should initially show the progress screen, until their
+         // "waitOnInstall" promise fulfills.  For DigitalOcean, server objects
+         // are returned by the repository as soon as the droplet exists with the
+         // "shadowbox" tag, however shadowbox installation may not yet be complete.
+         // This is needed in case the user restarts the manager after the droplet
+         // is created but before shadowbox installation finishes.
+         expect(currentScreen).toEqual(AppRootScreen.INSTALL_PROGRESS);
+         done();
+       });
+       app.start();
+     });
 });
 
 function createTestApp(
