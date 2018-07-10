@@ -211,12 +211,10 @@
       getServerCreator: function() {
         return this.$.serverCreator;
       },
-      getAndShowServerView: function (server) {
-        this.server = server;
-        this.$.content.select('serverView');
+      showServerView: function () {
         this.$.serverCreator.stop();
         this.$.serverView.initHelpBubbles();
-        return this.$.serverView;
+        this.$.content.select('serverView');
       },
       getServerView: function() {
         return this.$.serverView;

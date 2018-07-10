@@ -530,7 +530,8 @@ export class App {
     this.runningServer = selectedServer;
 
     // Show view and initialize fields from selectedServer.
-    const view = this.appRoot.getAndShowServerView();
+    const view = this.appRoot.getServerView();
+    view.serverId = selectedServer.getServerId();
     view.serverName = selectedServer.getName();
     view.serverHostname = selectedServer.getHostname();
     view.serverManagementPort = selectedServer.getManagementPort();
@@ -557,8 +558,8 @@ export class App {
     }
 
     view.metricsEnabled = selectedServer.getMetricsEnabled();
+    this.appRoot.showServerView();
     this.showMetricsOptInWhenNeeded(selectedServer, view);
-    view.serverId = selectedServer.getServerId();
 
     // Load "My Connection" and other access keys.
     selectedServer.listAccessKeys()
