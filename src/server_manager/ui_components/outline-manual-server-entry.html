@@ -20,6 +20,7 @@
 <link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
 <link rel='import' href='../bower_components/paper-progress/paper-progress.html'>
 <link rel="import" href="./cloud-install-styles.html">
+<link rel="import" href="./outline-step-view.html">
 <link rel="import" href="./style.css">
 
 <dom-module id="outline-manual-server-entry">
@@ -89,33 +90,37 @@
         width: 20px;
       }
     </style>
-    <div class='walkthrough'>
-      <div hidden$='[[!showConnection]]'>
-        <h3>Attempting to connect...</h3>
-        <paper-progress indeterminate class="slow"></paper-progress>
+    <outline-step-view>
+      <span slot="step-title">Set up Outline on your server.</span>
+        <span slot="step-description">Follow these instructions to install Outline with a<br/> cloud provider or on your own infrastructure.</span>
+      <div class='walkthrough'>
+        <div hidden$='[[!showConnection]]'>
+          <h3>Attempting to connect...</h3>
+          <paper-progress indeterminate class="slow"></paper-progress>
+        </div>
       </div>
-    </div>
 
-    <div class='card'>
-      <div>
-        <iron-icon src="images/terminal.svg" id="terminalIcon"></iron-icon>
-        <div class='stepContent'>
-          <div class='instructions'>First, log into your server, and run the following command:</div>
-          <div id='command' class='code'>bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"</div>
+      <div class='card'>
+        <div>
+          <iron-icon src="images/terminal.svg" id="terminalIcon"></iron-icon>
+          <div class='stepContent'>
+            <div class='instructions'>First, log into your server, and run the following command:</div>
+            <div id='command' class='code'>bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"</div>
+          </div>
         </div>
-      </div>
-      <div>
-        <iron-icon icon="content-paste"></iron-icon>
-        <div class='stepContent'>
-          <div class='instructions'>Second, paste the output from the installation process here and click 'Done'.</div>
-          <textarea id='serverConfig' type='text' placeholder$='[[placeholderText]]' class='code' rows='4'></textarea>
+        <div>
+          <iron-icon icon="content-paste"></iron-icon>
+          <div class='stepContent'>
+            <div class='instructions'>Second, paste the output from the installation process here and click 'Done'.</div>
+            <textarea id='serverConfig' type='text' placeholder$='[[placeholderText]]' class='code' rows='4'></textarea>
+          </div>
         </div>
-      </div>
-      <div id='buttonRow'>
-        <paper-button id='cancelButton' on-tap="cancelTapped" class="secondary">CANCEL</paper-button>
-        <paper-button id='doneButton' on-tap="doneTapped" class="primary">DONE</paper-button>
-      </div>
-    </div>  <!-- end of .card -->
+        <div id='buttonRow'>
+          <paper-button id='cancelButton' on-tap="cancelTapped" class="secondary">CANCEL</paper-button>
+          <paper-button id='doneButton' on-tap="doneTapped" class="primary">DONE</paper-button>
+        </div>
+      </div>  <!-- end of .card -->
+    </outline-step-view>
 
     <paper-dialog id='errorDialog' modal>
       <h3 hidden$='[[!errorTitle]]'>[[errorTitle]]</h3>

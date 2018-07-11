@@ -155,12 +155,8 @@
         <div main-title><img src="images/outline-manager-logo.svg"></div>
       </app-toolbar>
 
-      <div id='contentColumn'>
-        <iron-pages id='content' attr-for-selected="id">
-          <outline-server-creator id='serverCreator'></outline-server-creator>
-          <outline-server-view id='serverView'></outline-server-view>
-        </iron-pages>
-      </div>
+      <!-- TODO: deprecate server creator and move functionality to this file; fix the app drawer; fix tests! -->
+      <outline-server-creator id='serverCreator'></outline-server-creator>
 
       <paper-toast id='toast'><paper-icon-button icon='icons:close' on-tap='closeError'></paper-icon-button></paper-toast>
 
@@ -205,19 +201,10 @@
         },
       },
       getAndShowServerCreator: function () {
-        this.$.content.select('serverCreator');
         return this.$.serverCreator;
       },
       getServerCreator: function() {
         return this.$.serverCreator;
-      },
-      showServerView: function () {
-        this.$.serverCreator.stop();
-        this.$.serverView.initHelpBubbles();
-        this.$.content.select('serverView');
-      },
-      getServerView: function() {
-        return this.$.serverView;
       },
       showError: function (errorMsg) {
         this.showToast(errorMsg, Infinity);

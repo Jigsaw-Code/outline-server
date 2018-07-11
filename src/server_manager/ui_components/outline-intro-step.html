@@ -16,6 +16,7 @@
 <link rel='import' href='../bower_components/polymer/polymer.html'>
 <link rel='import' href='../bower_components/paper-button/paper-button.html'>
 <link rel="import" href="./cloud-install-styles.html">
+<link rel="import" href="./outline-step-view.html">
 <link rel="import" href="./style.css">
 
 <dom-module id="outline-intro-step">
@@ -125,50 +126,56 @@
       }
     </style>
 
-    <div id='digitalOcean' class='card'>
-      <div class="cardHeader">
-        <div class='difficultyLevel'>RECOMMENDED</div>
-        <img src="images/digital_ocean_logo.svg">
-      </div>
-      <div class="cardBody">
-        <div class='cardLeftColumn'>
-          <div class='title'>Set up Outline on DigitalOcean</div>
-        </div>
-        <div class='cardRightColumn'>
-          <ul>
-            <li>Easiest setup process</li>
-            <li>Only $5 a month</li>
-            <li>1 TB of data transfer</li>
-            <li>Cancel at anytime</li>
-          </ul>
-        </div>
-        <paper-button on-tap="connectToDigitalOceanTapped" class="primary">Connect with DigitalOcean</paper-button>
-      </div>
-    </div>  <!-- end of #digitalOcean -->
+    <outline-step-view>
+      <span slot="step-title">Choose a server, set up Outline.</span>
+      <span slot="step-description">Don't have a server? Create an account<br/> with DigitalOcean.</span>
 
-    <div id='manualServer' class='card'>
-      <div class="cardHeader">
-        <div class='difficultyLevel'>ADVANCED</div>
-        <img src="images/cloud.svg">
-      </div>
-      <div class="cardBody">
-        <div class='cardLeftColumn'>
-          <div class='title'>Set up Outline anywhere</div>
-          <div class='description'>Outline can run on all major cloud providers. You can also deploy it on your own infrastructure.</div>
+      <div id='digitalOcean' class='card'>
+        <div class="cardHeader">
+          <div class='difficultyLevel'>RECOMMENDED</div>
+          <img src="images/digital_ocean_logo.svg">
         </div>
-        <div class='cardRightColumn'>
-          <div>Tested on:</div>
-          <ul>
-            <li>Amazon EC2</li>
-            <li>Google Compute Engine</li>
-            <li>Vultr</li>
-            <li>Linode</li>
-            <li>Liquid Web</li>
-          </ul>
+        <div class="cardBody">
+          <div class='cardLeftColumn'>
+            <div class='title'>Set up Outline on DigitalOcean</div>
+          </div>
+          <div class='cardRightColumn'>
+            <ul>
+              <li>Easiest setup process</li>
+              <li>Only $5 a month</li>
+              <li>1 TB of data transfer</li>
+              <li>Cancel at anytime</li>
+            </ul>
+          </div>
+          <paper-button on-tap="connectToDigitalOceanTapped" class="primary">Connect with DigitalOcean</paper-button>
         </div>
-        <paper-button on-tap='manualServerTapped'>Get started</paper-button>
-      </div>
-    </div>   <!-- end of #manualServer -->
+      </div>  <!-- end of #digitalOcean -->
+
+      <div id='manualServer' class='card'>
+        <div class="cardHeader">
+          <div class='difficultyLevel'>ADVANCED</div>
+          <img src="images/cloud.svg">
+        </div>
+        <div class="cardBody">
+          <div class='cardLeftColumn'>
+            <div class='title'>Set up Outline anywhere</div>
+            <div class='description'>Outline can run on all major cloud providers. You can also deploy it on your own infrastructure.</div>
+          </div>
+          <div class='cardRightColumn'>
+            <div>Tested on:</div>
+            <ul>
+              <li>Amazon EC2</li>
+              <li>Google Compute Engine</li>
+              <li>Vultr</li>
+              <li>Linode</li>
+              <li>Liquid Web</li>
+            </ul>
+          </div>
+          <paper-button on-tap='manualServerTapped'>Get started</paper-button>
+        </div>
+      </div>   <!-- end of #manualServer -->
+    </outline-step-view>
+
   </template>
   <script>
     Polymer({

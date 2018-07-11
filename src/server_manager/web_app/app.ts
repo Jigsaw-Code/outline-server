@@ -209,8 +209,10 @@ export class App {
   // Show the DigitalOcean server creator or the existing server, if there's one.
   private enterDigitalOceanMode(accessToken: string) {
     const doSession = this.createDigitalOceanSession(accessToken);
+    const oauthUi = this.appRoot.getAndShowServerCreator().getDigitalOceanOauthFlow();
     const authEvents = new events.EventEmitter();
     let cancelled = false;
+    let activatingAccount = false;
 
     const query = () => {
       if (cancelled) {
@@ -233,51 +235,43 @@ export class App {
           });
     };
 
-    const oauthUi = this.appRoot.getAndShowServerCreator().getAndShowDigitalOceanOauthFlow();
     authEvents.on('account-update', (account: digitalocean_api.Account) => {
       if (cancelled) {
         return;
       }
       this.appRoot.adminEmail = account.email;
       if (account.status === 'active') {
-        oauthUi.showAccountActive();
         sendElectronEvent('bring-to-front');
-        this.digitalOceanRepository = this.createDigitalOceanServerRepository(doSession);
-        this.digitalOceanRepository.listServers()
-            .then((serverList) => {
-              // Check if this user already has a Shadowsocks server, if so show that.
-              // This assumes we only allow one Shadowsocks server per DigitalOcean user.
-              if (serverList.length > 0) {
-                this.showManagedServer(serverList[0]);
-              } else {
-                this.showCreateServer();
-              }
-            })
-            .catch((e) => {
-              const msg = 'Could not fetch server list from DigitalOcean';
-              console.error(msg, e);
-              SentryErrorReporter.logError(msg);
-              this.showIntro();
-            });
+        let maybeSleep = Promise.resolve();
+        if (activatingAccount) {
+          // Show the 'account active' screen for a few seconds if the account was activated during
+          // this session.
+          oauthUi.showAccountActive();
+          maybeSleep = this.sleep(1500);
+        }
+        maybeSleep.then(() => {
+          this.digitalOceanRepository = this.createDigitalOceanServerRepository(doSession);
+          this.digitalOceanRepository.listServers()
+              .then((serverList) => {
+                // Check if this user already has a Shadowsocks server, if so show that.
+                // This assumes we only allow one Shadowsocks server per DigitalOcean user.
+                if (serverList.length > 0) {
+                  this.showManagedServer(serverList[0]);
+                } else {
+                  this.showCreateServer();
+                }
+              })
+              .catch((e) => {
+                const msg = 'Could not fetch server list from DigitalOcean';
+                console.error(msg, e);
+                SentryErrorReporter.logError(msg);
+                this.showIntro();
+              });
+        });
       } else {
+        this.appRoot.getAndShowServerCreator().showDigitalOceanOauthFlow();
+        activatingAccount = true;
         if (account.email_verified) {
-        //   this.appRoot
-        //       .showModalDialog(
-        //           'Complete your DigitalOcean Registration',
-        //           'Please go to digitalocean.com to enter your billing information and complete your registration',
-        //           ['Sign Out'])
-        //       .then(() => {
-        //         authEvents.emit('cancel');
-        //       });
-        // } else {
-          // this.appRoot
-          //     .showModalDialog(
-          //         'Verify your email',
-          //         `Go to your ${account.email} email and open the email confirmation link sent by DigitalOcean`,
-          //         ['Sign Out'])
-          //     .then(() => {
-          //       authEvents.emit('cancel');
-          //     });
           oauthUi.showBilling();
         } else {
           oauthUi.showEmailVerification();
@@ -291,7 +285,6 @@ export class App {
       this.clearCredentialsAndShowIntro();
       this.appRoot.removeEventListener('DigitalOceanOauthCancelRequested', handleOauthFlowCanceled);
     };
-    authEvents.once('cancel', handleOauthFlowCanceled);
     this.appRoot.addEventListener('DigitalOceanOauthCancelRequested', handleOauthFlowCanceled);
 
     query();
@@ -563,7 +556,7 @@ export class App {
     }
 
     view.metricsEnabled = selectedServer.getMetricsEnabled();
-    this.appRoot.showServerView();
+    this.appRoot.getAndShowServerCreator().showServerView();
     this.showMetricsOptInWhenNeeded(selectedServer, view);
 
     // Load "My Connection" and other access keys.
@@ -644,7 +637,7 @@ export class App {
     this.runningServer.addAccessKey()
         .then((serverAccessKey: server.AccessKey) => {
           const uiAccessKey = convertToUiAccessKey(serverAccessKey);
-          this.appRoot.getServerView().addAccessKey(uiAccessKey);
+          this.appRoot.getServerCreator().getServerView().addAccessKey(uiAccessKey);
           this.displayNotification('Key added');
         })
         .catch((error) => {
@@ -798,5 +791,9 @@ export class App {
     serverToCancel.getHost().delete().then(() => {
       this.showCreateServer();
     });
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }

@@ -16,6 +16,7 @@
 <link rel='import' href='../bower_components/polymer/polymer.html'>
 <link rel='import' href='../bower_components/iron-pages/iron-pages.html'>
 <link rel="import" href="./cloud-install-styles.html">
+<link rel="import" href="./outline-step-view.html">
 
 <dom-module id="outline-do-oauth-step">
   <template>
@@ -52,28 +53,62 @@
         border: 1px solid rgba(0,0,0,0.12);
         border-radius: 2px;
       }
+      paper-button[disabled] {
+        color: rgba(0,0,0,0.54);
+        background: transparent;
+      }
     </style>
-    <paper-card>
+
       <iron-pages id='pages' attr-for-selected='id' selected='{{ currentPage }}'>
-        <div class="container" id="connectAccount">
-          <img src="images/digital_ocean_logo.svg" />
-          <p>Waiting to connect your account...</p>
-        </div>
-        <div class="container" id="verifyEmail">
-          <img src="images/do_oauth_email.svg" />
-          <p>Confirm your email...</p>
-        </div>
-        <div class="container" id="enterBilling">
-          <img src="images/do_oauth_billing.svg" />
-          <p>Enter billing information...</p>
-        </div>
-        <div class="container" id="accountActive">
-          <img src="images/do_oauth_done.svg" />
-          <p>Account activated!</p>
-        </div>
+        <outline-step-view id="connectAccount">
+          <span slot="step-title">Sign in or create an account with DigitalOcean.</span>
+          <span slot="step-description">With your account, Outline makes it easy to<br/> create a server and get connected.</span>
+          <paper-card>
+            <div class="container">
+              <img src="images/digital_ocean_logo.svg" />
+              <p>Waiting to connect your account...</p>
+            </div>
+            <paper-button on-tap="_cancelTapped">Cancel</paper-button>
+          </paper-card>
+        </outline-step-view>
+
+        <outline-step-view id="verifyEmail">
+          <span slot="step-title">Activate you DigitalOcean account.</span>
+          <span slot="step-description">Check your inbox for an email from DigitalOcean,<br/> and click the link in it to confirm your account.</span>
+          <paper-card>
+            <div class="container">
+              <img src="images/do_oauth_email.svg" />
+              <p>Confirm your email...</p>
+            </div>
+          <paper-button on-tap="_cancelTapped">Sign Out</paper-button>
+          </paper-card>
+        </outline-step-view>
+
+        <outline-step-view id="enterBilling">
+          <span slot="step-title">Activate you DigitalOcean account.</span>
+          <span slot="step-description">Enter your billing information on digitalocean.com<br/> and return to the app once you are done.</span>
+          <paper-card>
+            <div class="container">
+              <img src="images/do_oauth_billing.svg" />
+              <p>Enter billing information...</p>
+            </div>
+          <paper-button on-tap="_cancelTapped">Sign Out</paper-button>
+          </paper-card>
+        </outline-step-view>
+
+        <outline-step-view id="accountActive">
+          <span slot="step-title">Activate you DigitalOcean account.</span>
+          <span slot="step-description">Your DigitalOcean account has been activated.<br/><br/></span>
+          <paper-card>
+            <div class="container">
+              <img src="images/do_oauth_done.svg" />
+              <p>Account activated! Loading server locations...</p>
+            </div>
+          <paper-button disabled>Sign Out</paper-button>
+          </paper-card>
+        </outline-step-view>
+
       </iron-pages>
-      <paper-button on-tap="_cancelTapped">[[cancelButtonText]]</paper-button>
-    </paper-card>
   </template>
   <script>
     Polymer({
@@ -81,19 +116,11 @@
       properties: {
         currentPage: {
           type: String,
-          value: 'connectAccount',
-          observer: '_pageChanged'
+          value: 'connectAccount'
         },
         cancelButtonText: {
           type: String,
           value: 'Cancel'
-        }
-      },
-      _pageChanged: function(newPage, oldPage) {
-        if (newPage === 'connectAccount') {
-          this.cancelButtonText = 'Cancel';
-        } else {
-          this.cancelButtonText = 'Sign out';
         }
       },
       _cancelTapped: function() {
@@ -101,7 +128,6 @@
       },
       showEmailVerification: function() {
         this.currentPage = 'verifyEmail';
-        this.fire('DigitalOceanAccountCreated');
       },
       showBilling: function() {
         this.currentPage = 'enterBilling'

@@ -16,12 +16,13 @@
 <link rel='import' href='../bower_components/polymer/polymer.html'>
 <link rel='import' href='../bower_components/iron-pages/iron-pages.html'>
 
+<link rel="import" href="./cloud-install-styles.html">
 <link rel="import" href="./outline-do-oauth-step.html">
 <link rel="import" href="./outline-intro-step.html">
 <link rel="import" href="./outline-manual-server-entry.html">
 <link rel="import" href="./outline-region-picker-step.html">
 <link rel="import" href="./outline-server-progress-step.html">
-<link rel="import" href="./cloud-install-styles.html">
+<link rel="import" href="./outline-server-view.html">
 
 <dom-module id="outline-server-creator">
   <template>
@@ -29,63 +30,17 @@
       :host {
         display: block;
       }
-      .step-header {
-        padding: 48px 24px 24px;
-        vertical-align: middle;
-        height: auto;
-        text-align: left;
-        background-color: #263238;
-      }
-      .step-title, .step-description {
-        font-size: 20px;
-        line-height: 28px;
-      }
-      .step-title {
-        color: rgba(255, 255, 255, 0.87);
-      }
-      .step-description {
-        color: rgba(255, 255, 255, 0.54);
-      }
-</style>
-    <paper-card>
-      <div id="stepsContainer" class="step-header">
-        <div class="step-container first-step" data-step="1">
-          <div class="step-title">Choose a server, set up Outline.</div>
-          <div class="step-description">Don't have a server? Create an account<br/> with DigitalOcean.</div>
-        </div>
-        <div class="step-container" data-step="2" hidden>
-          <div class="step-title">Sign in or create an account with DigitalOcean.</div>
-          <div class="step-description">With your account, Outline makes it easy to<br/> create a server and get connected.</div>
-        </div>
-        <div class="step-container" data-step="3" hidden>
-          <div class="step-title">Activate you DigitalOcean account.</div>
-          <div class="step-description">Once your account is authorized, you can<br/> create new servers and start connecting.</div>
-        </div>
-        <div class="step-container" data-step="4" hidden>
-          <div class="step-title">Select the location of your server.</div>
-          <div class="step-description">This is where your internet experience<br/> will come from.</div>
-        </div>
-        <div class="step-container" data-step="5" hidden>
-          <div class="step-title">Setting up Outline.</div>
-          <div class="step-description">This could take up to two minutes. You can<br/> destroy this server at anytime.</div>
-        </div>
-        <div class="step-container" data-step="6" hidden>
-          <div class="step-title">Set up Outline on your server.</div>
-          <div class="step-description">Follow these instructions to install Outline with a<br/> cloud provider or on your own infrastructure.</div>
-        </div>
-      </div>
-    <paper-card>
-
+    </style>
     <iron-pages id='overlap' attr-for-selected='id' selected='{{ currentPage }}'>
       <outline-intro-step id='intro'></outline-intro-step>
       <outline-do-oauth-step id='digitalOceanOauth'></outline-do-oauth-step>
       <outline-manual-server-entry id='manualEntry'></outline-manual-server-entry>
       <outline-region-picker-step id='regionPicker'></outline-region-picker-step>
       <outline-server-progress-step id='serverProgressStep'></outline-server-progress-step>
+      <outline-server-view id='serverView'></outline-server-view>
     </iron-pages>
   </template>
   <script>
-    const SHOW_METRICS_OPT_IN = true;
     Polymer({
       is: 'outline-server-creator',
       properties: {
@@ -103,9 +58,15 @@
       showIntro: function () {
         this.currentPage = 'intro';
       },
+      getDigitalOceanOauthFlow: function () {
+        return this.$.digitalOceanOauth;
+      },
+      showDigitalOceanOauthFlow: function () {
+        this.currentPage = 'digitalOceanOauth';
+      },
       getAndShowDigitalOceanOauthFlow: function () {
         this.currentPage = 'digitalOceanOauth';
-        const oauthFlow = this.$.digitalOceanOauth;
+        const oauthFlow = this.getDigitalOceanOauthFlow();
         oauthFlow.showConnectAccount();
         return oauthFlow;
       },
@@ -122,6 +83,14 @@
         this.$.serverProgressStep.serverName = serverName;
         this.$.serverProgressStep.showCancelButton = showCancelButton;
         this.$.serverProgressStep.start();
+      },
+      showServerView: function () {
+        this.$.serverCreator.stop();
+        this.$.serverView.initHelpBubbles();
+        this.currentPage = 'serverView';
+      },
+      getServerView: function() {
+        return this.$.serverView;
       },
       handleRegionSelected: function (e) {
         this.fire('SetUpServerRequested', {
