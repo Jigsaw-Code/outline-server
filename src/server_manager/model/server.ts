@@ -48,6 +48,12 @@ export interface Server {
 
   // Gets the date when this server was created.
   getCreatedDate(): Date;
+
+  // Returns the server's domain name or IP address.
+  getHostname(): string;
+
+  // Returns the server's management API port.
+  getManagementPort(): number;
 }
 
 // Manual servers are servers which the user has independently setup to run

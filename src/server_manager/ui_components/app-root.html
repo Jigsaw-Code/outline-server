@@ -211,12 +211,10 @@
       getServerCreator: function() {
         return this.$.serverCreator;
       },
-      getAndShowServerView: function (server) {
-        this.server = server;
-        this.$.content.select('serverView');
+      showServerView: function () {
         this.$.serverCreator.stop();
         this.$.serverView.initHelpBubbles();
-        return this.$.serverView;
+        this.$.content.select('serverView');
       },
       getServerView: function() {
         return this.$.serverView;
@@ -313,6 +311,9 @@
       // Returns a Promise which fulfills with the index of the button clicked.
       showModalDialog: function(title, text, buttons) {
         return this.$.modalDialog.open(title, text, buttons);
+      },
+      closeModalDialog: function(title, text, buttons) {
+        return this.$.modalDialog.close();
       },
       showLicensesTapped: function () {
         this.closeSettingsDrawer();
