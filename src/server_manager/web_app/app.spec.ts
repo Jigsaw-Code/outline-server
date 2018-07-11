@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as events from 'events';
+
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as server from '../model/server';
 
@@ -32,10 +34,11 @@ describe('App', () => {
     const polymerAppRoot = new FakePolymerAppRoot();
     const app = createTestApp(
         polymerAppRoot, new InMemoryDigitalOceanTokenManager());
-    app.start().then(() => {
-      expect(polymerAppRoot.currentScreen).toEqual(AppRootScreen.INTRO);
+    polymerAppRoot.events.once('screen-change', (currentScreen) => {
+      expect(currentScreen).toEqual(AppRootScreen.INTRO);
       done();
     });
+    app.start();
   });
 
   it('Shows region picker when no servers exist but a DigitalOcean token is available', (done) => {
@@ -43,31 +46,37 @@ describe('App', () => {
     const tokenManager = new InMemoryDigitalOceanTokenManager();
     tokenManager.token = TOKEN_WITH_NO_SERVERS;
     const app = createTestApp(polymerAppRoot, tokenManager);
-    app.start().then(() => {
-      expect(polymerAppRoot.currentScreen).toEqual(AppRootScreen.REGION_PICKER);
+    polymerAppRoot.events.once('screen-change', (currentScreen) => {
+      expect(currentScreen).toEqual(AppRootScreen.REGION_PICKER);
       done();
     });
+    app.start();
   });
 
   it('Will not create a manual server with invalid input', (done) => {
     // Create a new app with no existing servers or DigitalOcean token.
     const polymerAppRoot = new FakePolymerAppRoot();
     const app = createTestApp(polymerAppRoot, new InMemoryDigitalOceanTokenManager());
-    app.start().then(() => {
+    polymerAppRoot.events.once('screen-change', (currentScreen) => {
+      expect(currentScreen).toEqual(AppRootScreen.INTRO);
       app.createManualServer('bad input').catch(done);
     });
+    app.start();
   });
 
   it('Creates a manual server with valid input', (done) => {
     // Create a new app with no existing servers or DigitalOcean token.
     const polymerAppRoot = new FakePolymerAppRoot();
     const app = createTestApp(polymerAppRoot, new InMemoryDigitalOceanTokenManager());
-    app.start().then(() => {
-      app.createManualServer(JSON.stringify({certSha256: 'cert', apiUrl: 'url'})).then(() => {
-        expect(polymerAppRoot.currentScreen).toEqual(AppRootScreen.SERVER_VIEW);
+    polymerAppRoot.events.once('screen-change', (currentScreen) => {
+      expect(currentScreen).toEqual(AppRootScreen.INTRO);
+      polymerAppRoot.events.once('screen-change', (currentScreen) => {
+        expect(currentScreen).toEqual(AppRootScreen.SERVER_VIEW);
         done();
       });
+      app.createManualServer(JSON.stringify({certSha256: 'cert', apiUrl: 'url'}));
     });
+    app.start();
   });
 
   it('App initially shows already created manual servers', (done) => {
@@ -78,11 +87,13 @@ describe('App', () => {
       const polymerAppRoot = new FakePolymerAppRoot();
       const app =
           createTestApp(polymerAppRoot, new InMemoryDigitalOceanTokenManager(), manualServerRepo);
-      app.start().then(() => {
-        expect(polymerAppRoot.currentScreen).toEqual(AppRootScreen.SERVER_VIEW);
+      polymerAppRoot.events.once('screen-change', (currentScreen) => {
+        expect(currentScreen).toEqual(AppRootScreen.SERVER_VIEW);
+        // TODO: Needs to set server view attributes before showing it.
         expect(polymerAppRoot.serverView.serverId).toEqual(manualServer.getServerId());
         done();
       });
+      app.start();
     });
   });
 
@@ -92,31 +103,36 @@ describe('App', () => {
     const tokenManager = new InMemoryDigitalOceanTokenManager();
     tokenManager.token = TOKEN_WITH_NO_SERVERS;
     const app = createTestApp(polymerAppRoot, tokenManager);
-    app.start().then(() => {
-      app.createDigitalOceanServer('fake2').then(() => {
-        expect(polymerAppRoot.currentScreen).toEqual(AppRootScreen.INSTALL_PROGRESS);
+    polymerAppRoot.events.once('screen-change', (currentScreen) => {
+      expect(currentScreen).toEqual(AppRootScreen.REGION_PICKER);
+      polymerAppRoot.events.once('screen-change', (currentScreen) => {
+        expect(currentScreen).toEqual(AppRootScreen.INSTALL_PROGRESS);
         done();
       });
+      app.createDigitalOceanServer('fakeRegion');
     });
+    app.start();
   });
 
-  it('Shows progress screen when starting with DigitalOcean servers still being created', (done) => {
-    // Start the app with a fake DigitalOcean token.
-    const polymerAppRoot = new FakePolymerAppRoot();
-    const tokenManager = new InMemoryDigitalOceanTokenManager();
-    tokenManager.token = TOKEN_WITH_ONE_SERVER;
-    const app = createTestApp(polymerAppRoot, tokenManager);
-    app.start().then(() => {
-      // Servers should initially show the progress screen, until their
-      // "waitOnInstall" promise fulfills.  For DigitalOcean, server objects
-      // are returned by the repository as soon as the droplet exists with the
-      // "shadowbox" tag, however shadowbox installation may not yet be complete.
-      // This is needed in case the user restarts the manager after the droplet
-      // is created but before shadowbox installation finishes.
-      expect(polymerAppRoot.currentScreen).toEqual(AppRootScreen.INSTALL_PROGRESS);
-      done();
-    });
-  });
+  it('Shows progress screen when starting with DigitalOcean servers still being created',
+     (done) => {
+       // Start the app with a fake DigitalOcean token.
+       const polymerAppRoot = new FakePolymerAppRoot();
+       const tokenManager = new InMemoryDigitalOceanTokenManager();
+       tokenManager.token = TOKEN_WITH_ONE_SERVER;
+       const app = createTestApp(polymerAppRoot, tokenManager);
+       polymerAppRoot.events.once('screen-change', (currentScreen) => {
+         // Servers should initially show the progress screen, until their
+         // "waitOnInstall" promise fulfills.  For DigitalOcean, server objects
+         // are returned by the repository as soon as the droplet exists with the
+         // "shadowbox" tag, however shadowbox installation may not yet be complete.
+         // This is needed in case the user restarts the manager after the droplet
+         // is created but before shadowbox installation finishes.
+         expect(currentScreen).toEqual(AppRootScreen.INSTALL_PROGRESS);
+         done();
+       });
+       app.start();
+     });
 });
 
 function createTestApp(
@@ -147,33 +163,61 @@ enum AppRootScreen {
   INTRO,
   REGION_PICKER,
   SERVER_VIEW,
-  INSTALL_PROGRESS
+  INSTALL_PROGRESS,
+  DIALOG
 }
 
 // TODO: define the AppRoot type.  Currently app.ts just defines the Polymer
 // type as HTMLElement&any.
 class FakePolymerAppRoot {
+  events = new events.EventEmitter();
+  backgroundScreen = AppRootScreen.NONE;
   currentScreen = AppRootScreen.NONE;
   serverView = {setServerTransferredData: () => {}, serverId: ''};
+
+  private setScreen(screenId: AppRootScreen) {
+    this.currentScreen = screenId;
+    this.events.emit('screen-change', screenId);
+  }
 
   getAndShowServerCreator() {
     return {
       showIntro: () => {
-        this.currentScreen = AppRootScreen.INTRO;
+        this.setScreen(AppRootScreen.INTRO);
       },
       getAndShowRegionPicker: () => {
-        this.currentScreen = AppRootScreen.REGION_PICKER;
+        this.setScreen(AppRootScreen.REGION_PICKER);
         return {};
       },
       showProgress: () => {
-        this.currentScreen = AppRootScreen.INSTALL_PROGRESS;
+        this.setScreen(AppRootScreen.INSTALL_PROGRESS);
       }
     };
   }
+  
+  showModalDialog() {
+    this.backgroundScreen = this.currentScreen;
+    this.setScreen(AppRootScreen.DIALOG);
+    const promise = new Promise(()=>{});
+    // Supress Promise not handled warning.
+    promise.then(()=>{});
+    return promise;
+  }
 
-  getAndShowServerView() {
-    this.currentScreen = AppRootScreen.SERVER_VIEW;
+  closeModalDialog() {
+    if (this.currentScreen !== AppRootScreen.DIALOG) {
+      return;
+    }
+    this.setScreen(this.backgroundScreen);
+    this.backgroundScreen = AppRootScreen.NONE;
+  }
+
+  getServerView() {
     return this.serverView;
+  }
+
+  showServerView() {
+    this.setScreen(AppRootScreen.SERVER_VIEW);
   }
 
   // Methods like setAttribute, addEventListener, and others are currently
@@ -221,19 +265,25 @@ class FakeServer implements server.Server {
     return Promise.resolve({bytesTransferredByUserId: {}});
   }
   addAccessKey() {
-    return Promise.reject('FakeServer.addAccessKey not implemented');
+    return Promise.reject(new Error('FakeServer.addAccessKey not implemented'));
   }
   renameAccessKey(accessKeyId: server.AccessKeyId, name: string) {
-    return Promise.reject('FakeServer.renameAccessKey not implemented');
+    return Promise.reject(new Error('FakeServer.renameAccessKey not implemented'));
   }
   removeAccessKey(accessKeyId: server.AccessKeyId) {
-    return Promise.reject('FakeServer.removeAccessKey not implemented');
+    return Promise.reject(new Error('FakeServer.removeAccessKey not implemented'));
+  }
+  getHostname() {
+    return 'fake-server';
+  }
+  getManagementPort() {
+    return 8080;
   }
 }
 
 class FakeManualServer extends FakeServer implements server.ManualServer {
   forget() {
-    return Promise.reject('FakeManualServer.forget not implemented');
+    return Promise.reject(new Error('FakeManualServer.forget not implemented'));
   }
 }
 
@@ -253,7 +303,7 @@ class FakeManualServerRepository implements server.ManualServerRepository {
 
 class InMemoryDigitalOceanTokenManager implements TokenManager {
   public token: string;
-  extractTokenFromUrl(): string {
+  getStoredToken(): string {
     return this.token;
   }
   removeTokenFromStorage() {
@@ -269,7 +319,7 @@ class FakeDigitalOceanSession implements digitalocean_api.DigitalOceanSession {
 
   // Return fake account data.
   getAccount() {
-    return Promise.resolve({email: 'fake', uuid: 'fake', email_verified: false, status: 'fake'});
+    return Promise.resolve({email: 'fake@email.com', uuid: 'fake', email_verified: true, status: 'active'});
   }
 
   // Return an empty list of droplets by default.
@@ -282,11 +332,11 @@ class FakeDigitalOceanSession implements digitalocean_api.DigitalOceanSession {
   createDroplet =
       (displayName: string, region: string, publicKeyForSSH: string,
        dropletSpec: digitalocean_api.DigitalOceanDropletSpecification) =>
-          Promise.reject('createDroplet not implemented');
-  deleteDroplet = (dropletId: number) => Promise.reject('deleteDroplet not implemented');
-  getDroplet = (dropletId: number) => Promise.reject('getDroplet not implemented');
-  getDropletTags = (dropletId: number) => Promise.reject('getDropletTags not implemented');
-  getDroplets = () => Promise.reject('getDroplets not implemented');
+          Promise.reject(new Error('createDroplet not implemented'));
+  deleteDroplet = (dropletId: number) => Promise.reject(new Error('deleteDroplet not implemented'));
+  getDroplet = (dropletId: number) => Promise.reject(new Error('getDroplet not implemented'));
+  getDropletTags = (dropletId: number) => Promise.reject(new Error('getDropletTags not implemented'));
+  getDroplets = () => Promise.reject(new Error('getDroplets not implemented'));
 }
 
 class FakeManagedServer extends FakeServer implements server.ManagedServer {

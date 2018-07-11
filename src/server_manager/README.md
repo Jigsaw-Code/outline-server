@@ -7,6 +7,11 @@ To run the Outline Manager:
 yarn do server_manager/electron_app/run
 ```
 
+## Debug an existing binary
+
+You can run an existing binary in debug mode by setting `OUTLINE_DEBUG=true`.
+This will enable the Developer menu on the application window.
+
 ## Packaging
 
 To build the app binary:

@@ -12,11 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as events from 'events';
+
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import * as server from '../model/server';
 
-import {getOauthUrl, TokenManager} from './digitalocean_oauth';
+import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {SentryErrorReporter} from './error_reporter';
 import {ManualServerRepository} from './manual_server';
@@ -34,9 +36,14 @@ interface PolymerEvent extends Event {
 const DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
 
 // These functions are defined in electron_app/preload.ts.
-declare function clearDigitalOceanCookies(): boolean;
 declare function onElectronEvent(event: string, listener: () => void): void;
 declare function sendElectronEvent(event: string): void;
+interface OauthSession {
+  result: Promise<string>;
+  isCancelled(): boolean;
+  cancel(): void;
+}
+declare function runDigitalOceanOauth(): OauthSession;
 
 interface UiAccessKey {
   id: string;
@@ -89,12 +96,11 @@ export class App {
       private digitalOceanTokenManager: TokenManager) {
     appRoot.setAttribute('outline-version', this.version);
 
+    appRoot.addEventListener('ConnectToDigitalOcean', (event: PolymerEvent) => {
+      this.connectToDigitalOcean();
+    });
     appRoot.addEventListener('SignOutRequested', (event: PolymerEvent) => {
       this.clearCredentialsAndShowIntro();
-    });
-
-    appRoot.addEventListener('ClearDigitalOceanCookiesRequested', (event: PolymerEvent) => {
-      this.signOutFromDigitalocean();
     });
 
     appRoot.addEventListener('SetUpServerRequested', (event: PolymerEvent) => {
@@ -122,7 +128,8 @@ export class App {
     });
 
     appRoot.addEventListener('ManualServerEntered', (event: PolymerEvent) => {
-      const userInputConfig = event.detail.userInputConfig;
+      const userInputConfig =
+          event.detail.userInputConfig.replace(/\s+/g, '');  // Remove whitespace
       const manualServerEntryEl = appRoot.getServerCreator().getManualServerEntry();
       this.createManualServer(userInputConfig)
           .then(() => {
@@ -178,10 +185,9 @@ export class App {
     sendElectronEvent('app-ui-ready');
   }
 
-  // Returns a Promise that fulfills once the correct UI screen is shown.
-  start(): Promise<void> {
+  start(): void {
     // Load manual servers from storage.
-    return this.manualServerRepository.listServers().then((manualServers) => {
+    this.manualServerRepository.listServers().then((manualServers) => {
       // Show any manual servers if they exist.
       if (manualServers.length > 0) {
         this.showManualServerIfHealthy(manualServers[0]);
@@ -189,9 +195,55 @@ export class App {
       }
 
       // User has no manual servers - check if they are logged into DigitalOcean.
-      const accessToken = this.digitalOceanTokenManager.extractTokenFromUrl();
+      const accessToken = this.digitalOceanTokenManager.getStoredToken();
       if (accessToken) {
-        return this.getDigitalOceanServerList(accessToken)
+        this.enterDigitalOceanMode(accessToken);
+        return;
+      }
+
+      // User has no manual servers or DigitalOcean token.
+      this.showIntro();
+    });
+  }
+
+  // Show the DigitalOcean server creator or the existing server, if there's one.
+  private enterDigitalOceanMode(accessToken: string) {
+    const doSession = this.createDigitalOceanSession(accessToken);
+    const authEvents = new events.EventEmitter();
+    let cancelled = false;
+
+    const query = () => {
+      if (cancelled) {
+        return;
+      }
+      this.digitalOceanRetry(() => {
+            if (cancelled) {
+              return Promise.reject('Authorization cancelled');
+            }
+            return doSession.getAccount();
+          })
+          .then((account) => {
+            authEvents.emit('account-update', account);
+          })
+          .catch((error) => {
+            if (!cancelled) {
+              this.appRoot.hideModalDialog();
+              this.showIntro();
+              this.displayError('Failed to get DigitalOcean account information', error);
+            }
+          });
+    };
+
+    authEvents.on('account-update', (account: digitalocean_api.Account) => {
+      if (cancelled) {
+        return;
+      }
+      this.appRoot.adminEmail = account.email;
+      if (account.status === 'active') {
+        this.appRoot.closeModalDialog();
+        sendElectronEvent('bring-to-front');
+        this.digitalOceanRepository = this.createDigitalOceanServerRepository(doSession);
+        this.digitalOceanRepository.listServers()
             .then((serverList) => {
               // Check if this user already has a shadowsocks server, if so show that.
               // This assumes we only allow one shadowsocks server per DigitalOcean user.
@@ -202,16 +254,41 @@ export class App {
               }
             })
             .catch((e) => {
-              const msg = 'could not fetch account details and/or server list';
+              const msg = 'Could not fetch server list from DigitalOcean';
               console.error(msg, e);
               SentryErrorReporter.logError(msg);
               this.showIntro();
             });
+      } else {
+        if (account.email_verified) {
+          this.appRoot
+              .showModalDialog(
+                  'Complete your DigitalOcean Registration',
+                  'Please go to digitalocean.com to enter your billing information and complete your registration',
+                  ['Sign Out'])
+              .then(() => {
+                authEvents.emit('cancel');
+              });
+        } else {
+          this.appRoot
+              .showModalDialog(
+                  'Verify your email',
+                  `Go to your ${account.email} email and open the email confirmation link sent by DigitalOcean`,
+                  ['Sign Out'])
+              .then(() => {
+                authEvents.emit('cancel');
+              });
+        }
+        setTimeout(query, 1000);
       }
-
-      // User has no manual servers or DigitalOcean token.
-      this.showIntro();
     });
+
+    authEvents.once('cancel', () => {
+      cancelled = true;
+      this.clearCredentialsAndShowIntro();
+    });
+
+    query();
   }
 
   private showManualServerIfHealthy(manualServer: server.ManualServer) {
@@ -240,33 +317,6 @@ export class App {
             }
           });
     });
-  }
-
-  // Returns a Promise that fulfills once the correct UI screen is shown.
-  private getDigitalOceanServerList(accessToken: string): Promise<server.ManagedServer[]> {
-    // Save accessToken to storage. DigitalOcean tokens
-    // expire after 30 days, unless they are manually revoked by the user.
-    // After 30 days the user will have to sign into DigitalOcean again.
-    // Note we cannot yet use DigitalOcean refresh tokens, as they require
-    // a client_secret to be stored on a server and not visible to end users
-    // in client-side JS.  More details at:
-    // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
-    this.digitalOceanTokenManager.writeTokenToStorage(accessToken);
-
-    // Fetch the user's email address and list of servers then change to
-    // either the region picker or management screen, depending on whether
-    // they have a server.
-    const digitalOceanSession = this.createDigitalOceanSession(accessToken);
-    return this
-        .digitalOceanRetry(() => {
-          return digitalOceanSession.getAccount().then((account) => {
-            this.appRoot.adminEmail = account.email;
-
-            this.digitalOceanRepository =
-                this.createDigitalOceanServerRepository(digitalOceanSession);
-            return this.digitalOceanRepository.listServers();
-          });
-        });
   }
 
   // Intended to add a "retry or re-authenticate?" prompt to DigitalOcean
@@ -313,8 +363,7 @@ export class App {
 
   // Shows the intro screen with overview and options to sign in or sign up.
   private showIntro() {
-    this.appRoot.getAndShowServerCreator().showIntro(
-        getOauthUrl(this.appUrl), DIGITALOCEAN_REFERRAL_CODE);
+    this.appRoot.getAndShowServerCreator().showIntro();
   }
 
   private displayAppUpdateNotification() {
@@ -323,41 +372,44 @@ export class App {
     this.appRoot.showToast(msg, 60000);
   }
 
+  private connectToDigitalOcean() {
+    const session = runDigitalOceanOauth();
+    this.appRoot
+        .showModalDialog(
+            'Awaiting authorization',  // Don't display any title.
+            'On the DigitalOcean window that was opened on your browser, sign in or create a new account, then authorize the Outline Manager application',
+            ['Cancel'])
+        .then(() => {
+          session.cancel();
+        });
+    session.result
+        .then((accessToken) => {
+          this.appRoot.closeModalDialog();
+          // Save accessToken to storage. DigitalOcean tokens
+          // expire after 30 days, unless they are manually revoked by the user.
+          // After 30 days the user will have to sign into DigitalOcean again.
+          // Note we cannot yet use DigitalOcean refresh tokens, as they require
+          // a client_secret to be stored on a server and not visible to end users
+          // in client-side JS.  More details at:
+          // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
+          this.digitalOceanTokenManager.writeTokenToStorage(accessToken);
+          this.enterDigitalOceanMode(accessToken);
+        })
+        .catch((error) => {
+          if (!session.isCancelled()) {
+            this.appRoot.closeModalDialog();
+            sendElectronEvent('bring-to-front');
+            this.displayError('Authentication with DigitalOcean failed', error);
+          }
+        });
+  }
+
   // Clears the credentials and returns to the intro screen.
   private clearCredentialsAndShowIntro() {
-    this.signOutFromDigitalocean();
-    // Remove credential from URL and local storage.
-    location.hash = '';
     this.digitalOceanTokenManager.removeTokenFromStorage();
     // Reset UI
     this.appRoot.adminEmail = '';
     this.showIntro();
-  }
-
-  private signOutFromDigitalocean() {
-    if (typeof clearDigitalOceanCookies === 'function') {
-      clearDigitalOceanCookies();
-    } else {
-      // Running outside of Electron, use old iframe logic.
-      // We load the logout page on an iframe so that the browser clears the
-      // credential cookies properly. We can't get the credential cookies cleared
-      // with a XHR.
-      const iframe = document.createElement('iframe');
-      iframe.src = 'https://cloud.digitalocean.com/logout';
-      iframe.onload = () => {
-        const msg = 'Signed out from DigitalOcean';
-        console.log(msg);
-        SentryErrorReporter.logInfo(msg);
-        iframe.remove();
-      };
-      iframe.onerror = () => {
-        const msg = 'DigitalOcean iframe error';
-        console.error(msg);
-        SentryErrorReporter.logError(msg);
-        iframe.remove();
-      };
-      document.body.appendChild(iframe);
-    }
   }
 
   // Opens the screen to create a server.
@@ -478,8 +530,13 @@ export class App {
     this.runningServer = selectedServer;
 
     // Show view and initialize fields from selectedServer.
-    const view = this.appRoot.getAndShowServerView();
+    const view = this.appRoot.getServerView();
+    view.serverId = selectedServer.getServerId();
     view.serverName = selectedServer.getName();
+    view.serverHostname = selectedServer.getHostname();
+    view.serverManagementPort = selectedServer.getManagementPort();
+    view.serverCreationDate = selectedServer.getCreatedDate().toLocaleString(
+        'en-US', {year: 'numeric', month: 'long', day: 'numeric'});
 
     if (isManagedServer(selectedServer)) {
       const host = selectedServer.getHost();
@@ -501,8 +558,8 @@ export class App {
     }
 
     view.metricsEnabled = selectedServer.getMetricsEnabled();
+    this.appRoot.showServerView();
     this.showMetricsOptInWhenNeeded(selectedServer, view);
-    view.serverId = selectedServer.getServerId();
 
     // Load "My Connection" and other access keys.
     selectedServer.listAccessKeys()
@@ -688,7 +745,7 @@ export class App {
   private forgetSelectedServer() {
     const serverToForget = this.selectedServer;
     if (!isManualServer(serverToForget)) {
-      const msg = 'cannot delete non-ManualServer';
+      const msg = 'cannot forget non-ManualServer';
       SentryErrorReporter.logError(msg);
       throw new Error(msg);
     }

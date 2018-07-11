@@ -59,6 +59,9 @@
           this.reject = reject;
         });
       },
+      close: function() {
+        this.$.dialog.close();
+      },
       buttonTapped: function(event) {
         if (!this.fulfill) {
           console.error('outline-modal-dialog: this.fulfill not defined');

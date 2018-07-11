@@ -23,44 +23,43 @@
       :host {
         margin: 0px;
       }
+      a {
+        color: #009485;
+      }
       #dialog {
         display: flex;
         flex-flow: column nowrap;
         width: 100%;
+        padding: 24px;
       }
-      #shareHeader {
-        background-color: #445a65;
-        display: flex;
-        flex-flow: column nowrap;
-        align-items: center;
-        margin: 0;
-      }
-      #shareHeader h3 {
-        color: #f1f2f3;
+      #dialog-header {
+        text-align: left;
+        margin: 0 0 18px 0;
         padding: 0;
-        margin: 25px;
-        max-width: 325px;
-        display: inline-block;
-        text-align: center;
       }
-      #shareHeader p {
-        color: #97a3a8;
+      #dialog-header h3 {
+        font-size: 18px;
+        color: rgba(0,0,0,0.87);
+        opacity: 0.87;
+        line-height: 24px;
+        padding: 0;
       }
-      #instructions-icons {
-        display: flex;
-        flex-flow: row nowrap;
-        justify-content: space-between;
-        align-items: flex-end;
-        width: 100%;
-        max-width: 325px;
+      #dialog-header p {
+        font-size: 14px;
+        color: rgba(0,0,0,0.54);
+        line-height: 20px;
+        max-width: 85%;
+        margin: 0;
       }
       #selectableText {
-        max-height: 400px;
+        height: 144px;
         overflow: auto;
-        border: 1px solid #445a65;
+        background-color: #ECEFF1;
+        border-radius: 2px;
         margin: 0;
-        padding: 24px;
-        background-color: #ebedee;
+        padding: 18px;
+        font-size: 12px;
+        line-height: 18px;
       }
       #selectableText p {
         color: black;
@@ -73,21 +72,20 @@
         color: #009485;
         font-weight: 500;
         border: none;
-        padding: 4px;
       }
       #copyText {
         text-align: center;
         color: rgba(0, 0, 0, 0.54);
-        margin-top: 0;
+        margin: 0;
       }
-      #buttonRow {
-        margin: 24px 24px 20px 24px;
+      #button-row {
+        margin: 24px 0;
         padding: 0;
+        letter-spacing: 0.62px;
       }
       #copyButton {
         color: #f1f2f3;
         background-color: #263238;
-        width: 50%;
       }
       #doneButton {
         color: #009485;
@@ -95,27 +93,35 @@
         position: absolute;
       }
     </style>
-    <paper-dialog id='dialog'>
-      <div id='shareHeader'>
-        <h3>To share a connection to this server, copy the invitation and send it over email or chat</h3>
-        <div id='instructions-icons'>
-          <div><img src='images/share_copy.svg'><p>Copy invite</p></div>
-          <div><img src='images/share_email.svg'><p>Email invite</p></div>
-          <div><img src='images/share_chat.svg'><p>Invite via chat</p></div>
-        </div>
+    <paper-dialog id="dialog">
+      <div id="dialog-header">
+        <h3>Share access</h3>
+        <p>
+          Copy this invitation and send it from a communication tool you trust. <a href="https://securityplanner.org/#/all-recommendations">Need help?</a>
+        </p>
       </div>
-      <div>
-        <div contenteditable id='selectableText' style= "-webkit-text-size-adjust: 100%;">
-          <p>Hello,</p>
-          <p>I'm inviting you to connect to my personal Outline server, which you can use to access the open internet, no matter where you are. Follow the instructions on your invitation link below to download the Outline App and get connected.</p>
-          <p><a href$='{{s3Url}}'>{{s3Url}}</a></p>
-        </div>
+      <div contenteditable id="selectableText" style="-webkit-text-size-adjust: 100%;">
+        <p>You’re invited to connect to my Outline server. Use it to access the open internet, no matter where you are. Follow the instructions on your invitation link below to download the Outline App and get connected.</p>
+
+        <p><a href$="{{s3Url}}">{{s3Url}}</a></p>
+        <p>-----</p>
+        <p>Having trouble accessing the invitation link?</p>
+        <ol>
+          <li>
+            Copy your access key:
+            <a href="{{accessUrl}}">{{accessUrl}}</a>
+          </li>
+          <li>
+            Follow our invitation instructions on GitHub:
+            <a href="https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md">https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md</a>
+          </li>
+        </ol>
       </div>
-      <div id='buttonRow'>
-        <paper-button id='copyButton' on-tap="copyClicked">Copy to clipboard</paper-button>
-        <paper-button id='doneButton' dialog-confirm>Done</paper-button>
+      <div id="button-row">
+        <paper-button id="copyButton" on-tap="copyClicked">Copy invitation</paper-button>
+        <paper-button id="doneButton" dialog-confirm>Done</paper-button>
       </div>
-      <div id='copyText' hidden>Copied to clipboard</div>
+      <div id="copyText" hidden>Copied to clipboard</div>
     </paper-dialog>
   </template>
   <script>
@@ -125,8 +131,9 @@
         this.clipboard = require('clipboard-polyfill');
       },
       open: function(accessUrl) {
+        this.accessUrl = accessUrl;
         // If updating this URL, must also update it in outline-server-view.html. TODO: deduplicate
-        this.s3Url = 'https://s3.amazonaws.com/outline-vpn/index.html#/invite/' +
+        this.s3Url = 'https://s3.amazonaws.com/outline-vpn/invite.html#' +
             encodeURIComponent(accessUrl);
         this.$.copyText.setAttribute('hidden', true);
         this.$.dialog.open();

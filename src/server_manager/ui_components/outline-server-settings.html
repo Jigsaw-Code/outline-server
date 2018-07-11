@@ -19,6 +19,7 @@
 <link rel='import' href='../bower_components/paper-toggle-button/paper-toggle-button.html'>
 
 <link rel='import' href='./cloud-install-styles.html'>
+<link rel='import' href='./outline-iconset.html'>
 
 <dom-module id='outline-server-settings'>
   <template>
@@ -32,14 +33,14 @@
         z-index: 101;  /* must be higher than the outline-help-bubble */
         background: white;
       }
-      app-toolbar h2 {
-        margin-left: 30px;
+      app-toolbar iron-icon {
+        margin-right: 24px;
       }
       .content {
         flex-grow: 1;
       }
       .setting {
-        padding: 20px;
+        padding: 24px;
         display: flex;
         align-items: flex-start;
       }
@@ -47,40 +48,33 @@
         border-top: 1px solid rgba(0, 0, 0, 0.08);
       }
       .setting > iron-icon {
-        margin-right: 20px;
+        margin-right: 24px;
         width: 40px;
+        color: #000;
+        opacity: 0.87;
       }
       .setting > div {
         width: 100%;
       }
       .setting h3 {
-        font-size: 16px;
-        margin: 0;
+        margin: 0 0 16px 0;
         padding: 0;
+        color: #000;
+        opacity: 0.87;
+        font-size: 18px;
+        font-weight: 500;
       }
       .setting p {
-        margin-bottom: 0;
+        margin-bottom: 12px;
       }
       #metricsHeader {
         display: flex;
         justify-content: space-between;
+        align-items: flex-start;
       }
-      #metricsStatus {
+      .detail {
         margin-top: 0px;
         font-size: 12px;
-      }
-      .footer {
-        height: 65px;
-        border-top: 1px solid rgba(0, 0, 0, 0.08);
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-      }
-      .footer paper-button {
-        width: 75px;
-      }
-      .footer .saveButton {
-        color: var(--primary-green);
       }
       .clickable {
         cursor: pointer;
@@ -93,19 +87,48 @@
       paper-input {
         /* Removes extra padding added by children of paper-input */
         margin-top: -8px;
+        --paper-input-container-label-focus: {
+          color: var(--primary-green);
+        };
+        --paper-input-container-underline-focus: {
+          border-color: var(--primary-green);
+        };
+        --paper-input-container-label: {
+          font-size: 14px;
+          line-height: 22px;
+        };
+      }
+      paper-input[disabled] {
+        --paper-input-container-underline: {
+          display: none;
+        };
+        --paper-input-container-underline-focus: {
+          display: none;
+        };
+        --paper-input-container-underline-disabled: {
+          display: none;
+        };
+        --paper-input-container-disabled: {
+          opacity: 1;
+        }
       }
     </style>
     <div class='fullScreenOverlay' hidden$='[[!visible]]'>
       <app-toolbar>
-        <h2>Server Settings</h2>
+        <paper-icon-button icon="arrow-back" on-tap="save"></paper-icon-button>
+        <h2>Server Details</h2>
       </app-toolbar>
       <div class='content'>
-        <!-- Rename controls -->
         <div class='setting'>
-          <iron-icon icon="create"></iron-icon>
+          <iron-icon icon="outline-iconset:outline"></iron-icon>
           <div>
-            <paper-input value='{{name}}' label='name' always-float-label maxlength='100'></paper-input>
-            <p>Set a new name for your server. Note that this will not be reflected on the devices of the users that you invited to connect to it.</p>
+            <h3>Information</h3>
+            <paper-input value='{{name}}' label='Name' always-float-label maxlength='100'></paper-input>
+            <p class='detail'>Set a new name for your server. Note that this will not be reflected on the devices of the users that you invited to connect to it.</p>
+            <paper-input disabled value='[[serverHostname]]' label='Hostname' hidden$='[[!serverHostname]]' always-float-label maxlength='100'></paper-input>
+            <paper-input disabled value='[[serverManagementPort]]' label='Management Port' hidden$='[[!serverManagementPort]]' always-float-label maxlength='100'></paper-input>
+            <paper-input disabled value='[[serverCreationDate]]' label='Created' hidden$='[[!serverCreationDate]]' always-float-label maxlength='100'></paper-input>
+            <paper-input disabled value='[[serverId]]' label='Server ID' hidden$='[[!serverId]]' always-float-label maxlength='100'></paper-input>
           </div>
         </div>
         <!-- Metrics controls -->
@@ -116,28 +139,9 @@
               <h3>Share anonymous metrics</h3>
               <paper-toggle-button checked='{{metricsEnabled}}'></paper-toggle-button>
             </div>
-            <p id='metricsStatus'>
-              <span hidden$='[[metricsEnabled]]'>Anonymous metrics sharing is disabled</span>
-              <span hidden$='[[!metricsEnabled]]'>Anonymous metrics sharing is enabled</span>
-            </p>
             <p>Share anonymized metrics to help improve the reliability and performance of Outline, for you and for those you share your server with. <a class="learnMoreLink" href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">Learn more</a>.</p>
-            <p hidden$='[[!metricsEnabled]]'>Server ID: [[serverId]]</p>
           </div>
         </div>
-        <!-- Delete/forget. -->
-        <div class='setting'>
-          <iron-icon icon="delete"></iron-icon>
-          <div hidden$='[[!deleteEnabled]]'>
-            <h3 on-tap='delete' class='clickable'>Destroy server</h3>
-          </div>
-          <div hidden$='[[!forgetEnabled]]'>
-            <h3 on-tap='forget' class='clickable'>Forget server</h3>
-          </div>
-        </div>
-      </div>
-      <div class='footer'>
-        <paper-button on-tap="close">Cancel</paper-button>
-        <paper-button on-tap="save" class='saveButton'>Save</paper-button>
       </div>
     </div>
   </template>
@@ -150,7 +154,11 @@
         name: String,
         metricsEnabled: Boolean,
         visible: {type: Boolean, value: false},
-        serverId: String
+        // Initialize to null so we can use the hidden attribute, which does not work well with undefined values.
+        serverId: {type: String, value: null},
+        serverHostname: {type: String, value: null},
+        serverManagementPort: {type: Number, value: null},
+        serverCreationDate: {type: String, value: null}
       },
       open: function(name, metricsEnabled) {
         this.visible = true;
@@ -176,12 +184,6 @@
           this.fire(metricsSignal);
         }
         this.close();
-      },
-      delete: function() {
-        this.fire('DeleteServerRequested');
-      },
-      forget: function() {
-        this.fire('ForgetServerRequested');
       }
     });
   </script>

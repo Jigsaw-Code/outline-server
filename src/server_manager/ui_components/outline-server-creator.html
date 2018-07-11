@@ -231,11 +231,8 @@
         'OpenManualServerEntry': 'handleManualServerSelected',
         'ManualServerEntryCancelled': 'handleManualCancelled'
       },
-      showIntro: function (oauthUrl, referralCode) {
-        this.$.intro.oauthUrl = oauthUrl;
-        this.$.intro.referralCode = referralCode;
+      showIntro: function () {
         this.$.overlap.select('intro');
-        this.fire('ClearDigitalOceanCookiesRequested');
       },
       getAndShowRegionPicker: function () {
         this.$.overlap.select('regionPicker');
