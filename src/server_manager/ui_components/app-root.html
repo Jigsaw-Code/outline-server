@@ -22,6 +22,7 @@
 <link rel='import' href='../bower_components/paper-toast/paper-toast.html'>
 <link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
 <link rel='import' href='../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html'>
+<link rel='import' href='../bower_components/paper-listbox/paper-listbox.html'>
 
 <link rel="import" href="./cloud-install-styles.html">
 <link rel="import" href="./outline-about-dialog.html">
@@ -38,6 +39,7 @@
       :host {
         width: 100%;
         --primary-green: #00bfa5;
+        --light-gray: color: rgba(0,0,0,0.54);
       }
 
       /* CONTENT */
@@ -66,8 +68,7 @@
         max-width: 450px;
       }
       #toast paper-icon-button {
-        /* prevents the icon from resizing when there is a long message in
-           the toast */
+        /* prevents the icon from resizing when there is a long message in the toast */
         flex-shrink: 0;
         padding: 0;
         height: 20px;
@@ -77,16 +78,28 @@
         z-index: 1000;
         margin-top: 12px;
       }
-      #settingsDrawer iron-icon {
-        margin-right: 12px;
+      #settingsDrawer paper-listbox {
+        color: var(--light-gray);
       }
-      #settingsDrawer .settingsMenuItem {
+      #settingsDrawer paper-icon-item {
+        display: block;
         cursor: pointer;
         padding: 12px 24px 12px 24px;
         font-size: 14px;
       }
-      #settingsDrawer .settingsMenuItem:hover {
+      #settingsDrawer iron-icon {
+        margin-right: 12px;
+      }
+      #settingsDrawer paper-icon-item:hover,
+      #settingsDrawer paper-icon-item iron-icon:hover {
         color: var(--primary-green);
+      }
+      #settingsDrawer a {
+        color: inherit;
+      }
+      #settingsDrawer paper-icon-item:focus,
+      #settingsDrawer a:focus {
+        outline: none;
       }
       #settingsDrawer #signedIn {
         text-align: center;
@@ -125,29 +138,39 @@
           <img src='images/manager-profile-2x.png'>
           <p>{{adminEmail}}</p>
           <div id='signOutButton' on-tap='signOutTapped'>Sign Out</div>
-          <hr>
+          <hr/>
         </div>
-        <div on-tap='dataCollectionTapped' class='settingsMenuItem' paper-drawer-toggle>
-          <iron-icon icon="lock"></iron-icon>Data Collection
-        </div>
-        <div on-tap='privacyTapped' class='settingsMenuItem' paper-drawer-toggle>
-          <iron-icon icon="lock"></iron-icon>Privacy
-        </div>
-        <div on-tap='termsTapped' class='settingsMenuItem' paper-drawer-toggle>
-          <iron-icon icon="info"></iron-icon>Terms
-        </div>
-        <div on-tap='submitFeedbackTapped' class='settingsMenuItem' paper-drawer-toggle>
-          <iron-icon icon="feedback"></iron-icon>Submit Feedback
-        </div>
-        <div on-tap='helpTapped' class='settingsMenuItem' paper-drawer-toggle>
-          <iron-icon icon="help"></iron-icon>Help Center
-        </div>
-        <div on-tap='aboutTapped' class='settingsMenuItem' paper-drawer-toggle>
-          <iron-icon icon="info"></iron-icon>About Outline
-        </div>
-        <div on-tap='showLicensesTapped' class='settingsMenuItem' paper-drawer-toggle>
-          <iron-icon icon="info"></iron-icon>Show Licenses
-        </div>
+        <paper-listbox on-tap="closeSettingsDrawer">
+          <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">
+            <paper-icon-item>
+              <iron-icon icon="lock" slot="item-icon"></iron-icon>Data Collection
+            </paper-icon-item>
+          </a>
+          <a href="https://www.google.com/policies/privacy/">
+            <paper-icon-item>
+              <iron-icon icon="lock" slot="item-icon"></iron-icon>Privacy
+            </paper-icon-item>
+          </a>
+          <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">
+            <paper-icon-item>
+                <iron-icon icon="info" slot="item-icon"></iron-icon>Terms
+            </paper-icon-item>
+          </a>
+          <paper-icon-item on-tap="submitFeedbackTapped">
+            <iron-icon icon="feedback" slot="item-icon"></iron-icon>Submit Feedback
+          </paper-icon-item>
+          <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">
+            <paper-icon-item>
+              <iron-icon icon="help" slot="item-icon"></iron-icon>Help Center
+            </paper-icon-item>
+          </a>
+          <paper-icon-item on-tap="aboutTapped">
+            <iron-icon icon="info" slot="item-icon"></iron-icon>About Outline
+          </paper-icon-item>
+          <paper-icon-item on-tap="showLicensesTapped">
+            <iron-icon icon="info" slot="item-icon"></iron-icon>Show Licenses
+          </paper-icon-item>
+        </paper-listbox>
       </app-drawer>
 
       <app-toolbar class='toolbar'>
@@ -155,7 +178,7 @@
         <div main-title><img src="images/outline-manager-logo.svg"></div>
       </app-toolbar>
 
-      <!-- TODO: deprecate server creator and move functionality to this file; fix the app drawer; fix tests! -->
+      <!-- TODO: deprecate server creator and move functionality to this file; fix tests! -->
       <outline-server-creator id='serverCreator'></outline-server-creator>
 
       <paper-toast id='toast'><paper-icon-button icon='icons:close' on-tap='closeError'></paper-icon-button></paper-toast>
@@ -265,31 +288,12 @@
         this.$.settingsDrawer.close();
       },
       submitFeedbackTapped: function () {
-        this.closeSettingsDrawer();
         this.$.feedbackDialog.open();
       },
-      termsTapped: function () {
-        this.closeSettingsDrawer();
-        window.open('https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html');
-      },
-      privacyTapped: function () {
-        this.closeSettingsDrawer();
-        window.open('https://www.google.com/policies/privacy/');
-      },
-      dataCollectionTapped: function () {
-        this.closeSettingsDrawer();
-        window.open('https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection');
-      },
       aboutTapped: function() {
-        this.closeSettingsDrawer();
         this.$.aboutDialog.open();
       },
-      helpTapped: function() {
-        this.closeSettingsDrawer();
-        window.open('https://s3.amazonaws.com/outline-vpn/index.html#/en/support/');
-      },
       signOutTapped: function() {
-        this.closeSettingsDrawer();
         this.fire('SignOutRequested');
       },
       openManualInstallFeedback: function(prepopulatedMessage) {
