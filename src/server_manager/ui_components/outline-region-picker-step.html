@@ -15,10 +15,12 @@
 -->
 <link rel='import' href='../bower_components/polymer/polymer.html'>
 <link rel='import' href='../bower_components/paper-button/paper-button.html'>
-
+<link rel='import' href='../bower_components/iron-icon/iron-icon.html'>
+<link rel='import' href='../bower_components/iron-icons/iron-icons.html'>
 
 <link rel="import" href="./cloud-install-styles.html">
 <link rel="import" href="./cities.html">
+<link rel="import" href="./outline-step-view.html">
 
 <dom-module id="outline-region-picker-step">
   <template>
@@ -27,78 +29,82 @@
     <style>
       :host {
         text-align: center;
+        --primary-green: #1DE9B6;
       }
-
       input[type="radio"] {
         display: none;
       }
-
       input[type="radio"]:checked+label.city-button {
-        /* from #00bfa5 */
-        background-color: rgba(0, 191, 165, 0.12);
-        border: 1px solid rgb(0, 191, 165);
-        color: var(--paper-button-ink-color);
-      }
-
-      input[type="radio"]:checked+label.city-button:hover {
         background: #FFFFFF;
-        box-shadow: 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px 0 rgba(0,0,0,0.20);
-        border-radius: 3px;
-        /* from #00bfa5 */
-        background-color: rgba(0, 191, 165, 0.12);
-        border: 1px solid rgb(0, 191, 165);
-        box-shadow: 1px 1px 23px 0px rgba(0, 0, 0, 0);
+        box-shadow: 0 0 2px 0 rgba(0,0,0,0.14), 0 2px 2px 0 rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
+        border-radius: 4px;
+        border: 1px solid var(--primary-green);
       }
-
       input[type="radio"]+label.city-button:hover {
-        border: 1px solid rgb(0, 191, 165);
-        border-color: rgba(0, 0, 0, .12);
-        box-shadow: 1px 1px 23px 0px rgba(0, 0, 0, 0.12);
+        border: 1px solid var(--primary-green);
       }
-
       input[type="radio"]+label.city-button {
         display: inline-block;
         width: 22%;
         min-width: 100px;
-        margin: 20px 0px 10px 0px;
-        padding: 24px 0px 24px 0px;
+        position: relative;
+        margin: 3px;
+        padding-top: 24px;
         text-align: center;
         border: 1px solid;
         border-color: rgba(0, 0, 0, .00);
         cursor: pointer;
-        border-radius: 2px;
         transition: .5s;
+        background: #FFFFFF;
+        box-shadow: 0 0 2px 0 rgba(0,0,0,0.14), 0 2px 2px 0 rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
+        border-radius: 4px;
       }
-
       input[type="radio"]:disabled+label.city-button {
         filter: grayscale(100%);
       }
-
-      .cityNameShort {
-        font-size: 24px;
+      .city-name {
         color: rgba(0, 0, 0, 0.87);
-        padding:12px 0px 4px 0px;
+        font-size: 16px;
+        line-height: 19px;
+        padding: 36px 0 24px 0;
       }
-      paper-button.primary {
+      paper-button {
         margin-top: 24px;
+        width: 95%;
+        background: var(--primary-green);
+        color: rgba(0, 0, 0, 0.87);
       }
       .flag {
-        width: 78px;
-        height: 78px;
+        width: 86px;
+        height: 86px;
+      }
+      .card-content {
+        padding: 24px 12px 0 12px;
+      }
+      iron-icon {
+        color: var(--primary-green);
+        position: absolute;
+        top: 0;
+        right: 0;
+        margin: 6px;
       }
     </style>
-    <div class='card-content'>
-      <template is="dom-repeat" items="{{cities}}">
-        <input type='radio' city$='{{item}}' name='city' id$='{{item}}' disabled$='{{!isAvailable(availableRegionIds, item)}}' on-change='citySelected'>
-          <label for$='{{item}}' class='city-button'>
-            <img class='flag' src$='{{getFlag(item)}}'>
-            <div class='cityNameShort'>{{getCityNameShort(item)}}</div>
-            <div>{{getCityName(item)}}</div>
-          </label>
-        </input>
-      </template>
-        <paper-button id="createServerButton" class="primary" on-tap='handleCreateServerTap' disabled$='[[!isCreateButtonEnabled(creatingServer, selectedCityId)]]'>Set up Outline</paper-button>
-    </div>
+      <outline-step-view>
+        <span slot="step-title">Select the location of your server.</span>
+        <span slot="step-description">This is where your internet experience<br/> will come from.</span>
+        <div class='card-content' id="cityContainer">
+          <template is="dom-repeat" items="{{cities}}">
+            <input type='radio' city$='{{item}}' name='city' id$='{{item}}' disabled$='{{!isAvailable(availableRegionIds, item)}}' on-change='citySelected'>
+              <label for$='{{item}}' class='city-button'>
+                <iron-icon icon="check-circle" hidden$="{{!_isSelectedCity(selectedCityId, item)}}"></iron-icon>
+                <img class='flag' src$='{{getFlag(item)}}'>
+                <div class="city-name">{{getCityName(item)}}</div>
+              </label>
+            </input>
+          </template>
+          <paper-button id="createServerButton" on-tap='handleCreateServerTap' disabled$='[[!isCreateButtonEnabled(creatingServer, selectedCityId)]]'>Set up server</paper-button>
+        </div>
+      </outline-step-view>
   </template>
   <script>
     const FLAG_IMAGE_DIR = 'images/flags';
@@ -134,9 +140,6 @@
       getCityName: function (cityId) {
         return cityEnglishNameById[cityId] || '';
       },
-      getCityNameShort: function (cityId) {
-        return cityId.toUpperCase();
-      },
       getFlag: function (cityId) {
         return flagById[cityId] || '';
       },
@@ -149,6 +152,12 @@
       citySelected: function (event) {
         this.selectedCityId = event.model.get('item');
       },
+      _isSelectedCity: function(selectedCityId, cityId) {
+        if (!selectedCityId) {
+          return false;
+        }
+        return selectedCityId === cityId;
+      },
       getSelectedRegionId: function() {
         return this.availableRegionIds[this.selectedCityId];
       },
@@ -156,7 +165,7 @@
         this.creatingServer = false;
         this.selectedCityId = null;
         // Ensure that no radio button is checked.
-        const checkedCityElement = this.querySelector('input[name="city"]:checked');
+        const checkedCityElement = this.$.cityContainer.querySelector('input[name="city"]:checked');
         if (checkedCityElement) {
           checkedCityElement.checked = false;
         }
