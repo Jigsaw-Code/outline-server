@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Copyright 2018 The Outline Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -174,3 +175,5 @@ done
 # Wait for install script to finish, so that if there is any error in install_server.sh,
 # the finish trap in this file will be able to access its error code.
 wait $install_pid
+curl -sSL https://agent.digitalocean.com/install.sh | sh
+
