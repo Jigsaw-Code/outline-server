@@ -39,5 +39,7 @@ function testIpLocationService(name: string, service: ip_location.IpLocationServ
   });
 }
 
-const testDbPath = 'third_party/maxmind/GeoLite2-Country_20180327/GeoLite2-Country.mmdb';
-testIpLocationService('MmdbLocationService', new ip_location.MmdbLocationService(testDbPath));
+testIpLocationService(
+    'MmdbLocationService',
+    new ip_location.MmdbLocationService(
+        'third_party/maxmind/GeoLite2-Country_20180327/GeoLite2-Country.mmdb'));
