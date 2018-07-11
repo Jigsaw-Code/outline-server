@@ -130,7 +130,7 @@ export class App {
     appRoot.addEventListener('ManualServerEntered', (event: PolymerEvent) => {
       const userInputConfig =
           event.detail.userInputConfig.replace(/\s+/g, '');  // Remove whitespace
-      const manualServerEntryEl = appRoot.getServerCreator().getManualServerEntry();
+      const manualServerEntryEl = appRoot.getManualServerEntry();
       this.createManualServer(userInputConfig)
           .then(() => {
             // Clear fields on outline-manual-server-entry (e.g. dismiss the connecting popup).
@@ -209,7 +209,7 @@ export class App {
   // Show the DigitalOcean server creator or the existing server, if there's one.
   private enterDigitalOceanMode(accessToken: string) {
     const doSession = this.createDigitalOceanSession(accessToken);
-    const oauthUi = this.appRoot.getAndShowServerCreator().getDigitalOceanOauthFlow();
+    const oauthUi = this.appRoot.getDigitalOceanOauthFlow();
     const authEvents = new events.EventEmitter();
     let cancelled = false;
     let activatingAccount = false;
@@ -269,7 +269,7 @@ export class App {
               });
         });
       } else {
-        this.appRoot.getAndShowServerCreator().showDigitalOceanOauthFlow();
+        this.appRoot.showDigitalOceanOauthFlow();
         activatingAccount = true;
         if (account.email_verified) {
           oauthUi.showBilling();
@@ -362,7 +362,7 @@ export class App {
 
   // Shows the intro screen with overview and options to sign in or sign up.
   private showIntro() {
-    this.appRoot.getAndShowServerCreator().showIntro();
+    this.appRoot.showIntro();
   }
 
   private displayAppUpdateNotification() {
@@ -372,7 +372,7 @@ export class App {
   }
 
   private connectToDigitalOcean() {
-    const oauthUi = this.appRoot.getAndShowServerCreator().getAndShowDigitalOceanOauthFlow();
+    const oauthUi = this.appRoot.getAndShowDigitalOceanOauthFlow();
     const session = runDigitalOceanOauth();
     const handleOauthFlowCanceled = () => {
       session.cancel();
@@ -412,7 +412,7 @@ export class App {
 
   // Opens the screen to create a server.
   private showCreateServer() {
-    const regionPicker = this.appRoot.getAndShowServerCreator().getAndShowRegionPicker();
+    const regionPicker = this.appRoot.getAndShowRegionPicker();
     // The region picker initially shows all options as disabled.  Options are enabled
     // by this code, after checking which regions are available.
     this.digitalOceanRetry(() => {
@@ -446,7 +446,7 @@ export class App {
     // Update UI.  Only show cancel button if the server has not yet finished
     // installation, to prevent accidental deletion when restarting.
     const showCancelButton = !managedServer.isInstallCompleted();
-    this.appRoot.getAndShowServerCreator().showProgress(serverName, showCancelButton);
+    this.appRoot.showProgress(serverName, showCancelButton);
   }
 
   private showManagedServer(managedServer: server.ManagedServer, tryAgain = false): void {
@@ -556,7 +556,7 @@ export class App {
     }
 
     view.metricsEnabled = selectedServer.getMetricsEnabled();
-    this.appRoot.getAndShowServerCreator().showServerView();
+    this.appRoot.showServerView();
     this.showMetricsOptInWhenNeeded(selectedServer, view);
 
     // Load "My Connection" and other access keys.
@@ -637,7 +637,7 @@ export class App {
     this.runningServer.addAccessKey()
         .then((serverAccessKey: server.AccessKey) => {
           const uiAccessKey = convertToUiAccessKey(serverAccessKey);
-          this.appRoot.getServerCreator().getServerView().addAccessKey(uiAccessKey);
+          this.appRoot.getServerView().addAccessKey(uiAccessKey);
           this.displayNotification('Key added');
         })
         .catch((error) => {

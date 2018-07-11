@@ -76,6 +76,9 @@
       paper-button {
         width: 45%;
       }
+      paper-progress {
+        margin: 0;
+      }
       #cancelButton {
         border: 1px solid rgba(0,0,0,0.12);
         border-radius: 2px;
@@ -93,12 +96,7 @@
     <outline-step-view>
       <span slot="step-title">Set up Outline on your server.</span>
         <span slot="step-description">Follow these instructions to install Outline with a<br/> cloud provider or on your own infrastructure.</span>
-      <div class='walkthrough'>
-        <div hidden$='[[!showConnection]]'>
-          <h3>Attempting to connect...</h3>
-          <paper-progress indeterminate class="slow"></paper-progress>
-        </div>
-      </div>
+      <paper-progress hidden$='[[!showConnection]]' indeterminate class="slow"></paper-progress>
 
       <div class='card'>
         <div>

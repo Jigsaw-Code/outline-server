@@ -26,9 +26,13 @@
 
 <link rel="import" href="./cloud-install-styles.html">
 <link rel="import" href="./outline-about-dialog.html">
+<link rel="import" href="./outline-do-oauth-step.html">
 <link rel="import" href="./outline-feedback-dialog.html">
+<link rel="import" href="./outline-intro-step.html">
+<link rel="import" href="./outline-manual-server-entry.html">
 <link rel="import" href="./outline-modal-dialog.html">
-<link rel="import" href="./outline-server-creator.html">
+<link rel="import" href="./outline-region-picker-step.html">
+<link rel="import" href="./outline-server-progress-step.html">
 <link rel="import" href="./outline-server-view.html">
 <link rel="import" href="./outline-tos-view.html">
 
@@ -41,25 +45,6 @@
         --primary-green: #00bfa5;
         --light-gray: color: rgba(0,0,0,0.54);
       }
-
-      /* CONTENT */
-
-      #contentColumn {
-        align-items: stretch;
-        display: flex;
-        flex-direction: column;
-        margin: auto;
-        position: relative;
-      }
-
-      @media only screen and (max-device-width: 500px) {
-         #contentColumn {
-          width: 95%;
-        }
-      }
-
-      /* BOTTOM NOTIFICATION */
-
       #toast {
         align-items: center;
         display: flex;
@@ -178,8 +163,14 @@
         <div main-title><img src="images/outline-manager-logo.svg"></div>
       </app-toolbar>
 
-      <!-- TODO: deprecate server creator and move functionality to this file; fix tests! -->
-      <outline-server-creator id='serverCreator'></outline-server-creator>
+      <iron-pages attr-for-selected='id' selected='{{ currentPage }}'>
+        <outline-intro-step id='intro'></outline-intro-step>
+        <outline-do-oauth-step id='digitalOceanOauth'></outline-do-oauth-step>
+        <outline-manual-server-entry id='manualEntry'></outline-manual-server-entry>
+        <outline-region-picker-step id='regionPicker'></outline-region-picker-step>
+        <outline-server-progress-step id='serverProgressStep'></outline-server-progress-step>
+        <outline-server-view id='serverView'></outline-server-view>
+      </iron-pages>
 
       <paper-toast id='toast'><paper-icon-button icon='icons:close' on-tap='closeError'></paper-icon-button></paper-toast>
 
@@ -222,12 +213,65 @@
           type: Boolean,
           computed: '_computeHasAcceptedTermsOfService(userAcceptedTos)'
         },
+        currentPage: {
+          type: String,
+          value: 'intro'
+        }
       },
-      getAndShowServerCreator: function () {
-        return this.$.serverCreator;
+      listeners: {
+        'RegionSelected': 'handleRegionSelected',
+        'MetricsChoiceSelected': 'handleMetricsChoiceSelected',
+        'OpenManualServerEntry': 'handleManualServerSelected',
+        'ManualServerEntryCancelled': 'handleManualCancelled'
       },
-      getServerCreator: function() {
-        return this.$.serverCreator;
+      showIntro: function () {
+        this.currentPage = 'intro';
+      },
+      getDigitalOceanOauthFlow: function () {
+        return this.$.digitalOceanOauth;
+      },
+      showDigitalOceanOauthFlow: function () {
+        this.currentPage = 'digitalOceanOauth';
+      },
+      getAndShowDigitalOceanOauthFlow: function () {
+        this.currentPage = 'digitalOceanOauth';
+        const oauthFlow = this.getDigitalOceanOauthFlow();
+        oauthFlow.showConnectAccount();
+        return oauthFlow;
+      },
+      getAndShowRegionPicker: function () {
+        this.currentPage = 'regionPicker';
+        this.$.regionPicker.init();
+        return this.$.regionPicker;
+      },
+      getManualServerEntry: function() {
+        return this.$.manualEntry;
+      },
+      showProgress: function (serverName, showCancelButton) {
+        this.currentPage = 'serverProgressStep';
+        this.$.serverProgressStep.serverName = serverName;
+        this.$.serverProgressStep.showCancelButton = showCancelButton;
+        this.$.serverProgressStep.start();
+      },
+      showServerView: function () {
+        this.$.serverProgressStep.stop();
+        this.$.serverView.initHelpBubbles();
+        this.currentPage = 'serverView';
+      },
+      getServerView: function() {
+        return this.$.serverView;
+      },
+      handleRegionSelected: function (e) {
+        this.fire('SetUpServerRequested', {
+          regionId: this.$.regionPicker.getSelectedRegionId()
+        });
+      },
+      handleManualServerSelected: function() {
+        this.$.manualEntry.clear();
+        this.currentPage = 'manualEntry';
+      },
+      handleManualCancelled: function() {
+        this.currentPage = 'intro';
       },
       showError: function (errorMsg) {
         this.showToast(errorMsg, Infinity);
@@ -294,6 +338,7 @@
         this.$.aboutDialog.open();
       },
       signOutTapped: function() {
+        this.closeSettingsDrawer();
         this.fire('SignOutRequested');
       },
       openManualInstallFeedback: function(prepopulatedMessage) {
