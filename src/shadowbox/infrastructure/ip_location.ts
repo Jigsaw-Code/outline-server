@@ -12,38 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as https from 'https';
 import * as maxmind from 'maxmind';
 
 export interface IpLocationService {
   // Returns the 2-digit country code for the IP address.
   countryForIp(ipAddress: string): Promise<string>;
-}
-
-// An IpLocationService that uses the ipinfo.io service.
-// See https://ipinfo.io/developers for API.
-export class IpInfoIpLocationService implements IpLocationService {
-  countryForIp(ipAddress: string): Promise<string> {
-    const countryPromise = new Promise<string>((fulfill, reject) => {
-      const url = `https://ipinfo.io/${encodeURIComponent(ipAddress)}/country`;
-      https.get(url, (response) => {
-        if (500 <= response.statusCode && response.statusCode <= 599) {
-          reject(new Error(`Got server error ${response.statusCode} from ipinfo.io`));
-          response.resume();
-          return;
-        }
-        let body = '';
-        response.on('data', (data) => { body += data; });
-        response.on('end', () => {
-          // ZZ is user-assigned and used by CLDR for "Uknown" regions.
-          fulfill(body.trim() || 'ZZ');
-        });
-      }).on('error', (e) => {
-        reject(new Error(`Failed to contact ipinfo.io: ${e}`));
-      });
-    });
-    return countryPromise;
-  }
 }
 
 // An IpLocationService that uses the node-maxmind package.
