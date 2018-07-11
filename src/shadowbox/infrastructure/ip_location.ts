@@ -23,12 +23,9 @@ export interface IpLocationService {
 // The database is downloaded by scripts/update_mmdb.sh.
 // The Dockerfile runs this script on boot and configures the system to run it weekly.
 export class MmdbLocationService implements IpLocationService {
-  private db: Promise<maxmind.Reader>;
+  private readonly db: Promise<maxmind.Reader>;
 
-  constructor(filename?: string) {
-    if (!filename) {
-      filename = '/var/lib/libmaxminddb/GeoLite2-Country.mmdb';
-    }
+  constructor(filename = '/var/lib/libmaxminddb/GeoLite2-Country.mmdb') {
     this.db = new Promise<maxmind.Reader>((fulfill, reject) => {
       // TODO: Change type to maxmind.Options once the type definition is updated
       // with these fields.
@@ -43,7 +40,7 @@ export class MmdbLocationService implements IpLocationService {
     });
   }
 
-  countryForIp(ipAddress: string): Promise<string> {
+  countryForIp(ipAddress) {
     return this.db.then((lookup) => {
       if (!maxmind.validate(ipAddress)) {
         throw new Error('Invalid IP address');
