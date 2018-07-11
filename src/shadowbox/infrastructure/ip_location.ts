@@ -80,22 +80,3 @@ export class MmdbLocationService implements IpLocationService {
     });
   }
 }
-
-// An IpLocationService that caches the responses of another IpLocationService.
-export class CachedIpLocationService implements IpLocationService {
-  // TODO: Make this cache bounded in size. Possibly use lru-cache.
-  private countryCache: Map<string, Promise<string>>;
-
-  constructor(private locationService: IpLocationService) {
-    this.countryCache = new Map<string, Promise<string>>();
-  }
-
-  countryForIp(ipAddress: string): Promise<string> {
-    if (this.countryCache.has(ipAddress)) {
-      return this.countryCache.get(ipAddress);
-    }
-    const promise = this.locationService.countryForIp(ipAddress);
-    this.countryCache.set(ipAddress, promise);
-    return promise;
-  }
-}
