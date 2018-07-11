@@ -21,7 +21,6 @@ import * as server from '../model/server';
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {SentryErrorReporter} from './error_reporter';
-import {ManualServerRepository} from './manual_server';
 
 // tslint:disable-next-line:no-any
 type Polymer = HTMLElement&any;
@@ -331,8 +330,8 @@ export class App {
   //       return the UI to its exact prior state. Fortunately, the most likely
   //       time to discover an invalid access token is when the application
   //       starts.
-  private digitalOceanRetry = <T>(f: () => Promise<T>):
-      Promise<T> => {
+    private digitalOceanRetry =
+        <T>(f: () => Promise<T>): Promise<T> => {
         return f().catch((e) => {
           if (!(e instanceof digitalocean_api.XhrError)) {
             return Promise.reject(e);

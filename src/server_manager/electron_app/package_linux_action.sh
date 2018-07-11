@@ -18,7 +18,7 @@ yarn do server_manager/electron_app/build
 
 # Auto-updates only work for AppImage:
 # https://github.com/electron-userland/electron-builder/issues/2498
-$ROOT_DIR/src/server_manager/node_modules/.bin/electron-builder \
+${ROOT_DIR}/src/server_manager/node_modules/.bin/electron-builder \
   --projectDir=build/server_manager/electron_app/static \
   --publish=never \
   --config.publish.provider=generic \
@@ -30,10 +30,10 @@ $ROOT_DIR/src/server_manager/node_modules/.bin/electron-builder \
   --config.artifactName='Outline-Manager.${ext}'
 
 for arch in ia32 x64; do
-  $ROOT_DIR/src/server_manager/node_modules/.bin/electron-builder \
+  ${ROOT_DIR}/src/server_manager/node_modules/.bin/electron-builder \
     --projectDir=build/server_manager/electron_app/static \
     --publish=never \
-    --$arch \
+    --${arch} \
     --linux deb rpm tar.gz \
     --config.linux.icon=icons/png \
     --config.linux.category=Network \
