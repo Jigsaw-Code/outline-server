@@ -349,7 +349,7 @@ export class App {
             });
           });
         });
-      };
+      }
 
   private displayError(message: string, cause: Error) {
     console.error(`${message}: ${cause}`);
