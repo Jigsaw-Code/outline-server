@@ -17,7 +17,6 @@ import * as crypto from 'crypto';
 import * as electron from 'electron';
 import * as express from 'express';
 import * as http from 'http';
-import * as path from 'path';
 import * as request from 'request';
 
 const REGISTERED_REDIRECTS: Array<{clientId: string, port: number}> = [
@@ -147,18 +146,18 @@ export function runOauth(): OauthSession {
               <script>
                   // We can't use URLSearchParams in IE :-(
                   function splitParams(paramsStr) {
-                    var params = {};
-                    var kvs = paramsStr.split("&");
-                    for (var i in kvs) {
+                    const params = {};
+                    const kvs = paramsStr.split("&");
+                    for (let i in kvs) {
                       pair = kvs[i].split("=");
                       params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
                     }
                     return params;
                   }
-                  var paramsStr = location.hash.substr(1);
-                  var params = splitParams(paramsStr);
-                  var form = document.getElementById("form");
-                  var targetUrl = params["state"];
+                  const paramsStr = location.hash.substr(1);
+                  const params = splitParams(paramsStr);
+                  const form = document.getElementById("form");
+                  const targetUrl = params["state"];
                   form.setAttribute("action", targetUrl);
                   document.getElementById("params").setAttribute("value", paramsStr);
                   form.submit();

@@ -317,8 +317,8 @@
       },
       showLicensesTapped: function () {
         this.closeSettingsDrawer();
-        var xhr = new XMLHttpRequest();
-        xhr.onload = () => {
+          const xhr = new XMLHttpRequest();
+          xhr.onload = () => {
           this.$.licensesText.innerText = xhr.responseText;
           this.$.licenses.open();
         };
