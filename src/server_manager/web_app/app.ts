@@ -216,11 +216,11 @@ export class App {
     const authEvents = new events.EventEmitter();
     let cancelled = false;
     let activatingAccount = false;
-    const handleOauthFlowCanceled = () => {
+    const cancelAccountStateVerification = () => {
       cancelled = true;
       this.clearCredentialsAndShowIntro();
     };
-    const oauthUi = this.appRoot.getDigitalOceanOauthFlow(handleOauthFlowCanceled);
+    const oauthUi = this.appRoot.getDigitalOceanOauthFlow(cancelAccountStateVerification);
 
     const query = () => {
       if (cancelled) {
@@ -380,7 +380,7 @@ export class App {
       session.cancel();
       this.clearCredentialsAndShowIntro();
     };
-    const oauthUi = this.appRoot.getAndShowDigitalOceanOauthFlow(handleOauthFlowCanceled);
+    this.appRoot.getAndShowDigitalOceanOauthFlow(handleOauthFlowCanceled);
 
     session.result
         .then((accessToken) => {
