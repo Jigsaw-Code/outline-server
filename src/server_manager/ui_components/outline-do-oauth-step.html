@@ -121,10 +121,13 @@
         cancelButtonText: {
           type: String,
           value: 'Cancel'
-        }
+        },
+        onCancel: Function
       },
       _cancelTapped: function() {
-        this.fire('DigitalOceanOauthCancelRequested');
+        if (this.onCancel) {
+          this.onCancel();
+        }
       },
       showEmailVerification: function() {
         this.currentPage = 'verifyEmail';

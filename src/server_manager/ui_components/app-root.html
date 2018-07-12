@@ -227,15 +227,17 @@
       showIntro: function () {
         this.currentPage = 'intro';
       },
-      getDigitalOceanOauthFlow: function () {
-        return this.$.digitalOceanOauth;
+      getDigitalOceanOauthFlow: function (onCancel) {
+        const oauthFlow = this.$.digitalOceanOauth;
+        oauthFlow.onCancel = onCancel;
+        return oauthFlow;
       },
       showDigitalOceanOauthFlow: function () {
         this.currentPage = 'digitalOceanOauth';
       },
-      getAndShowDigitalOceanOauthFlow: function () {
+      getAndShowDigitalOceanOauthFlow: function (onCancel) {
         this.currentPage = 'digitalOceanOauth';
-        const oauthFlow = this.getDigitalOceanOauthFlow();
+        const oauthFlow = this.getDigitalOceanOauthFlow(onCancel);
         oauthFlow.showConnectAccount();
         return oauthFlow;
       },

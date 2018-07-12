@@ -79,6 +79,10 @@ function isManualServer(testServer: server.Server): testServer is server.ManualS
   return !!(testServer as server.ManualServer).forget;
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 type DigitalOceanSessionFactory = (accessToken: string) => digitalocean_api.DigitalOceanSession;
 type DigitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) =>
     server.ManagedServerRepository;
@@ -209,10 +213,14 @@ export class App {
   // Show the DigitalOcean server creator or the existing server, if there's one.
   private enterDigitalOceanMode(accessToken: string) {
     const doSession = this.createDigitalOceanSession(accessToken);
-    const oauthUi = this.appRoot.getDigitalOceanOauthFlow();
     const authEvents = new events.EventEmitter();
     let cancelled = false;
     let activatingAccount = false;
+    const handleOauthFlowCanceled = () => {
+      cancelled = true;
+      this.clearCredentialsAndShowIntro();
+    };
+    const oauthUi = this.appRoot.getDigitalOceanOauthFlow(handleOauthFlowCanceled);
 
     const query = () => {
       if (cancelled) {
@@ -247,27 +255,28 @@ export class App {
           // Show the 'account active' screen for a few seconds if the account was activated during
           // this session.
           oauthUi.showAccountActive();
-          maybeSleep = this.sleep(1500);
+          maybeSleep = sleep(1500);
         }
-        maybeSleep.then(() => {
-          this.digitalOceanRepository = this.createDigitalOceanServerRepository(doSession);
-          this.digitalOceanRepository.listServers()
-              .then((serverList) => {
-                // Check if this user already has a Shadowsocks server, if so show that.
-                // This assumes we only allow one Shadowsocks server per DigitalOcean user.
-                if (serverList.length > 0) {
-                  this.showManagedServer(serverList[0]);
-                } else {
-                  this.showCreateServer();
-                }
-              })
-              .catch((e) => {
-                const msg = 'Could not fetch server list from DigitalOcean';
-                console.error(msg, e);
-                SentryErrorReporter.logError(msg);
-                this.showIntro();
-              });
-        });
+        maybeSleep
+            .then(() => {
+              this.digitalOceanRepository = this.createDigitalOceanServerRepository(doSession);
+              return this.digitalOceanRepository.listServers();
+            })
+            .then((serverList) => {
+              // Check if this user already has a Shadowsocks server, if so show that.
+              // This assumes we only allow one Shadowsocks server per DigitalOcean user.
+              if (serverList.length > 0) {
+                this.showManagedServer(serverList[0]);
+              } else {
+                this.showCreateServer();
+              }
+            })
+            .catch((e) => {
+              const msg = 'Could not fetch server list from DigitalOcean';
+              console.error(msg, e);
+              SentryErrorReporter.logError(msg);
+              this.showIntro();
+            });
       } else {
         this.appRoot.showDigitalOceanOauthFlow();
         activatingAccount = true;
@@ -280,12 +289,6 @@ export class App {
       }
     });
 
-    const handleOauthFlowCanceled = () => {
-      cancelled = true;
-      this.clearCredentialsAndShowIntro();
-      this.appRoot.removeEventListener('DigitalOceanOauthCancelRequested', handleOauthFlowCanceled);
-    };
-    this.appRoot.addEventListener('DigitalOceanOauthCancelRequested', handleOauthFlowCanceled);
 
     query();
   }
@@ -372,14 +375,12 @@ export class App {
   }
 
   private connectToDigitalOcean() {
-    const oauthUi = this.appRoot.getAndShowDigitalOceanOauthFlow();
     const session = runDigitalOceanOauth();
     const handleOauthFlowCanceled = () => {
       session.cancel();
       this.clearCredentialsAndShowIntro();
-      this.appRoot.removeEventListener('DigitalOceanOauthCancelRequested', handleOauthFlowCanceled);
     };
-    this.appRoot.addEventListener('DigitalOceanOauthCancelRequested', handleOauthFlowCanceled);
+    const oauthUi = this.appRoot.getAndShowDigitalOceanOauthFlow(handleOauthFlowCanceled);
 
     session.result
         .then((accessToken) => {
@@ -791,9 +792,5 @@ export class App {
     serverToCancel.getHost().delete().then(() => {
       this.showCreateServer();
     });
-  }
-
-  private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
