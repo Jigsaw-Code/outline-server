@@ -21,7 +21,7 @@
 core-style { display: none; }
 
 paper-dropdown {
-  box-shadow: 0px 0px 20px #999999;
+  box-shadow: 0 0 20px #999999;
 }
 
 html,
@@ -86,7 +86,7 @@ h3 {
   font-weight: 400;
   line-height: 28px;
   font-size: 16px;
-  margin: 0px 0px 14px 0px;
+  margin: 0 0 14px 0;
   padding: 14px 12% 32px 12%;
 }
 

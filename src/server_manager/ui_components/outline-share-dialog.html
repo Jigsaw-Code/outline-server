@@ -21,7 +21,7 @@
     <style include='cloud-install-styles'></style>
     <style>
       :host {
-        margin: 0px;
+        margin: 0;
       }
       a {
         color: #009485;
@@ -139,8 +139,8 @@
         this.$.dialog.open();
       },
       copyClicked: function() {
-        var dt = new this.clipboard.DT();
-        dt.setData("text/plain", this.$.selectableText.innerText);
+          const dt = new this.clipboard.DT();
+          dt.setData("text/plain", this.$.selectableText.innerText);
         dt.setData("text/html", this.$.selectableText.innerHTML);
         this.clipboard.write(dt);
         this.$.copyText.removeAttribute('hidden');
