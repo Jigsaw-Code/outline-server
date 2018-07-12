@@ -1,4 +1,3 @@
-#!/bin/bash
 #
 # Copyright 2018 The Outline Authors
 #
@@ -29,7 +28,7 @@ function do_action() {
   local action=$1
   echo -e "$STYLE_BOLD_WHITE[Running $action]$STYLE_RESET"
   shift
-  $ROOT_DIR/src/${action}_action.sh "$@"
+  ${ROOT_DIR}/src/${action}_action.sh "$@"
   echo -e "$STYLE_BOLD_WHITE[Done $action]$STYLE_RESET"
 }
 export -f do_action
