@@ -15,4 +15,4 @@
 # limitations under the License.
 
 do_action server_manager/web_app/build
-jasmine --config=${ROOT_DIR}/jasmine.json
+jasmine --config=$ROOT_DIR/jasmine.json

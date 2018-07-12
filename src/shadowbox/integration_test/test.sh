@@ -35,7 +35,7 @@ readonly TARGET_CONTAINER=integrationtest_target_1
 readonly SHADOWBOX_CONTAINER=integrationtest_shadowbox_1
 readonly CLIENT_CONTAINER=integrationtest_client_1
 readonly UTIL_CONTAINER=integrationtest_util_1
-echo Test output at ${OUTPUT_DIR}
+echo Test output at $OUTPUT_DIR
 # Set DEBUG=1 to not kill the stack when the test is finished so you can query
 # the containers.
 declare -ir DEBUG=${DEBUG:-0}
@@ -43,21 +43,21 @@ declare -ir DEBUG=${DEBUG:-0}
 # Waits for the input URL to return success.
 function wait_for_resource() {
   declare -r URL=$1
-  until curl --insecure ${URL}; do sleep 1; done
+  until curl --insecure $URL; do sleep 1; done
 }
 
 # Takes the JSON from a /access-keys POST request and returns the appropriate
 # ss-local arguments to connect to that user/instance.
 function ss_arguments_for_user() {
-  declare -r SS_INSTANCE_CIPHER=$(echo $1 | docker exec -i ${UTIL_CONTAINER} jq -r .method)
-  declare -r SS_INSTANCE_PASSWORD=$(echo $1 | docker exec -i ${UTIL_CONTAINER} jq -r .password)
-  declare -r SS_INSTANCE_PORT=$(echo $1 | docker exec -i ${UTIL_CONTAINER} jq .port)
+  declare -r SS_INSTANCE_CIPHER=$(echo $1 | docker exec -i $UTIL_CONTAINER jq -r .method)
+  declare -r SS_INSTANCE_PASSWORD=$(echo $1 | docker exec -i $UTIL_CONTAINER jq -r .password)
+  declare -r SS_INSTANCE_PORT=$(echo $1 | docker exec -i $UTIL_CONTAINER jq .port)
   echo "-p $SS_INSTANCE_PORT -k $SS_INSTANCE_PASSWORD -m $SS_INSTANCE_CIPHER -u"
 }
 
 # Runs curl on the client container.
 function client_curl() {
-  docker exec ${CLIENT_CONTAINER} curl "$@"
+  docker exec $CLIENT_CONTAINER curl "$@"
 }
 
 # Start a subprocess for trap
@@ -77,41 +77,41 @@ function client_curl() {
 
   # Wait for target to come up.
   wait_for_resource localhost:10080
-  declare -r TARGET_IP=$(docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${TARGET_CONTAINER})
+  declare -r TARGET_IP=$(docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $TARGET_CONTAINER)
 
   # Verify that the client cannot access or even resolve the target
   # Exit code 28 for "Connection timed out".
-  docker exec ${CLIENT_CONTAINER} curl --connect-timeout 1 ${TARGET_IP} && exit 1 || (($? == 28))
+  docker exec $CLIENT_CONTAINER curl --connect-timeout 1 $TARGET_IP && exit 1 || (($? == 28))
 
   # Exit code 6 for "Could not resolve host".
-  docker exec ${CLIENT_CONTAINER} curl --connect-timeout 1 http://target && exit 1 || (($? == 6))
+  docker exec $CLIENT_CONTAINER curl --connect-timeout 1 http://target && exit 1 || (($? == 6))
 
   # Wait for shadowbox to come up.
   wait_for_resource https://localhost:20443/access-keys
   # Verify that the shadowbox can access the target
-  docker exec ${SHADOWBOX_CONTAINER} wget --spider http://target
+  docker exec $SHADOWBOX_CONTAINER wget --spider http://target
 
   # Create new shadowbox user.
   # TODO(bemasc): Verify that the server is using the right certificate
   declare -r NEW_USER_JSON=$(client_curl --insecure -X POST https://shadowbox/${SB_API_PREFIX}/access-keys)
   [[ ${NEW_USER_JSON} == '{"id":'* ]] || exit 1
-  declare -r SS_USER_ARGUMENTS=$(ss_arguments_for_user ${NEW_USER_JSON})
+  declare -r SS_USER_ARGUMENTS=$(ss_arguments_for_user $NEW_USER_JSON)
 
   # Start Shadowsocks client and wait for it to be ready
   declare -r LOCAL_SOCKS_PORT=5555
-  docker exec -d ${CLIENT_CONTAINER} \
-    ss-local -l ${LOCAL_SOCKS_PORT} -s shadowbox ${SS_USER_ARGUMENTS} -v
-  while ! docker exec ${CLIENT_CONTAINER} nc -z localhost ${LOCAL_SOCKS_PORT}; do
+  docker exec -d $CLIENT_CONTAINER \
+    ss-local -l $LOCAL_SOCKS_PORT -s shadowbox $SS_USER_ARGUMENTS -v
+  while ! docker exec $CLIENT_CONTAINER nc -z localhost $LOCAL_SOCKS_PORT; do
     sleep 0.1
   done
 
   # Verify we can retrieve the target by IP.
-  client_curl -x socks5h://localhost:${LOCAL_SOCKS_PORT} ${TARGET_IP} > ${OUTPUT_DIR}/actual.html
-  diff ${OUTPUT_DIR}/actual.html target/index.html
+  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $TARGET_IP > $OUTPUT_DIR/actual.html
+  diff $OUTPUT_DIR/actual.html target/index.html
 
   # Verify we can retrieve the target using the system nameservers.
-  client_curl -x socks5h://localhost:${LOCAL_SOCKS_PORT} http://target > ${OUTPUT_DIR}/actual.html
-  diff ${OUTPUT_DIR}/actual.html target/index.html
+  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT http://target > $OUTPUT_DIR/actual.html
+  diff $OUTPUT_DIR/actual.html target/index.html
 
   # TODO(fortuna): Verify UDP requests.
 )

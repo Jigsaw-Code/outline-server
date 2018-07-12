@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 # Copyright 2018 The Outline Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,8 +48,8 @@ function log_start_step() {
   str="> $@"
   lineLength=47
   echo -n "$str"
-  numDots=$(expr ${lineLength} - ${#str} - 1)
-  if [[ ${numDots} > 0 ]]; then
+  numDots=$(expr $lineLength - ${#str} - 1)
+  if [[ $numDots > 0 ]]; then
     echo -n " "
     for i in $(seq 1 "$numDots"); do echo -n .; done
   fi
@@ -59,7 +58,7 @@ function log_start_step() {
 
 function run_step() {
   local -r msg=$1
-  log_start_step ${msg}
+  log_start_step $msg
   shift 1
   if "$@"; then
     echo "OK"
@@ -86,7 +85,7 @@ function command_exists {
 
 function log_for_sentry() {
   if [[ -n "$SENTRY_LOG_FILE" ]]; then
-    echo [$(date "+%Y-%m-%d@%H:%M:%S")] "install_server.sh" "$@" >>${SENTRY_LOG_FILE}
+    echo [$(date "+%Y-%m-%d@%H:%M:%S")] "install_server.sh" "$@" >>$SENTRY_LOG_FILE
   fi
 }
 
@@ -110,11 +109,11 @@ function verify_docker_installed() {
 
 function verify_docker_running() {
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(${DOCKER_CMD} info 2>&1 >/dev/null)
+  STDERR_OUTPUT=$($DOCKER_CMD info 2>&1 >/dev/null)
   local readonly RET=$?
-  if [[ ${RET} -eq 0 ]]; then
+  if [[ $RET -eq 0 ]]; then
     return 0
-  elif [[ ${STDERR_OUTPUT} = *"Is the docker daemon running"* ]]; then
+  elif [[ $STDERR_OUTPUT = *"Is the docker daemon running"* ]]; then
     start_docker
   fi
 }
@@ -144,12 +143,12 @@ function user_in_docker_group() {
   # Assume root has docker access; test with $UID because it's one of the few
   # environment variables available in DigitalOcean's CloudInit environment.
   if [[ $UID -ne 0 ]]; then
-    groups ${USER} | grep -E '(^|\s)docker(\s|$)' > /dev/null 2>&1
+    groups $USER | grep -E '(^|\s)docker(\s|$)' > /dev/null 2>&1
   fi
 }
 
 function add_user_to_docker_group() {
-  sudo usermod -a -G docker ${USER}
+  sudo usermod -a -G docker $USER
 }
 
 function start_docker() {
@@ -172,7 +171,7 @@ if [[ $UID -ne 0 ]]; then
 fi
 
 function docker_container_exists() {
-  ${DOCKER_CMD} ps | grep $1 >/dev/null 2>&1
+  $DOCKER_CMD ps | grep $1 >/dev/null 2>&1
 }
 
 function remove_shadowbox_container() {
@@ -184,20 +183,20 @@ function remove_watchtower_container() {
 }
 
 function remove_docker_container() {
-  ${DOCKER_CMD} rm -f $1
+  $DOCKER_CMD rm -f $1
 }
 
 function handle_docker_container_conflict() {
   local readonly CONTAINER_NAME=$1
   local readonly EXIT_ON_NEGATIVE_USER_RESPONSE=$2
   local PROMPT="> The container name \"$CONTAINER_NAME\" is already in use by another container. This may happen when running this script multiple times."
-  if ${EXIT_ON_NEGATIVE_USER_RESPONSE}; then
+  if $EXIT_ON_NEGATIVE_USER_RESPONSE; then
     PROMPT="$PROMPT We will attempt to remove the existing container and restart it. Would you like to proceed? [Y/n] "
   else
     PROMPT="$PROMPT Would you like to replace this container? If you answer no, we will proceed with the remainder of the installation. [Y/n] "
   fi
   if ! confirm "$PROMPT"; then
-    if ${EXIT_ON_NEGATIVE_USER_RESPONSE}; then
+    if $EXIT_ON_NEGATIVE_USER_RESPONSE; then
       exit 0
     fi
     return 0
@@ -213,7 +212,7 @@ function handle_docker_container_conflict() {
 # Set trap which publishes error tag only if there is an error.
 function finish {
   EXIT_CODE=$?
-  if [[ ${EXIT_CODE} -ne 0 ]]
+  if [[ $EXIT_CODE -ne 0 ]]
   then
     log_error "\nSorry! Something went wrong. If you can't figure this out, please copy and paste all this output into the Outline Manager screen, and send it to us, to see if we can help you."
   fi
@@ -225,7 +224,7 @@ function get_random_port {
   until (( 1024 <= num && num < 65536)); do
     num=$(( $RANDOM + ($RANDOM % 2) * 32768 ));
   done;
-  echo ${num};
+  echo $num;
 }
 
 function create_persisted_state_dir() {
@@ -287,9 +286,9 @@ function start_shadowbox() {
   )
   # By itself, local messes up the return code.
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(${DOCKER_CMD} run -d "${docker_shadowbox_flags[@]}" ${SB_IMAGE} 2>&1 >/dev/null)
+  STDERR_OUTPUT=$($DOCKER_CMD run -d "${docker_shadowbox_flags[@]}" ${SB_IMAGE} 2>&1 >/dev/null)
   local readonly RET=$?
-  if [[ ${RET} -eq 0 ]]; then
+  if [[ $RET -eq 0 ]]; then
     return 0
   fi
   log_error "FAILED"
@@ -310,9 +309,9 @@ function start_watchtower() {
   docker_watchtower_flags+=(-v /var/run/docker.sock:/var/run/docker.sock)
   # By itself, local messes up the return code.
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(${DOCKER_CMD} run -d "${docker_watchtower_flags[@]}" v2tec/watchtower --cleanup --tlsverify --interval ${WATCHTOWER_REFRESH_SECONDS} 2>&1 >/dev/null)
+  STDERR_OUTPUT=$($DOCKER_CMD run -d "${docker_watchtower_flags[@]}" v2tec/watchtower --cleanup --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS 2>&1 >/dev/null)
   local readonly RET=$?
-  if [[ ${RET} -eq 0 ]]; then
+  if [[ $RET -eq 0 ]]; then
     return 0
   fi
   log_error "FAILED"
@@ -336,7 +335,7 @@ function create_first_user() {
 }
 
 function output_config() {
-  echo "$@" >> ${ACCESS_CONFIG}
+  echo "$@" >> $ACCESS_CONFIG
 }
 
 function add_api_url_to_config() {
@@ -346,7 +345,7 @@ function add_api_url_to_config() {
 function check_firewall() {
   local readonly GET_ACCESS_KEYS=$(curl --insecure -s ${LOCAL_API_URL}/access-keys)
   local readonly GET_ACCESS_KEY_PORT="$DOCKER_CMD exec shadowbox node -e 'console.log($GET_ACCESS_KEYS[\"accessKeys\"][0][\"port\"])'"
-  local -r ACCESS_KEY_PORT=$(${GET_ACCESS_KEY_PORT})
+  local -r ACCESS_KEY_PORT=$($GET_ACCESS_KEY_PORT)
   if ! curl --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" -s "${PUBLIC_API_URL}/access-keys" >/dev/null; then
      log_error "BLOCKED"
      FIREWALL_STATUS="\
@@ -383,7 +382,7 @@ install_shadowbox() {
 
   log_for_sentry "Creating shadowbox directory"
   export SHADOWBOX_DIR="${SHADOWBOX_DIR:-${HOME:-/root}/shadowbox}"
-  mkdir -p ${SHADOWBOX_DIR}
+  mkdir -p $SHADOWBOX_DIR
 
   log_for_sentry "Setting API port"
   readonly SB_API_PORT="${SB_API_PORT:-$(get_random_port)}"
@@ -394,7 +393,7 @@ install_shadowbox() {
   # TODO(fortuna): Make sure this is IPv4
   readonly SB_PUBLIC_IP=${SB_PUBLIC_IP:-$(curl -4s https://ipinfo.io/ip)}
 
-  if [[ -z ${SB_PUBLIC_IP} ]]; then
+  if [[ -z $SB_PUBLIC_IP ]]; then
     local readonly MSG="Failed to determine the server's IP address."
     log_error "$MSG"
     log_for_sentry "$MSG"
@@ -405,7 +404,7 @@ install_shadowbox() {
   # Note we can't do "mv" here as do_install_server.sh may already be tailing
   # this file.
   log_for_sentry "Initializing ACCESS_CONFIG"
-  [[ -f ${ACCESS_CONFIG} ]] && cp ${ACCESS_CONFIG} ${ACCESS_CONFIG}.bak && > ${ACCESS_CONFIG}
+  [[ -f $ACCESS_CONFIG ]] && cp $ACCESS_CONFIG $ACCESS_CONFIG.bak && > $ACCESS_CONFIG
 
   # Make a directory for persistent state
   run_step "Creating persistent state dir" create_persisted_state_dir
@@ -433,7 +432,7 @@ install_shadowbox() {
   # e.g. if ACCESS_CONFIG contains the line "certSha256:1234",
   # calling $(get_field_value certSha256) will echo 1234.
   function get_field_value {
-    grep "$1" ${ACCESS_CONFIG} | sed "s/$1://"
+    grep "$1" $ACCESS_CONFIG | sed "s/$1://"
   }
 
   # Output JSON.  This relies on apiUrl and certSha256 (hex characters) requiring

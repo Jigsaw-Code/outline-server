@@ -16,10 +16,10 @@
 
 do_action server_manager/electron_app/build
 
-readonly NODE_MODULES_BIN_DIR=${ROOT_DIR}/src/server_manager/node_modules/.bin
+readonly NODE_MODULES_BIN_DIR=$ROOT_DIR/src/server_manager/node_modules/.bin
 
-cd ${BUILD_DIR}/server_manager/electron_app/static
+cd $BUILD_DIR/server_manager/electron_app/static
 OUTLINE_DEBUG=true \
 SB_METRICS_URL=https://metrics-test.uproxy.org \
 SENTRY_DSN=https://ee9db4eb185b471ca08c8eb5efbf61f1@sentry.io/214597 \
-${NODE_MODULES_BIN_DIR}/electron .
+$NODE_MODULES_BIN_DIR/electron .

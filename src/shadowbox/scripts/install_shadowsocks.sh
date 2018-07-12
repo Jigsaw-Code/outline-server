@@ -29,9 +29,9 @@ apk add --no-cache --virtual BUILD_DEPS \
     linux-headers mbedtls-dev openssl-dev pcre-dev tar c-ares-dev
 
 # Build.
-mkdir -p ${BUILD_DIR}
-cd ${BUILD_DIR}
-curl -sSL ${DOWNLOAD_URL} | tar xz --strip 1
+mkdir -p $BUILD_DIR
+cd $BUILD_DIR
+curl -sSL $DOWNLOAD_URL | tar xz --strip 1
 
 ./configure --disable-documentation
 make install

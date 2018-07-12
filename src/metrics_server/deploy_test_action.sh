@@ -15,11 +15,11 @@
 # limitations under the License.
 
 readonly MODULE_DIR=$(dirname $0)
-readonly OUT_DIR=${BUILD_DIR}/metrics_server/test
-readonly CONFIG_FILE=${MODULE_DIR}/config_test.json
+readonly OUT_DIR=$BUILD_DIR/metrics_server/test
+readonly CONFIG_FILE=$MODULE_DIR/config_test.json
 
 # Build the server
-${MODULE_DIR}/build.sh ${OUT_DIR} ${CONFIG_FILE}
+$MODULE_DIR/build.sh $OUT_DIR $CONFIG_FILE
 
 # Deploy as "reportHourlyConnectionMetricsTest"
-gcloud --project=uproxysite beta functions deploy reportHourlyConnectionMetricsTest --stage-bucket uproxy-cloud-functions --trigger-http --source=${OUT_DIR} --entry-point=reportHourlyConnectionMetrics
+gcloud --project=uproxysite beta functions deploy reportHourlyConnectionMetricsTest --stage-bucket uproxy-cloud-functions --trigger-http --source=$OUT_DIR --entry-point=reportHourlyConnectionMetrics

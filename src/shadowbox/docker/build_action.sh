@@ -17,4 +17,4 @@
 do_action shadowbox/server/build
 
 export DOCKER_CONTENT_TRUST=${DOCKER_CONTENT_TRUST:-1}
-docker build --force-rm --build-arg GITHUB_RELEASE="${TRAVIS_TAG:-none}" -t outline/shadowbox ${ROOT_DIR} -f src/shadowbox/docker/Dockerfile
+docker build --force-rm --build-arg GITHUB_RELEASE="${TRAVIS_TAG:-none}" -t outline/shadowbox $ROOT_DIR -f src/shadowbox/docker/Dockerfile
