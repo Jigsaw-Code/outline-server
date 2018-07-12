@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Copyright 2018 The Outline Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -176,7 +177,7 @@ done
 wait $install_pid
 # Install the DigitalOcean Agent, for improved monitoring:
 # https://www.digitalocean.com/docs/monitoring/quickstart/#enable-the-digitalocean-agent-on-existing-droplets
-#
+# 
 # Since the server manager looks only for the tags created in the previous
 # step, this does not slow down server creation.
 curl -sSL https://agent.digitalocean.com/install.sh | sh
