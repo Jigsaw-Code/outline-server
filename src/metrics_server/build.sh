@@ -25,9 +25,9 @@ readonly OUT_DIR=$1
 readonly CONFIG_FILE=$2
 
 # Compile the server.
-rm -rf $OUT_DIR
-tsc -p $MODULE_DIR/tsconfig.json --outDir $OUT_DIR
-cp -r $MODULE_DIR/package.json $OUT_DIR
+rm -rf ${OUT_DIR}
+tsc -p ${MODULE_DIR}/tsconfig.json --outDir ${OUT_DIR}
+cp -r ${MODULE_DIR}/package.json ${OUT_DIR}
 
 # Copy config file.
-cp -r $CONFIG_FILE $OUT_DIR/config.json
+cp -r ${CONFIG_FILE} ${OUT_DIR}/config.json
