@@ -35,15 +35,3 @@ function do_action() {
 export -f do_action
 
 do_action "$@"
-
-#The DigitalOcean Agent is an open-source Go utility that forwards basic 
-#metrics about your Droplet to the DigitalOcean metrics backend.
-
-echo deb https://repos.sonar.digitalocean.com/apt main main |sudo tee -a /etc/apt/sources.list.d/digitalocean-agent.list
-
-curl https://repos.sonar.digitalocean.com/sonar-agent.asc | sudo apt-key add -
-
-sudo apt-get update
-
-sudo apt-get install do-agent
-
