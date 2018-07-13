@@ -22,12 +22,17 @@
 <link rel='import' href='../bower_components/paper-toast/paper-toast.html'>
 <link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
 <link rel='import' href='../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html'>
+<link rel='import' href='../bower_components/paper-listbox/paper-listbox.html'>
 
 <link rel="import" href="./cloud-install-styles.html">
 <link rel="import" href="./outline-about-dialog.html">
+<link rel="import" href="./outline-do-oauth-step.html">
 <link rel="import" href="./outline-feedback-dialog.html">
+<link rel="import" href="./outline-intro-step.html">
+<link rel="import" href="./outline-manual-server-entry.html">
 <link rel="import" href="./outline-modal-dialog.html">
-<link rel="import" href="./outline-server-creator.html">
+<link rel="import" href="./outline-region-picker-step.html">
+<link rel="import" href="./outline-server-progress-step.html">
 <link rel="import" href="./outline-server-view.html">
 <link rel="import" href="./outline-tos-view.html">
 
@@ -38,26 +43,8 @@
       :host {
         width: 100%;
         --primary-green: #00bfa5;
+        --light-gray: color: rgba(0,0,0,0.54);
       }
-
-      /* CONTENT */
-
-      #contentColumn {
-        align-items: stretch;
-        display: flex;
-        flex-direction: column;
-        margin: auto;
-        position: relative;
-      }
-
-      @media only screen and (max-device-width: 500px) {
-         #contentColumn {
-          width: 95%;
-        }
-      }
-
-      /* BOTTOM NOTIFICATION */
-
       #toast {
         align-items: center;
         display: flex;
@@ -66,8 +53,7 @@
         max-width: 450px;
       }
       #toast paper-icon-button {
-        /* prevents the icon from resizing when there is a long message in
-           the toast */
+        /* prevents the icon from resizing when there is a long message in the toast */
         flex-shrink: 0;
         padding: 0;
         height: 20px;
@@ -77,16 +63,28 @@
         z-index: 1000;
         margin-top: 12px;
       }
-      #settingsDrawer iron-icon {
-        margin-right: 12px;
+      #settingsDrawer paper-listbox {
+        color: var(--light-gray);
       }
-      #settingsDrawer .settingsMenuItem {
+      #settingsDrawer paper-icon-item {
+        display: block;
         cursor: pointer;
         padding: 12px 24px 12px 24px;
         font-size: 14px;
       }
-      #settingsDrawer .settingsMenuItem:hover {
+      #settingsDrawer iron-icon {
+        margin-right: 12px;
+      }
+      #settingsDrawer paper-icon-item:hover,
+      #settingsDrawer paper-icon-item iron-icon:hover {
         color: var(--primary-green);
+      }
+      #settingsDrawer a {
+        color: inherit;
+      }
+      #settingsDrawer paper-icon-item:focus,
+      #settingsDrawer a:focus {
+        outline: none;
       }
       #settingsDrawer #signedIn {
         text-align: center;
@@ -112,8 +110,8 @@
         text-align: center;
       }
       app-toolbar [main-title] img {
-        height: 20px;
-        margin-top: 10px;
+        height: 16px;
+        margin-top: 8px;
       }
     </style>
 
@@ -125,29 +123,39 @@
           <img src='images/manager-profile-2x.png'>
           <p>{{adminEmail}}</p>
           <div id='signOutButton' on-tap='signOutTapped'>Sign Out</div>
-          <hr>
+          <hr/>
         </div>
-        <div on-tap='dataCollectionTapped' class='settingsMenuItem' paper-drawer-toggle>
-          <iron-icon icon="lock"></iron-icon>Data Collection
-        </div>
-        <div on-tap='privacyTapped' class='settingsMenuItem' paper-drawer-toggle>
-          <iron-icon icon="lock"></iron-icon>Privacy
-        </div>
-        <div on-tap='termsTapped' class='settingsMenuItem' paper-drawer-toggle>
-          <iron-icon icon="info"></iron-icon>Terms
-        </div>
-        <div on-tap='submitFeedbackTapped' class='settingsMenuItem' paper-drawer-toggle>
-          <iron-icon icon="feedback"></iron-icon>Submit Feedback
-        </div>
-        <div on-tap='helpTapped' class='settingsMenuItem' paper-drawer-toggle>
-          <iron-icon icon="help"></iron-icon>Help Center
-        </div>
-        <div on-tap='aboutTapped' class='settingsMenuItem' paper-drawer-toggle>
-          <iron-icon icon="info"></iron-icon>About Outline
-        </div>
-        <div on-tap='showLicensesTapped' class='settingsMenuItem' paper-drawer-toggle>
-          <iron-icon icon="info"></iron-icon>Show Licenses
-        </div>
+        <paper-listbox on-tap="closeSettingsDrawer">
+          <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">
+            <paper-icon-item>
+              <iron-icon icon="lock" slot="item-icon"></iron-icon>Data Collection
+            </paper-icon-item>
+          </a>
+          <a href="https://www.google.com/policies/privacy/">
+            <paper-icon-item>
+              <iron-icon icon="lock" slot="item-icon"></iron-icon>Privacy
+            </paper-icon-item>
+          </a>
+          <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">
+            <paper-icon-item>
+                <iron-icon icon="info" slot="item-icon"></iron-icon>Terms
+            </paper-icon-item>
+          </a>
+          <paper-icon-item on-tap="submitFeedbackTapped">
+            <iron-icon icon="feedback" slot="item-icon"></iron-icon>Submit Feedback
+          </paper-icon-item>
+          <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">
+            <paper-icon-item>
+              <iron-icon icon="help" slot="item-icon"></iron-icon>Help Center
+            </paper-icon-item>
+          </a>
+          <paper-icon-item on-tap="aboutTapped">
+            <iron-icon icon="info" slot="item-icon"></iron-icon>About Outline
+          </paper-icon-item>
+          <paper-icon-item on-tap="showLicensesTapped">
+            <iron-icon icon="info" slot="item-icon"></iron-icon>Show Licenses
+          </paper-icon-item>
+        </paper-listbox>
       </app-drawer>
 
       <app-toolbar class='toolbar'>
@@ -155,12 +163,14 @@
         <div main-title><img src="images/outline-manager-logo.svg"></div>
       </app-toolbar>
 
-      <div id='contentColumn'>
-        <iron-pages id='content' attr-for-selected="id">
-          <outline-server-creator id='serverCreator'></outline-server-creator>
-          <outline-server-view id='serverView'></outline-server-view>
-        </iron-pages>
-      </div>
+      <iron-pages attr-for-selected='id' selected='{{ currentPage }}'>
+        <outline-intro-step id='intro'></outline-intro-step>
+        <outline-do-oauth-step id='digitalOceanOauth'></outline-do-oauth-step>
+        <outline-manual-server-entry id='manualEntry'></outline-manual-server-entry>
+        <outline-region-picker-step id='regionPicker'></outline-region-picker-step>
+        <outline-server-progress-step id='serverProgressStep'></outline-server-progress-step>
+        <outline-server-view id='serverView'></outline-server-view>
+      </iron-pages>
 
       <paper-toast id='toast'><paper-icon-button icon='icons:close' on-tap='closeError'></paper-icon-button></paper-toast>
 
@@ -203,21 +213,67 @@
           type: Boolean,
           computed: '_computeHasAcceptedTermsOfService(userAcceptedTos)'
         },
+        currentPage: {
+          type: String,
+          value: 'intro'
+        }
       },
-      getAndShowServerCreator: function () {
-        this.$.content.select('serverCreator');
-        return this.$.serverCreator;
+      listeners: {
+        'RegionSelected': 'handleRegionSelected',
+        'MetricsChoiceSelected': 'handleMetricsChoiceSelected',
+        'OpenManualServerEntry': 'handleManualServerSelected',
+        'ManualServerEntryCancelled': 'handleManualCancelled'
       },
-      getServerCreator: function() {
-        return this.$.serverCreator;
+      showIntro: function () {
+        this.currentPage = 'intro';
+      },
+      getDigitalOceanOauthFlow: function (onCancel) {
+        const oauthFlow = this.$.digitalOceanOauth;
+        oauthFlow.onCancel = onCancel;
+        return oauthFlow;
+      },
+      showDigitalOceanOauthFlow: function () {
+        this.currentPage = 'digitalOceanOauth';
+      },
+      getAndShowDigitalOceanOauthFlow: function (onCancel) {
+        this.currentPage = 'digitalOceanOauth';
+        const oauthFlow = this.getDigitalOceanOauthFlow(onCancel);
+        oauthFlow.showConnectAccount();
+        return oauthFlow;
+      },
+      getAndShowRegionPicker: function () {
+        this.currentPage = 'regionPicker';
+        this.$.regionPicker.init();
+        return this.$.regionPicker;
+      },
+      getManualServerEntry: function() {
+        return this.$.manualEntry;
+      },
+      showProgress: function (serverName, showCancelButton) {
+        this.currentPage = 'serverProgressStep';
+        this.$.serverProgressStep.serverName = serverName;
+        this.$.serverProgressStep.showCancelButton = showCancelButton;
+        this.$.serverProgressStep.start();
       },
       showServerView: function () {
-        this.$.serverCreator.stop();
+        this.$.serverProgressStep.stop();
         this.$.serverView.initHelpBubbles();
-        this.$.content.select('serverView');
+        this.currentPage = 'serverView';
       },
       getServerView: function() {
         return this.$.serverView;
+      },
+      handleRegionSelected: function (e) {
+        this.fire('SetUpServerRequested', {
+          regionId: this.$.regionPicker.getSelectedRegionId()
+        });
+      },
+      handleManualServerSelected: function() {
+        this.$.manualEntry.clear();
+        this.currentPage = 'manualEntry';
+      },
+      handleManualCancelled: function() {
+        this.currentPage = 'intro';
       },
       showError: function (errorMsg) {
         this.showToast(errorMsg, Infinity);
@@ -278,28 +334,10 @@
         this.$.settingsDrawer.close();
       },
       submitFeedbackTapped: function () {
-        this.closeSettingsDrawer();
         this.$.feedbackDialog.open();
       },
-      termsTapped: function () {
-        this.closeSettingsDrawer();
-        window.open('https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html');
-      },
-      privacyTapped: function () {
-        this.closeSettingsDrawer();
-        window.open('https://www.google.com/policies/privacy/');
-      },
-      dataCollectionTapped: function () {
-        this.closeSettingsDrawer();
-        window.open('https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection');
-      },
       aboutTapped: function() {
-        this.closeSettingsDrawer();
         this.$.aboutDialog.open();
-      },
-      helpTapped: function() {
-        this.closeSettingsDrawer();
-        window.open('https://s3.amazonaws.com/outline-vpn/index.html#/en/support/');
       },
       signOutTapped: function() {
         this.closeSettingsDrawer();
