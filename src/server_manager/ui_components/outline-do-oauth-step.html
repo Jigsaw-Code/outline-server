@@ -1,0 +1,146 @@
+<!--
+  Copyright 2018 The Outline Authors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<link rel='import' href='../bower_components/polymer/polymer.html'>
+<link rel='import' href='../bower_components/iron-pages/iron-pages.html'>
+<link rel="import" href="./cloud-install-styles.html">
+<link rel="import" href="./outline-step-view.html">
+
+<dom-module id="outline-do-oauth-step">
+  <template>
+    <style include="cloud-install-styles">
+      :host {
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100%;
+        align-items: center;
+        padding: 132px 0;
+        font-size: 14px;
+        color: rgba(0,0,0,0.87);
+      }
+      #connectAccount img {
+        width: 36px;
+        height: 36px;
+      }
+      paper-card {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: space-between;
+        margin: 24px;
+        padding: 24px;
+        background: #FFFFFF;
+        box-shadow: 0 0 2px 0 rgba(0,0,0,0.14), 0 2px 2px 0 rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
+        border-radius: 2px;
+      }
+      paper-button {
+        width: 100%;
+        border: 1px solid rgba(0,0,0,0.12);
+        border-radius: 2px;
+      }
+      paper-button[disabled] {
+        color: rgba(0,0,0,0.54);
+        background: transparent;
+      }
+    </style>
+
+      <iron-pages id='pages' attr-for-selected='id' selected='{{ currentPage }}'>
+        <outline-step-view id="connectAccount">
+          <span slot="step-title">Sign in or create an account with DigitalOcean.</span>
+          <span slot="step-description">With your account, Outline makes it easy to<br/> create a server and get connected.</span>
+          <paper-card>
+            <div class="container">
+              <img src="images/digital_ocean_logo.svg" />
+              <p>Waiting to connect your account...</p>
+            </div>
+            <paper-button on-tap="_cancelTapped">Cancel</paper-button>
+          </paper-card>
+        </outline-step-view>
+
+        <outline-step-view id="verifyEmail">
+          <span slot="step-title">Activate you DigitalOcean account.</span>
+          <span slot="step-description">Check your inbox for an email from DigitalOcean,<br/> and click the link in it to confirm your account.</span>
+          <paper-card>
+            <div class="container">
+              <img src="images/do_oauth_email.svg" />
+              <p>Confirm your email...</p>
+            </div>
+          <paper-button on-tap="_cancelTapped">Sign Out</paper-button>
+          </paper-card>
+        </outline-step-view>
+
+        <outline-step-view id="enterBilling">
+          <span slot="step-title">Activate you DigitalOcean account.</span>
+          <span slot="step-description">Enter your billing information on digitalocean.com<br/> and return to the app once you are done.</span>
+          <paper-card>
+            <div class="container">
+              <img src="images/do_oauth_billing.svg" />
+              <p>Enter billing information...</p>
+            </div>
+          <paper-button on-tap="_cancelTapped">Sign Out</paper-button>
+          </paper-card>
+        </outline-step-view>
+
+        <outline-step-view id="accountActive">
+          <span slot="step-title">Activate you DigitalOcean account.</span>
+          <span slot="step-description">Your DigitalOcean account has been activated.<br/><br/></span>
+          <paper-card>
+            <div class="container">
+              <img src="images/do_oauth_done.svg" />
+              <p>Account activated! Loading server locations...</p>
+            </div>
+          <paper-button disabled>Sign Out</paper-button>
+          </paper-card>
+        </outline-step-view>
+
+      </iron-pages>
+  </template>
+  <script>
+    Polymer({
+      is: 'outline-do-oauth-step',
+      properties: {
+        currentPage: {
+          type: String,
+          value: 'connectAccount'
+        },
+        cancelButtonText: {
+          type: String,
+          value: 'Cancel'
+        },
+        onCancel: Function
+      },
+      _cancelTapped: function() {
+        if (this.onCancel) {
+          this.onCancel();
+        }
+      },
+      showEmailVerification: function() {
+        this.currentPage = 'verifyEmail';
+      },
+      showBilling: function() {
+        this.currentPage = 'enterBilling'
+      },
+      showAccountActive: function() {
+        this.currentPage = 'accountActive';
+      },
+      showConnectAccount: function() {
+        this.currentPage = 'connectAccount';
+      }
+    });
+  </script>
+</dom-module>

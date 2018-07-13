@@ -180,21 +180,23 @@ class FakePolymerAppRoot {
     this.events.emit('screen-change', screenId);
   }
 
-  getAndShowServerCreator() {
-    return {
-      showIntro: () => {
-        this.setScreen(AppRootScreen.INTRO);
-      },
-      getAndShowRegionPicker: () => {
-        this.setScreen(AppRootScreen.REGION_PICKER);
-        return {};
-      },
-      showProgress: () => {
-        this.setScreen(AppRootScreen.INSTALL_PROGRESS);
-      }
-    };
+  showIntro() {
+    this.setScreen(AppRootScreen.INTRO);
   }
-  
+
+  getAndShowRegionPicker() {
+    this.setScreen(AppRootScreen.REGION_PICKER);
+    return {};
+  }
+
+  getDigitalOceanOauthFlow() {
+    return {};
+  }
+
+  showProgress() {
+    this.setScreen(AppRootScreen.INSTALL_PROGRESS);
+  }
+
   showModalDialog() {
     this.backgroundScreen = this.currentScreen;
     this.setScreen(AppRootScreen.DIALOG);
