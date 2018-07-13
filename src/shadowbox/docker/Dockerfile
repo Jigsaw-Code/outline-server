@@ -13,13 +13,13 @@
 # limitations under the License.
 
 # See versions at https://hub.docker.com/_/node/
-FROM node:8.10.0-alpine
+FROM node:8.11.3-alpine
 
 # Versions can be found at https://github.com/shadowsocks/shadowsocks-libev/releases
 ARG SS_VERSION=3.2.0
 
 # Save metadata on the software versions we are using.
-LABEL shadowbox.node_version=8.10.0
+LABEL shadowbox.node_version=8.11.3
 LABEL shadowbox.shadowsocks_version="${SS_VERSION}"
 
 ARG GITHUB_RELEASE
