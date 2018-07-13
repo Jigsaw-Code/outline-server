@@ -79,6 +79,10 @@ function isManualServer(testServer: server.Server): testServer is server.ManualS
   return !!(testServer as server.ManualServer).forget;
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 type DigitalOceanSessionFactory = (accessToken: string) => digitalocean_api.DigitalOceanSession;
 type DigitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) =>
     server.ManagedServerRepository;
@@ -130,7 +134,7 @@ export class App {
     appRoot.addEventListener('ManualServerEntered', (event: PolymerEvent) => {
       const userInputConfig =
           event.detail.userInputConfig.replace(/\s+/g, '');  // Remove whitespace
-      const manualServerEntryEl = appRoot.getServerCreator().getManualServerEntry();
+      const manualServerEntryEl = appRoot.getManualServerEntry();
       this.createManualServer(userInputConfig)
           .then(() => {
             // Clear fields on outline-manual-server-entry (e.g. dismiss the connecting popup).
@@ -211,6 +215,12 @@ export class App {
     const doSession = this.createDigitalOceanSession(accessToken);
     const authEvents = new events.EventEmitter();
     let cancelled = false;
+    let activatingAccount = false;
+    const cancelAccountStateVerification = () => {
+      cancelled = true;
+      this.clearCredentialsAndShowIntro();
+    };
+    const oauthUi = this.appRoot.getDigitalOceanOauthFlow(cancelAccountStateVerification);
 
     const query = () => {
       if (cancelled) {
@@ -227,7 +237,6 @@ export class App {
           })
           .catch((error) => {
             if (!cancelled) {
-              this.appRoot.hideModalDialog();
               this.showIntro();
               this.displayError('Failed to get DigitalOcean account information', error);
             }
@@ -240,13 +249,22 @@ export class App {
       }
       this.appRoot.adminEmail = account.email;
       if (account.status === 'active') {
-        this.appRoot.closeModalDialog();
         sendElectronEvent('bring-to-front');
-        this.digitalOceanRepository = this.createDigitalOceanServerRepository(doSession);
-        this.digitalOceanRepository.listServers()
+        let maybeSleep = Promise.resolve();
+        if (activatingAccount) {
+          // Show the 'account active' screen for a few seconds if the account was activated during
+          // this session.
+          oauthUi.showAccountActive();
+          maybeSleep = sleep(1500);
+        }
+        maybeSleep
+            .then(() => {
+              this.digitalOceanRepository = this.createDigitalOceanServerRepository(doSession);
+              return this.digitalOceanRepository.listServers();
+            })
             .then((serverList) => {
-              // Check if this user already has a shadowsocks server, if so show that.
-              // This assumes we only allow one shadowsocks server per DigitalOcean user.
+              // Check if this user already has a Shadowsocks server, if so show that.
+              // This assumes we only allow one Shadowsocks server per DigitalOcean user.
               if (serverList.length > 0) {
                 this.showManagedServer(serverList[0]);
               } else {
@@ -260,33 +278,17 @@ export class App {
               this.showIntro();
             });
       } else {
+        this.appRoot.showDigitalOceanOauthFlow();
+        activatingAccount = true;
         if (account.email_verified) {
-          this.appRoot
-              .showModalDialog(
-                  'Complete your DigitalOcean Registration',
-                  'Please go to digitalocean.com to enter your billing information and complete your registration',
-                  ['Sign Out'])
-              .then(() => {
-                authEvents.emit('cancel');
-              });
+          oauthUi.showBilling();
         } else {
-          this.appRoot
-              .showModalDialog(
-                  'Verify your email',
-                  `Go to your ${account.email} email and open the email confirmation link sent by DigitalOcean`,
-                  ['Sign Out'])
-              .then(() => {
-                authEvents.emit('cancel');
-              });
+          oauthUi.showEmailVerification();
         }
         setTimeout(query, 1000);
       }
     });
 
-    authEvents.once('cancel', () => {
-      cancelled = true;
-      this.clearCredentialsAndShowIntro();
-    });
 
     query();
   }
@@ -363,7 +365,7 @@ export class App {
 
   // Shows the intro screen with overview and options to sign in or sign up.
   private showIntro() {
-    this.appRoot.getAndShowServerCreator().showIntro();
+    this.appRoot.showIntro();
   }
 
   private displayAppUpdateNotification() {
@@ -374,17 +376,14 @@ export class App {
 
   private connectToDigitalOcean() {
     const session = runDigitalOceanOauth();
-    this.appRoot
-        .showModalDialog(
-            'Awaiting authorization',  // Don't display any title.
-            'On the DigitalOcean window that was opened on your browser, sign in or create a new account, then authorize the Outline Manager application',
-            ['Cancel'])
-        .then(() => {
-          session.cancel();
-        });
+    const handleOauthFlowCanceled = () => {
+      session.cancel();
+      this.clearCredentialsAndShowIntro();
+    };
+    this.appRoot.getAndShowDigitalOceanOauthFlow(handleOauthFlowCanceled);
+
     session.result
         .then((accessToken) => {
-          this.appRoot.closeModalDialog();
           // Save accessToken to storage. DigitalOcean tokens
           // expire after 30 days, unless they are manually revoked by the user.
           // After 30 days the user will have to sign into DigitalOcean again.
@@ -397,7 +396,7 @@ export class App {
         })
         .catch((error) => {
           if (!session.isCancelled()) {
-            this.appRoot.closeModalDialog();
+            this.clearCredentialsAndShowIntro();
             sendElectronEvent('bring-to-front');
             this.displayError('Authentication with DigitalOcean failed', error);
           }
@@ -414,7 +413,7 @@ export class App {
 
   // Opens the screen to create a server.
   private showCreateServer() {
-    const regionPicker = this.appRoot.getAndShowServerCreator().getAndShowRegionPicker();
+    const regionPicker = this.appRoot.getAndShowRegionPicker();
     // The region picker initially shows all options as disabled.  Options are enabled
     // by this code, after checking which regions are available.
     this.digitalOceanRetry(() => {
@@ -448,7 +447,7 @@ export class App {
     // Update UI.  Only show cancel button if the server has not yet finished
     // installation, to prevent accidental deletion when restarting.
     const showCancelButton = !managedServer.isInstallCompleted();
-    this.appRoot.getAndShowServerCreator().showProgress(serverName, showCancelButton);
+    this.appRoot.showProgress(serverName, showCancelButton);
   }
 
   private showManagedServer(managedServer: server.ManagedServer, tryAgain = false): void {
