@@ -16,7 +16,7 @@
 FROM node:8.10.0-alpine
 
 # Versions can be found at https://github.com/shadowsocks/shadowsocks-libev/releases
-ARG SS_VERSION=3.1.3
+ARG SS_VERSION=3.2.0
 
 # Save metadata on the software versions we are using.
 LABEL shadowbox.node_version=8.10.0
