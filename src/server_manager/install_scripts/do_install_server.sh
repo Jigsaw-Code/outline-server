@@ -174,6 +174,7 @@ done
 # Wait for install script to finish, so that if there is any error in install_server.sh,
 # the finish trap in this file will be able to access its error code.
 wait ${install_pid}
+
 # Install the DigitalOcean Agent, for improved monitoring:
 # https://www.digitalocean.com/docs/monitoring/quickstart/#enable-the-digitalocean-agent-on-existing-droplets
 # 
