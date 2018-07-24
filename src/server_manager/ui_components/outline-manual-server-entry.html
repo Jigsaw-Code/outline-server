@@ -36,18 +36,49 @@
         border-radius: 2px;
         margin: 24px;
         text-align: left;
-        padding: 24px;
+      }
+      .card-section {
+        padding: 24px 12px;
+      }
+      .card-section:not(:first-child) {
+        border-top: 1px solid rgba(0,0,0,0.12);;
+      }
+      .section-header {
+        padding: 0 6px 0;
       }
       .instructions {
-        color: black;
+        font-size: 16px;
+        color: rgba(0,0,0,0.87);
+        line-height: 26px;
+        margin-left: 42px;
+      }
+      .stepcircle {
+        height: 26px;
+        width: 26px;
+        font-size: 14px;
+        background-color: rgba(0, 0, 0, 0.34);
+        border-radius: 50%;
+        float: left;
+        vertical-align: middle;
+        color: #fff;
+        background-color: #141414;
+        margin: auto;
+        text-align: center;
+        line-height: 26px;
+      }
+      .section-content {
+        width: 456px;
+        margin: 24px 0 0 48px;
       }
       .code {
         background-color: #ECEFF1;
-        color: black;
+        color: rgba(0,0,0,0.87);
         font-size: 14px;
         font-family: RobotoMono-Regular, monospace;
-        margin: 20px 0 40px 0;
-        padding: 14px;
+        line-height: 24px;
+        border-radius: 4px;
+        border-bottom: 2px solid #263238;
+        padding: 24px;
         word-break: break-all;
       }
       textarea {
@@ -55,26 +86,19 @@
         border: none;
         outline: none;
         box-sizing: border-box;
-        border-bottom: 2px solid #263238;
       }
       iron-icon {
         display: inline-block;
         vertical-align: top;
         color: black;
       }
-      .stepContent {
-        display: inline-block;
-        vertical-align: top;
-        width: 442px;
-        margin-left: 20px;
-      }
-      #buttonRow {
-        width: 100%;
+      #button-row {
         display: flex;
         justify-content: space-between;
+        padding: 0 24px 24px 60px;
       }
       paper-button {
-        width: 45%;
+        margin: 0;
       }
       paper-progress {
         margin: 0;
@@ -88,9 +112,8 @@
         box-shadow: 0 0 2px 0 rgba(0,0,0,0.14), 0 2px 2px 0 rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
         border-radius: 2px;
         width: 45%;
-      }
-      #terminalIcon {
-        width: 20px;
+        background-color: #1DE9B6;
+        color: rgba(0,0,0,0.87);
       }
     </style>
     <outline-step-view>
@@ -98,24 +121,28 @@
         <span slot="step-description">Follow these instructions to install Outline with a<br/> cloud provider or on your own infrastructure.</span>
       <paper-progress hidden$='[[!showConnection]]' indeterminate class="slow"></paper-progress>
 
-      <div class='card'>
-        <div>
-          <iron-icon src="images/terminal.svg" id="terminalIcon"></iron-icon>
-          <div class='stepContent'>
-            <div class='instructions'>First, log into your server, and run the following command:</div>
-            <div id='command' class='code'>bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"</div>
+      <div class="card">
+        <div class="card-section">
+          <div class="section-header">
+            <span class="stepcircle">1</span>
+            <div class="instructions">Log into your server, and run this command.</div>
+          </div>
+          <div class="section-content">
+            <div id="command" class="code">bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"</div>
           </div>
         </div>
-        <div>
-          <iron-icon icon="content-paste"></iron-icon>
-          <div class='stepContent'>
-            <div class='instructions'>Second, paste the output from the installation process here and click 'Done'.</div>
-            <textarea id='serverConfig' type='text' placeholder$='[[placeholderText]]' class='code' rows='4'></textarea>
+        <div class="card-section">
+          <div class="section-header">
+            <span class="stepcircle">2</span>
+            <div class="instructions">Paste your installation output here.</div>
+          </div>
+          <div class="section-content">
+            <textarea id="serverConfig" type="text" placeholder$="[[placeholderText]]" class="code" rows="3"></textarea>
           </div>
         </div>
-        <div id='buttonRow'>
-          <paper-button id='cancelButton' on-tap="cancelTapped" class="secondary">CANCEL</paper-button>
-          <paper-button id='doneButton' on-tap="doneTapped" class="primary">DONE</paper-button>
+        <div id="button-row">
+          <paper-button id="cancelButton" on-tap="cancelTapped" class="secondary">CANCEL</paper-button>
+          <paper-button id="doneButton" on-tap="doneTapped" class="primary">DONE</paper-button>
         </div>
       </div>  <!-- end of .card -->
     </outline-step-view>
@@ -136,7 +163,7 @@
         errorText: String,
         placeholderText: {
           type: String,
-          value: '{"apiUrl":"https://xxx.xxx.xxx.xxx:xxxxx/xxxxxxxxxxxxxxxxxxxxxx","certSha256":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}'
+          value: '{"apiUrl":"https://xxx.xxx.xxx.xxx:xxxxx/xxxxxxxxxxxxxxxxxxxxxx","certSha256":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}'
 
         },
         showConnection: Boolean
