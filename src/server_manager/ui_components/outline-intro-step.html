@@ -64,6 +64,7 @@
       }
       .card .card-body {
         padding: 0 24px;
+        flex: 7; /* for spacing */
       }
       .card .tag {
         font-weight: 500;
@@ -86,6 +87,7 @@
         font-size: 20px;
         margin: 0 24px;
         line-height: 32px;
+        flex: 2; /* for spacing */
       }
       .card img {
         margin-top: 11px;
@@ -190,7 +192,7 @@
             </div>
           </div>
           <div class="card-footer">
-            <paper-button on-tap="connectToGcpTapped" class="primary">Get started</paper-button>
+            <paper-button on-tap="setUpGcpTapped" class="primary">Get started</paper-button>
           </div>
         </div>
 
@@ -210,7 +212,7 @@
             </div>
           </div>
           <div class="card-footer">
-            <paper-button on-tap="connectToAwsTapped" class="primary">Get started</paper-button>
+            <paper-button on-tap="setUpAwsTapped" class="primary">Get started</paper-button>
           </div>
         </div>
 
@@ -229,7 +231,7 @@
             </div>
           </div>
           <div class="card-footer">
-            <paper-button on-tap="manualServerTapped">Get started</paper-button>
+            <paper-button on-tap="setUpGenericCloudProviderTapped">Get started</paper-button>
           </div>
         </div>
 
@@ -241,16 +243,16 @@
     Polymer({
       is: 'outline-intro-step',
       connectToDigitalOceanTapped: function() {
-        this.fire('ConnectToDigitalOceanTapped');
+        this.fire('ConnectToDigitalOcean');
       },
-      manualServerTapped: function() {
-        this.fire('OpenManualServerEntry');
+      setUpGenericCloudProviderTapped: function() {
+        this.fire('SetUpGenericCloudProviderRequested');
       },
-      connectToAwsTapped: function() {
-        this.fire('ConnectToAwsTapped');
+      setUpAwsTapped: function() {
+        this.fire('SetUpAwsRequested');
       },
-      connectToGcpTapped: function() {
-        this.fire('ConnectToGcpTapped');
+      setUpGcpTapped: function() {
+        this.fire('SetUpGcpRequested');
       }
     });
   </script>

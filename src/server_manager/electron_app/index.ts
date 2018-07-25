@@ -27,6 +27,9 @@ const shell = electron.shell;
 
 const debugMode = process.env.OUTLINE_DEBUG === 'true';
 
+const IMAGES_PATH = `file://${path.join(__dirname, 'server_manager', 'web_app')}`;
+let imageWindow: electron.BrowserWindow;
+
 interface IpcEvent {
   returnValue: {};
 }
@@ -181,6 +184,40 @@ function main() {
       mainWindow.restore();
     }
     mainWindow.focus();
+  });
+
+  ipcMain.on('open-image', (event: IpcEvent, args: string[]) => {
+    if (!args || args.length < 2) {
+      return;
+    }
+    const imagePath = args[0];
+    const windowTitle = args[1];
+    if (!imageWindow) {
+      imageWindow = new electron.BrowserWindow({
+        width: 600,
+        height: 768,
+        x: 0,
+        y: 0,
+        show: false,
+        title: windowTitle,
+        webPreferences: {
+          webSecurity: false  // Otherwise we cannot load local resources.
+        }
+      });
+      imageWindow.setMenu(null);
+
+      imageWindow.on('closed', () => {
+        imageWindow = null;
+      });
+
+      imageWindow.on('page-title-updated', (e) => {
+        e.preventDefault();  // Prevent the window's title from changing to the image path on load.
+      });
+    }
+    imageWindow.loadURL(path.join(IMAGES_PATH, imagePath));
+    imageWindow.setTitle(windowTitle);
+    imageWindow.show();
+    imageWindow.focus();
   });
 
   app.on('activate', () => {
