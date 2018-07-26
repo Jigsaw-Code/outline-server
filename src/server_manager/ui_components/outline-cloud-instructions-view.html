@@ -57,6 +57,24 @@
         height: 264px;
         margin-bottom: 24px;
       }
+      .overlay {
+        position: absolute;
+        width: 502px;
+        background: rgb(38,50,56);
+        opacity: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+      }
+      .overlay iron-icon {
+        color: #fff;
+        width: 24px;
+        height: 24px;
+      }
+      .overlay:hover {
+        opacity: 0.57;
+      }
       .instructions {
         font-size: 16px;
         color: rgba(0,0,0,0.87);
@@ -67,6 +85,9 @@
       <div class="header">
         <div class="title">[[title]]</div>
         <div class="example" on-tap="_openImage">Example<iron-icon icon="open-in-new"></iron-icon></div>
+      </div>
+      <div class="thumbnail overlay" on-tap="_openImage">
+        <iron-icon icon="open-in-new"></iron-icon>
       </div>
       <img class="thumbnail" src$="[[thumbnailPath]]"></img>
       <div class="instructions">
