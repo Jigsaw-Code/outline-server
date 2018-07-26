@@ -157,7 +157,7 @@
         <div class="card-section" hidden$="[[!isCloudProviderGcp]]">
           <div class="section-header">
             <span class="stepcircle">1</span>
-            <div class="instructions">Open your firewall</div>
+            <div class="instructions">Configure your firewall</div>
             <div class="drop-down" on-tap="_toggleGcpDropDown">
               <img src="images/gcp-logo.svg" />
               <span>Instructions</span>
@@ -168,21 +168,23 @@
             <div class="section-content-instructions">
               <outline-cloud-instructions-view title="Create a firewall rule" thumbnail-path="images/gcp-thumbnail-1.png" image-path="images/gcp-screenshot-1.png">
                 <ol>
-                  <li>Open <a href="https://console.cloud.google.com/networking/firewalls/add">App Engine<iron-icon icon="open-in-new"></iron-icon></a>, navigate to Firewall rules on Google Cloud Console.</li>
-                  <li>Click 'CREATE NEW RULE' button.</li>
-                  <li>Name your rule 'Outline'.</li>
-                  <li>Set target tags to 'Outline'.</li>
-                  <li>Set source IP range to '0.0.0.0/0'.</li>
-                  <li>Set Protocols and ports to 'Allow all'.</li>
+                  <li><a href="https://console.cloud.google.com/networking/firewalls/add">Add a new firewall rule<iron-icon icon="open-in-new"></iron-icon></a> to your Compute Engine project.</li>
+                  <li>Type 'outline' in the 'Name' field.</li>
+                  <li>Type 'outline' in the 'Target tags' field.</li>
+                  <li>Type '0.0.0.0/0' in the 'Source IP ranges' field.</li>
+                  <li>Select 'Allow all' under 'Protocols and ports'.</li>
+                  <li>Click 'Create'.</li>
                 </ol>
               </outline-cloud-instructions-view>
             </div>
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view title="Set VM Instance" thumbnail-path="images/gcp-thumbnail-2.png" image-path="images/gcp-screenshot-2.png"">
+              <outline-cloud-instructions-view title="Assign firewall rule" thumbnail-path="images/gcp-thumbnail-2.png" image-path="images/gcp-screenshot-2.png"">
                 <ol>
-                  <li>Navigate to Compute Engine / VM Instances.</li>
+                  <li>Navigate to the <a href="https://console.cloud.google.com/compute/instances">VM instances screen<iron-icon icon="open-in-new"></iron-icon></a>.</li>
+                  <li>Click on the instance where you want to host Outline.</li>
                   <li>Click 'EDIT' at the top of the VM Instance details screen.</li>
-                  <li>Scroll down to Network tags, change to ‘Outline’, hit 'SAVE'.</li>
+                  <li>Type 'outline' in the 'Network tags' field.</li>
+                  <li>Click 'SAVE'.</li>
                 </ol>
               </outline-cloud-instructions-view>
             </div>
@@ -192,7 +194,7 @@
         <div class="card-section" hidden$="[[!isCloudProviderAws]]">
           <div class="section-header">
             <span class="stepcircle">1</span>
-            <div class="instructions">Open your firewall</div>
+            <div class="instructions">Configure your firewall</div>
             <div class="drop-down" on-tap="_toggleAwsDropDown">
               <img id="aws-logo" src="images/aws-logo.svg" />
               <span>Instructions</span>
@@ -203,20 +205,22 @@
             <div class="section-content-instructions">
               <outline-cloud-instructions-view title="Create a Security Group" thumbnail-path="images/aws-thumbnail-1.png" image-path="images/aws-screenshot-1.png">
                 <ol>
-                  <li>Once you've created your EC2 instance, open the <a href="https://console.aws.amazon.com/ec2/v2/home">EC2 Management Console</a><iron-icon icon="open-in-new"></iron-icon>.</li>
-                  <li>Under 'Network & Security', select 'Create Security Groups'.</li>
-                  <li>Use 'Outline' for the Security Group Name and Description.</li>
-                  <li>Click 'Add Rule' and select 'All traffic'. Set the source to 'Anywhere'.</li>
+                  <li>Once you've created your EC2 instance, open the <a href="https://console.aws.amazon.com/ec2/v2/home">EC2 Management Console<iron-icon icon="open-in-new"></iron-icon></a>.</li>
+                  <li>Under 'Network & Security', select 'Security Groups'.</li>
+                  <li>Click on 'Create Security Group'.</li>
+                  <li>Type 'outline' in the 'Security group name' and 'Description' fields.</li>
+                  <li>Click 'Add Rule'.</li>
+                  <li>Select 'All traffic' under 'Type', and 'Anywhere' under 'Source'.</li>
                 </ol>
               </outline-cloud-instructions-view>
             </div>
             <div class="section-content-instructions">
               <outline-cloud-instructions-view title="Assign Security Group" thumbnail-path="images/aws-thumbnail-2.png" image-path="images/aws-screenshot-2.png">
                 <ol>
-                  <li>Navigate to 'Instances'.</li>
-                  <li>Click 'Actions' > 'Networking' > 'Change Security Groups' at the top of your Instances screen.</li>
-                  <li>Select the 'Outline' Security Group, unselect other security groups.</li>
-                  <li>Click 'Assign'.</li>
+                  <li>Navigate to <a href="https://console.aws.amazon.com/ec2/v2/home#Instances:sort=instanceId">Instances<iron-icon icon="open-in-new"></iron-icon></a>.</li>
+                  <li>Click 'Actions' > 'Networking' > 'Change Security Groups' at the top of the 'Instances' screen.</li>
+                  <li>Select the 'outline' Security Group, unselect other security groups.</li>
+                  <li>Click 'Assign Security Groups'.</li>
                 </ol>
               </outline-cloud-instructions-view>
             </div>
