@@ -19,7 +19,9 @@ import {SentryErrorReporter} from './error_reporter';
 interface MetricsEnabled {
   metricsEnabled: boolean;
 }
-export interface ServerName { name: string; }
+export interface ServerName {
+  name: string;
+}
 export interface ServerConfig {
   name: string;
   metricsEnabled: boolean;
@@ -171,21 +173,22 @@ export class ShadowboxServer implements server.Server {
         apiAddress += '/';
       }
       const url = apiAddress + path;
-      console.log(`Fetching url ${url}...`);
       return fetch(url, options)
           .then(
               (response) => {
-                console.log('Fetch result:', url, response.ok);
                 if (!response.ok) {
-                  const msg = 'Failed to fetch API request results';
+                  const msg = `API request to ${path} failed with status ${response.status}, type ${
+                      response.type}`;
+                  console.error(msg);
                   SentryErrorReporter.logError(msg);
                   throw new Error(msg);
                 }
+                console.debug(`API request to ${path} succeeded`);
                 return response.text();
               },
-              (error: Error) => {
-                const msg = 'Failed to fetch url';
-                console.error(msg, url, error);
+              (error) => {
+                const msg = `API request to ${path} failed due to network error`;
+                console.error(msg, error);
                 SentryErrorReporter.logError(msg);
                 throw error;
               })
