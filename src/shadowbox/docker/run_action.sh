@@ -15,7 +15,7 @@
 # limitations under the License.
 
 touch /tmp/config.json
-source $ROOT_DIR/src/shadowbox/scripts/make_certificate.sh
+source ${ROOT_DIR}/src/shadowbox/scripts/make_certificate.sh
 
 # TODO: mount a folder rather than individual files.
 declare -a docker_bindings=(

@@ -31,16 +31,16 @@ set -euxo pipefail
 sed -i 's/PasswordAuthentication no/# PasswordAuthentication no  # Commented out by the Outline installer/' /etc/ssh/sshd_config
 
 export SHADOWBOX_DIR="${SHADOWBOX_DIR:-${HOME:-/root}/shadowbox}"
-mkdir -p $SHADOWBOX_DIR
+mkdir -p ${SHADOWBOX_DIR}
 
 # Save output for debugging
-exec 2>&1 >$SHADOWBOX_DIR/install-shadowbox-output
+exec 2>&1 >${SHADOWBOX_DIR}/install-shadowbox-output
 
 # Initialize sentry log file.
 export SENTRY_LOG_FILE="$SHADOWBOX_DIR/sentry-log-file.txt"
-> $SENTRY_LOG_FILE
+> ${SENTRY_LOG_FILE}
 function log_for_sentry() {
-  echo [$(date "+%Y-%m-%d@%H:%M:%S")] "do_install_server.sh" "$@" >>$SENTRY_LOG_FILE
+  echo [$(date "+%Y-%m-%d@%H:%M:%S")] "do_install_server.sh" "$@" >>${SENTRY_LOG_FILE}
 }
 function post_sentry_report() {
   if [[ -n "$SENTRY_API_URL" ]]; then
@@ -48,7 +48,7 @@ function post_sentry_report() {
     # but otherwise assumes that there are no other characters to escape for JSON.
     # If we need better escaping, we can install the jq command line tool.
     readonly SENTRY_PAYLOAD_BYTE_LIMIT=8000
-    SENTRY_PAYLOAD="{\"message\": \"Install error:\n$(cat $SENTRY_LOG_FILE | awk '{printf "%s\\n", $0}' | tail --bytes $SENTRY_PAYLOAD_BYTE_LIMIT)\"}"
+    SENTRY_PAYLOAD="{\"message\": \"Install error:\n$(cat ${SENTRY_LOG_FILE} | awk '{printf "%s\\n", $0}' | tail --bytes ${SENTRY_PAYLOAD_BYTE_LIMIT})\"}"
     # See Sentry documentation at:
     # https://media.readthedocs.org/pdf/sentry/7.1.0/sentry.pdf
     curl "$SENTRY_API_URL" -H "Origin: shadowbox" --data-binary "$SENTRY_PAYLOAD"
@@ -122,9 +122,9 @@ ufw disable
 # the outset but we want to enable automatic rebooting so that critical updates
 # are applied without the Outline user's intervention.
 readonly UNATTENDED_UPGRADES_CONFIG=/etc/apt/apt.conf.d/50unattended-upgrades
-if [ -f $UNATTENDED_UPGRADES_CONFIG ]; then
+if [ -f ${UNATTENDED_UPGRADES_CONFIG} ]; then
   log_for_sentry "Configuring auto-updates"
-  cat >> $UNATTENDED_UPGRADES_CONFIG << EOF
+  cat >> ${UNATTENDED_UPGRADES_CONFIG} << EOF
 
 // Enabled by Outline manager installer.
 Unattended-Upgrade::Automatic-Reboot "true";
@@ -136,13 +136,13 @@ export SB_PUBLIC_IP=$(cloud::public_ip)
 
 log_for_sentry "Initializing ACCESS_CONFIG"
 export ACCESS_CONFIG="$SHADOWBOX_DIR/access.txt"
-> $ACCESS_CONFIG
+> ${ACCESS_CONFIG}
 
 # Set trap which publishes an error tag and sentry report only if there is an error.
 function finish {
   INSTALL_SERVER_EXIT_CODE=$?
   log_for_sentry "In EXIT trap, exit code $INSTALL_SERVER_EXIT_CODE"
-  if [[ -z $(grep apiUrl $ACCESS_CONFIG) ]] || [[ -z $(grep certSha256 $ACCESS_CONFIG) ]]; then
+  if [[ -z $(grep apiUrl ${ACCESS_CONFIG}) ]] || [[ -z $(grep certSha256 ${ACCESS_CONFIG}) ]]; then
     echo "INSTALL_SCRIPT_FAILED: $INSTALL_SERVER_EXIT_CODE" | cloud::add_kv_tag "install-error"
     # Post error report to sentry.
     post_sentry_report
@@ -157,23 +157,23 @@ install_pid=$!
 
 # Save tags for access information.
 log_for_sentry "Reading tags from ACCESS_CONFIG"
-tail -f $ACCESS_CONFIG --pid=$install_pid | while IFS=: read key value; do
+tail -f ${ACCESS_CONFIG} --pid=${install_pid} | while IFS=: read key value; do
   case "$key" in
     certSha256)
       # Bypass encoding
       log_for_sentry "Writing certSha256 tag"
-      echo $value | cloud::add_encoded_kv_tag "$key"
+      echo ${value} | cloud::add_encoded_kv_tag "$key"
       ;;
     apiUrl)
       log_for_sentry "Writing apiUrl tag"
-      echo -n $value | cloud::add_kv_tag "$key"
+      echo -n ${value} | cloud::add_kv_tag "$key"
       ;;
   esac
 done
 
 # Wait for install script to finish, so that if there is any error in install_server.sh,
 # the finish trap in this file will be able to access its error code.
-wait $install_pid
+wait ${install_pid}
 
 # Install the DigitalOcean Agent, for improved monitoring:
 # https://www.digitalocean.com/docs/monitoring/quickstart/#enable-the-digitalocean-agent-on-existing-droplets
