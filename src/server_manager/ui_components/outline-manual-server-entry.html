@@ -14,12 +14,14 @@
   limitations under the License.
 -->
 <link rel='import' href='../bower_components/polymer/polymer.html'>
+<link rel='import' href='../bower_components/iron-collapse/iron-collapse.html'>
 <link rel='import' href='../bower_components/iron-icon/iron-icon.html'>
 <link rel='import' href='../bower_components/iron-icons/iron-icons.html'>
 <link rel='import' href='../bower_components/paper-button/paper-button.html'>
 <link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
 <link rel='import' href='../bower_components/paper-progress/paper-progress.html'>
 <link rel="import" href="./cloud-install-styles.html">
+<link rel="import" href="./outline-cloud-instructions-view.html">
 <link rel="import" href="./outline-step-view.html">
 <link rel="import" href="./style.css">
 
@@ -36,18 +38,75 @@
         border-radius: 2px;
         margin: 24px;
         text-align: left;
-        padding: 24px;
+      }
+      .card-section {
+        padding: 24px 12px;
+      }
+      .card-section:not(:first-child) {
+        border-top: 1px solid rgba(0,0,0,0.12);;
+      }
+      .section-header {
+        padding: 0 6px 0;
+        display: flex;
       }
       .instructions {
-        color: black;
+        font-size: 16px;
+        color: rgba(0,0,0,0.87);
+        line-height: 26px;
+        margin-left: 16px;
+        flex: 2;
+      }
+      .stepcircle {
+        height: 26px;
+        width: 26px;
+        font-size: 14px;
+        background-color: rgba(0, 0, 0, 0.34);
+        border-radius: 50%;
+        float: left;
+        vertical-align: middle;
+        color: #fff;
+        background-color: #141414;
+        margin: auto;
+        text-align: center;
+        line-height: 26px;
+      }
+      .drop-down > * {
+        vertical-align: middle;
+      }
+      .drop-down span {
+        margin: 0 6px;
+      }
+      .drop-down:hover {
+        cursor: pointer;
+      }
+      .section-content {
+        margin: 24px 12px 0 48px;
+      }
+      .section-content-instructions {
+        margin: 24px 12px;
+      }
+      .section-content-instructions li {
+        margin-bottom: 24px;
+      }
+      .section-content-instructions a {
+        color: #00BFA5;
+      }
+      .section-content-instructions iron-icon {
+        color: #00BFA5;
+        width: 16px;
+        height: 16px;
+        margin-left: 4px;
+        vertical-align: middle;
       }
       .code {
         background-color: #ECEFF1;
-        color: black;
+        color: rgba(0,0,0,0.87);
         font-size: 14px;
         font-family: RobotoMono-Regular, monospace;
-        margin: 20px 0 40px 0;
-        padding: 14px;
+        line-height: 24px;
+        border-radius: 4px;
+        border-bottom: 2px solid #263238;
+        padding: 24px;
         word-break: break-all;
       }
       textarea {
@@ -55,26 +114,19 @@
         border: none;
         outline: none;
         box-sizing: border-box;
-        border-bottom: 2px solid #263238;
       }
       iron-icon {
         display: inline-block;
         vertical-align: top;
         color: black;
       }
-      .stepContent {
-        display: inline-block;
-        vertical-align: top;
-        width: 442px;
-        margin-left: 20px;
-      }
-      #buttonRow {
-        width: 100%;
+      #button-row {
         display: flex;
         justify-content: space-between;
+        padding: 0 24px 24px 60px;
       }
       paper-button {
-        width: 45%;
+        margin: 0;
       }
       paper-progress {
         margin: 0;
@@ -88,36 +140,119 @@
         box-shadow: 0 0 2px 0 rgba(0,0,0,0.14), 0 2px 2px 0 rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
         border-radius: 2px;
         width: 45%;
+        background-color: #1DE9B6;
+        color: rgba(0,0,0,0.87);
       }
-      #terminalIcon {
-        width: 20px;
+      #aws-logo {
+        vertical-align: top;
       }
     </style>
     <outline-step-view>
-      <span slot="step-title">Set up Outline on your server.</span>
-        <span slot="step-description">Follow these instructions to install Outline with a<br/> cloud provider or on your own infrastructure.</span>
+      <span slot="step-title">Follow the instructions below</span>
+      <span slot="step-description">These steps will help you install Outline<br/> on [[cloudProviderName]].</span>
       <paper-progress hidden$='[[!showConnection]]' indeterminate class="slow"></paper-progress>
 
-      <div class='card'>
-        <div>
-          <iron-icon src="images/terminal.svg" id="terminalIcon"></iron-icon>
-          <div class='stepContent'>
-            <div class='instructions'>First, log into your server, and run the following command:</div>
-            <div id='command' class='code'>bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"</div>
+      <div class="card">
+        <!-- GCP -->
+        <div class="card-section" hidden$="[[!isCloudProviderGcp]]">
+          <div class="section-header">
+            <span class="stepcircle">1</span>
+            <div class="instructions">Configure your firewall</div>
+            <div class="drop-down" on-tap="_toggleGcpDropDown">
+              <img src="images/gcp-logo.svg" />
+              <span>Instructions</span>
+              <iron-icon id="gcpDropDownIcon" icon="arrow-drop-down"></iron-icon>
+            </div>
+          </div>
+          <iron-collapse id="gcpDropDown">
+            <div class="section-content-instructions">
+              <outline-cloud-instructions-view title="Create a firewall rule" thumbnail-path="images/gcp-thumbnail-1.png" image-path="images/gcp-screenshot-1.png">
+                <ol>
+                  <li><a href="https://console.cloud.google.com/networking/firewalls/add">Add a new firewall rule<iron-icon icon="open-in-new"></iron-icon></a> to your Compute Engine project.</li>
+                  <li>Type 'outline' in the 'Name' field.</li>
+                  <li>Type 'outline' in the 'Target tags' field.</li>
+                  <li>Type '0.0.0.0/0' in the 'Source IP ranges' field.</li>
+                  <li>Select 'Allow all' under 'Protocols and ports'.</li>
+                  <li>Click 'Create'.</li>
+                </ol>
+              </outline-cloud-instructions-view>
+            </div>
+            <div class="section-content-instructions">
+              <outline-cloud-instructions-view title="Assign firewall rule" thumbnail-path="images/gcp-thumbnail-2.png" image-path="images/gcp-screenshot-2.png"">
+                <ol>
+                  <li>Navigate to the <a href="https://console.cloud.google.com/compute/instances">VM instances screen<iron-icon icon="open-in-new"></iron-icon></a>.</li>
+                  <li>Click on the instance where you want to host Outline.</li>
+                  <li>Click 'EDIT' at the top of the VM Instance details screen.</li>
+                  <li>Type 'outline' in the 'Network tags' field.</li>
+                  <li>Click 'SAVE'.</li>
+                </ol>
+              </outline-cloud-instructions-view>
+            </div>
+          </iron-collapse>
+        </div>
+        <!-- AWS -->
+        <div class="card-section" hidden$="[[!isCloudProviderAws]]">
+          <div class="section-header">
+            <span class="stepcircle">1</span>
+            <div class="instructions">Configure your firewall</div>
+            <div class="drop-down" on-tap="_toggleAwsDropDown">
+              <img id="aws-logo" src="images/aws-logo.svg" />
+              <span>Instructions</span>
+              <iron-icon id="awsDropDownIcon" icon="arrow-drop-down"></iron-icon>
+            </div>
+          </div>
+          <iron-collapse id="awsDropDown">
+            <div class="section-content-instructions">
+              <outline-cloud-instructions-view title="Create a Security Group" thumbnail-path="images/aws-thumbnail-1.png" image-path="images/aws-screenshot-1.png">
+                <ol>
+                  <li>Once you've created your EC2 instance, open the <a href="https://console.aws.amazon.com/ec2/v2/home">EC2 Management Console<iron-icon icon="open-in-new"></iron-icon></a>.</li>
+                  <li>Under 'Network & Security', select 'Security Groups'.</li>
+                  <li>Click on 'Create Security Group'.</li>
+                  <li>Type 'outline' in the 'Security group name' and 'Description' fields.</li>
+                  <li>Click 'Add Rule'.</li>
+                  <li>Select 'All traffic' under 'Type', and 'Anywhere' under 'Source'.</li>
+                </ol>
+              </outline-cloud-instructions-view>
+            </div>
+            <div class="section-content-instructions">
+              <outline-cloud-instructions-view title="Assign Security Group" thumbnail-path="images/aws-thumbnail-2.png" image-path="images/aws-screenshot-2.png">
+                <ol>
+                  <li>Navigate to <a href="https://console.aws.amazon.com/ec2/v2/home#Instances:sort=instanceId">Instances<iron-icon icon="open-in-new"></iron-icon></a>.</li>
+                  <li>Click 'Actions' > 'Networking' > 'Change Security Groups' at the top of the 'Instances' screen.</li>
+                  <li>Select the 'outline' Security Group, unselect other security groups.</li>
+                  <li>Click 'Assign Security Groups'.</li>
+                </ol>
+              </outline-cloud-instructions-view>
+            </div>
+          </iron-collapse>
+        </div>
+        <!-- Install command -->
+        <div class="card-section">
+          <div class="section-header">
+            <span class="stepcircle" hidden$="[[!isGenericCloudProvider]]">1</span>
+            <span class="stepcircle" hidden$="[[isGenericCloudProvider]]">2</span>
+            <div class="instructions">Log into your server, and run this command.</div>
+          </div>
+          <div class="section-content">
+            <div id="command" class="code">bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"</div>
           </div>
         </div>
-        <div>
-          <iron-icon icon="content-paste"></iron-icon>
-          <div class='stepContent'>
-            <div class='instructions'>Second, paste the output from the installation process here and click 'Done'.</div>
-            <textarea id='serverConfig' type='text' placeholder$='[[placeholderText]]' class='code' rows='4'></textarea>
+        <!-- Paste input -->
+        <div class="card-section">
+          <div class="section-header">
+            <span class="stepcircle" hidden$="[[!isGenericCloudProvider]]">2</span>
+            <span class="stepcircle" hidden$="[[isGenericCloudProvider]]">3</span>
+            <div class="instructions">Paste your installation output here.</div>
+          </div>
+          <div class="section-content">
+            <textarea id="serverConfig" type="text" placeholder$="[[placeholderText]]" class="code" rows="3"></textarea>
           </div>
         </div>
-        <div id='buttonRow'>
-          <paper-button id='cancelButton' on-tap="cancelTapped" class="secondary">CANCEL</paper-button>
-          <paper-button id='doneButton' on-tap="doneTapped" class="primary">DONE</paper-button>
+        <div id="button-row">
+          <paper-button id="cancelButton" on-tap="cancelTapped" class="secondary">CANCEL</paper-button>
+          <paper-button id="doneButton" on-tap="doneTapped" class="primary">DONE</paper-button>
         </div>
-      </div>  <!-- end of .card -->
+      </div>
     </outline-step-view>
 
     <paper-dialog id='errorDialog' modal>
@@ -136,10 +271,30 @@
         errorText: String,
         placeholderText: {
           type: String,
-          value: '{"apiUrl":"https://xxx.xxx.xxx.xxx:xxxxx/xxxxxxxxxxxxxxxxxxxxxx","certSha256":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}'
+          value: '{"apiUrl":"https://xxx.xxx.xxx.xxx:xxxxx/xxxxxxxxxxxxxxxxxxxxxx","certSha256":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}'
 
         },
-        showConnection: Boolean
+        showConnection: Boolean,
+        cloudProvider: {
+          type: String,
+          value: 'generic'
+        },
+        cloudProviderName: {
+          type: String,
+          computed: '_computeCloudProviderName(cloudProvider)'
+        },
+        isCloudProviderAws: {
+          type: Boolean,
+          computed: '_computeIsCloudProviderAws(cloudProvider)'
+        },
+        isCloudProviderGcp: {
+          type: Boolean,
+          computed: '_computeIsCloudProviderGcp(cloudProvider)'
+        },
+        isGenericCloudProvider: {
+          type: Boolean,
+          computed: '_computeIsGenericCloudProvider(cloudProvider)'
+        }
       },
       showError: function(errorTitle, errorMessage) {
         this.showConnection = false;
@@ -174,6 +329,34 @@
         this.clearError();
         this.showConnection = false;
         this.$.errorDialog.close();
+        this.$.awsDropDown.hide();
+        this.$.gcpDropDown.hide();
+      },
+      _computeCloudProviderName: function(cloudProvider) {
+        switch(cloudProvider) {
+          case 'aws': return 'Amazon Web Services';
+          case 'gcp': return 'Google Cloud Platform';
+          default: return 'your server';
+        }
+      },
+      _computeIsCloudProviderAws: function(cloudProvider) {
+        return cloudProvider === 'aws'
+      },
+      _computeIsCloudProviderGcp: function(cloudProvider) {
+        return cloudProvider === 'gcp'
+      },
+      _computeIsGenericCloudProvider: function(cloudProvider) {
+        return cloudProvider === 'generic';
+      },
+      _toggleAwsDropDown: function() {
+        this._toggleDropDown(this.$.awsDropDown, this.$.awsDropDownIcon)
+      },
+      _toggleGcpDropDown: function() {
+        this._toggleDropDown(this.$.gcpDropDown, this.$.gcpDropDownIcon);
+      },
+      _toggleDropDown: function(dropDown, icon) {
+        dropDown.toggle();
+        icon.icon = dropDown.opened ? 'arrow-drop-up' : 'arrow-drop-down';
       }
     });
   </script>

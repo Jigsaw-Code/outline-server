@@ -27,6 +27,8 @@ const shell = electron.shell;
 
 const debugMode = process.env.OUTLINE_DEBUG === 'true';
 
+const IMAGES_URL = `file://${path.join(__dirname, 'server_manager', 'web_app')}`;
+
 interface IpcEvent {
   returnValue: {};
 }
@@ -181,6 +183,15 @@ function main() {
       mainWindow.restore();
     }
     mainWindow.focus();
+  });
+
+  ipcMain.on('open-image', (event: IpcEvent, args: string[]) => {
+    if (!args || args.length === 0) {
+      console.error('open-image event received no image path.');
+      return;
+    }
+    const imagePath = args[0];
+    shell.openExternal(path.join(IMAGES_URL, imagePath));
   });
 
   app.on('activate', () => {

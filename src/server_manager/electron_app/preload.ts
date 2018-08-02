@@ -21,7 +21,8 @@ const ipcRenderer = electron.ipcRenderer;
 interface ElectronGlobal extends NodeJS.Global {
   whitelistCertificate: (fingerprint: string) => void;
   onElectronEvent: (event: string, listener: () => void) => void;
-  sendElectronEvent: (event: string) => void;
+  // tslint:disable-next-line:no-any
+  sendElectronEvent: (event: string, ...args: any[]) => void;
   runDigitalOceanOauth: () => digitalocean_oauth.OauthSession;
 }
 
@@ -33,8 +34,9 @@ process.once('loaded', () => {
   electronGlobal.onElectronEvent = (event: string, listener: () => void) => {
     ipcRenderer.on(event, listener);
   };
-  electronGlobal.sendElectronEvent = (event: string) => {
-    ipcRenderer.send(event);
+  // tslint:disable-next-line:no-any
+  electronGlobal.sendElectronEvent = (event: string, ...args: any[]) => {
+    ipcRenderer.send(event, args);
   };
   electronGlobal.runDigitalOceanOauth = digitalocean_oauth.runOauth;
 });

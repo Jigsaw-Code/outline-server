@@ -221,7 +221,9 @@
       listeners: {
         'RegionSelected': 'handleRegionSelected',
         'MetricsChoiceSelected': 'handleMetricsChoiceSelected',
-        'OpenManualServerEntry': 'handleManualServerSelected',
+        'SetUpGenericCloudProviderRequested': 'handleSetUpGenericCloudProviderRequested',
+        'SetUpAwsRequested': 'handleSetUpAwsRequested',
+        'SetUpGcpRequested': 'handleSetUpGcpRequested',
         'ManualServerEntryCancelled': 'handleManualCancelled'
       },
       showIntro: function () {
@@ -268,8 +270,18 @@
           regionId: this.$.regionPicker.getSelectedRegionId()
         });
       },
-      handleManualServerSelected: function() {
+      handleSetUpGenericCloudProviderRequested: function () {
+        this.handleManualServerSelected('generic');
+      },
+      handleSetUpAwsRequested: function() {
+        this.handleManualServerSelected('aws');
+      },
+      handleSetUpGcpRequested: function() {
+        this.handleManualServerSelected('gcp');
+      },
+      handleManualServerSelected: function(cloudProvider) {
         this.$.manualEntry.clear();
+        this.$.manualEntry.cloudProvider = cloudProvider;
         this.currentPage = 'manualEntry';
       },
       handleManualCancelled: function() {
