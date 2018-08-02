@@ -25,100 +25,155 @@
     <style>
       :host {
         text-align: center;
-        --do-blue: #1637FF;
         --manual-server-green: #00BFA5;
+        --aws-orange: #FF9900;
+        --gcp-blue: #4285F4;
       }
-      a {
-        cursor: pointer;
+      .container {
+        display: flex;
+        flex-flow: row wrap;
+        padding: 12px;
       }
       .card {
-        padding: 12px 0 24px 0;
-        margin: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 12px 0 0;
+        margin: 6px;
+        height: 324px;
+        width: 47.5%;
         text-align: left;
         color: rgba(0,0,0,0.87);
         font-weight: normal;
-        box-shadow: 0 0 2px 0 rgba(0,0,0,0.14), 0 2px 2px 0 rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
         border-radius: 2px;
+        /* For shadows and hover/click colours. */
+        transition: 135ms;
+        /* Whole card is clickable. */
+        cursor: pointer;
       }
-      .card paper-button {
-        width: 100%;
-        margin: 24px 0 0 0;
-        letter-spacing: 0.75px;
-      }
-      .card#digitalOcean paper-button {
-        color: #FFF;
-        background-color: var(--do-blue);
 
+      .card#digital-ocean {
+        color: rgba(255, 255, 255, 0.87);
       }
-      .card#digitalOcean .difficultyLevel {
-        color: var(--do-blue);
+
+      /* Card shadows (common to all cards).` */
+      .card {
+        box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.02), 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
       }
-      .card#manualServer paper-button {
-        color: #000;
-        background-color: var(--manual-server-green);
+      .card:hover {
+        box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.20), 0 4px 5px 0 rgba(0, 0, 0, 0.10), 0 1px 10px 0 rgba(0, 0, 0, 0.20);
       }
-      .card#manualServer .difficultyLevel {
-        color: var(--manual-server-green);
+      .card:active {
+        box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.20), 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
       }
-      .card .cardHeader {
+
+      /* DigitalOcean card background colours (gets brighter, inactive -> active). */
+      .card#digital-ocean {
+        background: rgba(22, 55, 255, 100);
+      }
+      .card#digital-ocean:hover {
+        background: rgba(22, 55, 255, 0.92);
+      }
+      .card#digital-ocean:active {
+        background: rgba(22, 55, 255, 0.84);
+      }
+
+      /* Non-DigitalOcean card background colours (get darker, inactive -> active). */
+      .card:hover {
+        background: rgba(38, 50, 56, 0.08);
+      }
+      .card:active {
+        background: rgba(38, 50, 56, 0.16);
+      }
+
+      .card .card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 0 24px 12px;
-        border-bottom: 1px solid rgba(0, 0, 0, .12);
       }
-      .card .cardBody {
+      .card .card-body {
         padding: 0 24px;
+        flex: 7; /* for spacing */
       }
-      .card .difficultyLevel {
+      .card .tag {
         font-weight: 500;
         letter-spacing: .05em;
         font-size: 10px;
-        color: rgba(255, 255, 255, 0.54);
       }
-      .card .cardLeftColumn {
-        display: inline-block;
-        vertical-align: top;
-        width: 200px;
+      .card#digital-ocean .tag {
+        color: rgba(255,255,255,0.87);
       }
-      .card .cardLeftColumn .title {
+      .card#manual-server .tag {
+        color: var(--manual-server-green);
+      }
+      .card#aws .tag {
+        color: var(--aws-orange);
+      }
+      .card#gcp .tag {
+        color: var(--gcp-blue);
+      }
+      .card-title {
         font-size: 20px;
-        margin-top: 22px;
+        margin: 0 24px;
         line-height: 32px;
+        flex: 2; /* for spacing */
       }
-      .card .cardLeftColumn img {
+      .card img {
         margin-top: 11px;
       }
-      .card .cardLeftColumn .description {
-        color: rgba(0,0,0,0.54);
-        line-height: 22px;
-        margin-top: 16px;
+      #digital-ocean img {
+        height: 22px;
+        width: 22px;
       }
       .card p {
         margin: 16px 0 0 0;
         color: rgba(255, 255, 255, 0.54);
       }
-      .card .cardRightColumn {
-        display: inline-block;
-        vertical-align: top;
-        width: 190px;
-        line-height: 32px;
+      .card .description {
         color: rgba(0,0,0,0.87);
         letter-spacing: 0;
-        line-height: 32px;
-        margin: 24px 0px 0px 50px;
+        line-height: 24px;
       }
-      .card .cardRightColumn ul {
+      .card .description ul {
         margin-top: 0px;
         padding-left: 16px;
       }
-      #digitalOcean .cardRightColumn ul {
+      .card .description ul li {
+        margin-bottom: 8px;
+      }
+      .card-footer {
+        height: 54px;
+        border-top: 1px solid rgba(0,0,0,0.12);
+      }
+      .card-footer paper-button {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        letter-spacing: 0.75px;
+        background-color: inherit;
+        color: rgba(0,0,0,0.87);
+      }
+      #digital-ocean .card-footer {
+        border-top: 1px solid rgba(255,255,255,0.12);
+      }
+      #digital-ocean .card-footer paper-button {
+        color: rgba(255,255,255,0.87);
+      }
+      #digital-ocean .description ul {
         /* NOTE: this URL must be relative to the ui_components sub dir,
            unlike our <img src="..."> attributes */
-        list-style-image: url('../images/check_blue.svg');
+        list-style-image: url('../images/check_white.svg');
+        color: rgba(255,255,255,0.87);
       }
-      #manualServer .cardRightColumn ul {
+      #manual-server .description ul {
         list-style-image: url('../images/check_green.svg');
+      }
+      #aws .description ul {
+        list-style-image: url('../images/check_orange.svg');
+      }
+      #gcp .description ul {
+        list-style-image: url('../images/check_blue.svg');
       }
       .dimmed {
         color: rgba(255, 255, 255, 0.54);
@@ -126,53 +181,91 @@
     </style>
 
     <outline-step-view>
-      <span slot="step-title">Choose a server, set up Outline.</span>
+      <span slot="step-title">Choose a cloud service, set up Outline.</span>
       <span slot="step-description">Don't have a server? Create an account<br/> with DigitalOcean.</span>
 
-      <div id='digitalOcean' class='card'>
-        <div class="cardHeader">
-          <div class='difficultyLevel'>RECOMMENDED</div>
-          <img src="images/digital_ocean_logo.svg">
-        </div>
-        <div class="cardBody">
-          <div class='cardLeftColumn'>
-            <div class='title'>Set up Outline on DigitalOcean</div>
+      <div class="container">
+        <div id="digital-ocean" class="card" on-tap="connectToDigitalOceanTapped">
+          <div class="card-header">
+            <div class="tag">RECOMMENDED</div>
+            <img src="images/do_white_logo.svg">
           </div>
-          <div class='cardRightColumn'>
-            <ul>
-              <li>Easiest setup process</li>
-              <li>Only $5 a month</li>
-              <li>1 TB of data transfer</li>
-              <li>Cancel at anytime</li>
-            </ul>
+          <div class="card-title">DigitalOcean</div>
+          <div class="card-body">
+            <div class="description">
+              <ul>
+                <li>Easiest setup process</li>
+                <li>Only $5 a month</li>
+                <li>1 TB of data transfer</li>
+                <li>Cancel at anytime</li>
+              </ul>
+            </div>
           </div>
-          <paper-button on-tap="connectToDigitalOceanTapped" class="primary">Connect with DigitalOcean</paper-button>
+          <div class="card-footer">
+            <paper-button on-tap="connectToDigitalOceanTapped" class="primary">Get started</paper-button>
+          </div>
         </div>
-      </div>  <!-- end of #digitalOcean -->
 
-      <div id='manualServer' class='card'>
-        <div class="cardHeader">
-          <div class='difficultyLevel'>ADVANCED</div>
-          <img src="images/cloud.svg">
-        </div>
-        <div class="cardBody">
-          <div class='cardLeftColumn'>
-            <div class='title'>Set up Outline anywhere</div>
-            <div class='description'>Outline can run on all major cloud providers. You can also deploy it on your own infrastructure.</div>
+        <div id="gcp" class="card" on-tap="setUpGcpTapped">
+          <div class="card-header">
+            <div class="tag">ADVANCED</div>
+            <img src="images/gcp-logo.svg">
           </div>
-          <div class='cardRightColumn'>
-            <div>Tested on:</div>
-            <ul>
-              <li>Amazon EC2</li>
-              <li>Google Compute Engine</li>
-              <li>Vultr</li>
-              <li>Linode</li>
-              <li>Liquid Web</li>
-            </ul>
+          <div class="card-title">Google Cloud Platform</div>
+          <div class="card-body">
+            <div class="description">
+              <ul>
+                <li>Step-by-step set-up guide</li>
+                <li>Firewall instructions</li>
+                <li>Simple install commands</li>
+              </ul>
+            </div>
           </div>
-          <paper-button on-tap='manualServerTapped'>Get started</paper-button>
+          <div class="card-footer">
+            <paper-button on-tap="setUpGcpTapped" class="primary">Get started</paper-button>
+          </div>
         </div>
-      </div>   <!-- end of #manualServer -->
+
+        <div id="aws" class="card" on-tap="setUpAwsTapped">
+          <div class="card-header">
+            <div class="tag">ADVANCED</div>
+            <img src="images/aws-logo.svg">
+          </div>
+          <div class="card-title">Amazon Web Services</div>
+          <div class="card-body">
+            <div class="description">
+              <ul>
+                <li>Step-by-step set-up guide</li>
+                <li>EC2 firewall instructions</li>
+                <li>Simple install commands</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer">
+            <paper-button on-tap="setUpAwsTapped" class="primary">Get started</paper-button>
+          </div>
+        </div>
+
+        <div id="manual-server" class="card" on-tap="setUpGenericCloudProviderTapped">
+          <div class="card-header">
+            <div class="tag">ADVANCED</div>
+            <img src="images/cloud.svg">
+          </div>
+          <div class="card-title">Set up Outline anywhere</div>
+          <div class="card-body">
+            <div class='description'>
+              <ul>
+                <li>Tested on VULTR, Linode, and Liquid Web</li>
+                <li>Simple install commands</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer">
+            <paper-button on-tap="setUpGenericCloudProviderTapped">Get started</paper-button>
+          </div>
+        </div>
+
+      </div>
     </outline-step-view>
 
   </template>
@@ -182,8 +275,14 @@
       connectToDigitalOceanTapped: function() {
         this.fire('ConnectToDigitalOcean');
       },
-      manualServerTapped: function() {
-        this.fire('OpenManualServerEntry');
+      setUpGenericCloudProviderTapped: function() {
+        this.fire('SetUpGenericCloudProviderRequested');
+      },
+      setUpAwsTapped: function() {
+        this.fire('SetUpAwsRequested');
+      },
+      setUpGcpTapped: function() {
+        this.fire('SetUpGcpRequested');
       }
     });
   </script>

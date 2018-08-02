@@ -37,7 +37,8 @@ const DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
 
 // These functions are defined in electron_app/preload.ts.
 declare function onElectronEvent(event: string, listener: () => void): void;
-declare function sendElectronEvent(event: string): void;
+// tslint:disable-next-line:no-any
+declare function sendElectronEvent(event: string, ...args: any[]): void;
 interface OauthSession {
   result: Promise<string>;
   isCancelled(): boolean;
@@ -183,6 +184,10 @@ export class App {
 
     appRoot.addEventListener('CancelServerCreationRequested', (event: PolymerEvent) => {
       this.cancelServerCreation(this.selectedServer);
+    });
+
+    appRoot.addEventListener('OpenImageRequested', (event: PolymerEvent) => {
+      sendElectronEvent('open-image', event.detail.imagePath, event.detail.windowTitle);
     });
 
     onElectronEvent('update-downloaded', this.displayAppUpdateNotification.bind(this));
