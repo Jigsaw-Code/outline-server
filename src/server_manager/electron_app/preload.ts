@@ -12,31 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as electron from 'electron';
+import {ipcRenderer} from 'electron';
 
 import * as digitalocean_oauth from './digitalocean_oauth';
 
-const ipcRenderer = electron.ipcRenderer;
+// For communication between the main and renderer process.
+//
+// Required since we disable nodeIntegration; for more info, see the entries here for
+// nodeIntegration and preload:
+//   https://electronjs.org/docs/api/browser-window#class-browserwindow
 
-interface ElectronGlobal extends NodeJS.Global {
-  whitelistCertificate: (fingerprint: string) => void;
-  onElectronEvent: (event: string, listener: () => void) => void;
-  // tslint:disable-next-line:no-any
-  sendElectronEvent: (event: string, ...args: any[]) => void;
-  runDigitalOceanOauth: () => digitalocean_oauth.OauthSession;
-}
+// tslint:disable-next-line:no-any
+(window as any).whitelistCertificate = (fingerprint: string) => {
+  return ipcRenderer.sendSync('whitelist-certificate', fingerprint);
+};
 
-process.once('loaded', () => {
-  const electronGlobal = (global as ElectronGlobal);
-  electronGlobal.whitelistCertificate = (fingerprint: string) => {
-    return ipcRenderer.sendSync('whitelist-certificate', fingerprint);
-  };
-  electronGlobal.onElectronEvent = (event: string, listener: () => void) => {
-    ipcRenderer.on(event, listener);
-  };
-  // tslint:disable-next-line:no-any
-  electronGlobal.sendElectronEvent = (event: string, ...args: any[]) => {
-    ipcRenderer.send(event, args);
-  };
-  electronGlobal.runDigitalOceanOauth = digitalocean_oauth.runOauth;
-});
+// tslint:disable-next-line:no-any
+(window as any).openImage = (basename: string) => {
+  ipcRenderer.send('open-image', basename);
+};
+
+// tslint:disable-next-line:no-any
+(window as any).onUpdateDownloaded = (callback: () => void) => {
+  ipcRenderer.on('update-downloaded', callback);
+};
+
+// tslint:disable-next-line:no-any
+(window as any).runDigitalOceanOauth = digitalocean_oauth.runOauth;
+
+// tslint:disable-next-line:no-any
+(window as any).bringToFront = () => {
+  return ipcRenderer.send('bring-to-front');
+};
