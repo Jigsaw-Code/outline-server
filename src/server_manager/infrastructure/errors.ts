@@ -42,3 +42,11 @@ export class ServerInstallFailedError extends OutlineError {
     super(message);
   }
 }
+
+// Thrown when a Shadowbox API request fails.
+// Response will be present if the server was contacted; if absent, a network error occurred.
+export class ServerApiError extends OutlineError {
+  constructor(message: string, public readonly response?: Response) {
+    super(message);
+  }
+}

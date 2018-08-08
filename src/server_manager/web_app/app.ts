@@ -338,25 +338,24 @@ export class App {
   //       return the UI to its exact prior state. Fortunately, the most likely
   //       time to discover an invalid access token is when the application
   //       starts.
-  private digitalOceanRetry = <T>(f: () => Promise<T>):
-      Promise<T> => {
-        return f().catch((e) => {
-          if (!(e instanceof digitalocean_api.XhrError)) {
-            return Promise.reject(e);
-          }
+  private digitalOceanRetry = <T>(f: () => Promise<T>): Promise<T> => {
+    return f().catch((e) => {
+      if (!(e instanceof digitalocean_api.XhrError)) {
+        return Promise.reject(e);
+      }
 
-          return new Promise((resolve, reject) => {
-            this.appRoot.showConnectivityDialog((retry: boolean) => {
-              if (retry) {
-                this.digitalOceanRetry(f).then(resolve, reject);
-              } else {
-                this.clearCredentialsAndShowIntro();
-                reject(e);
-              }
-            });
-          });
+      return new Promise((resolve, reject) => {
+        this.appRoot.showConnectivityDialog((retry: boolean) => {
+          if (retry) {
+            this.digitalOceanRetry(f).then(resolve, reject);
+          } else {
+            this.clearCredentialsAndShowIntro();
+            reject(e);
+          }
         });
-      };
+      });
+    });
+  };
 
   private displayError(message: string, cause: Error) {
     console.error(`${message}: ${cause}`);
@@ -609,21 +608,29 @@ export class App {
 
   private showTransferStats(runningServer: server.Server, serverView: Polymer) {
     const refreshTransferStats = () => {
-      runningServer.getDataUsage().then((stats) => {
-        // Calculate total bytes transferred.
-        let totalBytes = 0;
-        // tslint:disable-next-line:forin
-        for (const accessKeyId in stats.bytesTransferredByUserId) {
-          totalBytes += stats.bytesTransferredByUserId[accessKeyId];
-        }
-        serverView.setServerTransferredData(totalBytes);
-        // tslint:disable-next-line:forin
-        for (const accessKeyId in stats.bytesTransferredByUserId) {
-          const transferredBytes = stats.bytesTransferredByUserId[accessKeyId];
-          const relativeTraffic = totalBytes ? 100 * transferredBytes / totalBytes : 0;
-          serverView.updateAccessKeyRow(accessKeyId, {transferredBytes, relativeTraffic});
-        }
-      });
+      runningServer.getDataUsage().then(
+          (stats) => {
+            // Calculate total bytes transferred.
+            let totalBytes = 0;
+            // tslint:disable-next-line:forin
+            for (const accessKeyId in stats.bytesTransferredByUserId) {
+              totalBytes += stats.bytesTransferredByUserId[accessKeyId];
+            }
+            serverView.setServerTransferredData(totalBytes);
+            // tslint:disable-next-line:forin
+            for (const accessKeyId in stats.bytesTransferredByUserId) {
+              const transferredBytes = stats.bytesTransferredByUserId[accessKeyId];
+              const relativeTraffic = totalBytes ? 100 * transferredBytes / totalBytes : 0;
+              serverView.updateAccessKeyRow(accessKeyId, {transferredBytes, relativeTraffic});
+            }
+          },
+          (e: errors.ServerApiError) => {
+            // Since failure is invisible to users, allow non-network errors percolate to the top
+            // so that a Sentry report will be generated.
+            if (e.response) {
+              throw e;
+            }
+          });
     };
     refreshTransferStats();
 
