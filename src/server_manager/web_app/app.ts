@@ -624,12 +624,17 @@ export class App {
               serverView.updateAccessKeyRow(accessKeyId, {transferredBytes, relativeTraffic});
             }
           },
-          (e: errors.ServerApiError) => {
-            // Since failure is invisible to users, allow non-network errors percolate to the top
-            // so that a Sentry report will be generated.
-            if (e.response) {
-              throw e;
+          (e) => {
+            // Since failures are invisible to users we generally want exceptions here to bubble
+            // up and trigger a Sentry report. The exception is network errors, about which we can't
+            // do much (note: ShadowboxServer generates a breadcrumb for failures regardless, for
+            // anyone who explicitly submits feedback).
+            if (e instanceof errors.ServerApiError) {
+              if (!e.response) {
+                return;
+              }
             }
+            throw e;
           });
     };
     refreshTransferStats();
