@@ -627,12 +627,10 @@ export class App {
           (e) => {
             // Since failures are invisible to users we generally want exceptions here to bubble
             // up and trigger a Sentry report. The exception is network errors, about which we can't
-            // do much (note: ShadowboxServer generates a breadcrumb for failures regardless, for
-            // anyone who explicitly submits feedback).
-            if (e instanceof errors.ServerApiError) {
-              if (!e.response) {
-                return;
-              }
+            // do much (note: ShadowboxServer generates a breadcrumb for failures regardless which
+            // will show up when someone explicitly submits feedback).
+            if (e instanceof errors.ServerApiError && e.isNetworkError()) {
+              return;
             }
             throw e;
           });
