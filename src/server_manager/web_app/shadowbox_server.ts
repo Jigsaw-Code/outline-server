@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as errors from '../infrastructure/errors';
 import * as server from '../model/server';
 import {SentryErrorReporter} from './error_reporter';
 
@@ -177,11 +178,10 @@ export class ShadowboxServer implements server.Server {
           .then(
               (response) => {
                 if (!response.ok) {
-                  const msg = `API request to ${path} failed with status ${response.status}, type ${
-                      response.type}`;
+                  const msg = `API request to ${path} failed with status ${response.status}`;
                   console.error(msg);
                   SentryErrorReporter.logError(msg);
-                  throw new Error(msg);
+                  throw new errors.ServerApiError(msg, response);
                 }
                 console.debug(`API request to ${path} succeeded`);
                 return response.text();
@@ -190,7 +190,7 @@ export class ShadowboxServer implements server.Server {
                 const msg = `API request to ${path} failed due to network error`;
                 console.error(msg, error);
                 SentryErrorReporter.logError(msg);
-                throw error;
+                throw new errors.ServerApiError(msg);
               })
           .then((body) => {
             if (!body) {
