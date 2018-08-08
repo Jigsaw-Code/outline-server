@@ -27,7 +27,8 @@ const shell = electron.shell;
 
 const debugMode = process.env.OUTLINE_DEBUG === 'true';
 
-const IMAGES_URL = `file://${path.join(__dirname, 'server_manager', 'web_app')}`;
+const IMAGES_BASENAME =
+    `${path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), 'server_manager', 'web_app')}`;
 
 interface IpcEvent {
   returnValue: {};
@@ -186,12 +187,10 @@ function main() {
   });
 
   ipcMain.on('open-image', (event: IpcEvent, args: string[]) => {
-    if (!args || args.length === 0) {
-      console.error('open-image event received no image path.');
-      return;
+    const p = path.join(IMAGES_BASENAME, args[0]);
+    if (!shell.openItem(p)) {
+      console.error(`could not open image at ${p}`);
     }
-    const imagePath = args[0];
-    shell.openExternal(path.join(IMAGES_URL, imagePath));
   });
 
   app.on('activate', () => {
