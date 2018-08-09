@@ -23,6 +23,6 @@ export SB_API_PREFIX=TestApiPrefix
 export SB_METRICS_URL=https://metrics-test.uproxy.org
 export SB_STATE_DIR=/tmp
 
-source $ROOT_DIR/src/shadowbox/scripts/make_certificate.sh
+source ${ROOT_DIR}/src/shadowbox/scripts/make_certificate.sh
 
-node $BUILD_DIR/shadowbox/app/server/main
+node ${BUILD_DIR}/shadowbox/app/server/main

@@ -17,7 +17,7 @@
 yarn do server_manager/electron_app/build
 
 # Produces dmg and zip images. The latter is required for auto-update.
-$ROOT_DIR/src/server_manager/node_modules/.bin/electron-builder \
+${ROOT_DIR}/src/server_manager/node_modules/.bin/electron-builder \
   --projectDir=build/server_manager/electron_app/static \
   --config.asarUnpack=server_manager/web_app/images \
   --publish=never \

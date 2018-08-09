@@ -16,10 +16,10 @@
 
 # Builds the Electron App
 
-readonly OUT_DIR=$BUILD_DIR/server_manager/electron_app
-rm -rf $OUT_DIR
+readonly OUT_DIR=${BUILD_DIR}/server_manager/electron_app
+rm -rf ${OUT_DIR}
 
-readonly NODE_MODULES_BIN_DIR=$ROOT_DIR/src/server_manager/node_modules/.bin
+readonly NODE_MODULES_BIN_DIR=${ROOT_DIR}/src/server_manager/node_modules/.bin
 
 # Build the Web App.
 do_action server_manager/web_app/build
@@ -31,22 +31,22 @@ tsc -p src/server_manager/electron_app/tsconfig.json --outDir build/server_manag
 
 # Assemble everything together.
 readonly MODULE_DIR=$(dirname $0)
-readonly STATIC_DIR=$OUT_DIR/static
-mkdir -p $STATIC_DIR
-mkdir -p $STATIC_DIR/server_manager
-cp -r $OUT_DIR/js/* $STATIC_DIR
-cp -r $BUILD_DIR/server_manager/web_app/static $STATIC_DIR/server_manager/web_app/
+readonly STATIC_DIR=${OUT_DIR}/static
+mkdir -p ${STATIC_DIR}
+mkdir -p ${STATIC_DIR}/server_manager
+cp -r ${OUT_DIR}/js/* ${STATIC_DIR}
+cp -r ${BUILD_DIR}/server_manager/web_app/static ${STATIC_DIR}/server_manager/web_app/
 # Our electron app assumes all HTML files will be in the web_app directory.
-cp $MODULE_DIR/loading.html $STATIC_DIR/server_manager/web_app/
+cp ${MODULE_DIR}/loading.html ${STATIC_DIR}/server_manager/web_app/
 
 # Electron requires a package.json file for the app's name, etc.
 # We also need to install NPMs at this location for require()
 # in order for require() to work right in the renderer process, which
 # is loaded via a custom protocol.
-cp src/server_manager/package.json yarn.lock $STATIC_DIR
-cd $STATIC_DIR
+cp src/server_manager/package.json yarn.lock ${STATIC_DIR}
+cd ${STATIC_DIR}
 yarn install --prod --ignore-scripts
 
 # Icons.
-cd $ROOT_DIR
-$NODE_MODULES_BIN_DIR/electron-icon-maker --input=src/server_manager/images/launcher-icon.png --output=build/server_manager/electron_app/static
+cd ${ROOT_DIR}
+${NODE_MODULES_BIN_DIR}/electron-icon-maker --input=src/server_manager/images/launcher-icon.png --output=build/server_manager/electron_app/static
