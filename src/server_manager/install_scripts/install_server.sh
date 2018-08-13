@@ -343,9 +343,10 @@ function add_api_url_to_config() {
 }
 
 function check_firewall() {
-  local readonly GET_ACCESS_KEYS=$(curl --insecure -s ${LOCAL_API_URL}/access-keys)
-  local readonly GET_ACCESS_KEY_PORT="$DOCKER_CMD exec shadowbox node -e 'console.log($GET_ACCESS_KEYS[\"accessKeys\"][0][\"port\"])'"
-  local -r ACCESS_KEY_PORT=$($GET_ACCESS_KEY_PORT)
+  # Write the access keys to a temporary file due to the near-impossibility
+  # of correctly escaping JSON on the command line.
+  $DOCKER_CMD exec shadowbox curl --insecure -s ${LOCAL_API_URL}/access-keys -o /tmp/ak
+  local -r ACCESS_KEY_PORT=$($DOCKER_CMD exec shadowbox "node -r fs -p 'JSON.parse(fs.readFileSync(\"/tmp/ak\")).accessKeys[0].port;'")
   if ! curl --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" -s "${PUBLIC_API_URL}/access-keys" >/dev/null; then
      log_error "BLOCKED"
      FIREWALL_STATUS="\
