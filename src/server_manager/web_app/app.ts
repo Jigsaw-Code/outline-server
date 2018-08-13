@@ -35,17 +35,6 @@ interface PolymerEvent extends Event {
 //   https://www.digitalocean.com/help/referral-program/
 const DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
 
-// These functions are defined in electron_app/preload.ts.
-declare function onElectronEvent(event: string, listener: () => void): void;
-// tslint:disable-next-line:no-any
-declare function sendElectronEvent(event: string, ...args: any[]): void;
-interface OauthSession {
-  result: Promise<string>;
-  isCancelled(): boolean;
-  cancel(): void;
-}
-declare function runDigitalOceanOauth(): OauthSession;
-
 interface UiAccessKey {
   id: string;
   placeholderName: string;
@@ -187,11 +176,10 @@ export class App {
     });
 
     appRoot.addEventListener('OpenImageRequested', (event: PolymerEvent) => {
-      sendElectronEvent('open-image', event.detail.imagePath, event.detail.windowTitle);
+      openImage(event.detail.imagePath);
     });
 
-    onElectronEvent('update-downloaded', this.displayAppUpdateNotification.bind(this));
-    sendElectronEvent('app-ui-ready');
+    onUpdateDownloaded(this.displayAppUpdateNotification.bind(this));
   }
 
   start(): void {
@@ -254,7 +242,7 @@ export class App {
       }
       this.appRoot.adminEmail = account.email;
       if (account.status === 'active') {
-        sendElectronEvent('bring-to-front');
+        bringToFront();
         let maybeSleep = Promise.resolve();
         if (activatingAccount) {
           // Show the 'account active' screen for a few seconds if the account was activated during
@@ -401,7 +389,7 @@ export class App {
         .catch((error) => {
           if (!session.isCancelled()) {
             this.clearCredentialsAndShowIntro();
-            sendElectronEvent('bring-to-front');
+            bringToFront();
             this.displayError('Authentication with DigitalOcean failed', error);
           }
         });

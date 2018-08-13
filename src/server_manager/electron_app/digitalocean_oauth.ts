@@ -96,16 +96,6 @@ function getAccount(accessToken: string): Promise<Account> {
   });
 }
 
-export interface OauthSession {
-  // The result of the OAuth session, with the authentication token.
-  result: Promise<string>;
-  // Checks if the OauthSession has been cancelled.
-  isCancelled(): boolean;
-  // Cancels the OAuth session. The result promise is automatically rejected
-  // and isCancelled() will return true.
-  cancel(): void;
-}
-
 function closeWindowHtml(messageHtml: string) {
   return `<html><script>window.close()</script><body>${messageHtml}. You can close this window.</body></html>`;
 }
