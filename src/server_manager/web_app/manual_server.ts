@@ -26,7 +26,7 @@ class ManualServer extends ShadowboxServer implements server.ManualServer {
     // Electron requires that this be decoded from hex (to unprintable binary),
     // then encoded as base64.
     try {
-      this.whitelistCertificate(btoa(hexToString(config.certSha256)));
+      whitelistCertificate(btoa(hexToString(config.certSha256)));
     } catch (e) {
       // Error whitelisting certificate, may be due to bad user input.
       const msg = 'Error whitelisting certificate';

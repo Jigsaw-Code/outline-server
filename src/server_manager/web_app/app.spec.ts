@@ -23,17 +23,17 @@ import {TokenManager} from './digitalocean_oauth';
 const TOKEN_WITH_NO_SERVERS = 'no-server-token';
 const TOKEN_WITH_ONE_SERVER = 'one-server-token';
 
-// Define Electron's global  functions used by App. See server_manager/electron_app/preload.ts
+// Define functions from preload.ts.
+
 // tslint:disable-next-line:no-any
-const GLOBAL = global as any;
-GLOBAL.onElectronEvent = (event: string, listener: () => void) => {};
-GLOBAL.sendElectronEvent = (event: string) => {};
+(global as any).onUpdateDownloaded = () => {};
+// tslint:disable-next-line:no-any
+(global as any).bringToFront = () => {};
 
 describe('App', () => {
   it('Shows intro when starting with no manual servers or DigitalOcean token', (done) => {
     const polymerAppRoot = new FakePolymerAppRoot();
-    const app = createTestApp(
-        polymerAppRoot, new InMemoryDigitalOceanTokenManager());
+    const app = createTestApp(polymerAppRoot, new InMemoryDigitalOceanTokenManager());
     polymerAppRoot.events.once('screen-change', (currentScreen) => {
       expect(currentScreen).toEqual(AppRootScreen.INTRO);
       done();
@@ -143,13 +143,14 @@ function createTestApp(
   const fakeDigitalOceanSessionFactory = (accessToken: string) => {
     return new FakeDigitalOceanSession(accessToken);
   };
-  const fakeDigitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) => {
-    const repo = new FakeManagedServerRepository();
-    if (session.accessToken === TOKEN_WITH_ONE_SERVER) {
-      repo.createServer();  // OK to ignore promise as the fake implementation is synchronous.
-    }
-    return repo;
-  };
+  const fakeDigitalOceanServerRepositoryFactory =
+      (session: digitalocean_api.DigitalOceanSession) => {
+        const repo = new FakeManagedServerRepository();
+        if (session.accessToken === TOKEN_WITH_ONE_SERVER) {
+          repo.createServer();  // OK to ignore promise as the fake implementation is synchronous.
+        }
+        return repo;
+      };
   if (!manualServerRepo) {
     manualServerRepo = new FakeManualServerRepository();
   }
@@ -200,9 +201,9 @@ class FakePolymerAppRoot {
   showModalDialog() {
     this.backgroundScreen = this.currentScreen;
     this.setScreen(AppRootScreen.DIALOG);
-    const promise = new Promise(()=>{});
+    const promise = new Promise(() => {});
     // Supress Promise not handled warning.
-    promise.then(()=>{});
+    promise.then(() => {});
     return promise;
   }
 
@@ -321,7 +322,8 @@ class FakeDigitalOceanSession implements digitalocean_api.DigitalOceanSession {
 
   // Return fake account data.
   getAccount() {
-    return Promise.resolve({email: 'fake@email.com', uuid: 'fake', email_verified: true, status: 'active'});
+    return Promise.resolve(
+        {email: 'fake@email.com', uuid: 'fake', email_verified: true, status: 'active'});
   }
 
   // Return an empty list of droplets by default.
@@ -337,7 +339,8 @@ class FakeDigitalOceanSession implements digitalocean_api.DigitalOceanSession {
           Promise.reject(new Error('createDroplet not implemented'));
   deleteDroplet = (dropletId: number) => Promise.reject(new Error('deleteDroplet not implemented'));
   getDroplet = (dropletId: number) => Promise.reject(new Error('getDroplet not implemented'));
-  getDropletTags = (dropletId: number) => Promise.reject(new Error('getDropletTags not implemented'));
+  getDropletTags = (dropletId: number) =>
+      Promise.reject(new Error('getDropletTags not implemented'));
   getDroplets = () => Promise.reject(new Error('getDroplets not implemented'));
 }
 

@@ -67,6 +67,11 @@ function createMainWindow() {
   win.webContents.on('new-window', handleNavigation.bind(this));
   win.webContents.on('did-finish-load', () => {
     loadingWindow.hide();
+
+    // Wait until now to check for updates now so that the UI won't miss the event.
+    if (!debugMode) {
+      autoUpdater.checkForUpdates();
+    }
   });
 
   // Disable window maximization.  Setting "maximizable: false" in BrowserWindow
@@ -151,13 +156,6 @@ function main() {
     mainWindow = createMainWindow();
   });
 
-  ipcMain.on('app-ui-ready', () => {
-    // Check for updates after the UI is loaded; otherwise the UI may miss the
-    //'update-downloaded' event.
-    if (!debugMode) {
-      autoUpdater.checkForUpdates();
-    }
-  });
   const UPDATE_DOWNLOADED_EVENT = 'update-downloaded';
   autoUpdater.on(UPDATE_DOWNLOADED_EVENT, (ev, info) => {
     if (mainWindow) {
@@ -165,17 +163,15 @@ function main() {
     }
   });
 
+  // Handle cert whitelisting requests from the renderer process.
   const trustedFingerprints = new Set<string>();
   ipcMain.on('whitelist-certificate', (event: IpcEvent, fingerprint: string) => {
-    const prefix = 'sha256/';
-    const electronFormFingerprint = prefix + fingerprint;
-    trustedFingerprints.add(electronFormFingerprint);
+    trustedFingerprints.add(`sha256/${fingerprint}`);
     event.returnValue = true;
   });
   app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
     event.preventDefault();
-    const isValid = trustedFingerprints.has(certificate.fingerprint);
-    callback(isValid);
+    callback(trustedFingerprints.has(certificate.fingerprint));
   });
 
   // Restores the mainWindow if minimized and brings it into focus.
@@ -186,8 +182,9 @@ function main() {
     mainWindow.focus();
   });
 
-  ipcMain.on('open-image', (event: IpcEvent, args: string[]) => {
-    const p = path.join(IMAGES_BASENAME, args[0]);
+  // Handle "show me where" requests from the renderer process.
+  ipcMain.on('open-image', (event: IpcEvent, basename: string) => {
+    const p = path.join(IMAGES_BASENAME, basename);
     if (!shell.openItem(p)) {
       console.error(`could not open image at ${p}`);
     }

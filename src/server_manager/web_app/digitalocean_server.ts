@@ -207,7 +207,7 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
       const certificateFingerprint = this.getCertificateFingerprint();
       const apiAddress = this.getManagementApiAddress();
       // Loaded both the cert and url without exceptions, they can be set.
-      this.whitelistCertificate(certificateFingerprint);
+      whitelistCertificate(certificateFingerprint);
       this.setManagementApiUrl(apiAddress);
       return true;
     } catch (e) {

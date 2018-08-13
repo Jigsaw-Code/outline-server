@@ -30,9 +30,6 @@ export interface ServerConfig {
   createdTimestampMs: number;
 }
 
-// This function is defined in electron_app/preload.ts.
-declare function whitelistCertificate(fp: string): boolean;
-
 export class ShadowboxServer implements server.Server {
   private managementApiAddress: string;
   private serverConfig: ServerConfig;
@@ -147,14 +144,6 @@ export class ShadowboxServer implements server.Server {
   private getServerConfig(): Promise<ServerConfig> {
     SentryErrorReporter.logInfo('Retrieving server configuration');
     return this.apiRequest<ServerConfig>('server');
-  }
-
-  whitelistCertificate(base64Fingerprint: string): void {
-    // This function is defined in electron_app/preload.ts if we are running
-    // in the electron app, otherwise it will not be defined.
-    if (typeof whitelistCertificate === 'function') {
-      whitelistCertificate(base64Fingerprint);
-    }
   }
 
   protected setManagementApiUrl(apiAddress: string): void {
