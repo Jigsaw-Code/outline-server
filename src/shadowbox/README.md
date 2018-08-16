@@ -11,7 +11,7 @@ client apps. Shadowbox is also compatible with standard Shadowsocks clients.
 
 To install and run Shadowbox on your own server, run
 ```
-wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh | bash
+bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"
 ```
 
 Use `bash -x` instead at the end of the command if you need to debug the installation.
