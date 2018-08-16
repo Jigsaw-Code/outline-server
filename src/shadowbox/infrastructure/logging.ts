@@ -12,25 +12,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as path from 'path';
 
-function makeLogMessage(level: string, message: string): string {
+interface Callsite {
+  getLineNumber(): number;
+  getFileName(): string;
+}
+
+function getCallsite(): Callsite {
+  const originalPrepareStackTrace = Error.prepareStackTrace;
+  Error.prepareStackTrace = (_, stack) => {
+      return stack;
+  };
+  const error = new Error();
+  Error.captureStackTrace(error, getCallsite);
+  // tslint:disable-next-line:no-any
+  const stack = error.stack as any as Callsite[];
+  Error.prepareStackTrace = originalPrepareStackTrace;
+  return stack[1];
+}
+
+function makeLogMessage(level: string, callsite: Callsite, message: string): string {
   // This creates a string in the UTC timezone
   // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
-  return `${level}:${new Date().toISOString()}] ${message}`;
+  const timeStr = new Date().toISOString();
+  return `${level}${timeStr} ${process.pid} ${path.basename(callsite.getFileName())}:${callsite.getLineNumber()}] ${message}`;
 }
 
 export function error(message: string) {
-  console.error(makeLogMessage('E', message));
+  console.error(makeLogMessage('E', getCallsite(), message));
 }
 
 export function warn(message: string) {
-  console.warn(makeLogMessage('W', message));
+  console.warn(makeLogMessage('W', getCallsite(), message));
 }
 
 export function info(message: string) {
-  console.info(makeLogMessage('I', message));
+  console.info(makeLogMessage('I', getCallsite(), message));
 }
 
 export function debug(message: string) {
-  console.debug(makeLogMessage('D', message));
+  console.debug(makeLogMessage('D', getCallsite(), message));
 }
