@@ -12,25 +12,52 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as path from 'path';
 
-function makeLogMessage(level: string, message: string): string {
+interface Callsite {
+  getLineNumber(): number;
+  getFileName(): string;
+}
+
+// Returns the Callsite object of the caller.
+// This relies on the V8 stack trace API: https://github.com/v8/v8/wiki/Stack-Trace-API
+function getCallsite(): Callsite {
+  const originalPrepareStackTrace = Error.prepareStackTrace;
+  Error.prepareStackTrace = (_, stack) => {
+    return stack;
+  };
+  const error = new Error();
+  Error.captureStackTrace(error, getCallsite);
+  // tslint:disable-next-line:no-any
+  const stack = error.stack as any as Callsite[];
+  Error.prepareStackTrace = originalPrepareStackTrace;
+  return stack[1];
+}
+
+// Possible values for the level prefix.
+type LevelPrefix = 'E'|'W'|'I'|'D';
+
+// Formats the log message. Example:
+// I2018-08-16T16:46:21.577Z 167288 main.js:86] ...
+function makeLogMessage(level: LevelPrefix, callsite: Callsite, message: string): string {
   // This creates a string in the UTC timezone
   // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
-  return `${level}:${new Date().toISOString()}] ${message}`;
+  const timeStr = new Date().toISOString();
+  return `${level}${timeStr} ${process.pid} ${path.basename(callsite.getFileName())}:${callsite.getLineNumber()}] ${message}`;
 }
 
 export function error(message: string) {
-  console.error(makeLogMessage('E', message));
+  console.error(makeLogMessage('E', getCallsite(), message));
 }
 
 export function warn(message: string) {
-  console.warn(makeLogMessage('W', message));
+  console.warn(makeLogMessage('W', getCallsite(), message));
 }
 
 export function info(message: string) {
-  console.info(makeLogMessage('I', message));
+  console.info(makeLogMessage('I', getCallsite(), message));
 }
 
 export function debug(message: string) {
-  console.debug(makeLogMessage('D', message));
+  console.debug(makeLogMessage('D', getCallsite(), message));
 }
