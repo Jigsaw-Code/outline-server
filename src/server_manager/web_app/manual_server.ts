@@ -15,7 +15,6 @@
 import {hexToString} from '../infrastructure/hex_encoding';
 import * as server from '../model/server';
 
-import {SentryErrorReporter} from './error_reporter';
 import {ShadowboxServer} from './shadowbox_server';
 
 class ManualServer extends ShadowboxServer implements server.ManualServer {
@@ -29,9 +28,7 @@ class ManualServer extends ShadowboxServer implements server.ManualServer {
       whitelistCertificate(btoa(hexToString(config.certSha256)));
     } catch (e) {
       // Error whitelisting certificate, may be due to bad user input.
-      const msg = 'Error whitelisting certificate';
-      console.error(msg, e);
-      SentryErrorReporter.logError(msg);
+      console.error('Error whitelisting certificate');
     }
   }
 
@@ -61,9 +58,7 @@ export class ManualServerRepository implements server.ManualServerRepository {
         });
         return Promise.resolve(manualServers);
       } catch (e) {
-        const msg = 'Error creating manual servers from localStorage';
-        console.error(msg, e);
-        SentryErrorReporter.logError(msg);
+        console.error('Error creating manual servers from localStorage');
       }
     }
     return Promise.resolve([]);

@@ -9,6 +9,7 @@
     "email": "info@getoutline.org"
   },
   "dependencies": {
+    "@sentry/electron": "^0.8.1",
     "body-parser": "^1.18.3",
     "bytes": "^3.0.0",
     "clipboard-polyfill": "^2.4.6",
@@ -16,7 +17,6 @@
     "eventemitter3": "^2.0.3",
     "express": "^4.16.3",
     "node-forge": "^0.7.1",
-    "raven-js": "^3.17.0",
     "request": "^2.87.0",
     "request-lite": "^2.40.1"
   },

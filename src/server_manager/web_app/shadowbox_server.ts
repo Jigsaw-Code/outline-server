@@ -14,7 +14,6 @@
 
 import * as errors from '../infrastructure/errors';
 import * as server from '../model/server';
-import {SentryErrorReporter} from './error_reporter';
 
 // Interfaces used by metrics REST APIs.
 interface MetricsEnabled {
@@ -37,31 +36,30 @@ export class ShadowboxServer implements server.Server {
   constructor() {}
 
   listAccessKeys(): Promise<server.AccessKey[]> {
-    SentryErrorReporter.logInfo('Listing access keys');
+    console.info('Listing access keys');
     return this.apiRequest<{accessKeys: server.AccessKey[]}>('access-keys').then((response) => {
       return response.accessKeys;
     });
   }
 
   addAccessKey(): Promise<server.AccessKey> {
-    SentryErrorReporter.logInfo('Adding access key');
+    console.info('Adding access key');
     return this.apiRequest<server.AccessKey>('access-keys', {method: 'POST'});
   }
 
   renameAccessKey(accessKeyId: server.AccessKeyId, name: string): Promise<void> {
-    SentryErrorReporter.logInfo('Renaming access key');
+    console.info('Renaming access key');
     const body = new FormData();
     body.append('name', name);
     return this.apiRequest<void>('access-keys/' + accessKeyId + '/name', {method: 'PUT', body});
   }
 
   removeAccessKey(accessKeyId: server.AccessKeyId): Promise<void> {
-    SentryErrorReporter.logInfo('Removing access key');
+    console.info('Removing access key');
     return this.apiRequest<void>('access-keys/' + accessKeyId, {method: 'DELETE'});
   }
 
   getDataUsage(): Promise<server.DataUsageByAccessKey> {
-    SentryErrorReporter.logInfo('Retrieving data usage');
     return this.apiRequest<server.DataUsageByAccessKey>('metrics/transfer');
   }
 
@@ -70,7 +68,7 @@ export class ShadowboxServer implements server.Server {
   }
 
   setName(name: string): Promise<void> {
-    SentryErrorReporter.logInfo('Setting server name');
+    console.info('Setting server name');
     const requestOptions: RequestInit = {
       method: 'PUT',
       headers: new Headers({'Content-Type': 'application/json'}),
@@ -87,7 +85,7 @@ export class ShadowboxServer implements server.Server {
 
   setMetricsEnabled(metricsEnabled: boolean): Promise<void> {
     const action = metricsEnabled ? 'Enabling' : 'Disabling';
-    SentryErrorReporter.logInfo(`${action} metrics`);
+    console.info(`${action} metrics`);
     const requestOptions: RequestInit = {
       method: 'PUT',
       headers: new Headers({'Content-Type': 'application/json'}),
@@ -142,7 +140,7 @@ export class ShadowboxServer implements server.Server {
   }
 
   private getServerConfig(): Promise<ServerConfig> {
-    SentryErrorReporter.logInfo('Retrieving server configuration');
+    console.info('Retrieving server configuration');
     return this.apiRequest<ServerConfig>('server');
   }
 
@@ -156,7 +154,7 @@ export class ShadowboxServer implements server.Server {
       let apiAddress = this.managementApiAddress;
       if (!apiAddress) {
         const msg = 'Management API address unavailable';
-        SentryErrorReporter.logError(msg);
+        console.error(msg);
         throw new Error(msg);
       }
       if (!apiAddress.endsWith('/')) {
@@ -167,19 +165,14 @@ export class ShadowboxServer implements server.Server {
           .then(
               (response) => {
                 if (!response.ok) {
-                  const msg = `API request to ${path} failed with status ${response.status}`;
-                  console.error(msg);
-                  SentryErrorReporter.logError(msg);
-                  throw new errors.ServerApiError(msg, response);
+                  throw new errors.ServerApiError(
+                      `API request to ${path} failed with status ${response.status}`, response);
                 }
-                console.debug(`API request to ${path} succeeded`);
                 return response.text();
               },
               (error) => {
-                const msg = `API request to ${path} failed due to network error`;
-                console.error(msg, error);
-                SentryErrorReporter.logError(msg);
-                throw new errors.ServerApiError(msg);
+                throw new errors.ServerApiError(
+                    `API request to ${path} failed due to network error`);
               })
           .then((body) => {
             if (!body) {

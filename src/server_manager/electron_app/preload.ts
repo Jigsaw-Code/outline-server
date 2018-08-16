@@ -12,15 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as sentry from '@sentry/electron';
 import {ipcRenderer} from 'electron';
+import {URL} from 'url';
 
 import * as digitalocean_oauth from './digitalocean_oauth';
 
-// For communication between the main and renderer process.
+// This file is run in the renderer process *before* nodeIntegration is disabled.
 //
-// Required since we disable nodeIntegration; for more info, see the entries here for
-// nodeIntegration and preload:
-//   https://electronjs.org/docs/api/browser-window#class-browserwindow
+// Use it for main/renderer process communication and configuring Sentry (which works via
+// main/renderer process messages).
+
+// DSN is all we need to specify; for all other config - breadcrumbs, etc., see the main process.
+const params = new URL(document.URL).searchParams;
+sentry.init({dsn: params.get('sentryDsn')});
 
 // tslint:disable-next-line:no-any
 (window as any).whitelistCertificate = (fingerprint: string) => {

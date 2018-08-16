@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as sentry from '@sentry/electron';
 import * as electron from 'electron';
 import {autoUpdater} from 'electron-updater';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as url from 'url';
+import {URL, URLSearchParams} from 'url';
 
 import {LoadingWindow} from './loading_window';
 import * as menu from './menu';
@@ -30,12 +31,35 @@ const debugMode = process.env.OUTLINE_DEBUG === 'true';
 const IMAGES_BASENAME =
     `${path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), 'server_manager', 'web_app')}`;
 
+const sentryDsn =
+    process.env.SENTRY_DSN || 'https://533e56d1b2d64314bd6092a574e6d0f1@sentry.io/215496';
+
+sentry.init({
+  dsn: sentryDsn,
+  // Sentry provides a sensible default but we would prefer without the leading "outline-manager@".
+  release: electron.app.getVersion(),
+  maxBreadcrumbs: 100,
+  beforeBreadcrumb: (breadcrumb) => {
+    // Carefully redact from XHR requests all but the final component of the URL's pathname.
+    // Otherwise, we would receive server IPs and management URLs.
+    if (breadcrumb.category === 'fetch') {
+      if (breadcrumb.data && breadcrumb.data.url) {
+        try {
+          const pathname = new URL(breadcrumb.data.url).pathname;
+          breadcrumb.data.url = `(redacted)${pathname.substring(pathname.lastIndexOf('/'))}`;
+        } catch (e) {
+          breadcrumb.data.url = '(failed to sanitise URL)';
+        }
+      }
+    }
+    return breadcrumb;
+  }
+});
+// To clearly identify app restarts in Sentry.
+console.info(`Outline Manager is starting`);
+
 interface IpcEvent {
   returnValue: {};
-}
-
-function startsWith(larger: string, prefix: string) {
-  return larger.substr(0, prefix.length) === prefix;
 }
 
 function createMainWindow() {
@@ -82,7 +106,7 @@ function createMainWindow() {
 }
 
 function getWebAppUrl() {
-  const queryParams = new url.URLSearchParams();
+  const queryParams = new URLSearchParams();
   queryParams.set('version', electron.app.getVersion());
 
   // Set queryParams from environment variables.
@@ -94,17 +118,14 @@ function getWebAppUrl() {
     queryParams.set('metricsUrl', process.env.SB_METRICS_URL);
     console.log(`Will use metrics url ${process.env.SB_METRICS_URL}`);
   }
-  if (process.env.SENTRY_DSN) {
-    queryParams.set('sentryDsn', process.env.SENTRY_DSN);
-    console.log(`Will use sentryDsn url ${process.env.SENTRY_DSN}`);
-  }
+  queryParams.set('sentryDsn', sentryDsn);
   if (debugMode) {
     queryParams.set('outlineDebugMode', 'true');
     console.log(`Enabling Outline debug mode`);
   }
 
   // Append arguments to URL if any.
-  const webAppUrl = new url.URL('outline://web_app/index.html');
+  const webAppUrl = new URL('outline://web_app/index.html');
   webAppUrl.search = queryParams.toString();
   const webAppUrlString = webAppUrl.toString();
   console.log('Launching web app from ' + webAppUrlString);
@@ -144,7 +165,7 @@ function main() {
     electron.protocol.registerFileProtocol(
         'outline',
         (request, callback) => {
-          const appPath = new url.URL(request.url).pathname;
+          const appPath = new URL(request.url).pathname;
           const filesystemPath = path.join(__dirname, 'server_manager/web_app', appPath);
           callback(filesystemPath);
         },
