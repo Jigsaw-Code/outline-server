@@ -19,10 +19,12 @@ interface Callsite {
   getFileName(): string;
 }
 
+// Returns the Callsite object of the caller.
+// This relies on the V8 stack trace API: https://github.com/v8/v8/wiki/Stack-Trace-API
 function getCallsite(): Callsite {
   const originalPrepareStackTrace = Error.prepareStackTrace;
   Error.prepareStackTrace = (_, stack) => {
-      return stack;
+    return stack;
   };
   const error = new Error();
   Error.captureStackTrace(error, getCallsite);
@@ -32,7 +34,12 @@ function getCallsite(): Callsite {
   return stack[1];
 }
 
-function makeLogMessage(level: string, callsite: Callsite, message: string): string {
+// Possible values for the level prefix.
+type LevelPrefix = 'E' | 'W' | 'I' | 'D';
+
+// Formats the log message. Example:
+// I2018-08-16T16:46:21.577Z 167288 main.js:86] ...
+function makeLogMessage(level: LevelPrefix, callsite: Callsite, message: string): string {
   // This creates a string in the UTC timezone
   // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
   const timeStr = new Date().toISOString();
