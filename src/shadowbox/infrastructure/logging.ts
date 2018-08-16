@@ -35,7 +35,7 @@ function getCallsite(): Callsite {
 }
 
 // Possible values for the level prefix.
-type LevelPrefix = 'E' | 'W' | 'I' | 'D';
+type LevelPrefix = 'E'|'W'|'I'|'D';
 
 // Formats the log message. Example:
 // I2018-08-16T16:46:21.577Z 167288 main.js:86] ...
