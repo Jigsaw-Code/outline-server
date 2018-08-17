@@ -16,12 +16,12 @@ import {URL} from 'url';
 
 // Returns a URL's pathname stripped of its first directory name, which may be the empty string if
 // there are fewer than two "directories" in the URL's pathname.
+// Throws if s cannot be parsed as a URL.
 //
 // Used to strip PII from management API URLs, e.g.:
 //   https://124.10.10.2/abcd123/access-keys -> access-keys
 //   https://124.10.10.2/abcd123/access-keys/52 -> access-keys/52
-//
-// Throws if s cannot be parsed as a URL.
+//   https://124.10.10.2/abcd123 -> (empty string)
 export function redactManagerUrl(s: string) {
   return new URL(s).pathname.split('/').slice(2).join('/');
 }
