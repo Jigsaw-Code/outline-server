@@ -39,6 +39,15 @@ sentry.init({
   // Sentry provides a sensible default but we would prefer without the leading "outline-manager@".
   release: electron.app.getVersion(),
   maxBreadcrumbs: 100,
+  shouldAddBreadcrumb: (breadcrumb) => {
+    // Don't submit breadcrumbs for console.debug.
+    if (breadcrumb.category === 'console') {
+      if (breadcrumb.level === sentry.Severity.Debug) {
+        return false;
+      }
+    }
+    return true;
+  },
   beforeBreadcrumb: (breadcrumb) => {
     // Redact PII from XHR requests.
     if (breadcrumb.category === 'fetch' && breadcrumb.data && breadcrumb.data.url) {

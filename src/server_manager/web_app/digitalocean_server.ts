@@ -392,6 +392,13 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
     };
     return onceKeyPair
         .then((keyPair) => {
+          if (this.debugMode) {
+            // Strip carriage returns, which produce weird blank lines when pasted into a terminal.
+            console.debug(
+                `private key for SSH access to new droplet:\n${
+                    keyPair.private.replace(/\r/g, '')}\n\n` +
+                'Use "ssh -i keyfile root@[ip_address]" to connect to the machine');
+          }
           return this.digitalOcean.createDroplet(name, region, keyPair.public, dropletSpec);
         })
         .then((response) => {
