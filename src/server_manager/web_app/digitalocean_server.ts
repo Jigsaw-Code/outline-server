@@ -21,7 +21,6 @@ import {asciiToHex, hexToString} from '../infrastructure/hex_encoding';
 import * as do_install_script from '../install_scripts/do_install_script';
 import * as server from '../model/server';
 
-import {SentryErrorReporter} from './error_reporter';
 import {ShadowboxServer} from './shadowbox_server';
 
 // WARNING: these strings must be lowercase due to a DigitalOcean case
@@ -89,16 +88,14 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
     // Consider passing a RestEndpoint object to the parent constructor,
     // to better encapsulate the management api address logic.
     super();
-    const msg = 'DigitalOceanServer created';
-    console.info(`${msg}: %O`, dropletInfo);
-    SentryErrorReporter.logInfo(msg);
+    console.info('DigitalOceanServer created');
     this.eventQueue.once('server-active', () => console.timeEnd('activeServer'));
     this.waitOnInstall(true)
         .then(() => {
           this.setInstallCompleted();
         })
         .catch((e) => {
-          console.error('Error installing server', e);
+          console.error(`error installing server: ${e.message}`);
         });
   }
 
@@ -129,7 +126,8 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
               // Server has been installed (Api Url and Certificate have been)
               // set, but is not healthy.  This could occur if the server
               // is behind a firewall.
-              SentryErrorReporter.logError('digitalocean_server: Server is unreachable, possibly due to firewall.');
+              console.error(
+                  'digitalocean_server: Server is unreachable, possibly due to firewall.');
               reject(new errors.UnreachableServerError());
             }
           });
@@ -156,15 +154,15 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
         return;
       }
       if (this.getTagValue(INSTALL_ERROR_TAG)) {
-        SentryErrorReporter.logError('digitalocean_server: Got error tag ' + this.getTagValue(INSTALL_ERROR_TAG));
+        console.error(`error tag: ${this.getTagValue(INSTALL_ERROR_TAG)}`);
         this.installState = InstallState.ERROR;
       } else if (Date.now() - startTimestamp >= TIMEOUT_MS) {
-        SentryErrorReporter.logError('digitalocean_server: hit timeout while waiting for installation');
+        console.error('hit timeout while waiting for installation');
         this.installState = InstallState.ERROR;
       } else if (this.setApiUrlAndCertificate()) {
         // API Url and Certificate have been set, so we have successfully
         // installed the server and can now make API calls.
-        SentryErrorReporter.logInfo('digitalocean_server: Successfully found API and cert tags');
+        console.info('digitalocean_server: Successfully found API and cert tags');
         this.installState = InstallState.SUCCESS;
       }
     };
@@ -241,9 +239,7 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
       try {
         return hexToString(encodedData);
       } catch (e) {
-        const msg = 'error decoding hex string';
-        console.error(msg, e);
-        SentryErrorReporter.logError(msg);
+        console.error('error decoding hex string');
         return null;
       }
     }
@@ -385,7 +381,8 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
     const onceKeyPair = crypto.generateKeyPair();
     const watchtowerRefreshSeconds = this.image ? 30 : undefined;
     const installCommand = getInstallScript(
-        this.digitalOcean.accessToken, name, this.image, watchtowerRefreshSeconds, this.metricsUrl, this.sentryApiUrl);
+        this.digitalOcean.accessToken, name, this.image, watchtowerRefreshSeconds, this.metricsUrl,
+        this.sentryApiUrl);
 
     const dropletSpec = {
       installCommand,
@@ -393,24 +390,24 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
       image: 'docker',
       tags: [SHADOWBOX_TAG],
     };
-    return onceKeyPair.then((keyPair) => {
-      if (this.debugMode) {
-        // Strip carriage returns. They produce annoying blank lines when pasting
-        // into a terminal.
-        console.log(
-            `private key for SSH access to new droplet:\n${
-                keyPair.private.replace(/\r/g, '')}\n\n` +
-            'Use "ssh -i keyfile root@[ip_address]" to connect to the machine');
-      }
-      return this.digitalOcean.createDroplet(name, region, keyPair.public, dropletSpec);
-    }).then((response) => {
-      return new DigitaloceanServer(this.digitalOcean, response.droplet);
-    });
+    return onceKeyPair
+        .then((keyPair) => {
+          if (this.debugMode) {
+            // Strip carriage returns, which produce weird blank lines when pasted into a terminal.
+            console.debug(
+                `private key for SSH access to new droplet:\n${
+                    keyPair.private.replace(/\r/g, '')}\n\n` +
+                'Use "ssh -i keyfile root@[ip_address]" to connect to the machine');
+          }
+          return this.digitalOcean.createDroplet(name, region, keyPair.public, dropletSpec);
+        })
+        .then((response) => {
+          return new DigitaloceanServer(this.digitalOcean, response.droplet);
+        });
   }
 
   listServers(): Promise<server.ManagedServer[]> {
     return this.digitalOcean.getDropletsByTag(SHADOWBOX_TAG).then((droplets) => {
-      console.log('Found droplets: ', droplets);
       return droplets.map((droplet) => {
         return new DigitaloceanServer(this.digitalOcean, droplet);
       });
@@ -436,7 +433,9 @@ function getInstallScript(
   return '#!/bin/bash -eu\n' +
       `export DO_ACCESS_TOKEN=${sanitizezedAccessToken}\n` +
       (image ? `export SB_IMAGE=${image}\n` : '') +
-      (watchtowerRefreshSeconds ? `export WATCHTOWER_REFRESH_SECONDS=${watchtowerRefreshSeconds}\n` : '') +
+      (watchtowerRefreshSeconds ?
+           `export WATCHTOWER_REFRESH_SECONDS=${watchtowerRefreshSeconds}\n` :
+           '') +
       (sentryApiUrl ? `export SENTRY_API_URL="${sentryApiUrl}"\n` : '') +
       (metricsUrl ? `export SB_METRICS_URL=${metricsUrl}\n` : '') +
       `export SB_DEFAULT_SERVER_NAME="${name}"\n` + do_install_script.SCRIPT;

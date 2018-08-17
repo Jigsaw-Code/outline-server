@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// A little bit of Node.js that is available to us thanks to Browserify.
 import * as url from 'url';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
@@ -20,10 +19,7 @@ import * as digitalocean_api from '../cloud/digitalocean_api';
 import {App} from './app';
 import {DigitalOceanTokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
-import {SentryErrorReporter} from './error_reporter';
 import {ManualServerRepository} from './manual_server';
-
-const DEFAULT_SENTRY_DSN = 'https://533e56d1b2d64314bd6092a574e6d0f1@sentry.io/215496';
 
 function ensureString(queryParam: string|string[]): string {
   if (Array.isArray(queryParam)) {
@@ -41,10 +37,7 @@ document.addEventListener('WebComponentsReady', () => {
   const metricsUrl = ensureString(queryParams.metricsUrl);
   const shadowboxImage = ensureString(queryParams.image);
   const version = ensureString(queryParams.version);
-  const sentryDsn = ensureString(queryParams.sentryDsn) || DEFAULT_SENTRY_DSN;
-
-  // Initialize error reporting.
-  SentryErrorReporter.init(sentryDsn, version);
+  const sentryDsn = ensureString(queryParams.sentryDsn);
 
   // Set DigitalOcean server repository parameters.
   const digitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) => {

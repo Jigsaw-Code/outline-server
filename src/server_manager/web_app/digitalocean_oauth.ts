@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {SentryErrorReporter} from './error_reporter';
-
 export interface TokenManager {
   // Returns the Oauth token, or null if unavailable.
   getStoredToken(): string;
@@ -22,7 +20,6 @@ export interface TokenManager {
   // Removes the token from storage.
   removeTokenFromStorage(): void;
 }
-
 
 // TODO: this class combines URL manipulation with persistence logic.
 // Consider moving the URL manipulation logic to a separate class, so we
@@ -36,9 +33,7 @@ export class DigitalOceanTokenManager implements TokenManager {
   getStoredToken(): string {
     const tokenFromStorage = this.getTokenFromStorage();
     if (tokenFromStorage) {
-      const msg = 'found access token in local storage';
-      console.log(msg);
-      SentryErrorReporter.logInfo(msg);
+      console.info('found access token in local storage');
       return tokenFromStorage;
     }
 
