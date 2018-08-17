@@ -15,12 +15,12 @@
 import * as sentry from '@sentry/electron';
 import * as electron from 'electron';
 import {autoUpdater} from 'electron-updater';
-import * as fs from 'fs';
 import * as path from 'path';
 import {URL, URLSearchParams} from 'url';
 
 import {LoadingWindow} from './loading_window';
 import * as menu from './menu';
+import {redactManagerUrl} from './util';
 
 const app = electron.app;
 const ipcMain = electron.ipcMain;
@@ -40,16 +40,13 @@ sentry.init({
   release: electron.app.getVersion(),
   maxBreadcrumbs: 100,
   beforeBreadcrumb: (breadcrumb) => {
-    // Carefully redact from XHR requests all but the final component of the URL's pathname.
-    // Otherwise, we would receive server IPs and management URLs.
-    if (breadcrumb.category === 'fetch') {
-      if (breadcrumb.data && breadcrumb.data.url) {
-        try {
-          const pathname = new URL(breadcrumb.data.url).pathname;
-          breadcrumb.data.url = `(redacted)${pathname.substring(pathname.lastIndexOf('/'))}`;
-        } catch (e) {
-          breadcrumb.data.url = '(failed to sanitise URL)';
-        }
+    // Redact PII from XHR requests.
+    if (breadcrumb.category === 'fetch' && breadcrumb.data && breadcrumb.data.url) {
+      try {
+        breadcrumb.data.url = `(redacted)/${redactManagerUrl(breadcrumb.data.url)}`;
+      } catch (e) {
+        // NOTE: cannot log this failure to console if console breadcrumbs are enabled
+        breadcrumb.data.url = `(error redacting)`;
       }
     }
     return breadcrumb;
