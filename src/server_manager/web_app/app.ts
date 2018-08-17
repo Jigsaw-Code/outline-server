@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as sentry from '@sentry/electron';
 import * as events from 'events';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
@@ -20,8 +21,6 @@ import * as server from '../model/server';
 
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
-import {SentryErrorReporter} from './error_reporter';
-import {ManualServerRepository} from './manual_server';
 
 // tslint:disable-next-line:no-any
 type Polymer = HTMLElement&any;
@@ -160,7 +159,11 @@ export class App {
     appRoot.addEventListener('SubmitFeedback', (event: PolymerEvent) => {
       const detail = event.detail;
       try {
-        SentryErrorReporter.report(detail.userFeedback, detail.feedbackCategory, detail.userEmail);
+        sentry.captureEvent({
+          message: detail.userFeedback,
+          user: {email: detail.userEmail},
+          tags: {category: detail.feedbackCategory}
+        });
         appRoot.showNotification('Thanks for helping us improve! We love hearing from you.');
       } catch (e) {
         appRoot.showError('Failed to submit feedback. Please try again.');
@@ -265,9 +268,7 @@ export class App {
               }
             })
             .catch((e) => {
-              const msg = 'Could not fetch server list from DigitalOcean';
-              console.error(msg, e);
-              SentryErrorReporter.logError(msg);
+              console.error('Could not fetch server list from DigitalOcean');
               this.showIntro();
             });
       } else {
@@ -348,7 +349,7 @@ export class App {
   private displayError(message: string, cause: Error) {
     console.error(`${message}: ${cause}`);
     this.appRoot.showError(message);
-    SentryErrorReporter.logError(message);
+    console.error(message);
   }
 
   private displayNotification(message: string) {
@@ -453,26 +454,24 @@ export class App {
         })
         .catch((e) => {
           if (e instanceof errors.DeletedServerError) {
-            // The user deleted this server, no need to show an error or delete
-            // it again.
+            // The user deleted this server, no need to show an error or delete it again.
             return;
           }
           const errorMessage = managedServer.isInstallCompleted() ?
               'We are unable to connect to your Outline server at the moment.  This may be due to a firewall on your network or temporary connectivity issues with digitalocean.com.' :
               'There was an error creating your Outline server.  This may be due to a firewall on your network or temporary connectivity issues with digitalocean.com.';
-          SentryErrorReporter.logError(errorMessage);
           this.appRoot
               .showModalDialog(
                   null,  // Don't display any title.
                   errorMessage, ['Delete this server', 'Try again'])
               .then((clickedButtonIndex: number) => {
                 if (clickedButtonIndex === 0) {  // user clicked 'Delete this server'
-                  SentryErrorReporter.logInfo('Deleting unreachable server');
+                  console.info('Deleting unreachable server');
                   managedServer.getHost().delete().then(() => {
                     this.showCreateServer();
                   });
                 } else if (clickedButtonIndex === 1) {  // user clicked 'Try again'.
-                  SentryErrorReporter.logInfo('Retrying unreachable server');
+                  console.info('Retrying unreachable server');
                   this.showManagedServer(managedServer, true);
                 }
               });
@@ -492,26 +491,8 @@ export class App {
         .catch((e) => {
           // Sanity check - this error is not expected to occur, as showManagedServer
           // has it's own error handling.
-          console.error('error from showManagedServer', e);
+          console.error('error from showManagedServer');
           return Promise.reject(e);
-        });
-  }
-
-  // Displays `DIGITAL_OCEAN_CREATION_ERROR_MESSAGE` in a dialog that prompts the user to submit
-  // feedback. Logs `msg` and `error` to the console and Sentry.
-  private handleServerCreationFailure(msg: string, error: Error) {
-    console.error(msg, error);
-    SentryErrorReporter.logError(msg);
-    this.appRoot
-        .showModalDialog(
-            'Failed to create server', DIGITAL_OCEAN_CREATION_ERROR_MESSAGE,
-            ['Cancel', 'Submit Feedback'])
-        .then((clickedButtonIndex: number) => {
-          if (clickedButtonIndex === 1) {
-            const feedbackDialog = this.appRoot.$.feedbackDialog;
-            feedbackDialog.open(null, null, feedbackDialog.feedbackCategories.INSTALLATION);
-          }
-          this.showCreateServer();  // Reset UI.
         });
   }
 
@@ -673,16 +654,16 @@ export class App {
       userInputConfig = userInputConfig.substr(0, userInputConfig.lastIndexOf('}') + 1);
       serverConfig = JSON.parse(userInputConfig);
     } catch (e) {
-      SentryErrorReporter.logError('Invalid server configuration: could not parse JSON.');
+      console.error('Invalid server configuration: could not parse JSON.');
       return Promise.reject(new Error(''));
     }
     if (!serverConfig.apiUrl) {
       const msg = 'Invalid server configuration: apiUrl is missing.';
-      SentryErrorReporter.logError(msg);
+      console.error(msg);
       return Promise.reject(new Error(msg));
     } else if (!serverConfig.certSha256) {
       const msg = 'Invalid server configuration: certSha256 is missing.';
-      SentryErrorReporter.logError(msg);
+      console.error(msg);
       return Promise.reject(new Error(msg));
     }
 
@@ -694,7 +675,7 @@ export class App {
         } else {
           // Remove inaccessible manual server from local storage.
           manualServer.forget();
-          SentryErrorReporter.logError('Manual server installed but unreachable.');
+          console.error('Manual server installed but unreachable.');
           return Promise.reject(new errors.UnreachableServerError(
               'Your Outline Server was installed correctly, but we are not able to connect to it. Most likely this is because your server\'s firewall rules are blocking incoming connections. Please review them and make sure to allow incoming TCP connections on ports ranging from 1024 to 65535.'));
         }
@@ -717,7 +698,7 @@ export class App {
     const serverToDelete = this.selectedServer;
     if (!isManagedServer(serverToDelete)) {
       const msg = 'cannot delete non-ManagedServer';
-      SentryErrorReporter.logError(msg);
+      console.error(msg);
       throw new Error(msg);
     }
 
@@ -748,7 +729,7 @@ export class App {
     const serverToForget = this.selectedServer;
     if (!isManualServer(serverToForget)) {
       const msg = 'cannot forget non-ManualServer';
-      SentryErrorReporter.logError(msg);
+      console.error(msg);
       throw new Error(msg);
     }
 
@@ -789,7 +770,7 @@ export class App {
   private cancelServerCreation(serverToCancel: server.Server): void {
     if (!isManagedServer(serverToCancel)) {
       const msg = 'cannot cancel non-ManagedServer';
-      SentryErrorReporter.logError(msg);
+      console.error(msg);
       throw new Error(msg);
     }
     serverToCancel.getHost().delete().then(() => {
