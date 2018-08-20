@@ -149,7 +149,7 @@
     </style>
     <outline-step-view>
       <span slot="step-title">Follow the instructions below</span>
-      <span slot="step-description">These steps will help you install Outline<br/> on [[cloudProviderName]].</span>
+      <span slot="step-description">These steps will help you install Outline<br/> on a [[cloudProviderName]] Linux server.</span>
       <paper-progress hidden$='[[!showConnection]]' indeterminate class="slow"></paper-progress>
 
       <div class="card">
@@ -336,7 +336,7 @@
         switch(cloudProvider) {
           case 'aws': return 'Amazon Web Services';
           case 'gcp': return 'Google Cloud Platform';
-          default: return 'your server';
+          default: return 'your Linux server';
         }
       },
       _computeIsCloudProviderAws: function(cloudProvider) {
