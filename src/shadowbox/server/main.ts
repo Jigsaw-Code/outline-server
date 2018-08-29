@@ -121,7 +121,7 @@ function setApiHandlers(
   apiServer.post(`${apiPrefix}/access-keys`, managerService.createNewAccessKey.bind(managerService));
   apiServer.get(`${apiPrefix}/access-keys`, managerService.listAccessKeys.bind(managerService));
   apiServer.del(`${apiPrefix}/access-keys/:id`, managerService.removeAccessKey.bind(managerService));
-  apiServer.put(`${apiPrefix}/access-keys/:id/name`, managerService.renameAccessKey.bind(managerService));
+  apiServer.put(`${apiPrefix}/access-keys/:id/:name`, managerService.renameAccessKey.bind(managerService));
 
   // Metrics handlers.
   apiServer.get(`${apiPrefix}/metrics/transfer`, (req, res, next) => {
