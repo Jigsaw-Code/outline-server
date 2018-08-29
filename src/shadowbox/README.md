@@ -94,7 +94,7 @@ curl --insecure -X POST https://localhost:8081/TestApiPrefix/access-keys
 Rename a user
 (e.g. rename user ID 2 to 'albion')
 ```
-curl --insecure -X PUT https://localhost:8081/TestApiPrefix/access-keys/2/albion
+curl --insecure -X PUT curl -X POST -F 'name=albion' https://localhost:8081/TestApiPrefix/access-keys/2/name
 ```
 
 Remove a user
