@@ -20,7 +20,7 @@ import {getRandomUnusedPort} from '../infrastructure/get_port';
 import * as logging from '../infrastructure/logging';
 import {AccessKey, AccessKeyId, AccessKeyRepository} from '../model/access_key';
 import {Stats} from '../model/metrics';
-import {ShadowsocksServer} from '../model/shadowsocks_server';
+import {ShadowsocksInstance, ShadowsocksServer} from '../model/shadowsocks_server';
 import {TextFile} from '../model/text_file';
 
 // The format as json of access keys in the config file.
@@ -122,29 +122,14 @@ class ManagedAccessKeyRepository implements AccessKeyRepository {
   private nextId = 0;
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
   private reservedPorts: Set<number> = new Set();
+  private ssInstances = new Map<AccessKeyId, ShadowsocksInstance>();
 
   constructor(private proxyHostname: string, private configFile: AccessKeyConfigFile,
       private configJson: ConfigJson, private shadowsocksServer: ShadowsocksServer,
       private statsSocket: dgram.Socket, private stats: Stats) {
-    this.updateServer();
-  }
-
-  private updateServer(): Promise<void> {
-    const startInstancePromises = [];
     for (const accessKeyJson of this.configJson.accessKeys) {
-      startInstancePromises.push(
-          this.shadowsocksServer
-              .startInstance(
-                  accessKeyJson.port, accessKeyJson.password, this.statsSocket,
-                  accessKeyJson.encryptionMethod)
-              .then((ssInstance) => {
-                ssInstance.onInboundBytes(this.handleInboundBytes.bind(
-                    this, accessKeyJson.id, accessKeyJson.metricsId));
-              }));
+      this.startInstance(accessKeyJson);
     }
-    return Promise.all(startInstancePromises).then(() => {
-      return Promise.resolve();
-    });
   }
 
   public createNewAccessKey(): Promise<AccessKey> {
@@ -165,11 +150,11 @@ class ManagedAccessKeyRepository implements AccessKeyRepository {
       try {
         this.saveConfig();
       } catch (error) {
-        return Promise.reject(new Error(`Failed to save config: ${error}`));
+        throw new Error(`Failed to save config: ${error}`);
       }
-      return this.updateServer().then(() => {
-        return makeAccessKey(this.proxyHostname, accessKeyJson);
-      });
+
+      this.startInstance(accessKeyJson);
+      return makeAccessKey(this.proxyHostname, accessKeyJson);
     });
   }
 
@@ -178,7 +163,8 @@ class ManagedAccessKeyRepository implements AccessKeyRepository {
       if (this.configJson.accessKeys[ai].id === id) {
         this.configJson.accessKeys.splice(ai, 1);
         this.saveConfig();
-        this.updateServer();
+        this.ssInstances.get(id).stop();
+        this.ssInstances.delete(id);
         return true;
       }
     }
@@ -203,6 +189,18 @@ class ManagedAccessKeyRepository implements AccessKeyRepository {
       }
     }
     return false;
+  }
+
+  private startInstance(accessKeyJson: AccessKeyConfig) {
+    this.shadowsocksServer
+        .startInstance(
+            accessKeyJson.port, accessKeyJson.password, this.statsSocket,
+            accessKeyJson.encryptionMethod)
+        .then((ssInstance) => {
+          ssInstance.onInboundBytes(
+              this.handleInboundBytes.bind(this, accessKeyJson.id, accessKeyJson.metricsId));
+          this.ssInstances.set(accessKeyJson.id, ssInstance);
+        });
   }
 
   private handleInboundBytes(accessKeyId: AccessKeyId, metricsId: AccessKeyId, inboundBytes: number, ipAddresses: string[]) {
