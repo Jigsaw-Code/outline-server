@@ -21,7 +21,7 @@ import {getRandomUnusedPort} from '../infrastructure/get_port';
 import * as logging from '../infrastructure/logging';
 import {AccessKey, AccessKeyId, AccessKeyRepository} from '../model/access_key';
 import {Stats} from '../model/metrics';
-import {ShadowsocksInstance, ShadowsocksServer} from '../model/shadowsocks_server';
+import {ShadowsocksServer} from '../model/shadowsocks_server';
 import {TextFile} from '../model/text_file';
 
 // The format as json of access keys in the config file.
@@ -41,145 +41,169 @@ interface ConfigJson {
   nextId: number;
 }
 
-// AccessKey implementation that starts and stops a Shadowsocks server.
-class ManagedAccessKey implements AccessKey {
-  constructor(public id: AccessKeyId, public metricsId: AccessKeyId, public name: string, public shadowsocksInstance: ShadowsocksInstance) {}
-
-  public rename(name: string): void {
-    this.name = name;
-  }
-}
-
 // Generates a random password for Shadowsocks access keys.
 function generatePassword(): string {
   return randomstring.generate(12);
 }
+class AccessKeyConfigFile {
+  constructor(private configFile: TextFile) {}
 
-function readConfig(configFile: TextFile): ConfigJson {
-  const EMPTY_CONFIG = {accessKeys: [], nextId: 0} as ConfigJson;
+  loadConfig(): ConfigJson {
+    const EMPTY_CONFIG = {accessKeys: [], nextId: 0} as ConfigJson;
 
-  // Try to read the file from disk.
-  let configText: string;
-  try {
-    configText = configFile.readFileSync();
-  } catch (err) {
-    if (err.code === 'ENOENT') {
-      // File not found (e.g. this is a new server), return an empty config.
+    // Try to read the file from disk.
+    let configText: string;
+    try {
+      configText = this.configFile.readFileSync();
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        // File not found (e.g. this is a new server), return an empty config.
+        return EMPTY_CONFIG;
+      }
+      throw err;
+    }
+
+    // Ignore if the config file is empty.
+    if (!configText) {
       return EMPTY_CONFIG;
     }
-    throw err;
+
+    return JSON.parse(configText) as ConfigJson;
   }
 
-  // Ignore if the config file is empty.
-  if (!configText) {
-    return EMPTY_CONFIG;
+  // Save the repository to the local disk.
+  // Throws an error in case of failure.
+  // TODO(fortuna): Fix race condition. This can break if there are two modifications in parallel.
+  // TODO: this method should return an error if it fails to write to disk,
+  // then this error can be propagated back to the manager via the REST
+  // API, so users know there was an error and access keys may not be
+  // persisted.
+  saveConfig(config: ConfigJson) {
+    const text = JSON.stringify(config);
+    logging.info(`Persisting: ${text}`);
+    this.configFile.writeFileSync(text);
   }
-
-  return JSON.parse(configText) as ConfigJson;
 }
 
 export function createManagedAccessKeyRepository(
-    configFile: TextFile,
+    proxyHostname: string,
+    textFile: TextFile,
     shadowsocksServer: ShadowsocksServer,
     stats: Stats): Promise<AccessKeyRepository> {
-  const repo = new ManagedAccessKeyRepository(configFile, shadowsocksServer, stats);
-  return repo.init().then(() => {
-    return repo;
+  const configFile = new AccessKeyConfigFile(textFile);
+
+  const configJson = configFile.loadConfig();
+
+  const reservedPorts = getReservedPorts(configJson.accessKeys);
+  // Create and save the stats socket.
+  return createBoundUdpSocket(reservedPorts).then((statsSocket) => {
+    reservedPorts.add(statsSocket.address().port);
+    return new ManagedAccessKeyRepository(proxyHostname, configFile, configJson, shadowsocksServer, statsSocket, stats);
   });
+}
+
+function makeAccessKey(hostname: string, accessKeyJson: AccessKeyConfig): AccessKey {
+  return {
+    id: accessKeyJson.id,
+    name: accessKeyJson.name,
+    metricsId: accessKeyJson.metricsId,
+    proxyParams: {
+      hostname,
+      portNumber: accessKeyJson.port,
+      encryptionMethod: accessKeyJson.encryptionMethod,
+      password: accessKeyJson.password,
+    }
+  };
 }
 
 // AccessKeyRepository that keeps its state in a config file and uses ManagedAccessKey
 // to start and stop per-access-key Shadowsocks instances.
 class ManagedAccessKeyRepository implements AccessKeyRepository {
-  private accessKeys = new Map<AccessKeyId, ManagedAccessKey>();
   // This is the max id + 1 among all access keys. Used to generate unique ids for new access keys.
   private nextId = 0;
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
-  private statsSocket: dgram.Socket;
   private reservedPorts: Set<number> = new Set();
 
-  constructor(
-      private configFile: TextFile, private shadowsocksServer: ShadowsocksServer,
-      private stats: Stats) {
+  constructor(private proxyHostname: string, private configFile: AccessKeyConfigFile,
+      private configJson: ConfigJson, private shadowsocksServer: ShadowsocksServer,
+      private statsSocket: dgram.Socket, private stats: Stats) {
+    this.updateServer();
   }
 
-  // Initialize the repository from the config file.
-  public init(): Promise<void> {
-    const configJson = readConfig(this.configFile);
-    const accessKeys = configJson.accessKeys;
-    this.nextId = configJson.nextId;
-
-    this.reservedPorts = getReservedPorts(accessKeys);
-
-    // Create and save the stats socket.
-    return createBoundUdpSocket(this.reservedPorts).then((statsSocket) => {
-      this.statsSocket = statsSocket;
-      this.reservedPorts.add(statsSocket.address().port);
-
-      // Start an instance for each access key.
-      const startInstancePromises = [];
-      for (const accessKeyJson of accessKeys) {
-        startInstancePromises.push(
-            this.shadowsocksServer
-                .startInstance(
-                    accessKeyJson.port, accessKeyJson.password, statsSocket,
-                    accessKeyJson.encryptionMethod)
-                .then((ssInstance) => {
-                  ssInstance.onInboundBytes(this.handleInboundBytes.bind(
-                      this, accessKeyJson.id, accessKeyJson.metricsId));
-                  const accessKey = new ManagedAccessKey(
-                      accessKeyJson.id, accessKeyJson.metricsId, accessKeyJson.name, ssInstance);
-                  this.accessKeys.set(accessKey.id, accessKey);
-                  const idAsNumber = parseInt(accessKey.id, 10);
-                }));
-      }
-      return Promise.all(startInstancePromises).then(() => {
-        return Promise.resolve();
-      });
+  private updateServer(): Promise<void> {
+    const startInstancePromises = [];
+    for (const accessKeyJson of this.configJson.accessKeys) {
+      startInstancePromises.push(
+          this.shadowsocksServer
+              .startInstance(
+                  accessKeyJson.port, accessKeyJson.password, this.statsSocket,
+                  accessKeyJson.encryptionMethod)
+              .then((ssInstance) => {
+                ssInstance.onInboundBytes(this.handleInboundBytes.bind(
+                    this, accessKeyJson.id, accessKeyJson.metricsId));
+              }));
+    }
+    return Promise.all(startInstancePromises).then(() => {
+      return Promise.resolve();
     });
   }
 
   public createNewAccessKey(): Promise<AccessKey> {
     return getRandomUnusedPort(this.reservedPorts).then((port) => {
-      return this.shadowsocksServer
-          .startInstance(
-              port, generatePassword(), this.statsSocket, this.NEW_USER_ENCRYPTION_METHOD)
-          .then((ssInstance) => {
-            this.reservedPorts.add(port);
-            const id = this.allocateId();
-            const metricsId = uuidv4();
-            ssInstance.onInboundBytes(this.handleInboundBytes.bind(this, id, metricsId));
-            const accessKey = new ManagedAccessKey(id, metricsId, '', ssInstance);
-            this.accessKeys.set(accessKey.id, accessKey);
-            this.persistState();
-            return accessKey;
-          });
+      const id = this.allocateId();
+      const metricsId = uuidv4();
+      const password = generatePassword();
+      // Save key
+      const accessKeyJson: AccessKeyConfig = {
+        id,
+        metricsId,
+        name: '',
+        port,
+        encryptionMethod: this.NEW_USER_ENCRYPTION_METHOD,
+        password
+      };
+      this.configJson.accessKeys.push(accessKeyJson);
+      try {
+        this.saveConfig();
+      } catch (error) {
+        return Promise.reject(new Error(`Failed to save config: ${error}`));
+      }
+      return this.updateServer().then(() => {
+        return makeAccessKey(this.proxyHostname, accessKeyJson);
+      });
     });
   }
 
   public removeAccessKey(id: AccessKeyId): boolean {
-    const accessKey = this.accessKeys.get(id);
-    if (!accessKey) {
-      return false;
+    for (let ai = 0; ai < this.configJson.accessKeys.length; ai++) {
+      if (this.configJson.accessKeys[ai].id === id) {
+        this.configJson.accessKeys.splice(ai, 1);
+        this.saveConfig();
+        this.updateServer();
+        return true;
+      }
     }
-    accessKey.shadowsocksInstance.stop();
-    this.accessKeys.delete(accessKey.id);
-    this.persistState();
-    return true;
+    return false;
   }
 
   public listAccessKeys(): IterableIterator<AccessKey> {
-    return this.accessKeys.values();
+    return this.configJson.accessKeys.map(
+        accessKeyJson => makeAccessKey(this.proxyHostname, accessKeyJson))[Symbol.iterator]();
   }
 
   public renameAccessKey(id: AccessKeyId, name: string): boolean {
-    const accessKey = this.accessKeys.get(id);
-    if (!accessKey) {
-      return false;
+    for (const accessKeyJson of this.configJson.accessKeys) {
+      if (accessKeyJson.id === id) {
+        accessKeyJson.name = name;
+        try {
+          this.saveConfig();
+        } catch (error) {
+          return false;
+        }
+        return true;
+      }
     }
-    accessKey.rename(name);
-    this.persistState();
-    return true;
+    return false;
   }
 
   private handleInboundBytes(accessKeyId: AccessKeyId, metricsId: AccessKeyId, inboundBytes: number, ipAddresses: string[]) {
@@ -191,36 +215,10 @@ class ManagedAccessKeyRepository implements AccessKeyRepository {
     this.nextId += 1;
     return allocatedId.toString();
   }
-
-  private serializeState() {
-    return JSON.stringify({
-      accessKeys: Array.from(this.accessKeys.values()).map(managedAccessKeytoJson),
-      nextId: this.nextId
-    });
+  
+  private saveConfig() {
+    this.configFile.saveConfig(this.configJson);
   }
-
-  // Save the repository to the local disk.
-  // TODO(fortuna): Fix race condition. This can break if there are two modifications in parallel.
-  // TODO: this method should return an error if it fails to write to disk,
-  // then this error can be propagated back to the manager via the REST
-  // API, so users know there was an error and access keys may not be
-  // persisted.
-  private persistState() {
-    const state = this.serializeState();
-    logging.info(`Persisting: ${state}`);
-    this.configFile.writeFileSync(state);
-  }
-}
-
-function managedAccessKeytoJson(accessKey: ManagedAccessKey) {
-  return {
-    id: accessKey.id,
-    metricsId: accessKey.metricsId,
-    name: accessKey.name,
-    password: accessKey.shadowsocksInstance.password,
-    port: accessKey.shadowsocksInstance.portNumber,
-    encryptionMethod: accessKey.shadowsocksInstance.encryptionMethod
-  };
 }
 
 // Gets the set of port numbers reserved by the accessKeys.

@@ -23,8 +23,17 @@ export class MockAccessKeyRepository implements AccessKeyRepository {
   private accessKeys: AccessKey[] = [];
   createNewAccessKey(): Promise<AccessKey> {
     const id = this.accessKeys.length.toString();
-    const key = new MockAccessKey(
-        id, 'metricsId', 'name', new MockShadowsocksInstance());
+    const key = {
+      id,
+      name: 'name',
+      metricsId: 'metricsId',
+      proxyParams: {
+        hostname: 'hostname',
+        portNumber: 12345,
+        password: 'password',
+        encryptionMethod: 'chacha20-ietf-poly1305'
+      }
+    };
     this.accessKeys.push(key);
     return Promise.resolve(key);
   }
@@ -48,17 +57,6 @@ export class MockAccessKeyRepository implements AccessKeyRepository {
       }
     }
     return false;
-  }
-}
-
-class MockAccessKey implements AccessKey {
-  constructor(
-      public id: AccessKeyId,
-      public metricsId: AccessKeyId,
-      public name: string,
-      public shadowsocksInstance: ShadowsocksInstance) {}
-  public rename(name: string): void {
-    this.name = name;
   }
 }
 
