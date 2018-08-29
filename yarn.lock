@@ -252,6 +252,10 @@
     "@types/bunyan" "*"
     "@types/node" "*"
 
+"@types/semver@^5.5.0":
+  version "5.5.0"
+  resolved "https://registry.yarnpkg.com/@types/semver/-/semver-5.5.0.tgz#146c2a29ee7d3bae4bf2fcb274636e264c813c45"
+
 "@types/serve-static@*":
   version "1.13.1"
   resolved "https://registry.yarnpkg.com/@types/serve-static/-/serve-static-1.13.1.tgz#1d2801fa635d274cd97d4ec07e26b21b44127492"
@@ -893,7 +897,7 @@ buffer@^5.0.2:
     base64-js "^1.0.2"
     ieee754 "^1.1.4"
 
-builder-util-runtime@4.4.1, builder-util-runtime@^4.4.1, builder-util-runtime@~4.4.0:
+builder-util-runtime@4.4.1, builder-util-runtime@^4.4.1, builder-util-runtime@~4.4.1:
   version "4.4.1"
   resolved "https://registry.yarnpkg.com/builder-util-runtime/-/builder-util-runtime-4.4.1.tgz#2770d03241e51fde46acacc7ed3ed8a9f45f02cb"
   dependencies:
@@ -1646,19 +1650,19 @@ electron-publish@20.28.0:
     lazy-val "^1.0.3"
     mime "^2.3.1"
 
-electron-updater@^2.23.3:
-  version "2.23.3"
-  resolved "https://registry.yarnpkg.com/electron-updater/-/electron-updater-2.23.3.tgz#7bf054075f0cef2cd832cb533cf21adcdd5780b8"
+electron-updater@^3.1.2:
+  version "3.1.2"
+  resolved "https://registry.yarnpkg.com/electron-updater/-/electron-updater-3.1.2.tgz#30d9790d5b16048e4afc74a31748790348b153bf"
   dependencies:
     bluebird-lst "^1.0.5"
-    builder-util-runtime "~4.4.0"
+    builder-util-runtime "~4.4.1"
     electron-is-dev "^0.3.0"
     fs-extra-p "^4.6.1"
     js-yaml "^3.12.0"
     lazy-val "^1.0.3"
     lodash.isequal "^4.5.0"
-    semver "^5.5.0"
-    source-map-support "^0.5.6"
+    semver "^5.5.1"
+    source-map-support "^0.5.9"
 
 electron@^2.0.8:
   version "2.0.8"
@@ -4229,7 +4233,7 @@ semver@^4.3.3:
   version "4.3.6"
   resolved "https://registry.yarnpkg.com/semver/-/semver-4.3.6.tgz#300bc6e0e86374f7ba61068b5b1ecd57fc6532da"
 
-semver@^5.5.0:
+semver@^5.5.0, semver@^5.5.1:
   version "5.5.1"
   resolved "https://registry.yarnpkg.com/semver/-/semver-5.5.1.tgz#7dfdd8814bdb7cabc7be0fb1d734cfb66c940477"
 
@@ -4360,14 +4364,7 @@ sntp@2.x.x:
   dependencies:
     hoek "4.x.x"
 
-source-map-support@^0.5.6:
-  version "0.5.6"
-  resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.5.6.tgz#4435cee46b1aab62b8e8610ce60f788091c51c13"
-  dependencies:
-    buffer-from "^1.0.0"
-    source-map "^0.6.0"
-
-source-map-support@^0.5.8:
+source-map-support@^0.5.8, source-map-support@^0.5.9:
   version "0.5.9"
   resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.5.9.tgz#41bc953b2534267ea2d605bccfa7bfa3111ced5f"
   dependencies:
