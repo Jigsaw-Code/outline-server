@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as child_process from 'child_process';
 import * as dgram from 'dgram';
 import * as randomstring from 'randomstring';
 import * as uuidv4 from 'uuid/v4';
