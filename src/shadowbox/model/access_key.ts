@@ -1,3 +1,4 @@
+
 // Copyright 2018 The Outline Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,19 +12,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-import {ShadowsocksInstance} from './shadowsocks_server';
-
 export type AccessKeyId = string;
+
+export interface ProxyParams {
+  hostname: string;
+  portNumber: number;
+  encryptionMethod: string;
+  password: string;
+}
 
 export interface AccessKey {
   // The unique identifier for this access key.
   id: AccessKeyId;
   // Admin-controlled, editable name for this access key.
   name: string;
-  rename(name: string): void;
-  // The Shadowsocks instance being used by this access key.
-  shadowsocksInstance: ShadowsocksInstance;
+  // Used in metrics reporting to decouple from the real id. Can change.
+  metricsId: AccessKeyId;
+  // Parameters to access the proxy
+  proxyParams: ProxyParams;
 }
 
 export interface AccessKeyRepository {

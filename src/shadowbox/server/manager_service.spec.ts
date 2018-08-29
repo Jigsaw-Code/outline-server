@@ -30,7 +30,7 @@ describe('ShadowsocksManagerService', () => {
 
   it('lists access keys in order', (done) => {
     const repo = new MockAccessKeyRepository();
-    const service = new ShadowsocksManagerService(repo);
+    const service = new ShadowsocksManagerService(null, repo, null);
 
     // Create 2 access keys with names.
     Promise.all([
@@ -53,7 +53,7 @@ describe('ShadowsocksManagerService', () => {
 
   it('creates keys', (done) => {
     const repo = new MockAccessKeyRepository();
-    const service = new ShadowsocksManagerService(repo);
+    const service = new ShadowsocksManagerService(null, repo, null);
 
     // Verify that response returns a key with the expected properties.
     const res = {send: (httpCode, data) => {
@@ -67,7 +67,7 @@ describe('ShadowsocksManagerService', () => {
 
   it('removes keys', (done) => {
     const repo = new MockAccessKeyRepository();
-    const service = new ShadowsocksManagerService(repo);
+    const service = new ShadowsocksManagerService(null, repo, null);
 
     // Create 2 access keys with names.
     Promise.all([
@@ -87,7 +87,7 @@ describe('ShadowsocksManagerService', () => {
 
   it('renames keys', (done) => {
     const repo = new MockAccessKeyRepository();
-    const service = new ShadowsocksManagerService(repo);
+    const service = new ShadowsocksManagerService(null, repo, null);
     const OLD_NAME = 'oldName';
     const NEW_NAME = 'newName';
 
@@ -105,7 +105,7 @@ describe('ShadowsocksManagerService', () => {
   it('Rename returns a 500 when the repository throws an exception', (done) => {
     const repo = new MockAccessKeyRepository();
     spyOn(repo, 'renameAccessKey').and.throwError('cannot write to disk');
-    const service = new ShadowsocksManagerService(repo);
+    const service = new ShadowsocksManagerService(null, repo, null);
 
     createNewAccessKeyWithName(repo, 'oldName').then((key) => {
       const res = {send: (httpCode, data) => {}};
@@ -120,7 +120,7 @@ describe('ShadowsocksManagerService', () => {
   it('Create returns a 500 when the repository throws an exception', (done) => {
     const repo = new MockAccessKeyRepository();
     spyOn(repo, 'createNewAccessKey').and.throwError('cannot write to disk');
-    const service = new ShadowsocksManagerService(repo);
+    const service = new ShadowsocksManagerService(null, repo, null);
 
     const res = {send: (httpCode, data) => {}};
     service.createNewAccessKey({params: {}}, res, (error) => {
@@ -133,7 +133,7 @@ describe('ShadowsocksManagerService', () => {
   it('Remove returns a 500 when the repository throws an exception', (done) => {
     const repo = new MockAccessKeyRepository();
     spyOn(repo, 'removeAccessKey').and.throwError('cannot write to disk');
-    const service = new ShadowsocksManagerService(repo);
+    const service = new ShadowsocksManagerService(null, repo, null);
 
     // Create 2 access keys with names.
     createNewAccessKeyWithName(repo, 'keyName1').then((key) => {
@@ -154,7 +154,7 @@ function getFirstAccessKey(repo: AccessKeyRepository) {
 function createNewAccessKeyWithName(
     repo: AccessKeyRepository, name: string): Promise<AccessKey> {
   return repo.createNewAccessKey().then((key) => {
-    key.rename(name);
+    key.name = name;
     return key;
   });
 }
