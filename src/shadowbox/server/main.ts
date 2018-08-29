@@ -22,7 +22,7 @@ import * as ip_location from '../infrastructure/ip_location';
 import * as logging from '../infrastructure/logging';
 
 import {LibevShadowsocksServer} from './libev_shadowsocks_server';
-import {createManagedAccessKeyRepository} from './managed_user';
+import {createManagedAccessKeyRepository} from './managed_access_key';
 import {bindService, ShadowsocksManagerService} from './manager_service';
 import * as metrics from './metrics';
 import * as server_config from './server_config';
