@@ -10,7 +10,7 @@
     "Using https:// for ShadowsocksConfig to avoid adding git in the Docker image"
   ],
   "dependencies": {
-    "ShadowsocksConfig": "https://github.com/Jigsaw-Code/outline-shadowsocksconfig/archive/v0.0.6.tar.gz",
+    "ShadowsocksConfig": "Jigsaw-Code/outline-shadowsocksconfig#^v0.0.8",
     "ipaddr.js": "^1.4.0",
     "maxmind": "^2.7.0",
     "randomstring": "^1.1.5",
