@@ -44,6 +44,8 @@ interface ConfigJson {
 function generatePassword(): string {
   return randomstring.generate(12);
 }
+
+// AccessKeyConfigFile can load and save ConfigJsons from and to a file.
 class AccessKeyConfigFile {
   constructor(private configFile: TextFile) {}
 
