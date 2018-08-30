@@ -26,6 +26,7 @@ export interface ProxyParams {
   password: string;
 }
 
+// AccessKey is what admins work with. It gives ProxyParams a name and identity.
 export interface AccessKey {
   // The unique identifier for this access key.
   id: AccessKeyId;
