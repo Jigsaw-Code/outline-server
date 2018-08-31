@@ -121,7 +121,6 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyConfig): Access
 // to start and stop per-access-key Shadowsocks instances.
 class ManagedAccessKeyRepository implements AccessKeyRepository {
   // This is the max id + 1 among all access keys. Used to generate unique ids for new access keys.
-  private nextId = 0;
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
   private reservedPorts: Set<number> = new Set();
   private ssInstances = new Map<AccessKeyId, ShadowsocksInstance>();
@@ -136,7 +135,8 @@ class ManagedAccessKeyRepository implements AccessKeyRepository {
 
   public createNewAccessKey(): Promise<AccessKey> {
     return getRandomUnusedPort(this.reservedPorts).then((port) => {
-      const id = this.allocateId();
+      const id = this.configJson.nextId.toString();
+      this.configJson.nextId += 1;
       const metricsId = uuidv4();
       const password = generatePassword();
       // Save key
@@ -209,12 +209,6 @@ class ManagedAccessKeyRepository implements AccessKeyRepository {
 
   private handleInboundBytes(accessKeyId: AccessKeyId, metricsId: AccessKeyId, inboundBytes: number, ipAddresses: string[]) {
     this.stats.recordBytesTransferred(accessKeyId, metricsId, inboundBytes, ipAddresses);
-  }
-
-  private allocateId(): AccessKeyId {
-    const allocatedId = this.nextId;
-    this.nextId += 1;
-    return allocatedId.toString();
   }
   
   private saveConfig() {
