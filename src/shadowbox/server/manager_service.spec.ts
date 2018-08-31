@@ -12,9 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ShadowsocksManagerService } from './manager_service';
-import { MockAccessKeyRepository } from './mocks/mocks';
-import { AccessKey, AccessKeyRepository } from '../model/access_key';
+import {AccessKey, AccessKeyRepository} from '../model/access_key';
+
+import {ShadowsocksManagerService} from './manager_service';
+import {InMemoryFile, MockAccessKeyRepository} from './mocks/mocks';
+import {ServerConfig} from './server_config';
+
+interface ServerInfo {
+  name: string;
+}
 
 describe('ShadowsocksManagerService', () => {
   // After processing the response callback, we should set
@@ -26,6 +32,36 @@ describe('ShadowsocksManagerService', () => {
   });
   afterEach(() => {
     expect(responseProcessed).toEqual(true);
+  });
+
+  it('Return default name by default', (done) => {
+    const repo = new MockAccessKeyRepository();
+    const serverConfig = new ServerConfig(new InMemoryFile(true), 'default name');
+    const service = new ShadowsocksManagerService(serverConfig, repo, null);
+    service.getServer(
+        {params: {}}, {
+          send: (httpCode, data: ServerInfo) => {
+            expect(httpCode).toEqual(200);
+            expect(data.name).toEqual('default name');
+            responseProcessed = true;
+          }
+        },
+        done);
+  });
+
+  it('Rename changes the server name', (done) => {
+    const repo = new MockAccessKeyRepository();
+    const serverConfig = new ServerConfig(new InMemoryFile(true), 'default name');
+    const service = new ShadowsocksManagerService(serverConfig, repo, null);
+    service.renameServer(
+        {params: {name: 'new name'}}, {
+          send: (httpCode, _) => {
+            expect(httpCode).toEqual(204);
+            expect(serverConfig.getName()).toEqual('new name');
+            responseProcessed = true;
+          }
+        },
+        done);
   });
 
   it('lists access keys in order', (done) => {
