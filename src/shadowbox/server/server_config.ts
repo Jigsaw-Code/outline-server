@@ -25,7 +25,15 @@ export class ServerConfig {
 
   constructor(private configFile: TextFile, defaultName?: string) {
     // Initialize from filename if possible.
-    const configText = this.configFile.readFileSync();
+    let configText = '';
+    try {
+      configText = this.configFile.readFileSync();
+    } catch (error) {
+      // Ignore if file doesn't exist yet.
+      if (error.code !== 'ENOENT') {
+        throw error;
+      }
+    }
     if (configText) {
       try {
         const savedState = JSON.parse(configText);
