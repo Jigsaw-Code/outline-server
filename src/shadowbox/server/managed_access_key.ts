@@ -129,7 +129,9 @@ class ManagedAccessKeyRepository implements AccessKeyRepository {
       private configJson: ConfigJson, private shadowsocksServer: ShadowsocksServer,
       private statsSocket: dgram.Socket, private stats: Stats) {
     for (const accessKeyJson of this.configJson.accessKeys) {
-      this.startInstance(accessKeyJson);
+      this.startInstance(accessKeyJson).catch((error) => {
+        logging.error(`Failed to start Shadowsocks instance for key ${accessKeyJson.id}: ${error}`);
+      });
     }
   }
 
@@ -155,7 +157,9 @@ class ManagedAccessKeyRepository implements AccessKeyRepository {
         throw new Error(`Failed to save config: ${error}`);
       }
 
-      this.startInstance(accessKeyJson);
+      this.startInstance(accessKeyJson).catch((error) => {
+        logging.error(`Failed to start Shadowsocks instance for key ${accessKeyJson.id}: ${error}`);
+      });
       return makeAccessKey(this.proxyHostname, accessKeyJson);
     });
   }
@@ -193,8 +197,8 @@ class ManagedAccessKeyRepository implements AccessKeyRepository {
     return false;
   }
 
-  private startInstance(accessKeyJson: AccessKeyConfig) {
-    this.shadowsocksServer
+  private startInstance(accessKeyJson: AccessKeyConfig): Promise<void> {
+    return this.shadowsocksServer
         .startInstance(
             accessKeyJson.port, accessKeyJson.password, this.statsSocket,
             accessKeyJson.encryptionMethod)
@@ -202,8 +206,6 @@ class ManagedAccessKeyRepository implements AccessKeyRepository {
           ssInstance.onInboundBytes(
               this.handleInboundBytes.bind(this, accessKeyJson.id, accessKeyJson.metricsId));
           this.ssInstances.set(accessKeyJson.id, ssInstance);
-        }).catch((error) => {
-          logging.error(`Failed to start Shadowsocks instance for key ${accessKeyJson.id}: ${error}`);
         });
   }
 
