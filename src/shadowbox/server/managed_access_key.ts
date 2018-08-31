@@ -202,6 +202,8 @@ class ManagedAccessKeyRepository implements AccessKeyRepository {
           ssInstance.onInboundBytes(
               this.handleInboundBytes.bind(this, accessKeyJson.id, accessKeyJson.metricsId));
           this.ssInstances.set(accessKeyJson.id, ssInstance);
+        }).catch((error) => {
+          logging.error(`Failed to start Shadowsocks instance for key ${accessKeyJson.id}: ${error}`);
         });
   }
 
