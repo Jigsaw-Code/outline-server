@@ -12,18 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {ShadowsocksInstance} from './shadowsocks_server';
-
 export type AccessKeyId = string;
 
+// Parameters needed to access a Shadowsocks proxy.
+export interface ProxyParams {
+  // Hostname of the proxy
+  hostname: string;
+  // Number of the port where the Shadowsocks service is running.
+  portNumber: number;
+  // The Shadowsocks encryption method being used.
+  encryptionMethod: string;
+  // The password for the encryption.
+  password: string;
+}
+
+// AccessKey is what admins work with. It gives ProxyParams a name and identity.
 export interface AccessKey {
   // The unique identifier for this access key.
   id: AccessKeyId;
   // Admin-controlled, editable name for this access key.
   name: string;
-  rename(name: string): void;
-  // The Shadowsocks instance being used by this access key.
-  shadowsocksInstance: ShadowsocksInstance;
+  // Used in metrics reporting to decouple from the real id. Can change.
+  metricsId: AccessKeyId;
+  // Parameters to access the proxy
+  proxyParams: ProxyParams;
 }
 
 export interface AccessKeyRepository {

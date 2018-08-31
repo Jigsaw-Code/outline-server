@@ -13,9 +13,13 @@
 // limitations under the License.
 
 import * as restify from 'restify';
+import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
 import * as logging from '../infrastructure/logging';
 import { AccessKey, AccessKeyRepository } from '../model/access_key';
+import * as metrics_model from '../model/metrics';
+import * as metrics from './metrics';
+import * as server_config from './server_config';
 
 // Creates a AccessKey response.
 function accessKeyToJson(accessKey: AccessKey) {
@@ -25,10 +29,16 @@ function accessKeyToJson(accessKey: AccessKey) {
     // Admin-controlled, editable name for this access key.
     name: accessKey.name,
     // Shadowsocks-specific details and credentials.
-    password: accessKey.shadowsocksInstance.password,
-    port: accessKey.shadowsocksInstance.portNumber,
-    method: accessKey.shadowsocksInstance.encryptionMethod,
-    accessUrl: accessKey.shadowsocksInstance.accessUrl,
+    password: accessKey.proxyParams.password,
+    port: accessKey.proxyParams.portNumber,
+    method: accessKey.proxyParams.encryptionMethod,
+    accessUrl: SIP002_URI.stringify(makeConfig({
+      host: accessKey.proxyParams.hostname,
+      port: accessKey.proxyParams.portNumber,
+      method: accessKey.proxyParams.encryptionMethod,
+      password: accessKey.proxyParams.password,
+      outline: 1,
+    }))
   };
 }
 
@@ -45,11 +55,56 @@ interface ResponseType {
   send(code: number, data?: {}): void;
 }
 
+export function bindService(
+    apiServer: restify.Server, apiPrefix: string, service: ShadowsocksManagerService) {
+  apiServer.put(`${apiPrefix}/name`, service.renameServer.bind(service));
+  apiServer.get(`${apiPrefix}/server`, service.getServer.bind(service));
+
+  apiServer.post(`${apiPrefix}/access-keys`, service.createNewAccessKey.bind(service));
+  apiServer.get(`${apiPrefix}/access-keys`, service.listAccessKeys.bind(service));
+  apiServer.del(`${apiPrefix}/access-keys/:id`, service.removeAccessKey.bind(service));
+  apiServer.put(`${apiPrefix}/access-keys/:id/name`, service.renameAccessKey.bind(service));
+
+  apiServer.get(`${apiPrefix}/metrics/transfer`, service.getDataUsage.bind(service));
+  apiServer.get(`${apiPrefix}/metrics/enabled`, service.getShareMetrics.bind(service));
+  apiServer.put(`${apiPrefix}/metrics/enabled`, service.setShareMetrics.bind(service));
+}
+
+interface SetShareMetricsParams {
+  metricsEnabled: boolean;
+}
+
 // The ShadowsocksManagerService manages the access keys that can use the server
 // as a proxy using Shadowsocks. It runs an instance of the Shadowsocks server
 // for each existing access key, with the port and password assigned for that access key.
 export class ShadowsocksManagerService {
-  constructor(private accessKeys: AccessKeyRepository) {}
+  constructor(
+      private serverConfig: server_config.ServerConfig,
+      private accessKeys: AccessKeyRepository,
+      private stats: metrics.PersistentStats,
+  ) {}
+
+  public renameServer(req: RequestType, res: ResponseType, next: restify.Next): void {
+    const name = req.params.name;
+    if (typeof name !== 'string' || name.length > 100) {
+      res.send(400);
+      next();
+      return;
+    }
+    this.serverConfig.setName(name);
+    res.send(204);
+    next();
+  }
+
+  public getServer(req: RequestType, res: ResponseType, next: restify.Next): void {
+    res.send(200, {
+      name: this.serverConfig.getName(),
+      serverId: this.serverConfig.serverId,
+      metricsEnabled: this.serverConfig.getMetricsEnabled(),
+      createdTimestampMs: this.serverConfig.getCreatedTimestampMs()
+    });
+    next();
+  }
 
   // Lists all access keys
   public listAccessKeys(req: RequestType, res: ResponseType, next: restify.Next): void {
@@ -107,5 +162,31 @@ export class ShadowsocksManagerService {
       logging.error(error);
       return next(new restify.InternalServerError());
     }
+  }
+
+  public async getDataUsage(req: RequestType, res: ResponseType, next: restify.Next) {
+    try {
+      res.send(200, this.stats.get30DayByteTransfer());
+      return next();
+    } catch (error) {
+      logging.error(error);
+      return next(new restify.InternalServerError());
+    }
+  }
+
+  public getShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
+    res.send(200, {metricsEnabled: this.serverConfig.getMetricsEnabled()});
+    next();
+  }
+
+  public setShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
+    const params = req.params as SetShareMetricsParams;
+    if (typeof params.metricsEnabled === 'boolean') {
+      this.serverConfig.setMetricsEnabled(params.metricsEnabled);
+      res.send(204);
+    } else {
+      res.send(400);
+    }
+    next();
   }
 }

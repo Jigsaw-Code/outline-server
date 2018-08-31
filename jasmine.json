@@ -2,7 +2,8 @@
   "spec_dir": ".",
   "spec_files": [
     "build/server_manager/electron_app/js/**/*.spec.js",
-    "build/server_manager/web_app/**/*.spec.js"
+    "build/server_manager/web_app/**/*.spec.js",
+    "build/shadowbox/js/**/*.spec.js"
   ],
   "helpers": ["src/base64mocks.js"],
   "stopSpecOnExpectationFailure": false,
