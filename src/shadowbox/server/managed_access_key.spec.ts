@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createManagedAccessKeyRepository } from './managed_user';
+import { createManagedAccessKeyRepository } from './managed_access_key';
 import { MockShadowsocksServer, MockStats, InMemoryFile } from './mocks/mocks';
 import { AccessKeyRepository } from '../model/access_key';
 
@@ -141,6 +141,7 @@ function countAccessKeys(repo: AccessKeyRepository) {
 
 function createRepo(inMemoryFile: InMemoryFile) {
   return createManagedAccessKeyRepository(
+      'hostname',
       inMemoryFile,
       new MockShadowsocksServer(),
       new MockStats());

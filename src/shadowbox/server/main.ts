@@ -22,8 +22,8 @@ import * as ip_location from '../infrastructure/ip_location';
 import * as logging from '../infrastructure/logging';
 
 import {LibevShadowsocksServer} from './libev_shadowsocks_server';
-import {createManagedAccessKeyRepository} from './managed_user';
-import {ShadowsocksManagerService} from './manager_service';
+import {createManagedAccessKeyRepository} from './managed_access_key';
+import {bindService, ShadowsocksManagerService} from './manager_service';
 import * as metrics from './metrics';
 import * as server_config from './server_config';
 
@@ -31,7 +31,7 @@ const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
 
 function main() {
   const verbose = process.env.LOG_LEVEL === 'debug';
-  const publicAddress = process.env.SB_PUBLIC_IP;
+  const proxyHostname = process.env.SB_PUBLIC_IP;
   // Default to production metrics, as some old Docker images may not have
   // SB_METRICS_URL properly set.
   const metricsUrl = process.env.SB_METRICS_URL || 'https://metrics-prod.uproxy.org';
@@ -39,13 +39,13 @@ function main() {
     logging.warn('process.env.SB_METRICS_URL not set, using default');
   }
 
-  if (!publicAddress) {
+  if (!proxyHostname) {
     logging.error('Need to specify SB_PUBLIC_IP for invite links');
     process.exit(1);
   }
 
   logging.debug(`=== Config ===`);
-  logging.debug(`SB_PUBLIC_IP: ${publicAddress}`);
+  logging.debug(`SB_PUBLIC_IP: ${proxyHostname}`);
   logging.debug(`SB_METRICS_URL: ${metricsUrl}`);
   logging.debug(`==============`);
 
@@ -56,10 +56,11 @@ function main() {
     process.exit(1);
   }
 
-  const serverConfigFilename = getPersistentFilename('shadowbox_server_config.json');
-  const serverConfig = new server_config.ServerConfig(serverConfigFilename, process.env.SB_DEFAULT_SERVER_NAME);
+  const serverConfig = new server_config.ServerConfig(
+      new FilesystemTextFile(getPersistentFilename('shadowbox_server_config.json')),
+      process.env.SB_DEFAULT_SERVER_NAME);
 
-  const shadowsocksServer = new LibevShadowsocksServer(publicAddress, verbose);
+  const shadowsocksServer = new LibevShadowsocksServer(proxyHostname, verbose);
 
   const statsFilename = getPersistentFilename('shadowbox_stats.json');
   const stats = new metrics.PersistentStats(statsFilename);
@@ -81,89 +82,33 @@ function main() {
   logging.info('Starting...');
   const userConfigFilename = getPersistentFilename('shadowbox_config.json');
   createManagedAccessKeyRepository(
-      new FilesystemTextFile(userConfigFilename),
-      shadowsocksServer,
-      stats).then((managedAccessKeyRepository) => {
-    const managerService = new ShadowsocksManagerService(managedAccessKeyRepository);
-    const certificateFilename = process.env.SB_CERTIFICATE_FILE;
-    const privateKeyFilename = process.env.SB_PRIVATE_KEY_FILE;
+      proxyHostname, new FilesystemTextFile(userConfigFilename), shadowsocksServer, stats)
+      .then((managedAccessKeyRepository) => {
+        const managerService = new ShadowsocksManagerService(
+            serverConfig, managedAccessKeyRepository, stats);
+        const certificateFilename = process.env.SB_CERTIFICATE_FILE;
+        const privateKeyFilename = process.env.SB_PRIVATE_KEY_FILE;
 
-    // TODO(bemasc): Remove casts once https://github.com/DefinitelyTyped/DefinitelyTyped/pull/15229 lands
-    const apiServer = restify.createServer({
-      certificate: fs.readFileSync(certificateFilename),
-      key: fs.readFileSync(privateKeyFilename)
-    });
+        // TODO(bemasc): Remove casts once https://github.com/DefinitelyTyped/DefinitelyTyped/pull/15229 lands
+        const apiServer = restify.createServer({
+          certificate: fs.readFileSync(certificateFilename),
+          key: fs.readFileSync(privateKeyFilename)
+        });
 
-    // Pre-routing handlers
-    apiServer.pre(restify.CORS());
+        // Pre-routing handlers
+        apiServer.pre(restify.CORS());
 
-    // All routes handlers
-    const apiPrefix = process.env.SB_API_PREFIX ? `/${process.env.SB_API_PREFIX}` : '';
-    apiServer.pre(restify.pre.sanitizePath());
-    apiServer.use(restify.jsonp());
-    apiServer.use(restify.bodyParser());
-    setApiHandlers(apiServer, apiPrefix, managerService, stats, serverConfig);
+        // All routes handlers
+        const apiPrefix = process.env.SB_API_PREFIX ? `/${process.env.SB_API_PREFIX}` : '';
+        apiServer.pre(restify.pre.sanitizePath());
+        apiServer.use(restify.jsonp());
+        apiServer.use(restify.bodyParser());
+        bindService(apiServer, apiPrefix, managerService);
 
-    // TODO(fortuna): Bind to localhost or unix socket to avoid external access.
-    apiServer.listen(portNumber, () => {
-      logging.info(`Manager listening at ${apiServer.url}${apiPrefix}`);
-    });
-  });
-}
-
-function setApiHandlers(
-    apiServer: restify.Server,
-    apiPrefix: string,
-    managerService: ShadowsocksManagerService,
-    stats: metrics.PersistentStats,
-    serverConfig: server_config.ServerConfig) {
-  // Access key service handlers
-  apiServer.post(`${apiPrefix}/access-keys`, managerService.createNewAccessKey.bind(managerService));
-  apiServer.get(`${apiPrefix}/access-keys`, managerService.listAccessKeys.bind(managerService));
-  apiServer.del(`${apiPrefix}/access-keys/:id`, managerService.removeAccessKey.bind(managerService));
-  apiServer.put(`${apiPrefix}/access-keys/:id/name`, managerService.renameAccessKey.bind(managerService));
-
-  // Metrics handlers.
-  apiServer.get(`${apiPrefix}/metrics/transfer`, (req, res, next) => {
-    res.send(stats.get30DayByteTransfer());
-    next();
-  });
-  apiServer.get(`${apiPrefix}/metrics/enabled`, (req, res, next) => {
-    res.send({metricsEnabled: serverConfig.getMetricsEnabled()});
-    next();
-  });
-  apiServer.put(`${apiPrefix}/metrics/enabled`, (req, res, next) => {
-    if (typeof req.params.metricsEnabled === 'boolean') {
-      serverConfig.setMetricsEnabled(req.params.metricsEnabled);
-      res.send(204);
-    } else {
-      res.send(400);
-    }
-    next();
-  });
-
-  // Rename handler.
-  apiServer.put(`${apiPrefix}/name`, (req, res, next) => {
-    const name = req.params.name;
-    if (typeof name !== 'string' || name.length > 100) {
-      res.send(400);
-      next();
-      return;
-    }
-    serverConfig.setName(name);
-    res.send(204);
-    next();
-  });
-
-  apiServer.get(`${apiPrefix}/server`, (req, res, next) => {
-    res.send({
-      name: serverConfig.getName(),
-      serverId: serverConfig.serverId,
-      metricsEnabled: serverConfig.getMetricsEnabled(),
-      createdTimestampMs: serverConfig.getCreatedTimestampMs()
-    });
-    next();
-  });
+        apiServer.listen(portNumber, () => {
+          logging.info(`Manager listening at ${apiServer.url}${apiPrefix}`);
+        });
+      });
 }
 
 function getPersistentFilename(file: string): string {
