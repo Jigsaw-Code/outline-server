@@ -57,7 +57,8 @@ function main() {
   }
 
   const serverConfig = new server_config.ServerConfig(
-      getPersistentFilename('shadowbox_server_config.json'), process.env.SB_DEFAULT_SERVER_NAME);
+      new FilesystemTextFile(getPersistentFilename('shadowbox_server_config.json')),
+      process.env.SB_DEFAULT_SERVER_NAME);
 
   const shadowsocksServer = new LibevShadowsocksServer(proxyHostname, verbose);
 

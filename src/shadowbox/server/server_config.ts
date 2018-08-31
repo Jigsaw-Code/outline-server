@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as fs from 'fs';
 import * as uuidv4 from 'uuid/v4';
 
-import * as file_read from '../infrastructure/file_read';
 import * as logging from '../infrastructure/logging';
+import {TextFile} from '../model/text_file';
 
 export class ServerConfig {
   public serverId: string;
@@ -24,9 +23,9 @@ export class ServerConfig {
   private name: string;
   private createdTimestampMs: number;  // Created timestamp in UTC milliseconds.
 
-  constructor(private filename: string, defaultName?: string) {
+  constructor(private configFile: TextFile, defaultName?: string) {
     // Initialize from filename if possible.
-    const configText = file_read.readFileIfExists(filename);
+    const configText = this.configFile.readFileSync();
     if (configText) {
       try {
         const savedState = JSON.parse(configText);
@@ -73,7 +72,7 @@ export class ServerConfig {
       name: this.name,
       createdTimestampMs: this.createdTimestampMs
     });
-    fs.writeFileSync(this.filename, state, {encoding: 'utf8'});
+    this.configFile.writeFileSync(state);
   }
 
   public getMetricsEnabled(): boolean {
