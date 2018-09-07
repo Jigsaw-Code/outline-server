@@ -67,8 +67,7 @@ describe('getHourlyServerMetricsReport', () => {
   });
   it('Does not include duplicate countries', (done) => {
     const lastHourUserStats = new Map();
-    lastHourUserStats.set(USER_ID_1,
-        getPerUserStats([IP_ADDRESS_IN_US_1, IP_ADDRESS_IN_US_2]));
+    lastHourUserStats.set(USER_ID_1, getPerUserStats([IP_ADDRESS_IN_US_1, IP_ADDRESS_IN_US_2]));
 
     metrics
         .getHourlyServerMetricsReport(
@@ -83,8 +82,7 @@ describe('getHourlyServerMetricsReport', () => {
   });
   it('userReports matches input size for unsanctioned countries', (done) => {
     const lastHourUserStats = new Map();
-    lastHourUserStats.set(USER_ID_1,
-        getPerUserStats([IP_ADDRESS_IN_US_1]));
+    lastHourUserStats.set(USER_ID_1, getPerUserStats([IP_ADDRESS_IN_US_1]));
     lastHourUserStats.set(USER_ID_2, getPerUserStats([IP_ADDRESS_IN_US_2]));
 
     metrics
@@ -102,8 +100,8 @@ describe('getHourlyServerMetricsReport', () => {
   });
   it('Filters sanctioned countries from userReports', (done) => {
     const lastHourUserStats = new Map();
-    lastHourUserStats.set(USER_ID_1,
-        getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA, IP_ADDRESS_IN_US_1]));
+    lastHourUserStats.set(
+        USER_ID_1, getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA, IP_ADDRESS_IN_US_1]));
     lastHourUserStats.set(USER_ID_2, getPerUserStats([IP_ADDRESS_IN_US_1]));
 
     metrics
@@ -121,8 +119,8 @@ describe('getHourlyServerMetricsReport', () => {
   });
   it('Removes userReports that contain only sanctioned countries', (done) => {
     const lastHourUserStats = new Map();
-    lastHourUserStats.set(USER_ID_1,
-        getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA, IP_ADDRESS_IN_CUBA]));
+    lastHourUserStats.set(
+        USER_ID_1, getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA, IP_ADDRESS_IN_CUBA]));
     lastHourUserStats.set(USER_ID_2, getPerUserStats([IP_ADDRESS_IN_US_1]));
 
     metrics
@@ -138,10 +136,9 @@ describe('getHourlyServerMetricsReport', () => {
   });
   it('Does not generate any report if all users in sanctioned countries', (done) => {
     const lastHourUserStats = new Map();
-    lastHourUserStats.set(USER_ID_1,
-        getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA, IP_ADDRESS_IN_CUBA]));
-    lastHourUserStats.set(USER_ID_2,
-        getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA]));
+    lastHourUserStats.set(
+        USER_ID_1, getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA, IP_ADDRESS_IN_CUBA]));
+    lastHourUserStats.set(USER_ID_2, getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA]));
 
     metrics
         .getHourlyServerMetricsReport(
@@ -164,7 +161,8 @@ describe('getHourlyServerMetricsReport', () => {
           expect(report.userReports[0].countries.length).toEqual(1);
           expect(report.userReports[0].countries[0]).toEqual('ERROR');
           done();
-        }).catch((e) => {
+        })
+        .catch((e) => {
           done.fail(e);
         });
   });
@@ -180,17 +178,15 @@ describe('getHourlyServerMetricsReport', () => {
           expect(report.userReports[0].countries.length).toEqual(1);
           expect(report.userReports[0].countries[0]).toEqual('ERROR');
           done();
-        }).catch((e) => {
+        })
+        .catch((e) => {
           done.fail(e);
         });
   });
 });
 
 function getPerUserStats(ipAddresses: string[]): PerUserStats {
-  return {
-    bytesTransferred: 123,
-    anonymizedIpAddresses: new Set(ipAddresses)
-  };
+  return {bytesTransferred: 123, anonymizedIpAddresses: new Set(ipAddresses)};
 }
 
 class HardcodedIpLocationService implements ip_location.IpLocationService {
@@ -211,13 +207,17 @@ class HardcodedIpLocationService implements ip_location.IpLocationService {
 class FailConnectionIpLocationService implements ip_location.IpLocationService {
   countryForIp(ipAddress: string): Promise<string> {
     const countryPromise = new Promise<string>((fulfill, reject) => {
-      https.get('https://0.0.0.0', (response) => {
-        response.on('end', () => {
-          fulfill('SHOULD_NOT_HAPPEN');
-        });
-      }).on('error', (e) => {
-        reject(new Error(`Failed to contact location service: ${e}`));
-      });
+      https
+          .get(
+              'https://0.0.0.0',
+              (response) => {
+                response.on('end', () => {
+                  fulfill('SHOULD_NOT_HAPPEN');
+                });
+              })
+          .on('error', (e) => {
+            reject(new Error(`Failed to contact location service: ${e}`));
+          });
     });
     return countryPromise;
   }

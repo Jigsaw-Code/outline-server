@@ -16,7 +16,7 @@ import * as request from 'request-lite';
 
 interface Response {
   statusCode: number;
-  headers: { location?: string };
+  headers: {location?: string};
 }
 
 interface Options {
@@ -40,8 +40,7 @@ export function requestFollowRedirectsWithSameMethodAndBody(
   modifiedOptions.followAllRedirects = false;
   modifiedOptions.followRedirect = false;
   request(modifiedOptions, (error, response, body) => {
-    if (!error &&
-        response.statusCode >= 300 && response.statusCode < 400 &&
+    if (!error && response.statusCode >= 300 && response.statusCode < 400 &&
         response.headers.location) {
       // Request has been redirected, try again at the new location.
       modifiedOptions.url = response.headers.location;
