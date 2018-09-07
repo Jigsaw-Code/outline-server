@@ -18,8 +18,9 @@ import * as fs from 'fs';
 import * as file_read from '../infrastructure/file_read';
 import * as logging from '../infrastructure/logging';
 import {AccessKeyId} from '../model/access_key';
-import {DataUsageByUser, LastHourMetricsReadyCallback, PerUserStats, Stats} from '../model/metrics';
+import {DataUsageByUser, LastHourMetricsReadyCallback, Stats} from '../model/metrics';
 
+import {ManagerStats} from './manager_metrics';
 import {SharedStats} from './shared_metrics';
 
 interface PersistentStatsStoredData {
@@ -134,77 +135,6 @@ export class PersistentStats implements Stats {
     } catch (e) {
       return null;
     }
-  }
-}
-
-// ManagerStats keeps track of the number of bytes transferred per user, per day.
-// Surfaced by the manager service to display on the Manager UI.
-class ManagerStats {
-  // Key is a string in the form "userId-dateInYYYYMMDD", e.g. "3-20170726".
-  private dailyUserBytesTransferred: Map<string, number>;
-  // Set of all User IDs for whom we have transfer stats.
-  private userIdSet: Set<AccessKeyId>;
-
-  constructor(serializedObject?: {}) {
-    if (serializedObject) {
-      this.deserialize(serializedObject);
-    } else {
-      this.dailyUserBytesTransferred = new Map();
-      this.userIdSet = new Set();
-    }
-  }
-
-  public recordBytesTransferred(userId: AccessKeyId, numBytes: number) {
-    this.userIdSet.add(userId);
-
-    const d = new Date();
-    const oldTotal = this.getBytes(userId, d);
-    const newTotal = oldTotal + numBytes;
-    this.dailyUserBytesTransferred.set(this.getKey(userId, d), newTotal);
-  }
-
-  public get30DayByteTransfer(): DataUsageByUser {
-    const bytesTransferredByUserId = {};
-    for (let i = 0; i < 30; ++i) {
-      // Get Date from i days ago.
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-
-      // Get transfer per userId and total
-      for (const userId of this.userIdSet) {
-        if (!bytesTransferredByUserId[userId]) {
-          bytesTransferredByUserId[userId] = 0;
-        }
-        const numBytes = this.getBytes(userId, d);
-        bytesTransferredByUserId[userId] += numBytes;
-      }
-    }
-    return {bytesTransferredByUserId};
-  }
-
-  // Returns the state of this object, e.g.
-  // {"dailyUserBytesTransferred":[["0-20170816",100],["1-20170816",100]],"userIdSet":["0","1"]}
-  public serialize(): {} {
-    return {
-      // Use [...] operator to serialize Map and Set objects to JSON.
-      dailyUserBytesTransferred: [...this.dailyUserBytesTransferred],
-      userIdSet: [...this.userIdSet]
-    };
-  }
-
-  private deserialize(serializedObject: {}) {
-    this.dailyUserBytesTransferred = new Map(serializedObject['dailyUserBytesTransferred']);
-    this.userIdSet = new Set(serializedObject['userIdSet']);
-  }
-
-  private getBytes(userId: AccessKeyId, d: Date) {
-    const key = this.getKey(userId, d);
-    return this.dailyUserBytesTransferred.get(key) || 0;
-  }
-
-  private getKey(userId: AccessKeyId, d: Date) {
-    const yyyymmdd = d.toISOString().substr(0, 'YYYY-MM-DD'.length).replace(/-/g, '');
-    return `${userId}-${yyyymmdd}`;
   }
 }
 
