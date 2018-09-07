@@ -22,9 +22,9 @@ import * as ip_location from '../infrastructure/ip_location';
 import * as logging from '../infrastructure/logging';
 
 import {LibevShadowsocksServer} from './libev_shadowsocks_server';
-import {createManagedAccessKeyRepository} from './managed_access_key';
 import {bindService, ShadowsocksManagerService} from './manager_service';
 import * as metrics from './metrics';
+import {createServerAccessKeyRepository} from './server_access_key';
 import * as server_config from './server_config';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
@@ -81,7 +81,7 @@ function main() {
 
   logging.info('Starting...');
   const userConfigFilename = getPersistentFilename('shadowbox_config.json');
-  createManagedAccessKeyRepository(
+  createServerAccessKeyRepository(
       proxyHostname, new FilesystemTextFile(userConfigFilename), shadowsocksServer, stats)
       .then((managedAccessKeyRepository) => {
         const managerService = new ShadowsocksManagerService(
