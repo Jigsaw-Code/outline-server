@@ -16,6 +16,11 @@ import {AccessKeyId} from '../model/access_key';
 
 import {DataUsageByUser} from '../model/metrics';
 
+export interface ManagerStatsJson {
+  dailyUserBytesTransferred: Array<[string, number]>;
+  userIdSet: string[];
+}
+
 // ManagerStats keeps track of the number of bytes transferred per user, per day.
 // Surfaced by the manager service to display on the Manager UI.
 export class ManagerStats {
@@ -24,10 +29,10 @@ export class ManagerStats {
   // Set of all User IDs for whom we have transfer stats.
   private userIdSet: Set<AccessKeyId>;
 
-  constructor(serializedObject?: {}) {
+  constructor(serializedObject?: ManagerStatsJson) {
     if (serializedObject) {
-      this.dailyUserBytesTransferred = new Map(serializedObject['dailyUserBytesTransferred']);
-      this.userIdSet = new Set(serializedObject['userIdSet']);
+      this.dailyUserBytesTransferred = new Map(serializedObject.dailyUserBytesTransferred);
+      this.userIdSet = new Set(serializedObject.userIdSet);
     } else {
       this.dailyUserBytesTransferred = new Map();
       this.userIdSet = new Set();
@@ -64,7 +69,7 @@ export class ManagerStats {
 
   // Returns the state of this object, e.g.
   // {"dailyUserBytesTransferred":[["0-20170816",100],["1-20170816",100]],"userIdSet":["0","1"]}
-  public serialize(): {} {
+  public toJson(): ManagerStatsJson {
     return {
       // Use [...] operator to serialize Map and Set objects to JSON.
       dailyUserBytesTransferred: [...this.dailyUserBytesTransferred],

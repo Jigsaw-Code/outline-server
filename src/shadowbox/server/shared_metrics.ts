@@ -20,6 +20,12 @@ import {PerUserStats} from '../model/metrics';
 
 import * as ip_util from './ip_util';
 
+export interface SharedStatsJson {
+  startTimestamp: number;
+  lastHourUserStatsObj:
+      {[accessKeyId: string]: {bytesTransferred: number; anonymizedIpAddresses: string[];}};
+}
+
 // Keeps track of the connection stats per user, since the startDatetime.
 // This is reported to the Outline team if the admin opts-in.
 export class SharedStats {
@@ -30,9 +36,9 @@ export class SharedStats {
   // Map from the metrics AccessKeyId to stats (bytes transferred, IP addresses).
   public lastHourUserStats: Map<AccessKeyId, PerUserStats>;
 
-  constructor(serializedObject?: {}) {
+  constructor(serializedObject?: SharedStatsJson) {
     if (serializedObject) {
-      this.deserialize(serializedObject);
+      this.loadFromJson(serializedObject);
     } else {
       this.startDatetime = new Date();
       this.lastHourUserStats = new Map();
@@ -59,7 +65,7 @@ export class SharedStats {
 
   // Returns the state of this object, e.g.
   // {"startTimestamp":1502896650353,"lastHourUserStatsObj":{"0":{"bytesTransferred":100,"anonymizedIpAddresses":["2620:0:1003:0:0:0:0:0","5.2.79.0"]}}}
-  public serialize(): {} {
+  public toJson(): SharedStatsJson {
     // lastHourUserStats is a Map containing Set structures.  Convert to an object
     // with array values.
     const lastHourUserStatsObj = {};
@@ -72,19 +78,19 @@ export class SharedStats {
     return {startTimestamp: this.startDatetime.getTime(), lastHourUserStatsObj};
   }
 
-  private deserialize(serializedObject: {}) {
+  private loadFromJson(serializedObject: SharedStatsJson) {
     // Convert type of lastHourUserStatsObj from Object containing Arrays to
     // Map containing Sets.
     const lastHourUserStatsMap = new Map<AccessKeyId, PerUserStats>();
-    Object.keys(serializedObject['lastHourUserStatsObj']).map((userId) => {
-      const perUserStatsObj = serializedObject['lastHourUserStatsObj'][userId];
+    Object.keys(serializedObject.lastHourUserStatsObj).map((userId) => {
+      const perUserStatsObj = serializedObject.lastHourUserStatsObj[userId];
       lastHourUserStatsMap.set(userId, {
         bytesTransferred: perUserStatsObj.bytesTransferred,
         anonymizedIpAddresses: new Set(perUserStatsObj.anonymizedIpAddresses)
       });
     });
 
-    this.startDatetime = new Date(serializedObject['startTimestamp']);
+    this.startDatetime = new Date(serializedObject.startTimestamp);
     this.lastHourUserStats = lastHourUserStatsMap;
   }
 }

@@ -16,18 +16,49 @@ import * as events from 'events';
 import * as fs from 'fs';
 
 import * as file_read from '../infrastructure/file_read';
+import {JsonReaderWriter} from '../infrastructure/json_storage';
 import * as logging from '../infrastructure/logging';
 import {AccessKeyId} from '../model/access_key';
 import {DataUsageByUser, LastHourMetricsReadyCallback, Stats} from '../model/metrics';
 
-import {ManagerStats} from './manager_metrics';
-import {SharedStats} from './shared_metrics';
+import {ManagerStats, ManagerStatsJson} from './manager_metrics';
+import {SharedStats, SharedStatsJson} from './shared_metrics';
 
-interface PersistentStatsStoredData {
+interface PersistentStatsJson {
   // Serialized ManagerStats object.
-  transferStats: string;
+  transferStats: ManagerStatsJson;
   // Serialized SharedStats object.
-  hourlyMetrics: string;
+  hourlyMetrics: SharedStatsJson;
+}
+
+class MetricsFile implements JsonReaderWriter<PersistentStatsJson> {
+  constructor(private filename: string) {}
+
+  read(): PersistentStatsJson {
+    const text = file_read.readFileIfExists(this.filename);
+    if (!text) {
+      return null;
+    }
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  write(dataJson: PersistentStatsJson) {
+    // Write to temporary file, then move that temporary file to the
+    // persistent location, to avoid accidentally breaking the stats file.
+    // Use *Sync calls for atomic operations, to guard against corrupting
+    // these files.
+    const tempFilename = `${this.filename}.${Date.now()}`;
+    try {
+      fs.writeFileSync(tempFilename, dataJson, {encoding: 'utf8'});
+      fs.renameSync(tempFilename, this.filename);
+    } catch (err) {
+      logging.error(`Error writing stats file ${err}`);
+    }
+  }
 }
 
 // Stats implementation which reads and writes state to a JSON file containing
@@ -39,10 +70,12 @@ export class PersistentStats implements Stats {
   private dirty = false;
   private eventEmitter = new events.EventEmitter();
   private static readonly LAST_HOUR_METRICS_READY_EVENT = 'lastHourMetricsReady';
+  private metricsFile: MetricsFile;
 
   constructor(private filename) {
     // Initialize stats from saved file, if available.
-    const persistedStateObj = this.readStateFile();
+    this.metricsFile = new MetricsFile(filename);
+    const persistedStateObj = this.metricsFile.read();
     if (persistedStateObj) {
       this.managerStats = new ManagerStats(persistedStateObj.transferStats);
       this.sharedStats = new SharedStats(persistedStateObj.hourlyMetrics);
@@ -88,23 +121,9 @@ export class PersistentStats implements Stats {
       return;
     }
 
-    const statsSerialized = JSON.stringify({
-      transferStats: this.managerStats.serialize(),
-      hourlyMetrics: this.sharedStats.serialize()
-    });
-
-    // Write to temporary file, then move that temporary file to the
-    // persistent location, to avoid accidentally breaking the stats file.
-    // Use *Sync calls for atomic operations, to guard against corrupting
-    // these files.
-    const tempFilename = `${this.filename}.${Date.now()}`;
-    try {
-      fs.writeFileSync(tempFilename, statsSerialized, {encoding: 'utf8'});
-      fs.renameSync(tempFilename, this.filename);
-      this.dirty = false;
-    } catch (err) {
-      logging.error(`Error writing stats file ${err}`);
-    }
+    this.metricsFile.write(
+        {transferStats: this.managerStats.toJson(), hourlyMetrics: this.sharedStats.toJson()});
+    this.dirty = false;
   }
 
   private generateHourlyReport(): void {
@@ -123,18 +142,6 @@ export class PersistentStats implements Stats {
 
     // Update hasChange so we know to persist stats.
     this.dirty = true;
-  }
-
-  private readStateFile(): PersistentStatsStoredData {
-    const text = file_read.readFileIfExists(this.filename);
-    if (!text) {
-      return null;
-    }
-    try {
-      return JSON.parse(text);
-    } catch (e) {
-      return null;
-    }
   }
 }
 
