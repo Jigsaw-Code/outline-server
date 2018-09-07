@@ -41,9 +41,11 @@ type LevelPrefix = 'E'|'W'|'I'|'D';
 // I2018-08-16T16:46:21.577Z 167288 main.js:86] ...
 function makeLogMessage(level: LevelPrefix, callsite: Callsite, message: string): string {
   // This creates a string in the UTC timezone
-  // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
+  // See
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
   const timeStr = new Date().toISOString();
-  return `${level}${timeStr} ${process.pid} ${path.basename(callsite.getFileName())}:${callsite.getLineNumber()}] ${message}`;
+  return `${level}${timeStr} ${process.pid} ${path.basename(callsite.getFileName())}:${
+      callsite.getLineNumber()}] ${message}`;
 }
 
 export function error(message: string) {

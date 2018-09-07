@@ -14,7 +14,9 @@
 
 import {AccessKeyId} from './access_key';
 
-export type LastHourMetricsReadyCallback = (startDatetime: Date, endDatetime: Date, lastHourUserStats: Map<AccessKeyId, PerUserStats>) => void;
+export type LastHourMetricsReadyCallback =
+    (startDatetime: Date, endDatetime: Date, lastHourUserStats: Map<AccessKeyId, PerUserStats>) =>
+        void;
 
 // TODO: replace "user" with "access key" in metrics.  This may also require changing
 // - the metrics server
@@ -27,7 +29,8 @@ export interface Stats {
   // clients - we do not know the breakdown of how many bytes were transferred
   // per IP address, due to limitations of the ss-server.  ipAddresses are only
   // used for recording which countries clients are connecting from.
-  recordBytesTransferred(userId: AccessKeyId, metricsUserId: AccessKeyId, numBytes: number, ipAddresses: string[]);
+  recordBytesTransferred(
+      userId: AccessKeyId, metricsUserId: AccessKeyId, numBytes: number, ipAddresses: string[]);
   // Get 30 day data usage, broken down by userId.
   get30DayByteTransfer(): DataUsageByUser;
   // Register callback for hourly metrics report.

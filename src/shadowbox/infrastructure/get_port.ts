@@ -27,7 +27,7 @@ export function getRandomUnusedPort(
   return isPortUsed(port).then((isUsed) => {
     if (!isUsed && !reservedPorts.has(port)) {
       return Promise.resolve(port);
-    } else if (maxRetries ===  0) {
+    } else if (maxRetries === 0) {
       return Promise.reject(new Error('Could not find available port'));
     }
     return getRandomUnusedPort(reservedPorts, generatePort, isPortUsed, maxRetries - 1);
