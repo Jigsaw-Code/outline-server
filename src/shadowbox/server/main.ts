@@ -83,9 +83,9 @@ function main() {
   const userConfigFilename = getPersistentFilename('shadowbox_config.json');
   createServerAccessKeyRepository(
       proxyHostname, new FilesystemTextFile(userConfigFilename), shadowsocksServer, stats)
-      .then((managedAccessKeyRepository) => {
+      .then((accessKeyRepository) => {
         const managerService =
-            new ShadowsocksManagerService(serverConfig, managedAccessKeyRepository, stats);
+            new ShadowsocksManagerService(serverConfig, accessKeyRepository, stats);
         const certificateFilename = process.env.SB_CERTIFICATE_FILE;
         const privateKeyFilename = process.env.SB_PRIVATE_KEY_FILE;
 
