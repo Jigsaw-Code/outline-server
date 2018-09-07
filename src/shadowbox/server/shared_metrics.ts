@@ -14,6 +14,7 @@
 
 import * as follow_redirects from '../infrastructure/follow_redirects';
 import * as ip_location from '../infrastructure/ip_location';
+import {JsonWriter} from '../infrastructure/json_storage';
 import * as logging from '../infrastructure/logging';
 import {AccessKeyId} from '../model/access_key';
 import {PerUserStats} from '../model/metrics';
@@ -36,7 +37,7 @@ export class SharedStats {
   // Map from the metrics AccessKeyId to stats (bytes transferred, IP addresses).
   public lastHourUserStats: Map<AccessKeyId, PerUserStats>;
 
-  constructor(serializedObject?: SharedStatsJson) {
+  constructor(private writer: JsonWriter<SharedStatsJson>, serializedObject?: SharedStatsJson) {
     if (serializedObject) {
       this.loadFromJson(serializedObject);
     } else {
@@ -56,16 +57,18 @@ export class SharedStats {
       perUserStats.anonymizedIpAddresses.add(ip);
     }
     this.lastHourUserStats.set(userId, perUserStats);
+    this.writer.write(this.toJson());
   }
 
   public reset(): void {
     this.lastHourUserStats = new Map<AccessKeyId, PerUserStats>();
     this.startDatetime = new Date();
+    this.writer.write(this.toJson());
   }
 
   // Returns the state of this object, e.g.
   // {"startTimestamp":1502896650353,"lastHourUserStatsObj":{"0":{"bytesTransferred":100,"anonymizedIpAddresses":["2620:0:1003:0:0:0:0:0","5.2.79.0"]}}}
-  public toJson(): SharedStatsJson {
+  private toJson(): SharedStatsJson {
     // lastHourUserStats is a Map containing Set structures.  Convert to an object
     // with array values.
     const lastHourUserStatsObj = {};

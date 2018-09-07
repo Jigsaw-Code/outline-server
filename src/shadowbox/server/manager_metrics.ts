@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {JsonWriter} from '../infrastructure/json_storage';
 import {AccessKeyId} from '../model/access_key';
-
 import {DataUsageByUser} from '../model/metrics';
 
 export interface ManagerStatsJson {
@@ -29,7 +29,7 @@ export class ManagerStats {
   // Set of all User IDs for whom we have transfer stats.
   private userIdSet: Set<AccessKeyId>;
 
-  constructor(serializedObject?: ManagerStatsJson) {
+  constructor(private writer: JsonWriter<ManagerStatsJson>, serializedObject?: ManagerStatsJson) {
     if (serializedObject) {
       this.dailyUserBytesTransferred = new Map(serializedObject.dailyUserBytesTransferred);
       this.userIdSet = new Set(serializedObject.userIdSet);
@@ -46,6 +46,7 @@ export class ManagerStats {
     const oldTotal = this.getBytes(userId, d);
     const newTotal = oldTotal + numBytes;
     this.dailyUserBytesTransferred.set(this.getKey(userId, d), newTotal);
+    this.writer.write(this.toJson());
   }
 
   public get30DayByteTransfer(): DataUsageByUser {
@@ -69,7 +70,7 @@ export class ManagerStats {
 
   // Returns the state of this object, e.g.
   // {"dailyUserBytesTransferred":[["0-20170816",100],["1-20170816",100]],"userIdSet":["0","1"]}
-  public toJson(): ManagerStatsJson {
+  private toJson(): ManagerStatsJson {
     return {
       // Use [...] operator to serialize Map and Set objects to JSON.
       dailyUserBytesTransferred: [...this.dailyUserBytesTransferred],
