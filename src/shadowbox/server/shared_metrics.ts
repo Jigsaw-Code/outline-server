@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as events from 'events';
+
 import * as follow_redirects from '../infrastructure/follow_redirects';
 import * as ip_location from '../infrastructure/ip_location';
-import {JsonWriter} from '../infrastructure/json_storage';
+import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {AccessKeyId} from '../model/access_key';
 import {PerUserStats} from '../model/metrics';
+import {LastHourMetricsReadyCallback} from '../model/metrics';
 
 import * as ip_util from './ip_util';
 
@@ -27,9 +30,13 @@ export interface SharedStatsJson {
       {[accessKeyId: string]: {bytesTransferred: number; anonymizedIpAddresses: string[];}};
 }
 
+const LAST_HOUR_METRICS_READY_EVENT = 'lastHourMetricsReady';
+
 // Keeps track of the connection stats per user, since the startDatetime.
 // This is reported to the Outline team if the admin opts-in.
 export class SharedStats {
+  private eventEmitter = new events.EventEmitter();
+
   // Date+time at which we started recording connection stats, e.g.
   // in case this object is constructed from data written to disk.
   public startDatetime: Date;
@@ -37,13 +44,32 @@ export class SharedStats {
   // Map from the metrics AccessKeyId to stats (bytes transferred, IP addresses).
   public lastHourUserStats: Map<AccessKeyId, PerUserStats>;
 
-  constructor(private writer: JsonWriter<SharedStatsJson>, serializedObject?: SharedStatsJson) {
+  constructor(
+      private config: JsonConfig<SharedStatsJson>, serverId: string, metricsUrl: string,
+      ipLocationService: ip_location.IpLocationService, isMetricsEnabled: () => boolean) {
+    const serializedObject = this.config.data();
     if (serializedObject) {
       this.loadFromJson(serializedObject);
     } else {
       this.startDatetime = new Date();
       this.lastHourUserStats = new Map();
     }
+
+    this.onLastHourMetricsReady((startDatetime, endDatetime, lastHourUserStats) => {
+      if (!isMetricsEnabled()) {
+        return;
+      }
+      getHourlyServerMetricsReport(
+          serverId, startDatetime, endDatetime, lastHourUserStats, ipLocationService)
+          .then((report) => {
+            if (report) {
+              postHourlyServerMetricsReports(report, metricsUrl);
+            }
+          });
+    });
+
+    // Set hourly metrics report interval
+    setHourlyInterval(this.generateHourlyReport.bind(this));
   }
 
   // CONSIDER: accepting hashedIpAddresses, which can be persisted to disk
@@ -57,18 +83,30 @@ export class SharedStats {
       perUserStats.anonymizedIpAddresses.add(ip);
     }
     this.lastHourUserStats.set(userId, perUserStats);
-    this.writer.write(this.toJson());
+    this.toJson(this.config.data());
+    this.config.write();
   }
 
   public reset(): void {
     this.lastHourUserStats = new Map<AccessKeyId, PerUserStats>();
     this.startDatetime = new Date();
-    this.writer.write(this.toJson());
+    this.toJson(this.config.data());
+    this.config.write();
+  }
+
+  public onLastHourMetricsReady(callback: LastHourMetricsReadyCallback) {
+    this.eventEmitter.on(LAST_HOUR_METRICS_READY_EVENT, callback);
+
+    // Check if an hourly metrics report is already due (e.g. if server was shutdown over an
+    // hour ago and just restarted).
+    if (getHoursSinceDatetime(this.startDatetime) >= 1) {
+      this.generateHourlyReport();
+    }
   }
 
   // Returns the state of this object, e.g.
   // {"startTimestamp":1502896650353,"lastHourUserStatsObj":{"0":{"bytesTransferred":100,"anonymizedIpAddresses":["2620:0:1003:0:0:0:0:0","5.2.79.0"]}}}
-  private toJson(): SharedStatsJson {
+  private toJson(target: SharedStatsJson) {
     // lastHourUserStats is a Map containing Set structures.  Convert to an object
     // with array values.
     const lastHourUserStatsObj = {};
@@ -78,6 +116,8 @@ export class SharedStats {
         anonymizedIpAddresses: [...perUserStats.anonymizedIpAddresses]
       };
     });
+    target.startTimestamp = this.startDatetime.getTime();
+    target.lastHourUserStatsObj = lastHourUserStatsObj;
     return {startTimestamp: this.startDatetime.getTime(), lastHourUserStatsObj};
   }
 
@@ -95,6 +135,21 @@ export class SharedStats {
 
     this.startDatetime = new Date(serializedObject.startTimestamp);
     this.lastHourUserStats = lastHourUserStatsMap;
+  }
+
+  private generateHourlyReport(): void {
+    if (this.lastHourUserStats.size === 0) {
+      // No connection stats to report.
+      return;
+    }
+
+    this.eventEmitter.emit(
+        LAST_HOUR_METRICS_READY_EVENT, this.startDatetime,
+        new Date(),  // endDatetime is the current date and time.
+        this.lastHourUserStats);
+
+    // Reset connection stats to begin recording the next hour.
+    this.reset();
   }
 }
 
@@ -209,4 +264,20 @@ function getWithoutSanctionedReports(userReports: HourlyUserMetricsReport[]):
     }
   }
   return filteredReports;
+}
+
+const MS_PER_HOUR = 60 * 60 * 1000;
+
+function setHourlyInterval(callback: Function) {
+  const msUntilNextHour = MS_PER_HOUR - (Date.now() % MS_PER_HOUR);
+  setTimeout(() => {
+    setInterval(callback, MS_PER_HOUR);
+    callback();
+  }, msUntilNextHour);
+}
+
+// Returns the floating-point number of hours passed since the specified date.
+function getHoursSinceDatetime(d: Date): number {
+  const deltaMs = Date.now() - d.getTime();
+  return deltaMs / (MS_PER_HOUR);
 }

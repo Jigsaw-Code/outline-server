@@ -17,8 +17,8 @@ import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
 import * as logging from '../infrastructure/logging';
 import {AccessKey, AccessKeyRepository} from '../model/access_key';
-import * as metrics_model from '../model/metrics';
-import * as metrics from './metrics';
+
+import {ManagerStats} from './manager_metrics';
 import * as server_config from './server_config';
 
 // Creates a AccessKey response.
@@ -81,7 +81,7 @@ export class ShadowsocksManagerService {
   constructor(
       private serverConfig: server_config.ServerConfig,
       private accessKeys: AccessKeyRepository,
-      private stats: metrics.PersistentStats,
+      private managerMetrics: ManagerStats,
   ) {}
 
   public renameServer(req: RequestType, res: ResponseType, next: restify.Next): void {
@@ -166,7 +166,7 @@ export class ShadowsocksManagerService {
 
   public async getDataUsage(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      res.send(200, this.stats.get30DayByteTransfer());
+      res.send(200, this.managerMetrics.get30DayByteTransfer());
       return next();
     } catch (error) {
       logging.error(error);
