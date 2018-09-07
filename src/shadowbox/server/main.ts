@@ -84,12 +84,13 @@ function main() {
   createServerAccessKeyRepository(
       proxyHostname, new FilesystemTextFile(userConfigFilename), shadowsocksServer, stats)
       .then((managedAccessKeyRepository) => {
-        const managerService = new ShadowsocksManagerService(
-            serverConfig, managedAccessKeyRepository, stats);
+        const managerService =
+            new ShadowsocksManagerService(serverConfig, managedAccessKeyRepository, stats);
         const certificateFilename = process.env.SB_CERTIFICATE_FILE;
         const privateKeyFilename = process.env.SB_PRIVATE_KEY_FILE;
 
-        // TODO(bemasc): Remove casts once https://github.com/DefinitelyTyped/DefinitelyTyped/pull/15229 lands
+        // TODO(bemasc): Remove casts once
+        // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/15229 lands
         const apiServer = restify.createServer({
           certificate: fs.readFileSync(certificateFilename),
           key: fs.readFileSync(privateKeyFilename)

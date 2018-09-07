@@ -16,8 +16,7 @@ import * as child_process from 'child_process';
 import * as dgram from 'dgram';
 import * as dns from 'dns';
 import * as events from 'events';
-
-import {SIP002_URI, makeConfig} from 'ShadowsocksConfig/shadowsocks_config';
+import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
 import * as logging from '../infrastructure/logging';
 import {ShadowsocksInstance, ShadowsocksServer} from '../model/shadowsocks_server';
@@ -87,9 +86,9 @@ class LibevShadowsocksServerInstance implements ShadowsocksInstance {
   private INBOUND_BYTES_EVENT = 'inboundBytes';
 
   constructor(
-      private childProcess: child_process.ChildProcess,
-      public portNumber: number, public password, public encryptionMethod: string,
-      public accessUrl: string, private statsSocket: dgram.Socket) {}
+      private childProcess: child_process.ChildProcess, public portNumber: number, public password,
+      public encryptionMethod: string, public accessUrl: string,
+      private statsSocket: dgram.Socket) {}
 
   public stop() {
     logging.info(`Stopping server on port ${this.portNumber}`);
@@ -140,14 +139,14 @@ class LibevShadowsocksServerInstance implements ShadowsocksInstance {
     });
   }
 
-  private getConnectedClientIPAddresses() :Promise<string[]> {
+  private getConnectedClientIPAddresses(): Promise<string[]> {
     const lsofCommand = `lsof -i tcp:${this.portNumber} -n -P -Fn ` +
-      " | grep '\\->'" +        // only look at connection lines (e.g. skips "p8855" and "f60")
-      " | sed 's/:\\d*$//g'" +  // remove p
-      " | sed 's/n\\S*->//g'" + // remove first part of address
-      " | sed 's/\\[//g'" +     // remove [] (used by ipv6)
-      " | sed 's/\\]//g'" +     // remove ] (used by ipv6)
-      " | sort | uniq";         // remove duplicates
+        ' | grep \'\\->\'' +         // only look at connection lines (e.g. skips "p8855" and "f60")
+        ' | sed \'s/:\\d*$//g\'' +   // remove p
+        ' | sed \'s/n\\S*->//g\'' +  // remove first part of address
+        ' | sed \'s/\\[//g\'' +      // remove [] (used by ipv6)
+        ' | sed \'s/\\]//g\'' +      // remove ] (used by ipv6)
+        ' | sort | uniq';            // remove duplicates
     return this.execCmd(lsofCommand).then((output: string) => {
       return output.split('\n');
     });

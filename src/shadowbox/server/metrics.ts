@@ -16,9 +16,9 @@ import * as events from 'events';
 import * as fs from 'fs';
 import * as url from 'url';
 
-import * as ip_location from '../infrastructure/ip_location';
 import * as file_read from '../infrastructure/file_read';
 import * as follow_redirects from '../infrastructure/follow_redirects';
+import * as ip_location from '../infrastructure/ip_location';
 import * as logging from '../infrastructure/logging';
 import {AccessKeyId} from '../model/access_key';
 import {DataUsageByUser, LastHourMetricsReadyCallback, PerUserStats, Stats} from '../model/metrics';
@@ -62,7 +62,8 @@ export class PersistentStats implements Stats {
     setHourlyInterval(this.generateHourlyReport.bind(this));
   }
 
-  public recordBytesTransferred(userId: AccessKeyId, metricsUserId: AccessKeyId, numBytes: number, ipAddresses: string[]) {
+  public recordBytesTransferred(
+      userId: AccessKeyId, metricsUserId: AccessKeyId, numBytes: number, ipAddresses: string[]) {
     // Pass the userId (sequence number) to transferStats as this data is returned to the Outline
     // manager which relies on the userId sequence number.
     this.transferStats.recordBytesTransferred(userId, numBytes);
@@ -117,8 +118,7 @@ export class PersistentStats implements Stats {
     }
 
     this.eventEmitter.emit(
-        PersistentStats.LAST_HOUR_METRICS_READY_EVENT,
-        this.connectionStats.startDatetime,
+        PersistentStats.LAST_HOUR_METRICS_READY_EVENT, this.connectionStats.startDatetime,
         new Date(),  // endDatetime is the current date and time.
         this.connectionStats.lastHourUserStats);
 
@@ -260,10 +260,7 @@ class ConnectionStats {
         anonymizedIpAddresses: [...perUserStats.anonymizedIpAddresses]
       };
     });
-    return {
-      startTimestamp: this.startDatetime.getTime(),
-      lastHourUserStatsObj
-    };
+    return {startTimestamp: this.startDatetime.getTime(), lastHourUserStatsObj};
   }
 
   private deserialize(serializedObject: {}) {
@@ -312,8 +309,8 @@ export function getHourlyServerMetricsReport(
   });
 }
 
-export function postHourlyServerMetricsReports(report: HourlyServerMetricsReport,
-    metricsUrl: string) {
+export function postHourlyServerMetricsReports(
+    report: HourlyServerMetricsReport, metricsUrl: string) {
   const options = {
     url: metricsUrl,
     headers: {'Content-Type': 'application/json'},
@@ -321,20 +318,21 @@ export function postHourlyServerMetricsReports(report: HourlyServerMetricsReport
     body: JSON.stringify(report)
   };
   logging.info('Posting metrics: ' + JSON.stringify(options));
-  return follow_redirects.requestFollowRedirectsWithSameMethodAndBody(options, (error, response, body) => {
-    if (error) {
-      logging.error(`Error posting metrics: ${error}`);
-      return;
-    }
-    logging.info('Metrics server responded with status ' + response.statusCode);
-  });
+  return follow_redirects.requestFollowRedirectsWithSameMethodAndBody(
+      options, (error, response, body) => {
+        if (error) {
+          logging.error(`Error posting metrics: ${error}`);
+          return;
+        }
+        logging.info('Metrics server responded with status ' + response.statusCode);
+      });
 }
 
 function setHourlyInterval(callback: Function) {
   const msUntilNextHour = MS_PER_HOUR - (Date.now() % MS_PER_HOUR);
   setTimeout(() => {
-      setInterval(callback, MS_PER_HOUR);
-      callback();
+    setInterval(callback, MS_PER_HOUR);
+    callback();
   }, msUntilNextHour);
 }
 
@@ -394,7 +392,8 @@ function getWithoutDuplicates<T>(a: T[]): T[] {
   return [...new Set(a)];
 }
 
-function getWithoutSanctionedReports(userReports: HourlyUserMetricsReport[]): HourlyUserMetricsReport[] {
+function getWithoutSanctionedReports(userReports: HourlyUserMetricsReport[]):
+    HourlyUserMetricsReport[] {
   const sanctionedCountries = ['CU', 'IR', 'KP', 'SY'];
   const filteredReports = [];
   for (const userReport of userReports) {

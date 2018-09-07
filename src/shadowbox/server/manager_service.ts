@@ -16,7 +16,7 @@ import * as restify from 'restify';
 import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
 import * as logging from '../infrastructure/logging';
-import { AccessKey, AccessKeyRepository } from '../model/access_key';
+import {AccessKey, AccessKeyRepository} from '../model/access_key';
 import * as metrics_model from '../model/metrics';
 import * as metrics from './metrics';
 import * as server_config from './server_config';
