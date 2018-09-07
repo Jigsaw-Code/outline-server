@@ -19,16 +19,25 @@ import * as restify from 'restify';
 
 import {FilesystemTextFile} from '../infrastructure/filesystem_text_file';
 import * as ip_location from '../infrastructure/ip_location';
+import * as json_config from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 
 import {LibevShadowsocksServer} from './libev_shadowsocks_server';
+import {ManagerStats, ManagerStatsJson} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
-import * as metrics from './metrics';
 import {createServerAccessKeyRepository} from './server_access_key';
 import * as server_config from './server_config';
-import * as shared_metrics from './shared_metrics';
+import {SharedStats, SharedStatsJson} from './shared_metrics';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
+const MAX_STATS_FILE_AGE_MS = 5000;
+
+interface PersistentStatsJson {
+  // Serialized ManagerStats object.
+  transferStats?: ManagerStatsJson;
+  // Serialized SharedStats object.
+  hourlyMetrics?: SharedStatsJson;
+}
 
 function main() {
   const verbose = process.env.LOG_LEVEL === 'debug';
@@ -63,30 +72,25 @@ function main() {
 
   const shadowsocksServer = new LibevShadowsocksServer(proxyHostname, verbose);
 
-  const statsFilename = getPersistentFilename('shadowbox_stats.json');
-  const stats = new metrics.PersistentStats(statsFilename);
-  const ipLocationService = new ip_location.MmdbLocationService();
-  stats.onLastHourMetricsReady((startDatetime, endDatetime, lastHourUserStats) => {
-    if (serverConfig.getMetricsEnabled()) {
-      shared_metrics
-          .getHourlyServerMetricsReport(
-              serverConfig.serverId, startDatetime, endDatetime, lastHourUserStats,
-              ipLocationService)
-          .then((report) => {
-            if (report) {
-              shared_metrics.postHourlyServerMetricsReports(report, metricsUrl);
-            }
-          });
-    }
-  });
+  const statsConfig = new json_config.DelayedConfig(
+      json_config.loadFileConfig<PersistentStatsJson>(
+          getPersistentFilename('shadowbox_stats.json')),
+      MAX_STATS_FILE_AGE_MS);
+  const managerMetrics =
+      new ManagerStats(new json_config.ChildConfig(statsConfig, statsConfig.data().transferStats));
+  const sharedMetrics = new SharedStats(
+      new json_config.ChildConfig(statsConfig, statsConfig.data().hourlyMetrics),
+      serverConfig.serverId, metricsUrl, new ip_location.MmdbLocationService(),
+      serverConfig.getMetricsEnabled);
 
   logging.info('Starting...');
   const userConfigFilename = getPersistentFilename('shadowbox_config.json');
   createServerAccessKeyRepository(
-      proxyHostname, new FilesystemTextFile(userConfigFilename), shadowsocksServer, stats)
+      proxyHostname, new FilesystemTextFile(userConfigFilename), shadowsocksServer, managerMetrics,
+      sharedMetrics)
       .then((accessKeyRepository) => {
         const managerService =
-            new ShadowsocksManagerService(serverConfig, accessKeyRepository, stats);
+            new ShadowsocksManagerService(serverConfig, accessKeyRepository, managerMetrics);
         const certificateFilename = process.env.SB_CERTIFICATE_FILE;
         const privateKeyFilename = process.env.SB_PRIVATE_KEY_FILE;
 

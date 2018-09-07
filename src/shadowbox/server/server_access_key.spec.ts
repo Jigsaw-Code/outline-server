@@ -14,7 +14,7 @@
 
 import {AccessKeyRepository} from '../model/access_key';
 
-import {InMemoryFile, MockShadowsocksServer, MockStats} from './mocks/mocks';
+import {InMemoryFile, MockShadowsocksServer} from './mocks/mocks';
 import {createServerAccessKeyRepository} from './server_access_key';
 
 describe('ServerAccessKeyRepository', () => {
@@ -142,5 +142,5 @@ function countAccessKeys(repo: AccessKeyRepository) {
 
 function createRepo(inMemoryFile: InMemoryFile) {
   return createServerAccessKeyRepository(
-      'hostname', inMemoryFile, new MockShadowsocksServer(), new MockStats());
+      'hostname', inMemoryFile, new MockShadowsocksServer(), null, null);
 }
