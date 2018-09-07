@@ -86,10 +86,8 @@ class AccessKeyConfigFile {
   }
 }
 
-export function createManagedAccessKeyRepository(
-    proxyHostname: string,
-    textFile: TextFile,
-    shadowsocksServer: ShadowsocksServer,
+export function createServerAccessKeyRepository(
+    proxyHostname: string, textFile: TextFile, shadowsocksServer: ShadowsocksServer,
     stats: Stats): Promise<AccessKeyRepository> {
   const configFile = new AccessKeyConfigFile(textFile);
 
@@ -99,7 +97,8 @@ export function createManagedAccessKeyRepository(
   // Create and save the stats socket.
   return createBoundUdpSocket(reservedPorts).then((statsSocket) => {
     reservedPorts.add(statsSocket.address().port);
-    return new ManagedAccessKeyRepository(proxyHostname, configFile, configJson, shadowsocksServer, statsSocket, stats);
+    return new ServerAccessKeyRepository(
+        proxyHostname, configFile, configJson, shadowsocksServer, statsSocket, stats);
   });
 }
 
@@ -117,15 +116,16 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyConfig): Access
   };
 }
 
-// AccessKeyRepository that keeps its state in a config file and uses ManagedAccessKey
+// AccessKeyRepository that keeps its state in a config file and uses ShadowsocksServer
 // to start and stop per-access-key Shadowsocks instances.
-class ManagedAccessKeyRepository implements AccessKeyRepository {
+class ServerAccessKeyRepository implements AccessKeyRepository {
   // This is the max id + 1 among all access keys. Used to generate unique ids for new access keys.
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
   private reservedPorts: Set<number> = new Set();
   private ssInstances = new Map<AccessKeyId, ShadowsocksInstance>();
 
-  constructor(private proxyHostname: string, private configFile: AccessKeyConfigFile,
+  constructor(
+      private proxyHostname: string, private configFile: AccessKeyConfigFile,
       private configJson: ConfigJson, private shadowsocksServer: ShadowsocksServer,
       private statsSocket: dgram.Socket, private stats: Stats) {
     for (const accessKeyJson of this.configJson.accessKeys) {
@@ -209,10 +209,12 @@ class ManagedAccessKeyRepository implements AccessKeyRepository {
         });
   }
 
-  private handleInboundBytes(accessKeyId: AccessKeyId, metricsId: AccessKeyId, inboundBytes: number, ipAddresses: string[]) {
+  private handleInboundBytes(
+      accessKeyId: AccessKeyId, metricsId: AccessKeyId, inboundBytes: number,
+      ipAddresses: string[]) {
     this.stats.recordBytesTransferred(accessKeyId, metricsId, inboundBytes, ipAddresses);
   }
-  
+
   private saveConfig() {
     this.configFile.saveConfig(this.configJson);
   }
