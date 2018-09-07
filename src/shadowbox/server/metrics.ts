@@ -16,7 +16,7 @@ import * as events from 'events';
 import * as fs from 'fs';
 
 import * as file_read from '../infrastructure/file_read';
-import {JsonReaderWriter} from '../infrastructure/json_storage';
+import {JsonReader, JsonWriter} from '../infrastructure/json_storage';
 import * as logging from '../infrastructure/logging';
 import {AccessKeyId} from '../model/access_key';
 import {DataUsageByUser, LastHourMetricsReadyCallback, Stats} from '../model/metrics';
@@ -24,15 +24,30 @@ import {DataUsageByUser, LastHourMetricsReadyCallback, Stats} from '../model/met
 import {ManagerStats, ManagerStatsJson} from './manager_metrics';
 import {SharedStats, SharedStatsJson} from './shared_metrics';
 
+
+const MAX_STATS_FILE_AGE_MS = 5000;
+
 interface PersistentStatsJson {
   // Serialized ManagerStats object.
-  transferStats: ManagerStatsJson;
+  transferStats?: ManagerStatsJson;
   // Serialized SharedStats object.
-  hourlyMetrics: SharedStatsJson;
+  hourlyMetrics?: SharedStatsJson;
 }
 
-class MetricsFile implements JsonReaderWriter<PersistentStatsJson> {
-  constructor(private filename: string) {}
+class MetricsFile implements JsonReader<PersistentStatsJson> {
+  private dirty = false;
+  private data = null as PersistentStatsJson;
+
+  constructor(private filename: string) {
+    this.read();
+    setInterval(() => {
+      if (!this.dirty) {
+        return;
+      }
+      this.write(this.data);
+      this.dirty = false;
+    }, MAX_STATS_FILE_AGE_MS);
+  }
 
   read(): PersistentStatsJson {
     const text = file_read.readFileIfExists(this.filename);
@@ -40,13 +55,17 @@ class MetricsFile implements JsonReaderWriter<PersistentStatsJson> {
       return null;
     }
     try {
-      return JSON.parse(text);
+      this.data = JSON.parse(text);
+      if (!this.data) {
+        this.data = {};
+      }
+      return this.data;
     } catch (e) {
       return null;
     }
   }
 
-  write(dataJson: PersistentStatsJson) {
+  private write(dataJson: PersistentStatsJson) {
     // Write to temporary file, then move that temporary file to the
     // persistent location, to avoid accidentally breaking the stats file.
     // Use *Sync calls for atomic operations, to guard against corrupting
@@ -59,33 +78,49 @@ class MetricsFile implements JsonReaderWriter<PersistentStatsJson> {
       logging.error(`Error writing stats file ${err}`);
     }
   }
+
+  getManagerStatsWriter(): JsonWriter<ManagerStatsJson> {
+    const metricsFile = this;
+    return {
+      write(dataJson: ManagerStatsJson) {
+        metricsFile.data.transferStats = dataJson;
+        metricsFile.dirty = true;
+      }
+    };
+  }
+  getSharedStatsWriter(): JsonWriter<SharedStatsJson> {
+    const metricsFile = this;
+    return {
+      write(dataJson: SharedStatsJson) {
+        metricsFile.data.hourlyMetrics = dataJson;
+        metricsFile.dirty = true;
+      }
+    };
+  }
 }
 
 // Stats implementation which reads and writes state to a JSON file containing
 // a PersistentStatsStoredData object.
 export class PersistentStats implements Stats {
-  private static readonly MAX_STATS_FILE_AGE_MS = 5000;
   private managerStats: ManagerStats;
   private sharedStats: SharedStats;
-  private dirty = false;
   private eventEmitter = new events.EventEmitter();
   private static readonly LAST_HOUR_METRICS_READY_EVENT = 'lastHourMetricsReady';
   private metricsFile: MetricsFile;
 
-  constructor(private filename) {
+  constructor(filename: string) {
     // Initialize stats from saved file, if available.
     this.metricsFile = new MetricsFile(filename);
     const persistedStateObj = this.metricsFile.read();
     if (persistedStateObj) {
-      this.managerStats = new ManagerStats(persistedStateObj.transferStats);
-      this.sharedStats = new SharedStats(persistedStateObj.hourlyMetrics);
+      this.managerStats = new ManagerStats(
+          this.metricsFile.getManagerStatsWriter(), persistedStateObj.transferStats);
+      this.sharedStats =
+          new SharedStats(this.metricsFile.getSharedStatsWriter(), persistedStateObj.hourlyMetrics);
     } else {
-      this.managerStats = new ManagerStats();
-      this.sharedStats = new SharedStats();
+      this.managerStats = new ManagerStats(this.metricsFile.getManagerStatsWriter());
+      this.sharedStats = new SharedStats(this.metricsFile.getSharedStatsWriter());
     }
-
-    // Set write interval.
-    setInterval(this.writeStatsToFile.bind(this), PersistentStats.MAX_STATS_FILE_AGE_MS);
 
     // Set hourly metrics report interval
     setHourlyInterval(this.generateHourlyReport.bind(this));
@@ -99,7 +134,6 @@ export class PersistentStats implements Stats {
     // Pass metricsUserId (uuid, rather than sequence number) to connectionStats
     // as these values may be reported to the Outline metrics server.
     this.sharedStats.recordBytesTransferred(metricsUserId, numBytes, ipAddresses);
-    this.dirty = true;
   }
 
   public get30DayByteTransfer(): DataUsageByUser {
@@ -116,16 +150,6 @@ export class PersistentStats implements Stats {
     }
   }
 
-  private writeStatsToFile() {
-    if (!this.dirty) {
-      return;
-    }
-
-    this.metricsFile.write(
-        {transferStats: this.managerStats.toJson(), hourlyMetrics: this.sharedStats.toJson()});
-    this.dirty = false;
-  }
-
   private generateHourlyReport(): void {
     if (this.sharedStats.lastHourUserStats.size === 0) {
       // No connection stats to report.
@@ -139,9 +163,6 @@ export class PersistentStats implements Stats {
 
     // Reset connection stats to begin recording the next hour.
     this.sharedStats.reset();
-
-    // Update hasChange so we know to persist stats.
-    this.dirty = true;
   }
 }
 

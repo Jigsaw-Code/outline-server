@@ -12,12 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export interface JsonReader<T> {
-  read(): T;
-}
+export interface JsonReader<T> { read(): T; }
 
-export interface JsonWriter<T> {
-  write(json: T);
-}
-
-export type JsonReaderWriter<T> = JsonReader<T> & JsonWriter<T>;
+export interface JsonWriter<T> { write(json: T); }
