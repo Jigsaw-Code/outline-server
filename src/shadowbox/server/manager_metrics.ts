@@ -26,7 +26,8 @@ export class ManagerStats {
 
   constructor(serializedObject?: {}) {
     if (serializedObject) {
-      this.deserialize(serializedObject);
+      this.dailyUserBytesTransferred = new Map(serializedObject['dailyUserBytesTransferred']);
+      this.userIdSet = new Set(serializedObject['userIdSet']);
     } else {
       this.dailyUserBytesTransferred = new Map();
       this.userIdSet = new Set();
@@ -69,11 +70,6 @@ export class ManagerStats {
       dailyUserBytesTransferred: [...this.dailyUserBytesTransferred],
       userIdSet: [...this.userIdSet]
     };
-  }
-
-  private deserialize(serializedObject: {}) {
-    this.dailyUserBytesTransferred = new Map(serializedObject['dailyUserBytesTransferred']);
-    this.userIdSet = new Set(serializedObject['userIdSet']);
   }
 
   private getBytes(userId: AccessKeyId, d: Date) {
