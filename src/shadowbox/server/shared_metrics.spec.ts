@@ -17,7 +17,7 @@ import * as https from 'https';
 import * as ip_location from '../infrastructure/ip_location';
 import {PerUserStats} from '../model/metrics';
 
-import * as metrics from './metrics';
+import * as shared_metrics from './shared_metrics';
 
 const SERVER_ID = 'serverId';
 const USER_ID_1 = 'userId1';
@@ -35,7 +35,7 @@ describe('getHourlyServerMetricsReport', () => {
     const lastHourUserStats = new Map();
     lastHourUserStats.set(USER_ID_1, getPerUserStats([IP_ADDRESS_IN_US_1]));
 
-    metrics
+    shared_metrics
         .getHourlyServerMetricsReport(
             SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
             new HardcodedIpLocationService())
@@ -51,7 +51,7 @@ describe('getHourlyServerMetricsReport', () => {
     lastHourUserStats.set(USER_ID_1, getPerUserStats([IP_ADDRESS_IN_US_1, IP_ADDRESS_IN_GB]));
     lastHourUserStats.set(USER_ID_2, getPerUserStats([IP_ADDRESS_IN_US_1]));
 
-    metrics
+    shared_metrics
         .getHourlyServerMetricsReport(
             SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
             new HardcodedIpLocationService())
@@ -69,7 +69,7 @@ describe('getHourlyServerMetricsReport', () => {
     const lastHourUserStats = new Map();
     lastHourUserStats.set(USER_ID_1, getPerUserStats([IP_ADDRESS_IN_US_1, IP_ADDRESS_IN_US_2]));
 
-    metrics
+    shared_metrics
         .getHourlyServerMetricsReport(
             SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
             new HardcodedIpLocationService())
@@ -85,7 +85,7 @@ describe('getHourlyServerMetricsReport', () => {
     lastHourUserStats.set(USER_ID_1, getPerUserStats([IP_ADDRESS_IN_US_1]));
     lastHourUserStats.set(USER_ID_2, getPerUserStats([IP_ADDRESS_IN_US_2]));
 
-    metrics
+    shared_metrics
         .getHourlyServerMetricsReport(
             SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
             new HardcodedIpLocationService())
@@ -104,7 +104,7 @@ describe('getHourlyServerMetricsReport', () => {
         USER_ID_1, getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA, IP_ADDRESS_IN_US_1]));
     lastHourUserStats.set(USER_ID_2, getPerUserStats([IP_ADDRESS_IN_US_1]));
 
-    metrics
+    shared_metrics
         .getHourlyServerMetricsReport(
             SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
             new HardcodedIpLocationService())
@@ -123,7 +123,7 @@ describe('getHourlyServerMetricsReport', () => {
         USER_ID_1, getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA, IP_ADDRESS_IN_CUBA]));
     lastHourUserStats.set(USER_ID_2, getPerUserStats([IP_ADDRESS_IN_US_1]));
 
-    metrics
+    shared_metrics
         .getHourlyServerMetricsReport(
             SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
             new HardcodedIpLocationService())
@@ -140,7 +140,7 @@ describe('getHourlyServerMetricsReport', () => {
         USER_ID_1, getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA, IP_ADDRESS_IN_CUBA]));
     lastHourUserStats.set(USER_ID_2, getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA]));
 
-    metrics
+    shared_metrics
         .getHourlyServerMetricsReport(
             SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
             new HardcodedIpLocationService())
@@ -152,7 +152,7 @@ describe('getHourlyServerMetricsReport', () => {
   it('Does not propagate location service connection errors', (done) => {
     const lastHourUserStats = new Map();
     lastHourUserStats.set('some_user_id', getPerUserStats(['127.0.0.1']));
-    metrics
+    shared_metrics
         .getHourlyServerMetricsReport(
             SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
             new FailConnectionIpLocationService())
@@ -169,7 +169,7 @@ describe('getHourlyServerMetricsReport', () => {
   it('Does not propagate location service promise rejection', (done) => {
     const lastHourUserStats = new Map();
     lastHourUserStats.set('some_user_id', getPerUserStats(['127.0.0.1']));
-    return metrics
+    return shared_metrics
         .getHourlyServerMetricsReport(
             SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
             new AlwaysRejectIpLocationService())

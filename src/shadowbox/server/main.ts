@@ -26,6 +26,7 @@ import {bindService, ShadowsocksManagerService} from './manager_service';
 import * as metrics from './metrics';
 import {createServerAccessKeyRepository} from './server_access_key';
 import * as server_config from './server_config';
+import * as shared_metrics from './shared_metrics';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
 
@@ -67,13 +68,13 @@ function main() {
   const ipLocationService = new ip_location.MmdbLocationService();
   stats.onLastHourMetricsReady((startDatetime, endDatetime, lastHourUserStats) => {
     if (serverConfig.getMetricsEnabled()) {
-      metrics
+      shared_metrics
           .getHourlyServerMetricsReport(
               serverConfig.serverId, startDatetime, endDatetime, lastHourUserStats,
               ipLocationService)
           .then((report) => {
             if (report) {
-              metrics.postHourlyServerMetricsReports(report, metricsUrl);
+              shared_metrics.postHourlyServerMetricsReports(report, metricsUrl);
             }
           });
     }
