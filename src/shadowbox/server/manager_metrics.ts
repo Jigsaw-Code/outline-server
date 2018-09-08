@@ -29,7 +29,8 @@ export class ManagerStats {
   // Set of all User IDs for whom we have transfer stats.
   private userIdSet: Set<AccessKeyId>;
 
-  constructor(private config: JsonConfig<ManagerStatsJson>, serializedObject?: ManagerStatsJson) {
+  constructor(private config: JsonConfig<ManagerStatsJson>) {
+    const serializedObject = config.data();
     if (serializedObject) {
       this.dailyUserBytesTransferred = new Map(serializedObject.dailyUserBytesTransferred);
       this.userIdSet = new Set(serializedObject.userIdSet);
