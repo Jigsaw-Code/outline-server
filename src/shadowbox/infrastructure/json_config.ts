@@ -18,7 +18,9 @@ import * as file_read from './file_read';
 import * as logging from './logging';
 
 export interface JsonConfig<T> {
+  // Returns the config data as a json object.
   data(): T;
+  // Writes the config to the backing storage.
   write();
 }
 
@@ -35,7 +37,7 @@ export function loadFileConfig<T>(filename: string): JsonConfig<T> {
   return new FileConfig<T>(filename, dataJson);
 }
 
-
+// FileConfig is a JsonConfig backed by a filesystem file.
 export class FileConfig<T> implements JsonConfig<T> {
   constructor(private filename: string, private dataJson: T) {}
 
@@ -58,6 +60,7 @@ export class FileConfig<T> implements JsonConfig<T> {
   }
 }
 
+// ChildConfig is a JsonConfig backed by another config.
 export class ChildConfig<T> implements JsonConfig<T> {
   constructor(private parentConfig: JsonConfig<{}>, private dataJson: T) {}
   data(): T {
@@ -68,6 +71,8 @@ export class ChildConfig<T> implements JsonConfig<T> {
   }
 }
 
+// DelayedConfig is a JsonConfig that only writes the data in a periodic time interval.
+// Calls to write() will mark the data as "dirty" for the next inverval.
 export class DelayedConfig<T> implements JsonConfig<T> {
   private dirty = false;
   constructor(private config: JsonConfig<T>, writePeriodMs: number) {
@@ -87,7 +92,7 @@ export class DelayedConfig<T> implements JsonConfig<T> {
   }
 }
 
-// JsonConfig that writes to a member variable. Useful for testing.
+// InMemoryConfig is a JsonConfig backed by an internal member variable. Useful for testing.
 export class InMemoryConfig<T> implements JsonConfig<T> {
   public written: T;
   constructor(private dataJson: T) {
