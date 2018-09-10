@@ -14,98 +14,20 @@
 
 import * as uuidv4 from 'uuid/v4';
 
-import * as logging from '../infrastructure/logging';
-import {TextFile} from '../model/text_file';
+import * as json_config from '../infrastructure/json_config';
 
-export class ServerConfig {
-  public serverId: string;
-  private metricsEnabled = false;
-  private name: string;
-  private createdTimestampMs: number;  // Created timestamp in UTC milliseconds.
+export interface ServerConfigJson {
+  serverId: string;
+  metricsEnabled: boolean;
+  name: string;
+  createdTimestampMs: number;
+}
 
-  constructor(private configFile: TextFile, defaultName?: string) {
-    // Initialize from filename if possible.
-    let configText = '';
-    try {
-      configText = this.configFile.readFileSync();
-    } catch (error) {
-      // Ignore if file doesn't exist yet.
-      if (error.code !== 'ENOENT') {
-        throw error;
-      }
-    }
-    if (configText) {
-      try {
-        const savedState = JSON.parse(configText);
-        if (savedState.serverId) {
-          this.serverId = savedState.serverId;
-        }
-        if (savedState.metricsEnabled) {
-          this.metricsEnabled = savedState.metricsEnabled;
-        }
-        if (savedState.name) {
-          this.name = savedState.name;
-        }
-        if (savedState.createdTimestampMs) {
-          this.createdTimestampMs = savedState.createdTimestampMs;
-        }
-      } catch (err) {
-        logging.error(`Error parsing config ${err}`);
-      }
-    }
-
-    // Initialize to default values if file missing or not valid.
-    let dirty = false;
-    if (!this.serverId) {
-      this.serverId = uuidv4();
-      dirty = true;
-    }
-    if (!this.name && defaultName) {
-      this.name = defaultName;
-      dirty = true;
-    }
-    if (!this.createdTimestampMs) {
-      this.createdTimestampMs = Date.now();
-      dirty = true;
-    }
-    if (dirty) {
-      this.writeFile();
-    }
-  }
-
-  private writeFile(): void {
-    const state = JSON.stringify({
-      serverId: this.serverId,
-      metricsEnabled: this.metricsEnabled,
-      name: this.name,
-      createdTimestampMs: this.createdTimestampMs
-    });
-    this.configFile.writeFileSync(state);
-  }
-
-  public getMetricsEnabled(): boolean {
-    return this.metricsEnabled;
-  }
-
-  public setMetricsEnabled(newValue: boolean): void {
-    if (newValue !== this.metricsEnabled) {
-      this.metricsEnabled = newValue;
-      this.writeFile();
-    }
-  }
-
-  public getName(): string {
-    return this.name || 'Outline Server';
-  }
-
-  public setName(newValue: string): void {
-    if (newValue !== this.name) {
-      this.name = newValue;
-      this.writeFile();
-    }
-  }
-
-  public getCreatedTimestampMs(): number {
-    return this.createdTimestampMs;
-  }
+export function readServerConfig(filename: string): json_config.JsonConfig<ServerConfigJson> {
+  const config = json_config.loadFileConfig<ServerConfigJson>(filename);
+  config.data().serverId = config.data().serverId || uuidv4();
+  config.data().createdTimestampMs = config.data().createdTimestampMs || Date.now();
+  config.data().metricsEnabled = config.data().metricsEnabled || false;
+  config.write();
+  return config;
 }
