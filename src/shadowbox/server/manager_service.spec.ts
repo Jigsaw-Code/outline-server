@@ -217,6 +217,50 @@ describe('ShadowsocksManagerService', () => {
       });
     });
   });
+
+  describe('getShareMetrics', () => {
+    it('Returns value from config', (done) => {
+      const serverConfig = new InMemoryConfig({metricsEnabled: true} as ServerConfigJson);
+      const service = new ShadowsocksManagerService('default name', serverConfig, null, null);
+      service.getShareMetrics(
+          {params: {}}, {
+            send: (httpCode, data: {metricsEnabled: boolean}) => {
+              expect(httpCode).toEqual(200);
+              expect(data.metricsEnabled).toEqual(true);
+              responseProcessed = true;
+            }
+          },
+          done);
+    });
+    it('Returns false by default', (done) => {
+      const serverConfig = new InMemoryConfig({} as ServerConfigJson);
+      const service = new ShadowsocksManagerService('default name', serverConfig, null, null);
+      service.getShareMetrics(
+          {params: {}}, {
+            send: (httpCode, data: {metricsEnabled: boolean}) => {
+              expect(httpCode).toEqual(200);
+              expect(data.metricsEnabled).toEqual(false);
+              responseProcessed = true;
+            }
+          },
+          done);
+    });
+  });
+  describe('setShareMetrics', () => {
+    it('Sets value in the config', (done) => {
+      const serverConfig = new InMemoryConfig({metricsEnabled: false} as ServerConfigJson);
+      const service = new ShadowsocksManagerService('default name', serverConfig, null, null);
+      service.setShareMetrics(
+          {params: {metricsEnabled: true}}, {
+            send: (httpCode, _) => {
+              expect(httpCode).toEqual(204);
+              expect(serverConfig.written.metricsEnabled).toEqual(true);
+              responseProcessed = true;
+            }
+          },
+          done);
+    });
+  });
 });
 
 function getFirstAccessKey(repo: AccessKeyRepository) {
