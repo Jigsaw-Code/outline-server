@@ -32,11 +32,19 @@ import {SharedStats, SharedStatsJson} from './shared_metrics';
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
 const MAX_STATS_FILE_AGE_MS = 5000;
 
-interface PersistentStatsJson {
+interface StatsConfigJson {
   // Serialized ManagerStats object.
   transferStats?: ManagerStatsJson;
   // Serialized SharedStats object.
   hourlyMetrics?: SharedStatsJson;
+}
+
+function readStatsConfig(filename: string): json_config.JsonConfig<StatsConfigJson> {
+  const statsConfig = json_config.loadFileConfig<StatsConfigJson>(filename);
+  // Make sure we have non-empty sub-configs.
+  statsConfig.data().transferStats = statsConfig.data().transferStats || {} as ManagerStatsJson;
+  statsConfig.data().hourlyMetrics = statsConfig.data().hourlyMetrics || {} as SharedStatsJson;
+  return new json_config.DelayedConfig(statsConfig, MAX_STATS_FILE_AGE_MS);
 }
 
 function main() {
@@ -71,10 +79,7 @@ function main() {
 
   const shadowsocksServer = new LibevShadowsocksServer(proxyHostname, verbose);
 
-  const statsConfig = new json_config.DelayedConfig(
-      json_config.loadFileConfig<PersistentStatsJson>(
-          getPersistentFilename('shadowbox_stats.json')),
-      MAX_STATS_FILE_AGE_MS);
+  const statsConfig = readStatsConfig(getPersistentFilename('shadowbox_stats.json'));
   const managerMetrics =
       new ManagerStats(new json_config.ChildConfig(statsConfig, statsConfig.data().transferStats));
   const sharedMetrics = new SharedStats(

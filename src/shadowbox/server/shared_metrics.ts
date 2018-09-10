@@ -26,8 +26,8 @@ import * as ip_util from './ip_util';
 import {ServerConfigJson} from './server_config';
 
 export interface SharedStatsJson {
-  startTimestamp: number;
-  lastHourUserStatsObj:
+  startTimestamp?: number;
+  lastHourUserStatsObj?:
       {[accessKeyId: string]: {bytesTransferred: number; anonymizedIpAddresses: string[];}};
 }
 
@@ -50,11 +50,18 @@ export class SharedStats {
       private serverConfig: JsonConfig<ServerConfigJson>, metricsUrl: string,
       ipLocationService: ip_location.IpLocationService) {
     const serializedObject = this.config.data();
-    if (serializedObject) {
-      this.loadFromJson(serializedObject);
-    } else {
-      this.startDatetime = new Date();
-      this.lastHourUserStats = new Map();
+    this.startDatetime =
+        serializedObject.startTimestamp ? new Date(serializedObject.startTimestamp) : new Date();
+
+    this.lastHourUserStats = new Map<AccessKeyId, PerUserStats>();
+    if (serializedObject.lastHourUserStatsObj) {
+      Object.keys(serializedObject.lastHourUserStatsObj).map((userId) => {
+        const perUserStatsObj = serializedObject.lastHourUserStatsObj[userId];
+        this.lastHourUserStats.set(userId, {
+          bytesTransferred: perUserStatsObj.bytesTransferred,
+          anonymizedIpAddresses: new Set(perUserStatsObj.anonymizedIpAddresses)
+        });
+      });
     }
 
     this.onLastHourMetricsReady((startDatetime, endDatetime, lastHourUserStats) => {
@@ -77,7 +84,7 @@ export class SharedStats {
 
   // CONSIDER: accepting hashedIpAddresses, which can be persisted to disk
   // and reported to the metrics server (to approximate number of devices per userId).
-  public recordBytesTransferred(userId: AccessKeyId, numBytes: number, ipAddresses: string[]) {
+  recordBytesTransferred(userId: AccessKeyId, numBytes: number, ipAddresses: string[]) {
     const perUserStats = this.lastHourUserStats.get(userId) ||
         {bytesTransferred: 0, anonymizedIpAddresses: new Set<string>()};
     perUserStats.bytesTransferred += numBytes;
@@ -90,14 +97,14 @@ export class SharedStats {
     this.config.write();
   }
 
-  public reset(): void {
+  reset(): void {
     this.lastHourUserStats = new Map<AccessKeyId, PerUserStats>();
     this.startDatetime = new Date();
     this.toJson(this.config.data());
     this.config.write();
   }
 
-  public onLastHourMetricsReady(callback: LastHourMetricsReadyCallback) {
+  private onLastHourMetricsReady(callback: LastHourMetricsReadyCallback) {
     this.eventEmitter.on(LAST_HOUR_METRICS_READY_EVENT, callback);
 
     // Check if an hourly metrics report is already due (e.g. if server was shutdown over an
@@ -122,22 +129,6 @@ export class SharedStats {
     target.startTimestamp = this.startDatetime.getTime();
     target.lastHourUserStatsObj = lastHourUserStatsObj;
     return {startTimestamp: this.startDatetime.getTime(), lastHourUserStatsObj};
-  }
-
-  private loadFromJson(serializedObject: SharedStatsJson) {
-    // Convert type of lastHourUserStatsObj from Object containing Arrays to
-    // Map containing Sets.
-    const lastHourUserStatsMap = new Map<AccessKeyId, PerUserStats>();
-    Object.keys(serializedObject.lastHourUserStatsObj).map((userId) => {
-      const perUserStatsObj = serializedObject.lastHourUserStatsObj[userId];
-      lastHourUserStatsMap.set(userId, {
-        bytesTransferred: perUserStatsObj.bytesTransferred,
-        anonymizedIpAddresses: new Set(perUserStatsObj.anonymizedIpAddresses)
-      });
-    });
-
-    this.startDatetime = new Date(serializedObject.startTimestamp);
-    this.lastHourUserStats = lastHourUserStatsMap;
   }
 
   private generateHourlyReport(): void {
