@@ -18,25 +18,6 @@ export type LastHourMetricsReadyCallback =
     (startDatetime: Date, endDatetime: Date, lastHourUserStats: Map<AccessKeyId, PerUserStats>) =>
         void;
 
-// TODO: replace "user" with "access key" in metrics.  This may also require changing
-// - the metrics server
-// - the metrics bigquery tables
-// - the persisted metrics format (JSON file).
-export interface Stats {
-  // Record the number of bytes transferred for a user, and include known
-  // client IP addresses that are connected for that user.  If there are >1
-  // IP addresses, numBytes is the sum of bytes transferred across all of those
-  // clients - we do not know the breakdown of how many bytes were transferred
-  // per IP address, due to limitations of the ss-server.  ipAddresses are only
-  // used for recording which countries clients are connecting from.
-  recordBytesTransferred(
-      userId: AccessKeyId, metricsUserId: AccessKeyId, numBytes: number, ipAddresses: string[]);
-  // Get 30 day data usage, broken down by userId.
-  get30DayByteTransfer(): DataUsageByUser;
-  // Register callback for hourly metrics report.
-  onLastHourMetricsReady(callback: LastHourMetricsReadyCallback): void;
-}
-
 export interface PerUserStats {
   bytesTransferred: number;
   anonymizedIpAddresses: Set<string>;
