@@ -50,7 +50,7 @@ export class FileConfig<T> implements JsonConfig<T> {
     // these files.
     const tempFilename = `${this.filename}.${Date.now()}`;
     try {
-      fs.writeFileSync(tempFilename, this.dataJson, {encoding: 'utf8'});
+      fs.writeFileSync(tempFilename, JSON.stringify(this.dataJson), {encoding: 'utf8'});
       fs.renameSync(tempFilename, this.filename);
     } catch (error) {
       logging.error(`Error writing config ${this.filename} ${error}`);
