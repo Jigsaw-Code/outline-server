@@ -40,13 +40,12 @@ export class ManagerStats {
     }
   }
 
-  public recordBytesTransferred(userId: AccessKeyId, numBytes: number) {
+  public recordBytesTransferred(date: Date, userId: AccessKeyId, numBytes: number) {
     this.userIdSet.add(userId);
 
-    const d = new Date();
-    const oldTotal = this.getBytes(userId, d);
+    const oldTotal = this.getBytes(userId, date);
     const newTotal = oldTotal + numBytes;
-    this.dailyUserBytesTransferred.set(this.getKey(userId, d), newTotal);
+    this.dailyUserBytesTransferred.set(this.getKey(userId, date), newTotal);
     this.toJson(this.config.data());
     this.config.write();
   }

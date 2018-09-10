@@ -86,3 +86,17 @@ export class DelayedConfig<T> implements JsonConfig<T> {
     this.dirty = false;
   }
 }
+
+// JsonConfig that writes to a member variable. Useful for testing.
+export class InMemoryConfig<T> implements JsonConfig<T> {
+  public written: T;
+  constructor(private dataJson: T) {
+    this.written = this.dataJson;
+  }
+  data(): T {
+    return this.dataJson;
+  }
+  write() {
+    this.written = JSON.parse(JSON.stringify(this.dataJson));
+  }
+}
