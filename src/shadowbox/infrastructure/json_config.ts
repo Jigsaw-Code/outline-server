@@ -83,7 +83,7 @@ export class DelayedConfig<T> implements JsonConfig<T> {
     return this.config.data();
   }
   write() {
-    this.dirty = false;
+    this.dirty = true;
   }
 }
 
