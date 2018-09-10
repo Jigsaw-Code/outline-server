@@ -17,8 +17,8 @@ import {AccessKeyId} from '../model/access_key';
 import {DataUsageByUser} from '../model/metrics';
 
 export interface ManagerStatsJson {
-  dailyUserBytesTransferred: Array<[string, number]>;
-  userIdSet: string[];
+  dailyUserBytesTransferred?: Array<[string, number]>;
+  userIdSet?: string[];
 }
 
 // ManagerStats keeps track of the number of bytes transferred per user, per day.
