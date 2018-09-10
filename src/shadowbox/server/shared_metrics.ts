@@ -27,6 +27,7 @@ import {ServerConfigJson} from './server_config';
 
 export interface SharedStatsJson {
   startTimestamp?: number;
+  // TODO: Save the countries rather than anonymized IPs. There's no point in keeping the IPs.
   lastHourUserStatsObj?:
       {[accessKeyId: string]: {bytesTransferred: number; anonymizedIpAddresses: string[];}};
 }

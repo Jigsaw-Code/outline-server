@@ -17,16 +17,18 @@ import {AccessKeyId} from '../model/access_key';
 import {DataUsageByUser} from '../model/metrics';
 
 export interface ManagerStatsJson {
+  // Bytes per user per day. The key encodes the user+day in the form "userId-dateInYYYYMMDD".
   dailyUserBytesTransferred?: Array<[string, number]>;
+  // Set of all User IDs for whom we have transfer stats.
+  // TODO: Delete userIdSet. It can be derived from dailyUserBytesTransferred.
   userIdSet?: string[];
 }
 
 // ManagerStats keeps track of the number of bytes transferred per user, per day.
 // Surfaced by the manager service to display on the Manager UI.
+// TODO: Remove entries older than 30d.
 export class ManagerStats {
-  // Key is a string in the form "userId-dateInYYYYMMDD", e.g. "3-20170726".
   private dailyUserBytesTransferred: Map<string, number>;
-  // Set of all User IDs for whom we have transfer stats.
   private userIdSet: Set<AccessKeyId>;
 
   constructor(private config: JsonConfig<ManagerStatsJson>) {
