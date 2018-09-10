@@ -20,7 +20,6 @@ import * as logging from '../infrastructure/logging';
 import {AccessKey, AccessKeyRepository} from '../model/access_key';
 
 import {ManagerStats} from './manager_metrics';
-import * as server_config from './server_config';
 import {ServerConfigJson} from './server_config';
 
 // Creates a AccessKey response.
@@ -49,6 +48,7 @@ function accessKeyToJson(accessKey: AccessKey) {
 interface RequestParams {
   id?: string;
   name?: string;
+  metricsEnabled?: boolean;
 }
 interface RequestType {
   params: RequestParams;
@@ -179,7 +179,7 @@ export class ShadowsocksManagerService {
   }
 
   public getShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
-    res.send(200, {metricsEnabled: this.serverConfig.data().metricsEnabled});
+    res.send(200, {metricsEnabled: this.serverConfig.data().metricsEnabled || false});
     next();
   }
 
