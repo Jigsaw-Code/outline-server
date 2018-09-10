@@ -15,7 +15,6 @@
 import * as dgram from 'dgram';
 
 import {AccessKey, AccessKeyId, AccessKeyRepository} from '../../model/access_key';
-import {Stats} from '../../model/metrics';
 import {ShadowsocksInstance} from '../../model/shadowsocks_server';
 import {TextFile} from '../../model/text_file';
 
