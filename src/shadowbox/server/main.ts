@@ -66,9 +66,8 @@ function main() {
     process.exit(1);
   }
 
-  const serverConfig = new server_config.ServerConfig(
-      new FilesystemTextFile(getPersistentFilename('shadowbox_server_config.json')),
-      process.env.SB_DEFAULT_SERVER_NAME);
+  const serverConfig =
+      server_config.readServerConfig(getPersistentFilename('shadowbox_server_config.json'));
 
   const shadowsocksServer = new LibevShadowsocksServer(proxyHostname, verbose);
 
@@ -79,9 +78,8 @@ function main() {
   const managerMetrics =
       new ManagerStats(new json_config.ChildConfig(statsConfig, statsConfig.data().transferStats));
   const sharedMetrics = new SharedStats(
-      new json_config.ChildConfig(statsConfig, statsConfig.data().hourlyMetrics),
-      serverConfig.serverId, metricsUrl, new ip_location.MmdbLocationService(),
-      serverConfig.getMetricsEnabled);
+      new json_config.ChildConfig(statsConfig, statsConfig.data().hourlyMetrics), serverConfig,
+      metricsUrl, new ip_location.MmdbLocationService());
 
   logging.info('Starting...');
   const userConfigFilename = getPersistentFilename('shadowbox_config.json');
@@ -89,8 +87,9 @@ function main() {
       proxyHostname, new FilesystemTextFile(userConfigFilename), shadowsocksServer, managerMetrics,
       sharedMetrics)
       .then((accessKeyRepository) => {
-        const managerService =
-            new ShadowsocksManagerService(serverConfig, accessKeyRepository, managerMetrics);
+        const managerService = new ShadowsocksManagerService(
+            process.env.SB_DEFAULT_SERVER_NAME || 'Outline Server', serverConfig,
+            accessKeyRepository, managerMetrics);
         const certificateFilename = process.env.SB_CERTIFICATE_FILE;
         const privateKeyFilename = process.env.SB_PRIVATE_KEY_FILE;
 

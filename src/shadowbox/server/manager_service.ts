@@ -15,11 +15,13 @@
 import * as restify from 'restify';
 import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
+import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {AccessKey, AccessKeyRepository} from '../model/access_key';
 
 import {ManagerStats} from './manager_metrics';
 import * as server_config from './server_config';
+import {ServerConfigJson} from './server_config';
 
 // Creates a AccessKey response.
 function accessKeyToJson(accessKey: AccessKey) {
@@ -79,7 +81,8 @@ interface SetShareMetricsParams {
 // for each existing access key, with the port and password assigned for that access key.
 export class ShadowsocksManagerService {
   constructor(
-      private serverConfig: server_config.ServerConfig,
+      private defaultServerName: string,
+      private serverConfig: JsonConfig<ServerConfigJson>,
       private accessKeys: AccessKeyRepository,
       private managerMetrics: ManagerStats,
   ) {}
@@ -91,17 +94,18 @@ export class ShadowsocksManagerService {
       next();
       return;
     }
-    this.serverConfig.setName(name);
+    this.serverConfig.data().name = name;
+    this.serverConfig.write();
     res.send(204);
     next();
   }
 
   public getServer(req: RequestType, res: ResponseType, next: restify.Next): void {
     res.send(200, {
-      name: this.serverConfig.getName(),
-      serverId: this.serverConfig.serverId,
-      metricsEnabled: this.serverConfig.getMetricsEnabled(),
-      createdTimestampMs: this.serverConfig.getCreatedTimestampMs()
+      name: this.serverConfig.data().name || this.defaultServerName,
+      serverId: this.serverConfig.data().serverId,
+      metricsEnabled: this.serverConfig.data().metricsEnabled || false,
+      createdTimestampMs: this.serverConfig.data().createdTimestampMs
     });
     next();
   }
@@ -175,14 +179,15 @@ export class ShadowsocksManagerService {
   }
 
   public getShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
-    res.send(200, {metricsEnabled: this.serverConfig.getMetricsEnabled()});
+    res.send(200, {metricsEnabled: this.serverConfig.data().metricsEnabled});
     next();
   }
 
   public setShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
     const params = req.params as SetShareMetricsParams;
     if (typeof params.metricsEnabled === 'boolean') {
-      this.serverConfig.setMetricsEnabled(params.metricsEnabled);
+      this.serverConfig.data().metricsEnabled = params.metricsEnabled;
+      this.serverConfig.write();
       res.send(204);
     } else {
       res.send(400);

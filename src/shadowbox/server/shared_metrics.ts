@@ -23,6 +23,7 @@ import {PerUserStats} from '../model/metrics';
 import {LastHourMetricsReadyCallback} from '../model/metrics';
 
 import * as ip_util from './ip_util';
+import {ServerConfigJson} from './server_config';
 
 export interface SharedStatsJson {
   startTimestamp: number;
@@ -45,8 +46,9 @@ export class SharedStats {
   public lastHourUserStats: Map<AccessKeyId, PerUserStats>;
 
   constructor(
-      private config: JsonConfig<SharedStatsJson>, serverId: string, metricsUrl: string,
-      ipLocationService: ip_location.IpLocationService, isMetricsEnabled: () => boolean) {
+      private config: JsonConfig<SharedStatsJson>,
+      private serverConfig: JsonConfig<ServerConfigJson>, metricsUrl: string,
+      ipLocationService: ip_location.IpLocationService) {
     const serializedObject = this.config.data();
     if (serializedObject) {
       this.loadFromJson(serializedObject);
@@ -56,11 +58,12 @@ export class SharedStats {
     }
 
     this.onLastHourMetricsReady((startDatetime, endDatetime, lastHourUserStats) => {
-      if (!isMetricsEnabled()) {
+      if (!this.serverConfig.data().metricsEnabled) {
         return;
       }
       getHourlyServerMetricsReport(
-          serverId, startDatetime, endDatetime, lastHourUserStats, ipLocationService)
+          this.serverConfig.data().serverId, startDatetime, endDatetime, lastHourUserStats,
+          ipLocationService)
           .then((report) => {
             if (report) {
               postHourlyServerMetricsReports(report, metricsUrl);
