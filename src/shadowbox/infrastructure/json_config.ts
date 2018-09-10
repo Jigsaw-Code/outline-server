@@ -75,7 +75,7 @@ export class DelayedConfig<T> implements JsonConfig<T> {
       if (!this.dirty) {
         return;
       }
-      this.write();
+      this.config.write();
       this.dirty = false;
     }, writePeriodMs);
   }
