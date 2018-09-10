@@ -79,18 +79,6 @@ export class MockShadowsocksServer {
   }
 }
 
-export class MockStats {
-  recordBytesTransferred(
-      userId: AccessKeyId,
-      metricsUserId: AccessKeyId,
-      numBytes: number,
-      ipAddresses: string[]) {}
-  onLastHourMetricsReady(callback) {}
-  get30DayByteTransfer() {
-    return {bytesTransferredByUserId: {}};
-  }
-}
-
 export class InMemoryFile implements TextFile {
   private savedText: string;
   constructor(private exists: boolean) {}

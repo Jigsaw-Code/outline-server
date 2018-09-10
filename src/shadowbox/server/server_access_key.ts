@@ -215,7 +215,7 @@ class ServerAccessKeyRepository implements AccessKeyRepository {
   private handleInboundBytes(
       accessKeyId: AccessKeyId, metricsId: AccessKeyId, inboundBytes: number,
       ipAddresses: string[]) {
-    this.managerMetrics.recordBytesTransferred(accessKeyId, inboundBytes);
+    this.managerMetrics.recordBytesTransferred(new Date(), accessKeyId, inboundBytes);
     this.sharedMetrics.recordBytesTransferred(metricsId, inboundBytes, ipAddresses);
   }
 
