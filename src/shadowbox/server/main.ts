@@ -23,28 +23,32 @@ import * as json_config from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 
 import {LibevShadowsocksServer} from './libev_shadowsocks_server';
-import {ManagerStats, ManagerStatsJson} from './manager_metrics';
+import {ManagerMetrics, ManagerMetricsJson} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
 import {createServerAccessKeyRepository} from './server_access_key';
 import * as server_config from './server_config';
-import {SharedStats, SharedStatsJson} from './shared_metrics';
+import {SharedMetrics, SharedMetricsJson} from './shared_metrics';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
 const MAX_STATS_FILE_AGE_MS = 5000;
 
-interface StatsConfigJson {
+// Serialized format for the metrics file.
+// WARNING: Renaming fields will break backwards-compatibility.
+interface MetricsConfigJson {
   // Serialized ManagerStats object.
-  transferStats?: ManagerStatsJson;
+  transferStats?: ManagerMetricsJson;
   // Serialized SharedStats object.
-  hourlyMetrics?: SharedStatsJson;
+  hourlyMetrics?: SharedMetricsJson;
 }
 
-function readStatsConfig(filename: string): json_config.JsonConfig<StatsConfigJson> {
-  const statsConfig = json_config.loadFileConfig<StatsConfigJson>(filename);
+function readMetricsConfig(filename: string): json_config.JsonConfig<MetricsConfigJson> {
+  const metricsConfig = json_config.loadFileConfig<MetricsConfigJson>(filename);
   // Make sure we have non-empty sub-configs.
-  statsConfig.data().transferStats = statsConfig.data().transferStats || {} as ManagerStatsJson;
-  statsConfig.data().hourlyMetrics = statsConfig.data().hourlyMetrics || {} as SharedStatsJson;
-  return new json_config.DelayedConfig(statsConfig, MAX_STATS_FILE_AGE_MS);
+  metricsConfig.data().transferStats =
+      metricsConfig.data().transferStats || {} as ManagerMetricsJson;
+  metricsConfig.data().hourlyMetrics =
+      metricsConfig.data().hourlyMetrics || {} as SharedMetricsJson;
+  return new json_config.DelayedConfig(metricsConfig, MAX_STATS_FILE_AGE_MS);
 }
 
 function main() {
@@ -79,11 +83,11 @@ function main() {
 
   const shadowsocksServer = new LibevShadowsocksServer(proxyHostname, verbose);
 
-  const statsConfig = readStatsConfig(getPersistentFilename('shadowbox_stats.json'));
-  const managerMetrics =
-      new ManagerStats(new json_config.ChildConfig(statsConfig, statsConfig.data().transferStats));
-  const sharedMetrics = new SharedStats(
-      new json_config.ChildConfig(statsConfig, statsConfig.data().hourlyMetrics), serverConfig,
+  const metricsConfig = readMetricsConfig(getPersistentFilename('shadowbox_stats.json'));
+  const managerMetrics = new ManagerMetrics(
+      new json_config.ChildConfig(metricsConfig, metricsConfig.data().transferStats));
+  const sharedMetrics = new SharedMetrics(
+      new json_config.ChildConfig(metricsConfig, metricsConfig.data().hourlyMetrics), serverConfig,
       metricsUrl, new ip_location.MmdbLocationService());
 
   logging.info('Starting...');

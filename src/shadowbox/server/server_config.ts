@@ -16,6 +16,8 @@ import * as uuidv4 from 'uuid/v4';
 
 import * as json_config from '../infrastructure/json_config';
 
+// Serialized format for the server config.
+// WARNING: Renaming fields will break backwards-compatibility.
 export interface ServerConfigJson {
   serverId: string;
   metricsEnabled: boolean;

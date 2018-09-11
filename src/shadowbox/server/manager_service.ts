@@ -19,7 +19,7 @@ import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {AccessKey, AccessKeyRepository} from '../model/access_key';
 
-import {ManagerStats} from './manager_metrics';
+import {ManagerMetrics} from './manager_metrics';
 import {ServerConfigJson} from './server_config';
 
 // Creates a AccessKey response.
@@ -84,7 +84,7 @@ export class ShadowsocksManagerService {
       private defaultServerName: string,
       private serverConfig: JsonConfig<ServerConfigJson>,
       private accessKeys: AccessKeyRepository,
-      private managerMetrics: ManagerStats,
+      private managerMetrics: ManagerMetrics,
   ) {}
 
   public renameServer(req: RequestType, res: ResponseType, next: restify.Next): void {

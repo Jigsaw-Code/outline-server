@@ -71,7 +71,7 @@ class MockShadowsocksInstance implements ShadowsocksInstance {
 
 export class MockShadowsocksServer {
   startInstance(
-      portNumber: number, password: string, statsSocket: dgram.Socket,
+      portNumber: number, password: string, metricsSocket: dgram.Socket,
       encryptionMethod?: string): Promise<ShadowsocksInstance> {
     const mock = new MockShadowsocksInstance(portNumber, password, encryptionMethod);
     return Promise.resolve(mock);
