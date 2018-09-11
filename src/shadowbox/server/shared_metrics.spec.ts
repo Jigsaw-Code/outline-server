@@ -15,7 +15,7 @@
 import * as https from 'https';
 
 import * as ip_location from '../infrastructure/ip_location';
-import {PerUserStats} from '../model/metrics';
+import {PerUserMetrics} from '../model/metrics';
 
 import * as shared_metrics from './shared_metrics';
 
@@ -185,7 +185,7 @@ describe('getHourlyServerMetricsReport', () => {
   });
 });
 
-function getPerUserStats(ipAddresses: string[]): PerUserStats {
+function getPerUserStats(ipAddresses: string[]): PerUserMetrics {
   return {bytesTransferred: 123, anonymizedIpAddresses: new Set(ipAddresses)};
 }
 

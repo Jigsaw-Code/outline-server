@@ -15,15 +15,15 @@
 import {AccessKeyId} from './access_key';
 
 export type LastHourMetricsReadyCallback =
-    (startDatetime: Date, endDatetime: Date, lastHourUserStats: Map<AccessKeyId, PerUserStats>) =>
-        void;
+    (startDatetime: Date, endDatetime: Date,
+     lastHourUserMetrics: Map<AccessKeyId, PerUserMetrics>) => void;
 
-export interface PerUserStats {
+export interface PerUserMetrics {
   bytesTransferred: number;
   anonymizedIpAddresses: Set<string>;
 }
 
-// Byte transfer stats for the past 30 days, including both inbound and outbound.
+// Byte transfer metrics for the past 30 days, including both inbound and outbound.
 // TODO: this is copied at src/model/server.ts.  Both copies should
 // be kept in sync, until we can find a way to share code between the web_app
 // and shadowbox.

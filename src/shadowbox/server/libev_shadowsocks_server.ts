@@ -30,17 +30,17 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
   constructor(private publicAddress: string, private verbose: boolean) {}
 
   public startInstance(
-      portNumber: number, password: string, statsSocket: dgram.Socket,
+      portNumber: number, password: string, metricsSocket: dgram.Socket,
       encryptionMethod = this.DEFAULT_METHOD): Promise<ShadowsocksInstance> {
     logging.info(`Starting server on port ${portNumber}`);
 
-    const statsAddress = statsSocket.address();
+    const metricsAddress = metricsSocket.address();
     const commandArguments = [
       '-m', encryptionMethod,  // Encryption method
       '-u',                    // Allow UDP
       '--fast-open',           // Allow TCP fast open
       '-p', portNumber.toString(), '-k', password, '--manager-address',
-      `${statsAddress.address}:${statsAddress.port}`
+      `${metricsAddress.address}:${metricsAddress.port}`
     ];
     logging.info('starting ss-server with args: ' + commandArguments.join(' '));
     // Add the system DNS servers.
@@ -77,7 +77,7 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
     }));
 
     return Promise.resolve(new LibevShadowsocksServerInstance(
-        childProcess, portNumber, password, encryptionMethod, accessUrl, statsSocket));
+        childProcess, portNumber, password, encryptionMethod, accessUrl, metricsSocket));
   }
 }
 
@@ -88,7 +88,7 @@ class LibevShadowsocksServerInstance implements ShadowsocksInstance {
   constructor(
       private childProcess: child_process.ChildProcess, public portNumber: number, public password,
       public encryptionMethod: string, public accessUrl: string,
-      private statsSocket: dgram.Socket) {}
+      private metricsSocket: dgram.Socket) {}
 
   public stop() {
     logging.info(`Stopping server on port ${this.portNumber}`);
@@ -106,30 +106,30 @@ class LibevShadowsocksServerInstance implements ShadowsocksInstance {
   // https://github.com/shadowsocks/shadowsocks-libev/blob/a16826b83e73af386806d1b51149f8321820835e/src/server.c#L172
   public onInboundBytes(callback: (bytes: number, ipAddresses: string[]) => void) {
     if (this.eventEmitter.listenerCount(this.INBOUND_BYTES_EVENT) === 0) {
-      this.createStatsListener();
+      this.createMetricsListener();
     }
     this.eventEmitter.on(this.INBOUND_BYTES_EVENT, callback);
   }
 
-  private createStatsListener() {
+  private createMetricsListener() {
     let lastInboundBytes = 0;
-    this.statsSocket.on('message', (buf: Buffer) => {
-      let statsMessage;
+    this.metricsSocket.on('message', (buf: Buffer) => {
+      let metricsMessage;
       try {
-        statsMessage = parseStatsMessage(buf);
+        metricsMessage = parseMetricsMessage(buf);
       } catch (err) {
-        logging.error('error parsing stats: ' + buf + ', ' + err);
+        logging.error('error parsing metrics: ' + buf + ', ' + err);
         return;
       }
-      if (statsMessage.portNumber !== this.portNumber) {
-        // Ignore stats for other ss-servers, which post to the same statsSocket.
+      if (metricsMessage.portNumber !== this.portNumber) {
+        // Ignore metrics for other ss-servers, which post to the same metricsSocket.
         return;
       }
-      const delta = statsMessage.totalInboundBytes - lastInboundBytes;
+      const delta = metricsMessage.totalInboundBytes - lastInboundBytes;
       if (delta > 0) {
         this.getConnectedClientIPAddresses()
             .then((ipAddresses: string[]) => {
-              lastInboundBytes = statsMessage.totalInboundBytes;
+              lastInboundBytes = metricsMessage.totalInboundBytes;
               this.eventEmitter.emit(this.INBOUND_BYTES_EVENT, delta, ipAddresses);
             })
             .catch((err) => {
@@ -165,12 +165,12 @@ class LibevShadowsocksServerInstance implements ShadowsocksInstance {
   }
 }
 
-interface StatsMessage {
+interface MetricsMessage {
   portNumber: number;
   totalInboundBytes: number;
 }
 
-function parseStatsMessage(buf): StatsMessage {
+function parseMetricsMessage(buf): MetricsMessage {
   const jsonString = buf.toString()
                          .substr('stat: '.length)  // remove leading "stat: "
                          .replace(/\0/g, '');      // remove trailing null terminator

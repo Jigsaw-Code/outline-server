@@ -47,7 +47,7 @@ export class FileConfig<T> implements JsonConfig<T> {
 
   write() {
     // Write to temporary file, then move that temporary file to the
-    // persistent location, to avoid accidentally breaking the stats file.
+    // persistent location, to avoid accidentally breaking the metrics file.
     // Use *Sync calls for atomic operations, to guard against corrupting
     // these files.
     const tempFilename = `${this.filename}.${Date.now()}`;

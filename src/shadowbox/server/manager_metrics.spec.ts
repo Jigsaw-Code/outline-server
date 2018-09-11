@@ -14,7 +14,7 @@
 
 import {InMemoryConfig} from '../infrastructure/json_config';
 
-import {ManagerStats, ManagerStatsJson} from './manager_metrics';
+import {ManagerMetrics, ManagerMetricsJson} from './manager_metrics';
 
 function addDays(baseDate: Date, days: number) {
   const date = new Date(baseDate);
@@ -22,26 +22,26 @@ function addDays(baseDate: Date, days: number) {
   return date;
 }
 
-describe('ManagerStats', () => {
+describe('ManagerMetrics', () => {
   it('Saves traffic to config', (done) => {
     const now = new Date();
-    const config = new InMemoryConfig({} as ManagerStatsJson);
-    const stats = new ManagerStats(config);
+    const config = new InMemoryConfig({} as ManagerMetricsJson);
+    const metrics = new ManagerMetrics(config);
 
-    let report = stats.get30DayByteTransfer();
+    let report = metrics.get30DayByteTransfer();
     expect(report.bytesTransferredByUserId).toEqual({});
 
     for (let di = 0; di < 40; di++) {
-      stats.recordBytesTransferred(addDays(now, -di), 'user-0', 1);
+      metrics.recordBytesTransferred(addDays(now, -di), 'user-0', 1);
     }
-    report = stats.get30DayByteTransfer();
+    report = metrics.get30DayByteTransfer();
     // This is being dropped
     expect(report.bytesTransferredByUserId).toEqual({'user-0': 30});
     // We are not cleaning this from the config.
     expect(config.written.userIdSet).toEqual(['user-0']);
     expect(Object.keys(config.written.dailyUserBytesTransferred).length).toEqual(40);
 
-    expect(new ManagerStats(new InMemoryConfig(config.written)).get30DayByteTransfer())
+    expect(new ManagerMetrics(new InMemoryConfig(config.written)).get30DayByteTransfer())
         .toEqual(report);
     done();
   });

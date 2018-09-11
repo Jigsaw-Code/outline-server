@@ -16,22 +16,24 @@ import {JsonConfig} from '../infrastructure/json_config';
 import {AccessKeyId} from '../model/access_key';
 import {DataUsageByUser} from '../model/metrics';
 
-export interface ManagerStatsJson {
+// Serialized format for the manager metrics.
+// WARNING: Renaming fields will break backwards-compatibility.
+export interface ManagerMetricsJson {
   // Bytes per user per day. The key encodes the user+day in the form "userId-dateInYYYYMMDD".
   dailyUserBytesTransferred?: Array<[string, number]>;
-  // Set of all User IDs for whom we have transfer stats.
+  // Set of all User IDs for whom we have transfer metrics.
   // TODO: Delete userIdSet. It can be derived from dailyUserBytesTransferred.
   userIdSet?: string[];
 }
 
-// ManagerStats keeps track of the number of bytes transferred per user, per day.
+// ManagerMetrics keeps track of the number of bytes transferred per user, per day.
 // Surfaced by the manager service to display on the Manager UI.
 // TODO: Remove entries older than 30d.
-export class ManagerStats {
+export class ManagerMetrics {
   private dailyUserBytesTransferred: Map<string, number>;
   private userIdSet: Set<AccessKeyId>;
 
-  constructor(private config: JsonConfig<ManagerStatsJson>) {
+  constructor(private config: JsonConfig<ManagerMetricsJson>) {
     const serializedObject = config.data();
     if (serializedObject) {
       this.dailyUserBytesTransferred = new Map(serializedObject.dailyUserBytesTransferred);
@@ -73,7 +75,7 @@ export class ManagerStats {
 
   // Returns the state of this object, e.g.
   // {"dailyUserBytesTransferred":[["0-20170816",100],["1-20170816",100]],"userIdSet":["0","1"]}
-  private toJson(target: ManagerStatsJson) {
+  private toJson(target: ManagerMetricsJson) {
     // Use [...] operator to serialize Map and Set objects to JSON.
     target.dailyUserBytesTransferred = [...this.dailyUserBytesTransferred];
     target.userIdSet = [...this.userIdSet];

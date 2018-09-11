@@ -19,13 +19,15 @@ import * as ip_location from '../infrastructure/ip_location';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {AccessKeyId} from '../model/access_key';
-import {PerUserStats} from '../model/metrics';
+import {PerUserMetrics} from '../model/metrics';
 import {LastHourMetricsReadyCallback} from '../model/metrics';
 
 import * as ip_util from './ip_util';
 import {ServerConfigJson} from './server_config';
 
-export interface SharedStatsJson {
+// Serialized format for the shared metrics.
+// WARNING: Renaming fields will break backwards-compatibility.
+export interface SharedMetricsJson {
   startTimestamp?: number;
   // TODO: Save the countries rather than anonymized IPs. There's no point in keeping the IPs.
   lastHourUserStatsObj?:
@@ -34,31 +36,31 @@ export interface SharedStatsJson {
 
 const LAST_HOUR_METRICS_READY_EVENT = 'lastHourMetricsReady';
 
-// Keeps track of the connection stats per user, since the startDatetime.
+// Keeps track of the connection metrics per user, since the startDatetime.
 // This is reported to the Outline team if the admin opts-in.
-export class SharedStats {
+export class SharedMetrics {
   private eventEmitter = new events.EventEmitter();
 
-  // Date+time at which we started recording connection stats, e.g.
+  // Date+time at which we started recording connection metrics, e.g.
   // in case this object is constructed from data written to disk.
   public startDatetime: Date;
 
-  // Map from the metrics AccessKeyId to stats (bytes transferred, IP addresses).
-  public lastHourUserStats: Map<AccessKeyId, PerUserStats>;
+  // Map from the metrics AccessKeyId to metrics (bytes transferred, IP addresses).
+  public lastHourUserMetrics: Map<AccessKeyId, PerUserMetrics>;
 
   constructor(
-      private config: JsonConfig<SharedStatsJson>,
+      private config: JsonConfig<SharedMetricsJson>,
       private serverConfig: JsonConfig<ServerConfigJson>, metricsUrl: string,
       ipLocationService: ip_location.IpLocationService) {
     const serializedObject = this.config.data();
     this.startDatetime =
         serializedObject.startTimestamp ? new Date(serializedObject.startTimestamp) : new Date();
 
-    this.lastHourUserStats = new Map<AccessKeyId, PerUserStats>();
+    this.lastHourUserMetrics = new Map<AccessKeyId, PerUserMetrics>();
     if (serializedObject.lastHourUserStatsObj) {
       Object.keys(serializedObject.lastHourUserStatsObj).map((userId) => {
         const perUserStatsObj = serializedObject.lastHourUserStatsObj[userId];
-        this.lastHourUserStats.set(userId, {
+        this.lastHourUserMetrics.set(userId, {
           bytesTransferred: perUserStatsObj.bytesTransferred,
           anonymizedIpAddresses: new Set(perUserStatsObj.anonymizedIpAddresses)
         });
@@ -86,20 +88,20 @@ export class SharedStats {
   // CONSIDER: accepting hashedIpAddresses, which can be persisted to disk
   // and reported to the metrics server (to approximate number of devices per userId).
   recordBytesTransferred(userId: AccessKeyId, numBytes: number, ipAddresses: string[]) {
-    const perUserStats = this.lastHourUserStats.get(userId) ||
+    const perUserMetrics = this.lastHourUserMetrics.get(userId) ||
         {bytesTransferred: 0, anonymizedIpAddresses: new Set<string>()};
-    perUserStats.bytesTransferred += numBytes;
+    perUserMetrics.bytesTransferred += numBytes;
     const anonymizedIpAddresses = getAnonymizedAndDedupedIpAddresses(ipAddresses);
     for (const ip of anonymizedIpAddresses) {
-      perUserStats.anonymizedIpAddresses.add(ip);
+      perUserMetrics.anonymizedIpAddresses.add(ip);
     }
-    this.lastHourUserStats.set(userId, perUserStats);
+    this.lastHourUserMetrics.set(userId, perUserMetrics);
     this.toJson(this.config.data());
     this.config.write();
   }
 
   reset(): void {
-    this.lastHourUserStats = new Map<AccessKeyId, PerUserStats>();
+    this.lastHourUserMetrics = new Map<AccessKeyId, PerUserMetrics>();
     this.startDatetime = new Date();
     this.toJson(this.config.data());
     this.config.write();
@@ -117,11 +119,11 @@ export class SharedStats {
 
   // Returns the state of this object, e.g.
   // {"startTimestamp":1502896650353,"lastHourUserStatsObj":{"0":{"bytesTransferred":100,"anonymizedIpAddresses":["2620:0:1003:0:0:0:0:0","5.2.79.0"]}}}
-  private toJson(target: SharedStatsJson) {
+  private toJson(target: SharedMetricsJson) {
     // lastHourUserStats is a Map containing Set structures.  Convert to an object
     // with array values.
     const lastHourUserStatsObj = {};
-    this.lastHourUserStats.forEach((perUserStats, userId) => {
+    this.lastHourUserMetrics.forEach((perUserStats, userId) => {
       lastHourUserStatsObj[userId] = {
         bytesTransferred: perUserStats.bytesTransferred,
         anonymizedIpAddresses: [...perUserStats.anonymizedIpAddresses]
@@ -133,17 +135,17 @@ export class SharedStats {
   }
 
   private generateHourlyReport(): void {
-    if (this.lastHourUserStats.size === 0) {
-      // No connection stats to report.
+    if (this.lastHourUserMetrics.size === 0) {
+      // No connection metrics to report.
       return;
     }
 
     this.eventEmitter.emit(
         LAST_HOUR_METRICS_READY_EVENT, this.startDatetime,
         new Date(),  // endDatetime is the current date and time.
-        this.lastHourUserStats);
+        this.lastHourUserMetrics);
 
-    // Reset connection stats to begin recording the next hour.
+    // Reset connection metrics to begin recording the next hour.
     this.reset();
   }
 }
@@ -162,16 +164,16 @@ function getAnonymizedAndDedupedIpAddresses(ipAddresses: string[]): Set<string> 
 
 export function getHourlyServerMetricsReport(
     serverId: string, startDatetime: Date, endDatetime: Date,
-    lastHourUserStats: Map<AccessKeyId, PerUserStats>,
+    lastHourUserMetrics: Map<AccessKeyId, PerUserMetrics>,
     ipLocationService: ip_location.IpLocationService): Promise<HourlyServerMetricsReport|null> {
-  if (lastHourUserStats.size === 0) {
-    // Stats are empty, no need to post a report
+  if (lastHourUserMetrics.size === 0) {
+    // Metrics are empty, no need to post a report
     return Promise.resolve(null);
   }
   // convert lastHourUserStats to an array HourlyUserMetricsReport
   const userReportPromises = [];
-  lastHourUserStats.forEach((perUserStats, userId) => {
-    userReportPromises.push(getHourlyUserMetricsReport(userId, perUserStats, ipLocationService));
+  lastHourUserMetrics.forEach((perUserMetrics, userId) => {
+    userReportPromises.push(getHourlyUserMetricsReport(userId, perUserMetrics, ipLocationService));
   });
   return Promise.all(userReportPromises).then((userReports: HourlyUserMetricsReport[]) => {
     // Remove any userReports containing sanctioned countries, and return
@@ -222,10 +224,10 @@ interface HourlyUserMetricsReport {
 }
 
 function getHourlyUserMetricsReport(
-    userId: AccessKeyId, perUserStats: PerUserStats,
+    userId: AccessKeyId, perUserMetrics: PerUserMetrics,
     ipLocationService: ip_location.IpLocationService): Promise<HourlyUserMetricsReport> {
   const countryPromises = [];
-  for (const ip of perUserStats.anonymizedIpAddresses) {
+  for (const ip of perUserMetrics.anonymizedIpAddresses) {
     const countryPromise = ipLocationService.countryForIp(ip).catch((e) => {
       logging.warn(`Failed countryForIp call: ${e}`);
       return 'ERROR';
@@ -235,7 +237,7 @@ function getHourlyUserMetricsReport(
   return Promise.all(countryPromises).then((countries: string[]) => {
     return {
       userId,
-      bytesTransferred: perUserStats.bytesTransferred,
+      bytesTransferred: perUserMetrics.bytesTransferred,
       countries: getWithoutDuplicates(countries)
     };
   });
