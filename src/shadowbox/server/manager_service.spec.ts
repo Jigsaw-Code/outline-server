@@ -75,7 +75,7 @@ describe('ShadowsocksManagerService', () => {
           {params: {name: 'new name'}}, {
             send: (httpCode, _) => {
               expect(httpCode).toEqual(204);
-              expect(serverConfig.written.name).toEqual('new name');
+              expect(serverConfig.mostRecentWrite.name).toEqual('new name');
               responseProcessed = true;
             }
           },
@@ -254,7 +254,7 @@ describe('ShadowsocksManagerService', () => {
           {params: {metricsEnabled: true}}, {
             send: (httpCode, _) => {
               expect(httpCode).toEqual(204);
-              expect(serverConfig.written.metricsEnabled).toEqual(true);
+              expect(serverConfig.mostRecentWrite.metricsEnabled).toEqual(true);
               responseProcessed = true;
             }
           },
