@@ -51,6 +51,7 @@ export class FileConfig<T> implements JsonConfig<T> {
       fs.writeFileSync(tempFilename, JSON.stringify(this.dataJson), {encoding: 'utf8'});
       fs.renameSync(tempFilename, this.filename);
     } catch (error) {
+      // TODO: Stop swalling the exception and handle it in the callers.
       logging.error(`Error writing config ${this.filename} ${error}`);
     }
   }
