@@ -42,13 +42,17 @@ interface MetricsConfigJson {
 }
 
 function readMetricsConfig(filename: string): json_config.JsonConfig<MetricsConfigJson> {
-  const metricsConfig = json_config.loadFileConfig<MetricsConfigJson>(filename);
-  // Make sure we have non-empty sub-configs.
-  metricsConfig.data().transferStats =
-      metricsConfig.data().transferStats || {} as ManagerMetricsJson;
-  metricsConfig.data().hourlyMetrics =
-      metricsConfig.data().hourlyMetrics || {} as SharedMetricsJson;
-  return new json_config.DelayedConfig(metricsConfig, MAX_STATS_FILE_AGE_MS);
+  try {
+    const metricsConfig = json_config.loadFileConfig<MetricsConfigJson>(filename);
+    // Make sure we have non-empty sub-configs.
+    metricsConfig.data().transferStats =
+        metricsConfig.data().transferStats || {} as ManagerMetricsJson;
+    metricsConfig.data().hourlyMetrics =
+        metricsConfig.data().hourlyMetrics || {} as SharedMetricsJson;
+    return new json_config.DelayedConfig(metricsConfig, MAX_STATS_FILE_AGE_MS);
+  } catch (error) {
+    throw new Error(`Failed to read metrics config at ${filename}: ${error}`);
+  }
 }
 
 function main() {
