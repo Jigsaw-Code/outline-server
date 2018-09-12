@@ -28,11 +28,7 @@ export function loadFileConfig<T>(filename: string): JsonConfig<T> {
   const text = file_read.readFileIfExists(filename);
   let dataJson = {} as T;
   if (text) {
-    try {
-      dataJson = JSON.parse(text) as T;
-    } catch (error) {
-      logging.error(`Failed to parse config ${filename}: ${error}`);
-    }
+    dataJson = JSON.parse(text) as T;
   }
   return new FileConfig<T>(filename, dataJson);
 }
@@ -63,9 +59,11 @@ export class FileConfig<T> implements JsonConfig<T> {
 // ChildConfig is a JsonConfig backed by another config.
 export class ChildConfig<T> implements JsonConfig<T> {
   constructor(private parentConfig: JsonConfig<{}>, private dataJson: T) {}
+
   data(): T {
     return this.dataJson;
   }
+
   write() {
     this.parentConfig.write();
   }
@@ -76,6 +74,7 @@ export class ChildConfig<T> implements JsonConfig<T> {
 export class DelayedConfig<T> implements JsonConfig<T> {
   private dirty = false;
   constructor(private config: JsonConfig<T>, writePeriodMs: number) {
+    // This repeated call will never be cancelled until the execution is terminated.
     setInterval(() => {
       if (!this.dirty) {
         return;
@@ -84,9 +83,11 @@ export class DelayedConfig<T> implements JsonConfig<T> {
       this.dirty = false;
     }, writePeriodMs);
   }
+
   data(): T {
     return this.config.data();
   }
+
   write() {
     this.dirty = true;
   }
@@ -98,9 +99,11 @@ export class InMemoryConfig<T> implements JsonConfig<T> {
   constructor(private dataJson: T) {
     this.written = this.dataJson;
   }
+
   data(): T {
     return this.dataJson;
   }
+
   write() {
     this.written = JSON.parse(JSON.stringify(this.dataJson));
   }

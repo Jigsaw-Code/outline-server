@@ -26,10 +26,14 @@ export interface ServerConfigJson {
 }
 
 export function readServerConfig(filename: string): json_config.JsonConfig<ServerConfigJson> {
-  const config = json_config.loadFileConfig<ServerConfigJson>(filename);
-  config.data().serverId = config.data().serverId || uuidv4();
-  config.data().createdTimestampMs = config.data().createdTimestampMs || Date.now();
-  config.data().metricsEnabled = config.data().metricsEnabled || false;
-  config.write();
-  return config;
+  try {
+    const config = json_config.loadFileConfig<ServerConfigJson>(filename);
+    config.data().serverId = config.data().serverId || uuidv4();
+    config.data().createdTimestampMs = config.data().createdTimestampMs || Date.now();
+    config.data().metricsEnabled = config.data().metricsEnabled || false;
+    config.write();
+    return config;
+  } catch (error) {
+    throw new Error(`Failed to read server config at ${filename}: ${error}`);
+  }
 }
