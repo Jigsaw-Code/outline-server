@@ -19,9 +19,11 @@ import * as uuidv4 from 'uuid/v4';
 import {getRandomUnusedPort} from '../infrastructure/get_port';
 import * as logging from '../infrastructure/logging';
 import {AccessKey, AccessKeyId, AccessKeyRepository} from '../model/access_key';
-import {Stats} from '../model/metrics';
 import {ShadowsocksInstance, ShadowsocksServer} from '../model/shadowsocks_server';
 import {TextFile} from '../model/text_file';
+
+import {ManagerMetrics} from './manager_metrics';
+import {SharedMetrics} from './shared_metrics';
 
 // The format as json of access keys in the config file.
 interface AccessKeyConfig {
@@ -88,17 +90,17 @@ class AccessKeyConfigFile {
 
 export function createServerAccessKeyRepository(
     proxyHostname: string, textFile: TextFile, shadowsocksServer: ShadowsocksServer,
-    stats: Stats): Promise<AccessKeyRepository> {
+    managerMetrics: ManagerMetrics, sharedMetrics: SharedMetrics): Promise<AccessKeyRepository> {
   const configFile = new AccessKeyConfigFile(textFile);
-
   const configJson = configFile.loadConfig();
 
   const reservedPorts = getReservedPorts(configJson.accessKeys);
-  // Create and save the stats socket.
-  return createBoundUdpSocket(reservedPorts).then((statsSocket) => {
-    reservedPorts.add(statsSocket.address().port);
+  // Create and save the metrics socket.
+  return createBoundUdpSocket(reservedPorts).then((metricsSocket) => {
+    reservedPorts.add(metricsSocket.address().port);
     return new ServerAccessKeyRepository(
-        proxyHostname, configFile, configJson, shadowsocksServer, statsSocket, stats);
+        proxyHostname, configFile, configJson, shadowsocksServer, metricsSocket, managerMetrics,
+        sharedMetrics);
   });
 }
 
@@ -127,7 +129,8 @@ class ServerAccessKeyRepository implements AccessKeyRepository {
   constructor(
       private proxyHostname: string, private configFile: AccessKeyConfigFile,
       private configJson: ConfigJson, private shadowsocksServer: ShadowsocksServer,
-      private statsSocket: dgram.Socket, private stats: Stats) {
+      private metricsSocket: dgram.Socket, private managerMetrics: ManagerMetrics,
+      private sharedMetrics: SharedMetrics) {
     for (const accessKeyJson of this.configJson.accessKeys) {
       this.startInstance(accessKeyJson).catch((error) => {
         logging.error(`Failed to start Shadowsocks instance for key ${accessKeyJson.id}: ${error}`);
@@ -200,7 +203,7 @@ class ServerAccessKeyRepository implements AccessKeyRepository {
   private startInstance(accessKeyJson: AccessKeyConfig): Promise<void> {
     return this.shadowsocksServer
         .startInstance(
-            accessKeyJson.port, accessKeyJson.password, this.statsSocket,
+            accessKeyJson.port, accessKeyJson.password, this.metricsSocket,
             accessKeyJson.encryptionMethod)
         .then((ssInstance) => {
           ssInstance.onInboundBytes(
@@ -212,7 +215,8 @@ class ServerAccessKeyRepository implements AccessKeyRepository {
   private handleInboundBytes(
       accessKeyId: AccessKeyId, metricsId: AccessKeyId, inboundBytes: number,
       ipAddresses: string[]) {
-    this.stats.recordBytesTransferred(accessKeyId, metricsId, inboundBytes, ipAddresses);
+    this.managerMetrics.recordBytesTransferred(new Date(), accessKeyId, inboundBytes);
+    this.sharedMetrics.recordBytesTransferred(metricsId, inboundBytes, ipAddresses);
   }
 
   private saveConfig() {

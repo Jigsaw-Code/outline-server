@@ -15,7 +15,6 @@
 import * as dgram from 'dgram';
 
 import {AccessKey, AccessKeyId, AccessKeyRepository} from '../../model/access_key';
-import {Stats} from '../../model/metrics';
 import {ShadowsocksInstance} from '../../model/shadowsocks_server';
 import {TextFile} from '../../model/text_file';
 
@@ -72,22 +71,10 @@ class MockShadowsocksInstance implements ShadowsocksInstance {
 
 export class MockShadowsocksServer {
   startInstance(
-      portNumber: number, password: string, statsSocket: dgram.Socket,
+      portNumber: number, password: string, metricsSocket: dgram.Socket,
       encryptionMethod?: string): Promise<ShadowsocksInstance> {
     const mock = new MockShadowsocksInstance(portNumber, password, encryptionMethod);
     return Promise.resolve(mock);
-  }
-}
-
-export class MockStats {
-  recordBytesTransferred(
-      userId: AccessKeyId,
-      metricsUserId: AccessKeyId,
-      numBytes: number,
-      ipAddresses: string[]) {}
-  onLastHourMetricsReady(callback) {}
-  get30DayByteTransfer() {
-    return {bytesTransferredByUserId: {}};
   }
 }
 
