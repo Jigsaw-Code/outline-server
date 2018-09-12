@@ -16,7 +16,7 @@ import * as dgram from 'dgram';
 
 export interface ShadowsocksServer {
   startInstance(
-      portNumber: number, password: string, statsSocket: dgram.Socket,
+      portNumber: number, password: string, metricsSocket: dgram.Socket,
       encryptionMethod?: string): Promise<ShadowsocksInstance>;
 }
 

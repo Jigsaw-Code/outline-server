@@ -19,15 +19,41 @@ import * as restify from 'restify';
 
 import {FilesystemTextFile} from '../infrastructure/filesystem_text_file';
 import * as ip_location from '../infrastructure/ip_location';
+import * as json_config from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 
 import {LibevShadowsocksServer} from './libev_shadowsocks_server';
+import {ManagerMetrics, ManagerMetricsJson} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
-import * as metrics from './metrics';
 import {createServerAccessKeyRepository} from './server_access_key';
 import * as server_config from './server_config';
+import {SharedMetrics, SharedMetricsJson} from './shared_metrics';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
+const MAX_STATS_FILE_AGE_MS = 5000;
+
+// Serialized format for the metrics file.
+// WARNING: Renaming fields will break backwards-compatibility.
+interface MetricsConfigJson {
+  // Serialized ManagerStats object.
+  transferStats?: ManagerMetricsJson;
+  // Serialized SharedStats object.
+  hourlyMetrics?: SharedMetricsJson;
+}
+
+function readMetricsConfig(filename: string): json_config.JsonConfig<MetricsConfigJson> {
+  try {
+    const metricsConfig = json_config.loadFileConfig<MetricsConfigJson>(filename);
+    // Make sure we have non-empty sub-configs.
+    metricsConfig.data().transferStats =
+        metricsConfig.data().transferStats || {} as ManagerMetricsJson;
+    metricsConfig.data().hourlyMetrics =
+        metricsConfig.data().hourlyMetrics || {} as SharedMetricsJson;
+    return new json_config.DelayedConfig(metricsConfig, MAX_STATS_FILE_AGE_MS);
+  } catch (error) {
+    throw new Error(`Failed to read metrics config at ${filename}: ${error}`);
+  }
+}
 
 function main() {
   const verbose = process.env.LOG_LEVEL === 'debug';
@@ -56,36 +82,27 @@ function main() {
     process.exit(1);
   }
 
-  const serverConfig = new server_config.ServerConfig(
-      new FilesystemTextFile(getPersistentFilename('shadowbox_server_config.json')),
-      process.env.SB_DEFAULT_SERVER_NAME);
+  const serverConfig =
+      server_config.readServerConfig(getPersistentFilename('shadowbox_server_config.json'));
 
   const shadowsocksServer = new LibevShadowsocksServer(proxyHostname, verbose);
 
-  const statsFilename = getPersistentFilename('shadowbox_stats.json');
-  const stats = new metrics.PersistentStats(statsFilename);
-  const ipLocationService = new ip_location.MmdbLocationService();
-  stats.onLastHourMetricsReady((startDatetime, endDatetime, lastHourUserStats) => {
-    if (serverConfig.getMetricsEnabled()) {
-      metrics
-          .getHourlyServerMetricsReport(
-              serverConfig.serverId, startDatetime, endDatetime, lastHourUserStats,
-              ipLocationService)
-          .then((report) => {
-            if (report) {
-              metrics.postHourlyServerMetricsReports(report, metricsUrl);
-            }
-          });
-    }
-  });
+  const metricsConfig = readMetricsConfig(getPersistentFilename('shadowbox_stats.json'));
+  const managerMetrics = new ManagerMetrics(
+      new json_config.ChildConfig(metricsConfig, metricsConfig.data().transferStats));
+  const sharedMetrics = new SharedMetrics(
+      new json_config.ChildConfig(metricsConfig, metricsConfig.data().hourlyMetrics), serverConfig,
+      metricsUrl, new ip_location.MmdbLocationService());
 
   logging.info('Starting...');
   const userConfigFilename = getPersistentFilename('shadowbox_config.json');
   createServerAccessKeyRepository(
-      proxyHostname, new FilesystemTextFile(userConfigFilename), shadowsocksServer, stats)
+      proxyHostname, new FilesystemTextFile(userConfigFilename), shadowsocksServer, managerMetrics,
+      sharedMetrics)
       .then((accessKeyRepository) => {
-        const managerService =
-            new ShadowsocksManagerService(serverConfig, accessKeyRepository, stats);
+        const managerService = new ShadowsocksManagerService(
+            process.env.SB_DEFAULT_SERVER_NAME || 'Outline Server', serverConfig,
+            accessKeyRepository, managerMetrics);
         const certificateFilename = process.env.SB_CERTIFICATE_FILE;
         const privateKeyFilename = process.env.SB_PRIVATE_KEY_FILE;
 
