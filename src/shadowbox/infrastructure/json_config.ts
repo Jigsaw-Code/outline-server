@@ -18,7 +18,7 @@ import * as file_read from './file_read';
 import * as logging from './logging';
 
 export interface JsonConfig<T> {
-  // Returns the config data as a json object.
+  // Returns a reference (*not* a copy) to the json object backing the config.
   data(): T;
   // Writes the config to the backing storage.
   write();
