@@ -38,10 +38,10 @@ describe('ManagerMetrics', () => {
     // This is being dropped
     expect(report.bytesTransferredByUserId).toEqual({'user-0': 30});
     // We are not cleaning this from the config.
-    expect(config.written.userIdSet).toEqual(['user-0']);
-    expect(Object.keys(config.written.dailyUserBytesTransferred).length).toEqual(40);
+    expect(config.mostRecentWrite.userIdSet).toEqual(['user-0']);
+    expect(Object.keys(config.mostRecentWrite.dailyUserBytesTransferred).length).toEqual(40);
 
-    expect(new ManagerMetrics(new InMemoryConfig(config.written)).get30DayByteTransfer())
+    expect(new ManagerMetrics(new InMemoryConfig(config.mostRecentWrite)).get30DayByteTransfer())
         .toEqual(report);
     done();
   });
