@@ -162,7 +162,7 @@ export class App {
         sentry.captureEvent({
           message: detail.userFeedback,
           user: {email: detail.userEmail},
-          tags: {category: detail.feedbackCategory}
+          tags: {category: detail.feedbackCategory, cloudProvider: detail.cloudProvider}
         });
         appRoot.showNotification('Thanks for helping us improve! We love hearing from you.');
       } catch (e) {
