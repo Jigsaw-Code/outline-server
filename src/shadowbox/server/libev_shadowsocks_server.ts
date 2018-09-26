@@ -38,7 +38,7 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
       try {
         metricsMessage = parseMetricsMessage(buf);
       } catch (err) {
-        logging.error('error parsing metrics: ' + buf + ', ' + err);
+        logging.error(`Error parsing metrics message ${buf}: ${err.stack}`);
         return;
       }
       let dataDelta = metricsMessage.totalInboundBytes -
