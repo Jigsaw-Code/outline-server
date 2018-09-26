@@ -52,15 +52,17 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
       }
       this.portInboundBytes[metricsMessage.portNumber] = metricsMessage.totalInboundBytes;
       getConnectedClientIPAddresses(metricsMessage.portNumber)
-          .then(async (ipAddresses: string[]) => {
-            const countries = await Promise.all(ipAddresses.map((ipAddress) => {
+          .then((ipAddresses: string[]) => {
+            return Promise.all(ipAddresses.map((ipAddress) => {
               return ipLocation.countryForIp(ipAddress);
             }));
+          })
+          .then((countries: string[]) => {
             usageRecorder.recordBytesTransferred(
                 this.portId[metricsMessage.portNumber] || '', dataDelta, countries);
           })
-          .catch((err) => {
-            logging.error(`Unable to get client IP addresses ${err}`);
+          .catch((err: Error) => {
+            logging.error(`Unable to get client IP addresses: ${err.stack}`);
           });
     });
   }

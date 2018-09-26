@@ -25,27 +25,30 @@ export interface IpLocationService {
 export class MmdbLocationService implements IpLocationService {
   private readonly db: Promise<maxmind.Reader>;
 
-  constructor(filename = '/var/lib/libmaxminddb/GeoLite2-Country.mmdb') {
+  constructor(filename: string) {
     this.db = new Promise<maxmind.Reader>((fulfill, reject) => {
       // TODO: Change type to maxmind.Options once the type definition is updated
       // with these fields.
       const options: {} = {watchForUpdates: true, watchForUpdatesNonPersistent: true};
-      maxmind.open(filename, options, (err, lookup) => {
+      maxmind.open(filename, options, (err, reader) => {
         if (err) {
           reject(err);
         } else {
-          fulfill(lookup);
+          fulfill(reader);
         }
       });
     });
   }
 
   countryForIp(ipAddress) {
-    return this.db.then((lookup) => {
+    return this.db.then((reader) => {
+      if (!reader) {
+        throw new Error('MMDB reader is not valid');
+      }
       if (!maxmind.validate(ipAddress)) {
         throw new Error('Invalid IP address');
       }
-      const result = lookup.get(ipAddress);
+      const result = reader.get(ipAddress);
       return (result && result.country && result.country.iso_code) || 'ZZ';
     });
   }

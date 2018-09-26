@@ -104,9 +104,11 @@ function main() {
 
   logging.info('Starting...');
   const userConfigFilename = getPersistentFilename('shadowbox_config.json');
+  const ipLocation =
+      new ip_location.MmdbLocationService('/var/lib/libmaxminddb/GeoLite2-Country.mmdb');
   createServerAccessKeyRepository(
-      proxyHostname, new FilesystemTextFile(userConfigFilename),
-      new ip_location.MmdbLocationService(), metricsRecorder, verbose)
+      proxyHostname, new FilesystemTextFile(userConfigFilename), ipLocation, metricsRecorder,
+      verbose)
       .then((accessKeyRepository) => {
         const managerService = new ShadowsocksManagerService(
             process.env.SB_DEFAULT_SERVER_NAME || 'Outline Server', serverConfig,
