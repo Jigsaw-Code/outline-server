@@ -37,8 +37,7 @@ const MAX_STATS_FILE_AGE_MS = 5000;
 interface MetricsConfigJson {
   // Serialized ManagerStats object.
   transferStats?: ManagerMetricsJson;
-  // DEPRECATED: Serialized SharedStats object.
-  hourlyMetrics?: {};
+  // DEPRECATED: hourlyMetrics. Hourly stats live in memory only now.
 }
 
 function readMetricsConfig(filename: string): json_config.JsonConfig<MetricsConfigJson> {
