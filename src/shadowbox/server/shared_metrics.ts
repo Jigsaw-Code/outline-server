@@ -53,7 +53,7 @@ export interface SharedMetricsReporter {
   isSharingEnabled();
 }
 
-export interface OneHourUsageMetrics { getOneHourUsage(): KeyUsage[]; }
+export interface UsageMetrics { getUsage(): KeyUsage[]; }
 
 export interface UsageMetricsRecorder {
   recordBytesTransferred(accessKeyMetricsId: AccessKeyId, numBytes: number, countries: string[]);
@@ -61,11 +61,11 @@ export interface UsageMetricsRecorder {
 
 // Holds one hour usage metrics in memory.
 // TODO: migrate to an implementation that uses Prometheus.
-export class InMemoryOneHourUsageMetrics implements OneHourUsageMetrics, UsageMetricsRecorder {
+export class InMemoryOneHourUsageMetrics implements UsageMetrics, UsageMetricsRecorder {
   // Map from the metrics AccessKeyId to metrics (bytes transferred, IP addresses).
   private lastHourUsage = new Map<AccessKeyId, KeyUsage>();
 
-  getOneHourUsage(): KeyUsage[] {
+  getUsage(): KeyUsage[] {
     return [...this.lastHourUsage.values()];
   }
 
@@ -95,21 +95,22 @@ export class InMemoryOneHourUsageMetrics implements OneHourUsageMetrics, UsageMe
 // Keeps track of the connection metrics per user, since the startDatetime.
 // This is reported to the Outline team if the admin opts-in.
 export class OutlineSharedMetricsReporter implements SharedMetricsReporter {
-  // Date+time at which we started recording connection metrics, e.g.
+  // Time at which we started recording connection metrics, e.g.
   // in case this object is constructed from data written to disk.
-  private startDatetime: Date;
+  private previousReportTime: Date;
+  private reportedKeyData = new Map<string, number>();
 
   constructor(
       private serverConfig: JsonConfig<ServerConfigJson>, private metricsUrl: string,
-      usageMetrics: OneHourUsageMetrics) {
+      usageMetrics: UsageMetrics) {
     // Start timer
-    this.startDatetime = new Date();
+    this.previousReportTime = new Date();
 
     setInterval(() => {
       if (!this.isSharingEnabled()) {
         return;
       }
-      this.reportMetrics(usageMetrics.getOneHourUsage());
+      this.reportMetrics(usageMetrics.getUsage());
     }, MS_PER_HOUR);
   }
 
@@ -128,24 +129,34 @@ export class OutlineSharedMetricsReporter implements SharedMetricsReporter {
   }
 
   private reportMetrics(lastHourUsage: KeyUsage[]) {
-    const endDatetime = new Date();
+    const reportTime = new Date();
 
+    const userReports = [] as HourlyUserMetricsReportJson[];
+    const newReportedKeyData = new Map<string, number>();
+    for (const keyUsage of lastHourUsage) {
+      const dataDelta =
+          keyUsage.inboundBytes - (this.reportedKeyData[keyUsage.accessKeyMetricsId] || 0);
+      if (dataDelta === 0) {
+        continue;
+      }
+      userReports.push({
+        userId: keyUsage.accessKeyMetricsId,
+        bytesTransferred: dataDelta,
+        countries: [...keyUsage.countries]
+      });
+      newReportedKeyData[keyUsage.accessKeyMetricsId] = keyUsage.inboundBytes;
+    }
     const report = {
       serverId: this.serverConfig.data().serverId,
-      startUtcMs: this.startDatetime.getTime(),
-      endUtcMs: new Date().getTime(),
-      userReports: lastHourUsage.map((e) => {
-        return {
-          userId: e.accessKeyMetricsId,
-          bytesTransferred: e.inboundBytes,
-          countries: [...e.countries]
-        } as HourlyUserMetricsReportJson;
-      })
+      startUtcMs: this.previousReportTime.getTime(),
+      endUtcMs: reportTime.getTime(),
+      userReports
     } as HourlyServerMetricsReportJson;
 
     postHourlyServerMetricsReports(report, this.metricsUrl);
 
-    this.startDatetime = endDatetime;
+    this.previousReportTime = reportTime;
+    this.reportedKeyData = newReportedKeyData;
   }
 }
 
