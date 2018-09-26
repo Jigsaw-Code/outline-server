@@ -21,13 +21,13 @@ import {FilesystemTextFile} from '../infrastructure/filesystem_text_file';
 import * as ip_location from '../infrastructure/ip_location';
 import * as json_config from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
+import {AccessKeyId} from '../model/access_key';
 
-import {LibevShadowsocksServer} from './libev_shadowsocks_server';
 import {ManagerMetrics, ManagerMetricsJson} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
 import {createServerAccessKeyRepository} from './server_access_key';
 import * as server_config from './server_config';
-import {SharedMetrics, SharedMetricsJson} from './shared_metrics';
+import {InMemoryOneHourUsageMetrics, OutlineSharedMetricsReporter, SharedMetricsReporter, UsageMetricsRecorder} from './shared_metrics';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
 const MAX_STATS_FILE_AGE_MS = 5000;
@@ -37,8 +37,8 @@ const MAX_STATS_FILE_AGE_MS = 5000;
 interface MetricsConfigJson {
   // Serialized ManagerStats object.
   transferStats?: ManagerMetricsJson;
-  // Serialized SharedStats object.
-  hourlyMetrics?: SharedMetricsJson;
+  // DEPRECATED: Serialized SharedStats object.
+  hourlyMetrics?: {};
 }
 
 function readMetricsConfig(filename: string): json_config.JsonConfig<MetricsConfigJson> {
@@ -47,11 +47,21 @@ function readMetricsConfig(filename: string): json_config.JsonConfig<MetricsConf
     // Make sure we have non-empty sub-configs.
     metricsConfig.data().transferStats =
         metricsConfig.data().transferStats || {} as ManagerMetricsJson;
-    metricsConfig.data().hourlyMetrics =
-        metricsConfig.data().hourlyMetrics || {} as SharedMetricsJson;
     return new json_config.DelayedConfig(metricsConfig, MAX_STATS_FILE_AGE_MS);
   } catch (error) {
     throw new Error(`Failed to read metrics config at ${filename}: ${error}`);
+  }
+}
+
+class OutlineMetricsRecorder implements UsageMetricsRecorder {
+  constructor(
+      private managerMetrics: UsageMetricsRecorder, private sharedMetrics: UsageMetricsRecorder) {}
+
+  recordBytesTransferred(accessKeyId: AccessKeyId, numBytes: number, countries: string[]) {
+    this.managerMetrics.recordBytesTransferred(accessKeyId, numBytes, countries);
+    // TODO: map to metrics id.
+    const metricsId = 'TODO';
+    this.sharedMetrics.recordBytesTransferred(metricsId, numBytes, countries);
   }
 }
 
@@ -84,25 +94,23 @@ function main() {
 
   const serverConfig =
       server_config.readServerConfig(getPersistentFilename('shadowbox_server_config.json'));
-
-  const shadowsocksServer = new LibevShadowsocksServer(proxyHostname, verbose);
-
   const metricsConfig = readMetricsConfig(getPersistentFilename('shadowbox_stats.json'));
   const managerMetrics = new ManagerMetrics(
       new json_config.ChildConfig(metricsConfig, metricsConfig.data().transferStats));
-  const sharedMetrics = new SharedMetrics(
-      new json_config.ChildConfig(metricsConfig, metricsConfig.data().hourlyMetrics), serverConfig,
-      metricsUrl, new ip_location.MmdbLocationService());
+  const oneHourUsage = new InMemoryOneHourUsageMetrics();
+  const metricsRecorder = new OutlineMetricsRecorder(managerMetrics, oneHourUsage);
+  const metricsReporter: SharedMetricsReporter =
+      new OutlineSharedMetricsReporter(serverConfig, metricsUrl, oneHourUsage);
 
   logging.info('Starting...');
   const userConfigFilename = getPersistentFilename('shadowbox_config.json');
   createServerAccessKeyRepository(
-      proxyHostname, new FilesystemTextFile(userConfigFilename), shadowsocksServer, managerMetrics,
-      sharedMetrics)
+      proxyHostname, new FilesystemTextFile(userConfigFilename),
+      new ip_location.MmdbLocationService(), metricsRecorder, verbose)
       .then((accessKeyRepository) => {
         const managerService = new ShadowsocksManagerService(
             process.env.SB_DEFAULT_SERVER_NAME || 'Outline Server', serverConfig,
-            accessKeyRepository, managerMetrics);
+            accessKeyRepository, managerMetrics, metricsReporter);
         const certificateFilename = process.env.SB_CERTIFICATE_FILE;
         const privateKeyFilename = process.env.SB_PRIVATE_KEY_FILE;
 

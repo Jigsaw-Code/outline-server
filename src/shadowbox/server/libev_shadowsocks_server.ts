@@ -18,23 +18,59 @@ import * as dns from 'dns';
 import * as events from 'events';
 import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
+import {IpLocationService} from '../infrastructure/ip_location';
 import * as logging from '../infrastructure/logging';
 import {ShadowsocksInstance, ShadowsocksServer} from '../model/shadowsocks_server';
 
+import {UsageMetricsRecorder} from './shared_metrics';
+
 // Runs shadowsocks-libev server instances.
 export class LibevShadowsocksServer implements ShadowsocksServer {
-  // Old shadowsocks instances had been started with the aes-128-cfb encryption
-  // method, while new instances specify which method to use.
-  private DEFAULT_METHOD = 'aes-128-cfb';
+  private portId = new Map<number, string>();
+  private portInboundBytes = new Map<number, number>();
 
-  constructor(private publicAddress: string, private verbose: boolean) {}
+  constructor(
+      private publicAddress: string, private metricsSocket: dgram.Socket,
+      ipLocation: IpLocationService, usageRecorder: UsageMetricsRecorder,
+      private verbose: boolean) {
+    metricsSocket.on('message', (buf: Buffer) => {
+      let metricsMessage;
+      try {
+        metricsMessage = parseMetricsMessage(buf);
+      } catch (err) {
+        logging.error('error parsing metrics: ' + buf + ', ' + err);
+        return;
+      }
+      let dataDelta = metricsMessage.totalInboundBytes -
+          (this.portInboundBytes[metricsMessage.portNumber] || 0);
+      if (dataDelta === 0) {
+        return;
+      }
+      if (dataDelta < 0) {
+        // Counter has reset for some reason. Assume previous value was zero.
+        dataDelta = metricsMessage.totalInboundBytes;
+      }
+      this.portInboundBytes[metricsMessage.portNumber] = metricsMessage.totalInboundBytes;
+      getConnectedClientIPAddresses(metricsMessage.portNumber)
+          .then(async (ipAddresses: string[]) => {
+            const countries = await Promise.all(ipAddresses.map((ipAddress) => {
+              return ipLocation.countryForIp(ipAddress);
+            }));
+            usageRecorder.recordBytesTransferred(
+                this.portId[metricsMessage.portNumber] || '', dataDelta, countries);
+          })
+          .catch((err) => {
+            logging.error(`Unable to get client IP addresses ${err}`);
+          });
+    });
+  }
 
-  public startInstance(
-      portNumber: number, password: string, metricsSocket: dgram.Socket,
-      encryptionMethod = this.DEFAULT_METHOD): Promise<ShadowsocksInstance> {
+  public startInstance(id: string, portNumber: number, password: string, encryptionMethod):
+      Promise<ShadowsocksInstance> {
     logging.info(`Starting server on port ${portNumber}`);
+    this.portId[portNumber] = id;
 
-    const metricsAddress = metricsSocket.address();
+    const metricsAddress = this.metricsSocket.address();
     const commandArguments = [
       '-m', encryptionMethod,  // Encryption method
       '-u',                    // Allow UDP
@@ -77,92 +113,44 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
     }));
 
     return Promise.resolve(new LibevShadowsocksServerInstance(
-        childProcess, portNumber, password, encryptionMethod, accessUrl, metricsSocket));
+        childProcess, portNumber, password, encryptionMethod, accessUrl));
   }
 }
 
 class LibevShadowsocksServerInstance implements ShadowsocksInstance {
-  private eventEmitter = new events.EventEmitter();
-  private INBOUND_BYTES_EVENT = 'inboundBytes';
-
   constructor(
       private childProcess: child_process.ChildProcess, public portNumber: number, public password,
-      public encryptionMethod: string, public accessUrl: string,
-      private metricsSocket: dgram.Socket) {}
+      public encryptionMethod: string, public accessUrl: string) {}
 
   public stop() {
     logging.info(`Stopping server on port ${this.portNumber}`);
     this.childProcess.kill();
   }
+}
 
-  // onInboundBytes only reports inbound bytes, received from the client or from the target.
-  //
-  // This measure under-estimates outbound traffic because:
-  // 1) The traffic to and from the client has overhead from Shadowsocks
-  // 2) The overhead on the traffic to the client is larger than on the traffic from the client
-  //    because, from the client perspective, download traffic is usually larger than upload.
-  //
-  // The measure is calculated here:
-  // https://github.com/shadowsocks/shadowsocks-libev/blob/a16826b83e73af386806d1b51149f8321820835e/src/server.c#L172
-  public onInboundBytes(callback: (bytes: number, ipAddresses: string[]) => void) {
-    if (this.eventEmitter.listenerCount(this.INBOUND_BYTES_EVENT) === 0) {
-      this.createMetricsListener();
-    }
-    this.eventEmitter.on(this.INBOUND_BYTES_EVENT, callback);
-  }
+function getConnectedClientIPAddresses(portNumber: number): Promise<string[]> {
+  const lsofCommand = `lsof -i tcp:${portNumber} -n -P -Fn ` +
+      ' | grep \'\\->\'' +         // only look at connection lines (e.g. skips "p8855" and "f60")
+      ' | sed \'s/:\\d*$//g\'' +   // remove p
+      ' | sed \'s/n\\S*->//g\'' +  // remove first part of address
+      ' | sed \'s/\\[//g\'' +      // remove [] (used by ipv6)
+      ' | sed \'s/\\]//g\'' +      // remove ] (used by ipv6)
+      ' | sort | uniq';            // remove duplicates
+  return execCmd(lsofCommand).then((output: string) => {
+    return output.split('\n');
+  });
+}
 
-  private createMetricsListener() {
-    let lastInboundBytes = 0;
-    this.metricsSocket.on('message', (buf: Buffer) => {
-      let metricsMessage;
-      try {
-        metricsMessage = parseMetricsMessage(buf);
-      } catch (err) {
-        logging.error('error parsing metrics: ' + buf + ', ' + err);
-        return;
-      }
-      if (metricsMessage.portNumber !== this.portNumber) {
-        // Ignore metrics for other ss-servers, which post to the same metricsSocket.
-        return;
-      }
-      const delta = metricsMessage.totalInboundBytes - lastInboundBytes;
-      if (delta > 0) {
-        this.getConnectedClientIPAddresses()
-            .then((ipAddresses: string[]) => {
-              lastInboundBytes = metricsMessage.totalInboundBytes;
-              this.eventEmitter.emit(this.INBOUND_BYTES_EVENT, delta, ipAddresses);
-            })
-            .catch((err) => {
-              logging.error(`Unable to get client IP addresses ${err}`);
-            });
+function execCmd(cmd: string): Promise<string> {
+  return new Promise((fulfill, reject) => {
+    child_process.exec(cmd, (error: child_process.ExecError, stdout: string, stderr: string) => {
+      if (error) {
+        reject(error);
+      } else {
+        fulfill(stdout.trim());
       }
     });
-  }
-
-  private getConnectedClientIPAddresses(): Promise<string[]> {
-    const lsofCommand = `lsof -i tcp:${this.portNumber} -n -P -Fn ` +
-        ' | grep \'\\->\'' +         // only look at connection lines (e.g. skips "p8855" and "f60")
-        ' | sed \'s/:\\d*$//g\'' +   // remove p
-        ' | sed \'s/n\\S*->//g\'' +  // remove first part of address
-        ' | sed \'s/\\[//g\'' +      // remove [] (used by ipv6)
-        ' | sed \'s/\\]//g\'' +      // remove ] (used by ipv6)
-        ' | sort | uniq';            // remove duplicates
-    return this.execCmd(lsofCommand).then((output: string) => {
-      return output.split('\n');
-    });
-  }
-
-  private execCmd(cmd: string): Promise<string> {
-    return new Promise((fulfill, reject) => {
-      child_process.exec(cmd, (error: child_process.ExecError, stdout: string, stderr: string) => {
-        if (error) {
-          reject(error);
-        } else {
-          fulfill(stdout.trim());
-        }
-      });
-    });
-  }
+  });
 }
 
 interface MetricsMessage {
