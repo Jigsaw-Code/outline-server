@@ -41,14 +41,15 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
         logging.error(`Error parsing metrics message ${buf}: ${err.stack}`);
         return;
       }
-      let dataDelta = metricsMessage.totalInboundBytes -
-          (this.portInboundBytes[metricsMessage.portNumber] || 0);
+      let previousTotalInboundBytes = this.portInboundBytes[metricsMessage.portNumber] || 0;
+      if (previousTotalInboundBytes > metricsMessage.totalInboundBytes) {
+        // totalInboundBytes is a counter that monotonically increases. A drop means
+        // ss-server got restarted, so we set the previous value to zero.
+        previousTotalInboundBytes = 0;
+      }
+      const dataDelta = metricsMessage.totalInboundBytes - previousTotalInboundBytes;
       if (dataDelta === 0) {
         return;
-      }
-      if (dataDelta < 0) {
-        // Counter has reset for some reason. Assume previous value was zero.
-        dataDelta = metricsMessage.totalInboundBytes;
       }
       this.portInboundBytes[metricsMessage.portNumber] = metricsMessage.totalInboundBytes;
       getConnectedClientIPAddresses(metricsMessage.portNumber)
