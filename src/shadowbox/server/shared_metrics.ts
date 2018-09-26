@@ -146,6 +146,9 @@ export class OutlineSharedMetricsReporter implements SharedMetricsReporter {
       });
       newReportedKeyData[keyUsage.accessKeyMetricsId] = keyUsage.inboundBytes;
     }
+    if (userReports.length === 0) {
+      return;
+    }
     const report = {
       serverId: this.serverConfig.data().serverId,
       startUtcMs: this.previousReportTime.getTime(),
