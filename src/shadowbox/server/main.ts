@@ -27,7 +27,7 @@ import {ManagerMetrics, ManagerMetricsJson} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
 import {createServerAccessKeyRepository} from './server_access_key';
 import * as server_config from './server_config';
-import {InMemoryOneHourUsageMetrics, OutlineSharedMetricsReporter, SharedMetricsReporter, UsageMetricsRecorder} from './shared_metrics';
+import {InMemoryUsageMetrics, OutlineSharedMetricsReporter, SharedMetricsReporter, UsageMetricsRecorder} from './shared_metrics';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
 const MAX_STATS_FILE_AGE_MS = 5000;
@@ -96,10 +96,10 @@ function main() {
   const metricsConfig = readMetricsConfig(getPersistentFilename('shadowbox_stats.json'));
   const managerMetrics = new ManagerMetrics(
       new json_config.ChildConfig(metricsConfig, metricsConfig.data().transferStats));
-  const oneHourUsage = new InMemoryOneHourUsageMetrics();
-  const metricsRecorder = new OutlineMetricsRecorder(managerMetrics, oneHourUsage);
+  const usageMetrics = new InMemoryUsageMetrics();
+  const metricsRecorder = new OutlineMetricsRecorder(managerMetrics, usageMetrics);
   const metricsReporter: SharedMetricsReporter =
-      new OutlineSharedMetricsReporter(serverConfig, metricsUrl, oneHourUsage);
+      new OutlineSharedMetricsReporter(serverConfig, metricsUrl, usageMetrics);
 
   logging.info('Starting...');
   const userConfigFilename = getPersistentFilename('shadowbox_config.json');

@@ -61,7 +61,7 @@ export interface UsageMetricsRecorder {
 
 // Holds one hour usage metrics in memory.
 // TODO: migrate to an implementation that uses Prometheus.
-export class InMemoryOneHourUsageMetrics implements UsageMetrics, UsageMetricsRecorder {
+export class InMemoryUsageMetrics implements UsageMetrics, UsageMetricsRecorder {
   // Map from the metrics AccessKeyId to metrics (bytes transferred, IP addresses).
   private lastHourUsage = new Map<AccessKeyId, KeyUsage>();
 
