@@ -387,7 +387,7 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
     const dropletSpec = {
       installCommand,
       size: MACHINE_SIZE,
-      image: 'docker',
+      image: 'docker-18-04',
       tags: [SHADOWBOX_TAG],
     };
     return onceKeyPair
