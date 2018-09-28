@@ -18,7 +18,7 @@ import {AccessKey, AccessKeyRepository} from '../model/access_key';
 import {ShadowsocksManagerService} from './manager_service';
 import {MockAccessKeyRepository} from './mocks/mocks';
 import {ServerConfigJson} from './server_config';
-import {SharedMetricsReporter} from './shared_metrics';
+import {SharedMetricsPublisher} from './shared_metrics';
 
 interface ServerInfo {
   name: string;
@@ -266,7 +266,7 @@ function createNewAccessKeyWithName(repo: AccessKeyRepository, name: string): Pr
   });
 }
 
-function fakeSharedMetricsReporter(): SharedMetricsReporter {
+function fakeSharedMetricsReporter(): SharedMetricsPublisher {
   let sharing = false;
   return {
     startSharing() {

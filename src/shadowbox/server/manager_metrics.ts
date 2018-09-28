@@ -15,7 +15,7 @@
 import {JsonConfig} from '../infrastructure/json_config';
 import {AccessKeyId} from '../model/access_key';
 import {DataUsageByUser} from '../model/metrics';
-import {UsageMetricsRecorder} from './shared_metrics';
+import {UsageMetricsWriter} from './shared_metrics';
 
 // Serialized format for the manager metrics.
 // WARNING: Renaming fields will break backwards-compatibility.
@@ -30,7 +30,7 @@ export interface ManagerMetricsJson {
 // ManagerMetrics keeps track of the number of bytes transferred per user, per day.
 // Surfaced by the manager service to display on the Manager UI.
 // TODO: Remove entries older than 30d.
-export class ManagerMetrics implements UsageMetricsRecorder {
+export class ManagerMetrics implements UsageMetricsWriter {
   private dailyUserBytesTransferred: Map<string, number>;
   private userIdSet: Set<AccessKeyId>;
 
@@ -45,7 +45,7 @@ export class ManagerMetrics implements UsageMetricsRecorder {
     }
   }
 
-  public recordBytesTransferred(userId: AccessKeyId, numBytes: number, countries: string[]) {
+  public writeBytesTransferred(userId: AccessKeyId, numBytes: number, countries: string[]) {
     this.userIdSet.add(userId);
 
     const date = new Date();

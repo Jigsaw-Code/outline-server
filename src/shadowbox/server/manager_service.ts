@@ -21,7 +21,7 @@ import {AccessKey, AccessKeyRepository} from '../model/access_key';
 
 import {ManagerMetrics} from './manager_metrics';
 import {ServerConfigJson} from './server_config';
-import {SharedMetricsReporter} from './shared_metrics';
+import {SharedMetricsPublisher} from './shared_metrics';
 
 // Creates a AccessKey response.
 function accessKeyToJson(accessKey: AccessKey) {
@@ -84,7 +84,7 @@ export class ShadowsocksManagerService {
   constructor(
       private defaultServerName: string, private serverConfig: JsonConfig<ServerConfigJson>,
       private accessKeys: AccessKeyRepository, private managerMetrics: ManagerMetrics,
-      private metricsReporter: SharedMetricsReporter) {}
+      private metricsPublisher: SharedMetricsPublisher) {}
 
   public renameServer(req: RequestType, res: ResponseType, next: restify.Next): void {
     const name = req.params.name;
@@ -178,7 +178,7 @@ export class ShadowsocksManagerService {
   }
 
   public getShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
-    res.send(200, {metricsEnabled: this.metricsReporter.isSharingEnabled()});
+    res.send(200, {metricsEnabled: this.metricsPublisher.isSharingEnabled()});
     next();
   }
 
@@ -186,9 +186,9 @@ export class ShadowsocksManagerService {
     const params = req.params as SetShareMetricsParams;
     if (typeof params.metricsEnabled === 'boolean') {
       if (params.metricsEnabled) {
-        this.metricsReporter.startSharing();
+        this.metricsPublisher.startSharing();
       } else {
-        this.metricsReporter.stopSharing();
+        this.metricsPublisher.stopSharing();
       }
       res.send(204);
     } else {

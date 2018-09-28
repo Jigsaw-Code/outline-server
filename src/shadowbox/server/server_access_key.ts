@@ -24,7 +24,7 @@ import {ShadowsocksInstance, ShadowsocksServer} from '../model/shadowsocks_serve
 import {TextFile} from '../model/text_file';
 
 import {LibevShadowsocksServer} from './libev_shadowsocks_server';
-import {UsageMetricsRecorder} from './shared_metrics';
+import {UsageMetricsWriter} from './shared_metrics';
 
 // The format as json of access keys in the config file.
 interface AccessKeyConfig {
@@ -91,7 +91,7 @@ class AccessKeyConfigFile {
 
 export function createServerAccessKeyRepository(
     proxyHostname: string, textFile: TextFile, ipLocation: IpLocationService,
-    usageRecorder: UsageMetricsRecorder, verbose: boolean): Promise<AccessKeyRepository> {
+    usageRecorder: UsageMetricsWriter, verbose: boolean): Promise<AccessKeyRepository> {
   const configFile = new AccessKeyConfigFile(textFile);
   const configJson = configFile.loadConfig();
 

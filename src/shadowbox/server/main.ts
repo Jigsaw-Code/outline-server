@@ -27,7 +27,7 @@ import {ManagerMetrics, ManagerMetricsJson} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
 import {createServerAccessKeyRepository} from './server_access_key';
 import * as server_config from './server_config';
-import {InMemoryUsageMetrics, OutlineSharedMetricsReporter, SharedMetricsReporter, UsageMetricsRecorder} from './shared_metrics';
+import {InMemoryUsageMetrics, OutlineSharedMetricsPublisher, SharedMetricsPublisher, UsageMetricsWriter} from './shared_metrics';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
 const MAX_STATS_FILE_AGE_MS = 5000;
@@ -52,19 +52,17 @@ function readMetricsConfig(filename: string): json_config.JsonConfig<MetricsConf
   }
 }
 
-class OutlineMetricsRecorder implements UsageMetricsRecorder {
+class MultiMetricsWriter implements UsageMetricsWriter {
   constructor(
-      private managerMetrics: UsageMetricsRecorder, private sharedMetrics: UsageMetricsRecorder) {}
+      private managerMetrics: UsageMetricsWriter, private sharedMetrics: UsageMetricsWriter) {}
 
-  recordBytesTransferred(accessKeyId: AccessKeyId, numBytes: number, countries: string[]) {
-    this.managerMetrics.recordBytesTransferred(accessKeyId, numBytes, countries);
-    // TODO: map to metrics id.
-    const metricsId = 'TODO';
-    this.sharedMetrics.recordBytesTransferred(metricsId, numBytes, countries);
+  writeBytesTransferred(accessKeyId: AccessKeyId, numBytes: number, countries: string[]) {
+    this.managerMetrics.writeBytesTransferred(accessKeyId, numBytes, countries);
+    this.sharedMetrics.writeBytesTransferred(accessKeyId, numBytes, countries);
   }
 }
 
-function main() {
+async function main() {
   const verbose = process.env.LOG_LEVEL === 'debug';
   const proxyHostname = process.env.SB_PUBLIC_IP;
   // Default to production metrics, as some old Docker images may not have
@@ -97,45 +95,43 @@ function main() {
   const managerMetrics = new ManagerMetrics(
       new json_config.ChildConfig(metricsConfig, metricsConfig.data().transferStats));
   const usageMetrics = new InMemoryUsageMetrics();
-  const metricsRecorder = new OutlineMetricsRecorder(managerMetrics, usageMetrics);
-  const metricsReporter: SharedMetricsReporter =
-      new OutlineSharedMetricsReporter(serverConfig, metricsUrl, usageMetrics);
+  const metricsWriter = new MultiMetricsWriter(managerMetrics, usageMetrics);
+  const metricsPublisher: SharedMetricsPublisher =
+      new OutlineSharedMetricsPublisher(serverConfig, metricsUrl, usageMetrics);
 
   logging.info('Starting...');
-  const userConfigFilename = getPersistentFilename('shadowbox_config.json');
+  const userConfigFile = new FilesystemTextFile(getPersistentFilename('shadowbox_config.json'));
   const ipLocation =
       new ip_location.MmdbLocationService('/var/lib/libmaxminddb/GeoLite2-Country.mmdb');
-  createServerAccessKeyRepository(
-      proxyHostname, new FilesystemTextFile(userConfigFilename), ipLocation, metricsRecorder,
-      verbose)
-      .then((accessKeyRepository) => {
-        const managerService = new ShadowsocksManagerService(
-            process.env.SB_DEFAULT_SERVER_NAME || 'Outline Server', serverConfig,
-            accessKeyRepository, managerMetrics, metricsReporter);
-        const certificateFilename = process.env.SB_CERTIFICATE_FILE;
-        const privateKeyFilename = process.env.SB_PRIVATE_KEY_FILE;
+  const accessKeyRepository = await createServerAccessKeyRepository(
+      proxyHostname, userConfigFile, ipLocation, metricsWriter, verbose);
 
-        // TODO(bemasc): Remove casts once
-        // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/15229 lands
-        const apiServer = restify.createServer({
-          certificate: fs.readFileSync(certificateFilename),
-          key: fs.readFileSync(privateKeyFilename)
-        });
+  const managerService = new ShadowsocksManagerService(
+      process.env.SB_DEFAULT_SERVER_NAME || 'Outline Server', serverConfig, accessKeyRepository,
+      managerMetrics, metricsPublisher);
 
-        // Pre-routing handlers
-        apiServer.pre(restify.CORS());
+  const certificateFilename = process.env.SB_CERTIFICATE_FILE;
+  const privateKeyFilename = process.env.SB_PRIVATE_KEY_FILE;
+  // TODO(bemasc): Remove casts once
+  // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/15229 lands
+  const apiServer = restify.createServer({
+    certificate: fs.readFileSync(certificateFilename),
+    key: fs.readFileSync(privateKeyFilename)
+  });
 
-        // All routes handlers
-        const apiPrefix = process.env.SB_API_PREFIX ? `/${process.env.SB_API_PREFIX}` : '';
-        apiServer.pre(restify.pre.sanitizePath());
-        apiServer.use(restify.jsonp());
-        apiServer.use(restify.bodyParser());
-        bindService(apiServer, apiPrefix, managerService);
+  // Pre-routing handlers
+  apiServer.pre(restify.CORS());
 
-        apiServer.listen(portNumber, () => {
-          logging.info(`Manager listening at ${apiServer.url}${apiPrefix}`);
-        });
-      });
+  // All routes handlers
+  const apiPrefix = process.env.SB_API_PREFIX ? `/${process.env.SB_API_PREFIX}` : '';
+  apiServer.pre(restify.pre.sanitizePath());
+  apiServer.use(restify.jsonp());
+  apiServer.use(restify.bodyParser());
+  bindService(apiServer, apiPrefix, managerService);
+
+  apiServer.listen(portNumber, () => {
+    logging.info(`Manager listening at ${apiServer.url}${apiPrefix}`);
+  });
 }
 
 function getPersistentFilename(file: string): string {
@@ -143,8 +139,11 @@ function getPersistentFilename(file: string): string {
   return path.join(stateDir, file);
 }
 
-process.on('unhandledRejection', (error) => {
-  logging.error(`unhandledRejection: ${error}`);
+process.on('unhandledRejection', (error: Error) => {
+  logging.error(`unhandledRejection: ${error.stack}`);
 });
 
-main();
+main().catch((error) => {
+  logging.error(error.stack);
+  process.exit(1);
+});

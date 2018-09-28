@@ -47,7 +47,7 @@ interface HourlyUserMetricsReportJson {
   bytesTransferred: number;
 }
 
-export interface SharedMetricsReporter {
+export interface SharedMetricsPublisher {
   startSharing();
   stopSharing();
   isSharingEnabled();
@@ -55,14 +55,14 @@ export interface SharedMetricsReporter {
 
 export interface UsageMetrics { getUsage(): KeyUsage[]; }
 
-export interface UsageMetricsRecorder {
-  recordBytesTransferred(accessKeyMetricsId: AccessKeyId, numBytes: number, countries: string[]);
+export interface UsageMetricsWriter {
+  writeBytesTransferred(accessKeyId: AccessKeyId, numBytes: number, countries: string[]);
 }
 
-// Holds one hour usage metrics in memory.
+// Tracks usage metrics since the server started.
 // TODO: migrate to an implementation that uses Prometheus.
-export class InMemoryUsageMetrics implements UsageMetrics, UsageMetricsRecorder {
-  // Map from the metrics AccessKeyId to metrics (bytes transferred, IP addresses).
+export class InMemoryUsageMetrics implements UsageMetrics, UsageMetricsWriter {
+  // Map from the metrics AccessKeyId to its usage.
   private lastHourUsage = new Map<AccessKeyId, KeyUsage>();
 
   getUsage(): KeyUsage[] {
@@ -70,7 +70,7 @@ export class InMemoryUsageMetrics implements UsageMetrics, UsageMetricsRecorder 
   }
 
   // We use a separate metrics id so the accessKey id is not disclosed.
-  recordBytesTransferred(accessKeyMetricsId: AccessKeyId, numBytes: number, countries: string[]) {
+  writeBytesTransferred(accessKeyId: AccessKeyId, numBytes: number, countries: string[]) {
     // Don't record data for sanctioned countries.
     for (const country of countries) {
       if (SANCTIONED_COUNTRIES.has(country)) {
@@ -80,6 +80,7 @@ export class InMemoryUsageMetrics implements UsageMetrics, UsageMetricsRecorder 
     if (numBytes === 0) {
       return;
     }
+    const accessKeyMetricsId = 'TODO2';
     let keyUsage = this.lastHourUsage.get(accessKeyMetricsId);
     if (!keyUsage) {
       keyUsage = {accessKeyMetricsId, inboundBytes: 0, countries: new Set<string>()};
@@ -94,12 +95,15 @@ export class InMemoryUsageMetrics implements UsageMetrics, UsageMetricsRecorder 
 
 // Keeps track of the connection metrics per user, since the startDatetime.
 // This is reported to the Outline team if the admin opts-in.
-export class OutlineSharedMetricsReporter implements SharedMetricsReporter {
+export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
   // Time at which we started recording connection metrics, e.g.
   // in case this object is constructed from data written to disk.
   private previousReportTime: Date;
   private reportedKeyData = new Map<string, number>();
 
+  // serverConfig: where the enabled/disable setting is persisted
+  // metricsUrl: where to post the metrics
+  // usageMetrics: where we get the metrics from
   constructor(
       private serverConfig: JsonConfig<ServerConfigJson>, private metricsUrl: string,
       usageMetrics: UsageMetrics) {

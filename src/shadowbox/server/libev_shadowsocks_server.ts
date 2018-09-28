@@ -22,7 +22,7 @@ import {IpLocationService} from '../infrastructure/ip_location';
 import * as logging from '../infrastructure/logging';
 import {ShadowsocksInstance, ShadowsocksServer} from '../model/shadowsocks_server';
 
-import {UsageMetricsRecorder} from './shared_metrics';
+import {UsageMetricsWriter} from './shared_metrics';
 
 // Runs shadowsocks-libev server instances.
 export class LibevShadowsocksServer implements ShadowsocksServer {
@@ -31,8 +31,7 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
 
   constructor(
       private publicAddress: string, private metricsSocket: dgram.Socket,
-      ipLocation: IpLocationService, usageRecorder: UsageMetricsRecorder,
-      private verbose: boolean) {
+      ipLocation: IpLocationService, usageWriter: UsageMetricsWriter, private verbose: boolean) {
     metricsSocket.on('message', (buf: Buffer) => {
       let metricsMessage;
       try {
@@ -59,7 +58,7 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
             }));
           })
           .then((countries: string[]) => {
-            usageRecorder.recordBytesTransferred(
+            usageWriter.writeBytesTransferred(
                 this.portId[metricsMessage.portNumber] || '', dataDelta, countries);
           })
           .catch((err: Error) => {
