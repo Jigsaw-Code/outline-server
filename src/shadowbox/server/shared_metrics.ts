@@ -119,6 +119,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       }
       this.reportMetrics(usageMetrics.getUsage());
     }, MS_PER_HOUR);
+    // TODO(fortuna): also trigger report on shutdown, so data loss is minimized.
   }
 
   startSharing() {
