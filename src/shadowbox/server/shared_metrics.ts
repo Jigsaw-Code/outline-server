@@ -97,7 +97,7 @@ export class InMemoryUsageMetrics implements UsageMetrics, UsageMetricsWriter {
 export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
   // Time at which we started recording connection metrics, e.g.
   // in case this object is constructed from data written to disk.
-  private previousReportTime: Date;
+  private reportStartTime: Date;
   private reportedKeyData = new Map<string, number>();
 
   // serverConfig: where the enabled/disable setting is persisted
@@ -111,7 +111,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       private metricsUrl: string,
   ) {
     // Start timer
-    this.previousReportTime = new Date();
+    this.reportStartTime = new Date();
 
     setInterval(() => {
       if (!this.isSharingEnabled()) {
@@ -136,11 +136,12 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
   }
 
   private reportMetrics(usageMetrics: KeyUsage[]) {
-    const reportTime = new Date();
+    const reportEndTime = new Date();
 
     const userReports = [] as HourlyUserMetricsReportJson[];
     const newReportedKeyData = new Map<string, number>();
     for (const keyUsage of usageMetrics) {
+      newReportedKeyData[keyUsage.accessKeyId] = keyUsage.inboundBytes;
       const dataDelta = keyUsage.inboundBytes - (this.reportedKeyData[keyUsage.accessKeyId] || 0);
       if (dataDelta === 0) {
         continue;
@@ -150,21 +151,20 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
         bytesTransferred: dataDelta,
         countries: [...keyUsage.countries]
       });
-      newReportedKeyData[keyUsage.accessKeyId] = keyUsage.inboundBytes;
     }
     if (userReports.length === 0) {
       return;
     }
     const report = {
       serverId: this.serverConfig.data().serverId,
-      startUtcMs: this.previousReportTime.getTime(),
-      endUtcMs: reportTime.getTime(),
+      startUtcMs: this.reportStartTime.getTime(),
+      endUtcMs: reportEndTime.getTime(),
       userReports
     } as HourlyServerMetricsReportJson;
 
     postHourlyServerMetricsReports(report, this.metricsUrl);
 
-    this.previousReportTime = reportTime;
+    this.reportStartTime = reportEndTime;
     this.reportedKeyData = newReportedKeyData;
   }
 }
