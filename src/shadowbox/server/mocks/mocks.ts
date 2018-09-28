@@ -57,6 +57,9 @@ export class MockAccessKeyRepository implements AccessKeyRepository {
     }
     return false;
   }
+  getMetricsId(accessKeyId: AccessKeyId) {
+    return `metrics:${accessKeyId}`;
+  }
 }
 
 class MockShadowsocksInstance implements ShadowsocksInstance {

@@ -16,7 +16,7 @@
 import * as follow_redirects from '../infrastructure/follow_redirects';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {AccessKeyId} from '../model/access_key';
+import {AccessKeyId, AccessKeyMetricsId} from '../model/access_key';
 
 import {ServerConfigJson} from './server_config';
 
@@ -25,7 +25,7 @@ const SANCTIONED_COUNTRIES = new Set(['CU', 'IR', 'KP', 'SY']);
 
 // Used internally to track key usage.
 interface KeyUsage {
-  accessKeyMetricsId: string;
+  accessKeyId: string;
   inboundBytes: number;
   countries: Set<string>;
 }
@@ -80,11 +80,10 @@ export class InMemoryUsageMetrics implements UsageMetrics, UsageMetricsWriter {
     if (numBytes === 0) {
       return;
     }
-    const accessKeyMetricsId = 'TODO2';
-    let keyUsage = this.lastHourUsage.get(accessKeyMetricsId);
+    let keyUsage = this.lastHourUsage.get(accessKeyId);
     if (!keyUsage) {
-      keyUsage = {accessKeyMetricsId, inboundBytes: 0, countries: new Set<string>()};
-      this.lastHourUsage.set(accessKeyMetricsId, keyUsage);
+      keyUsage = {accessKeyId, inboundBytes: 0, countries: new Set<string>()};
+      this.lastHourUsage.set(accessKeyId, keyUsage);
     }
     keyUsage.inboundBytes += numBytes;
     for (const country of countries) {
@@ -102,11 +101,15 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
   private reportedKeyData = new Map<string, number>();
 
   // serverConfig: where the enabled/disable setting is persisted
-  // metricsUrl: where to post the metrics
   // usageMetrics: where we get the metrics from
+  // toMetricsId: maps Access key ids to metric ids
+  // metricsUrl: where to post the metrics
   constructor(
-      private serverConfig: JsonConfig<ServerConfigJson>, private metricsUrl: string,
-      usageMetrics: UsageMetrics) {
+      private serverConfig: JsonConfig<ServerConfigJson>,
+      usageMetrics: UsageMetrics,
+      private toMetricsId: (AccessKeyId) => AccessKeyMetricsId,
+      private metricsUrl: string,
+  ) {
     // Start timer
     this.previousReportTime = new Date();
 
@@ -132,23 +135,22 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
     return this.serverConfig.data().metricsEnabled || false;
   }
 
-  private reportMetrics(lastHourUsage: KeyUsage[]) {
+  private reportMetrics(usageMetrics: KeyUsage[]) {
     const reportTime = new Date();
 
     const userReports = [] as HourlyUserMetricsReportJson[];
     const newReportedKeyData = new Map<string, number>();
-    for (const keyUsage of lastHourUsage) {
-      const dataDelta =
-          keyUsage.inboundBytes - (this.reportedKeyData[keyUsage.accessKeyMetricsId] || 0);
+    for (const keyUsage of usageMetrics) {
+      const dataDelta = keyUsage.inboundBytes - (this.reportedKeyData[keyUsage.accessKeyId] || 0);
       if (dataDelta === 0) {
         continue;
       }
       userReports.push({
-        userId: keyUsage.accessKeyMetricsId,
+        userId: this.toMetricsId(keyUsage.accessKeyId) || '',
         bytesTransferred: dataDelta,
         countries: [...keyUsage.countries]
       });
-      newReportedKeyData[keyUsage.accessKeyMetricsId] = keyUsage.inboundBytes;
+      newReportedKeyData[keyUsage.accessKeyId] = keyUsage.inboundBytes;
     }
     if (userReports.length === 0) {
       return;

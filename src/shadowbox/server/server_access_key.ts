@@ -19,7 +19,7 @@ import * as uuidv4 from 'uuid/v4';
 import {getRandomUnusedPort} from '../infrastructure/get_port';
 import {IpLocationService} from '../infrastructure/ip_location';
 import * as logging from '../infrastructure/logging';
-import {AccessKey, AccessKeyId, AccessKeyRepository} from '../model/access_key';
+import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyRepository} from '../model/access_key';
 import {ShadowsocksInstance, ShadowsocksServer} from '../model/shadowsocks_server';
 import {TextFile} from '../model/text_file';
 
@@ -137,7 +137,7 @@ class ServerAccessKeyRepository implements AccessKeyRepository {
     }
   }
 
-  public createNewAccessKey(): Promise<AccessKey> {
+  createNewAccessKey(): Promise<AccessKey> {
     return getRandomUnusedPort(this.reservedPorts).then((port) => {
       const id = this.configJson.nextId.toString();
       this.configJson.nextId += 1;
@@ -166,7 +166,7 @@ class ServerAccessKeyRepository implements AccessKeyRepository {
     });
   }
 
-  public removeAccessKey(id: AccessKeyId): boolean {
+  removeAccessKey(id: AccessKeyId): boolean {
     for (let ai = 0; ai < this.configJson.accessKeys.length; ai++) {
       if (this.configJson.accessKeys[ai].id === id) {
         this.configJson.accessKeys.splice(ai, 1);
@@ -179,24 +179,37 @@ class ServerAccessKeyRepository implements AccessKeyRepository {
     return false;
   }
 
-  public listAccessKeys(): IterableIterator<AccessKey> {
+  listAccessKeys(): IterableIterator<AccessKey> {
     return this.configJson.accessKeys.map(
         accessKeyJson => makeAccessKey(this.proxyHostname, accessKeyJson))[Symbol.iterator]();
   }
 
-  public renameAccessKey(id: AccessKeyId, name: string): boolean {
+  renameAccessKey(id: AccessKeyId, name: string): boolean {
+    const accessKeyJson = this.getAccessKey(id);
+    if (!accessKeyJson) {
+      return false;
+    }
+    accessKeyJson.name = name;
+    try {
+      this.saveConfig();
+    } catch (error) {
+      return false;
+    }
+    return true;
+  }
+
+  getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined {
+    const accessKeyJson = this.getAccessKey(id);
+    return accessKeyJson ? accessKeyJson.metricsId : undefined;
+  }
+
+  private getAccessKey(id: AccessKeyId): AccessKeyConfig {
     for (const accessKeyJson of this.configJson.accessKeys) {
       if (accessKeyJson.id === id) {
-        accessKeyJson.name = name;
-        try {
-          this.saveConfig();
-        } catch (error) {
-          return false;
-        }
-        return true;
+        return accessKeyJson;
       }
     }
-    return false;
+    return undefined;
   }
 
   private startInstance(accessKeyJson: AccessKeyConfig): Promise<void> {

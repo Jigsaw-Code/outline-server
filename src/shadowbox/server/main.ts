@@ -96,8 +96,6 @@ async function main() {
       new json_config.ChildConfig(metricsConfig, metricsConfig.data().transferStats));
   const usageMetrics = new InMemoryUsageMetrics();
   const metricsWriter = new MultiMetricsWriter(managerMetrics, usageMetrics);
-  const metricsPublisher: SharedMetricsPublisher =
-      new OutlineSharedMetricsPublisher(serverConfig, metricsUrl, usageMetrics);
 
   logging.info('Starting...');
   const userConfigFile = new FilesystemTextFile(getPersistentFilename('shadowbox_config.json'));
@@ -106,6 +104,11 @@ async function main() {
   const accessKeyRepository = await createServerAccessKeyRepository(
       proxyHostname, userConfigFile, ipLocation, metricsWriter, verbose);
 
+  const toMetricsId = (id: AccessKeyId) => {
+    return accessKeyRepository.getMetricsId(id);
+  };
+  const metricsPublisher: SharedMetricsPublisher =
+      new OutlineSharedMetricsPublisher(serverConfig, usageMetrics, toMetricsId, metricsUrl);
   const managerService = new ShadowsocksManagerService(
       process.env.SB_DEFAULT_SERVER_NAME || 'Outline Server', serverConfig, accessKeyRepository,
       managerMetrics, metricsPublisher);
