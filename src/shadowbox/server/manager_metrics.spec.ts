@@ -26,8 +26,7 @@ function addDays(baseDate: Date, days: number) {
 
 describe('ManagerMetrics', () => {
   it('Saves traffic to config', (done) => {
-    const now = new Date();
-    tk.freeze(now);
+    const startTime = new Date();
     const config = new InMemoryConfig({} as ManagerMetricsJson);
     const metrics = new ManagerMetrics(config);
 
@@ -35,10 +34,9 @@ describe('ManagerMetrics', () => {
     expect(report.bytesTransferredByUserId).toEqual({});
 
     for (let di = 0; di < 40; di++) {
-      tk.travel(addDays(now, -di));
+      tk.freeze(addDays(startTime, di));
       metrics.writeBytesTransferred('user-0', 1);
     }
-    tk.travel(now);
     report = metrics.get30DayByteTransfer();
     // This is being dropped
     expect(report.bytesTransferredByUserId).toEqual({'user-0': 30});
