@@ -107,7 +107,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
   constructor(
       private serverConfig: JsonConfig<ServerConfigJson>,
       usageMetrics: UsageMetrics,
-      private toMetricsId: (AccessKeyId) => AccessKeyMetricsId,
+      private toMetricsId: (accessKeyId: AccessKeyId) => AccessKeyMetricsId,
       private metricsUrl: string,
   ) {
     // Start timer
