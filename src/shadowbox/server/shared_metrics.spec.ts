@@ -12,6 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {InMemoryUsageMetrics} from './shared_metrics';
+
+describe('InMemoryUsageMetrics', () => {
+  it('Returns empty usage initially', (done) => {
+    const metrics = new InMemoryUsageMetrics();
+    expect(metrics.getUsage()).toEqual([]);
+    done();
+  });
+  it('Records usage', (done) => {
+    const metrics = new InMemoryUsageMetrics();
+    metrics.writeBytesTransferred('user-0', 11, ['AA']);
+    metrics.writeBytesTransferred('user-1', 22, ['BB']);
+    metrics.writeBytesTransferred('user-0', 33, ['CC']);
+    metrics.writeBytesTransferred('user-1', 44, ['BB']);
+    metrics.writeBytesTransferred('user-2', 55, ['']);
+    expect(metrics.getUsage()).toEqual([
+      {accessKeyId: 'user-0', inboundBytes: 44, countries: new Set(['AA', 'CC'])},
+      {accessKeyId: 'user-1', inboundBytes: 66, countries: new Set(['BB'])},
+      {accessKeyId: 'user-2', inboundBytes: 55, countries: new Set([''])}
+    ]);
+    done();
+  });
+});
+
 // import * as https from 'https';
 
 // import * as ip_location from '../infrastructure/ip_location';
