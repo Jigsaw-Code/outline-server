@@ -174,6 +174,7 @@ class ServerAccessKeyRepository implements AccessKeyRepository {
         this.saveConfig();
         this.ssInstances.get(id).stop();
         this.ssInstances.delete(id);
+        this.configJson.nextId -= 1;
         return true;
       }
     }
