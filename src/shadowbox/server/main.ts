@@ -26,7 +26,7 @@ import {AccessKeyId} from '../model/access_key';
 
 import {ManagerMetrics, ManagerMetricsJson} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
-import {createServerAccessKeyRepository} from './server_access_key';
+import {AccessKeyConfigJson, createServerAccessKeyRepository} from './server_access_key';
 import * as server_config from './server_config';
 import {InMemoryUsageMetrics, OutlineSharedMetricsPublisher, RestMetricsCollectorClient, SharedMetricsPublisher, UsageMetricsWriter} from './shared_metrics';
 
@@ -97,13 +97,14 @@ async function main() {
       new json_config.ChildConfig(metricsConfig, metricsConfig.data().transferStats));
 
   logging.info('Starting...');
-  const userConfigFile = new FilesystemTextFile(getPersistentFilename('shadowbox_config.json'));
+  const accessKeyConfig = json_config.loadFileConfig<AccessKeyConfigJson>(
+      getPersistentFilename('shadowbox_config.json'));
   const ipLocation =
       new ip_location.MmdbLocationService('/var/lib/libmaxminddb/GeoLite2-Country.mmdb');
   const usageMetrics = new InMemoryUsageMetrics();
   const metricsWriter = new MultiMetricsWriter(managerMetrics, usageMetrics);
   const accessKeyRepository = await createServerAccessKeyRepository(
-      proxyHostname, userConfigFile, ipLocation, metricsWriter, verbose);
+      proxyHostname, accessKeyConfig, ipLocation, metricsWriter, verbose);
 
   const toMetricsId = (id: AccessKeyId) => {
     return accessKeyRepository.getMetricsId(id);

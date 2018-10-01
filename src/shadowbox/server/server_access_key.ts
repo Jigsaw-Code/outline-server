@@ -18,10 +18,10 @@ import * as uuidv4 from 'uuid/v4';
 
 import {getRandomUnusedPort} from '../infrastructure/get_port';
 import {IpLocationService} from '../infrastructure/ip_location';
+import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyRepository} from '../model/access_key';
 import {ShadowsocksInstance, ShadowsocksServer} from '../model/shadowsocks_server';
-import {TextFile} from '../model/text_file';
 
 import {LibevShadowsocksServer} from './libev_shadowsocks_server';
 import {UsageMetricsWriter} from './shared_metrics';
@@ -37,10 +37,10 @@ interface AccessKeyConfig {
 }
 
 // The configuration file format as json.
-interface AccessKeyConfigJson {
-  accessKeys: AccessKeyConfig[];
+export interface AccessKeyConfigJson {
+  accessKeys?: AccessKeyConfig[];
   // Next AccessKeyId to use.
-  nextId: number;
+  nextId?: number;
 }
 
 // Generates a random password for Shadowsocks access keys.
@@ -48,60 +48,18 @@ function generatePassword(): string {
   return randomstring.generate(12);
 }
 
-// AccessKeyConfigFile can load and save ConfigJsons from and to a file.
-class AccessKeyConfigFile {
-  constructor(private configFile: TextFile) {}
-
-  loadConfig(): AccessKeyConfigJson {
-    const EMPTY_CONFIG = {accessKeys: [], nextId: 0} as AccessKeyConfigJson;
-
-    // Try to read the file from disk.
-    let configText: string;
-    try {
-      configText = this.configFile.readFileSync();
-    } catch (err) {
-      if (err.code === 'ENOENT') {
-        // File not found (e.g. this is a new server), return an empty config.
-        return EMPTY_CONFIG;
-      }
-      throw err;
-    }
-
-    // Ignore if the config file is empty.
-    if (!configText) {
-      return EMPTY_CONFIG;
-    }
-
-    return JSON.parse(configText) as AccessKeyConfigJson;
-  }
-
-  // Save the repository to the local disk.
-  // Throws an error in case of failure.
-  // TODO(fortuna): Fix race condition. This can break if there are two modifications in parallel.
-  // TODO: this method should return an error if it fails to write to disk,
-  // then this error can be propagated back to the manager via the REST
-  // API, so users know there was an error and access keys may not be
-  // persisted.
-  saveConfig(config: AccessKeyConfigJson) {
-    const text = JSON.stringify(config);
-    logging.info(`Persisting: ${text}`);
-    this.configFile.writeFileSync(text);
-  }
-}
-
 export function createServerAccessKeyRepository(
-    proxyHostname: string, textFile: TextFile, ipLocation: IpLocationService,
-    usageWriter: UsageMetricsWriter, verbose: boolean): Promise<AccessKeyRepository> {
-  const configFile = new AccessKeyConfigFile(textFile);
-  const configJson = configFile.loadConfig();
-
-  const reservedPorts = getReservedPorts(configJson.accessKeys);
+    proxyHostname: string, keyConfig: JsonConfig<AccessKeyConfigJson>,
+    ipLocation: IpLocationService, usageWriter: UsageMetricsWriter,
+    verbose: boolean): Promise<AccessKeyRepository> {
+  // TODO: Set default values
+  const reservedPorts = getReservedPorts(keyConfig.data().accessKeys || []);
   // Create and save the metrics socket.
   return createBoundUdpSocket(reservedPorts).then((metricsSocket) => {
     reservedPorts.add(metricsSocket.address().port);
     const shadowsocksServer =
         new LibevShadowsocksServer(proxyHostname, metricsSocket, ipLocation, usageWriter, verbose);
-    return new ServerAccessKeyRepository(proxyHostname, configFile, configJson, shadowsocksServer);
+    return new ServerAccessKeyRepository(proxyHostname, keyConfig, shadowsocksServer);
   });
 }
 
@@ -121,16 +79,22 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyConfig): Access
 
 // AccessKeyRepository that keeps its state in a config file and uses ShadowsocksServer
 // to start and stop per-access-key Shadowsocks instances.
-class ServerAccessKeyRepository implements AccessKeyRepository {
+export class ServerAccessKeyRepository implements AccessKeyRepository {
   // This is the max id + 1 among all access keys. Used to generate unique ids for new access keys.
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
   private reservedPorts: Set<number> = new Set();
   private ssInstances = new Map<AccessKeyId, ShadowsocksInstance>();
 
   constructor(
-      private proxyHostname: string, private configFile: AccessKeyConfigFile,
-      private configJson: AccessKeyConfigJson, private shadowsocksServer: ShadowsocksServer) {
-    for (const accessKeyJson of this.configJson.accessKeys) {
+      private proxyHostname: string, private keyConfig: JsonConfig<AccessKeyConfigJson>,
+      private shadowsocksServer: ShadowsocksServer) {
+    if (this.keyConfig.data().accessKeys === undefined) {
+      this.keyConfig.data().accessKeys = [];
+    }
+    if (this.keyConfig.data().nextId === undefined) {
+      this.keyConfig.data().nextId = 0;
+    }
+    for (const accessKeyJson of this.keyConfig.data().accessKeys) {
       this.startInstance(accessKeyJson).catch((error) => {
         logging.error(`Failed to start Shadowsocks instance for key ${accessKeyJson.id}: ${error}`);
       });
@@ -139,8 +103,8 @@ class ServerAccessKeyRepository implements AccessKeyRepository {
 
   createNewAccessKey(): Promise<AccessKey> {
     return getRandomUnusedPort(this.reservedPorts).then((port) => {
-      const id = this.configJson.nextId.toString();
-      this.configJson.nextId += 1;
+      const id = this.keyConfig.data().nextId.toString();
+      this.keyConfig.data().nextId += 1;
       const metricsId = uuidv4();
       const password = generatePassword();
       // Save key
@@ -152,9 +116,9 @@ class ServerAccessKeyRepository implements AccessKeyRepository {
         encryptionMethod: this.NEW_USER_ENCRYPTION_METHOD,
         password
       };
-      this.configJson.accessKeys.push(accessKeyJson);
+      this.keyConfig.data().accessKeys.push(accessKeyJson);
       try {
-        this.saveConfig();
+        this.keyConfig.write();
       } catch (error) {
         throw new Error(`Failed to save config: ${error}`);
       }
@@ -167,10 +131,10 @@ class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   removeAccessKey(id: AccessKeyId): boolean {
-    for (let ai = 0; ai < this.configJson.accessKeys.length; ai++) {
-      if (this.configJson.accessKeys[ai].id === id) {
-        this.configJson.accessKeys.splice(ai, 1);
-        this.saveConfig();
+    for (let ai = 0; ai < this.keyConfig.data().accessKeys.length; ai++) {
+      if (this.keyConfig.data().accessKeys[ai].id === id) {
+        this.keyConfig.data().accessKeys.splice(ai, 1);
+        this.keyConfig.write();
         this.ssInstances.get(id).stop();
         this.ssInstances.delete(id);
         return true;
@@ -180,7 +144,7 @@ class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   listAccessKeys(): IterableIterator<AccessKey> {
-    return this.configJson.accessKeys.map(
+    return this.keyConfig.data().accessKeys.map(
         accessKeyJson => makeAccessKey(this.proxyHostname, accessKeyJson))[Symbol.iterator]();
   }
 
@@ -191,7 +155,7 @@ class ServerAccessKeyRepository implements AccessKeyRepository {
     }
     accessKeyJson.name = name;
     try {
-      this.saveConfig();
+      this.keyConfig.write();
     } catch (error) {
       return false;
     }
@@ -204,7 +168,7 @@ class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private getAccessKey(id: AccessKeyId): AccessKeyConfig {
-    for (const accessKeyJson of this.configJson.accessKeys) {
+    for (const accessKeyJson of this.keyConfig.data().accessKeys) {
       if (accessKeyJson.id === id) {
         return accessKeyJson;
       }
@@ -220,10 +184,6 @@ class ServerAccessKeyRepository implements AccessKeyRepository {
         .then((ssInstance) => {
           this.ssInstances.set(accessKeyJson.id, ssInstance);
         });
-  }
-
-  private saveConfig() {
-    this.configFile.saveConfig(this.configJson);
   }
 }
 
