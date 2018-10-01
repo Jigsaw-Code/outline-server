@@ -52,17 +52,22 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
       }
       this.portInboundBytes[metricsMessage.portNumber] = metricsMessage.totalInboundBytes;
       getConnectedClientIPAddresses(metricsMessage.portNumber)
-          .then((ipAddresses: string[]) => {
-            return Promise.all(ipAddresses.map((ipAddress) => {
-              return ipLocation.countryForIp(ipAddress);
-            }));
-          })
+          .then(
+              (ipAddresses: string[]) => {
+                return Promise.all(ipAddresses.map((ipAddress) => {
+                  return ipLocation.countryForIp(ipAddress);
+                }));
+              },
+              (error) => {
+                logging.error(`Unable to get client countries: ${error.stack}`);
+                return [];
+              })
           .then((countries: string[]) => {
             usageWriter.writeBytesTransferred(
                 this.portId[metricsMessage.portNumber] || '', dataDelta, countries);
           })
           .catch((err: Error) => {
-            logging.error(`Unable to get client IP addresses: ${err.stack}`);
+            logging.error(`Unable to write bytes transferred: ${err.stack}`);
           });
     });
   }
