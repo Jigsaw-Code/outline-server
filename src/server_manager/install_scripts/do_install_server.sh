@@ -131,6 +131,17 @@ Unattended-Upgrade::Automatic-Reboot "true";
 EOF
 fi
 
+# Enable BBR.
+# Recent DigitalOcean one-click images are based on Ubuntu 18 and have kernel 4.15+.
+log_for_sentry "Enabling BBR"
+cat >> /etc/sysctl.conf << EOF
+
+# Added by Outline.
+net.core.default_qdisc=fq
+net.ipv4.tcp_congestion_control=bbr
+EOF
+sysctl -p
+
 log_for_sentry "Getting SB_PUBLIC_IP"
 export SB_PUBLIC_IP=$(cloud::public_ip)
 
