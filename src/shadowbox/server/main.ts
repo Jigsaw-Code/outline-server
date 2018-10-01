@@ -17,6 +17,7 @@ import * as path from 'path';
 import * as process from 'process';
 import * as restify from 'restify';
 
+import {RealClock} from '../infrastructure/clock';
 import {FilesystemTextFile} from '../infrastructure/filesystem_text_file';
 import * as ip_location from '../infrastructure/ip_location';
 import * as json_config from '../infrastructure/json_config';
@@ -27,7 +28,7 @@ import {ManagerMetrics, ManagerMetricsJson} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
 import {createServerAccessKeyRepository} from './server_access_key';
 import * as server_config from './server_config';
-import {InMemoryUsageMetrics, OutlineSharedMetricsPublisher, SharedMetricsPublisher, UsageMetricsWriter} from './shared_metrics';
+import {InMemoryUsageMetrics, OutlineSharedMetricsPublisher, RestMetricsCollectorClient, SharedMetricsPublisher, UsageMetricsWriter} from './shared_metrics';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
 const MAX_STATS_FILE_AGE_MS = 5000;
@@ -93,21 +94,22 @@ async function main() {
   const metricsConfig = readMetricsConfig(getPersistentFilename('shadowbox_stats.json'));
   const managerMetrics = new ManagerMetrics(
       new json_config.ChildConfig(metricsConfig, metricsConfig.data().transferStats));
-  const usageMetrics = new InMemoryUsageMetrics();
-  const metricsWriter = new MultiMetricsWriter(managerMetrics, usageMetrics);
 
   logging.info('Starting...');
   const userConfigFile = new FilesystemTextFile(getPersistentFilename('shadowbox_config.json'));
   const ipLocation =
       new ip_location.MmdbLocationService('/var/lib/libmaxminddb/GeoLite2-Country.mmdb');
+  const usageMetrics = new InMemoryUsageMetrics();
+  const metricsWriter = new MultiMetricsWriter(managerMetrics, usageMetrics);
   const accessKeyRepository = await createServerAccessKeyRepository(
       proxyHostname, userConfigFile, ipLocation, metricsWriter, verbose);
 
   const toMetricsId = (id: AccessKeyId) => {
     return accessKeyRepository.getMetricsId(id);
   };
-  const metricsPublisher: SharedMetricsPublisher =
-      new OutlineSharedMetricsPublisher(serverConfig, usageMetrics, toMetricsId, metricsUrl);
+  const metricsCollector = new RestMetricsCollectorClient(metricsUrl);
+  const metricsPublisher: SharedMetricsPublisher = new OutlineSharedMetricsPublisher(
+      new RealClock(), serverConfig, usageMetrics, toMetricsId, metricsCollector);
   const managerService = new ShadowsocksManagerService(
       process.env.SB_DEFAULT_SERVER_NAME || 'Outline Server', serverConfig, accessKeyRepository,
       managerMetrics, metricsPublisher);

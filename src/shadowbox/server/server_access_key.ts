@@ -37,7 +37,7 @@ interface AccessKeyConfig {
 }
 
 // The configuration file format as json.
-interface ConfigJson {
+interface AccessKeyConfigJson {
   accessKeys: AccessKeyConfig[];
   // Next AccessKeyId to use.
   nextId: number;
@@ -52,8 +52,8 @@ function generatePassword(): string {
 class AccessKeyConfigFile {
   constructor(private configFile: TextFile) {}
 
-  loadConfig(): ConfigJson {
-    const EMPTY_CONFIG = {accessKeys: [], nextId: 0} as ConfigJson;
+  loadConfig(): AccessKeyConfigJson {
+    const EMPTY_CONFIG = {accessKeys: [], nextId: 0} as AccessKeyConfigJson;
 
     // Try to read the file from disk.
     let configText: string;
@@ -72,7 +72,7 @@ class AccessKeyConfigFile {
       return EMPTY_CONFIG;
     }
 
-    return JSON.parse(configText) as ConfigJson;
+    return JSON.parse(configText) as AccessKeyConfigJson;
   }
 
   // Save the repository to the local disk.
@@ -82,7 +82,7 @@ class AccessKeyConfigFile {
   // then this error can be propagated back to the manager via the REST
   // API, so users know there was an error and access keys may not be
   // persisted.
-  saveConfig(config: ConfigJson) {
+  saveConfig(config: AccessKeyConfigJson) {
     const text = JSON.stringify(config);
     logging.info(`Persisting: ${text}`);
     this.configFile.writeFileSync(text);
@@ -91,7 +91,7 @@ class AccessKeyConfigFile {
 
 export function createServerAccessKeyRepository(
     proxyHostname: string, textFile: TextFile, ipLocation: IpLocationService,
-    usageRecorder: UsageMetricsWriter, verbose: boolean): Promise<AccessKeyRepository> {
+    usageWriter: UsageMetricsWriter, verbose: boolean): Promise<AccessKeyRepository> {
   const configFile = new AccessKeyConfigFile(textFile);
   const configJson = configFile.loadConfig();
 
@@ -99,8 +99,8 @@ export function createServerAccessKeyRepository(
   // Create and save the metrics socket.
   return createBoundUdpSocket(reservedPorts).then((metricsSocket) => {
     reservedPorts.add(metricsSocket.address().port);
-    const shadowsocksServer = new LibevShadowsocksServer(
-        proxyHostname, metricsSocket, ipLocation, usageRecorder, verbose);
+    const shadowsocksServer =
+        new LibevShadowsocksServer(proxyHostname, metricsSocket, ipLocation, usageWriter, verbose);
     return new ServerAccessKeyRepository(proxyHostname, configFile, configJson, shadowsocksServer);
   });
 }
@@ -129,7 +129,7 @@ class ServerAccessKeyRepository implements AccessKeyRepository {
 
   constructor(
       private proxyHostname: string, private configFile: AccessKeyConfigFile,
-      private configJson: ConfigJson, private shadowsocksServer: ShadowsocksServer) {
+      private configJson: AccessKeyConfigJson, private shadowsocksServer: ShadowsocksServer) {
     for (const accessKeyJson of this.configJson.accessKeys) {
       this.startInstance(accessKeyJson).catch((error) => {
         logging.error(`Failed to start Shadowsocks instance for key ${accessKeyJson.id}: ${error}`);

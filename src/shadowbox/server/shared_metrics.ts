@@ -13,6 +13,7 @@
 // limitations under the License.
 
 
+import {Clock} from '../infrastructure/clock';
 import * as follow_redirects from '../infrastructure/follow_redirects';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
@@ -26,13 +27,13 @@ const SANCTIONED_COUNTRIES = new Set(['CU', 'IR', 'KP', 'SY']);
 // Used internally to track key usage.
 interface KeyUsage {
   accessKeyId: string;
+  countries: string[];
   inboundBytes: number;
-  countries: Set<string>;
 }
 
 // JSON format for the published report.
 // Field renames will break backwards-compatibility.
-interface HourlyServerMetricsReportJson {
+export interface HourlyServerMetricsReportJson {
   serverId: string;
   startUtcMs: number;
   endUtcMs: number;
@@ -41,7 +42,7 @@ interface HourlyServerMetricsReportJson {
 
 // JSON format for the published report.
 // Field renames will break backwards-compatibility.
-interface HourlyUserMetricsReportJson {
+export interface HourlyUserMetricsReportJson {
   userId: string;
   countries: string[];
   bytesTransferred: number;
@@ -53,7 +54,10 @@ export interface SharedMetricsPublisher {
   isSharingEnabled();
 }
 
-export interface UsageMetrics { getUsage(): KeyUsage[]; }
+export interface UsageMetrics {
+  getUsage(): KeyUsage[];
+  reset();
+}
 
 export interface UsageMetricsWriter {
   writeBytesTransferred(accessKeyId: AccessKeyId, numBytes: number, countries: string[]);
@@ -63,10 +67,10 @@ export interface UsageMetricsWriter {
 // TODO: migrate to an implementation that uses Prometheus.
 export class InMemoryUsageMetrics implements UsageMetrics, UsageMetricsWriter {
   // Map from the metrics AccessKeyId to its usage.
-  private lastHourUsage = new Map<AccessKeyId, KeyUsage>();
+  private totalUsage = new Map<string, KeyUsage>();
 
   getUsage(): KeyUsage[] {
-    return [...this.lastHourUsage.values()];
+    return [...this.totalUsage.values()];
   }
 
   // We use a separate metrics id so the accessKey id is not disclosed.
@@ -80,44 +84,76 @@ export class InMemoryUsageMetrics implements UsageMetrics, UsageMetricsWriter {
     if (numBytes === 0) {
       return;
     }
-    let keyUsage = this.lastHourUsage.get(accessKeyId);
+    const sortedCountries = new Array(...countries).sort();
+    const entryKey = JSON.stringify([accessKeyId, sortedCountries]);
+    let keyUsage = this.totalUsage.get(entryKey);
     if (!keyUsage) {
-      keyUsage = {accessKeyId, inboundBytes: 0, countries: new Set<string>()};
-      this.lastHourUsage.set(accessKeyId, keyUsage);
+      keyUsage = {accessKeyId, inboundBytes: 0, countries: sortedCountries};
+      this.totalUsage.set(entryKey, keyUsage);
     }
     keyUsage.inboundBytes += numBytes;
-    for (const country of countries) {
-      keyUsage.countries.add(country);
-    }
+  }
+
+  reset() {
+    this.totalUsage.clear();
+  }
+}
+
+export interface MetricsCollectorClient {
+  collectMetrics(reportJson: HourlyServerMetricsReportJson): Promise<void>;
+}
+
+export class RestMetricsCollectorClient {
+  constructor(private serviceUrl: string) {}
+
+  collectMetrics(reportJson: HourlyServerMetricsReportJson): Promise<void> {
+    const options = {
+      url: this.serviceUrl,
+      headers: {'Content-Type': 'application/json'},
+      method: 'POST',
+      body: JSON.stringify(reportJson)
+    };
+    logging.info('Posting metrics: ' + JSON.stringify(options));
+    return new Promise((resolve, reject) => {
+      follow_redirects.requestFollowRedirectsWithSameMethodAndBody(
+          options, (error, response, body) => {
+            if (error) {
+              reject(error);
+              return;
+            }
+            logging.info('Metrics server responded with status ' + response.statusCode);
+            resolve();
+          });
+    });
   }
 }
 
 // Keeps track of the connection metrics per user, since the startDatetime.
 // This is reported to the Outline team if the admin opts-in.
 export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
-  // Time at which we started recording connection metrics, e.g.
-  // in case this object is constructed from data written to disk.
-  private reportStartTime: Date;
-  private reportedKeyData = new Map<string, number>();
+  // Time at which we started recording connection metrics.
+  private reportStartTimestampMs: number;
 
   // serverConfig: where the enabled/disable setting is persisted
   // usageMetrics: where we get the metrics from
   // toMetricsId: maps Access key ids to metric ids
   // metricsUrl: where to post the metrics
   constructor(
+      private clock: Clock,
       private serverConfig: JsonConfig<ServerConfigJson>,
       usageMetrics: UsageMetrics,
       private toMetricsId: (accessKeyId: AccessKeyId) => AccessKeyMetricsId,
-      private metricsUrl: string,
+      private metricsCollector: MetricsCollectorClient,
   ) {
     // Start timer
-    this.reportStartTime = new Date();
+    this.reportStartTimestampMs = this.clock.now();
 
-    setInterval(() => {
+    this.clock.setInterval(() => {
       if (!this.isSharingEnabled()) {
         return;
       }
       this.reportMetrics(usageMetrics.getUsage());
+      usageMetrics.reset();
     }, MS_PER_HOUR);
     // TODO(fortuna): also trigger report on shutdown, so data loss is minimized.
   }
@@ -137,54 +173,30 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
   }
 
   private reportMetrics(usageMetrics: KeyUsage[]) {
-    const reportEndTime = new Date();
+    const reportEndTimestampMs = this.clock.now();
 
     const userReports = [] as HourlyUserMetricsReportJson[];
-    const newReportedKeyData = new Map<string, number>();
     for (const keyUsage of usageMetrics) {
-      newReportedKeyData[keyUsage.accessKeyId] = keyUsage.inboundBytes;
-      const dataDelta = keyUsage.inboundBytes - (this.reportedKeyData[keyUsage.accessKeyId] || 0);
-      if (dataDelta === 0) {
+      if (keyUsage.inboundBytes === 0) {
         continue;
       }
       userReports.push({
         userId: this.toMetricsId(keyUsage.accessKeyId) || '',
-        bytesTransferred: dataDelta,
+        bytesTransferred: keyUsage.inboundBytes,
         countries: [...keyUsage.countries]
       });
     }
-    if (userReports.length === 0) {
-      return;
-    }
     const report = {
       serverId: this.serverConfig.data().serverId,
-      startUtcMs: this.reportStartTime.getTime(),
-      endUtcMs: reportEndTime.getTime(),
+      startUtcMs: this.reportStartTimestampMs,
+      endUtcMs: reportEndTimestampMs,
       userReports
     } as HourlyServerMetricsReportJson;
 
-    postHourlyServerMetricsReports(report, this.metricsUrl);
-
-    this.reportStartTime = reportEndTime;
-    this.reportedKeyData = newReportedKeyData;
+    this.reportStartTimestampMs = reportEndTimestampMs;
+    if (userReports.length === 0) {
+      return;
+    }
+    this.metricsCollector.collectMetrics(report);
   }
-}
-
-export function postHourlyServerMetricsReports(
-    reportJson: HourlyServerMetricsReportJson, metricsUrl: string) {
-  const options = {
-    url: metricsUrl,
-    headers: {'Content-Type': 'application/json'},
-    method: 'POST',
-    body: JSON.stringify(reportJson)
-  };
-  logging.info('Posting metrics: ' + JSON.stringify(options));
-  return follow_redirects.requestFollowRedirectsWithSameMethodAndBody(
-      options, (error, response, body) => {
-        if (error) {
-          logging.error(`Error posting metrics: ${error}`);
-          return;
-        }
-        logging.info('Metrics server responded with status ' + response.statusCode);
-      });
 }
