@@ -53,11 +53,10 @@ function readMetricsConfig(filename: string): json_config.JsonConfig<MetricsConf
 }
 
 class MultiMetricsWriter implements UsageMetricsWriter {
-  constructor(
-      private managerMetrics: UsageMetricsWriter, private sharedMetrics: UsageMetricsWriter) {}
+  constructor(private managerMetrics: ManagerMetrics, private sharedMetrics: UsageMetricsWriter) {}
 
   writeBytesTransferred(accessKeyId: AccessKeyId, numBytes: number, countries: string[]) {
-    this.managerMetrics.writeBytesTransferred(accessKeyId, numBytes, countries);
+    this.managerMetrics.writeBytesTransferred(accessKeyId, numBytes);
     this.sharedMetrics.writeBytesTransferred(accessKeyId, numBytes, countries);
   }
 }

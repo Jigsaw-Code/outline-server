@@ -22,6 +22,7 @@
     "@types/maxmind": "^2",
     "@types/node": "^8",
     "@types/randomstring": "^1.1.6",
-    "@types/restify": "^2.0.41"
+    "@types/restify": "^2.0.41",
+    "timekeeper": "^2.1.2"
   }
 }
