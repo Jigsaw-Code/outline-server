@@ -27,3 +27,27 @@ export class RealClock implements Clock {
     return setInterval(callback, intervalMs);
   }
 }
+
+// Fake clock where you manually set what is "now" and can trigger the scheduled callbacks.
+// Useful for tests.
+export class ManualClock implements Clock {
+  public nowMs = 0;
+  private callbacks = [] as Function[];
+
+  constructor() {}
+
+  now() {
+    return this.nowMs;
+  }
+
+  setInterval(callback, intervalMs) {
+    this.callbacks.push(callback);
+    return 0;
+  }
+
+  runCallbacks() {
+    for (const callback of this.callbacks) {
+      callback();
+    }
+  }
+}

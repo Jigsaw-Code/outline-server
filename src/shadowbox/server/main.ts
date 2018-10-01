@@ -93,6 +93,7 @@ async function main() {
       server_config.readServerConfig(getPersistentFilename('shadowbox_server_config.json'));
   const metricsConfig = readMetricsConfig(getPersistentFilename('shadowbox_stats.json'));
   const managerMetrics = new ManagerMetrics(
+      new RealClock(),
       new json_config.ChildConfig(metricsConfig, metricsConfig.data().transferStats));
 
   logging.info('Starting...');

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Clock} from '../infrastructure/clock';
+import {ManualClock} from '../infrastructure/clock';
 import {InMemoryConfig} from '../infrastructure/json_config';
 import {AccessKeyId} from '../model/access_key';
 
@@ -128,28 +128,6 @@ describe('OutlineSharedMetricsPublisher', () => {
     });
   });
 });
-
-class ManualClock implements Clock {
-  public nowMs = 0;
-  private callbacks = [] as Function[];
-
-  constructor() {}
-
-  now() {
-    return this.nowMs;
-  }
-
-  setInterval(callback, intervalMs) {
-    this.callbacks.push(callback);
-    return 0;
-  }
-
-  runCallbacks() {
-    for (const callback of this.callbacks) {
-      callback();
-    }
-  }
-}
 
 class FakeMetricsCollector implements MetricsCollectorClient {
   public collectedReport: HourlyServerMetricsReportJson;
