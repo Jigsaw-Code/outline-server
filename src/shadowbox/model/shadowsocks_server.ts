@@ -12,12 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as dgram from 'dgram';
-
 export interface ShadowsocksServer {
-  startInstance(
-      portNumber: number, password: string, metricsSocket: dgram.Socket,
-      encryptionMethod?: string): Promise<ShadowsocksInstance>;
+  startInstance(id: string, portNumber: number, password: string, encryptionMethod?: string):
+      Promise<ShadowsocksInstance>;
 }
 
 export interface ShadowsocksInstance {
@@ -25,9 +22,5 @@ export interface ShadowsocksInstance {
   password: string;
   encryptionMethod: string;
   accessUrl: string;
-  // Registers a callback to be invoked when the ShadowsocksInstance has
-  // inbound data (from the client or the target).  bytes is the number of
-  // bytes received since the last callback.
-  onInboundBytes(callback: (bytes: number, ipAddresses: string[]) => void);
   stop();
 }
