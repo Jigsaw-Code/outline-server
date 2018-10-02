@@ -18,6 +18,7 @@ import {AccessKey, AccessKeyRepository} from '../model/access_key';
 import {ShadowsocksManagerService} from './manager_service';
 import {MockAccessKeyRepository} from './mocks/mocks';
 import {ServerConfigJson} from './server_config';
+import {SharedMetricsPublisher} from './shared_metrics';
 
 interface ServerInfo {
   name: string;
@@ -39,7 +40,7 @@ describe('ShadowsocksManagerService', () => {
     it('Return default name if name is absent', (done) => {
       const repo = new MockAccessKeyRepository();
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerService('default name', serverConfig, repo, null);
+      const service = new ShadowsocksManagerService('default name', serverConfig, repo, null, null);
       service.getServer(
           {params: {}}, {
             send: (httpCode, data: ServerInfo) => {
@@ -53,7 +54,7 @@ describe('ShadowsocksManagerService', () => {
     it('Return saved name', (done) => {
       const repo = new MockAccessKeyRepository();
       const serverConfig = new InMemoryConfig({name: 'Server'} as ServerConfigJson);
-      const service = new ShadowsocksManagerService('default name', serverConfig, repo, null);
+      const service = new ShadowsocksManagerService('default name', serverConfig, repo, null, null);
       service.getServer(
           {params: {}}, {
             send: (httpCode, data: ServerInfo) => {
@@ -70,7 +71,7 @@ describe('ShadowsocksManagerService', () => {
     it('Rename changes the server name', (done) => {
       const repo = new MockAccessKeyRepository();
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerService('default name', serverConfig, repo, null);
+      const service = new ShadowsocksManagerService('default name', serverConfig, repo, null, null);
       service.renameServer(
           {params: {name: 'new name'}}, {
             send: (httpCode, _) => {
@@ -86,7 +87,7 @@ describe('ShadowsocksManagerService', () => {
   describe('listAccessKeys', () => {
     it('lists access keys in order', (done) => {
       const repo = new MockAccessKeyRepository();
-      const service = new ShadowsocksManagerService('default name', null, repo, null);
+      const service = new ShadowsocksManagerService('default name', null, repo, null, null);
 
       // Create 2 access keys with names.
       Promise
@@ -115,7 +116,7 @@ describe('ShadowsocksManagerService', () => {
   describe('createNewAccessKey', () => {
     it('creates keys', (done) => {
       const repo = new MockAccessKeyRepository();
-      const service = new ShadowsocksManagerService('default name', null, repo, null);
+      const service = new ShadowsocksManagerService('default name', null, repo, null, null);
 
       // Verify that response returns a key with the expected properties.
       const res = {
@@ -131,7 +132,7 @@ describe('ShadowsocksManagerService', () => {
     it('Create returns a 500 when the repository throws an exception', (done) => {
       const repo = new MockAccessKeyRepository();
       spyOn(repo, 'createNewAccessKey').and.throwError('cannot write to disk');
-      const service = new ShadowsocksManagerService('default name', null, repo, null);
+      const service = new ShadowsocksManagerService('default name', null, repo, null, null);
 
       const res = {send: (httpCode, data) => {}};
       service.createNewAccessKey({params: {}}, res, (error) => {
@@ -145,7 +146,7 @@ describe('ShadowsocksManagerService', () => {
   describe('removeAccessKey', () => {
     it('removes keys', (done) => {
       const repo = new MockAccessKeyRepository();
-      const service = new ShadowsocksManagerService('default name', null, repo, null);
+      const service = new ShadowsocksManagerService('default name', null, repo, null, null);
 
       // Create 2 access keys with names.
       Promise
@@ -169,7 +170,7 @@ describe('ShadowsocksManagerService', () => {
     it('Remove returns a 500 when the repository throws an exception', (done) => {
       const repo = new MockAccessKeyRepository();
       spyOn(repo, 'removeAccessKey').and.throwError('cannot write to disk');
-      const service = new ShadowsocksManagerService('default name', null, repo, null);
+      const service = new ShadowsocksManagerService('default name', null, repo, null, null);
 
       // Create 2 access keys with names.
       createNewAccessKeyWithName(repo, 'keyName1').then((key) => {
@@ -186,7 +187,7 @@ describe('ShadowsocksManagerService', () => {
   describe('renameAccessKey', () => {
     it('renames keys', (done) => {
       const repo = new MockAccessKeyRepository();
-      const service = new ShadowsocksManagerService('default name', null, repo, null);
+      const service = new ShadowsocksManagerService('default name', null, repo, null, null);
       const OLD_NAME = 'oldName';
       const NEW_NAME = 'newName';
 
@@ -205,7 +206,7 @@ describe('ShadowsocksManagerService', () => {
     it('Rename returns a 500 when the repository throws an exception', (done) => {
       const repo = new MockAccessKeyRepository();
       spyOn(repo, 'renameAccessKey').and.throwError('cannot write to disk');
-      const service = new ShadowsocksManagerService('default name', null, repo, null);
+      const service = new ShadowsocksManagerService('default name', null, repo, null, null);
 
       createNewAccessKeyWithName(repo, 'oldName').then((key) => {
         const res = {send: (httpCode, data) => {}};
@@ -219,9 +220,11 @@ describe('ShadowsocksManagerService', () => {
   });
 
   describe('getShareMetrics', () => {
-    it('Returns value from config', (done) => {
-      const serverConfig = new InMemoryConfig({metricsEnabled: true} as ServerConfigJson);
-      const service = new ShadowsocksManagerService('default name', serverConfig, null, null);
+    it('Returns value from sharedMetrics', (done) => {
+      const sharedMetrics = fakeSharedMetricsReporter();
+      sharedMetrics.startSharing();
+      const service =
+          new ShadowsocksManagerService('default name', null, null, null, sharedMetrics);
       service.getShareMetrics(
           {params: {}}, {
             send: (httpCode, data: {metricsEnabled: boolean}) => {
@@ -232,29 +235,18 @@ describe('ShadowsocksManagerService', () => {
           },
           done);
     });
-    it('Returns false by default', (done) => {
-      const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerService('default name', serverConfig, null, null);
-      service.getShareMetrics(
-          {params: {}}, {
-            send: (httpCode, data: {metricsEnabled: boolean}) => {
-              expect(httpCode).toEqual(200);
-              expect(data.metricsEnabled).toEqual(false);
-              responseProcessed = true;
-            }
-          },
-          done);
-    });
   });
   describe('setShareMetrics', () => {
     it('Sets value in the config', (done) => {
-      const serverConfig = new InMemoryConfig({metricsEnabled: false} as ServerConfigJson);
-      const service = new ShadowsocksManagerService('default name', serverConfig, null, null);
+      const sharedMetrics = fakeSharedMetricsReporter();
+      sharedMetrics.stopSharing();
+      const service =
+          new ShadowsocksManagerService('default name', null, null, null, sharedMetrics);
       service.setShareMetrics(
           {params: {metricsEnabled: true}}, {
             send: (httpCode, _) => {
               expect(httpCode).toEqual(204);
-              expect(serverConfig.mostRecentWrite.metricsEnabled).toEqual(true);
+              expect(sharedMetrics.isSharingEnabled()).toEqual(true);
               responseProcessed = true;
             }
           },
@@ -272,4 +264,19 @@ function createNewAccessKeyWithName(repo: AccessKeyRepository, name: string): Pr
     key.name = name;
     return key;
   });
+}
+
+function fakeSharedMetricsReporter(): SharedMetricsPublisher {
+  let sharing = false;
+  return {
+    startSharing() {
+      sharing = true;
+    },
+    stopSharing() {
+      sharing = false;
+    },
+    isSharingEnabled(): boolean {
+      return sharing;
+    }
+  };
 }

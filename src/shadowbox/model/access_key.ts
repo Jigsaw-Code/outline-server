@@ -13,6 +13,7 @@
 // limitations under the License.
 
 export type AccessKeyId = string;
+export type AccessKeyMetricsId = string;
 
 // Parameters needed to access a Shadowsocks proxy.
 export interface ProxyParams {
@@ -33,7 +34,7 @@ export interface AccessKey {
   // Admin-controlled, editable name for this access key.
   name: string;
   // Used in metrics reporting to decouple from the real id. Can change.
-  metricsId: AccessKeyId;
+  metricsId: AccessKeyMetricsId;
   // Parameters to access the proxy
   proxyParams: ProxyParams;
 }
@@ -48,4 +49,7 @@ export interface AccessKeyRepository {
   // Apply the specified update to the specified access key.
   // Returns true if successful.
   renameAccessKey(id: AccessKeyId, name: string): boolean;
+
+  // Gets the metrics id for a given Access Key.
+  getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined;
 }

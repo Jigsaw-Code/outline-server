@@ -12,220 +12,128 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as https from 'https';
+import {ManualClock} from '../infrastructure/clock';
+import {InMemoryConfig} from '../infrastructure/json_config';
+import {AccessKeyId} from '../model/access_key';
 
-import * as ip_location from '../infrastructure/ip_location';
-import {PerUserMetrics} from '../model/metrics';
+import {ServerConfigJson} from './server_config';
+import {HourlyServerMetricsReportJson, InMemoryUsageMetrics, MetricsCollectorClient, OutlineSharedMetricsPublisher} from './shared_metrics';
 
-import * as shared_metrics from './shared_metrics';
-
-const SERVER_ID = 'serverId';
-const USER_ID_1 = 'userId1';
-const USER_ID_2 = 'userId2';
-const START_DATETIME = new Date(Date.now() - (3600 * 1000));  // 1 hour ago
-const END_DATETIME = new Date(Date.now());
-const IP_ADDRESS_IN_US_1 = '45.55.19.0';
-const IP_ADDRESS_IN_US_2 = '192.81.216.0';
-const IP_ADDRESS_IN_GB = '185.86.151.11';
-const IP_ADDRESS_IN_NORTH_KOREA = '175.45.176.0';
-const IP_ADDRESS_IN_CUBA = '152.206.0.0';
-
-describe('getHourlyServerMetricsReport', () => {
-  it('Converts IP addresses to country codes', (done) => {
-    const lastHourUserStats = new Map();
-    lastHourUserStats.set(USER_ID_1, getPerUserStats([IP_ADDRESS_IN_US_1]));
-
-    shared_metrics
-        .getHourlyServerMetricsReport(
-            SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
-            new HardcodedIpLocationService())
-        .then((report) => {
-          expect(report.userReports.length).toEqual(1);
-          expect(report.userReports[0].countries.length).toEqual(1);
-          expect(report.userReports[0].countries[0]).toEqual('US');
-          done();
-        });
+describe('InMemoryUsageMetrics', () => {
+  it('Returns empty usage initially', (done) => {
+    const metrics = new InMemoryUsageMetrics();
+    expect(metrics.getUsage()).toEqual([]);
+    done();
   });
-  it('Supports multiple countries per user report', (done) => {
-    const lastHourUserStats = new Map();
-    lastHourUserStats.set(USER_ID_1, getPerUserStats([IP_ADDRESS_IN_US_1, IP_ADDRESS_IN_GB]));
-    lastHourUserStats.set(USER_ID_2, getPerUserStats([IP_ADDRESS_IN_US_1]));
-
-    shared_metrics
-        .getHourlyServerMetricsReport(
-            SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
-            new HardcodedIpLocationService())
-        .then((report) => {
-          expect(report.userReports.length).toEqual(2);
-          expect(report.userReports[0].countries.length).toEqual(2);
-          expect(report.userReports[0].countries[0]).toEqual('US');
-          expect(report.userReports[0].countries[1]).toEqual('GB');
-          expect(report.userReports[1].countries.length).toEqual(1);
-          expect(report.userReports[1].countries[0]).toEqual('US');
-          done();
-        });
+  it('Records usage', (done) => {
+    const metrics = new InMemoryUsageMetrics();
+    metrics.writeBytesTransferred('user-0', 11, ['AA']);
+    metrics.writeBytesTransferred('user-1', 22, ['BB']);
+    metrics.writeBytesTransferred('user-0', 33, ['CC']);
+    metrics.writeBytesTransferred('user-1', 44, ['BB']);
+    metrics.writeBytesTransferred('user-2', 55, ['']);
+    expect(metrics.getUsage().sort()).toEqual([
+      {accessKeyId: 'user-0', inboundBytes: 11, countries: ['AA']},
+      {accessKeyId: 'user-1', inboundBytes: 66, countries: ['BB']},
+      {accessKeyId: 'user-0', inboundBytes: 33, countries: ['CC']},
+      {accessKeyId: 'user-2', inboundBytes: 55, countries: ['']}
+    ]);
+    done();
   });
-  it('Does not include duplicate countries', (done) => {
-    const lastHourUserStats = new Map();
-    lastHourUserStats.set(USER_ID_1, getPerUserStats([IP_ADDRESS_IN_US_1, IP_ADDRESS_IN_US_2]));
-
-    shared_metrics
-        .getHourlyServerMetricsReport(
-            SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
-            new HardcodedIpLocationService())
-        .then((report) => {
-          expect(report.userReports.length).toEqual(1);
-          expect(report.userReports[0].countries.length).toEqual(1);
-          expect(report.userReports[0].countries[0]).toEqual('US');
-          done();
-        });
-  });
-  it('userReports matches input size for unsanctioned countries', (done) => {
-    const lastHourUserStats = new Map();
-    lastHourUserStats.set(USER_ID_1, getPerUserStats([IP_ADDRESS_IN_US_1]));
-    lastHourUserStats.set(USER_ID_2, getPerUserStats([IP_ADDRESS_IN_US_2]));
-
-    shared_metrics
-        .getHourlyServerMetricsReport(
-            SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
-            new HardcodedIpLocationService())
-        .then((report) => {
-          expect(report.userReports.length).toEqual(2);
-          expect(report.userReports[0].countries.length).toEqual(1);
-          expect(report.userReports[0].countries[0]).toEqual('US');
-          expect(report.userReports[1].countries.length).toEqual(1);
-          expect(report.userReports[1].countries[0]).toEqual('US');
-          done();
-        });
-  });
-  it('Filters sanctioned countries from userReports', (done) => {
-    const lastHourUserStats = new Map();
-    lastHourUserStats.set(
-        USER_ID_1, getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA, IP_ADDRESS_IN_US_1]));
-    lastHourUserStats.set(USER_ID_2, getPerUserStats([IP_ADDRESS_IN_US_1]));
-
-    shared_metrics
-        .getHourlyServerMetricsReport(
-            SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
-            new HardcodedIpLocationService())
-        .then((report) => {
-          expect(report.userReports.length).toEqual(2);
-          expect(report.userReports[0].countries.length).toEqual(1);
-          expect(report.userReports[0].countries[0]).toEqual('US');
-          expect(report.userReports[1].countries.length).toEqual(1);
-          expect(report.userReports[1].countries[0]).toEqual('US');
-          done();
-        });
-  });
-  it('Removes userReports that contain only sanctioned countries', (done) => {
-    const lastHourUserStats = new Map();
-    lastHourUserStats.set(
-        USER_ID_1, getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA, IP_ADDRESS_IN_CUBA]));
-    lastHourUserStats.set(USER_ID_2, getPerUserStats([IP_ADDRESS_IN_US_1]));
-
-    shared_metrics
-        .getHourlyServerMetricsReport(
-            SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
-            new HardcodedIpLocationService())
-        .then((report) => {
-          expect(report.userReports.length).toEqual(1);
-          expect(report.userReports[0].countries.length).toEqual(1);
-          expect(report.userReports[0].countries[0]).toEqual('US');
-          done();
-        });
-  });
-  it('Does not generate any report if all users in sanctioned countries', (done) => {
-    const lastHourUserStats = new Map();
-    lastHourUserStats.set(
-        USER_ID_1, getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA, IP_ADDRESS_IN_CUBA]));
-    lastHourUserStats.set(USER_ID_2, getPerUserStats([IP_ADDRESS_IN_NORTH_KOREA]));
-
-    shared_metrics
-        .getHourlyServerMetricsReport(
-            SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
-            new HardcodedIpLocationService())
-        .then((report) => {
-          expect(report).toBeNull();
-          done();
-        });
-  });
-  it('Does not propagate location service connection errors', (done) => {
-    const lastHourUserStats = new Map();
-    lastHourUserStats.set('some_user_id', getPerUserStats(['127.0.0.1']));
-    shared_metrics
-        .getHourlyServerMetricsReport(
-            SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
-            new FailConnectionIpLocationService())
-        .then((report) => {
-          expect(report.userReports.length).toEqual(1);
-          expect(report.userReports[0].countries.length).toEqual(1);
-          expect(report.userReports[0].countries[0]).toEqual('ERROR');
-          done();
-        })
-        .catch((e) => {
-          done.fail(e);
-        });
-  });
-  it('Does not propagate location service promise rejection', (done) => {
-    const lastHourUserStats = new Map();
-    lastHourUserStats.set('some_user_id', getPerUserStats(['127.0.0.1']));
-    return shared_metrics
-        .getHourlyServerMetricsReport(
-            SERVER_ID, START_DATETIME, END_DATETIME, lastHourUserStats,
-            new AlwaysRejectIpLocationService())
-        .then((report) => {
-          expect(report.userReports.length).toEqual(1);
-          expect(report.userReports[0].countries.length).toEqual(1);
-          expect(report.userReports[0].countries[0]).toEqual('ERROR');
-          done();
-        })
-        .catch((e) => {
-          done.fail(e);
-        });
+  it('Ignores sanctioned countries', (done) => {
+    const metrics = new InMemoryUsageMetrics();
+    metrics.writeBytesTransferred('user-0', 11, ['AA']);
+    metrics.writeBytesTransferred('user-0', 22, ['IR']);  // Sanctioned
+    expect(metrics.getUsage().sort()).toEqual([
+      {accessKeyId: 'user-0', inboundBytes: 11, countries: ['AA']},
+    ]);
+    done();
   });
 });
 
-function getPerUserStats(ipAddresses: string[]): PerUserMetrics {
-  return {bytesTransferred: 123, anonymizedIpAddresses: new Set(ipAddresses)};
-}
+describe('OutlineSharedMetricsPublisher', () => {
+  describe('Enable/Disable', () => {
+    it('Mirrors config', (done) => {
+      const serverConfig = new InMemoryConfig<ServerConfigJson>({});
 
-class HardcodedIpLocationService implements ip_location.IpLocationService {
-  countryForIp(ipAddress: string) {
-    if (ipAddress === IP_ADDRESS_IN_US_1 || ipAddress === IP_ADDRESS_IN_US_2) {
-      return Promise.resolve('US');
-    } else if (ipAddress === IP_ADDRESS_IN_NORTH_KOREA) {
-      return Promise.resolve('KP');
-    } else if (ipAddress === IP_ADDRESS_IN_CUBA) {
-      return Promise.resolve('CU');
-    } else if (ipAddress === IP_ADDRESS_IN_GB) {
-      return Promise.resolve('GB');
-    }
-    return Promise.reject(new Error('IP address not found: ' + ipAddress));
-  }
-}
+      const publisher =
+          new OutlineSharedMetricsPublisher(new ManualClock(), serverConfig, null, null, null);
+      expect(publisher.isSharingEnabled()).toBeFalsy();
 
-class FailConnectionIpLocationService implements ip_location.IpLocationService {
-  countryForIp(ipAddress: string): Promise<string> {
-    const countryPromise = new Promise<string>((fulfill, reject) => {
-      https
-          .get(
-              'https://0.0.0.0',
-              (response) => {
-                response.on('end', () => {
-                  fulfill('SHOULD_NOT_HAPPEN');
-                });
-              })
-          .on('error', (e) => {
-            reject(new Error(`Failed to contact location service: ${e}`));
-          });
+      publisher.startSharing();
+      expect(publisher.isSharingEnabled()).toBeTruthy();
+      expect(serverConfig.mostRecentWrite.metricsEnabled).toBeTruthy();
+
+      publisher.stopSharing();
+      expect(publisher.isSharingEnabled()).toBeFalsy();
+      expect(serverConfig.mostRecentWrite.metricsEnabled).toBeFalsy();
+
+      done();
     });
-    return countryPromise;
-  }
-}
+    it('Reads from config', (done) => {
+      const serverConfig = new InMemoryConfig<ServerConfigJson>({metricsEnabled: true});
+      const publisher =
+          new OutlineSharedMetricsPublisher(new ManualClock(), serverConfig, null, null, null);
+      expect(publisher.isSharingEnabled()).toBeTruthy();
+      done();
+    });
+  });
+  describe('Metrics Reporting', () => {
+    it('Reports metrics correctly', (done) => {
+      const clock = new ManualClock();
+      let startTime = clock.nowMs;
+      const serverConfig = new InMemoryConfig<ServerConfigJson>({serverId: 'server-id'});
+      const usageMetrics = new InMemoryUsageMetrics();
+      const toMetricsId = (id: AccessKeyId) => `M(${id})`;
+      const metricsCollector = new FakeMetricsCollector();
+      const publisher = new OutlineSharedMetricsPublisher(
+          clock, serverConfig, usageMetrics, toMetricsId, metricsCollector);
 
-class AlwaysRejectIpLocationService implements ip_location.IpLocationService {
-  countryForIp(ipAddress: string): Promise<string> {
-    return Promise.reject(
-        new Error(`This IpLocationService always rejects. ipAddress: ${ipAddress}`));
+      publisher.startSharing();
+      usageMetrics.writeBytesTransferred('user-0', 11, ['AA', 'BB']);
+      usageMetrics.writeBytesTransferred('user-1', 22, ['CC']);
+      usageMetrics.writeBytesTransferred('user-0', 33, ['AA', 'DD']);
+
+      clock.nowMs += 60 * 60 * 1000;
+      clock.runCallbacks();
+      expect(metricsCollector.collectedReport).toEqual({
+        serverId: 'server-id',
+        startUtcMs: startTime,
+        endUtcMs: clock.nowMs,
+        userReports: [
+          {userId: 'M(user-0)', bytesTransferred: 11, countries: ['AA', 'BB']},
+          {userId: 'M(user-1)', bytesTransferred: 22, countries: ['CC']},
+          {userId: 'M(user-0)', bytesTransferred: 33, countries: ['AA', 'DD']},
+        ]
+      });
+
+      startTime = clock.nowMs;
+      usageMetrics.writeBytesTransferred('user-0', 44, ['EE']);
+      usageMetrics.writeBytesTransferred('user-2', 55, ['FF']);
+
+      clock.nowMs += 60 * 60 * 1000;
+      clock.runCallbacks();
+      expect(metricsCollector.collectedReport).toEqual({
+        serverId: 'server-id',
+        startUtcMs: startTime,
+        endUtcMs: clock.nowMs,
+        userReports: [
+          {userId: 'M(user-0)', bytesTransferred: 44, countries: ['EE']},
+          {userId: 'M(user-2)', bytesTransferred: 55, countries: ['FF']}
+        ]
+      });
+
+      publisher.stopSharing();
+      done();
+    });
+  });
+});
+
+class FakeMetricsCollector implements MetricsCollectorClient {
+  public collectedReport: HourlyServerMetricsReportJson;
+
+  collectMetrics(report) {
+    this.collectedReport = report;
+    return Promise.resolve();
   }
 }

@@ -19,10 +19,10 @@ import * as json_config from '../infrastructure/json_config';
 // Serialized format for the server config.
 // WARNING: Renaming fields will break backwards-compatibility.
 export interface ServerConfigJson {
-  serverId: string;
-  metricsEnabled: boolean;
-  name: string;
-  createdTimestampMs: number;
+  serverId?: string;
+  metricsEnabled?: boolean;
+  name?: string;
+  createdTimestampMs?: number;
 }
 
 export function readServerConfig(filename: string): json_config.JsonConfig<ServerConfigJson> {

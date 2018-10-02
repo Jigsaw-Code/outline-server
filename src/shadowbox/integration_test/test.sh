@@ -43,7 +43,7 @@ declare -ir DEBUG=${DEBUG:-0}
 # Waits for the input URL to return success.
 function wait_for_resource() {
   declare -r URL=$1
-  until curl --insecure $URL; do sleep 1; done
+  until curl --silent --insecure $URL; do sleep 1; done
 }
 
 # Takes the JSON from a /access-keys POST request and returns the appropriate
@@ -57,7 +57,7 @@ function ss_arguments_for_user() {
 
 # Runs curl on the client container.
 function client_curl() {
-  docker exec $CLIENT_CONTAINER curl "$@"
+  docker exec $CLIENT_CONTAINER curl --silent "$@"
 }
 
 # Start a subprocess for trap
@@ -81,10 +81,10 @@ function client_curl() {
 
   # Verify that the client cannot access or even resolve the target
   # Exit code 28 for "Connection timed out".
-  docker exec $CLIENT_CONTAINER curl --connect-timeout 1 $TARGET_IP && exit 1 || (($? == 28))
+  docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 1 $TARGET_IP && exit 1 || (($? == 28))
 
   # Exit code 6 for "Could not resolve host".
-  docker exec $CLIENT_CONTAINER curl --connect-timeout 1 http://target && exit 1 || (($? == 6))
+  docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 1 http://target && exit 1 || (($? == 6))
 
   # Wait for shadowbox to come up.
   wait_for_resource https://localhost:20443/access-keys

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {Clock} from '../infrastructure/clock';
 import {JsonConfig} from '../infrastructure/json_config';
 import {AccessKeyId} from '../model/access_key';
 import {DataUsageByUser} from '../model/metrics';
@@ -33,7 +34,7 @@ export class ManagerMetrics {
   private dailyUserBytesTransferred: Map<string, number>;
   private userIdSet: Set<AccessKeyId>;
 
-  constructor(private config: JsonConfig<ManagerMetricsJson>) {
+  constructor(private clock: Clock, private config: JsonConfig<ManagerMetricsJson>) {
     const serializedObject = config.data();
     if (serializedObject) {
       this.dailyUserBytesTransferred = new Map(serializedObject.dailyUserBytesTransferred);
@@ -44,9 +45,10 @@ export class ManagerMetrics {
     }
   }
 
-  public recordBytesTransferred(date: Date, userId: AccessKeyId, numBytes: number) {
+  public writeBytesTransferred(userId: AccessKeyId, numBytes: number) {
     this.userIdSet.add(userId);
 
+    const date = new Date(this.clock.now());
     const oldTotal = this.getBytes(userId, date);
     const newTotal = oldTotal + numBytes;
     this.dailyUserBytesTransferred.set(this.getKey(userId, date), newTotal);
@@ -58,7 +60,7 @@ export class ManagerMetrics {
     const bytesTransferredByUserId = {};
     for (let i = 0; i < 30; ++i) {
       // Get Date from i days ago.
-      const d = new Date();
+      const d = new Date(this.clock.now());
       d.setDate(d.getDate() - i);
 
       // Get transfer per userId and total

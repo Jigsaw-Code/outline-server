@@ -17,17 +17,18 @@ import * as path from 'path';
 import * as process from 'process';
 import * as restify from 'restify';
 
+import {RealClock} from '../infrastructure/clock';
 import {FilesystemTextFile} from '../infrastructure/filesystem_text_file';
 import * as ip_location from '../infrastructure/ip_location';
 import * as json_config from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
+import {AccessKeyId} from '../model/access_key';
 
-import {LibevShadowsocksServer} from './libev_shadowsocks_server';
 import {ManagerMetrics, ManagerMetricsJson} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
-import {createServerAccessKeyRepository} from './server_access_key';
+import {AccessKeyConfigJson, createServerAccessKeyRepository} from './server_access_key';
 import * as server_config from './server_config';
-import {SharedMetrics, SharedMetricsJson} from './shared_metrics';
+import {InMemoryUsageMetrics, OutlineSharedMetricsPublisher, RestMetricsCollectorClient, SharedMetricsPublisher, UsageMetricsWriter} from './shared_metrics';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
 const MAX_STATS_FILE_AGE_MS = 5000;
@@ -37,8 +38,7 @@ const MAX_STATS_FILE_AGE_MS = 5000;
 interface MetricsConfigJson {
   // Serialized ManagerStats object.
   transferStats?: ManagerMetricsJson;
-  // Serialized SharedStats object.
-  hourlyMetrics?: SharedMetricsJson;
+  // DEPRECATED: hourlyMetrics. Hourly stats live in memory only now.
 }
 
 function readMetricsConfig(filename: string): json_config.JsonConfig<MetricsConfigJson> {
@@ -47,15 +47,22 @@ function readMetricsConfig(filename: string): json_config.JsonConfig<MetricsConf
     // Make sure we have non-empty sub-configs.
     metricsConfig.data().transferStats =
         metricsConfig.data().transferStats || {} as ManagerMetricsJson;
-    metricsConfig.data().hourlyMetrics =
-        metricsConfig.data().hourlyMetrics || {} as SharedMetricsJson;
     return new json_config.DelayedConfig(metricsConfig, MAX_STATS_FILE_AGE_MS);
   } catch (error) {
     throw new Error(`Failed to read metrics config at ${filename}: ${error}`);
   }
 }
 
-function main() {
+class MultiMetricsWriter implements UsageMetricsWriter {
+  constructor(private managerMetrics: ManagerMetrics, private sharedMetrics: UsageMetricsWriter) {}
+
+  writeBytesTransferred(accessKeyId: AccessKeyId, numBytes: number, countries: string[]) {
+    this.managerMetrics.writeBytesTransferred(accessKeyId, numBytes);
+    this.sharedMetrics.writeBytesTransferred(accessKeyId, numBytes, countries);
+  }
+}
+
+async function main() {
   const verbose = process.env.LOG_LEVEL === 'debug';
   const proxyHostname = process.env.SB_PUBLIC_IP;
   // Default to production metrics, as some old Docker images may not have
@@ -84,49 +91,53 @@ function main() {
 
   const serverConfig =
       server_config.readServerConfig(getPersistentFilename('shadowbox_server_config.json'));
-
-  const shadowsocksServer = new LibevShadowsocksServer(proxyHostname, verbose);
-
   const metricsConfig = readMetricsConfig(getPersistentFilename('shadowbox_stats.json'));
   const managerMetrics = new ManagerMetrics(
+      new RealClock(),
       new json_config.ChildConfig(metricsConfig, metricsConfig.data().transferStats));
-  const sharedMetrics = new SharedMetrics(
-      new json_config.ChildConfig(metricsConfig, metricsConfig.data().hourlyMetrics), serverConfig,
-      metricsUrl, new ip_location.MmdbLocationService());
 
   logging.info('Starting...');
-  const userConfigFilename = getPersistentFilename('shadowbox_config.json');
-  createServerAccessKeyRepository(
-      proxyHostname, new FilesystemTextFile(userConfigFilename), shadowsocksServer, managerMetrics,
-      sharedMetrics)
-      .then((accessKeyRepository) => {
-        const managerService = new ShadowsocksManagerService(
-            process.env.SB_DEFAULT_SERVER_NAME || 'Outline Server', serverConfig,
-            accessKeyRepository, managerMetrics);
-        const certificateFilename = process.env.SB_CERTIFICATE_FILE;
-        const privateKeyFilename = process.env.SB_PRIVATE_KEY_FILE;
+  const accessKeyConfig = json_config.loadFileConfig<AccessKeyConfigJson>(
+      getPersistentFilename('shadowbox_config.json'));
+  const ipLocation =
+      new ip_location.MmdbLocationService('/var/lib/libmaxminddb/GeoLite2-Country.mmdb');
+  const usageMetrics = new InMemoryUsageMetrics();
+  const metricsWriter = new MultiMetricsWriter(managerMetrics, usageMetrics);
+  const accessKeyRepository = await createServerAccessKeyRepository(
+      proxyHostname, accessKeyConfig, ipLocation, metricsWriter, verbose);
 
-        // TODO(bemasc): Remove casts once
-        // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/15229 lands
-        const apiServer = restify.createServer({
-          certificate: fs.readFileSync(certificateFilename),
-          key: fs.readFileSync(privateKeyFilename)
-        });
+  const toMetricsId = (id: AccessKeyId) => {
+    return accessKeyRepository.getMetricsId(id);
+  };
+  const metricsCollector = new RestMetricsCollectorClient(metricsUrl);
+  const metricsPublisher: SharedMetricsPublisher = new OutlineSharedMetricsPublisher(
+      new RealClock(), serverConfig, usageMetrics, toMetricsId, metricsCollector);
+  const managerService = new ShadowsocksManagerService(
+      process.env.SB_DEFAULT_SERVER_NAME || 'Outline Server', serverConfig, accessKeyRepository,
+      managerMetrics, metricsPublisher);
 
-        // Pre-routing handlers
-        apiServer.pre(restify.CORS());
+  const certificateFilename = process.env.SB_CERTIFICATE_FILE;
+  const privateKeyFilename = process.env.SB_PRIVATE_KEY_FILE;
+  // TODO(bemasc): Remove casts once
+  // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/15229 lands
+  const apiServer = restify.createServer({
+    certificate: fs.readFileSync(certificateFilename),
+    key: fs.readFileSync(privateKeyFilename)
+  });
 
-        // All routes handlers
-        const apiPrefix = process.env.SB_API_PREFIX ? `/${process.env.SB_API_PREFIX}` : '';
-        apiServer.pre(restify.pre.sanitizePath());
-        apiServer.use(restify.jsonp());
-        apiServer.use(restify.bodyParser());
-        bindService(apiServer, apiPrefix, managerService);
+  // Pre-routing handlers
+  apiServer.pre(restify.CORS());
 
-        apiServer.listen(portNumber, () => {
-          logging.info(`Manager listening at ${apiServer.url}${apiPrefix}`);
-        });
-      });
+  // All routes handlers
+  const apiPrefix = process.env.SB_API_PREFIX ? `/${process.env.SB_API_PREFIX}` : '';
+  apiServer.pre(restify.pre.sanitizePath());
+  apiServer.use(restify.jsonp());
+  apiServer.use(restify.bodyParser());
+  bindService(apiServer, apiPrefix, managerService);
+
+  apiServer.listen(portNumber, () => {
+    logging.info(`Manager listening at ${apiServer.url}${apiPrefix}`);
+  });
 }
 
 function getPersistentFilename(file: string): string {
@@ -134,8 +145,11 @@ function getPersistentFilename(file: string): string {
   return path.join(stateDir, file);
 }
 
-process.on('unhandledRejection', (error) => {
-  logging.error(`unhandledRejection: ${error}`);
+process.on('unhandledRejection', (error: Error) => {
+  logging.error(`unhandledRejection: ${error.stack}`);
 });
 
-main();
+main().catch((error) => {
+  logging.error(error.stack);
+  process.exit(1);
+});
