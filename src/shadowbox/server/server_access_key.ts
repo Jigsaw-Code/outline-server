@@ -16,7 +16,7 @@ import * as dgram from 'dgram';
 import * as randomstring from 'randomstring';
 import * as uuidv4 from 'uuid/v4';
 
-import {getRandomUnusedPort} from '../infrastructure/get_port';
+import {PortProvider} from '../infrastructure/get_port';
 import {IpLocationService} from '../infrastructure/ip_location';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
@@ -48,21 +48,6 @@ function generatePassword(): string {
   return randomstring.generate(12);
 }
 
-export function createServerAccessKeyRepository(
-    proxyHostname: string, keyConfig: JsonConfig<AccessKeyConfigJson>,
-    ipLocation: IpLocationService, usageWriter: UsageMetricsWriter,
-    verbose: boolean): Promise<AccessKeyRepository> {
-  // TODO: Set default values
-  const reservedPorts = getReservedPorts(keyConfig.data().accessKeys || []);
-  // Create and save the metrics socket.
-  return createBoundUdpSocket(reservedPorts).then((metricsSocket) => {
-    reservedPorts.add(metricsSocket.address().port);
-    const shadowsocksServer =
-        new LibevShadowsocksServer(proxyHostname, metricsSocket, ipLocation, usageWriter, verbose);
-    return new ServerAccessKeyRepository(proxyHostname, keyConfig, shadowsocksServer);
-  });
-}
-
 function makeAccessKey(hostname: string, accessKeyJson: AccessKeyConfig): AccessKey {
   return {
     id: accessKeyJson.id,
@@ -82,11 +67,11 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyConfig): Access
 export class ServerAccessKeyRepository implements AccessKeyRepository {
   // This is the max id + 1 among all access keys. Used to generate unique ids for new access keys.
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
-  private reservedPorts: Set<number> = new Set();
   private ssInstances = new Map<AccessKeyId, ShadowsocksInstance>();
 
   constructor(
-      private proxyHostname: string, private keyConfig: JsonConfig<AccessKeyConfigJson>,
+      private portProvider: PortProvider, private proxyHostname: string,
+      private keyConfig: JsonConfig<AccessKeyConfigJson>,
       private shadowsocksServer: ShadowsocksServer) {
     if (this.keyConfig.data().accessKeys === undefined) {
       this.keyConfig.data().accessKeys = [];
@@ -101,38 +86,38 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     }
   }
 
-  createNewAccessKey(): Promise<AccessKey> {
-    return getRandomUnusedPort(this.reservedPorts).then((port) => {
-      const id = this.keyConfig.data().nextId.toString();
-      this.keyConfig.data().nextId += 1;
-      const metricsId = uuidv4();
-      const password = generatePassword();
-      // Save key
-      const accessKeyJson: AccessKeyConfig = {
-        id,
-        metricsId,
-        name: '',
-        port,
-        encryptionMethod: this.NEW_USER_ENCRYPTION_METHOD,
-        password
-      };
-      this.keyConfig.data().accessKeys.push(accessKeyJson);
-      try {
-        this.keyConfig.write();
-      } catch (error) {
-        throw new Error(`Failed to save config: ${error}`);
-      }
-
-      this.startInstance(accessKeyJson).catch((error) => {
-        logging.error(`Failed to start Shadowsocks instance for key ${accessKeyJson.id}: ${error}`);
-      });
-      return makeAccessKey(this.proxyHostname, accessKeyJson);
+  async createNewAccessKey(): Promise<AccessKey> {
+    const port = await this.portProvider.reserveNewPort();
+    const id = this.keyConfig.data().nextId.toString();
+    this.keyConfig.data().nextId += 1;
+    const metricsId = uuidv4();
+    const password = generatePassword();
+    // Save key
+    const accessKeyJson: AccessKeyConfig = {
+      id,
+      metricsId,
+      name: '',
+      port,
+      encryptionMethod: this.NEW_USER_ENCRYPTION_METHOD,
+      password
+    };
+    this.keyConfig.data().accessKeys.push(accessKeyJson);
+    try {
+      this.keyConfig.write();
+    } catch (error) {
+      throw new Error(`Failed to save config: ${error}`);
+    }
+    this.startInstance(accessKeyJson).catch((error) => {
+      logging.error(`Failed to start Shadowsocks instance for key ${accessKeyJson.id}: ${error}`);
     });
+    return makeAccessKey(this.proxyHostname, accessKeyJson);
   }
 
   removeAccessKey(id: AccessKeyId): boolean {
     for (let ai = 0; ai < this.keyConfig.data().accessKeys.length; ai++) {
-      if (this.keyConfig.data().accessKeys[ai].id === id) {
+      const accessKey = this.keyConfig.data().accessKeys[ai];
+      if (accessKey.id === id) {
+        this.portProvider.freePort(accessKey.port);
         this.keyConfig.data().accessKeys.splice(ai, 1);
         this.keyConfig.write();
         this.ssInstances.get(id).stop();
@@ -185,25 +170,4 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
           this.ssInstances.set(accessKeyJson.id, ssInstance);
         });
   }
-}
-
-// Gets the set of port numbers reserved by the accessKeys.
-function getReservedPorts(accessKeys: AccessKeyConfig[]): Set<number> {
-  const reservedPorts = new Set();
-  for (const accessKeyJson of accessKeys) {
-    reservedPorts.add(accessKeyJson.port);
-  }
-  return reservedPorts;
-}
-
-// Creates a bound UDP socket on a random unused port.
-function createBoundUdpSocket(reservedPorts: Set<number>): Promise<dgram.Socket> {
-  const socket = dgram.createSocket('udp4');
-  return new Promise((fulfill, reject) => {
-    getRandomUnusedPort(reservedPorts).then((portNumber) => {
-      socket.bind(portNumber, 'localhost', () => {
-        return fulfill(socket);
-      });
-    });
-  });
 }

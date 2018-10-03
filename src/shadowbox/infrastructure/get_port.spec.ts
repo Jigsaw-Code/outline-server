@@ -14,50 +14,22 @@
 
 import * as get_port from './get_port';
 
-const USED_PORT_1 = 2001;
-const USED_PORT_2 = 2002;
-const USED_PORT_3 = 2003;
-const UNUSED_PORT_1 = 3000;
-
-describe('getRandomUnusedPort', () => {
-  it('Tries until it finds an unused port', (done) => {
-    let generateCount = 0;
-    function generatePort(): number {
-      return [USED_PORT_1, USED_PORT_2, USED_PORT_3, UNUSED_PORT_1][generateCount++];
-    }
-    // This test replaces the default lsof check for used ports, as lsof may
-    // return different used ports on each machine.  To test with the real lsof
-    // code:
-    // 1. run "lsof -P | grep LISTEN" to see which ports are in use
-    // 2. change the USED_PORT_1..3 variables above to use those port numbers,
-    //    and be sure that UNUSED_PORT_1 is in fact unused on your machine.
-    // 3. remove the "isPortUsed" parameter from this call to getRandomUnusedPort.
-    get_port.getRandomUnusedPort(new Set(), generatePort, isPortUsed).then((port) => {
-      expect(port).toEqual(UNUSED_PORT_1);
-      done();
-    });
+describe('PortProvider', () => {
+  it('Gets port over 1023', async (done) => {
+    expect(await new get_port.PortProvider().reserveNewPort()).toBeGreaterThan(1023);
+    done();
   });
-
-  it('Rejects if it cannot find an unused port', (done) => {
-    get_port
-        .getRandomUnusedPort(
-            new Set(), get_port.getRandomPortOver1023,
-            (port: number) => Promise.resolve(true))  // always return port in use
-        .catch(done);
+  it('Fails on double reservation', (done) => {
+    const ports = new get_port.PortProvider();
+    ports.addReservedPort(8080);
+    expect(() => ports.addReservedPort(8080)).toThrowError();
+    done();
   });
-
-  it('Does not pick from reserved ports', (done) => {
-    const RESERVED_PORT = 123;
-    const MAX_RETRIES = 1;
-    get_port
-        .getRandomUnusedPort(
-            new Set([RESERVED_PORT]), () => RESERVED_PORT, (port: number) => Promise.resolve(false),
-            MAX_RETRIES)
-        .catch(done);
+  it('Free makes port available', (done) => {
+    const ports = new get_port.PortProvider();
+    ports.addReservedPort(8080);
+    ports.freePort(8080);
+    ports.addReservedPort(8080);
+    done();
   });
 });
-
-function isPortUsed(port: number): Promise<boolean> {
-  const isUsed = port === USED_PORT_1 || port === USED_PORT_2 || port === USED_PORT_3;
-  return Promise.resolve(isUsed);
-}

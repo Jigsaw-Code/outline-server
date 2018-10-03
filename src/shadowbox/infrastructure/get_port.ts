@@ -17,24 +17,40 @@ import * as child_process from 'child_process';
 const MAX_PORT = 65535;
 const MIN_PORT = 1024;
 
-export function getRandomUnusedPort(
-    reservedPorts: Set<number>, generatePort: (() => number) = getRandomPortOver1023,
-    isPortUsed: ((port: number) => Promise<boolean>) = isPortUsedLsof,
-    maxRetries = MAX_PORT): Promise<number> {
-  // TODO: consider using a set of available ports, so we don't randomly
-  // try the same port multiple times.
-  const port = generatePort();
-  return isPortUsed(port).then((isUsed) => {
-    if (!isUsed && !reservedPorts.has(port)) {
-      return Promise.resolve(port);
-    } else if (maxRetries === 0) {
-      return Promise.reject(new Error('Could not find available port'));
+export class PortProvider {
+  private reservedPorts = new Set<number>();
+
+  constructor() {}
+
+  addReservedPort(port: number) {
+    if (this.reservedPorts.has(port)) {
+      throw new Error(`Port ${port} is already reserved`);
     }
-    return getRandomUnusedPort(reservedPorts, generatePort, isPortUsed, maxRetries - 1);
-  });
+    this.reservedPorts.add(port);
+  }
+
+  async reserveNewPort(): Promise<number> {
+    // TODO: consider using a set of available ports, so we don't randomly
+    // try the same port multiple times.
+    while (true) {
+      const port = getRandomPortOver1023();
+      if (this.reservedPorts.has(port)) {
+        continue;
+      }
+      if (await isPortUsedLsof(port)) {
+        continue;
+      }
+      this.reservedPorts.add(port);
+      return port;
+    }
+  }
+
+  freePort(port: number) {
+    this.reservedPorts.delete(port);
+  }
 }
 
-export function getRandomPortOver1023() {
+function getRandomPortOver1023() {
   return Math.floor(Math.random() * (MAX_PORT + 1 - MIN_PORT) + MIN_PORT);
 }
 

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {PortProvider} from '../infrastructure/get_port';
 import {InMemoryConfig} from '../infrastructure/json_config';
 import {AccessKeyRepository} from '../model/access_key';
 
@@ -83,12 +84,14 @@ describe('ServerAccessKeyRepository', () => {
 
   it('Repos created with an existing file restore access keys', (done) => {
     const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
-    const repo1 = new ServerAccessKeyRepository('hostname', config, new MockShadowsocksServer());
+    const repo1 = new ServerAccessKeyRepository(
+        new PortProvider(), 'hostname', config, new MockShadowsocksServer());
     // Create 2 new access keys
     Promise.all([repo1.createNewAccessKey(), repo1.createNewAccessKey()]).then(() => {
       // Create a 2nd repo from the same config file.  This simulates what
       // might happen after the shadowbox server is restarted.
-      const repo2 = new ServerAccessKeyRepository('hostname', config, new MockShadowsocksServer());
+      const repo2 = new ServerAccessKeyRepository(
+          new PortProvider(), 'hostname', config, new MockShadowsocksServer());
       // Check that repo1 and repo2 have the same access keys
       const repo1Keys = iterToArray(repo1.listAccessKeys());
       const repo2Keys = iterToArray(repo2.listAccessKeys());
@@ -103,13 +106,15 @@ describe('ServerAccessKeyRepository', () => {
   it('Does not re-use ids when using the same config file', (done) => {
     const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
     // Create a repo with 1 access key, then delete that access key.
-    const repo1 = new ServerAccessKeyRepository('hostname', config, new MockShadowsocksServer());
+    const repo1 = new ServerAccessKeyRepository(
+        new PortProvider(), 'hostname', config, new MockShadowsocksServer());
     repo1.createNewAccessKey().then((accessKey1) => {
       repo1.removeAccessKey(accessKey1.id);
 
       // Create a 2nd repo with one access key, and verify that
       // it hasn't reused the first access key's ID.
-      const repo2 = new ServerAccessKeyRepository('hostname', config, new MockShadowsocksServer());
+      const repo2 = new ServerAccessKeyRepository(
+          new PortProvider(), 'hostname', config, new MockShadowsocksServer());
       repo2.createNewAccessKey().then((accessKey2) => {
         expect(accessKey1.id).not.toEqual(accessKey2.id);
         done();
@@ -134,5 +139,5 @@ function countAccessKeys(repo: AccessKeyRepository) {
 function createRepo(): ServerAccessKeyRepository {
   const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
   const server = new MockShadowsocksServer();
-  return new ServerAccessKeyRepository('hostname', config, server);
+  return new ServerAccessKeyRepository(new PortProvider(), 'hostname', config, server);
 }

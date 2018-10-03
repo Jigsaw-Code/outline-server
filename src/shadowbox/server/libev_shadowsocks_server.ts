@@ -24,6 +24,13 @@ import {ShadowsocksInstance, ShadowsocksServer} from '../model/shadowsocks_serve
 
 import {UsageMetricsWriter} from './shared_metrics';
 
+export async function createLibevShadowsocksServer(
+    publicAddress: string, metricsSocketPort: number, ipLocation: IpLocationService,
+    usageWriter: UsageMetricsWriter, verbose: boolean) {
+  const metricsSocket = await createBoundUdpSocket(metricsSocketPort);
+  return new LibevShadowsocksServer(publicAddress, metricsSocket, ipLocation, usageWriter, verbose);
+}
+
 // Runs shadowsocks-libev server instances.
 export class LibevShadowsocksServer implements ShadowsocksServer {
   private portId = new Map<number, string>();
@@ -178,4 +185,14 @@ function parseMetricsMessage(buf): MetricsMessage {
   const portNumber = parseInt(Object.keys(statObj)[0], 10);
   const totalInboundBytes = statObj[portNumber];
   return {portNumber, totalInboundBytes};
+}
+
+// Creates a bound UDP socket on a random unused port.
+function createBoundUdpSocket(portNumber: number): Promise<dgram.Socket> {
+  const socket = dgram.createSocket('udp4');
+  return new Promise((fulfill, reject) => {
+    socket.bind(portNumber, 'localhost', () => {
+      return fulfill(socket);
+    });
+  });
 }

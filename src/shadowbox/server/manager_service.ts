@@ -169,7 +169,7 @@ export class ShadowsocksManagerService {
 
   public async getDataUsage(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      res.send(200, this.managerMetrics.get30DayByteTransfer());
+      res.send(200, await this.managerMetrics.get30DayByteTransfer());
       return next();
     } catch (error) {
       logging.error(error);
