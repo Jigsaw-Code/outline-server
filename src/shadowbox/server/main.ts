@@ -13,22 +13,24 @@
 // limitations under the License.
 
 import * as fs from 'fs';
+import * as http from 'http';
 import * as path from 'path';
 import * as process from 'process';
+import * as prometheus from 'prom-client';
 import * as restify from 'restify';
 
 import {RealClock} from '../infrastructure/clock';
-import {FilesystemTextFile} from '../infrastructure/filesystem_text_file';
 import * as ip_location from '../infrastructure/ip_location';
 import * as json_config from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
+import {PrometheusClient, runPrometheusScraper} from '../infrastructure/prometheus_scraper';
 import {AccessKeyId} from '../model/access_key';
 
 import {ManagerMetrics, ManagerMetricsJson} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
 import {AccessKeyConfigJson, createServerAccessKeyRepository} from './server_access_key';
 import * as server_config from './server_config';
-import {InMemoryUsageMetrics, OutlineSharedMetricsPublisher, RestMetricsCollectorClient, SharedMetricsPublisher, UsageMetricsWriter} from './shared_metrics';
+import {InMemoryUsageMetrics, OutlineSharedMetricsPublisher, RestMetricsCollectorClient, SharedMetricsPublisher, UsageMetrics, UsageMetricsWriter} from './shared_metrics';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
 const MAX_STATS_FILE_AGE_MS = 5000;
@@ -62,8 +64,27 @@ class MultiMetricsWriter implements UsageMetricsWriter {
   }
 }
 
+async function exportPrometheusMetrics(registry: prometheus.Registry): Promise<string> {
+  const localMetricsServer = await new Promise<http.Server>((resolve, _) => {
+    const server = http.createServer((_, res) => {
+      res.write(registry.metrics());
+      res.end();
+    });
+    server.on('listening', () => {
+      resolve(server);
+    });
+    server.listen({port: 0, host: 'localhost', exclusive: true});
+  });
+  return `localhost:${localMetricsServer.address().port}`;
+}
+
 async function main() {
   const verbose = process.env.LOG_LEVEL === 'debug';
+
+  prometheus.collectDefaultMetrics({register: prometheus.register});
+  const nodeMetricsLocation = await exportPrometheusMetrics(prometheus.register);
+  logging.debug(`Node metrics is at ${nodeMetricsLocation}`);
+
   const proxyHostname = process.env.SB_PUBLIC_IP;
   // Default to production metrics, as some old Docker images may not have
   // SB_METRICS_URL properly set.
@@ -89,6 +110,23 @@ async function main() {
     process.exit(1);
   }
 
+  const prometheusMetricsLocation = 'localhost:9090';
+  runPrometheusScraper(
+      [
+        '--storage.tsdb.retention', '31d', '--storage.tsdb.path',
+        getPersistentFilename('prometheus/data'), '--web.listen-address', prometheusMetricsLocation,
+        '--log.level', verbose ? 'debug' : 'info'
+      ],
+      getPersistentFilename('prometheus/config.yml'), {
+        global: {
+          scrape_interval: '15s',
+        },
+        scrape_configs: [
+          {job_name: 'prometheus', static_configs: [{targets: [prometheusMetricsLocation]}]},
+          {job_name: 'outline-server', static_configs: [{targets: [nodeMetricsLocation]}]}
+        ]
+      });
+
   const serverConfig =
       server_config.readServerConfig(getPersistentFilename('shadowbox_server_config.json'));
   const metricsConfig = readMetricsConfig(getPersistentFilename('shadowbox_stats.json'));
@@ -101,8 +139,11 @@ async function main() {
       getPersistentFilename('shadowbox_config.json'));
   const ipLocation =
       new ip_location.MmdbLocationService('/var/lib/libmaxminddb/GeoLite2-Country.mmdb');
+
   const usageMetrics = new InMemoryUsageMetrics();
-  const metricsWriter = new MultiMetricsWriter(managerMetrics, usageMetrics);
+  // TODO: Use MultiMetricsWriter or Prometheus based on rollout.
+  const metricsWriter: UsageMetricsWriter = new MultiMetricsWriter(managerMetrics, usageMetrics);
+  const metricsReader: UsageMetrics = usageMetrics;
   const accessKeyRepository = await createServerAccessKeyRepository(
       proxyHostname, accessKeyConfig, ipLocation, metricsWriter, verbose);
 
@@ -110,8 +151,10 @@ async function main() {
     return accessKeyRepository.getMetricsId(id);
   };
   const metricsCollector = new RestMetricsCollectorClient(metricsUrl);
+  // TODO: Use InMemoryUsageMetrics or Prometheus for metricsReader based on rollout.
   const metricsPublisher: SharedMetricsPublisher = new OutlineSharedMetricsPublisher(
-      new RealClock(), serverConfig, usageMetrics, toMetricsId, metricsCollector);
+      new RealClock(), serverConfig, metricsReader, toMetricsId, metricsCollector);
+  // TODO: Use ManagerMetrics or Prometheus for managerMetrics based on rollout.
   const managerService = new ShadowsocksManagerService(
       process.env.SB_DEFAULT_SERVER_NAME || 'Outline Server', serverConfig, accessKeyRepository,
       managerMetrics, metricsPublisher);
