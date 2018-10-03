@@ -29,7 +29,7 @@
   <script src="server_manager/web_app/main.js"></script>
 
   <!-- TODO: Add Outline servers to connect-src on-demand (in addition to the DigitalOcean API). -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline' outline:; connect-src https:; frame-src https://s3.amazonaws.com/outline-vpn/ ss:">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline' outline:; connect-src https: 'self'; frame-src https://s3.amazonaws.com/outline-vpn/ ss:">
 
   <style>
     body {
