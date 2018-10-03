@@ -146,7 +146,7 @@ async function main() {
   let metricsWriter: UsageMetricsWriter;
   let metricsReader: UsageMetrics;
   const rollouts = new RolloutTracker(serverConfig.data().serverId);
-  if (rollouts.isRolloutEnabled('prometheus', 0.05)) {
+  if (rollouts.isRolloutEnabled('prometheus', 0)) {
     const prometheusLocation = 'localhost:9090';
     portProvider.addReservedPort(9090);
     runPrometheusScraper(
