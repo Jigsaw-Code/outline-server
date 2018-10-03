@@ -29,6 +29,7 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
+  background-color: #263238;
 }
 
 body {
@@ -36,7 +37,6 @@ body {
   font-size: 14px;
   font-weight: 400;
   color:rgba(0,0,0,0.54);
-  background-color: #FAFAFA;
 }
 
 div#wrapper {

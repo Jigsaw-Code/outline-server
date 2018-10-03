@@ -70,9 +70,10 @@ interface IpcEvent {
 
 function createMainWindow() {
   const win = new electron.BrowserWindow({
-    width: 600,
-    height: 768,
-    resizable: false,
+    width: 800,
+    height: 1024,
+    minWidth: 600,
+    minHeight: 768,
     icon: path.join(__dirname, 'web_app', 'ui_components', 'icons', 'launcher.png'),
     webPreferences: {
       nodeIntegration: false,
