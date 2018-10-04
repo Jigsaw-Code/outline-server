@@ -161,7 +161,7 @@ async function main() {
           },
           scrape_configs: [
             {job_name: 'prometheus', static_configs: [{targets: [prometheusLocation]}]},
-            {job_name: 'outline-server', static_configs: [{targets: [nodeMetricsLocation]}]}
+            {job_name: 'outline-server-main', static_configs: [{targets: [nodeMetricsLocation]}]}
           ]
         });
     const prometheusClient = new PrometheusClient(`http://${prometheusLocation}`);
