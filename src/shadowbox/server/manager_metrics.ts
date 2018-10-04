@@ -32,7 +32,11 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
         'sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t|>p<"}[30d])) by (access_key)');
     const usage = {} as {[userId: string]: number};
     for (const entry of result.result) {
-      usage[entry.metric['access_key'] || ''] = parseFloat(entry.value[1]);
+      const bytes = Math.round(parseFloat(entry.value[1]));
+      if (bytes === 0) {
+        continue;
+      }
+      usage[entry.metric['access_key'] || ''] = bytes;
     }
     // TODO: Remove this after 30 days of everyone being migrated, since we won't need the config
     // file anymore.
