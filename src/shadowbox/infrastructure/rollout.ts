@@ -19,12 +19,19 @@ export class RolloutTracker {
   constructor(private instanceId: string) {}
 
   // Returns true if the given feature is rolled out for this instance.
-  // Ratio is the ratio of instances that should have the feature active.
-  isRolloutEnabled(rolloutId: string, ratio: number) {
+  // `percentage` is between 0 and 100 and represents the percentage of
+  // instances that should have the feature active.
+  isRolloutEnabled(rolloutId: string, percentage: number) {
+    if (percentage < 0 || percentage > 100) {
+      throw new Error(`Expected 0 <= percentage <= 100. Found ${percentage}`);
+    }
+    if (Math.floor(percentage) !== percentage) {
+      throw new Error(`Expected percentage to be an integer. Found ${percentage}`);
+    }
     const hash = crypto.createHash('md5');
     hash.update(this.instanceId);
     hash.update(rolloutId);
     const buffer = hash.digest();
-    return buffer[0] < (ratio * 256);
+    return 100 * buffer[0] < percentage * 256;
   }
 }
