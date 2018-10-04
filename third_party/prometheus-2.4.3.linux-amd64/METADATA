@@ -1,0 +1,18 @@
+name: "prometheus"
+description:
+    "Prometheus is an open-source systems monitoring and alerting toolkit "
+    "originally built at SoundCloud."
+
+third_party {
+  url {
+    type: HOMEPAGE
+    value: "https://prometheus.io/"
+  }
+  url {
+    type: ARCHIVE
+    value: "https://github.com/prometheus/prometheus/releases/download/v2.4.3/prometheus-2.4.3.linux-amd64.tar.gz"
+  }
+  version: "2.4.3"
+  last_upgrade_date { year: 2018 month: 10 day: 4 }
+  license_type: PERMISSIVE
+}
