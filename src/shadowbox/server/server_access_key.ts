@@ -12,19 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as dgram from 'dgram';
 import * as randomstring from 'randomstring';
 import * as uuidv4 from 'uuid/v4';
 
 import {PortProvider} from '../infrastructure/get_port';
-import {IpLocationService} from '../infrastructure/ip_location';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyRepository} from '../model/access_key';
 import {ShadowsocksInstance, ShadowsocksServer} from '../model/shadowsocks_server';
-
-import {LibevShadowsocksServer} from './libev_shadowsocks_server';
-import {UsageMetricsWriter} from './shared_metrics';
 
 // The format as json of access keys in the config file.
 interface AccessKeyConfig {
