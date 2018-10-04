@@ -155,7 +155,7 @@ function getConnectedClientIPAddresses(portNumber: number): Promise<string[]> {
       ' | sed \'s/\\]//g\'' +      // remove ] (used by ipv6)
       ' | sort | uniq';            // remove duplicates
   return execCmd(lsofCommand).then((output: string) => {
-    return output.split('\n');
+    return output.trim().split('\n').map((e) => e.trim()).filter(Boolean);
   });
 }
 
