@@ -111,41 +111,6 @@ export function createPrometheusUsageMetricsWriter(registry: prometheus.Registry
   };
 }
 
-// Tracks usage metrics since the server started.
-export class InMemoryUsageMetrics implements UsageMetrics, UsageMetricsWriter {
-  // Map from the metrics AccessKeyId to its usage.
-  private totalUsage = new Map<string, KeyUsage>();
-
-  getUsage(): Promise<KeyUsage[]> {
-    return Promise.resolve([...this.totalUsage.values()]);
-  }
-
-  // We use a separate metrics id so the accessKey id is not disclosed.
-  writeBytesTransferred(accessKeyId: AccessKeyId, numBytes: number, countries: string[]) {
-    // Don't record data for sanctioned countries.
-    for (const country of countries) {
-      if (SANCTIONED_COUNTRIES.has(country)) {
-        return;
-      }
-    }
-    if (numBytes === 0) {
-      return;
-    }
-    const sortedCountries = new Array(...countries).sort();
-    const entryKey = JSON.stringify([accessKeyId, sortedCountries]);
-    let keyUsage = this.totalUsage.get(entryKey);
-    if (!keyUsage) {
-      keyUsage = {accessKeyId, inboundBytes: 0, countries: sortedCountries};
-      this.totalUsage.set(entryKey, keyUsage);
-    }
-    keyUsage.inboundBytes += numBytes;
-  }
-
-  reset() {
-    this.totalUsage.clear();
-  }
-}
-
 export interface MetricsCollectorClient {
   collectMetrics(reportJson: HourlyServerMetricsReportJson): Promise<void>;
 }

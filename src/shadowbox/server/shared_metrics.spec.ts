@@ -17,39 +17,7 @@ import {InMemoryConfig} from '../infrastructure/json_config';
 import {AccessKeyId} from '../model/access_key';
 
 import {ServerConfigJson} from './server_config';
-import {HourlyServerMetricsReportJson, InMemoryUsageMetrics, MetricsCollectorClient, OutlineSharedMetricsPublisher} from './shared_metrics';
-
-describe('InMemoryUsageMetrics', () => {
-  it('Returns empty usage initially', async (done) => {
-    const metrics = new InMemoryUsageMetrics();
-    expect(await metrics.getUsage()).toEqual([]);
-    done();
-  });
-  it('Records usage', async (done) => {
-    const metrics = new InMemoryUsageMetrics();
-    metrics.writeBytesTransferred('user-0', 11, ['AA']);
-    metrics.writeBytesTransferred('user-1', 22, ['BB']);
-    metrics.writeBytesTransferred('user-0', 33, ['CC']);
-    metrics.writeBytesTransferred('user-1', 44, ['BB']);
-    metrics.writeBytesTransferred('user-2', 55, ['']);
-    expect((await metrics.getUsage()).sort()).toEqual([
-      {accessKeyId: 'user-0', inboundBytes: 11, countries: ['AA']},
-      {accessKeyId: 'user-1', inboundBytes: 66, countries: ['BB']},
-      {accessKeyId: 'user-0', inboundBytes: 33, countries: ['CC']},
-      {accessKeyId: 'user-2', inboundBytes: 55, countries: ['']}
-    ]);
-    done();
-  });
-  it('Ignores sanctioned countries', async (done) => {
-    const metrics = new InMemoryUsageMetrics();
-    metrics.writeBytesTransferred('user-0', 11, ['AA']);
-    metrics.writeBytesTransferred('user-0', 22, ['IR']);  // Sanctioned
-    expect((await metrics.getUsage()).sort()).toEqual([
-      {accessKeyId: 'user-0', inboundBytes: 11, countries: ['AA']},
-    ]);
-    done();
-  });
-});
+import {HourlyServerMetricsReportJson, MetricsCollectorClient, OutlineSharedMetricsPublisher} from './shared_metrics';
 
 describe('OutlineSharedMetricsPublisher', () => {
   describe('Enable/Disable', () => {
@@ -83,7 +51,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       const clock = new ManualClock();
       let startTime = clock.nowMs;
       const serverConfig = new InMemoryConfig<ServerConfigJson>({serverId: 'server-id'});
-      const usageMetrics = new InMemoryUsageMetrics();
+      const usageMetrics = null; // new InMemoryUsageMetrics();
       const toMetricsId = (id: AccessKeyId) => `M(${id})`;
       const metricsCollector = new FakeMetricsCollector();
       const publisher = new OutlineSharedMetricsPublisher(

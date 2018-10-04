@@ -12,19 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as dgram from 'dgram';
 import * as randomstring from 'randomstring';
 import * as uuidv4 from 'uuid/v4';
 
 import {PortProvider} from '../infrastructure/get_port';
-import {IpLocationService} from '../infrastructure/ip_location';
 import {JsonConfig} from '../infrastructure/json_config';
-import * as logging from '../infrastructure/logging';
 import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyRepository} from '../model/access_key';
-import {ShadowsocksInstance, ShadowsocksServer} from '../model/shadowsocks_server';
-
-import {LibevShadowsocksServer} from './libev_shadowsocks_server';
-import {UsageMetricsWriter} from './shared_metrics';
+import {ShadowsocksServer} from '../model/shadowsocks_server';
 
 // The format as json of access keys in the config file.
 interface AccessKeyConfig {
@@ -67,7 +61,6 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyConfig): Access
 export class ServerAccessKeyRepository implements AccessKeyRepository {
   // This is the max id + 1 among all access keys. Used to generate unique ids for new access keys.
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
-  private ssInstances = new Map<AccessKeyId, ShadowsocksInstance>();
 
   constructor(
       private portProvider: PortProvider, private proxyHostname: string,
@@ -79,11 +72,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     if (this.keyConfig.data().nextId === undefined) {
       this.keyConfig.data().nextId = 0;
     }
-    for (const accessKeyJson of this.keyConfig.data().accessKeys) {
-      this.startInstance(accessKeyJson).catch((error) => {
-        logging.error(`Failed to start Shadowsocks instance for key ${accessKeyJson.id}: ${error}`);
-      });
-    }
+    this.updateServer();
   }
 
   async createNewAccessKey(): Promise<AccessKey> {
@@ -107,9 +96,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     } catch (error) {
       throw new Error(`Failed to save config: ${error}`);
     }
-    this.startInstance(accessKeyJson).catch((error) => {
-      logging.error(`Failed to start Shadowsocks instance for key ${accessKeyJson.id}: ${error}`);
-    });
+    await this.updateServer();
     return makeAccessKey(this.proxyHostname, accessKeyJson);
   }
 
@@ -120,8 +107,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
         this.portProvider.freePort(accessKey.port);
         this.keyConfig.data().accessKeys.splice(ai, 1);
         this.keyConfig.write();
-        this.ssInstances.get(id).stop();
-        this.ssInstances.delete(id);
+        this.updateServer();
         return true;
       }
     }
@@ -152,6 +138,12 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     return accessKeyJson ? accessKeyJson.metricsId : undefined;
   }
 
+  private updateServer(): Promise<void> {
+    return this.shadowsocksServer.update(this.keyConfig.data().accessKeys.map((e) => {
+      return {id: e.id, port: e.port, cipher: e.encryptionMethod, secret: e.password};
+    }));
+  }
+
   private getAccessKey(id: AccessKeyId): AccessKeyConfig {
     for (const accessKeyJson of this.keyConfig.data().accessKeys) {
       if (accessKeyJson.id === id) {
@@ -159,15 +151,5 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       }
     }
     return undefined;
-  }
-
-  private startInstance(accessKeyJson: AccessKeyConfig): Promise<void> {
-    return this.shadowsocksServer
-        .startInstance(
-            accessKeyJson.id, accessKeyJson.port, accessKeyJson.password,
-            accessKeyJson.encryptionMethod)
-        .then((ssInstance) => {
-          this.ssInstances.set(accessKeyJson.id, ssInstance);
-        });
   }
 }

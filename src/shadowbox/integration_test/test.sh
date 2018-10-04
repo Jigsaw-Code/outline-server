@@ -52,12 +52,12 @@ function ss_arguments_for_user() {
   declare -r SS_INSTANCE_CIPHER=$(echo $1 | docker exec -i $UTIL_CONTAINER jq -r .method)
   declare -r SS_INSTANCE_PASSWORD=$(echo $1 | docker exec -i $UTIL_CONTAINER jq -r .password)
   declare -r SS_INSTANCE_PORT=$(echo $1 | docker exec -i $UTIL_CONTAINER jq .port)
-  echo "-p $SS_INSTANCE_PORT -k $SS_INSTANCE_PASSWORD -m $SS_INSTANCE_CIPHER -u"
+  echo -cipher "$SS_INSTANCE_CIPHER" -password "$SS_INSTANCE_PASSWORD" -c "shadowbox:$SS_INSTANCE_PORT"
 }
 
 # Runs curl on the client container.
 function client_curl() {
-  docker exec $CLIENT_CONTAINER curl --silent "$@"
+  docker exec $CLIENT_CONTAINER curl --silent --show-error "$@"
 }
 
 # Start a subprocess for trap
@@ -100,7 +100,7 @@ function client_curl() {
   # Start Shadowsocks client and wait for it to be ready
   declare -r LOCAL_SOCKS_PORT=5555
   docker exec -d $CLIENT_CONTAINER \
-    ss-local -l $LOCAL_SOCKS_PORT -s shadowbox $SS_USER_ARGUMENTS -v
+    /go/bin/go-shadowsocks2 $SS_USER_ARGUMENTS -socks :$LOCAL_SOCKS_PORT -verbose
   while ! docker exec $CLIENT_CONTAINER nc -z localhost $LOCAL_SOCKS_PORT; do
     sleep 0.1
   done
