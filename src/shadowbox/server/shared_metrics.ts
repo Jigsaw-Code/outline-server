@@ -73,7 +73,7 @@ export class PrometheusUsageMetrics implements UsageMetrics {
   constructor(private prometheusClient: PrometheusClient) {}
 
   async getUsage(): Promise<KeyUsage[]> {
-    const timeDeltaSecs = (Date.now() - this.resetTimeMs) / 1000;
+    const timeDeltaSecs = Math.round((Date.now() - this.resetTimeMs) / 1000);
     const result =
         await this.prometheusClient.query(`sum(increase(shadowsocks_data_bytes{dir=">p<"}[${
             timeDeltaSecs}s])) by (location, access_key)`);
@@ -85,7 +85,8 @@ export class PrometheusUsageMetrics implements UsageMetrics {
       if (countriesStr) {
         countries = countriesStr.split(',').map((e) => e.trim());
       }
-      usage.push({accessKeyId, countries, inboundBytes: parseFloat(entry.value[1])});
+      const inboundBytes = Math.round(parseFloat(entry.value[1]));
+      usage.push({accessKeyId, countries, inboundBytes});
     }
     return usage;
   }
