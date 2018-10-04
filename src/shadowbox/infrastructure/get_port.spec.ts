@@ -15,21 +15,25 @@
 import * as get_port from './get_port';
 
 describe('PortProvider', () => {
-  it('Gets port over 1023', async (done) => {
-    expect(await new get_port.PortProvider().reserveNewPort()).toBeGreaterThan(1023);
-    done();
+  describe('addReservedPort', () => {
+    it('gets port over 1023', async (done) => {
+      expect(await new get_port.PortProvider().reserveNewPort()).toBeGreaterThan(1023);
+      done();
+    });
+    it('fails on double reservation', (done) => {
+      const ports = new get_port.PortProvider();
+      ports.addReservedPort(8080);
+      expect(() => ports.addReservedPort(8080)).toThrowError();
+      done();
+    });
   });
-  it('Fails on double reservation', (done) => {
-    const ports = new get_port.PortProvider();
-    ports.addReservedPort(8080);
-    expect(() => ports.addReservedPort(8080)).toThrowError();
-    done();
-  });
-  it('Free makes port available', (done) => {
-    const ports = new get_port.PortProvider();
-    ports.addReservedPort(8080);
-    ports.freePort(8080);
-    ports.addReservedPort(8080);
-    done();
+  describe('freePort', () => {
+    it('makes port available', (done) => {
+      const ports = new get_port.PortProvider();
+      ports.addReservedPort(8080);
+      ports.freePort(8080);
+      ports.addReservedPort(8080);
+      done();
+    });
   });
 });
