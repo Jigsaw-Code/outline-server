@@ -36,7 +36,7 @@ RUN /etc/periodic/weekly/update_mmdb
 
 WORKDIR /root/shadowbox
 
-COPY third_party/prometheus/prometheus ./bin/
+COPY third_party/prometheus-2.4.3.linux-amd64/prometheus ./bin/
 COPY src/shadowbox/package.json .
 COPY yarn.lock .
 # TODO: Replace with plain old "yarn" once the base image is fixed:
