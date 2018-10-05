@@ -17,7 +17,7 @@ import {InMemoryConfig} from '../infrastructure/json_config';
 import {AccessKeyId} from '../model/access_key';
 
 import {ServerConfigJson} from './server_config';
-import {HourlyServerMetricsReportJson, MetricsCollectorClient, OutlineSharedMetricsPublisher} from './shared_metrics';
+import {HourlyServerMetricsReportJson, MetricsCollectorClient, OutlineSharedMetricsPublisher, UsageMetrics, KeyUsage} from './shared_metrics';
 
 describe('OutlineSharedMetricsPublisher', () => {
   describe('Enable/Disable', () => {
@@ -51,16 +51,18 @@ describe('OutlineSharedMetricsPublisher', () => {
       const clock = new ManualClock();
       let startTime = clock.nowMs;
       const serverConfig = new InMemoryConfig<ServerConfigJson>({serverId: 'server-id'});
-      const usageMetrics = null; // new InMemoryUsageMetrics();
+      const usageMetrics = new ManualUsageMetrics();
       const toMetricsId = (id: AccessKeyId) => `M(${id})`;
       const metricsCollector = new FakeMetricsCollector();
       const publisher = new OutlineSharedMetricsPublisher(
           clock, serverConfig, usageMetrics, toMetricsId, metricsCollector);
 
       publisher.startSharing();
-      usageMetrics.writeBytesTransferred('user-0', 11, ['AA', 'BB']);
-      usageMetrics.writeBytesTransferred('user-1', 22, ['CC']);
-      usageMetrics.writeBytesTransferred('user-0', 33, ['AA', 'DD']);
+      usageMetrics.usage = [
+        {accessKeyId: 'user-0', inboundBytes: 11, countries: ['AA', 'BB']},
+        {accessKeyId: 'user-1', inboundBytes: 22, countries: ['CC']},
+        {accessKeyId: 'user-0', inboundBytes: 33, countries: ['AA', 'DD']},
+      ];
 
       clock.nowMs += 60 * 60 * 1000;
       await clock.runCallbacks();
@@ -76,8 +78,10 @@ describe('OutlineSharedMetricsPublisher', () => {
       });
 
       startTime = clock.nowMs;
-      usageMetrics.writeBytesTransferred('user-0', 44, ['EE']);
-      usageMetrics.writeBytesTransferred('user-2', 55, ['FF']);
+      usageMetrics.usage = [
+        {accessKeyId: 'user-0', inboundBytes: 44, countries: ['EE']},
+        {accessKeyId: 'user-2', inboundBytes: 55, countries: ['FF']},
+      ];
 
       clock.nowMs += 60 * 60 * 1000;
       await clock.runCallbacks();
@@ -103,5 +107,15 @@ class FakeMetricsCollector implements MetricsCollectorClient {
   collectMetrics(report) {
     this.collectedReport = report;
     return Promise.resolve();
+  }
+}
+
+class ManualUsageMetrics implements UsageMetrics {
+  public usage = [] as KeyUsage[];
+  getUsage(): Promise<KeyUsage[]> {
+    return Promise.resolve(this.usage);
+  }
+  reset() {
+    this.usage = [] as KeyUsage[];
   }
 }

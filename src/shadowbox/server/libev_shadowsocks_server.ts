@@ -121,8 +121,8 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
     const metricsAddress = this.metricsSocket.address();
     const commandArguments = [
       '-m', key.cipher,  // Encryption method
-      '-u',                    // Allow UDP
-      '--fast-open',           // Allow TCP fast open
+      '-u',              // Allow UDP
+      '--fast-open',     // Allow TCP fast open
       '-p', key.port.toString(), '-k', key.secret, '--manager-address',
       `${metricsAddress.address}:${metricsAddress.port}`
     ];

@@ -28,7 +28,7 @@ const MS_PER_HOUR = 60 * 60 * 1000;
 const SANCTIONED_COUNTRIES = new Set(['CU', 'IR', 'KP', 'SY']);
 
 // Used internally to track key usage.
-interface KeyUsage {
+export interface KeyUsage {
   accessKeyId: string;
   countries: string[];
   inboundBytes: number;
@@ -192,6 +192,9 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       if (keyUsage.inboundBytes === 0) {
         continue;
       }
+      if (hasSanctionedCountry(keyUsage.countries)) {
+        continue;
+      }
       userReports.push({
         userId: this.toMetricsId(keyUsage.accessKeyId) || '',
         bytesTransferred: keyUsage.inboundBytes,
@@ -211,4 +214,13 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
     }
     await this.metricsCollector.collectMetrics(report);
   }
+}
+
+function hasSanctionedCountry(countries: string[]) {
+  for (const country of countries) {
+    if (country in SANCTIONED_COUNTRIES) {
+      return true;
+    }
+  }
+  return false;
 }
