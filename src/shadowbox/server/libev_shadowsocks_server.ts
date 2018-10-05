@@ -36,6 +36,8 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
   private portId = new Map<number, string>();
   private portInboundBytes = new Map<number, number>();
   private portIps = new Map<number, string[]>();
+  private keyProcess = new Map<string, child_process.ChildProcess>();
+  private keys = new Map<string, AccessKey>();
 
   constructor(
       private publicAddress: string, private metricsSocket: dgram.Socket,
@@ -92,73 +94,81 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
     });
   }
 
-  update(keys: AccessKey[]): Promise<void> {
-    // TODO(fortuna): IMPLEMENT THIS.
-    return Promise.reject(new Error('Not implemented'));
+  update(newKeys: AccessKey[]): Promise<void> {
+    const oldKeys = this.keys;
+    this.keys = new Map<string, AccessKey>();
+    for (const key of newKeys) {
+      this.keys[key.id] = key;
+      const oldKey = oldKeys.get(key.id);
+      if (oldKey) {
+        continue;
+      }
+      this.startInstance(key);
+    }
+
+    for (const oldKey of oldKeys.values()) {
+      if (!this.keys.has(oldKey.id)) {
+        this.stopInstance(oldKey.id);
+      }
+    }
+    return Promise.resolve();
   }
 
-  // startInstance(id: string, portNumber: number, password: string, encryptionMethod):
-  //     Promise<ShadowsocksInstance> {
-  //   logging.info(`Starting server on port ${portNumber}`);
-  //   this.portId[portNumber] = id;
+  private startInstance(key: AccessKey): child_process.ChildProcess {
+    logging.info(`Starting server on port ${key.port}`);
+    this.portId[key.port] = key.id;
 
-  //   const metricsAddress = this.metricsSocket.address();
-  //   const commandArguments = [
-  //     '-m', encryptionMethod,  // Encryption method
-  //     '-u',                    // Allow UDP
-  //     '--fast-open',           // Allow TCP fast open
-  //     '-p', portNumber.toString(), '-k', password, '--manager-address',
-  //     `${metricsAddress.address}:${metricsAddress.port}`
-  //   ];
-  //   logging.info('starting ss-server with args: ' + commandArguments.join(' '));
-  //   // Add the system DNS servers.
-  //   // TODO(fortuna): Add dns.getServers to @types/node.
-  //   for (const dnsServer of dns.getServers()) {
-  //     commandArguments.push('-d');
-  //     commandArguments.push(dnsServer);
-  //   }
-  //   if (this.verbose) {
-  //     // Make the Shadowsocks output verbose in debug mode.
-  //     commandArguments.push('-v');
-  //   }
-  //   const childProcess = child_process.spawn('ss-server', commandArguments);
+    const metricsAddress = this.metricsSocket.address();
+    const commandArguments = [
+      '-m', key.cipher,  // Encryption method
+      '-u',                    // Allow UDP
+      '--fast-open',           // Allow TCP fast open
+      '-p', key.port.toString(), '-k', key.secret, '--manager-address',
+      `${metricsAddress.address}:${metricsAddress.port}`
+    ];
+    logging.info('starting ss-server with args: ' + commandArguments.join(' '));
+    // Add the system DNS servers.
+    // TODO(fortuna): Add dns.getServers to @types/node.
+    for (const dnsServer of dns.getServers()) {
+      commandArguments.push('-d');
+      commandArguments.push(dnsServer);
+    }
+    if (this.verbose) {
+      // Make the Shadowsocks output verbose in debug mode.
+      commandArguments.push('-v');
+    }
+    const childProcess = child_process.spawn('ss-server', commandArguments);
+    this.keyProcess[key.id] = childProcess;
 
-  //   childProcess.on('error', (error) => {
-  //     logging.error(`Error spawning server on port ${portNumber}: ${error}`);
-  //   });
-  //   // TODO(fortuna): Add restart logic.
-  //   childProcess.on('exit', (code, signal) => {
-  //     logging.info(`Server on port ${portNumber} has exited. Code: ${code}, Signal: ${signal}`);
-  //   });
-  //   // TODO(fortuna): Disable this for production.
-  //   // TODO(fortuna): Consider saving the output and expose it through the manager service.
-  //   childProcess.stdout.pipe(process.stdout);
-  //   childProcess.stderr.pipe(process.stderr);
+    childProcess.on('error', (error) => {
+      logging.error(`Error spawning server on port ${key.port}: ${error}`);
+    });
+    // TODO(fortuna): Add restart logic.
+    childProcess.on('exit', (code, signal) => {
+      logging.info(`Server on port ${key.port} has exited. Code: ${code}, Signal: ${signal}`);
+    });
+    // TODO(fortuna): Disable this for production.
+    // TODO(fortuna): Consider saving the output and expose it through the manager service.
+    childProcess.stdout.pipe(process.stdout);
+    childProcess.stderr.pipe(process.stderr);
 
-  //   // Generate a SIP002 access url.
-  //   const accessUrl = SIP002_URI.stringify(makeConfig({
-  //     host: this.publicAddress,
-  //     port: portNumber,
-  //     method: encryptionMethod,
-  //     password,
-  //     outline: 1,
-  //   }));
+    // Generate a SIP002 access url.
+    const accessUrl = SIP002_URI.stringify(makeConfig({
+      host: this.publicAddress,
+      port: key.port,
+      method: key.cipher,
+      password: key.secret,
+      outline: 1,
+    }));
 
-  //   return Promise.resolve(new LibevShadowsocksServerInstance(
-  //       childProcess, portNumber, password, encryptionMethod, accessUrl));
-  // }
+    return childProcess;
+  }
+
+  private stopInstance(keyId: string) {
+    this.keyProcess.get(keyId).kill();
+    this.keyProcess.delete(keyId);
+  }
 }
-
-// class LibevShadowsocksServerInstance implements ShadowsocksInstance {
-//   constructor(
-//       private childProcess: child_process.ChildProcess, public portNumber: number, public
-//       password, public encryptionMethod: string, public accessUrl: string) {}
-
-//   public stop() {
-//     logging.info(`Stopping server on port ${this.portNumber}`);
-//     this.childProcess.kill();
-//   }
-// }
 
 function getConnectedClientIPAddresses(portNumber: number): Promise<string[]> {
   const lsofCommand = `lsof -i tcp:${portNumber} -n -P -Fn ` +
