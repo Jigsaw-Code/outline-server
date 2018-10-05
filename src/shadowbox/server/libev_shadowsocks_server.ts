@@ -35,7 +35,7 @@ export async function createLibevShadowsocksServer(
 export class LibevShadowsocksServer implements ShadowsocksServer {
   private portId = new Map<number, string>();
   private portInboundBytes = new Map<number, number>();
-  private ipAddresses = [] as string[];
+  private portIps = new Map<number, string[]>();
 
   constructor(
       private publicAddress: string, private metricsSocket: dgram.Socket,
@@ -70,9 +70,11 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
             // This may happen if getConnectedClientIPAddresses runs when there's no TCP
             // connection open at that moment.
             if (ipAddresses) {
-              this.ipAddresses = ipAddresses;
+              this.portIps[metricsMessage.portNumber] = ipAddresses;
+            } else {
+              ipAddresses = this.portIps.get(metricsMessage.portNumber) || [];
             }
-            return Promise.all(this.ipAddresses.map((ipAddress) => {
+            return Promise.all(ipAddresses.map((ipAddress) => {
               return ipLocation.countryForIp(ipAddress).catch((e) => {
                 logging.error(`failed to get country for IP: ${e.stack}`);
                 return 'ZZ';
