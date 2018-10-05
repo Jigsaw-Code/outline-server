@@ -17,7 +17,7 @@ import {InMemoryConfig} from '../infrastructure/json_config';
 import {AccessKeyId} from '../model/access_key';
 
 import {ServerConfigJson} from './server_config';
-import {HourlyServerMetricsReportJson, MetricsCollectorClient, OutlineSharedMetricsPublisher, UsageMetrics, KeyUsage} from './shared_metrics';
+import {HourlyServerMetricsReportJson, KeyUsage, MetricsCollectorClient, OutlineSharedMetricsPublisher, UsageMetrics} from './shared_metrics';
 
 describe('OutlineSharedMetricsPublisher', () => {
   describe('Enable/Disable', () => {
