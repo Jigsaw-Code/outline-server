@@ -15,7 +15,6 @@
 import * as child_process from 'child_process';
 import * as dgram from 'dgram';
 import * as dns from 'dns';
-import * as events from 'events';
 import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
 import {IpLocationService} from '../infrastructure/ip_location';
@@ -70,7 +69,7 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
             // This may happen if getConnectedClientIPAddresses runs when there's no TCP
             // connection open at that moment.
             if (ipAddresses) {
-              this.portIps[metricsMessage.portNumber] = ipAddresses;
+              this.portIps.set(metricsMessage.portNumber, ipAddresses);
             } else {
               ipAddresses = this.portIps.get(metricsMessage.portNumber) || [];
             }
