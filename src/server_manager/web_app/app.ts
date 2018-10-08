@@ -121,9 +121,17 @@ export class App {
     });
 
     appRoot.addEventListener('ManualServerEntered', (event: PolymerEvent) => {
-      const userInputConfig =
-          event.detail.userInputConfig.replace(/\s+/g, '');  // Remove whitespace
       const manualServerEntryEl = appRoot.getManualServerEntry();
+      const userInputConfig = event.detail.userInputConfig;
+      if (!userInputConfig) {
+        manualServerEntryEl.showConnection = false;
+        const errorTitle = 'Failed to import server';
+        const errorText =
+            'Please paste the output from the installation process before proceeding.';
+        this.appRoot.showManualServerError(errorTitle, errorText);
+        return;
+      }
+      userInputConfig.replace(/\s+/g, '');  // Remove whitespace
       this.createManualServer(userInputConfig)
           .then(() => {
             // Clear fields on outline-manual-server-entry (e.g. dismiss the connecting popup).
@@ -134,7 +142,8 @@ export class App {
             manualServerEntryEl.showConnection = false;
             // Display either error dialog or feedback depending on error type.
             if (e instanceof errors.UnreachableServerError) {
-              manualServerEntryEl.showError('Unable to connect to your Outline Server', e.message);
+              const errorTitle = 'Unable to connect to your Outline Server';
+              this.appRoot.showManualServerError(errorTitle, e.message);
             } else {
               let errorMessage = '';
               if (e.message) {

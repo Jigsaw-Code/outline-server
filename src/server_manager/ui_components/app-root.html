@@ -48,7 +48,24 @@
         --background-contrast-color: #2e3a3f;
         --light-gray: rgba(255, 255, 255, 0.87);
         --medium-gray: rgba(255, 255, 255, 0.54);
+        --dark-gray: rgba(0,0, 0, 0.87);
+        --border-color: rgba(255,255, 255, 0.12);
         --status-bar-width: 48px;
+      }
+      .app-container {
+        display: flex;
+        justify-content: center;
+        margin: 0 auto;
+      }
+      @media (min-width: 1281px) {
+        .app-container {
+          max-width: 1200px;
+        }
+      }
+      @media (min-width: 1025px) and (max-width: 1280px) {
+        .app-container {
+          max-width: 920px;
+        }
       }
       #toast {
         align-items: center;
@@ -184,14 +201,16 @@
         </app-drawer>
 
         <app-header-layout>
-          <iron-pages attr-for-selected='id' selected='{{ currentPage }}'>
-            <outline-intro-step id='intro'></outline-intro-step>
-            <outline-do-oauth-step id='digitalOceanOauth'></outline-do-oauth-step>
-            <outline-manual-server-entry id='manualEntry'></outline-manual-server-entry>
-            <outline-region-picker-step id='regionPicker'></outline-region-picker-step>
-            <outline-server-progress-step id='serverProgressStep'></outline-server-progress-step>
-            <outline-server-view id='serverView'></outline-server-view>
-          </iron-pages>
+          <div class="app-container">
+            <iron-pages attr-for-selected='id' selected='{{ currentPage }}'>
+              <outline-intro-step id='intro'></outline-intro-step>
+              <outline-do-oauth-step id='digitalOceanOauth'></outline-do-oauth-step>
+              <outline-manual-server-entry id='manualEntry'></outline-manual-server-entry>
+              <outline-region-picker-step id='regionPicker'></outline-region-picker-step>
+              <outline-server-progress-step id='serverProgressStep'></outline-server-progress-step>
+              <outline-server-view id='serverView'></outline-server-view>
+            </iron-pages>
+          </div>
         </app-header-layout>
       </app-drawer-layout>
 
@@ -207,7 +226,7 @@
       <outline-about-dialog id='aboutDialog' outline-version='[[outlineVersion]]'></outline-about-dialog>
       <outline-modal-dialog id='modalDialog'></outline-modal-dialog>
 
-      <paper-dialog id="licenses" restoreFocusOnClose>
+      <paper-dialog id="licenses" modal restoreFocusOnClose>
         <paper-dialog-scrollable>
           <code id="licensesText">
             Could not load license.txt.
@@ -369,6 +388,16 @@
             continueFunc();
           }
         });
+      },
+      showManualServerError: function (errorTitle, errorText) {
+        this.showModalDialog(errorTitle, errorText, ['cancel', 'retry'])
+            .then((clickedButtonIndex) => {
+              if (clickedButtonIndex == 1) {
+                this.$.manualEntry.retryTapped();
+              } else {
+                this.$.manualEntry.cancelTapped();
+              }
+            });
       },
       _isSignedIn: function (adminEmail) {
         return Boolean(adminEmail);

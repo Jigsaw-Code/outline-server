@@ -28,70 +28,58 @@
         --manual-server-green: #00BFA5;
         --aws-orange: #FF9900;
         --gcp-blue: #4285F4;
+        --do-blue: #1565C0;
       }
       .container {
         display: flex;
         flex-flow: row wrap;
-        padding: 12px;
+        padding: 12px 0;
       }
       .card {
         background-color: var(--background-contrast-color);
         display: flex;
         flex-direction: column;
+        flex: 1 0 40%;
         justify-content: space-between;
-        padding: 12px 0 0;
-        margin: 6px;
-        height: 324px;
-        width: 47.5%;
+        padding: 12px 12px 6px;
+        margin: 12px 12px 0 0;
+        height: 320px;
+        /*width: 47.5%;*/
         text-align: left;
-        color: rgba(0,0,0,0.87);
+        color: var(--medium-gray);
         font-weight: normal;
         border-radius: 2px;
         /* For shadows and hover/click colours. */
         transition: 135ms;
         /* Whole card is clickable. */
         cursor: pointer;
-      }
-
-      .card#digital-ocean {
-        color: rgba(255, 255, 255, 0.87);
-      }
-
-      /* Card shadows (common to all cards).` */
-      .card {
         box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.02), 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
       }
+      /* Card shadows (common to all cards).` */
       .card:hover {
         box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.20), 0 4px 5px 0 rgba(0, 0, 0, 0.10), 0 1px 10px 0 rgba(0, 0, 0, 0.20);
       }
       .card:active {
         box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.20), 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
       }
-
       /* DigitalOcean card background colours (gets brighter, inactive -> active). */
       .card#digital-ocean {
-        background: rgba(22, 55, 255, 100);
+        /*background: rgba(28, 103, 89, 100);*/
+        background: var(--do-blue);
       }
       .card#digital-ocean:hover {
-        background: rgba(22, 55, 255, 0.92);
+        background: rgba(28, 103, 189, 0.92);
       }
-      .card#digital-ocean:active {
-        background: rgba(22, 55, 255, 0.84);
-      }
-
       /* Non-DigitalOcean card background colours (get darker, inactive -> active). */
       .card:hover {
-        background: rgba(38, 50, 56, 0.08);
-      }
-      .card:active {
         background: rgba(38, 50, 56, 0.16);
       }
-
       .card .card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 0 24px 12px;
+        color: var(--light-gray);
       }
       .card .card-body {
         padding: 0 24px;
@@ -103,7 +91,7 @@
         font-size: 10px;
       }
       .card#digital-ocean .tag {
-        color: rgba(255,255,255,0.87);
+        color: var(--medium-gray);
       }
       .card#manual-server .tag {
         color: var(--manual-server-green);
@@ -116,9 +104,10 @@
       }
       .card-title {
         font-size: 20px;
-        margin: 0 24px;
+        margin: 0 24px 8px;
         line-height: 32px;
         flex: 2; /* for spacing */
+        color: var(--light-gray);
       }
       .card img {
         margin-top: 11px;
@@ -129,10 +118,8 @@
       }
       .card p {
         margin: 16px 0 0 0;
-        color: rgba(255, 255, 255, 0.54);
       }
       .card .description {
-        color: rgba(0,0,0,0.87);
         letter-spacing: 0;
         line-height: 24px;
       }
@@ -153,19 +140,13 @@
         margin: 0;
         letter-spacing: 0.75px;
         background-color: inherit;
-        color: rgba(0,0,0,0.87);
-      }
-      #digital-ocean .card-footer {
+        color: var(--light-gray);
         border-top: 1px solid rgba(255,255,255,0.12);
-      }
-      #digital-ocean .card-footer paper-button {
-        color: rgba(255,255,255,0.87);
       }
       #digital-ocean .description ul {
         /* NOTE: this URL must be relative to the ui_components sub dir,
            unlike our <img src="..."> attributes */
         list-style-image: url('../images/check_white.svg');
-        color: rgba(255,255,255,0.87);
       }
       #manual-server .description ul {
         list-style-image: url('../images/check_green.svg');
@@ -175,9 +156,6 @@
       }
       #gcp .description ul {
         list-style-image: url('../images/check_blue.svg');
-      }
-      .dimmed {
-        color: rgba(255, 255, 255, 0.54);
       }
     </style>
 
@@ -203,7 +181,7 @@
             </div>
           </div>
           <div class="card-footer">
-            <paper-button on-tap="connectToDigitalOceanTapped" class="primary">Get started</paper-button>
+            <paper-button class="primary">Get started</paper-button>
           </div>
         </div>
 
