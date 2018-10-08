@@ -27,15 +27,11 @@
     <style include="cloud-install-styles"></style>
 
     <style>
-      :host {
-        text-align: center;
-        --primary-green: #1DE9B6;
-      }
       input[type="radio"] {
         display: none;
       }
       input[type="radio"]:checked+label.city-button {
-        background: #FFFFFF;
+        background-color: rgba(255,255,255,0.08);
         box-shadow: 0 0 2px 0 rgba(0,0,0,0.14), 0 2px 2px 0 rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
         border-radius: 4px;
         border: 1px solid var(--primary-green);
@@ -45,41 +41,43 @@
       }
       input[type="radio"]+label.city-button {
         display: inline-block;
-        width: 22%;
-        min-width: 100px;
+        flex: 1;
+        /* Distribute space evenly, accounting for margins, so there are always 4 cards per row. */
+        min-width: calc(25% - 24px);
         position: relative;
-        margin: 3px;
+        margin: 4px;
         padding-top: 24px;
         text-align: center;
         border: 1px solid;
         border-color: rgba(0, 0, 0, .00);
         cursor: pointer;
         transition: .5s;
-        background: #FFFFFF;
+        background: var(--background-contrast-color);
         box-shadow: 0 0 2px 0 rgba(0,0,0,0.14), 0 2px 2px 0 rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
         border-radius: 4px;
       }
       input[type="radio"]:disabled+label.city-button {
-        filter: grayscale(100%);
+        filter: blur(2px);
       }
       .city-name {
-        color: rgba(0, 0, 0, 0.87);
+        color: var(--light-gray);
         font-size: 16px;
         line-height: 19px;
-        padding: 36px 0 24px 0;
+        padding: 48px 0 24px 0;
       }
       paper-button {
-        margin-top: 24px;
-        width: 95%;
         background: var(--primary-green);
-        color: rgba(0, 0, 0, 0.87);
+        color: #fff;
+        text-align: center;
       }
       .flag {
         width: 86px;
         height: 86px;
       }
       .card-content {
-        padding: 24px 12px 0 12px;
+        display: flex;
+        flex-flow: wrap;
+        padding-top: 24px;
       }
       iron-icon {
         color: var(--primary-green);
@@ -89,9 +87,12 @@
         margin: 6px;
       }
     </style>
-      <outline-step-view>
+      <outline-step-view display-action>
         <span slot="step-title">Select the location of your server.</span>
         <span slot="step-description">This is where your internet experience<br/> will come from.</span>
+        <span slot="step-action">
+          <paper-button id="createServerButton" on-tap='handleCreateServerTap' disabled$='[[!isCreateButtonEnabled(creatingServer, selectedCityId)]]'>Set up Outline</paper-button>
+        </span>
         <div class='card-content' id="cityContainer">
           <template is="dom-repeat" items="{{cities}}">
             <input type='radio' city$='{{item}}' name='city' id$='{{item}}' disabled$='{{!isAvailable(availableRegionIds, item)}}' on-change='citySelected'>
@@ -102,7 +103,6 @@
               </label>
             </input>
           </template>
-          <paper-button id="createServerButton" on-tap='handleCreateServerTap' disabled$='[[!isCreateButtonEnabled(creatingServer, selectedCityId)]]'>Set up server</paper-button>
         </div>
       </outline-step-view>
   </template>
