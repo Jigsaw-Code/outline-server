@@ -68,7 +68,7 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
             // We keep using the same IP addresses if we don't see any IP for a port.
             // This may happen if getConnectedClientIPAddresses runs when there's no TCP
             // connection open at that moment.
-            if (ipAddresses) {
+            if (ipAddresses && ipAddresses.length > 0) {
               this.portIps.set(metricsMessage.portNumber, ipAddresses);
             } else {
               ipAddresses = this.portIps.get(metricsMessage.portNumber) || [];
