@@ -33,6 +33,7 @@ import {LegacyManagerMetrics, LegacyManagerMetricsJson, ManagerMetrics, Promethe
 import {bindService, ShadowsocksManagerService} from './manager_service';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
 import * as server_config from './server_config';
+import {ServerConfigJson} from './server_config';
 import {createPrometheusUsageMetricsWriter, InMemoryUsageMetrics, OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollectorClient, SharedMetricsPublisher, UsageMetrics, UsageMetricsWriter} from './shared_metrics';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
@@ -96,6 +97,17 @@ function createLegacyManagerMetrics(configFilename: string): LegacyManagerMetric
       new json_config.ChildConfig(metricsConfig, metricsConfig.data().transferStats));
 }
 
+function createRolloutTracker(serverConfig: json_config.JsonConfig<ServerConfigJson>):
+    RolloutTracker {
+  const rollouts = new RolloutTracker(serverConfig.data().serverId);
+  if (serverConfig.data().rollouts) {
+    for (const rollout of serverConfig.data().rollouts) {
+      rollouts.forceRollout(rollout.id, rollout.enabled);
+    }
+  }
+  return rollouts;
+}
+
 async function main() {
   const verbose = process.env.LOG_LEVEL === 'debug';
   const portProvider = new PortProvider();
@@ -145,7 +157,7 @@ async function main() {
   let managerMetrics: ManagerMetrics;
   let metricsWriter: UsageMetricsWriter;
   let metricsReader: UsageMetrics;
-  const rollouts = new RolloutTracker(serverConfig.data().serverId);
+  const rollouts = createRolloutTracker(serverConfig);
   if (rollouts.isRolloutEnabled('prometheus', 0)) {
     const prometheusLocation = 'localhost:9090';
     portProvider.addReservedPort(9090);

@@ -23,6 +23,14 @@ export interface ServerConfigJson {
   metricsEnabled?: boolean;
   name?: string;
   createdTimestampMs?: number;
+  rollouts?: RolloutConfigJson[];
+}
+
+// Serialized format for rollouts.
+// WARNING: Renaming fields will break backwards-compatibility.
+export interface RolloutConfigJson {
+  id: string;
+  enabled: boolean;
 }
 
 export function readServerConfig(filename: string): json_config.JsonConfig<ServerConfigJson> {
