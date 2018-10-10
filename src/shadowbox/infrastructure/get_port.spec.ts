@@ -40,14 +40,28 @@ describe('PortProvider', () => {
   });
 });
 
+function listen(): Promise<net.Server> {
+  const server = net.createServer();
+  return new Promise((resolve, reject) => {
+    server.listen(() => {
+      resolve(server);
+    });
+  });
+}
+
+describe('getFirstFreePort', () => {
+  it('returns used port', async () => {
+    const server = await listen();
+    expect(await get_port.getFirstFreePort(server.address().port))
+        .toBeGreaterThan(server.address().port);
+    server.close();
+  });
+});
+
 describe('getUsedPorts', () => {
   it('returns used port', async () => {
-    const server = net.createServer();
-    const serverPort = await new Promise((resolve, reject) => {
-      server.listen(() => {
-        resolve(server.address().port);
-      });
-    });
+    const server = await listen();
+    const serverPort = server.address().port;
     const usedPorts = await get_port.getUsedPorts();
     expect(usedPorts).toContain(serverPort);
 

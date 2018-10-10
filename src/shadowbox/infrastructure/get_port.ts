@@ -54,6 +54,17 @@ function getRandomPortOver1023() {
   return Math.floor(Math.random() * (MAX_PORT + 1 - MIN_PORT) + MIN_PORT);
 }
 
+// Returns the first free port equal or after initialPort
+export async function getFirstFreePort(initialPort: number): Promise<number> {
+  const usedPorts = await getUsedPorts();
+  for (let port = initialPort; port < 65536; port++) {
+    if (!usedPorts.has(port)) {
+      return port;
+    }
+  }
+  throw new Error('port not found');
+}
+
 // Returns the list of ports used by either TCP or UDP.
 export function getUsedPorts(): Promise<Set<number>> {
   return new Promise((resolve, reject) => {
