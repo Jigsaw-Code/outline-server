@@ -54,20 +54,34 @@ function getRandomPortOver1023() {
   return Math.floor(Math.random() * (MAX_PORT + 1 - MIN_PORT) + MIN_PORT);
 }
 
-function isPortUsedLsof(port: number): Promise<boolean> {
-  return new Promise((fulfill, reject) => {
-    const cmd = `lsof -P -i:${port} | grep LISTEN`;
-    child_process.exec(cmd, (error: child_process.ExecError, stdout: string, stderr: string) => {
-      if (error && error.code === 1) {
-        // lsof will return error code 1 if nothing is found.
-        fulfill(false);
-      } else if (stdout.trim() || stderr.trim()) {
-        // Anything written to stdout or stderr indicates that this port
-        // is in use.
-        fulfill(true);
-      } else {
-        fulfill(false);
+function getUsedTcpPorts(): Promise<number[]> {
+  return new Promise((resolve, reject) => {
+    child_process.exec('lsof -P -i tcp -s tcp:listen -F n', (error, stdout, stderr) => {
+      const tcpPorts = [];
+      if (error) {
+        reject(error);
       }
+      for (const line of stdout.split(/\r?\n/)) {
+        if (line.length === 0 || line[0] !== 'n') {
+          continue;
+        }
+        const port = parseInt(line.split(':', 2)[1], 10);
+        if (port) {
+          tcpPorts.push(port);
+        }
+      }
+      resolve(tcpPorts);
     });
+  });
+}
+
+function isPortUsedLsof(port: number): Promise<boolean> {
+  return getUsedTcpPorts().then((usedPorts) => {
+    for (const usedPort of usedPorts) {
+      if (usedPort === port) {
+        return true;
+      }
+    }
+    return false;
   });
 }
