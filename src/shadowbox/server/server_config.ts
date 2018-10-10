@@ -19,17 +19,24 @@ import * as json_config from '../infrastructure/json_config';
 // Serialized format for the server config.
 // WARNING: Renaming fields will break backwards-compatibility.
 export interface ServerConfigJson {
+  // The unique random identifier for this server. Used for shared metrics and staged rollouts.
   serverId?: string;
+  // Whether metrics sharing is enabled.
   metricsEnabled?: boolean;
+  // The name of this server, as shown in the Outline Manager.
   name?: string;
+  // When this server was created. Shown in the Outline Manager and to trigger the metrics opt-in.
   createdTimestampMs?: number;
+  // Which staged rollouts we should force enabled or disabled.
   rollouts?: RolloutConfigJson[];
 }
 
 // Serialized format for rollouts.
 // WARNING: Renaming fields will break backwards-compatibility.
 export interface RolloutConfigJson {
+  // Unique identifier of the rollout.
   id: string;
+  // Whether it's forced enabled or disabled. Omit for automatic behavior based on hash(serverId, rolloutId).
   enabled: boolean;
 }
 
