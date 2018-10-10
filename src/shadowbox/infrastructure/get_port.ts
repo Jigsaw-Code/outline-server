@@ -71,7 +71,11 @@ export function getUsedPorts(): Promise<Set<number>> {
     child_process.exec('lsof -P -i -F n', (error, stdout, stderr) => {
       const tcpPorts = new Set<number>();
       if (error) {
-        reject(error);
+        if (error.code === 1) {
+          // Empty list case
+          return resolve(tcpPorts);
+        }
+        return reject(error);
       }
       for (const line of stdout.split(/\r?\n/)) {
         if (line.length === 0 || line[0] !== 'n') {
