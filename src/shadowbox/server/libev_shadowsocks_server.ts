@@ -23,6 +23,8 @@ import {ShadowsocksInstance, ShadowsocksServer} from '../model/shadowsocks_serve
 
 import {UsageMetricsWriter} from './shared_metrics';
 
+const SHADOWSOCKS_ACL_PATH = '/root/shadowbox/shadowsocks.acl';
+
 export async function createLibevShadowsocksServer(
     publicAddress: string, metricsSocketPort: number, ipLocation: IpLocationService,
     usageWriter: UsageMetricsWriter, verbose: boolean) {
@@ -102,7 +104,7 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
       '-u',                    // Allow UDP
       '--fast-open',           // Allow TCP fast open
       '-p', portNumber.toString(), '-k', password, '--manager-address',
-      `${metricsAddress.address}:${metricsAddress.port}`
+      `${metricsAddress.address}:${metricsAddress.port}`, '--acl', SHADOWSOCKS_ACL_PATH
     ];
     logging.info('starting ss-server with args: ' + commandArguments.join(' '));
     // Add the system DNS servers.
