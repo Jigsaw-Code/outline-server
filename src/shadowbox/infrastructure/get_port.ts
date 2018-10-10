@@ -29,6 +29,18 @@ export class PortProvider {
     this.reservedPorts.add(port);
   }
 
+  // Returns the first free port equal or after initialPort
+  async reserveFirstFreePort(initialPort: number): Promise<number> {
+    const usedPorts = await getUsedPorts();
+    for (let port = initialPort; port < 65536; port++) {
+      if (!usedPorts.has(port) && !this.reservedPorts.has(port)) {
+        this.reservedPorts.add(port);
+        return port;
+      }
+    }
+    throw new Error('port not found');
+  }
+
   async reserveNewPort(): Promise<number> {
     // TODO: consider using a set of available ports, so we don't randomly
     // try the same port multiple times.
@@ -55,7 +67,7 @@ function getRandomPortOver1023() {
 }
 
 // Returns the first free port equal or after initialPort
-export async function getFirstFreePort(initialPort: number): Promise<number> {
+async function getFirstFreePort(initialPort: number): Promise<number> {
   const usedPorts = await getUsedPorts();
   for (let port = initialPort; port < 65536; port++) {
     if (!usedPorts.has(port)) {

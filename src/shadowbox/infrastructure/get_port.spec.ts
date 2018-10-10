@@ -38,6 +38,21 @@ describe('PortProvider', () => {
       done();
     });
   });
+  describe('reserverFirstFreePort', () => {
+    it('returns free port', async () => {
+      const ports = new get_port.PortProvider();
+      const server = await listen();
+      expect(await ports.reserveFirstFreePort(server.address().port))
+          .toBeGreaterThan(server.address().port);
+      server.close();
+    });
+    it('respects reserved ports', async () => {
+      const ports = new get_port.PortProvider();
+      ports.addReservedPort(9090);
+      ports.addReservedPort(9091);
+      expect(await ports.reserveFirstFreePort(9090)).toBeGreaterThan(9091);
+    });
+  });
 });
 
 function listen(): Promise<net.Server> {
@@ -48,15 +63,6 @@ function listen(): Promise<net.Server> {
     });
   });
 }
-
-describe('getFirstFreePort', () => {
-  it('returns used port', async () => {
-    const server = await listen();
-    expect(await get_port.getFirstFreePort(server.address().port))
-        .toBeGreaterThan(server.address().port);
-    server.close();
-  });
-});
 
 describe('getUsedPorts', () => {
   it('returns used port', async () => {

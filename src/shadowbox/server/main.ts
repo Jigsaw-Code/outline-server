@@ -157,14 +157,12 @@ async function main() {
   let metricsReader: UsageMetrics;
   const rollouts = createRolloutTracker(serverConfig);
   if (rollouts.isRolloutEnabled('prometheus', 0)) {
-    const prometheusPort = await get_port.getFirstFreePort(9090);
+    const prometheusPort = await portProvider.reserveFirstFreePort(9090);
     const prometheusLocation = `localhost:${prometheusPort}`;
-    portProvider.addReservedPort(prometheusPort);
 
-    const nodeMetricsPort = await get_port.getFirstFreePort(prometheusPort);
+    const nodeMetricsPort = await portProvider.reserveFirstFreePort(prometheusPort + 1);
     exportPrometheusMetrics(prometheus.register, nodeMetricsPort);
     const nodeMetricsLocation = `localhost:${nodeMetricsPort}`;
-    portProvider.addReservedPort(nodeMetricsPort);
 
     logging.info(`Prometheus is at ${prometheusLocation}`);
     logging.info(`Node metrics is at ${nodeMetricsLocation}`);
