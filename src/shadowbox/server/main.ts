@@ -20,6 +20,7 @@ import * as prometheus from 'prom-client';
 import * as restify from 'restify';
 
 import {RealClock} from '../infrastructure/clock';
+import * as get_port from '../infrastructure/get_port';
 import {PortProvider} from '../infrastructure/get_port';
 import * as ip_location from '../infrastructure/ip_location';
 import * as json_config from '../infrastructure/json_config';
@@ -69,8 +70,8 @@ class MultiMetricsWriter implements UsageMetricsWriter {
   }
 }
 
-async function exportPrometheusMetrics(registry: prometheus.Registry): Promise<string> {
-  const localMetricsServer = await new Promise<http.Server>((resolve, _) => {
+async function exportPrometheusMetrics(registry: prometheus.Registry, port): Promise<http.Server> {
+  return new Promise<http.Server>((resolve, _) => {
     const server = http.createServer((_, res) => {
       res.write(registry.metrics());
       res.end();
@@ -78,9 +79,8 @@ async function exportPrometheusMetrics(registry: prometheus.Registry): Promise<s
     server.on('listening', () => {
       resolve(server);
     });
-    server.listen({port: 0, host: 'localhost', exclusive: true});
+    server.listen({port, host: 'localhost', exclusive: true});
   });
-  return `localhost:${localMetricsServer.address().port}`;
 }
 
 function reserveAccessKeyPorts(
@@ -116,8 +116,6 @@ async function main() {
   reserveAccessKeyPorts(accessKeyConfig, portProvider);
 
   prometheus.collectDefaultMetrics({register: prometheus.register});
-  const nodeMetricsLocation = await exportPrometheusMetrics(prometheus.register);
-  logging.debug(`Node metrics is at ${nodeMetricsLocation}`);
 
   const proxyHostname = process.env.SB_PUBLIC_IP;
   // Default to production metrics, as some old Docker images may not have
@@ -159,8 +157,18 @@ async function main() {
   let metricsReader: UsageMetrics;
   const rollouts = createRolloutTracker(serverConfig);
   if (rollouts.isRolloutEnabled('prometheus', 0)) {
-    const prometheusLocation = 'localhost:9090';
-    portProvider.addReservedPort(9090);
+    const prometheusPort = await get_port.getFirstFreePort(9090);
+    const prometheusLocation = `localhost:${prometheusPort}`;
+    portProvider.addReservedPort(prometheusPort);
+
+    const nodeMetricsPort = await get_port.getFirstFreePort(prometheusPort);
+    exportPrometheusMetrics(prometheus.register, nodeMetricsPort);
+    const nodeMetricsLocation = `localhost:${nodeMetricsPort}`;
+    portProvider.addReservedPort(nodeMetricsPort);
+
+    logging.info(`Prometheus is at ${prometheusLocation}`);
+    logging.info(`Node metrics is at ${nodeMetricsLocation}`);
+
     runPrometheusScraper(
         [
           '--storage.tsdb.retention', '31d', '--storage.tsdb.path',
@@ -173,7 +181,7 @@ async function main() {
           },
           scrape_configs: [
             {job_name: 'prometheus', static_configs: [{targets: [prometheusLocation]}]},
-            {job_name: 'outline-server-main', static_configs: [{targets: [nodeMetricsLocation]}]}
+            {job_name: 'outline-server-main', static_configs: [{targets: [nodeMetricsLocation]}]},
           ]
         });
     const prometheusClient = new PrometheusClient(`http://${prometheusLocation}`);
