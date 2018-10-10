@@ -36,7 +36,8 @@ export interface ServerConfigJson {
 export interface RolloutConfigJson {
   // Unique identifier of the rollout.
   id: string;
-  // Whether it's forced enabled or disabled. Omit for automatic behavior based on hash(serverId, rolloutId).
+  // Whether it's forced enabled or disabled. Omit for automatic behavior based on
+  // hash(serverId, rolloutId).
   enabled: boolean;
 }
 
