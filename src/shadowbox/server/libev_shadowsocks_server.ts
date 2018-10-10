@@ -24,7 +24,7 @@ import {ShadowsocksInstance, ShadowsocksServer} from '../model/shadowsocks_serve
 
 import {UsageMetricsWriter} from './shared_metrics';
 
-const SHADOWSOCKS_ACL_PATH = '/etc/shadowsocks/shadowsocks.acl';
+const SHADOWSOCKS_ACL_PATH = '/root/shadowbox/shadowsocks.acl';
 
 // Runs shadowsocks-libev server instances.
 export class LibevShadowsocksServer implements ShadowsocksServer {
