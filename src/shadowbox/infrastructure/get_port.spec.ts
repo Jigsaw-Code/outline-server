@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as net from 'net';
+
 import * as get_port from './get_port';
 
 describe('PortProvider', () => {
@@ -35,5 +37,25 @@ describe('PortProvider', () => {
       ports.addReservedPort(8080);
       done();
     });
+  });
+});
+
+describe('getUsedPorts', () => {
+  it('returns used port', async () => {
+    const server = net.createServer();
+    const serverPort = await new Promise((resolve, reject) => {
+      server.listen(() => {
+        resolve(server.address().port);
+      });
+    });
+    const usedPorts = await get_port.getUsedPorts();
+    expect(usedPorts).toContain(serverPort);
+
+    const onceClosed = new Promise((resolve, reject) => {
+      server.on('close', () => resolve());
+    });
+    server.close();
+    await onceClosed;
+    expect(await get_port.getUsedPorts()).not.toContain(serverPort);
   });
 });

@@ -54,10 +54,11 @@ function getRandomPortOver1023() {
   return Math.floor(Math.random() * (MAX_PORT + 1 - MIN_PORT) + MIN_PORT);
 }
 
-function getUsedTcpPorts(): Promise<number[]> {
+// Returns the list of ports used by either TCP or UDP.
+export function getUsedPorts(): Promise<Set<number>> {
   return new Promise((resolve, reject) => {
-    child_process.exec('lsof -P -i tcp -s tcp:listen -F n', (error, stdout, stderr) => {
-      const tcpPorts = [];
+    child_process.exec('lsof -P -i -F n', (error, stdout, stderr) => {
+      const tcpPorts = new Set<number>();
       if (error) {
         reject(error);
       }
@@ -65,9 +66,13 @@ function getUsedTcpPorts(): Promise<number[]> {
         if (line.length === 0 || line[0] !== 'n') {
           continue;
         }
-        const port = parseInt(line.split(':', 2)[1], 10);
+        const parts = line.split(':');
+        if (parts.length !== 2) {
+          continue;
+        }
+        const port = parseInt(parts[1], 10);
         if (port) {
-          tcpPorts.push(port);
+          tcpPorts.add(port);
         }
       }
       resolve(tcpPorts);
@@ -76,7 +81,7 @@ function getUsedTcpPorts(): Promise<number[]> {
 }
 
 function isPortUsedLsof(port: number): Promise<boolean> {
-  return getUsedTcpPorts().then((usedPorts) => {
+  return getUsedPorts().then((usedPorts) => {
     for (const usedPort of usedPorts) {
       if (usedPort === port) {
         return true;
