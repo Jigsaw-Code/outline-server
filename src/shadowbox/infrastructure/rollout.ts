@@ -16,12 +16,22 @@ import * as crypto from 'crypto';
 
 // Utility to help with partial rollouts of new features.
 export class RolloutTracker {
+  private forcedRollouts = new Map<string, boolean>();
+
   constructor(private instanceId: string) {}
+
+  // Forces a rollout to be enabled or disabled.
+  forceRollout(rolloutId: string, enabled: boolean) {
+    this.forcedRollouts.set(rolloutId, enabled);
+  }
 
   // Returns true if the given feature is rolled out for this instance.
   // `percentage` is between 0 and 100 and represents the percentage of
   // instances that should have the feature active.
   isRolloutEnabled(rolloutId: string, percentage: number) {
+    if (this.forcedRollouts.has(rolloutId)) {
+      return this.forcedRollouts.get(rolloutId);
+    }
     if (percentage < 0 || percentage > 100) {
       throw new Error(`Expected 0 <= percentage <= 100. Found ${percentage}`);
     }

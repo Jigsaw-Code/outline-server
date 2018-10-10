@@ -34,6 +34,8 @@ RUN apk add --no-cache lsof curl
 
 COPY src/shadowbox/scripts scripts/
 COPY src/shadowbox/scripts/update_mmdb.sh /etc/periodic/weekly/update_mmdb
+# TODO: remove the ACL file, used to prevent access to localhost and LAN, when migrating to shadowsocks-go.
+COPY src/shadowbox/shadowbox.acl /root/shadowbox/shadowsocks.acl
 
 RUN sh ./scripts/install_shadowsocks.sh $SS_VERSION
 RUN /etc/periodic/weekly/update_mmdb
@@ -41,7 +43,7 @@ RUN /etc/periodic/weekly/update_mmdb
 WORKDIR /root/shadowbox
 
 COPY --from=outline-ss-server /go/bin/outline-ss-server ./bin/
-COPY third_party/prometheus-2.4.3.linux-amd64/prometheus ./bin/
+COPY third_party/prometheus/prometheus ./bin/
 COPY src/shadowbox/package.json .
 COPY yarn.lock .
 # TODO: Replace with plain old "yarn" once the base image is fixed:

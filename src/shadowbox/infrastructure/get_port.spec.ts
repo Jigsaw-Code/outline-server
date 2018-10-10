@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as net from 'net';
+
 import * as get_port from './get_port';
 
 describe('PortProvider', () => {
@@ -35,5 +37,45 @@ describe('PortProvider', () => {
       ports.addReservedPort(8080);
       done();
     });
+  });
+  describe('reserverFirstFreePort', () => {
+    it('returns free port', async () => {
+      const ports = new get_port.PortProvider();
+      const server = await listen();
+      expect(await ports.reserveFirstFreePort(server.address().port))
+          .toBeGreaterThan(server.address().port);
+      server.close();
+    });
+    it('respects reserved ports', async () => {
+      const ports = new get_port.PortProvider();
+      ports.addReservedPort(9090);
+      ports.addReservedPort(9091);
+      expect(await ports.reserveFirstFreePort(9090)).toBeGreaterThan(9091);
+    });
+  });
+});
+
+function listen(): Promise<net.Server> {
+  const server = net.createServer();
+  return new Promise((resolve, reject) => {
+    server.listen(() => {
+      resolve(server);
+    });
+  });
+}
+
+describe('getUsedPorts', () => {
+  it('returns used port', async () => {
+    const server = await listen();
+    const serverPort = server.address().port;
+    const usedPorts = await get_port.getUsedPorts();
+    expect(usedPorts).toContain(serverPort);
+
+    const onceClosed = new Promise((resolve, reject) => {
+      server.on('close', () => resolve());
+    });
+    server.close();
+    await onceClosed;
+    expect(await get_port.getUsedPorts()).not.toContain(serverPort);
   });
 });

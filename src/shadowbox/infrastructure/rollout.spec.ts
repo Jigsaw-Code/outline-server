@@ -40,4 +40,13 @@ describe('RolloutTracker', () => {
       expect(tracker.isRolloutEnabled('rollout-id', 10)).toBeTruthy();
     });
   });
+  describe('forceRollout', () => {
+    it('forces rollout', () => {
+      const tracker = new RolloutTracker('instance-id');
+      tracker.forceRollout('rollout-id', true);
+      expect(tracker.isRolloutEnabled('rollout-id', 0)).toBeTruthy();
+      tracker.forceRollout('rollout-id', false);
+      expect(tracker.isRolloutEnabled('rollout-id', 100)).toBeFalsy();
+    });
+  });
 });

@@ -61,8 +61,8 @@ function readMetricsConfig(filename: string): json_config.JsonConfig<MetricsConf
   }
 }
 
-async function exportPrometheusMetrics(registry: prometheus.Registry): Promise<string> {
-  const localMetricsServer = await new Promise<http.Server>((resolve, _) => {
+async function exportPrometheusMetrics(registry: prometheus.Registry, port): Promise<http.Server> {
+  return new Promise<http.Server>((resolve, _) => {
     const server = http.createServer((_, res) => {
       res.write(registry.metrics());
       res.end();
@@ -70,9 +70,8 @@ async function exportPrometheusMetrics(registry: prometheus.Registry): Promise<s
     server.on('listening', () => {
       resolve(server);
     });
-    server.listen({port: 0, host: 'localhost', exclusive: true});
+    server.listen({port, host: 'localhost', exclusive: true});
   });
-  return `localhost:${localMetricsServer.address().port}`;
 }
 
 function reserveAccessKeyPorts(
@@ -89,6 +88,17 @@ function createLegacyManagerMetrics(configFilename: string): LegacyManagerMetric
       new json_config.ChildConfig(metricsConfig, metricsConfig.data().transferStats));
 }
 
+function createRolloutTracker(serverConfig: json_config.JsonConfig<server_config.ServerConfigJson>):
+    RolloutTracker {
+  const rollouts = new RolloutTracker(serverConfig.data().serverId);
+  if (serverConfig.data().rollouts) {
+    for (const rollout of serverConfig.data().rollouts) {
+      rollouts.forceRollout(rollout.id, rollout.enabled);
+    }
+  }
+  return rollouts;
+}
+
 async function main() {
   const verbose = process.env.LOG_LEVEL === 'debug';
   const portProvider = new PortProvider();
@@ -97,8 +107,6 @@ async function main() {
   reserveAccessKeyPorts(accessKeyConfig, portProvider);
 
   prometheus.collectDefaultMetrics({register: prometheus.register});
-  const nodeMetricsLocation = await exportPrometheusMetrics(prometheus.register);
-  logging.debug(`Node metrics is at ${nodeMetricsLocation}`);
 
   const proxyHostname = process.env.SB_PUBLIC_IP;
   // Default to production metrics, as some old Docker images may not have
@@ -133,9 +141,15 @@ async function main() {
 
   const legacyManagerMetrics =
       createLegacyManagerMetrics(getPersistentFilename('shadowbox_stats.json'));
-  const prometheusLocation = 'localhost:9090';
-  const ssMetricsLocation = 'localhost:9091';
-  portProvider.addReservedPort(9090);
+  const prometheusPort = await portProvider.reserveFirstFreePort(9090);
+  const prometheusLocation = `localhost:${prometheusPort}`;
+
+  const nodeMetricsPort = await portProvider.reserveFirstFreePort(prometheusPort + 1);
+  exportPrometheusMetrics(prometheus.register, nodeMetricsPort);
+  const nodeMetricsLocation = `localhost:${nodeMetricsPort}`;
+
+  const ssMetricsPort = await portProvider.reserveFirstFreePort(nodeMetricsPort + 1);
+  const ssMetricsLocation = `localhost:${ssMetricsPort}`;
   runPrometheusScraper(
       [
         '--storage.tsdb.retention', '31d', '--storage.tsdb.path',
@@ -156,7 +170,7 @@ async function main() {
   const managerMetrics = new PrometheusManagerMetrics(prometheusClient, legacyManagerMetrics);
   const metricsReader = new PrometheusUsageMetrics(prometheusClient);
 
-  const rollouts = new RolloutTracker(serverConfig.data().serverId);
+  const rollouts = createRolloutTracker(serverConfig);
   let shadowsocksServer: ShadowsocksServer;
   if (rollouts.isRolloutEnabled('outline-ss-server', 0)) {
     shadowsocksServer = new OutlineShadowsocksServer(

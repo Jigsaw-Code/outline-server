@@ -23,6 +23,8 @@ import {AccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
 
 import {UsageMetricsWriter} from './shared_metrics';
 
+const SHADOWSOCKS_ACL_PATH = '/root/shadowbox/shadowsocks.acl';
+
 export async function createLibevShadowsocksServer(
     publicAddress: string, metricsSocketPort: number, ipLocation: IpLocationService,
     usageWriter: UsageMetricsWriter, verbose: boolean) {
@@ -71,8 +73,8 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
             // We keep using the same IP addresses if we don't see any IP for a port.
             // This may happen if getConnectedClientIPAddresses runs when there's no TCP
             // connection open at that moment.
-            if (ipAddresses) {
-              this.portIps[metricsMessage.portNumber] = ipAddresses;
+            if (ipAddresses && ipAddresses.length > 0) {
+              this.portIps.set(metricsMessage.portNumber, ipAddresses);
             } else {
               ipAddresses = this.portIps.get(metricsMessage.portNumber) || [];
             }
@@ -124,7 +126,7 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
       '-u',              // Allow UDP
       '--fast-open',     // Allow TCP fast open
       '-p', key.port.toString(), '-k', key.secret, '--manager-address',
-      `${metricsAddress.address}:${metricsAddress.port}`
+      `${metricsAddress.address}:${metricsAddress.port}`, '--acl', SHADOWSOCKS_ACL_PATH
     ];
     logging.info('starting ss-server with args: ' + commandArguments.join(' '));
     // Add the system DNS servers.
