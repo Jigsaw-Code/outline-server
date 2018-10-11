@@ -15,7 +15,6 @@
 import * as child_process from 'child_process';
 import * as dgram from 'dgram';
 import * as dns from 'dns';
-import * as events from 'events';
 import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
 import {IpLocationService} from '../infrastructure/ip_location';
@@ -26,10 +25,18 @@ import {UsageMetricsWriter} from './shared_metrics';
 
 const SHADOWSOCKS_ACL_PATH = '/root/shadowbox/shadowsocks.acl';
 
+export async function createLibevShadowsocksServer(
+    publicAddress: string, metricsSocketPort: number, ipLocation: IpLocationService,
+    usageWriter: UsageMetricsWriter, verbose: boolean) {
+  const metricsSocket = await createBoundUdpSocket(metricsSocketPort);
+  return new LibevShadowsocksServer(publicAddress, metricsSocket, ipLocation, usageWriter, verbose);
+}
+
 // Runs shadowsocks-libev server instances.
 export class LibevShadowsocksServer implements ShadowsocksServer {
   private portId = new Map<number, string>();
   private portInboundBytes = new Map<number, number>();
+  private portIps = new Map<number, string[]>();
 
   constructor(
       private publicAddress: string, private metricsSocket: dgram.Socket,
@@ -54,19 +61,31 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
       }
       this.portInboundBytes[metricsMessage.portNumber] = metricsMessage.totalInboundBytes;
       getConnectedClientIPAddresses(metricsMessage.portNumber)
-          .then(
-              (ipAddresses: string[]) => {
-                return Promise.all(ipAddresses.map((ipAddress) => {
-                  return ipLocation.countryForIp(ipAddress);
-                }));
-              },
-              (error) => {
-                logging.error(`Unable to get client countries: ${error.stack}`);
-                return [];
-              })
+          .catch((e) => {
+            logging.error(
+                `Unable to get client IP for port ${metricsMessage.portNumber}: ${e.stack}`);
+            return [];
+          })
+          .then((ipAddresses: string[]) => {
+            // We keep using the same IP addresses if we don't see any IP for a port.
+            // This may happen if getConnectedClientIPAddresses runs when there's no TCP
+            // connection open at that moment.
+            if (ipAddresses && ipAddresses.length > 0) {
+              this.portIps.set(metricsMessage.portNumber, ipAddresses);
+            } else {
+              ipAddresses = this.portIps.get(metricsMessage.portNumber) || [];
+            }
+            return Promise.all(ipAddresses.map((ipAddress) => {
+              return ipLocation.countryForIp(ipAddress).catch((e) => {
+                logging.error(`failed to get country for IP: ${e.stack}`);
+                return 'ZZ';
+              });
+            }));
+          })
           .then((countries: string[]) => {
+            const dedupedCountries = [...new Set(countries)].sort();
             usageWriter.writeBytesTransferred(
-                this.portId[metricsMessage.portNumber] || '', dataDelta, countries);
+                this.portId[metricsMessage.portNumber] || '', dataDelta, dedupedCountries);
           })
           .catch((err: Error) => {
             logging.error(`Unable to write bytes transferred: ${err.stack}`);
@@ -146,7 +165,7 @@ function getConnectedClientIPAddresses(portNumber: number): Promise<string[]> {
       ' | sed \'s/\\]//g\'' +      // remove ] (used by ipv6)
       ' | sort | uniq';            // remove duplicates
   return execCmd(lsofCommand).then((output: string) => {
-    return output.split('\n');
+    return output.trim().split('\n').map((e) => e.trim()).filter(Boolean);
   });
 }
 
@@ -180,4 +199,14 @@ function parseMetricsMessage(buf): MetricsMessage {
   const portNumber = parseInt(Object.keys(statObj)[0], 10);
   const totalInboundBytes = statObj[portNumber];
   return {portNumber, totalInboundBytes};
+}
+
+// Creates a bound UDP socket on a random unused port.
+function createBoundUdpSocket(portNumber: number): Promise<dgram.Socket> {
+  const socket = dgram.createSocket('udp4');
+  return new Promise((fulfill, reject) => {
+    socket.bind(portNumber, 'localhost', () => {
+      return fulfill(socket);
+    });
+  });
 }

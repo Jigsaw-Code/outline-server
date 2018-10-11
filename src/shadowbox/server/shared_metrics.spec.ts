@@ -20,19 +20,19 @@ import {ServerConfigJson} from './server_config';
 import {HourlyServerMetricsReportJson, InMemoryUsageMetrics, MetricsCollectorClient, OutlineSharedMetricsPublisher} from './shared_metrics';
 
 describe('InMemoryUsageMetrics', () => {
-  it('Returns empty usage initially', (done) => {
+  it('Returns empty usage initially', async (done) => {
     const metrics = new InMemoryUsageMetrics();
-    expect(metrics.getUsage()).toEqual([]);
+    expect(await metrics.getUsage()).toEqual([]);
     done();
   });
-  it('Records usage', (done) => {
+  it('Records usage', async (done) => {
     const metrics = new InMemoryUsageMetrics();
     metrics.writeBytesTransferred('user-0', 11, ['AA']);
     metrics.writeBytesTransferred('user-1', 22, ['BB']);
     metrics.writeBytesTransferred('user-0', 33, ['CC']);
     metrics.writeBytesTransferred('user-1', 44, ['BB']);
     metrics.writeBytesTransferred('user-2', 55, ['']);
-    expect(metrics.getUsage().sort()).toEqual([
+    expect((await metrics.getUsage()).sort()).toEqual([
       {accessKeyId: 'user-0', inboundBytes: 11, countries: ['AA']},
       {accessKeyId: 'user-1', inboundBytes: 66, countries: ['BB']},
       {accessKeyId: 'user-0', inboundBytes: 33, countries: ['CC']},
@@ -40,11 +40,11 @@ describe('InMemoryUsageMetrics', () => {
     ]);
     done();
   });
-  it('Ignores sanctioned countries', (done) => {
+  it('Ignores sanctioned countries', async (done) => {
     const metrics = new InMemoryUsageMetrics();
     metrics.writeBytesTransferred('user-0', 11, ['AA']);
     metrics.writeBytesTransferred('user-0', 22, ['IR']);  // Sanctioned
-    expect(metrics.getUsage().sort()).toEqual([
+    expect((await metrics.getUsage()).sort()).toEqual([
       {accessKeyId: 'user-0', inboundBytes: 11, countries: ['AA']},
     ]);
     done();
@@ -79,7 +79,7 @@ describe('OutlineSharedMetricsPublisher', () => {
     });
   });
   describe('Metrics Reporting', () => {
-    it('Reports metrics correctly', (done) => {
+    it('Reports metrics correctly', async (done) => {
       const clock = new ManualClock();
       let startTime = clock.nowMs;
       const serverConfig = new InMemoryConfig<ServerConfigJson>({serverId: 'server-id'});
@@ -95,7 +95,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       usageMetrics.writeBytesTransferred('user-0', 33, ['AA', 'DD']);
 
       clock.nowMs += 60 * 60 * 1000;
-      clock.runCallbacks();
+      await clock.runCallbacks();
       expect(metricsCollector.collectedReport).toEqual({
         serverId: 'server-id',
         startUtcMs: startTime,
@@ -112,7 +112,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       usageMetrics.writeBytesTransferred('user-2', 55, ['FF']);
 
       clock.nowMs += 60 * 60 * 1000;
-      clock.runCallbacks();
+      await clock.runCallbacks();
       expect(metricsCollector.collectedReport).toEqual({
         serverId: 'server-id',
         startUtcMs: startTime,
