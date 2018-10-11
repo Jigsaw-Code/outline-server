@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+FROM golang:1-alpine as outline-ss-server
+RUN apk add --no-cache git
+RUN go get github.com/Jigsaw-Code/outline-ss-server
+
 # See versions at https://hub.docker.com/_/node/
 FROM node:8.11.3-alpine
 
@@ -38,6 +42,7 @@ RUN /etc/periodic/weekly/update_mmdb
 
 WORKDIR /root/shadowbox
 
+COPY --from=outline-ss-server /go/bin/outline-ss-server ./bin/
 COPY third_party/prometheus/prometheus ./bin/
 COPY src/shadowbox/package.json .
 COPY yarn.lock .

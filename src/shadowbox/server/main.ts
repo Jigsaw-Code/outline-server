@@ -20,7 +20,6 @@ import * as prometheus from 'prom-client';
 import * as restify from 'restify';
 
 import {RealClock} from '../infrastructure/clock';
-import * as get_port from '../infrastructure/get_port';
 import {PortProvider} from '../infrastructure/get_port';
 import * as ip_location from '../infrastructure/ip_location';
 import * as json_config from '../infrastructure/json_config';
@@ -28,17 +27,19 @@ import * as logging from '../infrastructure/logging';
 import {PrometheusClient, runPrometheusScraper} from '../infrastructure/prometheus_scraper';
 import {RolloutTracker} from '../infrastructure/rollout';
 import {AccessKeyId} from '../model/access_key';
+import {ShadowsocksServer} from '../model/shadowsocks_server';
 
 import {createLibevShadowsocksServer} from './libev_shadowsocks_server';
-import {LegacyManagerMetrics, LegacyManagerMetricsJson, ManagerMetrics, PrometheusManagerMetrics} from './manager_metrics';
+import {LegacyManagerMetrics, LegacyManagerMetricsJson, PrometheusManagerMetrics} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
+import {OutlineShadowsocksServer} from './outline_shadowsocks_server';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
 import * as server_config from './server_config';
-import {ServerConfigJson} from './server_config';
-import {createPrometheusUsageMetricsWriter, InMemoryUsageMetrics, OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollectorClient, SharedMetricsPublisher, UsageMetrics, UsageMetricsWriter} from './shared_metrics';
+import {createPrometheusUsageMetricsWriter, OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollectorClient, SharedMetricsPublisher} from './shared_metrics';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
 const MAX_STATS_FILE_AGE_MS = 5000;
+const MMDB_LOCATION = '/var/lib/libmaxminddb/GeoLite2-Country.mmdb';
 
 // Serialized format for the metrics file.
 // WARNING: Renaming fields will break backwards-compatibility.
@@ -57,16 +58,6 @@ function readMetricsConfig(filename: string): json_config.JsonConfig<MetricsConf
     return new json_config.DelayedConfig(metricsConfig, MAX_STATS_FILE_AGE_MS);
   } catch (error) {
     throw new Error(`Failed to read metrics config at ${filename}: ${error}`);
-  }
-}
-
-class MultiMetricsWriter implements UsageMetricsWriter {
-  constructor(
-      private managerMetrics: LegacyManagerMetrics, private sharedMetrics: UsageMetricsWriter) {}
-
-  writeBytesTransferred(accessKeyId: AccessKeyId, numBytes: number, countries: string[]) {
-    this.managerMetrics.writeBytesTransferred(accessKeyId, numBytes);
-    this.sharedMetrics.writeBytesTransferred(accessKeyId, numBytes, countries);
   }
 }
 
@@ -97,7 +88,7 @@ function createLegacyManagerMetrics(configFilename: string): LegacyManagerMetric
       new json_config.ChildConfig(metricsConfig, metricsConfig.data().transferStats));
 }
 
-function createRolloutTracker(serverConfig: json_config.JsonConfig<ServerConfigJson>):
+function createRolloutTracker(serverConfig: json_config.JsonConfig<server_config.ServerConfigJson>):
     RolloutTracker {
   const rollouts = new RolloutTracker(serverConfig.data().serverId);
   if (serverConfig.data().rollouts) {
@@ -147,54 +138,51 @@ async function main() {
       server_config.readServerConfig(getPersistentFilename('shadowbox_server_config.json'));
 
   logging.info('Starting...');
-  const ipLocation =
-      new ip_location.MmdbLocationService('/var/lib/libmaxminddb/GeoLite2-Country.mmdb');
 
   const legacyManagerMetrics =
       createLegacyManagerMetrics(getPersistentFilename('shadowbox_stats.json'));
-  let managerMetrics: ManagerMetrics;
-  let metricsWriter: UsageMetricsWriter;
-  let metricsReader: UsageMetrics;
+  const prometheusPort = await portProvider.reserveFirstFreePort(9090);
+  const prometheusLocation = `localhost:${prometheusPort}`;
+
+  const nodeMetricsPort = await portProvider.reserveFirstFreePort(prometheusPort + 1);
+  exportPrometheusMetrics(prometheus.register, nodeMetricsPort);
+  const nodeMetricsLocation = `localhost:${nodeMetricsPort}`;
+
+  const ssMetricsPort = await portProvider.reserveFirstFreePort(nodeMetricsPort + 1);
+  const ssMetricsLocation = `localhost:${ssMetricsPort}`;
+  runPrometheusScraper(
+      [
+        '--storage.tsdb.retention', '31d', '--storage.tsdb.path',
+        getPersistentFilename('prometheus/data'), '--web.listen-address', prometheusLocation,
+        '--log.level', verbose ? 'debug' : 'info'
+      ],
+      getPersistentFilename('prometheus/config.yml'), {
+        global: {
+          scrape_interval: '15s',
+        },
+        scrape_configs: [
+          {job_name: 'prometheus', static_configs: [{targets: [prometheusLocation]}]},
+          {job_name: 'outline-server-main', static_configs: [{targets: [nodeMetricsLocation]}]},
+          {job_name: 'outline-server-ss', static_configs: [{targets: [ssMetricsLocation]}]}
+        ]
+      });
+  const prometheusClient = new PrometheusClient(`http://${prometheusLocation}`);
+  const managerMetrics = new PrometheusManagerMetrics(prometheusClient, legacyManagerMetrics);
+  const metricsReader = new PrometheusUsageMetrics(prometheusClient);
+
   const rollouts = createRolloutTracker(serverConfig);
-  if (rollouts.isRolloutEnabled('prometheus', 0)) {
-    const prometheusPort = await portProvider.reserveFirstFreePort(9090);
-    const prometheusLocation = `localhost:${prometheusPort}`;
-
-    const nodeMetricsPort = await portProvider.reserveFirstFreePort(prometheusPort + 1);
-    exportPrometheusMetrics(prometheus.register, nodeMetricsPort);
-    const nodeMetricsLocation = `localhost:${nodeMetricsPort}`;
-
-    logging.info(`Prometheus is at ${prometheusLocation}`);
-    logging.info(`Node metrics is at ${nodeMetricsLocation}`);
-
-    runPrometheusScraper(
-        [
-          '--storage.tsdb.retention', '31d', '--storage.tsdb.path',
-          getPersistentFilename('prometheus/data'), '--web.listen-address', prometheusLocation,
-          '--log.level', verbose ? 'debug' : 'info'
-        ],
-        getPersistentFilename('prometheus/config.yml'), {
-          global: {
-            scrape_interval: '15s',
-          },
-          scrape_configs: [
-            {job_name: 'prometheus', static_configs: [{targets: [prometheusLocation]}]},
-            {job_name: 'outline-server-main', static_configs: [{targets: [nodeMetricsLocation]}]},
-          ]
-        });
-    const prometheusClient = new PrometheusClient(`http://${prometheusLocation}`);
-    managerMetrics = new PrometheusManagerMetrics(prometheusClient, legacyManagerMetrics);
-    metricsWriter = createPrometheusUsageMetricsWriter(prometheus.register);
-    metricsReader = new PrometheusUsageMetrics(prometheusClient);
+  let shadowsocksServer: ShadowsocksServer;
+  if (rollouts.isRolloutEnabled('outline-ss-server', 0)) {
+    shadowsocksServer = new OutlineShadowsocksServer(
+        getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation,
+        MMDB_LOCATION);
   } else {
-    managerMetrics = legacyManagerMetrics;
-    const usageMetrics = new InMemoryUsageMetrics();
-    metricsWriter = new MultiMetricsWriter(legacyManagerMetrics, usageMetrics);
-    metricsReader = usageMetrics;
+    const ipLocation = new ip_location.MmdbLocationService(MMDB_LOCATION);
+    const metricsWriter = createPrometheusUsageMetricsWriter(prometheus.register);
+    shadowsocksServer = await createLibevShadowsocksServer(
+        proxyHostname, await portProvider.reserveNewPort(), ipLocation, metricsWriter, verbose);
   }
 
-  const shadowsocksServer = await createLibevShadowsocksServer(
-      proxyHostname, await portProvider.reserveNewPort(), ipLocation, metricsWriter, verbose);
   const accessKeyRepository = new ServerAccessKeyRepository(
       portProvider, proxyHostname, accessKeyConfig, shadowsocksServer);
 
