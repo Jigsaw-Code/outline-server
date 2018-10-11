@@ -12,10 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as dgram from 'dgram';
 
 import {AccessKey, AccessKeyId, AccessKeyRepository} from '../../model/access_key';
-import {ShadowsocksInstance, ShadowsocksServer} from '../../model/shadowsocks_server';
 import {TextFile} from '../../model/text_file';
 
 export class MockAccessKeyRepository implements AccessKeyRepository {
@@ -59,24 +57,6 @@ export class MockAccessKeyRepository implements AccessKeyRepository {
   }
   getMetricsId(accessKeyId: AccessKeyId) {
     return `metrics:${accessKeyId}`;
-  }
-}
-
-class MockShadowsocksInstance implements ShadowsocksInstance {
-  constructor(
-      public portNumber = 12345,
-      public password = 'password',
-      public encryptionMethod = 'encryption',
-      public accessUrl = 'ss://somethingsomething') {}
-  onInboundBytes(callback: (bytes: number, ipAddresses: string[]) => void) {}
-  stop() {}
-}
-
-export class MockShadowsocksServer implements ShadowsocksServer {
-  startInstance(id: string, portNumber: number, password: string, encryptionMethod?: string):
-      Promise<ShadowsocksInstance> {
-    const mock = new MockShadowsocksInstance(portNumber, password, encryptionMethod);
-    return Promise.resolve(mock);
   }
 }
 

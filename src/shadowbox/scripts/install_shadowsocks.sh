@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# TODO(fortuna): Delete once outline-ss-server rolls out
+
 VERSION=$1
 DOWNLOAD_URL=https://github.com/shadowsocks/shadowsocks-libev/releases/download/v${VERSION}/shadowsocks-libev-${VERSION}.tar.gz
 BUILD_DIR=/src/shadowsocks-libev
