@@ -45,9 +45,9 @@ export class ManualClock implements Clock {
     return 0;
   }
 
-  runCallbacks() {
+  async runCallbacks() {
     for (const callback of this.callbacks) {
-      callback();
+      await callback();
     }
   }
 }

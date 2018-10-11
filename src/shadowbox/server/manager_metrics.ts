@@ -14,12 +14,48 @@
 
 import {Clock} from '../infrastructure/clock';
 import {JsonConfig} from '../infrastructure/json_config';
+import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {AccessKeyId} from '../model/access_key';
 import {DataUsageByUser} from '../model/metrics';
 
+export interface ManagerMetrics { get30DayByteTransfer(): Promise<DataUsageByUser>; }
+
+// Reads manager metrics from a Prometheus instance.
+export class PrometheusManagerMetrics implements ManagerMetrics {
+  constructor(
+      private prometheusClient: PrometheusClient,
+      private legacyManagerMetrics: LegacyManagerMetrics) {}
+
+  async get30DayByteTransfer(): Promise<DataUsageByUser> {
+    // TODO(fortuna): Consider pre-computing this to save server's CPU.
+    const result = await this.prometheusClient.query(
+        'sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t|>p<"}[30d])) by (access_key)');
+    const usage = {} as {[userId: string]: number};
+    for (const entry of result.result) {
+      const bytes = Math.round(parseFloat(entry.value[1]));
+      if (bytes === 0) {
+        continue;
+      }
+      usage[entry.metric['access_key'] || ''] = bytes;
+    }
+    // TODO: Remove this after 30 days of everyone being migrated, since we won't need the config
+    // file anymore.
+    this.addLegacyUsageData(usage);
+    return {bytesTransferredByUserId: usage};
+  }
+
+  private async addLegacyUsageData(usage: {[userId: string]: number}) {
+    const bytesTransferredByUserId =
+        (await this.legacyManagerMetrics.get30DayByteTransfer()).bytesTransferredByUserId;
+    for (const userId of Object.keys(bytesTransferredByUserId)) {
+      usage[userId] += bytesTransferredByUserId[userId];
+    }
+  }
+}
+
 // Serialized format for the manager metrics.
 // WARNING: Renaming fields will break backwards-compatibility.
-export interface ManagerMetricsJson {
+export interface LegacyManagerMetricsJson {
   // Bytes per user per day. The key encodes the user+day in the form "userId-dateInYYYYMMDD".
   dailyUserBytesTransferred?: Array<[string, number]>;
   // Set of all User IDs for whom we have transfer metrics.
@@ -30,11 +66,11 @@ export interface ManagerMetricsJson {
 // ManagerMetrics keeps track of the number of bytes transferred per user, per day.
 // Surfaced by the manager service to display on the Manager UI.
 // TODO: Remove entries older than 30d.
-export class ManagerMetrics {
+export class LegacyManagerMetrics implements ManagerMetrics {
   private dailyUserBytesTransferred: Map<string, number>;
   private userIdSet: Set<AccessKeyId>;
 
-  constructor(private clock: Clock, private config: JsonConfig<ManagerMetricsJson>) {
+  constructor(private clock: Clock, private config: JsonConfig<LegacyManagerMetricsJson>) {
     const serializedObject = config.data();
     if (serializedObject) {
       this.dailyUserBytesTransferred = new Map(serializedObject.dailyUserBytesTransferred);
@@ -45,7 +81,7 @@ export class ManagerMetrics {
     }
   }
 
-  public writeBytesTransferred(userId: AccessKeyId, numBytes: number) {
+  writeBytesTransferred(userId: AccessKeyId, numBytes: number) {
     this.userIdSet.add(userId);
 
     const date = new Date(this.clock.now());
@@ -56,7 +92,7 @@ export class ManagerMetrics {
     this.config.write();
   }
 
-  public get30DayByteTransfer(): DataUsageByUser {
+  get30DayByteTransfer(): Promise<DataUsageByUser> {
     const bytesTransferredByUserId = {};
     for (let i = 0; i < 30; ++i) {
       // Get Date from i days ago.
@@ -72,12 +108,12 @@ export class ManagerMetrics {
         bytesTransferredByUserId[userId] += numBytes;
       }
     }
-    return {bytesTransferredByUserId};
+    return Promise.resolve({bytesTransferredByUserId});
   }
 
   // Returns the state of this object, e.g.
   // {"dailyUserBytesTransferred":[["0-20170816",100],["1-20170816",100]],"userIdSet":["0","1"]}
-  private toJson(target: ManagerMetricsJson) {
+  private toJson(target: LegacyManagerMetricsJson) {
     // Use [...] operator to serialize Map and Set objects to JSON.
     target.dailyUserBytesTransferred = [...this.dailyUserBytesTransferred];
     target.userIdSet = [...this.userIdSet];

@@ -13,10 +13,13 @@
 // limitations under the License.
 
 
+import * as prometheus from 'prom-client';
+
 import {Clock} from '../infrastructure/clock';
 import * as follow_redirects from '../infrastructure/follow_redirects';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
+import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {AccessKeyId, AccessKeyMetricsId} from '../model/access_key';
 
 import {ServerConfigJson} from './server_config';
@@ -55,7 +58,7 @@ export interface SharedMetricsPublisher {
 }
 
 export interface UsageMetrics {
-  getUsage(): KeyUsage[];
+  getUsage(): Promise<KeyUsage[]>;
   reset();
 }
 
@@ -63,14 +66,58 @@ export interface UsageMetricsWriter {
   writeBytesTransferred(accessKeyId: AccessKeyId, numBytes: number, countries: string[]);
 }
 
+// Writes usage metrics to Prometheus.
+export class PrometheusUsageMetrics implements UsageMetrics {
+  private resetTimeMs: number = Date.now();
+
+  constructor(private prometheusClient: PrometheusClient) {}
+
+  async getUsage(): Promise<KeyUsage[]> {
+    const timeDeltaSecs = Math.round((Date.now() - this.resetTimeMs) / 1000);
+    const result =
+        await this.prometheusClient.query(`sum(increase(shadowsocks_data_bytes{dir=">p<"}[${
+            timeDeltaSecs}s])) by (location, access_key)`);
+    const usage = [] as KeyUsage[];
+    for (const entry of result.result) {
+      const accessKeyId = entry.metric['access_key'] || '';
+      let countries = [];
+      const countriesStr = entry.metric['location'] || '';
+      if (countriesStr) {
+        countries = countriesStr.split(',').map((e) => e.trim());
+      }
+      const inboundBytes = Math.round(parseFloat(entry.value[1]));
+      usage.push({accessKeyId, countries, inboundBytes});
+    }
+    return usage;
+  }
+
+  reset() {
+    this.resetTimeMs = Date.now();
+  }
+}
+
+export function createPrometheusUsageMetricsWriter(registry: prometheus.Registry):
+    UsageMetricsWriter {
+  const usageCounter = new prometheus.Counter({
+    name: 'shadowsocks_data_bytes',
+    help: 'Bytes tranferred by the proxy',
+    labelNames: ['dir', 'proto', 'location', 'status', 'access_key']
+  });
+  registry.registerMetric(usageCounter);
+  return {
+    writeBytesTransferred(accessKeyId: AccessKeyId, inboundBytes: number, countries: string[]) {
+      usageCounter.labels('>p<', '', countries.join(','), '', accessKeyId).inc(inboundBytes);
+    }
+  };
+}
+
 // Tracks usage metrics since the server started.
-// TODO: migrate to an implementation that uses Prometheus.
 export class InMemoryUsageMetrics implements UsageMetrics, UsageMetricsWriter {
   // Map from the metrics AccessKeyId to its usage.
   private totalUsage = new Map<string, KeyUsage>();
 
-  getUsage(): KeyUsage[] {
-    return [...this.totalUsage.values()];
+  getUsage(): Promise<KeyUsage[]> {
+    return Promise.resolve([...this.totalUsage.values()]);
   }
 
   // We use a separate metrics id so the accessKey id is not disclosed.
@@ -148,11 +195,11 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
     // Start timer
     this.reportStartTimestampMs = this.clock.now();
 
-    this.clock.setInterval(() => {
+    this.clock.setInterval(async () => {
       if (!this.isSharingEnabled()) {
         return;
       }
-      this.reportMetrics(usageMetrics.getUsage());
+      this.reportMetrics(await usageMetrics.getUsage());
       usageMetrics.reset();
     }, MS_PER_HOUR);
     // TODO(fortuna): also trigger report on shutdown, so data loss is minimized.
@@ -172,7 +219,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
     return this.serverConfig.data().metricsEnabled || false;
   }
 
-  private reportMetrics(usageMetrics: KeyUsage[]) {
+  private async reportMetrics(usageMetrics: KeyUsage[]): Promise<void> {
     const reportEndTimestampMs = this.clock.now();
 
     const userReports = [] as HourlyUserMetricsReportJson[];
@@ -197,6 +244,6 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
     if (userReports.length === 0) {
       return;
     }
-    this.metricsCollector.collectMetrics(report);
+    await this.metricsCollector.collectMetrics(report);
   }
 }
