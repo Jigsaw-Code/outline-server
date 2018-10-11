@@ -19,7 +19,7 @@ import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
 import {IpLocationService} from '../infrastructure/ip_location';
 import * as logging from '../infrastructure/logging';
-import {ShadowsocksInstance, ShadowsocksServer} from '../model/shadowsocks_server';
+import {AccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
 
 import {UsageMetricsWriter} from './shared_metrics';
 
@@ -33,10 +33,13 @@ export async function createLibevShadowsocksServer(
 }
 
 // Runs shadowsocks-libev server instances.
+// TODO(fortuna): Delete once outline-ss-server rolls out
 export class LibevShadowsocksServer implements ShadowsocksServer {
   private portId = new Map<number, string>();
   private portInboundBytes = new Map<number, number>();
   private portIps = new Map<number, string[]>();
+  private keyProcess = new Map<string, child_process.ChildProcess>();
+  private keys = new Map<string, AccessKey>();
 
   constructor(
       private publicAddress: string, private metricsSocket: dgram.Socket,
@@ -93,17 +96,36 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
     });
   }
 
-  public startInstance(id: string, portNumber: number, password: string, encryptionMethod):
-      Promise<ShadowsocksInstance> {
-    logging.info(`Starting server on port ${portNumber}`);
-    this.portId[portNumber] = id;
+  update(newKeys: AccessKey[]): Promise<void> {
+    const oldKeys = this.keys;
+    this.keys = new Map<string, AccessKey>();
+    for (const key of newKeys) {
+      this.keys[key.id] = key;
+      const oldKey = oldKeys.get(key.id);
+      if (oldKey) {
+        continue;
+      }
+      this.startInstance(key);
+    }
+
+    for (const oldKey of oldKeys.values()) {
+      if (!this.keys.has(oldKey.id)) {
+        this.stopInstance(oldKey.id);
+      }
+    }
+    return Promise.resolve();
+  }
+
+  private startInstance(key: AccessKey): child_process.ChildProcess {
+    logging.info(`Starting server on port ${key.port}`);
+    this.portId[key.port] = key.id;
 
     const metricsAddress = this.metricsSocket.address();
     const commandArguments = [
-      '-m', encryptionMethod,  // Encryption method
-      '-u',                    // Allow UDP
-      '--fast-open',           // Allow TCP fast open
-      '-p', portNumber.toString(), '-k', password, '--manager-address',
+      '-m', key.cipher,  // Encryption method
+      '-u',              // Allow UDP
+      '--fast-open',     // Allow TCP fast open
+      '-p', key.port.toString(), '-k', key.secret, '--manager-address',
       `${metricsAddress.address}:${metricsAddress.port}`, '--acl', SHADOWSOCKS_ACL_PATH
     ];
     logging.info('starting ss-server with args: ' + commandArguments.join(' '));
@@ -118,13 +140,14 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
       commandArguments.push('-v');
     }
     const childProcess = child_process.spawn('ss-server', commandArguments);
+    this.keyProcess[key.id] = childProcess;
 
     childProcess.on('error', (error) => {
-      logging.error(`Error spawning server on port ${portNumber}: ${error}`);
+      logging.error(`Error spawning server on port ${key.port}: ${error}`);
     });
     // TODO(fortuna): Add restart logic.
     childProcess.on('exit', (code, signal) => {
-      logging.info(`Server on port ${portNumber} has exited. Code: ${code}, Signal: ${signal}`);
+      logging.info(`Server on port ${key.port} has exited. Code: ${code}, Signal: ${signal}`);
     });
     // TODO(fortuna): Disable this for production.
     // TODO(fortuna): Consider saving the output and expose it through the manager service.
@@ -134,25 +157,18 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
     // Generate a SIP002 access url.
     const accessUrl = SIP002_URI.stringify(makeConfig({
       host: this.publicAddress,
-      port: portNumber,
-      method: encryptionMethod,
-      password,
+      port: key.port,
+      method: key.cipher,
+      password: key.secret,
       outline: 1,
     }));
 
-    return Promise.resolve(new LibevShadowsocksServerInstance(
-        childProcess, portNumber, password, encryptionMethod, accessUrl));
+    return childProcess;
   }
-}
 
-class LibevShadowsocksServerInstance implements ShadowsocksInstance {
-  constructor(
-      private childProcess: child_process.ChildProcess, public portNumber: number, public password,
-      public encryptionMethod: string, public accessUrl: string) {}
-
-  public stop() {
-    logging.info(`Stopping server on port ${this.portNumber}`);
-    this.childProcess.kill();
+  private stopInstance(keyId: string) {
+    this.keyProcess.get(keyId).kill();
+    this.keyProcess.delete(keyId);
   }
 }
 
