@@ -37,12 +37,12 @@
         margin: 24px 0;
         text-align: left;
       }
-      .card-section {
+      .section {
         padding: 24px 12px;
         background: var(--background-contrast-color);
         border-radius: 2px;
       }
-      .card-section:not(:first-child) {
+      .section:not(:first-child) {
         margin-top: 8px;
       }
       .section-header {
@@ -67,6 +67,9 @@
         margin: auto;
         text-align: center;
         line-height: 26px;
+      }
+      .drop-down, .drop-down iron-icon {
+        color: #fff;
       }
       .drop-down > * {
         vertical-align: middle;
@@ -149,11 +152,10 @@
     <outline-step-view>
       <span slot="step-title">Follow the instructions below</span>
       <span slot="step-description">These steps will help you install Outline<br/> on a [[cloudProviderName]] Linux server.</span>
-      <paper-progress hidden$='[[!showConnection]]' indeterminate class="slow"></paper-progress>
 
       <div class="card">
         <!-- GCP -->
-        <div class="card-section" hidden$="[[!isCloudProviderGcp]]">
+        <div class="section" hidden$="[[!isCloudProviderGcp]]">
           <div class="section-header">
             <span class="stepcircle">1</span>
             <div class="instructions">Configure your firewall</div>
@@ -190,7 +192,7 @@
           </iron-collapse>
         </div>
         <!-- AWS -->
-        <div class="card-section" hidden$="[[!isCloudProviderAws]]">
+        <div class="section" hidden$="[[!isCloudProviderAws]]">
           <div class="section-header">
             <span class="stepcircle">1</span>
             <div class="instructions">Configure your firewall</div>
@@ -226,7 +228,7 @@
           </iron-collapse>
         </div>
         <!-- Install command -->
-        <div class="card-section">
+        <div class="section">
           <div class="section-header">
             <span class="stepcircle" hidden$="[[!isGenericCloudProvider]]">1</span>
             <span class="stepcircle" hidden$="[[isGenericCloudProvider]]">2</span>
@@ -237,7 +239,7 @@
           </div>
         </div>
         <!-- Paste input -->
-        <div class="card-section">
+        <div class="section">
           <div class="section-header">
             <span class="stepcircle" hidden$="[[!isGenericCloudProvider]]">2</span>
             <span class="stepcircle" hidden$="[[isGenericCloudProvider]]">3</span>
@@ -251,6 +253,7 @@
           <paper-button id="cancelButton" on-tap="cancelTapped" class="secondary">CANCEL</paper-button>
           <paper-button id="doneButton" on-tap="doneTapped" class="primary">DONE</paper-button>
         </div>
+        <paper-progress hidden$='[[!showConnection]]' indeterminate class="slow"></paper-progress>
       </div>
     </outline-step-view>
   </template>

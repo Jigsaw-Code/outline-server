@@ -101,7 +101,7 @@ h4 {
 
 /* normal text and links */
 p {
-  color: rgba(0,0,0,0.54);
+  color: var(--medium-gray);
   font-size: 14px;
   line-height: 1.5em;
 }
