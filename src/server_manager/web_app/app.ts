@@ -191,6 +191,15 @@ export class App {
       openImage(event.detail.imagePath);
     });
 
+    appRoot.addEventListener('OpenShareDialogRequested', (event: PolymerEvent) => {
+      const accessKey = event.detail.accessKey;
+      this.appRoot.openShareDialog(accessKey, this.getS3InviteUrl(accessKey));
+    });
+
+    appRoot.addEventListener('OpenGetConnectedDialogRequested', (event: PolymerEvent) => {
+      this.appRoot.openGetConnectedDialog(this.getS3InviteUrl(event.detail.accessKey, true));
+    });
+
     onUpdateDownloaded(this.displayAppUpdateNotification.bind(this));
   }
 
@@ -462,6 +471,7 @@ export class App {
           this.showServer(managedServer);
         })
         .catch((e) => {
+          console.log(e);
           if (e instanceof errors.DeletedServerError) {
             // The user deleted this server, no need to show an error or delete it again.
             return;
@@ -520,18 +530,20 @@ export class App {
         'en-US', {year: 'numeric', month: 'long', day: 'numeric'});
 
     if (isManagedServer(selectedServer)) {
+      view.isServerManaged = true;
       const host = selectedServer.getHost();
       view.monthlyCost = host.getMonthlyCost().usd;
-      view.deleteEnabled = true;
-      view.forgetEnabled = false;
-      const monthlyOutboundTransferGb = host.getMonthlyOutboundTransferLimit().terabytes * 1000;
-      view.monthlyOutboundTransferBytes = monthlyOutboundTransferGb * (2 ** 30);
+      view.monthlyOutboundTransferBytes =
+          host.getMonthlyOutboundTransferLimit().terabytes * (2 ** 40);
+      view.serverLocation = digitalocean_server.GetEnglishCityName(host.getRegionId());
     } else {
+      view.isServerManaged = false;
       // TODO(dborkan): consider using dom-if with restamp property
       // https://www.polymer-project.org/1.0/docs/api/elements/dom-if
       // or using template-repeat.  Then we won't have to worry about clearing
       // the server-view when we display a new server.  This should be fixed
       // once we support multiple servers.
+      view.serverLocation = undefined;
       view.monthlyCost = undefined;
       view.monthlyOutboundTransferBytes = undefined;
       view.deleteEnabled = false;
@@ -546,6 +558,10 @@ export class App {
     selectedServer.listAccessKeys()
         .then((serverAccessKeys: server.AccessKey[]) => {
           view.accessKeyRows = serverAccessKeys.map(convertToUiAccessKey);
+          // Initialize help bubbles once the page has rendered.
+          setTimeout(() => {
+            view.initHelpBubbles();
+          }, 250);
         })
         .catch((error) => {
           this.displayError('Could not load keys', error);
@@ -565,7 +581,7 @@ export class App {
       // and if they haven't seen the prompt yet according to localStorage.
       const storageKey = runningServer.getServerId() + '-prompted-for-metrics';
       if (!runningServer.getMetricsEnabled() && !localStorage.getItem(storageKey)) {
-        serverView.showMetricsDialogForNewServer();
+        this.appRoot.showMetricsDialogForNewServer();
         localStorage.setItem(storageKey, 'true');
       }
     };
@@ -625,6 +641,12 @@ export class App {
       }
       refreshTransferStats();
     }, statsRefreshRateMs);
+  }
+
+  private getS3InviteUrl(accessUrl: string, isAdmin = false) {
+    const adminParam = isAdmin ? '?admin_embed' : '';
+    return `https://s3.amazonaws.com/outline-vpn/invite.html${adminParam}#${
+        encodeURIComponent(accessUrl)}`;
   }
 
   private addAccessKey() {
@@ -720,7 +742,6 @@ export class App {
           })
           .then(
               () => {
-                this.appRoot.getServerView().closeServerSettings();
                 this.selectedServer = null;
                 this.showCreateServer();
                 this.displayNotification('Server deleted');
@@ -747,7 +768,6 @@ export class App {
         'This action removes your server from the Outline Manager, but does not block proxy access to users.  You will still need to manually delete the Outline server from your host machine.';
     const confirmationButton = 'FORGET';
     this.appRoot.getConfirmation(confirmationTitle, confirmationText, confirmationButton, () => {
-      this.appRoot.getServerView().closeServerSettings();
       serverToForget.forget();
       this.selectedServer = null;
       this.showIntro();

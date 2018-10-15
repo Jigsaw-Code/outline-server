@@ -68,6 +68,11 @@ export function MakeEnglishNameForServer(regionId: server.RegionId) {
   return `Outline Server ${cityEnglishNameById[getCityId(regionId)]}`;
 }
 
+// Returns the English name of the given region.
+export function GetEnglishCityName(regionId: server.RegionId) {
+  return cityEnglishNameById[getCityId(regionId)];
+}
+
 // Possible install states for DigitaloceanServer.
 enum InstallState {
   // Unknown state - server may still be installing.

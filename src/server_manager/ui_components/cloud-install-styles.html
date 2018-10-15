@@ -20,6 +20,16 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
 <dom-module id="cloud-install-styles">
   <template>
     <style>
+      :host {
+        --primary-green: #00BFA5;
+        --background-color: #263238;
+        --background-contrast-color: #2e3a3f;
+        --light-gray: rgba(255, 255, 255, 0.87);
+        --medium-gray: rgba(255, 255, 255, 0.54);
+        --dark-gray: rgba(0,0, 0, 0.87);
+        --border-color: rgba(255,255, 255, 0.12);
+      }
+
       #title {
         font-weight: 100;
         color: rgba(0, 0, 0, .87);
@@ -44,7 +54,7 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
       paper-button.primary {
         transition: .5s;
         color: white;
-        background-color: #263238;
+        background-color: var(--background-color);
         width: 56%;
       }
 
@@ -54,13 +64,16 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
 
       paper-button[disabled] {
         background-color: rgba(0, 0, 0, 0.25);
-        color: white;
+        color: var(--medium-gray);
       }
 
       paper-progress {
+         background: var(--background-contrast-color);
+        --paper-progress-active-color: var(--primary-green);
+        --paper-progress-container-color: var(--background-contrast-color);;
+        --paper-progress-transition-duration: 1.0s;
+        --paper-progress-transition-timing-function: linear;
         width: 100%;
-        margin-top: 24px;
-        --paper-progress-active-color: #00bfa5;
       }
 
       hr {
@@ -72,14 +85,14 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
       }
 
       app-toolbar {
-        background-color: #263238;
+        background-color: var(--background-color);
         color: #EEE;
         font-size: 12px;
         font-weight: 300;
         letter-spacing: .02em;
-        color: rgba(255,255,255,0.86);
+        color: var(--light-gray);
         padding: 0;
-        border-bottom: 2px solid rgba(0, 0, 0, 0.12);
+        border-bottom: 2px solid var(--border-color);
         /* Toolbar Copy 3: */
       }
 
@@ -192,11 +205,6 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
         text-decoration: none;
       }
 
-      .learnMoreLink {
-        text-decoration: underline;
-        color: rgba(0, 0, 0, 0.54);
-      }
-
       /*
         Helps make sure elements using both iron-flex-layout and the hidden
         attribute actually hide:
@@ -205,6 +213,23 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
       */
       [hidden] {
         display: none !important;
+      }
+
+      .flex-1 {
+        flex: 1;
+      }
+      .flex-2 {
+        flex: 2;
+      }
+
+      .card-section {
+        display: flex;
+        padding: 24px;
+        /* TODO(alalama): which one is it? */
+        background: #263238;
+        background: rgba(255,255,255,0.04);
+        background: var(--background-contrast-color);
+        border-radius: 2px;
       }
     </style>
 

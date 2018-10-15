@@ -43,13 +43,6 @@
     <style>
       :host {
         width: 100%;
-        --primary-green: #00BFA5;
-        --background-color: #263238;
-        --background-contrast-color: #2e3a3f;
-        --light-gray: rgba(255, 255, 255, 0.87);
-        --medium-gray: rgba(255, 255, 255, 0.54);
-        --dark-gray: rgba(0,0, 0, 0.87);
-        --border-color: rgba(255,255, 255, 0.12);
         --status-bar-width: 48px;
       }
       .app-container {
@@ -147,12 +140,28 @@
         text-align: center;
         color: var(--light-gray);
       }
+      #getConnectedDialog {
+        height: 562px;
+        background: white;
+      }
+      #getConnectedDialog iframe {
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid #ccc;
+        height: 500px;
+      }
+      #getConnectedDialog .buttons {
+         margin-top: -5px;  /* undo spacing added after iframe */
+      }
     </style>
 
     <outline-tos-view id="tosView" has-accepted-terms-of-service={{userAcceptedTos}} hidden$="{{hasAcceptedTos}}"></outline-tos-view>
 
     <div hidden$="{{!hasAcceptedTos}}">
-      <app-drawer-layout id="drawerLayout" responsive-width="768px" on-narrow-changed="_computeShouldShowSideBar" class$="[[sideBarMarginClass]]">
+      <!-- This responsive width sets the minimum layout area to 648px.  -->
+      <app-drawer-layout id="drawerLayout" responsive-width="886px" on-narrow-changed="_computeShouldShowSideBar" class$="[[sideBarMarginClass]]">
         <app-drawer id="appDrawer" slot="drawer" on-opened-changed="_computeShouldShowSideBar">
           <app-toolbar class="toolbar" hidden$="[[shouldShowSideBar]]">
             <paper-icon-button icon="menu" on-click="_toggleAppDrawer"></paper-icon-button>
@@ -220,9 +229,19 @@
 
       <paper-toast id='toast'><paper-icon-button icon='icons:close' on-tap='closeError'></paper-icon-button></paper-toast>
 
+      <!-- Modal dialogs must be outside the app container; otherwise the backdrop covers them.  -->
       <outline-feedback-dialog id='feedbackDialog'></outline-feedback-dialog>
       <outline-about-dialog id='aboutDialog' outline-version='[[outlineVersion]]'></outline-about-dialog>
       <outline-modal-dialog id='modalDialog'></outline-modal-dialog>
+      <outline-share-dialog id="shareDialog"></outline-share-dialog>
+      <outline-metrics-option-dialog id="metricsDialog"></outline-metrics-option-dialog>
+
+      <paper-dialog id="getConnectedDialog" modal>
+        <!-- iframe gets inserted here once we are given the invite URL. -->
+        <div class="buttons">
+          <paper-button on-tap="closeGetConnectedDialog" autofocus>Close</paper-button>
+        </div>
+      </paper-dialog>
 
       <paper-dialog id="licenses" modal restoreFocusOnClose>
         <paper-dialog-scrollable>
@@ -318,7 +337,6 @@
       },
       showServerView: function () {
         this.$.serverProgressStep.stop();
-        this.$.serverView.initHelpBubbles();
         this.currentPage = 'serverView';
       },
       getServerView: function() {
@@ -439,6 +457,31 @@
       },
       openManualInstallFeedback: function(prepopulatedMessage) {
         this.$.feedbackDialog.open(prepopulatedMessage, true);
+      },
+      openShareDialog: function(accessKey, s3Url) {
+        this.$.shareDialog.open(accessKey, s3Url);
+      },
+      openGetConnectedDialog: function(inviteUrl) {
+        const dialog = this.$.getConnectedDialog;
+        // Reset the iframe's state, by replacing it with a newly constructed
+        // iframe. Unfortunately the location.reload API does not work in our case due to
+        // this Chrome error:
+        // "Blocked a frame with origin "outline://web_app" from accessing a cross-origin frame."
+        const iframe = document.createElement('iframe');
+        iframe.onload = function() {
+          dialog.open();
+        };
+        iframe.src = inviteUrl;
+        dialog.insertBefore(iframe, dialog.children[0]);
+      },
+      closeGetConnectedDialog: function() {
+        const dialog = this.$.getConnectedDialog;
+        dialog.close();
+        const oldIframe = dialog.children[0];
+        dialog.removeChild(oldIframe);
+      },
+      showMetricsDialogForNewServer: function() {
+        this.$.metricsDialog.showMetricsOptInDialog();
       },
       // Returns a Promise which fulfills with the index of the button clicked.
       showModalDialog: function(title, text, buttons) {
