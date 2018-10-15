@@ -156,7 +156,7 @@ async function main() {
   let metricsWriter: UsageMetricsWriter;
   let metricsReader: UsageMetrics;
   const rollouts = createRolloutTracker(serverConfig);
-  if (rollouts.isRolloutEnabled('prometheus', 0)) {
+  if (rollouts.isRolloutEnabled('prometheus', 10)) {
     const prometheusPort = await portProvider.reserveFirstFreePort(9090);
     const prometheusLocation = `localhost:${prometheusPort}`;
 
