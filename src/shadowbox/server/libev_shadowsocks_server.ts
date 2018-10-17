@@ -155,7 +155,7 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
     childProcess.on('exit', (code, signal) => {
       logging.info(`Server on port ${key.port} has exited. Code: ${code}, Signal: ${signal}`);
     });
-    // TODO(fortuna): Disable this for production.
+    // This exposes the ss-server output on the docker logs.
     // TODO(fortuna): Consider saving the output and expose it through the manager service.
     childProcess.stdout.pipe(process.stdout);
     childProcess.stderr.pipe(process.stderr);

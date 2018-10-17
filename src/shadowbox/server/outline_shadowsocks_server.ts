@@ -85,7 +85,7 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
       logging.info(`Restarting`);
       this.start();
     });
-    // TODO(fortuna): Disable this for production.
+    // This exposes the outline-ss-server output on the docker logs.
     // TODO(fortuna): Consider saving the output and expose it through the manager service.
     this.ssProcess.stdout.pipe(process.stdout);
     this.ssProcess.stderr.pipe(process.stderr);
