@@ -33,6 +33,8 @@ interface AccessKeyConfig {
 // The configuration file format as json.
 export interface AccessKeyConfigJson {
   accessKeys?: AccessKeyConfig[];
+  // The port number to use for new access keys.
+  defaultPort?: number;
   // Next AccessKeyId to use.
   nextId?: number;
 }
@@ -76,7 +78,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   async createNewAccessKey(): Promise<AccessKey> {
-    const port = await this.portProvider.reserveNewPort();
+    const port = await this.getDefaultPort();
     const id = this.keyConfig.data().nextId.toString();
     this.keyConfig.data().nextId += 1;
     const metricsId = uuidv4();
@@ -136,6 +138,14 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined {
     const accessKeyJson = this.getAccessKey(id);
     return accessKeyJson ? accessKeyJson.metricsId : undefined;
+  }
+
+  private async getDefaultPort(): Promise<number> {
+    if (!this.keyConfig.data().defaultPort) {
+      this.keyConfig.data().defaultPort = await this.portProvider.reserveNewPort();
+      this.keyConfig.write();
+    }
+    return this.keyConfig.data().defaultPort;
   }
 
   private updateServer(): Promise<void> {
