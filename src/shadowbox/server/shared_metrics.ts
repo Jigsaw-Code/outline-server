@@ -28,7 +28,7 @@ const MS_PER_HOUR = 60 * 60 * 1000;
 const SANCTIONED_COUNTRIES = new Set(['CU', 'IR', 'KP', 'SY']);
 
 // Used internally to track key usage.
-interface KeyUsage {
+export interface KeyUsage {
   accessKeyId: string;
   countries: string[];
   inboundBytes: number;
@@ -109,41 +109,6 @@ export function createPrometheusUsageMetricsWriter(registry: prometheus.Registry
       usageCounter.labels('>p<', '', countries.join(','), '', accessKeyId).inc(inboundBytes);
     }
   };
-}
-
-// Tracks usage metrics since the server started.
-export class InMemoryUsageMetrics implements UsageMetrics, UsageMetricsWriter {
-  // Map from the metrics AccessKeyId to its usage.
-  private totalUsage = new Map<string, KeyUsage>();
-
-  getUsage(): Promise<KeyUsage[]> {
-    return Promise.resolve([...this.totalUsage.values()]);
-  }
-
-  // We use a separate metrics id so the accessKey id is not disclosed.
-  writeBytesTransferred(accessKeyId: AccessKeyId, numBytes: number, countries: string[]) {
-    // Don't record data for sanctioned countries.
-    for (const country of countries) {
-      if (SANCTIONED_COUNTRIES.has(country)) {
-        return;
-      }
-    }
-    if (numBytes === 0) {
-      return;
-    }
-    const sortedCountries = new Array(...countries).sort();
-    const entryKey = JSON.stringify([accessKeyId, sortedCountries]);
-    let keyUsage = this.totalUsage.get(entryKey);
-    if (!keyUsage) {
-      keyUsage = {accessKeyId, inboundBytes: 0, countries: sortedCountries};
-      this.totalUsage.set(entryKey, keyUsage);
-    }
-    keyUsage.inboundBytes += numBytes;
-  }
-
-  reset() {
-    this.totalUsage.clear();
-  }
 }
 
 export interface MetricsCollectorClient {
@@ -227,6 +192,9 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       if (keyUsage.inboundBytes === 0) {
         continue;
       }
+      if (hasSanctionedCountry(keyUsage.countries)) {
+        continue;
+      }
       userReports.push({
         userId: this.toMetricsId(keyUsage.accessKeyId) || '',
         bytesTransferred: keyUsage.inboundBytes,
@@ -246,4 +214,13 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
     }
     await this.metricsCollector.collectMetrics(report);
   }
+}
+
+function hasSanctionedCountry(countries: string[]) {
+  for (const country of countries) {
+    if (country in SANCTIONED_COUNTRIES) {
+      return true;
+    }
+  }
+  return false;
 }

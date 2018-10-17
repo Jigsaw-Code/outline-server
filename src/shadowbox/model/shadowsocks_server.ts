@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export interface ShadowsocksServer {
-  startInstance(id: string, portNumber: number, password: string, encryptionMethod?: string):
-      Promise<ShadowsocksInstance>;
+export interface AccessKey {
+  id: string;
+  port: number;
+  cipher: string;
+  secret: string;
 }
 
-export interface ShadowsocksInstance {
-  portNumber: number;
-  password: string;
-  encryptionMethod: string;
-  accessUrl: string;
-  stop();
+export interface ShadowsocksServer {
+  // Updates the server to accept only the given access keys.
+  update(keys: AccessKey[]): Promise<void>;
 }
