@@ -42,8 +42,9 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
   private keys = new Map<string, AccessKey>();
 
   constructor(
-      private publicAddress: string, private metricsSocket: dgram.Socket,
-      ipLocation: IpLocationService, usageWriter: UsageMetricsWriter, private verbose: boolean) {
+      private readonly publicAddress: string, private readonly metricsSocket: dgram.Socket,
+      ipLocation: IpLocationService, usageWriter: UsageMetricsWriter,
+      private readonly verbose: boolean) {
     metricsSocket.on('message', (buf: Buffer) => {
       let metricsMessage;
       try {
