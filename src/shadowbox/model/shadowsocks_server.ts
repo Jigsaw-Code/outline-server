@@ -19,4 +19,7 @@ export interface AccessKey {
   secret: string;
 }
 
-export interface ShadowsocksServer { update(keys: AccessKey[]): Promise<void>; }
+export interface ShadowsocksServer {
+  // Updates the server to accept only the given access keys.
+  update(keys: AccessKey[]): Promise<void>;
+}
