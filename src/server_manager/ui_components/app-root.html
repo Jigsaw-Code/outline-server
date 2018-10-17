@@ -42,17 +42,18 @@
     <style include='cloud-install-styles'></style>
     <style>
       :host {
-        width: 100%;
-        --status-bar-width: 48px;
+        --side-bar-width: 48px;
       }
       .app-container {
         margin: 0 auto;
       }
+      /* Large display desktops */
       @media (min-width: 1281px) {
         .app-container {
           max-width: 1200px;
         }
       }
+      /* Laptop, desktops */
       @media (min-width: 1025px) and (max-width: 1280px) {
         .app-container {
           max-width: 920px;
@@ -126,10 +127,10 @@
         margin-top: 8px;
       }
       .side-bar-margin {
-        margin-left: var(--status-bar-width);
+        margin-left: var(--side-bar-width);
       }
       #sideBar {
-        --app-drawer-width: var(--status-bar-width);
+        --app-drawer-width: var(--side-bar-width);
         --app-drawer-content-container: {
           background-color: var(--background-contrast-color);
         };
