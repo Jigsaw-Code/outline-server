@@ -49,12 +49,12 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
   }
 
   private writeConfigFile(keys: AccessKey[]): Promise<void> {
-    const keysJson = {keys: [] as AccessKey[]};
-    for (const key of keys) {
-      keysJson.keys.push(key);
-    }
-    const ymlTxt = jsyaml.safeDump(keysJson, {'sortKeys': true});
     return new Promise((resolve, reject) => {
+      const keysJson = {keys: [] as AccessKey[]};
+      for (const key of keys) {
+        keysJson.keys.push(key);
+      }
+      const ymlTxt = jsyaml.safeDump(keysJson, {'sortKeys': true});
       mkdirp.sync(path.dirname(this.configFilename));
       fs.writeFile(this.configFilename, ymlTxt, 'utf-8', (err) => {
         if (err) {
