@@ -100,6 +100,7 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
     return new Promise((resolve, reject) => {
       const oldKeys = this.keys;
       this.keys = new Map<string, AccessKey>();
+      // Start keys that were added
       for (const key of newKeys) {
         this.keys[key.id] = key;
         const oldKey = oldKeys.get(key.id);
@@ -108,7 +109,7 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
         }
         this.startInstance(key);
       }
-
+      // Stop keys that were removed.
       for (const oldKey of oldKeys.values()) {
         if (!this.keys.has(oldKey.id)) {
           this.stopInstance(oldKey.id);
