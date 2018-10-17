@@ -29,6 +29,7 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
   constructor(
       private configFilename: string, private verbose: boolean, private metricsLocation: string,
       private ipCountryLocation: string) {}
+
   private writeConfigFile(keys: AccessKey[]): Promise<void> {
     const keysJson = {keys: [] as AccessKey[]};
     for (const key of keys) {
