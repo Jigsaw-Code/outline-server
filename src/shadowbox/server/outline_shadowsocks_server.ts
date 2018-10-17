@@ -24,11 +24,29 @@ import {AccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
 // Runs outline-ss-server.
 export class OutlineShadowsocksServer implements ShadowsocksServer {
   private ssProcess: child_process.ChildProcess;
+  private ipCountryFilename = '';
 
   // configFilename is the location for the outline-ss-server config.
   constructor(
-      private configFilename: string, private verbose: boolean, private metricsLocation: string,
-      private ipCountryLocation: string) {}
+      private configFilename: string, private verbose: boolean, private metricsLocation: string) {}
+
+  // Annotates the Prometheus data metrics with countries.
+  // ipCountryFilename is the location of the GeoLite2-Country.mmdb file.
+  enableCountryMetrics(ipCountryFilename: string): OutlineShadowsocksServer {
+    this.ipCountryFilename = ipCountryFilename;
+    return this;
+  }
+
+  update(keys: AccessKey[]): Promise<void> {
+    return this.writeConfigFile(keys).then(() => {
+      if (!this.ssProcess) {
+        this.start();
+        return Promise.resolve();
+      } else {
+        this.ssProcess.kill('SIGHUP');
+      }
+    });
+  }
 
   private writeConfigFile(keys: AccessKey[]): Promise<void> {
     const keysJson = {keys: [] as AccessKey[]};
@@ -47,21 +65,10 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
     });
   }
 
-  update(keys: AccessKey[]): Promise<void> {
-    return this.writeConfigFile(keys).then(() => {
-      if (!this.ssProcess) {
-        this.start();
-        return Promise.resolve();
-      } else {
-        this.ssProcess.kill('SIGHUP');
-      }
-    });
-  }
-
   private start() {
     const commandArguments = ['-config', this.configFilename, '-metrics', this.metricsLocation];
-    if (this.ipCountryLocation) {
-      commandArguments.push('-ip_country_db', this.ipCountryLocation);
+    if (this.ipCountryFilename) {
+      commandArguments.push('-ip_country_db', this.ipCountryFilename);
     }
     if (this.verbose) {
       commandArguments.push('-verbose');
