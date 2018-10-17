@@ -150,6 +150,10 @@ async function main() {
 
   const ssMetricsPort = await portProvider.reserveFirstFreePort(nodeMetricsPort + 1);
   const ssMetricsLocation = `localhost:${ssMetricsPort}`;
+  logging.info(`Prometheus is at ${prometheusLocation}`);
+  logging.info(`Node metrics is at ${nodeMetricsLocation}`);
+  logging.info(`outline-ss-server metrics is at ${ssMetricsLocation}`);
+
   runPrometheusScraper(
       [
         '--storage.tsdb.retention', '31d', '--storage.tsdb.path',
