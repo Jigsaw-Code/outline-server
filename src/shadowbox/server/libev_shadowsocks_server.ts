@@ -97,23 +97,25 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
   }
 
   update(newKeys: AccessKey[]): Promise<void> {
-    const oldKeys = this.keys;
-    this.keys = new Map<string, AccessKey>();
-    for (const key of newKeys) {
-      this.keys[key.id] = key;
-      const oldKey = oldKeys.get(key.id);
-      if (oldKey) {
-        continue;
+    return new Promise((resolve, reject) => {
+      const oldKeys = this.keys;
+      this.keys = new Map<string, AccessKey>();
+      for (const key of newKeys) {
+        this.keys[key.id] = key;
+        const oldKey = oldKeys.get(key.id);
+        if (oldKey) {
+          continue;
+        }
+        this.startInstance(key);
       }
-      this.startInstance(key);
-    }
 
-    for (const oldKey of oldKeys.values()) {
-      if (!this.keys.has(oldKey.id)) {
-        this.stopInstance(oldKey.id);
+      for (const oldKey of oldKeys.values()) {
+        if (!this.keys.has(oldKey.id)) {
+          this.stopInstance(oldKey.id);
+        }
       }
-    }
-    return Promise.resolve();
+      resolve();
+    });
   }
 
   private startInstance(key: AccessKey): child_process.ChildProcess {
