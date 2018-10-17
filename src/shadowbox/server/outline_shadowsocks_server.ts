@@ -40,6 +40,7 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
 
   // Promise is resolved after the outline-ss-config config is updated and the SIGHUP sent.
   // Keys may not be active yet.
+  // TODO(fortuna): Make promise resolve when keys are ready.
   update(keys: AccessKey[]): Promise<void> {
     return this.writeConfigFile(keys).then(() => {
       if (!this.ssProcess) {
