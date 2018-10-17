@@ -28,7 +28,8 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
 
   // configFilename is the location for the outline-ss-server config.
   constructor(
-      private configFilename: string, private verbose: boolean, private metricsLocation: string) {}
+      private readonly configFilename: string, private readonly verbose: boolean,
+      private readonly metricsLocation: string) {}
 
   // Annotates the Prometheus data metrics with countries.
   // ipCountryFilename is the location of the GeoLite2-Country.mmdb file.
