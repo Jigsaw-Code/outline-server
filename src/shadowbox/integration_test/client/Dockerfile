@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This ensures that the client is up to date with the server.
-FROM outline/shadowbox
+FROM golang:1-alpine
+
+# curl for fetching pages using the local proxy
+RUN apk add --no-cache curl git
+RUN go get github.com/shadowsocks/go-shadowsocks2
 
 ENTRYPOINT [ "sh" ]
