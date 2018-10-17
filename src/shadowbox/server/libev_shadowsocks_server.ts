@@ -97,6 +97,8 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
     });
   }
 
+  // Update spawns the ss-libev subprocess and returns, likely before the instances
+  // are ready and serving.
   update(newKeys: AccessKey[]): Promise<void> {
     return new Promise((resolve, reject) => {
       const oldKeys = this.keys;
