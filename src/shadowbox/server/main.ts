@@ -173,9 +173,10 @@ async function main() {
   const rollouts = createRolloutTracker(serverConfig);
   let shadowsocksServer: ShadowsocksServer;
   if (rollouts.isRolloutEnabled('outline-ss-server', 0)) {
-    shadowsocksServer = new OutlineShadowsocksServer(
-        getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation,
-        MMDB_LOCATION);
+    shadowsocksServer =
+        new OutlineShadowsocksServer(
+            getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation)
+            .enableCountryMetrics(MMDB_LOCATION);
   } else {
     const ipLocation = new ip_location.MmdbLocationService(MMDB_LOCATION);
     const metricsWriter = createPrometheusUsageMetricsWriter(prometheus.register);
