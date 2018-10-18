@@ -56,6 +56,11 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
     return new Promise((resolve, reject) => {
       const keysJson = {keys: [] as AccessKey[]};
       for (const key of keys) {
+        if (!isAeadCipher(key.cipher)) {
+          logging.error(`Cipher ${key.cipher} for access key ${
+              key.id} is not supported: use an AEAD cipher instead.`);
+          continue;
+        }
         keysJson.keys.push(key);
       }
       const ymlTxt = jsyaml.safeDump(keysJson, {'sortKeys': true});
@@ -91,4 +96,10 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
     this.ssProcess.stdout.pipe(process.stdout);
     this.ssProcess.stderr.pipe(process.stderr);
   }
+}
+
+// List of AEAD ciphers can be found at https://shadowsocks.org/en/spec/AEAD-Ciphers.html
+function isAeadCipher(cipherAlias: string) {
+  cipherAlias = cipherAlias.toLowerCase();
+  return cipherAlias.endsWith('gcm') || cipherAlias.endsWith('poly1305');
 }
