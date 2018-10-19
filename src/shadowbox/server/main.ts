@@ -149,10 +149,8 @@ async function main() {
   const nodeMetricsLocation = `localhost:${nodeMetricsPort}`;
 
   const ssMetricsPort = await portProvider.reserveFirstFreePort(nodeMetricsPort + 1);
-  const ssMetricsLocation = `localhost:${ssMetricsPort}`;
   logging.info(`Prometheus is at ${prometheusLocation}`);
   logging.info(`Node metrics is at ${nodeMetricsLocation}`);
-  logging.info(`outline-ss-server metrics is at ${ssMetricsLocation}`);
 
   const prometheusConfigJson = {
     global: {
@@ -163,13 +161,12 @@ async function main() {
       {job_name: 'outline-server-main', static_configs: [{targets: [nodeMetricsLocation]}]},
     ]
   };
-  const prometheusClient = new PrometheusClient(`http://${prometheusLocation}`);
-  const managerMetrics = new PrometheusManagerMetrics(prometheusClient, legacyManagerMetrics);
-  const metricsReader = new PrometheusUsageMetrics(prometheusClient);
 
   const rollouts = createRolloutTracker(serverConfig);
   let shadowsocksServer: ShadowsocksServer;
   if (rollouts.isRolloutEnabled('outline-ss-server', 0)) {
+    const ssMetricsLocation = `localhost:${ssMetricsPort}`;
+    logging.info(`outline-ss-server metrics is at ${ssMetricsLocation}`);
     prometheusConfigJson.scrape_configs.push(
         {job_name: 'outline-server-ss', static_configs: [{targets: [ssMetricsLocation]}]});
     shadowsocksServer =
@@ -193,9 +190,12 @@ async function main() {
   const accessKeyRepository = new ServerAccessKeyRepository(
       portProvider, proxyHostname, accessKeyConfig, shadowsocksServer);
 
+  const prometheusClient = new PrometheusClient(`http://${prometheusLocation}`);
+  const metricsReader = new PrometheusUsageMetrics(prometheusClient);
   const toMetricsId = (id: AccessKeyId) => {
     return accessKeyRepository.getMetricsId(id);
   };
+  const managerMetrics = new PrometheusManagerMetrics(prometheusClient, legacyManagerMetrics);
   const metricsCollector = new RestMetricsCollectorClient(metricsCollectorUrl);
   const metricsPublisher: SharedMetricsPublisher = new OutlineSharedMetricsPublisher(
       new RealClock(), serverConfig, metricsReader, toMetricsId, metricsCollector);
