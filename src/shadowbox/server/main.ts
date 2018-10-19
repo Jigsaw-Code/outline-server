@@ -154,22 +154,15 @@ async function main() {
   logging.info(`Node metrics is at ${nodeMetricsLocation}`);
   logging.info(`outline-ss-server metrics is at ${ssMetricsLocation}`);
 
-  runPrometheusScraper(
-      [
-        '--storage.tsdb.retention', '31d', '--storage.tsdb.path',
-        getPersistentFilename('prometheus/data'), '--web.listen-address', prometheusLocation,
-        '--log.level', verbose ? 'debug' : 'info'
-      ],
-      getPersistentFilename('prometheus/config.yml'), {
-        global: {
-          scrape_interval: '15s',
-        },
-        scrape_configs: [
-          {job_name: 'prometheus', static_configs: [{targets: [prometheusLocation]}]},
-          {job_name: 'outline-server-main', static_configs: [{targets: [nodeMetricsLocation]}]},
-          {job_name: 'outline-server-ss', static_configs: [{targets: [ssMetricsLocation]}]}
-        ]
-      });
+  const prometheusConfigJson = {
+    global: {
+      scrape_interval: '15s',
+    },
+    scrape_configs: [
+      {job_name: 'prometheus', static_configs: [{targets: [prometheusLocation]}]},
+      {job_name: 'outline-server-main', static_configs: [{targets: [nodeMetricsLocation]}]},
+    ]
+  };
   const prometheusClient = new PrometheusClient(`http://${prometheusLocation}`);
   const managerMetrics = new PrometheusManagerMetrics(prometheusClient, legacyManagerMetrics);
   const metricsReader = new PrometheusUsageMetrics(prometheusClient);
@@ -177,6 +170,8 @@ async function main() {
   const rollouts = createRolloutTracker(serverConfig);
   let shadowsocksServer: ShadowsocksServer;
   if (rollouts.isRolloutEnabled('outline-ss-server', 0)) {
+    prometheusConfigJson.scrape_configs.push(
+        {job_name: 'outline-server-ss', static_configs: [{targets: [ssMetricsLocation]}]});
     shadowsocksServer =
         new OutlineShadowsocksServer(
             getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation)
@@ -187,6 +182,13 @@ async function main() {
     shadowsocksServer = await createLibevShadowsocksServer(
         proxyHostname, await portProvider.reserveNewPort(), ipLocation, metricsWriter, verbose);
   }
+  runPrometheusScraper(
+      [
+        '--storage.tsdb.retention', '31d', '--storage.tsdb.path',
+        getPersistentFilename('prometheus/data'), '--web.listen-address', prometheusLocation,
+        '--log.level', verbose ? 'debug' : 'info'
+      ],
+      getPersistentFilename('prometheus/config.yml'), prometheusConfigJson);
 
   const accessKeyRepository = new ServerAccessKeyRepository(
       portProvider, proxyHostname, accessKeyConfig, shadowsocksServer);
