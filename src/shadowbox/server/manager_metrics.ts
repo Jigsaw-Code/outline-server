@@ -40,7 +40,7 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     }
     // TODO: Remove this after 30 days of everyone being migrated, since we won't need the config
     // file anymore.
-    this.addLegacyUsageData(usage);
+    await this.addLegacyUsageData(usage);
     return {bytesTransferredByUserId: usage};
   }
 
@@ -48,7 +48,11 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     const bytesTransferredByUserId =
         (await this.legacyManagerMetrics.get30DayByteTransfer()).bytesTransferredByUserId;
     for (const userId of Object.keys(bytesTransferredByUserId)) {
-      usage[userId] += bytesTransferredByUserId[userId];
+      const oldBytes = usage[userId] || 0;
+      const increment = bytesTransferredByUserId[userId];
+      if (increment > 0) {
+        usage[userId] = oldBytes + increment;
+      }
     }
   }
 }

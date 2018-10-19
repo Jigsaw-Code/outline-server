@@ -18,24 +18,21 @@ import * as get_port from './get_port';
 
 describe('PortProvider', () => {
   describe('addReservedPort', () => {
-    it('gets port over 1023', async (done) => {
+    it('gets port over 1023', async () => {
       expect(await new get_port.PortProvider().reserveNewPort()).toBeGreaterThan(1023);
-      done();
     });
-    it('fails on double reservation', (done) => {
+    it('fails on double reservation', () => {
       const ports = new get_port.PortProvider();
       ports.addReservedPort(8080);
       expect(() => ports.addReservedPort(8080)).toThrowError();
-      done();
     });
   });
   describe('freePort', () => {
-    it('makes port available', (done) => {
+    it('makes port available', () => {
       const ports = new get_port.PortProvider();
       ports.addReservedPort(8080);
       ports.freePort(8080);
       ports.addReservedPort(8080);
-      done();
     });
   });
   describe('reserverFirstFreePort', () => {
@@ -58,7 +55,7 @@ describe('PortProvider', () => {
 function listen(): Promise<net.Server> {
   const server = net.createServer();
   return new Promise((resolve, reject) => {
-    server.listen(() => {
+    server.listen({host: 'localhost', port: 0, exclusive: true}, () => {
       resolve(server);
     });
   });
