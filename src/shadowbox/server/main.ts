@@ -139,8 +139,6 @@ async function main() {
 
   logging.info('Starting...');
 
-  const legacyManagerMetrics =
-      createLegacyManagerMetrics(getPersistentFilename('shadowbox_stats.json'));
   const prometheusPort = await portProvider.reserveFirstFreePort(9090);
   const prometheusLocation = `localhost:${prometheusPort}`;
 
@@ -195,6 +193,8 @@ async function main() {
   const toMetricsId = (id: AccessKeyId) => {
     return accessKeyRepository.getMetricsId(id);
   };
+  const legacyManagerMetrics =
+      createLegacyManagerMetrics(getPersistentFilename('shadowbox_stats.json'));
   const managerMetrics = new PrometheusManagerMetrics(prometheusClient, legacyManagerMetrics);
   const metricsCollector = new RestMetricsCollectorClient(metricsCollectorUrl);
   const metricsPublisher: SharedMetricsPublisher = new OutlineSharedMetricsPublisher(
