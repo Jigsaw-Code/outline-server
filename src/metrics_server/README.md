@@ -4,7 +4,7 @@ The Outline Metrics Server is built using [Google Cloud Functions](https://cloud
 
 ## Requirements
 * Install `gcloud` from https://cloud.google.com/sdk/docs/
-* Node 6.11.1 or greater (for testing via Cloud Functions Emulator)
+* Node 6.x, x=11.1 or greater (for testing via Cloud Functions Emulator)
 
 ## Building
 Run `yarn do metrics_server/build`
