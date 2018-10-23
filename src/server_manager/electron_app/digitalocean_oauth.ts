@@ -148,8 +148,8 @@ export function runOauth(): OauthSession {
                   var paramsStr = location.hash.substr(1);
                   var params = splitParams(paramsStr);
                   var form = document.getElementById("form");
-                  var targetUrl = params["state"];
-                  form.setAttribute("action", targetUrl);
+                  var secret = params["state"];
+                  form.setAttribute("action", "/?secret=" + encodeURIComponent(secret));
                   document.getElementById("params").setAttribute("value", paramsStr);
                   form.submit();
               </script>
@@ -204,12 +204,10 @@ export function runOauth(): OauthSession {
           const address = server.address();
           console.log(`OAuth target listening on ${address.address}:${address.port}`);
 
-          const targetUrl = `http://localhost:${
-              encodeURIComponent(address.port.toString())}?secret=${encodeURIComponent(secret)}`;
           const oauthUrl = `https://cloud.digitalocean.com/v1/oauth/authorize?client_id=${
               encodeURIComponent(
                   clientId)}&response_type=token&scope=read%20write&redirect_uri=http://localhost:${
-              encodeURIComponent(port.toString())}/&state=${encodeURIComponent(targetUrl)}`;
+              encodeURIComponent(port.toString())}/&state=${encodeURIComponent(secret)}`;
           console.log(`Opening OAuth URL ${oauthUrl}`);
           electron.shell.openExternal(oauthUrl);
         })
