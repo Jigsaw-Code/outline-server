@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as child_process from 'child_process';
+import * as net from 'net';
 
 const MAX_PORT = 65535;
 const MIN_PORT = 1024;
@@ -31,9 +32,8 @@ export class PortProvider {
 
   // Returns the first free port equal or after initialPort
   async reserveFirstFreePort(initialPort: number): Promise<number> {
-    const usedPorts = await getUsedPorts();
     for (let port = initialPort; port < 65536; port++) {
-      if (!usedPorts.has(port) && !this.reservedPorts.has(port)) {
+      if (!this.reservedPorts.has(port) && !(await isPortUsed(port))) {
         this.reservedPorts.add(port);
         return port;
       }
@@ -49,7 +49,7 @@ export class PortProvider {
       if (this.reservedPorts.has(port)) {
         continue;
       }
-      if (await isPortUsedLsof(port)) {
+      if (await isPortUsed(port)) {
         continue;
       }
       this.reservedPorts.add(port);
@@ -64,17 +64,6 @@ export class PortProvider {
 
 function getRandomPortOver1023() {
   return Math.floor(Math.random() * (MAX_PORT + 1 - MIN_PORT) + MIN_PORT);
-}
-
-// Returns the first free port equal or after initialPort
-async function getFirstFreePort(initialPort: number): Promise<number> {
-  const usedPorts = await getUsedPorts();
-  for (let port = initialPort; port < 65536; port++) {
-    if (!usedPorts.has(port)) {
-      return port;
-    }
-  }
-  throw new Error('port not found');
 }
 
 // Returns the list of ports used by either TCP or UDP.
@@ -107,13 +96,28 @@ export function getUsedPorts(): Promise<Set<number>> {
   });
 }
 
-function isPortUsedLsof(port: number): Promise<boolean> {
-  return getUsedPorts().then((usedPorts) => {
-    for (const usedPort of usedPorts) {
-      if (usedPort === port) {
-        return true;
+interface ServerError extends Error {
+  code: string;
+}
+
+function isPortUsed(port: number): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    let isUsed = false;
+    const server = new net.Server();
+    server.on('error', (error: ServerError) => {
+      if (error.code === 'EADDRINUSE') {
+        isUsed = true;
+      } else {
+        reject(error);
       }
-    }
-    return false;
+      server.close();
+    });
+    server.listen({host: 'localhost', port, exclusive: true}, () => {
+      isUsed = false;
+      server.close();
+    });
+    server.on('close', () => {
+      resolve(isUsed);
+    });
   });
 }

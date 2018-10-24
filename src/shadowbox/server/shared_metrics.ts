@@ -218,7 +218,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
 
 function hasSanctionedCountry(countries: string[]) {
   for (const country of countries) {
-    if (country in SANCTIONED_COUNTRIES) {
+    if (SANCTIONED_COUNTRIES.has(country)) {
       return true;
     }
   }
