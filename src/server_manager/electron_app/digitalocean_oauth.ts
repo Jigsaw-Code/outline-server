@@ -135,9 +135,9 @@ export function runOauth(): OauthSession {
                   <input id="params" type="hidden" name="params"></input>
               </form>
               <script>
-                  var params = location.hash.substr(1);
+                  var paramsStr = location.hash.substr(1);
                   var form = document.getElementById("form");
-                  document.getElementById("params").setAttribute("value", params);
+                  document.getElementById("params").setAttribute("value", paramsStr);
                   form.submit();
               </script>
           </body>
