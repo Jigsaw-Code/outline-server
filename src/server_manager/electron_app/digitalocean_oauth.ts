@@ -135,22 +135,9 @@ export function runOauth(): OauthSession {
                   <input id="params" type="hidden" name="params"></input>
               </form>
               <script>
-                  // We can't use URLSearchParams in IE :-(
-                  function splitParams(paramsStr) {
-                    var params = {};
-                    var kvs = paramsStr.split("&");
-                    for (var i in kvs) {
-                      pair = kvs[i].split("=");
-                      params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
-                    }
-                    return params;
-                  }
-                  var paramsStr = location.hash.substr(1);
-                  var params = splitParams(paramsStr);
+                  var params = location.hash.substr(1);
                   var form = document.getElementById("form");
-                  var secret = params["state"];
-                  form.setAttribute("action", "/?secret=" + encodeURIComponent(secret));
-                  document.getElementById("params").setAttribute("value", paramsStr);
+                  document.getElementById("params").setAttribute("value", params);
                   form.submit();
               </script>
           </body>
@@ -165,16 +152,16 @@ export function runOauth(): OauthSession {
     app.post('/', bodyParser.urlencoded({type: '*/*', extended: false}), (request, response) => {
       server.close();
 
-      const requestSecret = request.query.secret;
-      if (requestSecret !== secret) {
-        response.status(400).send(closeWindowHtml('Authentication failed'));
-        reject(new Error(`Expected secret ${secret}. Got ${requestSecret}`));
-        return;
-      }
       const params = new URLSearchParams(request.body.params);
       if (params.get('error')) {
         response.status(400).send(closeWindowHtml('Authentication failed'));
         reject(new Error(`DigitalOcean OAuth error: ${params.get('error_description')}`));
+        return;
+      }
+      const requestSecret = params.get('state');
+      if (requestSecret !== secret) {
+        response.status(400).send(closeWindowHtml('Authentication failed'));
+        reject(new Error(`Expected secret ${secret}. Got ${requestSecret}`));
         return;
       }
       const accessToken = params.get('access_token');
