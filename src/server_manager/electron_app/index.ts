@@ -88,7 +88,16 @@ function createMainWindow() {
   const LOADING_WINDOW_DELAY_MS = 3000;
 
   const handleNavigation = (event: Event, url: string) => {
-    shell.openExternal(url);
+    try {
+      const parsed: URL = new URL(url);
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        shell.openExternal(url);
+      } else {
+        console.warn(`Refusing to open URL with protocol "${parsed.protocol}"`);
+      }
+    } catch (e) {
+      console.warn('Could not parse URL: ' + url);
+    }
     event.preventDefault();
   };
   win.webContents.on('will-navigate', (event: Event, url: string) => {
