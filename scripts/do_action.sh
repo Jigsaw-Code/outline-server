@@ -30,12 +30,10 @@ function do_action() {
   local action=$1
   echo -e "$STYLE_BOLD_WHITE[Running $action]$STYLE_RESET"
   shift
-  OUTPUT_FILE=$(mktemp)
-  if $ROOT_DIR/src/${action}_action.sh "$@" 2> $OUTPUT_FILE; then
+  if $ROOT_DIR/src/${action}_action.sh "$@"; then
     echo -e "$STYLE_BOLD_WHITE[Done $action]$STYLE_RESET"
   else
     local status=$?
-    cat $OUTPUT_FILE >&2
     echo -e "$STYLE_BOLD_RED[Failed $action]$STYLE_RESET"
     return $status
   fi
