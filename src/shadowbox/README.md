@@ -81,9 +81,9 @@ docker rmi $(docker images -f dangling=true -q)
 
 ## Access Keys Management API
 
-In order to Access the Management API, you'll need to know the apiUrl for your server. You can obtain this information from the access.txt file under the 'shadowbox' directory in your Outline server. An example apiUrl is: https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z. 
+In order to utilize the Management API, you'll need to know the apiUrl for your Outline server. You can obtain this information from the 'access.txt' file under the 'shadowbox' directory of your server. An example apiUrl is: https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z. 
 
-Replacing apiUrl with the actual URL you see in that file, here's how you can programmatically operate on the Server.
+By replacing apiUrl with the actual URL you see in that file, you can programmatically perform the following operations on the server.
 
 List users
 ```
@@ -113,37 +113,37 @@ Example output
 </summary>
 
 ```
-$ curl --insecure https://localhost:8081/TestApiPrefix/access-keys
+$ curl --insecure https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z/access-keys
 {"users":[]}
 
-$ curl --insecure -X POST https://localhost:8081/TestApiPrefix/access-keys
+$ curl --insecure -X POST https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z/access-keys
 {"id":"0","password":"Nm9wtQkPeshs","port":34180}
 
-$ curl --insecure -X POST https://localhost:8081/TestApiPrefix/access-keys
+$ curl --insecure -X POST hhttps://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z/access-keys
 {"id":"1","password":"32mW3jhuhBGv","port":55625}
 
-$ curl --insecure -X POST https://localhost:8081/TestApiPrefix/access-keys
+$ curl --insecure -X POST https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z/access-keys
 {"id":"2","password":"jFOKrJcpbgIb","port":15884}
 
-$ curl --insecure https://localhost:8081/TestApiPrefix/access-keys
+$ curl --insecure https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z/access-keys
 {"users":[{"id":"0","password":"Nm9wtQkPeshs","port":34180},{"id":"1","password":"32mW3jhuhBGv","port":55625},{"id":"2","password":"jFOKrJcpbgIb","port":15884}]}
 
-$ curl --insecure -X DELETE https://localhost:8081/TestApiPrefix/access-keys/0 -v
+$ curl --insecure -X DELETE https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z/access-keys/0 -v
 * Hostname was NOT found in DNS cache
 *   Trying ::1...
-* Connected to localhost (::1) port 8081 (#0)
+* Connected to 1.2.3.4 (::1) port 1234 (#0)
 > DELETE /access-keys/0 HTTP/1.1
 > User-Agent: curl/7.35.0
-> Host: localhost:8081
+> Host: 1.2.3.4:1234
 > Accept: */*
 >
 < HTTP/1.1 204 No Content
 < Date: Fri, 03 Feb 2017 22:46:39 GMT
 < Connection: keep-alive
 <
-* Connection #0 to host localhost left intact
+* Connection #0 to host 1.2.3.4 left intact
 
-$ curl --insecure https://localhost:8081/TestApiPrefix/access-keys
+$ curl --insecure https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z/access-keys
 {"users":[{"id":"1","password":"32mW3jhuhBGv","port":55625},{"id":"2","password":"jFOKrJcpbgIb","port":15884}]}
 ```
 </details>
