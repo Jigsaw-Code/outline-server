@@ -25,27 +25,27 @@ rm -rf $OUT_DIR
 mkdir -p $OUT_DIR/ts/server_manager/web_app
 mkdir -p $OUT_DIR/sh/server_manager/web_app
 
-pushd $ROOT_DIR/src/server_manager/install_scripts
+pushd $ROOT_DIR/src/server_manager/install_scripts > /dev/null
 tar --create --gzip -f $OUT_DIR/sh/server_manager/web_app/scripts.tgz *.sh
-popd
+popd > /dev/null
 
 # Node.js on Cygwin doesn't like absolute Unix-style paths.
 # So, we'll use relative paths for a few steps such as Browserify.
 
-pushd $ROOT_DIR
+pushd $ROOT_DIR > /dev/null
 node src/server_manager/install_scripts/build_install_script_ts.node.js \
     build/server_manager/web_app/sh/server_manager/web_app/scripts.tgz > $ROOT_DIR/src/server_manager/install_scripts/do_install_script.ts
-popd
+popd > /dev/null
 
 # Compile Typescript
 tsc
 
 # Browserify node_modules/ (just a couple of key NPMs) and app.
-pushd $OUT_DIR
+pushd $OUT_DIR > /dev/null
 mkdir -p browserified/server_manager/web_app
 $NODE_MODULES_BIN_DIR/browserify --require bytes --require clipboard-polyfill -o browserified/node_modules.js
 $NODE_MODULES_BIN_DIR/browserify js/server_manager/web_app/main.js -s main -o browserified/server_manager/web_app/main.js
-popd
+popd > /dev/null
 
 # Assemble the web app
 readonly STATIC_DIR=$OUT_DIR/static
