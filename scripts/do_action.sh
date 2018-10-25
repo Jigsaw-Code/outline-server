@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -eux
+set -eu
 
 # TODO: Because Node.js on Cygwin doesn't handle absolute paths very
 #       well, it would be worth pushd-ing to ROOT_DIR before invoking
@@ -25,12 +25,20 @@ export BUILD_DIR=${BUILD_DIR:-$ROOT_DIR/build}
 
 function do_action() {
   readonly STYLE_BOLD_WHITE='\033[1;37m'
+  readonly STYLE_BOLD_RED='\033[1;31m'
   readonly STYLE_RESET='\033[0m'
   local action=$1
   echo -e "$STYLE_BOLD_WHITE[Running $action]$STYLE_RESET"
   shift
-  $ROOT_DIR/src/${action}_action.sh "$@"
-  echo -e "$STYLE_BOLD_WHITE[Done $action]$STYLE_RESET"
+  OUTPUT_FILE=$(mktemp)
+  if $ROOT_DIR/src/${action}_action.sh "$@" 2> $OUTPUT_FILE; then
+    echo -e "$STYLE_BOLD_WHITE[Done $action]$STYLE_RESET"
+  else
+    local status=$?
+    cat $OUTPUT_FILE >&2
+    echo -e "$STYLE_BOLD_RED[Failed $action]$STYLE_RESET"
+    return $status
+  fi
 }
 export -f do_action
 
