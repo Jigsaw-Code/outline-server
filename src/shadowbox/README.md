@@ -81,26 +81,30 @@ docker rmi $(docker images -f dangling=true -q)
 
 ## Access Keys Management API
 
+In order to Access the Management API, you'll need to know the apiUrl for your server. You can obtain this information from the access.txt file under the 'shadowbox' directory in your Outline server. An example apiUrl is: https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z. 
+
+Replacing apiUrl with the actual URL you see in that file, here's how you can programmatically operate on the Server.
+
 List users
 ```
-curl --insecure https://localhost:8081/TestApiPrefix/access-keys/
+curl --insecure apiUrl/access-keys/
 ```
 
 Create a user
 ```
-curl --insecure -X POST https://localhost:8081/TestApiPrefix/access-keys
+curl --insecure -X POST apiUrl/access-keys
 ```
 
 Rename a user
 (e.g. rename user ID 2 to 'albion')
 ```
-curl --insecure -X PUT curl -X POST -F 'name=albion' https://localhost:8081/TestApiPrefix/access-keys/2/name
+curl --insecure -X PUT curl -F 'name=albion' apiUrl/access-keys/2/name
 ```
 
 Remove a user
 (e.g. remove user ID 2)
 ```
-curl --insecure -X DELETE https://localhost:8081/TestApiPrefix/access-keys/2
+curl --insecure -X DELETE apiUrl/access-keys/2
 ```
 
 <details>
