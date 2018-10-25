@@ -24,7 +24,7 @@
 # WATCHTOWER_REFRESH_SECONDS: refresh interval in seconds to check for updates,
 #     defaults to 3600.
 
-set -euxo pipefail
+set -euo pipefail
 
 # Re-enable password login, since DigitalOcean disables it when we create a server
 # with a SSH key.
