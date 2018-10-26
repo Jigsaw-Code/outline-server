@@ -31,84 +31,94 @@
         align-items: center;
         padding: 132px 0;
         font-size: 14px;
-        color: rgba(0,0,0,0.87);
       }
       #connectAccount img {
-        width: 36px;
-        height: 36px;
+        width: 48px;
+        height: 48px;
+        margin-bottom: 12px;
       }
-      paper-card {
+      .card {
         display: flex;
         flex-direction: column;
         align-items: stretch;
         justify-content: space-between;
-        margin: 24px;
+        margin: 24px 0;
         padding: 24px;
-        background: #FFFFFF;
+        background: var(--background-contrast-color);
         box-shadow: 0 0 2px 0 rgba(0,0,0,0.14), 0 2px 2px 0 rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
         border-radius: 2px;
       }
-      paper-button {
+      @media (min-width: 1025px) {
+        paper-card {
+          /* Set min with for the paper-card to grow responsively. */
+          min-width: 600px;
+        }
+      }
+      .card p {
+        color: var(--light-gray);
+      }
+      .card paper-button {
+        color: var(--light-gray);
         width: 100%;
-        border: 1px solid rgba(0,0,0,0.12);
+        border: 1px solid rgba(255,255,255,0.12);
         border-radius: 2px;
       }
-      paper-button[disabled] {
-        color: rgba(0,0,0,0.54);
+      .card paper-button[disabled] {
+        color: var(--medium-gray);
         background: transparent;
       }
     </style>
 
-      <iron-pages id='pages' attr-for-selected='id' selected='{{ currentPage }}'>
-        <outline-step-view id="connectAccount">
-          <span slot="step-title">Sign in or create an account with DigitalOcean.</span>
-          <span slot="step-description">With your account, Outline makes it easy to<br/> create a server and get connected.</span>
-          <paper-card>
-            <div class="container">
-              <img src="images/digital_ocean_logo.svg" />
-              <p>Waiting to connect your account...</p>
-            </div>
-            <paper-button on-tap="_cancelTapped">Cancel</paper-button>
-          </paper-card>
-        </outline-step-view>
+    <iron-pages id='pages' attr-for-selected='id' selected='{{ currentPage }}'>
+      <outline-step-view id="connectAccount">
+        <span slot="step-title">Sign in or create an account with DigitalOcean.</span>
+        <span slot="step-description">With your account, Outline makes it easy to create a server and get connected.</span>
+        <paper-card class="card">
+          <div class="container">
+            <img src="images/digital_ocean_logo.svg" />
+            <p>Waiting to connect your account...</p>
+          </div>
+          <paper-button on-tap="_cancelTapped">Cancel</paper-button>
+        </paper-card>
+      </outline-step-view>
 
-        <outline-step-view id="verifyEmail">
-          <span slot="step-title">Activate you DigitalOcean account.</span>
-          <span slot="step-description">Check your inbox for an email from DigitalOcean,<br/> and click the link in it to confirm your account.</span>
-          <paper-card>
-            <div class="container">
-              <img src="images/do_oauth_email.svg" />
-              <p>Confirm your email...</p>
-            </div>
-          <paper-button on-tap="_cancelTapped">Sign Out</paper-button>
-          </paper-card>
-        </outline-step-view>
+      <outline-step-view id="verifyEmail">
+        <span slot="step-title">Activate you DigitalOcean account.</span>
+        <span slot="step-description">Check your inbox for an email from DigitalOcean, and click the link in it to confirm your account.</span>
+        <paper-card class="card">
+          <div class="container">
+            <img src="images/do_oauth_email.svg" />
+            <p>Confirm your email...</p>
+          </div>
+        <paper-button on-tap="_cancelTapped">Sign Out</paper-button>
+        </paper-card>
+      </outline-step-view>
 
-        <outline-step-view id="enterBilling">
-          <span slot="step-title">Activate you DigitalOcean account.</span>
-          <span slot="step-description">Enter your billing information on digitalocean.com<br/> and return to the app once you are done.</span>
-          <paper-card>
-            <div class="container">
-              <img src="images/do_oauth_billing.svg" />
-              <p>Enter billing information...</p>
-            </div>
-          <paper-button on-tap="_cancelTapped">Sign Out</paper-button>
-          </paper-card>
-        </outline-step-view>
+      <outline-step-view id="enterBilling">
+        <span slot="step-title">Activate you DigitalOcean account.</span>
+        <span slot="step-description">Enter your billing information on digitalocean.com and return to the app once you are done.</span>
+        <paper-card class="card">
+          <div class="container">
+            <img src="images/do_oauth_billing.svg" />
+            <p>Enter billing information...</p>
+          </div>
+        <paper-button on-tap="_cancelTapped">Sign Out</paper-button>
+        </paper-card>
+      </outline-step-view>
 
-        <outline-step-view id="accountActive">
-          <span slot="step-title">Activate you DigitalOcean account.</span>
-          <span slot="step-description">Your DigitalOcean account has been activated.<br/><br/></span>
-          <paper-card>
-            <div class="container">
-              <img src="images/do_oauth_done.svg" />
-              <p>Account activated! Loading server locations...</p>
-            </div>
-          <paper-button disabled>Sign Out</paper-button>
-          </paper-card>
-        </outline-step-view>
+      <outline-step-view id="accountActive">
+        <span slot="step-title">Activate you DigitalOcean account.</span>
+        <span slot="step-description">Your DigitalOcean account has been activated.</span>
+        <paper-card class="card">
+          <div class="container">
+            <img src="images/do_oauth_done.svg" />
+            <p>Account activated! Loading server locations...</p>
+          </div>
+        <paper-button disabled>Sign Out</paper-button>
+        </paper-card>
+      </outline-step-view>
+    </iron-pages>
 
-      </iron-pages>
   </template>
   <script>
     Polymer({
