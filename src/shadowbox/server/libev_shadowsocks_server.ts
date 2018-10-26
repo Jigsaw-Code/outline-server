@@ -15,7 +15,6 @@
 import * as child_process from 'child_process';
 import * as dgram from 'dgram';
 import * as dns from 'dns';
-import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
 import {IpLocationService} from '../infrastructure/ip_location';
 import * as logging from '../infrastructure/logging';
