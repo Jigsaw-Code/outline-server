@@ -34,17 +34,17 @@
         text-align: center;
       }
       .card {
-        background: #FFFFFF;
-        box-shadow: 0 0 2px 0 rgba(0,0,0,0.14), 0 2px 2px 0 rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
-        border-radius: 2px;
-        margin: 24px;
+        color: var(--light-gray);
+        margin: 24px 0;
         text-align: left;
       }
-      .card-section {
+      .section {
         padding: 24px 12px;
+        background: var(--background-contrast-color);
+        border-radius: 2px;
       }
-      .card-section:not(:first-child) {
-        border-top: 1px solid rgba(0,0,0,0.12);;
+      .section:not(:first-child) {
+        margin-top: 8px;
       }
       .section-header {
         padding: 0 6px 0;
@@ -52,7 +52,6 @@
       }
       .instructions {
         font-size: 16px;
-        color: rgba(0,0,0,0.87);
         line-height: 26px;
         margin-left: 16px;
         flex: 2;
@@ -61,15 +60,17 @@
         height: 26px;
         width: 26px;
         font-size: 14px;
-        background-color: rgba(0, 0, 0, 0.34);
         border-radius: 50%;
         float: left;
         vertical-align: middle;
-        color: #fff;
-        background-color: #141414;
+        color: #000;
+        background-color: #fff;
         margin: auto;
         text-align: center;
         line-height: 26px;
+      }
+      .drop-down, .drop-down iron-icon {
+        color: #fff;
       }
       .drop-down > * {
         vertical-align: middle;
@@ -112,8 +113,8 @@
           word-break: break-all;
         }
       }
-      /* TODO: Seems like a @mixin would help avoid duplication. */      
-      #command {
+      /* TODO: Seems like a @mixin would help avoid duplication. */
+      .code, #command {
         color: var(--dark-gray);
         font-size: 14px;
         font-family: RobotoMono-Regular, monospace;
@@ -129,6 +130,7 @@
         display: flex;
         justify-content: space-between;
         padding: 0 24px 24px 60px;
+        background-color: var(--background-contrast-color);
       }
       paper-button {
         margin: 0;
@@ -137,16 +139,16 @@
         margin: 0;
       }
       #cancelButton {
-        border: 1px solid rgba(0,0,0,0.12);
+        color: var(--light-gray);
+        border: 1px solid var(--border-color);
         border-radius: 2px;
         width: 45%;
       }
       #doneButton {
-        box-shadow: 0 0 2px 0 rgba(0,0,0,0.14), 0 2px 2px 0 rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
         border-radius: 2px;
         width: 45%;
-        background-color: #1DE9B6;
-        color: rgba(0,0,0,0.87);
+        background-color: var(--primary-green);
+        color: var(--light-gray);
       }
       #doneButton[disabled] {
         background-color: var(--border-color);
@@ -157,12 +159,11 @@
     </style>
     <outline-step-view>
       <span slot="step-title">Follow the instructions below</span>
-      <span slot="step-description">These steps will help you install Outline<br/> on a [[cloudProviderName]] Linux server.</span>
-      <paper-progress hidden$='[[!showConnection]]' indeterminate class="slow"></paper-progress>
+      <span slot="step-description">These steps will help you install Outline on a [[cloudProviderName]] Linux server.</span>
 
       <div class="card">
         <!-- GCP -->
-        <div class="card-section" hidden$="[[!isCloudProviderGcp]]">
+        <div class="section" hidden$="[[!isCloudProviderGcp]]">
           <div class="section-header">
             <span class="stepcircle">1</span>
             <div class="instructions">Configure your firewall</div>
@@ -199,7 +200,7 @@
           </iron-collapse>
         </div>
         <!-- AWS -->
-        <div class="card-section" hidden$="[[!isCloudProviderAws]]">
+        <div class="section" hidden$="[[!isCloudProviderAws]]">
           <div class="section-header">
             <span class="stepcircle">1</span>
             <div class="instructions">Configure your firewall</div>
@@ -235,7 +236,7 @@
           </iron-collapse>
         </div>
         <!-- Install command -->
-        <div class="card-section">
+        <div class="section">
           <div class="section-header">
             <span class="stepcircle" hidden$="[[!isGenericCloudProvider]]">1</span>
             <span class="stepcircle" hidden$="[[isGenericCloudProvider]]">2</span>
@@ -246,7 +247,7 @@
           </div>
         </div>
         <!-- Paste input -->
-        <div class="card-section">
+        <div class="section">
           <div class="section-header">
             <span class="stepcircle" hidden$="[[!isGenericCloudProvider]]">2</span>
             <span class="stepcircle" hidden$="[[isGenericCloudProvider]]">3</span>
@@ -260,23 +261,14 @@
           <paper-button id="cancelButton" on-tap="cancelTapped" class="secondary">CANCEL</paper-button>
           <paper-button id="doneButton" on-tap="doneTapped" class="primary" disabled$='[[!enableDoneButton]]'>DONE</paper-button>
         </div>
+        <paper-progress hidden$='[[!showConnection]]' indeterminate class="slow"></paper-progress>
       </div>
     </outline-step-view>
-
-    <paper-dialog id='errorDialog' modal>
-      <h3 hidden$='[[!errorTitle]]'>[[errorTitle]]</h3>
-      <div style="text-align: left">[[errorText]]</div>
-      <div class="buttons">
-        <paper-button dialog-dismiss autofocus>Cancel</paper-button>
-        <paper-button on-tap='retryTapped' dialog-dismiss>Retry</paper-button>
-      </div>
-    </paper-dialog>
   </template>
   <script>
     Polymer({
       is: 'outline-manual-server-entry',
       properties: {
-        errorText: String,
         placeholderText: {
           type: String,
           value: '{"apiUrl":"https://xxx.xxx.xxx.xxx:xxxxx/xxxxxxxxxxxxxxxxxxxxxx","certSha256":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}'
@@ -308,22 +300,7 @@
           value: false,
         }
       },
-      showError: function(errorTitle, errorMessage) {
-        this.showConnection = false;
-        this.$.errorDialog.open();
-        this.errorText = errorMessage;
-        this.errorTitle = errorTitle;
-      },
-      clearError: function() {
-        this.errorTitle = '';
-        this.errorText = '';
-      },
       doneTapped: function() {
-        if (!this.$.serverConfig.value) {
-          this.showError('',
-              'Please paste the output from the installation process before proceeding.');
-          return;
-        }
         this.showConnection = true;
         this.fire('ManualServerEntered', {
           userInput: this.$.serverConfig.value
@@ -338,9 +315,7 @@
       },
       clear: function() {
         this.$.serverConfig.value = '';
-        this.clearError();
         this.showConnection = false;
-        this.$.errorDialog.close();
         this.$.awsDropDown.hide();
         this.$.gcpDropDown.hide();
       },
@@ -348,7 +323,7 @@
         switch(cloudProvider) {
           case 'aws': return 'Amazon Web Services';
           case 'gcp': return 'Google Cloud Platform';
-          default: return 'your Linux server';
+          default: return '';
         }
       },
       _computeIsCloudProviderAws: function(cloudProvider) {
