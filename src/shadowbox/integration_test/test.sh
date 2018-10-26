@@ -43,7 +43,7 @@ declare -ir DEBUG=${DEBUG:-0}
 # Waits for the input URL to return success.
 function wait_for_resource() {
   declare -r URL=$1
-  until curl --silent --insecure $URL; do sleep 1; done
+  until curl --silent --insecure $URL > /dev/null; do sleep 1; done
 }
 
 # Takes the JSON from a /access-keys POST request and returns the appropriate
@@ -60,6 +60,22 @@ function client_curl() {
   docker exec $CLIENT_CONTAINER curl --silent --show-error "$@"
 }
 
+function fail() {
+  echo FAILED: "$@"
+  exit 1
+}
+
+function cleanup() {
+  status=$?
+  (($DEBUG != 0)) || docker-compose down
+  return $status
+}
+
+function remove_color() {
+  # From https://stackoverflow.com/a/52781213/1234111
+  sed -r "s/\x1B\[[0-9;]*[JKmsu]//g"
+}
+
 # Start a subprocess for trap
 (
   set -eu
@@ -69,7 +85,7 @@ function client_curl() {
   source ../scripts/make_certificate.sh
 
   # Ensure proper shut down on exit if not in debug mode
-  (($DEBUG != 0)) || trap "docker-compose down" EXIT
+  trap "cleanup" EXIT
 
   # Sets everything up
   export SB_API_PREFIX=TestApiPrefix
@@ -81,10 +97,12 @@ function client_curl() {
 
   # Verify that the client cannot access or even resolve the target
   # Exit code 28 for "Connection timed out".
-  docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 1 $TARGET_IP && exit 1 || (($? == 28))
+  docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 1 $TARGET_IP > /dev/null && \
+    fail "Client should not have access to target IP" || (($? == 28))
 
   # Exit code 6 for "Could not resolve host".
-  docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 1 http://target && exit 1 || (($? == 6))
+  docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 1 http://target > /dev/null && \
+    fail "Client should not have access to target host" || (($? == 6))
 
   # Wait for shadowbox to come up.
   wait_for_resource https://localhost:20443/access-keys
@@ -94,24 +112,42 @@ function client_curl() {
   # Create new shadowbox user.
   # TODO(bemasc): Verify that the server is using the right certificate
   declare -r NEW_USER_JSON=$(client_curl --insecure -X POST https://shadowbox/${SB_API_PREFIX}/access-keys)
-  [[ ${NEW_USER_JSON} == '{"id":'* ]] || exit 1
+  [[ ${NEW_USER_JSON} == '{"id":"0"'* ]] || fail "Fail to create user"
   declare -r SS_USER_ARGUMENTS=$(ss_arguments_for_user $NEW_USER_JSON)
+
+  # Verify that we handle deletions well
+  client_curl --insecure -X POST https://shadowbox/${SB_API_PREFIX}/access-keys > /dev/null
+  client_curl --insecure -X DELETE https://shadowbox/${SB_API_PREFIX}/access-keys/1 > /dev/null
 
   # Start Shadowsocks client and wait for it to be ready
   declare -r LOCAL_SOCKS_PORT=5555
   docker exec -d $CLIENT_CONTAINER \
-    /go/bin/go-shadowsocks2 $SS_USER_ARGUMENTS -socks :$LOCAL_SOCKS_PORT -verbose
+    /go/bin/go-shadowsocks2 $SS_USER_ARGUMENTS -socks :$LOCAL_SOCKS_PORT -verbose \
+    || fail "Could not start shadowsocks client"
   while ! docker exec $CLIENT_CONTAINER nc -z localhost $LOCAL_SOCKS_PORT; do
     sleep 0.1
   done
 
   # Verify we can retrieve the target by IP.
   client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $TARGET_IP > $OUTPUT_DIR/actual.html
-  diff $OUTPUT_DIR/actual.html target/index.html
+  diff $OUTPUT_DIR/actual.html target/index.html || fail "Target page by IP does not match"
 
   # Verify we can retrieve the target using the system nameservers.
   client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT http://target > $OUTPUT_DIR/actual.html
-  diff $OUTPUT_DIR/actual.html target/index.html
+  diff $OUTPUT_DIR/actual.html target/index.html || fail "Target page by hostname does not match"
 
+  # Verify we can't access the page anymore after the key is deleted
+  client_curl --insecure -X DELETE https://shadowbox/${SB_API_PREFIX}/access-keys/0 > /dev/null
+  # Exit code 56 is "Connection reset by peer".
+  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT --connect-timeout 1 http://target &> /dev/null \
+    && fail "Deleted access key is still active" || (($? == 56))
+
+  # Verify no errors occurred
+  docker logs $SHADOWBOX_CONTAINER &> $OUTPUT_DIR/logs.txt
+  if cat $OUTPUT_DIR/logs.txt | remove_color | grep --quiet -E "^E|level=error|ERROR:"; then
+    fail "Found errors on container logs. See $OUTPUT_DIR/logs.txt"
+  fi
+
+  # TODO(fortuna): Test metrics.
   # TODO(fortuna): Verify UDP requests.
 )
