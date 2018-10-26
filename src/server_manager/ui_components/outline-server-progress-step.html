@@ -31,10 +31,11 @@
         text-align: center;
       }
       .card {
-        padding: 24px;
-        margin: 24px;
+        margin-top: 72px;
         box-shadow: 0 0 2px 0 rgba(0,0,0,0.14), 0 2px 2px 0 rgba(0,0,0,0.12), 0 1px 3px 0 rgba(0,0,0,0.20);
         border-radius: 2px;
+        color: var(--light-gray);
+        background: var(--background-contrast-color);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -43,46 +44,33 @@
         margin: 24px 0 72px 0;
         text-align: center;
       }
-      h3 {
-        font-size: 18px;
-        margin-bottom: 12px;
-        color: rgba(0,0,0,0.54);
-        margin: 0px 0px 0px 0px;
-        padding: 14px 0 14px 0;
-      }
-      .servername p {
+      .card p {
         font-size: 14px;
-        color: rgba(0,0,0,0.54);
+        color: var(--light-gray);
       }
       outline-progress-spinner {
         margin-top: 72px;
       }
-      paper-progress {
-         background: #ffffff;
-        --paper-progress-active-color: #1DE9B6;
-        --paper-progress-container-color: #ffffff;
-        --paper-progress-transition-duration: 1.0s;
-        --paper-progress-transition-timing-function: linear;
-        width: 100%;
-        margin-top: 0px;
-      }
       paper-button {
         width: 100%;
-        border: 1px solid rgba(0,0,0,0.12);
+        border: 1px solid var(--light-gray);
         border-radius: 2px;
+        color: var(--light-gray);
       }
     </style>
 
-    <outline-step-view>
+    <outline-step-view display-action>
       <span slot="step-title">Setting up Outline.</span>
-      <span slot="step-description">This could take up to two minutes. You can<br/> destroy this server at anytime.</span>
-      <paper-progress id='bar' class='transiting'></paper-progress>
+      <span slot="step-description">This could take up to two minutes. You can destroy this server at anytime.</span>
+      <span slot="step-action">
+        <paper-button id='cancelButton' hidden$='{{!showCancelButton}}' on-tap='handleCancelTapped'>Cancel</paper-button>
+      </span>
       <div class='card'>
         <outline-progress-spinner></outline-progress-spinner>
         <div class='servername'>
-          <h3>{{serverName}}</h3>
+          <p>{{serverName}}</p>
         </div>
-        <paper-button id='cancelButton' hidden$='{{!showCancelButton}}' on-tap='handleCancelTapped'>Cancel</paper-button>
+        <paper-progress id='bar' class='transiting'></paper-progress>
       </div>
     </outline-step-view>
 

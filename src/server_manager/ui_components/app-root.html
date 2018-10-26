@@ -15,6 +15,7 @@
 -->
 <link rel='import' href='../bower_components/polymer/polymer.html'>
 <link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
 <link rel='import' href='../bower_components/iron-icon/iron-icon.html'>
 <link rel='import' href='../bower_components/iron-icons/iron-icons.html'>
 <link rel='import' href='../bower_components/iron-pages/iron-pages.html'>
@@ -41,9 +42,22 @@
     <style include='cloud-install-styles'></style>
     <style>
       :host {
-        width: 100%;
-        --primary-green: #00bfa5;
-        --light-gray: color: rgba(0,0,0,0.54);
+        --side-bar-width: 48px;
+      }
+      .app-container {
+        margin: 0 auto;
+      }
+      /* Large display desktops */
+      @media (min-width: 1281px) {
+        .app-container {
+          max-width: 1200px;
+        }
+      }
+      /* Laptop, desktops */
+      @media (min-width: 1025px) and (max-width: 1280px) {
+        .app-container {
+          max-width: 920px;
+        }
       }
       #toast {
         align-items: center;
@@ -59,126 +73,178 @@
         height: 20px;
         width: 20px;
       }
-      #settingsDrawer {
-        z-index: 1000;
-        margin-top: 12px;
+      #appDrawer {
+        --app-drawer-content-container: {
+          background-color: var(--background-contrast-color);
+        };
       }
-      #settingsDrawer paper-listbox {
-        color: var(--light-gray);
+      #appDrawer paper-listbox {
+        color: var(--medium-gray);
+        background-color: var(--background-contrast-color);
       }
-      #settingsDrawer paper-icon-item {
+      #appDrawer paper-icon-item {
         display: block;
         cursor: pointer;
         padding: 12px 24px 12px 24px;
         font-size: 14px;
       }
-      #settingsDrawer iron-icon {
+      #appDrawer iron-icon {
         margin-right: 12px;
       }
-      #settingsDrawer paper-icon-item:hover,
-      #settingsDrawer paper-icon-item iron-icon:hover {
+      #appDrawer paper-icon-item:hover,
+      #appDrawer paper-icon-item iron-icon:hover {
         color: var(--primary-green);
       }
-      #settingsDrawer a {
+      #appDrawer a {
         color: inherit;
       }
-      #settingsDrawer paper-icon-item:focus,
-      #settingsDrawer a:focus {
+      #appDrawer paper-icon-item:focus,
+      #appDrawer a:focus {
         outline: none;
       }
-      #settingsDrawer #signedIn {
+      #appDrawer #signedIn {
         text-align: center;
       }
-      #settingsDrawer #signedIn img {
+      #appDrawer #signedIn img {
         height: 65px;
         margin-top: 12px;
       }
-      #settingsDrawer #signOutButton  {
+      #appDrawer #signOutButton  {
         font-weight: bold;
         margin-bottom: 24px;
         cursor: pointer;
         text-transform: uppercase;
       }
-      #settingsDrawer #signOutButton:hover {
+      #appDrawer #signOutButton:hover {
         color: var(--primary-green);
       }
-      app-toolbar paper-icon-button {
-        /* needed so the "Outline Manager" title appears centered in the window. */
-        position: absolute;
-      }
-      app-toolbar [main-title] {
-        text-align: center;
+      app-drawer-layout app-toolbar {
+        background-color: var(--background-contrast-color);
+        border-bottom: 1px solid rgba(200, 200, 200, 0.12);
       }
       app-toolbar [main-title] img {
         height: 16px;
         margin-top: 8px;
+      }
+      .side-bar-margin {
+        margin-left: var(--side-bar-width);
+      }
+      #sideBar {
+        --app-drawer-width: var(--side-bar-width);
+        --app-drawer-content-container: {
+          background-color: var(--background-contrast-color);
+        };
+      }
+      #sideBar div {
+        margin-top: 12px;
+        height: 100%;
+        text-align: center;
+        color: var(--light-gray);
+      }
+      #getConnectedDialog {
+        height: 562px;
+        background: white;
+      }
+      #getConnectedDialog iframe {
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid #ccc;
+        height: 500px;
+      }
+      #getConnectedDialog .buttons {
+         margin-top: -5px;  /* undo spacing added after iframe */
       }
     </style>
 
     <outline-tos-view id="tosView" has-accepted-terms-of-service={{userAcceptedTos}} hidden$="{{hasAcceptedTos}}"></outline-tos-view>
 
     <div hidden$="{{!hasAcceptedTos}}">
-      <app-drawer id="settingsDrawer">
-        <div id='signedIn' hidden$='{{!isSignedIn}}'>
-          <img src='images/manager-profile-2x.png'>
-          <p>{{adminEmail}}</p>
-          <div id='signOutButton' on-tap='signOutTapped'>Sign Out</div>
-          <hr/>
+      <!-- This responsive width sets the minimum layout area to 648px.  -->
+      <app-drawer-layout id="drawerLayout" responsive-width="886px" on-narrow-changed="_computeShouldShowSideBar" class$="[[sideBarMarginClass]]">
+        <app-drawer id="appDrawer" slot="drawer" on-opened-changed="_computeShouldShowSideBar">
+          <app-toolbar class="toolbar" hidden$="[[shouldShowSideBar]]">
+            <paper-icon-button icon="menu" on-click="_toggleAppDrawer"></paper-icon-button>
+            <div main-title><img src="images/outline-manager-logo.svg"></div>
+          </app-toolbar>
+
+          <div id='signedIn' hidden$='{{!isSignedIn}}'>
+            <img src='images/manager-profile-2x.png'>
+            <p>{{adminEmail}}</p>
+            <div id='signOutButton' on-tap='signOutTapped'>Sign Out</div>
+            <hr/>
+          </div>
+          <paper-listbox on-tap="maybeCloseDrawer">
+            <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">
+              <paper-icon-item>
+                <iron-icon icon="lock" slot="item-icon"></iron-icon>Data Collection
+              </paper-icon-item>
+            </a>
+            <a href="https://www.google.com/policies/privacy/">
+              <paper-icon-item>
+                <iron-icon icon="lock" slot="item-icon"></iron-icon>Privacy
+              </paper-icon-item>
+            </a>
+            <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">
+              <paper-icon-item>
+                  <iron-icon icon="info" slot="item-icon"></iron-icon>Terms
+              </paper-icon-item>
+            </a>
+            <paper-icon-item on-tap="submitFeedbackTapped">
+              <iron-icon icon="feedback" slot="item-icon"></iron-icon>Submit Feedback
+            </paper-icon-item>
+            <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">
+              <paper-icon-item>
+                <iron-icon icon="help" slot="item-icon"></iron-icon>Help Center
+              </paper-icon-item>
+            </a>
+            <paper-icon-item on-tap="aboutTapped">
+              <iron-icon icon="info" slot="item-icon"></iron-icon>About Outline
+            </paper-icon-item>
+            <paper-icon-item on-tap="showLicensesTapped">
+              <iron-icon icon="info" slot="item-icon"></iron-icon>Show Licenses
+            </paper-icon-item>
+          </paper-listbox>
+        </app-drawer>
+
+        <app-header-layout>
+          <div class="app-container">
+            <iron-pages attr-for-selected='id' selected='{{ currentPage }}'>
+              <outline-intro-step id='intro'></outline-intro-step>
+              <outline-do-oauth-step id='digitalOceanOauth'></outline-do-oauth-step>
+              <outline-manual-server-entry id='manualEntry'></outline-manual-server-entry>
+              <outline-region-picker-step id='regionPicker'></outline-region-picker-step>
+              <outline-server-progress-step id='serverProgressStep'></outline-server-progress-step>
+              <outline-server-view id='serverView'></outline-server-view>
+            </iron-pages>
+          </div>
+        </app-header-layout>
+      </app-drawer-layout>
+
+      <app-drawer id="sideBar" opened$="[[shouldShowSideBar]]" persistent>
+        <div>
+          <paper-icon-button icon="menu" on-click="_toggleAppDrawer"></paper-icon-button>
         </div>
-        <paper-listbox on-tap="closeSettingsDrawer">
-          <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">
-            <paper-icon-item>
-              <iron-icon icon="lock" slot="item-icon"></iron-icon>Data Collection
-            </paper-icon-item>
-          </a>
-          <a href="https://www.google.com/policies/privacy/">
-            <paper-icon-item>
-              <iron-icon icon="lock" slot="item-icon"></iron-icon>Privacy
-            </paper-icon-item>
-          </a>
-          <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">
-            <paper-icon-item>
-                <iron-icon icon="info" slot="item-icon"></iron-icon>Terms
-            </paper-icon-item>
-          </a>
-          <paper-icon-item on-tap="submitFeedbackTapped">
-            <iron-icon icon="feedback" slot="item-icon"></iron-icon>Submit Feedback
-          </paper-icon-item>
-          <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">
-            <paper-icon-item>
-              <iron-icon icon="help" slot="item-icon"></iron-icon>Help Center
-            </paper-icon-item>
-          </a>
-          <paper-icon-item on-tap="aboutTapped">
-            <iron-icon icon="info" slot="item-icon"></iron-icon>About Outline
-          </paper-icon-item>
-          <paper-icon-item on-tap="showLicensesTapped">
-            <iron-icon icon="info" slot="item-icon"></iron-icon>Show Licenses
-          </paper-icon-item>
-        </paper-listbox>
       </app-drawer>
-
-      <app-toolbar class='toolbar'>
-        <paper-icon-button icon="menu" on-tap="toggleSettingsDrawer"></paper-icon-button>
-        <div main-title><img src="images/outline-manager-logo.svg"></div>
-      </app-toolbar>
-
-      <iron-pages attr-for-selected='id' selected='{{ currentPage }}'>
-        <outline-intro-step id='intro'></outline-intro-step>
-        <outline-do-oauth-step id='digitalOceanOauth'></outline-do-oauth-step>
-        <outline-manual-server-entry id='manualEntry'></outline-manual-server-entry>
-        <outline-region-picker-step id='regionPicker'></outline-region-picker-step>
-        <outline-server-progress-step id='serverProgressStep'></outline-server-progress-step>
-        <outline-server-view id='serverView'></outline-server-view>
-      </iron-pages>
 
       <paper-toast id='toast'><paper-icon-button icon='icons:close' on-tap='closeError'></paper-icon-button></paper-toast>
 
+      <!-- Modal dialogs must be outside the app container; otherwise the backdrop covers them.  -->
       <outline-feedback-dialog id='feedbackDialog'></outline-feedback-dialog>
       <outline-about-dialog id='aboutDialog' outline-version='[[outlineVersion]]'></outline-about-dialog>
       <outline-modal-dialog id='modalDialog'></outline-modal-dialog>
+      <outline-share-dialog id="shareDialog"></outline-share-dialog>
+      <outline-metrics-option-dialog id="metricsDialog"></outline-metrics-option-dialog>
 
-      <paper-dialog id="licenses" restoreFocusOnClose>
+      <paper-dialog id="getConnectedDialog" modal>
+        <!-- iframe gets inserted here once we are given the invite URL. -->
+        <div class="buttons">
+          <paper-button on-tap="closeGetConnectedDialog" autofocus>Close</paper-button>
+        </div>
+      </paper-dialog>
+
+      <paper-dialog id="licenses" modal restoreFocusOnClose>
         <paper-dialog-scrollable>
           <code id="licensesText">
             Could not load license.txt.
@@ -188,6 +254,7 @@
           <paper-button dialog-dismiss autofocus>Close</paper-button>
         </div>
       </paper-dialog>
+
     </div>
   </template>
   <script>
@@ -216,7 +283,15 @@
         currentPage: {
           type: String,
           value: 'intro'
-        }
+        },
+        shouldShowSideBar: {
+          type: Boolean,
+          value: false
+        },
+        sideBarMarginClass: {
+          type: String,
+          computed: '_computeSideBarMarginClass(shouldShowSideBar)'
+        },
       },
       listeners: {
         'RegionSelected': 'handleRegionSelected',
@@ -259,7 +334,6 @@
       },
       showServerView: function () {
         this.$.serverProgressStep.stop();
-        this.$.serverView.initHelpBubbles();
         this.currentPage = 'serverView';
       },
       getServerView: function() {
@@ -328,6 +402,16 @@
           }
         });
       },
+      showManualServerError: function (errorTitle, errorText) {
+        this.showModalDialog(errorTitle, errorText, ['cancel', 'retry'])
+            .then((clickedButtonIndex) => {
+              if (clickedButtonIndex == 1) {
+                this.$.manualEntry.retryTapped();
+              } else {
+                this.$.manualEntry.cancelTapped();
+              }
+            });
+      },
       _isSignedIn: function (adminEmail) {
         return Boolean(adminEmail);
       },
@@ -339,11 +423,25 @@
       _computeHasAcceptedTermsOfService: function(userAcceptedTos) {
         return userAcceptedTos || !!window.localStorage[TOS_ACK_LOCAL_STORAGE_KEY];
       },
-      toggleSettingsDrawer: function() {
-        this.$.settingsDrawer.toggle();
+      _toggleAppDrawer: function() {
+        const drawerNarrow = this.$.drawerLayout.narrow;
+        const forceNarrow = this.$.drawerLayout.forceNarrow;
+        if (drawerNarrow) {
+          if (forceNarrow) {
+            // The window width is below the responsive threshold. Do not force narrow mode.
+            this.$.drawerLayout.forceNarrow = false;
+          }
+          this.$.appDrawer.toggle();
+        } else {
+          // Forcing narrow mode when the window width is above the responsive threshold effectively
+          // collapses the drawer. Conversely, reverting force narrow expands the drawer.
+          this.$.drawerLayout.forceNarrow = !forceNarrow;
+        }
       },
-      closeSettingsDrawer: function() {
-        this.$.settingsDrawer.close();
+      maybeCloseDrawer: function() {
+        if (this.$.drawerLayout.narrow || this.$.drawerLayout.forceNarrow) {
+          this.$.appDrawer.close();
+        }
       },
       submitFeedbackTapped: function () {
         this.$.feedbackDialog.open();
@@ -352,11 +450,35 @@
         this.$.aboutDialog.open();
       },
       signOutTapped: function() {
-        this.closeSettingsDrawer();
         this.fire('SignOutRequested');
       },
       openManualInstallFeedback: function(prepopulatedMessage) {
         this.$.feedbackDialog.open(prepopulatedMessage, true);
+      },
+      openShareDialog: function(accessKey, s3Url) {
+        this.$.shareDialog.open(accessKey, s3Url);
+      },
+      openGetConnectedDialog: function(inviteUrl) {
+        const dialog = this.$.getConnectedDialog;
+        // Reset the iframe's state, by replacing it with a newly constructed
+        // iframe. Unfortunately the location.reload API does not work in our case due to
+        // this Chrome error:
+        // "Blocked a frame with origin "outline://web_app" from accessing a cross-origin frame."
+        const iframe = document.createElement('iframe');
+        iframe.onload = function() {
+          dialog.open();
+        };
+        iframe.src = inviteUrl;
+        dialog.insertBefore(iframe, dialog.children[0]);
+      },
+      closeGetConnectedDialog: function() {
+        const dialog = this.$.getConnectedDialog;
+        dialog.close();
+        const oldIframe = dialog.children[0];
+        dialog.removeChild(oldIframe);
+      },
+      showMetricsDialogForNewServer: function() {
+        this.$.metricsDialog.showMetricsOptInDialog();
       },
       // Returns a Promise which fulfills with the index of the button clicked.
       showModalDialog: function(title, text, buttons) {
@@ -366,7 +488,6 @@
         return this.$.modalDialog.close();
       },
       showLicensesTapped: function () {
-        this.closeSettingsDrawer();
         var xhr = new XMLHttpRequest();
         xhr.onload = () => {
           this.$.licensesText.innerText = xhr.responseText;
@@ -377,7 +498,19 @@
         };
         xhr.open('GET', '/ui_components/licenses/licenses.txt', true);
         xhr.send();
-      }
+      },
+      _computeShouldShowSideBar: function() {
+        const drawerNarrow = this.$.drawerLayout.narrow;
+        const drawerOpened = this.$.appDrawer.opened;
+        if (drawerOpened && drawerNarrow) {
+          this.shouldShowSideBar = false;
+        } else {
+          this.shouldShowSideBar = drawerNarrow;
+        }
+      },
+      _computeSideBarMarginClass: function(shouldShowSideBar) {
+        return shouldShowSideBar ? 'side-bar-margin' : '';
+      },
     });
   </script>
 </dom-module>

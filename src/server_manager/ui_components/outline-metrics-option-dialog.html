@@ -21,7 +21,12 @@
 
 <dom-module id='outline-metrics-option-dialog'>
   <template>
-    <style include='cloud-install-styles'></style>
+    <style include='cloud-install-styles'>
+      .learnMoreLink {
+        text-decoration: underline;
+        color: rgba(0, 0, 0, 0.54);
+      }
+    </style>
     <paper-dialog id='metricsEnabledDialog' modal>
       <div class='dialogBanner'><img src='images/metrics.png'></div>
       <h3>Metrics sharing</h3>
