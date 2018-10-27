@@ -15,7 +15,6 @@
 import * as child_process from 'child_process';
 import * as dgram from 'dgram';
 import * as dns from 'dns';
-import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
 import {IpLocationService} from '../infrastructure/ip_location';
 import * as logging from '../infrastructure/logging';
@@ -53,7 +52,12 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
         logging.error(`Error parsing metrics message ${buf}: ${err.stack}`);
         return;
       }
-      let previousTotalInboundBytes = this.portInboundBytes[metricsMessage.portNumber] || 0;
+      const accessKeyId = this.portId.get(metricsMessage.portNumber);
+      if (accessKeyId === undefined) {
+        // Access key has been deleted, and we no longer have the portInboundBytes. Ignore.
+        return;
+      }
+      let previousTotalInboundBytes = this.portInboundBytes.get(metricsMessage.portNumber) || 0;
       if (previousTotalInboundBytes > metricsMessage.totalInboundBytes) {
         // totalInboundBytes is a counter that monotonically increases. A drop means
         // ss-server got restarted, so we set the previous value to zero.
@@ -63,7 +67,7 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
       if (dataDelta === 0) {
         return;
       }
-      this.portInboundBytes[metricsMessage.portNumber] = metricsMessage.totalInboundBytes;
+      this.portInboundBytes.set(metricsMessage.portNumber, metricsMessage.totalInboundBytes);
       getConnectedClientIPAddresses(metricsMessage.portNumber)
           .catch((e) => {
             logging.error(
@@ -88,8 +92,7 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
           })
           .then((countries: string[]) => {
             const dedupedCountries = [...new Set(countries)].sort();
-            usageWriter.writeBytesTransferred(
-                this.portId[metricsMessage.portNumber] || '', dataDelta, dedupedCountries);
+            usageWriter.writeBytesTransferred(accessKeyId || '', dataDelta, dedupedCountries);
           })
           .catch((err: Error) => {
             logging.error(`Unable to write bytes transferred: ${err.stack}`);
@@ -101,21 +104,19 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
   // are ready and serving.
   update(newKeys: AccessKey[]): Promise<void> {
     return new Promise((resolve, reject) => {
-      const oldKeys = this.keys;
-      this.keys = new Map<string, AccessKey>();
+      const oldKeyIds = this.keys.keys();
+      const newKeyIds = new Set(newKeys.map(k => k.id));
       // Start keys that were added
       for (const key of newKeys) {
-        this.keys[key.id] = key;
-        const oldKey = oldKeys.get(key.id);
-        if (oldKey) {
+        if (this.keys.has(key.id)) {
           continue;
         }
         this.startInstance(key);
       }
       // Stop keys that were removed.
-      for (const oldKey of oldKeys.values()) {
-        if (!this.keys.has(oldKey.id)) {
-          this.stopInstance(oldKey.id);
+      for (const oldKeyId of oldKeyIds) {
+        if (!newKeyIds.has(oldKeyId)) {
+          this.stopInstance(oldKeyId);
         }
       }
       resolve();
@@ -124,7 +125,8 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
 
   private startInstance(key: AccessKey): child_process.ChildProcess {
     logging.info(`Starting server on port ${key.port}`);
-    this.portId[key.port] = key.id;
+    this.keys.set(key.id, key);
+    this.portId.set(key.port, key.id);
 
     const metricsAddress = this.metricsSocket.address();
     const commandArguments = [
@@ -146,7 +148,7 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
       commandArguments.push('-v');
     }
     const childProcess = child_process.spawn('ss-server', commandArguments);
-    this.keyProcess[key.id] = childProcess;
+    this.keyProcess.set(key.id, childProcess);
 
     childProcess.on('error', (error) => {
       logging.error(`Error spawning server on port ${key.port}: ${error}`);
@@ -159,22 +161,17 @@ export class LibevShadowsocksServer implements ShadowsocksServer {
     // TODO(fortuna): Consider saving the output and expose it through the manager service.
     childProcess.stdout.pipe(process.stdout);
     childProcess.stderr.pipe(process.stderr);
-
-    // Generate a SIP002 access url.
-    const accessUrl = SIP002_URI.stringify(makeConfig({
-      host: this.publicAddress,
-      port: key.port,
-      method: key.cipher,
-      password: key.secret,
-      outline: 1,
-    }));
-
     return childProcess;
   }
 
   private stopInstance(keyId: string) {
     this.keyProcess.get(keyId).kill();
     this.keyProcess.delete(keyId);
+    const key = this.keys.get(keyId);
+    this.keys.delete(keyId);
+    this.portId.delete(key.port);
+    this.portIps.delete(key.port);
+    this.portInboundBytes.delete(key.port);
   }
 }
 
