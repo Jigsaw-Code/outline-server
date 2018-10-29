@@ -116,22 +116,23 @@ Example output
 </summary>
 
 ```
-$ curl --insecure https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z/access-keys
+$ API_URL=https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z
+$ curl --insecure $API_URL/access-keys
 {"users":[]}
 
-$ curl --insecure -X POST https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z/access-keys
+$ curl --insecure -X POST $API_URL/access-keys
 {"id":"0","password":"Nm9wtQkPeshs","port":34180}
 
-$ curl --insecure -X POST hhttps://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z/access-keys
+$ curl --insecure -X POST $API_URL/access-keys
 {"id":"1","password":"32mW3jhuhBGv","port":55625}
 
-$ curl --insecure -X POST https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z/access-keys
+$ curl --insecure -X POST $API_URL/access-keys
 {"id":"2","password":"jFOKrJcpbgIb","port":15884}
 
-$ curl --insecure https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z/access-keys
+$ curl --insecure $API_URL/access-keys
 {"users":[{"id":"0","password":"Nm9wtQkPeshs","port":34180},{"id":"1","password":"32mW3jhuhBGv","port":55625},{"id":"2","password":"jFOKrJcpbgIb","port":15884}]}
 
-$ curl --insecure -X DELETE https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z/access-keys/0 -v
+$ curl --insecure -X DELETE $API_URL/access-keys/0 -v
 * Hostname was NOT found in DNS cache
 *   Trying ::1...
 * Connected to 1.2.3.4 (::1) port 1234 (#0)
@@ -146,7 +147,7 @@ $ curl --insecure -X DELETE https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z/access-k
 <
 * Connection #0 to host 1.2.3.4 left intact
 
-$ curl --insecure https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z/access-keys
+$ curl --insecure $API_URL/access-keys
 {"users":[{"id":"1","password":"32mW3jhuhBGv","port":55625},{"id":"2","password":"jFOKrJcpbgIb","port":15884}]}
 ```
 </details>
