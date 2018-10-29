@@ -83,28 +83,31 @@ docker rmi $(docker images -f dangling=true -q)
 
 In order to utilize the Management API, you'll need to know the apiUrl for your Outline server. You can obtain this information from the 'access.txt' file under the 'shadowbox' directory of your server. An example apiUrl is: https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z. 
 
-By replacing apiUrl with the actual URL you see in that file, you can programmatically perform the following operations on the server.
+Start by storing the apiURL you see see in that file, as a variable. For example:
+API_URL=https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z
+
+You can then perform the following operations on the server, remotely.
 
 List users
 ```
-curl --insecure apiUrl/access-keys/
+curl --insecure $API_URL/access-keys/
 ```
 
 Create a user
 ```
-curl --insecure -X POST apiUrl/access-keys
+curl --insecure -X POST $API_URL/access-keys
 ```
 
 Rename a user
 (e.g. rename user ID 2 to 'albion')
 ```
-curl --insecure -X PUT curl -F 'name=albion' apiUrl/access-keys/2/name
+curl --insecure -X PUT curl -F 'name=albion' $API_URL/access-keys/2/name
 ```
 
 Remove a user
 (e.g. remove user ID 2)
 ```
-curl --insecure -X DELETE apiUrl/access-keys/2
+curl --insecure -X DELETE $API_URL/access-keys/2
 ```
 
 <details>
