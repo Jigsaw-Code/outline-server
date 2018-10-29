@@ -320,7 +320,7 @@
               </span>
             </div>
             <!-- rows for each access key -->
-            <template is="dom-repeat" items="{{accessKeyRows}}" filter="isRegularConnection">
+            <template is="dom-repeat" items="{{accessKeyRows}}" filter="isRegularConnection" sort='sort'>
               <div class="access-key-row">
                 <span class="access-key-container">
                   <img class="access-key-icon" src="images/key-avatar.svg">
@@ -591,6 +591,20 @@
       },
       isRegularConnection: function(item) {
         return item.id !== MY_CONNECTION_USER_ID;
+      },
+      // https://stackoverflow.com/a/46119203/1298144
+      sort: function(a, b) {
+        var nameA = a.name.toUpperCase(); 
+        var nameB = b.name.toUpperCase(); 
+        if (nameA < nameB) {
+          return -1;
+        }
+        if (nameA > nameB) {
+          return 1;
+        }
+
+        // names must be equal
+        return 0;
       },
       deleteServer: function() {
         this.fire('DeleteServerRequested');
