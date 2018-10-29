@@ -84,7 +84,9 @@ docker rmi $(docker images -f dangling=true -q)
 In order to utilize the Management API, you'll need to know the apiUrl for your Outline server. You can obtain this information from the 'access.txt' file under the 'shadowbox' directory of your server. An example apiUrl is: https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z. 
 
 Start by storing the apiURL you see see in that file, as a variable. For example:
+```
 API_URL=https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z
+```
 
 You can then perform the following operations on the server, remotely.
 
