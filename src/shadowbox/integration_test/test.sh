@@ -71,11 +71,6 @@ function cleanup() {
   return $status
 }
 
-function remove_color() {
-  # From https://stackoverflow.com/a/52781213/1234111
-  sed -r "s/\x1B\[[0-9;]*[JKmsu]//g"
-}
-
 # Start a subprocess for trap
 (
   set -eu
@@ -144,7 +139,7 @@ function remove_color() {
 
   # Verify no errors occurred
   docker logs $SHADOWBOX_CONTAINER &> $OUTPUT_DIR/logs.txt
-  if cat $OUTPUT_DIR/logs.txt | remove_color | grep --quiet -E "^E|level=error|ERROR:"; then
+  if cat $OUTPUT_DIR/logs.txt | grep --quiet -E "^E|level=error|ERROR:"; then
     fail "Found errors on container logs. See $OUTPUT_DIR/logs.txt"
   fi
 
