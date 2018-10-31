@@ -28,7 +28,7 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
 
   async get30DayByteTransfer(): Promise<DataUsageByUser> {
     // TODO(fortuna): Consider pre-computing this to save server's CPU.
-    // We measure only traffic leaving the server, since that's what DigitalOcean charges
+    // We measure only traffic leaving the server, since that's what DigitalOcean charges.
     // TODO: Display all directions to admin
     // TODO: Remove >p< once ss-libev support is gone.
     const result = await this.prometheusClient.query(
