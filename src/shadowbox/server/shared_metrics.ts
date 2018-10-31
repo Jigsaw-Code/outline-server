@@ -74,8 +74,10 @@ export class PrometheusUsageMetrics implements UsageMetrics {
 
   async getUsage(): Promise<KeyUsage[]> {
     const timeDeltaSecs = Math.round((Date.now() - this.resetTimeMs) / 1000);
+    // We mesure the traffic to and from the target, since that's what we are protecting.
+    // TODO: remove >p< once the ss-libev support is gone.
     const result =
-        await this.prometheusClient.query(`sum(increase(shadowsocks_data_bytes{dir=">p<"}[${
+        await this.prometheusClient.query(`sum(increase(shadowsocks_data_bytes{dir=~">p<|p>t|p<t"}[${
             timeDeltaSecs}s])) by (location, access_key)`);
     const usage = [] as KeyUsage[];
     for (const entry of result.result) {
