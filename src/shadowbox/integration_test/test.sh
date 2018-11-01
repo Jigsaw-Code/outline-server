@@ -137,10 +137,11 @@ function cleanup() {
   client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT --connect-timeout 1 http://target &> /dev/null \
     && fail "Deleted access key is still active" || (($? == 56))
 
-  # Verify no errors occurred
-  docker logs $SHADOWBOX_CONTAINER &> $OUTPUT_DIR/logs.txt
-  if cat $OUTPUT_DIR/logs.txt | grep --quiet -E "^E|level=error|ERROR:"; then
-    fail "Found errors on container logs. See $OUTPUT_DIR/logs.txt"
+  # Verify no errors occurred.
+  readonly SHADOWBOX_LOG=$OUTPUT_DIR/shadowbox-log.txt
+  if docker logs $SHADOWBOX_CONTAINER 2>&1 | tee $SHADOWBOX_LOG | egrep -q "^E|level=error|ERROR:"; then
+    cat $SHADOWBOX_LOG
+    fail "Found errors in Shadowbox logs (see above, also saved to $SHADOWBOX_LOG)"
   fi
 
   # TODO(fortuna): Test metrics.
