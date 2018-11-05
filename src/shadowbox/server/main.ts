@@ -162,7 +162,7 @@ async function main() {
 
   const rollouts = createRolloutTracker(serverConfig);
   let shadowsocksServer: ShadowsocksServer;
-  if (rollouts.isRolloutEnabled('outline-ss-server', 30)) {
+  if (rollouts.isRolloutEnabled('outline-ss-server', 50)) {
     const ssMetricsLocation = `localhost:${ssMetricsPort}`;
     logging.info(`outline-ss-server metrics is at ${ssMetricsLocation}`);
     prometheusConfigJson.scrape_configs.push(
