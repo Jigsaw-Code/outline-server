@@ -19,6 +19,7 @@ import * as digitalocean_api from '../cloud/digitalocean_api';
 import {App} from './app';
 import {DigitalOceanTokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
+import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
 
 function ensureString(queryParam: string|string[]): string {
@@ -49,7 +50,8 @@ document.addEventListener('WebComponentsReady', () => {
   new App(
       document.getElementById('appRoot'), document.URL, version,
       digitalocean_api.createDigitalOceanSession, digitalOceanServerRepositoryFactory,
-      new ManualServerRepository('manualServers'), new DigitalOceanTokenManager())
+      new ManualServerRepository('manualServers'), new DisplayServerRepository(),
+      new DigitalOceanTokenManager())
       .start();
 });
 

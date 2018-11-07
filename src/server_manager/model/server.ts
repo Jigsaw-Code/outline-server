@@ -54,11 +54,18 @@ export interface Server {
 
   // Returns the server's management API port.
   getManagementPort(): number;
+
+  // Returns the server's management API URL.
+  getManagementApiUrl(): string;
 }
 
 // Manual servers are servers which the user has independently setup to run
 // shadowbox, and can be on any cloud provider.
-export interface ManualServer extends Server { forget(): void; }
+export interface ManualServer extends Server {
+  getCertificateFingerprint(): string;
+
+  forget(): void;
+}
 
 // Managed servers are servers created by the Outline Manager through our
 // "magic" user experience, e.g. DigitalOcean.
@@ -83,6 +90,8 @@ export interface ManagedServerHost {
   getRegionId(): RegionId;
   // Deletes the server - cannot be undone.
   delete(): Promise<void>;
+  // Returns the virtual host ID.
+  getHostId(): string;
 }
 
 export class DataAmount { terabytes: number; }
@@ -127,6 +136,9 @@ export interface ManualServerRepository {
   listServers(): Promise<ManualServer[]>;
   // Adds a manual server using the config (e.g. user input).
   addServer(config: ManualServerConfig): Promise<ManualServer>;
+
+  // Retrieves a server with `config`.
+  findServer(config: ManualServerConfig): ManualServer|undefined;
 }
 
 export type AccessKeyId = string;

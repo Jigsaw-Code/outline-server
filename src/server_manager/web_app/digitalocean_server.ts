@@ -344,6 +344,10 @@ class DigitalOceanHost implements server.ManagedServerHost {
       this.deleteCallback();
     });
   }
+
+  getHostId(): string {
+    return `${this.dropletInfo.id}`;
+  }
 }
 
 function startsWithCaseInsensitive(text: string, prefix: string) {

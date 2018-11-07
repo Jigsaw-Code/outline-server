@@ -15,6 +15,7 @@
 -->
 <link rel='import' href='../bower_components/polymer/polymer.html'>
 <link rel='import' href='../bower_components/paper-button/paper-button.html'>
+<link rel='import' href='../bower_components/paper-progress/paper-progress.html'>
 <link rel='import' href='../bower_components/iron-icon/iron-icon.html'>
 <link rel='import' href='../bower_components/iron-icons/iron-icons.html'>
 
@@ -106,6 +107,7 @@
             </input>
           </template>
         </div>
+        <paper-progress hidden$="[[!creatingServer]]" indeterminate class="slow"></paper-progress>
       </outline-step-view>
   </template>
   <script>

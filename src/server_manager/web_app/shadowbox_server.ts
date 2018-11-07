@@ -148,6 +148,10 @@ export class ShadowboxServer implements server.Server {
     this.managementApiAddress = apiAddress;
   }
 
+  getManagementApiUrl() {
+    return this.managementApiAddress;
+  }
+
   // Makes a request to the management API.
   private apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
     try {
