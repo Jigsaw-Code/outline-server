@@ -245,6 +245,7 @@ export class App {
         });
       }
     });
+    this.showIntro();
   }
 
   private async syncServersToDisplay(servers: server.Server[]) {
