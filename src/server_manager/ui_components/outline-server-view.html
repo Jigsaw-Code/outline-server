@@ -304,6 +304,7 @@
       }
       .add-new-key {
         color: var(--primary-green);
+        cursor: pointer;
       }
       outline-help-bubble {
         text-align: center;
@@ -475,8 +476,8 @@
             <!-- add key button -->
             <div class="access-key-row" id="addAccessKeyRow">
               <span class="access-key-container">
-                <paper-icon-button icon="icons:add" on-tap='_handleAddAccessKeyPressed' id='addAccessKeyButton' class="access-key-icon"></paper-icon-button>
-                <div class="add-new-key">Add new key</div>
+                <paper-icon-button icon="icons:add" on-tap="_handleAddAccessKeyPressed" id="addAccessKeyButton" class="access-key-icon"></paper-icon-button>
+                <div class="add-new-key" on-tap="_handleAddAccessKeyPressed">Add new key</div>
               </span>
             </div>
           </div>

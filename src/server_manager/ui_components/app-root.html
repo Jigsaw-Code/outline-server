@@ -88,7 +88,7 @@
         width: 100%;
       }
       .servers {
-        overflow: scroll;
+        overflow-y: scroll;
         flex: 1;
       }
       .servers-section {
@@ -184,6 +184,7 @@
         padding: 0 24px;
         font-size: 14px;
         line-height: 40px;
+        outline: none;
       }
       #appDrawer a {
         color: inherit;
@@ -640,6 +641,9 @@
       },
       openGetConnectedDialog: function(inviteUrl) {
         const dialog = this.$.getConnectedDialog;
+        if (dialog.children.length > 1) {
+          return;  // The iframe is already loading.
+        }
         // Reset the iframe's state, by replacing it with a newly constructed
         // iframe. Unfortunately the location.reload API does not work in our case due to
         // this Chrome error:
