@@ -180,7 +180,8 @@
             </div>
           </div>
           <div class="card-footer">
-            <paper-button class="primary">Get started</paper-button>
+            <paper-button class="primary" hidden$="{{isSignedInToDigitalOcean}}">Connect</paper-button>
+            <paper-button class="primary" hidden$="{{!isSignedInToDigitalOcean}}">Create server</paper-button>
           </div>
         </div>
 
@@ -250,6 +251,9 @@
   <script>
     Polymer({
       is: 'outline-intro-step',
+      properties: {
+        isSignedInToDigitalOcean: Boolean,
+      },
       connectToDigitalOceanTapped: function() {
         this.fire('ConnectToDigitalOcean');
       },

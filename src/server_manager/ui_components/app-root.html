@@ -346,7 +346,7 @@
         <app-header-layout>
           <div class="app-container">
             <iron-pages attr-for-selected='id' selected='{{ currentPage }}'>
-              <outline-intro-step id='intro'></outline-intro-step>
+              <outline-intro-step id='intro' is-signed-in-to-digital-ocean='{{isSignedInToDigitalOcean}}'></outline-intro-step>
               <outline-do-oauth-step id='digitalOceanOauth'></outline-do-oauth-step>
               <outline-manual-server-entry id='manualEntry'></outline-manual-server-entry>
               <outline-region-picker-step id='regionPicker'></outline-region-picker-step>
