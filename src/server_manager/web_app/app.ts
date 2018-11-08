@@ -546,6 +546,8 @@ export class App {
     if (!!this.appRoot.selectedServer && this.appRoot.selectedServer.isManaged) {
       this.appRoot.selectedServer = null;
       this.showIntro();
+    } else if (!this.appRoot.selectedServer) {
+      this.showIntro();
     }
   }
 
