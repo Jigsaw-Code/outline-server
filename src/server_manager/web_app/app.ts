@@ -508,8 +508,16 @@ export class App {
           // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
           this.digitalOceanTokenManager.writeTokenToStorage(accessToken);
           this.enterDigitalOceanMode(accessToken).then((managedServers) => {
-            this.syncServersToDisplay(managedServers);
-            this.showCreateServer();
+            if (managedServers.length > 0) {
+              this.syncServersToDisplay(managedServers).then(() => {
+                // Show the first server in the list since the user just signed in to DO.
+                const displayServer = this.appRoot.serverList.find((displayServer: DisplayServer) => displayServer.isManaged);
+                const server = this.serverDisplayTable[displayServer.id].server;
+                this.showServerIfHealthy(server, displayServer);
+              });
+            } else {
+              this.showCreateServer();
+            }
           });
         })
         .catch((error) => {
