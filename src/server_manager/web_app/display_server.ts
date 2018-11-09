@@ -20,7 +20,8 @@ export interface DisplayServer {
   isManaged: boolean;
 }
 
-// Persistence layer for server display data.
+// Persistence layer for `DisplayServer`. Caches the list of servers shown in the UI in case they
+// cannot be accessed due to connectivity issues.
 export class DisplayServerRepository {
   static readonly SERVERS_STORAGE_KEY = 'displayServers';
   static readonly LAST_DISPLAYED_SERVER_STORAGE_KEY = 'lastDisplayedServer';
@@ -32,7 +33,7 @@ export class DisplayServerRepository {
   }
 
   listServers(): Promise<DisplayServer[]> {
-    // Copy the server array; resolving with the instance varialbe may lead to races in `findServer`
+    // Copy the server array; resolving with the instance variable may lead to races in `findServer`
     return Promise.resolve(JSON.parse(JSON.stringify(this.servers)));
   }
 
@@ -58,7 +59,6 @@ export class DisplayServerRepository {
     return this.servers.find(server => server.id === serverId);
   }
 
-
   storeLastDisplayedServerId(serverId: string) {
     this.storage.setItem(DisplayServerRepository.LAST_DISPLAYED_SERVER_STORAGE_KEY, serverId);
   }
@@ -67,7 +67,7 @@ export class DisplayServerRepository {
     return this.storage.getItem(DisplayServerRepository.LAST_DISPLAYED_SERVER_STORAGE_KEY);
   }
 
-  removeLastDisplayedSeverId() {
+  removeLastDisplayedServerId() {
     this.storage.removeItem(DisplayServerRepository.LAST_DISPLAYED_SERVER_STORAGE_KEY);
   }
 

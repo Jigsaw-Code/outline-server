@@ -117,7 +117,7 @@ describe('DisplayServerRepository', () => {
     repository.storeLastDisplayedServerId(serverId);
 
     expect(repository.getLastDisplayedServerId()).toEqual(serverId);
-    repository.removeLastDisplayedSeverId();
+    repository.removeLastDisplayedServerId();
     expect(repository.getLastDisplayedServerId()).toBeNull();
   });
 });

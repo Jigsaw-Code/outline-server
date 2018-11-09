@@ -305,14 +305,14 @@ export class App {
     this.syncDisplayServersToUi();
   }
 
-  // Shows the last server displayed, if there is one in local storage.
+  // Shows the last server displayed, if there is one in local storage and it still exists.
   private maybeShowLastDisplayedServer() {
     const lastDisplayedServerId = this.displayServerRepository.getLastDisplayedServerId();
     if (!lastDisplayedServerId) {
       return;  // No server was displayed when user quit the app.
     }
     const lastDisplayedServer = this.displayServerRepository.findServer(lastDisplayedServerId);
-    if (!lastDisplayedServerId) {
+    if (!lastDisplayedServer) {
       return console.warn('Last displayed server ID not found in display sever repository');
     }
     try {
