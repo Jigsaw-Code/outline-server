@@ -91,6 +91,10 @@
         overflow-y: scroll;
         flex: 1;
       }
+      .servers::-webkit-scrollbar {
+        /* Do not display the scroll bar in the drawer or side bar. It is not styled on some platforms. */
+        display: none;
+      }
       .servers-section {
         padding: 12px 0;
         border-bottom: 1px solid var(--border-color);
@@ -220,9 +224,6 @@
       }
       .side-bar-container .servers {
         flex: initial; /* Prevent the server list pushing down the add server button. */
-      }
-      .side-bar-container .servers::-webkit-scrollbar {
-        display: none;
       }
       .side-bar-section {
         display: flex;
