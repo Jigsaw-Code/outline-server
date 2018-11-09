@@ -44,11 +44,6 @@ interface UiAccessKey {
   relativeTraffic: number;
 }
 
-// Mapping between `DisplayServer`s and `server.Server`, keyed by displayServer.id.
-interface ServerDisplayTable {
-  [displayServerId: string]: {server: server.Server, displayServer: DisplayServer};
-}
-
 // Converts the access key from the remote service format to the
 // format used by outline-server-view.
 function convertToUiAccessKey(remoteAccessKey: server.AccessKey): UiAccessKey {
@@ -87,7 +82,6 @@ export class App {
   private selectedServer: server.Server;
   private serverBeingCreated: server.ManagedServer;
   private displayServerBeingCreated: DisplayServer;
-  private serverDisplayTable: ServerDisplayTable = {};
 
   constructor(
       private appRoot: Polymer, private readonly appUrl: string, private readonly version: string,
@@ -210,41 +204,30 @@ export class App {
     });
 
     appRoot.addEventListener('ShowServerRequested', (event: PolymerEvent) => {
-      const displayServerId = event.detail.displayServerId;
-      const serverEntry = this.serverDisplayTable[displayServerId];
-      if (!serverEntry && !!this.serverBeingCreated) {
-        this.showServerCreationProgress();
-      } else if (!!serverEntry) {
-        this.showServerIfHealthy(serverEntry.server, serverEntry.displayServer);
-      } else {
-        // We should never reach this if the server display table is synced.
-        console.error(`Could not find server entry for display server ID ${displayServerId}`);
-      }
+      this.handleShowServerRequested(event.detail.displayServerId);
     });
 
     onUpdateDownloaded(this.displayAppUpdateNotification.bind(this));
   }
 
   start(): void {
-    // Load display servers and associate them with managed and manual servers.
-    this.displayServerRepository.listServers().then((displayServers) => {
-      this.appRoot.serverList = displayServers;
+    this.syncDisplayServersToUi();
 
-      this.manualServerRepository.listServers().then((manualServers) => {
-        this.syncServersToDisplay(manualServers).then(() => {
+    // Load display servers and associate them with managed and manual servers.
+    this.manualServerRepository.listServers().then((manualServers) => {
+      this.syncServersToDisplay(manualServers).then(() => {
+        this.maybeShowLastDisplayedServer();
+      });
+    });
+
+    const accessToken = this.digitalOceanTokenManager.getStoredToken();
+    if (accessToken) {
+      this.enterDigitalOceanMode(accessToken).then((managedServers) => {
+        this.syncServersToDisplay(managedServers).then(() => {
           this.maybeShowLastDisplayedServer();
         });
       });
-
-      const accessToken = this.digitalOceanTokenManager.getStoredToken();
-      if (accessToken) {
-        this.enterDigitalOceanMode(accessToken).then((managedServers) => {
-          this.syncServersToDisplay(managedServers).then(() => {
-            this.maybeShowLastDisplayedServer();
-          });
-        });
-      }
-    });
+    }
     this.showIntro();
   }
 
@@ -255,12 +238,15 @@ export class App {
   }
 
   // Syncs the locally persisted server metadata for `server`. Creates a DisplayServer for `server`
-  // if one is not found in storage.
+  // if one is not found in storage. While this method does not make any assumptions on whether the
+  // server is reachable, it does assume that its management API URL is available.
   private async syncServerToDisplay(server: server.Server): Promise<DisplayServer> {
+    // We key display servers by the server management API URL, which can be retrieved independently
+    // of the server health.
     const displayServerId = server.getManagementApiUrl();
     let displayServer = this.displayServerRepository.findServer(displayServerId);
     if (!displayServer) {
-      console.warn(`Could not find managed display server with ID ${displayServerId}`);
+      console.warn(`Could not find display server with ID ${displayServerId}`);
       const isHealthy = await server.isHealthy().catch((e) => false);
       displayServer = {
         id: displayServerId,
@@ -284,7 +270,6 @@ export class App {
         // Ignore, we may not have the server config yet.
       }
     }
-    this.serverDisplayTable[displayServer.id] = {displayServer, server};
     return displayServer;
   }
 
@@ -300,9 +285,27 @@ export class App {
 
   // Removes `displayServer` from the UI.
   private removeServerFromDisplay(displayServer: DisplayServer) {
-    delete this.serverDisplayTable[displayServer.id];
     this.displayServerRepository.removeServer(displayServer);
     this.syncDisplayServersToUi();
+  }
+
+  // Retrieves a server associated to `displayServer`.
+  private async getServerFromRepository(displayServer: DisplayServer): Promise<server.Server|null> {
+    const apiManagementUrl = displayServer.id;
+    let server: server.Server = null;
+    if (displayServer.isManaged) {
+      const accessToken = this.digitalOceanTokenManager.getStoredToken();
+      if (accessToken) {
+        const managedServers: server.ManagedServer[] =
+            await this.enterDigitalOceanMode(accessToken).catch(e => []);
+        server = managedServers.find(
+            (managedServer) => managedServer.getManagementApiUrl() === apiManagementUrl);
+      }
+    } else {
+      server =
+          this.manualServerRepository.findServer({'apiUrl': apiManagementUrl, 'certSha256': ''});
+    }
+    return server;
   }
 
   // Shows the last server displayed, if there is one in local storage and it still exists.
@@ -315,15 +318,38 @@ export class App {
     if (!lastDisplayedServer) {
       return console.warn('Last displayed server ID not found in display sever repository');
     }
-    try {
-      const server = this.serverDisplayTable[lastDisplayedServerId].server;
-      this.showServerIfHealthy(server, lastDisplayedServer);
-    } catch (e) {
-      // All is well, the server display table may not be fully synced yet.
+    this.getAndShowServerFromRepository(lastDisplayedServer);
+  }
+
+  private async handleShowServerRequested(displayServerId: string) {
+    const displayServer =
+        this.displayServerRepository.findServer(displayServerId) || this.displayServerBeingCreated;
+    if (!displayServer) {
+      // This shouldn't happen since the displayed servers are fetched from the repository.
+      console.error('Display server not found in storage');
+      return;
+    }
+    const server = await this.getServerFromRepository(displayServer);
+    if (!server && !!this.serverBeingCreated) {
+      this.showServerCreationProgress();
+    } else if (!!server) {
+      this.showServerIfHealthy(server, displayServer);
+    } else {
+      // We should never reach this.
+      console.error(`Could not find manual server for display server ID ${displayServerId}`);
     }
   }
 
-  // Show the DigitalOcean server creator or the existing server, if there's one.
+  private getAndShowServerFromRepository(displayServer: DisplayServer) {
+    this.getServerFromRepository(displayServer).then((server) => {
+      if (!!server) {
+        this.showServerIfHealthy(server, displayServer);
+      }
+    });
+  }
+
+  // Signs in to DigitalOcean through the OAuthFlow. Creates a `ManagedServerRepository` and
+  // resolves with the servers present in the account.
   private enterDigitalOceanMode(accessToken: string): Promise<server.ManagedServer[]> {
     const doSession = this.createDigitalOceanSession(accessToken);
     const authEvents = new events.EventEmitter();
@@ -513,8 +539,7 @@ export class App {
                 // Show the first server in the list since the user just signed in to DO.
                 const displayServer = this.appRoot.serverList.find(
                     (displayServer: DisplayServer) => displayServer.isManaged);
-                const server = this.serverDisplayTable[displayServer.id].server;
-                this.showServerIfHealthy(server, displayServer);
+                this.getServerFromRepository(displayServer);
               });
             } else {
               this.showCreateServer();

@@ -71,6 +71,8 @@ export class DisplayServerRepository {
     this.storage.removeItem(DisplayServerRepository.LAST_DISPLAYED_SERVER_STORAGE_KEY);
   }
 
+  // Loads the servers from storage. Does *not* throw because it is only called on the constructor,
+  // and the repository is created before the app starts.
   private loadServers() {
     const serversJson = this.storage.getItem(DisplayServerRepository.SERVERS_STORAGE_KEY);
     if (serversJson) {
