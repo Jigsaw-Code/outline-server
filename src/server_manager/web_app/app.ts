@@ -210,11 +210,12 @@ export class App {
     onUpdateDownloaded(this.displayAppUpdateNotification.bind(this));
   }
 
-  start(): void {
+  async start(): Promise<void> {
+    this.showIntro();
     this.syncDisplayServersToUi();
 
     // Load display servers and associate them with managed and manual servers.
-    this.manualServerRepository.listServers().then((manualServers) => {
+    await this.manualServerRepository.listServers().then((manualServers) => {
       this.syncServersToDisplay(manualServers).then(() => {
         this.maybeShowLastDisplayedServer();
       });
@@ -222,13 +223,19 @@ export class App {
 
     const accessToken = this.digitalOceanTokenManager.getStoredToken();
     if (accessToken) {
-      this.enterDigitalOceanMode(accessToken).then((managedServers) => {
-        this.syncServersToDisplay(managedServers).then(() => {
+      await this.enterDigitalOceanMode(accessToken).then((managedServers) => {
+        // There can only be one server being created at any given time.
+        const serverBeingCreated = managedServers.find(server => !server.isInstallCompleted());
+        if (!!serverBeingCreated) {
+          this.syncServerCreationToUi(serverBeingCreated);
+        }
+        const installedManagedServers =
+            managedServers.filter(server => server.isInstallCompleted());
+        this.syncServersToDisplay(installedManagedServers).then(() => {
           this.maybeShowLastDisplayedServer();
         });
       });
     }
-    this.showIntro();
   }
 
   private async syncServersToDisplay(servers: server.Server[]) {
@@ -246,7 +253,7 @@ export class App {
     const displayServerId = server.getManagementApiUrl();
     let displayServer = this.displayServerRepository.findServer(displayServerId);
     if (!displayServer) {
-      console.warn(`Could not find display server with ID ${displayServerId}`);
+      console.debug(`Could not find display server with ID ${displayServerId}`);
       const isHealthy = await server.isHealthy().catch((e) => false);
       displayServer = {
         id: displayServerId,
@@ -308,8 +315,31 @@ export class App {
     return server;
   }
 
+  private syncServerCreationToUi(server: server.ManagedServer) {
+    // Set name to the default server name for this region. Because the server
+    // is still being created, the getName REST API will not yet be available.
+    const regionId = server.getHost().getRegionId();
+    const serverName = digitalocean_server.MakeEnglishNameForServer(regionId);
+    this.serverBeingCreated = server;
+    this.displayServerBeingCreated = {
+      id: server.getHost().getHostId(),  // Use the droplet ID until the API URL is available.
+      name: serverName,
+      isManaged: true
+    };
+    this.syncDisplayServersToUi();
+    // Show creation progress for new servers only after we have a ManagedServer object,
+    // otherwise the cancel action will not be available.
+    this.showServerCreationProgress();
+    this.waitForManagedServerCreation();
+  }
+
   // Shows the last server displayed, if there is one in local storage and it still exists.
   private maybeShowLastDisplayedServer() {
+    if (!!this.serverBeingCreated) {
+      // The server being created should be shown regardless of the last user selection.
+      this.displayServerRepository.removeLastDisplayedServerId();
+      return;
+    }
     const lastDisplayedServerId = this.displayServerRepository.getLastDisplayedServerId();
     if (!lastDisplayedServerId) {
       return;  // No server was displayed when user quit the app.
@@ -336,7 +366,7 @@ export class App {
       this.showServerIfHealthy(server, displayServer);
     } else {
       // We should never reach this.
-      console.error(`Could not find manual server for display server ID ${displayServerId}`);
+      console.error(`Could not find server for display server ID ${displayServerId}`);
     }
   }
 
@@ -661,21 +691,7 @@ export class App {
           return this.digitalOceanRepository.createServer(regionId);
         })
         .then((server) => {
-          // Set name to the default server name for this region. Because the server
-          // is still being created, the getName REST API will not yet be available.
-          const regionId = server.getHost().getRegionId();
-          const serverName = digitalocean_server.MakeEnglishNameForServer(regionId);
-          this.serverBeingCreated = server;
-          this.displayServerBeingCreated = {
-            id: server.getHost().getHostId(),  // Use the droplet ID until the API URL is available.
-            name: serverName,
-            isManaged: true
-          };
-          this.syncDisplayServersToUi();
-          // Show creation progress for new servers only after we have a ManagedServer object,
-          // otherwise the cancel action will not be available.
-          this.showServerCreationProgress();
-          this.waitForManagedServerCreation();
+          this.syncServerCreationToUi(server);
         })
         .catch((e) => {
           // Sanity check - this error is not expected to occur, as waitForManagedServerCreation
