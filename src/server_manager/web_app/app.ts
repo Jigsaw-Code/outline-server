@@ -81,7 +81,6 @@ export class App {
   private digitalOceanRepository: server.ManagedServerRepository;
   private selectedServer: server.Server;
   private serverBeingCreated: server.ManagedServer;
-  private displayServerBeingCreated: DisplayServer;
 
   constructor(
       private appRoot: Polymer, private readonly appUrl: string, private readonly version: string,
@@ -212,41 +211,39 @@ export class App {
 
   async start(): Promise<void> {
     this.showIntro();
-    this.syncDisplayServersToUi();
+    await this.syncDisplayServersToUi();
 
-    // Load display servers and associate them with managed and manual servers.
-    await this.manualServerRepository.listServers().then((manualServers) => {
-      this.syncServersToDisplay(manualServers).then(() => {
-        this.maybeShowLastDisplayedServer();
-      });
-    });
+    const manualServersPromise = this.manualServerRepository.listServers();
 
     const accessToken = this.digitalOceanTokenManager.getStoredToken();
-    if (accessToken) {
-      await this.enterDigitalOceanMode(accessToken).then((managedServers) => {
-        // There can only be one server being created at any given time.
-        const serverBeingCreated = managedServers.find(server => !server.isInstallCompleted());
-        if (!!serverBeingCreated) {
-          this.syncServerCreationToUi(serverBeingCreated);
-        }
-        const installedManagedServers =
-            managedServers.filter(server => server.isInstallCompleted());
-        this.syncServersToDisplay(installedManagedServers).then(() => {
+    const managedServersPromise =
+        !!accessToken ? this.enterDigitalOceanMode(accessToken) : Promise.resolve([]);
+
+    return Promise.all([manualServersPromise, managedServersPromise])
+        .then(([manualServers, managedServers]) => {
+          const installedManagedServers =
+              managedServers.filter(server => server.isInstallCompleted());
+          const serverBeingCreated = managedServers.find(server => !server.isInstallCompleted());
+          if (!!serverBeingCreated) {
+            this.syncServerCreationToUi(serverBeingCreated);
+          }
+          return this.syncServersToDisplay(manualServers.concat(installedManagedServers));
+        })
+        .then(() => {
           this.maybeShowLastDisplayedServer();
         });
-      });
-    }
   }
 
   private async syncServersToDisplay(servers: server.Server[]) {
     for (const server of servers) {
-      await this.syncServerToDisplay(server);
+      this.syncServerToDisplay(server);
     }
   }
 
   // Syncs the locally persisted server metadata for `server`. Creates a DisplayServer for `server`
-  // if one is not found in storage. While this method does not make any assumptions on whether the
-  // server is reachable, it does assume that its management API URL is available.
+  // if one is not found in storage. Updates the UI to show the DisplayServer.
+  // While this method does not make any assumptions on whether the server is reachable, it does
+  // assume that its management API URL is available.
   private async syncServerToDisplay(server: server.Server): Promise<DisplayServer> {
     // We key display servers by the server management API URL, which can be retrieved independently
     // of the server health.
@@ -280,13 +277,14 @@ export class App {
     return displayServer;
   }
 
+  // Updates the UI with the stored display servers and server creation in progress, if any.
   private syncDisplayServersToUi() {
+    const displayServerBeingCreated = this.getDisplayServerBeingCreated();
     this.displayServerRepository.listServers().then((displayServers) => {
-      this.appRoot.serverList = displayServers;
-      if (!!this.displayServerBeingCreated) {
-        // Trigger Polymer array mutation.
-        this.appRoot.push('serverList', this.displayServerBeingCreated);
+      if (!!displayServerBeingCreated) {
+        displayServers.push(displayServerBeingCreated);
       }
+      this.appRoot.serverList = displayServers;
     });
   }
 
@@ -296,18 +294,14 @@ export class App {
     this.syncDisplayServersToUi();
   }
 
-  // Retrieves a server associated to `displayServer`.
+  // Retrieves the server associated with `displayServer`.
   private async getServerFromRepository(displayServer: DisplayServer): Promise<server.Server|null> {
     const apiManagementUrl = displayServer.id;
     let server: server.Server = null;
-    if (displayServer.isManaged) {
-      const accessToken = this.digitalOceanTokenManager.getStoredToken();
-      if (accessToken) {
-        const managedServers: server.ManagedServer[] =
-            await this.enterDigitalOceanMode(accessToken).catch(e => []);
-        server = managedServers.find(
-            (managedServer) => managedServer.getManagementApiUrl() === apiManagementUrl);
-      }
+    if (displayServer.isManaged && !!this.digitalOceanRepository) {
+      const managedServers = await this.digitalOceanRepository.listServers();
+      server = managedServers.find(
+          (managedServer) => managedServer.getManagementApiUrl() === apiManagementUrl);
     } else {
       server =
           this.manualServerRepository.findServer({'apiUrl': apiManagementUrl, 'certSha256': ''});
@@ -316,21 +310,28 @@ export class App {
   }
 
   private syncServerCreationToUi(server: server.ManagedServer) {
-    // Set name to the default server name for this region. Because the server
-    // is still being created, the getName REST API will not yet be available.
-    const regionId = server.getHost().getRegionId();
-    const serverName = digitalocean_server.MakeEnglishNameForServer(regionId);
     this.serverBeingCreated = server;
-    this.displayServerBeingCreated = {
-      id: server.getHost().getHostId(),  // Use the droplet ID until the API URL is available.
-      name: serverName,
-      isManaged: true
-    };
     this.syncDisplayServersToUi();
     // Show creation progress for new servers only after we have a ManagedServer object,
     // otherwise the cancel action will not be available.
     this.showServerCreationProgress();
     this.waitForManagedServerCreation();
+  }
+
+  private getDisplayServerBeingCreated(): DisplayServer {
+    if (!this.serverBeingCreated) {
+      return null;
+    }
+    // Set name to the default server name for this region. Because the server
+    // is still being created, the getName REST API will not yet be available.
+    const regionId = this.serverBeingCreated.getHost().getRegionId();
+    const serverName = digitalocean_server.MakeEnglishNameForServer(regionId);
+    return {
+      // Use the droplet ID until the API URL is available.
+      id: this.serverBeingCreated.getHost().getHostId(),
+      name: serverName,
+      isManaged: true
+    };
   }
 
   // Shows the last server displayed, if there is one in local storage and it still exists.
@@ -346,36 +347,36 @@ export class App {
     }
     const lastDisplayedServer = this.displayServerRepository.findServer(lastDisplayedServerId);
     if (!lastDisplayedServer) {
-      return console.warn('Last displayed server ID not found in display sever repository');
+      return console.debug('Last displayed server ID not found in display sever repository');
     }
-    this.getAndShowServerFromRepository(lastDisplayedServer);
+    this.showServerFromRepository(lastDisplayedServer);
+  }
+
+  private showServerFromRepository(displayServer: DisplayServer) {
+    this.getServerFromRepository(displayServer).then((server) => {
+      if (!!server) {
+        this.showServerIfHealthy(server, displayServer);
+      }
+    });
   }
 
   private async handleShowServerRequested(displayServerId: string) {
-    const displayServer =
-        this.displayServerRepository.findServer(displayServerId) || this.displayServerBeingCreated;
+    const displayServer = this.displayServerRepository.findServer(displayServerId) ||
+        this.getDisplayServerBeingCreated();
     if (!displayServer) {
       // This shouldn't happen since the displayed servers are fetched from the repository.
       console.error('Display server not found in storage');
       return;
     }
     const server = await this.getServerFromRepository(displayServer);
-    if (!server && !!this.serverBeingCreated) {
-      this.showServerCreationProgress();
-    } else if (!!server) {
+    if (!!server) {
       this.showServerIfHealthy(server, displayServer);
+    } else if (!!this.serverBeingCreated) {
+      this.showServerCreationProgress();
     } else {
-      // We should never reach this.
       console.error(`Could not find server for display server ID ${displayServerId}`);
+      this.removeServerFromDisplay(displayServer);
     }
-  }
-
-  private getAndShowServerFromRepository(displayServer: DisplayServer) {
-    this.getServerFromRepository(displayServer).then((server) => {
-      if (!!server) {
-        this.showServerIfHealthy(server, displayServer);
-      }
-    });
   }
 
   // Signs in to DigitalOcean through the OAuthFlow. Creates a `ManagedServerRepository` and
@@ -569,7 +570,7 @@ export class App {
                 // Show the first server in the list since the user just signed in to DO.
                 const displayServer = this.appRoot.serverList.find(
                     (displayServer: DisplayServer) => displayServer.isManaged);
-                this.getServerFromRepository(displayServer);
+                this.showServerFromRepository(displayServer);
               });
             } else {
               this.showCreateServer();
@@ -635,21 +636,21 @@ export class App {
   private showServerCreationProgress() {
     // Set selected server, needed for cancel button.
     this.selectedServer = this.serverBeingCreated;
-    this.appRoot.selectedServer = this.displayServerBeingCreated;
+    this.appRoot.selectedServer = this.getDisplayServerBeingCreated();
     // Update UI.  Only show cancel button if the server has not yet finished
     // installation, to prevent accidental deletion when restarting.
     const showCancelButton = !this.serverBeingCreated.isInstallCompleted();
-    this.appRoot.showProgress(this.displayServerBeingCreated.name, showCancelButton);
+    this.appRoot.showProgress(this.appRoot.selectedServer.name, showCancelButton);
   }
 
   private waitForManagedServerCreation(tryAgain = false): void {
     this.serverBeingCreated.waitOnInstall(tryAgain)
         .then(() => {
-          this.syncServerToDisplay(this.serverBeingCreated).then((displayServer) => {
-            this.removeServerFromDisplay(this.displayServerBeingCreated);
-            this.showServer(this.serverBeingCreated, displayServer);
-            this.serverBeingCreated = null;
-            this.displayServerBeingCreated = null;
+          // Unset the instance variable before syncing the server so the UI does not display it.
+          const server = this.serverBeingCreated;
+          this.serverBeingCreated = null;
+          this.syncServerToDisplay(server).then((displayServer) => {
+            this.showServer(server, displayServer);
           });
         })
         .catch((e) => {
@@ -657,7 +658,6 @@ export class App {
           if (e instanceof errors.DeletedServerError) {
             // The user deleted this server, no need to show an error or delete it again.
             this.serverBeingCreated = null;
-            this.displayServerBeingCreated = null;
             return;
           }
           const errorMessage = this.serverBeingCreated.isInstallCompleted() ?
@@ -672,7 +672,6 @@ export class App {
                   console.info('Deleting unreachable server');
                   this.serverBeingCreated.getHost().delete().then(() => {
                     this.serverBeingCreated = null;
-                    this.displayServerBeingCreated = null;
                     this.showCreateServer();
                   });
                 } else if (clickedButtonIndex === 1) {  // user clicked 'Try again'.
@@ -1007,10 +1006,9 @@ export class App {
       throw new Error(msg);
     }
     serverToCancel.getHost().delete().then(() => {
-      const displayServerToCancel = this.displayServerBeingCreated;
-      this.displayServerBeingCreated = null;
+      this.serverBeingCreated = null;
+      this.removeServerFromDisplay(this.appRoot.selectedServer);
       this.appRoot.selectedServer = null;
-      this.removeServerFromDisplay(displayServerToCancel);
       this.showCreateServer();
     });
   }

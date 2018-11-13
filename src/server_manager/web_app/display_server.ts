@@ -48,9 +48,9 @@ export class DisplayServerRepository {
     this.storeServers();
   }
 
-  removeServer(serverToForget: DisplayServer) {
+  removeServer(serverToRemove: DisplayServer) {
     this.servers = this.servers.filter((server: DisplayServer) => {
-      return server.id !== serverToForget.id;
+      return server.id !== serverToRemove.id;
     });
     this.storeServers();
   }
@@ -75,12 +75,13 @@ export class DisplayServerRepository {
   // and the repository is created before the app starts.
   private loadServers() {
     const serversJson = this.storage.getItem(DisplayServerRepository.SERVERS_STORAGE_KEY);
-    if (serversJson) {
-      try {
-        this.servers = JSON.parse(serversJson);
-      } catch (e) {
-        console.error('Error loading local servers from storage');
-      }
+    if (!serversJson) {
+      return;
+    }
+    try {
+      this.servers = JSON.parse(serversJson);
+    } catch (e) {
+      console.error('Error loading local servers from storage');
     }
   }
 
