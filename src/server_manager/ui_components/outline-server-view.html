@@ -772,8 +772,8 @@
         }
         // Default to sorting by name.
         return function(a, b) {
-          const nameA = a.name.toUpperCase();
-          const nameB = b.name.toUpperCase();
+          const nameA = a.name.toUpperCase() || a.placeholderName.toUpperCase();
+          const nameB = b.name.toUpperCase() || b.placeholderName.toUpperCase();;
           if (nameA < nameB) {
             return -1 * this.accessKeySortDirection;
           }
