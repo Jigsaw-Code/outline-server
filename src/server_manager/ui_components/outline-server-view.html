@@ -436,6 +436,7 @@
                 <span class="overflow-menu flex-1"></span>
               </span>
             </div>
+            <div id="accessKeysContainer">
             <!-- rows for each access key -->
             <template is="dom-repeat" items="{{accessKeyRows}}" filter="isRegularConnection" sort="{{_sortAccessKeys(accessKeySortBy, accessKeySortDirection)}}" observe="name transferredBytes">
               <!-- TODO(alalama): why is observe not responding to rename? -->
@@ -473,6 +474,7 @@
                 </span>
               </div>
             </template>
+            </div>
             <!-- add key button -->
             <div class="access-key-row" id="addAccessKeyRow">
               <span class="access-key-container">
@@ -621,8 +623,9 @@
         });
       },
       _handleRenameAccessKeyPressed: function(event) {
-        const input = this.querySelectorAll('.access-key-row.access-key > input')[event.model.index];
-        // This need to be deferred because the closing menu messes up with the focus.
+        const input = this.$.accessKeysContainer.querySelectorAll(
+            '.access-key-row .access-key-container > input')[event.model.index];
+        // This needs to be deferred because the closing menu messes up with the focus.
         window.setTimeout(() => { input.focus() }, 0);
       },
       _handleConnectPressed: function() {
