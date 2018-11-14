@@ -298,10 +298,14 @@ export class App {
   private async getServerFromRepository(displayServer: DisplayServer): Promise<server.Server|null> {
     const apiManagementUrl = displayServer.id;
     let server: server.Server = null;
-    if (displayServer.isManaged && !!this.digitalOceanRepository) {
-      const managedServers = await this.digitalOceanRepository.listServers();
-      server = managedServers.find(
-          (managedServer) => managedServer.getManagementApiUrl() === apiManagementUrl);
+    if (displayServer.isManaged) {
+      if (!!this.digitalOceanRepository) {
+        // Fetch the servers from memory to prevent a leak that happens due to polling when creating
+        // a new object for a server whose creation has been cancelled.
+        const managedServers = await this.digitalOceanRepository.listServers(false);
+        server = managedServers.find(
+            (managedServer) => managedServer.getManagementApiUrl() === apiManagementUrl);
+      }
     } else {
       server =
           this.manualServerRepository.findServer({'apiUrl': apiManagementUrl, 'certSha256': ''});

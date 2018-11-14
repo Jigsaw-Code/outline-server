@@ -112,8 +112,9 @@ export type RegionMap = {
 // manager on cloud providers where we can provide a "magical" user experience,
 // e.g. DigitalOcean.
 export interface ManagedServerRepository {
-  // Lists all existing Shadowboxes.
-  listServers(): Promise<ManagedServer[]>;
+  // Lists all existing Shadowboxes. If `fetchFromHost` is true, performs a network request to
+  // retrieve the servers; otherwise resolves with a cached server list.
+  listServers(fetchFromHost?: boolean): Promise<ManagedServer[]>;
   // Return a map of regions that are available and support our target machine size.
   getRegionMap(): Promise<Readonly<RegionMap>>;
   // Creates a server and returning it when it becomes active (i.e. the server has
