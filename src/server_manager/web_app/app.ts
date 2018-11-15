@@ -236,7 +236,7 @@ export class App {
 
   private async syncServersToDisplay(servers: server.Server[]) {
     for (const server of servers) {
-      this.syncServerToDisplay(server);
+      await this.syncServerToDisplay(server);
     }
   }
 
@@ -261,7 +261,7 @@ export class App {
       this.syncDisplayServersToUi();
     } else {
       // We may need to update the stored display server if it was persisted when the server was not
-      // healthy.
+      // healthy, or the server has been renamed.
       try {
         const remoteServerName = server.getName();
         if (displayServer.name !== remoteServerName) {
@@ -471,7 +471,7 @@ export class App {
         });
       } else {
         // Display the unreachable server state within the server view.
-        const serverView = this.appRoot.getServerView();
+        const serverView = this.appRoot.getServerView(displayServer.id);
         serverView.isServerReachable = false;
         serverView.isServerManaged = isManagedServer(server);
         serverView.serverName = displayServer.name;  // Don't get the name from the remote server.
@@ -654,7 +654,7 @@ export class App {
           const server = this.serverBeingCreated;
           this.serverBeingCreated = null;
           this.syncServerToDisplay(server).then((displayServer) => {
-            this.showServer(server, displayServer);
+            this.showServerAfterTimeout(server, displayServer);
           });
         })
         .catch((e) => {
@@ -704,6 +704,15 @@ export class App {
         });
   }
 
+  // Shows a server after a `timeoutMs`. This is sometimes necessary to guarantee that the UI gets
+  // updated before displaying a server.
+  private showServerAfterTimeout(
+      selectedServer: server.Server, selectedDisplayServer: DisplayServer, timeoutMs = 250) {
+    setTimeout(() => {
+      this.showServer(selectedServer, selectedDisplayServer);
+    }, timeoutMs);
+  }
+
   // Show the server management screen. Assumes the server is healthy.
   private showServer(selectedServer: server.Server, selectedDisplayServer: DisplayServer): void {
     this.selectedServer = selectedServer;
@@ -711,7 +720,7 @@ export class App {
     this.displayServerRepository.storeLastDisplayedServerId(selectedDisplayServer.id);
 
     // Show view and initialize fields from selectedServer.
-    const view = this.appRoot.getServerView();
+    const view = this.appRoot.getServerView(selectedDisplayServer.id);
     view.isServerReachable = true;
     view.serverId = selectedServer.getServerId();
     view.serverName = selectedServer.getName();
@@ -729,14 +738,6 @@ export class App {
       view.serverLocation = digitalocean_server.GetEnglishCityName(host.getRegionId());
     } else {
       view.isServerManaged = false;
-      // TODO(dborkan): consider using dom-if with restamp property
-      // https://www.polymer-project.org/1.0/docs/api/elements/dom-if
-      // or using template-repeat.  Then we won't have to worry about clearing
-      // the server-view when we display a new server.  This should be fixed
-      // once we support multiple servers.
-      view.serverLocation = undefined;
-      view.monthlyCost = undefined;
-      view.monthlyOutboundTransferBytes = undefined;
     }
 
     view.metricsEnabled = selectedServer.getMetricsEnabled();
@@ -843,7 +844,7 @@ export class App {
     this.selectedServer.addAccessKey()
         .then((serverAccessKey: server.AccessKey) => {
           const uiAccessKey = convertToUiAccessKey(serverAccessKey);
-          this.appRoot.getServerView().addAccessKey(uiAccessKey);
+          this.appRoot.getServerView(this.appRoot.selectedServer.id).addAccessKey(uiAccessKey);
           this.displayNotification('Key added');
         })
         .catch((error) => {
@@ -900,7 +901,7 @@ export class App {
       return manualServer.isHealthy().then((isHealthy) => {
         if (isHealthy) {
           return this.syncServerToDisplay(manualServer).then((displayServer) => {
-            this.showServer(manualServer, displayServer);
+            this.showServerAfterTimeout(manualServer, displayServer);
           });
         } else {
           // Remove inaccessible manual server from local storage if it was just created.
@@ -916,7 +917,7 @@ export class App {
   private removeAccessKey(accessKeyId: string) {
     this.selectedServer.removeAccessKey(accessKeyId)
         .then(() => {
-          this.appRoot.getServerView().removeAccessKey(accessKeyId);
+          this.appRoot.getServerView(this.appRoot.selectedServer.id).removeAccessKey(accessKeyId);
           this.displayNotification('Key removed');
         })
         .catch((error) => {
@@ -982,7 +983,8 @@ export class App {
     this.selectedServer.setMetricsEnabled(metricsEnabled)
         .then(() => {
           // Change metricsEnabled property on polymer element to update display.
-          this.appRoot.getServerView().metricsEnabled = metricsEnabled;
+          this.appRoot.getServerView(this.appRoot.selectedServer.id).metricsEnabled =
+              metricsEnabled;
         })
         .catch((error) => {
           this.displayError('Error setting metrics enabled', error);
@@ -992,10 +994,9 @@ export class App {
   private renameServer(newName: string): void {
     this.selectedServer.setName(newName)
         .then(() => {
-          this.appRoot.getServerView().serverName = newName;
-          this.removeServerFromDisplay(this.appRoot.selectedServer);
+          this.appRoot.getServerView(this.appRoot.selectedServer.id).serverName = newName;
           this.syncServerToDisplay(this.selectedServer).then((displayServer) => {
-            this.appRoot.selectedServer = displayServer;
+            this.showServerAfterTimeout(this.selectedServer, displayServer);
           });
         })
         .catch((error) => {

@@ -353,7 +353,11 @@
               <outline-manual-server-entry id='manualEntry'></outline-manual-server-entry>
               <outline-region-picker-step id='regionPicker'></outline-region-picker-step>
               <outline-server-progress-step id='serverProgressStep'></outline-server-progress-step>
-              <outline-server-view id='serverView'></outline-server-view>
+              <div id="serverView">
+                <template is="dom-repeat" items="{{serverList}}" as="server">
+                  <outline-server-view id="serverView-{{_base64Encode(server.id)}}" hidden$="{{!_isServerSelected(selectedServer, server)}}"></outline-server-view>
+                </template>
+              </div>
             </iron-pages>
           </div>
         </app-header-layout>
@@ -432,8 +436,8 @@
           value: [],
         },
         selectedServer: {
-          type: Object, // see UiServer in app.ts
-          value: {},
+          type: Object, // DisplayServer in display_server.ts
+          value: undefined,
         },
         hasManualServers: {
           type: Boolean,
@@ -515,8 +519,12 @@
         this.$.serverProgressStep.stop();
         this.currentPage = 'serverView';
       },
-      getServerView: function() {
-        return this.$.serverView;
+      getServerView: function(displayServerId) {
+        if (!displayServerId) {
+          return null;
+        }
+        const selectedServerId = this._base64Encode(displayServerId);
+        return this.$.serverView.querySelector(`#serverView-${selectedServerId}`);
       },
       handleRegionSelected: function (e) {
         this.fire('SetUpServerRequested', {
@@ -713,18 +721,24 @@
         return 0;
       },
       _computeSelectedServerClass: function(selectedServer, server) {
-        return this._isServerSelected(server) ? 'selected' : '';
+        return this._isServerSelected(selectedServer, server) ? 'selected' : '';
       },
       _computeSelectedServerImage: function(selectedServer, server) {
-        return this._isServerSelected(server) ? 'server-icon-selected.png' : 'server-icon.png';
+        return this._isServerSelected(selectedServer, server) ? 'server-icon-selected.png' : 'server-icon.png';
       },
-      _isServerSelected: function(server) {
-        return !!this.selectedServer && this.selectedServer.id === server.id;
+      _isServerSelected: function(selectedServer, server) {
+        return !!selectedServer && selectedServer.id === server.id;
       },
       _showServer: function(event) {
         const server = event.model.server;
         this.fire('ShowServerRequested', {displayServerId: server.id });
         this.maybeCloseDrawer();
+      },
+      // Wrapper to encode a string in base64. This is necessary to set the server view IDs to
+      // the display server IDs, which are URLs, so they can be used with selector methods. The IDs
+      // are never decoded.
+      _base64Encode: function(s) {
+        return btoa(s).replace(/=/g, '');
       },
     });
   </script>
