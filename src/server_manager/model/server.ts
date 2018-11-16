@@ -54,11 +54,18 @@ export interface Server {
 
   // Returns the server's management API port.
   getManagementPort(): number;
+
+  // Returns the server's management API URL.
+  getManagementApiUrl(): string;
 }
 
 // Manual servers are servers which the user has independently setup to run
 // shadowbox, and can be on any cloud provider.
-export interface ManualServer extends Server { forget(): void; }
+export interface ManualServer extends Server {
+  getCertificateFingerprint(): string;
+
+  forget(): void;
+}
 
 // Managed servers are servers created by the Outline Manager through our
 // "magic" user experience, e.g. DigitalOcean.
@@ -83,6 +90,8 @@ export interface ManagedServerHost {
   getRegionId(): RegionId;
   // Deletes the server - cannot be undone.
   delete(): Promise<void>;
+  // Returns the virtual host ID.
+  getHostId(): string;
 }
 
 export class DataAmount { terabytes: number; }
@@ -103,8 +112,9 @@ export type RegionMap = {
 // manager on cloud providers where we can provide a "magical" user experience,
 // e.g. DigitalOcean.
 export interface ManagedServerRepository {
-  // Lists all existing Shadowboxes.
-  listServers(): Promise<ManagedServer[]>;
+  // Lists all existing Shadowboxes. If `fetchFromHost` is true, performs a network request to
+  // retrieve the servers; otherwise resolves with a cached server list.
+  listServers(fetchFromHost?: boolean): Promise<ManagedServer[]>;
   // Return a map of regions that are available and support our target machine size.
   getRegionMap(): Promise<Readonly<RegionMap>>;
   // Creates a server and returning it when it becomes active (i.e. the server has
@@ -127,6 +137,9 @@ export interface ManualServerRepository {
   listServers(): Promise<ManualServer[]>;
   // Adds a manual server using the config (e.g. user input).
   addServer(config: ManualServerConfig): Promise<ManualServer>;
+
+  // Retrieves a server with `config`.
+  findServer(config: ManualServerConfig): ManualServer|undefined;
 }
 
 export type AccessKeyId = string;
