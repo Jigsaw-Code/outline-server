@@ -126,3 +126,7 @@ pre {
 paper-menu {
   white-space: nowrap;
 }
+
+paper-progress {
+  border-radius: 2px;
+}
