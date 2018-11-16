@@ -78,6 +78,16 @@ describe('DisplayServerRepository', () => {
     expect(repository.findServer(displayServer2.id)).toEqual(objectContaining(displayServer2));
   });
 
+  it('loads existing servers unsynced', () => {
+    // Initialize isSynced to true to simulate a persisted synced server.
+    const displayServer = {id: 'id', name: 'name', isManaged: false, isSynced: false};
+    const store =
+        new Map([[DisplayServerRepository.SERVERS_STORAGE_KEY, JSON.stringify([displayServer])]]);
+    const repository = new DisplayServerRepository(new InMemoryStorage(store));
+    const foundServer = repository.findServer(displayServer.id);
+    expect(foundServer.isSynced).toBeFalsy();
+  });
+
   it('removes servers', () => {
     const displayServerToKeep = {id: 'id0', name: 'name0', isManaged: false};
     const displayServerToRemove = {id: 'id', name: 'name', isManaged: false};
