@@ -41,10 +41,9 @@
         flex-direction: column;
         flex: 1 0 40%;
         justify-content: space-between;
-        padding: 12px 12px 6px;
+        padding: 24px 24px 12px 24px;
         margin: 12px 12px 0 0;
         height: 320px;
-        /*width: 47.5%;*/
         text-align: left;
         color: var(--medium-gray);
         font-weight: normal;
@@ -77,19 +76,21 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0 24px 12px;
+        margin-bottom: 24px;
         color: var(--light-gray);
       }
       .card .card-body {
-        padding: 0 24px;
-        flex: 7; /* for spacing */
+        flex: 6; /* for spacing */
+      }
+      .card p {
+        margin: 0;
       }
       .card .tag {
         font-weight: 500;
         letter-spacing: .05em;
         font-size: 10px;
       }
-      .card#digital-ocean .tag {
+      .card#digital-ocean .tag, .card#digital-ocean .email, .card p {
         color: var(--medium-gray);
       }
       .card#manual-server .tag {
@@ -103,7 +104,6 @@
       }
       .card-title {
         font-size: 20px;
-        margin: 0 24px 8px;
         line-height: 32px;
         flex: 2; /* for spacing */
         color: var(--light-gray);
@@ -114,9 +114,6 @@
       #digital-ocean img {
         height: 22px;
         width: 22px;
-      }
-      .card p {
-        margin: 16px 0 0 0;
       }
       .card .description {
         letter-spacing: 0;
@@ -131,7 +128,6 @@
       }
       .card-footer {
         height: 54px;
-        border-top: 1px solid rgba(0,0,0,0.12);
       }
       .card-footer paper-button {
         width: 100%;
@@ -140,7 +136,7 @@
         letter-spacing: 0.75px;
         background-color: inherit;
         color: var(--light-gray);
-        border-top: 1px solid rgba(255,255,255,0.12);
+        border-top: 1px solid var(--border-color);
       }
       #digital-ocean .description ul {
         /* NOTE: this URL must be relative to the ui_components sub dir,
@@ -165,22 +161,27 @@
       <div class="container">
         <div id="digital-ocean" class="card" on-tap="connectToDigitalOceanTapped">
           <div class="card-header">
-            <div class="tag">RECOMMENDED</div>
+            <div class="tag" hidden$="{{isSignedInToDigitalOcean}}">RECOMMENDED</div>
+            <div class="email" hidden$="{{!isSignedInToDigitalOcean}}">{{digitalOceanEmail}}</div>
             <img src="images/do_white_logo.svg">
           </div>
           <div class="card-title">DigitalOcean</div>
           <div class="card-body">
             <div class="description">
-              <ul>
+              <ul hidden$="{{isSignedInToDigitalOcean}}">
                 <li>Easiest setup process</li>
                 <li>Only $5 a month</li>
                 <li>1 TB of data transfer</li>
                 <li>Cancel at anytime</li>
               </ul>
+              <p hidden$="{{!isSignedInToDigitalOcean}}">
+                Create a new server with your DigitalOcean account for an additional $5 USD/30 days for 1TB of data transfer.
+              </p>
             </div>
           </div>
           <div class="card-footer">
-            <paper-button class="primary">Get started</paper-button>
+            <paper-button class="primary" hidden$="{{isSignedInToDigitalOcean}}">Set up</paper-button>
+            <paper-button class="primary" hidden$="{{!isSignedInToDigitalOcean}}">Create server</paper-button>
           </div>
         </div>
 
@@ -200,7 +201,7 @@
             </div>
           </div>
           <div class="card-footer">
-            <paper-button on-tap="setUpGcpTapped" class="primary">Get started</paper-button>
+            <paper-button on-tap="setUpGcpTapped" class="primary">Set up</paper-button>
           </div>
         </div>
 
@@ -220,7 +221,7 @@
             </div>
           </div>
           <div class="card-footer">
-            <paper-button on-tap="setUpAwsTapped" class="primary">Get started</paper-button>
+            <paper-button on-tap="setUpAwsTapped" class="primary">Set up</paper-button>
           </div>
         </div>
 
@@ -239,7 +240,7 @@
             </div>
           </div>
           <div class="card-footer">
-            <paper-button on-tap="setUpGenericCloudProviderTapped">Get started</paper-button>
+            <paper-button on-tap="setUpGenericCloudProviderTapped">Set up</paper-button>
           </div>
         </div>
 
@@ -250,6 +251,10 @@
   <script>
     Polymer({
       is: 'outline-intro-step',
+      properties: {
+        isSignedInToDigitalOcean: Boolean,
+        digitalOceanEmail: String,
+      },
       connectToDigitalOceanTapped: function() {
         this.fire('ConnectToDigitalOcean');
       },
