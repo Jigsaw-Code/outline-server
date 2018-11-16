@@ -159,7 +159,7 @@ function handle_docker_container_conflict() {
     return 0
   fi
   if run_step "Removing $CONTAINER_NAME container" remove_"$CONTAINER_NAME"_container ; then
-    echo -n "> Restarting $CONTAINER_NAME ....................... "
+    echo -n "> Restarting $CONTAINER_NAME ........................ "
     start_"$CONTAINER_NAME"
     return $?
   fi
