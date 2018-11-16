@@ -35,6 +35,7 @@
 set -euo pipefail
 
 readonly SENTRY_LOG_FILE=${SENTRY_LOG_FILE:-}
+OUTLINE_USER=${OUTLINE_USER:-outline}
 
 function log_error() {
   local -r ERROR_TEXT="\033[0;31m"  # red
@@ -89,6 +90,20 @@ function log_for_sentry() {
   fi
 }
 
+function create_outline_user() {
+  if id -u $OUTLINE_USER &> /dev/null; then
+    log_error "ALREADY EXISTS"
+    echo -n
+    if ! confirm "> Would you like to use user $OUTLINE_USER to run the Outline server? [Y/n] "; then
+      log_error "Please re-run the script with the OUTLINE_USER variable set to the user you would like to use"
+      exit 1
+    fi
+  fi
+  if ! id -u $OUTLINE_USER &> /dev/null; then
+    useradd --system --user-group --groups docker $OUTLINE_USER
+  fi
+}
+
 # Check to see if docker is installed.
 function verify_docker_installed() {
   if command_exists docker; then
@@ -109,7 +124,7 @@ function verify_docker_installed() {
 
 function verify_docker_running() {
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$($DOCKER_CMD info 2>&1 >/dev/null)
+  STDERR_OUTPUT=$(docker info 2>&1 >/dev/null)
   local readonly RET=$?
   if [[ $RET -eq 0 ]]; then
     return 0
@@ -119,15 +134,16 @@ function verify_docker_running() {
 }
 
 function verify_docker_permissions() {
-  if user_in_docker_group; then
+  readonly docker_user=$1
+  if user_in_docker_group $docker_user; then
     return 0
   fi
   log_error "FAILED"
-  local readonly PROMPT="> It seems like you may not have permission to run Docker. To solve this, we will attempt to add your user to the docker group by running 'sudo usermod -a -G docker $USER'. Would you like to proceed? [Y/n] "
+  local readonly PROMPT="> It seems like user $docker_user may not have permission to run Docker. To solve this, we will attempt to add your user to the docker group by running 'usermod -a -G docker $OUTLINE_USER'. Would you like to proceed? [Y/n] "
   if ! confirm "$PROMPT"; then
     exit 0
   fi
-  if run_step "Adding $USER to docker group" add_user_to_docker_group; then
+  if run_step "Adding $docker_user to docker group" add_user_to_docker_group $docker_user; then
     echo -n "> Docker ready................................. "
   else
     log_error "FAILED"
@@ -143,35 +159,21 @@ function user_in_docker_group() {
   # Assume root has docker access; test with $UID because it's one of the few
   # environment variables available in DigitalOcean's CloudInit environment.
   if [[ $UID -ne 0 ]]; then
-    groups $USER | grep -E '(^|\s)docker(\s|$)' > /dev/null 2>&1
+    groups $1 | grep -E '(^|\s)docker(\s|$)' > /dev/null 2>&1
   fi
 }
 
 function add_user_to_docker_group() {
-  sudo usermod -a -G docker $USER
+  usermod -a -G docker "$1"
 }
 
 function start_docker() {
-  sudo systemctl start docker.service > /dev/null 2>&1
-  sudo systemctl enable docker.service > /dev/null 2>&1
+  systemctl start docker.service > /dev/null 2>&1
+  systemctl enable docker.service > /dev/null 2>&1
 }
 
-# If not running as root then run docker with sg to ensure the command has
-# membership of the docker group, membership of which may only have been
-# acquired during the session. Otherwise, don't do anything fancy with
-# positional parameters because they're a nightmare to get right with
-# subshells in both regular and the DigitalOcean CloudInit environment.
-# See also comments for user_in_docker_group.
-DOCKER_CMD=docker
-if [[ $UID -ne 0 ]]; then
-  function safe_docker() {
-    sg docker -c "docker $*"
-  }
-  DOCKER_CMD=safe_docker
-fi
-
 function docker_container_exists() {
-  $DOCKER_CMD ps | grep $1 >/dev/null 2>&1
+  docker ps | grep $1 >/dev/null 2>&1
 }
 
 function remove_shadowbox_container() {
@@ -183,7 +185,7 @@ function remove_watchtower_container() {
 }
 
 function remove_docker_container() {
-  $DOCKER_CMD rm -f $1
+  docker rm -f $1
 }
 
 function handle_docker_container_conflict() {
@@ -229,7 +231,8 @@ function get_random_port {
 
 function create_persisted_state_dir() {
   readonly STATE_DIR="$SHADOWBOX_DIR/persisted-state"
-  mkdir -p "${STATE_DIR}"
+  mkdir -p --mode=770 "${STATE_DIR}"
+  chmod ug+s "${STATE_DIR}"
 }
 
 # Generate a secret key for access to the shadowbox API and store it in a tag.
@@ -286,7 +289,7 @@ function start_shadowbox() {
   )
   # By itself, local messes up the return code.
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$($DOCKER_CMD run -d "${docker_shadowbox_flags[@]}" ${SB_IMAGE} 2>&1 >/dev/null)
+  STDERR_OUTPUT=$(docker run -d "${docker_shadowbox_flags[@]}" ${SB_IMAGE} 2>&1 >/dev/null)
   local readonly RET=$?
   if [[ $RET -eq 0 ]]; then
     return 0
@@ -309,7 +312,7 @@ function start_watchtower() {
   docker_watchtower_flags+=(-v /var/run/docker.sock:/var/run/docker.sock)
   # By itself, local messes up the return code.
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$($DOCKER_CMD run -d "${docker_watchtower_flags[@]}" v2tec/watchtower --cleanup --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS 2>&1 >/dev/null)
+  STDERR_OUTPUT=$(docker run -d "${docker_watchtower_flags[@]}" v2tec/watchtower --cleanup --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS 2>&1 >/dev/null)
   local readonly RET=$?
   if [[ $RET -eq 0 ]]; then
     return 0
@@ -344,7 +347,7 @@ function add_api_url_to_config() {
 
 function check_firewall() {
   local readonly GET_ACCESS_KEYS=$(curl --insecure -s ${LOCAL_API_URL}/access-keys)
-  local readonly GET_ACCESS_KEY_PORT="$DOCKER_CMD exec shadowbox node -e 'console.log($GET_ACCESS_KEYS[\"accessKeys\"][0][\"port\"])'"	
+  local readonly GET_ACCESS_KEY_PORT="docker exec shadowbox node -e 'console.log($GET_ACCESS_KEYS[\"accessKeys\"][0][\"port\"])'"	
   local -r ACCESS_KEY_PORT=$($GET_ACCESS_KEY_PORT)
   if ! curl --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" -s "${PUBLIC_API_URL}/access-keys" >/dev/null; then
      log_error "BLOCKED"
@@ -376,13 +379,19 @@ blocks inbound connections, even though your machine seems to allow them.
 }
 
 install_shadowbox() {
+  # Make sure we don't leak readable files to other users.
+  umask 0007
+
   run_step "Verifying that Docker is installed" verify_docker_installed
-  run_step "Verifying Docker permissions" verify_docker_permissions
+  run_step "Creating outline user" create_outline_user
+  run_step "Verifying Docker permissions" verify_docker_permissions $USER
   run_step "Verifying that Docker daemon is running" verify_docker_running
 
-  log_for_sentry "Creating shadowbox directory"
-  export SHADOWBOX_DIR="${SHADOWBOX_DIR:-${HOME:-/root}/shadowbox}"
-  mkdir -p $SHADOWBOX_DIR
+  log_for_sentry "Creating Outline directory"
+  export SHADOWBOX_DIR="${SHADOWBOX_DIR:-/var/lib/outline}"
+  mkdir -p --mode=770 $SHADOWBOX_DIR
+  chmod ug+s $SHADOWBOX_DIR
+  chown :$OUTLINE_USER $SHADOWBOX_DIR
 
   log_for_sentry "Setting API port"
   readonly SB_API_PORT="${SB_API_PORT:-$(get_random_port)}"
