@@ -82,11 +82,76 @@
         flex: 11;
         margin: 0 0 6px 0;
       }
-      .server-info {
+      .server-location, .unreachable-server paper-button {
         color: var(--medium-gray);
       }
-      .server-info .server-transfer {
+      .unreachable-server {
+        flex-direction: column;
+        align-items: center;
+        margin-top: 24px;
+        padding: 72px 48px;
+      }
+      .unreachable-server p {
+        line-height: 22px;
+        max-width: 50ch;
+        text-align: center;
+        color: var(--medium-gray);
+      }
+      .unreachable-server .button-container {
+        padding: 24px 0;
+      }
+      .unreachable-server paper-button.try-again-btn {
         color: var(--primary-green);
+      }
+      .server-img {
+        width: 142px;
+        height: 142px;
+        margin: 24px;
+      }
+      .stats-container {
+        display: flex;
+        flex-direction: row;
+        margin: 0 -8px;
+      }
+      .stats-card {
+        flex-direction: column;
+        flex: 1;
+        margin: 0 8px;
+      }
+      .stats {
+        margin: 30px 0 18px 0;
+        color: #FFF;
+        white-space: nowrap;
+      }
+      .stats > * {
+        font-weight: 300;
+        display: inline-block;
+        margin: 0;
+      }
+      .stats h3 {
+        font-size: 48px;
+      }
+      .stats p, .stats-card p {
+        margin: 0;
+        font-size: 14px;
+      }
+      @media (max-width: 938px) {
+        /* Reduce the cards' size so they fit comfortably on small displays. */
+        .stats {
+          margin-top: 24px;
+        }
+        .stats h3 {
+          font-size: 42px;
+        }
+        .stats-card p {
+          font-size: 12px;
+        }
+      }
+      .transfer-stats .stats {
+        color: var(--primary-green);
+      }
+      .stats-card p, .stats-card iron-icon {
+        color: var(--medium-gray);
       }
       .access-key-list {
         flex-direction: column;
@@ -126,7 +191,6 @@
         max-width: 72px;
         margin: 0 24px 0 12px;
         --paper-progress-active-color: var(--primary-green);
-        --paper-progress-container-color: var(--light-gray);
       }
       @media (max-width: 640px) {
         .measurement-container paper-progress {
@@ -146,6 +210,11 @@
         display: flex;
         flex: 4;
         align-items: center;
+      }
+      .sort-icon {
+        /* Disable click events on the sorting icons, so that the event gets propagated to the
+           parent, which defines the dataset elements needed for displaying the icon. */
+        pointer-events: none;
       }
       #manager-access-key-description {
         font-size: 12px;
@@ -194,6 +263,8 @@
         font-weight: normal;
       }
       .overflow-menu {
+        display: flex;
+        justify-content: flex-end;
         padding: 0px;
         min-width: 40px;
         margin-left: 8px;
@@ -233,6 +304,7 @@
       }
       .add-new-key {
         color: var(--primary-green);
+        cursor: pointer;
       }
       outline-help-bubble {
         text-align: center;
@@ -264,25 +336,21 @@
       <div class="server-header">
         <div class="server-name">
           <h3>[[serverName]]</h3>
-          <paper-menu-button horizontal-align="right" class="overflow-menu flex-1" close-on-activate no-animations dynamic-align no-overlap>
+          <paper-menu-button horizontal-align="right" class="overflow-menu flex-1" hidden$="{{!isServerReachable}}" close-on-activate no-animations dynamic-align no-overlap>
             <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
             <paper-listbox slot="dropdown-content">
-              <paper-item hidden$="[[!isServerManaged]]" on-tap="deleteServer">
-                <iron-icon icon="icons:remove-circle-outline"></iron-icon>Delete server
+              <paper-item hidden$="[[!isServerManaged]]" on-tap="destroyServer">
+                <iron-icon icon="icons:remove-circle-outline"></iron-icon>Destroy server
               </paper-item>
-              <paper-item hidden$="[[isServerManaged]]" on-tap="forgetServer">
-                <iron-icon icon="icons:remove-circle-outline"></iron-icon>Forget server
+              <paper-item hidden$="[[isServerManaged]]" on-tap="removeServer">
+                <iron-icon icon="icons:remove-circle-outline"></iron-icon>Remove server
               </paper-item>
             </paper-listbox>
           </paper-menu-button>
         </div>
-        <div class="server-info">
-          <span class="server-transfer">[[_formatBytesTransferred(totalInboundBytes, '0')]] </span>
-          <span hidden$="{{!monthlyOutboundTransferBytes}}">of [[_formatBytesTransferred(monthlyOutboundTransferBytes)]] </span>
-          <span>transferred</span>
-        </div>
+        <div class="server-location" hidden$="{{!isServerReachable}}">[[serverLocation]]</div>
       </div>
-      <div class="tabs-container">
+      <div class="tabs-container" hidden$="{{!isServerReachable}}">
         <div class="tabs-spacer"></div>
         <paper-tabs selected="{{selectedTab}}" attr-for-selected="name" noink>
           <paper-tab name="connections">Connections</paper-tab>
@@ -290,13 +358,62 @@
         </paper-tabs>
       </div>
 
-      <iron-pages selected="{{selectedTab}}" attr-for-selected="name">
+      <!-- Unreachable server display -->
+      <div class="card-section unreachable-server" hidden$="{{isServerReachable}}">
+        <img class="server-img" src="images/server-unreachable.png" />
+        <h3>Server unreachable</h3>
+        <p hidden$="{{isServerManaged}}">We're having issues connecting to this server. Try again or remove this server from the application.</p>
+        <p hidden$="{{!isServerManaged}}">We're having issues connecting to this server. Try again or destroy this server and the virtual host.</p>
+        <div class="button-container">
+          <paper-button on-tap="removeServer" hidden$="{{isServerManaged}}">Remove server</paper-button>
+          <paper-button on-tap="destroyServer" hidden$="{{!isServerManaged}}">Destroy server</paper-button>
+          <paper-button on-tap="retryDisplayingServer" class="try-again-btn">Try again</paper-button>
+        </div>
+      </div>
+
+      <iron-pages selected="{{selectedTab}}" attr-for-selected="name" hidden$="{{!isServerReachable}}">
         <div name="connections">
+          <div class="stats-container">
+            <div class="stats-card transfer-stats card-section">
+              <iron-icon icon="icons:swap-horiz"></iron-icon>
+              <div class="stats">
+                <h3>[[_getFormattedTransferredValue(totalInboundBytes, '0')]]</h3>
+                <p>[[_getFormattedTransferredUnit(totalInboundBytes, 'B')]]</p>
+              </div>
+              <p>Data transferred / 30 days</p>
+            </div>
+            <div hidden$="[[!isServerManaged]]" class="stats-card card-section">
+              <div>
+                <img class="digital-ocean-icon" src="images/do_white_logo.svg"/>
+              </div>
+              <div class="stats">
+                <h3>[[managedServerUtilzationPercentage]]</h3>
+                <p>/[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]</p>
+              </div>
+              <p>Utilization / 30 days</p>
+            </div>
+            <div class="stats-card card-section">
+              <iron-icon icon="outline-iconset:key"></iron-icon>
+              <div class="stats">
+                <h3>[[accessKeyRows.length]]</h3>
+              </div>
+              <p>Access keys</p>
+            </div>
+          </div>
+
           <div class="access-key-list card-section">
             <!-- header row -->
             <div class="access-key-row header-row">
-              <span class="access-key-container">Access keys</span>
-              <span class="measurement-container">Usage / 30 days</span>
+              <span class="access-key-container" on-tap="_setSortByOrToggleDirection" data-sort-by="name">
+                Access keys
+                <iron-icon class="sort-icon" icon="arrow-drop-down" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'name', -1)]]"></iron-icon>
+                <iron-icon class="sort-icon" icon="arrow-drop-up" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'name', 1)]]"></iron-icon>
+              </span>
+              <span class="measurement-container" on-tap="_setSortByOrToggleDirection" data-sort-by="usage">
+                Usage / 30 days
+                <iron-icon class="sort-icon" icon="arrow-drop-down" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'usage', -1)]]"></iron-icon>
+                <iron-icon class="sort-icon" icon="arrow-drop-up" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'usage', 1)]]"></iron-icon>
+              </span>
               <span class="flex-1 header-row-spacer"></span>
             </div>
             <!-- admin row -->
@@ -319,8 +436,10 @@
                 <span class="overflow-menu flex-1"></span>
               </span>
             </div>
+            <div id="accessKeysContainer">
             <!-- rows for each access key -->
-            <template is="dom-repeat" items="{{accessKeyRows}}" filter="isRegularConnection" sort='sort'>
+            <template is="dom-repeat" items="{{accessKeyRows}}" filter="isRegularConnection" sort="{{_sortAccessKeys(accessKeySortBy, accessKeySortDirection)}}" observe="name transferredBytes">
+              <!-- TODO(alalama): why is observe not responding to rename? -->
               <div class="access-key-row">
                 <span class="access-key-container">
                   <img class="access-key-icon" src="images/key-avatar.svg">
@@ -355,11 +474,12 @@
                 </span>
               </div>
             </template>
+            </div>
             <!-- add key button -->
             <div class="access-key-row" id="addAccessKeyRow">
               <span class="access-key-container">
-                <paper-icon-button icon="icons:add" on-tap='_handleAddAccessKeyPressed' id='addAccessKeyButton' class="access-key-icon"></paper-icon-button>
-                <div class="add-new-key">Add new key</div>
+                <paper-icon-button icon="icons:add" on-tap="_handleAddAccessKeyPressed" id="addAccessKeyButton" class="access-key-icon"></paper-icon-button>
+                <div class="add-new-key" on-tap="_handleAddAccessKeyPressed">Add new key</div>
               </span>
             </div>
           </div>
@@ -393,11 +513,16 @@
         this.bytes = require('bytes');
       },
       properties: {
+        serverId: String,
         serverName: String,
         serverHostname: String,
         serverManagementPort: Number,
         serverCreationDate: String,
         serverLocation: String,
+        isServerManaged: Boolean,
+        isServerReachable: Boolean,
+        // Callback for retrying to display an unreachable server.
+        retryDisplayingServer: Function,
         // myConnection has the same fields as each item in accessKeyRows.  It may
         // be unset in some old versions of Outline that allowed deleting this
         // row.
@@ -405,9 +530,7 @@
         totalInboundBytes: Number,
         accessKeyRows: {type: Array, value: []},
         hasNonAdminAccessKeys: Boolean,
-        isServerManaged: Boolean,
         metricsEnabled: Boolean,
-        serverId: String,
         // Initialize monthlyOutboundTransferBytes and monthlyCost to 0, so they can
         // be bound to hidden attributes.  Initializing to undefined does not
         // cause hidden$=... expressions to be evaluated and so elements may be
@@ -418,7 +541,20 @@
         monthlyCost: {type: Number, value: 0},
         selectedTab: {
           type: String,
-          value: 'connections',
+          value: '',
+        },
+        managedServerUtilzationPercentage: {
+          type: Number,
+          computed: '_computeManagedServerUtilzationPercentage(totalInboundBytes, monthlyOutboundTransferBytes)',
+        },
+        accessKeySortBy: {
+          type: String,
+          value: 'name'
+        },
+        accessKeySortDirection: {
+          // 1 == ascending, -1 == descending
+          type: Number,
+          value: 1
         },
       },
       observers: [
@@ -487,8 +623,9 @@
         });
       },
       _handleRenameAccessKeyPressed: function(event) {
-        const input = this.querySelectorAll('.access-key-row.access-key > input')[event.model.index];
-        // This need to be deferred because the closing menu messes up with the focus.
+        const input = this.$.accessKeysContainer.querySelectorAll(
+            '.access-key-row .access-key-container > input')[event.model.index];
+        // This needs to be deferred because the closing menu messes up with the focus.
         window.setTimeout(() => { input.focus() }, 0);
       },
       _handleConnectPressed: function() {
@@ -537,6 +674,32 @@
         const bytesOptions = {unitSeparator: ' ', decimalPlaces: numDecimals};
         // Use uppercase to convert kB to KB (kB incorrectly implies 1000B)
         return this.bytes(numBytes, bytesOptions).toUpperCase();
+      },
+      _getFormattedTransferredUnit: function(numBytes, emptyValue = '') {
+        const formattedTransfer = this._formatBytesTransferred(numBytes);
+        if (!formattedTransfer) {
+          return emptyValue;
+        }
+        const units = formattedTransfer.match(/[a-zA-Z%]+/g);
+        if (!units || units.length < 0) {
+          return emptyValue;
+        }
+        return units.pop();
+      },
+      _getFormattedTransferredValue: function(numBytes, emptyValue = '') {
+        const formattedTransfer = this._formatBytesTransferred(numBytes);
+        if (!formattedTransfer) {
+          return emptyValue;
+        }
+        const value = parseFloat(formattedTransfer);
+        return !!value ? value : emptyValue;
+      },
+      _computeManagedServerUtilzationPercentage: function(numBytes, monthlyLimitBytes) {
+        let utilizationPercentage = 0;
+        if (monthlyLimitBytes && numBytes) {
+          utilizationPercentage = Math.round(numBytes / monthlyLimitBytes * 100);
+        }
+        return `${utilizationPercentage}%`
       },
       _accessKeysAddedOrRemoved: function(changeRecord) {
         // Check for myConnection and regular access keys.
@@ -592,24 +755,42 @@
       isRegularConnection: function(item) {
         return item.id !== MY_CONNECTION_USER_ID;
       },
-      // https://stackoverflow.com/a/46119203/1298144
-      sort: function(a, b) {
-        var nameA = a.name.toUpperCase(); 
-        var nameB = b.name.toUpperCase(); 
-        if (nameA < nameB) {
-          return -1;
+      _setSortByOrToggleDirection: function(e) {
+        const sortBy = e.target.dataset.sortBy;
+        if (this.accessKeySortBy !== sortBy) {
+          this.accessKeySortBy = sortBy;
+          this.accessKeySortDirection = 1; // Sort ascending initially.
+          return;
         }
-        if (nameA > nameB) {
-          return 1;
-        }
-
-        // names must be equal
-        return 0;
+        this.accessKeySortDirection *= -1; // Toggle sort direction.
       },
-      deleteServer: function() {
+      _sortAccessKeys: function(accessKeySortBy, accessKeySortDirection) {
+        if (accessKeySortBy === 'usage') {
+          return function(a, b) {
+            return (a.transferredBytes - b.transferredBytes) * this.accessKeySortDirection;
+          }.bind(this);
+        }
+        // Default to sorting by name.
+        return function(a, b) {
+          const nameA = a.name.toUpperCase() || a.placeholderName.toUpperCase();
+          const nameB = b.name.toUpperCase() || b.placeholderName.toUpperCase();;
+          if (nameA < nameB) {
+            return -1 * this.accessKeySortDirection;
+          }
+          if (nameA > nameB) {
+            return 1 * this.accessKeySortDirection;
+          }
+          return 0;
+        }.bind(this);
+      },
+      _computeShouldShowSortIcon: function(accessKeySortBy, accessKeySortDirection,
+                                           elementSortBy, elementSortDirection) {
+        return accessKeySortBy === elementSortBy && accessKeySortDirection === elementSortDirection;
+      },
+      destroyServer: function() {
         this.fire('DeleteServerRequested');
       },
-      forgetServer: function() {
+      removeServer: function() {
         this.fire('ForgetServerRequested');
       }
     });
