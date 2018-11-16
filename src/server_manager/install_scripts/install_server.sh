@@ -35,7 +35,6 @@
 set -euo pipefail
 
 readonly SENTRY_LOG_FILE=${SENTRY_LOG_FILE:-}
-OUTLINE_USER=${OUTLINE_USER:-outline}
 
 function log_error() {
   local -r ERROR_TEXT="\033[0;31m"  # red
@@ -90,20 +89,6 @@ function log_for_sentry() {
   fi
 }
 
-function create_outline_user() {
-  if id -u $OUTLINE_USER &> /dev/null; then
-    log_error "ALREADY EXISTS"
-    echo -n
-    if ! confirm "> Would you like to use user $OUTLINE_USER to run the Outline server? [Y/n] "; then
-      log_error "Please re-run the script with the OUTLINE_USER variable set to the user you would like to use"
-      exit 1
-    fi
-  fi
-  if ! id -u $OUTLINE_USER &> /dev/null; then
-    useradd --system --user-group --groups docker $OUTLINE_USER
-  fi
-}
-
 # Check to see if docker is installed.
 function verify_docker_installed() {
   if command_exists docker; then
@@ -133,38 +118,8 @@ function verify_docker_running() {
   fi
 }
 
-function verify_docker_permissions() {
-  readonly docker_user=$1
-  if user_in_docker_group $docker_user; then
-    return 0
-  fi
-  log_error "FAILED"
-  local readonly PROMPT="> It seems like user $docker_user may not have permission to run Docker. To solve this, we will attempt to add your user to the docker group by running 'usermod -a -G docker $OUTLINE_USER'. Would you like to proceed? [Y/n] "
-  if ! confirm "$PROMPT"; then
-    exit 0
-  fi
-  if run_step "Adding $docker_user to docker group" add_user_to_docker_group $docker_user; then
-    echo -n "> Docker ready................................. "
-  else
-    log_error "FAILED"
-    return 1
-  fi
-}
-
 function install_docker() {
   curl -sS https://get.docker.com/ | sh > /dev/null 2>&1
-}
-
-function user_in_docker_group() {
-  # Assume root has docker access; test with $UID because it's one of the few
-  # environment variables available in DigitalOcean's CloudInit environment.
-  if [[ $UID -ne 0 ]]; then
-    groups $1 | grep -E '(^|\s)docker(\s|$)' > /dev/null 2>&1
-  fi
-}
-
-function add_user_to_docker_group() {
-  usermod -a -G docker "$1"
 }
 
 function start_docker() {
@@ -185,7 +140,7 @@ function remove_watchtower_container() {
 }
 
 function remove_docker_container() {
-  docker rm -f $1
+  docker rm -f $1 > /dev/null
 }
 
 function handle_docker_container_conflict() {
@@ -232,7 +187,7 @@ function get_random_port {
 function create_persisted_state_dir() {
   readonly STATE_DIR="$SHADOWBOX_DIR/persisted-state"
   mkdir -p --mode=770 "${STATE_DIR}"
-  chmod ug+s "${STATE_DIR}"
+  chmod g+s "${STATE_DIR}"
 }
 
 # Generate a secret key for access to the shadowbox API and store it in a tag.
@@ -346,9 +301,12 @@ function add_api_url_to_config() {
 }
 
 function check_firewall() {
-  local readonly GET_ACCESS_KEYS=$(curl --insecure -s ${LOCAL_API_URL}/access-keys)
-  local readonly GET_ACCESS_KEY_PORT="docker exec shadowbox node -e 'console.log($GET_ACCESS_KEYS[\"accessKeys\"][0][\"port\"])'"	
-  local -r ACCESS_KEY_PORT=$($GET_ACCESS_KEY_PORT)
+  local readonly ACCESS_KEY_PORT=$(curl --insecure -s ${LOCAL_API_URL}/access-keys | 
+      docker exec -i shadowbox node -e '
+          const fs = require("fs");
+          const accessKeys = JSON.parse(fs.readFileSync(0, {encoding: "utf-8"}));
+          console.log(accessKeys["accessKeys"][0]["port"]);
+      ')
   if ! curl --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" -s "${PUBLIC_API_URL}/access-keys" >/dev/null; then
      log_error "BLOCKED"
      FIREWALL_STATUS="\
@@ -383,15 +341,12 @@ install_shadowbox() {
   umask 0007
 
   run_step "Verifying that Docker is installed" verify_docker_installed
-  run_step "Creating outline user" create_outline_user
-  run_step "Verifying Docker permissions" verify_docker_permissions $USER
   run_step "Verifying that Docker daemon is running" verify_docker_running
 
   log_for_sentry "Creating Outline directory"
   export SHADOWBOX_DIR="${SHADOWBOX_DIR:-/var/lib/outline}"
   mkdir -p --mode=770 $SHADOWBOX_DIR
-  chmod ug+s $SHADOWBOX_DIR
-  chown :$OUTLINE_USER $SHADOWBOX_DIR
+  chmod u+s $SHADOWBOX_DIR
 
   log_for_sentry "Setting API port"
   readonly SB_API_PORT="${SB_API_PORT:-$(get_random_port)}"
