@@ -159,7 +159,7 @@ function handle_docker_container_conflict() {
     return 0
   fi
   if run_step "Removing $CONTAINER_NAME container" remove_"$CONTAINER_NAME"_container ; then
-    echo -n "> Restarting $CONTAINER_NAME ........................ "
+    echo -n "> Restarting $CONTAINER_NAME ....................... "
     start_"$CONTAINER_NAME"
     return $?
   fi
@@ -312,8 +312,7 @@ function check_firewall() {
      FIREWALL_STATUS="\
 You won’t be able to access it externally, despite your server being correctly
 set up, because there's a firewall (in this machine, your router or cloud
-provider) that is preventing incoming connections to ports ${SB_API_PORT} and
-${ACCESS_KEY_PORT}.
+provider) that is preventing incoming connections to ports ${SB_API_PORT} and ${ACCESS_KEY_PORT}.
 
 - If you plan to have a single access key to access your server, opening those
   ports for TCP and UDP should suffice.
