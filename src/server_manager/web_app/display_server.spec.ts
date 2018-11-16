@@ -15,6 +15,10 @@
 import {InMemoryStorage} from './app.spec';
 import {DisplayServer, DisplayServerRepository} from './display_server';
 
+// Use this helper to compare `DisplayServer`s when we don't care about the
+// `isSynced` property.
+const objectContaining = jasmine.objectContaining;
+
 describe('DisplayServerRepository', () => {
   it('adds and finds servers', () => {
     const displayServer = {id: 'id', name: 'name', isManaged: false};
@@ -34,8 +38,8 @@ describe('DisplayServerRepository', () => {
     const repository = new DisplayServerRepository(new InMemoryStorage(store));
 
     repository.listServers().then((servers) => {
-      expect(servers).toContain(displayServer1);
-      expect(servers).toContain(displayServer2);
+      expect(servers).toContain(objectContaining(displayServer1));
+      expect(servers).toContain(objectContaining(displayServer2));
     });
   });
 
@@ -70,8 +74,8 @@ describe('DisplayServerRepository', () => {
       JSON.stringify([displayServer1, displayServer2])
     ]]);
     const repository = new DisplayServerRepository(new InMemoryStorage(store));
-    expect(repository.findServer(displayServer1.id)).toEqual(displayServer1);
-    expect(repository.findServer(displayServer2.id)).toEqual(displayServer2);
+    expect(repository.findServer(displayServer1.id)).toEqual(objectContaining(displayServer1));
+    expect(repository.findServer(displayServer2.id)).toEqual(objectContaining(displayServer2));
   });
 
   it('removes servers', () => {
@@ -84,7 +88,8 @@ describe('DisplayServerRepository', () => {
     expect(repository.findServer(displayServerToRemove.id)).toEqual(displayServerToRemove);
     repository.removeServer(displayServerToRemove);
     expect(repository.findServer(displayServerToRemove.id)).toBeUndefined();
-    expect(repository.findServer(displayServerToKeep.id)).toEqual(displayServerToKeep);
+    expect(repository.findServer(displayServerToKeep.id))
+        .toEqual(objectContaining(displayServerToKeep));
   });
 
   it('persists servers', () => {
@@ -95,7 +100,7 @@ describe('DisplayServerRepository', () => {
 
     // Instantiate a new repository to validate that servers have been persisted to storage.
     repository = new DisplayServerRepository(storage);
-    expect(displayServer).toEqual(repository.findServer(displayServer.id));
+    expect(objectContaining(displayServer)).toEqual(repository.findServer(displayServer.id));
   });
 
   it('persists the last displayed server ID', () => {
