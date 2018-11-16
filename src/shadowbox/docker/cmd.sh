@@ -17,6 +17,9 @@
 export SB_PUBLIC_IP=${SB_PUBLIC_IP:-$(curl https://ipinfo.io/ip)}
 export SB_METRICS_URL=${SB_METRICS_URL:-https://metrics-prod.uproxy.org}
 
+# Make sure we don't leak readable files to other users.
+umask 0007
+
 # The maximum number of files that can be opened by ss-server greatly
 # influence on performance, as described here:
 #   https://shadowsocks.org/en/config/advanced.html
