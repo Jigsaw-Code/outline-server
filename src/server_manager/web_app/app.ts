@@ -239,20 +239,19 @@ export class App {
     for (const server of servers) {
       await this.syncServerToDisplay(server);
     }
+
     // Remove any unsynced servers from display and alert the user.
     const displayServers = await this.displayServerRepository.listServers();
     const unsyncedServers = displayServers.filter(s => !s.isSynced);
-    if (unsyncedServers.length === 0) {
-      return;
-    }
-    const unsyncedServerNames = unsyncedServers.map(s => s.name).join(', ');
-    for (const displayServer of unsyncedServers) {
-      if (!displayServer.isSynced) {
+    if (unsyncedServers.length > 0) {
+      for (const displayServer of unsyncedServers) {
         this.displayServerRepository.removeServer(displayServer);
       }
+      const unsyncedServerNames = unsyncedServers.map(s => s.name).join(', ');
+      this.appRoot.showError(
+          `${unsyncedServerNames} no longer present in your DigitalOcean account.`);
     }
-    this.appRoot.showError(
-        `${unsyncedServerNames} no longer present in your DigitalOcean account.`);
+
     await this.syncDisplayServersToUi();
   }
 
@@ -291,14 +290,13 @@ export class App {
       displayServer.isSynced = true;
       this.displayServerRepository.addServer(displayServer);
     }
-    await this.syncDisplayServersToUi();
     return displayServer;
   }
 
   // Updates the UI with the stored display servers and server creation in progress, if any.
-  private syncDisplayServersToUi() {
+  private async syncDisplayServersToUi() {
     const displayServerBeingCreated = this.getDisplayServerBeingCreated();
-    this.displayServerRepository.listServers().then((displayServers) => {
+    await this.displayServerRepository.listServers().then((displayServers) => {
       if (!!displayServerBeingCreated) {
         displayServers.push(displayServerBeingCreated);
       }
@@ -694,9 +692,7 @@ export class App {
           // Unset the instance variable before syncing the server so the UI does not display it.
           const server = this.serverBeingCreated;
           this.serverBeingCreated = null;
-          this.syncServerToDisplay(server).then((displayServer) => {
-            this.showServerAfterTimeout(server, displayServer);
-          });
+          return this.syncAndShowServer(server);
         })
         .catch((e) => {
           console.log(e);
@@ -745,13 +741,11 @@ export class App {
         });
   }
 
-  // Shows a server after a `timeoutMs`. This is sometimes necessary to guarantee that the UI gets
-  // updated before displaying a server.
-  private showServerAfterTimeout(
-      selectedServer: server.Server, selectedDisplayServer: DisplayServer, timeoutMs = 250) {
-    setTimeout(() => {
-      this.showServer(selectedServer, selectedDisplayServer);
-    }, timeoutMs);
+  // Syncs a healthy `server` to the display and shows it.
+  private async syncAndShowServer(server: server.Server, timeoutMs = 250) {
+    const displayServer = await this.syncServerToDisplay(server);
+    await this.syncDisplayServersToUi();
+    this.showServer(server, displayServer);
   }
 
   // Show the server management screen. Assumes the server is healthy.
@@ -941,9 +935,7 @@ export class App {
     return this.manualServerRepository.addServer(serverConfig).then((manualServer) => {
       return manualServer.isHealthy().then((isHealthy) => {
         if (isHealthy) {
-          return this.syncServerToDisplay(manualServer).then((displayServer) => {
-            this.showServerAfterTimeout(manualServer, displayServer);
-          });
+          return this.syncAndShowServer(manualServer);
         } else {
           // Remove inaccessible manual server from local storage if it was just created.
           manualServer.forget();
@@ -1036,9 +1028,7 @@ export class App {
     this.selectedServer.setName(newName)
         .then(() => {
           this.appRoot.getServerView(this.appRoot.selectedServer.id).serverName = newName;
-          this.syncServerToDisplay(this.selectedServer).then((displayServer) => {
-            this.showServerAfterTimeout(this.selectedServer, displayServer);
-          });
+          return this.syncAndShowServer(this.selectedServer);
         })
         .catch((error) => {
           this.displayError('Error renaming server', error);
