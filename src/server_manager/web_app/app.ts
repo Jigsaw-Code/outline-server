@@ -216,8 +216,9 @@ export class App {
     const manualServersPromise = this.manualServerRepository.listServers();
 
     const accessToken = this.digitalOceanTokenManager.getStoredToken();
-    const managedServersPromise =
-        !!accessToken ? this.enterDigitalOceanMode(accessToken) : Promise.resolve([]);
+    const managedServersPromise = !!accessToken ?
+        this.enterDigitalOceanMode(accessToken).catch(e => [] as server.ManagedServer[]) :
+        Promise.resolve([]);
 
     return Promise.all([manualServersPromise, managedServersPromise])
         .then(([manualServers, managedServers]) => {
@@ -238,6 +239,20 @@ export class App {
     for (const server of servers) {
       await this.syncServerToDisplay(server);
     }
+
+    // Remove any unsynced servers from display and alert the user.
+    const displayServers = await this.displayServerRepository.listServers();
+    const unsyncedServers = displayServers.filter(s => !s.isSynced);
+    if (unsyncedServers.length > 0) {
+      for (const displayServer of unsyncedServers) {
+        this.displayServerRepository.removeServer(displayServer);
+      }
+      const unsyncedServerNames = unsyncedServers.map(s => s.name).join(', ');
+      this.appRoot.showError(
+          `${unsyncedServerNames} no longer present in your DigitalOcean account.`);
+    }
+
+    await this.syncDisplayServersToUi();
   }
 
   // Syncs the locally persisted server metadata for `server`. Creates a DisplayServer for `server`
@@ -255,10 +270,10 @@ export class App {
       displayServer = {
         id: displayServerId,
         name: isHealthy ? server.getName() : server.getHostname(),
-        isManaged: isManagedServer(server)
+        isManaged: isManagedServer(server),
+        isSynced: true
       };
       this.displayServerRepository.addServer(displayServer);
-      this.syncDisplayServersToUi();
     } else {
       // We may need to update the stored display server if it was persisted when the server was not
       // healthy, or the server has been renamed.
@@ -266,21 +281,22 @@ export class App {
         const remoteServerName = server.getName();
         if (displayServer.name !== remoteServerName) {
           displayServer.name = remoteServerName;
-          this.removeServerFromDisplay(displayServer);
-          this.displayServerRepository.addServer(displayServer);
-          this.syncDisplayServersToUi();
         }
       } catch (e) {
         // Ignore, we may not have the server config yet.
       }
+      // Mark the server as synced.
+      this.displayServerRepository.removeServer(displayServer);
+      displayServer.isSynced = true;
+      this.displayServerRepository.addServer(displayServer);
     }
     return displayServer;
   }
 
   // Updates the UI with the stored display servers and server creation in progress, if any.
-  private syncDisplayServersToUi() {
+  private async syncDisplayServersToUi() {
     const displayServerBeingCreated = this.getDisplayServerBeingCreated();
-    this.displayServerRepository.listServers().then((displayServers) => {
+    await this.displayServerRepository.listServers().then((displayServers) => {
       if (!!displayServerBeingCreated) {
         displayServers.push(displayServerBeingCreated);
       }
@@ -289,9 +305,9 @@ export class App {
   }
 
   // Removes `displayServer` from the UI.
-  private removeServerFromDisplay(displayServer: DisplayServer) {
+  private async removeServerFromDisplay(displayServer: DisplayServer) {
     this.displayServerRepository.removeServer(displayServer);
-    this.syncDisplayServersToUi();
+    await this.syncDisplayServersToUi();
   }
 
   // Retrieves the server associated with `displayServer`.
@@ -378,8 +394,8 @@ export class App {
     } else if (!!this.serverBeingCreated) {
       this.showServerCreationProgress();
     } else {
+      // This should not happen, since we remove unsynced servers from display.
       console.error(`Could not find server for display server ID ${displayServerId}`);
-      this.removeServerFromDisplay(displayServer);
     }
   }
 
@@ -476,7 +492,30 @@ export class App {
         serverView.isServerManaged = isManagedServer(server);
         serverView.serverName = displayServer.name;  // Don't get the name from the remote server.
         serverView.retryDisplayingServer = () => {
-          this.showServerIfHealthy(server, displayServer);
+          // Refresh the server list if the server is managed, it may have been deleted outside the
+          // app.
+          let serverExistsPromise = Promise.resolve(true);
+          if (serverView.isServerManaged && !!this.digitalOceanRepository) {
+            serverExistsPromise =
+                this.digitalOceanRepository.listServers().then((managedServers) => {
+                  return this.getServerFromRepository(displayServer).then((server) => {
+                    return !!server;
+                  });
+                });
+          }
+          serverExistsPromise.then((serverExists: boolean) => {
+            if (serverExists) {
+              this.showServerIfHealthy(server, displayServer);
+            } else {
+              // Server has been deleted outside the app.
+              this.appRoot.showError(
+                  `${displayServer.name} no longer present in your DigitalOcean account.`);
+              this.removeServerFromDisplay(displayServer);
+              this.selectedServer = null;
+              this.appRoot.selectedServer = null;
+              this.showIntro();
+            }
+          });
         };
         this.selectedServer = server;
         this.appRoot.selectedServer = displayServer;
@@ -653,9 +692,7 @@ export class App {
           // Unset the instance variable before syncing the server so the UI does not display it.
           const server = this.serverBeingCreated;
           this.serverBeingCreated = null;
-          this.syncServerToDisplay(server).then((displayServer) => {
-            this.showServerAfterTimeout(server, displayServer);
-          });
+          return this.syncAndShowServer(server);
         })
         .catch((e) => {
           console.log(e);
@@ -704,13 +741,11 @@ export class App {
         });
   }
 
-  // Shows a server after a `timeoutMs`. This is sometimes necessary to guarantee that the UI gets
-  // updated before displaying a server.
-  private showServerAfterTimeout(
-      selectedServer: server.Server, selectedDisplayServer: DisplayServer, timeoutMs = 250) {
-    setTimeout(() => {
-      this.showServer(selectedServer, selectedDisplayServer);
-    }, timeoutMs);
+  // Syncs a healthy `server` to the display and shows it.
+  private async syncAndShowServer(server: server.Server, timeoutMs = 250) {
+    const displayServer = await this.syncServerToDisplay(server);
+    await this.syncDisplayServersToUi();
+    this.showServer(server, displayServer);
   }
 
   // Show the server management screen. Assumes the server is healthy.
@@ -900,9 +935,7 @@ export class App {
     return this.manualServerRepository.addServer(serverConfig).then((manualServer) => {
       return manualServer.isHealthy().then((isHealthy) => {
         if (isHealthy) {
-          return this.syncServerToDisplay(manualServer).then((displayServer) => {
-            this.showServerAfterTimeout(manualServer, displayServer);
-          });
+          return this.syncAndShowServer(manualServer);
         } else {
           // Remove inaccessible manual server from local storage if it was just created.
           manualServer.forget();
@@ -995,9 +1028,7 @@ export class App {
     this.selectedServer.setName(newName)
         .then(() => {
           this.appRoot.getServerView(this.appRoot.selectedServer.id).serverName = newName;
-          this.syncServerToDisplay(this.selectedServer).then((displayServer) => {
-            this.showServerAfterTimeout(this.selectedServer, displayServer);
-          });
+          return this.syncAndShowServer(this.selectedServer);
         })
         .catch((error) => {
           this.displayError('Error renaming server', error);
