@@ -18,6 +18,7 @@ export interface DisplayServer {
   id: string;
   name: string;
   isManaged: boolean;
+  isSynced?: boolean;
 }
 
 // Persistence layer for `DisplayServer`. Caches the list of servers shown in the UI in case they
@@ -79,7 +80,11 @@ export class DisplayServerRepository {
       return;
     }
     try {
-      this.servers = JSON.parse(serversJson);
+      // We need the servers' `isSynced` property be false on load.
+      this.servers = JSON.parse(serversJson).map((server: DisplayServer) => {
+        server.isSynced = false;
+        return server;
+      });
     } catch (e) {
       console.error('Error loading local servers from storage');
     }
