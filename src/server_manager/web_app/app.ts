@@ -21,6 +21,7 @@ import * as server from '../model/server';
 
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
+import {parseManualServerConfig} from './management_urls';
 
 // tslint:disable-next-line:no-any
 type Polymer = HTMLElement&any;
@@ -120,11 +121,23 @@ export class App {
       this.renameAccessKey(event.detail.accessKeyId, event.detail.newName, event.detail.entry);
     });
 
-    appRoot.addEventListener('ManualServerEntered', (event: PolymerEvent) => {
-      const userInputConfig =
-          event.detail.userInputConfig.replace(/\s+/g, '');  // Remove whitespace
+    // The UI wants us to validate a server management URL.
+    // "Reply" by setting a field on the relevant template.
+    appRoot.addEventListener('ManualServerEdited', (event: PolymerEvent) => {
+      let isValid = true;
+      try {
+        parseManualServerConfig(event.detail.userInput);
+      } catch (e) {
+        isValid = false;
+      }
       const manualServerEntryEl = appRoot.getManualServerEntry();
-      this.createManualServer(userInputConfig)
+      manualServerEntryEl.enableDoneButton = isValid;
+    });
+
+    appRoot.addEventListener('ManualServerEntered', (event: PolymerEvent) => {
+      const userInput = event.detail.userInput;
+      const manualServerEntryEl = appRoot.getManualServerEntry();
+      this.createManualServer(userInput)
           .then(() => {
             // Clear fields on outline-manual-server-entry (e.g. dismiss the connecting popup).
             manualServerEntryEl.clear();
@@ -140,8 +153,8 @@ export class App {
               if (e.message) {
                 errorMessage += `${e.message}\n`;
               }
-              if (userInputConfig) {
-                errorMessage += userInputConfig;
+              if (userInput) {
+                errorMessage += userInput;
               }
               appRoot.openManualInstallFeedback(errorMessage);
             }
@@ -644,27 +657,13 @@ export class App {
 
   // Returns promise which fulfills when the server is created successfully,
   // or rejects with an error message that can be displayed to the user.
-  public createManualServer(userInputConfig: string): Promise<void> {
-    // Parse and validate user input.
+  public createManualServer(userInput: string): Promise<void> {
     let serverConfig: server.ManualServerConfig;
     try {
-      // Remove anything before the first '{' and after the last '}', in case
-      // the user accidentally copied extra from the install script.
-      userInputConfig = userInputConfig.substr(userInputConfig.indexOf('{'));
-      userInputConfig = userInputConfig.substr(0, userInputConfig.lastIndexOf('}') + 1);
-      serverConfig = JSON.parse(userInputConfig);
+      serverConfig = parseManualServerConfig(userInput);
     } catch (e) {
-      console.error('Invalid server configuration: could not parse JSON.');
-      return Promise.reject(new Error(''));
-    }
-    if (!serverConfig.apiUrl) {
-      const msg = 'Invalid server configuration: apiUrl is missing.';
-      console.error(msg);
-      return Promise.reject(new Error(msg));
-    } else if (!serverConfig.certSha256) {
-      const msg = 'Invalid server configuration: certSha256 is missing.';
-      console.error(msg);
-      return Promise.reject(new Error(msg));
+      // This shouldn't happen because the UI validates the URL before enabling the DONE button.
+      return Promise.reject(new Error(`could not parse server config: ${e.message}`));
     }
 
     return this.manualServerRepository.addServer(serverConfig).then((manualServer) => {

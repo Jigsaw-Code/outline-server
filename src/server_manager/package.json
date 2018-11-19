@@ -16,6 +16,7 @@
     "electron-updater": "^3.1.2",
     "eventemitter3": "^2.0.3",
     "express": "^4.16.3",
+    "jsonic": "^0.3.1",
     "node-forge": "^0.7.1",
     "request": "^2.87.0",
     "request-lite": "^2.40.1"
