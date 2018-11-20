@@ -19,6 +19,7 @@
 <link rel='import' href='../bower_components/iron-icons/iron-icons.html'>
 <link rel='import' href='../bower_components/paper-button/paper-button.html'>
 <link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
+<link rel='import' href='../bower_components/paper-input/paper-textarea.html'>
 <link rel='import' href='../bower_components/paper-progress/paper-progress.html'>
 <link rel="import" href="./cloud-install-styles.html">
 <link rel="import" href="./outline-cloud-instructions-view.html">
@@ -79,8 +80,12 @@
       .drop-down:hover {
         cursor: pointer;
       }
+      /* This element surrounds the copy and paste elements. */
       .section-content {
         margin: 24px 12px 0 48px;
+        padding: 24px;
+        background-color: #ECEFF1;
+        border-radius: 4px;
       }
       .section-content-instructions {
         margin: 24px 12px;
@@ -98,22 +103,22 @@
         margin-left: 4px;
         vertical-align: middle;
       }
-      .code {
-        background-color: #ECEFF1;
-        color: rgba(0,0,0,0.87);
+      paper-textarea {
+        --iron-autogrow-textarea: {
+          color: var(--dark-gray);
+          font-size: 14px;
+          font-family: RobotoMono-Regular, monospace;
+          line-height: 24px;
+          word-break: break-all;
+        }
+      }
+      /* TODO: Seems like a @mixin would help avoid duplication. */      
+      #command {
+        color: var(--dark-gray);
         font-size: 14px;
         font-family: RobotoMono-Regular, monospace;
         line-height: 24px;
-        border-radius: 4px;
-        border-bottom: 2px solid #263238;
-        padding: 24px;
         word-break: break-all;
-      }
-      textarea {
-        width: 100%;
-        border: none;
-        outline: none;
-        box-sizing: border-box;
       }
       iron-icon {
         display: inline-block;
@@ -142,6 +147,9 @@
         width: 45%;
         background-color: #1DE9B6;
         color: rgba(0,0,0,0.87);
+      }
+      #doneButton[disabled] {
+        background-color: var(--border-color);
       }
       #aws-logo {
         vertical-align: top;
@@ -234,7 +242,7 @@
             <div class="instructions">Log into your server, and run this command.</div>
           </div>
           <div class="section-content">
-            <div id="command" class="code">sudo bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"</div>
+            <div id="command">sudo bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"</div>
           </div>
         </div>
         <!-- Paste input -->
@@ -245,12 +253,12 @@
             <div class="instructions">Paste your installation output here.</div>
           </div>
           <div class="section-content">
-            <textarea id="serverConfig" type="text" placeholder$="[[placeholderText]]" class="code" rows="3"></textarea>
+            <paper-textarea id="serverConfig" type="text" placeholder$="[[placeholderText]]" class="code" rows="4" max-rows="4" no-label-float on-value-changed='onServerConfigChanged'></paper-textarea>
           </div>
         </div>
         <div id="button-row">
           <paper-button id="cancelButton" on-tap="cancelTapped" class="secondary">CANCEL</paper-button>
-          <paper-button id="doneButton" on-tap="doneTapped" class="primary">DONE</paper-button>
+          <paper-button id="doneButton" on-tap="doneTapped" class="primary" disabled$='[[!enableDoneButton]]'>DONE</paper-button>
         </div>
       </div>
     </outline-step-view>
@@ -294,6 +302,10 @@
         isGenericCloudProvider: {
           type: Boolean,
           computed: '_computeIsGenericCloudProvider(cloudProvider)'
+        },
+        enableDoneButton: {
+          type: Boolean,
+          value: false,
         }
       },
       showError: function(errorTitle, errorMessage) {
@@ -314,7 +326,7 @@
         }
         this.showConnection = true;
         this.fire('ManualServerEntered', {
-          userInputConfig: this.$.serverConfig.value
+          userInput: this.$.serverConfig.value
         });
       },
       cancelTapped: function() {
@@ -357,6 +369,11 @@
       _toggleDropDown: function(dropDown, icon) {
         dropDown.toggle();
         icon.icon = dropDown.opened ? 'arrow-drop-up' : 'arrow-drop-down';
+      },
+      onServerConfigChanged: function () {
+        this.fire('ManualServerEdited', {
+          userInput: this.$.serverConfig.value
+        });
       }
     });
   </script>
