@@ -111,6 +111,9 @@ function createMainWindow() {
     if (!debugMode) {
       autoUpdater.checkForUpdates();
     }
+
+    // Opening the window does not trigger a focus event, at least on Linux.
+    win.webContents.send('poll-clipboard');
   });
 
   // Disable window maximization.  Setting "maximizable: false" in BrowserWindow
@@ -237,6 +240,12 @@ function main() {
 
   app.on('window-all-closed', () => {
     app.quit();
+  });
+
+  app.on('browser-window-focus', () => {
+    if (mainWindow) {
+      mainWindow.webContents.send('poll-clipboard');
+    }
   });
 }
 

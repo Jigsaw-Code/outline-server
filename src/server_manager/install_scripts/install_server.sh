@@ -405,6 +405,8 @@ install_shadowbox() {
 
 CONGRATULATIONS! Your Outline server is up and running.
 
+TREV: change!
+
 To manage your Outline server, please copy the following line (including curly
 brackets) into Step 2 of the Outline Manager interface:
 

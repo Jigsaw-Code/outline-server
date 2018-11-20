@@ -35,6 +35,7 @@
 <link rel="import" href="./outline-server-progress-step.html">
 <link rel="import" href="./outline-server-view.html">
 <link rel="import" href="./outline-tos-view.html">
+<link rel="import" href="./outline-confirm-invite-dialog.html">
 
 <dom-module id="app-root">
   <template>
@@ -177,6 +178,7 @@
       <outline-feedback-dialog id='feedbackDialog'></outline-feedback-dialog>
       <outline-about-dialog id='aboutDialog' outline-version='[[outlineVersion]]'></outline-about-dialog>
       <outline-modal-dialog id='modalDialog'></outline-modal-dialog>
+      <outline-confirm-invite-dialog id='confirmInviteDialog'></outline-about-dialog>
 
       <paper-dialog id="licenses" restoreFocusOnClose>
         <paper-dialog-scrollable>
@@ -328,6 +330,10 @@
           }
         });
       },
+      openConfirmInviteDialog: function(config) {
+        console.log('OPEN THE THING');
+        this.$.confirmInviteDialog.open(config);
+      },
       _isSignedIn: function (adminEmail) {
         return Boolean(adminEmail);
       },
@@ -337,7 +343,8 @@
         }
       },
       _computeHasAcceptedTermsOfService: function(userAcceptedTos) {
-        return userAcceptedTos || !!window.localStorage[TOS_ACK_LOCAL_STORAGE_KEY];
+        // TREV: this totally messes up modal dialogs at launch
+        return true;
       },
       toggleSettingsDrawer: function() {
         this.$.settingsDrawer.toggle();

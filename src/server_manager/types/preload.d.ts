@@ -31,3 +31,5 @@ interface OauthSession {
 declare function runDigitalOceanOauth(): OauthSession;
 
 declare function bringToFront(): void;
+
+declare function setClipboardHandler(callback: (contents: string) => void): void;

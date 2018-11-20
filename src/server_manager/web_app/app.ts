@@ -196,6 +196,32 @@ export class App {
     });
 
     onUpdateDownloaded(this.displayAppUpdateNotification.bind(this));
+
+    setClipboardHandler(this.clipboardHandler.bind(this));
+  }
+
+  private lastClipboardText: string;
+
+  // TODO: ignore if server already added
+  private clipboardHandler(text: string) {
+    // Shorten, sanitise.
+    text = text.substring(0, 1000).trim();
+
+    // Debounce.
+    if (this.lastClipboardText && text === this.lastClipboardText) {
+      return;
+    }
+    this.lastClipboardText = text;
+
+    console.log('scanning clipboard!');
+
+    try {
+      const config = parseManualServerConfig(text);
+      console.log('valid!');
+      this.appRoot.openConfirmInviteDialog(config);
+    } catch (e) {
+      // Don't alert the user; high false positive rate.
+    }
   }
 
   start(): void {
