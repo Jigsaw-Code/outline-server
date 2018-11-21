@@ -398,19 +398,13 @@ install_shadowbox() {
     grep "$1" $ACCESS_CONFIG | sed "s/$1://"
   }
 
-  # Output JSON.  This relies on apiUrl and certSha256 (hex characters) requiring
-  # no string escaping.  TODO: look for a way to generate JSON that doesn't
-  # require new dependencies.
+  # Output a server manager invitation.
   cat <<END_OF_SERVER_OUTPUT
 
 CONGRATULATIONS! Your Outline server is up and running.
 
-TREV: change!
-
-To manage your Outline server, please copy the following line (including curly
-brackets) into Step 2 of the Outline Manager interface:
-
-$(echo -e "\033[1;32m{\"apiUrl\":\"$(get_field_value apiUrl)\",\"certSha256\":\"$(get_field_value certSha256)\"}\033[0m")
+To manage your Outline server, please open this link:
+http://167.99.154.218/outline-vpn/#/en/manage/$(echo '{"apiUrl":"'$(get_field_value apiUrl)'","certSha256":"'$(get_field_value certSha256)'"}'|base64 -w 0)
 
 ${FIREWALL_STATUS}
 END_OF_SERVER_OUTPUT
