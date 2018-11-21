@@ -148,6 +148,9 @@ export class App {
             // Display either error dialog or feedback depending on error type.
             if (e instanceof errors.UnreachableServerError) {
               manualServerEntryEl.showError('Unable to connect to your Outline Server', e.message);
+              // TOTAL HACK FOR DEMO
+              this.appRoot.showToast(
+                  'Unable to connect to your Outline server. Please check its firewall configuration.');
             } else {
               let errorMessage = '';
               if (e.message) {
@@ -217,7 +220,6 @@ export class App {
 
     try {
       const config = parseManualServerConfig(text);
-      console.log('valid!');
       this.appRoot.openConfirmInviteDialog(config);
     } catch (e) {
       // Don't alert the user; high false positive rate.
