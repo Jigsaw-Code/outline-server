@@ -21,6 +21,16 @@ export interface DisplayServer {
   isSynced?: boolean;
 }
 
+// Returns a `DisplayServer` corresponding to `server`.
+export async function makeDisplayServer(server: server.Server) {
+  return {
+    id: server.getManagementApiUrl(),
+    name: await server.isHealthy().catch((e) => false) ? server.getName() : server.getHostname(),
+    isManaged: !!(server as server.ManagedServer).getHost,
+    isSynced: true
+  };
+}
+
 // Persistence layer for `DisplayServer`. Caches the list of servers shown in the UI in case they
 // cannot be accessed due to connectivity issues.
 export class DisplayServerRepository {

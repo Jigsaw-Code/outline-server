@@ -19,7 +19,7 @@ import * as server from '../model/server';
 
 import {App} from './app';
 import {TokenManager} from './digitalocean_oauth';
-import {DisplayServer, DisplayServerRepository} from './display_server';
+import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 
 const TOKEN_WITH_NO_SERVERS = 'no-server-token';
 const TOKEN_WITH_ONE_SERVER = 'one-server-token';
@@ -32,7 +32,7 @@ const TOKEN_WITH_ONE_SERVER = 'one-server-token';
 (global as any).bringToFront = () => {};
 
 describe('App', () => {
-  it('Shows intro when starting with no manual servers or DigitalOcean token', (done) => {
+  it('shows intro when starting with no manual servers or DigitalOcean token', (done) => {
     const polymerAppRoot = new FakePolymerAppRoot();
     const app = createTestApp(polymerAppRoot, new InMemoryDigitalOceanTokenManager());
     polymerAppRoot.events.once('screen-change', (currentScreen) => {
@@ -42,12 +42,186 @@ describe('App', () => {
     app.start();
   });
 
-  // TODO(alalama): re-implement broken tests
+  it('will not create a manual server with invalid input', (done) => {
+    // Create a new app with no existing servers or DigitalOcean token.
+    const polymerAppRoot = new FakePolymerAppRoot();
+    const app = createTestApp(polymerAppRoot, new InMemoryDigitalOceanTokenManager());
+    polymerAppRoot.events.once('screen-change', (currentScreen) => {
+      expect(currentScreen).toEqual(AppRootScreen.INTRO);
+      app.createManualServer('bad input').catch(done);
+    });
+    app.start();
+  });
+
+  it('creates a manual server with valid input', async (done) => {
+    // Create a new app with no existing servers or DigitalOcean token.
+    const polymerAppRoot = new FakePolymerAppRoot();
+    const app = createTestApp(polymerAppRoot, new InMemoryDigitalOceanTokenManager());
+    polymerAppRoot.events.once('screen-change', (currentScreen) => {
+      expect(currentScreen).toEqual(AppRootScreen.INTRO);
+      polymerAppRoot.events.once('screen-change', (currentScreen) => {
+        expect(currentScreen).toEqual(AppRootScreen.SERVER_VIEW);
+        done();
+      });
+    });
+    await app.start();
+    await app.createManualServer(JSON.stringify({certSha256: 'cert', apiUrl: 'url'}));
+  });
+
+  it('initially shows and stores server display metadata', async (done) => {
+    // Create fake servers and simulate their metadata being cached before creating the app.
+    const tokenManager = new InMemoryDigitalOceanTokenManager();
+    tokenManager.token = TOKEN_WITH_NO_SERVERS;
+    const managedServerRepo = new FakeManagedServerRepository();
+    const managedServer = await managedServerRepo.createServer();
+    managedServer.apiUrl = 'fake-managed-server-api-url';
+    const managedDisplayServer = await makeDisplayServer(managedServer);
+    const manualServerRepo = new FakeManualServerRepository();
+    const manualServer1 = await manualServerRepo.addServer(
+        {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-1'});
+    const manualServer2 = await manualServerRepo.addServer(
+        {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
+    const manualDisplayServer1 = await makeDisplayServer(manualServer1);
+    const manualDisplayServer2 = await makeDisplayServer(manualServer2);
+
+    const displayServerRepo = new DisplayServerRepository(new InMemoryStorage());
+    const polymerAppRoot = new FakePolymerAppRoot();
+    const app = createTestApp(
+        polymerAppRoot, tokenManager, manualServerRepo, displayServerRepo, managedServerRepo);
+
+    await app.start();
+    // Validate that server metadata is shown.
+    const managedServers = await managedServerRepo.listServers();
+    const manualServers = await manualServerRepo.listServers();
+    const serverList = polymerAppRoot.serverList;
+    expect(serverList.length).toEqual(manualServers.length + managedServers.length);
+    expect(serverList).toContain(manualDisplayServer1);
+    expect(serverList).toContain(manualDisplayServer2);
+    expect(serverList).toContain(managedDisplayServer);
+
+    // Validate that display servers are stored.
+    const displayServers = await displayServerRepo.listServers();
+    for (const displayServer of displayServers) {
+      expect(serverList).toContain(displayServer);
+    }
+    done();
+  });
+
+  it('initially shows stored server display metadata', async (done) => {
+    // Create fake servers without caching their display metadata.
+    const tokenManager = new InMemoryDigitalOceanTokenManager();
+    tokenManager.token = TOKEN_WITH_NO_SERVERS;
+    const managedServerRepo = new FakeManagedServerRepository();
+    const managedServer = await managedServerRepo.createServer();
+    managedServer.apiUrl = 'fake-managed-server-api-url';
+    const managedDisplayServer = await makeDisplayServer(managedServer);
+    const manualServerRepo = new FakeManualServerRepository();
+    const manualServer1 = await manualServerRepo.addServer(
+        {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-1'});
+    const manualServer2 = await manualServerRepo.addServer(
+        {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
+    const manualDisplayServer1 = await makeDisplayServer(manualServer1);
+    const manualDisplayServer2 = await makeDisplayServer(manualServer2);
+    const store = new Map([[
+      DisplayServerRepository.SERVERS_STORAGE_KEY,
+      JSON.stringify([manualDisplayServer1, manualDisplayServer2, managedDisplayServer])
+    ]]);
+    const displayServerRepo = new DisplayServerRepository(new InMemoryStorage(store));
+    const polymerAppRoot = new FakePolymerAppRoot();
+    const app = createTestApp(
+        polymerAppRoot, tokenManager, manualServerRepo, displayServerRepo, managedServerRepo);
+
+    await app.start();
+    const managedServers = await managedServerRepo.listServers();
+    const manualServers = await manualServerRepo.listServers();
+    const serverList = polymerAppRoot.serverList;
+    expect(serverList.length).toEqual(manualServers.length + managedServers.length);
+    expect(serverList).toContain(manualDisplayServer1);
+    expect(serverList).toContain(manualDisplayServer2);
+    expect(serverList).toContain(managedDisplayServer);
+    done();
+  });
+
+  it('initially shows the last selected server', async (done) => {
+    const tokenManager = new InMemoryDigitalOceanTokenManager();
+    tokenManager.token = TOKEN_WITH_ONE_SERVER;
+
+    const LAST_DISPLAYED_SERVER_ID = 'fake-manual-server-api-url-1';
+    const manualServerRepo = new FakeManualServerRepository();
+    const lastDisplayedServer =
+        await manualServerRepo.addServer({certSha256: 'cert', apiUrl: LAST_DISPLAYED_SERVER_ID});
+    const manualServer = await manualServerRepo.addServer(
+        {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
+    const manualDisplayServer1 = await makeDisplayServer(lastDisplayedServer);
+    const manualDisplayServer2 = await makeDisplayServer(manualServer);
+    const store = new Map([[
+      DisplayServerRepository.SERVERS_STORAGE_KEY,
+      JSON.stringify([manualDisplayServer1, manualDisplayServer2])
+    ]]);
+    const displayServerRepo = new DisplayServerRepository(new InMemoryStorage(store));
+    displayServerRepo.storeLastDisplayedServerId(LAST_DISPLAYED_SERVER_ID);
+
+    const polymerAppRoot = new FakePolymerAppRoot();
+    const app = createTestApp(polymerAppRoot, tokenManager, manualServerRepo, displayServerRepo);
+    polymerAppRoot.events.once('screen-change', (currentScreen) => {
+      expect(currentScreen).toEqual(AppRootScreen.INTRO);
+      polymerAppRoot.events.once('screen-change', (currentScreen) => {
+        expect(currentScreen).toEqual(AppRootScreen.SERVER_VIEW);
+        expect(polymerAppRoot.serverView.serverId).toEqual(lastDisplayedServer.getServerId());
+        done();
+      });
+    });
+    await app.start();
+  });
+
+  it('shows progress screen once DigitalOcean droplets are created', async (done) => {
+    // Start the app with a fake DigitalOcean token.
+    const polymerAppRoot = new FakePolymerAppRoot();
+    const tokenManager = new InMemoryDigitalOceanTokenManager();
+    tokenManager.token = TOKEN_WITH_NO_SERVERS;
+    const app = createTestApp(polymerAppRoot, tokenManager);
+    polymerAppRoot.events.once('screen-change', (currentScreen) => {
+      expect(currentScreen).toEqual(AppRootScreen.INTRO);
+      polymerAppRoot.events.once('screen-change', (currentScreen) => {
+        expect(currentScreen).toEqual(AppRootScreen.INSTALL_PROGRESS);
+        done();
+      });
+    });
+    await app.start();
+    app.createDigitalOceanServer('fakeRegion');
+  });
+
+  it('shows progress screen when starting with DigitalOcean servers still being created',
+     async (done) => {
+       const polymerAppRoot = new FakePolymerAppRoot();
+       const tokenManager = new InMemoryDigitalOceanTokenManager();
+       tokenManager.token = TOKEN_WITH_NO_SERVERS;
+       const managedSeverRepository = new FakeManagedServerRepository();
+       // Manually create the server since the DO repository server factory function is synchronous.
+       await managedSeverRepository.createUninstalledServer();
+       const app = createTestApp(polymerAppRoot, tokenManager, null, null, managedSeverRepository);
+       polymerAppRoot.events.once('screen-change', (currentScreen) => {
+         expect(currentScreen).toEqual(AppRootScreen.INTRO);
+         polymerAppRoot.events.once('screen-change', (currentScreen) => {
+           // Servers should initially show the progress screen, until their
+           // "waitOnInstall" promise fulfills.  For DigitalOcean, server objects
+           // are returned by the repository as soon as the droplet exists with the
+           // "shadowbox" tag, however shadowbox installation may not yet be complete.
+           // This is needed in case the user restarts the manager after the droplet
+           // is created but before shadowbox installation finishes.
+           expect(currentScreen).toEqual(AppRootScreen.INSTALL_PROGRESS);
+           done();
+         });
+       });
+       await app.start();
+     });
 });
 
 function createTestApp(
     polymerAppRoot: FakePolymerAppRoot, digitalOceanTokenManager: InMemoryDigitalOceanTokenManager,
-    manualServerRepo?: server.ManualServerRepository) {
+    manualServerRepo?: server.ManualServerRepository,
+    displayServerRepository?: FakeDisplayServerRepository,
+    managedServerRepository?: FakeManagedServerRepository) {
   const WEB_APP_URL = 'outline://fakefakefake/';
   const VERSION = '0.0.1';
   const fakeDigitalOceanSessionFactory = (accessToken: string) => {
@@ -55,7 +229,7 @@ function createTestApp(
   };
   const fakeDigitalOceanServerRepositoryFactory =
       (session: digitalocean_api.DigitalOceanSession) => {
-        const repo = new FakeManagedServerRepository();
+        const repo = managedServerRepository || new FakeManagedServerRepository();
         if (session.accessToken === TOKEN_WITH_ONE_SERVER) {
           repo.createServer();  // OK to ignore promise as the fake implementation is synchronous.
         }
@@ -64,10 +238,12 @@ function createTestApp(
   if (!manualServerRepo) {
     manualServerRepo = new FakeManualServerRepository();
   }
-  const fakeDisplayServerRepository = new FakeDisplayServerRepository();
+  if (!displayServerRepository) {
+    displayServerRepository = new FakeDisplayServerRepository();
+  }
   return new App(
       polymerAppRoot, WEB_APP_URL, VERSION, fakeDigitalOceanSessionFactory,
-      fakeDigitalOceanServerRepositoryFactory, manualServerRepo, fakeDisplayServerRepository,
+      fakeDigitalOceanServerRepositoryFactory, manualServerRepo, displayServerRepository,
       digitalOceanTokenManager);
 }
 
@@ -86,7 +262,8 @@ class FakePolymerAppRoot {
   events = new events.EventEmitter();
   backgroundScreen = AppRootScreen.NONE;
   currentScreen = AppRootScreen.NONE;
-  serverView = {setServerTransferredData: () => {}, serverId: ''};
+  serverView = {setServerTransferredData: () => {}, serverId: '', initHelpBubbles: () => {}};
+  serverList: DisplayServer[] = [];
 
   private setScreen(screenId: AppRootScreen) {
     this.currentScreen = screenId;
@@ -147,6 +324,7 @@ class FakeServer implements server.Server {
   private name = 'serverName';
   private metricsEnabled = false;
   private id: string;
+  apiUrl: string;
   constructor() {
     this.id = Math.random().toString();
   }
@@ -195,14 +373,16 @@ class FakeServer implements server.Server {
     return 8080;
   }
   getManagementApiUrl() {
-    // Ensure this is unique, as in the real servers.
-    return `https://${Math.round(Math.random() * 100000)}:8080`;
+    return this.apiUrl || Math.random().toString();
   }
 }
 
 class FakeManualServer extends FakeServer implements server.ManualServer {
   constructor(public manualServerConfig: server.ManualServerConfig) {
     super();
+  }
+  getManagementApiUrl() {
+    return this.manualServerConfig.apiUrl;
   }
   forget() {
     return Promise.reject(new Error('FakeManualServer.forget not implemented'));
@@ -271,6 +451,9 @@ class FakeDigitalOceanSession implements digitalocean_api.DigitalOceanSession {
 }
 
 class FakeManagedServer extends FakeServer implements server.ManagedServer {
+  constructor(private isInstalled = true) {
+    super();
+  }
   waitOnInstall(resetTimeout: boolean) {
     // Return a promise which does not yet fulfill, to simulate long
     // shadowbox install time.
@@ -286,7 +469,7 @@ class FakeManagedServer extends FakeServer implements server.ManagedServer {
     };
   }
   isInstallCompleted() {
-    return false;
+    return this.isInstalled;
   }
 }
 
@@ -300,6 +483,12 @@ class FakeManagedServerRepository implements server.ManagedServerRepository {
   }
   createServer() {
     const newServer = new FakeManagedServer();
+    this.servers.push(newServer);
+    return Promise.resolve(newServer);
+  }
+
+  createUninstalledServer() {
+    const newServer = new FakeManagedServer(false);
     this.servers.push(newServer);
     return Promise.resolve(newServer);
   }
