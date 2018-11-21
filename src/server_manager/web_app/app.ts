@@ -21,7 +21,7 @@ import * as server from '../model/server';
 
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
-import {DisplayServer, DisplayServerRepository} from './display_server';
+import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 
 // tslint:disable-next-line:no-any
 type Polymer = HTMLElement&any;
@@ -266,13 +266,7 @@ export class App {
     let displayServer = this.displayServerRepository.findServer(displayServerId);
     if (!displayServer) {
       console.debug(`Could not find display server with ID ${displayServerId}`);
-      const isHealthy = await server.isHealthy().catch((e) => false);
-      displayServer = {
-        id: displayServerId,
-        name: isHealthy ? server.getName() : server.getHostname(),
-        isManaged: isManagedServer(server),
-        isSynced: true
-      };
+      displayServer = await makeDisplayServer(server);
       this.displayServerRepository.addServer(displayServer);
     } else {
       // We may need to update the stored display server if it was persisted when the server was not

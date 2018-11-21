@@ -19,7 +19,7 @@ import * as server from '../model/server';
 
 import {App} from './app';
 import {TokenManager} from './digitalocean_oauth';
-import {DisplayServer, DisplayServerRepository} from './display_server';
+import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 
 const TOKEN_WITH_NO_SERVERS = 'no-server-token';
 const TOKEN_WITH_ONE_SERVER = 'one-server-token';
@@ -77,15 +77,17 @@ describe('App', () => {
     managedServer.apiUrl = 'fake-managed-server-api-url';
     const managedDisplayServer = await makeDisplayServer(managedServer);
     const manualServerRepo = new FakeManualServerRepository();
-    const manualServer1 = await manualServerRepo.addServer({certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-1'});
-    const manualServer2 = await manualServerRepo.addServer({certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
+    const manualServer1 = await manualServerRepo.addServer(
+        {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-1'});
+    const manualServer2 = await manualServerRepo.addServer(
+        {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
     const manualDisplayServer1 = await makeDisplayServer(manualServer1);
     const manualDisplayServer2 = await makeDisplayServer(manualServer2);
 
     const displayServerRepo = new DisplayServerRepository(new InMemoryStorage());
     const polymerAppRoot = new FakePolymerAppRoot();
-    const app =
-        createTestApp(polymerAppRoot, tokenManager, manualServerRepo, displayServerRepo, managedServerRepo);
+    const app = createTestApp(
+        polymerAppRoot, tokenManager, manualServerRepo, displayServerRepo, managedServerRepo);
 
     await app.start();
     // Validate that server metadata is shown.
@@ -114,8 +116,10 @@ describe('App', () => {
     managedServer.apiUrl = 'fake-managed-server-api-url';
     const managedDisplayServer = await makeDisplayServer(managedServer);
     const manualServerRepo = new FakeManualServerRepository();
-    const manualServer1 = await manualServerRepo.addServer({certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-1'});
-    const manualServer2 = await manualServerRepo.addServer({certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
+    const manualServer1 = await manualServerRepo.addServer(
+        {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-1'});
+    const manualServer2 = await manualServerRepo.addServer(
+        {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
     const manualDisplayServer1 = await makeDisplayServer(manualServer1);
     const manualDisplayServer2 = await makeDisplayServer(manualServer2);
     const store = new Map([[
@@ -124,8 +128,8 @@ describe('App', () => {
     ]]);
     const displayServerRepo = new DisplayServerRepository(new InMemoryStorage(store));
     const polymerAppRoot = new FakePolymerAppRoot();
-    const app =
-        createTestApp(polymerAppRoot, tokenManager, manualServerRepo, displayServerRepo, managedServerRepo);
+    const app = createTestApp(
+        polymerAppRoot, tokenManager, manualServerRepo, displayServerRepo, managedServerRepo);
 
     await app.start();
     const managedServers = await managedServerRepo.listServers();
@@ -144,8 +148,10 @@ describe('App', () => {
 
     const LAST_DISPLAYED_SERVER_ID = 'fake-manual-server-api-url-1';
     const manualServerRepo = new FakeManualServerRepository();
-    const lastDisplayedServer = await manualServerRepo.addServer({certSha256: 'cert', apiUrl: LAST_DISPLAYED_SERVER_ID});
-    const manualServer = await manualServerRepo.addServer({certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
+    const lastDisplayedServer =
+        await manualServerRepo.addServer({certSha256: 'cert', apiUrl: LAST_DISPLAYED_SERVER_ID});
+    const manualServer = await manualServerRepo.addServer(
+        {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
     const manualDisplayServer1 = await makeDisplayServer(lastDisplayedServer);
     const manualDisplayServer2 = await makeDisplayServer(manualServer);
     const store = new Map([[
@@ -156,8 +162,7 @@ describe('App', () => {
     displayServerRepo.storeLastDisplayedServerId(LAST_DISPLAYED_SERVER_ID);
 
     const polymerAppRoot = new FakePolymerAppRoot();
-    const app =
-        createTestApp(polymerAppRoot, tokenManager, manualServerRepo, displayServerRepo);
+    const app = createTestApp(polymerAppRoot, tokenManager, manualServerRepo, displayServerRepo);
     polymerAppRoot.events.once('screen-change', (currentScreen) => {
       expect(currentScreen).toEqual(AppRootScreen.INTRO);
       polymerAppRoot.events.once('screen-change', (currentScreen) => {
@@ -240,15 +245,6 @@ function createTestApp(
       polymerAppRoot, WEB_APP_URL, VERSION, fakeDigitalOceanSessionFactory,
       fakeDigitalOceanServerRepositoryFactory, manualServerRepo, displayServerRepository,
       digitalOceanTokenManager);
-}
-
-async function makeDisplayServer(server: server.Server) {
-  return {
-    id: server.getManagementApiUrl(),
-    name: await server.isHealthy() ? server.getName() : server.getHostname(),
-    isManaged: !!(server as server.ManagedServer).getHost,
-    isSynced: true
-  };
 }
 
 enum AppRootScreen {
