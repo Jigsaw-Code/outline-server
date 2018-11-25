@@ -38,7 +38,7 @@ const API_URL_TAG = 'apiurl';
 // The tag which appears if there is an error during installation.
 const INSTALL_ERROR_TAG = 'install-error';
 
-// These are superceded by the API_URL_TAG
+// These are superseded by the API_URL_TAG
 // The tag key for the manager API port.
 const DEPRECATED_API_PORT_TAG = 'apiport';
 // The tag key for the manager API url prefix.
