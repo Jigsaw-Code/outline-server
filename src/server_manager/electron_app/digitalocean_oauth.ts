@@ -124,13 +124,13 @@ export function runOauth(): OauthSession {
     }
   });
 
-  // This is the callback for the DigitalOcean callback. It serves Javascript that will
+  // This is the callback for the DigitalOcean callback. It serves JavaScript that will
   // extract the access token from the hash and post it back to our http server.
   app.get('/', (request, response) => {
     response.send(`<html>
           <head><title>Authenticating...</title></head>
           <body>
-              <noscript>You need to enable Javascript in order for the DigitalOcean authentication to work.</noscript>
+              <noscript>You need to enable JavaScript in order for the DigitalOcean authentication to work.</noscript>
               <form id="form" method="POST">
                   <input id="params" type="hidden" name="params"></input>
               </form>
