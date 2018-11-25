@@ -102,7 +102,7 @@ export function createPrometheusUsageMetricsWriter(registry: prometheus.Registry
     UsageMetricsWriter {
   const usageCounter = new prometheus.Counter({
     name: 'shadowsocks_data_bytes',
-    help: 'Bytes tranferred by the proxy',
+    help: 'Bytes transferred by the proxy',
     labelNames: ['dir', 'proto', 'location', 'status', 'access_key']
   });
   registry.registerMetric(usageCounter);
