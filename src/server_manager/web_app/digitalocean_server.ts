@@ -200,7 +200,7 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
   // Returns true on success, else false.
   private setApiUrlAndCertificate(): boolean {
     try {
-      // Atempt to get certificate fingerprint and management api address,
+      // Attempt to get certificate fingerprint and management api address,
       // these methods throw exceptions if the fields are unavailable.
       const certificateFingerprint = this.getCertificateFingerprint();
       const apiAddress = this.getManagementApiAddress();
