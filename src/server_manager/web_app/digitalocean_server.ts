@@ -428,10 +428,10 @@ function sanitizeDigitaloceanToken(input: string): string {
 function getInstallScript(
     accessToken: string, name: string, image?: string, watchtowerRefreshSeconds?: number,
     metricsUrl?: string, sentryApiUrl?: string): string {
-  const sanitizezedAccessToken = sanitizeDigitaloceanToken(accessToken);
+  const sanitizedAccessToken = sanitizeDigitaloceanToken(accessToken);
   // TODO: consider shell escaping these variables.
   return '#!/bin/bash -eu\n' +
-      `export DO_ACCESS_TOKEN=${sanitizezedAccessToken}\n` +
+      `export DO_ACCESS_TOKEN=${sanitizedAccessToken}\n` +
       (image ? `export SB_IMAGE=${image}\n` : '') +
       (watchtowerRefreshSeconds ?
            `export WATCHTOWER_REFRESH_SECONDS=${watchtowerRefreshSeconds}\n` :
