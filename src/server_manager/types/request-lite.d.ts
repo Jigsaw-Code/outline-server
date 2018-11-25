@@ -18,7 +18,7 @@
 declare module 'request-lite' {
   // tslint:disable-next-line:no-any
   function request(
-      url: string, callback: (error: Error, repsonse: any, body: string) => void): void;
+      url: string, callback: (error: Error, response: any, body: string) => void): void;
   namespace request {}
   export = request;
 }
