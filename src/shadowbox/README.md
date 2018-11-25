@@ -26,7 +26,7 @@ Besides [Node](https://nodejs.org/en/download/) and [Yarn](https://yarnpkg.com/e
 1. [docker-compose 1.11+](https://docs.docker.com/compose/install/)
 
 Run `docker info` and make sure `Storage Driver` is `devicemapper`. If it is
-not, you can override it by editting `/etc/default/docker` or by passing
+not, you can override it by editing `/etc/default/docker` or by passing
 another storage driver in the daemon commandline:
 ```
 sudo dockerd --storage-driver=devicemapper
