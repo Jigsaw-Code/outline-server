@@ -32,6 +32,13 @@
     <style>
       :host {
         text-align: center;
+        --code-mixin: {
+          color: var(--dark-gray);
+          font-size: 14px;
+          font-family: RobotoMono-Regular, monospace;
+          line-height: 24px;
+          word-break: break-all;
+        }
       }
       .card {
         color: var(--light-gray);
@@ -106,20 +113,17 @@
       }
       paper-textarea {
         --iron-autogrow-textarea: {
-          color: var(--dark-gray);
-          font-size: 14px;
-          font-family: RobotoMono-Regular, monospace;
-          line-height: 24px;
-          word-break: break-all;
+          @apply --code-mixin;
+        }
+        --paper-input-container-underline: {
+          display: none;
+        }
+        --paper-input-container-underline-focus: {
+          display: none;
         }
       }
-      /* TODO: Seems like a @mixin would help avoid duplication. */
-      .code, #command {
-        color: var(--dark-gray);
-        font-size: 14px;
-        font-family: RobotoMono-Regular, monospace;
-        line-height: 24px;
-        word-break: break-all;
+      .code, #command, paper-textarea {
+        @apply --code-mixin;
       }
       iron-icon {
         display: inline-block;
