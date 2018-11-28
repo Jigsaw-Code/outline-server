@@ -135,21 +135,8 @@ export function runOauth(): OauthSession {
                   <input id="params" type="hidden" name="params"></input>
               </form>
               <script>
-                  // We can't use URLSearchParams in IE :-(
-                  function splitParams(paramsStr) {
-                    var params = {};
-                    var kvs = paramsStr.split("&");
-                    for (var i in kvs) {
-                      pair = kvs[i].split("=");
-                      params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
-                    }
-                    return params;
-                  }
                   var paramsStr = location.hash.substr(1);
-                  var params = splitParams(paramsStr);
                   var form = document.getElementById("form");
-                  var targetUrl = params["state"];
-                  form.setAttribute("action", targetUrl);
                   document.getElementById("params").setAttribute("value", paramsStr);
                   form.submit();
               </script>
@@ -165,16 +152,16 @@ export function runOauth(): OauthSession {
     app.post('/', bodyParser.urlencoded({type: '*/*', extended: false}), (request, response) => {
       server.close();
 
-      const requestSecret = request.query.secret;
-      if (requestSecret !== secret) {
-        response.status(400).send(closeWindowHtml('Authentication failed'));
-        reject(new Error(`Expected secret ${secret}. Got ${requestSecret}`));
-        return;
-      }
       const params = new URLSearchParams(request.body.params);
       if (params.get('error')) {
         response.status(400).send(closeWindowHtml('Authentication failed'));
         reject(new Error(`DigitalOcean OAuth error: ${params.get('error_description')}`));
+        return;
+      }
+      const requestSecret = params.get('state');
+      if (requestSecret !== secret) {
+        response.status(400).send(closeWindowHtml('Authentication failed'));
+        reject(new Error(`Expected secret ${secret}. Got ${requestSecret}`));
         return;
       }
       const accessToken = params.get('access_token');
@@ -204,12 +191,10 @@ export function runOauth(): OauthSession {
           const address = server.address();
           console.log(`OAuth target listening on ${address.address}:${address.port}`);
 
-          const targetUrl = `http://localhost:${
-              encodeURIComponent(address.port.toString())}?secret=${encodeURIComponent(secret)}`;
           const oauthUrl = `https://cloud.digitalocean.com/v1/oauth/authorize?client_id=${
               encodeURIComponent(
                   clientId)}&response_type=token&scope=read%20write&redirect_uri=http://localhost:${
-              encodeURIComponent(port.toString())}/&state=${encodeURIComponent(targetUrl)}`;
+              encodeURIComponent(port.toString())}/&state=${encodeURIComponent(secret)}`;
           console.log(`Opening OAuth URL ${oauthUrl}`);
           electron.shell.openExternal(oauthUrl);
         })
