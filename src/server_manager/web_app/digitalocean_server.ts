@@ -38,7 +38,7 @@ const API_URL_TAG = 'apiurl';
 // The tag which appears if there is an error during installation.
 const INSTALL_ERROR_TAG = 'install-error';
 
-// These are superceded by the API_URL_TAG
+// These are superseded by the API_URL_TAG
 // The tag key for the manager API port.
 const DEPRECATED_API_PORT_TAG = 'apiport';
 // The tag key for the manager API url prefix.
@@ -200,7 +200,7 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
   // Returns true on success, else false.
   private setApiUrlAndCertificate(): boolean {
     try {
-      // Atempt to get certificate fingerprint and management api address,
+      // Attempt to get certificate fingerprint and management api address,
       // these methods throw exceptions if the fields are unavailable.
       const certificateFingerprint = this.getCertificateFingerprint();
       const apiAddress = this.getManagementApiAddress();
@@ -428,10 +428,10 @@ function sanitizeDigitaloceanToken(input: string): string {
 function getInstallScript(
     accessToken: string, name: string, image?: string, watchtowerRefreshSeconds?: number,
     metricsUrl?: string, sentryApiUrl?: string): string {
-  const sanitizezedAccessToken = sanitizeDigitaloceanToken(accessToken);
+  const sanitizedAccessToken = sanitizeDigitaloceanToken(accessToken);
   // TODO: consider shell escaping these variables.
   return '#!/bin/bash -eu\n' +
-      `export DO_ACCESS_TOKEN=${sanitizezedAccessToken}\n` +
+      `export DO_ACCESS_TOKEN=${sanitizedAccessToken}\n` +
       (image ? `export SB_IMAGE=${image}\n` : '') +
       (watchtowerRefreshSeconds ?
            `export WATCHTOWER_REFRESH_SECONDS=${watchtowerRefreshSeconds}\n` :
