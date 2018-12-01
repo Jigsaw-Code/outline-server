@@ -13,7 +13,7 @@
 # limitations under the License.
 
 FROM golang:1-alpine as outline-ss-server
-COPY third_party/go/src /go/src
+COPY third_party/go/src /go/src/
 RUN go install github.com/Jigsaw-Code/outline-ss-server
 
 # See versions at https://hub.docker.com/_/node/
