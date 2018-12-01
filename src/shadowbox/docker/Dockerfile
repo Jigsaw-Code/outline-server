@@ -14,7 +14,7 @@
 
 FROM golang:1-alpine as outline-ss-server
 COPY third_party/go/src /go/src/
-RUN go install -v github.com/Jigsaw-Code/outline-ss-server/...
+RUN go install -v github.com/Jigsaw-Code/outline-ss-server
 
 # See versions at https://hub.docker.com/_/node/
 FROM node:8.11.3-alpine
