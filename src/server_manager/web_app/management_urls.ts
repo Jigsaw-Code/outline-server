@@ -30,6 +30,9 @@ export function parseManualServerConfig(userInput: string): ManualServerConfig {
     userInput = userInput.substring(0, indexOfLastBrace + 1);
   }
 
+  // Strip whitespace.
+  userInput = userInput.replace(/\s+/g, '');
+
   const config = jsonic(userInput) as ManualServerConfig;
 
   if (!config.apiUrl) {
