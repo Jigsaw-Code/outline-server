@@ -46,4 +46,18 @@ describe('parseManualServerConfig', () => {
     expect(result.apiUrl).toEqual('http://abc.com/xyz');
     expect(result.certSha256).toEqual('1234567');
   });
+
+  it('strips whitespace', () => {
+    const result =
+        parseManualServerConfig('{"apiUrl":http://abc.com/xyz, "certSha256":"123   4567"}');
+    expect(result.apiUrl).toEqual('http://abc.com/xyz');
+    expect(result.certSha256).toEqual('1234567');
+  });
+
+  it('strips newlines', () => {
+    const result =
+        parseManualServerConfig('{"apiUrl":http://abc.com/xyz, "certSha256":"123\n4567"}');
+    expect(result.apiUrl).toEqual('http://abc.com/xyz');
+    expect(result.certSha256).toEqual('1234567');
+  });
 });
