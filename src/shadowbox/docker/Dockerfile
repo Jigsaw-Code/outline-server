@@ -19,7 +19,7 @@ FROM node:8.11.3-alpine
 ARG SS_VERSION=3.2.0
 
 # Versions can be found at https://github.com/Jigsaw-Code/outline-ss-server/releases
-ARG SS_GO_VERSION=0.0.1
+ARG SS_GO_VERSION=1.0.0
 
 # Save metadata on the software versions we are using.
 LABEL shadowbox.node_version=8.11.3
