@@ -93,7 +93,7 @@
         position: absolute;
       }
     </style>
-    <paper-dialog id="dialog">
+    <paper-dialog id="dialog" modal>
       <div id="dialog-header">
         <h3>Share access</h3>
         <p>
@@ -109,7 +109,7 @@
         <ol>
           <li>
             Copy your access key:
-            <a href="{{accessUrl}}">{{accessUrl}}</a>
+            <a href="{{acessKey}}">{{acessKey}}</a>
           </li>
           <li>
             Follow our invitation instructions on GitHub:
@@ -130,11 +130,9 @@
       created: function () {
         this.clipboard = require('clipboard-polyfill');
       },
-      open: function(accessUrl) {
-        this.accessUrl = accessUrl;
-        // If updating this URL, must also update it in outline-server-view.html. TODO: deduplicate
-        this.s3Url = 'https://s3.amazonaws.com/outline-vpn/invite.html#' +
-            encodeURIComponent(accessUrl);
+      open: function(acessKey, s3Url) {
+        this.acessKey = acessKey;
+        this.s3Url = s3Url;
         this.$.copyText.setAttribute('hidden', true);
         this.$.dialog.open();
       },

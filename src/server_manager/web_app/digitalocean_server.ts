@@ -68,6 +68,11 @@ export function MakeEnglishNameForServer(regionId: server.RegionId) {
   return `Outline Server ${cityEnglishNameById[getCityId(regionId)]}`;
 }
 
+// Returns the English name of the given region.
+export function GetEnglishCityName(regionId: server.RegionId) {
+  return cityEnglishNameById[getCityId(regionId)];
+}
+
 // Possible install states for DigitaloceanServer.
 enum InstallState {
   // Unknown state - server may still be installing.
@@ -339,6 +344,10 @@ class DigitalOceanHost implements server.ManagedServerHost {
       this.deleteCallback();
     });
   }
+
+  getHostId(): string {
+    return `${this.dropletInfo.id}`;
+  }
 }
 
 function startsWithCaseInsensitive(text: string, prefix: string) {
@@ -352,6 +361,8 @@ function getCityId(slug: server.RegionId): string {
 const MACHINE_SIZE = 's-1vcpu-1gb';
 
 export class DigitaloceanServerRepository implements server.ManagedServerRepository {
+  private servers: DigitaloceanServer[] = [];
+
   constructor(
       private digitalOcean: DigitalOceanSession, private image: string, private metricsUrl: string,
       private sentryApiUrl: string, private debugMode: boolean) {}
@@ -402,16 +413,27 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
           return this.digitalOcean.createDroplet(name, region, keyPair.public, dropletSpec);
         })
         .then((response) => {
-          return new DigitaloceanServer(this.digitalOcean, response.droplet);
+          return this.createDigitalOceanServer(this.digitalOcean, response.droplet);
         });
   }
 
-  listServers(): Promise<server.ManagedServer[]> {
+  listServers(fetchFromHost = true): Promise<server.ManagedServer[]> {
+    if (!fetchFromHost) {
+      return Promise.resolve(this.servers);  // Return the in-memory servers.
+    }
     return this.digitalOcean.getDropletsByTag(SHADOWBOX_TAG).then((droplets) => {
+      this.servers = [];
       return droplets.map((droplet) => {
-        return new DigitaloceanServer(this.digitalOcean, droplet);
+        return this.createDigitalOceanServer(this.digitalOcean, droplet);
       });
     });
+  }
+
+  // Creates a DigitaloceanServer object and adds it to the in-memory server list.
+  private createDigitalOceanServer(digitalOcean: DigitalOceanSession, dropletInfo: DropletInfo) {
+    const server = new DigitaloceanServer(digitalOcean, dropletInfo);
+    this.servers.push(server);
+    return server;
   }
 }
 
