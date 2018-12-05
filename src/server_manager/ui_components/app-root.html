@@ -15,6 +15,7 @@
 -->
 <link rel='import' href='../bower_components/polymer/polymer.html'>
 <link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
 <link rel='import' href='../bower_components/iron-icon/iron-icon.html'>
 <link rel='import' href='../bower_components/iron-icons/iron-icons.html'>
 <link rel='import' href='../bower_components/iron-pages/iron-pages.html'>
@@ -23,6 +24,7 @@
 <link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
 <link rel='import' href='../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html'>
 <link rel='import' href='../bower_components/paper-listbox/paper-listbox.html'>
+<link rel='import' href='../bower_components/paper-menu-button/paper-menu-button.html'>
 
 <link rel="import" href="./cloud-install-styles.html">
 <link rel="import" href="./outline-about-dialog.html">
@@ -42,9 +44,22 @@
     <style include='cloud-install-styles'></style>
     <style>
       :host {
-        width: 100%;
-        --primary-green: #00bfa5;
-        --light-gray: color: rgba(0,0,0,0.54);
+        --side-bar-width: 48px;
+      }
+      .app-container {
+        margin: 0 auto;
+      }
+      /* Large display desktops */
+      @media (min-width: 1281px) {
+        .app-container {
+          max-width: 1200px;
+        }
+      }
+      /* Laptop, desktops */
+      @media (min-width: 1025px) and (max-width: 1280px) {
+        .app-container {
+          max-width: 920px;
+        }
       }
       #toast {
         align-items: center;
@@ -60,127 +75,350 @@
         height: 20px;
         width: 20px;
       }
-      #settingsDrawer {
-        z-index: 1000;
-        margin-top: 12px;
+      #appDrawer {
+        --app-drawer-content-container: {
+          color: var(--medium-gray);
+          background-color: var(--background-contrast-color);
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          align-items: right;
+        };
       }
-      #settingsDrawer paper-listbox {
-        color: var(--light-gray);
+      #appDrawer > * {
+        width: 100%;
       }
-      #settingsDrawer paper-icon-item {
-        display: block;
-        cursor: pointer;
-        padding: 12px 24px 12px 24px;
-        font-size: 14px;
+      .servers {
+        overflow-y: scroll;
+        flex: 1;
       }
-      #settingsDrawer iron-icon {
+      .servers::-webkit-scrollbar {
+        /* Do not display the scroll bar in the drawer or side bar. It is not styled on some platforms. */
+        display: none;
+      }
+      .servers-section {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .servers-section:last-child {
+        border-bottom: none;
+      }
+      .servers-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-left: 24px;
+        line-height: 39px;
+      }
+      .do-overflow-menu {
+        padding: 24px;
+        color: var(--dark-gray);
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+      }
+      .do-overflow-menu h4 {
+        margin-top: 0;
+        white-space: nowrap;
+      }
+      .do-overflow-menu .account-info {
+        display: flex;
+        align-items: center;
+        color: var(--faded-gray);
+      }
+      .do-overflow-menu .account-info img {
         margin-right: 12px;
+        width: 24px;
       }
-      #settingsDrawer paper-icon-item:hover,
-      #settingsDrawer paper-icon-item iron-icon:hover {
-        color: var(--primary-green);
-      }
-      #settingsDrawer a {
-        color: inherit;
-      }
-      #settingsDrawer paper-icon-item:focus,
-      #settingsDrawer a:focus {
-        outline: none;
-      }
-      #settingsDrawer #signedIn {
-        text-align: center;
-      }
-      #settingsDrawer #signedIn img {
-        height: 65px;
-        margin-top: 12px;
-      }
-      #settingsDrawer #signOutButton  {
+      .do-overflow-menu .sign-out-button  {
+        margin-top: 24px;
+        align-self: flex-end;
         font-weight: bold;
-        margin-bottom: 24px;
         cursor: pointer;
         text-transform: uppercase;
       }
-      #settingsDrawer #signOutButton:hover {
+      .servers-container {
+        padding-right: 12px; /* In case the server name is wraps. */
+      }
+      .server {
+        display: flex;
+        align-items: center;
+        width: 100%;  /* For the side bar icons. */
+        margin: 18px 0;
+        padding: 6px 0;
+        cursor: pointer;
+      }
+      .server.selected {
+        color: white;
+        border-left: 2px solid var(--primary-green);
+      }
+      .server.syncing {
+        cursor: wait;
+      }
+      .server-icon {
+        width: 22px;
+        height: 22px;
+        /* Prevent the image from shrinking when the server title spans multiple lines */
+        min-width: 22px !important;
+        margin: 0 24px;
+      }
+      .selected > .server-icon {
+        /* Account for the selected border width to preserve center alignment. */
+        margin-left: 22px;
+      }
+      .add-server-section {
+        padding: 24px 0;
+        text-transform: uppercase;
         color: var(--primary-green);
+        font-size: 12px;
+        letter-spacing: 0.6px;
+        border-top: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
       }
-      app-toolbar paper-icon-button {
-        /* needed so the "Outline Manager" title appears centered in the window. */
-        position: absolute;
+      .add-server-section paper-icon-item {
+        margin-left: 24px;
       }
-      app-toolbar [main-title] {
-        text-align: center;
+      .add-server-section paper-icon-item iron-icon {
+        margin-right: 24px;
+      }
+      #appDrawer > paper-listbox {
+        color: var(--medium-gray);
+        background-color: var(--background-contrast-color);
+      }
+      #appDrawer > paper-listbox > * {
+        display: block;
+        cursor: pointer;
+        padding: 0 24px;
+        font-size: 14px;
+        line-height: 40px;
+        outline: none;
+      }
+      #appDrawer a {
+        color: inherit;
+      }
+      #appDrawer a:focus {
+        outline: none;
+      }
+      .legal-links {
+        margin: 36px -6px 0;
+      }
+      .legal-links > * {
+        margin: 0 6px;
       }
       app-toolbar [main-title] img {
         height: 16px;
         margin-top: 8px;
+      }
+      .side-bar-margin {
+        margin-left: var(--side-bar-width);
+      }
+      #sideBar {
+        --app-drawer-width: var(--side-bar-width);
+        --app-drawer-content-container: {
+          background-color: var(--background-contrast-color);
+        };
+      }
+      .side-bar-container {
+        height: 100%;
+        text-align: center;
+        color: var(--light-gray);
+        display: flex;
+        flex-direction: column;
+      }
+      .side-bar-container .servers {
+        flex: initial; /* Prevent the server list pushing down the add server button. */
+      }
+      .side-bar-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .side-bar-section.menu {
+        min-height: 32px;
+      }
+      .side-bar-section.servers-section {
+        padding: 24px 0;
+      }
+      .side-bar-section .server {
+        justify-content: center;
+        margin: 12px auto;
+        padding: 2px 0;
+      }
+      .side-bar-section .provider-icon {
+        margin-bottom: 12px;
+        padding: 12px 0;
+        opacity: 0.54;
+        filter: grayscale(100%);
+      }
+      .side-bar-section.add-server-section {
+        flex: 1 0 24px;
+        border-bottom: none;
+      }
+      .side-bar-section .server-icon {
+        margin: 0;
+      }
+      #getConnectedDialog {
+        height: 562px;
+        background: white;
+      }
+      #getConnectedDialog iframe {
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid #ccc;
+        height: 500px;
+      }
+      #getConnectedDialog .buttons {
+         margin-top: -5px;  /* undo spacing added after iframe */
       }
     </style>
 
     <outline-tos-view id="tosView" has-accepted-terms-of-service={{userAcceptedTos}} hidden$="{{hasAcceptedTos}}"></outline-tos-view>
 
     <div hidden$="{{!hasAcceptedTos}}">
-      <app-drawer id="settingsDrawer">
-        <div id='signedIn' hidden$='{{!isSignedIn}}'>
-          <img src='images/manager-profile-2x.png'>
-          <p>{{adminEmail}}</p>
-          <div id='signOutButton' on-tap='signOutTapped'>Sign Out</div>
-          <hr/>
+      <!-- This responsive width sets the minimum layout area to 648px.  -->
+      <app-drawer-layout id="drawerLayout" responsive-width="886px" on-narrow-changed="_computeShouldShowSideBar" class$="[[sideBarMarginClass]]">
+        <app-drawer id="appDrawer" slot="drawer" on-opened-changed="_computeShouldShowSideBar">
+          <app-toolbar class="toolbar" hidden$="[[shouldShowSideBar]]">
+            <paper-icon-button icon="menu" on-click="_toggleAppDrawer"></paper-icon-button>
+            <div main-title><img src="images/outline-manager-logo.svg"></div>
+          </app-toolbar>
+
+          <!-- Servers section -->
+          <div class="servers">
+            <!-- DigitalOcean servers -->
+            <div class="servers-section" hidden$="{{!isSignedInToDigitalOcean}}">
+              <div class="servers-header">
+                <span>DigitalOcean servers</span>
+                <paper-menu-button horizontal-align="left" class="" close-on-activate no-animations dynamic-align no-overlap>
+                  <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
+                  <div class="do-overflow-menu" slot="dropdown-content">
+                    <h4>Disconnect DigitalOcean account</h4>
+                    <div class="account-info"><img src="images/digital_ocean_logo.svg" />{{adminEmail}}</div>
+                    <div class="sign-out-button" on-tap="signOutTapped">Disconnect</div>
+                  </div>
+                </paper-menu-button>
+              </div>
+              <div class="servers-container">
+                <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
+                  <div class$="server {{_computeServerClass(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
+                    <img class="server-icon" src$="images/{{_computeServerImage(selectedServer, server)}}" />
+                    <span>{{server.name}}</span>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <!-- Manual servers -->
+            <div class="servers-section" hidden$="{{!hasManualServers}}">
+              <div class="servers-header">
+                <span>Servers</span>
+              </div>
+              <div class="servers-container">
+                <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
+                  <div class$="server {{_computeServerClass(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
+                    <img class="server-icon" src$="images/{{_computeServerImage(selectedServer, server)}}" />
+                    <span>{{server.name}}</span>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add server -->
+          <div class="add-server-section" on-tap="showIntro">
+            <paper-icon-item>
+              <iron-icon icon="add" slot="item-icon"></iron-icon>Add server
+            </paper-icon-item>
+          </div>
+
+          <!-- Links section -->
+          <paper-listbox on-tap="maybeCloseDrawer">
+            <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">Data collection</a>
+            <span on-tap="submitFeedbackTapped">Feedback</span>
+            <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">Help</a>
+            <span on-tap="aboutTapped">About</span>
+            <div class="legal-links">
+              <a href="https://www.google.com/policies/privacy/">Privacy</a>
+              <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">Terms</a>
+              <span on-tap="showLicensesTapped">Licenses</span>
+            </div>
+          </paper-listbox>
+        </app-drawer>
+
+        <app-header-layout>
+          <div class="app-container">
+            <iron-pages attr-for-selected='id' selected='{{ currentPage }}'>
+              <outline-intro-step id='intro' is-signed-in-to-digital-ocean='{{isSignedInToDigitalOcean}}' digital-ocean-email='{{adminEmail}}'></outline-intro-step>
+              <outline-do-oauth-step id='digitalOceanOauth'></outline-do-oauth-step>
+              <outline-manual-server-entry id='manualEntry'></outline-manual-server-entry>
+              <outline-region-picker-step id='regionPicker'></outline-region-picker-step>
+              <outline-server-progress-step id='serverProgressStep'></outline-server-progress-step>
+              <div id="serverView">
+                <template is="dom-repeat" items="{{serverList}}" as="server">
+                  <outline-server-view id="serverView-{{_base64Encode(server.id)}}" hidden$="{{!_isServerSelected(selectedServer, server)}}"></outline-server-view>
+                </template>
+              </div>
+            </iron-pages>
+          </div>
+        </app-header-layout>
+      </app-drawer-layout>
+
+      <!-- Side bar -->
+      <app-drawer id="sideBar" opened$="[[shouldShowSideBar]]" persistent>
+        <div class="side-bar-container">
+          <div class="side-bar-section menu">
+            <paper-icon-button icon="menu" on-click="_toggleAppDrawer"></paper-icon-button>
+          </div>
+          <div class="servers">
+            <!-- DigitalOcean servers -->
+            <div class="side-bar-section servers-section" hidden$="{{!isSignedInToDigitalOcean}}">
+              <img class="provider-icon" src="images/do_white_logo.svg"/>
+              <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
+                <div class$="server {{_computeServerClass(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
+                  <img class="server-icon" src$="images/{{_computeServerImage(selectedServer, server)}}" />
+                </div>
+              </template>
+            </div>
+            <!-- Manual servers -->
+            <div class="side-bar-section servers-section" hidden$="{{!hasManualServers}}">
+              <img class="provider-icon" src="images/cloud.svg"/>
+              <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
+                <div class$="server {{_computeServerClass(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
+                  <img class="server-icon" src$="images/{{_computeServerImage(selectedServer, server)}}" />
+                </div>
+              </template>
+            </div>
+          </div>
+          <div class="side-bar-section add-server-section" on-tap="showIntro">
+              <paper-icon-item>
+                <iron-icon icon="add" slot="item-icon"></iron-icon>
+              </paper-icon-item>
+            </div>
         </div>
-        <paper-listbox on-tap="closeSettingsDrawer">
-          <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">
-            <paper-icon-item>
-              <iron-icon icon="lock" slot="item-icon"></iron-icon>Data Collection
-            </paper-icon-item>
-          </a>
-          <a href="https://www.google.com/policies/privacy/">
-            <paper-icon-item>
-              <iron-icon icon="lock" slot="item-icon"></iron-icon>Privacy
-            </paper-icon-item>
-          </a>
-          <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">
-            <paper-icon-item>
-                <iron-icon icon="info" slot="item-icon"></iron-icon>Terms
-            </paper-icon-item>
-          </a>
-          <paper-icon-item on-tap="submitFeedbackTapped">
-            <iron-icon icon="feedback" slot="item-icon"></iron-icon>Submit Feedback
-          </paper-icon-item>
-          <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">
-            <paper-icon-item>
-              <iron-icon icon="help" slot="item-icon"></iron-icon>Help Center
-            </paper-icon-item>
-          </a>
-          <paper-icon-item on-tap="aboutTapped">
-            <iron-icon icon="info" slot="item-icon"></iron-icon>About Outline
-          </paper-icon-item>
-          <paper-icon-item on-tap="showLicensesTapped">
-            <iron-icon icon="info" slot="item-icon"></iron-icon>Show Licenses
-          </paper-icon-item>
-        </paper-listbox>
       </app-drawer>
-
-      <app-toolbar class='toolbar'>
-        <paper-icon-button icon="menu" on-tap="toggleSettingsDrawer"></paper-icon-button>
-        <div main-title><img src="images/outline-manager-logo.svg"></div>
-      </app-toolbar>
-
-      <iron-pages attr-for-selected='id' selected='{{ currentPage }}'>
-        <outline-intro-step id='intro'></outline-intro-step>
-        <outline-do-oauth-step id='digitalOceanOauth'></outline-do-oauth-step>
-        <outline-manual-server-entry id='manualEntry'></outline-manual-server-entry>
-        <outline-region-picker-step id='regionPicker'></outline-region-picker-step>
-        <outline-server-progress-step id='serverProgressStep'></outline-server-progress-step>
-        <outline-server-view id='serverView'></outline-server-view>
-      </iron-pages>
 
       <paper-toast id='toast'><paper-icon-button icon='icons:close' on-tap='closeError'></paper-icon-button></paper-toast>
 
+      <!-- Modal dialogs must be outside the app container; otherwise the backdrop covers them.  -->
       <outline-feedback-dialog id='feedbackDialog'></outline-feedback-dialog>
       <outline-about-dialog id='aboutDialog' outline-version='[[outlineVersion]]'></outline-about-dialog>
       <outline-modal-dialog id='modalDialog'></outline-modal-dialog>
+      <outline-share-dialog id="shareDialog"></outline-share-dialog>
+      <outline-metrics-option-dialog id="metricsDialog"></outline-metrics-option-dialog>
       <outline-confirm-invite-dialog id='confirmInviteDialog'></outline-about-dialog>
 
-      <paper-dialog id="licenses" restoreFocusOnClose>
+      <paper-dialog id="getConnectedDialog" modal>
+        <!-- iframe gets inserted here once we are given the invite URL. -->
+        <div class="buttons">
+          <paper-button on-tap="closeGetConnectedDialog" autofocus>Close</paper-button>
+        </div>
+      </paper-dialog>
+
+      <paper-dialog id="licenses" modal restoreFocusOnClose>
         <paper-dialog-scrollable>
           <code id="licensesText">
             Could not load license.txt.
@@ -190,6 +428,7 @@
           <paper-button dialog-dismiss autofocus>Close</paper-button>
         </div>
       </paper-dialog>
+
     </div>
   </template>
   <script>
@@ -197,13 +436,25 @@
     Polymer({
       is: 'app-root',
       properties: {
+        serverList: {
+          type: Array,
+          value: [],
+        },
+        selectedServer: {
+          type: Object, // DisplayServer in display_server.ts
+          value: undefined,
+        },
+        hasManualServers: {
+          type: Boolean,
+          computed: '_computeHasManualServers(serverList.*)',
+        },
         adminEmail: {
           type: String,
           value: ''
         },
-        isSignedIn: {
+        isSignedInToDigitalOcean: {
           type: Boolean,
-          computed: '_isSignedIn(adminEmail)'
+          computed: '_computeIsSignedInToDigitalOcean(adminEmail)'
         },
         outlineVersion: String,
         userAcceptedTos: {
@@ -218,7 +469,15 @@
         currentPage: {
           type: String,
           value: 'intro'
-        }
+        },
+        shouldShowSideBar: {
+          type: Boolean,
+          value: false
+        },
+        sideBarMarginClass: {
+          type: String,
+          computed: '_computeSideBarMarginClass(shouldShowSideBar)'
+        },
       },
       listeners: {
         'RegionSelected': 'handleRegionSelected',
@@ -229,6 +488,8 @@
         'ManualServerEntryCancelled': 'handleManualCancelled'
       },
       showIntro: function () {
+        this.maybeCloseDrawer();
+        this.selectedServer = undefined;
         this.currentPage = 'intro';
       },
       getDigitalOceanOauthFlow: function (onCancel) {
@@ -261,11 +522,14 @@
       },
       showServerView: function () {
         this.$.serverProgressStep.stop();
-        this.$.serverView.initHelpBubbles();
         this.currentPage = 'serverView';
       },
-      getServerView: function() {
-        return this.$.serverView;
+      getServerView: function(displayServerId) {
+        if (!displayServerId) {
+          return null;
+        }
+        const selectedServerId = this._base64Encode(displayServerId);
+        return this.$.serverView.querySelector(`#serverView-${selectedServerId}`);
       },
       handleRegionSelected: function (e) {
         this.fire('SetUpServerRequested', {
@@ -316,8 +580,8 @@
       // the user chose to retry the failing operation.
       showConnectivityDialog: function (cb) {
         const dialogTitle = 'Connection problem';
-        const dialogText = 'We\'re having trouble connecting with your DigitalOcean account. This is often a temporary problem with DigitalOcean or with your internet connection. In some cases, logging into DigitalOcean again will fix the problem.';
-        this.showModalDialog(dialogTitle, dialogText, ['login', 'retry'])
+        const dialogText = 'We\'re having trouble connecting to your DigitalOcean account. This is sometimes a temporary problem with DigitalOcean or with your internet connection. If retrying doesn\`t work, logging into DigitalOcean again should fix the problem.';
+        this.showModalDialog(dialogTitle, dialogText, ['cancel', 'retry'])
         .then((clickedButtonIndex) => {
           cb(clickedButtonIndex === 1);  // pass true if user clicked retry
         });
@@ -333,8 +597,21 @@
       openConfirmInviteDialog: function(config) {
         this.$.confirmInviteDialog.open(config);
       },
-      _isSignedIn: function (adminEmail) {
+      showManualServerError: function (errorTitle, errorText) {
+        this.showModalDialog(errorTitle, errorText, ['cancel', 'retry'])
+            .then((clickedButtonIndex) => {
+              if (clickedButtonIndex == 1) {
+                this.$.manualEntry.retryTapped();
+              } else {
+                this.$.manualEntry.cancelTapped();
+              }
+            });
+      },
+      _computeIsSignedInToDigitalOcean: function (adminEmail) {
         return Boolean(adminEmail);
+      },
+      _computeHasManualServers: function(serverList) {
+        return this.serverList.filter(server => !server.isManaged).length > 0;
       },
       _userAcceptedTosChanged: function(userAcceptedTos) {
         if (userAcceptedTos) {
@@ -345,11 +622,25 @@
         // TREV: this totally messes up modal dialogs at launch
         return true;
       },
-      toggleSettingsDrawer: function() {
-        this.$.settingsDrawer.toggle();
+      _toggleAppDrawer: function() {
+        const drawerNarrow = this.$.drawerLayout.narrow;
+        const forceNarrow = this.$.drawerLayout.forceNarrow;
+        if (drawerNarrow) {
+          if (forceNarrow) {
+            // The window width is below the responsive threshold. Do not force narrow mode.
+            this.$.drawerLayout.forceNarrow = false;
+          }
+          this.$.appDrawer.toggle();
+        } else {
+          // Forcing narrow mode when the window width is above the responsive threshold effectively
+          // collapses the drawer. Conversely, reverting force narrow expands the drawer.
+          this.$.drawerLayout.forceNarrow = !forceNarrow;
+        }
       },
-      closeSettingsDrawer: function() {
-        this.$.settingsDrawer.close();
+      maybeCloseDrawer: function() {
+        if (this.$.drawerLayout.narrow || this.$.drawerLayout.forceNarrow) {
+          this.$.appDrawer.close();
+        }
       },
       submitFeedbackTapped: function () {
         this.$.feedbackDialog.open();
@@ -358,11 +649,38 @@
         this.$.aboutDialog.open();
       },
       signOutTapped: function() {
-        this.closeSettingsDrawer();
         this.fire('SignOutRequested');
       },
       openManualInstallFeedback: function(prepopulatedMessage) {
         this.$.feedbackDialog.open(prepopulatedMessage, true);
+      },
+      openShareDialog: function(accessKey, s3Url) {
+        this.$.shareDialog.open(accessKey, s3Url);
+      },
+      openGetConnectedDialog: function(inviteUrl) {
+        const dialog = this.$.getConnectedDialog;
+        if (dialog.children.length > 1) {
+          return;  // The iframe is already loading.
+        }
+        // Reset the iframe's state, by replacing it with a newly constructed
+        // iframe. Unfortunately the location.reload API does not work in our case due to
+        // this Chrome error:
+        // "Blocked a frame with origin "outline://web_app" from accessing a cross-origin frame."
+        const iframe = document.createElement('iframe');
+        iframe.onload = function() {
+          dialog.open();
+        };
+        iframe.src = inviteUrl;
+        dialog.insertBefore(iframe, dialog.children[0]);
+      },
+      closeGetConnectedDialog: function() {
+        const dialog = this.$.getConnectedDialog;
+        dialog.close();
+        const oldIframe = dialog.children[0];
+        dialog.removeChild(oldIframe);
+      },
+      showMetricsDialogForNewServer: function() {
+        this.$.metricsDialog.showMetricsOptInDialog();
       },
       // Returns a Promise which fulfills with the index of the button clicked.
       showModalDialog: function(title, text, buttons) {
@@ -372,7 +690,6 @@
         return this.$.modalDialog.close();
       },
       showLicensesTapped: function () {
-        this.closeSettingsDrawer();
         var xhr = new XMLHttpRequest();
         xhr.onload = () => {
           this.$.licensesText.innerText = xhr.responseText;
@@ -383,7 +700,62 @@
         };
         xhr.open('GET', '/ui_components/licenses/licenses.txt', true);
         xhr.send();
-      }
+      },
+      _computeShouldShowSideBar: function() {
+        const drawerNarrow = this.$.drawerLayout.narrow;
+        const drawerOpened = this.$.appDrawer.opened;
+        if (drawerOpened && drawerNarrow) {
+          this.shouldShowSideBar = false;
+        } else {
+          this.shouldShowSideBar = drawerNarrow;
+        }
+      },
+      _computeSideBarMarginClass: function(shouldShowSideBar) {
+        return shouldShowSideBar ? 'side-bar-margin' : '';
+      },
+      _isServerManaged: function(server) {
+        return server.isManaged;
+      },
+      _isServerManual: function(server) {
+        return !server.isManaged;
+      },
+      _sortServersByName: function(a, b) {
+        const aName = a.name.toUpperCase();
+        const bName = b.name.toUpperCase();
+        if (aName < bName) {
+          return -1;
+        } else if (aName > bName) {
+          return 1;
+        }
+        return 0;
+      },
+      _computeServerClass: function(selectedServer, server) {
+        if (this._isServerSelected(selectedServer, server)) {
+          return 'selected';
+        }
+        return server.isSynced ? '' : 'syncing';
+      },
+      // TODO(alalama): get syncing icon from @ohnocassio.
+      _computeServerImage: function(selectedServer, server) {
+        if (this._isServerSelected(selectedServer, server)) {
+          return 'server-icon-selected.png';
+        }
+        return server.isSynced ? 'server-icon.png' : 'server-syncing.png';
+      },
+      _isServerSelected: function(selectedServer, server) {
+        return !!selectedServer && selectedServer.id === server.id;
+      },
+      _showServer: function(event) {
+        const server = event.model.server;
+        this.fire('ShowServerRequested', {displayServerId: server.id });
+        this.maybeCloseDrawer();
+      },
+      // Wrapper to encode a string in base64. This is necessary to set the server view IDs to
+      // the display server IDs, which are URLs, so they can be used with selector methods. The IDs
+      // are never decoded.
+      _base64Encode: function(s) {
+        return btoa(s).replace(/=/g, '');
+      },
     });
   </script>
 </dom-module>

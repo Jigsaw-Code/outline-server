@@ -35,7 +35,7 @@ describe('PortProvider', () => {
       ports.addReservedPort(8080);
     });
   });
-  describe('reserverFirstFreePort', () => {
+  describe('reserveFirstFreePort', () => {
     it('returns free port', async () => {
       const ports = new get_port.PortProvider();
       const server = await listen();

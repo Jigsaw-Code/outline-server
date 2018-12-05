@@ -18,18 +18,23 @@ import * as server from '../model/server';
 import {ShadowboxServer} from './shadowbox_server';
 
 class ManualServer extends ShadowboxServer implements server.ManualServer {
-  constructor(config: server.ManualServerConfig, private forgetCallback: Function) {
+  constructor(
+      private manualServerConfig: server.ManualServerConfig, private forgetCallback: Function) {
     super();
-    this.setManagementApiUrl(config.apiUrl);
-    // config.certSha256 is expected to be in hex format (install script).
+    this.setManagementApiUrl(manualServerConfig.apiUrl);
+    // manualServerConfig.certSha256 is expected to be in hex format (install script).
     // Electron requires that this be decoded from hex (to unprintable binary),
     // then encoded as base64.
     try {
-      whitelistCertificate(btoa(hexToString(config.certSha256)));
+      whitelistCertificate(btoa(hexToString(manualServerConfig.certSha256)));
     } catch (e) {
       // Error whitelisting certificate, may be due to bad user input.
       console.error('Error whitelisting certificate');
     }
+  }
+
+  getCertificateFingerprint() {
+    return this.manualServerConfig.certSha256;
   }
 
   forget(): void {
@@ -38,35 +43,66 @@ class ManualServer extends ShadowboxServer implements server.ManualServer {
 }
 
 export class ManualServerRepository implements server.ManualServerRepository {
-  constructor(private storageKey: string) {}
+  private servers: server.ManualServer[] = [];
+
+  constructor(private storageKey: string) {
+    this.loadServers();
+  }
 
   addServer(config: server.ManualServerConfig): Promise<server.ManualServer> {
-    const server = new ManualServer(config, this.forgetServer.bind(this));
-    // Write to storage as an array, so we can easily extend this once we support
-    // multiple servers.
-    localStorage.setItem(this.storageKey, JSON.stringify([config]));
+    const existingServer = this.findServer(config);
+    if (!!existingServer) {
+      console.debug('server already added');
+      return Promise.resolve(existingServer);
+    }
+    const server = this.createServer(config);
+    this.servers.push(server);
+    this.storeServers();
     return Promise.resolve(server);
   }
 
   listServers(): Promise<server.ManualServer[]> {
+    return Promise.resolve(this.servers);
+  }
+
+  findServer(config: server.ManualServerConfig): server.ManualServer|undefined {
+    return this.servers.find(server => server.getManagementApiUrl() === config.apiUrl);
+  }
+
+  private loadServers() {
+    this.servers = [];
     const serversJson = localStorage.getItem(this.storageKey);
     if (serversJson) {
       try {
-        const serversData = JSON.parse(serversJson);
-        const manualServers = serversData.map((config: server.ManualServerConfig) => {
-          return new ManualServer(config, this.forgetServer.bind(this));
+        const serverConfigs = JSON.parse(serversJson);
+        this.servers = serverConfigs.map((config: server.ManualServerConfig) => {
+          return this.createServer(config);
         });
-        return Promise.resolve(manualServers);
       } catch (e) {
         console.error('Error creating manual servers from localStorage');
       }
     }
-    return Promise.resolve([]);
   }
 
-  private forgetServer(): void {
-    // TODO(dborkan): extend this code to find a specific server for deleting,
-    // once we support multiple servers.
-    localStorage.removeItem(this.storageKey);
+  private storeServers() {
+    const serverConfigs: server.ManualServerConfig[] = this.servers.map((server) => {
+      return {apiUrl: server.getManagementApiUrl(), certSha256: server.getCertificateFingerprint()};
+    });
+    localStorage.setItem(this.storageKey, JSON.stringify(serverConfigs));
+  }
+
+  private createServer(config: server.ManualServerConfig) {
+    const server = new ManualServer(config, () => {
+      this.forgetServer(server);
+    });
+    return server;
+  }
+
+  private forgetServer(serverToForget: server.ManualServer): void {
+    const apiUrl = serverToForget.getManagementApiUrl();
+    this.servers = this.servers.filter((server) => {
+      return apiUrl !== server.getManagementApiUrl();
+    });
+    this.storeServers();
   }
 }
