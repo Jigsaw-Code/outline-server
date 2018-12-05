@@ -151,9 +151,6 @@ export class App {
             if (e instanceof errors.UnreachableServerError) {
               const errorTitle = 'Unable to connect to your Outline Server';
               this.appRoot.showManualServerError(errorTitle, e.message);
-              // TOTAL HACK FOR DEMO
-              this.appRoot.showToast(
-                  'Unable to connect to your Outline server. Please check its firewall configuration.');
             } else {
               let errorMessage = '';
               if (e.message) {
