@@ -147,7 +147,7 @@
           font-size: 12px;
         }
       }
-      .transfer-stats .stats {
+      .transfer-stats .stats, .transfer-stats .stats p {
         color: var(--primary-green);
       }
       .stats-card p, .stats-card iron-icon {
@@ -390,14 +390,15 @@
                 <h3>[[managedServerUtilzationPercentage]]</h3>
                 <p>/[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]</p>
               </div>
-              <p>Utilization / 30 days</p>
+              <p>Data used / 30 days</p>
             </div>
             <div class="stats-card card-section">
               <iron-icon icon="outline-iconset:key"></iron-icon>
               <div class="stats">
                 <h3>[[accessKeyRows.length]]</h3>
+                <p>Keys</p>
               </div>
-              <p>Access keys</p>
+              <p>Server access</p>
             </div>
           </div>
 
