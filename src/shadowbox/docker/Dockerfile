@@ -12,19 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1-alpine as outline-ss-server
-RUN apk add --no-cache git
-RUN go get github.com/Jigsaw-Code/outline-ss-server
-
 # See versions at https://hub.docker.com/_/node/
 FROM node:8.11.3-alpine
 
-# Versions can be found at https://github.com/shadowsocks/shadowsocks-libev/releases
-ARG SS_VERSION=3.2.0
+# Versions can be found at https://github.com/Jigsaw-Code/outline-ss-server/releases
+ARG SS_VERSION=1.0.0
 
 # Save metadata on the software versions we are using.
 LABEL shadowbox.node_version=8.11.3
-LABEL shadowbox.shadowsocks_version="${SS_VERSION}"
+LABEL shadowbox.outline-ss-server_version="${SS_VERSION}"
 
 ARG GITHUB_RELEASE
 LABEL shadowbox.github.release="${GITHUB_RELEASE}"
@@ -37,12 +33,12 @@ COPY src/shadowbox/scripts/update_mmdb.sh /etc/periodic/weekly/update_mmdb
 # TODO: remove the ACL file, used to prevent access to localhost and LAN, when migrating to shadowsocks-go.
 COPY src/shadowbox/shadowbox.acl /root/shadowbox/shadowsocks.acl
 
-RUN sh ./scripts/install_shadowsocks.sh $SS_VERSION
+RUN sh ./scripts/install_shadowsocks.sh 3.2.0
 RUN /etc/periodic/weekly/update_mmdb
 
 WORKDIR /root/shadowbox
 
-COPY --from=outline-ss-server /go/bin/outline-ss-server ./bin/
+RUN mkdir bin && curl -SsL https://github.com/Jigsaw-Code/outline-ss-server/releases/download/v${SS_VERSION}/outline-ss-server_${SS_VERSION}_linux_x86_64.tar.gz | tar xz -C bin outline-ss-server
 COPY third_party/prometheus/prometheus ./bin/
 COPY src/shadowbox/package.json .
 COPY yarn.lock .
