@@ -7,7 +7,10 @@ The Outline Metrics Server is built using [Google Cloud Functions](https://cloud
 * Node 6.11.1 or greater (for testing via Cloud Functions Emulator)
 
 ## Building
-Run `yarn do metrics_server/build`
+
+```sh
+yarn do metrics_server/build
+```
 
 ## Deploying
 You must have access to the project `uproxysite`.
@@ -18,34 +21,45 @@ To deploy:
   * to deploy to test: `yarn do metrics_server/deploy_test`
   * to deploy to prod: `yarn do metrics_server/deploy_prod`
 
-## Testing with the Cloud Functions Emulator
-You can test with the Google Cloud Functions Emulator by running `yarn do metrics_server/test <test_data>`, e.g.:
-```
-yarn do metrics_server/test '{"serverId":"12345","startUtcMs":1502486354823,"endUtcMs":1502499314823,"userReports":[{"userId":"1","bytesTransferred":60,"countries":["US","NL"]},{"userId":"2","bytesTransferred":100,"countries":["UK"]}]}'
-```
+## Testing
 
-## Testing with Node
-You can test the metrics server code using Node:
+We can test the function locally with the [Cloud Functions Emulator](https://cloud.google.com/functions/docs/emulator).
 
-`cd build/metrics_server`
+**Note: The emulator is not actively maintained is very temperamental!**
 
-run `node`, then you can test the post_server_report module as follows:
-```
-post_server_report = require('./post_server_report.js');
+### Requirements
 
-serverReport = {
-  serverId: "123",
-  startUtcMs: 1502486354823,
-  endUtcMs: 1502499314823,
-  userReports: [
-    {userId: "1", bytesTransferred: 60, countries: ["US", "NL"]},
-    {userId: "2", bytesTransferred: 100, countries: ["CN"]}
-  ]
-}
+Because the emulator requires Node.js 6.x we have not added it to our `package.json`:
+* Assuming you use [NVM](https://github.com/creationix/nvm), install and switch (temporarily) to Node.js 6.x:
+  ```sh
+  nvm install 6
+  ```
+* Install the emulator globally:
+  ```sh
+  yarn global add @google-cloud/functions-emulator
+  ```
 
-post_server_report.postServerReport('uproxy_metrics_test', 'connections_v1', serverReport)
-  .then(() => { console.log('success') })
-  .catch((e) => { console.error('failure: ' + e) })
-```
+### Test
 
-You can then view this inserted data at https://bigquery.cloud.google.com/table/uproxysite:uproxy_metrics_test.connections_v1
+* Sample command:
+  ```
+  export TIMESTAMP=$(date +%s%3N)
+  yarn do metrics_server/test '{"serverId":"12345","startUtcMs":'$TIMESTAMP',"endUtcMs":'$(($TIMESTAMP+1))',"userReports":[{"userId":"1","bytesTransferred":60,"countries":["US","NL"]},{"userId":"2","bytesTransferred":100,"countries":["UK"]}]}'
+  ```
+* You can then view this inserted data at https://bigquery.cloud.google.com/table/uproxysite:uproxy_metrics_test.connections_v1, e.g.:
+  ```sql
+  SELECT * FROM [uproxysite:uproxy_metrics_test.connections_v1] ORDER BY endTimestamp DESC LIMIT 10;
+  ```
+
+**Note: The emulator ignores the response code: if the function returns 400 or 500, the command will appear to run successfully!**
+
+### Troubleshooting
+
+* If you run into errors like `could not load the default credentials`, try this command:
+  ```sh
+  gcloud auth application-default login
+  ```
+* Many errors can be "fixed" by clearing the emulator's config, e.g.:
+  * `functions clear`
+  * kill any running server, e.g. `pkill -f functions`
+  * clear `~/.config/configstore/@google-cloud`
