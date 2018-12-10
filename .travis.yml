@@ -19,7 +19,9 @@ stages:
   - name: tag
     if: type = cron
   - build and unit test
+    if: type != cron
   - integration test
+    if: type != cron
   - name: deploy
     if: tag =~ ^daily
   - name: release
@@ -30,15 +32,10 @@ stages:
 # doing, we add a descriptive environment variable.
 jobs:
   include:
-    # Because this stage's only function is to trigger a subsequent, full-blown release build, we
-    # make it terminate the entire build after tagging. Without exiting, it would (wastefully)
-    # build and run tests - using travis_terminate here avoids significantly complicating the
-    # stages: section, above.
     - stage: tag
       script:
         - RELEASE_NAME=daily-$(date -I)
         - curl --data '{"tag_name":"'$RELEASE_NAME'","name":"'$RELEASE_NAME'","prerelease":true}' https://api.github.com/repos/Jigsaw-Code/outline-server/releases?access_token=$CI_USER_TOKEN
-        - travis_terminate 0
 
     # Ideally, we would split this stage in some way, e.g. by component or by
     # build/test commands, to make it clearer in the Travis UI exactly which
