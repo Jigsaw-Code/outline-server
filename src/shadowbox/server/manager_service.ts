@@ -111,7 +111,7 @@ export class ShadowsocksManagerService {
 
   // Lists all access keys
   public listAccessKeys(req: RequestType, res: ResponseType, next: restify.Next): void {
-    logging.debug(`listAccessKeys request ${req.params}`);
+    logging.debug(`listAccessKeys request ${JSON.stringify(req.params)}`);
     const response = {accessKeys: [], users: []};
     for (const accessKey of this.accessKeys.listAccessKeys()) {
       response.accessKeys.push(accessKeyToJson(accessKey));
@@ -124,7 +124,7 @@ export class ShadowsocksManagerService {
   // Creates a new access key
   public createNewAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
     try {
-      logging.debug(`createNewAccessKey request ${req.params}`);
+      logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
       this.accessKeys.createNewAccessKey().then((accessKey) => {
         const accessKeyJson = accessKeyToJson(accessKey);
         res.send(201, accessKeyJson);
@@ -139,7 +139,7 @@ export class ShadowsocksManagerService {
   // Removes an existing access key
   public removeAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
     try {
-      logging.debug(`removeAccessKey request ${req.params}`);
+      logging.debug(`removeAccessKey request ${JSON.stringify(req.params)}`);
       const accessKeyId = req.params.id;
       if (!this.accessKeys.removeAccessKey(accessKeyId)) {
         return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
@@ -154,7 +154,7 @@ export class ShadowsocksManagerService {
 
   public renameAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
     try {
-      logging.debug(`renameAccessKey request ${req.params}`);
+      logging.debug(`renameAccessKey request ${JSON.stringify(req.params)}`);
       const accessKeyId = req.params.id;
       if (!this.accessKeys.renameAccessKey(accessKeyId, req.params.name)) {
         return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
