@@ -109,7 +109,7 @@ function verify_docker_installed() {
 
 function verify_docker_running() {
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$($DOCKER_CMD info 2>&1 >/dev/null)
+  STDERR_OUTPUT=$(docker info 2>&1 >/dev/null)
   local readonly RET=$?
   if [[ $RET -eq 0 ]]; then
     return 0
@@ -118,60 +118,17 @@ function verify_docker_running() {
   fi
 }
 
-function verify_docker_permissions() {
-  if user_in_docker_group; then
-    return 0
-  fi
-  log_error "FAILED"
-  local readonly PROMPT="> It seems like you may not have permission to run Docker. To solve this, we will attempt to add your user to the docker group by running 'sudo usermod -a -G docker $USER'. Would you like to proceed? [Y/n] "
-  if ! confirm "$PROMPT"; then
-    exit 0
-  fi
-  if run_step "Adding $USER to docker group" add_user_to_docker_group; then
-    echo -n "> Docker ready................................. "
-  else
-    log_error "FAILED"
-    return 1
-  fi
-}
-
 function install_docker() {
   curl -sS https://get.docker.com/ | sh > /dev/null 2>&1
 }
 
-function user_in_docker_group() {
-  # Assume root has docker access; test with $UID because it's one of the few
-  # environment variables available in DigitalOcean's CloudInit environment.
-  if [[ $UID -ne 0 ]]; then
-    groups $USER | grep -E '(^|\s)docker(\s|$)' > /dev/null 2>&1
-  fi
-}
-
-function add_user_to_docker_group() {
-  sudo usermod -a -G docker $USER
-}
-
 function start_docker() {
-  sudo systemctl start docker.service > /dev/null 2>&1
-  sudo systemctl enable docker.service > /dev/null 2>&1
+  systemctl start docker.service > /dev/null 2>&1
+  systemctl enable docker.service > /dev/null 2>&1
 }
-
-# If not running as root then run docker with sg to ensure the command has
-# membership of the docker group, membership of which may only have been
-# acquired during the session. Otherwise, don't do anything fancy with
-# positional parameters because they're a nightmare to get right with
-# subshells in both regular and the DigitalOcean CloudInit environment.
-# See also comments for user_in_docker_group.
-DOCKER_CMD=docker
-if [[ $UID -ne 0 ]]; then
-  function safe_docker() {
-    sg docker -c "docker $*"
-  }
-  DOCKER_CMD=safe_docker
-fi
 
 function docker_container_exists() {
-  $DOCKER_CMD ps | grep $1 >/dev/null 2>&1
+  docker ps | grep $1 >/dev/null 2>&1
 }
 
 function remove_shadowbox_container() {
@@ -183,7 +140,7 @@ function remove_watchtower_container() {
 }
 
 function remove_docker_container() {
-  $DOCKER_CMD rm -f $1
+  docker rm -f $1 > /dev/null
 }
 
 function handle_docker_container_conflict() {
@@ -229,7 +186,8 @@ function get_random_port {
 
 function create_persisted_state_dir() {
   readonly STATE_DIR="$SHADOWBOX_DIR/persisted-state"
-  mkdir -p "${STATE_DIR}"
+  mkdir -p --mode=770 "${STATE_DIR}"
+  chmod g+s "${STATE_DIR}"
 }
 
 # Generate a secret key for access to the shadowbox API and store it in a tag.
@@ -286,7 +244,7 @@ function start_shadowbox() {
   )
   # By itself, local messes up the return code.
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$($DOCKER_CMD run -d "${docker_shadowbox_flags[@]}" ${SB_IMAGE} 2>&1 >/dev/null)
+  STDERR_OUTPUT=$(docker run -d "${docker_shadowbox_flags[@]}" ${SB_IMAGE} 2>&1 >/dev/null)
   local readonly RET=$?
   if [[ $RET -eq 0 ]]; then
     return 0
@@ -309,7 +267,7 @@ function start_watchtower() {
   docker_watchtower_flags+=(-v /var/run/docker.sock:/var/run/docker.sock)
   # By itself, local messes up the return code.
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$($DOCKER_CMD run -d "${docker_watchtower_flags[@]}" v2tec/watchtower --cleanup --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS 2>&1 >/dev/null)
+  STDERR_OUTPUT=$(docker run -d "${docker_watchtower_flags[@]}" v2tec/watchtower --cleanup --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS 2>&1 >/dev/null)
   local readonly RET=$?
   if [[ $RET -eq 0 ]]; then
     return 0
@@ -343,16 +301,18 @@ function add_api_url_to_config() {
 }
 
 function check_firewall() {
-  local readonly GET_ACCESS_KEYS=$(curl --insecure -s ${LOCAL_API_URL}/access-keys)
-  local readonly GET_ACCESS_KEY_PORT="$DOCKER_CMD exec shadowbox node -e 'console.log($GET_ACCESS_KEYS[\"accessKeys\"][0][\"port\"])'"	
-  local -r ACCESS_KEY_PORT=$($GET_ACCESS_KEY_PORT)
+  local readonly ACCESS_KEY_PORT=$(curl --insecure -s ${LOCAL_API_URL}/access-keys | 
+      docker exec -i shadowbox node -e '
+          const fs = require("fs");
+          const accessKeys = JSON.parse(fs.readFileSync(0, {encoding: "utf-8"}));
+          console.log(accessKeys["accessKeys"][0]["port"]);
+      ')
   if ! curl --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" -s "${PUBLIC_API_URL}/access-keys" >/dev/null; then
      log_error "BLOCKED"
      FIREWALL_STATUS="\
 You won’t be able to access it externally, despite your server being correctly
 set up, because there's a firewall (in this machine, your router or cloud
-provider) that is preventing incoming connections to ports ${SB_API_PORT} and
-${ACCESS_KEY_PORT}.
+provider) that is preventing incoming connections to ports ${SB_API_PORT} and ${ACCESS_KEY_PORT}.
 
 - If you plan to have a single access key to access your server, opening those
   ports for TCP and UDP should suffice.
@@ -376,13 +336,16 @@ blocks inbound connections, even though your machine seems to allow them.
 }
 
 install_shadowbox() {
+  # Make sure we don't leak readable files to other users.
+  umask 0007
+
   run_step "Verifying that Docker is installed" verify_docker_installed
-  run_step "Verifying Docker permissions" verify_docker_permissions
   run_step "Verifying that Docker daemon is running" verify_docker_running
 
-  log_for_sentry "Creating shadowbox directory"
-  export SHADOWBOX_DIR="${SHADOWBOX_DIR:-${HOME:-/root}/shadowbox}"
-  mkdir -p $SHADOWBOX_DIR
+  log_for_sentry "Creating Outline directory"
+  export SHADOWBOX_DIR="${SHADOWBOX_DIR:-/opt/outline}"
+  mkdir -p --mode=770 $SHADOWBOX_DIR
+  chmod u+s $SHADOWBOX_DIR
 
   log_for_sentry "Setting API port"
   readonly SB_API_PORT="${SB_API_PORT:-$(get_random_port)}"

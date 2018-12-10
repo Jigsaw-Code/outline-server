@@ -12,13 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// TODO(dborkan): request-lite should be the same type as defined in the
-// @types/request module.  We should re-use those typings if possible, or just
-// use another lightweight request module with it's own @type supplied.
-declare module 'request-lite' {
-  // tslint:disable-next-line:no-any
-  function request(
-      url: string, callback: (error: Error, response: any, body: string) => void): void;
-  namespace request {}
-  export = request;
+// Typings for:
+// https://www.npmjs.com/package/jsonic
+
+declare module 'jsonic' {
+  function parse(s: string): Object;
+  namespace parse {}
+  export = parse;
 }

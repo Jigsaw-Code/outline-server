@@ -28,81 +28,70 @@
         --manual-server-green: #00BFA5;
         --aws-orange: #FF9900;
         --gcp-blue: #4285F4;
+        --do-blue: #1565C0;
       }
       .container {
         display: flex;
         flex-flow: row wrap;
-        padding: 12px;
+        padding: 12px 0;
       }
       .card {
+        background-color: var(--background-contrast-color);
         display: flex;
         flex-direction: column;
+        flex: 1 0 40%;
         justify-content: space-between;
-        padding: 12px 0 0;
-        margin: 6px;
-        height: 324px;
-        width: 47.5%;
+        padding: 24px 24px 12px 24px;
+        margin: 12px 12px 0 0;
+        height: 320px;
         text-align: left;
-        color: rgba(0,0,0,0.87);
+        color: var(--medium-gray);
         font-weight: normal;
         border-radius: 2px;
         /* For shadows and hover/click colours. */
         transition: 135ms;
         /* Whole card is clickable. */
         cursor: pointer;
-      }
-
-      .card#digital-ocean {
-        color: rgba(255, 255, 255, 0.87);
-      }
-
-      /* Card shadows (common to all cards).` */
-      .card {
         box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.02), 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
       }
+      /* Card shadows (common to all cards).` */
       .card:hover {
         box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.20), 0 4px 5px 0 rgba(0, 0, 0, 0.10), 0 1px 10px 0 rgba(0, 0, 0, 0.20);
       }
       .card:active {
         box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.20), 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
       }
-
       /* DigitalOcean card background colours (gets brighter, inactive -> active). */
       .card#digital-ocean {
-        background: rgba(22, 55, 255, 100);
+        background: var(--do-blue);
       }
       .card#digital-ocean:hover {
-        background: rgba(22, 55, 255, 0.92);
+        background: rgba(28, 103, 189, 0.92);
       }
-      .card#digital-ocean:active {
-        background: rgba(22, 55, 255, 0.84);
-      }
-
       /* Non-DigitalOcean card background colours (get darker, inactive -> active). */
       .card:hover {
-        background: rgba(38, 50, 56, 0.08);
-      }
-      .card:active {
         background: rgba(38, 50, 56, 0.16);
       }
-
       .card .card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0 24px 12px;
+        margin-bottom: 24px;
+        color: var(--light-gray);
       }
       .card .card-body {
-        padding: 0 24px;
-        flex: 7; /* for spacing */
+        flex: 6; /* for spacing */
+      }
+      .card p {
+        margin: 0;
       }
       .card .tag {
         font-weight: 500;
         letter-spacing: .05em;
         font-size: 10px;
       }
-      .card#digital-ocean .tag {
-        color: rgba(255,255,255,0.87);
+      .card#digital-ocean .tag, .card#digital-ocean .email, .card p {
+        color: var(--medium-gray);
       }
       .card#manual-server .tag {
         color: var(--manual-server-green);
@@ -115,9 +104,9 @@
       }
       .card-title {
         font-size: 20px;
-        margin: 0 24px;
         line-height: 32px;
         flex: 2; /* for spacing */
+        color: var(--light-gray);
       }
       .card img {
         margin-top: 11px;
@@ -126,12 +115,7 @@
         height: 22px;
         width: 22px;
       }
-      .card p {
-        margin: 16px 0 0 0;
-        color: rgba(255, 255, 255, 0.54);
-      }
       .card .description {
-        color: rgba(0,0,0,0.87);
         letter-spacing: 0;
         line-height: 24px;
       }
@@ -144,7 +128,6 @@
       }
       .card-footer {
         height: 54px;
-        border-top: 1px solid rgba(0,0,0,0.12);
       }
       .card-footer paper-button {
         width: 100%;
@@ -152,19 +135,13 @@
         margin: 0;
         letter-spacing: 0.75px;
         background-color: inherit;
-        color: rgba(0,0,0,0.87);
-      }
-      #digital-ocean .card-footer {
-        border-top: 1px solid rgba(255,255,255,0.12);
-      }
-      #digital-ocean .card-footer paper-button {
-        color: rgba(255,255,255,0.87);
+        color: var(--light-gray);
+        border-top: 1px solid var(--border-color);
       }
       #digital-ocean .description ul {
         /* NOTE: this URL must be relative to the ui_components sub dir,
            unlike our <img src="..."> attributes */
         list-style-image: url('../images/check_white.svg');
-        color: rgba(255,255,255,0.87);
       }
       #manual-server .description ul {
         list-style-image: url('../images/check_green.svg');
@@ -175,34 +152,36 @@
       #gcp .description ul {
         list-style-image: url('../images/check_blue.svg');
       }
-      .dimmed {
-        color: rgba(255, 255, 255, 0.54);
-      }
     </style>
 
     <outline-step-view>
       <span slot="step-title">Choose a cloud service, set up Outline.</span>
-      <span slot="step-description">Don't have a server? Create an account<br/> with DigitalOcean.</span>
+      <span slot="step-description">Don't have a server? Create an account with DigitalOcean.</span>
 
       <div class="container">
         <div id="digital-ocean" class="card" on-tap="connectToDigitalOceanTapped">
           <div class="card-header">
-            <div class="tag">RECOMMENDED</div>
+            <div class="tag" hidden$="{{isSignedInToDigitalOcean}}">RECOMMENDED</div>
+            <div class="email" hidden$="{{!isSignedInToDigitalOcean}}">{{digitalOceanEmail}}</div>
             <img src="images/do_white_logo.svg">
           </div>
           <div class="card-title">DigitalOcean</div>
           <div class="card-body">
             <div class="description">
-              <ul>
+              <ul hidden$="{{isSignedInToDigitalOcean}}">
                 <li>Easiest setup process</li>
                 <li>Only $5 a month</li>
                 <li>1 TB of data transfer</li>
                 <li>Cancel at anytime</li>
               </ul>
+              <p hidden$="{{!isSignedInToDigitalOcean}}">
+                Create a new server with your DigitalOcean account for an additional $5 USD/30 days for 1TB of data transfer.
+              </p>
             </div>
           </div>
           <div class="card-footer">
-            <paper-button on-tap="connectToDigitalOceanTapped" class="primary">Get started</paper-button>
+            <paper-button class="primary" hidden$="{{isSignedInToDigitalOcean}}">Set up</paper-button>
+            <paper-button class="primary" hidden$="{{!isSignedInToDigitalOcean}}">Create server</paper-button>
           </div>
         </div>
 
@@ -222,7 +201,7 @@
             </div>
           </div>
           <div class="card-footer">
-            <paper-button on-tap="setUpGcpTapped" class="primary">Get started</paper-button>
+            <paper-button on-tap="setUpGcpTapped" class="primary">Set up</paper-button>
           </div>
         </div>
 
@@ -242,7 +221,7 @@
             </div>
           </div>
           <div class="card-footer">
-            <paper-button on-tap="setUpAwsTapped" class="primary">Get started</paper-button>
+            <paper-button on-tap="setUpAwsTapped" class="primary">Set up</paper-button>
           </div>
         </div>
 
@@ -261,7 +240,7 @@
             </div>
           </div>
           <div class="card-footer">
-            <paper-button on-tap="setUpGenericCloudProviderTapped">Get started</paper-button>
+            <paper-button on-tap="setUpGenericCloudProviderTapped">Set up</paper-button>
           </div>
         </div>
 
@@ -272,6 +251,10 @@
   <script>
     Polymer({
       is: 'outline-intro-step',
+      properties: {
+        isSignedInToDigitalOcean: Boolean,
+        digitalOceanEmail: String,
+      },
       connectToDigitalOceanTapped: function() {
         this.fire('ConnectToDigitalOcean');
       },
