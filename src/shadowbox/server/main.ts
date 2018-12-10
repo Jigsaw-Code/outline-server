@@ -21,21 +21,18 @@ import * as restify from 'restify';
 
 import {RealClock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
-import * as ip_location from '../infrastructure/ip_location';
 import * as json_config from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient, runPrometheusScraper} from '../infrastructure/prometheus_scraper';
 import {RolloutTracker} from '../infrastructure/rollout';
 import {AccessKeyId} from '../model/access_key';
-import {ShadowsocksServer} from '../model/shadowsocks_server';
 
-import {createLibevShadowsocksServer} from './libev_shadowsocks_server';
 import {LegacyManagerMetrics, LegacyManagerMetricsJson, PrometheusManagerMetrics} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
 import {OutlineShadowsocksServer} from './outline_shadowsocks_server';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
 import * as server_config from './server_config';
-import {createPrometheusUsageMetricsWriter, OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollectorClient, SharedMetricsPublisher} from './shared_metrics';
+import {OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollectorClient, SharedMetricsPublisher} from './shared_metrics';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
 const MAX_STATS_FILE_AGE_MS = 5000;
@@ -81,6 +78,7 @@ function reserveAccessKeyPorts(
   }
 }
 
+// TODO: Get rid of this after 30 days of everyone's migration to Prometheus.
 function createLegacyManagerMetrics(configFilename: string): LegacyManagerMetrics {
   const metricsConfig = readMetricsConfig(configFilename);
   return new LegacyManagerMetrics(
@@ -160,23 +158,14 @@ async function main() {
     ]
   };
 
-  const rollouts = createRolloutTracker(serverConfig);
-  let shadowsocksServer: ShadowsocksServer;
-  if (rollouts.isRolloutEnabled('outline-ss-server', 100)) {
-    const ssMetricsLocation = `localhost:${ssMetricsPort}`;
-    logging.info(`outline-ss-server metrics is at ${ssMetricsLocation}`);
-    prometheusConfigJson.scrape_configs.push(
-        {job_name: 'outline-server-ss', static_configs: [{targets: [ssMetricsLocation]}]});
-    shadowsocksServer =
-        new OutlineShadowsocksServer(
-            getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation)
-            .enableCountryMetrics(MMDB_LOCATION);
-  } else {
-    const ipLocation = new ip_location.MmdbLocationService(MMDB_LOCATION);
-    const metricsWriter = createPrometheusUsageMetricsWriter(prometheus.register);
-    shadowsocksServer = await createLibevShadowsocksServer(
-        proxyHostname, await portProvider.reserveNewPort(), ipLocation, metricsWriter, verbose);
-  }
+  const ssMetricsLocation = `localhost:${ssMetricsPort}`;
+  logging.info(`outline-ss-server metrics is at ${ssMetricsLocation}`);
+  prometheusConfigJson.scrape_configs.push(
+      {job_name: 'outline-server-ss', static_configs: [{targets: [ssMetricsLocation]}]});
+  const shadowsocksServer =
+      new OutlineShadowsocksServer(
+          getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation)
+          .enableCountryMetrics(MMDB_LOCATION);
   runPrometheusScraper(
       [
         '--storage.tsdb.retention', '31d', '--storage.tsdb.path',
