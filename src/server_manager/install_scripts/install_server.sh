@@ -89,6 +89,24 @@ function log_for_sentry() {
   fi
 }
 
+# Check to see curl is installed.
+function verify_curl_installed() {
+  if command_exists curl; then
+    return 0
+  fi
+  log_error "CURL NOT INSTALLED"
+  echo -n
+  if ! confirm "> Would you like to install Curl? This will run 'apt update && apt upgrade && apt install curl | sh'. [Y/n] "; then
+    exit 0
+  fi
+  if ! run_step "Installing Curl" install_curl; then
+    log_error "Curl installation failed."
+    exit 1
+  fi
+  echo -n "> Verifying Curl installation................ "
+  command_exists curl
+}
+
 # Check to see if docker is installed.
 function verify_docker_installed() {
   if command_exists docker; then
@@ -118,6 +136,9 @@ function verify_docker_running() {
   fi
 }
 
+function install_curl() {
+  apt update && apt upgrade && apt install curl | sh > /dev/null 2>&1
+}
 function install_docker() {
   curl -sS https://get.docker.com/ | sh > /dev/null 2>&1
 }
