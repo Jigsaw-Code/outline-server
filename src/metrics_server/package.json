@@ -9,7 +9,6 @@
     "@google-cloud/bigquery": "^0.9.6"
   },
   "devDependencies": {
-    "@google-cloud/functions-emulator": "1.0.0-alpha.23",
     "@types/express": "^4.0.36"
   }
 }
