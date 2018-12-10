@@ -13,13 +13,22 @@ yarn do metrics_server/build
 ```
 
 ## Deploying
-You must have access to the project `uproxysite`.
 
-To deploy:
-* Authenticate with gcloud: `gcloud auth login`
-* Run the deploy script:
-  * to deploy to test: `yarn do metrics_server/deploy_test`
-  * to deploy to prod: `yarn do metrics_server/deploy_prod`
+Requirements:
+* You must have access to the project `uproxysite`.
+
+* Authenticate with `gcloud`:
+  ```sh
+  gcloud auth login
+  ```
+* To deploy to test:
+  ```sh
+  yarn do metrics_server/deploy_test
+  ```
+* To deploy to prod:
+  ```sh
+  yarn do metrics_server/deploy_prod
+  ```
 
 ## Testing
 
