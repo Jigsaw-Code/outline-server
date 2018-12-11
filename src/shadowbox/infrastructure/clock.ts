@@ -15,16 +15,16 @@
 export interface Clock {
   // Returns the current time in milliseconds from the epoch.
   now(): number;
-  setInterval(callback, intervalMs): number;
+  setInterval(callback, intervalMs): void;
 }
 
 export class RealClock implements Clock {
-  now(): number {
+  now() {
     return Date.now();
   }
 
-  setInterval(callback, intervalMs): number {
-    return setInterval(callback, intervalMs);
+  setInterval(callback, intervalMs) {
+    setInterval(callback, intervalMs);
   }
 }
 
@@ -42,7 +42,6 @@ export class ManualClock implements Clock {
 
   setInterval(callback, intervalMs) {
     this.callbacks.push(callback);
-    return 0;
   }
 
   async runCallbacks() {
