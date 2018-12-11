@@ -18,9 +18,9 @@ before_install:
 stages:
   - name: tag
     if: type = cron
-  - build and unit test
+  - name: build and unit test
     if: type != cron
-  - integration test
+  - name: integration test
     if: type != cron
   - name: deploy
     if: tag =~ ^daily
