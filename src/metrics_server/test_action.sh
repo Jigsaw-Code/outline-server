@@ -19,16 +19,16 @@ if (( $# <= 0 )); then
   exit 1;
 fi
 
-readonly MODULE_DIR=$(dirname $0)
-readonly OUT_DIR=$BUILD_DIR/metrics_server/test
-readonly CONFIG_FILE=$MODULE_DIR/config_test.json
+yarn do metrics_server/build
 
-# Build the server
-$MODULE_DIR/build.sh $OUT_DIR $CONFIG_FILE
+cp src/metrics_server/config_test.json build/metrics_server/config.json
 
-# TODO(dborkan): figure out why the functions binary isn't installed at $ROOT_DIR/node_modules/.bin/
-readonly FUNCTIONS_EMULATOR=$ROOT_DIR/node_modules/@google-cloud/functions-emulator/bin/functions
+# Because of weird issues with --local-path, have "functions deploy" search in the current
+# directory instead.
+pushd build/metrics_server
+functions deploy reportHourlyConnectionMetrics --trigger-http
 
-$FUNCTIONS_EMULATOR start
-$FUNCTIONS_EMULATOR deploy reportHourlyConnectionMetrics --trigger-http --local-path=$OUT_DIR --entry-point=reportHourlyConnectionMetrics
-$FUNCTIONS_EMULATOR call reportHourlyConnectionMetrics --data=$1
+functions call reportHourlyConnectionMetrics --data=$1
+
+# Because the emulator ignores the response code, always print the logs to highlight any errors.
+functions logs read
