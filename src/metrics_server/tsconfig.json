@@ -2,21 +2,11 @@
   "compilerOptions": {
     "target": "es2016",
     "removeComments": false,
-    "noImplicitAny": true,
+    "strict": true,
     "module": "commonjs",
-    "rootDir": ".",
-    "lib": [
-      "dom",
-      "es2016"
-    ]
+    "outDir": "../../build/metrics_server"
   },
   "include": [
-    "index.ts",
-    "post_server_report.ts",
-    "types/**/*.d.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ],
-  "compileOnSave": true
+    "**/*.ts"
+  ]
 }
