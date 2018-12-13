@@ -45,6 +45,7 @@ jobs:
     - stage: build and unit test
       script:
         - yarn do metrics_server/build
+        - yarn do sentry_webhook/build
         - yarn do shadowbox/server/build
         - yarn do shadowbox/test
         - yarn do server_manager/electron_app/build
