@@ -30,8 +30,6 @@ RUN apk add --no-cache lsof curl
 
 COPY src/shadowbox/scripts scripts/
 COPY src/shadowbox/scripts/update_mmdb.sh /etc/periodic/weekly/update_mmdb
-# TODO: remove the ACL file, used to prevent access to localhost and LAN, when migrating to shadowsocks-go.
-COPY src/shadowbox/shadowbox.acl /root/shadowbox/shadowsocks.acl
 
 RUN /etc/periodic/weekly/update_mmdb
 
