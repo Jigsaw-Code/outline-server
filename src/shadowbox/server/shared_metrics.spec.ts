@@ -21,7 +21,7 @@ import {HourlyServerMetricsReportJson, KeyUsage, MetricsCollectorClient, Outline
 
 describe('OutlineSharedMetricsPublisher', () => {
   describe('Enable/Disable', () => {
-    it('Mirrors config', (done) => {
+    it('Mirrors config', () => {
       const serverConfig = new InMemoryConfig<ServerConfigJson>({});
 
       const publisher =
@@ -35,19 +35,16 @@ describe('OutlineSharedMetricsPublisher', () => {
       publisher.stopSharing();
       expect(publisher.isSharingEnabled()).toBeFalsy();
       expect(serverConfig.mostRecentWrite.metricsEnabled).toBeFalsy();
-
-      done();
     });
-    it('Reads from config', (done) => {
+    it('Reads from config', () => {
       const serverConfig = new InMemoryConfig<ServerConfigJson>({metricsEnabled: true});
       const publisher =
           new OutlineSharedMetricsPublisher(new ManualClock(), serverConfig, null, null, null);
       expect(publisher.isSharingEnabled()).toBeTruthy();
-      done();
     });
   });
   describe('Metrics Reporting', () => {
-    it('Reports metrics correctly', async (done) => {
+    it('reports metrics correctly', async () => {
       const clock = new ManualClock();
       let startTime = clock.nowMs;
       const serverConfig = new InMemoryConfig<ServerConfigJson>({serverId: 'server-id'});
@@ -96,7 +93,36 @@ describe('OutlineSharedMetricsPublisher', () => {
       });
 
       publisher.stopSharing();
-      done();
+    });
+    it('ignores sanctioned countries', async () => {
+      const clock = new ManualClock();
+      const startTime = clock.nowMs;
+      const serverConfig = new InMemoryConfig<ServerConfigJson>({serverId: 'server-id'});
+      const usageMetrics = new ManualUsageMetrics();
+      const toMetricsId = (id: AccessKeyId) => `M(${id})`;
+      const metricsCollector = new FakeMetricsCollector();
+      const publisher = new OutlineSharedMetricsPublisher(
+          clock, serverConfig, usageMetrics, toMetricsId, metricsCollector);
+
+      publisher.startSharing();
+      usageMetrics.usage = [
+        {accessKeyId: 'user-0', inboundBytes: 11, countries: ['AA', 'IR']},
+        {accessKeyId: 'user-1', inboundBytes: 22, countries: ['CC']},
+        {accessKeyId: 'user-0', inboundBytes: 33, countries: ['AA', 'DD']},
+      ];
+
+      clock.nowMs += 60 * 60 * 1000;
+      await clock.runCallbacks();
+      expect(metricsCollector.collectedReport).toEqual({
+        serverId: 'server-id',
+        startUtcMs: startTime,
+        endUtcMs: clock.nowMs,
+        userReports: [
+          {userId: 'M(user-1)', bytesTransferred: 22, countries: ['CC']},
+          {userId: 'M(user-0)', bytesTransferred: 33, countries: ['AA', 'DD']},
+        ]
+      });
+      publisher.stopSharing();
     });
   });
 });

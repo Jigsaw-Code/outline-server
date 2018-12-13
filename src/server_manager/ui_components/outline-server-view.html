@@ -16,6 +16,7 @@
 <link rel='import' href='../bower_components/polymer/polymer.html'>
 <link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
 <link rel='import' href='../bower_components/iron-icons/iron-icons.html'>
+<link rel='import' href='../bower_components/iron-pages/iron-pages.html'>
 <link rel='import' href='../bower_components/iron-icons/editor-icons.html'>
 <link rel='import' href='../bower_components/iron-icons/social-icons.html'>
 <link rel='import' href='../bower_components/paper-icon-button/paper-icon-button.html'>
@@ -23,6 +24,7 @@
 <link rel='import' href='../bower_components/paper-listbox/paper-listbox.html'>
 <link rel='import' href='../bower_components/paper-menu-button/paper-menu-button.html'>
 <link rel='import' href='../bower_components/paper-progress/paper-progress.html'>
+<link rel='import' href='../bower_components/paper-tabs/paper-tabs.html'>
 
 <link rel='import' href='./cloud-install-styles.html'>
 <link rel='import' href='./outline-iconset.html'>
@@ -37,65 +39,134 @@
   <template>
     <style include='cloud-install-styles'></style>
     <style>
-      paper-item {
+     .container {
+        display: flex;
+        flex-direction: column;
+        padding: 24px;
+        color: var(--light-gray);
+      }
+      .tabs-container {
+        display: flex;
+        flex-direction: row;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .tabs-spacer {
+        flex: 2;
+      }
+      paper-tabs {
+        flex: 1;
+        --paper-tabs-selection-bar-color: var(--primary-green);
+        --paper-tab-ink: var(--primary-green);
+        --paper-tab-content-unselected {
+          color: var(--dark-gray);
+        }
+      }
+      div[name="connections"], div[name="settings"], .access-key-list {
+        margin-top: 24px;
+      }
+      .server-header {
+        display: flex;
+        flex-direction: column;
+        margin: 24px 0;
+      }
+      .server-name {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .server-name h3 {
+        font-size: 36px;
+        font-weight: 400;
+        color: #FFFFFF;
+        flex: 11;
+        margin: 0 0 6px 0;
+      }
+      .server-location, .unreachable-server paper-button {
+        color: var(--medium-gray);
+      }
+      .unreachable-server {
+        flex-direction: column;
+        align-items: center;
+        margin-top: 24px;
+        padding: 72px 48px;
+      }
+      .unreachable-server p {
+        line-height: 22px;
+        max-width: 50ch;
+        text-align: center;
+        color: var(--medium-gray);
+      }
+      .unreachable-server .button-container {
+        padding: 24px 0;
+      }
+      .unreachable-server paper-button.try-again-btn {
+        color: var(--primary-green);
+      }
+      .server-img {
+        width: 142px;
+        height: 142px;
+        margin: 24px;
+      }
+      .stats-container {
+        display: flex;
+        flex-direction: row;
+        margin: 0 -8px;
+      }
+      .stats-card {
+        flex-direction: column;
+        flex: 1;
+        margin: 0 8px;
+      }
+      .stats {
+        margin: 30px 0 18px 0;
+        color: #FFF;
+        white-space: nowrap;
+      }
+      .stats > * {
+        font-weight: 300;
+        display: inline-block;
+        margin: 0;
+      }
+      .stats h3 {
+        font-size: 48px;
+      }
+      .stats p, .stats-card p {
+        margin: 0;
         font-size: 14px;
       }
-      paper-listbox iron-icon {
-        margin-right: 10px;
-        width: 18px;
+      @media (max-width: 938px) {
+        /* Reduce the cards' size so they fit comfortably on small displays. */
+        .stats {
+          margin-top: 24px;
+        }
+        .stats h3 {
+          font-size: 42px;
+        }
+        .stats-card p {
+          font-size: 12px;
+        }
       }
-      .card-header {
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-        background-color: #263238;
+      .transfer-stats .stats {
+        color: var(--primary-green);
       }
-      .card-header .headerContents {
-        padding: 24px 24px 0px 32px;
-        display: flex;
-        flex-flow: row nowrap;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .card-header .headerContents paper-icon-button {
-        color: rgba(255, 255, 255, 0.54);
-      }
-      .card-header paper-menu-button {
-        color: rgba(255, 255, 255, 0.54);
+      .stats-card p, .stats-card iron-icon {
+        color: var(--medium-gray);
       }
       .access-key-list {
-        display: table;
-        width: 100%;
+        flex-direction: column;
+        padding: 24px 16px 24px 30px;
       }
       .access-key-row {
         display: flex;
         align-items: center;
-        padding: 6px 12px 6px 10px;
-        padding-top: 6px;
-        padding-right: 12px;
-        padding-left: 10px;
-        padding-bottom: 6px;
-      }
-      .access-key-row .connectButton,
-      .access-key-row .shareButton {
-        height: 32px;
-        text-align: right;
-        color: rgba(0, 0, 0, 0.54);
-        cursor: pointer;
-        font-weight: 500;
-        font-size: 13px;
-        letter-spacing: normal;
-        padding-left: 24px;
-        padding-right: 24px;
-        margin: 0;
-        justify-content: flex-end;
+        justify-content: center;
+        margin: 15px 0;
       }
       .header-row {
         font-size: 12px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-        background-color: #ffffff;
-      }
-      .header-row .serverAccessKeys {
-        flex-grow: 1;
-        padding-left: 16px;
+        color: var(--medium-gray);
+        margin-bottom: 12px;
       }
       .header-row paper-button {
         color: white;
@@ -105,48 +176,64 @@
         background-color: #00bfa5;
         margin: 0px 12px 0px 96px;
         height: 36px;
-    }
-
-      .measurement {
-        /* We don't want numbers separated from their units */
-        font-size: 12px;
-        white-space: nowrap;
       }
-
-      .my-connection-row {
+      .header-row-spacer {
+        /* 24px (share icon) + 40px (overflow menu) + 8px (margin) */
+        min-width: 72px;
+      }
+      .measurement-container {
         display: flex;
+        flex: 3;
         align-items: center;
-        padding: 12px 12px 12px 10px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.07);
-        /* Shift to align Get Connected with Share buttons */
       }
-      .manager-access-key-icon {
-        width: 42px;
-        height: 42px;
-        margin: 0 18px 0px 12px;
+      .measurement-container paper-progress {
+        height: 3px;
+        max-width: 72px;
+        margin: 0 24px 0 12px;
+        --paper-progress-active-color: var(--primary-green);
       }
-      .access-key-icon {
-        width: 40px;
-        height: 33px;
-        margin: 0 16px;
-      }
-      #serverAvatar {
-        width: 100%;
-        max-width: 90px;
-        height: auto;
-        margin-right: 32px;
-      }
-      @media (max-width: 400px) {
-        #serverAvatar {
-          display: none;
+      @media (max-width: 640px) {
+        .measurement-container paper-progress {
+          width: 48px;
         }
       }
+      .measurement {
+        /* Space the usage bars evenly */
+        min-width: 7ch;
+        /* We don't want numbers separated from their units */
+        white-space: nowrap;
+        font-size: 14px;
+        color: var(--medium-gray);
+        line-height: 24px;
+      }
+      .access-key-container {
+        display: flex;
+        flex: 4;
+        align-items: center;
+      }
+      .sort-icon {
+        /* Disable click events on the sorting icons, so that the event gets propagated to the
+           parent, which defines the dataset elements needed for displaying the icon. */
+        pointer-events: none;
+      }
+      #manager-access-key-description {
+        font-size: 12px;
+        font-weight: 400;
+        margin-top: 4px;
+        color: var(--medium-gray);
+      }
+      .manager-access-key-icon.access-key-icon {
+        height: 48px;
+      }
+      .access-key-icon {
+        width: 42px;
+        height: 42px;
+        margin-right: 18px;
+      }
       .access-key-name {
-        flex-grow: 1;
-        opacity: 0.87;
-        color: #000000;
+        display: flex;
+        flex-direction: column;
         font-weight: 500;
-        width: 50px;
       }
       input.access-key-name {
         font-family: inherit;
@@ -154,21 +241,20 @@
         border-top: none;
         border-left: none;
         border-right: none;
-        border-bottom: 2px solid transparent;
+        border-bottom: 1px solid transparent;
         border-radius: 2px;
-        padding: 4px 7px;
+        padding: 4px 8px;
         position: relative;
-        margin-right: 24px;
-        /* Align with padding */
-        left: -7px;
-        background-color: #FAFAFA;  /* Match existing background color */
+        left: -8px; /* Align with padding */
+        background: var(--background-contrast-color);
+        color: var(--light-gray);
       }
       input.access-key-name::placeholder {
         opacity: inherit;
         color: inherit;
       }
       input.access-key-name:hover {
-        border-bottom-color: #e5e5e5
+        border-bottom-color: var(--border-color);
       }
       input.access-key-name:focus {
         border-bottom-color: var(--primary-green);
@@ -176,78 +262,49 @@
         outline: none;
         font-weight: normal;
       }
-      #titleWrapper {
-        flex-grow: 1;
+      .overflow-menu {
+        display: flex;
+        justify-content: flex-end;
+        padding: 0px;
+        min-width: 40px;
+        margin-left: 8px;
+        color: var(--medium-gray);
       }
-      #titleWrapper h3 {
-        margin: 0;
-        padding: 0 0 4px 0;
-        color: white;
-        font-size: 20px;
-      }
-      #titleWrapper p {
-        margin: 0;
-        padding: 0 0 6px 0;
-        color: rgba(255, 255, 255, 0.54);
-        font-weight: lighter;
-      }
-      .overflowMenu {
-        display: inline-block;
-        position: relative;
-        outline: none;
-        float: right;
-      }
-      .overflowMenu paper-item {
+      .overflow-menu paper-item {
         cursor: pointer;
+      }
+      paper-item {
+        font-size: 14px;
+      }
+      paper-listbox iron-icon {
+        margin-right: 10px;
+        width: 18px;
       }
       paper-dropdown {
         box-shadow: 0px 0px 20px #999999;
       }
-      .access-key-row paper-progress {
-        width: 50px;
-        margin: 0 12px 0 24px;
-        --paper-progress-active-color: var(--primary-green);
-        --paper-progress-container-color: #FAFAFA;
+      #addAccessKeyButton {
+        background: var(--primary-green);
+        color: #fff;
+        border-radius: 50%;
       }
-      .card-header paper-progress {
-        --paper-progress-active-color: var(--primary-green);
-        --paper-progress-container-color: #263238;
+      .actions {
+        flex: 1;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        text-align: end;
       }
-      .share-button {
-        margin-right: 15px;
-      }
-      .totalBytes {
-        color: var(--primary-green);
-        font-size: 14px;
-      }
-      #shareInstructions {
-        width: 100%;
-        text-align: center;
-      }
-      #shareInstructions img {
-        margin-top: 190px;
-        height: 20px;
-      }
-      #getConnectedDialog {
-        height: 562px;
-        background: white;
-      }
-      #getConnectedDialog iframe {
+      .connect-button, .share-button {
+        color: white;
         padding: 0;
         margin: 0;
-        width: 100%;
-        border: none;
-        border-bottom: 1px solid #ccc;
-        height: 500px;
+        height: 24px;
+        width: 24px;
       }
-      #getConnectedDialog .buttons {
-         margin-top: -5px;  /* undo spacing added after iframe */
-      }
-      #myAccessKeyDescription {
-        font-size: 12px;
-        font-weight: 400;
-        margin-top: 4px;
-        color: rgba(0,0,0,0.54);
+      .add-new-key {
+        color: var(--primary-green);
+        cursor: pointer;
       }
       outline-help-bubble {
         text-align: center;
@@ -259,7 +316,6 @@
         font-size: 16px;
         margin: 0px 0px 12px 0px;
       }
-
       outline-help-bubble paper-button {
         color: white;
       }
@@ -268,110 +324,183 @@
         height: auto;
         margin: 12px 0px 24px 0px;
       }
+      .digital-ocean-icon {
+        opacity: 0.54;
+      }
+      .flex-1 {
+        flex: 1;
+      }
     </style>
 
-    <outline-share-dialog id='shareDialog'></outline-share-dialog>
-    <outline-metrics-option-dialog id='metricsDialog'></outline-metrics-option-dialog>
-
-    <paper-dialog id='getConnectedDialog' modal>
-        <iframe src='[[getS3InviteUrl(myConnection.accessUrl)]]'></iframe>
-        <div class="buttons">
-          <paper-button on-tap="closeGetConnectedDialog" autofocus>Close</paper-button>
-        </div>
-    </paper-dialog>
-    <outline-server-settings id='serverSettings' server-id='[[serverId]]' server-hostname='[[serverHostname]]' server-management-port='[[serverManagementPort]]' server-creation-date='[[serverCreationDate]]'></outline-server-settings>
-
-    <div class='card-header'>
-      <div class='headerContents'>
-        <img id='serverAvatar' src='images/server_avatar.png'>
-        <div id='titleWrapper'>
-          <h3>{{serverName}}</h3>
-          <p>
-            <span class='totalBytes measurement'>[[_formatBytesTransferred(totalInboundBytes, '0')]]</span>
-            <span hidden$='{{!monthlyOutboundTransferBytes}}'>of [[_formatBytesTransferred(monthlyOutboundTransferBytes)]] Transfer</span>
-            <span hidden$='{{!monthlyCost}}'>, ${{monthlyCost}} US/Mo</span>
-          </p>
-        </div>
-        <paper-menu-button horizontal-align='right' class='overflowMenu' close-on-activate no-animations dynamic-align>
-          <paper-icon-button icon='more-vert' slot='dropdown-trigger'></paper-icon-button>
-          <paper-listbox slot='dropdown-content'>
-            <paper-item on-tap='showServerSettings'>
-              <iron-icon icon="outline-iconset:outline"></iron-icon>Server details
-            </paper-item>
-            <paper-item hidden$='[[!deleteEnabled]]' on-tap='deleteServer'>
-              <iron-icon icon='icons:remove-circle-outline'></iron-icon>Delete server
-            </paper-item>
-            <paper-item hidden$='[[!forgetEnabled]]' on-tap='forgetServer'>
-              <iron-icon icon='icons:remove-circle-outline'></iron-icon>Forget server
-            </paper-item>
-          </paper-listbox>
-        </paper-menu-button>
-      </div>
-      <!-- TODO: hide or modify progress bars for manual servers -->
-      <paper-progress value='[[_getTotalTransferredPercent(transferStats)]]'></paper-progress>
-    </div>
-
-    <div class='access-key-list'>
-      <!-- header row -->
-      <div class="access-key-row header-row">
-        <span class="serverAccessKeys">Server access keys</span>
-        <span>Data usage</span>
-        <paper-button on-tap='_handleAddAccessKeyPressed' id='addAccessKeyButton'>Add key</paper-button>
-      </div>
-      <!-- admin row -->
-      <div class='access-key-row my-connection-row' hidden$="{{ !myConnection }}">
-        <img class='manager-access-key-icon' src='images/manager-key-avatar.svg'>
-        <span class='access-key-name'>
-          <div>My access key</div>
-          <div id='myAccessKeyDescription'>Connect your personal devices.</div>
-        </span>
-        <span class='measurement'>[[_formatBytesTransferred(myConnection.transferredBytes, '...')]]</span>
-        <paper-progress value='[[myConnection.relativeTraffic]]'></paper-progress>
-        <paper-button class='connectButton' id='getConnectedText' on-tap='_handleConnectPressed'>GET CONNECTED</paper-button>
-      </div>
-      <!-- rows for each access key -->
-      <template is='dom-repeat' items='{{accessKeyRows}}' filter='isRegularConnection'>
-        <div class='access-key-row access-key'>
-          <img class='access-key-icon' src='images/key-avatar.svg'>
-          <input type='text' class='access-key-name'
-              placeholder='{{item.placeholderName}}'
-              value='[[item.name]]'
-              on-blur='_handleNameInputBlur'
-              on-keydown='_handleNameInputKeyDown'>
-          </input>
-          <span class='measurement'>[[_formatBytesTransferred(item.transferredBytes, '...')]]</span>
-          <paper-progress value='[[item.relativeTraffic]]'></paper-progress>
-          <paper-button class='shareButton' on-tap='_handleShareCodePressed'>Share</paper-button>
-          <paper-menu-button horizontal-align='right' class='overflowMenu' close-on-activate no-animations dynamic-align>
-            <paper-icon-button icon='more-vert' slot='dropdown-trigger'></paper-icon-button>
-            <paper-listbox slot='dropdown-content'>
-            <paper-item on-tap='_handleRenameAccessKeyPressed'>
-              <iron-icon icon='icons:create'></iron-icon>Rename
-            </paper-item>
-              <paper-item on-tap='_handleRemoveAccessKeyPressed'>
-                <iron-icon icon='icons:delete'></iron-icon>Remove
+    <div class="container">
+      <div class="server-header">
+        <div class="server-name">
+          <h3>[[serverName]]</h3>
+          <paper-menu-button horizontal-align="right" class="overflow-menu flex-1" hidden$="{{!isServerReachable}}" close-on-activate no-animations dynamic-align no-overlap>
+            <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
+            <paper-listbox slot="dropdown-content">
+              <paper-item hidden$="[[!isServerManaged]]" on-tap="destroyServer">
+                <iron-icon icon="icons:remove-circle-outline"></iron-icon>Destroy server
+              </paper-item>
+              <paper-item hidden$="[[isServerManaged]]" on-tap="removeServer">
+                <iron-icon icon="icons:remove-circle-outline"></iron-icon>Remove server
               </paper-item>
             </paper-listbox>
           </paper-menu-button>
         </div>
-      </template>
+        <div class="server-location" hidden$="{{!isServerReachable}}">[[serverLocation]]</div>
+      </div>
+      <div class="tabs-container" hidden$="{{!isServerReachable}}">
+        <div class="tabs-spacer"></div>
+        <paper-tabs selected="{{selectedTab}}" attr-for-selected="name" noink>
+          <paper-tab name="connections">Connections</paper-tab>
+          <paper-tab name="settings">Settings</paper-tab>
+        </paper-tabs>
+      </div>
+
+      <!-- Unreachable server display -->
+      <div class="card-section unreachable-server" hidden$="{{isServerReachable}}">
+        <img class="server-img" src="images/server-unreachable.png" />
+        <h3>Server unreachable</h3>
+        <p hidden$="{{isServerManaged}}">We're having issues connecting to this server. Try again or remove this server from the application.</p>
+        <p hidden$="{{!isServerManaged}}">We're having issues connecting to this server. Try again or destroy this server and the virtual host.</p>
+        <div class="button-container">
+          <paper-button on-tap="removeServer" hidden$="{{isServerManaged}}">Remove server</paper-button>
+          <paper-button on-tap="destroyServer" hidden$="{{!isServerManaged}}">Destroy server</paper-button>
+          <paper-button on-tap="retryDisplayingServer" class="try-again-btn">Try again</paper-button>
+        </div>
+      </div>
+
+      <iron-pages selected="{{selectedTab}}" attr-for-selected="name" hidden$="{{!isServerReachable}}">
+        <div name="connections">
+          <div class="stats-container">
+            <div class="stats-card transfer-stats card-section">
+              <iron-icon icon="icons:swap-horiz"></iron-icon>
+              <div class="stats">
+                <h3>[[_getFormattedTransferredValue(totalInboundBytes, '0')]]</h3>
+                <p>[[_getFormattedTransferredUnit(totalInboundBytes, 'B')]]</p>
+              </div>
+              <p>Data transferred / 30 days</p>
+            </div>
+            <div hidden$="[[!isServerManaged]]" class="stats-card card-section">
+              <div>
+                <img class="digital-ocean-icon" src="images/do_white_logo.svg"/>
+              </div>
+              <div class="stats">
+                <h3>[[managedServerUtilzationPercentage]]</h3>
+                <p>/[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]</p>
+              </div>
+              <p>Utilization / 30 days</p>
+            </div>
+            <div class="stats-card card-section">
+              <iron-icon icon="outline-iconset:key"></iron-icon>
+              <div class="stats">
+                <h3>[[accessKeyRows.length]]</h3>
+              </div>
+              <p>Access keys</p>
+            </div>
+          </div>
+
+          <div class="access-key-list card-section">
+            <!-- header row -->
+            <div class="access-key-row header-row">
+              <span class="access-key-container" on-tap="_setSortByOrToggleDirection" data-sort-by="name">
+                Access keys
+                <iron-icon class="sort-icon" icon="arrow-drop-down" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'name', -1)]]"></iron-icon>
+                <iron-icon class="sort-icon" icon="arrow-drop-up" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'name', 1)]]"></iron-icon>
+              </span>
+              <span class="measurement-container" on-tap="_setSortByOrToggleDirection" data-sort-by="usage">
+                Usage / 30 days
+                <iron-icon class="sort-icon" icon="arrow-drop-down" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'usage', -1)]]"></iron-icon>
+                <iron-icon class="sort-icon" icon="arrow-drop-up" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'usage', 1)]]"></iron-icon>
+              </span>
+              <span class="flex-1 header-row-spacer"></span>
+            </div>
+            <!-- admin row -->
+            <div class="access-key-row" id="managerRow">
+              <span class="access-key-container">
+                <img class="manager-access-key-icon access-key-icon" src="images/manager-key-avatar.svg">
+                <div class="access-key-name">
+                  <div>My access key</div>
+                  <div id="manager-access-key-description">Connect your devices</div>
+                </div>
+              </span>
+              <span class="measurement-container">
+                  <span class="measurement">[[_formatBytesTransferred(myConnection.transferredBytes, "...")]]</span>
+                  <paper-progress value='[[myConnection.relativeTraffic]]'></paper-progress>
+                </span>
+              <span class="actions">
+                <span class="flex-1">
+                  <paper-icon-button icon="outline-iconset:devices" class="connect-button" on-tap="_handleConnectPressed"></paper-icon-button>
+                </span>
+                <span class="overflow-menu flex-1"></span>
+              </span>
+            </div>
+            <div id="accessKeysContainer">
+            <!-- rows for each access key -->
+            <template is="dom-repeat" items="{{accessKeyRows}}" filter="isRegularConnection" sort="{{_sortAccessKeys(accessKeySortBy, accessKeySortDirection)}}" observe="name transferredBytes">
+              <!-- TODO(alalama): why is observe not responding to rename? -->
+              <div class="access-key-row">
+                <span class="access-key-container">
+                  <img class="access-key-icon" src="images/key-avatar.svg">
+                  <input type="text" class="access-key-name"
+                    placeholder="{{item.placeholderName}}"
+                    value="[[item.name]]"
+                    on-blur="_handleNameInputBlur"
+                    on-keydown="_handleNameInputKeyDown">
+                  </input>
+                </span>
+                <span class="measurement-container">
+                  <span class="measurement">[[_formatBytesTransferred(item.transferredBytes, "...")]]</span>
+                  <paper-progress value='[[item.relativeTraffic]]'></paper-progress>
+                </span>
+                <span class="actions">
+                  <span class="flex-1">
+                    <paper-icon-button icon="outline-iconset:share" class="share-button" on-tap="_handleShareCodePressed"></paper-icon-button>
+                  </span>
+                  <span class="flex-1">
+                    <paper-menu-button horizontal-align="right" class="overflow-menu" close-on-activate no-animations no-overlap dynamic-align>
+                      <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
+                      <paper-listbox slot="dropdown-content">
+                      <paper-item on-tap="_handleRenameAccessKeyPressed">
+                        <iron-icon icon="icons:create"></iron-icon>Rename
+                      </paper-item>
+                        <paper-item on-tap="_handleRemoveAccessKeyPressed">
+                          <iron-icon icon="icons:delete"></iron-icon>Remove
+                        </paper-item>
+                      </paper-listbox>
+                    </paper-menu-button>
+                  </span>
+                </span>
+              </div>
+            </template>
+            </div>
+            <!-- add key button -->
+            <div class="access-key-row" id="addAccessKeyRow">
+              <span class="access-key-container">
+                <paper-icon-button icon="icons:add" on-tap="_handleAddAccessKeyPressed" id="addAccessKeyButton" class="access-key-icon"></paper-icon-button>
+                <div class="add-new-key" on-tap="_handleAddAccessKeyPressed">Add new key</div>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div name="settings">
+          <outline-server-settings id="serverSettings" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-management-port="[[serverManagementPort]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]"></outline-server-settings>
+        </div>
+      </iron-pages>
     </div>
 
-    <div id='shareInstructions' hidden$='{{ hasNonAdminAccessKeys }}'>
-        <img src='images/key-empty.svg'>
-    </div>
-
-    <outline-help-bubble id='getConnectedHelpBubble' vertical-align='top' horizontal-align='auto'>
-      <img src='images/connect-tip-2x.png'>
+    <outline-help-bubble id="getConnectedHelpBubble" vertical-align="top" horizontal-align="right">
+      <img src="images/connect-tip-2x.png">
       <h3>You are not connected yet!</h3>
       <p>Click here to install the Outline client app, using your personal access key to your Outline server</p>
-      <paper-button on-tap='closeGetConnectedHelpBubble'>Okay, got it!</paper-button>
+      <paper-button on-tap="closeGetConnectedHelpBubble">Okay, got it!</paper-button>
     </outline-help-bubble>
-    <outline-help-bubble id='addAccessKeyHelpBubble' vertical-align='top' horizontal-align='auto'>
-      <img src='images/key-tip-2x.png'>
+    <outline-help-bubble id="addAccessKeyHelpBubble" vertical-align="top" horizontal-align="left">
+      <img src="images/key-tip-2x.png">
       <h3>Create keys, share access</h3>
       <p>Share access keys with friends, so they can connect to your Outline server. They can use the same access key on all their devices</p>
-      <paper-button on-tap='showGetConnectedHelpBubble'>Next</paper-button>
+      <paper-button on-tap="showGetConnectedHelpBubble">Next</paper-button>
     </outline-help-bubble>
 
   </template>
@@ -384,10 +513,16 @@
         this.bytes = require('bytes');
       },
       properties: {
+        serverId: String,
         serverName: String,
         serverHostname: String,
         serverManagementPort: Number,
         serverCreationDate: String,
+        serverLocation: String,
+        isServerManaged: Boolean,
+        isServerReachable: Boolean,
+        // Callback for retrying to display an unreachable server.
+        retryDisplayingServer: Function,
         // myConnection has the same fields as each item in accessKeyRows.  It may
         // be unset in some old versions of Outline that allowed deleting this
         // row.
@@ -395,10 +530,7 @@
         totalInboundBytes: Number,
         accessKeyRows: {type: Array, value: []},
         hasNonAdminAccessKeys: Boolean,
-        deleteEnabled: Boolean,
-        forgetEnabled: Boolean,
         metricsEnabled: Boolean,
-        serverId: String,
         // Initialize monthlyOutboundTransferBytes and monthlyCost to 0, so they can
         // be bound to hidden attributes.  Initializing to undefined does not
         // cause hidden$=... expressions to be evaluated and so elements may be
@@ -406,11 +538,29 @@
         //   https://stackoverflow.com/questions/33700125/polymer-1-0-hidden-attribute-negate-operator
         //   https://www.polymer-project.org/1.0/docs/devguide/data-binding.html
         monthlyOutboundTransferBytes: {type: Number, value: 0},
-        monthlyCost: {type: Number, value: 0}
+        monthlyCost: {type: Number, value: 0},
+        selectedTab: {
+          type: String,
+          value: '',
+        },
+        managedServerUtilzationPercentage: {
+          type: Number,
+          computed: '_computeManagedServerUtilzationPercentage(totalInboundBytes, monthlyOutboundTransferBytes)',
+        },
+        accessKeySortBy: {
+          type: String,
+          value: 'name'
+        },
+        accessKeySortDirection: {
+          // 1 == ascending, -1 == descending
+          type: Number,
+          value: 1
+        },
       },
       observers: [
         '_accessKeysAddedOrRemoved(accessKeyRows.splices)',
-        '_myConnectionChanged(myConnection)'
+        '_myConnectionChanged(myConnection)',
+        '_selectedTabChanged(selectedTab)',
       ],
       // Parameter `accessKey` has the format {
       //   id: string,
@@ -473,25 +623,26 @@
         });
       },
       _handleRenameAccessKeyPressed: function(event) {
-        const input = this.querySelectorAll('.access-key-row.access-key > input')[event.model.index];
-        // This need to be deferred because the closing menu messes up with the focus.
+        const input = this.$.accessKeysContainer.querySelectorAll(
+            '.access-key-row .access-key-container > input')[event.model.index];
+        // This needs to be deferred because the closing menu messes up with the focus.
         window.setTimeout(() => { input.focus() }, 0);
       },
       _handleConnectPressed: function() {
-        this.$.getConnectedDialog.open();
         this.$.getConnectedHelpBubble.hide();
+        this.fire('OpenGetConnectedDialogRequested', {accessKey: this.myConnection.accessUrl});
       },
       _handleShareCodePressed: function(event) {
         const accessKey = event.model.item;
-        this.$.shareDialog.open(accessKey.accessUrl);
+        this.fire('OpenShareDialogRequested', {accessKey: accessKey.accessUrl});
       },
       _handleRemoveAccessKeyPressed: function(e) {
         const accessKey = e.model.item;
         this.fire('RemoveAccessKeyRequested', {accessKeyId: accessKey.id});
       },
       _encodeURIComponent: encodeURIComponent,
-      setServerTransferredData(total_bytes) {
-        this.totalInboundBytes = total_bytes
+      setServerTransferredData(totalBytes) {
+        this.totalInboundBytes = totalBytes
       },
       updateAccessKeyRow(accessKeyId, fields) {
         if (accessKeyId === MY_CONNECTION_USER_ID) {
@@ -507,7 +658,7 @@
         }
       },
       _formatBytesTransferred: function(numBytes, emptyValue = '') {
-        if (numBytes === undefined || numBytes === null || numBytes === 0) {
+        if (!numBytes) {
           // numBytes may not be set for manual servers, or may be 0 for
           // unused access keys.
           return emptyValue;
@@ -523,6 +674,32 @@
         const bytesOptions = {unitSeparator: ' ', decimalPlaces: numDecimals};
         // Use uppercase to convert kB to KB (kB incorrectly implies 1000B)
         return this.bytes(numBytes, bytesOptions).toUpperCase();
+      },
+      _getFormattedTransferredUnit: function(numBytes, emptyValue = '') {
+        const formattedTransfer = this._formatBytesTransferred(numBytes);
+        if (!formattedTransfer) {
+          return emptyValue;
+        }
+        const units = formattedTransfer.match(/[a-zA-Z%]+/g);
+        if (!units || units.length < 0) {
+          return emptyValue;
+        }
+        return units.pop();
+      },
+      _getFormattedTransferredValue: function(numBytes, emptyValue = '') {
+        const formattedTransfer = this._formatBytesTransferred(numBytes);
+        if (!formattedTransfer) {
+          return emptyValue;
+        }
+        const value = parseFloat(formattedTransfer);
+        return !!value ? value : emptyValue;
+      },
+      _computeManagedServerUtilzationPercentage: function(numBytes, monthlyLimitBytes) {
+        let utilizationPercentage = 0;
+        if (monthlyLimitBytes && numBytes) {
+          utilizationPercentage = Math.round(numBytes / monthlyLimitBytes * 100);
+        }
+        return `${utilizationPercentage}%`
       },
       _accessKeysAddedOrRemoved: function(changeRecord) {
         // Check for myConnection and regular access keys.
@@ -544,67 +721,76 @@
       showGetConnectedHelpBubble: function() {
         if (this.myConnection) {
           this.$.addAccessKeyHelpBubble.hide();
-          this.showHelpBubbleOnce('getConnectedHelpBubble', 'getConnectedText');
+          this.showHelpBubbleOnce('getConnectedHelpBubble', 'managerRow');
         }
       },
       closeGetConnectedHelpBubble: function() {
         this.$.getConnectedHelpBubble.hide();
       },
-      getS3InviteUrl: function(accessUrl) {
-        // If updating this URL, must also update it in outline-share-dialog.html.
-        // TODO: deduplicate and move this to the TypeScript app code.
-        return 'https://s3.amazonaws.com/outline-vpn/invite.html?admin_embed#' +
-            encodeURIComponent(accessUrl);
+      _selectedTabChanged(selectedTab) {
+        if (this.selectedTab === 'settings') {
+          this.$.serverSettings.update(this.serverName, this.metricsEnabled);
+        }
       },
       // initHelpBubbles should be called after this outline-server-view
       // is on the screen (e.g. selected in iron-pages).  If help bubbles
       // are initialized before this point, setPosition will not work and
       // they will appear in the top left of the view.
       initHelpBubbles: function() {
-        this.showHelpBubbleOnce('addAccessKeyHelpBubble', 'addAccessKeyButton');
+        this.showHelpBubbleOnce('addAccessKeyHelpBubble', 'addAccessKeyRow', 'up', 'left');
       },
-      showHelpBubbleOnce: function(helpBubbleId, positionTargetId) {
+      showHelpBubbleOnce: function(helpBubbleId, positionTargetId,
+                                   arrowDirection='up', arrowAlignment='right') {
         const storageKey = helpBubbleId + '-dismissed';
         if (window.localStorage.getItem(storageKey)) {
           // Help bubble has already been dismissed, nothing to show.
           return;
         }
         const helpBubble = this.$[helpBubbleId];
-        helpBubble.show(this.$[positionTargetId], 'up', 'right');
+        helpBubble.show(this.$[positionTargetId], arrowDirection, arrowAlignment);
         helpBubble.addEventListener('outline-help-bubble-dismissed', function(e) {
           window.localStorage.setItem(storageKey, true);
         }.bind(this));
       },
-      showMetricsDialogForNewServer: function() {
-        this.$.metricsDialog.showMetricsOptInDialog();
-      },
-      showServerSettings: function() {
-        this.$.serverSettings.open(this.serverName, this.metricsEnabled);
-      },
-      closeServerSettings: function() {
-        this.$.serverSettings.close();
-      },
       isRegularConnection: function(item) {
         return item.id !== MY_CONNECTION_USER_ID;
       },
-      closeGetConnectedDialog: function() {
-        const dialog = this.$.getConnectedDialog;
-        dialog.close();
-        // Reset the iframe's state, by replacing it with a newly constructed
-        // iframe using the same src.  Unfortunately the location.reload API
-        // does not work in our case due to this Chrome error:
-        // "Blocked a frame with origin "outline://web_app" from accessing a cross-origin frame."
-        const oldIframe = dialog.children[0];
-        dialog.removeChild(oldIframe);
-        const newIframe = document.createElement('iframe');
-        newIframe.src = oldIframe.src;
-        newIframe.className = oldIframe.className;
-        dialog.insertBefore(newIframe, dialog.children[0]);
+      _setSortByOrToggleDirection: function(e) {
+        const sortBy = e.target.dataset.sortBy;
+        if (this.accessKeySortBy !== sortBy) {
+          this.accessKeySortBy = sortBy;
+          this.accessKeySortDirection = 1; // Sort ascending initially.
+          return;
+        }
+        this.accessKeySortDirection *= -1; // Toggle sort direction.
       },
-      deleteServer: function() {
+      _sortAccessKeys: function(accessKeySortBy, accessKeySortDirection) {
+        if (accessKeySortBy === 'usage') {
+          return function(a, b) {
+            return (a.transferredBytes - b.transferredBytes) * this.accessKeySortDirection;
+          }.bind(this);
+        }
+        // Default to sorting by name.
+        return function(a, b) {
+          const nameA = a.name.toUpperCase() || a.placeholderName.toUpperCase();
+          const nameB = b.name.toUpperCase() || b.placeholderName.toUpperCase();;
+          if (nameA < nameB) {
+            return -1 * this.accessKeySortDirection;
+          }
+          if (nameA > nameB) {
+            return 1 * this.accessKeySortDirection;
+          }
+          return 0;
+        }.bind(this);
+      },
+      _computeShouldShowSortIcon: function(accessKeySortBy, accessKeySortDirection,
+                                           elementSortBy, elementSortDirection) {
+        return accessKeySortBy === elementSortBy && accessKeySortDirection === elementSortDirection;
+      },
+      destroyServer: function() {
         this.fire('DeleteServerRequested');
       },
-      forgetServer: function() {
+      removeServer: function() {
         this.fire('ForgetServerRequested');
       }
     });

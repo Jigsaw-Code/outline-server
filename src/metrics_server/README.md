@@ -1,51 +1,63 @@
 # Outline Metrics Server
 
-The Outline Metrics Server is built using [Google Cloud Functions](https://cloud.google.com/functions/), which lets us write a simple Node HTTP server.  By deploying this server to the uproxysite Google project, we gain permission to write to uproxysite's BigQuery tables.
+The Outline Metrics Server is a [Google Cloud Function](https://cloud.google.com/functions/) which writes to BigQuery usage data received from Outline servers.
 
 ## Requirements
-* Install `gcloud` from https://cloud.google.com/sdk/docs/
-* Node 6.11.1 or greater (for testing via Cloud Functions Emulator)
 
-## Building
-Run `yarn do metrics_server/build`
+* [Google Cloud SDK](https://cloud.google.com/sdk/)
 
-## Deploying
-You must have access to the project `uproxysite`.
+## Build
 
-To deploy:
-* Authenticate with gcloud: `gcloud auth login`
-* Run the deploy script:
-  * to deploy to test: `yarn do metrics_server/deploy_test`
-  * to deploy to prod: `yarn do metrics_server/deploy_prod`
-
-## Testing with the Cloud Functions Emulator
-You can test with the Google Cloud Functions Emulator by running `yarn do metrics_server/test <test_data>`, e.g.:
-```
-yarn do metrics_server/test '{"serverId":"12345","startUtcMs":1502486354823,"endUtcMs":1502499314823,"userReports":[{"userId":"1","bytesTransferred":60,"countries":["US","NL"]},{"userId":"2","bytesTransferred":100,"countries":["UK"]}]}'
+```sh
+yarn do metrics_server/build
 ```
 
-## Testing with Node
-You can test the metrics server code using Node:
+## Deploy
 
-`cd build/metrics_server`
+* Authenticate with `gcloud`:
+  ```sh
+  gcloud auth login
+  ```
+* To deploy to test:
+  ```sh
+  yarn do metrics_server/deploy_test
+  ```
+* To deploy to prod:
+  ```sh
+  yarn do metrics_server/deploy_prod
+  ```
 
-run `node`, then you can test the post_server_report module as follows:
+## Test
+
+We can test the function locally with the [Cloud Functions Emulator](https://cloud.google.com/functions/docs/emulator).
+
+**Note: The emulator is not actively maintained is very temperamental!**
+
+Because the emulator explicitly requests Node.js 6.x (it refuses to even install on other versions), we have not added it to our `package.json`. If you use a Node version manager such as [NVM](https://github.com/creationix/nvm), it is easy to switch temporarily to Node.js 6.x:
+```sh
+nvm install 6
+yarn global add @google-cloud/functions-emulator
 ```
-post_server_report = require('./post_server_report.js');
 
-serverReport = {
-  serverId: "123",
-  startUtcMs: 1502486354823,
-  endUtcMs: 1502499314823,
-  userReports: [
-    {userId: "1", bytesTransferred: 60, countries: ["US", "NL"]},
-    {userId: "2", bytesTransferred: 100, countries: ["CN"]}
-  ]
-}
-
-post_server_report.postServerReport('uproxy_metrics_test', 'connections_v1', serverReport)
-  .then(() => { console.log('success') })
-  .catch((e) => { console.error('failure: ' + e) })
+`yarn do metrics_server/test` builds and spins up a local server. It accepts one argument, which it forwards to the function, e.g.:
+```
+export TIMESTAMP=$(date +%s%3N)
+yarn do metrics_server/test '{"serverId":"12345","startUtcMs":'$TIMESTAMP',"endUtcMs":'$(($TIMESTAMP+1))',"userReports":[{"userId":"1","bytesTransferred":60,"countries":["US","NL"]},{"userId":"2","bytesTransferred":100,"countries":["UK"]}]}'
 ```
 
-You can then view this inserted data at https://bigquery.cloud.google.com/table/uproxysite:uproxy_metrics_test.connections_v1
+After running, you can view the inserted data in BigQuery, e.g.:
+```sql
+SELECT * FROM [uproxysite:uproxy_metrics_test.connections_v1] ORDER BY endTimestamp DESC LIMIT 10;
+```
+
+**Note: The emulator ignores the response code: if the function returns 400 or 500, the command will appear to run successfully!**
+
+Troubleshooting:
+* If you run into errors like `could not load the default credentials`, try this command:
+  ```sh
+  gcloud auth application-default login
+  ```
+* Many errors can be "fixed" by clearing the emulator's config, e.g.:
+  * `functions clear`
+  * kill any running server, e.g. `pkill -f functions`
+  * clear `~/.config/configstore/@google-cloud`

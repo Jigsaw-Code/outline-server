@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Definitions missing from @types/node.
+// Typings for:
+// https://www.npmjs.com/package/jsonic
 
-// TODO(dborkan): Find a *.d.ts file with this definition.  The API is defined at
-// https://googlecloudplatform.github.io/google-cloud-node/#/docs/bigquery/0.9.6/bigquery
-declare module '@google-cloud/bigquery';
+declare module 'jsonic' {
+  function parse(s: string): Object;
+  namespace parse {}
+  export = parse;
+}

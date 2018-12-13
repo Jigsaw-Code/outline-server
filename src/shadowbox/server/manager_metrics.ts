@@ -28,6 +28,9 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
 
   async get30DayByteTransfer(): Promise<DataUsageByUser> {
     // TODO(fortuna): Consider pre-computing this to save server's CPU.
+    // We measure only traffic leaving the server, since that's what DigitalOcean charges.
+    // TODO: Display all directions to admin
+    // TODO: Remove >p< once ss-libev support is gone.
     const result = await this.prometheusClient.query(
         'sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t|>p<"}[30d])) by (access_key)');
     const usage = {} as {[userId: string]: number};
@@ -40,7 +43,7 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     }
     // TODO: Remove this after 30 days of everyone being migrated, since we won't need the config
     // file anymore.
-    this.addLegacyUsageData(usage);
+    await this.addLegacyUsageData(usage);
     return {bytesTransferredByUserId: usage};
   }
 
@@ -48,7 +51,11 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     const bytesTransferredByUserId =
         (await this.legacyManagerMetrics.get30DayByteTransfer()).bytesTransferredByUserId;
     for (const userId of Object.keys(bytesTransferredByUserId)) {
-      usage[userId] += bytesTransferredByUserId[userId];
+      const oldBytes = usage[userId] || 0;
+      const increment = bytesTransferredByUserId[userId];
+      if (increment > 0) {
+        usage[userId] = oldBytes + increment;
+      }
     }
   }
 }
