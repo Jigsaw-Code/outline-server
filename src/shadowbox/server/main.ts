@@ -176,6 +176,9 @@ async function main() {
 
   const accessKeyRepository = new ServerAccessKeyRepository(
       portProvider, proxyHostname, accessKeyConfig, shadowsocksServer);
+  if (createRolloutTracker(serverConfig).isRolloutEnabled('single-port', 0)) {
+    accessKeyRepository.enableSinglePort();
+  }
 
   const prometheusClient = new PrometheusClient(`http://${prometheusLocation}`);
   const metricsReader = new PrometheusUsageMetrics(prometheusClient);

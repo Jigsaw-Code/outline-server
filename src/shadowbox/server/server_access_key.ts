@@ -63,6 +63,7 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyConfig): Access
 export class ServerAccessKeyRepository implements AccessKeyRepository {
   // This is the max id + 1 among all access keys. Used to generate unique ids for new access keys.
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
+  private singlePortEnabled = false;
 
   constructor(
       private portProvider: PortProvider, private proxyHostname: string,
@@ -77,8 +78,12 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.updateServer();
   }
 
+  enableSinglePort() {
+    this.singlePortEnabled = true;
+  }
+
   async createNewAccessKey(): Promise<AccessKey> {
-    const port = await this.getDefaultPort();
+    const port = await (this.singlePortEnabled ? this.getDefaultPort() : this.portProvider.reserveNewPort());
     const id = this.keyConfig.data().nextId.toString();
     this.keyConfig.data().nextId += 1;
     const metricsId = uuidv4();
