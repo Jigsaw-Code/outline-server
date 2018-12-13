@@ -134,6 +134,7 @@
       .stats p, .stats-card p {
         margin: 0;
         font-size: 14px;
+        font-weight: normal;
       }
       @media (max-width: 938px) {
         /* Reduce the cards' size so they fit comfortably on small displays. */
@@ -147,7 +148,7 @@
           font-size: 12px;
         }
       }
-      .transfer-stats .stats {
+      .transfer-stats .stats, .transfer-stats .stats p {
         color: var(--primary-green);
       }
       .stats-card p, .stats-card iron-icon {
@@ -388,16 +389,17 @@
               </div>
               <div class="stats">
                 <h3>[[managedServerUtilzationPercentage]]</h3>
-                <p>/[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]</p>
+                <p>of [[_formatBytesTransferred(monthlyOutboundTransferBytes)]]</p>
               </div>
-              <p>Utilization / 30 days</p>
+              <p>Data used / 30 days</p>
             </div>
             <div class="stats-card card-section">
               <iron-icon icon="outline-iconset:key"></iron-icon>
               <div class="stats">
                 <h3>[[accessKeyRows.length]]</h3>
+                <p>Keys</p>
               </div>
-              <p>Access keys</p>
+              <p>Server access</p>
             </div>
           </div>
 
