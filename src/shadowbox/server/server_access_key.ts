@@ -33,6 +33,8 @@ interface AccessKeyConfig {
 // The configuration file format as json.
 export interface AccessKeyConfigJson {
   accessKeys?: AccessKeyConfig[];
+  // The port number to use for new access keys.
+  defaultPort?: number;
   // Next AccessKeyId to use.
   nextId?: number;
 }
@@ -61,6 +63,7 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyConfig): Access
 export class ServerAccessKeyRepository implements AccessKeyRepository {
   // This is the max id + 1 among all access keys. Used to generate unique ids for new access keys.
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
+  private singlePortEnabled = false;
 
   constructor(
       private portProvider: PortProvider, private proxyHostname: string,
@@ -75,8 +78,12 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.updateServer();
   }
 
+  enableSinglePort() {
+    this.singlePortEnabled = true;
+  }
+
   async createNewAccessKey(): Promise<AccessKey> {
-    const port = await this.portProvider.reserveNewPort();
+    const port = await (this.singlePortEnabled ? this.getDefaultPort() : this.portProvider.reserveNewPort());
     const id = this.keyConfig.data().nextId.toString();
     this.keyConfig.data().nextId += 1;
     const metricsId = uuidv4();
@@ -136,6 +143,14 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined {
     const accessKeyJson = this.getAccessKey(id);
     return accessKeyJson ? accessKeyJson.metricsId : undefined;
+  }
+
+  private async getDefaultPort(): Promise<number> {
+    if (!this.keyConfig.data().defaultPort) {
+      this.keyConfig.data().defaultPort = await this.portProvider.reserveNewPort();
+      this.keyConfig.write();
+    }
+    return this.keyConfig.data().defaultPort;
   }
 
   private updateServer(): Promise<void> {
