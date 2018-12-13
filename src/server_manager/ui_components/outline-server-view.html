@@ -134,6 +134,7 @@
       .stats p, .stats-card p {
         margin: 0;
         font-size: 14px;
+        font-weight: normal;
       }
       @media (max-width: 938px) {
         /* Reduce the cards' size so they fit comfortably on small displays. */
@@ -388,7 +389,7 @@
               </div>
               <div class="stats">
                 <h3>[[managedServerUtilzationPercentage]]</h3>
-                <p>/[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]</p>
+                <p>of [[_formatBytesTransferred(monthlyOutboundTransferBytes)]]</p>
               </div>
               <p>Data used / 30 days</p>
             </div>
