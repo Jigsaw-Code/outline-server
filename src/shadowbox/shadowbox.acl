@@ -1,7 +1,0 @@
-[outbound_block_list]
-# Restrict access to localhost
-127.0.0.1
-::1
-# Restrict access to multicast
-224.0.0.0/4
-FF00::/8
