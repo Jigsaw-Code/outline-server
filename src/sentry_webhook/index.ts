@@ -15,22 +15,22 @@
 import * as sentry from '@sentry/types';
 import * as express from 'express';
 
-import {postSentryEventToSalesforce} from './post_sentry_event_to_salesforce';
+import {postSentryEventToSalesforce, shouldPostEventToSalesforce} from './post_sentry_event_to_salesforce';
 
 exports.postSentryEventToSalesforce = (req: express.Request, res: express.Response) => {
   if (req.method !== 'POST') {
-    res.status(405).send('Method not allowed');
-    return;
+    return res.status(405).send('Method not allowed');
   }
   if (!req.body) {
-    res.status(400).send('Missing request body');
-    return;
+    return res.status(400).send('Missing request body');
   }
 
   const sentryEvent: sentry.SentryEvent = req.body.event;
   if (!sentryEvent) {
-    res.status(400).send('Missing Sentry event');
-    return;
+    return res.status(400).send('Missing Sentry event');
+  }
+  if (!shouldPostEventToSalesforce(sentryEvent)) {
+    return res.status(200).send();
   }
   // Use the request message if SentryEvent.message is unpopulated.
   sentryEvent.message = sentryEvent.message || req.body.message;

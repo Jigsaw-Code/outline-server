@@ -71,15 +71,17 @@ const SALESFORCE_FORM_VALUES_PROD: SalesforceFormValues = {
   recordType: '0120b0000006e8i',
 };
 
-// Posts a Sentry event to Salesforce using predefined form data. Only posts if the event contains
-// an email address.
+// Returns whether a Sentry event should be sent to Salesforce by checking that it contains an
+// email address.
+export function shouldPostEventToSalesforce(event: sentry.SentryEvent) {
+  return !!event.user && !!event.user.email;
+}
+
+// Posts a Sentry event to Salesforce using predefined form data. Assumes
+// `shouldPostEventToSalesforce` has returned true for `event`.
 export function postSentryEventToSalesforce(
     event: sentry.SentryEvent, project: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (!event.user || !event.user.email) {
-      reject(new Error('Not posting event without email'));
-      return;
-    }
     // Sentry development projects are marked with 'dev', i.e. outline-client-dev.
     const isProd = project.indexOf('-dev') === -1;
     const salesforceHost = isProd ? SALESFORCE_PROD_HOST : SALESFORCE_DEV_HOST;
@@ -87,7 +89,7 @@ export function postSentryEventToSalesforce(
     const formValues = isProd ? SALESFORCE_FORM_VALUES_PROD : SALESFORCE_FORM_VALUES_DEV;
     const isClient = project.indexOf('client') !== -1;
     const formData =
-        getSalesforceFormData(formFields, formValues, event, event.user.email, isClient);
+        getSalesforceFormData(formFields, formValues, event, event.user!.email!, isClient);
     const req = https.request(
         {
           host: salesforceHost,
@@ -107,9 +109,7 @@ export function postSentryEventToSalesforce(
           }
         });
     req.on('error', (err) => {
-      reject(new Error(
-          `Failed to submit form: ${err}`,
-          ));
+      reject(new Error(`Failed to submit form: ${err}`));
     });
     req.write(formData);
     req.end();
@@ -127,8 +127,8 @@ function getSalesforceFormData(
   form.push(encodeFormData(formFields.sentryEventId, event.event_id));
   form.push(encodeFormData(formFields.description, event.message));
   form.push(encodeFormData(formFields.type, isClient ? 'Outline client' : 'Outline manager'));
-  const tags = getTagsMap(event.tags);
-  if (!!tags) {
+  if (!!event.tags) {
+    const tags = getTagsMap(event.tags);
     form.push(encodeFormData(formFields.category, tags.get('category')));
     form.push(encodeFormData(formFields.os, tags.get('os.name')));
     form.push(encodeFormData(formFields.version, tags.get('sentry:release')));
@@ -145,10 +145,7 @@ function encodeFormData(field: string, value?: string) {
 
 // Although SentryEvent.tags is declared as an index signature object, it is actually an array of
 // arrays i.e. [['key0': 'value0'], ['key1': 'value1']]. Converts the tags to a Map of strings.
-function getTagsMap(tags?: {[key: string]: string}) {
-  if (!tags) {
-    return null;
-  }
+function getTagsMap(tags: {[key: string]: string}) {
   const tagsMap = new Map<string, string>();
   for (const i of Object.keys(tags)) {
     try {
