@@ -124,29 +124,23 @@ function getSalesforceFormData(
   form.push(encodeFormData(formFields.orgId, formValues.orgId));
   form.push(encodeFormData(formFields.recordType, formValues.recordType));
   form.push(encodeFormData(formFields.email, email));
-  form.push(encodeFormData(formFields.sentryEventId, getStringValueOrEmtpy(event.event_id)));
-  form.push(encodeFormData(formFields.description, getStringValueOrEmtpy(event.message)));
+  form.push(encodeFormData(formFields.sentryEventId, event.event_id));
+  form.push(encodeFormData(formFields.description, event.message));
   form.push(encodeFormData(formFields.type, isClient ? 'Outline client' : 'Outline manager'));
   const tags = getTagsMap(event.tags);
   if (!!tags) {
-    form.push(encodeFormData(formFields.category, getStringValueOrEmtpy(tags.get('category'))));
-    form.push(encodeFormData(formFields.os, getStringValueOrEmtpy(tags.get('os.name'))));
-    form.push(
-        encodeFormData(formFields.version, getStringValueOrEmtpy(tags.get('sentry:release'))));
+    form.push(encodeFormData(formFields.category, tags.get('category')));
+    form.push(encodeFormData(formFields.os, tags.get('os.name')));
+    form.push(encodeFormData(formFields.version, tags.get('sentry:release')));
     if (!isClient) {
-      form.push(encodeFormData(
-          formFields.cloudProvider, getStringValueOrEmtpy(tags.get('cloudProvider'))));
+      form.push(encodeFormData(formFields.cloudProvider, tags.get('cloudProvider')));
     }
   }
   return form.join('&');
 }
 
-function encodeFormData(field: string, value: string) {
-  return `${encodeURIComponent(field)}=${encodeURIComponent(value)}`;
-}
-
-function getStringValueOrEmtpy(str?: string): string {
-  return str || '';
+function encodeFormData(field: string, value?: string) {
+  return `${encodeURIComponent(field)}=${encodeURIComponent(value || '')}`;
 }
 
 // Although SentryEvent.tags is declared as an index signature object, it is actually an array of

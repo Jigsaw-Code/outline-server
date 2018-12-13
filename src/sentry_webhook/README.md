@@ -7,7 +7,6 @@ The Outline Sentry webhook is a [Google Cloud Function](https://cloud.google.com
 * [Google Cloud SDK](https://cloud.google.com/sdk/)
 * Access to Outline's Sentry account.
 
-
 ## Build
 
 ```sh
