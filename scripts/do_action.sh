@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -eux
+set -eu
 
 # TODO: Because Node.js on Cygwin doesn't handle absolute paths very
 #       well, it would be worth pushd-ing to ROOT_DIR before invoking
@@ -22,15 +22,26 @@ set -eux
 
 export ROOT_DIR=${ROOT_DIR:-$(git rev-parse --show-toplevel)}
 export BUILD_DIR=${BUILD_DIR:-$ROOT_DIR/build}
+export _DO_ACTION_INDENT=''
 
 function do_action() {
+  local OLD_INDENT=${_DO_ACTION_INDENT}
+  _DO_ACTION_INDENT="..${_DO_ACTION_INDENT}"
   readonly STYLE_BOLD_WHITE='\033[1;37m'
+  readonly STYLE_BOLD_RED='\033[1;31m'
   readonly STYLE_RESET='\033[0m'
   local action=$1
-  echo -e "$STYLE_BOLD_WHITE[Running $action]$STYLE_RESET"
+  echo -e "${OLD_INDENT}$STYLE_BOLD_WHITE[Running $action]$STYLE_RESET"
   shift
-  $ROOT_DIR/src/${action}_action.sh "$@"
-  echo -e "$STYLE_BOLD_WHITE[Done $action]$STYLE_RESET"
+  local status=0
+  $ROOT_DIR/src/${action}_action.sh "$@" || status=$?
+  if ((status == 0)); then
+    echo -e "${OLD_INDENT}$STYLE_BOLD_WHITE[Done $action]$STYLE_RESET"
+  else
+    echo -e "${OLD_INDENT}$STYLE_BOLD_RED[Failed $action]$STYLE_RESET"
+  fi
+  _DO_ACTION_INDENT=${OLD_INDENT}
+  return $status
 }
 export -f do_action
 

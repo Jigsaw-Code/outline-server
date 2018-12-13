@@ -74,8 +74,10 @@ export class PrometheusUsageMetrics implements UsageMetrics {
 
   async getUsage(): Promise<KeyUsage[]> {
     const timeDeltaSecs = Math.round((Date.now() - this.resetTimeMs) / 1000);
-    const result =
-        await this.prometheusClient.query(`sum(increase(shadowsocks_data_bytes{dir=">p<"}[${
+    // We measure the traffic to and from the target, since that's what we are protecting.
+    // TODO: remove >p< once the ss-libev support is gone.
+    const result = await this.prometheusClient.query(
+        `sum(increase(shadowsocks_data_bytes{dir=~">p<|p>t|p<t"}[${
             timeDeltaSecs}s])) by (location, access_key)`);
     const usage = [] as KeyUsage[];
     for (const entry of result.result) {
@@ -100,7 +102,7 @@ export function createPrometheusUsageMetricsWriter(registry: prometheus.Registry
     UsageMetricsWriter {
   const usageCounter = new prometheus.Counter({
     name: 'shadowsocks_data_bytes',
-    help: 'Bytes tranferred by the proxy',
+    help: 'Bytes transferred by the proxy',
     labelNames: ['dir', 'proto', 'location', 'status', 'access_key']
   });
   registry.registerMetric(usageCounter);
@@ -218,7 +220,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
 
 function hasSanctionedCountry(countries: string[]) {
   for (const country of countries) {
-    if (country in SANCTIONED_COUNTRIES) {
+    if (SANCTIONED_COUNTRIES.has(country)) {
       return true;
     }
   }

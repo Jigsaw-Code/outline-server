@@ -38,7 +38,7 @@ const API_URL_TAG = 'apiurl';
 // The tag which appears if there is an error during installation.
 const INSTALL_ERROR_TAG = 'install-error';
 
-// These are superceded by the API_URL_TAG
+// These are superseded by the API_URL_TAG
 // The tag key for the manager API port.
 const DEPRECATED_API_PORT_TAG = 'apiport';
 // The tag key for the manager API url prefix.
@@ -66,6 +66,11 @@ const cityEnglishNameById: {[key: string]: string} = {
 // Returns a name for a server in the given region.
 export function MakeEnglishNameForServer(regionId: server.RegionId) {
   return `Outline Server ${cityEnglishNameById[getCityId(regionId)]}`;
+}
+
+// Returns the English name of the given region.
+export function GetEnglishCityName(regionId: server.RegionId) {
+  return cityEnglishNameById[getCityId(regionId)];
 }
 
 // Possible install states for DigitaloceanServer.
@@ -200,7 +205,7 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
   // Returns true on success, else false.
   private setApiUrlAndCertificate(): boolean {
     try {
-      // Atempt to get certificate fingerprint and management api address,
+      // Attempt to get certificate fingerprint and management api address,
       // these methods throw exceptions if the fields are unavailable.
       const certificateFingerprint = this.getCertificateFingerprint();
       const apiAddress = this.getManagementApiAddress();
@@ -339,6 +344,10 @@ class DigitalOceanHost implements server.ManagedServerHost {
       this.deleteCallback();
     });
   }
+
+  getHostId(): string {
+    return `${this.dropletInfo.id}`;
+  }
 }
 
 function startsWithCaseInsensitive(text: string, prefix: string) {
@@ -352,6 +361,8 @@ function getCityId(slug: server.RegionId): string {
 const MACHINE_SIZE = 's-1vcpu-1gb';
 
 export class DigitaloceanServerRepository implements server.ManagedServerRepository {
+  private servers: DigitaloceanServer[] = [];
+
   constructor(
       private digitalOcean: DigitalOceanSession, private image: string, private metricsUrl: string,
       private sentryApiUrl: string, private debugMode: boolean) {}
@@ -402,16 +413,27 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
           return this.digitalOcean.createDroplet(name, region, keyPair.public, dropletSpec);
         })
         .then((response) => {
-          return new DigitaloceanServer(this.digitalOcean, response.droplet);
+          return this.createDigitalOceanServer(this.digitalOcean, response.droplet);
         });
   }
 
-  listServers(): Promise<server.ManagedServer[]> {
+  listServers(fetchFromHost = true): Promise<server.ManagedServer[]> {
+    if (!fetchFromHost) {
+      return Promise.resolve(this.servers);  // Return the in-memory servers.
+    }
     return this.digitalOcean.getDropletsByTag(SHADOWBOX_TAG).then((droplets) => {
+      this.servers = [];
       return droplets.map((droplet) => {
-        return new DigitaloceanServer(this.digitalOcean, droplet);
+        return this.createDigitalOceanServer(this.digitalOcean, droplet);
       });
     });
+  }
+
+  // Creates a DigitaloceanServer object and adds it to the in-memory server list.
+  private createDigitalOceanServer(digitalOcean: DigitalOceanSession, dropletInfo: DropletInfo) {
+    const server = new DigitaloceanServer(digitalOcean, dropletInfo);
+    this.servers.push(server);
+    return server;
   }
 }
 
@@ -428,10 +450,10 @@ function sanitizeDigitaloceanToken(input: string): string {
 function getInstallScript(
     accessToken: string, name: string, image?: string, watchtowerRefreshSeconds?: number,
     metricsUrl?: string, sentryApiUrl?: string): string {
-  const sanitizezedAccessToken = sanitizeDigitaloceanToken(accessToken);
+  const sanitizedAccessToken = sanitizeDigitaloceanToken(accessToken);
   // TODO: consider shell escaping these variables.
   return '#!/bin/bash -eu\n' +
-      `export DO_ACCESS_TOKEN=${sanitizezedAccessToken}\n` +
+      `export DO_ACCESS_TOKEN=${sanitizedAccessToken}\n` +
       (image ? `export SB_IMAGE=${image}\n` : '') +
       (watchtowerRefreshSeconds ?
            `export WATCHTOWER_REFRESH_SECONDS=${watchtowerRefreshSeconds}\n` :

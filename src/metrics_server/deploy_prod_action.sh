@@ -1,4 +1,4 @@
-#!/bin/bash -eux
+#!/bin/bash -eu
 #
 # Copyright 2018 The Outline Authors
 #
@@ -14,12 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-readonly MODULE_DIR=$(dirname $0)
-readonly OUT_DIR=$BUILD_DIR/metrics_server/prod
-readonly CONFIG_FILE=$MODULE_DIR/config_prod.json
+yarn do metrics_server/build
 
-# Build the server
-$MODULE_DIR/build.sh $OUT_DIR $CONFIG_FILE
+cp src/metrics_server/config_prod.json build/metrics_server/config.json
 
-# Deploy as "reportHourlyConnectionMetrics"
-gcloud --project=uproxysite beta functions deploy reportHourlyConnectionMetrics --stage-bucket uproxy-cloud-functions --trigger-http --source=$OUT_DIR --entry-point=reportHourlyConnectionMetrics
+cp src/metrics_server/package.json build/metrics_server/
+
+gcloud --project=uproxysite functions deploy reportHourlyConnectionMetrics --trigger-http --source=build/metrics_server --entry-point=reportHourlyConnectionMetrics

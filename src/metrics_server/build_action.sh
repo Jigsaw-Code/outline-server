@@ -1,4 +1,4 @@
-#!/bin/bash -eux
+#!/bin/bash -eu
 #
 # Copyright 2018 The Outline Authors
 #
@@ -14,20 +14,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if (( $# <= 1 )); then
-  echo "Invalid arguments, usage:"
-  echo "build.sh <outdir> <config>"
-  exit 1;
-fi
-
-readonly MODULE_DIR=$(dirname $0)
-readonly OUT_DIR=$1
-readonly CONFIG_FILE=$2
-
-# Compile the server.
-rm -rf $OUT_DIR
-tsc -p $MODULE_DIR/tsconfig.json --outDir $OUT_DIR
-cp -r $MODULE_DIR/package.json $OUT_DIR
-
-# Copy config file.
-cp -r $CONFIG_FILE $OUT_DIR/config.json
+tsc -p $(dirname $0)
