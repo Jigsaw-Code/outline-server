@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as child_process from 'child_process';
 import * as net from 'net';
 
 const MAX_PORT = 65535;
@@ -64,36 +63,6 @@ export class PortProvider {
 
 function getRandomPortOver1023() {
   return Math.floor(Math.random() * (MAX_PORT + 1 - MIN_PORT) + MIN_PORT);
-}
-
-// Returns the list of ports used by either TCP or UDP.
-export function getUsedPorts(): Promise<Set<number>> {
-  return new Promise((resolve, reject) => {
-    child_process.exec('lsof -P -i -F n', (error, stdout, stderr) => {
-      const tcpPorts = new Set<number>();
-      if (error) {
-        if (error.code === 1) {
-          // Empty list case
-          return resolve(tcpPorts);
-        }
-        return reject(error);
-      }
-      for (const line of stdout.split(/\r?\n/)) {
-        if (line.length === 0 || line[0] !== 'n') {
-          continue;
-        }
-        const parts = line.split(':');
-        if (parts.length !== 2) {
-          continue;
-        }
-        const port = parseInt(parts[1], 10);
-        if (port) {
-          tcpPorts.add(port);
-        }
-      }
-      resolve(tcpPorts);
-    });
-  });
 }
 
 interface ServerError extends Error {

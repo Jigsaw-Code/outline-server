@@ -60,19 +60,3 @@ function listen(): Promise<net.Server> {
     });
   });
 }
-
-describe('getUsedPorts', () => {
-  it('returns used port', async () => {
-    const server = await listen();
-    const serverPort = server.address().port;
-    const usedPorts = await get_port.getUsedPorts();
-    expect(usedPorts).toContain(serverPort);
-
-    const onceClosed = new Promise((resolve, reject) => {
-      server.on('close', () => resolve());
-    });
-    server.close();
-    await onceClosed;
-    expect(await get_port.getUsedPorts()).not.toContain(serverPort);
-  });
-});
