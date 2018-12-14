@@ -25,8 +25,8 @@ LABEL shadowbox.outline-ss-server_version="${SS_VERSION}"
 ARG GITHUB_RELEASE
 LABEL shadowbox.github.release="${GITHUB_RELEASE}"
 
-# lsof for Shadowbox, curl for detecting our public IP.
-RUN apk add --no-cache lsof curl
+# We use curl to detect the server's public IP.
+RUN apk add --no-cache curl
 
 COPY src/shadowbox/scripts scripts/
 COPY src/shadowbox/scripts/update_mmdb.sh /etc/periodic/weekly/update_mmdb
