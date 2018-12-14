@@ -70,11 +70,13 @@ const SALESFORCE_FORM_VALUES_PROD: SalesforceFormValues = {
   orgId: '00D0b000000BrsN',
   recordType: '0120b0000006e8i',
 };
+const EMAIL_REGEX =
+    /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
-// Returns whether a Sentry event should be sent to Salesforce by checking that it contains an
-// email address.
+// Returns whether a Sentry event should be sent to Salesforce by checking that it contains a
+// valid email address.
 export function shouldPostEventToSalesforce(event: sentry.SentryEvent) {
-  return !!event.user && !!event.user.email;
+  return !!event.user && !!event.user.email && EMAIL_REGEX.test(event.user.email);
 }
 
 // Posts a Sentry event to Salesforce using predefined form data. Assumes
