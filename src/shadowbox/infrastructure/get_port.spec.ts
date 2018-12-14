@@ -21,12 +21,14 @@ describe('PortProvider', () => {
     it('gets port over 1023', async () => {
       expect(await new get_port.PortProvider().reserveNewPort()).toBeGreaterThan(1023);
     });
+
     it('fails on double reservation', () => {
       const ports = new get_port.PortProvider();
       ports.addReservedPort(8080);
       expect(() => ports.addReservedPort(8080)).toThrowError();
     });
   });
+
   describe('freePort', () => {
     it('makes port available', () => {
       const ports = new get_port.PortProvider();
@@ -35,6 +37,7 @@ describe('PortProvider', () => {
       ports.addReservedPort(8080);
     });
   });
+
   describe('reserveFirstFreePort', () => {
     it('returns free port', async () => {
       const ports = new get_port.PortProvider();
@@ -43,6 +46,7 @@ describe('PortProvider', () => {
           .toBeGreaterThan(server.address().port);
       server.close();
     });
+
     it('respects reserved ports', async () => {
       const ports = new get_port.PortProvider();
       ports.addReservedPort(9090);
@@ -60,19 +64,3 @@ function listen(): Promise<net.Server> {
     });
   });
 }
-
-describe('getUsedPorts', () => {
-  it('returns used port', async () => {
-    const server = await listen();
-    const serverPort = server.address().port;
-    const usedPorts = await get_port.getUsedPorts();
-    expect(usedPorts).toContain(serverPort);
-
-    const onceClosed = new Promise((resolve, reject) => {
-      server.on('close', () => resolve());
-    });
-    server.close();
-    await onceClosed;
-    expect(await get_port.getUsedPorts()).not.toContain(serverPort);
-  });
-});
