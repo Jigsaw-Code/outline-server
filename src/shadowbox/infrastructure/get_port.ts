@@ -20,8 +20,6 @@ const MIN_PORT = 1024;
 export class PortProvider {
   private reservedPorts = new Set<number>();
 
-  constructor() {}
-
   addReservedPort(port: number) {
     if (this.reservedPorts.has(port)) {
       throw new Error(`Port ${port} is already reserved`);
