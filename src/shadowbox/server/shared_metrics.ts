@@ -25,7 +25,7 @@ import {AccessKeyId, AccessKeyMetricsId} from '../model/access_key';
 import {ServerConfigJson} from './server_config';
 
 const MS_PER_HOUR = 60 * 60 * 1000;
-const SANCTIONED_COUNTRIES = new Set(['CU', 'IR', 'KP', 'SY']);
+const SANCTIONED_COUNTRIES = new Set(['CU', 'KP', 'SY']);
 
 // Used internally to track key usage.
 export interface KeyUsage {
