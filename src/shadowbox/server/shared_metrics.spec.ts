@@ -106,7 +106,7 @@ describe('OutlineSharedMetricsPublisher', () => {
 
       publisher.startSharing();
       usageMetrics.usage = [
-        {accessKeyId: 'user-0', inboundBytes: 11, countries: ['AA', 'IR']},
+        {accessKeyId: 'user-0', inboundBytes: 11, countries: ['AA', 'SY']},
         {accessKeyId: 'user-1', inboundBytes: 22, countries: ['CC']},
         {accessKeyId: 'user-0', inboundBytes: 33, countries: ['AA', 'DD']},
       ];
