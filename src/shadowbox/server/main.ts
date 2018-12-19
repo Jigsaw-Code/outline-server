@@ -73,9 +73,9 @@ async function exportPrometheusMetrics(registry: prometheus.Registry, port): Pro
 
 function reserveAccessKeyPorts(
     keyConfig: json_config.JsonConfig<AccessKeyConfigJson>, portProvider: PortProvider) {
-  for (const accessKeyJson of keyConfig.data().accessKeys || []) {
-    portProvider.addReservedPort(accessKeyJson.port);
-  }
+  const accessKeys = keyConfig.data().accessKeys || [];
+  const dedupedPorts = new Set(accessKeys.map(ak => ak.port));
+  dedupedPorts.forEach(p => portProvider.addReservedPort(p));
 }
 
 // TODO: Get rid of this after 30 days of everyone's migration to Prometheus.
