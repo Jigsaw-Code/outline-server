@@ -13,10 +13,10 @@
 # limitations under the License.
 
 # See versions at https://hub.docker.com/_/node/
-FROM node:8.11.3-alpine
+FROM node:8.14.0-alpine
 
 # Versions can be found at https://github.com/Jigsaw-Code/outline-ss-server/releases
-ARG SS_VERSION=1.0.2
+ARG SS_VERSION=1.0.3
 
 # Save metadata on the software versions we are using.
 LABEL shadowbox.node_version=8.11.3
