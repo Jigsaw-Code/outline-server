@@ -19,7 +19,7 @@ FROM node:8.14.0-alpine
 ARG SS_VERSION=1.0.3
 
 # Save metadata on the software versions we are using.
-LABEL shadowbox.node_version=8.11.3
+LABEL shadowbox.node_version=8.14.0
 LABEL shadowbox.outline-ss-server_version="${SS_VERSION}"
 
 ARG GITHUB_RELEASE
