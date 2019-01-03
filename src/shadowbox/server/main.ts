@@ -177,7 +177,7 @@ async function main() {
       getPersistentFilename('prometheus/config.yml'), prometheusConfigJson);
 
   const accessKeyRepository = new ServerAccessKeyRepository(
-      portProvider, proxyHostname, accessKeyConfig, shadowsocksServer);
+      portProvider, proxyHostname, accessKeyConfig, serverConfig, shadowsocksServer);
 
   // TODO(fortuna): Once single-port is fully rollout, we should:
   // - update `install_server.sh` to stop using `--net=host` for new servers (old servers are stuck

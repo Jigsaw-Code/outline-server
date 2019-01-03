@@ -19,6 +19,7 @@ import {PortProvider} from '../infrastructure/get_port';
 import {JsonConfig} from '../infrastructure/json_config';
 import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyRepository} from '../model/access_key';
 import {ShadowsocksServer} from '../model/shadowsocks_server';
+import {ServerConfigJson} from './server_config';
 
 // The format as json of access keys in the config file.
 interface AccessKeyConfig {
@@ -33,10 +34,11 @@ interface AccessKeyConfig {
 // The configuration file format as json.
 export interface AccessKeyConfigJson {
   accessKeys?: AccessKeyConfig[];
-  // The port number to use for new access keys.
-  defaultPort?: number;
   // Next AccessKeyId to use.
   nextId?: number;
+
+  // DEPRECATED: Use ServerConfigJson.defaultAccessKeyPort instead.
+  defaultPort?: number;
 }
 
 // Generates a random password for Shadowsocks access keys.
@@ -68,6 +70,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   constructor(
       private portProvider: PortProvider, private proxyHostname: string,
       private keyConfig: JsonConfig<AccessKeyConfigJson>,
+      private serverConfig: JsonConfig<ServerConfigJson>,
       private shadowsocksServer: ShadowsocksServer) {
     if (this.keyConfig.data().accessKeys === undefined) {
       this.keyConfig.data().accessKeys = [];
@@ -146,11 +149,18 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private async getDefaultPort(): Promise<number> {
-    if (!this.keyConfig.data().defaultPort) {
-      this.keyConfig.data().defaultPort = await this.portProvider.reserveNewPort();
-      this.keyConfig.write();
+    if (!this.serverConfig.data().defaultAccessKeyPort) {
+      // For backward compatibility.
+      if (this.keyConfig.data().defaultPort) {
+        this.serverConfig.data().defaultAccessKeyPort = this.keyConfig.data().defaultPort;
+        delete this.keyConfig.data().defaultPort;
+        this.keyConfig.write();
+      } else {
+        this.serverConfig.data().defaultAccessKeyPort = await this.portProvider.reserveNewPort();
+      }
+      this.serverConfig.write();
     }
-    return this.keyConfig.data().defaultPort;
+    return this.serverConfig.data().defaultAccessKeyPort;
   }
 
   private updateServer(): Promise<void> {
