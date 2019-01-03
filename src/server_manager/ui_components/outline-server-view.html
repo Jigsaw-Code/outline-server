@@ -487,7 +487,18 @@
           </div>
         </div>
         <div name="settings">
-          <outline-server-settings id="serverSettings" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-management-port="[[serverManagementPort]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]"></outline-server-settings>
+          <outline-server-settings
+            id="serverSettings"
+            server-id="[[serverId]]"
+            server-hostname="[[serverHostname]]"
+            server-management-api-url="[[serverManagementApiUrl]]"
+            server-default-access-key-port="[[serverDefaultAccessKeyPort]]"
+            server-creation-date="[[serverCreationDate]]"
+            server-monthly-cost="[[monthlyCost]]"
+            server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]"
+            is-server-managed="[[isServerManaged]]"
+            server-location="[[serverLocation]]">
+          </outline-server-settings>
         </div>
       </iron-pages>
     </div>
@@ -518,7 +529,8 @@
         serverId: String,
         serverName: String,
         serverHostname: String,
-        serverManagementPort: Number,
+        serverManagementApiUrl: String,
+        serverDefaultAccessKeyPort: Number,
         serverCreationDate: String,
         serverLocation: String,
         isServerManaged: Boolean,

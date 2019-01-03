@@ -52,11 +52,11 @@ export interface Server {
   // Returns the server's domain name or IP address.
   getHostname(): string;
 
-  // Returns the server's management API port.
-  getManagementPort(): number;
-
   // Returns the server's management API URL.
   getManagementApiUrl(): string;
+
+  // Returns the port number for new access keys.
+  getDefaultAccessKeyPort(): number;
 }
 
 // Manual servers are servers which the user has independently setup to run

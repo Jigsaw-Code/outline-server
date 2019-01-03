@@ -132,7 +132,8 @@
             <paper-input id="serverNameInput" class="server-name" value="{{name}}" label="Name" always-float-label maxlength="100" on-keydown="_handleNameInputKeyDown" on-blur="_handleNameInputBlur"></paper-input>
             <p class="detail">Set a new name for your server. Note that this will not be reflected on the devices of the users that you invited to connect to it.</p>
             <paper-input disabled value="[[serverHostname]]" label="Hostname" hidden$="[[!serverHostname]]" always-float-label maxlength="100"></paper-input>
-            <paper-input disabled value="[[serverManagementPort]]" label="Management port" hidden$="[[!serverManagementPort]]" always-float-label maxlength="100"></paper-input>
+            <paper-input disabled value="[[serverManagementApiUrl]]" label="Management API URL" hidden$="[[!serverManagementApiUrl]]" always-float-label maxlength="100"></paper-input>
+            <paper-input disabled value="[[serverDefaultAccessKeyPort]]" label="Default Access Key port" hidden$="[[!serverDefaultAccessKeyPort]]" always-float-label maxlength="100"></paper-input>
             <paper-input disabled value="[[serverCreationDate]]" label="Created" hidden$="[[!serverCreationDate]]" always-float-label maxlength="100"></paper-input>
             <paper-input disabled value="[[serverId]]" label="Server ID" hidden$="[[!serverId]]" always-float-label maxlength="100"></paper-input>
           </div>
@@ -161,7 +162,8 @@
         // Initialize to null so we can use the hidden attribute, which does not work well with undefined values.
         serverId: {type: String, value: null},
         serverHostname: {type: String, value: null},
-        serverManagementPort: {type: Number, value: null},
+        serverManagementApiUrl: {type: String, value: null},
+        serverDefaultAccessKeyPort: {type: Number, value: null},
         serverCreationDate: {type: String, value: null},
         serverLocation: {type: String, value: null},
         serverMonthlyCost: {type: String, value: null},

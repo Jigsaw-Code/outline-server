@@ -27,6 +27,7 @@ export interface ServerConfig {
   metricsEnabled: boolean;
   serverId: string;
   createdTimestampMs: number;
+  defaultAccessKeyPort: number;
 }
 
 export class ShadowboxServer implements server.Server {
@@ -131,9 +132,12 @@ export class ShadowboxServer implements server.Server {
     }
   }
 
-  getManagementPort(): number {
+  getDefaultAccessKeyPort(): number {
     try {
-      return parseInt(new URL(this.managementApiAddress).port, 10);
+      if (typeof this.serverConfig.defaultAccessKeyPort !== "number") {
+        return undefined;
+      }
+      return this.serverConfig.defaultAccessKeyPort;
     } catch (e) {
       return undefined;
     }
