@@ -78,22 +78,26 @@ function reserveAccessKeyPorts(
   dedupedPorts.forEach(p => portProvider.addReservedPort(p));
 }
 
-async function getPortForNewAccessKeys(
-    portProvider: PortProvider,
+function getPortForNewAccessKeys(
     serverConfig: json_config.JsonConfig<server_config.ServerConfigJson>,
-    keyConfig: json_config.JsonConfig<AccessKeyConfigJson>) {
+    keyConfig: json_config.JsonConfig<AccessKeyConfigJson>): number {
   if (!serverConfig.data().portForNewAccessKeys) {
     // NOTE(2019-01-04): For backward compatibility. Delete after servers have been migrated.
     if (keyConfig.data().defaultPort) {
       // Migrate setting from keyConfig to serverConfig.
       serverConfig.data().portForNewAccessKeys = keyConfig.data().defaultPort;
+      serverConfig.write();
       delete keyConfig.data().defaultPort;
       keyConfig.write();
-    } else {
-      serverConfig.data().portForNewAccessKeys = await portProvider.reserveNewPort();
     }
-    serverConfig.write();
   }
+  return serverConfig.data().portForNewAccessKeys;
+}
+
+async function reservePortForNewAccessKeys(
+    portProvider: PortProvider,
+    serverConfig: json_config.JsonConfig<server_config.ServerConfigJson>): Promise<number> {
+  serverConfig.data().portForNewAccessKeys = await portProvider.reserveNewPort();
   return serverConfig.data().portForNewAccessKeys;
 }
 
@@ -203,8 +207,8 @@ async function main() {
   //   with that forever) and output new instructions for port configuration.
   // - update manger UI to provide new instructions for port configuration in manual mode.
   if (createRolloutTracker(serverConfig).isRolloutEnabled('single-port', 0)) {
-    const portForNewAccessKeys =
-        await getPortForNewAccessKeys(portProvider, serverConfig, accessKeyConfig);
+    const portForNewAccessKeys = getPortForNewAccessKeys(serverConfig, accessKeyConfig) ||
+        await reservePortForNewAccessKeys(portProvider, serverConfig);
     accessKeyRepository.enableSinglePort(portForNewAccessKeys);
   }
 
