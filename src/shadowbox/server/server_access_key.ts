@@ -65,12 +65,11 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyConfig): Access
 export class ServerAccessKeyRepository implements AccessKeyRepository {
   // This is the max id + 1 among all access keys. Used to generate unique ids for new access keys.
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
-  private singlePortEnabled = false;
+  private portForNewAccessKeys: number|undefined;
 
   constructor(
       private portProvider: PortProvider, private proxyHostname: string,
-      private portForNewAccessKeys: number, private keyConfig: JsonConfig<AccessKeyConfigJson>,
-      private serverConfig: JsonConfig<ServerConfigJson>,
+      private keyConfig: JsonConfig<AccessKeyConfigJson>,
       private shadowsocksServer: ShadowsocksServer) {
     if (this.keyConfig.data().accessKeys === undefined) {
       this.keyConfig.data().accessKeys = [];
@@ -81,12 +80,12 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.updateServer();
   }
 
-  enableSinglePort() {
-    this.singlePortEnabled = true;
+  enableSinglePort(portForNewAccessKeys: number) {
+    this.portForNewAccessKeys = portForNewAccessKeys;
   }
 
   async createNewAccessKey(): Promise<AccessKey> {
-    const port = await (this.singlePortEnabled ? this.getDefaultPort() : this.portProvider.reserveNewPort());
+    const port = this.portForNewAccessKeys || await this.portProvider.reserveNewPort();
     const id = this.keyConfig.data().nextId.toString();
     this.keyConfig.data().nextId += 1;
     const metricsId = uuidv4();
@@ -146,21 +145,6 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined {
     const accessKeyJson = this.getAccessKey(id);
     return accessKeyJson ? accessKeyJson.metricsId : undefined;
-  }
-
-  private async getDefaultPort(): Promise<number> {
-    if (!this.serverConfig.data().portForNewAccessKeys) {
-      // For backward compatibility.
-      if (this.keyConfig.data().defaultPort) {
-        this.serverConfig.data().portForNewAccessKeys = this.keyConfig.data().defaultPort;
-        delete this.keyConfig.data().defaultPort;
-        this.keyConfig.write();
-      } else {
-        this.serverConfig.data().portForNewAccessKeys = await this.portProvider.reserveNewPort();
-      }
-      this.serverConfig.write();
-    }
-    return this.serverConfig.data().portForNewAccessKeys;
   }
 
   private updateServer(): Promise<void> {

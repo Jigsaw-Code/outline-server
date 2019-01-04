@@ -78,6 +78,24 @@ function reserveAccessKeyPorts(
   dedupedPorts.forEach(p => portProvider.addReservedPort(p));
 }
 
+async function getPortForNewAccessKeys(
+    portProvider: PortProvider,
+    serverConfig: json_config.JsonConfig<server_config.ServerConfigJson>,
+    keyConfig: json_config.JsonConfig<AccessKeyConfigJson>) {
+  if (!serverConfig.data().portForNewAccessKeys) {
+    // For backward compatibility.
+    if (keyConfig.data().defaultPort) {
+      serverConfig.data().portForNewAccessKeys = keyConfig.data().defaultPort;
+      delete keyConfig.data().defaultPort;
+      keyConfig.write();
+    } else {
+      serverConfig.data().portForNewAccessKeys = await portProvider.reserveNewPort();
+    }
+    serverConfig.write();
+  }
+  return serverConfig.data().portForNewAccessKeys;
+}
+
 // TODO: Get rid of this after 30 days of everyone's migration to Prometheus.
 function createLegacyManagerMetrics(configFilename: string): LegacyManagerMetrics {
   const metricsConfig = readMetricsConfig(configFilename);
@@ -177,14 +195,16 @@ async function main() {
       getPersistentFilename('prometheus/config.yml'), prometheusConfigJson);
 
   const accessKeyRepository = new ServerAccessKeyRepository(
-      portProvider, proxyHostname, accessKeyConfig, serverConfig, shadowsocksServer);
+      portProvider, proxyHostname, accessKeyConfig, shadowsocksServer);
 
   // TODO(fortuna): Once single-port is fully rollout, we should:
   // - update `install_server.sh` to stop using `--net=host` for new servers (old servers are stuck
   //   with that forever) and output new instructions for port configuration.
   // - update manger UI to provide new instructions for port configuration in manual mode.
   if (createRolloutTracker(serverConfig).isRolloutEnabled('single-port', 0)) {
-    accessKeyRepository.enableSinglePort();
+    const portForNewAccessKeys =
+        await getPortForNewAccessKeys(portProvider, serverConfig, accessKeyConfig);
+    accessKeyRepository.enableSinglePort(portForNewAccessKeys);
   }
 
   const prometheusClient = new PrometheusClient(`http://${prometheusLocation}`);
