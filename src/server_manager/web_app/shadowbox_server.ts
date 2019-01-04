@@ -132,7 +132,7 @@ export class ShadowboxServer implements server.Server {
     }
   }
 
-  getDefaultAccessKeyPort(): number {
+  getDefaultAccessKeyPort(): number|undefined {
     try {
       if (typeof this.serverConfig.defaultAccessKeyPort !== "number") {
         return undefined;
