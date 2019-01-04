@@ -91,7 +91,7 @@
         }
 
       }
-      paper-input[disabled] {
+      paper-input[readonly] {
         --paper-input-container-underline: {
           display: none;
         };
@@ -109,7 +109,7 @@
         text-decoration: underline;
         color: var(--medium-gray);
       }
-      .server-name {
+      paper-input:not([readonly]) {
         width: 60%;
       }
     </style>
@@ -120,9 +120,9 @@
           <img class="setting-icon digital-ocean-icon" src="images/do_white_logo.svg"/>
           <div>
             <h3>Digital Ocean</h3>
-            <paper-input disabled value="[[serverLocation]]" label="Server location" hidden$="[[!serverLocation]]" always-float-label maxlength="100"></paper-input>
-            <paper-input disabled value="[[serverMonthlyCost]] USD/month" label="Montly cost" hidden$="[[!serverMonthlyCost]]" always-float-label maxlength="100"></paper-input>
-            <paper-input disabled value="[[serverMonthlyTransferLimit]]" label="Transfer limit" hidden$="[[!serverMonthlyTransferLimit]]" always-float-label maxlength="100"></paper-input>
+            <paper-input readonly value="[[serverLocation]]" label="Server location" hidden$="[[!serverLocation]]" always-float-label maxlength="100"></paper-input>
+            <paper-input readonly value="[[serverMonthlyCost]] USD/month" label="Montly cost" hidden$="[[!serverMonthlyCost]]" always-float-label maxlength="100"></paper-input>
+            <paper-input readonly value="[[serverMonthlyTransferLimit]]" label="Transfer limit" hidden$="[[!serverMonthlyTransferLimit]]" always-float-label maxlength="100"></paper-input>
           </div>
         </div>
         <div class="setting card-section">
@@ -131,11 +131,11 @@
             <h3>Server Information</h3>
             <paper-input id="serverNameInput" class="server-name" value="{{name}}" label="Name" always-float-label maxlength="100" on-keydown="_handleNameInputKeyDown" on-blur="_handleNameInputBlur"></paper-input>
             <p class="detail">Set a new name for your server. Note that this will not be reflected on the devices of the users that you invited to connect to it.</p>
-            <paper-input disabled value="[[serverHostname]]" label="Hostname" hidden$="[[!serverHostname]]" always-float-label maxlength="100"></paper-input>
-            <paper-input disabled value="[[serverManagementApiUrl]]" label="Management API URL" hidden$="[[!serverManagementApiUrl]]" always-float-label maxlength="100"></paper-input>
-            <paper-input disabled value="[[serverDefaultAccessKeyPort]]" label="Default Access Key port" hidden$="[[!serverDefaultAccessKeyPort]]" always-float-label maxlength="100"></paper-input>
-            <paper-input disabled value="[[serverCreationDate]]" label="Created" hidden$="[[!serverCreationDate]]" always-float-label maxlength="100"></paper-input>
-            <paper-input disabled value="[[serverId]]" label="Server ID" hidden$="[[!serverId]]" always-float-label maxlength="100"></paper-input>
+            <paper-input readonly value="[[serverDefaultAccessKeyPort]]" label="Port for new access keys" hidden$="[[!serverDefaultAccessKeyPort]]" always-float-label maxlength="100"></paper-input>
+            <paper-input readonly value="[[serverHostname]]" label="Hostname" hidden$="[[!serverHostname]]" always-float-label maxlength="100"></paper-input>
+            <paper-input readonly value="[[serverManagementApiUrl]]" label="Management API URL" hidden$="[[!serverManagementApiUrl]]" always-float-label maxlength="100"></paper-input>
+            <paper-input readonly value="[[serverCreationDate]]" label="Created" hidden$="[[!serverCreationDate]]" always-float-label maxlength="100"></paper-input>
+            <paper-input readonly value="[[serverId]]" label="Server ID" hidden$="[[!serverId]]" always-float-label maxlength="100"></paper-input>
           </div>
         </div>
         <!-- Metrics controls -->
