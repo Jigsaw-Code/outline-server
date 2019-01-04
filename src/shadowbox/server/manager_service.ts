@@ -104,7 +104,8 @@ export class ShadowsocksManagerService {
       name: this.serverConfig.data().name || this.defaultServerName,
       serverId: this.serverConfig.data().serverId,
       metricsEnabled: this.serverConfig.data().metricsEnabled || false,
-      createdTimestampMs: this.serverConfig.data().createdTimestampMs
+      createdTimestampMs: this.serverConfig.data().createdTimestampMs,
+      portForNewAccessKeys: this.serverConfig.data().portForNewAccessKeys
     });
     next();
   }

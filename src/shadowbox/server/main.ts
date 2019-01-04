@@ -27,7 +27,7 @@ import {PrometheusClient, runPrometheusScraper} from '../infrastructure/promethe
 import {RolloutTracker} from '../infrastructure/rollout';
 import {AccessKeyId} from '../model/access_key';
 
-import {LegacyManagerMetrics, LegacyManagerMetricsJson, PrometheusManagerMetrics} from './manager_metrics';
+import {PrometheusManagerMetrics} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
 import {OutlineShadowsocksServer} from './outline_shadowsocks_server';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
@@ -35,28 +35,8 @@ import * as server_config from './server_config';
 import {OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollectorClient, SharedMetricsPublisher} from './shared_metrics';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
-const MAX_STATS_FILE_AGE_MS = 5000;
 const MMDB_LOCATION = '/var/lib/libmaxminddb/GeoLite2-Country.mmdb';
 
-// Serialized format for the metrics file.
-// WARNING: Renaming fields will break backwards-compatibility.
-interface MetricsConfigJson {
-  // Serialized ManagerStats object.
-  transferStats?: LegacyManagerMetricsJson;
-  // DEPRECATED: hourlyMetrics. Hourly stats live in memory only now.
-}
-
-function readMetricsConfig(filename: string): json_config.JsonConfig<MetricsConfigJson> {
-  try {
-    const metricsConfig = json_config.loadFileConfig<MetricsConfigJson>(filename);
-    // Make sure we have non-empty sub-configs.
-    metricsConfig.data().transferStats =
-        metricsConfig.data().transferStats || {} as LegacyManagerMetricsJson;
-    return new json_config.DelayedConfig(metricsConfig, MAX_STATS_FILE_AGE_MS);
-  } catch (error) {
-    throw new Error(`Failed to read metrics config at ${filename}: ${error}`);
-  }
-}
 
 async function exportPrometheusMetrics(registry: prometheus.Registry, port): Promise<http.Server> {
   return new Promise<http.Server>((resolve, _) => {
@@ -78,12 +58,27 @@ function reserveAccessKeyPorts(
   dedupedPorts.forEach(p => portProvider.addReservedPort(p));
 }
 
-// TODO: Get rid of this after 30 days of everyone's migration to Prometheus.
-function createLegacyManagerMetrics(configFilename: string): LegacyManagerMetrics {
-  const metricsConfig = readMetricsConfig(configFilename);
-  return new LegacyManagerMetrics(
-      new RealClock(),
-      new json_config.ChildConfig(metricsConfig, metricsConfig.data().transferStats));
+function getPortForNewAccessKeys(
+    serverConfig: json_config.JsonConfig<server_config.ServerConfigJson>,
+    keyConfig: json_config.JsonConfig<AccessKeyConfigJson>): number {
+  if (!serverConfig.data().portForNewAccessKeys) {
+    // NOTE(2019-01-04): For backward compatibility. Delete after servers have been migrated.
+    if (keyConfig.data().defaultPort) {
+      // Migrate setting from keyConfig to serverConfig.
+      serverConfig.data().portForNewAccessKeys = keyConfig.data().defaultPort;
+      serverConfig.write();
+      delete keyConfig.data().defaultPort;
+      keyConfig.write();
+    }
+  }
+  return serverConfig.data().portForNewAccessKeys;
+}
+
+async function reservePortForNewAccessKeys(
+    portProvider: PortProvider,
+    serverConfig: json_config.JsonConfig<server_config.ServerConfigJson>): Promise<number> {
+  serverConfig.data().portForNewAccessKeys = await portProvider.reserveNewPort();
+  return serverConfig.data().portForNewAccessKeys;
 }
 
 function createRolloutTracker(serverConfig: json_config.JsonConfig<server_config.ServerConfigJson>):
@@ -184,7 +179,9 @@ async function main() {
   //   with that forever) and output new instructions for port configuration.
   // - update manger UI to provide new instructions for port configuration in manual mode.
   if (createRolloutTracker(serverConfig).isRolloutEnabled('single-port', 20)) {
-    accessKeyRepository.enableSinglePort();
+    const portForNewAccessKeys = getPortForNewAccessKeys(serverConfig, accessKeyConfig) ||
+        await reservePortForNewAccessKeys(portProvider, serverConfig);
+    accessKeyRepository.enableSinglePort(portForNewAccessKeys);
   }
 
   const prometheusClient = new PrometheusClient(`http://${prometheusLocation}`);
@@ -192,9 +189,7 @@ async function main() {
   const toMetricsId = (id: AccessKeyId) => {
     return accessKeyRepository.getMetricsId(id);
   };
-  const legacyManagerMetrics =
-      createLegacyManagerMetrics(getPersistentFilename('shadowbox_stats.json'));
-  const managerMetrics = new PrometheusManagerMetrics(prometheusClient, legacyManagerMetrics);
+  const managerMetrics = new PrometheusManagerMetrics(prometheusClient);
   const metricsCollector = new RestMetricsCollectorClient(metricsCollectorUrl);
   const metricsPublisher: SharedMetricsPublisher = new OutlineSharedMetricsPublisher(
       new RealClock(), serverConfig, metricsReader, toMetricsId, metricsCollector);

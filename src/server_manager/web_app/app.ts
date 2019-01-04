@@ -759,7 +759,8 @@ export class App {
     view.serverId = selectedServer.getServerId();
     view.serverName = selectedServer.getName();
     view.serverHostname = selectedServer.getHostname();
-    view.serverManagementPort = selectedServer.getManagementPort();
+    view.serverManagementApiUrl = selectedServer.getManagementApiUrl();
+    view.serverPortForNewAccessKeys = selectedServer.getPortForNewAccessKeys();
     view.serverCreationDate = selectedServer.getCreatedDate().toLocaleString(
         'en-US', {year: 'numeric', month: 'long', day: 'numeric'});
 
