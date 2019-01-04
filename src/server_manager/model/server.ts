@@ -56,8 +56,8 @@ export interface Server {
   getManagementApiUrl(): string;
 
   // Returns the port number for new access keys.
-  // Returns undefined if the server doesn't have a default port set.
-  getDefaultAccessKeyPort(): number|undefined;
+  // Returns undefined if the server doesn't have a port set.
+  getPortForNewAccessKeys(): number|undefined;
 }
 
 // Manual servers are servers which the user has independently setup to run

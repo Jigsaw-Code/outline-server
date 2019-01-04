@@ -131,7 +131,7 @@
             <h3>Server Information</h3>
             <paper-input id="serverNameInput" class="server-name" value="{{name}}" label="Name" always-float-label maxlength="100" on-keydown="_handleNameInputKeyDown" on-blur="_handleNameInputBlur"></paper-input>
             <p class="detail">Set a new name for your server. Note that this will not be reflected on the devices of the users that you invited to connect to it.</p>
-            <paper-input readonly value="[[serverDefaultAccessKeyPort]]" label="Port for new access keys" hidden$="[[!serverDefaultAccessKeyPort]]" always-float-label maxlength="100"></paper-input>
+            <paper-input readonly value="[[serverPortForNewAccessKeys]]" label="Port for new access keys" hidden$="[[!serverPortForNewAccessKeys]]" always-float-label maxlength="100"></paper-input>
             <paper-input readonly value="[[serverHostname]]" label="Hostname" hidden$="[[!serverHostname]]" always-float-label maxlength="100"></paper-input>
             <paper-input readonly value="[[serverManagementApiUrl]]" label="Management API URL" hidden$="[[!serverManagementApiUrl]]" always-float-label maxlength="100"></paper-input>
             <paper-input readonly value="[[serverCreationDate]]" label="Created" hidden$="[[!serverCreationDate]]" always-float-label maxlength="100"></paper-input>
@@ -163,7 +163,7 @@
         serverId: {type: String, value: null},
         serverHostname: {type: String, value: null},
         serverManagementApiUrl: {type: String, value: null},
-        serverDefaultAccessKeyPort: {type: Number, value: null},
+        serverPortForNewAccessKeys: {type: Number, value: null},
         serverCreationDate: {type: String, value: null},
         serverLocation: {type: String, value: null},
         serverMonthlyCost: {type: String, value: null},

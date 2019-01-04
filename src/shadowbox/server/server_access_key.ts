@@ -37,7 +37,7 @@ export interface AccessKeyConfigJson {
   // Next AccessKeyId to use.
   nextId?: number;
 
-  // DEPRECATED: Use ServerConfigJson.defaultAccessKeyPort instead.
+  // DEPRECATED: Use ServerConfigJson.portForNewAccessKeys instead.
   defaultPort?: number;
 }
 
@@ -69,7 +69,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
 
   constructor(
       private portProvider: PortProvider, private proxyHostname: string,
-      private keyConfig: JsonConfig<AccessKeyConfigJson>,
+      private portForNewAccessKeys: number, private keyConfig: JsonConfig<AccessKeyConfigJson>,
       private serverConfig: JsonConfig<ServerConfigJson>,
       private shadowsocksServer: ShadowsocksServer) {
     if (this.keyConfig.data().accessKeys === undefined) {
@@ -149,18 +149,18 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private async getDefaultPort(): Promise<number> {
-    if (!this.serverConfig.data().defaultAccessKeyPort) {
+    if (!this.serverConfig.data().portForNewAccessKeys) {
       // For backward compatibility.
       if (this.keyConfig.data().defaultPort) {
-        this.serverConfig.data().defaultAccessKeyPort = this.keyConfig.data().defaultPort;
+        this.serverConfig.data().portForNewAccessKeys = this.keyConfig.data().defaultPort;
         delete this.keyConfig.data().defaultPort;
         this.keyConfig.write();
       } else {
-        this.serverConfig.data().defaultAccessKeyPort = await this.portProvider.reserveNewPort();
+        this.serverConfig.data().portForNewAccessKeys = await this.portProvider.reserveNewPort();
       }
       this.serverConfig.write();
     }
-    return this.serverConfig.data().defaultAccessKeyPort;
+    return this.serverConfig.data().portForNewAccessKeys;
   }
 
   private updateServer(): Promise<void> {

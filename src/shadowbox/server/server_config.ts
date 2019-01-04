@@ -28,7 +28,7 @@ export interface ServerConfigJson {
   // When this server was created. Shown in the Outline Manager and to trigger the metrics opt-in.
   createdTimestampMs?: number;
   // What port number should we use for new access keys?
-  defaultAccessKeyPort?: number;
+  portForNewAccessKeys?: number;
   // Which staged rollouts we should force enabled or disabled.
   rollouts?: RolloutConfigJson[];
 }

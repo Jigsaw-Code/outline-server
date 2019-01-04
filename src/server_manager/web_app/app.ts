@@ -760,7 +760,7 @@ export class App {
     view.serverName = selectedServer.getName();
     view.serverHostname = selectedServer.getHostname();
     view.serverManagementApiUrl = selectedServer.getManagementApiUrl();
-    view.serverDefaultAccessKeyPort = selectedServer.getDefaultAccessKeyPort();
+    view.serverPortForNewAccessKeys = selectedServer.getPortForNewAccessKeys();
     view.serverCreationDate = selectedServer.getCreatedDate().toLocaleString(
         'en-US', {year: 'numeric', month: 'long', day: 'numeric'});
 

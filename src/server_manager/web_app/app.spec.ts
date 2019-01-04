@@ -372,7 +372,7 @@ class FakeServer implements server.Server {
   getManagementApiUrl() {
     return this.apiUrl || Math.random().toString();
   }
-  getDefaultAccessKeyPort(): number {
+  getPortForNewAccessKeys(): number|undefined {
     return undefined;
   }
 }
