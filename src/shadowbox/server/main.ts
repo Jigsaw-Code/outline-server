@@ -183,7 +183,7 @@ async function main() {
   // - update `install_server.sh` to stop using `--net=host` for new servers (old servers are stuck
   //   with that forever) and output new instructions for port configuration.
   // - update manger UI to provide new instructions for port configuration in manual mode.
-  if (createRolloutTracker(serverConfig).isRolloutEnabled('single-port', 0)) {
+  if (createRolloutTracker(serverConfig).isRolloutEnabled('single-port', 20)) {
     accessKeyRepository.enableSinglePort();
   }
 
