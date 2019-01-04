@@ -83,8 +83,9 @@ async function getPortForNewAccessKeys(
     serverConfig: json_config.JsonConfig<server_config.ServerConfigJson>,
     keyConfig: json_config.JsonConfig<AccessKeyConfigJson>) {
   if (!serverConfig.data().portForNewAccessKeys) {
-    // For backward compatibility.
+    // NOTE(2019-01-04): For backward compatibility. Delete after servers have been migrated.
     if (keyConfig.data().defaultPort) {
+      // Migrate setting from keyConfig to serverConfig.
       serverConfig.data().portForNewAccessKeys = keyConfig.data().defaultPort;
       delete keyConfig.data().defaultPort;
       keyConfig.write();
