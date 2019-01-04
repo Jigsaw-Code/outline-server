@@ -27,6 +27,7 @@ export interface ServerConfig {
   metricsEnabled: boolean;
   serverId: string;
   createdTimestampMs: number;
+  portForNewAccessKeys: number;
 }
 
 export class ShadowboxServer implements server.Server {
@@ -131,9 +132,12 @@ export class ShadowboxServer implements server.Server {
     }
   }
 
-  getManagementPort(): number {
+  getPortForNewAccessKeys(): number|undefined {
     try {
-      return parseInt(new URL(this.managementApiAddress).port, 10);
+      if (typeof this.serverConfig.portForNewAccessKeys !== 'number') {
+        return undefined;
+      }
+      return this.serverConfig.portForNewAccessKeys;
     } catch (e) {
       return undefined;
     }

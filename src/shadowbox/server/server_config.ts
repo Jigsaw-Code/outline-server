@@ -27,6 +27,8 @@ export interface ServerConfigJson {
   name?: string;
   // When this server was created. Shown in the Outline Manager and to trigger the metrics opt-in.
   createdTimestampMs?: number;
+  // What port number should we use for new access keys?
+  portForNewAccessKeys?: number;
   // Which staged rollouts we should force enabled or disabled.
   rollouts?: RolloutConfigJson[];
 }
@@ -45,8 +47,8 @@ export function readServerConfig(filename: string): json_config.JsonConfig<Serve
   try {
     const config = json_config.loadFileConfig<ServerConfigJson>(filename);
     config.data().serverId = config.data().serverId || uuidv4();
-    config.data().createdTimestampMs = config.data().createdTimestampMs || Date.now();
     config.data().metricsEnabled = config.data().metricsEnabled || false;
+    config.data().createdTimestampMs = config.data().createdTimestampMs || Date.now();
     config.write();
     return config;
   } catch (error) {

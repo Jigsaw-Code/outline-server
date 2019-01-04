@@ -369,11 +369,11 @@ class FakeServer implements server.Server {
   getHostname() {
     return 'fake-server';
   }
-  getManagementPort() {
-    return 8080;
-  }
   getManagementApiUrl() {
     return this.apiUrl || Math.random().toString();
+  }
+  getPortForNewAccessKeys(): number|undefined {
+    return undefined;
   }
 }
 

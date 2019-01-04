@@ -18,6 +18,7 @@ import {AccessKeyRepository} from '../model/access_key';
 import {AccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
 
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
+import {ServerConfigJson} from './server_config';
 
 describe('ServerAccessKeyRepository', () => {
   it('Repos with non-existent files are created with no access keys', (done) => {
