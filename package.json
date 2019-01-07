@@ -21,7 +21,7 @@
   ],
   "husky": {
     "hooks": {
-      "pre-commit": "for i in . src/server_manager/electron_app src/metrics_server src/shadowbox; do tslint -p $i --fix; done; git-clang-format"
+      "pre-commit": "yarn tslint --fix 'src/**/*.ts' -e '**/bower_components/**' -e '**/node_modules/**' && yarn git-clang-format"
     }
   }
 }
