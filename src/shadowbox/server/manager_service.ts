@@ -113,7 +113,7 @@ export class ShadowsocksManagerService {
   // Lists all access keys
   public listAccessKeys(req: RequestType, res: ResponseType, next: restify.Next): void {
     logging.debug(`listAccessKeys request ${JSON.stringify(req.params)}`);
-    const response = {accessKeys: [], users: []};
+    const response = {accessKeys: []};
     for (const accessKey of this.accessKeys.listAccessKeys()) {
       response.accessKeys.push(accessKeyToJson(accessKey));
     }
