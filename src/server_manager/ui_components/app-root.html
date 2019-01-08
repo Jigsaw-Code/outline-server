@@ -151,8 +151,20 @@
         color: white;
         border-left: 2px solid var(--primary-green);
       }
+      @keyframes rotate {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
       .server.syncing {
         cursor: wait;
+      }
+      .syncing .server-icon {
+        animation: rotate 1.75s ease-out infinite;
+        opacity: 0.5;
       }
       .server-icon {
         width: 22px;
@@ -304,7 +316,7 @@
               </div>
               <div class="servers-container">
                 <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
-                  <div class$="server {{_computeServerClass(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
+                  <div class$="server {{_computeServerClasses(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
                     <img class="server-icon" src$="images/{{_computeServerImage(selectedServer, server)}}" />
                     <span>{{server.name}}</span>
                   </div>
@@ -318,7 +330,7 @@
               </div>
               <div class="servers-container">
                 <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
-                  <div class$="server {{_computeServerClass(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
+                  <div class$="server {{_computeServerClasses(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
                     <img class="server-icon" src$="images/{{_computeServerImage(selectedServer, server)}}" />
                     <span>{{server.name}}</span>
                   </div>
@@ -377,7 +389,7 @@
             <div class="side-bar-section servers-section" hidden$="{{!isSignedInToDigitalOcean}}">
               <img class="provider-icon" src="images/do_white_logo.svg"/>
               <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
-                <div class$="server {{_computeServerClass(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
+                <div class$="server {{_computeServerClasses(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
                   <img class="server-icon" src$="images/{{_computeServerImage(selectedServer, server)}}" />
                 </div>
               </template>
@@ -386,7 +398,7 @@
             <div class="side-bar-section servers-section" hidden$="{{!hasManualServers}}">
               <img class="provider-icon" src="images/cloud.svg"/>
               <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
-                <div class$="server {{_computeServerClass(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
+                <div class$="server {{_computeServerClasses(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
                   <img class="server-icon" src$="images/{{_computeServerImage(selectedServer, server)}}" />
                 </div>
               </template>
@@ -723,18 +735,21 @@
         }
         return 0;
       },
-      _computeServerClass: function(selectedServer, server) {
+      _computeServerClasses: function(selectedServer, server) {
+        let serverClasses = [];
         if (this._isServerSelected(selectedServer, server)) {
-          return 'selected';
+          serverClasses.push('selected');
         }
-        return server.isSynced ? '' : 'syncing';
+        if (!server.isSynced) {
+          serverClasses.push('syncing')
+        }
+        return serverClasses.join(' ');
       },
-      // TODO(alalama): get syncing icon from @ohnocassio.
       _computeServerImage: function(selectedServer, server) {
         if (this._isServerSelected(selectedServer, server)) {
           return 'server-icon-selected.png';
         }
-        return server.isSynced ? 'server-icon.png' : 'server-syncing.png';
+        return 'server-icon.png';
       },
       _isServerSelected: function(selectedServer, server) {
         return !!selectedServer && selectedServer.id === server.id;
