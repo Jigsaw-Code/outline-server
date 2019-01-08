@@ -3,10 +3,17 @@ info:
   title: Outline Server Management
   description: API to manage an Outline server.
   version: '1.0'
+tags:
+  - name: Server
+    description: Server-level functions
+  - name: Access Key
+    description: Access key functions
 paths:
   /name:
     put:
       description: Renames the server
+      tags:
+        - Server
       requestBody:
         required: true
         content: 
@@ -26,6 +33,8 @@ paths:
           description: Invalid name
   /server:
     get:
+      tags:
+        - Server
       description: Returns information about the server
       responses:
         '200':
@@ -41,6 +50,8 @@ paths:
   /access-keys:
     post:
       description: Creates a new access key
+      tags:
+        - Access Key
       responses:
         '201':
           description: The newly created access key
@@ -49,7 +60,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/AccessKey"
               examples:
-                # TODO: Sanitize
                 '0':
                   value: >-
                     {"id":"0","name":"First","password":"XxXxXx","port":9795,"method":"chacha20-ietf-poly1305","accessUrl":"ss://SADFJSKADFJAKSD@0.0.0.0:9795/?outline=1"}
@@ -58,6 +68,8 @@ paths:
                     {"id":"1","name":"Second","password":"xXxXxX","port":9795,"method":"chacha20-ietf-poly1305","accessUrl":"ss://ASDFHAKSDFSDAKFJ@0.0.0.0:9795/?outline=1"}
     get:
       description: Lists the access keys
+      tags:
+        - Access Key
       responses:
         '200':
           description: List of access keys
@@ -80,6 +92,8 @@ paths:
   /access-keys/{id}:
     delete:
       description: Deletes an access key
+      tags:
+        - Access Key
       parameters:
         - name: id
           in: path
@@ -109,6 +123,8 @@ paths:
   /access-keys/{id}/name:
     put:
       description: Renames an access key
+      tags:
+        - Access Key
       parameters:
         - name: id
           in: path
@@ -133,6 +149,8 @@ paths:
   /metrics/transfer:
     get:
       description: Returns the data transferred per user
+      tags:
+        - Access Key
       responses:
         '200':
           description: The data tranferred by user
@@ -151,6 +169,8 @@ paths:
   /metrics/enabled:
     get:
       description: Returns whether metrics is being shared
+      tags:
+        - Server
       responses:
         '200':
           description: The metrics enabled setting
@@ -166,6 +186,8 @@ paths:
                   value: '{"metricsEnabled":true}'
     put:
       description: Enables or disables sharing of metrics
+      tags:
+        - Server
       requestBody:
         required: true
         content: 
@@ -214,4 +236,3 @@ components:
           type: string
         accessUrl:
           type: string
-      
