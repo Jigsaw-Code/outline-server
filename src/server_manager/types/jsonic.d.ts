@@ -16,7 +16,7 @@
 // https://www.npmjs.com/package/jsonic
 
 declare module 'jsonic' {
-  function parse(s: string): Object;
+  function parse(s: string): {};
   namespace parse {}
   export = parse;
 }

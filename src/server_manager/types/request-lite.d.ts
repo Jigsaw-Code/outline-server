@@ -16,8 +16,8 @@
 // @types/request module.  We should re-use those typings if possible, or just
 // use another lightweight request module with it's own @type supplied.
 declare module 'request-lite' {
-  // tslint:disable-next-line:no-any
   function request(
+      // tslint:disable-next-line:no-any
       url: string, callback: (error: Error, response: any, body: string) => void): void;
   namespace request {}
   export = request;

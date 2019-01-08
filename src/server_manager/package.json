@@ -1,7 +1,7 @@
 {
   "name": "outline-manager",
   "productName": "Outline Manager",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Create and manage access to Outline servers",
   "homepage": "https://getoutline.org/",
   "author": {
@@ -13,7 +13,7 @@
     "body-parser": "^1.18.3",
     "bytes": "^3.0.0",
     "clipboard-polyfill": "^2.4.6",
-    "electron-updater": "^3.1.2",
+    "electron-updater": "3.2.3",
     "eventemitter3": "^2.0.3",
     "express": "^4.16.3",
     "jsonic": "^0.3.1",
@@ -28,8 +28,8 @@
     "@types/semver": "^5.5.0",
     "bower": "^1.8.0",
     "browserify": "^14.5.0",
-    "electron": "^2.0.8",
-    "electron-builder": "^20.28.2",
+    "electron": "^2.0.16",
+    "electron-builder": "20.34.0",
     "electron-icon-maker": "^0.0.4"
   },
   "scripts": {
