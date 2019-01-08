@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: Outline Server Management
-  description: API to manage an Outline server.
+  description: API to manage an Outline server. See [getoutline.org](https://getoutline.org).
   version: '1.0'
 tags:
   - name: Server
