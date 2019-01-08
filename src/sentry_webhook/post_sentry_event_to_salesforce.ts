@@ -23,7 +23,7 @@ interface SalesforceFormFields {
   description: string;
   category: string;
   cloudProvider: string;
-  sentryEventId: string;
+  sentryEventUrl: string;
   os: string;
   version: string;
   type: string;
@@ -45,7 +45,7 @@ const SALESFORCE_FORM_FIELDS_DEV: SalesforceFormFields = {
   description: 'description',
   category: '00N3F000002Rqho',
   cloudProvider: '00N3F000002Rqhs',
-  sentryEventId: '00N3F000002Rqhq',
+  sentryEventUrl: '00N3F000002Rqhq',
   os: '00N3F000002cLcN',
   version: '00N3F000002cLcI',
   type: 'type'
@@ -57,7 +57,7 @@ const SALESFORCE_FORM_FIELDS_PROD: SalesforceFormFields = {
   description: 'description',
   category: '00N0b00000BqOA2',
   cloudProvider: '00N0b00000BqOA7',
-  sentryEventId: '00N0b00000BqOA4',
+  sentryEventUrl: '00N0b00000BqOA4',
   os: '00N0b00000BqOfW',
   version: '00N0b00000BqOfR',
   type: 'type'
@@ -89,7 +89,7 @@ export function postSentryEventToSalesforce(
     const formValues = isProd ? SALESFORCE_FORM_VALUES_PROD : SALESFORCE_FORM_VALUES_DEV;
     const isClient = project.indexOf('client') !== -1;
     const formData =
-        getSalesforceFormData(formFields, formValues, event, event.user!.email!, isClient);
+        getSalesforceFormData(formFields, formValues, event, event.user!.email!, isClient, project);
     const req = https.request(
         {
           host: salesforceHost,
@@ -119,12 +119,12 @@ export function postSentryEventToSalesforce(
 // Returns a URL-encoded string with the Salesforce form data.
 function getSalesforceFormData(
     formFields: SalesforceFormFields, formValues: SalesforceFormValues, event: sentry.SentryEvent,
-    email: string, isClient: boolean): string {
+    email: string, isClient: boolean, project: string): string {
   const form = [];
   form.push(encodeFormData(formFields.orgId, formValues.orgId));
   form.push(encodeFormData(formFields.recordType, formValues.recordType));
   form.push(encodeFormData(formFields.email, email));
-  form.push(encodeFormData(formFields.sentryEventId, event.event_id));
+  form.push(encodeFormData(formFields.sentryEventUrl, getSentryEventUrl(project, event.event_id)));
   form.push(encodeFormData(formFields.description, event.message));
   form.push(encodeFormData(formFields.type, isClient ? 'Outline client' : 'Outline manager'));
   if (!!event.tags) {
@@ -156,4 +156,11 @@ function getTagsMap(tags: {[key: string]: string}) {
     }
   }
   return tagsMap;
+}
+
+function getSentryEventUrl(project: string, eventId?: string) {
+  if (!eventId) {
+    return '';
+  }
+  return `https://sentry.io/outlinevpn/${project}/events/${eventId}`;
 }
