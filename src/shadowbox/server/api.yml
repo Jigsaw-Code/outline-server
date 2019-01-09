@@ -8,6 +8,9 @@ tags:
     description: Server-level functions
   - name: Access Key
     description: Access key functions
+servers: 
+  - url: https://example.com/SecretPath
+    description: Example URL. Change to your own server.  
 paths:
   /server:
     get:
