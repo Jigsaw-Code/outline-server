@@ -14,19 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-touch /tmp/config.json
-source $ROOT_DIR/src/shadowbox/scripts/make_certificate.sh
+do_action shadowbox/docker/build
+
+OUTLINE_DIR=/tmp/outline
+touch "$OUTLINE_DIR/config.json"
+source $ROOT_DIR/src/shadowbox/scripts/make_test_certificate.sh "${OUTLINE_DIR}"
 
 # TODO: mount a folder rather than individual files.
 declare -a docker_bindings=(
-  -v /tmp/config.json:/root/shadowbox/shadowbox_config.json
-  -v /tmp/stats.json:/root/shadowbox/shadowbox_stats.json
+  -v "$OUTLINE_DIR/config.json":/root/shadowbox/shadowbox_config.json
+  -v "$OUTLINE_DIR/stats.json":/root/shadowbox/shadowbox_stats.json
   -v ${SB_CERTIFICATE_FILE}:${SB_CERTIFICATE_FILE}
   -v ${SB_PRIVATE_KEY_FILE}:${SB_PRIVATE_KEY_FILE}
   -e "LOG_LEVEL=${LOG_LEVEL:-debug}"
   -e SB_API_PREFIX=TestApiPrefix
-  -e SB_CERTIFICATE_FILE
-  -e SB_PRIVATE_KEY_FILE
+  -e SB_CERTIFICATE_FILE=${SB_CERTIFICATE_FILE}
+  -e SB_PRIVATE_KEY_FILE=${SB_PRIVATE_KEY_FILE}
 )
 export DOCKER_CONTENT_TRUST=${DOCKER_CONTENT_TRUST:-1}
-docker run --rm -it --network=host --name shadowbox "${docker_bindings[@]}" outline/shadowbox
+sudo docker run --rm -it --network=host --name shadowbox "${docker_bindings[@]}" outline/shadowbox

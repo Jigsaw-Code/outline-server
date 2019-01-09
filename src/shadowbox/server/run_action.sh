@@ -21,8 +21,10 @@ export SB_PUBLIC_IP="${SB_PUBLIC_IP:-$(curl https://ipinfo.io/ip)}"
 # WARNING: The SB_API_PREFIX should be kept secret!
 export SB_API_PREFIX=TestApiPrefix
 export SB_METRICS_URL=https://metrics-test.uproxy.org
-export SB_STATE_DIR=/tmp
+export SB_STATE_DIR=/tmp/outline
 
-source $ROOT_DIR/src/shadowbox/scripts/make_certificate.sh
+source $ROOT_DIR/src/shadowbox/scripts/make_test_certificate.sh $SB_STATE_DIR
 
+# This will fail because it expects prometheus and outline-ss-server to be in /root/shadowbox/bin.
+# TODO: Fix it
 node $BUILD_DIR/shadowbox/app/server/main
