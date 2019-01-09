@@ -9,7 +9,7 @@ tags:
   - name: Access Key
     description: Access key functions
 servers: 
-  - url: https://example.com/SecretPath
+  - url: https://myserver/SecretPath
     description: Example URL. Change to your own server.  
 paths:
   /server:
