@@ -97,18 +97,18 @@ List access keys
 curl --insecure $API_URL/access-keys/
 ```
 
-Create an access keys
+Create an access key
 ```
 curl --insecure -X POST $API_URL/access-keys
 ```
 
-Rename an access keys
+Rename an access key
 (e.g. rename access key 2 to 'albion')
 ```
 curl --insecure -X PUT curl -F 'name=albion' $API_URL/access-keys/2/name
 ```
 
-Remove as access keys
+Remove an access key
 (e.g. remove access key 2)
 ```
 curl --insecure -X DELETE $API_URL/access-keys/2
