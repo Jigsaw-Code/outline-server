@@ -16,7 +16,7 @@
 
 do_action shadowbox/docker/build
 
-OUTLINE_DIR=/tmp/outline
+readonly OUTLINE_DIR=/tmp/outline
 touch "$OUTLINE_DIR/config.json"
 source $ROOT_DIR/src/shadowbox/scripts/make_test_certificate.sh "${OUTLINE_DIR}"
 
