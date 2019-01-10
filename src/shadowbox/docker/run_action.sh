@@ -31,5 +31,5 @@ declare -a docker_bindings=(
   -e SB_CERTIFICATE_FILE=${SB_CERTIFICATE_FILE}
   -e SB_PRIVATE_KEY_FILE=${SB_PRIVATE_KEY_FILE}
 )
-export DOCKER_CONTENT_TRUST=${DOCKER_CONTENT_TRUST:-1}
+
 docker run --rm -it --network=host --name shadowbox "${docker_bindings[@]}" outline/shadowbox
