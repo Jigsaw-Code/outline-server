@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+echo "** Currently broken, use yarn do shadowbox/docker/run instead **" >&2
+exit 1
+
 do_action shadowbox/server/build
 
 export LOG_LEVEL="${LOG_LEVEL:-debug}"
