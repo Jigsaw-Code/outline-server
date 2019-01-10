@@ -77,7 +77,7 @@ function cleanup() {
   (($DEBUG != 0)) && set -x
 
   # Make the certificate
-  source ../scripts/make_certificate.sh
+  source ../scripts/make_test_certificate.sh /tmp
 
   # Ensure proper shut down on exit if not in debug mode
   trap "cleanup" EXIT
