@@ -62,10 +62,6 @@ export interface UsageMetrics {
   reset();
 }
 
-export interface UsageMetricsWriter {
-  writeBytesTransferred(accessKeyId: AccessKeyId, numBytes: number, countries: string[]);
-}
-
 // Reads data usage metrics from Prometheus.
 export class PrometheusUsageMetrics implements UsageMetrics {
   private resetTimeMs: number = Date.now();
@@ -96,21 +92,6 @@ export class PrometheusUsageMetrics implements UsageMetrics {
   reset() {
     this.resetTimeMs = Date.now();
   }
-}
-
-export function createPrometheusUsageMetricsWriter(registry: prometheus.Registry):
-    UsageMetricsWriter {
-  const usageCounter = new prometheus.Counter({
-    name: 'shadowsocks_data_bytes',
-    help: 'Bytes transferred by the proxy',
-    labelNames: ['dir', 'proto', 'location', 'status', 'access_key']
-  });
-  registry.registerMetric(usageCounter);
-  return {
-    writeBytesTransferred(accessKeyId: AccessKeyId, inboundBytes: number, countries: string[]) {
-      usageCounter.labels('>p<', '', countries.join(','), '', accessKeyId).inc(inboundBytes);
-    }
-  };
 }
 
 export interface MetricsCollectorClient {
