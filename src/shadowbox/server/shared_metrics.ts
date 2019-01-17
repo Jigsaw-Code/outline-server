@@ -13,8 +13,6 @@
 // limitations under the License.
 
 
-import * as prometheus from 'prom-client';
-
 import {Clock} from '../infrastructure/clock';
 import * as follow_redirects from '../infrastructure/follow_redirects';
 import {JsonConfig} from '../infrastructure/json_config';
