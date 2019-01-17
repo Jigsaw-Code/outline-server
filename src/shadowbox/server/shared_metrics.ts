@@ -153,12 +153,10 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
   // toMetricsId: maps Access key ids to metric ids
   // metricsUrl: where to post the metrics
   constructor(
-      private clock: Clock,
-      private serverConfig: JsonConfig<ServerConfigJson>,
+      private clock: Clock, private serverConfig: JsonConfig<ServerConfigJson>,
       usageMetrics: UsageMetrics,
       private toMetricsId: (accessKeyId: AccessKeyId) => AccessKeyMetricsId,
-      private metricsCollector: MetricsCollectorClient,
-  ) {
+      private metricsCollector: MetricsCollectorClient) {
     // Start timer
     this.reportStartTimestampMs = this.clock.now();
 
