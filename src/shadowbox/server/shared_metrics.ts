@@ -66,7 +66,7 @@ export interface UsageMetricsWriter {
   writeBytesTransferred(accessKeyId: AccessKeyId, numBytes: number, countries: string[]);
 }
 
-// Writes usage metrics to Prometheus.
+// Reads data usage metrics from Prometheus.
 export class PrometheusUsageMetrics implements UsageMetrics {
   private resetTimeMs: number = Date.now();
 
