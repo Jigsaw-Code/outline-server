@@ -13,8 +13,6 @@
 // limitations under the License.
 
 
-import * as prometheus from 'prom-client';
-
 import {Clock} from '../infrastructure/clock';
 import * as follow_redirects from '../infrastructure/follow_redirects';
 import {JsonConfig} from '../infrastructure/json_config';
@@ -62,11 +60,7 @@ export interface UsageMetrics {
   reset();
 }
 
-export interface UsageMetricsWriter {
-  writeBytesTransferred(accessKeyId: AccessKeyId, numBytes: number, countries: string[]);
-}
-
-// Writes usage metrics to Prometheus.
+// Reads data usage metrics from Prometheus.
 export class PrometheusUsageMetrics implements UsageMetrics {
   private resetTimeMs: number = Date.now();
 
@@ -75,9 +69,8 @@ export class PrometheusUsageMetrics implements UsageMetrics {
   async getUsage(): Promise<KeyUsage[]> {
     const timeDeltaSecs = Math.round((Date.now() - this.resetTimeMs) / 1000);
     // We measure the traffic to and from the target, since that's what we are protecting.
-    // TODO: remove >p< once the ss-libev support is gone.
-    const result = await this.prometheusClient.query(
-        `sum(increase(shadowsocks_data_bytes{dir=~">p<|p>t|p<t"}[${
+    const result =
+        await this.prometheusClient.query(`sum(increase(shadowsocks_data_bytes{dir=~"p>t|p<t"}[${
             timeDeltaSecs}s])) by (location, access_key)`);
     const usage = [] as KeyUsage[];
     for (const entry of result.result) {
@@ -96,21 +89,6 @@ export class PrometheusUsageMetrics implements UsageMetrics {
   reset() {
     this.resetTimeMs = Date.now();
   }
-}
-
-export function createPrometheusUsageMetricsWriter(registry: prometheus.Registry):
-    UsageMetricsWriter {
-  const usageCounter = new prometheus.Counter({
-    name: 'shadowsocks_data_bytes',
-    help: 'Bytes transferred by the proxy',
-    labelNames: ['dir', 'proto', 'location', 'status', 'access_key']
-  });
-  registry.registerMetric(usageCounter);
-  return {
-    writeBytesTransferred(accessKeyId: AccessKeyId, inboundBytes: number, countries: string[]) {
-      usageCounter.labels('>p<', '', countries.join(','), '', accessKeyId).inc(inboundBytes);
-    }
-  };
 }
 
 export interface MetricsCollectorClient {
@@ -153,12 +131,10 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
   // toMetricsId: maps Access key ids to metric ids
   // metricsUrl: where to post the metrics
   constructor(
-      private clock: Clock,
-      private serverConfig: JsonConfig<ServerConfigJson>,
+      private clock: Clock, private serverConfig: JsonConfig<ServerConfigJson>,
       usageMetrics: UsageMetrics,
       private toMetricsId: (accessKeyId: AccessKeyId) => AccessKeyMetricsId,
-      private metricsCollector: MetricsCollectorClient,
-  ) {
+      private metricsCollector: MetricsCollectorClient) {
     // Start timer
     this.reportStartTimestampMs = this.clock.now();
 
