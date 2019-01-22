@@ -19,6 +19,8 @@
 # SB_IMAGE: Shadowbox Docker image to install, e.g. quay.io/outline/shadowbox:nightly
 # SB_API_PORT: The port number of the management API.
 # SHADOWBOX_DIR: Directory for persistent Shadowbox state.
+# STATE_HOST_PATH: Host directory or volume for persistent Shadowbox state.
+#     Same as STATE_DIR by default, assuming the script is running outside of a container.
 # SB_PUBLIC_IP: The public IP address for Shadowbox.
 # ACCESS_CONFIG: The location of the access config text file.
 # SB_DEFAULT_SERVER_NAME: Default name for this server, e.g. "Outline server New York".
@@ -186,6 +188,7 @@ function get_random_port {
 
 function create_persisted_state_dir() {
   readonly STATE_DIR="$SHADOWBOX_DIR/persisted-state"
+  readonly STATE_HOST_PATH="${STATE_HOST_PATH:-$STATE_DIR}"
   mkdir -p --mode=770 "${STATE_DIR}"
   chmod g+s "${STATE_DIR}"
 }
@@ -232,7 +235,7 @@ function generate_certificate_fingerprint() {
 function start_shadowbox() {
   declare -a docker_shadowbox_flags=(
     --name shadowbox --restart=always --net=host
-    -v "${STATE_DIR}:${STATE_DIR}"
+    -v "${STATE_HOST_PATH}:${STATE_DIR}"
     -e "SB_STATE_DIR=${STATE_DIR}"
     -e "SB_PUBLIC_IP=${SB_PUBLIC_IP}"
     -e "SB_API_PORT=${SB_API_PORT}"
