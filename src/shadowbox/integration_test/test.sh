@@ -16,13 +16,17 @@
 
 # Shadowbox Integration Test
 #
-# This test verifies that a client can access a target in a different network via a shadowbox node.
+# This test verifies that a client can access a target website via a shadowbox node.
+# Sets up a target in the LAN to validate that it cannot be accessed through shadowbox.
 #
 # Architecture:
 #
-# +--------+     +-----------+     +--------+
-# | Client | --> | Shadowbox | --> | Target |
-# +--------+     +-----------+     +--------+
+# +--------+     +-----------+
+# | Client | --> | Shadowbox | -->  Internet
+# +--------+     +-----------+
+#                      |           +--------+
+#                      ----//----> | Target |
+#                                  +--------+
 #
 # Each node runs on a different Docker container.
 
@@ -35,6 +39,7 @@ readonly TARGET_CONTAINER=integrationtest_target_1
 readonly SHADOWBOX_CONTAINER=integrationtest_shadowbox_1
 readonly CLIENT_CONTAINER=integrationtest_client_1
 readonly UTIL_CONTAINER=integrationtest_util_1
+readonly INTERNET_TARGET_URL="http://www.gstatic.com/generate_204"
 echo Test output at $OUTPUT_DIR
 # Set DEBUG=1 to not kill the stack when the test is finished so you can query
 # the containers.
@@ -123,18 +128,19 @@ function cleanup() {
     sleep 0.1
   done
 
-  # Verify we can retrieve the target by IP.
-  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $TARGET_IP > $OUTPUT_DIR/actual.html
-  diff $OUTPUT_DIR/actual.html target/index.html || fail "Target page by IP does not match"
+  # Verify the server blocks requests to hosts on private addresses.
+  # Exit code 52 is "Empty server response".
+  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $TARGET_IP &> /dev/null \
+    && fail "Target host in a private network accessible through shadowbox" || (($? == 52))
 
-  # Verify we can retrieve the target using the system nameservers.
-  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT http://target > $OUTPUT_DIR/actual.html
-  diff $OUTPUT_DIR/actual.html target/index.html || fail "Target page by hostname does not match"
+  # Verify we can retrieve the internet target URL.
+  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $INTERNET_TARGET_URL \
+    || fail "Could not fetch $INTERNET_TARGET_URL through shadowbox."
 
-  # Verify we can't access the page anymore after the key is deleted
+  # Verify we can't access the URL anymore after the key is deleted
   client_curl --insecure -X DELETE https://shadowbox/${SB_API_PREFIX}/access-keys/0 > /dev/null
   # Exit code 56 is "Connection reset by peer".
-  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT --connect-timeout 1 http://target &> /dev/null \
+  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT --connect-timeout 1 $INTERNET_TARGET_URL &> /dev/null \
     && fail "Deleted access key is still active" || (($? == 56))
 
   # Verify no errors occurred.
