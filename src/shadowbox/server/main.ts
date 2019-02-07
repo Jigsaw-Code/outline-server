@@ -77,6 +77,7 @@ async function reservePortForNewAccessKeys(
     portProvider: PortProvider,
     serverConfig: json_config.JsonConfig<server_config.ServerConfigJson>): Promise<number> {
   serverConfig.data().portForNewAccessKeys = await portProvider.reserveNewPort();
+  serverConfig.write();
   return serverConfig.data().portForNewAccessKeys;
 }
 
