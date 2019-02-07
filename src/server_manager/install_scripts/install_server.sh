@@ -325,7 +325,6 @@ Make sure to open the following ports on your firewall, router or cloud provider
 - Management port ${SB_API_PORT}, for TCP
 - Access key port ${ACCESS_KEY_PORT}, for TCP and UDP
 "
-
 }
 
 install_shadowbox() {
