@@ -312,27 +312,19 @@ function check_firewall() {
      FIREWALL_STATUS="\
 You won’t be able to access it externally, despite your server being correctly
 set up, because there's a firewall (in this machine, your router or cloud
-provider) that is preventing incoming connections to ports ${SB_API_PORT} and ${ACCESS_KEY_PORT}.
-
-- If you plan to have a single access key to access your server, opening those
-  ports for TCP and UDP should suffice.
-- If you plan on adding additional access keys, you’ll have to open ports 1024
-  through 65535 on your firewall since the Outline server may allocate any of
-  those ports to new access keys.
-"
+provider) that is preventing incoming connections to ports ${SB_API_PORT} and ${ACCESS_KEY_PORT}."
   else
     FIREWALL_STATUS="\
 If you have connection problems, it may be that your router or cloud provider
-blocks inbound connections, even though your machine seems to allow them.
-
-- If you plan to have a single access key to access your server make sure
-  ports ${SB_API_PORT} and ${ACCESS_KEY_PORT} are open for TCP and UDP on
-  your router or cloud provider.
-- If you plan on adding additional access keys, you’ll have to open ports
-  1024 through 65535 on your router or cloud provider since the Outline
-  Server may allocate any of those ports to new access keys.
-"
+blocks inbound connections, even though your machine seems to allow them."
   fi
+  FIREWALL_STATUS="\
+$FIREWALL_STATUS
+
+Make sure to open the following ports on your firewall, router or cloud provider:
+- Management port ${SB_API_PORT}, for TCP
+- Access key port ${ACCESS_KEY_PORT}, for TCP and UDP
+"
 }
 
 install_shadowbox() {

@@ -24,7 +24,6 @@ import {PortProvider} from '../infrastructure/get_port';
 import * as json_config from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient, runPrometheusScraper} from '../infrastructure/prometheus_scraper';
-import {RolloutTracker} from '../infrastructure/rollout';
 import {AccessKeyId} from '../model/access_key';
 
 import {PrometheusManagerMetrics} from './manager_metrics';
@@ -78,18 +77,8 @@ async function reservePortForNewAccessKeys(
     portProvider: PortProvider,
     serverConfig: json_config.JsonConfig<server_config.ServerConfigJson>): Promise<number> {
   serverConfig.data().portForNewAccessKeys = await portProvider.reserveNewPort();
+  serverConfig.write();
   return serverConfig.data().portForNewAccessKeys;
-}
-
-function createRolloutTracker(serverConfig: json_config.JsonConfig<server_config.ServerConfigJson>):
-    RolloutTracker {
-  const rollouts = new RolloutTracker(serverConfig.data().serverId);
-  if (serverConfig.data().rollouts) {
-    for (const rollout of serverConfig.data().rollouts) {
-      rollouts.forceRollout(rollout.id, rollout.enabled);
-    }
-  }
-  return rollouts;
 }
 
 async function main() {
@@ -174,15 +163,9 @@ async function main() {
   const accessKeyRepository = new ServerAccessKeyRepository(
       portProvider, proxyHostname, accessKeyConfig, shadowsocksServer);
 
-  // TODO(fortuna): Once single-port is fully rollout, we should:
-  // - update `install_server.sh` to stop using `--net=host` for new servers (old servers are stuck
-  //   with that forever) and output new instructions for port configuration.
-  // - update manger UI to provide new instructions for port configuration in manual mode.
-  if (createRolloutTracker(serverConfig).isRolloutEnabled('single-port', 100)) {
-    const portForNewAccessKeys = getPortForNewAccessKeys(serverConfig, accessKeyConfig) ||
-        await reservePortForNewAccessKeys(portProvider, serverConfig);
-    accessKeyRepository.enableSinglePort(portForNewAccessKeys);
-  }
+  const portForNewAccessKeys = getPortForNewAccessKeys(serverConfig, accessKeyConfig) ||
+      await reservePortForNewAccessKeys(portProvider, serverConfig);
+  accessKeyRepository.enableSinglePort(portForNewAccessKeys);
 
   const prometheusClient = new PrometheusClient(`http://${prometheusLocation}`);
   const metricsReader = new PrometheusUsageMetrics(prometheusClient);
