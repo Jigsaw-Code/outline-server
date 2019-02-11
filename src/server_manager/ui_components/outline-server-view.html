@@ -671,12 +671,13 @@
           }
         }
       },
-      _formatBytesTransferred: function(numBytes, emptyValue = '') {
+      _formatBytesTransferred: function (numBytes, emptyValue = '') {
         if (!numBytes) {
           // numBytes may not be set for manual servers, or may be 0 for
           // unused access keys.
           return emptyValue;
         }
+
         // Show 0 decimals for < 1MB, 1 decimal for >= 1MB, 2 decimals for >= 1GB.
         let numDecimals = 0;
         if (numBytes >= Math.pow(2, 30)) {
@@ -685,9 +686,7 @@
           numDecimals = 1;
         }
 
-        const bytesOptions = {unitSeparator: ' ', decimalPlaces: numDecimals};
-        // Use uppercase to convert kB to KB (kB incorrectly implies 1000B)
-        return this.bytes(numBytes, bytesOptions).toUpperCase();
+        return this.bytes(numBytes, { unitSeparator: ' ', decimalPlaces: numDecimals });
       },
       _getFormattedTransferredUnit: function(numBytes, emptyValue = '') {
         const formattedTransfer = this._formatBytesTransferred(numBytes);
