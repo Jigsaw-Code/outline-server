@@ -38,7 +38,7 @@ The output will be at `build/shadowbox/app`.
 ### Running Shadowbox as a Docker container
 
 > **NOTE**: This does not currently work in Docker on Mac due to use of
-`--host=net` and integrity checks failing. For now, please see the Manual
+`--network=host` and integrity checks failing. For now, please see the Manual
 testing section below.
 
 ### With docker command
