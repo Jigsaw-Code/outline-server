@@ -19,7 +19,7 @@
 # SB_IMAGE: Shadowbox Docker image to install, e.g. quay.io/outline/shadowbox:nightly
 # SB_API_PORT: The port number of the management API.
 # SHADOWBOX_DIR: Directory for persistent Shadowbox state.
-# SB_PUBLIC_IP: The public IP address for Shadowbox.
+# SB_PUBLIC_IP: The public hostname for Shadowbox.
 # ACCESS_CONFIG: The location of the access config text file.
 # SB_DEFAULT_SERVER_NAME: Default name for this server, e.g. "Outline server New York".
 #     This name will be used for the server until the admins updates the name
@@ -174,7 +174,6 @@ function finish {
     log_error "\nSorry! Something went wrong. If you can't figure this out, please copy and paste all this output into the Outline Manager screen, and send it to us, to see if we can help you."
   fi
 }
-trap finish EXIT
 
 function get_random_port {
   local num=0  # Init to an invalid value, to prevent "unbound variable" errors.
@@ -213,7 +212,7 @@ function generate_certificate() {
   readonly SB_PRIVATE_KEY_FILE="${CERTIFICATE_NAME}.key"
   declare -a openssl_req_flags=(
     -x509 -nodes -days 36500 -newkey rsa:2048
-    -subj "/CN=${SB_PUBLIC_IP}"
+    -subj "/CN=${PUBLIC_HOSTNAME}"
     -keyout "${SB_PRIVATE_KEY_FILE}" -out "${SB_CERTIFICATE_FILE}"
   )
   openssl req "${openssl_req_flags[@]}" >/dev/null 2>&1
@@ -229,13 +228,29 @@ function generate_certificate_fingerprint() {
   output_config "certSha256:$CERT_HEX_FINGERPRINT"
 }
 
+function join() {
+  local IFS="$1"
+  shift
+  echo "$*"
+}
+
+function write_config() {
+  declare -a config=()
+  if [[ -n $FLAGS_PORT_FOR_KEYS ]]; then
+    config+=("\"portForNewAccessKeys\":$FLAGS_PORT_FOR_KEYS")
+  fi
+  echo "{"$(join , "${config[@]}")"}" > $STATE_DIR/shadowbox_server_config.json
+}
+
 function start_shadowbox() {
+  # TODO(fortuna): Write PUBLIC_HOSTNAME and PORT_FOR_API to config file,
+  # rather than pass in the environment.
   declare -a docker_shadowbox_flags=(
     --name shadowbox --restart=always --net=host
     -v "${STATE_DIR}:${STATE_DIR}"
     -e "SB_STATE_DIR=${STATE_DIR}"
-    -e "SB_PUBLIC_IP=${SB_PUBLIC_IP}"
-    -e "SB_API_PORT=${SB_API_PORT}"
+    -e "SB_PUBLIC_IP=${PUBLIC_HOSTNAME}"
+    -e "SB_API_PORT=${PORT_FOR_API}"
     -e "SB_API_PREFIX=${SB_API_PREFIX}"
     -e "SB_CERTIFICATE_FILE=${SB_CERTIFICATE_FILE}"
     -e "SB_PRIVATE_KEY_FILE=${SB_PRIVATE_KEY_FILE}"
@@ -312,7 +327,7 @@ function check_firewall() {
      FIREWALL_STATUS="\
 You won’t be able to access it externally, despite your server being correctly
 set up, because there's a firewall (in this machine, your router or cloud
-provider) that is preventing incoming connections to ports ${SB_API_PORT} and ${ACCESS_KEY_PORT}."
+provider) that is preventing incoming connections to ports ${PORT_FOR_API} and ${ACCESS_KEY_PORT}."
   else
     FIREWALL_STATUS="\
 If you have connection problems, it may be that your router or cloud provider
@@ -322,7 +337,7 @@ blocks inbound connections, even though your machine seems to allow them."
 $FIREWALL_STATUS
 
 Make sure to open the following ports on your firewall, router or cloud provider:
-- Management port ${SB_API_PORT}, for TCP
+- Management port ${PORT_FOR_API}, for TCP
 - Access key port ${ACCESS_KEY_PORT}, for TCP and UDP
 "
 }
@@ -340,15 +355,15 @@ install_shadowbox() {
   chmod u+s $SHADOWBOX_DIR
 
   log_for_sentry "Setting API port"
-  readonly SB_API_PORT="${SB_API_PORT:-$(get_random_port)}"
+  readonly PORT_FOR_API="${FLAGS_PORT_FOR_API:-${SB_API_PORT:-$(get_random_port)}}"
   readonly ACCESS_CONFIG=${ACCESS_CONFIG:-$SHADOWBOX_DIR/access.txt}
   readonly SB_IMAGE=${SB_IMAGE:-quay.io/outline/shadowbox:stable}
 
-  log_for_sentry "Setting SB_PUBLIC_IP"
+  log_for_sentry "Setting PUBLIC_HOSTNAME"
   # TODO(fortuna): Make sure this is IPv4
-  readonly SB_PUBLIC_IP=${SB_PUBLIC_IP:-$(curl -4s https://ipinfo.io/ip)}
+  PUBLIC_HOSTNAME=${FLAGS_HOSTNAME:-${SB_PUBLIC_IP:-$(curl -4s https://ipinfo.io/ip)}}
 
-  if [[ -z $SB_PUBLIC_IP ]]; then
+  if [[ -z $PUBLIC_HOSTNAME ]]; then
     local readonly MSG="Failed to determine the server's IP address."
     log_error "$MSG"
     log_for_sentry "$MSG"
@@ -366,6 +381,8 @@ install_shadowbox() {
   run_step "Generating secret key" generate_secret_key
   run_step "Generating TLS certificate" generate_certificate
   run_step "Generating SHA-256 certificate fingerprint" generate_certificate_fingerprint
+  run_step "Writing config" write_config
+
   # TODO(dborkan): if the script fails after docker run, it will continue to fail
   # as the names shadowbox and watchtower will already be in use.  Consider
   # deleting the container in the case of failure (e.g. using a trap, or
@@ -374,8 +391,8 @@ install_shadowbox() {
   # TODO(fortuna): Don't wait for Shadowbox to run this.
   run_step "Starting Watchtower" start_watchtower
 
-  readonly PUBLIC_API_URL="https://${SB_PUBLIC_IP}:${SB_API_PORT}/${SB_API_PREFIX}"
-  readonly LOCAL_API_URL="https://localhost:${SB_API_PORT}/${SB_API_PREFIX}"
+  readonly PUBLIC_API_URL="https://${PUBLIC_HOSTNAME}:${PORT_FOR_API}/${SB_API_PREFIX}"
+  readonly LOCAL_API_URL="https://localhost:${PORT_FOR_API}/${SB_API_PREFIX}"
   run_step "Waiting for Outline server to be healthy" wait_shadowbox
   run_step "Creating first user" create_first_user
   run_step "Adding API URL to config" add_api_url_to_config
@@ -406,5 +423,60 @@ ${FIREWALL_STATUS}
 END_OF_SERVER_OUTPUT
 } # end of install_shadowbox
 
-# Wrapped in a function for some protection against half-downloads.
-install_shadowbox
+function display_usage() {
+  echo Usage: install_server.sh [--hostname <hostname>] [--port-for-api <port>] [--port-for-keys <port>]
+  echo
+  echo  --hostname   The hostname to be used to access the management API and access keys.
+}
+
+function read_param() {
+  if (( "$#" < 2 )); then
+    log_error "Missing $1 value"
+    display_usage
+    exit 1
+  fi
+  echo $2
+}
+
+function parse_flags() {
+  local PARAMS=""
+  while [[ "$#" > 0 && ! "$1" == "--" ]]; do
+    case "$1" in
+      --hostname)
+        FLAGS_HOSTNAME=$(read_param "$@")
+        shift
+        ;;
+      --port-for-api)
+        FLAGS_PORT_FOR_API=$(read_param "$@")
+        shift
+        ;;
+      --port-for-keys)
+        FLAGS_PORT_FOR_KEYS=$(read_param "$@")
+        shift
+        ;;
+      -*|--*=) # unsupported flags
+        log_error "Unsupported flag $1"
+        display_usage
+        exit 1
+        ;;
+      *) # preserve positional arguments
+        PARAMS="$PARAMS '$1'"
+        ;;
+    esac
+    shift
+  done
+  if (( FLAGS_PORT_FOR_API == FLAGS_PORT_FOR_KEYS )); then
+    log_error "Port for management API must be different from port for access keys"
+    exit 1
+  fi
+  # set positional arguments in their proper place
+  eval set -- "$PARAMS"
+}
+
+function main() {
+  trap finish EXIT
+  parse_flags "$@"
+  install_shadowbox
+}
+
+main "$@"
