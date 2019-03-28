@@ -17,9 +17,7 @@
 
 # You may set the following environment variables, overriding their defaults:
 # SB_IMAGE: The Outline Server Docker image to install, e.g. quay.io/outline/shadowbox:nightly
-# SB_API_PORT: The port number of the management API.
 # SHADOWBOX_DIR: Directory for persistent Outline Server state.
-# SB_PUBLIC_IP: The public hostname for the Outline Server.
 # ACCESS_CONFIG: The location of the access config text file.
 # SB_DEFAULT_SERVER_NAME: Default name for this server, e.g. "Outline server New York".
 #     This name will be used for the server until the admins updates the name
@@ -29,6 +27,10 @@
 #     only by do_install_server.sh.
 # WATCHTOWER_REFRESH_SECONDS: refresh interval in seconds to check for updates,
 #     defaults to 3600.
+#
+# Deprecated:
+# SB_PUBLIC_IP: Use the --hostname flag instead
+# SB_API_PORT: Use the --port-for-api flag instead
 
 # Requires curl and docker to be installed
 
