@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Script to install a shadowbox docker container, a watchtower docker container
-# (to automatically update shadowbox), and to create a new shadowbox user.
+# Script to install the Outline Server docker container, a watchtower docker container
+# (to automatically update the server), and to create a new Outline user.
 
 # You may set the following environment variables, overriding their defaults:
-# SB_IMAGE: Shadowbox Docker image to install, e.g. quay.io/outline/shadowbox:nightly
+# SB_IMAGE: The Outline Server Docker image to install, e.g. quay.io/outline/shadowbox:nightly
 # SB_API_PORT: The port number of the management API.
-# SHADOWBOX_DIR: Directory for persistent Shadowbox state.
-# SB_PUBLIC_IP: The public hostname for Shadowbox.
+# SHADOWBOX_DIR: Directory for persistent Outline Server state.
+# SB_PUBLIC_IP: The public hostname for the Outline Server.
 # ACCESS_CONFIG: The location of the access config text file.
 # SB_DEFAULT_SERVER_NAME: Default name for this server, e.g. "Outline server New York".
 #     This name will be used for the server until the admins updates the name
@@ -33,6 +33,14 @@
 # Requires curl and docker to be installed
 
 set -euo pipefail
+
+function display_usage() {
+  echo Usage: install_server.sh [--hostname <hostname>] [--port-for-api <port>] [--port-for-keys <port>]
+  echo
+  echo  --hostname        The hostname to be used to access the management API and access keys
+  echo  --port-for-api    The port number for the management API
+  echo  --port-for-keys   The port number for the access keys
+}
 
 readonly SENTRY_LOG_FILE=${SENTRY_LOG_FILE:-}
 
@@ -189,7 +197,7 @@ function create_persisted_state_dir() {
   chmod g+s "${STATE_DIR}"
 }
 
-# Generate a secret key for access to the shadowbox API and store it in a tag.
+# Generate a secret key for access to the Management API and store it in a tag.
 # 16 bytes = 128 bits of entropy should be plenty for this use.
 function safe_base64() {
   # Implements URL-safe base64 of stdin, stripping trailing = chars.
@@ -296,7 +304,7 @@ function start_watchtower() {
   fi
 }
 
-# Waits for Shadowbox to be up and healthy
+# Waits for the service to be up and healthy
 function wait_shadowbox() {
   # We use insecure connection because our threat model doesn't include localhost port
   # interception and our certificate doesn't have localhost as a subject alternative name
@@ -422,12 +430,6 @@ $(echo -e "\033[1;32m{\"apiUrl\":\"$(get_field_value apiUrl)\",\"certSha256\":\"
 ${FIREWALL_STATUS}
 END_OF_SERVER_OUTPUT
 } # end of install_shadowbox
-
-function display_usage() {
-  echo Usage: install_server.sh [--hostname <hostname>] [--port-for-api <port>] [--port-for-keys <port>]
-  echo
-  echo  --hostname   The hostname to be used to access the management API and access keys.
-}
 
 function read_param() {
   if (( "$#" < 2 )); then
