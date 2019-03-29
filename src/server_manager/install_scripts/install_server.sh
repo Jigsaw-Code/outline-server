@@ -37,11 +37,13 @@
 set -euo pipefail
 
 function display_usage() {
-  echo Usage: install_server.sh [--hostname <hostname>] [--port-for-api <port>] [--port-for-keys <port>]
-  echo
-  echo  --hostname        The hostname to be used to access the management API and access keys
-  echo  --port-for-api    The port number for the management API
-  echo  --port-for-keys   The port number for the access keys
+  cat <<EOF
+Usage: install_server.sh [--hostname <hostname>] [--port-for-api <port>] [--port-for-keys <port>]
+
+  --hostname        The hostname to be used to access the management API and access keys
+  --port-for-api    The port number for the management API
+  --port-for-keys   The port number for the access keys
+EOF
 }
 
 readonly SENTRY_LOG_FILE=${SENTRY_LOG_FILE:-}
@@ -246,21 +248,23 @@ function join() {
 
 function write_config() {
   declare -a config=()
-  if [[ -n $FLAGS_PORT_FOR_KEYS ]]; then
-    config+=("\"portForNewAccessKeys\":$FLAGS_PORT_FOR_KEYS")
+  if [[ $FLAGS_KEYS_PORT != 0 ]]; then
+    config+=("\"portForNewAccessKeys\":$FLAGS_KEYS_PORT")
   fi
-  echo "{"$(join , "${config[@]}")"}" > $STATE_DIR/shadowbox_server_config.json
+  if [[ ${#config[@]} > 0 ]]; then
+    echo "{"$(join , "${config[@]}")"}" > $STATE_DIR/shadowbox_server_config.json
+  fi
 }
 
 function start_shadowbox() {
-  # TODO(fortuna): Write PUBLIC_HOSTNAME and PORT_FOR_API to config file,
+  # TODO(fortuna): Write PUBLIC_HOSTNAME and API_PORT to config file,
   # rather than pass in the environment.
   declare -a docker_shadowbox_flags=(
     --name shadowbox --restart=always --net=host
     -v "${STATE_DIR}:${STATE_DIR}"
     -e "SB_STATE_DIR=${STATE_DIR}"
     -e "SB_PUBLIC_IP=${PUBLIC_HOSTNAME}"
-    -e "SB_API_PORT=${PORT_FOR_API}"
+    -e "SB_API_PORT=${API_PORT}"
     -e "SB_API_PREFIX=${SB_API_PREFIX}"
     -e "SB_CERTIFICATE_FILE=${SB_CERTIFICATE_FILE}"
     -e "SB_PRIVATE_KEY_FILE=${SB_PRIVATE_KEY_FILE}"
@@ -337,7 +341,7 @@ function check_firewall() {
      FIREWALL_STATUS="\
 You won’t be able to access it externally, despite your server being correctly
 set up, because there's a firewall (in this machine, your router or cloud
-provider) that is preventing incoming connections to ports ${PORT_FOR_API} and ${ACCESS_KEY_PORT}."
+provider) that is preventing incoming connections to ports ${API_PORT} and ${ACCESS_KEY_PORT}."
   else
     FIREWALL_STATUS="\
 If you have connection problems, it may be that your router or cloud provider
@@ -347,7 +351,7 @@ blocks inbound connections, even though your machine seems to allow them."
 $FIREWALL_STATUS
 
 Make sure to open the following ports on your firewall, router or cloud provider:
-- Management port ${PORT_FOR_API}, for TCP
+- Management port ${API_PORT}, for TCP
 - Access key port ${ACCESS_KEY_PORT}, for TCP and UDP
 "
 }
@@ -365,7 +369,10 @@ install_shadowbox() {
   chmod u+s $SHADOWBOX_DIR
 
   log_for_sentry "Setting API port"
-  readonly PORT_FOR_API="${FLAGS_PORT_FOR_API:-${SB_API_PORT:-$(get_random_port)}}"
+  API_PORT="${FLAGS_API_PORT}"
+  if [[ $API_PORT == 0 ]]; then
+    API_PORT = ${SB_API_PORT:-$(get_random_port)}
+  fi
   readonly ACCESS_CONFIG=${ACCESS_CONFIG:-$SHADOWBOX_DIR/access.txt}
   readonly SB_IMAGE=${SB_IMAGE:-quay.io/outline/shadowbox:stable}
 
@@ -401,8 +408,8 @@ install_shadowbox() {
   # TODO(fortuna): Don't wait for Shadowbox to run this.
   run_step "Starting Watchtower" start_watchtower
 
-  readonly PUBLIC_API_URL="https://${PUBLIC_HOSTNAME}:${PORT_FOR_API}/${SB_API_PREFIX}"
-  readonly LOCAL_API_URL="https://localhost:${PORT_FOR_API}/${SB_API_PREFIX}"
+  readonly PUBLIC_API_URL="https://${PUBLIC_HOSTNAME}:${API_PORT}/${SB_API_PREFIX}"
+  readonly LOCAL_API_URL="https://localhost:${API_PORT}/${SB_API_PREFIX}"
   run_step "Waiting for Outline server to be healthy" wait_shadowbox
   run_step "Creating first user" create_first_user
   run_step "Adding API URL to config" add_api_url_to_config
@@ -433,48 +440,55 @@ ${FIREWALL_STATUS}
 END_OF_SERVER_OUTPUT
 } # end of install_shadowbox
 
-function read_param() {
-  if (( "$#" < 2 )); then
-    log_error "Missing $1 value"
-    display_usage
-    exit 1
-  fi
-  echo $2
+function is_valid_port() {
+  (( 0 < "$1" && "$1" <= 65535 ))
 }
 
 function parse_flags() {
-  local PARAMS=""
-  while [[ "$#" > 0 && ! "$1" == "--" ]]; do
-    case "$1" in
+  eval set -- $(getopt --longoptions hostname:,api-port:,keys-port: -n $0 -- $0 "$@")
+  declare -g FLAGS_HOSTNAME=""
+  declare -gi FLAGS_API_PORT=0
+  declare -gi FLAGS_KEYS_PORT=0
+
+  while [[ "$#" > 0 ]]; do
+    local flag=$1
+    shift
+    case "$flag" in
       --hostname)
-        FLAGS_HOSTNAME=$(read_param "$@")
+        FLAGS_HOSTNAME=${1}
         shift
         ;;
-      --port-for-api)
-        FLAGS_PORT_FOR_API=$(read_param "$@")
+      --api-port)
+        FLAGS_API_PORT=${1}
         shift
+        if ! is_valid_port $FLAGS_API_PORT; then
+          log_error "Invalid value for $flag: $FLAGS_API_PORT"
+          exit 1
+        fi
         ;;
-      --port-for-keys)
-        FLAGS_PORT_FOR_KEYS=$(read_param "$@")
+      --keys-port)
+        FLAGS_KEYS_PORT=$1
         shift
+        if ! is_valid_port $FLAGS_KEYS_PORT; then
+          log_error "Invalid value for $flag: $FLAGS_KEYS_PORT"
+          exit 1
+        fi
         ;;
-      -*|--*=) # unsupported flags
-        log_error "Unsupported flag $1"
+      --)
+        break
+        ;;
+      *) # This should not happen
+        log_error "Unsupported flag $flag"
         display_usage
         exit 1
         ;;
-      *) # preserve positional arguments
-        PARAMS="$PARAMS '$1'"
-        ;;
     esac
-    shift
   done
-  if (( FLAGS_PORT_FOR_API == FLAGS_PORT_FOR_KEYS )); then
-    log_error "Port for management API must be different from port for access keys"
+  if [[ $FLAGS_API_PORT != 0 && $FLAGS_API_PORT == $FLAGS_KEYS_PORT ]]; then
+    log_error "--api-port must be different from --keys-port"
     exit 1
   fi
-  # set positional arguments in their proper place
-  eval set -- "$PARAMS"
+  return 0
 }
 
 function main() {
