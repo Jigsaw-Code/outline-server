@@ -30,7 +30,7 @@
 #
 # Deprecated:
 # SB_PUBLIC_IP: Use the --hostname flag instead
-# SB_API_PORT: Use the --port-for-api flag instead
+# SB_API_PORT: Use the --apit-port flag instead
 
 # Requires curl and docker to be installed
 
@@ -38,11 +38,11 @@ set -euo pipefail
 
 function display_usage() {
   cat <<EOF
-Usage: install_server.sh [--hostname <hostname>] [--port-for-api <port>] [--port-for-keys <port>]
+Usage: install_server.sh [--hostname <hostname>] [--apit-port <port>] [--keys-port <port>]
 
-  --hostname        The hostname to be used to access the management API and access keys
-  --port-for-api    The port number for the management API
-  --port-for-keys   The port number for the access keys
+  --hostname   The hostname to be used to access the management API and access keys
+  --api-port   The port number for the management API
+  --keys-port  The port number for the access keys
 EOF
 }
 
