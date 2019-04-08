@@ -445,7 +445,8 @@ function is_valid_port() {
 }
 
 function parse_flags() {
-  local params=$(getopt --longoptions hostname:,api-port:,keys-port: -n $0 -- $0 "$@" || exit 1)
+  params=$(getopt --longoptions hostname:,api-port:,keys-port: -n $0 -- $0 "$@")
+  [[ $? == 0 ]] || exit 1
   eval set -- $params
   declare -g FLAGS_HOSTNAME=""
   declare -gi FLAGS_API_PORT=0
