@@ -371,7 +371,7 @@ install_shadowbox() {
   log_for_sentry "Setting API port"
   API_PORT="${FLAGS_API_PORT}"
   if [[ $API_PORT == 0 ]]; then
-    API_PORT = ${SB_API_PORT:-$(get_random_port)}
+    API_PORT=${SB_API_PORT:-$(get_random_port)}
   fi
   readonly ACCESS_CONFIG=${ACCESS_CONFIG:-$SHADOWBOX_DIR/access.txt}
   readonly SB_IMAGE=${SB_IMAGE:-quay.io/outline/shadowbox:stable}
