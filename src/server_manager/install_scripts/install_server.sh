@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Script to install a shadowbox docker container, a watchtower docker container
-# (to automatically update shadowbox), and to create a new shadowbox user.
+# Script to install the Outline Server docker container, a watchtower docker container
+# (to automatically update the server), and to create a new Outline user.
 
 # You may set the following environment variables, overriding their defaults:
-# SB_IMAGE: Shadowbox Docker image to install, e.g. quay.io/outline/shadowbox:nightly
-# SB_API_PORT: The port number of the management API.
-# SHADOWBOX_DIR: Directory for persistent Shadowbox state.
-# SB_PUBLIC_IP: The public IP address for Shadowbox.
+# SB_IMAGE: The Outline Server Docker image to install, e.g. quay.io/outline/shadowbox:nightly
+# SHADOWBOX_DIR: Directory for persistent Outline Server state.
 # ACCESS_CONFIG: The location of the access config text file.
 # SB_DEFAULT_SERVER_NAME: Default name for this server, e.g. "Outline server New York".
 #     This name will be used for the server until the admins updates the name
@@ -29,10 +27,24 @@
 #     only by do_install_server.sh.
 # WATCHTOWER_REFRESH_SECONDS: refresh interval in seconds to check for updates,
 #     defaults to 3600.
+#
+# Deprecated:
+# SB_PUBLIC_IP: Use the --hostname flag instead
+# SB_API_PORT: Use the --api-port flag instead
 
 # Requires curl and docker to be installed
 
 set -euo pipefail
+
+function display_usage() {
+  cat <<EOF
+Usage: install_server.sh [--hostname <hostname>] [--api-port <port>] [--keys-port <port>]
+
+  --hostname   The hostname to be used to access the management API and access keys
+  --api-port   The port number for the management API
+  --keys-port  The port number for the access keys
+EOF
+}
 
 readonly SENTRY_LOG_FILE=${SENTRY_LOG_FILE:-}
 
@@ -174,7 +186,6 @@ function finish {
     log_error "\nSorry! Something went wrong. If you can't figure this out, please copy and paste all this output into the Outline Manager screen, and send it to us, to see if we can help you."
   fi
 }
-trap finish EXIT
 
 function get_random_port {
   local num=0  # Init to an invalid value, to prevent "unbound variable" errors.
@@ -190,7 +201,7 @@ function create_persisted_state_dir() {
   chmod g+s "${STATE_DIR}"
 }
 
-# Generate a secret key for access to the shadowbox API and store it in a tag.
+# Generate a secret key for access to the Management API and store it in a tag.
 # 16 bytes = 128 bits of entropy should be plenty for this use.
 function safe_base64() {
   # Implements URL-safe base64 of stdin, stripping trailing = chars.
@@ -213,7 +224,7 @@ function generate_certificate() {
   readonly SB_PRIVATE_KEY_FILE="${CERTIFICATE_NAME}.key"
   declare -a openssl_req_flags=(
     -x509 -nodes -days 36500 -newkey rsa:2048
-    -subj "/CN=${SB_PUBLIC_IP}"
+    -subj "/CN=${PUBLIC_HOSTNAME}"
     -keyout "${SB_PRIVATE_KEY_FILE}" -out "${SB_CERTIFICATE_FILE}"
   )
   openssl req "${openssl_req_flags[@]}" >/dev/null 2>&1
@@ -229,13 +240,31 @@ function generate_certificate_fingerprint() {
   output_config "certSha256:$CERT_HEX_FINGERPRINT"
 }
 
+function join() {
+  local IFS="$1"
+  shift
+  echo "$*"
+}
+
+function write_config() {
+  declare -a config=()
+  if [[ $FLAGS_KEYS_PORT != 0 ]]; then
+    config+=("\"portForNewAccessKeys\":$FLAGS_KEYS_PORT")
+  fi
+  if [[ ${#config[@]} > 0 ]]; then
+    echo "{"$(join , "${config[@]}")"}" > $STATE_DIR/shadowbox_server_config.json
+  fi
+}
+
 function start_shadowbox() {
+  # TODO(fortuna): Write PUBLIC_HOSTNAME and API_PORT to config file,
+  # rather than pass in the environment.
   declare -a docker_shadowbox_flags=(
     --name shadowbox --restart=always --net=host
     -v "${STATE_DIR}:${STATE_DIR}"
     -e "SB_STATE_DIR=${STATE_DIR}"
-    -e "SB_PUBLIC_IP=${SB_PUBLIC_IP}"
-    -e "SB_API_PORT=${SB_API_PORT}"
+    -e "SB_PUBLIC_IP=${PUBLIC_HOSTNAME}"
+    -e "SB_API_PORT=${API_PORT}"
     -e "SB_API_PREFIX=${SB_API_PREFIX}"
     -e "SB_CERTIFICATE_FILE=${SB_CERTIFICATE_FILE}"
     -e "SB_PRIVATE_KEY_FILE=${SB_PRIVATE_KEY_FILE}"
@@ -281,7 +310,7 @@ function start_watchtower() {
   fi
 }
 
-# Waits for Shadowbox to be up and healthy
+# Waits for the service to be up and healthy
 function wait_shadowbox() {
   # We use insecure connection because our threat model doesn't include localhost port
   # interception and our certificate doesn't have localhost as a subject alternative name
@@ -312,7 +341,7 @@ function check_firewall() {
      FIREWALL_STATUS="\
 You won’t be able to access it externally, despite your server being correctly
 set up, because there's a firewall (in this machine, your router or cloud
-provider) that is preventing incoming connections to ports ${SB_API_PORT} and ${ACCESS_KEY_PORT}."
+provider) that is preventing incoming connections to ports ${API_PORT} and ${ACCESS_KEY_PORT}."
   else
     FIREWALL_STATUS="\
 If you have connection problems, it may be that your router or cloud provider
@@ -322,7 +351,7 @@ blocks inbound connections, even though your machine seems to allow them."
 $FIREWALL_STATUS
 
 Make sure to open the following ports on your firewall, router or cloud provider:
-- Management port ${SB_API_PORT}, for TCP
+- Management port ${API_PORT}, for TCP
 - Access key port ${ACCESS_KEY_PORT}, for TCP and UDP
 "
 }
@@ -340,15 +369,18 @@ install_shadowbox() {
   chmod u+s $SHADOWBOX_DIR
 
   log_for_sentry "Setting API port"
-  readonly SB_API_PORT="${SB_API_PORT:-$(get_random_port)}"
+  API_PORT="${FLAGS_API_PORT}"
+  if [[ $API_PORT == 0 ]]; then
+    API_PORT=${SB_API_PORT:-$(get_random_port)}
+  fi
   readonly ACCESS_CONFIG=${ACCESS_CONFIG:-$SHADOWBOX_DIR/access.txt}
   readonly SB_IMAGE=${SB_IMAGE:-quay.io/outline/shadowbox:stable}
 
-  log_for_sentry "Setting SB_PUBLIC_IP"
+  log_for_sentry "Setting PUBLIC_HOSTNAME"
   # TODO(fortuna): Make sure this is IPv4
-  readonly SB_PUBLIC_IP=${SB_PUBLIC_IP:-$(curl -4s https://ipinfo.io/ip)}
+  PUBLIC_HOSTNAME=${FLAGS_HOSTNAME:-${SB_PUBLIC_IP:-$(curl -4s https://ipinfo.io/ip)}}
 
-  if [[ -z $SB_PUBLIC_IP ]]; then
+  if [[ -z $PUBLIC_HOSTNAME ]]; then
     local readonly MSG="Failed to determine the server's IP address."
     log_error "$MSG"
     log_for_sentry "$MSG"
@@ -366,6 +398,8 @@ install_shadowbox() {
   run_step "Generating secret key" generate_secret_key
   run_step "Generating TLS certificate" generate_certificate
   run_step "Generating SHA-256 certificate fingerprint" generate_certificate_fingerprint
+  run_step "Writing config" write_config
+
   # TODO(dborkan): if the script fails after docker run, it will continue to fail
   # as the names shadowbox and watchtower will already be in use.  Consider
   # deleting the container in the case of failure (e.g. using a trap, or
@@ -374,8 +408,8 @@ install_shadowbox() {
   # TODO(fortuna): Don't wait for Shadowbox to run this.
   run_step "Starting Watchtower" start_watchtower
 
-  readonly PUBLIC_API_URL="https://${SB_PUBLIC_IP}:${SB_API_PORT}/${SB_API_PREFIX}"
-  readonly LOCAL_API_URL="https://localhost:${SB_API_PORT}/${SB_API_PREFIX}"
+  readonly PUBLIC_API_URL="https://${PUBLIC_HOSTNAME}:${API_PORT}/${SB_API_PREFIX}"
+  readonly LOCAL_API_URL="https://localhost:${API_PORT}/${SB_API_PREFIX}"
   run_step "Waiting for Outline server to be healthy" wait_shadowbox
   run_step "Creating first user" create_first_user
   run_step "Adding API URL to config" add_api_url_to_config
@@ -406,5 +440,63 @@ ${FIREWALL_STATUS}
 END_OF_SERVER_OUTPUT
 } # end of install_shadowbox
 
-# Wrapped in a function for some protection against half-downloads.
-install_shadowbox
+function is_valid_port() {
+  (( 0 < "$1" && "$1" <= 65535 ))
+}
+
+function parse_flags() {
+  params=$(getopt --longoptions hostname:,api-port:,keys-port: -n $0 -- $0 "$@")
+  [[ $? == 0 ]] || exit 1
+  eval set -- $params
+  declare -g FLAGS_HOSTNAME=""
+  declare -gi FLAGS_API_PORT=0
+  declare -gi FLAGS_KEYS_PORT=0
+
+  while [[ "$#" > 0 ]]; do
+    local flag=$1
+    shift
+    case "$flag" in
+      --hostname)
+        FLAGS_HOSTNAME=${1}
+        shift
+        ;;
+      --api-port)
+        FLAGS_API_PORT=${1}
+        shift
+        if ! is_valid_port $FLAGS_API_PORT; then
+          log_error "Invalid value for $flag: $FLAGS_API_PORT"
+          exit 1
+        fi
+        ;;
+      --keys-port)
+        FLAGS_KEYS_PORT=$1
+        shift
+        if ! is_valid_port $FLAGS_KEYS_PORT; then
+          log_error "Invalid value for $flag: $FLAGS_KEYS_PORT"
+          exit 1
+        fi
+        ;;
+      --)
+        break
+        ;;
+      *) # This should not happen
+        log_error "Unsupported flag $flag"
+        display_usage
+        exit 1
+        ;;
+    esac
+  done
+  if [[ $FLAGS_API_PORT != 0 && $FLAGS_API_PORT == $FLAGS_KEYS_PORT ]]; then
+    log_error "--api-port must be different from --keys-port"
+    exit 1
+  fi
+  return 0
+}
+
+function main() {
+  trap finish EXIT
+  parse_flags "$@"
+  install_shadowbox
+}
+
+main "$@"
