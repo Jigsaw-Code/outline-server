@@ -23,6 +23,7 @@
     "iron-fit-behavior": "PolymerElements/iron-fit-behavior#^2.1.0",
     "iron-pages": "PolymerElements/iron-pages#^2.0.1",
     "paper-button": "PolymerElements/paper-button#^2.0.0",
+    "paper-checkbox": "PolymerElements/paper-checkbox#^2.0.4",
     "paper-dialog": "PolymerElements/paper-dialog#^2.0.1",
     "paper-dialog-scrollable": "PolymerElements/paper-dialog-scrollable#^2.1.0",
     "paper-dropdown-menu": "PolymerElements/paper-dropdown-menu#^2.0.2",
