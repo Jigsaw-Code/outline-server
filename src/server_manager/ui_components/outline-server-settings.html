@@ -172,7 +172,6 @@
       update: function(name, metricsEnabled) {
         this.initialName = name;
         this.name = name;
-        this.initialMetricsEnabled = metricsEnabled;
         this.metricsEnabled = metricsEnabled;
       },
       _handleNameInputKeyDown: function(event) {
@@ -195,15 +194,14 @@
           this.fire('ServerRenameRequested', {newName});
         }
       },
-      _metricsEnabledChanged: function() {
-        if (this.metricsEnabled === undefined || this.initialMetricsEnabled === undefined) {
+       _metricsEnabledChanged: function (newMetricsEnabled, oldMetricsEnabled) {
+        if (oldMetricsEnabled === undefined || newMetricsEnabled === undefined) {
           return;
         }
         // Fire signal if metrics changed.
-        if (this.metricsEnabled !== this.initialMetricsEnabled) {
-          const metricsSignal = this.metricsEnabled ?
-              'EnableMetricsRequested' : 'DisableMetricsRequested';
-          this.initialMetricsEnabled = this.metricsEnabled;
+        if (newMetricsEnabled !== oldMetricsEnabled) {
+          const metricsSignal = newMetricsEnabled ?
+            'EnableMetricsRequested' : 'DisableMetricsRequested';
           this.fire(metricsSignal);
         }
       },
