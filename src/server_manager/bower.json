@@ -23,6 +23,7 @@
     "iron-fit-behavior": "PolymerElements/iron-fit-behavior#^2.1.0",
     "iron-pages": "PolymerElements/iron-pages#^2.0.1",
     "paper-button": "PolymerElements/paper-button#^2.0.0",
+    "paper-checkbox": "PolymerElements/paper-checkbox#^2.0.4",
     "paper-dialog": "PolymerElements/paper-dialog#^2.0.1",
     "paper-dialog-scrollable": "PolymerElements/paper-dialog-scrollable#^2.1.0",
     "paper-dropdown-menu": "PolymerElements/paper-dropdown-menu#^2.0.2",
@@ -33,7 +34,6 @@
     "paper-progress": "PolymerElements/paper-progress#^2.0.1",
     "paper-tabs": "PolymerElements/paper-tabs#^2.1.1",
     "paper-toast": "PolymerElements/paper-toast#^2.0.0",
-    "paper-toggle-button": "PolymerElements/paper-toggle-button#^2.0.0",
     "web-animations-js": "web-animations/web-animations-js",
     "webcomponentsjs": "webcomponents/webcomponentsjs#^v1.1.0"
   }

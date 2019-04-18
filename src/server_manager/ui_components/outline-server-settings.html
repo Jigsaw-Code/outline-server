@@ -16,7 +16,7 @@
 <link rel='import' href='../bower_components/polymer/polymer.html'>
 <link rel='import' href='../bower_components/paper-button/paper-button.html'>
 <link rel='import' href='../bower_components/paper-input/paper-input.html'>
-<link rel='import' href='../bower_components/paper-toggle-button/paper-toggle-button.html'>
+<link rel='import' href='../bower_components/paper-checkbox/paper-checkbox.html'>
 
 <link rel='import' href='./cloud-install-styles.html'>
 <link rel='import' href='./outline-iconset.html'>
@@ -66,11 +66,12 @@
       .clickable {
         cursor: pointer;
       }
-      paper-toggle-button {
-        --paper-toggle-button-checked-bar-color: var(--primary-green);
-        --paper-toggle-button-checked-button-color: var(--primary-green);
-        --paper-toggle-button-checked-ink-color: var(--primary-green);
-        --paper-toggle-button-unchecked-bar-color: var(--dark-gray);
+      paper-checkbox {
+        /* We want the ink to be the color we're going to, not coming from */
+        --paper-checkbox-checked-color: var(--primary-green);
+        --paper-checkbox-checked-ink-color: var(--dark-gray);
+        --paper-checkbox-unchecked-color: var(--light-gray);
+        --paper-checkbox-unchecked-ink-color: var(--primary-green);
       }
       paper-input {
         /* Removes extra padding added by children of paper-input */
@@ -144,7 +145,7 @@
           <div>
             <div id="metricsHeader">
               <h3>Share anonymous metrics</h3>
-              <paper-toggle-button id="metricsToggle" checked="{{metricsEnabled}}"></paper-toggle-button>
+              <paper-checkbox id="metricsCheckbox" checked="{{metricsEnabled}}"></paper-checkbox>
             </div>
             <p>Share anonymized metrics to help improve the reliability and performance of Outline, for you and for those you share your server with. <a class="link" href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">Learn more</a>.</p>
           </div>
