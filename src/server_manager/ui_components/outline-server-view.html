@@ -742,6 +742,7 @@
       },
       _selectedTabChanged(selectedTab) {
         if (this.selectedTab === 'settings') {
+          this.$.addAccessKeyHelpBubble.hide();
           this.$.serverSettings.update(this.serverName, this.metricsEnabled);
         }
       },
