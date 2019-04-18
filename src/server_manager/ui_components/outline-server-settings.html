@@ -195,7 +195,7 @@
           this.fire('ServerRenameRequested', {newName});
         }
       },
-       _metricsEnabledChanged: function(newMetricsEnabled, oldMetricsEnabled) {
+      _metricsEnabledChanged: function(newMetricsEnabled, oldMetricsEnabled) {
         if (oldMetricsEnabled === undefined || newMetricsEnabled === undefined) {
           return;
         }
