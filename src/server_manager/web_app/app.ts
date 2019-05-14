@@ -239,8 +239,14 @@ export class App {
         this.displayServerRepository.removeServer(displayServer);
       }
       const unsyncedServerNames = unsyncedServers.map(s => s.name).join(', ');
-      this.appRoot.showError(
-          `${unsyncedServerNames} no longer present in your DigitalOcean account.`);
+      let messageKey = 'error-server-removed';
+      let placeholder = 'serverName';
+      if (unsyncedServers.length > 1) {
+        // Pluralize localized message.
+        messageKey = 'error-servers-removed';
+        placeholder = 'serverNames';
+      }
+      this.appRoot.showError(this.appRoot.localize(messageKey, placeholder, unsyncedServerNames));
     }
 
     await this.syncDisplayServersToUi();
