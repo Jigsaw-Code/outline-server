@@ -20,7 +20,6 @@
 <link rel='import' href='../bower_components/iron-icons/iron-icons.html'>
 
 <link rel="import" href="./cloud-install-styles.html">
-<link rel="import" href="./cities.html">
 <link rel="import" href="./outline-step-view.html">
 
 <dom-module id="outline-region-picker-step">
@@ -91,10 +90,12 @@
       }
     </style>
       <outline-step-view display-action>
-        <span slot="step-title">Select the location of your server.</span>
-        <span slot="step-description">This is where your internet experience will come from.</span>
+        <span slot="step-title">[[localize('region-title')]]</span>
+        <span slot="step-description">[[localize('region-description')]]</span>
         <span slot="step-action">
-          <paper-button id="createServerButton" on-tap='handleCreateServerTap' disabled$='[[!isCreateButtonEnabled(creatingServer, selectedCityId)]]'>Set up Outline</paper-button>
+          <paper-button id="createServerButton" on-tap='handleCreateServerTap' disabled$='[[!isCreateButtonEnabled(creatingServer, selectedCityId)]]'>
+            [[localize('region-setup')]]
+          </paper-button>
         </span>
         <div class='card-content' id="cityContainer">
           <template is="dom-repeat" items="{{cities}}">
@@ -102,7 +103,7 @@
               <label for$='{{item}}' class='city-button'>
                 <iron-icon icon="check-circle" hidden$="{{!_isSelectedCity(selectedCityId, item)}}"></iron-icon>
                 <img class='flag' src$='{{getFlag(item)}}'>
-                <div class="city-name">{{getCityName(item)}}</div>
+                <div class="city-name">{{getCityName(item, localize)}}</div>
               </label>
             </input>
           </template>
@@ -128,21 +129,30 @@
       properties: {
         cities: {
           type: Array,
+          readonly: true,
           value: Object.keys(flagById)
         },
         availableRegionIds: {  // One-to-one map from cityIds to regionIds.
           type: Object,
+          readonly: true,
           value: {}
         },
         selectedCityId: String,
-        creatingServer: Boolean
+        creatingServer: Boolean,
+        localize: {
+          type: Function,
+          readonly: true,
+        },
       },
       handleCreateServerTap: function () {
         this.creatingServer = true;
         this.fire('RegionSelected');
       },
-      getCityName: function (cityId) {
-        return cityEnglishNameById[cityId] || '';
+      getCityName: function (cityId, localize) {
+        if (!this.localize) {
+          return '';
+        }
+        return this.localize(`city-${cityId}`) || '';
       },
       getFlag: function (cityId) {
         return flagById[cityId] || '';
@@ -176,7 +186,7 @@
       },
       isCreateButtonEnabled: function(creatingServer, selectedCityId) {
         return !creatingServer && selectedCityId;
-      }
+      },
     });
   </script>
 </dom-module>

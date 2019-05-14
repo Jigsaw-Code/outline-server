@@ -75,7 +75,7 @@
     <div class="container">
       <div class="header">
         <div class="title">[[title]]</div>
-        <div class="showme" on-tap="_openImage">Show me where<iron-icon icon="open-in-new"></iron-icon></div>
+        <div class="showme" on-tap="_openImage">[[localize('manual-server-show-me')]]<iron-icon icon="open-in-new"></iron-icon></div>
       </div>
       <div class="thumbnail overlay" on-tap="_openImage">
         <iron-icon icon="open-in-new"></iron-icon>
@@ -93,7 +93,8 @@
         title: String,
         imagePath: String,
         thumbnailPath: String,
-        instructions: Array
+        instructions: Array,
+        localize: {type: Function, readonly: true},
       },
       _openImage: function() {
         this.fire('OpenImageRequested', {imagePath: this.imagePath});
