@@ -88,34 +88,31 @@ see https://github.com/PolymerElements/paper-swatch-picker/issues/36 -->
         <p id='feedbackExplanation'>[[feedbackExplanation]]</p>
         <paper-dropdown-menu id='feedbackCategory' horizontal-align='left' on-selected-item-changed='feedbackCategoryChanged'>
           <paper-listbox id='feedbackCategoryListbox' slot='dropdown-content' class='dropdown-content' selected='0'>
-            <paper-item>General feedback</paper-item>
-            <paper-item>Having trouble installing Outline</paper-item>
-            <paper-item>Can't connect to my server</paper-item>
-            <paper-item>Others can't connect to my server</paper-item>
-            <paper-item>Having trouble managing my server</paper-item>
-            <paper-item>Suggestions</paper-item>
+            <paper-item>[[localize('feedback-general')]]</paper-item>
+            <paper-item>[[localize('feedback-install')]]</paper-item>
+            <paper-item>[[localize('feedback-connection')]]</paper-item>
+            <paper-item>[[localize('feedback-connection-others')]]</paper-item>
+            <paper-item>[[localize('feedback-management')]]</paper-item>
+            <paper-item>[[localize('feedback-suggestion')]]</paper-item>
           </paper-listbox>
         </paper-dropdown-menu>
-        <paper-dropdown-menu id='cloudProvider' horizontal-align='left' placeholder='Select cloud provider' hidden$="[[!shouldShowCloudProvider]]" error-message="Please select a cloud provider">
+        <paper-dropdown-menu id="cloudProvider" horizontal-align="left" placeholder="[[localize('feedback-cloud-provider')]]" hidden$="[[!shouldShowCloudProvider]]" error-message="[[localize('feedback-cloud-provider-error')]]">
           <paper-listbox id='cloudProviderListbox' slot='dropdown-content' class='dropdown-content'>
             <paper-item>DigitalOcean</paper-item>
             <paper-item>Amazon Web Services</paper-item>
             <paper-item>Google Cloud Platform</paper-item>
-            <paper-item>Other</paper-item>
+            <paper-item>[[localize('feedback-other')]]</paper-item>
           </paper-listbox>
         </paper-dropdown-menu>
-        <paper-input id='userEmail' type='text' placeholder='Email address (optional)' on-value-changed='userEmailValueChanged'></paper-input>
-        <p class="disclaimer" hidden$=[[!shouldShowLanguageDisclaimer]]>Please note that our team is only able to answer feedback in English.</p>
-        <paper-textarea id='userFeedback' type='text' label='Your feedback' always-float-label rows="4" error-message='Please enter feedback.' on-value-changed='userFeedbackValueChanged'></paper-textarea>
-        <p>
-          Your feedback, email address (if provided) and additional information
-          referred to in the <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">privacy policy</a>
-          will be sent to the Outline team.
+        <paper-input id="userEmail" type="text" placeholder="[[localize('feedback-email')]]" on-value-changed="userEmailValueChanged"></paper-input>
+        <p class="disclaimer" hidden$=[[!shouldShowLanguageDisclaimer]]>[[localize('feedback-disclaimer')]]</p>
+        <paper-textarea id="userFeedback" type="text" label="[[localize('feedback-label')]]" always-float-label rows="4" error-message="[[localize('feedback-error')]]" on-value-changed="userFeedbackValueChanged"></paper-textarea>
+        <p inner-h-t-m-l="[[localize('feedback-privacy', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]">
         </p>
       </div>  <!-- end of #feedbackWrapper -->
       <p class="buttons">
-        <paper-button dialog-dismiss>Cancel</paper-button>
-        <paper-button autofocus on-tap='submitTappedHandler'>Submit</paper-button>
+        <paper-button dialog-dismiss>[[localize('cancel')]]</paper-button>
+        <paper-button autofocus on-tap='submitTappedHandler'>[[localize('feedback-submit')]]</paper-button>
       </p>
     </paper-dialog>
   </template>
@@ -149,19 +146,25 @@ see https://github.com/PolymerElements/paper-swatch-picker/issues/36 -->
           type: Boolean,
           computed: '_computeShouldShowLanguageDisclaimer(hasEnteredEmail)',
         },
+        localize: {
+          type: Function,
+          readonly: true
+        },
       },
-      open: function(prepopulatedMessage, showInstallationFailed, feedbackCategory = 0) {
+      open: function(prepopulatedMessage, showInstallationFailed) {
         // Clear all fields, in case feedback had already been entered.
         if (showInstallationFailed) {
-          this.title = 'Outline Server Installation Failed';
-          this.feedbackExplanation = 'An error occurred while attempting to install Outline on your server. If you haven\'t been able to figure out a solution, please consider sending us feedback and telling us your email address (optional) so that we can get back to you.';
+          this.title = this.localize('feedback-title-install');
+          this.feedbackExplanation = this.localize('feedback-explanation-install');
           this.$.dialog.classList.add('installationFailed');
           this.$.feedbackCategoryListbox.selected = this.feedbackCategories.INSTALLATION;
         } else {
-          this.title = 'Send Feedback';
+          this.title = this.localize('feedback-title-generic');
           this.feedbackExplanation = '';
           this.$.dialog.classList.remove('installationFailed');
-          this.$.feedbackCategoryListbox.selected = feedbackCategory;
+          // TODO(alalama): figure out why the localized category doesn't get displayed the first
+          // time opening the dialog.
+          this.$.feedbackCategoryListbox.selected = this.feedbackCategories.GENERAL;
         }
         this.$.userFeedback.invalid = false;
         this.$.userFeedback.value = prepopulatedMessage || '';

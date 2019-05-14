@@ -55,4 +55,4 @@ mkdir -p $STATIC_DIR
 cp -r $OUT_DIR/browserified/* $STATIC_DIR/
 
 # Copy static resources
-cp -r $ROOT_DIR/src/server_manager/{bower_components,ui_components,index.html,images} $STATIC_DIR
+cp -r $ROOT_DIR/src/server_manager/{bower_components,ui_components,index.html,images,messages} $STATIC_DIR

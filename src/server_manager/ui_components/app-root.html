@@ -16,6 +16,7 @@
 <link rel='import' href='../bower_components/polymer/polymer.html'>
 <link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
 <link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
+<link rel="import" href="../bower_components/app-localize-behavior/app-localize-behavior.html">
 <link rel='import' href='../bower_components/iron-icon/iron-icon.html'>
 <link rel='import' href='../bower_components/iron-icons/iron-icons.html'>
 <link rel='import' href='../bower_components/iron-pages/iron-pages.html'>
@@ -288,7 +289,7 @@
       }
     </style>
 
-    <outline-tos-view id="tosView" has-accepted-terms-of-service={{userAcceptedTos}} hidden$="{{hasAcceptedTos}}"></outline-tos-view>
+    <outline-tos-view id="tosView" has-accepted-terms-of-service={{userAcceptedTos}} hidden$="{{hasAcceptedTos}}" localize="[[localize]]"></outline-tos-view>
 
     <div hidden$="{{!hasAcceptedTos}}">
       <!-- This responsive width sets the minimum layout area to 648px.  -->
@@ -304,13 +305,13 @@
             <!-- DigitalOcean servers -->
             <div class="servers-section" hidden$="{{!isSignedInToDigitalOcean}}">
               <div class="servers-header">
-                <span>DigitalOcean servers</span>
+                <span>[[localize('servers-digitalocean')]]</span>
                 <paper-menu-button horizontal-align="left" class="" close-on-activate no-animations dynamic-align no-overlap>
                   <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
                   <div class="do-overflow-menu" slot="dropdown-content">
-                    <h4>Disconnect DigitalOcean account</h4>
+                    <h4>[[localize('digitalocean-disconnect-account')]]</h4>
                     <div class="account-info"><img src="images/digital_ocean_logo.svg" />{{adminEmail}}</div>
-                    <div class="sign-out-button" on-tap="signOutTapped">Disconnect</div>
+                    <div class="sign-out-button" on-tap="signOutTapped">[[localize('digitalocean-disconnect')]]</div>
                   </div>
                 </paper-menu-button>
               </div>
@@ -326,7 +327,7 @@
             <!-- Manual servers -->
             <div class="servers-section" hidden$="{{!hasManualServers}}">
               <div class="servers-header">
-                <span>Servers</span>
+                <span>[[localize('servers-manual')]]</span>
               </div>
               <div class="servers-container">
                 <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
@@ -342,20 +343,20 @@
           <!-- Add server -->
           <div class="add-server-section" on-tap="showIntro">
             <paper-icon-item>
-              <iron-icon icon="add" slot="item-icon"></iron-icon>Add server
+              <iron-icon icon="add" slot="item-icon"></iron-icon>[[localize('servers-add')]]
             </paper-icon-item>
           </div>
 
           <!-- Links section -->
           <paper-listbox on-tap="maybeCloseDrawer">
-            <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">Data collection</a>
-            <span on-tap="submitFeedbackTapped">Feedback</span>
-            <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">Help</a>
-            <span on-tap="aboutTapped">About</span>
+            <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">[[localize('nav-data-collection')]]</a>
+            <span on-tap="submitFeedbackTapped">[[localize('nav-feedback')]]</span>
+            <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">[[localize('nav-help')]]</a>
+            <span on-tap="aboutTapped">[[localize('nav-about')]]</span>
             <div class="legal-links">
-              <a href="https://www.google.com/policies/privacy/">Privacy</a>
-              <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">Terms</a>
-              <span on-tap="showLicensesTapped">Licenses</span>
+              <a href="https://www.google.com/policies/privacy/">[[localize('nav-privacy')]]</a>
+              <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">[[localize('nav-terms')]]</a>
+              <span on-tap="showLicensesTapped">[[localize('nav-licenses')]]</span>
             </div>
           </paper-listbox>
         </app-drawer>
@@ -363,14 +364,14 @@
         <app-header-layout>
           <div class="app-container">
             <iron-pages attr-for-selected='id' selected='{{ currentPage }}'>
-              <outline-intro-step id='intro' is-signed-in-to-digital-ocean='{{isSignedInToDigitalOcean}}' digital-ocean-email='{{adminEmail}}'></outline-intro-step>
-              <outline-do-oauth-step id='digitalOceanOauth'></outline-do-oauth-step>
-              <outline-manual-server-entry id='manualEntry'></outline-manual-server-entry>
-              <outline-region-picker-step id='regionPicker'></outline-region-picker-step>
-              <outline-server-progress-step id='serverProgressStep'></outline-server-progress-step>
+              <outline-intro-step id='intro' is-signed-in-to-digital-ocean='{{isSignedInToDigitalOcean}}' digital-ocean-email='{{adminEmail}}' localize="[[localize]]"></outline-intro-step>
+              <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
+              <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
+              <outline-region-picker-step id="regionPicker" localize="[[localize]]"></outline-region-picker-step>
+              <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
               <div id="serverView">
                 <template is="dom-repeat" items="{{serverList}}" as="server">
-                  <outline-server-view id="serverView-{{_base64Encode(server.id)}}" hidden$="{{!_isServerSelected(selectedServer, server)}}"></outline-server-view>
+                  <outline-server-view id="serverView-{{_base64Encode(server.id)}}" localize="[[localize]]" hidden$="{{!_isServerSelected(selectedServer, server)}}"></outline-server-view>
                 </template>
               </div>
             </iron-pages>
@@ -415,27 +416,27 @@
       <paper-toast id='toast'><paper-icon-button icon='icons:close' on-tap='closeError'></paper-icon-button></paper-toast>
 
       <!-- Modal dialogs must be outside the app container; otherwise the backdrop covers them.  -->
-      <outline-feedback-dialog id='feedbackDialog'></outline-feedback-dialog>
-      <outline-about-dialog id='aboutDialog' outline-version='[[outlineVersion]]'></outline-about-dialog>
-      <outline-modal-dialog id='modalDialog'></outline-modal-dialog>
-      <outline-share-dialog id="shareDialog"></outline-share-dialog>
-      <outline-metrics-option-dialog id="metricsDialog"></outline-metrics-option-dialog>
+      <outline-feedback-dialog id="feedbackDialog" localize="[[localize]]"></outline-feedback-dialog>
+      <outline-about-dialog id="aboutDialog" outline-version="[[outlineVersion]]" localize="[[localize]]"></outline-about-dialog>
+      <outline-modal-dialog id="modalDialog"></outline-modal-dialog>
+      <outline-share-dialog id="shareDialog" localize="[[localize]]"></outline-share-dialog>
+      <outline-metrics-option-dialog id="metricsDialog" localize="[[localize]]"></outline-metrics-option-dialog>
 
       <paper-dialog id="getConnectedDialog" modal>
         <!-- iframe gets inserted here once we are given the invite URL. -->
         <div class="buttons">
-          <paper-button on-tap="closeGetConnectedDialog" autofocus>Close</paper-button>
+          <paper-button on-tap="closeGetConnectedDialog" autofocus>[[localize('close')]]</paper-button>
         </div>
       </paper-dialog>
 
       <paper-dialog id="licenses" modal restoreFocusOnClose>
         <paper-dialog-scrollable>
           <code id="licensesText">
-            Could not load license.txt.
+            [[localize('error-licenses')]]
           </code>
         </paper-dialog-scrollable>
         <div class="buttons">
-          <paper-button dialog-dismiss autofocus>Close</paper-button>
+          <paper-button dialog-dismiss autofocus>[[localize('close')]]</paper-button>
         </div>
       </paper-dialog>
 
@@ -445,7 +446,19 @@
     const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
     Polymer({
       is: 'app-root',
+      behaviors: [
+        Polymer.AppLocalizeBehavior
+      ],
       properties: {
+        useKeyIfMissing: {
+          type: Boolean,
+          value: true
+        },
+        language: {
+          type: String,
+          readonly: true,
+          value: 'en'
+        },
         serverList: {
           type: Array,
           value: [],
@@ -496,6 +509,11 @@
         'SetUpAwsRequested': 'handleSetUpAwsRequested',
         'SetUpGcpRequested': 'handleSetUpGcpRequested',
         'ManualServerEntryCancelled': 'handleManualCancelled'
+      },
+      ready: function() {
+        // TODO(alalama): detect language
+        const messagesUrl = `/messages/${this.language}.json`;
+        this.loadResources(messagesUrl, this.language);
       },
       showIntro: function () {
         this.maybeCloseDrawer();
@@ -566,9 +584,8 @@
       showError: function (errorMsg) {
         this.showToast(errorMsg, Infinity);
       },
-      showNotification: function (message) {
-        const NOTIFICATION_TOAST_DURATION_MS = 3000;
-        this.showToast(message, NOTIFICATION_TOAST_DURATION_MS);
+      showNotification: function (message, durationMs=3000) {
+        this.showToast(message, durationMs);
       },
       showToast: function(message, duration) {
         const toast = this.$.toast;
@@ -589,15 +606,15 @@
       // cb is a function which accepts a single boolean which is true iff
       // the user chose to retry the failing operation.
       showConnectivityDialog: function (cb) {
-        const dialogTitle = 'Connection problem';
-        const dialogText = 'We\'re having trouble connecting to your DigitalOcean account. This is sometimes a temporary problem with DigitalOcean or with your internet connection. If retrying doesn\`t work, logging into DigitalOcean again should fix the problem.';
-        this.showModalDialog(dialogTitle, dialogText, ['cancel', 'retry'])
+        const dialogTitle = this.localize('error-connectivity-title');
+        const dialogText = this.localize('error-connectivity');
+        this.showModalDialog(dialogTitle, dialogText, [this.localize('cancel'), this.localize('retry')])
         .then((clickedButtonIndex) => {
           cb(clickedButtonIndex === 1);  // pass true if user clicked retry
         });
       },
       getConfirmation: function(title, text, confirmButtonText, continueFunc) {
-        this.showModalDialog(title, text, ['Cancel', confirmButtonText])
+        this.showModalDialog(title, text, [this.localize('cancel'), confirmButtonText])
         .then((clickedButtonIndex) => {
           if (clickedButtonIndex === 1) {  // user clicked to confirm.
             continueFunc();
@@ -605,7 +622,7 @@
         });
       },
       showManualServerError: function (errorTitle, errorText) {
-        this.showModalDialog(errorTitle, errorText, ['cancel', 'retry'])
+        this.showModalDialog(errorTitle, errorText, [this.localize('cancel'), this.localize('retry')])
             .then((clickedButtonIndex) => {
               if (clickedButtonIndex == 1) {
                 this.$.manualEntry.retryTapped();

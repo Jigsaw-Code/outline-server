@@ -60,10 +60,10 @@
     </style>
 
     <outline-step-view display-action>
-      <span slot="step-title">Setting up Outline.</span>
-      <span slot="step-description">This could take up to two minutes. You can destroy this server at anytime.</span>
+      <span slot="step-title">[[localize('setup-do-title')]]</span>
+      <span slot="step-description">[[localize('setup-do-description')]]</span>
       <span slot="step-action">
-        <paper-button id='cancelButton' hidden$='{{!showCancelButton}}' on-tap='handleCancelTapped'>Cancel</paper-button>
+        <paper-button id='cancelButton' hidden$='{{!showCancelButton}}' on-tap='handleCancelTapped'>[[localize('cancel')]]</paper-button>
       </span>
       <div class='card'>
         <outline-progress-spinner></outline-progress-spinner>
@@ -82,7 +82,8 @@
       properties: {
         serverName: String,
         showCancelButton: Boolean,
-        updateIntervalId: Number
+        updateIntervalId: Number,
+        localize: Function
       },
       start: function() {
         if (this.updateIntervalId) {

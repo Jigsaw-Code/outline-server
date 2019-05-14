@@ -1,0 +1,892 @@
+{
+  "about_outline": {
+    "message": "Outline is an open source project created by $JIGSAW$ to provide a safer way for news organizations and journalists to access the internet.$NEW_LINE$$NEW_LINE$ Outline is powered by $SHADOWSOCKS$ and is still an early stage product. You can contribute to the code on $GITHUB$, and follow us on $REDDIT$ and $MEDIUM$ to hear when we expand to more platforms and add new features.",
+    "description": "",
+    "placeholders": {
+      "GITHUB": {
+        "content": "<a href={gitHubUrl}>GitHub</a>"
+      },
+      "JIGSAW": {
+        "content": "<a href={jigsawUrl}>Jigsaw</a>"
+      },
+      "MEDIUM": {
+        "content": "<a href={mediumUrl}>Medium</a>"
+      },
+      "NEW_LINE": {
+        "content": "<br>"
+      },
+      "REDDIT": {
+        "content": "<a href={redditUrl}>Reddit</a>"
+      },
+      "SHADOWSOCKS": {
+        "content": "<a href={shadowsocksUrl}>Shadowsocks</a>"
+      }
+    }
+  },
+  "about_version": {
+    "message": "Version $VERSION$",
+    "description": "",
+    "placeholders": {
+      "VERSION": {
+        "content": "{version}",
+        "example": "1.0.2"
+      }
+    }
+  },
+  "aws_group_assign_0": {
+    "message": "Navigate to $START_OF_LINK$Instances$END_OF_LINK$.",
+    "description": "",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
+  },
+  "aws_group_assign_1": {
+    "message": "Click 'Actions' > 'Networking' > 'Change Security Groups' at the top of the 'Instances' screen.",
+    "description": ""
+  },
+  "aws_group_assign_2": {
+    "message": "Select the 'outline' Security Group, unselect other security groups.",
+    "description": ""
+  },
+  "aws_group_assign_3": {
+    "message": "Click 'Assign Security Groups'.",
+    "description": ""
+  },
+  "aws_group_create_0": {
+    "message": "Once you've created your EC2 instance, open the $START_OF_LINK$EC2 Management Console$END_OF_LINK$.",
+    "description": "",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
+  },
+  "aws_group_create_1": {
+    "message": "Under 'Network & Security', select 'Security Groups'.",
+    "description": ""
+  },
+  "aws_group_create_2": {
+    "message": "Click on 'Create Security Group'.",
+    "description": ""
+  },
+  "aws_group_create_3": {
+    "message": "Type 'outline' in the 'Security group name' and 'Description' fields.",
+    "description": ""
+  },
+  "aws_group_create_4": {
+    "message": "Click 'Add Rule'.",
+    "description": ""
+  },
+  "aws_group_create_5": {
+    "message": "Select 'All traffic' under 'Type', and 'Anywhere' under 'Source'.",
+    "description": ""
+  },
+  "cancel": {
+    "message": "Cancel",
+    "description": ""
+  },
+  "city_ams": {
+    "message": "Amsterdam",
+    "description": ""
+  },
+  "city_blr": {
+    "message": "Bangalore",
+    "description": ""
+  },
+  "city_fra": {
+    "message": "Frankfurt",
+    "description": ""
+  },
+  "city_lon": {
+    "message": "London",
+    "description": ""
+  },
+  "city_nyc": {
+    "message": "New York",
+    "description": ""
+  },
+  "city_sfo": {
+    "message": "San Francisco",
+    "description": ""
+  },
+  "city_sgp": {
+    "message": "Singapore",
+    "description": ""
+  },
+  "city_tor": {
+    "message": "Toronto",
+    "description": ""
+  },
+  "close": {
+    "message": "Close",
+    "description": ""
+  },
+  "confirmation_server_destroy": {
+    "message": "Existing users will lose access. This action cannot be undone.",
+    "description": ""
+  },
+  "confirmation_server_destroy_title": {
+    "message": "Destroy Server?",
+    "description": ""
+  },
+  "confirmation_server_remove": {
+    "message": "This action removes your server from the Outline Manager, but does not block proxy access to users. You will still need to manually delete the Outline server from your host machine.",
+    "description": ""
+  },
+  "confirmation_server_remove_title": {
+    "message": "Remove Server?",
+    "description": ""
+  },
+  "destroy": {
+    "message": "Destroy",
+    "description": ""
+  },
+  "digitalocean_disconnect": {
+    "message": "Disconnect",
+    "description": ""
+  },
+  "digitalocean_disconnect_account": {
+    "message": "Disconnect DigitalOcean account",
+    "description": ""
+  },
+  "digitalocean_unreachable": {
+    "message": "This error may be due to a firewall on your network or temporary connectivity issues with digitalocean.com.",
+    "description": ""
+  },
+  "done": {
+    "message": "Done",
+    "description": ""
+  },
+  "error_connectivity": {
+    "message": "We're having trouble connecting to your DigitalOcean account. This is sometimes a temporary problem with DigitalOcean or with your internet connection. If retrying doesn't work, logging into DigitalOcean again should fix the problem.",
+    "description": ""
+  },
+  "error_connectivity_title": {
+    "message": "Connection problem",
+    "description": ""
+  },
+  "error_do_account_info": {
+    "message": "Failed to get DigitalOcean account information",
+    "description": ""
+  },
+  "error_do_auth": {
+    "message": "Authentication with DigitalOcean failed",
+    "description": ""
+  },
+  "error_do_regions": {
+    "message": "Failed to get list of available regions",
+    "description": ""
+  },
+  "error_feedback": {
+    "message": "Failed to submit feedback. Please try again.",
+    "description": ""
+  },
+  "error_key_add": {
+    "message": "Failed to add key",
+    "description": ""
+  },
+  "error_key_remove": {
+    "message": "Failed to remove key",
+    "description": ""
+  },
+  "error_key_rename": {
+    "message": "Failed to rename key",
+    "description": ""
+  },
+  "error_keys_get": {
+    "message": "Could not load keys",
+    "description": ""
+  },
+  "error_licenses": {
+    "message": "Could not load licenses.",
+    "description": ""
+  },
+  "error_metrics": {
+    "message": "Error setting metrics enabled",
+    "description": ""
+  },
+  "error_server_creation": {
+    "message": "There was an error creating your Outline server.",
+    "description": ""
+  },
+  "error_server_destroy": {
+    "message": "Failed to destroy server",
+    "description": ""
+  },
+  "error_server_removed": {
+    "message": "$SERVER_NAME$ no longer present in your DigitalOcean account.",
+    "description": "",
+    "placeholders": {
+      "SERVER_NAMES": {
+        "content": "{serverName}",
+        "example": "New York Outline Server"
+      }
+    }
+  },
+  "error_server_rename": {
+    "message": "Failed to rename server",
+    "description": ""
+  },
+  "error_server_unreachable": {
+    "message": "Your Outline Server was installed correctly, but we are not able to connect to it. Most likely this is because your server's firewall rules are blocking incoming connections. Please review them and make sure to allow incoming TCP connections on ports ranging from 1024 to 65535.",
+    "description": ""
+  },
+  "error_server_unreachable_title": {
+    "message": "Unable to connect to your Outline Server",
+    "description": ""
+  },
+  "error_servers_removed": {
+    "message": "$SERVER_NAMES$ no longer present in your DigitalOcean account.",
+    "description": "",
+    "placeholders": {
+      "SERVER_NAMES": {
+        "content": "{serverNames}",
+        "example": "New York Outline Server, Amsterdam Outline Server"
+      }
+    }
+  },
+  "feedback_cloud_provider": {
+    "message": "Select cloud provider",
+    "description": ""
+  },
+  "feedback_cloud_provider_error": {
+    "message": "Please select a cloud provider.",
+    "description": ""
+  },
+  "feedback_connection": {
+    "message": "Can't connect to my server",
+    "description": ""
+  },
+  "feedback_connection_others": {
+    "message": "Others can't connect to my server",
+    "description": ""
+  },
+  "feedback_disclaimer": {
+    "message": "Please note that our team is only able to answer feedback in English.",
+    "description": ""
+  },
+  "feedback_email": {
+    "message": "Email address (optional)",
+    "description": ""
+  },
+  "feedback_error": {
+    "message": "Please enter feedback.",
+    "description": ""
+  },
+  "feedback_explanation_install": {
+    "message": "An error occurred while attempting to install Outline on your server. If you haven't been able to figure out a solution, please consider sending us feedback and telling us your email address (optional) so that we can get back to you.",
+    "description": ""
+  },
+  "feedback_general": {
+    "message": "General feedback",
+    "description": ""
+  },
+  "feedback_install": {
+    "message": "Having trouble installing Outline",
+    "description": ""
+  },
+  "feedback_label": {
+    "message": "Your feedback",
+    "description": ""
+  },
+  "feedback_management": {
+    "message": "Having trouble managing my server",
+    "description": ""
+  },
+  "feedback_other": {
+    "message": "Other",
+    "description": ""
+  },
+  "feedback_privacy": {
+    "message": "Your feedback, email address (if provided) and additional information referred to in the $START_OF_LINK$privacy policy$END_OF_LINK$ will be sent to the Outline team.",
+    "description": "",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
+  },
+  "feedback_submit": {
+    "message": "Submit",
+    "description": ""
+  },
+  "feedback_suggestion": {
+    "message": "Suggestions",
+    "description": ""
+  },
+  "feedback_title_generic": {
+    "message": "Send Feedback",
+    "description": ""
+  },
+  "feedback_title_install": {
+    "message": "Outline Server Installation Failed",
+    "description": ""
+  },
+  "gcp_firewall_assign_0": {
+    "message": "Navigate to the $START_OF_LINK$VM instances screen$END_OF_LINK$.",
+    "description": "",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
+  },
+  "gcp_firewall_assign_1": {
+    "message": "Click on the instance where you want to host Outline.",
+    "description": ""
+  },
+  "gcp_firewall_assign_2": {
+    "message": "Click 'EDIT' at the top of the VM Instance details screen.",
+    "description": ""
+  },
+  "gcp_firewall_assign_3": {
+    "message": "Type 'outline' in the 'Network tags' field.",
+    "description": ""
+  },
+  "gcp_firewall_assign_4": {
+    "message": "Click 'SAVE'.",
+    "description": ""
+  },
+  "gcp_firewall_create_0": {
+    "message": "$START_OF_LINK$Add a new firewall rule$END_OF_LINK$ to your Compute Engine project.",
+    "description": "",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
+  },
+  "gcp_firewall_create_1": {
+    "message": "Type 'outline' in the 'Name' field.",
+    "description": ""
+  },
+  "gcp_firewall_create_2": {
+    "message": "Type 'outline' in the 'Target tags' field.",
+    "description": ""
+  },
+  "gcp_firewall_create_3": {
+    "message": "Type '0.0.0.0/0' in the 'Source IP ranges' field.",
+    "description": ""
+  },
+  "gcp_firewall_create_4": {
+    "message": "Select 'Allow all' under 'Protocols and ports'.",
+    "description": ""
+  },
+  "gcp_firewall_create_5": {
+    "message": "Click 'Create'.",
+    "description": ""
+  },
+  "key": {
+    "message": "Key",
+    "description": ""
+  },
+  "manual_server_assign_firewall": {
+    "message": "Assign firewall rule",
+    "description": ""
+  },
+  "manual_server_assign_group": {
+    "message": "Assign Security Group",
+    "description": ""
+  },
+  "manual_server_create_firewall": {
+    "message": "Create a firewall rule",
+    "description": ""
+  },
+  "manual_server_create_group": {
+    "message": "Create a Security Group",
+    "description": ""
+  },
+  "manual_server_description": {
+    "message": "These steps will help you install Outline on a $CLOUD_PROVIDER$ Linux server.",
+    "description": "",
+    "placeholders": {
+      "CLOUD_PROVIDER": {
+        "content": "{cloudProvider}",
+        "example": "Amazon Web Services"
+      }
+    }
+  },
+  "manual_server_firewall": {
+    "message": "Configure your firewall",
+    "description": ""
+  },
+  "manual_server_install_paste": {
+    "message": "Paste your installation output here.",
+    "description": ""
+  },
+  "manual_server_install_run": {
+    "message": "Log into your server, and run this command.",
+    "description": ""
+  },
+  "manual_server_instructions": {
+    "message": "Instructions",
+    "description": ""
+  },
+  "manual_server_show_me": {
+    "message": "Show me where",
+    "description": ""
+  },
+  "manual_server_title": {
+    "message": "Follow the instructions below",
+    "description": ""
+  },
+  "metrics_description": {
+    "message": "Share anonymized metrics to help improve the reliability and performance of Outline, for you and for those you share your server with. $START_OF_LINK$Learn more.$END_OF_LINK$",
+    "description": "",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
+  },
+  "metrics_share": {
+    "message": "Share metrics",
+    "description": ""
+  },
+  "metrics_skip": {
+    "message": "Skip",
+    "description": ""
+  },
+  "metrics_title": {
+    "message": "Metrics sharing",
+    "description": ""
+  },
+  "nav_about": {
+    "message": "About",
+    "description": ""
+  },
+  "nav_data_collection": {
+    "message": "Data collection",
+    "description": ""
+  },
+  "nav_feedback": {
+    "message": "Feedback",
+    "description": ""
+  },
+  "nav_help": {
+    "message": "Help",
+    "description": ""
+  },
+  "nav_licenses": {
+    "message": "Licenses",
+    "description": ""
+  },
+  "nav_privacy": {
+    "message": "Privacy",
+    "description": ""
+  },
+  "nav_terms": {
+    "message": "Terms",
+    "description": ""
+  },
+  "notification_app_update": {
+    "message": "An updated version of the Outline Manager has been downloaded. It will be installed when you restart the application.",
+    "description": ""
+  },
+  "notification_feedback_thanks": {
+    "message": "Thanks for helping us improve! We love hearing from you.",
+    "description": ""
+  },
+  "notification_key_added": {
+    "message": "Key added",
+    "description": ""
+  },
+  "notification_key_removed": {
+    "message": "Key removed",
+    "description": ""
+  },
+  "notification_server_destroyed": {
+    "message": "Server destroyed",
+    "description": ""
+  },
+  "notification_server_exists": {
+    "message": "Server already added",
+    "description": ""
+  },
+  "notification_server_removed": {
+    "message": "Server removed",
+    "description": ""
+  },
+  "oauth_account_active": {
+    "message": "Your DigitalOcean account has been activated.",
+    "description": ""
+  },
+  "oauth_account_active_tag": {
+    "message": "Enter billing information...",
+    "description": ""
+  },
+  "oauth_activate_account": {
+    "message": "Activate you DigitalOcean account.",
+    "description": ""
+  },
+  "oauth_billing": {
+    "message": "Enter your billing information on digitalocean.com and return to the app once you are done.",
+    "description": ""
+  },
+  "oauth_billing_tag": {
+    "message": "Enter billing information...",
+    "description": ""
+  },
+  "oauth_connect_description": {
+    "message": "With your account, Outline makes it easy to create a server and get connected.",
+    "description": ""
+  },
+  "oauth_connect_tag": {
+    "message": "Waiting to connect your account...",
+    "description": ""
+  },
+  "oauth_connect_title": {
+    "message": "Sign in or create an account with DigitalOcean.",
+    "description": ""
+  },
+  "oauth_sign_out": {
+    "message": "Sign Out",
+    "description": ""
+  },
+  "oauth_verify": {
+    "message": "Check your inbox for an email from DigitalOcean, and click the link in it to confirm your account.",
+    "description": ""
+  },
+  "oauth_verify_tag": {
+    "message": "Confirm your email...",
+    "description": ""
+  },
+  "oauth_verify_title": {
+    "message": "Activate you DigitalOcean account.",
+    "description": ""
+  },
+  "okay": {
+    "message": "OK",
+    "description": ""
+  },
+  "region_description": {
+    "message": "This is where your internet experience will come from.",
+    "description": ""
+  },
+  "region_setup": {
+    "message": "Set up Outline",
+    "description": ""
+  },
+  "region_title": {
+    "message": "Select the location of your server.",
+    "description": ""
+  },
+  "remove": {
+    "message": "Remove",
+    "description": ""
+  },
+  "retry": {
+    "message": "Retry",
+    "description": ""
+  },
+  "server_access": {
+    "message": "Server access",
+    "description": ""
+  },
+  "server_access_key_new": {
+    "message": "Add new key",
+    "description": ""
+  },
+  "server_access_key_rename": {
+    "message": "Rename",
+    "description": ""
+  },
+  "server_access_keys": {
+    "message": "Access keys",
+    "description": ""
+  },
+  "server_connect_devices": {
+    "message": "Connect your devices",
+    "description": ""
+  },
+  "server_connections": {
+    "message": "Connections",
+    "description": ""
+  },
+  "server_data_transfer": {
+    "message": "Data transferred / 30 days",
+    "description": ""
+  },
+  "server_data_used": {
+    "message": "Data used / 30 days",
+    "description": ""
+  },
+  "server_destroy": {
+    "message": "Destroy server",
+    "description": ""
+  },
+  "server_help_access_key_description": {
+    "message": "Share access keys with friends, so they can connect to your Outline server. They can use the same access key on all their devices.",
+    "description": ""
+  },
+  "server_help_access_key_next": {
+    "message": "Next",
+    "description": ""
+  },
+  "server_help_access_key_title": {
+    "message": "Create keys, share access",
+    "description": ""
+  },
+  "server_help_connection_description": {
+    "message": "Click here to install the Outline client app, using your personal access key to your Outline server.",
+    "description": ""
+  },
+  "server_help_connection_ok": {
+    "message": "Okay, got it!",
+    "description": ""
+  },
+  "server_help_connection_title": {
+    "message": "You are not connected yet!",
+    "description": ""
+  },
+  "server_keys": {
+    "message": "Keys",
+    "description": ""
+  },
+  "server_my_access_key": {
+    "message": "My access key",
+    "description": ""
+  },
+  "server_name": {
+    "message": "Outline Server $SEVER_LOCATION$",
+    "description": "",
+    "placeholders": {
+      "SEVER_LOCATION": {
+        "content": "{serverLocation}",
+        "example": "New York"
+      }
+    }
+  },
+  "server_remove": {
+    "message": "Remove server",
+    "description": ""
+  },
+  "server_settings": {
+    "message": "Settings",
+    "description": ""
+  },
+  "server_unreachable": {
+    "message": "Server unreachable",
+    "description": ""
+  },
+  "server_unreachable_description": {
+    "message": "We're having issues connecting to this server.",
+    "description": ""
+  },
+  "server_unreachable_managed_description": {
+    "message": "Try again or remove this server from the application.",
+    "description": ""
+  },
+  "server_unreachable_manual_description": {
+    "message": "Try again or destroy this server and the virtual host.",
+    "description": ""
+  },
+  "server_usage": {
+    "message": "Usage / 30 days",
+    "description": ""
+  },
+  "servers_add": {
+    "message": "Add server",
+    "description": ""
+  },
+  "servers_digitalocean": {
+    "message": "DigitalOcean servers",
+    "description": ""
+  },
+  "servers_manual": {
+    "message": "Servers",
+    "description": ""
+  },
+  "settings_access_key_port": {
+    "message": "Port for new access keys",
+    "description": ""
+  },
+  "settings_metrics_header": {
+    "message": "Share anonymous metrics",
+    "description": ""
+  },
+  "settings_server_api_url": {
+    "message": "Management API URL",
+    "description": ""
+  },
+  "settings_server_cost": {
+    "message": "Monthly cost",
+    "description": ""
+  },
+  "settings_server_creation": {
+    "message": "Created",
+    "description": ""
+  },
+  "settings_server_hostname": {
+    "message": "Hostname",
+    "description": ""
+  },
+  "settings_server_id": {
+    "message": "Server ID",
+    "description": ""
+  },
+  "settings_server_info": {
+    "message": "Server Information",
+    "description": ""
+  },
+  "settings_server_location": {
+    "message": "Server location",
+    "description": ""
+  },
+  "settings_server_name": {
+    "message": "Name",
+    "description": ""
+  },
+  "settings_server_rename": {
+    "message": "Set a new name for your server. Note that this will not be reflected on the devices of the users that you invited to connect to it.",
+    "description": ""
+  },
+  "settings_transfer_limit": {
+    "message": "Transfer limit",
+    "description": ""
+  },
+  "setup_action": {
+    "message": "Set up",
+    "description": ""
+  },
+  "setup_advanced": {
+    "message": "Advanced",
+    "description": ""
+  },
+  "setup_anywhere": {
+    "message": "Set up Outline anywhere",
+    "description": ""
+  },
+  "setup_create": {
+    "message": "Create server",
+    "description": ""
+  },
+  "setup_description": {
+    "message": "Don't have a server? Create an account with DigitalOcean.",
+    "description": ""
+  },
+  "setup_do_cancel": {
+    "message": "Cancel at anytime",
+    "description": ""
+  },
+  "setup_do_cost": {
+    "message": "Only $5 a month",
+    "description": ""
+  },
+  "setup_do_create": {
+    "message": "Create a new server with your DigitalOcean account for an additional $5 USD/30 days for 1TB of data transfer.",
+    "description": ""
+  },
+  "setup_do_data": {
+    "message": "1 TB of data transfer",
+    "description": ""
+  },
+  "setup_do_description": {
+    "message": "This could take up to two minutes. You can destroy this server at anytime.",
+    "description": ""
+  },
+  "setup_do_easiest": {
+    "message": "Easiest setup process",
+    "description": ""
+  },
+  "setup_do_title": {
+    "message": "Setting up Outline.",
+    "description": ""
+  },
+  "setup_firewall_instructions": {
+    "message": "Firewall instructions",
+    "description": ""
+  },
+  "setup_recommended": {
+    "message": "Recommended",
+    "description": ""
+  },
+  "setup_simple_commands": {
+    "message": "Simple install commands",
+    "description": ""
+  },
+  "setup_step-by-step": {
+    "message": "Step-by-step set-up guide",
+    "description": ""
+  },
+  "setup_tested": {
+    "message": "Tested on VULTR, Linode, and Liquid Web",
+    "description": ""
+  },
+  "setup_title": {
+    "message": "Choose a cloud service, set up Outline.",
+    "description": ""
+  },
+  "share_description": {
+    "message": "Copy this invitation and send it from a communication tool you trust. $START_OF_LINK$Need help?$END_OF_LINK$",
+    "description": "",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
+  },
+  "share_invite": {
+    "message": "You\u2019re invited to connect to my Outline server. Use it to access the open internet, no matter where you are. Follow the instructions on your invitation link below to download the Outline App and get connected.",
+    "description": ""
+  },
+  "share_invite_copied": {
+    "message": "Copied to clipboard",
+    "description": ""
+  },
+  "share_invite_copy": {
+    "message": "Copy invitation",
+    "description": ""
+  },
+  "share_invite_copy_access_key": {
+    "message": "Copy your access key:",
+    "description": ""
+  },
+  "share_invite_instructions": {
+    "message": "Follow our invitation instructions on GitHub:",
+    "description": ""
+  },
+  "share_invite_trouble": {
+    "message": "Having trouble accessing the invitation link?",
+    "description": ""
+  },
+  "share_title": {
+    "message": "Share access",
+    "description": ""
+  },
+  "terms_of_service": {
+    "message": "I have read and understood the $START_OF_LINK$Outline Terms of Service$END_OF_LINK$",
+    "description": "",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
+  }
+}

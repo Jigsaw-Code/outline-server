@@ -89,6 +89,7 @@
         font-weight: 500;
         letter-spacing: .05em;
         font-size: 10px;
+        text-transform: uppercase;
       }
       .card#digital-ocean .tag, .card#digital-ocean .email, .card p {
         color: var(--medium-gray);
@@ -155,13 +156,13 @@
     </style>
 
     <outline-step-view>
-      <span slot="step-title">Choose a cloud service, set up Outline.</span>
-      <span slot="step-description">Don't have a server? Create an account with DigitalOcean.</span>
+      <span slot="step-title">[[localize('setup-title')]]</span>
+      <span slot="step-description">[[localize('setup-description')]]</span>
 
       <div class="container">
         <div id="digital-ocean" class="card" on-tap="connectToDigitalOceanTapped">
           <div class="card-header">
-            <div class="tag" hidden$="{{isSignedInToDigitalOcean}}">RECOMMENDED</div>
+            <div class="tag" hidden$="{{isSignedInToDigitalOcean}}">[[localize('setup-recommended')]]</div>
             <div class="email" hidden$="{{!isSignedInToDigitalOcean}}">{{digitalOceanEmail}}</div>
             <img src="images/do_white_logo.svg">
           </div>
@@ -169,78 +170,78 @@
           <div class="card-body">
             <div class="description">
               <ul hidden$="{{isSignedInToDigitalOcean}}">
-                <li>Easiest setup process</li>
-                <li>Only $5 a month</li>
-                <li>1 TB of data transfer</li>
-                <li>Cancel at anytime</li>
+                <li>[[localize('setup-do-easiest')]]</li>
+                <li>[[localize('setup-do-cost')]]</li>
+                <li>[[localize('setup-do-data')]]</li>
+                <li>[[localize('setup-do-cancel')]]</li>
               </ul>
               <p hidden$="{{!isSignedInToDigitalOcean}}">
-                Create a new server with your DigitalOcean account for an additional $5 USD/30 days for 1TB of data transfer.
+                [[localize('setup-do-create')]]
               </p>
             </div>
           </div>
           <div class="card-footer">
-            <paper-button class="primary" hidden$="{{isSignedInToDigitalOcean}}">Set up</paper-button>
-            <paper-button class="primary" hidden$="{{!isSignedInToDigitalOcean}}">Create server</paper-button>
+            <paper-button class="primary" hidden$="{{isSignedInToDigitalOcean}}">[[localize('setup-action')]]</paper-button>
+            <paper-button class="primary" hidden$="{{!isSignedInToDigitalOcean}}">[[localize('setup-create')]]</paper-button>
           </div>
         </div>
 
         <div id="gcp" class="card" on-tap="setUpGcpTapped">
           <div class="card-header">
-            <div class="tag">ADVANCED</div>
+            <div class="tag">[[localize('setup-advanced')]]</div>
             <img src="images/gcp-logo.svg">
           </div>
           <div class="card-title">Google Cloud Platform</div>
           <div class="card-body">
             <div class="description">
               <ul>
-                <li>Step-by-step set-up guide</li>
-                <li>Firewall instructions</li>
-                <li>Simple install commands</li>
+                <li>[[localize('setup-step-by-step')]]</li>
+                <li>[[localize('setup-firewall-instructions')]]</li>
+                <li>[[localize('setup-simple-commands')]]</li>
               </ul>
             </div>
           </div>
           <div class="card-footer">
-            <paper-button on-tap="setUpGcpTapped" class="primary">Set up</paper-button>
+            <paper-button on-tap="setUpGcpTapped" class="primary">[[localize('setup-action')]]</paper-button>
           </div>
         </div>
 
         <div id="aws" class="card" on-tap="setUpAwsTapped">
           <div class="card-header">
-            <div class="tag">ADVANCED</div>
+            <div class="tag">[[localize('setup-advanced')]]</div>
             <img src="images/aws-logo.svg">
           </div>
           <div class="card-title">Amazon Web Services</div>
           <div class="card-body">
             <div class="description">
               <ul>
-                <li>Step-by-step set-up guide</li>
-                <li>EC2 firewall instructions</li>
-                <li>Simple install commands</li>
+                <li>[[localize('setup-step-by-step')]]</li>
+                <li>[[localize('setup-firewall-instructions')]]</li>
+                <li>[[localize('setup-simple-commands')]]</li>
               </ul>
             </div>
           </div>
           <div class="card-footer">
-            <paper-button on-tap="setUpAwsTapped" class="primary">Set up</paper-button>
+            <paper-button on-tap="setUpAwsTapped" class="primary">[[localize('setup-action')]]</paper-button>
           </div>
         </div>
 
         <div id="manual-server" class="card" on-tap="setUpGenericCloudProviderTapped">
           <div class="card-header">
-            <div class="tag">ADVANCED</div>
+            <div class="tag">[[localize('setup-advanced')]]</div>
             <img src="images/cloud.svg">
           </div>
-          <div class="card-title">Set up Outline anywhere</div>
+          <div class="card-title">[[localize('setup-anywhere')]]</div>
           <div class="card-body">
             <div class='description'>
               <ul>
-                <li>Tested on VULTR, Linode, and Liquid Web</li>
-                <li>Simple install commands</li>
+                <li>[[localize('setup-tested')]]</li>
+                <li>[[localize('setup-simple-commands')]]</li>
               </ul>
             </div>
           </div>
           <div class="card-footer">
-            <paper-button on-tap="setUpGenericCloudProviderTapped">Set up</paper-button>
+            <paper-button on-tap="setUpGenericCloudProviderTapped">[[localize('setup-action')]]</paper-button>
           </div>
         </div>
 
@@ -254,6 +255,10 @@
       properties: {
         isSignedInToDigitalOcean: Boolean,
         digitalOceanEmail: String,
+        localize: {
+          type: Function,
+          readonly: true,
+        },
       },
       connectToDigitalOceanTapped: function() {
         this.fire('ConnectToDigitalOcean');
