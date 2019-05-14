@@ -225,7 +225,7 @@
     "message": "$SERVER_NAME$ no longer present in your DigitalOcean account.",
     "description": "",
     "placeholders": {
-      "SERVER_NAMES": {
+      "SERVER_NAME": {
         "content": "{serverName}",
         "example": "New York Outline Server"
       }
