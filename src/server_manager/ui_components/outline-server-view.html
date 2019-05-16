@@ -364,6 +364,7 @@
         <img class="server-img" src="images/server-unreachable.png" />
         <h3>[[localize('server-unreachable')]]</h3>
         <p>
+          <div>[[localize('server-unreachable-description')]]</div>
           <span hidden$="{{isServerManaged}}">[[localize('server-unreachable-managed-description')]]</span>
           <span hidden$="{{!isServerManaged}}">[[localize('server-unreachable-manual-description')]]</span>
         </p>
