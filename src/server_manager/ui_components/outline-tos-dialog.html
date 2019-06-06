@@ -13,21 +13,23 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
+<link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
 
-<dom-module id='outline-tos-view'>
+<dom-module id='outline-tos-dialog'>
   <template>
     <style include='cloud-install-styles'></style>
     <style>
-      :host {
+      #dialog {
         background-color: #263238;
         height: 100%;
         width: 100%;
-        position: absolute;
-        z-index: 1000;
+        max-height: 100%;
+        max-width: 100%;
       }
       .container {
         height: 85%;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
       }
@@ -48,27 +50,26 @@
         margin-left: 12px;
       }
     </style>
-    <div class="container">
-      <img id="logo" src="images/launcher-icon.png" />
-    </div>
-    <div id="tos">
-        <span>I have read and understood the <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">Outline Terms of Service</a>.</span>
-        <paper-button on-tap="acceptTermsOfService">OK</button>
-    </div>
+    <paper-dialog id="dialog" modal>
+      <div class="container">
+        <img id="logo" src="images/launcher-icon.png" />
+        <div id="tos">
+            <span>I have read and understood the <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">Outline Terms of Service</a>.</span>
+            <paper-button dialog-confirm on-tap="acceptTermsOfService">OK</button>
+        </div>
+      </div>
+    </paper-dialog>
   </template>
   <script>
     Polymer({
-      is: 'outline-tos-view',
-      properties: {
-        hasAcceptedTermsOfService: {
-          type: Boolean,
-          value: false,
-          notify: true,
-        }
+      is: 'outline-tos-dialog',
+      open: function () {
+        this.$.dialog.open();
       },
       acceptTermsOfService: function() {
-        this.hasAcceptedTermsOfService = true;
-      },
+        this.$.dialog.close();
+        this.fire('TermsOfServiceAccepted');
+      }
     });
   </script>
 </dom-module>

@@ -36,6 +36,8 @@ interface PolymerEvent extends Event {
 //   https://www.digitalocean.com/help/referral-program/
 const DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
 
+const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
+
 interface UiAccessKey {
   id: string;
   placeholderName: string;
@@ -91,6 +93,10 @@ export class App {
       private displayServerRepository: DisplayServerRepository,
       private digitalOceanTokenManager: TokenManager) {
     appRoot.setAttribute('outline-version', this.version);
+
+    appRoot.addEventListener('TermsOfServiceAccepted', (event: PolymerEvent) => {
+      window.localStorage[TOS_ACK_LOCAL_STORAGE_KEY] = Date.now();
+    });
 
     appRoot.addEventListener('ConnectToDigitalOcean', (event: PolymerEvent) => {
       this.connectToDigitalOcean();
@@ -215,6 +221,9 @@ export class App {
   }
 
   async start(): Promise<void> {
+    if (!window.localStorage[TOS_ACK_LOCAL_STORAGE_KEY]) {
+      this.appRoot.$.tosDialog.open();
+    }
     this.showIntro();
     await this.syncDisplayServersToUi();
 

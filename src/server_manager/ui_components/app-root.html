@@ -36,7 +36,7 @@
 <link rel="import" href="./outline-region-picker-step.html">
 <link rel="import" href="./outline-server-progress-step.html">
 <link rel="import" href="./outline-server-view.html">
-<link rel="import" href="./outline-tos-view.html">
+<link rel="import" href="./outline-tos-dialog.html">
 
 <dom-module id="app-root">
   <template>
@@ -73,6 +73,9 @@
         padding: 0;
         height: 20px;
         width: 20px;
+      }
+      #drawerLayout {
+        height: 100%;
       }
       #appDrawer {
         --app-drawer-content-container: {
@@ -288,158 +291,154 @@
       }
     </style>
 
-    <outline-tos-view id="tosView" has-accepted-terms-of-service={{userAcceptedTos}} hidden$="{{hasAcceptedTos}}"></outline-tos-view>
+    <!-- This responsive width sets the minimum layout area to 648px.  -->
+    <app-drawer-layout id="drawerLayout" responsive-width="886px" on-narrow-changed="_computeShouldShowSideBar" class$="[[sideBarMarginClass]]">
+      <app-drawer id="appDrawer" slot="drawer" on-opened-changed="_computeShouldShowSideBar">
+        <app-toolbar class="toolbar" hidden$="[[shouldShowSideBar]]">
+          <paper-icon-button icon="menu" on-click="_toggleAppDrawer"></paper-icon-button>
+          <div main-title><img src="images/outline-manager-logo.svg"></div>
+        </app-toolbar>
 
-    <div hidden$="{{!hasAcceptedTos}}">
-      <!-- This responsive width sets the minimum layout area to 648px.  -->
-      <app-drawer-layout id="drawerLayout" responsive-width="886px" on-narrow-changed="_computeShouldShowSideBar" class$="[[sideBarMarginClass]]">
-        <app-drawer id="appDrawer" slot="drawer" on-opened-changed="_computeShouldShowSideBar">
-          <app-toolbar class="toolbar" hidden$="[[shouldShowSideBar]]">
-            <paper-icon-button icon="menu" on-click="_toggleAppDrawer"></paper-icon-button>
-            <div main-title><img src="images/outline-manager-logo.svg"></div>
-          </app-toolbar>
-
-          <!-- Servers section -->
-          <div class="servers">
-            <!-- DigitalOcean servers -->
-            <div class="servers-section" hidden$="{{!isSignedInToDigitalOcean}}">
-              <div class="servers-header">
-                <span>DigitalOcean servers</span>
-                <paper-menu-button horizontal-align="left" class="" close-on-activate no-animations dynamic-align no-overlap>
-                  <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
-                  <div class="do-overflow-menu" slot="dropdown-content">
-                    <h4>Disconnect DigitalOcean account</h4>
-                    <div class="account-info"><img src="images/digital_ocean_logo.svg" />{{adminEmail}}</div>
-                    <div class="sign-out-button" on-tap="signOutTapped">Disconnect</div>
-                  </div>
-                </paper-menu-button>
-              </div>
-              <div class="servers-container">
-                <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
-                  <div class$="server {{_computeServerClasses(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
-                    <img class="server-icon" src$="images/{{_computeServerImage(selectedServer, server)}}" />
-                    <span>{{server.name}}</span>
-                  </div>
-                </template>
-              </div>
+        <!-- Servers section -->
+        <div class="servers">
+          <!-- DigitalOcean servers -->
+          <div class="servers-section" hidden$="{{!isSignedInToDigitalOcean}}">
+            <div class="servers-header">
+              <span>DigitalOcean servers</span>
+              <paper-menu-button horizontal-align="left" class="" close-on-activate no-animations dynamic-align no-overlap>
+                <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
+                <div class="do-overflow-menu" slot="dropdown-content">
+                  <h4>Disconnect DigitalOcean account</h4>
+                  <div class="account-info"><img src="images/digital_ocean_logo.svg" />{{adminEmail}}</div>
+                  <div class="sign-out-button" on-tap="signOutTapped">Disconnect</div>
+                </div>
+              </paper-menu-button>
             </div>
-            <!-- Manual servers -->
-            <div class="servers-section" hidden$="{{!hasManualServers}}">
-              <div class="servers-header">
-                <span>Servers</span>
-              </div>
-              <div class="servers-container">
-                <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
-                  <div class$="server {{_computeServerClasses(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
-                    <img class="server-icon" src$="images/{{_computeServerImage(selectedServer, server)}}" />
-                    <span>{{server.name}}</span>
-                  </div>
-                </template>
-              </div>
-            </div>
-          </div>
-
-          <!-- Add server -->
-          <div class="add-server-section" on-tap="showIntro">
-            <paper-icon-item>
-              <iron-icon icon="add" slot="item-icon"></iron-icon>Add server
-            </paper-icon-item>
-          </div>
-
-          <!-- Links section -->
-          <paper-listbox on-tap="maybeCloseDrawer">
-            <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">Data collection</a>
-            <span on-tap="submitFeedbackTapped">Feedback</span>
-            <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">Help</a>
-            <span on-tap="aboutTapped">About</span>
-            <div class="legal-links">
-              <a href="https://www.google.com/policies/privacy/">Privacy</a>
-              <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">Terms</a>
-              <span on-tap="showLicensesTapped">Licenses</span>
-            </div>
-          </paper-listbox>
-        </app-drawer>
-
-        <app-header-layout>
-          <div class="app-container">
-            <iron-pages attr-for-selected='id' selected='{{ currentPage }}'>
-              <outline-intro-step id='intro' is-signed-in-to-digital-ocean='{{isSignedInToDigitalOcean}}' digital-ocean-email='{{adminEmail}}'></outline-intro-step>
-              <outline-do-oauth-step id='digitalOceanOauth'></outline-do-oauth-step>
-              <outline-manual-server-entry id='manualEntry'></outline-manual-server-entry>
-              <outline-region-picker-step id='regionPicker'></outline-region-picker-step>
-              <outline-server-progress-step id='serverProgressStep'></outline-server-progress-step>
-              <div id="serverView">
-                <template is="dom-repeat" items="{{serverList}}" as="server">
-                  <outline-server-view id="serverView-{{_base64Encode(server.id)}}" hidden$="{{!_isServerSelected(selectedServer, server)}}"></outline-server-view>
-                </template>
-              </div>
-            </iron-pages>
-          </div>
-        </app-header-layout>
-      </app-drawer-layout>
-
-      <!-- Side bar -->
-      <app-drawer id="sideBar" opened$="[[shouldShowSideBar]]" persistent>
-        <div class="side-bar-container">
-          <div class="side-bar-section menu">
-            <paper-icon-button icon="menu" on-click="_toggleAppDrawer"></paper-icon-button>
-          </div>
-          <div class="servers">
-            <!-- DigitalOcean servers -->
-            <div class="side-bar-section servers-section" hidden$="{{!isSignedInToDigitalOcean}}">
-              <img class="provider-icon" src="images/do_white_logo.svg"/>
+            <div class="servers-container">
               <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
                 <div class$="server {{_computeServerClasses(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
                   <img class="server-icon" src$="images/{{_computeServerImage(selectedServer, server)}}" />
-                </div>
-              </template>
-            </div>
-            <!-- Manual servers -->
-            <div class="side-bar-section servers-section" hidden$="{{!hasManualServers}}">
-              <img class="provider-icon" src="images/cloud.svg"/>
-              <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
-                <div class$="server {{_computeServerClasses(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
-                  <img class="server-icon" src$="images/{{_computeServerImage(selectedServer, server)}}" />
+                  <span>{{server.name}}</span>
                 </div>
               </template>
             </div>
           </div>
-          <div class="side-bar-section add-server-section" on-tap="showIntro">
-              <paper-icon-item>
-                <iron-icon icon="add" slot="item-icon"></iron-icon>
-              </paper-icon-item>
+          <!-- Manual servers -->
+          <div class="servers-section" hidden$="{{!hasManualServers}}">
+            <div class="servers-header">
+              <span>Servers</span>
             </div>
+            <div class="servers-container">
+              <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
+                <div class$="server {{_computeServerClasses(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
+                  <img class="server-icon" src$="images/{{_computeServerImage(selectedServer, server)}}" />
+                  <span>{{server.name}}</span>
+                </div>
+              </template>
+            </div>
+          </div>
         </div>
+
+        <!-- Add server -->
+        <div class="add-server-section" on-tap="showIntro">
+          <paper-icon-item>
+            <iron-icon icon="add" slot="item-icon"></iron-icon>Add server
+          </paper-icon-item>
+        </div>
+
+        <!-- Links section -->
+        <paper-listbox on-tap="maybeCloseDrawer">
+          <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">Data collection</a>
+          <span on-tap="submitFeedbackTapped">Feedback</span>
+          <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">Help</a>
+          <span on-tap="aboutTapped">About</span>
+          <div class="legal-links">
+            <a href="https://www.google.com/policies/privacy/">Privacy</a>
+            <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">Terms</a>
+            <span on-tap="showLicensesTapped">Licenses</span>
+          </div>
+        </paper-listbox>
       </app-drawer>
 
-      <paper-toast id='toast'><paper-icon-button icon='icons:close' on-tap='closeError'></paper-icon-button></paper-toast>
-
-      <!-- Modal dialogs must be outside the app container; otherwise the backdrop covers them.  -->
-      <outline-feedback-dialog id='feedbackDialog'></outline-feedback-dialog>
-      <outline-about-dialog id='aboutDialog' outline-version='[[outlineVersion]]'></outline-about-dialog>
-      <outline-modal-dialog id='modalDialog'></outline-modal-dialog>
-      <outline-share-dialog id="shareDialog"></outline-share-dialog>
-      <outline-metrics-option-dialog id="metricsDialog"></outline-metrics-option-dialog>
-
-      <paper-dialog id="getConnectedDialog" modal>
-        <!-- iframe gets inserted here once we are given the invite URL. -->
-        <div class="buttons">
-          <paper-button on-tap="closeGetConnectedDialog" autofocus>Close</paper-button>
+      <app-header-layout>
+        <div class="app-container">
+          <iron-pages attr-for-selected='id' selected='{{ currentPage }}'>
+            <outline-intro-step id='intro' is-signed-in-to-digital-ocean='{{isSignedInToDigitalOcean}}' digital-ocean-email='{{adminEmail}}'></outline-intro-step>
+            <outline-do-oauth-step id='digitalOceanOauth'></outline-do-oauth-step>
+            <outline-manual-server-entry id='manualEntry'></outline-manual-server-entry>
+            <outline-region-picker-step id='regionPicker'></outline-region-picker-step>
+            <outline-server-progress-step id='serverProgressStep'></outline-server-progress-step>
+            <div id="serverView">
+              <template is="dom-repeat" items="{{serverList}}" as="server">
+                <outline-server-view id="serverView-{{_base64Encode(server.id)}}" hidden$="{{!_isServerSelected(selectedServer, server)}}"></outline-server-view>
+              </template>
+            </div>
+          </iron-pages>
         </div>
-      </paper-dialog>
+      </app-header-layout>
+    </app-drawer-layout>
 
-      <paper-dialog id="licenses" modal restoreFocusOnClose>
-        <paper-dialog-scrollable>
-          <code id="licensesText">
-            Could not load license.txt.
-          </code>
-        </paper-dialog-scrollable>
-        <div class="buttons">
-          <paper-button dialog-dismiss autofocus>Close</paper-button>
+    <!-- Side bar -->
+    <app-drawer id="sideBar" opened$="[[shouldShowSideBar]]" persistent>
+      <div class="side-bar-container">
+        <div class="side-bar-section menu">
+          <paper-icon-button icon="menu" on-click="_toggleAppDrawer"></paper-icon-button>
         </div>
-      </paper-dialog>
+        <div class="servers">
+          <!-- DigitalOcean servers -->
+          <div class="side-bar-section servers-section" hidden$="{{!isSignedInToDigitalOcean}}">
+            <img class="provider-icon" src="images/do_white_logo.svg"/>
+            <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
+              <div class$="server {{_computeServerClasses(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
+                <img class="server-icon" src$="images/{{_computeServerImage(selectedServer, server)}}" />
+              </div>
+            </template>
+          </div>
+          <!-- Manual servers -->
+          <div class="side-bar-section servers-section" hidden$="{{!hasManualServers}}">
+            <img class="provider-icon" src="images/cloud.svg"/>
+            <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
+              <div class$="server {{_computeServerClasses(selectedServer, server)}}" data-server$=[[server]] on-tap="_showServer">
+                <img class="server-icon" src$="images/{{_computeServerImage(selectedServer, server)}}" />
+              </div>
+            </template>
+          </div>
+        </div>
+        <div class="side-bar-section add-server-section" on-tap="showIntro">
+            <paper-icon-item>
+              <iron-icon icon="add" slot="item-icon"></iron-icon>
+            </paper-icon-item>
+          </div>
+      </div>
+    </app-drawer>
 
-    </div>
+    <paper-toast id='toast'><paper-icon-button icon='icons:close' on-tap='closeError'></paper-icon-button></paper-toast>
+
+    <!-- Modal dialogs must be outside the app container; otherwise the backdrop covers them.  -->
+    <outline-tos-dialog id="tosDialog"></outline-tos-dialog>
+    <outline-feedback-dialog id='feedbackDialog'></outline-feedback-dialog>
+    <outline-about-dialog id='aboutDialog' outline-version='[[outlineVersion]]'></outline-about-dialog>
+    <outline-modal-dialog id='modalDialog'></outline-modal-dialog>
+    <outline-share-dialog id="shareDialog"></outline-share-dialog>
+    <outline-metrics-option-dialog id="metricsDialog"></outline-metrics-option-dialog>
+
+    <paper-dialog id="getConnectedDialog" modal>
+      <!-- iframe gets inserted here once we are given the invite URL. -->
+      <div class="buttons">
+        <paper-button on-tap="closeGetConnectedDialog" autofocus>Close</paper-button>
+      </div>
+    </paper-dialog>
+
+    <paper-dialog id="licenses" modal restoreFocusOnClose>
+      <paper-dialog-scrollable>
+        <code id="licensesText">
+          Could not load license.txt.
+        </code>
+      </paper-dialog-scrollable>
+      <div class="buttons">
+        <paper-button dialog-dismiss autofocus>Close</paper-button>
+      </div>
+    </paper-dialog>
   </template>
   <script>
     const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
@@ -467,15 +466,6 @@
           computed: '_computeIsSignedInToDigitalOcean(adminEmail)'
         },
         outlineVersion: String,
-        userAcceptedTos: {
-          type: Boolean,
-           // Get notified when the user clicks the OK button in the ToS view
-          observer: '_userAcceptedTosChanged',
-        },
-        hasAcceptedTos: {
-          type: Boolean,
-          computed: '_computeHasAcceptedTermsOfService(userAcceptedTos)'
-        },
         currentPage: {
           type: String,
           value: 'intro'
@@ -619,14 +609,6 @@
       },
       _computeHasManualServers: function(serverList) {
         return this.serverList.filter(server => !server.isManaged).length > 0;
-      },
-      _userAcceptedTosChanged: function(userAcceptedTos) {
-        if (userAcceptedTos) {
-          window.localStorage[TOS_ACK_LOCAL_STORAGE_KEY] = Date.now();
-        }
-      },
-      _computeHasAcceptedTermsOfService: function(userAcceptedTos) {
-        return userAcceptedTos || !!window.localStorage[TOS_ACK_LOCAL_STORAGE_KEY];
       },
       _toggleAppDrawer: function() {
         const drawerNarrow = this.$.drawerLayout.narrow;
