@@ -222,7 +222,6 @@ function createTestApp(
     manualServerRepo?: server.ManualServerRepository,
     displayServerRepository?: FakeDisplayServerRepository,
     managedServerRepository?: FakeManagedServerRepository) {
-  const WEB_APP_URL = 'outline://fakefakefake/';
   const VERSION = '0.0.1';
   const fakeDigitalOceanSessionFactory = (accessToken: string) => {
     return new FakeDigitalOceanSession(accessToken);
@@ -242,7 +241,7 @@ function createTestApp(
     displayServerRepository = new FakeDisplayServerRepository();
   }
   return new App(
-      polymerAppRoot, WEB_APP_URL, VERSION, fakeDigitalOceanSessionFactory,
+      polymerAppRoot, VERSION, fakeDigitalOceanSessionFactory,
       fakeDigitalOceanServerRepositoryFactory, manualServerRepo, displayServerRepository,
       digitalOceanTokenManager);
 }

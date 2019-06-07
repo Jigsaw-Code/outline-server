@@ -32,10 +32,6 @@ interface PolymerEvent extends Event {
   detail: any;
 }
 
-// The Outline DigitalOcean team's referral code:
-//   https://www.digitalocean.com/help/referral-program/
-const DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
-
 const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
 
 interface UiAccessKey {
@@ -60,10 +56,6 @@ function convertToUiAccessKey(remoteAccessKey: server.AccessKey): UiAccessKey {
   };
 }
 
-const DIGITAL_OCEAN_CREATION_ERROR_MESSAGE = `Sorry! We couldn't create a server this time.
-  If this problem persists, it might be that your account needs to be reviewed by DigitalOcean.
-  Please log in to www.digitalocean.com and follow their instructions.`;
-
 function isManagedServer(testServer: server.Server): testServer is server.ManagedServer {
   return !!(testServer as server.ManagedServer).getHost;
 }
@@ -86,7 +78,7 @@ export class App {
   private serverBeingCreated: server.ManagedServer;
 
   constructor(
-      private appRoot: Polymer, private readonly appUrl: string, private readonly version: string,
+      private appRoot: Polymer, private readonly version: string,
       private createDigitalOceanSession: DigitalOceanSessionFactory,
       private createDigitalOceanServerRepository: DigitalOceanServerRepositoryFactory,
       private manualServerRepository: server.ManualServerRepository,
@@ -95,7 +87,7 @@ export class App {
     appRoot.setAttribute('outline-version', this.version);
 
     appRoot.addEventListener('TermsOfServiceAccepted', (event: PolymerEvent) => {
-      window.localStorage[TOS_ACK_LOCAL_STORAGE_KEY] = Date.now();
+      localStorage.setItem(TOS_ACK_LOCAL_STORAGE_KEY, Date.now().toString());
     });
 
     appRoot.addEventListener('ConnectToDigitalOcean', (event: PolymerEvent) => {
@@ -224,7 +216,7 @@ export class App {
   }
 
   async start(): Promise<void> {
-    if (!window.localStorage[TOS_ACK_LOCAL_STORAGE_KEY]) {
+    if (!localStorage.getItem(TOS_ACK_LOCAL_STORAGE_KEY)) {
       this.appRoot.$.tosDialog.open();
     }
     this.showIntro();
