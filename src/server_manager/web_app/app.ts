@@ -217,7 +217,10 @@ export class App {
       this.handleShowServerRequested(event.detail.displayServerId);
     });
 
-    onUpdateDownloaded(this.displayAppUpdateNotification.bind(this));
+    if (onUpdateDownloaded) {
+      // Only run on Electron.
+      onUpdateDownloaded(this.displayAppUpdateNotification.bind(this));
+    }
   }
 
   async start(): Promise<void> {
