@@ -162,42 +162,43 @@
       }
     </style>
     <outline-step-view>
-      <span slot="step-title">Follow the instructions below</span>
-      <span slot="step-description">These steps will help you install Outline on a [[cloudProviderName]] Linux server.</span>
+      <span slot="step-title">[[localize('manual-server-title')]]</span>
+      <span slot="step-description">[[localize('manual-server-description', 'cloudProvider', cloudProviderName)]]</span>
 
       <div class="card">
         <!-- GCP -->
         <div class="section" hidden$="[[!isCloudProviderGcp]]">
           <div class="section-header">
+            <!-- TODO(alalama): localize numbers  -->
             <span class="stepcircle">1</span>
-            <div class="instructions">Configure your firewall</div>
+            <div class="instructions">[[localize('manual-server-firewall')]]</div>
             <div class="drop-down" on-tap="_toggleGcpDropDown">
               <img src="images/gcp-logo.svg" />
-              <span>Instructions</span>
+              <span>[[localize('manual-server-instructions')]]</span>
               <iron-icon id="gcpDropDownIcon" icon="arrow-drop-down"></iron-icon>
             </div>
           </div>
           <iron-collapse id="gcpDropDown">
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view title="Create a firewall rule" thumbnail-path="images/gcp-thumbnail-1.png" image-path="images/gcp-screenshot-1.png">
+              <outline-cloud-instructions-view title="[[localize('manual-server-create-firewall')]]" thumbnail-path="images/gcp-thumbnail-1.png" image-path="images/gcp-screenshot-1.png" localize="[[localize]]">
                 <ol>
-                  <li><a href="https://console.cloud.google.com/networking/firewalls/add">Add a new firewall rule<iron-icon icon="open-in-new"></iron-icon></a> to your Compute Engine project.</li>
-                  <li>Type 'outline' in the 'Name' field.</li>
-                  <li>Type 'outline' in the 'Target tags' field.</li>
-                  <li>Type '0.0.0.0/0' in the 'Source IP ranges' field.</li>
-                  <li>Select 'Allow all' under 'Protocols and ports'.</li>
-                  <li>Click 'Create'.</li>
+                  <li inner-h-t-m-l="[[localize('gcp-firewall-create-0', 'openLink', '<a href=https://console.cloud.google.com/networking/firewalls/add>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
+                  <li>[[localize('gcp-firewall-create-1')]]</li>
+                  <li>[[localize('gcp-firewall-create-2')]]</li>
+                  <li>[[localize('gcp-firewall-create-3')]]</li>
+                  <li>[[localize('gcp-firewall-create-4')]]</li>
+                  <li>[[localize('gcp-firewall-create-5')]]</li>
                 </ol>
               </outline-cloud-instructions-view>
             </div>
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view title="Assign firewall rule" thumbnail-path="images/gcp-thumbnail-2.png" image-path="images/gcp-screenshot-2.png"">
+              <outline-cloud-instructions-view title="[[localize('manual-server-assign-firewall')]]" thumbnail-path="images/gcp-thumbnail-2.png" image-path="images/gcp-screenshot-2.png"" localize="[[localize]]">
                 <ol>
-                  <li>Navigate to the <a href="https://console.cloud.google.com/compute/instances">VM instances screen<iron-icon icon="open-in-new"></iron-icon></a>.</li>
-                  <li>Click on the instance where you want to host Outline.</li>
-                  <li>Click 'EDIT' at the top of the VM Instance details screen.</li>
-                  <li>Type 'outline' in the 'Network tags' field.</li>
-                  <li>Click 'SAVE'.</li>
+                  <li inner-h-t-m-l="[[localize('gcp-firewall-assign-0', 'openLink', '<a href=https://console.cloud.google.com/compute/instances>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
+                  <li>[[localize('gcp-firewall-assign-1')]]</li>
+                  <li>[[localize('gcp-firewall-assign-2')]]</li>
+                  <li>[[localize('gcp-firewall-assign-3')]]</li>
+                  <li>[[localize('gcp-firewall-assign-4')]]</li>
                 </ol>
               </outline-cloud-instructions-view>
             </div>
@@ -207,33 +208,33 @@
         <div class="section" hidden$="[[!isCloudProviderAws]]">
           <div class="section-header">
             <span class="stepcircle">1</span>
-            <div class="instructions">Configure your firewall</div>
+            <div class="instructions">[[localize('manual-server-firewall')]]</div>
             <div class="drop-down" on-tap="_toggleAwsDropDown">
               <img id="aws-logo" src="images/aws-logo.svg" />
-              <span>Instructions</span>
+              <span>[[localize('manual-server-instructions')]]</span>
               <iron-icon id="awsDropDownIcon" icon="arrow-drop-down"></iron-icon>
             </div>
           </div>
           <iron-collapse id="awsDropDown">
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view title="Create a Security Group" thumbnail-path="images/aws-thumbnail-1.png" image-path="images/aws-screenshot-1.png">
+              <outline-cloud-instructions-view title="[[localize('manual-server-create-group')]]" thumbnail-path="images/aws-thumbnail-1.png" image-path="images/aws-screenshot-1.png" localize="[[localize]]">
                 <ol>
-                  <li>Once you've created your EC2 instance, open the <a href="https://console.aws.amazon.com/ec2/v2/home">EC2 Management Console<iron-icon icon="open-in-new"></iron-icon></a>.</li>
-                  <li>Under 'Network & Security', select 'Security Groups'.</li>
-                  <li>Click on 'Create Security Group'.</li>
-                  <li>Type 'outline' in the 'Security group name' and 'Description' fields.</li>
-                  <li>Click 'Add Rule'.</li>
-                  <li>Select 'All traffic' under 'Type', and 'Anywhere' under 'Source'.</li>
+                  <li inner-h-t-m-l="[[localize('aws-group-create-0', 'openLink', '<a href=https://console.aws.amazon.com/ec2/v2/home>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
+                  <li>[[localize('aws-group-create-1')]]</li>
+                  <li>[[localize('aws-group-create-2')]]</li>
+                  <li>[[localize('aws-group-create-3')]]</li>
+                  <li>[[localize('aws-group-create-4')]]</li>
+                  <li>[[localize('aws-group-create-5')]]</li>
                 </ol>
               </outline-cloud-instructions-view>
             </div>
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view title="Assign Security Group" thumbnail-path="images/aws-thumbnail-2.png" image-path="images/aws-screenshot-2.png">
+              <outline-cloud-instructions-view title="[[localize('manual-server-assign-group')]]" thumbnail-path="images/aws-thumbnail-2.png" image-path="images/aws-screenshot-2.png" localize="[[localize]]">
                 <ol>
-                  <li>Navigate to <a href="https://console.aws.amazon.com/ec2/v2/home#Instances:sort=instanceId">Instances<iron-icon icon="open-in-new"></iron-icon></a>.</li>
-                  <li>Click 'Actions' > 'Networking' > 'Change Security Groups' at the top of the 'Instances' screen.</li>
-                  <li>Select the 'outline' Security Group, unselect other security groups.</li>
-                  <li>Click 'Assign Security Groups'.</li>
+                  <li inner-h-t-m-l="[[localize('aws-group-assign-0', 'openLink', '<a href=https://console.aws.amazon.com/ec2/v2/home#Instances:sort=instanceId>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
+                  <li>[[localize('aws-group-assign-1')]]</li>
+                  <li>[[localize('aws-group-assign-2')]]</li>
+                  <li>[[localize('aws-group-assign-3')]]</li>
                 </ol>
               </outline-cloud-instructions-view>
             </div>
@@ -244,7 +245,7 @@
           <div class="section-header">
             <span class="stepcircle" hidden$="[[!isGenericCloudProvider]]">1</span>
             <span class="stepcircle" hidden$="[[isGenericCloudProvider]]">2</span>
-            <div class="instructions">Log into your server, and run this command.</div>
+            <div class="instructions">[[localize('manual-server-install-run')]]</div>
           </div>
           <div class="section-content">
             <div id="command">sudo bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"</div>
@@ -255,15 +256,15 @@
           <div class="section-header">
             <span class="stepcircle" hidden$="[[!isGenericCloudProvider]]">2</span>
             <span class="stepcircle" hidden$="[[isGenericCloudProvider]]">3</span>
-            <div class="instructions">Paste your installation output here.</div>
+            <div class="instructions">[[localize('manual-server-install-paste')]]</div>
           </div>
           <div class="section-content">
             <paper-textarea id="serverConfig" type="text" placeholder$="[[placeholderText]]" class="code" rows="4" max-rows="4" no-label-float on-value-changed='onServerConfigChanged'></paper-textarea>
           </div>
         </div>
         <div id="button-row">
-          <paper-button id="cancelButton" on-tap="cancelTapped" class="secondary">CANCEL</paper-button>
-          <paper-button id="doneButton" on-tap="doneTapped" class="primary" disabled$='[[!enableDoneButton]]'>DONE</paper-button>
+          <paper-button id="cancelButton" on-tap="cancelTapped" class="secondary">[[localize('cancel')]]</paper-button>
+          <paper-button id="doneButton" on-tap="doneTapped" class="primary" disabled$='[[!enableDoneButton]]'>[[localize('done')]]</paper-button>
         </div>
         <paper-progress hidden$='[[!showConnection]]' indeterminate class="slow"></paper-progress>
       </div>
@@ -302,7 +303,11 @@
         enableDoneButton: {
           type: Boolean,
           value: false,
-        }
+        },
+        localize: {
+          type: Function,
+          readonly: true,
+        },
       },
       doneTapped: function() {
         this.showConnection = true;

@@ -22,24 +22,30 @@
 <dom-module id='outline-metrics-option-dialog'>
   <template>
     <style include='cloud-install-styles'>
-      .learnMoreLink {
+      .link {
         text-decoration: underline;
         color: rgba(0, 0, 0, 0.54);
       }
     </style>
     <paper-dialog id='metricsEnabledDialog' modal>
       <div class='dialogBanner'><img src='images/metrics.png'></div>
-      <h3>Metrics sharing</h3>
-      <p>Share anonymized metrics to help improve the reliability and performance of Outline, for you and for those you share your server with. <a class="learnMoreLink" href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">Learn more</a>.</p>
+      <h3>[[localize('metrics-title')]]</h3>
+      <p inner-h-t-m-l="[[localize('metrics-description', 'openLink', '<a class=link href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
       <div class='buttons'>
-        <paper-button dialog-dismiss on-tap='disableMetricsRequested'>Skip</paper-button>
-        <paper-button autofocus dialog-dismiss on-tap='enableMetricsRequested'>Share metrics</paper-button>
+        <paper-button dialog-dismiss on-tap='disableMetricsRequested'>[[localize('metrics-skip')]]</paper-button>
+        <paper-button autofocus dialog-dismiss on-tap='enableMetricsRequested'>[[localize('metrics-share')]]</paper-button>
       </div>
     </paper-dialog>
   </template>
   <script>
     Polymer({
       is: 'outline-metrics-option-dialog',
+      properties: {
+        localize: {
+          type: Function,
+          readonly: true,
+        },
+      },
       showMetricsOptInDialog: function() {
         this.$.metricsEnabledDialog.open();
       },

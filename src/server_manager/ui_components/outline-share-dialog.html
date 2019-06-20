@@ -95,38 +95,41 @@
     </style>
     <paper-dialog id="dialog" modal>
       <div id="dialog-header">
-        <h3>Share access</h3>
-        <p>
-          Copy this invitation and send it from a communication tool you trust. <a href="https://securityplanner.org/#/all-recommendations">Need help?</a>
-        </p>
+        <h3>[[localize('share-title')]]</h3>
+        <p inner-h-t-m-l="[[localize('share-description', 'openLink', '<a href=https://securityplanner.org/#/all-recommendations>', 'closeLink', '</a>')]]"></p>
       </div>
       <div contenteditable id="selectableText" style="-webkit-text-size-adjust: 100%;">
-        <p>You’re invited to connect to my Outline server. Use it to access the open internet, no matter where you are. Follow the instructions on your invitation link below to download the Outline App and get connected.</p>
+        <p>[[localize('share-invite')]]</p>
 
         <p><a href$="{{s3Url}}">{{s3Url}}</a></p>
         <p>-----</p>
-        <p>Having trouble accessing the invitation link?</p>
+        <p>[[localize('share-invite-trouble')]]</p>
         <ol>
           <li>
-            Copy your access key:
+            [[localize('share-invite-copy-access-key')]]
             <a href="{{acessKey}}">{{acessKey}}</a>
           </li>
           <li>
-            Follow our invitation instructions on GitHub:
+            [[localize('share-invite-instructions')]]
             <a href="https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md">https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md</a>
           </li>
         </ol>
       </div>
       <div id="button-row">
-        <paper-button id="copyButton" on-tap="copyClicked">Copy invitation</paper-button>
-        <paper-button id="doneButton" dialog-confirm>Done</paper-button>
+        <paper-button id="copyButton" on-tap="copyClicked">[[localize('share-invite-copy')]]</paper-button>
+        <paper-button id="doneButton" dialog-confirm>[[localize('done')]]</paper-button>
       </div>
-      <div id="copyText" hidden>Copied to clipboard</div>
+      <div id="copyText" hidden>[[localize('share-invite-copied')]]</div>
     </paper-dialog>
   </template>
   <script>
+    // TODO(alalama): add a language selector. This should be a separate instance of Polymer.AppLocalizeBehavior
+    // so the app language is not changed. Consider refactoring l10n into a separate Polymer behavior.
     Polymer({
       is: 'outline-share-dialog',
+      properties: {
+        localize: {type: Function, readonly: true},
+      },
       created: function () {
         this.clipboard = require('clipboard-polyfill');
       },

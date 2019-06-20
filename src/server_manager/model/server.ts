@@ -120,7 +120,7 @@ export interface ManagedServerRepository {
   getRegionMap(): Promise<Readonly<RegionMap>>;
   // Creates a server and returning it when it becomes active (i.e. the server has
   // created, not necessarily once shadowbox installation has finished).
-  createServer(region: RegionId): Promise<ManagedServer>;
+  createServer(region: RegionId, name: string): Promise<ManagedServer>;
 }
 
 // Configuration for manual servers.  This is the output emitted from the

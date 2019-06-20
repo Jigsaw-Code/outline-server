@@ -52,8 +52,8 @@
       <img id="logo" src="images/launcher-icon.png" />
     </div>
     <div id="tos">
-        <span>I have read and understood the <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">Outline Terms of Service</a>.</span>
-        <paper-button on-tap="acceptTermsOfService">OK</button>
+        <span inner-h-t-m-l="[[localize('terms-of-service', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html>', 'closeLink', '</a>')]]"></span>
+        <paper-button on-tap="acceptTermsOfService">[[localize('okay')]]</paper-button>
     </div>
   </template>
   <script>
@@ -64,6 +64,10 @@
           type: Boolean,
           value: false,
           notify: true,
+        },
+        localize: {
+          type: Function,
+          readonly: true
         }
       },
       acceptTermsOfService: function() {

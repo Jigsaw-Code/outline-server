@@ -45,23 +45,6 @@ interface UiAccessKey {
   relativeTraffic: number;
 }
 
-// Converts the access key from the remote service format to the
-// format used by outline-server-view.
-function convertToUiAccessKey(remoteAccessKey: server.AccessKey): UiAccessKey {
-  return {
-    id: remoteAccessKey.id,
-    placeholderName: 'Key ' + remoteAccessKey.id,
-    name: remoteAccessKey.name,
-    accessUrl: remoteAccessKey.accessUrl,
-    transferredBytes: 0,
-    relativeTraffic: 0
-  };
-}
-
-const DIGITAL_OCEAN_CREATION_ERROR_MESSAGE = `Sorry! We couldn't create a server this time.
-  If this problem persists, it might be that your account needs to be reviewed by DigitalOcean.
-  Please log in to www.digitalocean.com and follow their instructions.`;
-
 function isManagedServer(testServer: server.Server): testServer is server.ManagedServer {
   return !!(testServer as server.ManagedServer).getHost;
 }
@@ -145,13 +128,15 @@ export class App {
             manualServerEntryEl.clear();
           })
           .catch((e: Error) => {
-            // Remove the "Attempting to connect..." display.
+            // Remove the progress indicator.
             manualServerEntryEl.showConnection = false;
             // Display either error dialog or feedback depending on error type.
             if (e instanceof errors.UnreachableServerError) {
-              const errorTitle = 'Unable to connect to your Outline Server';
-              this.appRoot.showManualServerError(errorTitle, e.message);
+              const errorTitle = appRoot.localize('error-server-unreachable-title');
+              const errorMessage = appRoot.localize('error-server-unreachable');
+              this.appRoot.showManualServerError(errorTitle, errorMessage);
             } else {
+              // TODO(alalama): with UI validation, this code path never gets executed. Remove?
               let errorMessage = '';
               if (e.message) {
                 errorMessage += `${e.message}\n`;
@@ -180,9 +165,10 @@ export class App {
           user: {email: detail.userEmail},
           tags: {category: detail.feedbackCategory, cloudProvider: detail.cloudProvider}
         });
-        appRoot.showNotification('Thanks for helping us improve! We love hearing from you.');
+        appRoot.showNotification(appRoot.localize('notification-feedback-thanks'));
       } catch (e) {
-        appRoot.showError('Failed to submit feedback. Please try again.');
+        console.error(`Failed to submit feedback: ${e}`);
+        appRoot.showError(appRoot.localize('error-feedback'));
       }
     });
 
@@ -253,8 +239,14 @@ export class App {
         this.displayServerRepository.removeServer(displayServer);
       }
       const unsyncedServerNames = unsyncedServers.map(s => s.name).join(', ');
-      this.appRoot.showError(
-          `${unsyncedServerNames} no longer present in your DigitalOcean account.`);
+      let messageKey = 'error-server-removed';
+      let placeholder = 'serverName';
+      if (unsyncedServers.length > 1) {
+        // Pluralize localized message.
+        messageKey = 'error-servers-removed';
+        placeholder = 'serverNames';
+      }
+      this.appRoot.showError(this.appRoot.localize(messageKey, placeholder, unsyncedServerNames));
     }
 
     await this.syncDisplayServersToUi();
@@ -344,7 +336,7 @@ export class App {
     // Set name to the default server name for this region. Because the server
     // is still being created, the getName REST API will not yet be available.
     const regionId = this.serverBeingCreated.getHost().getRegionId();
-    const serverName = digitalocean_server.MakeEnglishNameForServer(regionId);
+    const serverName = this.makeLocalizedServerName(regionId);
     return {
       // Use the droplet ID until the API URL is available.
       id: this.serverBeingCreated.getHost().getHostId(),
@@ -429,9 +421,10 @@ export class App {
             .catch((error) => {
               if (!cancelled) {
                 this.showIntro();
-                const msg = 'Failed to get DigitalOcean account information';
-                this.displayError(msg, error);
-                reject(new Error(`${msg}: ${error}`));
+                const msg = `Failed to get DigitalOcean account information: ${error}`;
+                console.error(msg);
+                this.appRoot.showError(this.appRoot.localize('error-do-account-info'));
+                reject(new Error(msg));
               }
             });
       };
@@ -508,7 +501,7 @@ export class App {
             } else {
               // Server has been deleted outside the app.
               this.appRoot.showError(
-                  `${displayServer.name} no longer present in your DigitalOcean account.`);
+                  this.appRoot.localize('error-server-removed', 'serverName', displayServer.name));
               this.removeServerFromDisplay(displayServer);
               this.selectedServer = null;
               this.appRoot.selectedServer = null;
@@ -554,25 +547,13 @@ export class App {
     });
   };
 
-  private displayError(message: string, cause: Error) {
-    console.error(`${message}: ${cause}`);
-    this.appRoot.showError(message);
-    console.error(message);
-  }
-
-  private displayNotification(message: string) {
-    this.appRoot.showNotification(message);
-  }
-
   // Shows the intro screen with overview and options to sign in or sign up.
   private showIntro() {
     this.appRoot.showIntro();
   }
 
   private displayAppUpdateNotification() {
-    const msg =
-        'An updated version of the Outline Manager has been downloaded. It will be installed when you restart the application.';
-    this.appRoot.showToast(msg, 60000);
+    this.appRoot.showNotification(this.appRoot.localize('notification-app-update'), 60000);
   }
 
   private connectToDigitalOcean() {
@@ -623,7 +604,8 @@ export class App {
           if (!session.isCancelled()) {
             this.clearCredentialsAndShowIntro();
             bringToFront();
-            this.displayError('Authentication with DigitalOcean failed', error);
+            console.error(`DigitalOcean authentication failed: ${error}`);
+            this.appRoot.showError(this.appRoot.localize('error-do-auth'));
           }
         });
   }
@@ -671,7 +653,8 @@ export class App {
               regionPicker.availableRegionIds = availableRegionIds;
             },
             (e) => {
-              this.displayError('Failed to get list of available regions', e);
+              console.error(`Failed to get list of available regions: ${e}`);
+              this.appRoot.showError(this.appRoot.localize('error-do-regions'));
             });
   }
 
@@ -700,13 +683,15 @@ export class App {
             this.serverBeingCreated = null;
             return;
           }
-          const errorMessage = this.serverBeingCreated.isInstallCompleted() ?
-              'We are unable to connect to your Outline server at the moment.  This may be due to a firewall on your network or temporary connectivity issues with digitalocean.com.' :
-              'There was an error creating your Outline server.  This may be due to a firewall on your network or temporary connectivity issues with digitalocean.com.';
+          let errorMessage = this.serverBeingCreated.isInstallCompleted() ?
+              this.appRoot.localize('error-server-unreachable-title') :
+              this.appRoot.localize('error-server-creation');
+          errorMessage += ` ${this.appRoot.localize('digitalocean-unreachable')}`;
           this.appRoot
               .showModalDialog(
                   null,  // Don't display any title.
-                  errorMessage, ['Delete this server', 'Try again'])
+                  errorMessage,
+                  [this.appRoot.localize('server-destroy'), this.appRoot.localize('retry')])
               .then((clickedButtonIndex: number) => {
                 if (clickedButtonIndex === 0) {  // user clicked 'Delete this server'
                   console.info('Deleting unreachable server');
@@ -722,12 +707,23 @@ export class App {
         });
   }
 
+  private getLocalizedCityName(regionId: server.RegionId) {
+    const cityId = digitalocean_server.GetCityId(regionId);
+    return this.appRoot.localize(`city-${cityId}`);
+  }
+
+  private makeLocalizedServerName(regionId: server.RegionId) {
+    const serverLocation = this.getLocalizedCityName(regionId);
+    return this.appRoot.localize('server-name', 'serverLocation', serverLocation);
+  }
+
   // Returns a promise which fulfills once the DigitalOcean droplet is created.
   // Shadowbox may not be fully installed once this promise is fulfilled.
   public createDigitalOceanServer(regionId: server.RegionId) {
+    const serverName = this.makeLocalizedServerName(regionId);
     return this
         .digitalOceanRetry(() => {
-          return this.digitalOceanRepository.createServer(regionId);
+          return this.digitalOceanRepository.createServer(regionId, serverName);
         })
         .then((server) => {
           this.syncServerCreationToUi(server);
@@ -761,6 +757,7 @@ export class App {
     view.serverHostname = selectedServer.getHostname();
     view.serverManagementApiUrl = selectedServer.getManagementApiUrl();
     view.serverPortForNewAccessKeys = selectedServer.getPortForNewAccessKeys();
+    // TODO(alalama): use actual locale.
     view.serverCreationDate = selectedServer.getCreatedDate().toLocaleString(
         'en-US', {year: 'numeric', month: 'long', day: 'numeric'});
 
@@ -770,7 +767,7 @@ export class App {
       view.monthlyCost = host.getMonthlyCost().usd;
       view.monthlyOutboundTransferBytes =
           host.getMonthlyOutboundTransferLimit().terabytes * (2 ** 40);
-      view.serverLocation = digitalocean_server.GetEnglishCityName(host.getRegionId());
+      view.serverLocation = this.getLocalizedCityName(host.getRegionId());
     } else {
       view.isServerManaged = false;
     }
@@ -783,14 +780,15 @@ export class App {
     // Load "My Connection" and other access keys.
     selectedServer.listAccessKeys()
         .then((serverAccessKeys: server.AccessKey[]) => {
-          view.accessKeyRows = serverAccessKeys.map(convertToUiAccessKey);
+          view.accessKeyRows = serverAccessKeys.map(this.convertToUiAccessKey.bind(this));
           // Initialize help bubbles once the page has rendered.
           setTimeout(() => {
             view.initHelpBubbles();
           }, 250);
         })
         .catch((error) => {
-          this.displayError('Could not load keys', error);
+          console.error(`Failed to load access keys: ${error}`);
+          this.appRoot.showError(this.appRoot.localize('error-keys-get'));
         });
 
     this.showTransferStats(selectedServer, view);
@@ -870,20 +868,36 @@ export class App {
   }
 
   private getS3InviteUrl(accessUrl: string, isAdmin = false) {
+    // TODO(alalama): display the invite in the user's preferred language.
     const adminParam = isAdmin ? '?admin_embed' : '';
     return `https://s3.amazonaws.com/outline-vpn/invite.html${adminParam}#${
         encodeURIComponent(accessUrl)}`;
   }
 
+  // Converts the access key from the remote service format to the
+  // format used by outline-server-view.
+  private convertToUiAccessKey(remoteAccessKey: server.AccessKey): UiAccessKey {
+    return {
+      id: remoteAccessKey.id,
+      placeholderName: `${this.appRoot.localize('key')} ${remoteAccessKey.id}`,
+      name: remoteAccessKey.name,
+      accessUrl: remoteAccessKey.accessUrl,
+      transferredBytes: 0,
+      relativeTraffic: 0
+    };
+  }
+
+
   private addAccessKey() {
     this.selectedServer.addAccessKey()
         .then((serverAccessKey: server.AccessKey) => {
-          const uiAccessKey = convertToUiAccessKey(serverAccessKey);
+          const uiAccessKey = this.convertToUiAccessKey(serverAccessKey);
           this.appRoot.getServerView(this.appRoot.selectedServer.id).addAccessKey(uiAccessKey);
-          this.displayNotification('Key added');
+          this.appRoot.showNotification(this.appRoot.localize('notification-key-added'));
         })
         .catch((error) => {
-          this.displayError('Failed to add key', error);
+          console.error(`Failed to add access key: ${error}`);
+          this.appRoot.showError(this.appRoot.localize('error-key-add'));
         });
   }
 
@@ -893,7 +907,8 @@ export class App {
           entry.commitName();
         })
         .catch((error) => {
-          this.displayError('Failed to rename key', error);
+          console.error(`Failed to rename access key: ${error}`);
+          this.appRoot.showError(this.appRoot.localize('error-key-rename'));
           entry.revertName();
         });
   }
@@ -906,7 +921,9 @@ export class App {
       serverConfig = parseManualServerConfig(userInput);
     } catch (e) {
       // This shouldn't happen because the UI validates the URL before enabling the DONE button.
-      return Promise.reject(new Error(`could not parse server config: ${e.message}`));
+      const msg = `could not parse server config: ${e.message}`;
+      console.error(msg);
+      return Promise.reject(new Error(msg));
     }
 
     // Don't let `ManualServerRepository.addServer` throw to avoid redundant error handling if we
@@ -914,7 +931,7 @@ export class App {
     const storedServer = this.manualServerRepository.findServer(serverConfig);
     if (!!storedServer) {
       return this.syncServerToDisplay(storedServer).then((displayServer) => {
-        this.appRoot.showToast('Server already added', 5000);
+        this.appRoot.showNotification(this.appRoot.localize('notification-server-exists'), 5000);
         this.showServerIfHealthy(storedServer, displayServer);
       });
     }
@@ -926,8 +943,7 @@ export class App {
           // Remove inaccessible manual server from local storage if it was just created.
           manualServer.forget();
           console.error('Manual server installed but unreachable.');
-          return Promise.reject(new errors.UnreachableServerError(
-              'Your Outline Server was installed correctly, but we are not able to connect to it. Most likely this is because your server\'s firewall rules are blocking incoming connections. Please review them and make sure to allow incoming TCP connections on ports ranging from 1024 to 65535.'));
+          return Promise.reject(new errors.UnreachableServerError());
         }
       });
     });
@@ -937,10 +953,11 @@ export class App {
     this.selectedServer.removeAccessKey(accessKeyId)
         .then(() => {
           this.appRoot.getServerView(this.appRoot.selectedServer.id).removeAccessKey(accessKeyId);
-          this.displayNotification('Key removed');
+          this.appRoot.showNotification(this.appRoot.localize('notification-key-removed'));
         })
         .catch((error) => {
-          this.displayError('Failed to remove key', error);
+          console.error(`Failed to remove access key: ${error}`);
+          this.appRoot.showError(this.appRoot.localize('error-key-remove'));
         });
   }
 
@@ -952,9 +969,9 @@ export class App {
       throw new Error(msg);
     }
 
-    const confirmationTitle = 'Destroy Server?';
-    const confirmationText = 'Existing users will lose access.  This action cannot be undone.';
-    const confirmationButton = 'DESTROY';
+    const confirmationTitle = this.appRoot.localize('confirmation-server-destroy-title');
+    const confirmationText = this.appRoot.localize('confirmation-server-destroy');
+    const confirmationButton = this.appRoot.localize('destroy');
     this.appRoot.getConfirmation(confirmationTitle, confirmationText, confirmationButton, () => {
       this.digitalOceanRetry(() => {
             return serverToDelete.getHost().delete();
@@ -965,12 +982,14 @@ export class App {
                 this.appRoot.selectedServer = null;
                 this.selectedServer = null;
                 this.showIntro();
-                this.displayNotification('Server destroyed');
+                this.appRoot.showNotification(
+                    this.appRoot.localize('notification-server-destroyed'));
               },
               (e) => {
                 // Don't show a toast on the login screen.
                 if (!(e instanceof digitalocean_api.XhrError)) {
-                  this.displayError('Failed to destroy server', e);
+                  console.error(`Failed destroy server: ${e}`);
+                  this.appRoot.showError(this.appRoot.localize('error-server-destroy'));
                 }
               });
     });
@@ -984,17 +1003,16 @@ export class App {
       throw new Error(msg);
     }
 
-    const confirmationTitle = 'Remove Server?';
-    const confirmationText =
-        'This action removes your server from the Outline Manager, but does not block proxy access to users.  You will still need to manually delete the Outline server from your host machine.';
-    const confirmationButton = 'REMOVE';
+    const confirmationTitle = this.appRoot.localize('confirmation-server-remove-title');
+    const confirmationText = this.appRoot.localize('confirmation-server-remove');
+    const confirmationButton = this.appRoot.localize('remove');
     this.appRoot.getConfirmation(confirmationTitle, confirmationText, confirmationButton, () => {
       serverToForget.forget();
       this.removeServerFromDisplay(this.appRoot.selectedServer);
       this.appRoot.selectedServer = null;
       this.selectedServer = null;
       this.showIntro();
-      this.displayNotification('Server removed');
+      this.appRoot.showNotification(this.appRoot.localize('notification-server-removed'));
     });
   }
 
@@ -1006,7 +1024,8 @@ export class App {
               metricsEnabled;
         })
         .catch((error) => {
-          this.displayError('Error setting metrics enabled', error);
+          console.error(`Failed to set metrics enabled: ${error}`);
+          this.appRoot.showError(this.appRoot.localize('error-metrics'));
         });
   }
 
@@ -1017,7 +1036,8 @@ export class App {
           return this.syncAndShowServer(this.selectedServer);
         })
         .catch((error) => {
-          this.displayError('Error renaming server', error);
+          console.error(`Failed to rename server: ${error}`);
+          this.appRoot.showError(this.appRoot.localize('error-server-rename'));
         });
   }
 

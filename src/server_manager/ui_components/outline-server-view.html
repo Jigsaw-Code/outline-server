@@ -341,10 +341,10 @@
             <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
             <paper-listbox slot="dropdown-content">
               <paper-item hidden$="[[!isServerManaged]]" on-tap="destroyServer">
-                <iron-icon icon="icons:remove-circle-outline"></iron-icon>Destroy server
+                <iron-icon icon="icons:remove-circle-outline"></iron-icon>[[localize('server-destroy')]]
               </paper-item>
               <paper-item hidden$="[[isServerManaged]]" on-tap="removeServer">
-                <iron-icon icon="icons:remove-circle-outline"></iron-icon>Remove server
+                <iron-icon icon="icons:remove-circle-outline"></iron-icon>[[localize('server-remove')]]
               </paper-item>
             </paper-listbox>
           </paper-menu-button>
@@ -354,21 +354,24 @@
       <div class="tabs-container" hidden$="{{!isServerReachable}}">
         <div class="tabs-spacer"></div>
         <paper-tabs selected="{{selectedTab}}" attr-for-selected="name" noink>
-          <paper-tab name="connections">Connections</paper-tab>
-          <paper-tab name="settings">Settings</paper-tab>
+          <paper-tab name="connections">[[localize('server-connections')]]</paper-tab>
+          <paper-tab name="settings">[[localize('server-settings')]]</paper-tab>
         </paper-tabs>
       </div>
 
       <!-- Unreachable server display -->
       <div class="card-section unreachable-server" hidden$="{{isServerReachable}}">
         <img class="server-img" src="images/server-unreachable.png" />
-        <h3>Server unreachable</h3>
-        <p hidden$="{{isServerManaged}}">We're having issues connecting to this server. Try again or remove this server from the application.</p>
-        <p hidden$="{{!isServerManaged}}">We're having issues connecting to this server. Try again or destroy this server and the virtual host.</p>
+        <h3>[[localize('server-unreachable')]]</h3>
+        <p>
+          <div>[[localize('server-unreachable-description')]]</div>
+          <span hidden$="{{isServerManaged}}">[[localize('server-unreachable-managed-description')]]</span>
+          <span hidden$="{{!isServerManaged}}">[[localize('server-unreachable-manual-description')]]</span>
+        </p>
         <div class="button-container">
-          <paper-button on-tap="removeServer" hidden$="{{isServerManaged}}">Remove server</paper-button>
-          <paper-button on-tap="destroyServer" hidden$="{{!isServerManaged}}">Destroy server</paper-button>
-          <paper-button on-tap="retryDisplayingServer" class="try-again-btn">Try again</paper-button>
+          <paper-button on-tap="removeServer" hidden$="{{isServerManaged}}">[[localize('server-remove')]]</paper-button>
+          <paper-button on-tap="destroyServer" hidden$="{{!isServerManaged}}">[[localize('server-destroy')]]</paper-button>
+          <paper-button on-tap="retryDisplayingServer" class="try-again-btn">[[localize('retry')]]</paper-button>
         </div>
       </div>
 
@@ -381,7 +384,7 @@
                 <h3>[[_getFormattedTransferredValue(totalInboundBytes, '0')]]</h3>
                 <p>[[_getFormattedTransferredUnit(totalInboundBytes, 'B')]]</p>
               </div>
-              <p>Data transferred / 30 days</p>
+              <p>[[localize('server-data-transfer')]]</p>
             </div>
             <div hidden$="[[!isServerManaged]]" class="stats-card card-section">
               <div>
@@ -389,17 +392,17 @@
               </div>
               <div class="stats">
                 <h3>[[managedServerUtilzationPercentage]]</h3>
-                <p>of [[_formatBytesTransferred(monthlyOutboundTransferBytes)]]</p>
+                <p>/[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]</p>
               </div>
-              <p>Data used / 30 days</p>
+              <p>[[localize('server-data-used')]]</p>
             </div>
             <div class="stats-card card-section">
               <iron-icon icon="outline-iconset:key"></iron-icon>
               <div class="stats">
                 <h3>[[accessKeyRows.length]]</h3>
-                <p>Keys</p>
+                <p>[[localize('server-keys')]]</p>
               </div>
-              <p>Server access</p>
+              <p>[[localize('server-access')]]</p>
             </div>
           </div>
 
@@ -407,12 +410,12 @@
             <!-- header row -->
             <div class="access-key-row header-row">
               <span class="access-key-container" on-tap="_setSortByOrToggleDirection" data-sort-by="name">
-                Access keys
+                [[localize('server-access-keys')]]
                 <iron-icon class="sort-icon" icon="arrow-drop-down" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'name', -1)]]"></iron-icon>
                 <iron-icon class="sort-icon" icon="arrow-drop-up" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'name', 1)]]"></iron-icon>
               </span>
               <span class="measurement-container" on-tap="_setSortByOrToggleDirection" data-sort-by="usage">
-                Usage / 30 days
+                [[localize('server-usage')]]
                 <iron-icon class="sort-icon" icon="arrow-drop-down" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'usage', -1)]]"></iron-icon>
                 <iron-icon class="sort-icon" icon="arrow-drop-up" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'usage', 1)]]"></iron-icon>
               </span>
@@ -423,8 +426,8 @@
               <span class="access-key-container">
                 <img class="manager-access-key-icon access-key-icon" src="images/manager-key-avatar.svg">
                 <div class="access-key-name">
-                  <div>My access key</div>
-                  <div id="manager-access-key-description">Connect your devices</div>
+                  <div>[[localize('server-my-access-key')]]</div>
+                  <div id="manager-access-key-description">[[localize('server-connect-devices')]]</div>
                 </div>
               </span>
               <span class="measurement-container">
@@ -465,10 +468,10 @@
                       <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
                       <paper-listbox slot="dropdown-content">
                       <paper-item on-tap="_handleRenameAccessKeyPressed">
-                        <iron-icon icon="icons:create"></iron-icon>Rename
+                        <iron-icon icon="icons:create"></iron-icon>[[localize('server-access-key-rename')]]
                       </paper-item>
                         <paper-item on-tap="_handleRemoveAccessKeyPressed">
-                          <iron-icon icon="icons:delete"></iron-icon>Remove
+                          <iron-icon icon="icons:delete"></iron-icon>[[localize('remove')]]
                         </paper-item>
                       </paper-listbox>
                     </paper-menu-button>
@@ -481,7 +484,7 @@
             <div class="access-key-row" id="addAccessKeyRow">
               <span class="access-key-container">
                 <paper-icon-button icon="icons:add" on-tap="_handleAddAccessKeyPressed" id="addAccessKeyButton" class="access-key-icon"></paper-icon-button>
-                <div class="add-new-key" on-tap="_handleAddAccessKeyPressed">Add new key</div>
+                <div class="add-new-key" on-tap="_handleAddAccessKeyPressed">[[localize('server-access-key-new')]]</div>
               </span>
             </div>
           </div>
@@ -497,23 +500,24 @@
             server-monthly-cost="[[monthlyCost]]"
             server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]"
             is-server-managed="[[isServerManaged]]"
-            server-location="[[serverLocation]]">
+            server-location="[[serverLocation]]"
+            localize="[[localize]]">
           </outline-server-settings>
         </div>
       </iron-pages>
     </div>
 
-    <outline-help-bubble id="getConnectedHelpBubble" vertical-align="top" horizontal-align="right">
+    <outline-help-bubble id="getConnectedHelpBubble" vertical-align="bottom" horizontal-align="right">
       <img src="images/connect-tip-2x.png">
-      <h3>You are not connected yet!</h3>
-      <p>Click here to install the Outline client app, using your personal access key to your Outline server</p>
-      <paper-button on-tap="closeGetConnectedHelpBubble">Okay, got it!</paper-button>
+      <h3>[[localize('server-help-connection-title')]]</h3>
+      <p>[[localize('server-help-connection-description')]]</p>
+      <paper-button on-tap="closeGetConnectedHelpBubble">[[localize('server-help-connection-ok')]]</paper-button>
     </outline-help-bubble>
-    <outline-help-bubble id="addAccessKeyHelpBubble" vertical-align="top" horizontal-align="left">
+    <outline-help-bubble id="addAccessKeyHelpBubble" vertical-align="bottom" horizontal-align="left">
       <img src="images/key-tip-2x.png">
-      <h3>Create keys, share access</h3>
-      <p>Share access keys with friends, so they can connect to your Outline server. They can use the same access key on all their devices</p>
-      <paper-button on-tap="showGetConnectedHelpBubble">Next</paper-button>
+      <h3>[[localize('server-help-access-key-title')]]</h3>
+      <p>[[localize('server-help-access-key-description')]]</p>
+      <paper-button on-tap="showGetConnectedHelpBubble">[[localize('server-help-access-key-next')]]</paper-button>
     </outline-help-bubble>
 
   </template>
@@ -569,6 +573,10 @@
           // 1 == ascending, -1 == descending
           type: Number,
           value: 1
+        },
+        localize: {
+          type: Function,
+          readonly: true
         },
       },
       observers: [
@@ -751,10 +759,10 @@
       // are initialized before this point, setPosition will not work and
       // they will appear in the top left of the view.
       initHelpBubbles: function() {
-        this.showHelpBubbleOnce('addAccessKeyHelpBubble', 'addAccessKeyRow', 'up', 'left');
+        this.showHelpBubbleOnce('addAccessKeyHelpBubble', 'addAccessKeyRow', 'down', 'left');
       },
       showHelpBubbleOnce: function(helpBubbleId, positionTargetId,
-                                   arrowDirection='up', arrowAlignment='right') {
+                                   arrowDirection='down', arrowAlignment='right') {
         const storageKey = helpBubbleId + '-dismissed';
         if (window.localStorage.getItem(storageKey)) {
           // Help bubble has already been dismissed, nothing to show.

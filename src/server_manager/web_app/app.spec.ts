@@ -318,6 +318,7 @@ class FakePolymerAppRoot {
   // and throwing an exception would result in breakage.
   setAttribute() {}
   addEventListener() {}
+  localize() {}
 }
 
 class FakeServer implements server.Server {

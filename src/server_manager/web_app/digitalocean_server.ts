@@ -52,27 +52,6 @@ function makeKeyValueTag(key: string, value: string) {
   return [KEY_VALUE_TAG, key, asciiToHex(value)].join(':');
 }
 
-const cityEnglishNameById: {[key: string]: string} = {
-  ams: 'Amsterdam',
-  sgp: 'Singapore',
-  blr: 'Bangalore',
-  fra: 'Frankfurt',
-  lon: 'London',
-  sfo: 'San Francisco',
-  tor: 'Toronto',
-  nyc: 'New York'
-};
-
-// Returns a name for a server in the given region.
-export function MakeEnglishNameForServer(regionId: server.RegionId) {
-  return `Outline Server ${cityEnglishNameById[getCityId(regionId)]}`;
-}
-
-// Returns the English name of the given region.
-export function GetEnglishCityName(regionId: server.RegionId) {
-  return cityEnglishNameById[getCityId(regionId)];
-}
-
 // Possible install states for DigitaloceanServer.
 enum InstallState {
   // Unknown state - server may still be installing.
@@ -354,7 +333,7 @@ function startsWithCaseInsensitive(text: string, prefix: string) {
   return text.slice(0, prefix.length).toLowerCase() === prefix.toLowerCase();
 }
 
-function getCityId(slug: server.RegionId): string {
+export function GetCityId(slug: server.RegionId): string {
   return slug.substr(0, 3).toLowerCase();
 }
 
@@ -372,7 +351,7 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
     return this.digitalOcean.getRegionInfo().then((regions) => {
       const ret: server.RegionMap = {};
       regions.forEach((region) => {
-        const cityId = getCityId(region.slug);
+        const cityId = GetCityId(region.slug);
         if (!(cityId in ret)) {
           ret[cityId] = [];
         }
@@ -385,8 +364,7 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
   }
 
   // Creates a server and returning it when it becomes active.
-  createServer(region: server.RegionId): Promise<server.ManagedServer> {
-    const name = MakeEnglishNameForServer(region);
+  createServer(region: server.RegionId, name: string): Promise<server.ManagedServer> {
     console.time('activeServer');
     console.time('servingServer');
     const onceKeyPair = crypto.generateKeyPair();
