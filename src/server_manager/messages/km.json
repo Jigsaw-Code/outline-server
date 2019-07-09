@@ -1,892 +1,196 @@
 {
-  "about_outline": {
-    "message": "Outline គឺជាគម្រោងកូដចំហរដែលបង្កើតឡើងដោយ$JIGSAW$ដើម្បីផ្តល់នូវវិធីដែលមានសុវត្ថិភាពសម្រាប់ស្ថាប័នព័ត៌មាន និងអ្នកកាសែតដើម្បីប្រើប្រាស់អ៉ីនធើណិត។ $NEW_LINE$$NEW_LINE$Outline គ្រប់គ្រងដោយ $SHADOWSOCKS$ និងជាកម្មវិធីដែលស្ថិតក្នុងតំណាក់កាលដំបូង។ អ្នកអាចរួមចំណែកជួយដល់កូដលើ $GITHUB$ និង Follow យើងខ្ញុំលើ $REDDIT$ និង $MEDIUM$ដើម្បីទទួលបានព័ត៌មានពេលយើងបន្ថែមទៅកាន់ទម្រង់ និងមុខងារថ្មីៗដទៃទៀត។",
-    "description": "This string appears in a dialog as a paragraph to provide a description of the product. Outline is the product name and should not be translated.",
-    "placeholders": {
-      "GITHUB": {
-        "content": "<a href={gitHubUrl}>GitHub</a>"
-      },
-      "JIGSAW": {
-        "content": "<a href={jigsawUrl}>Jigsaw</a>"
-      },
-      "MEDIUM": {
-        "content": "<a href={mediumUrl}>Medium</a>"
-      },
-      "NEW_LINE": {
-        "content": "<br>"
-      },
-      "REDDIT": {
-        "content": "<a href={redditUrl}>Reddit</a>"
-      },
-      "SHADOWSOCKS": {
-        "content": "<a href={shadowsocksUrl}>Shadowsocks</a>"
-      }
-    }
-  },
-  "about_version": {
-    "message": "ជំនាន់ $VERSION$",
-    "description": "This string appears in a dialog as a header to indicate the version of the application.",
-    "placeholders": {
-      "VERSION": {
-        "content": "{version}",
-        "example": "1.0.2"
-      }
-    }
-  },
-  "aws_group_assign_0": {
-    "message": "រុករកទៅ $START_OF_LINK$ វត្ថុ $END_OF_LINK$",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a security group in Amazon Web Services.",
-    "placeholders": {
-      "END_OF_LINK": {
-        "content": "{closeLink}"
-      },
-      "START_OF_LINK": {
-        "content": "{openLink}"
-      }
-    }
-  },
-  "aws_group_assign_1": {
-    "message": "ចុច 'សកម្មភាព' > 'បណ្តាញ' > 'ផ្លាស់ប្ដូរសន្តិសុខក្រុម' នៅខាងលើអេក្រង់ 'វត្ថុ'។",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a security group in Amazon Web Services. Words in quotes should be translated and included untranslated in parentheses."
-  },
-  "aws_group_assign_2": {
-    "message": "ជ្រើសរើសក្រុមសន្តិសុខ 'outline', ដោះការជ្រើសរើសក្រុមសន្តិសុខផ្សេងទៀត។",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a security group in Amazon Web Services. 'Security Group' should be translated and included untranslated in parentheses."
-  },
-  "aws_group_assign_3": {
-    "message": "ចុច 'កំណត់ក្រុមសន្តិសុខ'។",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a security group in Amazon Web Services. 'Assign Security Groups' should be translated and included untranslated in parentheses."
-  },
-  "aws_group_create_0": {
-    "message": "ពេលដែលអ្នកបានបង្កើត វត្ថុEC2 របស់អ្នកហើយ, សូមបើក $START_OF_LINK$ EC2 ទូបញ្ជាគ្រប់គ្រង $END_OF_LINK$",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a security group in Amazon Web Services. EC2 is a product name and should not be translated.",
-    "placeholders": {
-      "END_OF_LINK": {
-        "content": "{closeLink}"
-      },
-      "START_OF_LINK": {
-        "content": "{openLink}"
-      }
-    }
-  },
-  "aws_group_create_1": {
-    "message": "ខាងក្រោម 'បណ្តាញ និង សន្តិសុខ', ជ្រើសយក 'ក្រុមសន្តិសុខ'។",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a security group in Amazon Web Services. Phrases in quotes should be translated and included untranslated in parentheses."
-  },
-  "aws_group_create_2": {
-    "message": "ចុចលើ 'បង្កើតក្រុមសន្តិសុខ'។",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a security group in Amazon Web Services. 'Create Security Group' should be translated and included untranslated in parentheses."
-  },
-  "aws_group_create_3": {
-    "message": "សរសេរ 'outline' ក្នុង 'ឈ្មោះក្រុមសន្តិសុខ' និងវាលពិណ៌នា។",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a security group in Amazon Web Services. Phrases in quotes should be translated and included untranslated in parentheses."
-  },
-  "aws_group_create_4": {
-    "message": "ចុច 'បន្ថែមបទបញ្ជា'",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a security group in Amazon Web Services. 'Add rule' should be translated and included untranslated in parentheses."
-  },
-  "aws_group_create_5": {
-    "message": "ជ្រើស 'គ្រប់ចរាចរណ៍' ក្រោម 'ប្រភេទ' និង 'គ្រប់កន្លែង' ក្រោម  'ប្រភព'",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a security group in Amazon Web Services. Phrases in quotes should be translated and included untranslated in parentheses."
-  },
-  "cancel": {
-    "message": "បោះបង់",
-    "description": "This string appears across the application as a button. Clicking it aborts the current flow."
-  },
-  "city_ams": {
-    "message": "ទីក្រុងអាំស្ទែដាំ",
-    "description": "This string appears in a card as part of the server creation flow. It allows the user to select the location to deploy a server. Refers to the city in the Netherlands."
-  },
-  "city_blr": {
-    "message": "ទីក្រុងបឹងកាឡូ",
-    "description": "This string appears in a card as part of the server creation flow. It allows the user to select the location to deploy a server. Refers to the city in India."
-  },
-  "city_fra": {
-    "message": "ទីក្រុងហ្វ្រែងហ្វើត",
-    "description": "This string appears in a card as part of the server creation flow. It allows the user to select the location to deploy a server. Refers to the city in Germany."
-  },
-  "city_lon": {
-    "message": "ទីក្រុងឡុងដ៍",
-    "description": "This string appears in a card as part of the server creation flow. It allows the user to select the location to deploy a server. Refers to the city in England."
-  },
-  "city_nyc": {
-    "message": "ទីក្រុងញូវយ៉ក",
-    "description": "This string appears in a card as part of the server creation flow. It allows the user to select the location to deploy a server. Refers to the city in the United States."
-  },
-  "city_sfo": {
-    "message": "ទីក្រុងសេន​ហ្វ្រេ​ន​ស៊ី​ស្កូ",
-    "description": "This string appears in a card as part of the server creation flow. It allows the user to select the location to deploy a server. Refers to the city in the United States."
-  },
-  "city_sgp": {
-    "message": "សិង្ហបុរី",
-    "description": "This string appears in a card as part of the server creation flow. It allows the user to select the location to deploy a server. Refers to the capital of Singapore."
-  },
-  "city_tor": {
-    "message": "ទីក្រុងតូរ៉ុនតូ",
-    "description": "This string appears in a card as part of the server creation flow. It allows the user to select the location to deploy a server. Refers to the city in Canada."
-  },
-  "close": {
-    "message": "បិទ",
-    "description": "This string appears in dialogs as a button. Clicking it dismisses the dialog."
-  },
-  "confirmation_server_destroy": {
-    "message": "អ្នកប្រើដែលមានស្រាប់នឹងបាត់បង់ការចូលប្រើ។ សកម្មភាពនេះមិនអាចមិនធ្វើវិញបានទេ។",
-    "description": "This string appears in a dialog that requests user confirmation for destroying a server. It informs the user about the consequences of destroying a server. 'Destroy' in this context implies that the server will be deleted."
-  },
-  "confirmation_server_destroy_title": {
-    "message": "បំផ្លាញម៉ាស៊ីនមេ?",
-    "description": "This string appears in a dialog that requests user confirmation for destroying a server. 'Destroy' in this context implies that the server will be deleted."
-  },
-  "confirmation_server_remove": {
-    "message": "សកម្មភាពនេះដកម៉ាស៊ីនមេរបស់អ្នកចេញពី អ្នកគ្រប់គ្រង Outline ប៉ុន្តែមិនរាំងខ្ទប់ការចូលប្រើប្រូកស៊ីទៅកាន់អ្នកប្រើប្រាស់ទេ។ អ្នកនៅតែត្រូវការលុបម៉ាស៊ីនមេដោយដៃចេញពីម៉ាស៊ីនបម្រើ។",
-    "description": "This string appears in a dialog that requests user confirmation for removing a server from the application. It informs the user about the consequences of removing a server. 'Remove' in this context does not imply server deletion."
-  },
-  "confirmation_server_remove_title": {
-    "message": "ដកម៉ាស៊ីនមេចេញ?",
-    "description": "This string appears in a dialog that requests user confirmation for removing a server from the application. 'Remove' in this context does not imply server deletion."
-  },
-  "destroy": {
-    "message": "បំផ្លាញ",
-    "description": "This string appears as a button in a dialog that requests user confirmation for destroying a server. Clicking the button causes the server to be deleted."
-  },
-  "digitalocean_disconnect": {
-    "message": "ផ្តាច់",
-    "description": "This string appears as a button in a dialog to disconnect the user's DigitalOcean account from the application. Clicking it signs the user out of DigitalOcean, a cloud server provider."
-  },
-  "digitalocean_disconnect_account": {
-    "message": "ផ្តាច់គណនីពី DigitalOcean",
-    "description": "This string appears as a header in a dialog to disconnect the user's DigitalOcean account from the application. DigitalOcean is a cloud server provider name and should not be translated."
-  },
-  "digitalocean_unreachable": {
-    "message": "កំហុសនេះអាចបណ្តាលមកពីជញ្ជាំងភ្លើងនៅលើបណ្តាញរបស់អ្នកឬបណ្តាញបញ្ហាបណ្តោះអាសន្នជាមួយនឹង digitalocean.com",
-    "description": "This string appears in a dialog as a paragraph. It is shown when a DigitalOcean server cannot be reached. DigitalOcean is a cloud server provider."
-  },
-  "done": {
-    "message": "រួចរាល់",
-    "description": "This string appears across the application as a button. It lets the user indicate that an action, such as entering text or reading a dialog, has been completed."
-  },
-  "error_connectivity": {
-    "message": "យើងកំពុងមានបញ្ហាក្នុងការភ្ជាប់ទៅគណនី DigitalOcean របស់អ្នក។ ករណីនេះជួនកាលជាបញ្ហាបណ្តោះអាសន្នមួយ ជាមួយ DigitalOcean រឺជាមួយការភ្ជាប់អ៉ីនធើណិតរបស់អ្នក។ ប្រសិនបើការព្យាយាមឡើងវិញមិនដំណើរការទេ ការចូលទៅក្នុងគណនី DigitalOcean ម្តងទៀត អាចដោះស្រាយបញ្ហានេះបាន។",
-    "description": "This string appears in a dialog as a paragraph. The dialog is shown when an operation on a DigitalOcean server fails due to connectivity issues. The dialog displays buttons that allow the user to retry the operation. DigitalOcean is a cloud server provider name and should not be translated."
-  },
-  "error_connectivity_title": {
-    "message": "បញ្ហាការតភ្ជាប់",
-    "description": "This string appears in a dialog as a header. The dialog is shown when an operation on a server fails due to connectivity issues. The dialog displays buttons that allow the user to retry the operation."
-  },
-  "error_do_account_info": {
-    "message": "បានបរាជ័យក្នុងការទទួលបានព័ត៌មានអំពីគណនី DigitalOcean",
-    "description": "This string appears in an error notification toast. It is shown when there is an error retrieving the user's DigitalOcean account. DigitalOcean is a cloud server provider name and should not be translated."
-  },
-  "error_do_auth": {
-    "message": "ការផ្ទៀងផ្ទាត់ភាពត្រឹមត្រូវជាមួយ DigitalOcean បានបរាជ័យ",
-    "description": "This string appears in an error notification toast. It is shown when there is an error when logging in to the user's DigitalOcean account. DigitalOcean is a cloud server provider name and should not be translated."
-  },
-  "error_do_regions": {
-    "message": "បានបរាជ័យក្នុងការយកបញ្ជីឈ្មោះប្រទេសដែលមាន",
-    "description": "This string appears in an error notification toast. It is shown when there is an error retrieving the regions available for server deployment."
-  },
-  "error_feedback": {
-    "message": "បានបរាជ័យក្នុងការបញ្ជូនមតិអ្នកប្រើ។ សូម​ព្យាយាម​ម្តង​ទៀត។",
-    "description": "This string appears in an error notification toast. It is shown when there is an error submitting the user's feedback."
-  },
-  "error_key_add": {
-    "message": "បរាជ័យក្នុងការបញ្ជូលកូនសោ",
-    "description": "This string appears in an error notification toast. It is shown when there is an error creating a server access key."
-  },
-  "error_key_remove": {
-    "message": "បរាជ័យក្នុងការដកចេញនូវកូនសោ",
-    "description": "This string appears in an error notification toast. It is shown when there is an error deleting a server access key."
-  },
-  "error_key_rename": {
-    "message": "បរាជ័យក្នុងការប្តូរឈ្មោះកូនសោ",
-    "description": "This string appears in an error notification toast. It is shown when there is an error renaming a server access key."
-  },
-  "error_keys_get": {
-    "message": "បរាជ័យក្នុងផ្ទុកកូនសោ",
-    "description": "This string appears in an error notification toast. It is shown when there is an error retrieving a server access keys."
-  },
-  "error_licenses": {
-    "message": "បរាជ័យក្នុងការផ្ទុកអាជ្ញាបណ្ណ",
-    "description": "This string appears in a dialog that shows the application's software licenses. It is shown instead of the licenses' text when loading them fails."
-  },
-  "error_metrics": {
-    "message": "កំហុសក្នុងការកំណត់ប្រព័ន្ធម៉ែត្រ",
-    "description": "This string appears in an error notification toast. It is shown when there is an error enabling or disabling a server's metrics reporting."
-  },
-  "error_server_creation": {
-    "message": "មានបញ្ហាក្នុងការបង្កើតម៉ាស៊ីនមេ Outline របស់អ្នក។",
-    "description": "This string appears in an dialog as a paragraph. The dialog is shown when there is an creating a server; the user can retry the operation or destroy the server."
-  },
-  "error_server_destroy": {
-    "message": "បរាជ័យក្នុងការបំផ្លាញម៉ាស៊ីនមេ",
-    "description": "This string appears in an error notification toast. It is shown when there is an error destroying a server."
-  },
-  "error_server_removed": {
-    "message": "$SERVER_NAME$មិនមាននៅក្នុងគណនី DigitalOcean របស់អ្នកទៀតទេ។",
-    "description": "This string appears in an error notification toast. It is shown when a DigitalOcean server was destroyed outside the application to let the user know that it will not be displayed in the UI. DigitalOcean is a cloud server provider name and should not be translated.",
-    "placeholders": {
-      "SERVER_NAME": {
-        "content": "{serverName}",
-        "example": "New York Outline Server"
-      }
-    }
-  },
-  "error_server_rename": {
-    "message": "បរាជ័យក្នុងការប្ដូរឈ្មោះម៉ាស៊ីនមេ",
-    "description": "This string appears in an error notification toast. It is shown when there is an error renaming a server."
-  },
-  "error_server_unreachable": {
-    "message": "ម៉ាស៊ីនមេ Outline របស់អ្នកត្រូវបានតំឡើងយ៉ាងត្រឹមត្រូវ ប៉ុន្តែយើងមិនអាចភ្ជាប់វាបានទេ។ ភាគច្រើននៃករណីនេះគឺដោយសារតែបទបញ្ជារបស់ម៉ាស៊ីនមេជញ្ជាំងភ្លើងរបស់អ្នកកំពុងរារាំងការតភ្ជាប់ចូល។ សូមពិនិត្យពួកវាឡើងវិញហើយត្រូវប្រាកដថាអនុញ្ញាតឱ្យមានការតភ្ជាប់ TCP ចូលនៅលើច្រកចាប់ពី 1024 ដល់ 65535 ។",
-    "description": "This string appears in dialog as a paragraph. The dialog is shown when a server is installed successfully but cannot be reached. The dialog provides possible solutions and displays buttons that allow the user to retry reaching the server."
-  },
-  "error_server_unreachable_title": {
-    "message": "មិនអាចតភ្ជាប់ទៅម៉ាស៊ីនមេ Outline របស់អ្នក",
-    "description": "This string appears in dialog as a header. The dialog is shown when a server is installed successfully but cannot be reached."
-  },
-  "error_servers_removed": {
-    "message": "$SERVER_NAMES$លែងមានប្រើប្រាស់ក្នុង គណនី Digital Ocean.",
-    "description": "This string appears in an error notification toast. It is shown when multiple DigitalOcean servers were destroyed outside the application to let the user know that they will not be displayed in the UI. DigitalOcean is a cloud server provider name and should not be translated.",
-    "placeholders": {
-      "SERVER_NAMES": {
-        "content": "{serverNames}",
-        "example": "New York Outline Server, Amsterdam Outline Server"
-      }
-    }
-  },
-  "feedback_cloud_provider": {
-    "message": "ជ្រើសរើសវេាកម្ម ពពក របស់អ្នក",
-    "description": "This string appears in the feedback dialog as an placeholder within a drop-down. Allows the user to select a cloud provider for certain feedback categories."
-  },
-  "feedback_cloud_provider_error": {
-    "message": "សូមជ្រើសរើសយកសេវាកម្ម ពពក មួយ",
-    "description": "This string appears in the feedback dialog as an error message within a drop-down. The string appears when the user attempts to submit feedback without selecting a cloud provider."
-  },
-  "feedback_connection": {
-    "message": "មិនអាចតភ្ជាប់ទៅម៉ាស៊ីនមេរបស់ខ្ញុំទេ",
-    "description": "This string appears in the feedback dialog as an option within a drop-down of feedback categories. Indicates that the user cannot connect to their server."
-  },
-  "feedback_connection_others": {
-    "message": "អ្នកផ្សេងមិនអាចភ្ជាប់មកម៉ាស៊ីនមេរបស់ខ្ញុំទេ",
-    "description": "This string appears in the feedback dialog as an option within a drop-down of feedback categories. Indicates that users who have been given access keys cannot connect to the server."
-  },
-  "feedback_disclaimer": {
-    "message": "សូមកត់សម្គាល់ថាក្រុមការងាររបស់យើងអាចឆ្លើយតបជាភាសាអង់គ្លេសបាន។",
-    "description": "This string appears in the feedback dialog as a paragraph under the feedback form. Lets the user know that, although the application is localized, our team can only respond to feedback in English."
-  },
-  "feedback_email": {
-    "message": "អាស័យដ្ឋាន អ៉ីម៉ែល (ជាជម្រើស)",
-    "description": "This string appears in the feedback dialog as a label of the email input form."
-  },
-  "feedback_error": {
-    "message": "សូមសរសេរមតិរបស់អ្នក",
-    "description": "This string appears in the feedback dialog as a paragraph below the feedback input form. It is displayed when the user clicks the submit button without having entered feedback in the input form."
-  },
-  "feedback_explanation_install": {
-    "message": "កំហុសមួយបានកើតឡើងនៅពេលដែលព្យាយាមដំឡើង Outline លើម៉ាស៊ីនមេរបស់អ្នក។ ប្រសិនបើអ្នកមិនអាចដោះស្រាយបញ្ហាបានទេ សូមពិចារណាបញ្ជូនមតិយោបល់មកយើង ហើយប្រាប់អាសយដ្ឋានអ៉ីម៉ែលរបស់អ្នក (ជាជម្រើស) ដូច្នេះយើងអាចឆ្លើយតបទៅអ្នកវិញ។",
-    "description": "This string appears in the feedback dialog as a paragraph above the feedback input form. The feedback dialog gets automatically displayed with this message when a server installation fails."
-  },
-  "feedback_general": {
-    "message": "មតិទូទៅ",
-    "description": "This string appears in the feedback dialog as an option within a drop-down of feedback categories. Indicates that the user is providing general feedback."
-  },
-  "feedback_install": {
-    "message": "មានបញ្ហាក្នុងការដំឡើង Outline",
-    "description": "This string appears in the feedback dialog as an option within a drop-down of feedback categories. Indicates that the user cannot install Outline on their server."
-  },
-  "feedback_label": {
-    "message": "មិតរបស់អ្នក",
-    "description": "This string appears in the feedback dialog as a placeholder of the feedback input form."
-  },
-  "feedback_management": {
-    "message": "មានបញ្ហាក្នុងការគ្រប់គ្រងម៉ាស៊ីនមេរបស់ខ្ញុំ",
-    "description": "This string appears in the feedback dialog as an option within a drop-down of feedback categories. Indicates that the user is having issues managing their server."
-  },
-  "feedback_other": {
-    "message": "ផ្សេងៗ",
-    "description": "This string appears in the feedback dialog as an option within a drop-down of cloud providers. Indicates that the user has a server on an unlisted cloud provider."
-  },
-  "feedback_privacy": {
-    "message": "មតិរបស់អ្នក អាសយដ្ឋានអ៉ីម៉ែល (បើអ្នកបានផ្តល់ឲ្យ) និងព័ត៌មានបន្ថែមសំដៅទៅលើ $START_OF_LINK$ គោលនយោបាយឯកជនភាព $END_OF_LINK$ ដែលនឹងត្រូវបានគេផ្ញើទៅកាន់ក្រុមការងាររបស់ Outline។",
-    "description": "This string appears in the feedback dialog as paragraph below the feedback input form. Lets the user know how their feedback and personal information will be handled.",
-    "placeholders": {
-      "END_OF_LINK": {
-        "content": "{closeLink}"
-      },
-      "START_OF_LINK": {
-        "content": "{openLink}"
-      }
-    }
-  },
-  "feedback_submit": {
-    "message": "ដាក់បញ្ចូល",
-    "description": "This string appears in the feedback dialog as a button. Clicking it submits the feedback form."
-  },
-  "feedback_suggestion": {
-    "message": "សំណើរ",
-    "description": "This string appears in the feedback dialog as an option within a drop-down of feedback categories. Indicates that the user is providing a product suggestion."
-  },
-  "feedback_title_generic": {
-    "message": "ផ្ញើមតិ",
-    "description": "This string appears in the feedback dialog as a header."
-  },
-  "feedback_title_install": {
-    "message": "ការតឡើងម៉ាស៊ីនមេរបស់ Outline បរាជ័យ",
-    "description": "This string appears in the feedback dialog as a header. The feedback dialog gets automatically displayed with this header when a server installation fails."
-  },
-  "gcp_firewall_assign_0": {
-    "message": "រុករកទៅមើល $START_OF_LINK$ អេក្រង់ វត្ថុVM $END_OF_LINK$។",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform.",
-    "placeholders": {
-      "END_OF_LINK": {
-        "content": "{closeLink}"
-      },
-      "START_OF_LINK": {
-        "content": "{openLink}"
-      }
-    }
-  },
-  "gcp_firewall_assign_1": {
-    "message": "ចុចលើ វត្ថុ កន្លែងដែលអ្នកចង់បង្កើតម៉ាស៊ីនបម្រើ Outline។",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform."
-  },
-  "gcp_firewall_assign_2": {
-    "message": "ចុច 'កែសម្រួល' នៅខាងលើអេក្រង់នៃព័ត៌មានលំអត់ វត្ថុVM",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'EDIT' should be translated and included untranslated in parentheses. VM is an acronym for virtual machine."
-  },
-  "gcp_firewall_assign_3": {
-    "message": "សរសេរ 'outline' ក្នុងវាល 'ស្លាកបណ្តាញ'។",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'Network tags' should be translated and included untranslated in parentheses."
-  },
-  "gcp_firewall_assign_4": {
-    "message": "ចុច 'រក្សាទុក'។",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'SAVE' should be translated and included untranslated in parentheses."
-  },
-  "gcp_firewall_create_0": {
-    "message": "$START_OF_LINK$បញ្ជូលបទបញ្ជាថ្មីមួយរបស់ជញ្ជាំងភ្លើង $END_OF_LINK$ ក្នុងគម្រោង Computer Engine ។",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. Compute Engine is a product of Google Cloud Platform and should not be translated.",
-    "placeholders": {
-      "END_OF_LINK": {
-        "content": "{closeLink}"
-      },
-      "START_OF_LINK": {
-        "content": "{openLink}"
-      }
-    }
-  },
-  "gcp_firewall_create_1": {
-    "message": "សរសេរ 'outline' ក្នុងវាល 'ឈ្មោះ'",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'Name' should be translated and included untranslated in parentheses."
-  },
-  "gcp_firewall_create_2": {
-    "message": "សរសេរ 'outline' ក្នុងវាល 'ស្លាកគោលដៅ'",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'Target tags' should be translated and included untranslated in parentheses."
-  },
-  "gcp_firewall_create_3": {
-    "message": "សរសេរ '0.0.0.0/0' ក្នុង 'ជូួរប្រភព IP'",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'Source IP ranges' should be translated and included untranslated in parentheses."
-  },
-  "gcp_firewall_create_4": {
-    "message": "ជ្រើស 'អនុញ្ញាតទាំងអស់' ក្រោម 'ពិធីការ និងច្រក'។",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'Allow all' and 'Protocols and ports' should be translated and included untranslated in parentheses."
-  },
-  "gcp_firewall_create_5": {
-    "message": "ចុច 'បង្កើត'",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'Create' should be translated and included untranslated in parentheses."
-  },
-  "key": {
-    "message": "កូនសោ",
-    "description": "This string appears in the server view as a placeholder for a newly created access key."
-  },
-  "manual_server_assign_firewall": {
-    "message": "កំណត់បទបញ្ជាជញ្ជាំងភ្លើង",
-    "description": "This string appears in the server setup view as a sub-header of a section that provides instructions to configure the server's firewall."
-  },
-  "manual_server_assign_group": {
-    "message": "កំណត់ក្រុមសន្តិសុខ",
-    "description": "This string appears in the server setup view as a sub-header of a section that provides instructions to configure the server's firewall."
-  },
-  "manual_server_create_firewall": {
-    "message": "បង្កើតបទបញ្ជាមួយរបស់ជញ្ជាំងភ្លើង",
-    "description": "This string appears in the server setup view as a sub-header of a section that provides instructions to configure the server's firewall."
-  },
-  "manual_server_create_group": {
-    "message": "បង្កើតក្រុមសន្តិសុខមួយ",
-    "description": "This string appears in the server setup view as a sub-header of a section that provides instructions to configure the server's firewall."
-  },
-  "manual_server_description": {
-    "message": "ជំហ៊ានទាំងនេះនឹងជួយអ្នកក្នុងការតឡើង Outline លើ$CLOUD_PROVIDER$ ម៉ាស៊ីនមេ Linux",
-    "description": "This string appears in the server setup view as a header. Lets the user know that the following sections provide instructions on how to install Outline on their server.",
-    "placeholders": {
-      "CLOUD_PROVIDER": {
-        "content": "{cloudProvider}",
-        "example": "Amazon Web Services"
-      }
-    }
-  },
-  "manual_server_firewall": {
-    "message": "កំណត់រចនាសម្ព័ន្ធជញ្ជាំងភ្លើងរបស់អ្នក",
-    "description": "This string appears in the server setup view as the header of a section that provides instructions to configure the server's firewall."
-  },
-  "manual_server_install_paste": {
-    "message": "បិទភ្ជាប់លទ្ធផលដំឡើងរបស់អ្នកនៅទីនេះ។",
-    "description": "This string appears in the server setup view as a header of a section that contains an input form. The user must enter the output of the server installation script to manage their server in the application."
-  },
-  "manual_server_install_run": {
-    "message": "ចូលទៅក្នុងម៉ាស៊ីនមេរបស់អ្នក ហើយរត់ពាក្យបញ្ជានេះ។",
-    "description": "This string appears in the server setup view as a header of a section that displays a command to install Outline on their server."
-  },
-  "manual_server_instructions": {
-    "message": "សេចក្តីណែនាំ",
-    "description": "This string appears in the server setup view as a toggle of a section that provides instructions to configure the server's firewall."
-  },
-  "manual_server_show_me": {
-    "message": "បង្ហាញកន្លែងខ្ញុំ",
-    "description": "This string appears in the server setup view as a button. Clicking the button opens a link to the cloud server provider management console."
-  },
-  "manual_server_title": {
-    "message": "អនុវត្តតាមការណែនាំដូចខាងក្រោម",
-    "description": "This string appears in the server setup view as a header. Communicates to the user that they need to perform a series of actions to install Outline on their server."
-  },
-  "metrics_description": {
-    "message": "ចែករំលែករង្វាស់អនាមិកដើម្បីជួយបង្កើនភាពជឿជាក់និងការអនុវត្តនៃ Outline សម្រាប់អ្នក និងសម្រាប់អ្នកណាដែលអ្នកចែករំលែកម៉ាស៊ីនមេរបស់អ្នកជាមួយគ្នា។ $START_OF_LINK$មើលបន្ថែម។ $END_OF_LINK$",
-    "description": "This string appears in the server settings view as a paragraph next to a toggle that enables/disables server metrics reporting.",
-    "placeholders": {
-      "END_OF_LINK": {
-        "content": "{closeLink}"
-      },
-      "START_OF_LINK": {
-        "content": "{openLink}"
-      }
-    }
-  },
-  "metrics_share": {
-    "message": "ចែករំលែកប្រព័ន្ធម៉ែត្រ",
-    "description": "This string appears as a button of a dialog that prompts the user to share server metrics. Clicking it enables server metrics reporting."
-  },
-  "metrics_skip": {
-    "message": "រំលង",
-    "description": "This string appears as a button of a dialog that prompts the user to share server metrics. Clicking it dismisses the dialog."
-  },
-  "metrics_title": {
-    "message": "ការចែករំលែកប្រព័ន្ធម៉ែត្រ",
-    "description": "This string appears as the header of a dialog that prompts the user to share server metrics."
-  },
-  "nav_about": {
-    "message": "អំពី",
-    "description": "This string appears in an application drawer as a navigation link. Clicking it opens a dialog with information about Outline."
-  },
-  "nav_data_collection": {
-    "message": "ការ​ប្រមូល​ទិន្នន័យ",
-    "description": "This string appears in an application drawer as a navigation link. Clicking it opens Outline's data collection policy in the browser."
-  },
-  "nav_feedback": {
-    "message": "មតិអ្នកប្រើ",
-    "description": "This string appears in an application drawer as a navigation link. Clicking it opens a dialog that allows the user to submit feedback."
-  },
-  "nav_help": {
-    "message": "ជំនួយ",
-    "description": "This string appears in an application drawer as a navigation link. Clicking it opens Outline's support website."
-  },
-  "nav_licenses": {
-    "message": "អាជ្ញាប័ណ្ណ",
-    "description": "This string appears in an application drawer as a navigation link. Clicking it opens a dialog listing Outline's software licenses."
-  },
-  "nav_privacy": {
-    "message": "ភាពឯកជន",
-    "description": "This string appears in an application drawer as a navigation link. Clicking it opens Outline's privacy policy in the browser."
-  },
-  "nav_terms": {
-    "message": "លក្ខខណ្ឌ",
-    "description": "This string appears in an application drawer as a navigation link. Clicking it opens Outline's terms of service in the browser."
-  },
-  "notification_app_update": {
-    "message": "កំណែនៃកម្មវិធី Outline Manager ត្រូវបានធ្វើបច្ចុប្បន្នភាពហើយត្រូវបានទាញយករួចរាល់។ វានឹងត្រូវបានដំឡើងនៅពេលដែលអ្នកចាប់ផ្តើមកម្មវិធីឡើងវិញ។",
-    "description": "This string appears in a transient notification toast. It is shown when an update to the application is ready to install."
-  },
-  "notification_feedback_thanks": {
-    "message": "សូមអរគុណសម្រាប់ការជួយយើងឱ្យប្រសើរឡើង! យើងចង់បានមតិយោបល់ពីអ្នក។",
-    "description": "This string appears in a transient notification toast. It is shown when the user has successfully submitted feedback."
-  },
-  "notification_key_added": {
-    "message": "បានបញ្ចូលកូនសោ",
-    "description": "This string appears in a transient notification toast. It is shown when a server access key has been successfully created."
-  },
-  "notification_key_removed": {
-    "message": "កូនសោត្រូវដកចេញ",
-    "description": "This string appears in a transient notification toast. It is shown when a server access key has been successfully removed."
-  },
-  "notification_server_destroyed": {
-    "message": "ម៉ាស៊ីមេត្រូវបានបំផ្លាញ",
-    "description": "This string appears in a transient notification toast. It is shown when a server has been successfully destroyed."
-  },
-  "notification_server_exists": {
-    "message": "ម៉ាស៊ីនមេត្រូវបានបញ្ចូលរួចរាល់",
-    "description": "This string appears in a transient notification toast. It is shown when the user attempts to add server that is already present in the application."
-  },
-  "notification_server_removed": {
-    "message": "ម៉ាស៊ីនមេត្រូវបានដកចេញ",
-    "description": "This string appears in a transient notification toast. It is shown when a server has been successfully removed from the application."
-  },
-  "oauth_account_active": {
-    "message": "គណនី DigitalOcean របស់អ្នកត្រូវបានដំណើរការ",
-    "description": "This string appears in the DigitalOcean account creation flow as a sub-header. Lets the user know their DigitalOcean account is active. DigitalOcean is a cloud provider name and should not be translated."
-  },
-  "oauth_account_active_tag": {
-    "message": "គណនីដំណើរការ! កំពុងផ្ទុកទីតាំងម៉ាស៊ីនមេ...",
-    "description": "This string appears in the DigitalOcean account creation flow as a paragraph. Displayed when the user's DigitalOcean account has been successfully activated."
-  },
-  "oauth_activate_account": {
-    "message": "ដាក់ឲ្យដំណើរការគណនី DigitalOcean របស់អ្នក។",
-    "description": "This string appears in the DigitalOcean account creation flow as a header. Displayed when the account has been created but not yet active. DigitalOcean is a cloud provider name and should not be translated."
-  },
-  "oauth_billing": {
-    "message": "បញ្ចូលព័ត៌មានការបង់ប្រាក់របស់អ្នកនៅលើ digitalocean.com ហើយត្រលប់ទៅកម្មវិធីវិញនៅពេលដែលអ្នកបានបញ្ចប់។",
-    "description": "This string appears in the DigitalOcean account creation flow as a sub-header. Prompts the user to enter their billing information on DigitalOcean's website."
-  },
-  "oauth_billing_tag": {
-    "message": "បញ្ចូលព័ត៌មានការបង់ប្រាក់",
-    "description": "This string appears in the DigitalOcean account creation flow as a paragraph. Prompts the user to enter their billing information on DigitalOcean's website."
-  },
-  "oauth_connect_description": {
-    "message": "Outline ធ្វើឲ្យងាយស្រួលដើម្បីបង្កើតម៉ាស៊ីនមេមួយ និងភ្ជាប់វា តាមរយៈគណនីរបស់អ្នក។",
-    "description": "This string appears in the DigitalOcean account creation flow as a sub-header. Displayed when the user has not yet authorized Outline to access their DigitalOcean account."
-  },
-  "oauth_connect_tag": {
-    "message": "រង់ចាំភ្ជាប់ទៅកាន់គណនីរបស់អ្នក...",
-    "description": "This string appears in the DigitalOcean account creation flow as a paragraph. Displayed when the user has not yet authorized Outline to access their DigitalOcean account."
-  },
-  "oauth_connect_title": {
-    "message": "ចុចចូល ឬបង្កើតគណនីមួយជាមួយនឹង DigitalOcean.com",
-    "description": "This string appears in the DigitalOcean account creation flow as a header. Displayed when the user has not yet signed in to DigitalOcean or created an account."
-  },
-  "oauth_sign_out": {
-    "message": "ចាកចេញ",
-    "description": "This string appears in the DigitalOcean account creation flow as a button. Displayed when the user has authorized Outline to access their account. Clicking it aborts the account creation flow and signs out the user."
-  },
-  "oauth_verify": {
-    "message": "សូមពិនិត្យមើលប្រអប់សំបុត្ររបស់អ្នកសម្រាប់អ៉ីម៉ែលមួយពី DigitalOcean ហើយចុចតំណភ្ជាប់លើវាដើម្បីបញ្ជាក់ពីគណនីរបស់អ្នក។",
-    "description": "This string appears in the DigitalOcean account creation flow as a sub-header. Displayed when the user has not yet entered billing information to activate their DigitalOcean account. DigitalOcean is a cloud provider name and should not be translated."
-  },
-  "oauth_verify_tag": {
-    "message": "បញ្ជាក់អ៉ីមែលរបស់អ្នក...",
-    "description": "This string appears in the DigitalOcean account creation flow as a paragraph. Displayed when the user has not yet confirmed the registered email for their DigitalOcean account."
-  },
-  "oauth_verify_title": {
-    "message": "ដំណើរការគណនី DigitalOcean របស់អ្នក",
-    "description": "This string appears in the DigitalOcean account creation flow as a title. Displayed when the user has not yet activated their DigitalOcean account."
-  },
-  "okay": {
-    "message": "យល់ព្រម",
-    "description": "This string appears across the application as a button. It lets the user acknowledge displayed information. Clicking dismisses the enclosing UI element."
-  },
-  "region_description": {
-    "message": "នេះគឺជាបទពិសោធន៍អ៉ីនធើណិតរបស់អ្នក។",
-    "description": "This string appears within the server creation flow, as a sub-header of the server selection view. Lets the user know about the implications of selecting a server location."
-  },
-  "region_setup": {
-    "message": "តឡើង Outline",
-    "description": "This string appears within the server creation flow, as a button of the server selection view. Clicking it creates an Outline server at the selected location. 'Set up' means install and run the Outline server software."
-  },
-  "region_title": {
-    "message": "ជ្រើសទីតាំងរបស់ម៉ាស៊ីនមេរបស់អ្នក។",
-    "description": "This string appears within the server creation flow, as the header of the server selection view."
-  },
-  "remove": {
-    "message": "ដកចេញ",
-    "description": "This string appears across the application as a button. It allows the user to confirm the removal of a server or access key."
-  },
-  "retry": {
-    "message": "ព្យាយាមម្តងទៀត",
-    "description": "This string appears across the application as a button. It allows the user to retry a failed operation."
-  },
-  "server_access": {
-    "message": "ចូលប្រើម៉ាស៊ីនមេ",
-    "description": "This string appears within the server view as the header of a card that displays the number of server access keys."
-  },
-  "server_access_key_new": {
-    "message": "បញ្ចូលកូនសោថ្មី",
-    "description": "This string appears within the server view as a button. Clicking it creates a new server access key."
-  },
-  "server_access_key_rename": {
-    "message": "ប្ដូរឈ្មោះ",
-    "description": "This string appears within the server view as a button of a drop-down to manage a server access key. Clicking it renames the access key."
-  },
-  "server_access_keys": {
-    "message": "ប្រើកូនសោ",
-    "description": "This string appears within the server view as a header of a table column that displays server access keys."
-  },
-  "server_connect_devices": {
-    "message": "ភ្ជាប់ឧបករណ៍របស់អ្នក",
-    "description": "This string appears within the server view as a sub-header for the default server access key. This key is meant to be used by the server administrator."
-  },
-  "server_connections": {
-    "message": "ការតភ្ជាប់",
-    "description": "This string appears within the server view as a header of the section that displays server information and access keys."
-  },
-  "server_data_transfer": {
-    "message": "ទិន្នន័យផ្ទេរ / 30 ថ្ងៃ",
-    "description": "This string appears within the server view as the header of a card that displays the amount of data transferred by the server."
-  },
-  "server_data_used": {
-    "message": "អនុញ្ញាតឲ្យប្រើ / 30 ថ្ងៃ",
-    "description": "This string appears within the server view as the header of a card that displays the amount of data transferred by the server as a percentage of the total available data."
-  },
-  "server_destroy": {
-    "message": "បផ្លាញម៉ាស៊ីនមេ",
-    "description": "This string appears within the server view as a button of a drop-down to manage a server. Clicking it opens a confirmation dialog to destroy the server."
-  },
-  "server_help_access_key_description": {
-    "message": "ចែករំលែកកូនសោចូលប្រើជាមួយមិត្តភក្ដិ ដូច្នេះពួកគេអាចភ្ជាប់ទៅ Outline របស់អ្នក។ ពួកគេអាចប្រើកូនសោចូលប្រើដូចគ្នានៅលើឧបករណ៍របស់ពួកគេទាំងអស់។",
-    "description": "This string appears within a help bubble as a paragraph. The help bubble is displayed when a server is installed. Informs to the user how to share access to their server."
-  },
-  "server_help_access_key_next": {
-    "message": "បន្ទាប់",
-    "description": "This string appears within a help bubble as a button. Clicking it displays the next help bubble."
-  },
-  "server_help_access_key_title": {
-    "message": "បង្កើតកូនសោ ហើយចែកការប្រើប្រាស់",
-    "description": "This string appears within a help bubble as a header. The help bubble provides information about sharing access to the server through access keys."
-  },
-  "server_help_connection_description": {
-    "message": "ចុចទីនេះដើម្បីតំឡើងកម្មវិធីបម្រើ Outline ដោយប្រើកូនសោចូលផ្ទាល់ខ្លួនរបស់អ្នកទៅម៉ាស៊ីនបម្រើមេ Outline របស់អ្នក។",
-    "description": "This string appears within a help bubble as a paragraph. Informs the user how to install the Outline clients and get connected to the server."
-  },
-  "server_help_connection_ok": {
-    "message": "អូខេ យល់ហើយ!",
-    "description": "This string appears within a help bubble as a button. Clicking it dismisses the help bubble."
-  },
-  "server_help_connection_title": {
-    "message": "អ្នកមិនទាន់បានភ្ជាប់នៅឡើយទេ!",
-    "description": "This string appears within a help bubble as a header. The help bubble provides information about connecting to the server."
-  },
-  "server_keys": {
-    "message": "កូនសោ",
-    "description": "This string appears within the server view as the unit of a card that displays the number of server access keys."
-  },
-  "server_my_access_key": {
-    "message": "កូនសោចូលប្រើរបស់ខ្ញុំ",
-    "description": "This string appears within the server view as the header for the default server access key. This key is meant to be used by the server administrator."
-  },
-  "server_name": {
-    "message": "ម៉ាស៊ីនមេរបស់ Outline $SEVER_LOCATION$",
-    "description": "This string appears within the server view and in the application drawer. It is the default name for a newly created server.",
-    "placeholders": {
-      "SEVER_LOCATION": {
-        "content": "{serverLocation}",
-        "example": "New York"
-      }
-    }
-  },
-  "server_remove": {
-    "message": "ដកម៉ាស៊ីនមេចេញ",
-    "description": "This string appears within the server view as a button of a drop-down to manage a server. Clicking it opens a confirmation dialog to remove the server from the application."
-  },
-  "server_settings": {
-    "message": "ការកំណត់",
-    "description": "This string appears within the server view as a header of the section that displays server settings."
-  },
-  "server_unreachable": {
-    "message": "មិនអាចតភ្ជាប់ទៅម៉ាស៊ីនមេបាន",
-    "description": "This string appears within a server view as a header. Displayed when a server's information cannot be displayed because it is not reachable."
-  },
-  "server_unreachable_description": {
-    "message": "យើងកំពុងមានបញ្ហាក្នុងការភ្ជាប់ទៅម៉ាស៊ីនមេនេះ។",
-    "description": "This string appears within a server view as a paragraph. Informs the user that a server's information cannot be displayed because it is not reachable."
-  },
-  "server_unreachable_managed_description": {
-    "message": "ព្យាយាមម្តងទៀត ឬយកម៉ាស៊ីនមេនេះចេញពីកម្មវិធី។",
-    "description": "This string appears within a server view as a header. Displayed when a server's information cannot be displayed because it is not reachable. Prompts the user to retry contacting the server or remove it from the application."
-  },
-  "server_unreachable_manual_description": {
-    "message": "ព្យាយាមម្តងទៀត ឬបំផ្លាញម៉ាស៊ីនមេនេះ និងម៉ាស៊ីននិម្មិត។",
-    "description": "This string appears within a server view as a header. Displayed when a server's information cannot be displayed because it is not reachable. Prompts the user to retry contacting the server or destroy it."
-  },
-  "server_usage": {
-    "message": "ការប្រើប្រាស់ / 30 ថ្ងៃ",
-    "description": "This string appears within the server view as a header of a table column that displays the breakdown of data usage by access key."
-  },
-  "servers_add": {
-    "message": "បន្ថែមម៉ាស៊ីនមេ",
-    "description": "This string appears in an application drawer as a button. Clicking it starts the server setup flow."
-  },
-  "servers_digitalocean": {
-    "message": "ម៉ាស៊ីនមេរបស់ DigitalOcean",
-    "description": "This string appears in an application drawer as the header of a section that displays the list of DigitalOcean servers. DigitalOcean is a cloud server provider name and should not be translated."
-  },
-  "servers_manual": {
-    "message": "ម៉ាស៊ីនមេ",
-    "description": "This string appears in an application drawer as the header of a section that displays a list of servers."
-  },
-  "settings_access_key_port": {
-    "message": "ច្រកសម្រាប់កូនសោចូលប្រើ",
-    "description": "This string appears in the server settings view as a label for the server port number used to create new access keys."
-  },
-  "settings_metrics_header": {
-    "message": "ចែកចាយ រង្វាស់ម៉ែត្រអនាមិក",
-    "description": "This string appears in the server settings view as a header of the section to configure server metrics reporting."
-  },
-  "settings_server_api_url": {
-    "message": "គ្រប់គ្រង API URL",
-    "description": "This string appears in the server settings view as a label for the server's management API URL. API stands for application programming interface; the acronym should not be translated."
-  },
-  "settings_server_cost": {
-    "message": "ចំណាយប្រចាំខែ",
-    "description": "This string appears in the server settings view as a label for the server's monthly cost."
-  },
-  "settings_server_creation": {
-    "message": "បានបង្កើត",
-    "description": "This string appears in the server settings view as a label for the server's creation date."
-  },
-  "settings_server_hostname": {
-    "message": "ឈ្មោះម៉ាស៊ីន",
-    "description": "This string appears in the server settings view as a label for the server's IP address or domain name."
-  },
-  "settings_server_id": {
-    "message": "អត្តសញ្ញាណម៉ាស៊ីនមេ",
-    "description": "This string appears in the server settings view as a label for the server's unique identifier."
-  },
-  "settings_server_info": {
-    "message": "ព័ត៌មានរបស់ម៉ាស៊ីនមេ",
-    "description": "This string appears in the server settings view as a header of the section that displays server details."
-  },
-  "settings_server_location": {
-    "message": "ទីតាំងរបស់ម៉ាស៊ីមេ",
-    "description": "This string appears in the server settings view as a label for the server's location."
-  },
-  "settings_server_name": {
-    "message": "ឈ្មោះ",
-    "description": "This string appears in the server settings view as a label for the server's name."
-  },
-  "settings_server_rename": {
-    "message": "កំណត់ឈ្មោះថ្មីសម្រាប់ម៉ាស៊ីនមេរបស់អ្នក។ ចំណាំថាវានឹងមិនត្រូវបានបង្ហាញលើឧបករណ៍របស់អ្នកប្រើដែលអ្នកបានដាក់ឱ្យភ្ជាប់ទៅវានោះទេ។",
-    "description": "This string appears in the server settings view as a paragraph below the server's name. Informs the user about the implications of renaming a server."
-  },
-  "settings_transfer_limit": {
-    "message": "ទិន្នន័យផ្ទេរដែលអនុញ្ញាត",
-    "description": "This string appears in the server settings view as a label for the server's data transfer allowance."
-  },
-  "setup_action": {
-    "message": "តំឡើង",
-    "description": "This string appears in the server setup view as a button. Clicking it starts the server setup flow. 'Set up' means install and run the Outline server software."
-  },
-  "setup_advanced": {
-    "message": "កម្រិតខ្ពស់",
-    "description": "This string appears in the server setup view as a label. Advanced in this context implies that the user will have to follow technical instructions to install Outline."
-  },
-  "setup_anywhere": {
-    "message": "តំឡើង Outline គ្រប់ទីកន្លែង",
-    "description": "This string appears in the server setup view as a header within a card. The card provides information about installing Outline on an arbitrary cloud server provider."
-  },
-  "setup_create": {
-    "message": "បង្កើតម៉ាស៊ីនមេ",
-    "description": "This string appears in the server setup view as a button. Clicking it starts the server creation flow."
-  },
-  "setup_description": {
-    "message": "មិនមានម៉ាស៊ីនមេ? បង្កើតគណនីជាមួយ ជាមួយនឹង DigitalOcean ។",
-    "description": "This string appears in the server setup view as a sub-header. Prompts the user to create a DigitalOcean account to deploy Outline servers. DigitalOcean is a cloud provider name and should not be translated."
-  },
-  "setup_do_cancel": {
-    "message": "បោះបង់នៅពេលណាក៏បាន",
-    "description": "This string appears in the server setup view as an item of a list describing Outline's features."
-  },
-  "setup_do_cost": {
-    "message": "ត្រឹមតែ $5 ក្នុងមួយខែ",
-    "description": "This string appears in the server setup view as an item of a list describing Outline's features."
-  },
-  "setup_do_create": {
-    "message": "បង្កើតម៉ាស៊ីនមេថ្មីជាមួយគណនី DigitalOcean របស់អ្នកសម្រាប់ការបន្ថែម US$5 / 30 ថ្ងៃសម្រាប់ផ្ទេរទិន្នន័យ 1 TB ។",
-    "description": "This string appears in the server setup view as a paragraph within a card. Describes Outline servers' features when deployed on DigitalOcean. DigitalOcean is a cloud provider name and should not be translated; TB is an abbreviation for terabyte and should not be translated"
-  },
-  "setup_do_data": {
-    "message": "អនុញ្ញាត 1 TB ទិន្នន័យផ្ទេរ",
-    "description": "This string appears in the server setup view as an item of a list describing Outline's features. Refers to the monthly amount of transfer data offered by a cloud server provider. TB is an abbreviation for terabyte and should not be translated."
-  },
-  "setup_do_description": {
-    "message": "វាអាចប្រើពេលពីរនាទី។ អ្នកអាចបំផ្លាញម៉ាស៊ីនមេនេះនៅពេលណាក៏បាន។",
-    "description": "This string appears in the server setup view as a sub-header. Displayed when a server is being created along a progress bar."
-  },
-  "setup_do_easiest": {
-    "message": "ដំណើរការរៀបចំងាយស្រួលបំផុត",
-    "description": "This string appears in the server setup view as an item of a list describing Outline's features."
-  },
-  "setup_do_title": {
-    "message": "ការតំឡើង Outline",
-    "description": "This string appears in the server setup view as a header. Displayed when a server is being created along a progress bar."
-  },
-  "setup_firewall_instructions": {
-    "message": "សេចក្តីណែនាំអំពីជញ្ជាំងភ្លើង",
-    "description": "This string appears in the server setup view as the header of a section that provides instructions to configure the server's firewall."
-  },
-  "setup_recommended": {
-    "message": "ត្រូវបានណែនាំ",
-    "description": "This string appears in the server setup view as a label. Describes Outline servers deployment on DigitalOcean, which is easier from a user perspective."
-  },
-  "setup_simple_commands": {
-    "message": "ពាក្យបញ្ជាដំឡើងសាមញ្ញ",
-    "description": "This string appears in the server setup view as an item of a list describing Outline's features."
-  },
-  "setup_step-by-step": {
-    "message": "សេចក្តីណែនាំរៀបចំតំឡើងមួយជំហានម្តង ៗ",
-    "description": "This string appears in the server setup view as an item of a list describing Outline's features."
-  },
-  "setup_tested": {
-    "message": "បានសាកល្បងលើ VULTR, Linode, និង Liquid Web",
-    "description": "This string appears in the server setup view as an item of a list describing Outline's features. VULTR, Linode, and Liquid Web a cloud provider names and should not be translated."
-  },
-  "setup_title": {
-    "message": "ជ្រើសរើសសេវាកម្មពពកមួយដើម្បីតំឡើង Outlinel។",
-    "description": "This string appears in the server setup view as a header. Prompts the user to create deploy Outline servers on the cloud provider of their choice. 'Set up' means install and run the Outline server software."
-  },
-  "share_description": {
-    "message": "ចម្លងការអញ្ជើញនេះហើយផ្ញើវាពីឧបករណ៍ទំនាក់ទំនងដែលអ្នកទុកចិត្ត។ $START_OF_LINK$ ត្រូវការជំនួយ? $END_OF_LINK$",
-    "description": "This string appears as a sub-header of a dialog that provides instructions on how to share access to a server.",
-    "placeholders": {
-      "END_OF_LINK": {
-        "content": "{closeLink}"
-      },
-      "START_OF_LINK": {
-        "content": "{openLink}"
-      }
-    }
-  },
-  "share_invite": {
-    "message": "អ្នកត្រូវបានអញ្ជើញឱ្យភ្ជាប់ទៅម៉ាស៊ីនមេ Outline របស់ខ្ញុំ។ ប្រើវាដើម្បីចូលអ៉ីនធើណិតអត់មានសុវត្ថិភាព មិនថាអ្នកនៅទីណាទេ។ ធ្វើតាមការណែនាំនៅលើតំណការអញ្ជើញរបស់អ្នកនៅខាងក្រោមដើម្បីទាញយកកម្មវិធីគ្រោងហើយភ្ជាប់។",
-    "description": "This string appears as a paragraph within a dialog that provides an invitation to share access to a server. Belongs to the instructions for the user with whom access is being shared."
-  },
-  "share_invite_copied": {
-    "message": "បានចម្លងទៅក្ដារត្បៀតឯកសារ",
-    "description": "This string appears as a label within a dialog that provides an invitation to share access to a server. Displayed when the user clicks a button to copy the invitation text to the clipboard."
-  },
-  "share_invite_copy": {
-    "message": "ចម្លងការអញ្ជើញ",
-    "description": "This string appears as a button within a dialog that provides an invitation to share access to a server. Clicking it copies the invitation instructions text to the clipboard."
-  },
-  "share_invite_copy_access_key": {
-    "message": "ចម្លងកូនសោចូលប្រើរបស់អ្នក:",
-    "description": "This string appears as a paragraph within a dialog that provides an invitation to share access to a server. Belongs to the instructions for the user with whom access is being shared."
-  },
-  "share_invite_instructions": {
-    "message": "អនុវត្តតាមការណែនាំការអញ្ជើញរបស់យើងនៅលើ GitHub:",
-    "description": "This string appears as a list item within a dialog that provides an invitation to share access to a server. Belongs to the instructions for the user with whom access is being shared."
-  },
-  "share_invite_trouble": {
-    "message": "មានបញ្ហាក្នុងការចូលប្រើតំណអញ្ជើញ?",
-    "description": "This string appears as a paragraph within a dialog that provides an invitation to share access to a server. Belongs to the instructions for the user with whom access is being shared."
-  },
-  "share_title": {
-    "message": "ចែករំលែកការចូល",
-    "description": "This string appears as the header of a dialog that provides an invitation to share access to a server."
-  },
-  "terms_of_service": {
-    "message": "ខ្ញុំបានអានហើយយល់ពី $START_OF_LINK$ លក្ខខណ្ឌប្រើប្រាស់របស់Outline $END_OF_LINK$",
-    "description": "This string appears within an overlay the first time the user runs the app. Prompts the user to review and accept Outline's terms of service.",
-    "placeholders": {
-      "END_OF_LINK": {
-        "content": "{closeLink}"
-      },
-      "START_OF_LINK": {
-        "content": "{openLink}"
-      }
-    }
-  }
+  "about-outline": "Outline \u1782\u17ba\u1787\u17b6\u1782\u1798\u17d2\u179a\u17c4\u1784\u1780\u17bc\u178a\u1785\u17c6\u17a0\u179a\u178a\u17c2\u179b\u1794\u1784\u17d2\u1780\u17be\u178f\u17a1\u17be\u1784\u178a\u17c4\u1799<a href={jigsawUrl}>Jigsaw</a>\u178a\u17be\u1798\u17d2\u1794\u17b8\u1795\u17d2\u178f\u179b\u17cb\u1793\u17bc\u179c\u179c\u17b7\u1792\u17b8\u178a\u17c2\u179b\u1798\u17b6\u1793\u179f\u17bb\u179c\u178f\u17d2\u1790\u17b7\u1797\u17b6\u1796\u179f\u1798\u17d2\u179a\u17b6\u1794\u17cb\u179f\u17d2\u1790\u17b6\u1794\u17d0\u1793\u1796\u17d0\u178f\u17cc\u1798\u17b6\u1793 \u1793\u17b7\u1784\u17a2\u17d2\u1793\u1780\u1780\u17b6\u179f\u17c2\u178f\u178a\u17be\u1798\u17d2\u1794\u17b8\u1794\u17d2\u179a\u17be\u1794\u17d2\u179a\u17b6\u179f\u17cb\u17a2\u17c9\u17b8\u1793\u1792\u17be\u178e\u17b7\u178f\u17d4 <br><br>Outline \u1782\u17d2\u179a\u1794\u17cb\u1782\u17d2\u179a\u1784\u178a\u17c4\u1799 <a href={shadowsocksUrl}>Shadowsocks</a> \u1793\u17b7\u1784\u1787\u17b6\u1780\u1798\u17d2\u1798\u179c\u17b7\u1792\u17b8\u178a\u17c2\u179b\u179f\u17d2\u1790\u17b7\u178f\u1780\u17d2\u1793\u17bb\u1784\u178f\u17c6\u178e\u17b6\u1780\u17cb\u1780\u17b6\u179b\u178a\u17c6\u1794\u17bc\u1784\u17d4 \u17a2\u17d2\u1793\u1780\u17a2\u17b6\u1785\u179a\u17bd\u1798\u1785\u17c6\u178e\u17c2\u1780\u1787\u17bd\u1799\u178a\u179b\u17cb\u1780\u17bc\u178a\u179b\u17be <a href={gitHubUrl}>GitHub</a> \u1793\u17b7\u1784 Follow \u1799\u17be\u1784\u1781\u17d2\u1789\u17bb\u17c6\u179b\u17be <a href={redditUrl}>Reddit</a> \u1793\u17b7\u1784 <a href={mediumUrl}>Medium</a>\u178a\u17be\u1798\u17d2\u1794\u17b8\u1791\u1791\u17bd\u179b\u1794\u17b6\u1793\u1796\u17d0\u178f\u17cc\u1798\u17b6\u1793\u1796\u17c1\u179b\u1799\u17be\u1784\u1794\u1793\u17d2\u1790\u17c2\u1798\u1791\u17c5\u1780\u17b6\u1793\u17cb\u1791\u1798\u17d2\u179a\u1784\u17cb \u1793\u17b7\u1784\u1798\u17bb\u1781\u1784\u17b6\u179a\u1790\u17d2\u1798\u17b8\u17d7\u178a\u1791\u17c3\u1791\u17c0\u178f\u17d4",
+  "about-version": "\u1787\u17c6\u1793\u17b6\u1793\u17cb {version}",
+  "aws-group-assign-0": "\u179a\u17bb\u1780\u179a\u1780\u1791\u17c5 {openLink} \u179c\u178f\u17d2\u1790\u17bb {closeLink}",
+  "aws-group-assign-1": "\u1785\u17bb\u1785 '\u179f\u1780\u1798\u17d2\u1798\u1797\u17b6\u1796' > '\u1794\u178e\u17d2\u178f\u17b6\u1789' > '\u1795\u17d2\u179b\u17b6\u179f\u17cb\u1794\u17d2\u178a\u17bc\u179a\u179f\u1793\u17d2\u178f\u17b7\u179f\u17bb\u1781\u1780\u17d2\u179a\u17bb\u1798' \u1793\u17c5\u1781\u17b6\u1784\u179b\u17be\u17a2\u17c1\u1780\u17d2\u179a\u1784\u17cb '\u179c\u178f\u17d2\u1790\u17bb'\u17d4",
+  "aws-group-assign-2": "\u1787\u17d2\u179a\u17be\u179f\u179a\u17be\u179f\u1780\u17d2\u179a\u17bb\u1798\u179f\u1793\u17d2\u178f\u17b7\u179f\u17bb\u1781 'outline', \u178a\u17c4\u17c7\u1780\u17b6\u179a\u1787\u17d2\u179a\u17be\u179f\u179a\u17be\u179f\u1780\u17d2\u179a\u17bb\u1798\u179f\u1793\u17d2\u178f\u17b7\u179f\u17bb\u1781\u1795\u17d2\u179f\u17c1\u1784\u1791\u17c0\u178f\u17d4",
+  "aws-group-assign-3": "\u1785\u17bb\u1785 '\u1780\u17c6\u178e\u178f\u17cb\u1780\u17d2\u179a\u17bb\u1798\u179f\u1793\u17d2\u178f\u17b7\u179f\u17bb\u1781'\u17d4",
+  "aws-group-create-0": "\u1796\u17c1\u179b\u178a\u17c2\u179b\u17a2\u17d2\u1793\u1780\u1794\u17b6\u1793\u1794\u1784\u17d2\u1780\u17be\u178f \u179c\u178f\u17d2\u1790\u17bbEC2 \u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u17a0\u17be\u1799, \u179f\u17bc\u1798\u1794\u17be\u1780 {openLink} EC2 \u1791\u17bc\u1794\u1789\u17d2\u1787\u17b6\u1782\u17d2\u179a\u1794\u17cb\u1782\u17d2\u179a\u1784 {closeLink}",
+  "aws-group-create-1": "\u1781\u17b6\u1784\u1780\u17d2\u179a\u17c4\u1798 '\u1794\u178e\u17d2\u178f\u17b6\u1789 \u1793\u17b7\u1784 \u179f\u1793\u17d2\u178f\u17b7\u179f\u17bb\u1781', \u1787\u17d2\u179a\u17be\u179f\u1799\u1780 '\u1780\u17d2\u179a\u17bb\u1798\u179f\u1793\u17d2\u178f\u17b7\u179f\u17bb\u1781'\u17d4",
+  "aws-group-create-2": "\u1785\u17bb\u1785\u179b\u17be '\u1794\u1784\u17d2\u1780\u17be\u178f\u1780\u17d2\u179a\u17bb\u1798\u179f\u1793\u17d2\u178f\u17b7\u179f\u17bb\u1781'\u17d4",
+  "aws-group-create-3": "\u179f\u179a\u179f\u17c1\u179a 'outline' \u1780\u17d2\u1793\u17bb\u1784 '\u1788\u17d2\u1798\u17c4\u17c7\u1780\u17d2\u179a\u17bb\u1798\u179f\u1793\u17d2\u178f\u17b7\u179f\u17bb\u1781' \u1793\u17b7\u1784\u179c\u17b6\u179b\u1796\u17b7\u178e\u17cc\u1793\u17b6\u17d4",
+  "aws-group-create-4": "\u1785\u17bb\u1785 '\u1794\u1793\u17d2\u1790\u17c2\u1798\u1794\u1791\u1794\u1789\u17d2\u1787\u17b6'",
+  "aws-group-create-5": "\u1787\u17d2\u179a\u17be\u179f '\u1782\u17d2\u179a\u1794\u17cb\u1785\u179a\u17b6\u1785\u179a\u178e\u17cd' \u1780\u17d2\u179a\u17c4\u1798 '\u1794\u17d2\u179a\u1797\u17c1\u1791' \u1793\u17b7\u1784 '\u1782\u17d2\u179a\u1794\u17cb\u1780\u1793\u17d2\u179b\u17c2\u1784' \u1780\u17d2\u179a\u17c4\u1798  '\u1794\u17d2\u179a\u1797\u1796'",
+  "cancel": "\u1794\u17c4\u17c7\u1794\u1784\u17cb",
+  "city-ams": "\u1791\u17b8\u1780\u17d2\u179a\u17bb\u1784\u17a2\u17b6\u17c6\u179f\u17d2\u1791\u17c2\u178a\u17b6\u17c6",
+  "city-blr": "\u1791\u17b8\u1780\u17d2\u179a\u17bb\u1784\u1794\u17b9\u1784\u1780\u17b6\u17a1\u17bc",
+  "city-fra": "\u1791\u17b8\u1780\u17d2\u179a\u17bb\u1784\u17a0\u17d2\u179c\u17d2\u179a\u17c2\u1784\u17a0\u17d2\u179c\u17be\u178f",
+  "city-lon": "\u1791\u17b8\u1780\u17d2\u179a\u17bb\u1784\u17a1\u17bb\u1784\u178a\u17cd",
+  "city-nyc": "\u1791\u17b8\u1780\u17d2\u179a\u17bb\u1784\u1789\u17bc\u179c\u1799\u17c9\u1780",
+  "city-sfo": "\u1791\u17b8\u1780\u17d2\u179a\u17bb\u1784\u179f\u17c1\u1793\u200b\u17a0\u17d2\u179c\u17d2\u179a\u17c1\u200b\u1793\u200b\u179f\u17ca\u17b8\u200b\u179f\u17d2\u1780\u17bc",
+  "city-sgp": "\u179f\u17b7\u1784\u17d2\u17a0\u1794\u17bb\u179a\u17b8",
+  "city-tor": "\u1791\u17b8\u1780\u17d2\u179a\u17bb\u1784\u178f\u17bc\u179a\u17c9\u17bb\u1793\u178f\u17bc",
+  "close": "\u1794\u17b7\u1791",
+  "confirmation-server-destroy": "\u17a2\u17d2\u1793\u1780\u1794\u17d2\u179a\u17be\u178a\u17c2\u179b\u1798\u17b6\u1793\u179f\u17d2\u179a\u17b6\u1794\u17cb\u1793\u17b9\u1784\u1794\u17b6\u178f\u17cb\u1794\u1784\u17cb\u1780\u17b6\u179a\u1785\u17bc\u179b\u1794\u17d2\u179a\u17be\u17d4 \u179f\u1780\u1798\u17d2\u1798\u1797\u17b6\u1796\u1793\u17c1\u17c7\u1798\u17b7\u1793\u17a2\u17b6\u1785\u1798\u17b7\u1793\u1792\u17d2\u179c\u17be\u179c\u17b7\u1789\u1794\u17b6\u1793\u1791\u17c1\u17d4",
+  "confirmation-server-destroy-title": "\u1794\u17c6\u1795\u17d2\u179b\u17b6\u1789\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1?",
+  "confirmation-server-remove": "\u179f\u1780\u1798\u17d2\u1798\u1797\u17b6\u1796\u1793\u17c1\u17c7\u178a\u1780\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u1785\u17c1\u1789\u1796\u17b8 \u17a2\u17d2\u1793\u1780\u1782\u17d2\u179a\u1794\u17cb\u1782\u17d2\u179a\u1784 Outline \u1794\u17c9\u17bb\u1793\u17d2\u178f\u17c2\u1798\u17b7\u1793\u179a\u17b6\u17c6\u1784\u1781\u17d2\u1791\u1794\u17cb\u1780\u17b6\u179a\u1785\u17bc\u179b\u1794\u17d2\u179a\u17be\u1794\u17d2\u179a\u17bc\u1780\u179f\u17ca\u17b8\u1791\u17c5\u1780\u17b6\u1793\u17cb\u17a2\u17d2\u1793\u1780\u1794\u17d2\u179a\u17be\u1794\u17d2\u179a\u17b6\u179f\u17cb\u1791\u17c1\u17d4 \u17a2\u17d2\u1793\u1780\u1793\u17c5\u178f\u17c2\u178f\u17d2\u179a\u17bc\u179c\u1780\u17b6\u179a\u179b\u17bb\u1794\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u178a\u17c4\u1799\u178a\u17c3\u1785\u17c1\u1789\u1796\u17b8\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1794\u1798\u17d2\u179a\u17be\u17d4",
+  "confirmation-server-remove-title": "\u178a\u1780\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u1785\u17c1\u1789?",
+  "destroy": "\u1794\u17c6\u1795\u17d2\u179b\u17b6\u1789",
+  "digitalocean-disconnect": "\u1795\u17d2\u178f\u17b6\u1785\u17cb",
+  "digitalocean-disconnect-account": "\u1795\u17d2\u178f\u17b6\u1785\u17cb\u1782\u178e\u1793\u17b8\u1796\u17b8 DigitalOcean",
+  "digitalocean-unreachable": "\u1780\u17c6\u17a0\u17bb\u179f\u1793\u17c1\u17c7\u17a2\u17b6\u1785\u1794\u178e\u17d2\u178f\u17b6\u179b\u1798\u1780\u1796\u17b8\u1787\u1789\u17d2\u1787\u17b6\u17c6\u1784\u1797\u17d2\u179b\u17be\u1784\u1793\u17c5\u179b\u17be\u1794\u178e\u17d2\u178f\u17b6\u1789\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u17ac\u1794\u178e\u17d2\u178f\u17b6\u1789\u1794\u1789\u17d2\u17a0\u17b6\u1794\u178e\u17d2\u178f\u17c4\u17c7\u17a2\u17b6\u179f\u1793\u17d2\u1793\u1787\u17b6\u1798\u17bd\u1799\u1793\u17b9\u1784 digitalocean.com",
+  "done": "\u179a\u17bd\u1785\u179a\u17b6\u179b\u17cb",
+  "error-connectivity": "\u1799\u17be\u1784\u1780\u17c6\u1796\u17bb\u1784\u1798\u17b6\u1793\u1794\u1789\u17d2\u17a0\u17b6\u1780\u17d2\u1793\u17bb\u1784\u1780\u17b6\u179a\u1797\u17d2\u1787\u17b6\u1794\u17cb\u1791\u17c5\u1782\u178e\u1793\u17b8 DigitalOcean \u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u17d4 \u1780\u179a\u178e\u17b8\u1793\u17c1\u17c7\u1787\u17bd\u1793\u1780\u17b6\u179b\u1787\u17b6\u1794\u1789\u17d2\u17a0\u17b6\u1794\u178e\u17d2\u178f\u17c4\u17c7\u17a2\u17b6\u179f\u1793\u17d2\u1793\u1798\u17bd\u1799 \u1787\u17b6\u1798\u17bd\u1799 DigitalOcean \u179a\u17ba\u1787\u17b6\u1798\u17bd\u1799\u1780\u17b6\u179a\u1797\u17d2\u1787\u17b6\u1794\u17cb\u17a2\u17c9\u17b8\u1793\u1792\u17be\u178e\u17b7\u178f\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u17d4 \u1794\u17d2\u179a\u179f\u17b7\u1793\u1794\u17be\u1780\u17b6\u179a\u1796\u17d2\u1799\u17b6\u1799\u17b6\u1798\u17a1\u17be\u1784\u179c\u17b7\u1789\u1798\u17b7\u1793\u178a\u17c6\u178e\u17be\u179a\u1780\u17b6\u179a\u1791\u17c1 \u1780\u17b6\u179a\u1785\u17bc\u179b\u1791\u17c5\u1780\u17d2\u1793\u17bb\u1784\u1782\u178e\u1793\u17b8 DigitalOcean \u1798\u17d2\u178f\u1784\u1791\u17c0\u178f \u17a2\u17b6\u1785\u178a\u17c4\u17c7\u179f\u17d2\u179a\u17b6\u1799\u1794\u1789\u17d2\u17a0\u17b6\u1793\u17c1\u17c7\u1794\u17b6\u1793\u17d4",
+  "error-connectivity-title": "\u1794\u1789\u17d2\u17a0\u17b6\u1780\u17b6\u179a\u178f\u1797\u17d2\u1787\u17b6\u1794\u17cb",
+  "error-do-account-info": "\u1794\u17b6\u1793\u1794\u179a\u17b6\u1787\u17d0\u1799\u1780\u17d2\u1793\u17bb\u1784\u1780\u17b6\u179a\u1791\u1791\u17bd\u179b\u1794\u17b6\u1793\u1796\u17d0\u178f\u17cc\u1798\u17b6\u1793\u17a2\u17c6\u1796\u17b8\u1782\u178e\u1793\u17b8 DigitalOcean",
+  "error-do-auth": "\u1780\u17b6\u179a\u1795\u17d2\u1791\u17c0\u1784\u1795\u17d2\u1791\u17b6\u178f\u17cb\u1797\u17b6\u1796\u178f\u17d2\u179a\u17b9\u1798\u178f\u17d2\u179a\u17bc\u179c\u1787\u17b6\u1798\u17bd\u1799 DigitalOcean \u1794\u17b6\u1793\u1794\u179a\u17b6\u1787\u17d0\u1799",
+  "error-do-regions": "\u1794\u17b6\u1793\u1794\u179a\u17b6\u1787\u17d0\u1799\u1780\u17d2\u1793\u17bb\u1784\u1780\u17b6\u179a\u1799\u1780\u1794\u1789\u17d2\u1787\u17b8\u1788\u17d2\u1798\u17c4\u17c7\u1794\u17d2\u179a\u1791\u17c1\u179f\u178a\u17c2\u179b\u1798\u17b6\u1793",
+  "error-feedback": "\u1794\u17b6\u1793\u1794\u179a\u17b6\u1787\u17d0\u1799\u1780\u17d2\u1793\u17bb\u1784\u1780\u17b6\u179a\u1794\u1789\u17d2\u1787\u17bc\u1793\u1798\u178f\u17b7\u17a2\u17d2\u1793\u1780\u1794\u17d2\u179a\u17be\u17d4 \u179f\u17bc\u1798\u200b\u1796\u17d2\u1799\u17b6\u1799\u17b6\u1798\u200b\u1798\u17d2\u178f\u1784\u200b\u1791\u17c0\u178f\u17d4",
+  "error-key-add": "\u1794\u179a\u17b6\u1787\u17d0\u1799\u1780\u17d2\u1793\u17bb\u1784\u1780\u17b6\u179a\u1794\u1789\u17d2\u1787\u17bc\u179b\u1780\u17bc\u1793\u179f\u17c4",
+  "error-key-remove": "\u1794\u179a\u17b6\u1787\u17d0\u1799\u1780\u17d2\u1793\u17bb\u1784\u1780\u17b6\u179a\u178a\u1780\u1785\u17c1\u1789\u1793\u17bc\u179c\u1780\u17bc\u1793\u179f\u17c4",
+  "error-key-rename": "\u1794\u179a\u17b6\u1787\u17d0\u1799\u1780\u17d2\u1793\u17bb\u1784\u1780\u17b6\u179a\u1794\u17d2\u178f\u17bc\u179a\u1788\u17d2\u1798\u17c4\u17c7\u1780\u17bc\u1793\u179f\u17c4",
+  "error-keys-get": "\u1794\u179a\u17b6\u1787\u17d0\u1799\u1780\u17d2\u1793\u17bb\u1784\u1795\u17d2\u1791\u17bb\u1780\u1780\u17bc\u1793\u179f\u17c4",
+  "error-licenses": "\u1794\u179a\u17b6\u1787\u17d0\u1799\u1780\u17d2\u1793\u17bb\u1784\u1780\u17b6\u179a\u1795\u17d2\u1791\u17bb\u1780\u17a2\u17b6\u1787\u17d2\u1789\u17b6\u1794\u178e\u17d2\u178e",
+  "error-metrics": "\u1780\u17c6\u17a0\u17bb\u179f\u1780\u17d2\u1793\u17bb\u1784\u1780\u17b6\u179a\u1780\u17c6\u178e\u178f\u17cb\u1794\u17d2\u179a\u1796\u17d0\u1793\u17d2\u1792\u1798\u17c9\u17c2\u178f\u17d2\u179a",
+  "error-server-creation": "\u1798\u17b6\u1793\u1794\u1789\u17d2\u17a0\u17b6\u1780\u17d2\u1793\u17bb\u1784\u1780\u17b6\u179a\u1794\u1784\u17d2\u1780\u17be\u178f\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1 Outline \u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u17d4",
+  "error-server-destroy": "\u1794\u179a\u17b6\u1787\u17d0\u1799\u1780\u17d2\u1793\u17bb\u1784\u1780\u17b6\u179a\u1794\u17c6\u1795\u17d2\u179b\u17b6\u1789\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1",
+  "error-server-removed": "{serverName}\u1798\u17b7\u1793\u1798\u17b6\u1793\u1793\u17c5\u1780\u17d2\u1793\u17bb\u1784\u1782\u178e\u1793\u17b8 DigitalOcean \u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u1791\u17c0\u178f\u1791\u17c1\u17d4",
+  "error-server-rename": "\u1794\u179a\u17b6\u1787\u17d0\u1799\u1780\u17d2\u1793\u17bb\u1784\u1780\u17b6\u179a\u1794\u17d2\u178a\u17bc\u179a\u1788\u17d2\u1798\u17c4\u17c7\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1",
+  "error-server-unreachable": "\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1 Outline \u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u178f\u17d2\u179a\u17bc\u179c\u1794\u17b6\u1793\u178f\u17c6\u17a1\u17be\u1784\u1799\u17c9\u17b6\u1784\u178f\u17d2\u179a\u17b9\u1798\u178f\u17d2\u179a\u17bc\u179c \u1794\u17c9\u17bb\u1793\u17d2\u178f\u17c2\u1799\u17be\u1784\u1798\u17b7\u1793\u17a2\u17b6\u1785\u1797\u17d2\u1787\u17b6\u1794\u17cb\u179c\u17b6\u1794\u17b6\u1793\u1791\u17c1\u17d4 \u1797\u17b6\u1782\u1785\u17d2\u179a\u17be\u1793\u1793\u17c3\u1780\u179a\u178e\u17b8\u1793\u17c1\u17c7\u1782\u17ba\u178a\u17c4\u1799\u179f\u17b6\u179a\u178f\u17c2\u1794\u1791\u1794\u1789\u17d2\u1787\u17b6\u179a\u1794\u179f\u17cb\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u1787\u1789\u17d2\u1787\u17b6\u17c6\u1784\u1797\u17d2\u179b\u17be\u1784\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u1780\u17c6\u1796\u17bb\u1784\u179a\u17b6\u179a\u17b6\u17c6\u1784\u1780\u17b6\u179a\u178f\u1797\u17d2\u1787\u17b6\u1794\u17cb\u1785\u17bc\u179b\u17d4 \u179f\u17bc\u1798\u1796\u17b7\u1793\u17b7\u178f\u17d2\u1799\u1796\u17bd\u1780\u179c\u17b6\u17a1\u17be\u1784\u179c\u17b7\u1789\u17a0\u17be\u1799\u178f\u17d2\u179a\u17bc\u179c\u1794\u17d2\u179a\u17b6\u1780\u178a\u1790\u17b6\u17a2\u1793\u17bb\u1789\u17d2\u1789\u17b6\u178f\u17b1\u17d2\u1799\u1798\u17b6\u1793\u1780\u17b6\u179a\u178f\u1797\u17d2\u1787\u17b6\u1794\u17cb TCP \u1785\u17bc\u179b\u1793\u17c5\u179b\u17be\u1785\u17d2\u179a\u1780\u1785\u17b6\u1794\u17cb\u1796\u17b8 1024 \u178a\u179b\u17cb 65535 \u17d4",
+  "error-server-unreachable-title": "\u1798\u17b7\u1793\u17a2\u17b6\u1785\u178f\u1797\u17d2\u1787\u17b6\u1794\u17cb\u1791\u17c5\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1 Outline \u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780",
+  "error-servers-removed": "{serverNames}\u179b\u17c2\u1784\u1798\u17b6\u1793\u1794\u17d2\u179a\u17be\u1794\u17d2\u179a\u17b6\u179f\u17cb\u1780\u17d2\u1793\u17bb\u1784 \u1782\u178e\u1793\u17b8 Digital Ocean.",
+  "feedback-cloud-provider": "\u1787\u17d2\u179a\u17be\u179f\u179a\u17be\u179f\u179c\u17c1\u17b6\u1780\u1798\u17d2\u1798 \u1796\u1796\u1780 \u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780",
+  "feedback-cloud-provider-error": "\u179f\u17bc\u1798\u1787\u17d2\u179a\u17be\u179f\u179a\u17be\u179f\u1799\u1780\u179f\u17c1\u179c\u17b6\u1780\u1798\u17d2\u1798 \u1796\u1796\u1780 \u1798\u17bd\u1799",
+  "feedback-connection": "\u1798\u17b7\u1793\u17a2\u17b6\u1785\u178f\u1797\u17d2\u1787\u17b6\u1794\u17cb\u1791\u17c5\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u179a\u1794\u179f\u17cb\u1781\u17d2\u1789\u17bb\u17c6\u1791\u17c1",
+  "feedback-connection-others": "\u17a2\u17d2\u1793\u1780\u1795\u17d2\u179f\u17c1\u1784\u1798\u17b7\u1793\u17a2\u17b6\u1785\u1797\u17d2\u1787\u17b6\u1794\u17cb\u1798\u1780\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u179a\u1794\u179f\u17cb\u1781\u17d2\u1789\u17bb\u17c6\u1791\u17c1",
+  "feedback-disclaimer": "\u179f\u17bc\u1798\u1780\u178f\u17cb\u179f\u1798\u17d2\u1782\u17b6\u179b\u17cb\u1790\u17b6\u1780\u17d2\u179a\u17bb\u1798\u1780\u17b6\u179a\u1784\u17b6\u179a\u179a\u1794\u179f\u17cb\u1799\u17be\u1784\u17a2\u17b6\u1785\u1786\u17d2\u179b\u17be\u1799\u178f\u1794\u1787\u17b6\u1797\u17b6\u179f\u17b6\u17a2\u1784\u17cb\u1782\u17d2\u179b\u17c1\u179f\u1794\u17b6\u1793\u17d4",
+  "feedback-email": "\u17a2\u17b6\u179f\u17d0\u1799\u178a\u17d2\u178b\u17b6\u1793 \u17a2\u17c9\u17b8\u1798\u17c9\u17c2\u179b (\u1787\u17b6\u1787\u1798\u17d2\u179a\u17be\u179f)",
+  "feedback-error": "\u179f\u17bc\u1798\u179f\u179a\u179f\u17c1\u179a\u1798\u178f\u17b7\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780",
+  "feedback-explanation-install": "\u1780\u17c6\u17a0\u17bb\u179f\u1798\u17bd\u1799\u1794\u17b6\u1793\u1780\u17be\u178f\u17a1\u17be\u1784\u1793\u17c5\u1796\u17c1\u179b\u178a\u17c2\u179b\u1796\u17d2\u1799\u17b6\u1799\u17b6\u1798\u178a\u17c6\u17a1\u17be\u1784 Outline \u179b\u17be\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u17d4 \u1794\u17d2\u179a\u179f\u17b7\u1793\u1794\u17be\u17a2\u17d2\u1793\u1780\u1798\u17b7\u1793\u17a2\u17b6\u1785\u178a\u17c4\u17c7\u179f\u17d2\u179a\u17b6\u1799\u1794\u1789\u17d2\u17a0\u17b6\u1794\u17b6\u1793\u1791\u17c1 \u179f\u17bc\u1798\u1796\u17b7\u1785\u17b6\u179a\u178e\u17b6\u1794\u1789\u17d2\u1787\u17bc\u1793\u1798\u178f\u17b7\u1799\u17c4\u1794\u179b\u17cb\u1798\u1780\u1799\u17be\u1784 \u17a0\u17be\u1799\u1794\u17d2\u179a\u17b6\u1794\u17cb\u17a2\u17b6\u179f\u1799\u178a\u17d2\u178b\u17b6\u1793\u17a2\u17c9\u17b8\u1798\u17c9\u17c2\u179b\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780 (\u1787\u17b6\u1787\u1798\u17d2\u179a\u17be\u179f) \u178a\u17bc\u1785\u17d2\u1793\u17c1\u17c7\u1799\u17be\u1784\u17a2\u17b6\u1785\u1786\u17d2\u179b\u17be\u1799\u178f\u1794\u1791\u17c5\u17a2\u17d2\u1793\u1780\u179c\u17b7\u1789\u17d4",
+  "feedback-general": "\u1798\u178f\u17b7\u1791\u17bc\u1791\u17c5",
+  "feedback-install": "\u1798\u17b6\u1793\u1794\u1789\u17d2\u17a0\u17b6\u1780\u17d2\u1793\u17bb\u1784\u1780\u17b6\u179a\u178a\u17c6\u17a1\u17be\u1784 Outline",
+  "feedback-label": "\u1798\u17b7\u178f\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780",
+  "feedback-management": "\u1798\u17b6\u1793\u1794\u1789\u17d2\u17a0\u17b6\u1780\u17d2\u1793\u17bb\u1784\u1780\u17b6\u179a\u1782\u17d2\u179a\u1794\u17cb\u1782\u17d2\u179a\u1784\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u179a\u1794\u179f\u17cb\u1781\u17d2\u1789\u17bb\u17c6",
+  "feedback-other": "\u1795\u17d2\u179f\u17c1\u1784\u17d7",
+  "feedback-privacy": "\u1798\u178f\u17b7\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780 \u17a2\u17b6\u179f\u1799\u178a\u17d2\u178b\u17b6\u1793\u17a2\u17c9\u17b8\u1798\u17c9\u17c2\u179b (\u1794\u17be\u17a2\u17d2\u1793\u1780\u1794\u17b6\u1793\u1795\u17d2\u178f\u179b\u17cb\u17b2\u17d2\u1799) \u1793\u17b7\u1784\u1796\u17d0\u178f\u17cc\u1798\u17b6\u1793\u1794\u1793\u17d2\u1790\u17c2\u1798\u179f\u17c6\u178a\u17c5\u1791\u17c5\u179b\u17be {openLink} \u1782\u17c4\u179b\u1793\u1799\u17c4\u1794\u17b6\u1799\u17af\u1780\u1787\u1793\u1797\u17b6\u1796 {closeLink} \u178a\u17c2\u179b\u1793\u17b9\u1784\u178f\u17d2\u179a\u17bc\u179c\u1794\u17b6\u1793\u1782\u17c1\u1795\u17d2\u1789\u17be\u1791\u17c5\u1780\u17b6\u1793\u17cb\u1780\u17d2\u179a\u17bb\u1798\u1780\u17b6\u179a\u1784\u17b6\u179a\u179a\u1794\u179f\u17cb Outline\u17d4",
+  "feedback-submit": "\u178a\u17b6\u1780\u17cb\u1794\u1789\u17d2\u1785\u17bc\u179b",
+  "feedback-suggestion": "\u179f\u17c6\u178e\u17be\u179a",
+  "feedback-title-generic": "\u1795\u17d2\u1789\u17be\u1798\u178f\u17b7",
+  "feedback-title-install": "\u1780\u17b6\u179a\u178f\u17a1\u17be\u1784\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u179a\u1794\u179f\u17cb Outline \u1794\u179a\u17b6\u1787\u17d0\u1799",
+  "gcp-firewall-assign-0": "\u179a\u17bb\u1780\u179a\u1780\u1791\u17c5\u1798\u17be\u179b {openLink} \u17a2\u17c1\u1780\u17d2\u179a\u1784\u17cb \u179c\u178f\u17d2\u1790\u17bbVM {closeLink}\u17d4",
+  "gcp-firewall-assign-1": "\u1785\u17bb\u1785\u179b\u17be \u179c\u178f\u17d2\u1790\u17bb \u1780\u1793\u17d2\u179b\u17c2\u1784\u178a\u17c2\u179b\u17a2\u17d2\u1793\u1780\u1785\u1784\u17cb\u1794\u1784\u17d2\u1780\u17be\u178f\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1794\u1798\u17d2\u179a\u17be Outline\u17d4",
+  "gcp-firewall-assign-2": "\u1785\u17bb\u1785 '\u1780\u17c2\u179f\u1798\u17d2\u179a\u17bd\u179b' \u1793\u17c5\u1781\u17b6\u1784\u179b\u17be\u17a2\u17c1\u1780\u17d2\u179a\u1784\u17cb\u1793\u17c3\u1796\u17d0\u178f\u17cc\u1798\u17b6\u1793\u179b\u17c6\u17a2\u178f\u17cb \u179c\u178f\u17d2\u1790\u17bbVM",
+  "gcp-firewall-assign-3": "\u179f\u179a\u179f\u17c1\u179a 'outline' \u1780\u17d2\u1793\u17bb\u1784\u179c\u17b6\u179b '\u179f\u17d2\u179b\u17b6\u1780\u1794\u178e\u17d2\u178f\u17b6\u1789'\u17d4",
+  "gcp-firewall-assign-4": "\u1785\u17bb\u1785 '\u179a\u1780\u17d2\u179f\u17b6\u1791\u17bb\u1780'\u17d4",
+  "gcp-firewall-create-0": "{openLink}\u1794\u1789\u17d2\u1787\u17bc\u179b\u1794\u1791\u1794\u1789\u17d2\u1787\u17b6\u1790\u17d2\u1798\u17b8\u1798\u17bd\u1799\u179a\u1794\u179f\u17cb\u1787\u1789\u17d2\u1787\u17b6\u17c6\u1784\u1797\u17d2\u179b\u17be\u1784 {closeLink} \u1780\u17d2\u1793\u17bb\u1784\u1782\u1798\u17d2\u179a\u17c4\u1784 Computer Engine \u17d4",
+  "gcp-firewall-create-1": "\u179f\u179a\u179f\u17c1\u179a 'outline' \u1780\u17d2\u1793\u17bb\u1784\u179c\u17b6\u179b '\u1788\u17d2\u1798\u17c4\u17c7'",
+  "gcp-firewall-create-2": "\u179f\u179a\u179f\u17c1\u179a 'outline' \u1780\u17d2\u1793\u17bb\u1784\u179c\u17b6\u179b '\u179f\u17d2\u179b\u17b6\u1780\u1782\u17c4\u179b\u178a\u17c5'",
+  "gcp-firewall-create-3": "\u179f\u179a\u179f\u17c1\u179a '0.0.0.0/0' \u1780\u17d2\u1793\u17bb\u1784 '\u1787\u17bc\u17bd\u179a\u1794\u17d2\u179a\u1797\u1796 IP'",
+  "gcp-firewall-create-4": "\u1787\u17d2\u179a\u17be\u179f '\u17a2\u1793\u17bb\u1789\u17d2\u1789\u17b6\u178f\u1791\u17b6\u17c6\u1784\u17a2\u179f\u17cb' \u1780\u17d2\u179a\u17c4\u1798 '\u1796\u17b7\u1792\u17b8\u1780\u17b6\u179a \u1793\u17b7\u1784\u1785\u17d2\u179a\u1780'\u17d4",
+  "gcp-firewall-create-5": "\u1785\u17bb\u1785 '\u1794\u1784\u17d2\u1780\u17be\u178f'",
+  "key": "\u1780\u17bc\u1793\u179f\u17c4",
+  "manual-server-assign-firewall": "\u1780\u17c6\u178e\u178f\u17cb\u1794\u1791\u1794\u1789\u17d2\u1787\u17b6\u1787\u1789\u17d2\u1787\u17b6\u17c6\u1784\u1797\u17d2\u179b\u17be\u1784",
+  "manual-server-assign-group": "\u1780\u17c6\u178e\u178f\u17cb\u1780\u17d2\u179a\u17bb\u1798\u179f\u1793\u17d2\u178f\u17b7\u179f\u17bb\u1781",
+  "manual-server-create-firewall": "\u1794\u1784\u17d2\u1780\u17be\u178f\u1794\u1791\u1794\u1789\u17d2\u1787\u17b6\u1798\u17bd\u1799\u179a\u1794\u179f\u17cb\u1787\u1789\u17d2\u1787\u17b6\u17c6\u1784\u1797\u17d2\u179b\u17be\u1784",
+  "manual-server-create-group": "\u1794\u1784\u17d2\u1780\u17be\u178f\u1780\u17d2\u179a\u17bb\u1798\u179f\u1793\u17d2\u178f\u17b7\u179f\u17bb\u1781\u1798\u17bd\u1799",
+  "manual-server-description": "\u1787\u17c6\u17a0\u17ca\u17b6\u1793\u1791\u17b6\u17c6\u1784\u1793\u17c1\u17c7\u1793\u17b9\u1784\u1787\u17bd\u1799\u17a2\u17d2\u1793\u1780\u1780\u17d2\u1793\u17bb\u1784\u1780\u17b6\u179a\u178f\u17a1\u17be\u1784 Outline \u179b\u17be{cloudProvider} \u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1 Linux",
+  "manual-server-firewall": "\u1780\u17c6\u178e\u178f\u17cb\u179a\u1785\u1793\u17b6\u179f\u1798\u17d2\u1796\u17d0\u1793\u17d2\u1792\u1787\u1789\u17d2\u1787\u17b6\u17c6\u1784\u1797\u17d2\u179b\u17be\u1784\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780",
+  "manual-server-install-paste": "\u1794\u17b7\u1791\u1797\u17d2\u1787\u17b6\u1794\u17cb\u179b\u1791\u17d2\u1792\u1795\u179b\u178a\u17c6\u17a1\u17be\u1784\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u1793\u17c5\u1791\u17b8\u1793\u17c1\u17c7\u17d4",
+  "manual-server-install-run": "\u1785\u17bc\u179b\u1791\u17c5\u1780\u17d2\u1793\u17bb\u1784\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780 \u17a0\u17be\u1799\u179a\u178f\u17cb\u1796\u17b6\u1780\u17d2\u1799\u1794\u1789\u17d2\u1787\u17b6\u1793\u17c1\u17c7\u17d4",
+  "manual-server-instructions": "\u179f\u17c1\u1785\u1780\u17d2\u178f\u17b8\u178e\u17c2\u1793\u17b6\u17c6",
+  "manual-server-show-me": "\u1794\u1784\u17d2\u17a0\u17b6\u1789\u1780\u1793\u17d2\u179b\u17c2\u1784\u1781\u17d2\u1789\u17bb\u17c6",
+  "manual-server-title": "\u17a2\u1793\u17bb\u179c\u178f\u17d2\u178f\u178f\u17b6\u1798\u1780\u17b6\u179a\u178e\u17c2\u1793\u17b6\u17c6\u178a\u17bc\u1785\u1781\u17b6\u1784\u1780\u17d2\u179a\u17c4\u1798",
+  "metrics-description": "\u1785\u17c2\u1780\u179a\u17c6\u179b\u17c2\u1780\u179a\u1784\u17d2\u179c\u17b6\u179f\u17cb\u17a2\u1793\u17b6\u1798\u17b7\u1780\u178a\u17be\u1798\u17d2\u1794\u17b8\u1787\u17bd\u1799\u1794\u1784\u17d2\u1780\u17be\u1793\u1797\u17b6\u1796\u1787\u17bf\u1787\u17b6\u1780\u17cb\u1793\u17b7\u1784\u1780\u17b6\u179a\u17a2\u1793\u17bb\u179c\u178f\u17d2\u178f\u1793\u17c3 Outline \u179f\u1798\u17d2\u179a\u17b6\u1794\u17cb\u17a2\u17d2\u1793\u1780 \u1793\u17b7\u1784\u179f\u1798\u17d2\u179a\u17b6\u1794\u17cb\u17a2\u17d2\u1793\u1780\u178e\u17b6\u178a\u17c2\u179b\u17a2\u17d2\u1793\u1780\u1785\u17c2\u1780\u179a\u17c6\u179b\u17c2\u1780\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u1787\u17b6\u1798\u17bd\u1799\u1782\u17d2\u1793\u17b6\u17d4 {openLink}\u1798\u17be\u179b\u1794\u1793\u17d2\u1790\u17c2\u1798\u17d4 {closeLink}",
+  "metrics-share": "\u1785\u17c2\u1780\u179a\u17c6\u179b\u17c2\u1780\u1794\u17d2\u179a\u1796\u17d0\u1793\u17d2\u1792\u1798\u17c9\u17c2\u178f\u17d2\u179a",
+  "metrics-skip": "\u179a\u17c6\u179b\u1784",
+  "metrics-title": "\u1780\u17b6\u179a\u1785\u17c2\u1780\u179a\u17c6\u179b\u17c2\u1780\u1794\u17d2\u179a\u1796\u17d0\u1793\u17d2\u1792\u1798\u17c9\u17c2\u178f\u17d2\u179a",
+  "nav-about": "\u17a2\u17c6\u1796\u17b8",
+  "nav-data-collection": "\u1780\u17b6\u179a\u200b\u1794\u17d2\u179a\u1798\u17bc\u179b\u200b\u1791\u17b7\u1793\u17d2\u1793\u1793\u17d0\u1799",
+  "nav-feedback": "\u1798\u178f\u17b7\u17a2\u17d2\u1793\u1780\u1794\u17d2\u179a\u17be",
+  "nav-help": "\u1787\u17c6\u1793\u17bd\u1799",
+  "nav-licenses": "\u17a2\u17b6\u1787\u17d2\u1789\u17b6\u1794\u17d0\u178e\u17d2\u178e",
+  "nav-privacy": "\u1797\u17b6\u1796\u17af\u1780\u1787\u1793",
+  "nav-terms": "\u179b\u1780\u17d2\u1781\u1781\u178e\u17d2\u178c",
+  "notification-app-update": "\u1780\u17c6\u178e\u17c2\u1793\u17c3\u1780\u1798\u17d2\u1798\u179c\u17b7\u1792\u17b8 Outline Manager \u178f\u17d2\u179a\u17bc\u179c\u1794\u17b6\u1793\u1792\u17d2\u179c\u17be\u1794\u1785\u17d2\u1785\u17bb\u1794\u17d2\u1794\u1793\u17d2\u1793\u1797\u17b6\u1796\u17a0\u17be\u1799\u178f\u17d2\u179a\u17bc\u179c\u1794\u17b6\u1793\u1791\u17b6\u1789\u1799\u1780\u179a\u17bd\u1785\u179a\u17b6\u179b\u17cb\u17d4 \u179c\u17b6\u1793\u17b9\u1784\u178f\u17d2\u179a\u17bc\u179c\u1794\u17b6\u1793\u178a\u17c6\u17a1\u17be\u1784\u1793\u17c5\u1796\u17c1\u179b\u178a\u17c2\u179b\u17a2\u17d2\u1793\u1780\u1785\u17b6\u1794\u17cb\u1795\u17d2\u178f\u17be\u1798\u1780\u1798\u17d2\u1798\u179c\u17b7\u1792\u17b8\u17a1\u17be\u1784\u179c\u17b7\u1789\u17d4",
+  "notification-feedback-thanks": "\u179f\u17bc\u1798\u17a2\u179a\u1782\u17bb\u178e\u179f\u1798\u17d2\u179a\u17b6\u1794\u17cb\u1780\u17b6\u179a\u1787\u17bd\u1799\u1799\u17be\u1784\u17b1\u17d2\u1799\u1794\u17d2\u179a\u179f\u17be\u179a\u17a1\u17be\u1784! \u1799\u17be\u1784\u1785\u1784\u17cb\u1794\u17b6\u1793\u1798\u178f\u17b7\u1799\u17c4\u1794\u179b\u17cb\u1796\u17b8\u17a2\u17d2\u1793\u1780\u17d4",
+  "notification-key-added": "\u1794\u17b6\u1793\u1794\u1789\u17d2\u1785\u17bc\u179b\u1780\u17bc\u1793\u179f\u17c4",
+  "notification-key-removed": "\u1780\u17bc\u1793\u179f\u17c4\u178f\u17d2\u179a\u17bc\u179c\u178a\u1780\u1785\u17c1\u1789",
+  "notification-server-destroyed": "\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1798\u17c1\u178f\u17d2\u179a\u17bc\u179c\u1794\u17b6\u1793\u1794\u17c6\u1795\u17d2\u179b\u17b6\u1789",
+  "notification-server-exists": "\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u178f\u17d2\u179a\u17bc\u179c\u1794\u17b6\u1793\u1794\u1789\u17d2\u1785\u17bc\u179b\u179a\u17bd\u1785\u179a\u17b6\u179b\u17cb",
+  "notification-server-removed": "\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u178f\u17d2\u179a\u17bc\u179c\u1794\u17b6\u1793\u178a\u1780\u1785\u17c1\u1789",
+  "oauth-account-active": "\u1782\u178e\u1793\u17b8 DigitalOcean \u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u178f\u17d2\u179a\u17bc\u179c\u1794\u17b6\u1793\u178a\u17c6\u178e\u17be\u179a\u1780\u17b6\u179a",
+  "oauth-account-active-tag": "\u1782\u178e\u1793\u17b8\u178a\u17c6\u178e\u17be\u179a\u1780\u17b6\u179a! \u1780\u17c6\u1796\u17bb\u1784\u1795\u17d2\u1791\u17bb\u1780\u1791\u17b8\u178f\u17b6\u17c6\u1784\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1...",
+  "oauth-activate-account": "\u178a\u17b6\u1780\u17cb\u17b2\u17d2\u1799\u178a\u17c6\u178e\u17be\u179a\u1780\u17b6\u179a\u1782\u178e\u1793\u17b8 DigitalOcean \u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u17d4",
+  "oauth-billing": "\u1794\u1789\u17d2\u1785\u17bc\u179b\u1796\u17d0\u178f\u17cc\u1798\u17b6\u1793\u1780\u17b6\u179a\u1794\u1784\u17cb\u1794\u17d2\u179a\u17b6\u1780\u17cb\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u1793\u17c5\u179b\u17be digitalocean.com \u17a0\u17be\u1799\u178f\u17d2\u179a\u179b\u1794\u17cb\u1791\u17c5\u1780\u1798\u17d2\u1798\u179c\u17b7\u1792\u17b8\u179c\u17b7\u1789\u1793\u17c5\u1796\u17c1\u179b\u178a\u17c2\u179b\u17a2\u17d2\u1793\u1780\u1794\u17b6\u1793\u1794\u1789\u17d2\u1785\u1794\u17cb\u17d4",
+  "oauth-billing-tag": "\u1794\u1789\u17d2\u1785\u17bc\u179b\u1796\u17d0\u178f\u17cc\u1798\u17b6\u1793\u1780\u17b6\u179a\u1794\u1784\u17cb\u1794\u17d2\u179a\u17b6\u1780\u17cb",
+  "oauth-connect-description": "Outline \u1792\u17d2\u179c\u17be\u17b2\u17d2\u1799\u1784\u17b6\u1799\u179f\u17d2\u179a\u17bd\u179b\u178a\u17be\u1798\u17d2\u1794\u17b8\u1794\u1784\u17d2\u1780\u17be\u178f\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u1798\u17bd\u1799 \u1793\u17b7\u1784\u1797\u17d2\u1787\u17b6\u1794\u17cb\u179c\u17b6 \u178f\u17b6\u1798\u179a\u1799\u17c8\u1782\u178e\u1793\u17b8\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u17d4",
+  "oauth-connect-tag": "\u179a\u1784\u17cb\u1785\u17b6\u17c6\u1797\u17d2\u1787\u17b6\u1794\u17cb\u1791\u17c5\u1780\u17b6\u1793\u17cb\u1782\u178e\u1793\u17b8\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780...",
+  "oauth-connect-title": "\u1785\u17bb\u1785\u1785\u17bc\u179b \u17ac\u1794\u1784\u17d2\u1780\u17be\u178f\u1782\u178e\u1793\u17b8\u1798\u17bd\u1799\u1787\u17b6\u1798\u17bd\u1799\u1793\u17b9\u1784 DigitalOcean.com",
+  "oauth-sign-out": "\u1785\u17b6\u1780\u1785\u17c1\u1789",
+  "oauth-verify": "\u179f\u17bc\u1798\u1796\u17b7\u1793\u17b7\u178f\u17d2\u1799\u1798\u17be\u179b\u1794\u17d2\u179a\u17a2\u1794\u17cb\u179f\u17c6\u1794\u17bb\u178f\u17d2\u179a\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u179f\u1798\u17d2\u179a\u17b6\u1794\u17cb\u17a2\u17c9\u17b8\u1798\u17c9\u17c2\u179b\u1798\u17bd\u1799\u1796\u17b8 DigitalOcean \u17a0\u17be\u1799\u1785\u17bb\u1785\u178f\u17c6\u178e\u1797\u17d2\u1787\u17b6\u1794\u17cb\u179b\u17be\u179c\u17b6\u178a\u17be\u1798\u17d2\u1794\u17b8\u1794\u1789\u17d2\u1787\u17b6\u1780\u17cb\u1796\u17b8\u1782\u178e\u1793\u17b8\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u17d4",
+  "oauth-verify-tag": "\u1794\u1789\u17d2\u1787\u17b6\u1780\u17cb\u17a2\u17c9\u17b8\u1798\u17c2\u179b\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780...",
+  "oauth-verify-title": "\u178a\u17c6\u178e\u17be\u179a\u1780\u17b6\u179a\u1782\u178e\u1793\u17b8 DigitalOcean \u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780",
+  "okay": "\u1799\u179b\u17cb\u1796\u17d2\u179a\u1798",
+  "region-description": "\u1793\u17c1\u17c7\u1782\u17ba\u1787\u17b6\u1794\u1791\u1796\u17b7\u179f\u17c4\u1792\u1793\u17cd\u17a2\u17c9\u17b8\u1793\u1792\u17be\u178e\u17b7\u178f\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u17d4",
+  "region-setup": "\u178f\u17a1\u17be\u1784 Outline",
+  "region-title": "\u1787\u17d2\u179a\u17be\u179f\u1791\u17b8\u178f\u17b6\u17c6\u1784\u179a\u1794\u179f\u17cb\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u17d4",
+  "remove": "\u178a\u1780\u1785\u17c1\u1789",
+  "retry": "\u1796\u17d2\u1799\u17b6\u1799\u17b6\u1798\u1798\u17d2\u178f\u1784\u1791\u17c0\u178f",
+  "server-access": "\u1785\u17bc\u179b\u1794\u17d2\u179a\u17be\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1",
+  "server-access-key-new": "\u1794\u1789\u17d2\u1785\u17bc\u179b\u1780\u17bc\u1793\u179f\u17c4\u1790\u17d2\u1798\u17b8",
+  "server-access-key-rename": "\u1794\u17d2\u178a\u17bc\u179a\u1788\u17d2\u1798\u17c4\u17c7",
+  "server-access-keys": "\u1794\u17d2\u179a\u17be\u1780\u17bc\u1793\u179f\u17c4",
+  "server-connect-devices": "\u1797\u17d2\u1787\u17b6\u1794\u17cb\u17a7\u1794\u1780\u179a\u178e\u17cd\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780",
+  "server-connections": "\u1780\u17b6\u179a\u178f\u1797\u17d2\u1787\u17b6\u1794\u17cb",
+  "server-data-transfer": "\u1791\u17b7\u1793\u17d2\u1793\u1793\u17d0\u1799\u1795\u17d2\u1791\u17c1\u179a / 30 \u1790\u17d2\u1784\u17c3",
+  "server-data-used": "\u17a2\u1793\u17bb\u1789\u17d2\u1789\u17b6\u178f\u17b2\u17d2\u1799\u1794\u17d2\u179a\u17be / 30 \u1790\u17d2\u1784\u17c3",
+  "server-destroy": "\u1794\u1795\u17d2\u179b\u17b6\u1789\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1",
+  "server-help-access-key-description": "\u1785\u17c2\u1780\u179a\u17c6\u179b\u17c2\u1780\u1780\u17bc\u1793\u179f\u17c4\u1785\u17bc\u179b\u1794\u17d2\u179a\u17be\u1787\u17b6\u1798\u17bd\u1799\u1798\u17b7\u178f\u17d2\u178f\u1797\u1780\u17d2\u178a\u17b7 \u178a\u17bc\u1785\u17d2\u1793\u17c1\u17c7\u1796\u17bd\u1780\u1782\u17c1\u17a2\u17b6\u1785\u1797\u17d2\u1787\u17b6\u1794\u17cb\u1791\u17c5 Outline \u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u17d4 \u1796\u17bd\u1780\u1782\u17c1\u17a2\u17b6\u1785\u1794\u17d2\u179a\u17be\u1780\u17bc\u1793\u179f\u17c4\u1785\u17bc\u179b\u1794\u17d2\u179a\u17be\u178a\u17bc\u1785\u1782\u17d2\u1793\u17b6\u1793\u17c5\u179b\u17be\u17a7\u1794\u1780\u179a\u178e\u17cd\u179a\u1794\u179f\u17cb\u1796\u17bd\u1780\u1782\u17c1\u1791\u17b6\u17c6\u1784\u17a2\u179f\u17cb\u17d4",
+  "server-help-access-key-next": "\u1794\u1793\u17d2\u1791\u17b6\u1794\u17cb",
+  "server-help-access-key-title": "\u1794\u1784\u17d2\u1780\u17be\u178f\u1780\u17bc\u1793\u179f\u17c4 \u17a0\u17be\u1799\u1785\u17c2\u1780\u1780\u17b6\u179a\u1794\u17d2\u179a\u17be\u1794\u17d2\u179a\u17b6\u179f\u17cb",
+  "server-help-connection-description": "\u1785\u17bb\u1785\u1791\u17b8\u1793\u17c1\u17c7\u178a\u17be\u1798\u17d2\u1794\u17b8\u178f\u17c6\u17a1\u17be\u1784\u1780\u1798\u17d2\u1798\u179c\u17b7\u1792\u17b8\u1794\u1798\u17d2\u179a\u17be Outline \u178a\u17c4\u1799\u1794\u17d2\u179a\u17be\u1780\u17bc\u1793\u179f\u17c4\u1785\u17bc\u179b\u1795\u17d2\u1791\u17b6\u179b\u17cb\u1781\u17d2\u179b\u17bd\u1793\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u1791\u17c5\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1794\u1798\u17d2\u179a\u17be\u1798\u17c1 Outline \u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u17d4",
+  "server-help-connection-ok": "\u17a2\u17bc\u1781\u17c1 \u1799\u179b\u17cb\u17a0\u17be\u1799!",
+  "server-help-connection-title": "\u17a2\u17d2\u1793\u1780\u1798\u17b7\u1793\u1791\u17b6\u1793\u17cb\u1794\u17b6\u1793\u1797\u17d2\u1787\u17b6\u1794\u17cb\u1793\u17c5\u17a1\u17be\u1799\u1791\u17c1!",
+  "server-keys": "\u1780\u17bc\u1793\u179f\u17c4",
+  "server-my-access-key": "\u1780\u17bc\u1793\u179f\u17c4\u1785\u17bc\u179b\u1794\u17d2\u179a\u17be\u179a\u1794\u179f\u17cb\u1781\u17d2\u1789\u17bb\u17c6",
+  "server-name": "\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u179a\u1794\u179f\u17cb Outline {serverLocation}",
+  "server-remove": "\u178a\u1780\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u1785\u17c1\u1789",
+  "server-settings": "\u1780\u17b6\u179a\u1780\u17c6\u178e\u178f\u17cb",
+  "server-unreachable": "\u1798\u17b7\u1793\u17a2\u17b6\u1785\u178f\u1797\u17d2\u1787\u17b6\u1794\u17cb\u1791\u17c5\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u1794\u17b6\u1793",
+  "server-unreachable-description": "\u1799\u17be\u1784\u1780\u17c6\u1796\u17bb\u1784\u1798\u17b6\u1793\u1794\u1789\u17d2\u17a0\u17b6\u1780\u17d2\u1793\u17bb\u1784\u1780\u17b6\u179a\u1797\u17d2\u1787\u17b6\u1794\u17cb\u1791\u17c5\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u1793\u17c1\u17c7\u17d4",
+  "server-unreachable-managed-description": "\u1796\u17d2\u1799\u17b6\u1799\u17b6\u1798\u1798\u17d2\u178f\u1784\u1791\u17c0\u178f \u17ac\u1799\u1780\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u1793\u17c1\u17c7\u1785\u17c1\u1789\u1796\u17b8\u1780\u1798\u17d2\u1798\u179c\u17b7\u1792\u17b8\u17d4",
+  "server-unreachable-manual-description": "\u1796\u17d2\u1799\u17b6\u1799\u17b6\u1798\u1798\u17d2\u178f\u1784\u1791\u17c0\u178f \u17ac\u1794\u17c6\u1795\u17d2\u179b\u17b6\u1789\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u1793\u17c1\u17c7 \u1793\u17b7\u1784\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1793\u17b7\u1798\u17d2\u1798\u17b7\u178f\u17d4",
+  "server-usage": "\u1780\u17b6\u179a\u1794\u17d2\u179a\u17be\u1794\u17d2\u179a\u17b6\u179f\u17cb / 30 \u1790\u17d2\u1784\u17c3",
+  "servers-add": "\u1794\u1793\u17d2\u1790\u17c2\u1798\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1",
+  "servers-digitalocean": "\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u179a\u1794\u179f\u17cb DigitalOcean",
+  "servers-manual": "\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1",
+  "settings-access-key-port": "\u1785\u17d2\u179a\u1780\u179f\u1798\u17d2\u179a\u17b6\u1794\u17cb\u1780\u17bc\u1793\u179f\u17c4\u1785\u17bc\u179b\u1794\u17d2\u179a\u17be",
+  "settings-metrics-header": "\u1785\u17c2\u1780\u1785\u17b6\u1799 \u179a\u1784\u17d2\u179c\u17b6\u179f\u17cb\u1798\u17c9\u17c2\u178f\u17d2\u179a\u17a2\u1793\u17b6\u1798\u17b7\u1780",
+  "settings-server-api-url": "\u1782\u17d2\u179a\u1794\u17cb\u1782\u17d2\u179a\u1784 API URL",
+  "settings-server-cost": "\u1785\u17c6\u178e\u17b6\u1799\u1794\u17d2\u179a\u1785\u17b6\u17c6\u1781\u17c2",
+  "settings-server-creation": "\u1794\u17b6\u1793\u1794\u1784\u17d2\u1780\u17be\u178f",
+  "settings-server-hostname": "\u1788\u17d2\u1798\u17c4\u17c7\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793",
+  "settings-server-id": "\u17a2\u178f\u17d2\u178f\u179f\u1789\u17d2\u1789\u17b6\u178e\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1",
+  "settings-server-info": "\u1796\u17d0\u178f\u17cc\u1798\u17b6\u1793\u179a\u1794\u179f\u17cb\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1",
+  "settings-server-location": "\u1791\u17b8\u178f\u17b6\u17c6\u1784\u179a\u1794\u179f\u17cb\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1798\u17c1",
+  "settings-server-name": "\u1788\u17d2\u1798\u17c4\u17c7",
+  "settings-server-rename": "\u1780\u17c6\u178e\u178f\u17cb\u1788\u17d2\u1798\u17c4\u17c7\u1790\u17d2\u1798\u17b8\u179f\u1798\u17d2\u179a\u17b6\u1794\u17cb\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u17d4 \u1785\u17c6\u178e\u17b6\u17c6\u1790\u17b6\u179c\u17b6\u1793\u17b9\u1784\u1798\u17b7\u1793\u178f\u17d2\u179a\u17bc\u179c\u1794\u17b6\u1793\u1794\u1784\u17d2\u17a0\u17b6\u1789\u179b\u17be\u17a7\u1794\u1780\u179a\u178e\u17cd\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u1794\u17d2\u179a\u17be\u178a\u17c2\u179b\u17a2\u17d2\u1793\u1780\u1794\u17b6\u1793\u178a\u17b6\u1780\u17cb\u17b1\u17d2\u1799\u1797\u17d2\u1787\u17b6\u1794\u17cb\u1791\u17c5\u179c\u17b6\u1793\u17c4\u17c7\u1791\u17c1\u17d4",
+  "settings-transfer-limit": "\u1791\u17b7\u1793\u17d2\u1793\u1793\u17d0\u1799\u1795\u17d2\u1791\u17c1\u179a\u178a\u17c2\u179b\u17a2\u1793\u17bb\u1789\u17d2\u1789\u17b6\u178f",
+  "setup-action": "\u178f\u17c6\u17a1\u17be\u1784",
+  "setup-advanced": "\u1780\u1798\u17d2\u179a\u17b7\u178f\u1781\u17d2\u1796\u179f\u17cb",
+  "setup-anywhere": "\u178f\u17c6\u17a1\u17be\u1784 Outline \u1782\u17d2\u179a\u1794\u17cb\u1791\u17b8\u1780\u1793\u17d2\u179b\u17c2\u1784",
+  "setup-create": "\u1794\u1784\u17d2\u1780\u17be\u178f\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1",
+  "setup-description": "\u1798\u17b7\u1793\u1798\u17b6\u1793\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1? \u1794\u1784\u17d2\u1780\u17be\u178f\u1782\u178e\u1793\u17b8\u1787\u17b6\u1798\u17bd\u1799 \u1787\u17b6\u1798\u17bd\u1799\u1793\u17b9\u1784 DigitalOcean \u17d4",
+  "setup-do-cancel": "\u1794\u17c4\u17c7\u1794\u1784\u17cb\u1793\u17c5\u1796\u17c1\u179b\u178e\u17b6\u1780\u17cf\u1794\u17b6\u1793",
+  "setup-do-cost": "\u178f\u17d2\u179a\u17b9\u1798\u178f\u17c2 $5 \u1780\u17d2\u1793\u17bb\u1784\u1798\u17bd\u1799\u1781\u17c2",
+  "setup-do-create": "\u1794\u1784\u17d2\u1780\u17be\u178f\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u1790\u17d2\u1798\u17b8\u1787\u17b6\u1798\u17bd\u1799\u1782\u178e\u1793\u17b8 DigitalOcean \u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u179f\u1798\u17d2\u179a\u17b6\u1794\u17cb\u1780\u17b6\u179a\u1794\u1793\u17d2\u1790\u17c2\u1798 US$5 / 30 \u1790\u17d2\u1784\u17c3\u179f\u1798\u17d2\u179a\u17b6\u1794\u17cb\u1795\u17d2\u1791\u17c1\u179a\u1791\u17b7\u1793\u17d2\u1793\u1793\u17d0\u1799 1 TB \u17d4",
+  "setup-do-data": "\u17a2\u1793\u17bb\u1789\u17d2\u1789\u17b6\u178f 1 TB \u1791\u17b7\u1793\u17d2\u1793\u1793\u17d0\u1799\u1795\u17d2\u1791\u17c1\u179a",
+  "setup-do-description": "\u179c\u17b6\u17a2\u17b6\u1785\u1794\u17d2\u179a\u17be\u1796\u17c1\u179b\u1796\u17b8\u179a\u1793\u17b6\u1791\u17b8\u17d4 \u17a2\u17d2\u1793\u1780\u17a2\u17b6\u1785\u1794\u17c6\u1795\u17d2\u179b\u17b6\u1789\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1\u1793\u17c1\u17c7\u1793\u17c5\u1796\u17c1\u179b\u178e\u17b6\u1780\u17cf\u1794\u17b6\u1793\u17d4",
+  "setup-do-easiest": "\u178a\u17c6\u178e\u17be\u179a\u1780\u17b6\u179a\u179a\u17c0\u1794\u1785\u17c6\u1784\u17b6\u1799\u179f\u17d2\u179a\u17bd\u179b\u1794\u17c6\u1795\u17bb\u178f",
+  "setup-do-title": "\u1780\u17b6\u179a\u178f\u17c6\u17a1\u17be\u1784 Outline",
+  "setup-firewall-instructions": "\u179f\u17c1\u1785\u1780\u17d2\u178f\u17b8\u178e\u17c2\u1793\u17b6\u17c6\u17a2\u17c6\u1796\u17b8\u1787\u1789\u17d2\u1787\u17b6\u17c6\u1784\u1797\u17d2\u179b\u17be\u1784",
+  "setup-recommended": "\u178f\u17d2\u179a\u17bc\u179c\u1794\u17b6\u1793\u178e\u17c2\u1793\u17b6\u17c6",
+  "setup-simple-commands": "\u1796\u17b6\u1780\u17d2\u1799\u1794\u1789\u17d2\u1787\u17b6\u178a\u17c6\u17a1\u17be\u1784\u179f\u17b6\u1798\u1789\u17d2\u1789",
+  "setup-step-by-step": "\u179f\u17c1\u1785\u1780\u17d2\u178f\u17b8\u178e\u17c2\u1793\u17b6\u17c6\u179a\u17c0\u1794\u1785\u17c6\u178f\u17c6\u17a1\u17be\u1784\u1798\u17bd\u1799\u1787\u17c6\u17a0\u17b6\u1793\u1798\u17d2\u178f\u1784 \u17d7",
+  "setup-tested": "\u1794\u17b6\u1793\u179f\u17b6\u1780\u179b\u17d2\u1794\u1784\u179b\u17be VULTR, Linode, \u1793\u17b7\u1784 Liquid Web",
+  "setup-title": "\u1787\u17d2\u179a\u17be\u179f\u179a\u17be\u179f\u179f\u17c1\u179c\u17b6\u1780\u1798\u17d2\u1798\u1796\u1796\u1780\u1798\u17bd\u1799\u178a\u17be\u1798\u17d2\u1794\u17b8\u178f\u17c6\u17a1\u17be\u1784 Outlinel\u17d4",
+  "share-description": "\u1785\u1798\u17d2\u179b\u1784\u1780\u17b6\u179a\u17a2\u1789\u17d2\u1787\u17be\u1789\u1793\u17c1\u17c7\u17a0\u17be\u1799\u1795\u17d2\u1789\u17be\u179c\u17b6\u1796\u17b8\u17a7\u1794\u1780\u179a\u178e\u17cd\u1791\u17c6\u1793\u17b6\u1780\u17cb\u1791\u17c6\u1793\u1784\u178a\u17c2\u179b\u17a2\u17d2\u1793\u1780\u1791\u17bb\u1780\u1785\u17b7\u178f\u17d2\u178f\u17d4 {openLink} \u178f\u17d2\u179a\u17bc\u179c\u1780\u17b6\u179a\u1787\u17c6\u1793\u17bd\u1799? {closeLink}",
+  "share-invite": "\u17a2\u17d2\u1793\u1780\u178f\u17d2\u179a\u17bc\u179c\u1794\u17b6\u1793\u17a2\u1789\u17d2\u1787\u17be\u1789\u17b1\u17d2\u1799\u1797\u17d2\u1787\u17b6\u1794\u17cb\u1791\u17c5\u1798\u17c9\u17b6\u179f\u17ca\u17b8\u1793\u1798\u17c1 Outline \u179a\u1794\u179f\u17cb\u1781\u17d2\u1789\u17bb\u17c6\u17d4 \u1794\u17d2\u179a\u17be\u179c\u17b6\u178a\u17be\u1798\u17d2\u1794\u17b8\u1785\u17bc\u179b\u17a2\u17c9\u17b8\u1793\u1792\u17be\u178e\u17b7\u178f\u17a2\u178f\u17cb\u1798\u17b6\u1793\u179f\u17bb\u179c\u178f\u17d2\u1790\u17b7\u1797\u17b6\u1796 \u1798\u17b7\u1793\u1790\u17b6\u17a2\u17d2\u1793\u1780\u1793\u17c5\u1791\u17b8\u178e\u17b6\u1791\u17c1\u17d4 \u1792\u17d2\u179c\u17be\u178f\u17b6\u1798\u1780\u17b6\u179a\u178e\u17c2\u1793\u17b6\u17c6\u1793\u17c5\u179b\u17be\u178f\u17c6\u178e\u1780\u17b6\u179a\u17a2\u1789\u17d2\u1787\u17be\u1789\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u1793\u17c5\u1781\u17b6\u1784\u1780\u17d2\u179a\u17c4\u1798\u178a\u17be\u1798\u17d2\u1794\u17b8\u1791\u17b6\u1789\u1799\u1780\u1780\u1798\u17d2\u1798\u179c\u17b7\u1792\u17b8\u1782\u17d2\u179a\u17c4\u1784\u17a0\u17be\u1799\u1797\u17d2\u1787\u17b6\u1794\u17cb\u17d4",
+  "share-invite-copied": "\u1794\u17b6\u1793\u1785\u1798\u17d2\u179b\u1784\u1791\u17c5\u1780\u17d2\u178a\u17b6\u179a\u178f\u17d2\u1794\u17c0\u178f\u17af\u1780\u179f\u17b6\u179a",
+  "share-invite-copy": "\u1785\u1798\u17d2\u179b\u1784\u1780\u17b6\u179a\u17a2\u1789\u17d2\u1787\u17be\u1789",
+  "share-invite-copy-access-key": "\u1785\u1798\u17d2\u179b\u1784\u1780\u17bc\u1793\u179f\u17c4\u1785\u17bc\u179b\u1794\u17d2\u179a\u17be\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780:",
+  "share-invite-instructions": "\u17a2\u1793\u17bb\u179c\u178f\u17d2\u178f\u178f\u17b6\u1798\u1780\u17b6\u179a\u178e\u17c2\u1793\u17b6\u17c6\u1780\u17b6\u179a\u17a2\u1789\u17d2\u1787\u17be\u1789\u179a\u1794\u179f\u17cb\u1799\u17be\u1784\u1793\u17c5\u179b\u17be GitHub:",
+  "share-invite-trouble": "\u1798\u17b6\u1793\u1794\u1789\u17d2\u17a0\u17b6\u1780\u17d2\u1793\u17bb\u1784\u1780\u17b6\u179a\u1785\u17bc\u179b\u1794\u17d2\u179a\u17be\u178f\u17c6\u178e\u17a2\u1789\u17d2\u1787\u17be\u1789?",
+  "share-title": "\u1785\u17c2\u1780\u179a\u17c6\u179b\u17c2\u1780\u1780\u17b6\u179a\u1785\u17bc\u179b",
+  "terms-of-service": "\u1781\u17d2\u1789\u17bb\u17c6\u1794\u17b6\u1793\u17a2\u17b6\u1793\u17a0\u17be\u1799\u1799\u179b\u17cb\u1796\u17b8 {openLink} \u179b\u1780\u17d2\u1781\u1781\u178e\u17d2\u178c\u1794\u17d2\u179a\u17be\u1794\u17d2\u179a\u17b6\u179f\u17cb\u179a\u1794\u179f\u17cbOutline {closeLink}"
 }
