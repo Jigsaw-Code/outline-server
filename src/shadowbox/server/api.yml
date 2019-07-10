@@ -8,9 +8,9 @@ tags:
     description: Server-level functions
   - name: Access Key
     description: Access key functions
-servers: 
+servers:
   - url: https://myserver/SecretPath
-    description: Example URL. Change to your own server.  
+    description: Example URL. Change to your own server.
 paths:
   /server:
     get:
@@ -35,7 +35,7 @@ paths:
         - Server
       requestBody:
         required: true
-        content: 
+        content:
           application/json:
             schema:
               type: object
@@ -137,7 +137,7 @@ paths:
             type: string
       requestBody:
         required: true
-        content: 
+        content:
           application/json:
             schema:
               type: object
@@ -147,6 +147,50 @@ paths:
       responses:
         '204':
           description: Access key renamed successfully
+        '404':
+          description: Access key inexistent
+  /access-keys/{id}/quota:
+    put:
+      description: Sets an access key data transfer quota
+      tags:
+        - Access Key
+        - Quota
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the access key to set a quota
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessKeyQuota"
+              examples:
+                '0':
+                  value: "{quotaBytes: 1000000, windowHours: 24}"
+      responses:
+        '204':
+          description: Access key quota set successfully
+        '404':
+          description: Access key inexistent
+    delete:
+      description: Removes an acess key data transfer quota
+      tags:
+        - Access Key
+        - Quota
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the access key to delete a quota
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Access key quota set successfully
         '404':
           description: Access key inexistent
   /metrics/transfer:
@@ -193,7 +237,7 @@ paths:
         - Server
       requestBody:
         required: true
-        content: 
+        content:
           application/json:
             schema:
               type: object
@@ -208,7 +252,7 @@ paths:
           description: Setting successful
         '400':
           description: Invalid request
-          
+
 components:
   schemas:
     Server:
@@ -222,6 +266,12 @@ components:
         createdTimestampMs:
           type: number
         portForNewAccessKeys:
+          type: integer
+    AccessKeyQuota:
+      properties:
+        quotaBytes:
+          type: integer
+        windowHours:
           type: integer
     AccessKey:
       required:
@@ -239,3 +289,5 @@ components:
           type: string
         accessUrl:
           type: string
+        quota:
+          $ref: "#/components/schemas/AccessKeyQuota"
