@@ -17,7 +17,7 @@
 do_action shadowbox/docker/build
 
 readonly OUTLINE_DIR=/tmp/outline
-touch "$OUTLINE_DIR/config.json"
+mkdir -p $OUTLINE_DIR && touch "$OUTLINE_DIR/config.json"
 source $ROOT_DIR/src/shadowbox/scripts/make_test_certificate.sh "${OUTLINE_DIR}"
 
 # TODO: mount a folder rather than individual files.
