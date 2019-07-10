@@ -15,25 +15,30 @@
 import * as randomstring from 'randomstring';
 import * as uuidv4 from 'uuid/v4';
 
+import {Clock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
 import {JsonConfig} from '../infrastructure/json_config';
-import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyRepository} from '../model/access_key';
-import {ShadowsocksServer} from '../model/shadowsocks_server';
+import * as logging from '../infrastructure/logging';
+import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyQuota, AccessKeyRepository} from '../model/access_key';
+import {ShadowsocksAccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
+
+import {ManagerMetrics} from './manager_metrics';
 import {ServerConfigJson} from './server_config';
 
 // The format as json of access keys in the config file.
-interface AccessKeyConfig {
+interface AccessKeyJson {
   id: AccessKeyId;
   metricsId: AccessKeyId;
   name: string;
   password: string;
   port: number;
   encryptionMethod?: string;
+  quota?: AccessKeyQuota;
 }
 
 // The configuration file format as json.
 export interface AccessKeyConfigJson {
-  accessKeys?: AccessKeyConfig[];
+  accessKeys?: AccessKeyJson[];
   // Next AccessKeyId to use.
   nextId?: number;
 
@@ -46,7 +51,7 @@ function generatePassword(): string {
   return randomstring.generate(12);
 }
 
-function makeAccessKey(hostname: string, accessKeyJson: AccessKeyConfig): AccessKey {
+function makeAccessKey(hostname: string, accessKeyJson: AccessKeyJson): AccessKey {
   return {
     id: accessKeyJson.id,
     name: accessKeyJson.name,
@@ -56,28 +61,56 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyConfig): Access
       portNumber: accessKeyJson.port,
       encryptionMethod: accessKeyJson.encryptionMethod,
       password: accessKeyJson.password,
-    }
+    },
+    quota: accessKeyJson.quota,
+    isOverQuota: false
+  };
+}
+
+function makeAccessKeyJson(accessKey: AccessKey): AccessKeyJson {
+  return {
+    id: accessKey.id,
+    metricsId: accessKey.metricsId,
+    name: accessKey.name,
+    password: accessKey.proxyParams.password,
+    port: accessKey.proxyParams.portNumber,
+    encryptionMethod: accessKey.proxyParams.encryptionMethod,
+    quota: accessKey.quota
   };
 }
 
 // AccessKeyRepository that keeps its state in a config file and uses ShadowsocksServer
 // to start and stop per-access-key Shadowsocks instances.
 export class ServerAccessKeyRepository implements AccessKeyRepository {
-  // This is the max id + 1 among all access keys. Used to generate unique ids for new access keys.
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
+  private QUOTA_ENFORCEMENT_INTERVAL_MS = 3600000;  // 1h
+  private accessKeys: AccessKey[];
   private portForNewAccessKeys: number|undefined;
 
   constructor(
       private portProvider: PortProvider, private proxyHostname: string,
       private keyConfig: JsonConfig<AccessKeyConfigJson>,
-      private shadowsocksServer: ShadowsocksServer) {
+      private shadowsocksServer: ShadowsocksServer, private metrics: ManagerMetrics) {
     if (this.keyConfig.data().accessKeys === undefined) {
       this.keyConfig.data().accessKeys = [];
     }
     if (this.keyConfig.data().nextId === undefined) {
       this.keyConfig.data().nextId = 0;
     }
-    this.updateServer();
+    this.accessKeys = this.loadAccessKeys();
+  }
+
+  // Exposes the access key configuration to the server. Periodically enforces access key quotas.
+  async start(clock: Clock): Promise<void> {
+    await this.updateServer();
+    clock.setInterval(async () => {
+      try {
+        await this.enforceAccessKeyQuotas();
+      } catch (e) {
+        logging.error(`Failed to enforce access key quotas: ${e}`);
+      }
+    }, this.QUOTA_ENFORCEMENT_INTERVAL_MS);
+    await this.enforceAccessKeyQuotas();
   }
 
   enableSinglePort(portForNewAccessKeys: number) {
@@ -90,32 +123,32 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.keyConfig.data().nextId += 1;
     const metricsId = uuidv4();
     const password = generatePassword();
-    // Save key
-    const accessKeyJson: AccessKeyConfig = {
+    const accessKey: AccessKey = {
       id,
-      metricsId,
       name: '',
-      port,
-      encryptionMethod: this.NEW_USER_ENCRYPTION_METHOD,
-      password
+      metricsId,
+      proxyParams: {
+        hostname: this.proxyHostname,
+        portNumber: port,
+        encryptionMethod: this.NEW_USER_ENCRYPTION_METHOD,
+        password,
+      },
+      quota: undefined,
+      isOverQuota: false
     };
-    this.keyConfig.data().accessKeys.push(accessKeyJson);
-    try {
-      this.keyConfig.write();
-    } catch (error) {
-      throw new Error(`Failed to save config: ${error}`);
-    }
+    this.accessKeys.push(accessKey);
+    this.saveAccessKeys();
     await this.updateServer();
-    return makeAccessKey(this.proxyHostname, accessKeyJson);
+    return accessKey;
   }
 
   removeAccessKey(id: AccessKeyId): boolean {
-    for (let ai = 0; ai < this.keyConfig.data().accessKeys.length; ai++) {
-      const accessKey = this.keyConfig.data().accessKeys[ai];
+    for (let ai = 0; ai < this.accessKeys.length; ai++) {
+      const accessKey = this.accessKeys[ai];
       if (accessKey.id === id) {
-        this.portProvider.freePort(accessKey.port);
-        this.keyConfig.data().accessKeys.splice(ai, 1);
-        this.keyConfig.write();
+        this.portProvider.freePort(accessKey.proxyParams.portNumber);
+        this.accessKeys.splice(ai, 1);
+        this.saveAccessKeys();
         this.updateServer();
         return true;
       }
@@ -123,19 +156,60 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     return false;
   }
 
-  listAccessKeys(): IterableIterator<AccessKey> {
-    return this.keyConfig.data().accessKeys.map(
-        accessKeyJson => makeAccessKey(this.proxyHostname, accessKeyJson))[Symbol.iterator]();
+  listAccessKeys(): AccessKey[] {
+    // Deep copy the access key array to prevent returning references to keys or their properties.
+    return this.accessKeys.map(key => (key instanceof Object) ? {...key} : key);
   }
 
   renameAccessKey(id: AccessKeyId, name: string): boolean {
-    const accessKeyJson = this.getAccessKey(id);
-    if (!accessKeyJson) {
+    const accessKey = this.getAccessKey(id);
+    if (!accessKey) {
       return false;
     }
-    accessKeyJson.name = name;
+    accessKey.name = name;
     try {
-      this.keyConfig.write();
+      this.saveAccessKeys();
+    } catch (error) {
+      return false;
+    }
+    return true;
+  }
+
+  async setAccessKeyQuota(id: AccessKeyId, quota: AccessKeyQuota): Promise<boolean> {
+    if (!quota || quota.quotaBytes < 1 || quota.windowHours < 1) {
+      return false;
+    }
+    const accessKey = this.getAccessKey(id);
+    if (!accessKey) {
+      return false;
+    }
+    accessKey.quota = quota;
+    try {
+      this.saveAccessKeys();
+      const quotaStausChanged = await this.updateAccessKeyQuotaStaus(accessKey);
+      if (quotaStausChanged) {
+        // Reflect the access key quota status if it changed with the new quota.
+        await this.updateServer();
+      }
+    } catch (error) {
+      return false;
+    }
+    return true;
+  }
+
+  async removeAccessKeyQuota(id: AccessKeyId): Promise<boolean> {
+    const accessKey = this.getAccessKey(id);
+    if (!accessKey) {
+      return false;
+    }
+    const quotaStausChanged = accessKey.isOverQuota;
+    accessKey.quota = undefined;
+    accessKey.isOverQuota = false;
+    try {
+      this.saveAccessKeys();
+      if (quotaStausChanged) {
+        await this.updateServer();
+      }
     } catch (error) {
       return false;
     }
@@ -143,20 +217,68 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined {
-    const accessKeyJson = this.getAccessKey(id);
-    return accessKeyJson ? accessKeyJson.metricsId : undefined;
+    const accessKey = this.getAccessKey(id);
+    return accessKey ? accessKey.metricsId : undefined;
+  }
+
+  // Compares access key usage with collected metrics, marking them as under or over quota.
+  async enforceAccessKeyQuotas() {
+    let quotaStatusChanged = false;
+    for (const accessKey of this.accessKeys) {
+      quotaStatusChanged = quotaStatusChanged || await this.updateAccessKeyQuotaStaus(accessKey);
+    }
+    if (quotaStatusChanged) {
+      this.updateServer();
+    }
+  }
+
+  // Updates `accessKey` quota status by comparing its usage with collected metrics. Returns whether
+  // the quota status changed.
+  private async updateAccessKeyQuotaStaus(accessKey: AccessKey): Promise<boolean> {
+    if (!accessKey.quota) {
+      return false;  // Don't query the usage of access keys without quota.
+    }
+    const usage =
+        await this.metrics.getOutboundByteTransfer(accessKey.id, accessKey.quota.windowHours);
+    const usageBytes = usage.bytesTransferredByUserId[accessKey.id];
+    const isOverQuota = usageBytes > accessKey.quota.quotaBytes;
+    logging.debug(`Enforcing quota for access key ${accessKey.id}. Quota: ${
+        JSON.stringify(accessKey.quota)}, usage: ${usageBytes}B, isOverQuota: ${isOverQuota}`);
+    const quotaStatusChanged = isOverQuota !== accessKey.isOverQuota;
+    accessKey.isOverQuota = isOverQuota;
+    return quotaStatusChanged;
   }
 
   private updateServer(): Promise<void> {
-    return this.shadowsocksServer.update(this.keyConfig.data().accessKeys.map((e) => {
-      return {id: e.id, port: e.port, cipher: e.encryptionMethod, secret: e.password};
-    }));
+    const serverAccessKeys = this.accessKeys.filter(e => !e.isOverQuota).map(e => {
+      return {
+        id: e.id,
+        port: e.proxyParams.portNumber,
+        cipher: e.proxyParams.encryptionMethod,
+        secret: e.proxyParams.password
+      };
+    });
+    return this.shadowsocksServer.update(serverAccessKeys);
   }
 
-  private getAccessKey(id: AccessKeyId): AccessKeyConfig {
-    for (const accessKeyJson of this.keyConfig.data().accessKeys) {
-      if (accessKeyJson.id === id) {
-        return accessKeyJson;
+  private loadAccessKeys(): AccessKey[] {
+    return this.keyConfig.data().accessKeys.map(e => makeAccessKey(this.proxyHostname, e));
+  }
+
+  private saveAccessKeys() {
+    try {
+      this.keyConfig.data().accessKeys = this.accessKeys.map(e => makeAccessKeyJson(e));
+      this.keyConfig.write();
+    } catch (error) {
+      throw new Error(`Failed to save access key config: ${error}`);
+    }
+  }
+
+  // Returns a reference to the access key with `id`, or undefined if the key is not found.
+  private getAccessKey(id: AccessKeyId): AccessKey|undefined {
+    for (const accessKey of this.accessKeys) {
+      if (accessKey.id === id) {
+        return accessKey;
       }
     }
     return undefined;

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export interface AccessKey {
+export interface ShadowsocksAccessKey {
   id: string;
   port: number;
   cipher: string;
@@ -21,5 +21,5 @@ export interface AccessKey {
 
 export interface ShadowsocksServer {
   // Updates the server to accept only the given access keys.
-  update(keys: AccessKey[]): Promise<void>;
+  update(keys: ShadowsocksAccessKey[]): Promise<void>;
 }

@@ -12,53 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-import {AccessKey, AccessKeyId, AccessKeyRepository} from '../../model/access_key';
+import {DataUsageByUser} from '../../model/metrics';
+import {ShadowsocksAccessKey, ShadowsocksServer} from '../../model/shadowsocks_server';
 import {TextFile} from '../../model/text_file';
-
-export class MockAccessKeyRepository implements AccessKeyRepository {
-  private accessKeys: AccessKey[] = [];
-  createNewAccessKey(): Promise<AccessKey> {
-    const id = this.accessKeys.length.toString();
-    const key = {
-      id,
-      name: 'name',
-      metricsId: 'metricsId',
-      proxyParams: {
-        hostname: 'hostname',
-        portNumber: 12345,
-        password: 'password',
-        encryptionMethod: 'chacha20-ietf-poly1305'
-      }
-    };
-    this.accessKeys.push(key);
-    return Promise.resolve(key);
-  }
-  removeAccessKey(id: AccessKeyId): boolean {
-    for (let i = 0; i < this.accessKeys.length; ++i) {
-      if (this.accessKeys[i].id === id) {
-        this.accessKeys.splice(i, 1);
-        return true;
-      }
-    }
-    return false;
-  }
-  listAccessKeys(): IterableIterator<AccessKey> {
-    return this.accessKeys[Symbol.iterator]();
-  }
-  renameAccessKey(id: AccessKeyId, name: string): boolean {
-    for (let i = 0; i < this.accessKeys.length; ++i) {
-      if (this.accessKeys[i].id === id) {
-        this.accessKeys[i].name = name;
-        return true;
-      }
-    }
-    return false;
-  }
-  getMetricsId(accessKeyId: AccessKeyId) {
-    return `metrics:${accessKeyId}`;
-  }
-}
+import {ManagerMetrics} from '../manager_metrics';
 
 export class InMemoryFile implements TextFile {
   private savedText: string;
@@ -76,5 +33,37 @@ export class InMemoryFile implements TextFile {
   writeFileSync(text: string) {
     this.savedText = text;
     this.exists = true;
+  }
+}
+
+export class MockShadowsocksServer implements ShadowsocksServer {
+  private accessKeys: ShadowsocksAccessKey[] = [];
+
+  update(keys: ShadowsocksAccessKey[]) {
+    this.accessKeys = keys;
+    return Promise.resolve();
+  }
+
+  getAccessKeys() {
+    return this.accessKeys;
+  }
+}
+
+export class ManagerMetricsStub implements ManagerMetrics {
+  constructor(public usage: {[accessKeyId: string]: {[windowHours: number]: number}}) {}
+
+  get30DayByteTransfer(): Promise<DataUsageByUser> {
+    throw new Error('Not implemented');
+  }
+  async getOutboundByteTransfer(accessKeyId: string, windowHours: number):
+      Promise<DataUsageByUser> {
+    const accessKeyUsage = this.usage[accessKeyId];
+    let usageBytes = 0;
+    if (!!accessKeyUsage) {
+      usageBytes = accessKeyUsage[windowHours] || 0;
+    }
+    const bytesTransferredByUserId = {};
+    bytesTransferredByUserId[accessKeyId] = usageBytes;
+    return {bytesTransferredByUserId};
   }
 }
