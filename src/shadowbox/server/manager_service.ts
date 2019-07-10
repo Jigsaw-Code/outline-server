@@ -17,7 +17,7 @@ import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {AccessKey, AccessKeyRepository} from '../model/access_key';
+import {AccessKey, AccessKeyQuota, AccessKeyRepository} from '../model/access_key';
 
 import {ManagerMetrics} from './manager_metrics';
 import {ServerConfigJson} from './server_config';
@@ -40,7 +40,9 @@ function accessKeyToJson(accessKey: AccessKey) {
       method: accessKey.proxyParams.encryptionMethod,
       password: accessKey.proxyParams.password,
       outline: 1,
-    }))
+    })),
+    quota: accessKey.quota,
+    isOverQuota: accessKey.isOverQuota || false
   };
 }
 
@@ -50,6 +52,7 @@ interface RequestParams {
   id?: string;
   name?: string;
   metricsEnabled?: boolean;
+  quota?: AccessKeyQuota;
 }
 interface RequestType {
   params: RequestParams;
@@ -67,6 +70,8 @@ export function bindService(
   apiServer.get(`${apiPrefix}/access-keys`, service.listAccessKeys.bind(service));
   apiServer.del(`${apiPrefix}/access-keys/:id`, service.removeAccessKey.bind(service));
   apiServer.put(`${apiPrefix}/access-keys/:id/name`, service.renameAccessKey.bind(service));
+  apiServer.put(`${apiPrefix}/access-keys/:id/quota`, service.setAccessKeyQuota.bind(service));
+  apiServer.del(`${apiPrefix}/access-keys/:id/quota`, service.removeAccessKeyQuota.bind(service));
 
   apiServer.get(`${apiPrefix}/metrics/transfer`, service.getDataUsage.bind(service));
   apiServer.get(`${apiPrefix}/metrics/enabled`, service.getShareMetrics.bind(service));
@@ -158,6 +163,46 @@ export class ShadowsocksManagerService {
       logging.debug(`renameAccessKey request ${JSON.stringify(req.params)}`);
       const accessKeyId = req.params.id;
       if (!this.accessKeys.renameAccessKey(accessKeyId, req.params.name)) {
+        return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
+      }
+      res.send(204);
+      return next();
+    } catch (error) {
+      logging.error(error);
+      return next(new restify.InternalServerError());
+    }
+  }
+
+  public async setAccessKeyQuota(req: RequestType, res: ResponseType, next: restify.Next) {
+    try {
+      logging.debug(`setAccessKeyQuota request ${JSON.stringify(req.params)}`);
+      const accessKeyId = req.params.id;
+      const quota = req.params.quota;
+      if (!quota || !quota.quotaBytes || !quota.windowHours) {
+        return next(new restify.InvalidArgumentError(
+            'Must provide a quota value with "quotaBytes" and "windowHours"'));
+      }
+      if (quota.quotaBytes < 0 || quota.windowHours < 0) {
+        return next(new restify.InvalidArgumentError('Must provide positive quota values'));
+      }
+      const success = await this.accessKeys.setAccessKeyQuota(accessKeyId, quota);
+      if (!success) {
+        return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
+      }
+      res.send(204);
+      return next();
+    } catch (error) {
+      logging.error(error);
+      return next(new restify.InternalServerError());
+    }
+  }
+
+  public async removeAccessKeyQuota(req: RequestType, res: ResponseType, next: restify.Next) {
+    try {
+      logging.debug(`removeAccessKeyQuota request ${JSON.stringify(req.params)}`);
+      const accessKeyId = req.params.id;
+      const success = await this.accessKeys.removeAccessKeyQuota(accessKeyId);
+      if (!success) {
         return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
       }
       res.send(204);
