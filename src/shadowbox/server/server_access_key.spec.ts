@@ -350,15 +350,6 @@ describe('ServerAccessKeyRepository', () => {
   });
 });
 
-// Convert from an IterableIterator to an Array
-function iterToArray<T>(iter: IterableIterator<T>): T[] {
-  const returnArray = [];
-  for (const el of iter) {
-    returnArray.push(el);
-  }
-  return returnArray;
-}
-
 function countAccessKeys(repo: AccessKeyRepository) {
   return repo.listAccessKeys().length;
 }
