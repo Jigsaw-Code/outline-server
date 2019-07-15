@@ -36,7 +36,7 @@ export class InMemoryFile implements TextFile {
   }
 }
 
-export class MockShadowsocksServer implements ShadowsocksServer {
+export class FakeShadowsocksServer implements ShadowsocksServer {
   private accessKeys: ShadowsocksAccessKey[] = [];
 
   update(keys: ShadowsocksAccessKey[]) {
@@ -49,7 +49,7 @@ export class MockShadowsocksServer implements ShadowsocksServer {
   }
 }
 
-export class ManagerMetricsStub implements ManagerMetrics {
+export class FakeManagerMetrics implements ManagerMetrics {
   constructor(public usage: {[accessKeyId: string]: {[windowHours: number]: number}}) {}
 
   get30DayByteTransfer(): Promise<DataUsageByUser> {

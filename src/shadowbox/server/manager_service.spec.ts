@@ -19,7 +19,7 @@ import {AccessKey, AccessKeyQuota, AccessKeyRepository} from '../model/access_ke
 
 import {ManagerMetrics} from './manager_metrics';
 import {ShadowsocksManagerService} from './manager_service';
-import {ManagerMetricsStub, MockShadowsocksServer} from './mocks/mocks';
+import {FakeManagerMetrics, FakeShadowsocksServer} from './mocks/mocks';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
 import {ServerConfigJson} from './server_config';
 import {SharedMetricsPublisher} from './shared_metrics';
@@ -430,5 +430,5 @@ function getAccessKeyRepository(): AccessKeyRepository {
   return new ServerAccessKeyRepository(
       new PortProvider(), 'hostname',
       new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}),
-      new MockShadowsocksServer(), new ManagerMetricsStub({}));
+      new FakeShadowsocksServer(), new FakeManagerMetrics({}));
 }
