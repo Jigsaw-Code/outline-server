@@ -177,7 +177,7 @@ paths:
         '404':
           description: Access key inexistent
     delete:
-      description: Removes an acess key data transfer quota
+      description: Removes an access key data transfer quota, lifting data transfer restrictions on the key.
       tags:
         - Access Key
         - Quota
@@ -190,7 +190,7 @@ paths:
             type: string
       responses:
         '204':
-          description: Access key quota set successfully
+          description: Access key quota deleted successfully.
         '404':
           description: Access key inexistent
   /metrics/transfer:

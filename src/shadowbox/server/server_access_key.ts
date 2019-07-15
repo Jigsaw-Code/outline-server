@@ -186,8 +186,8 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     accessKey.quota = quota;
     try {
       this.saveAccessKeys();
-      const quotaStausChanged = await this.updateAccessKeyQuotaStaus(accessKey);
-      if (quotaStausChanged) {
+      const quotaStautsChanged = await this.updateAccessKeyQuotaStatus(accessKey);
+      if (quotaStautsChanged) {
         // Reflect the access key quota status if it changed with the new quota.
         await this.updateServer();
       }
@@ -202,12 +202,12 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     if (!accessKey) {
       return false;
     }
-    const quotaStausChanged = accessKey.isOverQuota;
+    const wasOverQuota = accessKey.isOverQuota;
     accessKey.quota = undefined;
     accessKey.isOverQuota = false;
     try {
       this.saveAccessKeys();
-      if (quotaStausChanged) {
+      if (wasOverQuota) {
         await this.updateServer();
       }
     } catch (error) {
@@ -225,7 +225,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   async enforceAccessKeyQuotas() {
     let quotaStatusChanged = false;
     for (const accessKey of this.accessKeys) {
-      quotaStatusChanged = quotaStatusChanged || await this.updateAccessKeyQuotaStaus(accessKey);
+      quotaStatusChanged = quotaStatusChanged || await this.updateAccessKeyQuotaStatus(accessKey);
     }
     if (quotaStatusChanged) {
       this.updateServer();
@@ -234,7 +234,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
 
   // Updates `accessKey` quota status by comparing its usage with collected metrics. Returns whether
   // the quota status changed.
-  private async updateAccessKeyQuotaStaus(accessKey: AccessKey): Promise<boolean> {
+  private async updateAccessKeyQuotaStatus(accessKey: AccessKey): Promise<boolean> {
     if (!accessKey.quota) {
       return false;  // Don't query the usage of access keys without quota.
     }
@@ -250,24 +250,24 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private updateServer(): Promise<void> {
-    const serverAccessKeys = this.accessKeys.filter(e => !e.isOverQuota).map(e => {
+    const serverAccessKeys = this.accessKeys.filter(key => !key.isOverQuota).map(key => {
       return {
-        id: e.id,
-        port: e.proxyParams.portNumber,
-        cipher: e.proxyParams.encryptionMethod,
-        secret: e.proxyParams.password
+        id: key.id,
+        port: key.proxyParams.portNumber,
+        cipher: key.proxyParams.encryptionMethod,
+        secret: key.proxyParams.password
       };
     });
     return this.shadowsocksServer.update(serverAccessKeys);
   }
 
   private loadAccessKeys(): AccessKey[] {
-    return this.keyConfig.data().accessKeys.map(e => makeAccessKey(this.proxyHostname, e));
+    return this.keyConfig.data().accessKeys.map(key => makeAccessKey(this.proxyHostname, key));
   }
 
   private saveAccessKeys() {
     try {
-      this.keyConfig.data().accessKeys = this.accessKeys.map(e => makeAccessKeyJson(e));
+      this.keyConfig.data().accessKeys = this.accessKeys.map(key => makeAccessKeyJson(key));
       this.keyConfig.write();
     } catch (error) {
       throw new Error(`Failed to save access key config: ${error}`);
