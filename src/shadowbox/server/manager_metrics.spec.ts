@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 import {PrometheusClient, QueryResultData} from '../infrastructure/prometheus_scraper';
 import {DataUsageByUser} from '../model/metrics';
-
 import {PrometheusManagerMetrics} from './manager_metrics';
+import {FakePrometheusClient} from './mocks/mocks';
 
 describe('PrometheusManagerMetrics', () => {
   it('get30DayByteTransfer', async (done) => {
-    const managerMetrics = getManagerMetrics({'access-key-1': 1000, 'access-key-2': 10000});
+    const managerMetrics = new PrometheusManagerMetrics(
+        new FakePrometheusClient({'access-key-1': 1000, 'access-key-2': 10000}));
     const dataUsage = await managerMetrics.get30DayByteTransfer();
     const bytesTransferredByUserId = dataUsage.bytesTransferredByUserId;
     expect(Object.keys(bytesTransferredByUserId).length).toEqual(2);
@@ -28,39 +28,4 @@ describe('PrometheusManagerMetrics', () => {
     expect(bytesTransferredByUserId['access-key-2']).toEqual(10000);
     done();
   });
-
-  it('getOutboundByteTransfer', async (done) => {
-    const managerMetrics = getManagerMetrics({'access-key': 1024});
-    const bytesTransferred = await managerMetrics.getOutboundByteTransfer('access-key', 10);
-    expect(bytesTransferred).toEqual(1024);
-    done();
-  });
-
-  it('getOutboundByteTransfer returns zero when ID is missing', async (done) => {
-    const managerMetrics = getManagerMetrics({'access-key': 1024});
-    const bytesTransferred = await managerMetrics.getOutboundByteTransfer('doesnotexist', 10);
-    expect(bytesTransferred).toEqual(0);
-    done();
-  });
 });
-
-class FakePrometheusClient extends PrometheusClient {
-  constructor(private transferredBytesById: {[accessKeyId: string]: number}) {
-    super('');
-  }
-
-  async query(query: string): Promise<QueryResultData> {
-    const queryResultData = {} as QueryResultData;
-    queryResultData.result = [];
-    for (const accessKeyId of Object.keys(this.transferredBytesById)) {
-      const transferredBytes = this.transferredBytesById[accessKeyId];
-      queryResultData.result.push(
-          {metric: {'access_key': accessKeyId}, value: [transferredBytes, `${transferredBytes}`]});
-    }
-    return queryResultData;
-  }
-}
-
-function getManagerMetrics(transferredBytesById: {[accessKeyId: string]: number}) {
-  return new PrometheusManagerMetrics(new FakePrometheusClient(transferredBytesById));
-}

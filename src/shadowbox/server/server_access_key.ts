@@ -19,7 +19,8 @@ import {Clock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyQuota, AccessKeyRepository} from '../model/access_key';
+import {PrometheusClient} from '../infrastructure/prometheus_scraper';
+import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyQuota, AccessKeyRepository, ProxyParams} from '../model/access_key';
 import {ShadowsocksAccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
 
 import {ManagerMetrics} from './manager_metrics';
@@ -44,6 +45,20 @@ export interface AccessKeyConfigJson {
 
   // DEPRECATED: Use ServerConfigJson.portForNewAccessKeys instead.
   defaultPort?: number;
+}
+
+export interface UsageMetrics {
+  getOutboundByteTransfer(accessKeyId: string, windowHours: number): Promise<number>;
+}
+
+// AccessKey implementation with write access enabled on properties that may change.
+class ServerAccessKey implements AccessKey {
+  readonly id: AccessKeyId;
+  name: string;
+  metricsId: AccessKeyMetricsId;
+  readonly proxyParams: ProxyParams;
+  quota?: AccessKeyQuota;
+  isOverQuota?: boolean;
 }
 
 // Generates a random password for Shadowsocks access keys.
@@ -84,13 +99,13 @@ function makeAccessKeyJson(accessKey: AccessKey): AccessKeyJson {
 export class ServerAccessKeyRepository implements AccessKeyRepository {
   private static QUOTA_ENFORCEMENT_INTERVAL_MS = 60 * 60 * 1000;  // 1h
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
-  private accessKeys: AccessKey[];
+  private accessKeys: ServerAccessKey[];
   private portForNewAccessKeys: number|undefined;
 
   constructor(
       private portProvider: PortProvider, private proxyHostname: string,
       private keyConfig: JsonConfig<AccessKeyConfigJson>,
-      private shadowsocksServer: ShadowsocksServer, private metrics: ManagerMetrics) {
+      private shadowsocksServer: ShadowsocksServer, private metrics: UsageMetrics) {
     if (this.keyConfig.data().accessKeys === undefined) {
       this.keyConfig.data().accessKeys = [];
     }
@@ -100,8 +115,11 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.accessKeys = this.loadAccessKeys();
   }
 
-  // Exposes the access key configuration to the server. Periodically enforces access key quotas.
+  // Starts the Shadowsocks server and exposes the access key configuration to the server.
+  // Periodically enforces access key quotas.
   async start(clock: Clock): Promise<void> {
+    await this.enforceAccessKeyQuotas();
+    await this.updateServer();
     clock.setInterval(async () => {
       try {
         await this.enforceAccessKeyQuotas();
@@ -109,8 +127,6 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
         logging.error(`Failed to enforce access key quotas: ${e}`);
       }
     }, ServerAccessKeyRepository.QUOTA_ENFORCEMENT_INTERVAL_MS);
-    await this.enforceAccessKeyQuotas();
-    await this.updateServer();
   }
 
   enableSinglePort(portForNewAccessKeys: number) {
@@ -157,8 +173,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   listAccessKeys(): AccessKey[] {
-    // Deep copy the access key array to prevent returning references to keys or their properties.
-    return this.accessKeys.map(key => (key instanceof Object) ? {...key} : key);
+    return [...this.accessKeys];  // Return a copy to the access key array.
   }
 
   renameAccessKey(id: AccessKeyId, name: string): boolean {
@@ -176,7 +191,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   async setAccessKeyQuota(id: AccessKeyId, quota: AccessKeyQuota): Promise<boolean> {
-    if (!quota || quota.quotaBytes < 1 || quota.windowHours < 1) {
+    if (!quota || quota.quotaBytes < 0 || quota.windowHours < 0) {
       return false;
     }
     const accessKey = this.getAccessKey(id);
@@ -234,7 +249,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
 
   // Updates `accessKey` quota status by comparing its usage with collected metrics. Returns whether
   // the quota status changed.
-  private async updateAccessKeyQuotaStatus(accessKey: AccessKey): Promise<boolean> {
+  private async updateAccessKeyQuotaStatus(accessKey: ServerAccessKey): Promise<boolean> {
     if (!accessKey.quota) {
       return false;  // Don't query the usage of access keys without quota.
     }
@@ -274,12 +289,28 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   // Returns a reference to the access key with `id`, or undefined if the key is not found.
-  private getAccessKey(id: AccessKeyId): AccessKey|undefined {
+  private getAccessKey(id: AccessKeyId): ServerAccessKey|undefined {
     for (const accessKey of this.accessKeys) {
       if (accessKey.id === id) {
         return accessKey;
       }
     }
     return undefined;
+  }
+}
+
+// Retrieves access key usage metrics from a Prometheus instance.
+export class AccessKeyUsageMetrics implements UsageMetrics {
+  constructor(private prometheusClient: PrometheusClient) {}
+
+  async getOutboundByteTransfer(accessKeyId: string, windowHours: number): Promise<number> {
+    let bytesTransferred = 0;
+    const result = await this.prometheusClient.query(
+        `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t",access_key="${accessKeyId}"}[${
+            windowHours}h])) by (access_key)`);
+    if (result && result.result[0] && result.result[0].metric['access_key'] === accessKeyId) {
+      bytesTransferred = Math.round(parseFloat(result.result[0].value[1]));
+    }
+    return bytesTransferred;
   }
 }

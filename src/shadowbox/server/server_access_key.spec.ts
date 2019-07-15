@@ -16,9 +16,9 @@ import {ManualClock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
 import {InMemoryConfig} from '../infrastructure/json_config';
 import {AccessKeyRepository} from '../model/access_key';
-import {FakeManagerMetrics, FakeShadowsocksServer} from './mocks/mocks';
 
-import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
+import {FakePrometheusClient, FakeShadowsocksServer, FakeUsageMetrics} from './mocks/mocks';
+import {AccessKeyConfigJson, AccessKeyUsageMetrics, ServerAccessKeyRepository} from './server_access_key';
 import {ServerConfigJson} from './server_config';
 
 describe('ServerAccessKeyRepository', () => {
@@ -119,11 +119,6 @@ describe('ServerAccessKeyRepository', () => {
     expect(await repo.setAccessKeyQuota(accessKey.id, negativeBytesQuota)).toBeFalsy();
     const negativeWindowQuota = {quotaBytes: 1000, windowHours: -24};
     expect(await repo.setAccessKeyQuota(accessKey.id, negativeWindowQuota)).toBeFalsy();
-    // Decimal values
-    const decimalBytesQuota = {quotaBytes: 0.1, windowHours: 24};
-    expect(await repo.setAccessKeyQuota(accessKey.id, decimalBytesQuota)).toBeFalsy();
-    const decimalWindowQuota = {quotaBytes: 1000, windowHours: 0.1};
-    expect(await repo.setAccessKeyQuota(accessKey.id, decimalWindowQuota)).toBeFalsy();
     // Undefined quota
     expect(await repo.setAccessKeyQuota(accessKey.id, undefined)).toBeFalsy();
     done();
@@ -131,7 +126,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('setAccessKeyQuota updates keys quota status', async (done) => {
     const server = new FakeShadowsocksServer();
-    const metrics = new FakeManagerMetrics({'0': {1: 500, 2: 800}, '1': {1: 200}});
+    const metrics = new FakeUsageMetrics({'0': {1: 500, 2: 800}, '1': {1: 200}});
     const repo = new ServerAccessKeyRepository(
         new PortProvider(), '',
         new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}), server, metrics);
@@ -178,7 +173,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('removeAccessKeyQuota restores over-quota access keys when removing quota ', async (done) => {
     const server = new FakeShadowsocksServer();
-    const metrics = new FakeManagerMetrics({'0': {1: 500}, '1': {1: 100}});
+    const metrics = new FakeUsageMetrics({'0': {1: 500}, '1': {1: 100}});
     const repo = new ServerAccessKeyRepository(
         new PortProvider(), '',
         new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}), server, metrics);
@@ -197,7 +192,7 @@ describe('ServerAccessKeyRepository', () => {
   });
 
   it('enforceAccessKeyQuotas updates keys quota status ', async (done) => {
-    const metrics = new FakeManagerMetrics({'0': {1: 500}, '1': {1: 100}});
+    const metrics = new FakeUsageMetrics({'0': {1: 500}, '1': {1: 100}});
     const repo = new ServerAccessKeyRepository(
         new PortProvider(), '',
         new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}),
@@ -221,7 +216,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('enforceAccessKeyQuotas enables and disables keys', async (done) => {
     const server = new FakeShadowsocksServer();
-    const metrics = new FakeManagerMetrics({'0': {1: 500}, '1': {1: 100}});
+    const metrics = new FakeUsageMetrics({'0': {1: 500}, '1': {1: 100}});
     const repo = new ServerAccessKeyRepository(
         new PortProvider(), '',
         new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}), server, metrics);
@@ -246,7 +241,7 @@ describe('ServerAccessKeyRepository', () => {
     const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
     const repo1 = new ServerAccessKeyRepository(
         new PortProvider(), 'hostname', config, new FakeShadowsocksServer(),
-        new FakeManagerMetrics({}));
+        new FakeUsageMetrics({}));
     // Create 2 new access keys
     await Promise.all([repo1.createNewAccessKey(), repo1.createNewAccessKey()]);
     // Modify properties
@@ -257,7 +252,7 @@ describe('ServerAccessKeyRepository', () => {
     // might happen after the shadowbox server is restarted.
     const repo2 = new ServerAccessKeyRepository(
         new PortProvider(), 'hostname', config, new FakeShadowsocksServer(),
-        new FakeManagerMetrics({}));
+        new FakeUsageMetrics({}));
     // Check that repo1 and repo2 have the same access keys
     expect(repo1.listAccessKeys()).toEqual(repo2.listAccessKeys());
     done();
@@ -267,14 +262,14 @@ describe('ServerAccessKeyRepository', () => {
     const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
     // Create a repo with 1 access key, then delete that access key.
     const repo1 = new ServerAccessKeyRepository(
-        new PortProvider(), '', config, new FakeShadowsocksServer(), new FakeManagerMetrics({}));
+        new PortProvider(), '', config, new FakeShadowsocksServer(), new FakeUsageMetrics({}));
     repo1.createNewAccessKey().then((accessKey1) => {
       repo1.removeAccessKey(accessKey1.id);
 
       // Create a 2nd repo with one access key, and verify that
       // it hasn't reused the first access key's ID.
       const repo2 = new ServerAccessKeyRepository(
-          new PortProvider(), '', config, new FakeShadowsocksServer(), new FakeManagerMetrics({}));
+          new PortProvider(), '', config, new FakeShadowsocksServer(), new FakeUsageMetrics({}));
       repo2.createNewAccessKey().then((accessKey2) => {
         expect(accessKey1.id).not.toEqual(accessKey2.id);
         done();
@@ -285,14 +280,14 @@ describe('ServerAccessKeyRepository', () => {
   it('start exposes the access keys to the server', async (done) => {
     const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
     const repo = new ServerAccessKeyRepository(
-        new PortProvider(), '', config, new FakeShadowsocksServer(), new FakeManagerMetrics({}));
+        new PortProvider(), '', config, new FakeShadowsocksServer(), new FakeUsageMetrics({}));
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
     // Create a new repository with the same configuration. The keys should not be exposed to the
     // server until `start` is called.
     const server = new FakeShadowsocksServer();
     const repo2 = new ServerAccessKeyRepository(
-        new PortProvider(), '', config, server, new FakeManagerMetrics({}));
+        new PortProvider(), '', config, server, new FakeUsageMetrics({}));
     expect(server.getAccessKeys().length).toEqual(0);
     await repo2.start(new ManualClock());
     const serverAccessKeys = server.getAccessKeys();
@@ -304,7 +299,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('start periodically enforces access key quotas', async (done) => {
     const server = new FakeShadowsocksServer();
-    const metrics = new FakeManagerMetrics({'0': {1: 500}, '1': {1: 300}, '2': {5: 1000}});
+    const metrics = new FakeUsageMetrics({'0': {1: 500}, '1': {1: 300}, '2': {5: 1000}});
     const repo = new ServerAccessKeyRepository(
         new PortProvider(), '',
         new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}), server, metrics);
@@ -339,6 +334,22 @@ describe('ServerAccessKeyRepository', () => {
   });
 });
 
+describe('AccessKeyUsageMetrics', () => {
+  it('getOutboundByteTransfer', async (done) => {
+    const usageMetrics = new AccessKeyUsageMetrics(new FakePrometheusClient({'access-key': 1024}));
+    const bytesTransferred = await usageMetrics.getOutboundByteTransfer('access-key', 10);
+    expect(bytesTransferred).toEqual(1024);
+    done();
+  });
+
+  it('getOutboundByteTransfer returns zero when ID is missing', async (done) => {
+    const usageMetrics = new AccessKeyUsageMetrics(new FakePrometheusClient({'access-key': 1024}));
+    const bytesTransferred = await usageMetrics.getOutboundByteTransfer('doesnotexist', 10);
+    expect(bytesTransferred).toEqual(0);
+    done();
+  });
+});
+
 function countAccessKeys(repo: AccessKeyRepository) {
   return repo.listAccessKeys().length;
 }
@@ -347,5 +358,5 @@ function createRepo(): ServerAccessKeyRepository {
   const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
   return new ServerAccessKeyRepository(
       new PortProvider(), 'hostname', config, new FakeShadowsocksServer(),
-      new FakeManagerMetrics({}));
+      new FakeUsageMetrics({}));
 }

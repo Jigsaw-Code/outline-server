@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {PrometheusClient, QueryResultData} from '../../infrastructure/prometheus_scraper';
 import {DataUsageByUser} from '../../model/metrics';
 import {ShadowsocksAccessKey, ShadowsocksServer} from '../../model/shadowsocks_server';
 import {TextFile} from '../../model/text_file';
-import {ManagerMetrics} from '../manager_metrics';
+import {UsageMetrics} from '../server_access_key';
 
 export class InMemoryFile implements TextFile {
   private savedText: string;
@@ -49,12 +50,9 @@ export class FakeShadowsocksServer implements ShadowsocksServer {
   }
 }
 
-export class FakeManagerMetrics implements ManagerMetrics {
+export class FakeUsageMetrics implements UsageMetrics {
   constructor(public usage: {[accessKeyId: string]: {[windowHours: number]: number}}) {}
 
-  get30DayByteTransfer(): Promise<DataUsageByUser> {
-    throw new Error('Not implemented');
-  }
   async getOutboundByteTransfer(accessKeyId: string, windowHours: number): Promise<number> {
     const accessKeyUsage = this.usage[accessKeyId];
     let usageBytes = 0;
@@ -62,5 +60,22 @@ export class FakeManagerMetrics implements ManagerMetrics {
       usageBytes = accessKeyUsage[windowHours] || 0;
     }
     return usageBytes;
+  }
+}
+
+export class FakePrometheusClient extends PrometheusClient {
+  constructor(private transferredBytesById: {[accessKeyId: string]: number}) {
+    super('');
+  }
+
+  async query(query: string): Promise<QueryResultData> {
+    const queryResultData = {} as QueryResultData;
+    queryResultData.result = [];
+    for (const accessKeyId of Object.keys(this.transferredBytesById)) {
+      const transferredBytes = this.transferredBytesById[accessKeyId];
+      queryResultData.result.push(
+          {metric: {'access_key': accessKeyId}, value: [transferredBytes, `${transferredBytes}`]});
+    }
+    return queryResultData;
   }
 }

@@ -19,7 +19,7 @@ import {AccessKey, AccessKeyQuota, AccessKeyRepository} from '../model/access_ke
 
 import {ManagerMetrics} from './manager_metrics';
 import {ShadowsocksManagerService} from './manager_service';
-import {FakeManagerMetrics, FakeShadowsocksServer} from './mocks/mocks';
+import {FakeShadowsocksServer, FakeUsageMetrics} from './mocks/mocks';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
 import {ServerConfigJson} from './server_config';
 import {SharedMetricsPublisher} from './shared_metrics';
@@ -247,14 +247,12 @@ describe('ShadowsocksManagerService', () => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
       const accessKey = await repo.createNewAccessKey();
-      let quota: AccessKeyQuota = {quotaBytes: 1, windowHours: 24};
-      delete quota.windowHours;  // Trick the compiler to pass a malformed quota.
+      let quota = {quotaBytes: 1} as AccessKeyQuota;
       const res = {send: (httpCode, data) => {}};
       await service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, (error) => {
         expect(error.statusCode).toEqual(409);
       });
-      quota = {quotaBytes: 1, windowHours: 24};
-      delete quota.quotaBytes;
+      quota = {windowHours: 1} as AccessKeyQuota;
       service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, (error) => {
         expect(error.statusCode).toEqual(409);
         responseProcessed = true;  // required for afterEach to pass.
@@ -317,7 +315,7 @@ describe('ShadowsocksManagerService', () => {
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
       const quota: AccessKeyQuota = {quotaBytes: 10000, windowHours: 48};
       const accessKey = await repo.createNewAccessKey();
-      accessKey.quota = quota;
+      repo.setAccessKeyQuota(accessKey.id, quota);
       expect(accessKey.quota).toEqual(quota);
       const res = {
         send: (httpCode, data) => {
@@ -396,19 +394,15 @@ function getFirstAccessKey(repo: AccessKeyRepository) {
   return repo.listAccessKeys()[0];
 }
 
-function createNewAccessKeyWithName(repo: AccessKeyRepository, name: string): Promise<AccessKey> {
-  return repo.createNewAccessKey().then((key) => {
-    key.name = name;
-    return key;
-  });
-}
-
-function createNewAccessKeyWithQuota(
-    repo: AccessKeyRepository, quota: AccessKeyQuota): Promise<AccessKey> {
-  return repo.createNewAccessKey().then((key) => {
-    key.quota = quota;
-    return key;
-  });
+async function createNewAccessKeyWithName(
+    repo: AccessKeyRepository, name: string): Promise<AccessKey> {
+  const accessKey = await repo.createNewAccessKey();
+  try {
+    repo.renameAccessKey(accessKey.id, name);
+  } catch (e) {
+    // Ignore; writing to disk is expected to fail in some of the tests.
+  }
+  return accessKey;
 }
 
 function fakeSharedMetricsReporter(): SharedMetricsPublisher {
@@ -430,5 +424,5 @@ function getAccessKeyRepository(): AccessKeyRepository {
   return new ServerAccessKeyRepository(
       new PortProvider(), 'hostname',
       new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}),
-      new FakeShadowsocksServer(), new FakeManagerMetrics({}));
+      new FakeShadowsocksServer(), new FakeUsageMetrics({}));
 }

@@ -29,7 +29,7 @@ import {AccessKeyId} from '../model/access_key';
 import {PrometheusManagerMetrics} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
 import {OutlineShadowsocksServer} from './outline_shadowsocks_server';
-import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
+import {AccessKeyConfigJson, AccessKeyUsageMetrics, ServerAccessKeyRepository} from './server_access_key';
 import * as server_config from './server_config';
 import {OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollectorClient, SharedMetricsPublisher} from './shared_metrics';
 
@@ -160,6 +160,14 @@ async function main() {
       getPersistentFilename('prometheus/config.yml'), prometheusConfigJson);
 
   const prometheusClient = new PrometheusClient(`http://${prometheusLocation}`);
+  const accessKeyRepository = new ServerAccessKeyRepository(
+      portProvider, proxyHostname, accessKeyConfig, shadowsocksServer,
+      new AccessKeyUsageMetrics(prometheusClient));
+
+  const portForNewAccessKeys = getPortForNewAccessKeys(serverConfig, accessKeyConfig) ||
+      await reservePortForNewAccessKeys(portProvider, serverConfig);
+  accessKeyRepository.enableSinglePort(portForNewAccessKeys);
+
   const metricsReader = new PrometheusUsageMetrics(prometheusClient);
   const toMetricsId = (id: AccessKeyId) => {
     return accessKeyRepository.getMetricsId(id);
@@ -168,13 +176,6 @@ async function main() {
   const metricsCollector = new RestMetricsCollectorClient(metricsCollectorUrl);
   const metricsPublisher: SharedMetricsPublisher = new OutlineSharedMetricsPublisher(
       new RealClock(), serverConfig, metricsReader, toMetricsId, metricsCollector);
-
-  const accessKeyRepository = new ServerAccessKeyRepository(
-      portProvider, proxyHostname, accessKeyConfig, shadowsocksServer, managerMetrics);
-  const portForNewAccessKeys = getPortForNewAccessKeys(serverConfig, accessKeyConfig) ||
-      await reservePortForNewAccessKeys(portProvider, serverConfig);
-  accessKeyRepository.enableSinglePort(portForNewAccessKeys);
-
   const managerService = new ShadowsocksManagerService(
       process.env.SB_DEFAULT_SERVER_NAME || 'Outline Server', serverConfig, accessKeyRepository,
       managerMetrics, metricsPublisher);
