@@ -17,7 +17,7 @@ import {DataUsageByUser} from '../model/metrics';
 
 export interface ManagerMetrics {
   get30DayByteTransfer(): Promise<DataUsageByUser>;
-  getOutboundByteTransfer(accessKeyId: string, windowHours: number): Promise<DataUsageByUser>;
+  getOutboundByteTransfer(accessKeyId: string, windowHours: number): Promise<number>;
 }
 
 // Reads manager metrics from a Prometheus instance.
@@ -42,17 +42,14 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     return {bytesTransferredByUserId: usage};
   }
 
-  async getOutboundByteTransfer(accessKeyId: string, windowHours: number):
-      Promise<DataUsageByUser> {
+  async getOutboundByteTransfer(accessKeyId: string, windowHours: number): Promise<number> {
     let bytesTransferred = 0;
     const result = await this.prometheusClient.query(
-        `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t|>p<",access_key="${accessKeyId}"}[${
+        `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t",access_key="${accessKeyId}"}[${
             windowHours}h])) by (access_key)`);
     if (result && result.result[0] && result.result[0].metric['access_key'] === accessKeyId) {
       bytesTransferred = Math.round(parseFloat(result.result[0].value[1]));
     }
-    const bytesTransferredByUserId = {};
-    bytesTransferredByUserId[accessKeyId] = bytesTransferred;
-    return {bytesTransferredByUserId};
+    return bytesTransferred;
   }
 }

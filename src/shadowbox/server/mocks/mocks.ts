@@ -55,15 +55,12 @@ export class ManagerMetricsStub implements ManagerMetrics {
   get30DayByteTransfer(): Promise<DataUsageByUser> {
     throw new Error('Not implemented');
   }
-  async getOutboundByteTransfer(accessKeyId: string, windowHours: number):
-      Promise<DataUsageByUser> {
+  async getOutboundByteTransfer(accessKeyId: string, windowHours: number): Promise<number> {
     const accessKeyUsage = this.usage[accessKeyId];
     let usageBytes = 0;
     if (!!accessKeyUsage) {
       usageBytes = accessKeyUsage[windowHours] || 0;
     }
-    const bytesTransferredByUserId = {};
-    bytesTransferredByUserId[accessKeyId] = usageBytes;
-    return {bytesTransferredByUserId};
+    return usageBytes;
   }
 }

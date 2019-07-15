@@ -31,19 +31,15 @@ describe('PrometheusManagerMetrics', () => {
 
   it('getOutboundByteTransfer', async (done) => {
     const managerMetrics = getManagerMetrics({'access-key': 1024});
-    const dataUsage = await managerMetrics.getOutboundByteTransfer('access-key', 10);
-    const bytesTransferredByUserId = dataUsage.bytesTransferredByUserId;
-    expect(Object.keys(bytesTransferredByUserId).length).toEqual(1);
-    expect(bytesTransferredByUserId['access-key']).toEqual(1024);
+    const bytesTransferred = await managerMetrics.getOutboundByteTransfer('access-key', 10);
+    expect(bytesTransferred).toEqual(1024);
     done();
   });
 
   it('getOutboundByteTransfer returns zero when ID is missing', async (done) => {
     const managerMetrics = getManagerMetrics({'access-key': 1024});
-    const dataUsage = await managerMetrics.getOutboundByteTransfer('doesnotexist', 10);
-    const bytesTransferredByUserId = dataUsage.bytesTransferredByUserId;
-    expect(Object.keys(bytesTransferredByUserId).length).toEqual(1);
-    expect(bytesTransferredByUserId['doesnotexist']).toEqual(0);
+    const bytesTransferred = await managerMetrics.getOutboundByteTransfer('doesnotexist', 10);
+    expect(bytesTransferred).toEqual(0);
     done();
   });
 });

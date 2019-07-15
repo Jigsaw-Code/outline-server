@@ -82,8 +82,8 @@ function makeAccessKeyJson(accessKey: AccessKey): AccessKeyJson {
 // AccessKeyRepository that keeps its state in a config file and uses ShadowsocksServer
 // to start and stop per-access-key Shadowsocks instances.
 export class ServerAccessKeyRepository implements AccessKeyRepository {
+  private static QUOTA_ENFORCEMENT_INTERVAL_MS = 60 * 60 * 1000;  // 1h
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
-  private QUOTA_ENFORCEMENT_INTERVAL_MS = 3600000;  // 1h
   private accessKeys: AccessKey[];
   private portForNewAccessKeys: number|undefined;
 
@@ -102,15 +102,15 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
 
   // Exposes the access key configuration to the server. Periodically enforces access key quotas.
   async start(clock: Clock): Promise<void> {
-    await this.updateServer();
     clock.setInterval(async () => {
       try {
         await this.enforceAccessKeyQuotas();
       } catch (e) {
         logging.error(`Failed to enforce access key quotas: ${e}`);
       }
-    }, this.QUOTA_ENFORCEMENT_INTERVAL_MS);
+    }, ServerAccessKeyRepository.QUOTA_ENFORCEMENT_INTERVAL_MS);
     await this.enforceAccessKeyQuotas();
+    await this.updateServer();
   }
 
   enableSinglePort(portForNewAccessKeys: number) {
@@ -238,9 +238,8 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     if (!accessKey.quota) {
       return false;  // Don't query the usage of access keys without quota.
     }
-    const usage =
+    const usageBytes =
         await this.metrics.getOutboundByteTransfer(accessKey.id, accessKey.quota.windowHours);
-    const usageBytes = usage.bytesTransferredByUserId[accessKey.id];
     const isOverQuota = usageBytes > accessKey.quota.quotaBytes;
     logging.debug(`Enforcing quota for access key ${accessKey.id}. Quota: ${
         JSON.stringify(accessKey.quota)}, usage: ${usageBytes}B, isOverQuota: ${isOverQuota}`);

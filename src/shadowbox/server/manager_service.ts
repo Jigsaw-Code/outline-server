@@ -178,11 +178,12 @@ export class ShadowsocksManagerService {
       logging.debug(`setAccessKeyQuota request ${JSON.stringify(req.params)}`);
       const accessKeyId = req.params.id;
       const quota = req.params.quota;
+      // TODO(alalama): remove these checks once the repository supports typed errors.
       if (!quota || !quota.quotaBytes || !quota.windowHours) {
         return next(new restify.InvalidArgumentError(
             'Must provide a quota value with "quotaBytes" and "windowHours"'));
       }
-      if (quota.quotaBytes < 0 || quota.windowHours < 0) {
+      if (quota.quotaBytes <= 0 || quota.windowHours <= 0) {
         return next(new restify.InvalidArgumentError('Must provide positive quota values'));
       }
       const success = await this.accessKeys.setAccessKeyQuota(accessKeyId, quota);
