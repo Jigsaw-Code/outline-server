@@ -269,10 +269,16 @@ components:
           type: integer
     AccessKeyQuota:
       properties:
-        quotaBytes:
-          type: integer
-        windowHours:
-          type: integer
+        quota:
+          type: object
+          properties:
+            bytes:
+              type: integer
+        window:
+          type: object
+          properties:
+            hours:
+              type: integer
     AccessKey:
       required:
         - id

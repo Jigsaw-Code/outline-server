@@ -191,7 +191,8 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   async setAccessKeyQuota(id: AccessKeyId, quota: AccessKeyQuota): Promise<boolean> {
-    if (!quota || quota.quotaBytes < 0 || quota.windowHours < 0) {
+    if (!quota || !quota.quota || !quota.window || quota.quota.bytes < 0 ||
+        quota.window.hours < 0) {
       return false;
     }
     const accessKey = this.getAccessKey(id);
@@ -254,8 +255,8 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       return false;  // Don't query the usage of access keys without quota.
     }
     const usageBytes =
-        await this.metrics.getOutboundByteTransfer(accessKey.id, accessKey.quota.windowHours);
-    const isOverQuota = usageBytes > accessKey.quota.quotaBytes;
+        await this.metrics.getOutboundByteTransfer(accessKey.id, accessKey.quota.window.hours);
+    const isOverQuota = usageBytes > accessKey.quota.quota.bytes;
     logging.debug(`Enforcing quota for access key ${accessKey.id}. Quota: ${
         JSON.stringify(accessKey.quota)}, usage: ${usageBytes}B, isOverQuota: ${isOverQuota}`);
     const quotaStatusChanged = isOverQuota !== accessKey.isOverQuota;

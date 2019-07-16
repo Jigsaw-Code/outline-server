@@ -96,7 +96,7 @@ describe('ServerAccessKeyRepository', () => {
   it('Can set access key quota', async (done) => {
     const repo = createRepo();
     const accessKey = await repo.createNewAccessKey();
-    const quota = {quotaBytes: 5000, windowHours: 24};
+    const quota = {quota: {bytes: 5000}, window: {hours: 24}};
     expect(await repo.setAccessKeyQuota(accessKey.id, quota)).toBeTruthy();
     const accessKeys = repo.listAccessKeys();
     expect(accessKeys[0].quota).toEqual(quota);
@@ -106,7 +106,7 @@ describe('ServerAccessKeyRepository', () => {
   it('setAccessKeyQuota returns false for missing keys', async (done) => {
     const repo = createRepo();
     await repo.createNewAccessKey();
-    const quota = {quotaBytes: 1000, windowHours: 24};
+    const quota = {quota: {bytes: 1000}, window: {hours: 24}};
     expect(await repo.setAccessKeyQuota('doesnotexist', quota)).toBeFalsy();
     done();
   });
@@ -115,9 +115,9 @@ describe('ServerAccessKeyRepository', () => {
     const repo = createRepo();
     const accessKey = await repo.createNewAccessKey();
     // Negative values
-    const negativeBytesQuota = {quotaBytes: -1000, windowHours: 24};
+    const negativeBytesQuota = {quota: {bytes: -1000}, window: {hours: 24}};
     expect(await repo.setAccessKeyQuota(accessKey.id, negativeBytesQuota)).toBeFalsy();
-    const negativeWindowQuota = {quotaBytes: 1000, windowHours: -24};
+    const negativeWindowQuota = {quota: {bytes: 1000}, window: {hours: -24}};
     expect(await repo.setAccessKeyQuota(accessKey.id, negativeWindowQuota)).toBeFalsy();
     // Undefined quota
     expect(await repo.setAccessKeyQuota(accessKey.id, undefined)).toBeFalsy();
@@ -133,7 +133,7 @@ describe('ServerAccessKeyRepository', () => {
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
 
-    await repo.setAccessKeyQuota(accessKey1.id, {quotaBytes: 200, windowHours: 1});
+    await repo.setAccessKeyQuota(accessKey1.id, {quota: {bytes: 200}, window: {hours: 1}});
     let accessKeys = await repo.listAccessKeys();
     expect(accessKeys[0].isOverQuota).toBeTruthy();
     expect(accessKeys[1].isOverQuota).toBeFalsy();
@@ -142,8 +142,8 @@ describe('ServerAccessKeyRepository', () => {
     expect(serverAccessKeys[0].id).toEqual(accessKey2.id);
     // The over-quota access key should be re-enabled after increasing its quota, while the
     // under-quota key should be disabled after setting its quota.
-    await repo.setAccessKeyQuota(accessKey1.id, {quotaBytes: 1000, windowHours: 2});
-    await repo.setAccessKeyQuota(accessKey2.id, {quotaBytes: 100, windowHours: 1});
+    await repo.setAccessKeyQuota(accessKey1.id, {quota: {bytes: 1000}, window: {hours: 2}});
+    await repo.setAccessKeyQuota(accessKey2.id, {quota: {bytes: 100}, window: {hours: 1}});
     accessKeys = await repo.listAccessKeys();
     expect(accessKeys[0].isOverQuota).toBeFalsy();
     expect(accessKeys[1].isOverQuota).toBeTruthy();
@@ -156,7 +156,7 @@ describe('ServerAccessKeyRepository', () => {
   it('can remove access key quotas', async (done) => {
     const repo = createRepo();
     const accessKey = await repo.createNewAccessKey();
-    await expect(repo.setAccessKeyQuota(accessKey.id, {quotaBytes: 100, windowHours: 24}))
+    await expect(repo.setAccessKeyQuota(accessKey.id, {quota: {bytes: 100}, window: {hours: 24}}))
         .toBeTruthy();
     expect(repo.listAccessKeys()[0].quota).toBeDefined();
     expect(repo.removeAccessKeyQuota(accessKey.id)).toBeTruthy();
@@ -179,7 +179,7 @@ describe('ServerAccessKeyRepository', () => {
         new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}), server, metrics);
     const accessKey = await repo.createNewAccessKey();
     await repo.createNewAccessKey();
-    await repo.setAccessKeyQuota(accessKey.id, {quotaBytes: 100, windowHours: 1});
+    await repo.setAccessKeyQuota(accessKey.id, {quota: {bytes: 100}, window: {hours: 1}});
     expect(server.getAccessKeys().length).toEqual(1);
 
     // Remove the quota; expect the key to be under quota and enabled.
@@ -199,7 +199,7 @@ describe('ServerAccessKeyRepository', () => {
         new FakeShadowsocksServer(), metrics);
     const accessKey1 = await repo.createNewAccessKey();
     await repo.createNewAccessKey();
-    await repo.setAccessKeyQuota(accessKey1.id, {quotaBytes: 200, windowHours: 1});
+    await repo.setAccessKeyQuota(accessKey1.id, {quota: {bytes: 200}, window: {hours: 1}});
 
     await repo.enforceAccessKeyQuotas();
     let accessKeys = await repo.listAccessKeys();
@@ -222,7 +222,7 @@ describe('ServerAccessKeyRepository', () => {
         new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}), server, metrics);
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
-    await repo.setAccessKeyQuota(accessKey1.id, {quotaBytes: 200, windowHours: 1});
+    await repo.setAccessKeyQuota(accessKey1.id, {quota: {bytes: 200}, window: {hours: 1}});
 
     await repo.enforceAccessKeyQuotas();
     const accessKeys = await repo.listAccessKeys();
@@ -245,7 +245,7 @@ describe('ServerAccessKeyRepository', () => {
     // Create 2 new access keys
     await Promise.all([repo1.createNewAccessKey(), repo1.createNewAccessKey()]);
     // Modify properties
-    await repo1.setAccessKeyQuota('0', {quotaBytes: 100, windowHours: 12});
+    await repo1.setAccessKeyQuota('0', {quota: {bytes: 100}, window: {hours: 12}});
     repo1.renameAccessKey('1', 'name');
 
     // Create a 2nd repo from the same config file. This simulates what
@@ -306,8 +306,8 @@ describe('ServerAccessKeyRepository', () => {
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
     const accessKey3 = await repo.createNewAccessKey();
-    await repo.setAccessKeyQuota(accessKey1.id, {quotaBytes: 300, windowHours: 1});
-    await repo.setAccessKeyQuota(accessKey2.id, {quotaBytes: 100, windowHours: 1});
+    await repo.setAccessKeyQuota(accessKey1.id, {quota: {bytes: 300}, window: {hours: 1}});
+    await repo.setAccessKeyQuota(accessKey2.id, {quota: {bytes: 100}, window: {hours: 1}});
     const clock = new ManualClock();
 
     await repo.start(clock);

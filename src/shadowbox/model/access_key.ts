@@ -30,9 +30,9 @@ export interface ProxyParams {
 // Parameters needed to enforce an access key data quota, over a sliding window.
 export interface AccessKeyQuota {
   // The allowed metered traffic measured in bytes.
-  readonly quotaBytes: number;
+  readonly quota: {bytes: number};
   // The sliding window size in hours.
-  readonly windowHours: number;
+  readonly window: {hours: number};
 }
 
 // AccessKey is what admins work with. It gives ProxyParams a name and identity.

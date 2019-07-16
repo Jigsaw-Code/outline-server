@@ -122,7 +122,7 @@ curl --insecure -X DELETE $API_URL/access-keys/2
 Set an access key quota
 (e.g. limit outbound data transfer for access key 2 to 1MB over a 24 hour sliding window)
 ```
-curl -v --insecure -X PUT -H "Content-Type: application/json" -d '{"quota": {"quotaBytes": 1000000, "windowHours": 24}}' $API_URL/access-keys/2/quota
+curl -v --insecure -X PUT -H "Content-Type: application/json" -d '{"quota": {"quota": {"bytes": 1000}, "window": {"hours": 1}}}' $API_URL/access-keys/2/quota
 ```
 
 Remove an access key quota
