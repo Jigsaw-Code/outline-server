@@ -266,13 +266,14 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   // Retrieves access key outbound data transfer in bytes for `accessKeyId` over `windowHours`
   // from a Prometheus instance.
   async getOutboundByteTransfer(accessKeyId: string, windowHours: number): Promise<number> {
+    const escapedAccessKeyId = JSON.stringify(accessKeyId);
     let bytesTransferred = 0;
     const result = await this.prometheusClient.query(
-        `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t",access_key="${accessKeyId}"}[${
+        `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t",access_key=${escapedAccessKeyId}}[${
             windowHours}h])) by (access_key)`);
     if (result && result.result[0] && result.result[0].metric['access_key'] === accessKeyId &&
         result.result[0].value && result.result[0].value.length > 1) {
-      bytesTransferred = Math.round(parseFloat(result.result[0].value[1]));
+      bytesTransferred = Math.round(parseFloat(result.result[0].value[1])) || 0;
     }
     return bytesTransferred;
   }
