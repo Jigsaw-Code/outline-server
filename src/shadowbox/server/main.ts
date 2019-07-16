@@ -29,7 +29,7 @@ import {AccessKeyId} from '../model/access_key';
 import {PrometheusManagerMetrics} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
 import {OutlineShadowsocksServer} from './outline_shadowsocks_server';
-import {AccessKeyConfigJson, AccessKeyUsageMetrics, ServerAccessKeyRepository} from './server_access_key';
+import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
 import * as server_config from './server_config';
 import {OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollectorClient, SharedMetricsPublisher} from './shared_metrics';
 
@@ -161,8 +161,7 @@ async function main() {
 
   const prometheusClient = new PrometheusClient(`http://${prometheusLocation}`);
   const accessKeyRepository = new ServerAccessKeyRepository(
-      portProvider, proxyHostname, accessKeyConfig, shadowsocksServer,
-      new AccessKeyUsageMetrics(prometheusClient));
+      portProvider, proxyHostname, accessKeyConfig, shadowsocksServer, prometheusClient);
 
   const portForNewAccessKeys = getPortForNewAccessKeys(serverConfig, accessKeyConfig) ||
       await reservePortForNewAccessKeys(portProvider, serverConfig);

@@ -27,9 +27,9 @@ export interface ProxyParams {
   readonly password: string;
 }
 
-// Parameters needed to enforce an access key data quota, over a sliding window.
+// Parameters needed to enforce an access key data transfer quota, over a sliding window.
 export interface AccessKeyQuota {
-  // The allowed metered traffic measured in bytes.
+  // The allowed metered data transfer measured in bytes.
   readonly quota: {bytes: number};
   // The sliding window size in hours.
   readonly window: {hours: number};
@@ -47,7 +47,7 @@ export interface AccessKey {
   readonly proxyParams: ProxyParams;
   // Admin-controlled, data transfer quota for this access key. Unlimited if unset.
   readonly quota?: AccessKeyQuota;
-  // Whether the access key data usage exceeds the quota.
+  // Whether the access key data transfer exceeds the quota.
   readonly isOverQuota?: boolean;
 }
 

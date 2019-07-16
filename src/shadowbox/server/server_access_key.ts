@@ -47,10 +47,6 @@ export interface AccessKeyConfigJson {
   defaultPort?: number;
 }
 
-export interface UsageMetrics {
-  getOutboundByteTransfer(accessKeyId: string, windowHours: number): Promise<number>;
-}
-
 // AccessKey implementation with write access enabled on properties that may change.
 class ServerAccessKey implements AccessKey {
   readonly id: AccessKeyId;
@@ -105,7 +101,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   constructor(
       private portProvider: PortProvider, private proxyHostname: string,
       private keyConfig: JsonConfig<AccessKeyConfigJson>,
-      private shadowsocksServer: ShadowsocksServer, private metrics: UsageMetrics) {
+      private shadowsocksServer: ShadowsocksServer, private prometheusClient: PrometheusClient) {
     if (this.keyConfig.data().accessKeys === undefined) {
       this.keyConfig.data().accessKeys = [];
     }
@@ -254,14 +250,31 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     if (!accessKey.quota) {
       return false;  // Don't query the usage of access keys without quota.
     }
-    const usageBytes =
-        await this.metrics.getOutboundByteTransfer(accessKey.id, accessKey.quota.window.hours);
-    const isOverQuota = usageBytes > accessKey.quota.quota.bytes;
-    logging.debug(`Enforcing quota for access key ${accessKey.id}. Quota: ${
-        JSON.stringify(accessKey.quota)}, usage: ${usageBytes}B, isOverQuota: ${isOverQuota}`);
+    const bytesTransferred =
+        await this.getOutboundByteTransfer(accessKey.id, accessKey.quota.window.hours);
+    const isOverQuota = bytesTransferred > accessKey.quota.quota.bytes;
     const quotaStatusChanged = isOverQuota !== accessKey.isOverQuota;
     accessKey.isOverQuota = isOverQuota;
+    if (quotaStatusChanged) {
+      logging.debug(`Access key "${accessKey.id}" quota status changed. Quota: ${
+          JSON.stringify(
+              accessKey.quota)}, usage: ${bytesTransferred}B, isOverQuota: ${isOverQuota}`);
+    }
     return quotaStatusChanged;
+  }
+
+  // Retrieves access key outbound data transfer in bytes for `accessKeyId` over `windowHours`
+  // from a Prometheus instance.
+  async getOutboundByteTransfer(accessKeyId: string, windowHours: number): Promise<number> {
+    let bytesTransferred = 0;
+    const result = await this.prometheusClient.query(
+        `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t",access_key="${accessKeyId}"}[${
+            windowHours}h])) by (access_key)`);
+    if (result && result.result[0] && result.result[0].metric['access_key'] === accessKeyId &&
+        result.result[0].value && result.result[0].value.length > 1) {
+      bytesTransferred = Math.round(parseFloat(result.result[0].value[1]));
+    }
+    return bytesTransferred;
   }
 
   private updateServer(): Promise<void> {
@@ -297,21 +310,5 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       }
     }
     return undefined;
-  }
-}
-
-// Retrieves access key usage metrics from a Prometheus instance.
-export class AccessKeyUsageMetrics implements UsageMetrics {
-  constructor(private prometheusClient: PrometheusClient) {}
-
-  async getOutboundByteTransfer(accessKeyId: string, windowHours: number): Promise<number> {
-    let bytesTransferred = 0;
-    const result = await this.prometheusClient.query(
-        `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t",access_key="${accessKeyId}"}[${
-            windowHours}h])) by (access_key)`);
-    if (result && result.result[0] && result.result[0].metric['access_key'] === accessKeyId) {
-      bytesTransferred = Math.round(parseFloat(result.result[0].value[1]));
-    }
-    return bytesTransferred;
   }
 }

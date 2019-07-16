@@ -16,7 +16,6 @@ import {PrometheusClient, QueryResultData} from '../../infrastructure/prometheus
 import {DataUsageByUser} from '../../model/metrics';
 import {ShadowsocksAccessKey, ShadowsocksServer} from '../../model/shadowsocks_server';
 import {TextFile} from '../../model/text_file';
-import {UsageMetrics} from '../server_access_key';
 
 export class InMemoryFile implements TextFile {
   private savedText: string;
@@ -50,31 +49,25 @@ export class FakeShadowsocksServer implements ShadowsocksServer {
   }
 }
 
-export class FakeUsageMetrics implements UsageMetrics {
-  constructor(public usage: {[accessKeyId: string]: {[windowHours: number]: number}}) {}
-
-  async getOutboundByteTransfer(accessKeyId: string, windowHours: number): Promise<number> {
-    const accessKeyUsage = this.usage[accessKeyId];
-    let usageBytes = 0;
-    if (!!accessKeyUsage) {
-      usageBytes = accessKeyUsage[windowHours] || 0;
-    }
-    return usageBytes;
-  }
-}
-
 export class FakePrometheusClient extends PrometheusClient {
-  constructor(private transferredBytesById: {[accessKeyId: string]: number}) {
+  constructor(public bytesTransferredById: {[accessKeyId: string]: number}) {
     super('');
   }
 
   async query(query: string): Promise<QueryResultData> {
-    const queryResultData = {} as QueryResultData;
-    queryResultData.result = [];
-    for (const accessKeyId of Object.keys(this.transferredBytesById)) {
-      const transferredBytes = this.transferredBytesById[accessKeyId];
+    const accessKeyIdMatch = query.match(/access_key="(.*?)"/);
+    let accessKeyIds: string[];
+    if (accessKeyIdMatch && accessKeyIdMatch[1]) {
+      // Return query results only for the specified access key.
+      accessKeyIds = [accessKeyIdMatch[1]];
+    } else {
+      accessKeyIds = Object.keys(this.bytesTransferredById);
+    }
+    const queryResultData = {result: []} as QueryResultData;
+    for (const accessKeyId of accessKeyIds) {
+      const bytesTransferred = this.bytesTransferredById[accessKeyId] || 0;
       queryResultData.result.push(
-          {metric: {'access_key': accessKeyId}, value: [transferredBytes, `${transferredBytes}`]});
+          {metric: {'access_key': accessKeyId}, value: [bytesTransferred, `${bytesTransferred}`]});
     }
     return queryResultData;
   }
