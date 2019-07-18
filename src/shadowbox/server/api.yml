@@ -269,7 +269,7 @@ components:
           type: integer
     AccessKeyQuota:
       properties:
-        quota:
+        data:
           type: object
           properties:
             bytes:

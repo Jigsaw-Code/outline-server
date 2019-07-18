@@ -41,8 +41,7 @@ function accessKeyToJson(accessKey: AccessKey) {
       password: accessKey.proxyParams.password,
       outline: 1,
     })),
-    quota: accessKey.quota,
-    isOverQuota: accessKey.isOverQuota || false
+    quota: accessKey.quotaUsage ? accessKey.quotaUsage.quota : undefined
   };
 }
 
@@ -179,11 +178,11 @@ export class ShadowsocksManagerService {
       const accessKeyId = req.params.id;
       const quota = req.params.quota;
       // TODO(alalama): remove these checks once the repository supports typed errors.
-      if (!quota || !quota.quota || !quota.window) {
+      if (!quota || !quota.data || !quota.window) {
         return next(new restify.InvalidArgumentError(
-            'Must provide a quota value with "quota.bytes" and "window.hours"'));
+            'Must provide a quota value with "data.bytes" and "window.hours"'));
       }
-      if (quota.quota.bytes < 0 || quota.window.hours < 0) {
+      if (quota.data.bytes < 0 || quota.window.hours < 0) {
         return next(new restify.InvalidArgumentError('Must provide positive quota values'));
       }
       const success = await this.accessKeys.setAccessKeyQuota(accessKeyId, quota);

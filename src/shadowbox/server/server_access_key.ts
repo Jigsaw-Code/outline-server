@@ -20,7 +20,7 @@ import {PortProvider} from '../infrastructure/get_port';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
-import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyQuota, AccessKeyRepository, ProxyParams} from '../model/access_key';
+import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyQuota, AccessKeyQuotaUsage, AccessKeyRepository, ProxyParams} from '../model/access_key';
 import {ShadowsocksAccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
 
 import {ManagerMetrics} from './manager_metrics';
@@ -53,8 +53,14 @@ class ServerAccessKey implements AccessKey {
   name: string;
   metricsId: AccessKeyMetricsId;
   readonly proxyParams: ProxyParams;
-  quota?: AccessKeyQuota;
-  isOverQuota?: boolean;
+  quotaUsage?: AccessKeyQuotaUsage;
+}
+
+export function IsAccessKeyOverQuota(accessKey: AccessKey) {
+  if (!accessKey.quotaUsage) {
+    return false;
+  }
+  return accessKey.quotaUsage.usage.bytes > accessKey.quotaUsage.quota.data.bytes;
 }
 
 // Generates a random password for Shadowsocks access keys.
@@ -73,8 +79,7 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyJson): AccessKe
       encryptionMethod: accessKeyJson.encryptionMethod,
       password: accessKeyJson.password,
     },
-    quota: accessKeyJson.quota,
-    isOverQuota: false
+    quotaUsage: accessKeyJson.quota ? {quota: accessKeyJson.quota, usage: {bytes: 0}} : undefined,
   };
 }
 
@@ -86,7 +91,7 @@ function makeAccessKeyJson(accessKey: AccessKey): AccessKeyJson {
     password: accessKey.proxyParams.password,
     port: accessKey.proxyParams.portNumber,
     encryptionMethod: accessKey.proxyParams.encryptionMethod,
-    quota: accessKey.quota
+    quota: accessKey.quotaUsage ? accessKey.quotaUsage.quota : undefined
   };
 }
 
@@ -145,8 +150,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
         encryptionMethod: this.NEW_USER_ENCRYPTION_METHOD,
         password,
       },
-      quota: undefined,
-      isOverQuota: false
+      quotaUsage: undefined
     };
     this.accessKeys.push(accessKey);
     this.saveAccessKeys();
@@ -187,15 +191,14 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   async setAccessKeyQuota(id: AccessKeyId, quota: AccessKeyQuota): Promise<boolean> {
-    if (!quota || !quota.quota || !quota.window || quota.quota.bytes < 0 ||
-        quota.window.hours < 0) {
+    if (!quota || !quota.data || !quota.window || quota.data.bytes < 0 || quota.window.hours < 0) {
       return false;
     }
     const accessKey = this.getAccessKey(id);
     if (!accessKey) {
       return false;
     }
-    accessKey.quota = quota;
+    accessKey.quotaUsage = {quota, usage: {bytes: 0}};
     try {
       this.saveAccessKeys();
       const quotaStautsChanged = await this.updateAccessKeyQuotaStatus(accessKey);
@@ -214,9 +217,8 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     if (!accessKey) {
       return false;
     }
-    const wasOverQuota = accessKey.isOverQuota;
-    accessKey.quota = undefined;
-    accessKey.isOverQuota = false;
+    const wasOverQuota = IsAccessKeyOverQuota(accessKey);
+    accessKey.quotaUsage = undefined;
     try {
       this.saveAccessKeys();
       if (wasOverQuota) {
@@ -247,18 +249,18 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   // Updates `accessKey` quota status by comparing its usage with collected metrics. Returns whether
   // the quota status changed.
   private async updateAccessKeyQuotaStatus(accessKey: ServerAccessKey): Promise<boolean> {
-    if (!accessKey.quota) {
+    if (!accessKey.quotaUsage) {
       return false;  // Don't query the usage of access keys without quota.
     }
+    const wasOverQuota = IsAccessKeyOverQuota(accessKey);
     const bytesTransferred =
-        await this.getOutboundByteTransfer(accessKey.id, accessKey.quota.window.hours);
-    const isOverQuota = bytesTransferred > accessKey.quota.quota.bytes;
-    const quotaStatusChanged = isOverQuota !== accessKey.isOverQuota;
-    accessKey.isOverQuota = isOverQuota;
+        await this.getOutboundByteTransfer(accessKey.id, accessKey.quotaUsage.quota.window.hours);
+    accessKey.quotaUsage.usage.bytes = bytesTransferred;
+    const isOverQuota = IsAccessKeyOverQuota(accessKey);
+    const quotaStatusChanged = isOverQuota !== wasOverQuota;
     if (quotaStatusChanged) {
       logging.debug(`Access key "${accessKey.id}" quota status changed. Quota: ${
-          JSON.stringify(
-              accessKey.quota)}, usage: ${bytesTransferred}B, isOverQuota: ${isOverQuota}`);
+          JSON.stringify(accessKey.quotaUsage)}, isOverQuota: ${isOverQuota}`);
     }
     return quotaStatusChanged;
   }
@@ -279,7 +281,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private updateServer(): Promise<void> {
-    const serverAccessKeys = this.accessKeys.filter(key => !key.isOverQuota).map(key => {
+    const serverAccessKeys = this.accessKeys.filter(key => !IsAccessKeyOverQuota(key)).map(key => {
       return {
         id: key.id,
         port: key.proxyParams.portNumber,
