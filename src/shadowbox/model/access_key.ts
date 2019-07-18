@@ -55,6 +55,8 @@ export interface AccessKey {
   readonly proxyParams: ProxyParams;
   // Admin-controlled, data transfer quota for this access key. Unlimited if unset.
   readonly quotaUsage?: AccessKeyQuotaUsage;
+  // Returns whether the access key has exceeded its data transfer quota.
+  isOverQuota(): boolean;
 }
 
 export interface AccessKeyRepository {

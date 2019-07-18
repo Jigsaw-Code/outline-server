@@ -49,18 +49,16 @@ export interface AccessKeyConfigJson {
 
 // AccessKey implementation with write access enabled on properties that may change.
 class ServerAccessKey implements AccessKey {
-  readonly id: AccessKeyId;
-  name: string;
-  metricsId: AccessKeyMetricsId;
-  readonly proxyParams: ProxyParams;
-  quotaUsage?: AccessKeyQuotaUsage;
-}
+  constructor(
+      readonly id: AccessKeyId, public name: string, public metricsId: AccessKeyMetricsId,
+      readonly proxyParams: ProxyParams, public quotaUsage?: AccessKeyQuotaUsage) {}
 
-export function IsAccessKeyOverQuota(accessKey: AccessKey) {
-  if (!accessKey.quotaUsage) {
-    return false;
+  isOverQuota(): boolean {
+    if (!this.quotaUsage) {
+      return false;
+    }
+    return this.quotaUsage.usage.bytes > this.quotaUsage.quota.data.bytes;
   }
-  return accessKey.quotaUsage.usage.bytes > accessKey.quotaUsage.quota.data.bytes;
 }
 
 // Generates a random password for Shadowsocks access keys.
@@ -69,18 +67,16 @@ function generatePassword(): string {
 }
 
 function makeAccessKey(hostname: string, accessKeyJson: AccessKeyJson): AccessKey {
-  return {
-    id: accessKeyJson.id,
-    name: accessKeyJson.name,
-    metricsId: accessKeyJson.metricsId,
-    proxyParams: {
-      hostname,
-      portNumber: accessKeyJson.port,
-      encryptionMethod: accessKeyJson.encryptionMethod,
-      password: accessKeyJson.password,
-    },
-    quotaUsage: accessKeyJson.quota ? {quota: accessKeyJson.quota, usage: {bytes: 0}} : undefined,
+  const proxyParams = {
+    hostname,
+    portNumber: accessKeyJson.port,
+    encryptionMethod: accessKeyJson.encryptionMethod,
+    password: accessKeyJson.password,
   };
+  const quotaUsage =
+      accessKeyJson.quota ? {quota: accessKeyJson.quota, usage: {bytes: 0}} : undefined;
+  return new ServerAccessKey(
+      accessKeyJson.id, accessKeyJson.name, accessKeyJson.metricsId, proxyParams, quotaUsage);
 }
 
 function makeAccessKeyJson(accessKey: AccessKey): AccessKeyJson {
@@ -140,18 +136,13 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.keyConfig.data().nextId += 1;
     const metricsId = uuidv4();
     const password = generatePassword();
-    const accessKey: AccessKey = {
-      id,
-      name: '',
-      metricsId,
-      proxyParams: {
-        hostname: this.proxyHostname,
-        portNumber: port,
-        encryptionMethod: this.NEW_USER_ENCRYPTION_METHOD,
-        password,
-      },
-      quotaUsage: undefined
+    const proxyParams = {
+      hostname: this.proxyHostname,
+      portNumber: port,
+      encryptionMethod: this.NEW_USER_ENCRYPTION_METHOD,
+      password,
     };
+    const accessKey = new ServerAccessKey(id, '', metricsId, proxyParams, undefined);
     this.accessKeys.push(accessKey);
     this.saveAccessKeys();
     await this.updateServer();
@@ -217,7 +208,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     if (!accessKey) {
       return false;
     }
-    const wasOverQuota = IsAccessKeyOverQuota(accessKey);
+    const wasOverQuota = accessKey.isOverQuota();
     accessKey.quotaUsage = undefined;
     try {
       this.saveAccessKeys();
@@ -252,11 +243,11 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     if (!accessKey.quotaUsage) {
       return false;  // Don't query the usage of access keys without quota.
     }
-    const wasOverQuota = IsAccessKeyOverQuota(accessKey);
+    const wasOverQuota = accessKey.isOverQuota();
     const bytesTransferred =
         await this.getOutboundByteTransfer(accessKey.id, accessKey.quotaUsage.quota.window.hours);
     accessKey.quotaUsage.usage.bytes = bytesTransferred;
-    const isOverQuota = IsAccessKeyOverQuota(accessKey);
+    const isOverQuota = accessKey.isOverQuota();
     const quotaStatusChanged = isOverQuota !== wasOverQuota;
     if (quotaStatusChanged) {
       logging.debug(`Access key "${accessKey.id}" quota status changed. Quota: ${
@@ -281,7 +272,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private updateServer(): Promise<void> {
-    const serverAccessKeys = this.accessKeys.filter(key => !IsAccessKeyOverQuota(key)).map(key => {
+    const serverAccessKeys = this.accessKeys.filter(key => !key.isOverQuota()).map(key => {
       return {
         id: key.id,
         port: key.proxyParams.portNumber,

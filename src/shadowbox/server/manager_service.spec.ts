@@ -20,7 +20,7 @@ import {AccessKey, AccessKeyQuota, AccessKeyRepository} from '../model/access_ke
 import {ManagerMetrics} from './manager_metrics';
 import {ShadowsocksManagerService} from './manager_service';
 import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
-import {AccessKeyConfigJson, IsAccessKeyOverQuota, ServerAccessKeyRepository} from './server_access_key';
+import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
 import {ServerConfigJson} from './server_config';
 import {SharedMetricsPublisher} from './shared_metrics';
 
@@ -230,14 +230,14 @@ describe('ShadowsocksManagerService', () => {
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
       const accessKey = await repo.createNewAccessKey();
       expect(accessKey.quotaUsage).toBeUndefined();
-      expect(IsAccessKeyOverQuota(accessKey)).toBeFalsy();
+      expect(accessKey.isOverQuota()).toBeFalsy();
       const quota = {data: {bytes: 10000}, window: {hours: 48}};
       const res = {
         send: (httpCode, data) => {
           expect(httpCode).toEqual(204);
           const accessKey = getFirstAccessKey(repo);
           expect(accessKey.quotaUsage.quota).toEqual(quota);
-          expect(IsAccessKeyOverQuota(accessKey)).toBeFalsy();
+          expect(accessKey.isOverQuota()).toBeFalsy();
           responseProcessed = true;  // required for afterEach to pass.
         }
       };
@@ -327,7 +327,7 @@ describe('ShadowsocksManagerService', () => {
           expect(httpCode).toEqual(204);
           const accessKey = getFirstAccessKey(repo);
           expect(accessKey.quotaUsage).toBeUndefined();
-          expect(IsAccessKeyOverQuota(accessKey)).toBeFalsy();
+          expect(accessKey.isOverQuota()).toBeFalsy();
           responseProcessed = true;  // required for afterEach to pass.
         }
       };

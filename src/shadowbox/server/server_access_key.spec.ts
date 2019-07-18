@@ -18,7 +18,7 @@ import {InMemoryConfig} from '../infrastructure/json_config';
 import {AccessKeyQuota, AccessKeyRepository} from '../model/access_key';
 
 import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
-import {AccessKeyConfigJson, IsAccessKeyOverQuota, ServerAccessKeyRepository} from './server_access_key';
+import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
 import {ServerConfigJson} from './server_config';
 
 describe('ServerAccessKeyRepository', () => {
@@ -40,7 +40,7 @@ describe('ServerAccessKeyRepository', () => {
     const repo = createRepo();
     const accessKey = await repo.createNewAccessKey();
     expect(accessKey.quotaUsage).toBeUndefined();
-    expect(IsAccessKeyOverQuota(accessKey)).toBeFalsy();
+    expect(accessKey.isOverQuota()).toBeFalsy();
     done();
   });
 
@@ -141,8 +141,8 @@ describe('ServerAccessKeyRepository', () => {
 
     await repo.setAccessKeyQuota(accessKey1.id, {data: {bytes: 200}, window: {hours: 1}});
     let accessKeys = await repo.listAccessKeys();
-    expect(IsAccessKeyOverQuota(accessKeys[0])).toBeTruthy();
-    expect(IsAccessKeyOverQuota(accessKeys[1])).toBeFalsy();
+    expect(accessKeys[0].isOverQuota()).toBeTruthy();
+    expect(accessKeys[1].isOverQuota()).toBeFalsy();
     let serverAccessKeys = server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(1);
     expect(serverAccessKeys[0].id).toEqual(accessKey2.id);
@@ -152,8 +152,8 @@ describe('ServerAccessKeyRepository', () => {
     await repo.setAccessKeyQuota(accessKey1.id, {data: {bytes: 1000}, window: {hours: 1}});
     await repo.setAccessKeyQuota(accessKey2.id, {data: {bytes: 100}, window: {hours: 1}});
     accessKeys = await repo.listAccessKeys();
-    expect(IsAccessKeyOverQuota(accessKeys[0])).toBeFalsy();
-    expect(IsAccessKeyOverQuota(accessKeys[1])).toBeTruthy();
+    expect(accessKeys[0].isOverQuota()).toBeFalsy();
+    expect(accessKeys[1].isOverQuota()).toBeTruthy();
     serverAccessKeys = server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(1);
     expect(serverAccessKeys[0].id).toEqual(accessKey1.id);
@@ -194,8 +194,8 @@ describe('ServerAccessKeyRepository', () => {
     expect(repo.removeAccessKeyQuota(accessKey.id)).toBeTruthy();
     expect(server.getAccessKeys().length).toEqual(2);
     const accessKeys = await repo.listAccessKeys();
-    expect(IsAccessKeyOverQuota(accessKeys[0])).toBeFalsy();
-    expect(IsAccessKeyOverQuota(accessKeys[1])).toBeFalsy();
+    expect(accessKeys[0].isOverQuota()).toBeFalsy();
+    expect(accessKeys[1].isOverQuota()).toBeFalsy();
     expect(accessKeys[0].quotaUsage).toBeUndefined();
     expect(accessKeys[1].quotaUsage).toBeUndefined();
     done();
@@ -213,16 +213,16 @@ describe('ServerAccessKeyRepository', () => {
 
     await repo.enforceAccessKeyQuotas();
     let accessKeys = await repo.listAccessKeys();
-    expect(IsAccessKeyOverQuota(accessKeys[0])).toBeTruthy();
-    expect(IsAccessKeyOverQuota(accessKeys[1])).toBeFalsy();
+    expect(accessKeys[0].isOverQuota()).toBeTruthy();
+    expect(accessKeys[1].isOverQuota()).toBeFalsy();
     expect(accessKeys[0].quotaUsage.usage.bytes).toEqual(500);
     expect(accessKeys[1].quotaUsage).toBeUndefined();
 
     prometheusClient.bytesTransferredById = {'0': 100, '1': 100};
     await repo.enforceAccessKeyQuotas();
     accessKeys = await repo.listAccessKeys();
-    expect(IsAccessKeyOverQuota(accessKeys[0])).toBeFalsy();
-    expect(IsAccessKeyOverQuota(accessKeys[1])).toBeFalsy();
+    expect(accessKeys[0].isOverQuota()).toBeFalsy();
+    expect(accessKeys[1].isOverQuota()).toBeFalsy();
     expect(accessKeys[0].quotaUsage.usage.bytes).toEqual(100);
     expect(accessKeys[1].quotaUsage).toBeUndefined();
     done();
@@ -330,9 +330,9 @@ describe('ServerAccessKeyRepository', () => {
     await repo.start(clock);
     await clock.runCallbacks();
     let accessKeys = await repo.listAccessKeys();
-    expect(IsAccessKeyOverQuota(accessKeys[0])).toBeTruthy();
-    expect(IsAccessKeyOverQuota(accessKeys[1])).toBeTruthy();
-    expect(IsAccessKeyOverQuota(accessKeys[2])).toBeFalsy();
+    expect(accessKeys[0].isOverQuota()).toBeTruthy();
+    expect(accessKeys[1].isOverQuota()).toBeTruthy();
+    expect(accessKeys[2].isOverQuota()).toBeFalsy();
     expect(accessKeys[0].quotaUsage.usage.bytes).toEqual(500);
     expect(accessKeys[1].quotaUsage.usage.bytes).toEqual(300);
     expect(accessKeys[2].quotaUsage).toBeUndefined();
@@ -344,9 +344,9 @@ describe('ServerAccessKeyRepository', () => {
     prometheusClient.bytesTransferredById = {'0': 100, '1': 300, '2': 1000};
     await clock.runCallbacks();
     accessKeys = await repo.listAccessKeys();
-    expect(IsAccessKeyOverQuota(accessKeys[0])).toBeFalsy();
-    expect(IsAccessKeyOverQuota(accessKeys[1])).toBeTruthy();
-    expect(IsAccessKeyOverQuota(accessKeys[2])).toBeFalsy();
+    expect(accessKeys[0].isOverQuota()).toBeFalsy();
+    expect(accessKeys[1].isOverQuota()).toBeTruthy();
+    expect(accessKeys[2].isOverQuota()).toBeFalsy();
     expect(accessKeys[0].quotaUsage.usage.bytes).toEqual(100);
     expect(accessKeys[1].quotaUsage.usage.bytes).toEqual(300);
     expect(accessKeys[2].quotaUsage).toBeUndefined();
