@@ -143,6 +143,8 @@ describe('ServerAccessKeyRepository', () => {
     let accessKeys = await repo.listAccessKeys();
     expect(accessKeys[0].isOverQuota()).toBeTruthy();
     expect(accessKeys[1].isOverQuota()).toBeFalsy();
+    // We determine which access keys have been enabled/disabled by accessing them from
+    // the server's perspective, ensuring `server.update` has been called.
     let serverAccessKeys = server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(1);
     expect(serverAccessKeys[0].id).toEqual(accessKey2.id);

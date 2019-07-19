@@ -164,7 +164,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   listAccessKeys(): AccessKey[] {
-    return [...this.accessKeys];  // Return a copy to the access key array.
+    return [...this.accessKeys];  // Return a copy of the access key array.
   }
 
   renameAccessKey(id: AccessKeyId, name: string): boolean {
