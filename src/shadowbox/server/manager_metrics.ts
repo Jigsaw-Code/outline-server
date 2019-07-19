@@ -15,7 +15,9 @@
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {DataUsageByUser} from '../model/metrics';
 
-export interface ManagerMetrics { get30DayByteTransfer(): Promise<DataUsageByUser>; }
+export interface ManagerMetrics {
+  get30DayByteTransfer(): Promise<DataUsageByUser>;
+}
 
 // Reads manager metrics from a Prometheus instance.
 export class PrometheusManagerMetrics implements ManagerMetrics {

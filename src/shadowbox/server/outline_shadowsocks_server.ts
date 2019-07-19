@@ -19,7 +19,7 @@ import * as mkdirp from 'mkdirp';
 import * as path from 'path';
 
 import * as logging from '../infrastructure/logging';
-import {AccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
+import {ShadowsocksAccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
 
 // Runs outline-ss-server.
 export class OutlineShadowsocksServer implements ShadowsocksServer {
@@ -41,7 +41,7 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
   // Promise is resolved after the outline-ss-config config is updated and the SIGHUP sent.
   // Keys may not be active yet.
   // TODO(fortuna): Make promise resolve when keys are ready.
-  update(keys: AccessKey[]): Promise<void> {
+  update(keys: ShadowsocksAccessKey[]): Promise<void> {
     return this.writeConfigFile(keys).then(() => {
       if (!this.ssProcess) {
         this.start();
@@ -52,9 +52,9 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
     });
   }
 
-  private writeConfigFile(keys: AccessKey[]): Promise<void> {
+  private writeConfigFile(keys: ShadowsocksAccessKey[]): Promise<void> {
     return new Promise((resolve, reject) => {
-      const keysJson = {keys: [] as AccessKey[]};
+      const keysJson = {keys: [] as ShadowsocksAccessKey[]};
       for (const key of keys) {
         if (!isAeadCipher(key.cipher)) {
           logging.error(`Cipher ${key.cipher} for access key ${

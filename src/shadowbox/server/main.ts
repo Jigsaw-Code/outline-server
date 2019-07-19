@@ -36,7 +36,6 @@ import {OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollec
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
 const MMDB_LOCATION = '/var/lib/libmaxminddb/GeoLite2-Country.mmdb';
 
-
 async function exportPrometheusMetrics(registry: prometheus.Registry, port): Promise<http.Server> {
   return new Promise<http.Server>((resolve, _) => {
     const server = http.createServer((_, res) => {
@@ -160,14 +159,14 @@ async function main() {
       ],
       getPersistentFilename('prometheus/config.yml'), prometheusConfigJson);
 
+  const prometheusClient = new PrometheusClient(`http://${prometheusLocation}`);
   const accessKeyRepository = new ServerAccessKeyRepository(
-      portProvider, proxyHostname, accessKeyConfig, shadowsocksServer);
+      portProvider, proxyHostname, accessKeyConfig, shadowsocksServer, prometheusClient);
 
   const portForNewAccessKeys = getPortForNewAccessKeys(serverConfig, accessKeyConfig) ||
       await reservePortForNewAccessKeys(portProvider, serverConfig);
   accessKeyRepository.enableSinglePort(portForNewAccessKeys);
 
-  const prometheusClient = new PrometheusClient(`http://${prometheusLocation}`);
   const metricsReader = new PrometheusUsageMetrics(prometheusClient);
   const toMetricsId = (id: AccessKeyId) => {
     return accessKeyRepository.getMetricsId(id);
@@ -200,6 +199,8 @@ async function main() {
   apiServer.listen(portNumber, () => {
     logging.info(`Manager listening at ${apiServer.url}${apiPrefix}`);
   });
+
+  await accessKeyRepository.start(new RealClock());
 }
 
 function getPersistentFilename(file: string): string {

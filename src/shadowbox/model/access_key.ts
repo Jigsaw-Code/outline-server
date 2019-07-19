@@ -18,25 +18,45 @@ export type AccessKeyMetricsId = string;
 // Parameters needed to access a Shadowsocks proxy.
 export interface ProxyParams {
   // Hostname of the proxy
-  hostname: string;
+  readonly hostname: string;
   // Number of the port where the Shadowsocks service is running.
-  portNumber: number;
+  readonly portNumber: number;
   // The Shadowsocks encryption method being used.
-  encryptionMethod: string;
+  readonly encryptionMethod: string;
   // The password for the encryption.
-  password: string;
+  readonly password: string;
+}
+
+// Parameters needed to limit access key data usage over a sliding window.
+export interface AccessKeyQuota {
+  // The allowed metered data transfer measured in bytes.
+  readonly data: {bytes: number};
+  // The sliding window size in hours.
+  readonly window: {hours: number};
+}
+
+// Parameters needed to enforce an access key data transfer quota.
+export interface AccessKeyQuotaUsage {
+  // Data transfer quota on this access key.
+  readonly quota: AccessKeyQuota;
+  // Data transferred by this access key over the quota window.
+  readonly usage: {bytes: number};
 }
 
 // AccessKey is what admins work with. It gives ProxyParams a name and identity.
 export interface AccessKey {
   // The unique identifier for this access key.
-  id: AccessKeyId;
+  readonly id: AccessKeyId;
   // Admin-controlled, editable name for this access key.
-  name: string;
+  readonly name: string;
   // Used in metrics reporting to decouple from the real id. Can change.
-  metricsId: AccessKeyMetricsId;
+  readonly metricsId: AccessKeyMetricsId;
   // Parameters to access the proxy
-  proxyParams: ProxyParams;
+  readonly proxyParams: ProxyParams;
+  // Admin-controlled, data transfer quota for this access key. Unlimited if unset.
+  readonly quotaUsage?: AccessKeyQuotaUsage;
+  // Returns whether the access key has exceeded its data transfer quota.
+  isOverQuota(): boolean;
 }
 
 export interface AccessKeyRepository {
@@ -45,11 +65,14 @@ export interface AccessKeyRepository {
   // Removes the access key given its id.  Returns true if successful.
   removeAccessKey(id: AccessKeyId): boolean;
   // Lists all existing access keys
-  listAccessKeys(): IterableIterator<AccessKey>;
+  listAccessKeys(): AccessKey[];
   // Apply the specified update to the specified access key.
   // Returns true if successful.
   renameAccessKey(id: AccessKeyId, name: string): boolean;
-
   // Gets the metrics id for a given Access Key.
   getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined;
+  // Sets the transfer quota for the specified access key. Returns true if successful.
+  setAccessKeyQuota(id: AccessKeyId, quota: AccessKeyQuota): Promise<boolean>;
+  // Clears the transfer quota for the specified access key. Returns true if successful.
+  removeAccessKeyQuota(id: AccessKeyId): Promise<boolean>;
 }
