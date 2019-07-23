@@ -99,7 +99,7 @@ export class ShadowsocksManagerService {
     const name = req.params.name;
     if (typeof name !== 'string' || name.length > 100) {
       next(new restify.BadRequestError(
-        `Requested server name should be a string <= 100 characters long.  Got ${name}`));
+          `Requested server name should be a string <= 100 characters long.  Got ${name}`));
       return;
     }
     this.serverConfig.data().name = name;
@@ -235,17 +235,16 @@ export class ShadowsocksManagerService {
 
   public setShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
     const params = req.params as SetShareMetricsParams;
-    if (typeof params.metricsEnabled === 'boolean') {
-      if (params.metricsEnabled) {
-        this.metricsPublisher.startSharing();
-      } else {
-        this.metricsPublisher.stopSharing();
-      }
-      res.send(Success.NO_CONTENT);
-    } else {
+    if (!params.metricsEnabled || typeof params.metricsEnabled !== 'boolean') {
       next(new restify.BadRequestError(
         `Expected metricsEnabled to be boolean.  Instead got ${params.metricsEnabled}`));
     }
+    if (params.metricsEnabled) {
+      this.metricsPublisher.startSharing();
+    } else {
+      this.metricsPublisher.stopSharing();
+    }
+    res.send(Success.NO_CONTENT);
     next();
   }
 }
