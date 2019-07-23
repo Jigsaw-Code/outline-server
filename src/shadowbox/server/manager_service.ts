@@ -234,12 +234,11 @@ export class ShadowsocksManagerService {
   }
 
   public setShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
-    const params = req.params as SetShareMetricsParams;
-    if (!params.metricsEnabled || typeof params.metricsEnabled !== 'boolean') {
+    if (!req.params || typeof req.params.metricsEnabled !== 'boolean') {
       next(new restify.BadRequestError(
-          `Expected metricsEnabled to be boolean.  Instead got ${params.metricsEnabled}`));
+          `Expected metricsEnabled to be boolean.  Instead got ${req.params.metricsEnabled}`));
     }
-    if (params.metricsEnabled) {
+    if (req.params.metricsEnabled) {
       this.metricsPublisher.startSharing();
     } else {
       this.metricsPublisher.stopSharing();
