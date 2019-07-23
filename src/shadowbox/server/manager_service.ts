@@ -98,7 +98,8 @@ export class ShadowsocksManagerService {
   public renameServer(req: RequestType, res: ResponseType, next: restify.Next): void {
     const name = req.params.name;
     if (typeof name !== 'string' || name.length > 100) {
-      next(new restify.BadRequestError(`Requested server name should be a string <= 100 characters long.  Got ${name}`));
+      next(new restify.BadRequestError(
+        `Requested server name should be a string <= 100 characters long.  Got ${name}`));
       return;
     }
     this.serverConfig.data().name = name;
@@ -242,7 +243,8 @@ export class ShadowsocksManagerService {
       }
       res.send(Success.NO_CONTENT);
     } else {
-      next(restify.BadRequestError(`Expected metricsEnabled to be boolean.  Instead got ${params.metricsEnabled}`));
+      next(new restify.BadRequestError(
+        `Expected metricsEnabled to be boolean.  Instead got ${params.metricsEnabled}`));
     }
     next();
   }
