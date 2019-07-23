@@ -60,7 +60,7 @@ interface ResponseType {
   send(code: number, data?: {}): void;
 }
 
-enum Success {
+enum HttpSuccess {
   OK = 200,
   NO_CONTENT = 204,
 }
@@ -98,18 +98,18 @@ export class ShadowsocksManagerService {
   public renameServer(req: RequestType, res: ResponseType, next: restify.Next): void {
     const name = req.params.name;
     if (typeof name !== 'string' || name.length > 100) {
-      next(new restify.BadRequestError(
+      next(new restify.InvalidArgumentError(
           `Requested server name should be a string <= 100 characters long.  Got ${name}`));
       return;
     }
     this.serverConfig.data().name = name;
     this.serverConfig.write();
-    res.send(Success.NO_CONTENT);
+    res.send(HttpSuccess.NO_CONTENT);
     next();
   }
 
   public getServer(req: RequestType, res: ResponseType, next: restify.Next): void {
-    res.send(Success.OK, {
+    res.send(HttpSuccess.OK, {
       name: this.serverConfig.data().name || this.defaultServerName,
       serverId: this.serverConfig.data().serverId,
       metricsEnabled: this.serverConfig.data().metricsEnabled || false,
@@ -127,7 +127,7 @@ export class ShadowsocksManagerService {
       response.accessKeys.push(accessKeyToJson(accessKey));
     }
     logging.debug(`listAccessKeys response ${response}`);
-    res.send(Success.OK, response);
+    res.send(HttpSuccess.OK, response);
     return next();
   }
 
@@ -154,7 +154,7 @@ export class ShadowsocksManagerService {
       if (!this.accessKeys.removeAccessKey(accessKeyId)) {
         return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
       }
-      res.send(Success.NO_CONTENT);
+      res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
@@ -169,7 +169,7 @@ export class ShadowsocksManagerService {
       if (!this.accessKeys.renameAccessKey(accessKeyId, req.params.name)) {
         return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
       }
-      res.send(Success.NO_CONTENT);
+      res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
@@ -194,7 +194,7 @@ export class ShadowsocksManagerService {
       if (!success) {
         return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
       }
-      res.send(Success.NO_CONTENT);
+      res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
@@ -210,7 +210,7 @@ export class ShadowsocksManagerService {
       if (!success) {
         return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
       }
-      res.send(Success.NO_CONTENT);
+      res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
@@ -220,7 +220,7 @@ export class ShadowsocksManagerService {
 
   public async getDataUsage(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      res.send(Success.OK, await this.managerMetrics.get30DayByteTransfer());
+      res.send(HttpSuccess.OK, await this.managerMetrics.get30DayByteTransfer());
       return next();
     } catch (error) {
       logging.error(error);
@@ -229,22 +229,28 @@ export class ShadowsocksManagerService {
   }
 
   public getShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
-    res.send(Success.OK, {metricsEnabled: this.metricsPublisher.isSharingEnabled()});
+    res.send(HttpSuccess.OK, {metricsEnabled: this.metricsPublisher.isSharingEnabled()});
     next();
   }
 
   public setShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
-    if (!req.params || typeof req.params.metricsEnabled !== 'boolean') {
-      next(new restify.BadRequestError(
-          `Expected metricsEnabled to be boolean.  Instead got ${req.params.metricsEnabled}`));
+    if (!req.params) {
+      return next(
+          new restify.BadRequestError(`No params attached to request.  Instead got ${req}`));
     }
-    if (req.params.metricsEnabled) {
+    const enabledType = typeof req.params.metricsEnabled;
+    if (enabledType !== 'boolean') {
+      return next(
+          new restify.BadRequestError(`Expected metricsEnabled to be boolean.  Instead got ${
+              req.params.metricsEnabled}, with type ${enabledType}.`));
+    }
+    const enabled = req.params.metricsEnabled;
+    if (enabled) {
       this.metricsPublisher.startSharing();
     } else {
       this.metricsPublisher.stopSharing();
     }
-    res.send(Success.NO_CONTENT);
+    res.send(HttpSuccess.NO_CONTENT);
     next();
-    // blahblah
   }
 }
