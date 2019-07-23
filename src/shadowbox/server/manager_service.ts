@@ -13,15 +13,15 @@
 // limitations under the License.
 
 import * as restify from 'restify';
-import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
+import { makeConfig, SIP002_URI } from 'ShadowsocksConfig/shadowsocks_config';
 
-import {JsonConfig} from '../infrastructure/json_config';
+import { JsonConfig } from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {AccessKey, AccessKeyQuota, AccessKeyRepository} from '../model/access_key';
+import { AccessKey, AccessKeyQuota, AccessKeyRepository } from '../model/access_key';
 
-import {ManagerMetrics} from './manager_metrics';
-import {ServerConfigJson} from './server_config';
-import {SharedMetricsPublisher} from './shared_metrics';
+import { ManagerMetrics } from './manager_metrics';
+import { ServerConfigJson } from './server_config';
+import { SharedMetricsPublisher } from './shared_metrics';
 
 // Creates a AccessKey response.
 function accessKeyToJson(accessKey: AccessKey) {
@@ -60,8 +60,13 @@ interface ResponseType {
   send(code: number, data?: {}): void;
 }
 
+enum Success {
+  OK = 200,
+  NO_CONTENT = 204,
+}
+
 export function bindService(
-    apiServer: restify.Server, apiPrefix: string, service: ShadowsocksManagerService) {
+  apiServer: restify.Server, apiPrefix: string, service: ShadowsocksManagerService) {
   apiServer.put(`${apiPrefix}/name`, service.renameServer.bind(service));
   apiServer.get(`${apiPrefix}/server`, service.getServer.bind(service));
 
@@ -86,25 +91,24 @@ interface SetShareMetricsParams {
 // for each existing access key, with the port and password assigned for that access key.
 export class ShadowsocksManagerService {
   constructor(
-      private defaultServerName: string, private serverConfig: JsonConfig<ServerConfigJson>,
-      private accessKeys: AccessKeyRepository, private managerMetrics: ManagerMetrics,
-      private metricsPublisher: SharedMetricsPublisher) {}
+    private defaultServerName: string, private serverConfig: JsonConfig<ServerConfigJson>,
+    private accessKeys: AccessKeyRepository, private managerMetrics: ManagerMetrics,
+    private metricsPublisher: SharedMetricsPublisher) { }
 
   public renameServer(req: RequestType, res: ResponseType, next: restify.Next): void {
     const name = req.params.name;
     if (typeof name !== 'string' || name.length > 100) {
-      res.send(400);
-      next();
+      next(new restify.BadRequestError(`Requested server name should be a string <= 100 characters long.  Got ${name}`));
       return;
     }
     this.serverConfig.data().name = name;
     this.serverConfig.write();
-    res.send(204);
+    res.send(Success.NO_CONTENT);
     next();
   }
 
   public getServer(req: RequestType, res: ResponseType, next: restify.Next): void {
-    res.send(200, {
+    res.send(Success.OK, {
       name: this.serverConfig.data().name || this.defaultServerName,
       serverId: this.serverConfig.data().serverId,
       metricsEnabled: this.serverConfig.data().metricsEnabled || false,
@@ -117,12 +121,12 @@ export class ShadowsocksManagerService {
   // Lists all access keys
   public listAccessKeys(req: RequestType, res: ResponseType, next: restify.Next): void {
     logging.debug(`listAccessKeys request ${JSON.stringify(req.params)}`);
-    const response = {accessKeys: []};
+    const response = { accessKeys: [] };
     for (const accessKey of this.accessKeys.listAccessKeys()) {
       response.accessKeys.push(accessKeyToJson(accessKey));
     }
     logging.debug(`listAccessKeys response ${response}`);
-    res.send(200, response);
+    res.send(Success.OK, response);
     return next();
   }
 
@@ -149,7 +153,7 @@ export class ShadowsocksManagerService {
       if (!this.accessKeys.removeAccessKey(accessKeyId)) {
         return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
       }
-      res.send(204);
+      res.send(Success.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
@@ -164,7 +168,7 @@ export class ShadowsocksManagerService {
       if (!this.accessKeys.renameAccessKey(accessKeyId, req.params.name)) {
         return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
       }
-      res.send(204);
+      res.send(Success.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
@@ -180,7 +184,7 @@ export class ShadowsocksManagerService {
       // TODO(alalama): remove these checks once the repository supports typed errors.
       if (!quota || !quota.data || !quota.window) {
         return next(new restify.InvalidArgumentError(
-            'Must provide a quota value with "data.bytes" and "window.hours"'));
+          'Must provide a quota value with "data.bytes" and "window.hours"'));
       }
       if (quota.data.bytes < 0 || quota.window.hours < 0) {
         return next(new restify.InvalidArgumentError('Must provide positive quota values'));
@@ -189,7 +193,7 @@ export class ShadowsocksManagerService {
       if (!success) {
         return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
       }
-      res.send(204);
+      res.send(Success.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
@@ -205,7 +209,7 @@ export class ShadowsocksManagerService {
       if (!success) {
         return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
       }
-      res.send(204);
+      res.send(Success.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
@@ -215,7 +219,7 @@ export class ShadowsocksManagerService {
 
   public async getDataUsage(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      res.send(200, await this.managerMetrics.get30DayByteTransfer());
+      res.send(Success.OK, await this.managerMetrics.get30DayByteTransfer());
       return next();
     } catch (error) {
       logging.error(error);
@@ -224,7 +228,7 @@ export class ShadowsocksManagerService {
   }
 
   public getShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
-    res.send(200, {metricsEnabled: this.metricsPublisher.isSharingEnabled()});
+    res.send(Success.OK, { metricsEnabled: this.metricsPublisher.isSharingEnabled() });
     next();
   }
 
@@ -236,9 +240,9 @@ export class ShadowsocksManagerService {
       } else {
         this.metricsPublisher.stopSharing();
       }
-      res.send(204);
+      res.send(Success.NO_CONTENT);
     } else {
-      res.send(400);
+      next(restify.BadRequestError(`Expected metricsEnabled to be boolean.  Instead got ${params.metricsEnabled}`));
     }
     next();
   }
