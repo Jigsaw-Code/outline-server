@@ -13,15 +13,15 @@
 // limitations under the License.
 
 import * as restify from 'restify';
-import { makeConfig, SIP002_URI } from 'ShadowsocksConfig/shadowsocks_config';
+import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
-import { JsonConfig } from '../infrastructure/json_config';
+import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import { AccessKey, AccessKeyQuota, AccessKeyRepository } from '../model/access_key';
+import {AccessKey, AccessKeyQuota, AccessKeyRepository} from '../model/access_key';
 
-import { ManagerMetrics } from './manager_metrics';
-import { ServerConfigJson } from './server_config';
-import { SharedMetricsPublisher } from './shared_metrics';
+import {ManagerMetrics} from './manager_metrics';
+import {ServerConfigJson} from './server_config';
+import {SharedMetricsPublisher} from './shared_metrics';
 
 // Creates a AccessKey response.
 function accessKeyToJson(accessKey: AccessKey) {
@@ -66,7 +66,7 @@ enum Success {
 }
 
 export function bindService(
-  apiServer: restify.Server, apiPrefix: string, service: ShadowsocksManagerService) {
+    apiServer: restify.Server, apiPrefix: string, service: ShadowsocksManagerService) {
   apiServer.put(`${apiPrefix}/name`, service.renameServer.bind(service));
   apiServer.get(`${apiPrefix}/server`, service.getServer.bind(service));
 
@@ -91,9 +91,9 @@ interface SetShareMetricsParams {
 // for each existing access key, with the port and password assigned for that access key.
 export class ShadowsocksManagerService {
   constructor(
-    private defaultServerName: string, private serverConfig: JsonConfig<ServerConfigJson>,
-    private accessKeys: AccessKeyRepository, private managerMetrics: ManagerMetrics,
-    private metricsPublisher: SharedMetricsPublisher) { }
+      private defaultServerName: string, private serverConfig: JsonConfig<ServerConfigJson>,
+      private accessKeys: AccessKeyRepository, private managerMetrics: ManagerMetrics,
+      private metricsPublisher: SharedMetricsPublisher) {}
 
   public renameServer(req: RequestType, res: ResponseType, next: restify.Next): void {
     const name = req.params.name;
@@ -122,7 +122,7 @@ export class ShadowsocksManagerService {
   // Lists all access keys
   public listAccessKeys(req: RequestType, res: ResponseType, next: restify.Next): void {
     logging.debug(`listAccessKeys request ${JSON.stringify(req.params)}`);
-    const response = { accessKeys: [] };
+    const response = {accessKeys: []};
     for (const accessKey of this.accessKeys.listAccessKeys()) {
       response.accessKeys.push(accessKeyToJson(accessKey));
     }
@@ -185,7 +185,7 @@ export class ShadowsocksManagerService {
       // TODO(alalama): remove these checks once the repository supports typed errors.
       if (!quota || !quota.data || !quota.window) {
         return next(new restify.InvalidArgumentError(
-          'Must provide a quota value with "data.bytes" and "window.hours"'));
+            'Must provide a quota value with "data.bytes" and "window.hours"'));
       }
       if (quota.data.bytes < 0 || quota.window.hours < 0) {
         return next(new restify.InvalidArgumentError('Must provide positive quota values'));
