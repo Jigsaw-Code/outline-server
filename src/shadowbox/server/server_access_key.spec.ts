@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as net from 'net';
+
 import {ManualClock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
 import {InMemoryConfig} from '../infrastructure/json_config';
 import {AccessKeyQuota, AccessKeyRepository} from '../model/access_key';
+import * as errors from '../model/outline_error';
 
 import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
-import * as errors from '../model/outline_error';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
-
-import * as net from 'net';
 
 describe('ServerAccessKeyRepository', () => {
   it('Repos with non-existent files are created with no access keys', (done) => {
@@ -125,15 +125,15 @@ describe('ServerAccessKeyRepository', () => {
     done();
   });
 
-  it('setDefaultPort rejects invalid port numbers', async(done) => {
-    const repo = new RepoBuilder().build(); 
-    // jasmine.toThrowError expects a function and makes the code 
+  it('setDefaultPort rejects invalid port numbers', async (done) => {
+    const repo = new RepoBuilder().build();
+    // jasmine.toThrowError expects a function and makes the code
     // hard to read.
     const expectThrow = async (port: number) => {
       try {
         await repo.setDefaultPort(port);
         fail(`setDefaultPort should reject invalid port number ${port}.`);
-      } catch(error) {
+      } catch (error) {
         expect(error instanceof errors.InvalidPortNumber).toBeTruthy();
       }
     };
@@ -153,7 +153,7 @@ describe('ServerAccessKeyRepository', () => {
       try {
         await repo.setDefaultPort(port);
         fail(`setDefaultPort should reject already used port ${port}.`);
-      } catch(error) {
+      } catch (error) {
         expect(error instanceof errors.PortInUse);
       }
       server.close();
@@ -167,18 +167,18 @@ describe('ServerAccessKeyRepository', () => {
     const repo = new RepoBuilder().port(oldPort).build();
     await repo.createNewAccessKey();
 
-    // jasmine.toThrowError expects a function and makes the code 
+    // jasmine.toThrowError expects a function and makes the code
     // hard to read.
     const expectNoThrow = async (port: number) => {
       try {
         await repo.setDefaultPort(port);
-      } catch(error) {
+      } catch (error) {
         fail(`setDefaultPort should accept port ${port}.`);
       }
     };
 
     await expectNoThrow(await portProvider.reserveNewPort());
-    
+
     // simulate the first key's connection on its port
     const server = new net.Server();
     server.listen(oldPort, async () => {
@@ -228,8 +228,9 @@ describe('ServerAccessKeyRepository', () => {
   it('setAccessKeyQuota updates keys quota status', async (done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 200});
-    const repo = new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
-    
+    const repo =
+        new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
+
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
 
@@ -277,7 +278,8 @@ describe('ServerAccessKeyRepository', () => {
   it('removeAccessKeyQuota restores over-quota access keys when removing quota ', async (done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 100});
-    const repo = new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
+    const repo =
+        new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
 
     const accessKey = await repo.createNewAccessKey();
     await repo.createNewAccessKey();
@@ -323,7 +325,8 @@ describe('ServerAccessKeyRepository', () => {
   it('enforceAccessKeyQuotas enables and disables keys', async (done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 100});
-    const repo = new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
+    const repo =
+        new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
 
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
@@ -398,8 +401,9 @@ describe('ServerAccessKeyRepository', () => {
   it('start periodically enforces access key quotas', async (done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 300, '2': 1000});
-    const repo = new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
-    
+    const repo =
+        new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
+
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
     const accessKey3 = await repo.createNewAccessKey();
@@ -464,26 +468,25 @@ class RepoBuilder {
   private shadowsocksServer_ = new FakeShadowsocksServer();
   private prometheusClient_ = new FakePrometheusClient({});
 
-  public port(port: number): RepoBuilder { 
-    this.port_ = port; 
-    return this; 
+  public port(port: number): RepoBuilder {
+    this.port_ = port;
+    return this;
   }
-  public keyConfig(keyConfig: InMemoryConfig<AccessKeyConfigJson>): RepoBuilder { 
-    this.keyConfig_ = keyConfig; 
-    return this; 
+  public keyConfig(keyConfig: InMemoryConfig<AccessKeyConfigJson>): RepoBuilder {
+    this.keyConfig_ = keyConfig;
+    return this;
   }
-  public shadowsocksServer(shadowsocksServer: FakeShadowsocksServer): RepoBuilder { 
-    this.shadowsocksServer_ = shadowsocksServer; 
-    return this; 
+  public shadowsocksServer(shadowsocksServer: FakeShadowsocksServer): RepoBuilder {
+    this.shadowsocksServer_ = shadowsocksServer;
+    return this;
   }
-  public prometheusClient(prometheusClient: FakePrometheusClient): RepoBuilder { 
-    this.prometheusClient_ = prometheusClient; 
-    return this; 
+  public prometheusClient(prometheusClient: FakePrometheusClient): RepoBuilder {
+    this.prometheusClient_ = prometheusClient;
+    return this;
   }
 
   public build(): ServerAccessKeyRepository {
     return new ServerAccessKeyRepository(
-      this.port_, 'hostname', this.keyConfig_, this.shadowsocksServer_,
-      this.prometheusClient_); 
+        this.port_, 'hostname', this.keyConfig_, this.shadowsocksServer_, this.prometheusClient_);
   }
 }

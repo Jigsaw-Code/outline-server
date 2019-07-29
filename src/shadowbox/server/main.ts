@@ -141,7 +141,8 @@ async function main() {
   }
   serverConfig.write();
   const accessKeyRepository = new ServerAccessKeyRepository(
-      serverConfig.data().portForNewAccessKeys, proxyHostname, accessKeyConfig, shadowsocksServer, prometheusClient);
+      serverConfig.data().portForNewAccessKeys, proxyHostname, accessKeyConfig, shadowsocksServer,
+      prometheusClient);
 
   const metricsReader = new PrometheusUsageMetrics(prometheusClient);
   const toMetricsId = (id: AccessKeyId) => {

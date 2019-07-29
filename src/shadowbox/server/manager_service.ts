@@ -146,7 +146,8 @@ export class ShadowsocksManagerService {
   }
 
   // Sets the default ports for new access keys
-  public async setDefaultPort(req: RequestType, res: ResponseType, next: restify.Next): Promise<void> {
+  public async setDefaultPort(req: RequestType, res: ResponseType, next: restify.Next):
+      Promise<void> {
     try {
       const port = req.params.port;
       await this.accessKeys.setDefaultPort(port);

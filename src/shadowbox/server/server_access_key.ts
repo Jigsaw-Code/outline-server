@@ -16,7 +16,7 @@ import * as randomstring from 'randomstring';
 import * as uuidv4 from 'uuid/v4';
 
 import {Clock} from '../infrastructure/clock';
-import {PortProvider, isPortUsed} from '../infrastructure/get_port';
+import {isPortUsed, PortProvider} from '../infrastructure/get_port';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
@@ -90,7 +90,7 @@ function makeAccessKeyJson(accessKey: AccessKey): AccessKeyJson {
 }
 
 // AccessKeyRepository that keeps its state in a config file and uses ShadowsocksServer
-// to start and stop per-access-key Shadowsocks instances.  Lazily generates a default 
+// to start and stop per-access-key Shadowsocks instances.  Lazily generates a default
 // port for new access keys if none is provided.
 export class ServerAccessKeyRepository implements AccessKeyRepository {
   private static QUOTA_ENFORCEMENT_INTERVAL_MS = 60 * 60 * 1000;  // 1h
