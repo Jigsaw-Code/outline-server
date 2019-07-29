@@ -92,6 +92,32 @@ paths:
                       {"id":"0","name":"Admin","password":"XxXxXx","port":18162,"method":"chacha20-ietf-poly1305","accessUrl":"ss://SADFJSKADFJAKSD@0.0.0.0:18162/?outline=1"},
                       {"id":"1","name":"First","password":"xXxXxX","port":4410,"method":"chacha20-ietf-poly1305","accessUrl":"ss://ASDFSADJFKAS=@0.0.0.0:4410/?outline=1"},
                       {"id":"2","name":"Second","password":"XxXxXx","port":25424,"method":"chacha20-ietf-poly1305","accessUrl":"ss://ASDFHAKSDFSDAKFJ@0.0.0.0:25424/?outline=1"}]}
+  /access-keys/default-port:
+    put:
+      description: Changes the default port for newly created access keys.  This can be a port already used for access keys.
+      tags:
+        - Access Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                port:
+                  type: number
+            examples:
+              '0':
+                value: '{port: 12345}'
+      responses:
+        '204':
+          description: The default port was sucessfully changed.
+        '403':
+          description: The requested port was already in use by another service.
+        '409':
+          description: The requested port wasn't an integer from 1 through 65535, or the request had no port parameter.
+        '500':
+          description: An internal server error occurred.
   /access-keys/{id}:
     delete:
       description: Deletes an access key
