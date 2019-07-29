@@ -1,9 +1,3 @@
-enum ErrorType {
-  InvalidPortNumberError,
-  PortInUseError,
-  NewError
-}
-
 class OutlineError extends Error {
   constructor(message: string) {
     super(message);
