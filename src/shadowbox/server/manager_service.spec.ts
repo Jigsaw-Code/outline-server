@@ -12,21 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {ManualClock} from '../infrastructure/clock';
-import {PortProvider} from '../infrastructure/get_port';
 import {InMemoryConfig} from '../infrastructure/json_config';
 import {AccessKey, AccessKeyQuota, AccessKeyRepository} from '../model/access_key';
 
-import {ManagerMetrics} from './manager_metrics';
 import {ShadowsocksManagerService} from './manager_service';
 import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
 import {ServerConfigJson} from './server_config';
 import {SharedMetricsPublisher} from './shared_metrics';
+import * as net from 'net';
 
 interface ServerInfo {
   name: string;
 }
+
+const newPort = 12345;
+const oldPort = 54321;
 
 describe('ShadowsocksManagerService', () => {
   // After processing the response callback, we should set
@@ -145,6 +146,120 @@ describe('ShadowsocksManagerService', () => {
         responseProcessed = true;  // required for afterEach to pass.
         done();
       });
+    });
+  });
+  describe('setDefaultPort', () => {
+    it('changes ports for new access keys', async (done) => {
+      const repo = getAccessKeyRepository();
+      const serverConfig = new InMemoryConfig({} as ServerConfigJson);
+      const service = new ShadowsocksManagerService('name', serverConfig, repo, null, null);
+      
+      const oldKey = await repo.createNewAccessKey();
+      const res = {send: (httpCode) => {
+        expect(httpCode).toEqual(204);
+      }};
+      await service.setDefaultPort({params: {port: newPort}}, res, () => {});
+      const newKey = await repo.createNewAccessKey();
+      expect(newKey.proxyParams.portNumber).toEqual(newPort);
+      expect(oldKey.proxyParams.portNumber).not.toEqual(newPort);
+      responseProcessed = true;
+      done();
+    });
+
+    it('changes the server config', async (done) => {
+      const repo = getAccessKeyRepository();
+      const serverConfig = new InMemoryConfig({} as ServerConfigJson);
+      const service = new ShadowsocksManagerService('name', serverConfig, repo, null, null);
+
+      const res = {send: (httpCode) => {
+        expect(httpCode).toEqual(204);
+        expect(serverConfig.data().portForNewAccessKeys).toEqual(newPort);
+        responseProcessed = true; 
+      }};
+      await service.setDefaultPort({params: {port: newPort}}, res, done);
+    });
+
+    it('rejects invalid port numbers', async (done) => {
+      const repo = getAccessKeyRepository();
+      const serverConfig = new InMemoryConfig({} as ServerConfigJson);
+      const service = new ShadowsocksManagerService('name', serverConfig, repo, null, null);
+
+      const res = {send: (httpCode) => {
+        fail(`setDefaultPort should have failed with 409 Conflict, instead succeeded with code ${httpCode}`);
+      }};
+      const next = (error) => {
+        // Conflict
+        expect(error.statusCode).toEqual(409);
+      };
+
+      await service.setDefaultPort({params: {port: -1}}, res, next);
+      await service.setDefaultPort({params: {port: 0}}, res, next);
+      await service.setDefaultPort({params: {port: 100.1}}, res, next);
+      await service.setDefaultPort({params: {port: 65536}}, res, next);
+
+      responseProcessed = true;
+      done();
+    });
+
+    it('rejects port numbers already in use', async (done) => {
+      const repo = getAccessKeyRepository();
+      const serverConfig = new InMemoryConfig({} as ServerConfigJson);
+      const service = new ShadowsocksManagerService('name', serverConfig, repo, null, null);
+      
+      const res = {send: (httpCode) => {
+        fail(`setDefaultPort should have failed with 403 Forbidden, instead succeeded with code ${httpCode}`);
+      }};
+      const next = (error) => {
+        // Forbidden
+        expect(error.statusCode).toEqual(403);
+        responseProcessed = true;
+        done();
+      };
+
+      const server = new net.Server();
+      server.listen(newPort, async () => {
+        await service.setDefaultPort({params: {port: newPort}}, res, next);
+      });
+    });
+
+    it('accepts port numbers already in use by access keys', async (done) => {
+      const repo = getAccessKeyRepository();
+      const serverConfig = new InMemoryConfig({} as ServerConfigJson);
+      const service = new ShadowsocksManagerService('name', serverConfig, repo, null, null);
+
+      await service.createNewAccessKey({params: {}}, {send: () => {}}, () => {});
+      
+      await service.setDefaultPort({params: {port: newPort}}, {send: () => {}}, () => {});
+
+      const res = {send: (httpCode) => {
+        expect(httpCode).toEqual(204);
+        responseProcessed = true;
+      }};
+
+      const firstKeyConnection = new net.Server();
+      firstKeyConnection.listen(oldPort, async () => {
+        await service.setDefaultPort({params: {port: oldPort}}, res, () => {});
+        firstKeyConnection.close();
+        done();
+      });
+    });
+
+    it('rejects malformed requests', async (done) => {
+      const repo = getAccessKeyRepository();
+      const serverConfig = new InMemoryConfig({} as ServerConfigJson);
+      const service = new ShadowsocksManagerService('name', serverConfig, repo, null, null);
+
+      const noPort = {params: {}};
+      const res = {send: (httpCode) => {
+        fail(`setDefaultPort should have failed with 409 Conflict, instead succeeded with code ${httpCode}`);
+      }};
+      const next = (error) => {
+        expect(error.statusCode).toEqual(409);
+        responseProcessed = true;
+        done();
+      };
+
+      await service.setDefaultPort(noPort, res, next); 
     });
   });
 
@@ -425,7 +540,7 @@ function fakeSharedMetricsReporter(): SharedMetricsPublisher {
 
 function getAccessKeyRepository(): AccessKeyRepository {
   return new ServerAccessKeyRepository(
-      new PortProvider(), 'hostname',
+      oldPort, 'hostname',
       new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}),
       new FakeShadowsocksServer(), new FakePrometheusClient({}));
 }

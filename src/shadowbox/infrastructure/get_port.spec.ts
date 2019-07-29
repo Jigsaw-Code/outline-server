@@ -29,15 +29,6 @@ describe('PortProvider', () => {
     });
   });
 
-  describe('freePort', () => {
-    it('makes port available', () => {
-      const ports = new get_port.PortProvider();
-      ports.addReservedPort(8080);
-      ports.freePort(8080);
-      ports.addReservedPort(8080);
-    });
-  });
-
   describe('reserveFirstFreePort', () => {
     it('returns free port', async () => {
       const ports = new get_port.PortProvider();
@@ -53,6 +44,33 @@ describe('PortProvider', () => {
       ports.addReservedPort(9091);
       expect(await ports.reserveFirstFreePort(9090)).toBeGreaterThan(9091);
     });
+  });
+
+  describe('reserveNewPort', () => {
+    it('Returns a port not in use', async (done) => {
+      for (let i = 0; i < 1000; ++i) {
+        const port = await new get_port.PortProvider().reserveNewPort();
+        expect(await get_port.isPortUsed(port)).toBeFalsy();
+      }
+      done();
+    });
+  });
+});
+
+describe('isPortUsed', () => {
+  it('Identifies a port in use', async (done) => {
+    const port = 12345;
+    const server = new net.Server();
+    server.listen(port, async () => {
+      expect(await get_port.isPortUsed(port)).toBeTruthy();
+      server.close();
+      done();
+    });
+  });
+  it('Identifies a port not in use', async (done) => {
+    const port = await new get_port.PortProvider().reserveNewPort();
+    expect(await get_port.isPortUsed(port)).toBeFalsy();
+    done();
   });
 });
 

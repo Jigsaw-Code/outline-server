@@ -18,6 +18,7 @@ import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {AccessKey, AccessKeyQuota, AccessKeyRepository} from '../model/access_key';
+import * as errors from '../model/outline_error';
 
 import {ManagerMetrics} from './manager_metrics';
 import {ServerConfigJson} from './server_config';
@@ -52,6 +53,7 @@ interface RequestParams {
   name?: string;
   metricsEnabled?: boolean;
   quota?: AccessKeyQuota;
+  port?: number;
 }
 interface RequestType {
   params: RequestParams;
@@ -67,6 +69,8 @@ export function bindService(
 
   apiServer.post(`${apiPrefix}/access-keys`, service.createNewAccessKey.bind(service));
   apiServer.get(`${apiPrefix}/access-keys`, service.listAccessKeys.bind(service));
+  apiServer.put(`${apiPrefix}/access-keys/default-port`, service.setDefaultPort.bind(service));
+
   apiServer.del(`${apiPrefix}/access-keys/:id`, service.removeAccessKey.bind(service));
   apiServer.put(`${apiPrefix}/access-keys/:id/name`, service.renameAccessKey.bind(service));
   apiServer.put(`${apiPrefix}/access-keys/:id/quota`, service.setAccessKeyQuota.bind(service));
@@ -138,6 +142,26 @@ export class ShadowsocksManagerService {
     } catch (error) {
       logging.error(error);
       return next(new restify.InternalServerError());
+    }
+  }
+
+  // Sets the default ports for new access keys
+  public async setDefaultPort(req: RequestType, res: ResponseType, next: restify.Next): Promise<void> {
+    try {
+      const port = req.params.port;
+      await this.accessKeys.setDefaultPort(port);
+      this.serverConfig.data().portForNewAccessKeys = port;
+      this.serverConfig.write();
+      res.send(204);
+      next();
+    } catch (error) {
+      logging.error(error);
+      if (error instanceof errors.InvalidPortNumber) {
+        return next(new restify.InvalidArgumentError(error.message));
+      } else if (error instanceof errors.PortInUse) {
+        return next(new restify.ForbiddenError(error.message));
+      }
+      return next(new restify.InternalServerError(error));
     }
   }
 

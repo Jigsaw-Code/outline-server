@@ -18,18 +18,20 @@ import {InMemoryConfig} from '../infrastructure/json_config';
 import {AccessKeyQuota, AccessKeyRepository} from '../model/access_key';
 
 import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
+import * as errors from '../model/outline_error';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
-import {ServerConfigJson} from './server_config';
+
+import * as net from 'net';
 
 describe('ServerAccessKeyRepository', () => {
   it('Repos with non-existent files are created with no access keys', (done) => {
-    const repo = createRepo();
+    const repo = new RepoBuilder().build();
     expect(countAccessKeys(repo)).toEqual(0);
     done();
   });
 
   it('Can create new access keys', (done) => {
-    const repo = createRepo();
+    const repo = new RepoBuilder().build();
     repo.createNewAccessKey().then((accessKey) => {
       expect(accessKey).toBeDefined();
       done();
@@ -37,7 +39,7 @@ describe('ServerAccessKeyRepository', () => {
   });
 
   it('Creates access keys without quota and under quota', async (done) => {
-    const repo = createRepo();
+    const repo = new RepoBuilder().build();
     const accessKey = await repo.createNewAccessKey();
     expect(accessKey.quotaUsage).toBeUndefined();
     expect(accessKey.isOverQuota()).toBeFalsy();
@@ -45,7 +47,7 @@ describe('ServerAccessKeyRepository', () => {
   });
 
   it('Can remove access keys', (done) => {
-    const repo = createRepo();
+    const repo = new RepoBuilder().build();
     repo.createNewAccessKey().then((accessKey) => {
       expect(countAccessKeys(repo)).toEqual(1);
       const removeResult = repo.removeAccessKey(accessKey.id);
@@ -56,7 +58,7 @@ describe('ServerAccessKeyRepository', () => {
   });
 
   it('removeAccessKey returns false for missing keys', (done) => {
-    const repo = createRepo();
+    const repo = new RepoBuilder().build();
     repo.createNewAccessKey().then((accessKey) => {
       expect(countAccessKeys(repo)).toEqual(1);
       const removeResult = repo.removeAccessKey('badId');
@@ -67,7 +69,7 @@ describe('ServerAccessKeyRepository', () => {
   });
 
   it('Can rename access keys', (done) => {
-    const repo = createRepo();
+    const repo = new RepoBuilder().build();
     repo.createNewAccessKey().then((accessKey) => {
       const NEW_NAME = 'newName';
       const renameResult = repo.renameAccessKey(accessKey.id, NEW_NAME);
@@ -80,7 +82,7 @@ describe('ServerAccessKeyRepository', () => {
   });
 
   it('renameAccessKey returns false for missing keys', (done) => {
-    const repo = createRepo();
+    const repo = new RepoBuilder().build();
     repo.createNewAccessKey().then((accessKey) => {
       const NEW_NAME = 'newName';
       const renameResult = repo.renameAccessKey('badId', NEW_NAME);
@@ -92,8 +94,102 @@ describe('ServerAccessKeyRepository', () => {
     });
   });
 
+  it('Creates keys at the right port by construction', async (done) => {
+    const portProvider = new PortProvider();
+    const port = await portProvider.reserveNewPort();
+    const repo = new RepoBuilder().port(port).build();
+    const key = await repo.createNewAccessKey();
+    expect(key.proxyParams.portNumber).toEqual(port);
+    done();
+  });
+
+  it('setDefaultPort changes default port for new keys', async (done) => {
+    const portProvider = new PortProvider();
+    const port = await portProvider.reserveNewPort();
+    const repo = new RepoBuilder().build();
+    await repo.setDefaultPort(port);
+    const key = await repo.createNewAccessKey();
+    expect(key.proxyParams.portNumber).toEqual(port);
+    done();
+  });
+
+  it('setDefaultPort maintains ports on existing keys', async (done) => {
+    const portProvider = new PortProvider();
+    const oldPort = await portProvider.reserveNewPort();
+    const repo = new RepoBuilder().port(oldPort).build();
+    const oldKey = await repo.createNewAccessKey();
+
+    const newPort = await portProvider.reserveNewPort();
+    await repo.setDefaultPort(newPort);
+    expect(oldKey.proxyParams.portNumber).toEqual(oldPort);
+    done();
+  });
+
+  it('setDefaultPort rejects invalid port numbers', async(done) => {
+    const repo = new RepoBuilder().build(); 
+    // jasmine.toThrowError expects a function and makes the code 
+    // hard to read.
+    const expectThrow = async (port: number) => {
+      try {
+        await repo.setDefaultPort(port);
+        fail(`setDefaultPort should reject invalid port number ${port}.`);
+      } catch(error) {
+        expect(error instanceof errors.InvalidPortNumber).toBeTruthy();
+      }
+    };
+    await expectThrow(0);
+    await expectThrow(-1);
+    await expectThrow(100.1);
+    await expectThrow(65536);
+    done();
+  });
+
+  it('setDefaultPort rejects ports in use', async (done) => {
+    const portProvider = new PortProvider();
+    const port = await portProvider.reserveNewPort();
+    const repo = new RepoBuilder().build();
+    const server = new net.Server();
+    server.listen(port, async () => {
+      try {
+        await repo.setDefaultPort(port);
+        fail(`setDefaultPort should reject already used port ${port}.`);
+      } catch(error) {
+        expect(error instanceof errors.PortInUse);
+      }
+      server.close();
+      done();
+    });
+  });
+
+  it('setDefaultPort accepts ports already used by access keys', async (done) => {
+    const portProvider = new PortProvider();
+    const oldPort = await portProvider.reserveNewPort();
+    const repo = new RepoBuilder().port(oldPort).build();
+    await repo.createNewAccessKey();
+
+    // jasmine.toThrowError expects a function and makes the code 
+    // hard to read.
+    const expectNoThrow = async (port: number) => {
+      try {
+        await repo.setDefaultPort(port);
+      } catch(error) {
+        fail(`setDefaultPort should accept port ${port}.`);
+      }
+    };
+
+    await expectNoThrow(await portProvider.reserveNewPort());
+    
+    // simulate the first key's connection on its port
+    const server = new net.Server();
+    server.listen(oldPort, async () => {
+      await expectNoThrow(oldPort);
+      server.close();
+      done();
+    });
+  });
+
   it('Can set access key quota', async (done) => {
-    const repo = createRepo();
+    const repo = new RepoBuilder().build();
     const accessKey = await repo.createNewAccessKey();
     const quota = {data: {bytes: 5000}, window: {hours: 24}};
     expect(await repo.setAccessKeyQuota(accessKey.id, quota)).toBeTruthy();
@@ -104,7 +200,7 @@ describe('ServerAccessKeyRepository', () => {
   });
 
   it('setAccessKeyQuota returns false for missing keys', async (done) => {
-    const repo = createRepo();
+    const repo = new RepoBuilder().build();
     await repo.createNewAccessKey();
     const quota = {data: {bytes: 1000}, window: {hours: 24}};
     expect(await repo.setAccessKeyQuota('doesnotexist', quota)).toBeFalsy();
@@ -112,7 +208,7 @@ describe('ServerAccessKeyRepository', () => {
   });
 
   it('setAccessKeyQuota fails with disallowed quota values', async (done) => {
-    const repo = createRepo();
+    const repo = new RepoBuilder().build();
     const accessKey = await repo.createNewAccessKey();
     // Negative values
     const negativeBytesQuota = {data: {bytes: -1000}, window: {hours: 24}};
@@ -132,10 +228,8 @@ describe('ServerAccessKeyRepository', () => {
   it('setAccessKeyQuota updates keys quota status', async (done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 200});
-    const repo = new ServerAccessKeyRepository(
-        new PortProvider(), '',
-        new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}), server,
-        prometheusClient);
+    const repo = new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
+    
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
 
@@ -163,7 +257,7 @@ describe('ServerAccessKeyRepository', () => {
   });
 
   it('can remove access key quotas', async (done) => {
-    const repo = createRepo();
+    const repo = new RepoBuilder().build();
     const accessKey = await repo.createNewAccessKey();
     await expect(repo.setAccessKeyQuota(accessKey.id, {data: {bytes: 100}, window: {hours: 24}}))
         .toBeTruthy();
@@ -174,7 +268,7 @@ describe('ServerAccessKeyRepository', () => {
   });
 
   it('removeAccessKeyQuota returns false for missing keys', async (done) => {
-    const repo = createRepo();
+    const repo = new RepoBuilder().build();
     await repo.createNewAccessKey();
     expect(await repo.removeAccessKeyQuota('doesnotexist')).toBeFalsy();
     done();
@@ -183,10 +277,8 @@ describe('ServerAccessKeyRepository', () => {
   it('removeAccessKeyQuota restores over-quota access keys when removing quota ', async (done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 100});
-    const repo = new ServerAccessKeyRepository(
-        new PortProvider(), '',
-        new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}), server,
-        prometheusClient);
+    const repo = new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
+
     const accessKey = await repo.createNewAccessKey();
     await repo.createNewAccessKey();
     await repo.setAccessKeyQuota(accessKey.id, {data: {bytes: 100}, window: {hours: 1}});
@@ -205,10 +297,8 @@ describe('ServerAccessKeyRepository', () => {
 
   it('enforceAccessKeyQuotas updates keys quota status ', async (done) => {
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 100});
-    const repo = new ServerAccessKeyRepository(
-        new PortProvider(), '',
-        new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}),
-        new FakeShadowsocksServer(), prometheusClient);
+    const repo = new RepoBuilder().prometheusClient(prometheusClient).build();
+
     const accessKey1 = await repo.createNewAccessKey();
     await repo.createNewAccessKey();
     await repo.setAccessKeyQuota(accessKey1.id, {data: {bytes: 200}, window: {hours: 1}});
@@ -233,10 +323,8 @@ describe('ServerAccessKeyRepository', () => {
   it('enforceAccessKeyQuotas enables and disables keys', async (done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 100});
-    const repo = new ServerAccessKeyRepository(
-        new PortProvider(), '',
-        new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}), server,
-        prometheusClient);
+    const repo = new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
+
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
     await repo.setAccessKeyQuota(accessKey1.id, {data: {bytes: 200}, window: {hours: 1}});
@@ -256,9 +344,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('Repos created with an existing file restore access keys', async (done) => {
     const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
-    const repo1 = new ServerAccessKeyRepository(
-        new PortProvider(), 'hostname', config, new FakeShadowsocksServer(),
-        new FakePrometheusClient({}));
+    const repo1 = new RepoBuilder().keyConfig(config).build();
     // Create 2 new access keys
     await Promise.all([repo1.createNewAccessKey(), repo1.createNewAccessKey()]);
     // Modify properties
@@ -267,9 +353,7 @@ describe('ServerAccessKeyRepository', () => {
 
     // Create a 2nd repo from the same config file. This simulates what
     // might happen after the shadowbox server is restarted.
-    const repo2 = new ServerAccessKeyRepository(
-        new PortProvider(), 'hostname', config, new FakeShadowsocksServer(),
-        new FakePrometheusClient({}));
+    const repo2 = new RepoBuilder().keyConfig(config).build();
     // Check that repo1 and repo2 have the same access keys
     expect(repo1.listAccessKeys()).toEqual(repo2.listAccessKeys());
     done();
@@ -278,16 +362,13 @@ describe('ServerAccessKeyRepository', () => {
   it('Does not re-use ids when using the same config file', (done) => {
     const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
     // Create a repo with 1 access key, then delete that access key.
-    const repo1 = new ServerAccessKeyRepository(
-        new PortProvider(), '', config, new FakeShadowsocksServer(), new FakePrometheusClient({}));
+    const repo1 = new RepoBuilder().keyConfig(config).build();
     repo1.createNewAccessKey().then((accessKey1) => {
       repo1.removeAccessKey(accessKey1.id);
 
       // Create a 2nd repo with one access key, and verify that
       // it hasn't reused the first access key's ID.
-      const repo2 = new ServerAccessKeyRepository(
-          new PortProvider(), '', config, new FakeShadowsocksServer(),
-          new FakePrometheusClient({}));
+      const repo2 = new RepoBuilder().keyConfig(config).build();
       repo2.createNewAccessKey().then((accessKey2) => {
         expect(accessKey1.id).not.toEqual(accessKey2.id);
         done();
@@ -297,15 +378,14 @@ describe('ServerAccessKeyRepository', () => {
 
   it('start exposes the access keys to the server', async (done) => {
     const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
-    const repo = new ServerAccessKeyRepository(
-        new PortProvider(), '', config, new FakeShadowsocksServer(), new FakePrometheusClient({}));
+    const repo = new RepoBuilder().keyConfig(config).build();
+
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
     // Create a new repository with the same configuration. The keys should not be exposed to the
     // server until `start` is called.
     const server = new FakeShadowsocksServer();
-    const repo2 = new ServerAccessKeyRepository(
-        new PortProvider(), '', config, server, new FakePrometheusClient({}));
+    const repo2 = new RepoBuilder().keyConfig(config).shadowsocksServer(server).build();
     expect(server.getAccessKeys().length).toEqual(0);
     await repo2.start(new ManualClock());
     const serverAccessKeys = server.getAccessKeys();
@@ -318,10 +398,8 @@ describe('ServerAccessKeyRepository', () => {
   it('start periodically enforces access key quotas', async (done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 300, '2': 1000});
-    const repo = new ServerAccessKeyRepository(
-        new PortProvider(), '',
-        new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}), server,
-        prometheusClient);
+    const repo = new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
+    
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
     const accessKey3 = await repo.createNewAccessKey();
@@ -361,10 +439,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('getOutboundByteTransfer', async (done) => {
     const prometheusClient = new FakePrometheusClient({'0': 1024});
-    const repo = new ServerAccessKeyRepository(
-        new PortProvider(), '',
-        new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}),
-        new FakeShadowsocksServer(), prometheusClient);
+    const repo = new RepoBuilder().prometheusClient(prometheusClient).build();
     const bytesTransferred = await repo.getOutboundByteTransfer('0', 10);
     expect(bytesTransferred).toEqual(1024);
     done();
@@ -372,10 +447,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('getOutboundByteTransfer returns zero when ID is missing', async (done) => {
     const prometheusClient = new FakePrometheusClient({'0': 1024});
-    const repo = new ServerAccessKeyRepository(
-        new PortProvider(), '',
-        new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}),
-        new FakeShadowsocksServer(), prometheusClient);
+    const repo = new RepoBuilder().prometheusClient(prometheusClient).build();
     const bytesTransferred = await repo.getOutboundByteTransfer('doesnotexist', 10);
     expect(bytesTransferred).toEqual(0);
     done();
@@ -386,9 +458,32 @@ function countAccessKeys(repo: AccessKeyRepository) {
   return repo.listAccessKeys().length;
 }
 
-function createRepo(): ServerAccessKeyRepository {
-  const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
-  return new ServerAccessKeyRepository(
-      new PortProvider(), 'hostname', config, new FakeShadowsocksServer(),
-      new FakePrometheusClient({}));
+class RepoBuilder {
+  private port_ = 12345;
+  private keyConfig_ = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
+  private shadowsocksServer_ = new FakeShadowsocksServer();
+  private prometheusClient_ = new FakePrometheusClient({});
+
+  public port(port: number): RepoBuilder { 
+    this.port_ = port; 
+    return this; 
+  }
+  public keyConfig(keyConfig: InMemoryConfig<AccessKeyConfigJson>): RepoBuilder { 
+    this.keyConfig_ = keyConfig; 
+    return this; 
+  }
+  public shadowsocksServer(shadowsocksServer: FakeShadowsocksServer): RepoBuilder { 
+    this.shadowsocksServer_ = shadowsocksServer; 
+    return this; 
+  }
+  public prometheusClient(prometheusClient: FakePrometheusClient): RepoBuilder { 
+    this.prometheusClient_ = prometheusClient; 
+    return this; 
+  }
+
+  public build(): ServerAccessKeyRepository {
+    return new ServerAccessKeyRepository(
+      this.port_, 'hostname', this.keyConfig_, this.shadowsocksServer_,
+      this.prometheusClient_); 
+  }
 }

@@ -66,6 +66,8 @@ export interface AccessKeyRepository {
   removeAccessKey(id: AccessKeyId): boolean;
   // Lists all existing access keys
   listAccessKeys(): AccessKey[];
+  // Changes the default port for new access keys.
+  setDefaultPort(port: number): Promise<void>;
   // Apply the specified update to the specified access key.
   // Returns true if successful.
   renameAccessKey(id: AccessKeyId, name: string): boolean;

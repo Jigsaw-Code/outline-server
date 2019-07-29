@@ -49,35 +49,11 @@ async function exportPrometheusMetrics(registry: prometheus.Registry, port): Pro
   });
 }
 
-function reserveAccessKeyPorts(
+function reserveExistingAccessKeyPorts(
     keyConfig: json_config.JsonConfig<AccessKeyConfigJson>, portProvider: PortProvider) {
   const accessKeys = keyConfig.data().accessKeys || [];
   const dedupedPorts = new Set(accessKeys.map(ak => ak.port));
   dedupedPorts.forEach(p => portProvider.addReservedPort(p));
-}
-
-function getPortForNewAccessKeys(
-    serverConfig: json_config.JsonConfig<server_config.ServerConfigJson>,
-    keyConfig: json_config.JsonConfig<AccessKeyConfigJson>): number {
-  if (!serverConfig.data().portForNewAccessKeys) {
-    // NOTE(2019-01-04): For backward compatibility. Delete after servers have been migrated.
-    if (keyConfig.data().defaultPort) {
-      // Migrate setting from keyConfig to serverConfig.
-      serverConfig.data().portForNewAccessKeys = keyConfig.data().defaultPort;
-      serverConfig.write();
-      delete keyConfig.data().defaultPort;
-      keyConfig.write();
-    }
-  }
-  return serverConfig.data().portForNewAccessKeys;
-}
-
-async function reservePortForNewAccessKeys(
-    portProvider: PortProvider,
-    serverConfig: json_config.JsonConfig<server_config.ServerConfigJson>): Promise<number> {
-  serverConfig.data().portForNewAccessKeys = await portProvider.reserveNewPort();
-  serverConfig.write();
-  return serverConfig.data().portForNewAccessKeys;
 }
 
 async function main() {
@@ -85,7 +61,7 @@ async function main() {
   const portProvider = new PortProvider();
   const accessKeyConfig = json_config.loadFileConfig<AccessKeyConfigJson>(
       getPersistentFilename('shadowbox_config.json'));
-  reserveAccessKeyPorts(accessKeyConfig, portProvider);
+  reserveExistingAccessKeyPorts(accessKeyConfig, portProvider);
 
   prometheus.collectDefaultMetrics({register: prometheus.register});
 
@@ -108,12 +84,12 @@ async function main() {
   logging.debug(`==============`);
 
   const DEFAULT_PORT = 8081;
-  const portNumber = Number(process.env.SB_API_PORT || DEFAULT_PORT);
-  if (isNaN(portNumber)) {
+  const apiPortNumber = Number(process.env.SB_API_PORT || DEFAULT_PORT);
+  if (isNaN(apiPortNumber)) {
     logging.error(`Invalid SB_API_PORT: ${process.env.SB_API_PORT}`);
     process.exit(1);
   }
-  portProvider.addReservedPort(portNumber);
+  portProvider.addReservedPort(apiPortNumber);
 
   const serverConfig =
       server_config.readServerConfig(getPersistentFilename('shadowbox_server_config.json'));
@@ -160,12 +136,12 @@ async function main() {
       getPersistentFilename('prometheus/config.yml'), prometheusConfigJson);
 
   const prometheusClient = new PrometheusClient(`http://${prometheusLocation}`);
+  if (!serverConfig.data().portForNewAccessKeys) {
+    serverConfig.data().portForNewAccessKeys = await portProvider.reserveNewPort();
+  }
+  serverConfig.write();
   const accessKeyRepository = new ServerAccessKeyRepository(
-      portProvider, proxyHostname, accessKeyConfig, shadowsocksServer, prometheusClient);
-
-  const portForNewAccessKeys = getPortForNewAccessKeys(serverConfig, accessKeyConfig) ||
-      await reservePortForNewAccessKeys(portProvider, serverConfig);
-  accessKeyRepository.enableSinglePort(portForNewAccessKeys);
+      serverConfig.data().portForNewAccessKeys, proxyHostname, accessKeyConfig, shadowsocksServer, prometheusClient);
 
   const metricsReader = new PrometheusUsageMetrics(prometheusClient);
   const toMetricsId = (id: AccessKeyId) => {
@@ -196,7 +172,7 @@ async function main() {
   apiServer.use(restify.bodyParser());
   bindService(apiServer, apiPrefix, managerService);
 
-  apiServer.listen(portNumber, () => {
+  apiServer.listen(apiPortNumber, () => {
     logging.info(`Manager listening at ${apiServer.url}${apiPrefix}`);
   });
 
