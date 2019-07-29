@@ -71,10 +71,10 @@ export function bindService(
     apiServer: restify.Server, apiPrefix: string, service: ShadowsocksManagerService) {
   apiServer.put(`${apiPrefix}/name`, service.renameServer.bind(service));
   apiServer.get(`${apiPrefix}/server`, service.getServer.bind(service));
+  apiServer.put(`${apiPrefix}/default-access-key-port`, service.setDefaultPort.bind(service));
 
   apiServer.post(`${apiPrefix}/access-keys`, service.createNewAccessKey.bind(service));
   apiServer.get(`${apiPrefix}/access-keys`, service.listAccessKeys.bind(service));
-  apiServer.put(`${apiPrefix}/access-keys/default-port`, service.setDefaultPort.bind(service));
 
   apiServer.del(`${apiPrefix}/access-keys/:id`, service.removeAccessKey.bind(service));
   apiServer.put(`${apiPrefix}/access-keys/:id/name`, service.renameAccessKey.bind(service));
@@ -154,11 +154,12 @@ export class ShadowsocksManagerService {
   public async setDefaultPort(req: RequestType, res: ResponseType, next: restify.Next):
       Promise<void> {
     try {
+      logging.debug(`setDefaultPort request ${JSON.stringify(req.params)}`);
       const port = req.params.port;
       await this.accessKeys.setDefaultPort(port);
       this.serverConfig.data().portForNewAccessKeys = port;
       this.serverConfig.write();
-      res.send(204);
+      res.send(HttpSuccess.NO_CONTENT);
       next();
     } catch (error) {
       logging.error(error);

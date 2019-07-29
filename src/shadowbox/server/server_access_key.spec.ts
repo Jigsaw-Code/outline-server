@@ -168,7 +168,10 @@ describe('ServerAccessKeyRepository', () => {
     await repo.createNewAccessKey();
 
     // jasmine.toThrowError expects a function and makes the code
-    // hard to read.
+    // hard to read.  We also can't do anything like
+    // `expect(repo.setDefaultPort.bind(repo, port)).not.toThrow()`
+    // since setDefaultPort is async and this would lead to false positives
+    // when expect() returns before setDefaultPort throws.
     const expectNoThrow = async (port: number) => {
       try {
         await repo.setDefaultPort(port);
