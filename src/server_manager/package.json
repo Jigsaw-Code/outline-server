@@ -30,7 +30,12 @@
     "browserify": "^14.5.0",
     "electron": "^2.0.16",
     "electron-builder": "20.34.0",
-    "electron-icon-maker": "^0.0.4"
+    "electron-icon-maker": "^0.0.4",
+    "gulp": "^4.0.0",
+    "gulp-posthtml": "^3.0.4",
+    "gulp-replace": "^0.6.1",
+    "postcss-rtl": "^1.2.3",
+    "posthtml-postcss": "^0.2.6"
   },
   "scripts": {
     "postinstall": "bower install"

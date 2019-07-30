@@ -757,9 +757,8 @@ export class App {
     view.serverHostname = selectedServer.getHostname();
     view.serverManagementApiUrl = selectedServer.getManagementApiUrl();
     view.serverPortForNewAccessKeys = selectedServer.getPortForNewAccessKeys();
-    // TODO(alalama): use actual locale.
     view.serverCreationDate = selectedServer.getCreatedDate().toLocaleString(
-        'en-US', {year: 'numeric', month: 'long', day: 'numeric'});
+        this.appRoot.language, {year: 'numeric', month: 'long', day: 'numeric'});
 
     if (isManagedServer(selectedServer)) {
       view.isServerManaged = true;

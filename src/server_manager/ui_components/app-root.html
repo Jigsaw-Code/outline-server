@@ -75,6 +75,7 @@
         height: 20px;
         width: 20px;
       }
+      /* rtl:begin:ignore */
       #appDrawer {
         --app-drawer-content-container: {
           color: var(--medium-gray);
@@ -85,6 +86,7 @@
           align-items: right;
         };
       }
+      /* rtl:end:ignore */
       #appDrawer > * {
         width: 100%;
       }
@@ -109,6 +111,9 @@
         align-items: center;
         padding-left: 24px;
         line-height: 39px;
+      }
+      .servers-header > span {
+        flex: 1;
       }
       .do-overflow-menu {
         padding: 24px;
@@ -201,7 +206,7 @@
       #appDrawer > paper-listbox > * {
         display: block;
         cursor: pointer;
-        padding: 0 24px;
+        padding-left: 24px;
         font-size: 14px;
         line-height: 40px;
         outline: none;
@@ -225,12 +230,14 @@
       .side-bar-margin {
         margin-left: var(--side-bar-width);
       }
+      /* rtl:begin:ignore */
       #sideBar {
         --app-drawer-width: var(--side-bar-width);
         --app-drawer-content-container: {
           background-color: var(--background-contrast-color);
         };
       }
+      /* rtl:end:ignore */
       .side-bar-container {
         height: 100%;
         text-align: center;
@@ -269,7 +276,7 @@
         flex: 1 0 24px;
         border-bottom: none;
       }
-      .side-bar-section .server-icon {
+      .side-bar-section > .server-icon {
         margin: 0;
       }
       #getConnectedDialog {
@@ -450,6 +457,19 @@
         Polymer.AppLocalizeBehavior
       ],
       properties: {
+        LANGUAGES_AVAILABLE: {
+          type: Object,
+          readonly: true,
+          value: {
+            en: {id: 'en', dir: 'ltr'},
+            km: {id: 'km', dir: 'ltr'},
+          }
+        },
+        DEFAULT_LANGUAGE: {
+          type: String,
+          readonly: true,
+          value: 'en'
+        },
         useKeyIfMissing: {
           type: Boolean,
           value: true
@@ -457,7 +477,7 @@
         language: {
           type: String,
           readonly: true,
-          value: 'en'
+          computed: '_computeLanguage(LANGUAGES_AVAILABLE, DEFAULT_LANGUAGE)'
         },
         serverList: {
           type: Array,
@@ -511,9 +531,14 @@
         'ManualServerEntryCancelled': 'handleManualCancelled'
       },
       ready: function() {
-        // TODO(alalama): detect language
         const messagesUrl = `/messages/${this.language}.json`;
         this.loadResources(messagesUrl, this.language);
+        const languageProperties = this.LANGUAGES_AVAILABLE[this.language];
+        if (languageProperties && languageProperties.dir === 'rtl') {
+          document.documentElement.setAttribute('dir', 'rtl');
+          this.$.appDrawer.align = 'right';
+          this.$.sideBar.align = 'right';
+        }
       },
       showIntro: function () {
         this.maybeCloseDrawer();
@@ -775,6 +800,10 @@
         const server = event.model.server;
         this.fire('ShowServerRequested', {displayServerId: server.id });
         this.maybeCloseDrawer();
+      },
+      _computeLanguage: function (LANGUAGES_AVAILABLE, DEFAULT_LANGUAGE) {
+        return OutlineI18n.getBestMatchingLanguage(
+          Object.keys(LANGUAGES_AVAILABLE)) || DEFAULT_LANGUAGE;
       },
       // Wrapper to encode a string in base64. This is necessary to set the server view IDs to
       // the display server IDs, which are URLs, so they can be used with selector methods. The IDs

@@ -48,6 +48,7 @@
         padding: 0;
         color: #fff;
         font-size: 16px;
+        width: 100%;
       }
       .setting p {
         margin-bottom: 12px;
@@ -122,7 +123,7 @@
           <div>
             <h3>DigitalOcean</h3>
             <paper-input readonly value="[[serverLocation]]" label="[[localize('settings-server-location')]]" hidden$="[[!serverLocation]]" always-float-label maxlength="100"></paper-input>
-            <paper-input readonly value="[[serverMonthlyCost]] USD/month" label="[[localize('settings-server-cost')]]" hidden$="[[!serverMonthlyCost]]" always-float-label maxlength="100"></paper-input>
+            <paper-input readonly value="[[serverMonthlyCost]] USD" label="[[localize('settings-server-cost')]]" hidden$="[[!serverMonthlyCost]]" always-float-label maxlength="100"></paper-input>
             <paper-input readonly value="[[serverMonthlyTransferLimit]]" label="[[localize('settings-transfer-limit')]]" hidden$="[[!serverMonthlyTransferLimit]]" always-float-label maxlength="100"></paper-input>
           </div>
         </div>

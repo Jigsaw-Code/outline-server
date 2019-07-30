@@ -220,6 +220,11 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
         background: var(--background-contrast-color);
         border-radius: 2px;
       }
+
+      /* Mirror progress indicators for RTL languages */
+      :host(:dir(rtl)) paper-progress {
+        transform: scaleX(-1);
+      }
     </style>
 
   </template>
