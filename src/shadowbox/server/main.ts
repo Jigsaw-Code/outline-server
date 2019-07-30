@@ -138,8 +138,8 @@ async function main() {
   const prometheusClient = new PrometheusClient(`http://${prometheusLocation}`);
   if (!serverConfig.data().portForNewAccessKeys) {
     serverConfig.data().portForNewAccessKeys = await portProvider.reserveNewPort();
+    serverConfig.write();
   }
-  serverConfig.write();
   const accessKeyRepository = new ServerAccessKeyRepository(
       serverConfig.data().portForNewAccessKeys, proxyHostname, accessKeyConfig, shadowsocksServer,
       prometheusClient);
