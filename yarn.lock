@@ -813,10 +813,10 @@ binary-extensions@^1.0.0:
   resolved "https://registry.yarnpkg.com/binary-extensions/-/binary-extensions-1.13.1.tgz#598afe54755b2868a5330d2aff9d4ebb53209b65"
   integrity sha512-Un7MIEDdUC5gNpcGDV97op1Ywk748MpHcFTHoYs6qnj1Z3j7I53VG3nwZhKzoBZmbdRNnb6WRdFlwl7tSDuZGw==
 
-binaryextensions@~1.0.0:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/binaryextensions/-/binaryextensions-1.0.1.tgz#1e637488b35b58bda5f4774bf96a5212a8c90755"
-  integrity sha1-HmN0iLNbWL2l9HdL+WpSEqjJB1U=
+binaryextensions@2:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/binaryextensions/-/binaryextensions-2.1.2.tgz#c83c3d74233ba7674e4f313cb2a2b70f54e94b7c"
+  integrity sha512-xVNN69YGDghOqCCtA6FI7avYrr02mTJjOgB0/f1VPD3pJC8QEvjTKWc4epDx8AqxxA75NI0QpVM2gPJXUbE4Tg==
 
 bintrees@1.0.1:
   version "1.0.1"
@@ -2015,6 +2015,11 @@ ecdsa-sig-formatter@1.0.9:
     base64url "^2.0.0"
     safe-buffer "^5.0.1"
 
+editions@^1.3.3:
+  version "1.3.4"
+  resolved "https://registry.yarnpkg.com/editions/-/editions-1.3.4.tgz#3662cb592347c3168eb8e498a0ff73271d67f50b"
+  integrity sha512-gzao+mxnYDzIysXKMQi/+M1mjy/rjestjg6OPoYTtI+3Izp23oiGZitsl9lPDPiTGXbcSIk1iJWhliSaglxnUg==
+
 ee-first@1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/ee-first/-/ee-first-1.1.1.tgz#590c61156b0ae2f4f0255732a158b266bc56b21d"
@@ -2996,12 +3001,12 @@ gulp-posthtml@^3.0.4:
     posthtml-load-config "^1.0.0"
     through2 "^2.0.0"
 
-gulp-replace@^0.6.1:
-  version "0.6.1"
-  resolved "https://registry.yarnpkg.com/gulp-replace/-/gulp-replace-0.6.1.tgz#11bf8c8fce533e33e2f6a8f2f430b955ba0be066"
-  integrity sha1-Eb+Mj85TPjPi9qjy9DC5VboL4GY=
+gulp-replace@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/gulp-replace/-/gulp-replace-1.0.0.tgz#b32bd61654d97b8d78430a67b3e8ce067b7c9143"
+  integrity sha512-lgdmrFSI1SdhNMXZQbrC75MOl1UjYWlOWNbNRnz+F/KHmgxt3l6XstBoAYIdadwETFyG/6i+vWUSCawdC3pqOw==
   dependencies:
-    istextorbinary "1.0.2"
+    istextorbinary "2.2.1"
     readable-stream "^2.0.1"
     replacestream "^4.0.0"
 
@@ -3713,13 +3718,14 @@ isstream@~0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/isstream/-/isstream-0.1.2.tgz#47e63f7af55afa6f92e1500e690eb8b8529c099a"
 
-istextorbinary@1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/istextorbinary/-/istextorbinary-1.0.2.tgz#ace19354d1a9a0173efeb1084ce0f87b0ad7decf"
-  integrity sha1-rOGTVNGpoBc+/rEITOD4ewrX3s8=
+istextorbinary@2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/istextorbinary/-/istextorbinary-2.2.1.tgz#a5231a08ef6dd22b268d0895084cf8d58b5bec53"
+  integrity sha512-TS+hoFl8Z5FAFMK38nhBkdLt44CclNRgDHWeMgsV8ko3nDlr/9UI2Sf839sW7enijf8oKsZYXRvM8g0it9Zmcw==
   dependencies:
-    binaryextensions "~1.0.0"
-    textextensions "~1.0.0"
+    binaryextensions "2"
+    editions "^1.3.3"
+    textextensions "2"
 
 jasmine-core@~2.6.0:
   version "2.6.4"
@@ -5017,10 +5023,10 @@ posix-character-classes@^0.1.0:
   resolved "https://registry.yarnpkg.com/posix-character-classes/-/posix-character-classes-0.1.1.tgz#01eac0fe3b5af71a2a6c02feabb8c1fef7e00eab"
   integrity sha1-AerA/jta9xoqbAL+q7jB/vfgDqs=
 
-postcss-rtl@^1.2.3:
-  version "1.3.3"
-  resolved "https://registry.yarnpkg.com/postcss-rtl/-/postcss-rtl-1.3.3.tgz#9ded22ba783cce5516640072f3cee0d28b746eaf"
-  integrity sha512-iKdSko4zSvchZSPplz0iLD4dQyd4RiiARivMwboknD2eHu4tde1K7BqZ4CizZmnxrfhi4fvS774YSQPX6LJfMQ==
+postcss-rtl@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/postcss-rtl/-/postcss-rtl-1.4.0.tgz#11ac6cd91acc9957838ad1d30979809b3a224a0c"
+  integrity sha512-lmOTQnjdqWJFurh7X+OKa8NexzJDv7Ry8Ic2HObuTfX+ZyyZt53afuXhtNlJuOXBtUzrXoPgNuBOOtypZXgdEw==
   dependencies:
     rtlcss "^2.4.0"
 
@@ -6308,10 +6314,10 @@ term-size@^1.2.0:
   dependencies:
     execa "^0.7.0"
 
-textextensions@~1.0.0:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/textextensions/-/textextensions-1.0.2.tgz#65486393ee1f2bb039a60cbba05b0b68bd9501d2"
-  integrity sha1-ZUhjk+4fK7A5pgy7oFsLaL2VAdI=
+textextensions@2:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/textextensions/-/textextensions-2.4.0.tgz#6a143a985464384cc2cff11aea448cd5b018e72b"
+  integrity sha512-qftQXnX1DzpSV8EddtHIT0eDDEiBF8ywhFYR2lI9xrGtxqKN+CvLXhACeCIGbCpQfxxERbrkZEFb8cZcDKbVZA==
 
 throttleit@0.0.2:
   version "0.0.2"
