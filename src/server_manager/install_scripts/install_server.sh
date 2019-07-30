@@ -448,9 +448,6 @@ function parse_flags() {
   params=$(getopt --longoptions hostname:,api-port:,keys-port: -n $0 -- $0 "$@")
   [[ $? == 0 ]] || exit 1
   eval set -- $params
-  declare -g FLAGS_HOSTNAME=""
-  declare -gi FLAGS_API_PORT=0
-  declare -gi FLAGS_KEYS_PORT=0
 
   while [[ "$#" > 0 ]]; do
     local flag=$1
@@ -495,6 +492,9 @@ function parse_flags() {
 
 function main() {
   trap finish EXIT
+  declare FLAGS_HOSTNAME=""
+  declare -i FLAGS_API_PORT=0
+  declare -i FLAGS_KEYS_PORT=0
   parse_flags "$@"
   install_shadowbox
 }
