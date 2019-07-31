@@ -21,7 +21,7 @@ import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyQuota, AccessKeyQuotaUsage, AccessKeyRepository, ProxyParams} from '../model/access_key';
-import * as errors from '../model/outline_error';
+import * as errors from '../model/errors';
 import {ShadowsocksServer} from '../model/shadowsocks_server';
 
 // The format as json of access keys in the config file.

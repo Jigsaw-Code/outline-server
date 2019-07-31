@@ -18,7 +18,7 @@ import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {AccessKey, AccessKeyQuota, AccessKeyRepository} from '../model/access_key';
-import * as errors from '../model/outline_error';
+import * as errors from '../model/errors';
 
 import {ManagerMetrics} from './manager_metrics';
 import {ServerConfigJson} from './server_config';

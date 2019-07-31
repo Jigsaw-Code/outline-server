@@ -18,7 +18,7 @@ import {ManualClock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
 import {InMemoryConfig} from '../infrastructure/json_config';
 import {AccessKeyQuota, AccessKeyRepository} from '../model/access_key';
-import * as errors from '../model/outline_error';
+import * as errors from '../model/errors';
 
 import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
