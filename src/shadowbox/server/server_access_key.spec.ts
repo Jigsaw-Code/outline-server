@@ -103,7 +103,7 @@ describe('ServerAccessKeyRepository', () => {
     done();
   });
 
-  it('setDefaultPort changes default port for new keys', async (done) => {
+  it('setPortForNewAccessKeys changes default port for new keys', async (done) => {
     const portProvider = new PortProvider();
     const port = await portProvider.reserveNewPort();
     const repo = new RepoBuilder().build();
@@ -113,7 +113,7 @@ describe('ServerAccessKeyRepository', () => {
     done();
   });
 
-  it('setDefaultPort maintains ports on existing keys', async (done) => {
+  it('setPortForNewAccessKeys maintains ports on existing keys', async (done) => {
     const portProvider = new PortProvider();
     const oldPort = await portProvider.reserveNewPort();
     const repo = new RepoBuilder().port(oldPort).build();
@@ -125,14 +125,14 @@ describe('ServerAccessKeyRepository', () => {
     done();
   });
 
-  it('setDefaultPort rejects invalid port numbers', async (done) => {
+  it('setPortForNewAccessKeys rejects invalid port numbers', async (done) => {
     const repo = new RepoBuilder().build();
     // jasmine.toThrowError expects a function and makes the code
     // hard to read.
     const expectThrow = async (port: number) => {
       try {
         await repo.setPortForNewAccessKeys(port);
-        fail(`setDefaultPort should reject invalid port number ${port}.`);
+        fail(`setPortForNewAccessKeys should reject invalid port number ${port}.`);
       } catch (error) {
         expect(error instanceof errors.InvalidPortNumber).toBeTruthy();
       }
@@ -144,7 +144,7 @@ describe('ServerAccessKeyRepository', () => {
     done();
   });
 
-  it('setDefaultPort rejects ports in use', async (done) => {
+  it('setPortForNewAccessKeys rejects ports in use', async (done) => {
     const portProvider = new PortProvider();
     const port = await portProvider.reserveNewPort();
     const repo = new RepoBuilder().build();
@@ -152,16 +152,16 @@ describe('ServerAccessKeyRepository', () => {
     server.listen(port, async () => {
       try {
         await repo.setPortForNewAccessKeys(port);
-        fail(`setDefaultPort should reject already used port ${port}.`);
+        fail(`setPortForNewAccessKeys should reject already used port ${port}.`);
       } catch (error) {
-        expect(error instanceof errors.PortInUse);
+        expect(error instanceof errors.PortUnavailable);
       }
       server.close();
       done();
     });
   });
 
-  it('setDefaultPort accepts ports already used by access keys', async (done) => {
+  it('setPortForNewAccessKeys accepts ports already used by access keys', async (done) => {
     const portProvider = new PortProvider();
     const oldPort = await portProvider.reserveNewPort();
     const repo = new RepoBuilder().port(oldPort).build();
@@ -169,14 +169,14 @@ describe('ServerAccessKeyRepository', () => {
 
     // jasmine.toThrowError expects a function and makes the code
     // hard to read.  We also can't do anything like
-    // `expect(repo.setDefaultPort.bind(repo, port)).not.toThrow()`
-    // since setDefaultPort is async and this would lead to false positives
-    // when expect() returns before setDefaultPort throws.
+    // `expect(repo.setPortForNewAccessKeys.bind(repo, port)).not.toThrow()`
+    // since setPortForNewAccessKeys is async and this would lead to false positives
+    // when expect() returns before setPortForNewAccessKeys throws.
     const expectNoThrow = async (port: number) => {
       try {
         await repo.setPortForNewAccessKeys(port);
       } catch (error) {
-        fail(`setDefaultPort should accept port ${port}.`);
+        fail(`setPortForNewAccessKeys should accept port ${port}.`);
       }
     };
 
