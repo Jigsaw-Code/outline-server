@@ -161,7 +161,7 @@ describe('ShadowsocksManagerService', () => {
           expect(httpCode).toEqual(204);
         }
       };
-      await service.setDefaultPort({params: {port: newPort}}, res, () => {});
+      await service.setPortForNewAccessKeys({params: {port: newPort}}, res, () => {});
       const newKey = await repo.createNewAccessKey();
       expect(newKey.proxyParams.portNumber).toEqual(newPort);
       expect(oldKey.proxyParams.portNumber).not.toEqual(newPort);
@@ -181,7 +181,7 @@ describe('ShadowsocksManagerService', () => {
           responseProcessed = true;
         }
       };
-      await service.setDefaultPort({params: {port: newPort}}, res, done);
+      await service.setPortForNewAccessKeys({params: {port: newPort}}, res, done);
     });
 
     it('rejects invalid port numbers', async (done) => {
@@ -200,10 +200,10 @@ describe('ShadowsocksManagerService', () => {
         expect(error.statusCode).toEqual(409);
       };
 
-      await service.setDefaultPort({params: {port: -1}}, res, next);
-      await service.setDefaultPort({params: {port: 0}}, res, next);
-      await service.setDefaultPort({params: {port: 100.1}}, res, next);
-      await service.setDefaultPort({params: {port: 65536}}, res, next);
+      await service.setPortForNewAccessKeys({params: {port: -1}}, res, next);
+      await service.setPortForNewAccessKeys({params: {port: 0}}, res, next);
+      await service.setPortForNewAccessKeys({params: {port: 100.1}}, res, next);
+      await service.setPortForNewAccessKeys({params: {port: 65536}}, res, next);
 
       responseProcessed = true;
       done();
@@ -229,7 +229,7 @@ describe('ShadowsocksManagerService', () => {
 
       const server = new net.Server();
       server.listen(newPort, async () => {
-        await service.setDefaultPort({params: {port: newPort}}, res, next);
+        await service.setPortForNewAccessKeys({params: {port: newPort}}, res, next);
       });
     });
 
@@ -240,7 +240,7 @@ describe('ShadowsocksManagerService', () => {
 
       await service.createNewAccessKey({params: {}}, {send: () => {}}, () => {});
 
-      await service.setDefaultPort({params: {port: newPort}}, {send: () => {}}, () => {});
+      await service.setPortForNewAccessKeys({params: {port: newPort}}, {send: () => {}}, () => {});
 
       const res = {
         send: (httpCode) => {
@@ -251,7 +251,7 @@ describe('ShadowsocksManagerService', () => {
 
       const firstKeyConnection = new net.Server();
       firstKeyConnection.listen(oldPort, async () => {
-        await service.setDefaultPort({params: {port: oldPort}}, res, () => {});
+        await service.setPortForNewAccessKeys({params: {port: oldPort}}, res, () => {});
         firstKeyConnection.close();
         done();
       });
@@ -275,7 +275,7 @@ describe('ShadowsocksManagerService', () => {
         done();
       };
 
-      await service.setDefaultPort(noPort, res, next);
+      await service.setPortForNewAccessKeys(noPort, res, next);
     });
   });
 
