@@ -71,7 +71,8 @@ export function bindService(
     apiServer: restify.Server, apiPrefix: string, service: ShadowsocksManagerService) {
   apiServer.put(`${apiPrefix}/name`, service.renameServer.bind(service));
   apiServer.get(`${apiPrefix}/server`, service.getServer.bind(service));
-  apiServer.put(`${apiPrefix}/default-access-key-port`, service.setPortForNewAccessKeys.bind(service));
+  apiServer.put(
+      `${apiPrefix}/default-access-key-port`, service.setPortForNewAccessKeys.bind(service));
 
   apiServer.post(`${apiPrefix}/access-keys`, service.createNewAccessKey.bind(service));
   apiServer.get(`${apiPrefix}/access-keys`, service.listAccessKeys.bind(service));
