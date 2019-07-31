@@ -191,8 +191,9 @@ describe('ShadowsocksManagerService', () => {
 
       const res = {
         send: (httpCode) => {
-          fail(`setPortForNewAccessKeys should have failed with 409 Conflict, instead succeeded with code ${
-              httpCode}`);
+          fail(
+              `setPortForNewAccessKeys should have failed with 409 Conflict, instead succeeded with code ${
+                  httpCode}`);
         }
       };
       const next = (error) => {
@@ -216,8 +217,9 @@ describe('ShadowsocksManagerService', () => {
 
       const res = {
         send: (httpCode) => {
-          fail(`setPortForNewAccessKeys should have failed with 403 Forbidden, instead succeeded with code ${
-              httpCode}`);
+          fail(
+              `setPortForNewAccessKeys should have failed with 403 Forbidden, instead succeeded with code ${
+                  httpCode}`);
         }
       };
       const next = (error) => {
@@ -265,8 +267,9 @@ describe('ShadowsocksManagerService', () => {
       const noPort = {params: {}};
       const res = {
         send: (httpCode) => {
-          fail(`setPortForNewAccessKeys should have failed with 409 Conflict, instead succeeded with code ${
-              httpCode}`);
+          fail(
+              `setPortForNewAccessKeys should have failed with 409 Conflict, instead succeeded with code ${
+                  httpCode}`);
         }
       };
       const next = (error) => {
