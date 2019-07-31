@@ -156,7 +156,7 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`setDefaultPort request ${JSON.stringify(req.params)}`);
       const port = req.params.port;
-      await this.accessKeys.setDefaultPort(port);
+      await this.accessKeys.setPortForNewAccessKeys(port);
       this.serverConfig.data().portForNewAccessKeys = port;
       this.serverConfig.write();
       res.send(HttpSuccess.NO_CONTENT);

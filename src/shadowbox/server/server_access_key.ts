@@ -127,7 +127,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     });
   }
 
-  async setDefaultPort(port: number): Promise<void> {
+  async setPortForNewAccessKeys(port: number): Promise<void> {
     if (!Number.isInteger(port) || port < 1 || port > 65535) {
       throw new errors.InvalidPortNumber(port);
     }

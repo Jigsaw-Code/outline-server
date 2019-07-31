@@ -107,7 +107,7 @@ describe('ServerAccessKeyRepository', () => {
     const portProvider = new PortProvider();
     const port = await portProvider.reserveNewPort();
     const repo = new RepoBuilder().build();
-    await repo.setDefaultPort(port);
+    await repo.setPortForNewAccessKeys(port);
     const key = await repo.createNewAccessKey();
     expect(key.proxyParams.portNumber).toEqual(port);
     done();
@@ -120,7 +120,7 @@ describe('ServerAccessKeyRepository', () => {
     const oldKey = await repo.createNewAccessKey();
 
     const newPort = await portProvider.reserveNewPort();
-    await repo.setDefaultPort(newPort);
+    await repo.setPortForNewAccessKeys(newPort);
     expect(oldKey.proxyParams.portNumber).toEqual(oldPort);
     done();
   });
@@ -131,7 +131,7 @@ describe('ServerAccessKeyRepository', () => {
     // hard to read.
     const expectThrow = async (port: number) => {
       try {
-        await repo.setDefaultPort(port);
+        await repo.setPortForNewAccessKeys(port);
         fail(`setDefaultPort should reject invalid port number ${port}.`);
       } catch (error) {
         expect(error instanceof errors.InvalidPortNumber).toBeTruthy();
@@ -151,7 +151,7 @@ describe('ServerAccessKeyRepository', () => {
     const server = new net.Server();
     server.listen(port, async () => {
       try {
-        await repo.setDefaultPort(port);
+        await repo.setPortForNewAccessKeys(port);
         fail(`setDefaultPort should reject already used port ${port}.`);
       } catch (error) {
         expect(error instanceof errors.PortInUse);
@@ -174,7 +174,7 @@ describe('ServerAccessKeyRepository', () => {
     // when expect() returns before setDefaultPort throws.
     const expectNoThrow = async (port: number) => {
       try {
-        await repo.setDefaultPort(port);
+        await repo.setPortForNewAccessKeys(port);
       } catch (error) {
         fail(`setDefaultPort should accept port ${port}.`);
       }
