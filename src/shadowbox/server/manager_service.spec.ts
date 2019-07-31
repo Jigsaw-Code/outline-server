@@ -149,7 +149,7 @@ describe('ShadowsocksManagerService', () => {
       });
     });
   });
-  describe('setDefaultPort', () => {
+  describe('setPortForNewAccessKeys', () => {
     it('changes ports for new access keys', async (done) => {
       const repo = getAccessKeyRepository();
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
@@ -191,7 +191,7 @@ describe('ShadowsocksManagerService', () => {
 
       const res = {
         send: (httpCode) => {
-          fail(`setDefaultPort should have failed with 409 Conflict, instead succeeded with code ${
+          fail(`setPortForNewAccessKeys should have failed with 409 Conflict, instead succeeded with code ${
               httpCode}`);
         }
       };
@@ -216,7 +216,7 @@ describe('ShadowsocksManagerService', () => {
 
       const res = {
         send: (httpCode) => {
-          fail(`setDefaultPort should have failed with 403 Forbidden, instead succeeded with code ${
+          fail(`setPortForNewAccessKeys should have failed with 403 Forbidden, instead succeeded with code ${
               httpCode}`);
         }
       };
@@ -265,7 +265,7 @@ describe('ShadowsocksManagerService', () => {
       const noPort = {params: {}};
       const res = {
         send: (httpCode) => {
-          fail(`setDefaultPort should have failed with 409 Conflict, instead succeeded with code ${
+          fail(`setPortForNewAccessKeys should have failed with 409 Conflict, instead succeeded with code ${
               httpCode}`);
         }
       };

@@ -155,7 +155,7 @@ export class ShadowsocksManagerService {
   public async setPortForNewAccessKeys(req: RequestType, res: ResponseType, next: restify.Next):
       Promise<void> {
     try {
-      logging.debug(`setDefaultPort request ${JSON.stringify(req.params)}`);
+      logging.debug(`setPortForNewAccessKeys request ${JSON.stringify(req.params)}`);
       const port = req.params.port;
       if (typeof port !== 'number') {
         return next(new restify.InvalidArgumentError(port));
