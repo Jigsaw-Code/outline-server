@@ -21,15 +21,14 @@ class ShadowboxError extends Error {
 }
 
 export class InvalidPortNumber extends ShadowboxError {
-  // Since this is the error when a non-numeric value is passed to `port`, it takes type `any`.
-  // tslint:disable-next-line: no-any
-  constructor(public port: any) {
-    super(`Outline needs an integer port number between 1 and 65535.  Instead got ${port}.`);
+  // Since this is the error when a non-numeric value is passed to `port`, it takes type `string`.
+  constructor(public port: string) {
+    super(port);
   }
 }
 
-export class PortInUse extends ShadowboxError {
+export class PortUnavailable extends ShadowboxError {
   constructor(public port: number) {
-    super(`Attempted to start an Outline server on port ${port}, which is already in use.`);
+    super(port.toString());
   }
 }

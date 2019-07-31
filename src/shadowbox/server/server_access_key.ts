@@ -132,7 +132,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       throw new errors.InvalidPortNumber(port);
     }
     if (!this.isExistingAccessKeyPort(port) && await isPortUsed(port)) {
-      throw new errors.PortInUse(port);
+      throw new errors.PortUnavailable(port);
     }
     this.portForNewAccessKeys = port;
   }

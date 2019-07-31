@@ -157,6 +157,9 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`setDefaultPort request ${JSON.stringify(req.params)}`);
       const port = req.params.port;
+      if (typeof port !== 'number') {
+        return next(new restify.InvalidArgumentError(port));
+      }
       await this.accessKeys.setPortForNewAccessKeys(port);
       this.serverConfig.data().portForNewAccessKeys = port;
       this.serverConfig.write();
@@ -166,7 +169,7 @@ export class ShadowsocksManagerService {
       logging.error(error);
       if (error instanceof errors.InvalidPortNumber) {
         return next(new restify.InvalidArgumentError(error.message));
-      } else if (error instanceof errors.PortInUse) {
+      } else if (error instanceof errors.PortUnavailable) {
         return next(new restify.ForbiddenError(error.message));
       }
       return next(new restify.InternalServerError(error));

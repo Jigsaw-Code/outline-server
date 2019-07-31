@@ -154,7 +154,7 @@ describe('ServerAccessKeyRepository', () => {
         await repo.setPortForNewAccessKeys(port);
         fail(`setPortForNewAccessKeys should reject already used port ${port}.`);
       } catch (error) {
-        expect(error instanceof errors.PortInUse);
+        expect(error instanceof errors.PortUnavailable);
       }
       server.close();
       done();
