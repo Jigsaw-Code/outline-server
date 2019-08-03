@@ -35,6 +35,7 @@ The system comprises the following components:
 In order to build and run the code, you need the following installed:
   - [Node](https://nodejs.org/)
   - [Yarn](https://yarnpkg.com/en/docs/install)
+  - [Bazel](https://docs.bazel.build/versions/master/install.html)
   - [Wine](https://www.winehq.org/download), if you would like to generate binaries for Windows.
 
 Then you need to install all the NPM package dependencies:

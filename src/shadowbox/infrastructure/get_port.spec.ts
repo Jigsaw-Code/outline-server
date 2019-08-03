@@ -42,8 +42,8 @@ describe('PortProvider', () => {
     it('returns free port', async () => {
       const ports = new get_port.PortProvider();
       const server = await listen();
-      expect(await ports.reserveFirstFreePort(server.address().port))
-          .toBeGreaterThan(server.address().port);
+      expect(await ports.reserveFirstFreePort((server.address() as net.AddressInfo).port))
+          .toBeGreaterThan((server.address() as net.AddressInfo).port);
       server.close();
     });
 
