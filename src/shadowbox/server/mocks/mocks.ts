@@ -13,9 +13,8 @@
 // limitations under the License.
 
 import {PrometheusClient, QueryResultData} from '../../infrastructure/prometheus_scraper';
-import {DataUsageByUser} from '../../model/metrics';
+import {TextFile} from '../../infrastructure/text_file';
 import {ShadowsocksAccessKey, ShadowsocksServer} from '../../model/shadowsocks_server';
-import {TextFile} from '../../model/text_file';
 
 export class InMemoryFile implements TextFile {
   private savedText: string;
