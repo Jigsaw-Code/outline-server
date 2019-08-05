@@ -1,8 +1,37 @@
 package(default_visibility=["//visibility:public"])
+load("@build_bazel_rules_nodejs//:defs.bzl", "nodejs_binary")
 load("@npm_bazel_typescript//:index.bzl", "ts_library")
 load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
-# TODO: main
+ts_library(
+    name = "main",
+    srcs = ["main.ts"],
+    deps = [
+        ":manager_metrics",
+        ":manager_service",
+        ":outline_shadowsocks_server",
+        ":server_access_key",
+        ":server_config",
+        ":shared_metrics",
+        "//src/shadowbox/infrastructure:clock",
+        "//src/shadowbox/infrastructure:get_port",
+        "//src/shadowbox/infrastructure:json_config",
+        "//src/shadowbox/infrastructure:logging",
+        "//src/shadowbox/infrastructure:prometheus_scraper",
+        "//src/shadowbox/model",
+        "@npm//ShadowsocksConfig",
+        "@npm//prom-client",
+        "@npm//restify",
+        "@npm//@types/restify",       
+        "@npm//@types/node",
+    ],
+)
+
+nodejs_binary(
+    name = "server",
+    data = [":main"],
+    entry_point = ":main.ts",
+)
 
 ts_library(
     name = "manager_metrics",

@@ -33,12 +33,13 @@
     }
   },
   "dependencies": {
+    "ShadowsocksConfig": "Jigsaw-Code/outline-shadowsocksconfig#master",
     "js-yaml": "^3.13.1",
     "mkdirp": "^0.5.1",
-    "ShadowsocksConfig": "Jigsaw-Code/outline-shadowsocksconfig",
+    "prom-client": "^11.5.3",
     "randomstring": "^1.1.5",
     "request-lite": "^2.40.1",
-    "restify": "4",
+    "restify": "2",
     "uuid": "^3.3.2"
   }
 }

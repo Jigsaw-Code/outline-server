@@ -126,7 +126,7 @@ async function main() {
   const prometheusLocation = `127.0.0.1:${prometheusPort}`;
 
   const nodeMetricsPort = await portProvider.reserveFirstFreePort(prometheusPort + 1);
-  exportPrometheusMetrics(prometheus.register, nodeMetricsPort);
+  const ignoreServer = exportPrometheusMetrics(prometheus.register, nodeMetricsPort);
   const nodeMetricsLocation = `localhost:${nodeMetricsPort}`;
 
   const ssMetricsPort = await portProvider.reserveFirstFreePort(nodeMetricsPort + 1);
@@ -151,7 +151,7 @@ async function main() {
       new OutlineShadowsocksServer(
           getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation)
           .enableCountryMetrics(MMDB_LOCATION);
-  runPrometheusScraper(
+  const ignoreProcess = runPrometheusScraper(
       [
         '--storage.tsdb.retention', '31d', '--storage.tsdb.path',
         getPersistentFilename('prometheus/data'), '--web.listen-address', prometheusLocation,
