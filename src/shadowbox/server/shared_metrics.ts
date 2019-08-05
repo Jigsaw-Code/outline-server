@@ -142,7 +142,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       if (!this.isSharingEnabled()) {
         return;
       }
-      this.reportMetrics(await usageMetrics.getUsage());
+      const ignoredPromise = this.reportMetrics(await usageMetrics.getUsage());
       usageMetrics.reset();
     }, MS_PER_HOUR);
     // TODO(fortuna): also trigger report on shutdown, so data loss is minimized.

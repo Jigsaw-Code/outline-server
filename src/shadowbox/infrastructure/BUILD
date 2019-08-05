@@ -52,6 +52,7 @@ ts_library(
         "@npm//@types/jasmine",
         "@npm//@types/node",
     ],
+    testonly = True,
 )
 
 jasmine_node_test(
@@ -107,6 +108,7 @@ ts_library(
         ":rollout",
         "@npm//@types/jasmine",
     ],
+    testonly = True,
 )
 
 jasmine_node_test(

@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {PrometheusClient, QueryResultData} from '../infrastructure/prometheus_scraper';
-import {DataUsageByUser} from '../model/metrics';
 import {PrometheusManagerMetrics} from './manager_metrics';
 import {FakePrometheusClient} from './mocks/mocks';
 

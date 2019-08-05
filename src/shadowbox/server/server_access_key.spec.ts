@@ -19,7 +19,6 @@ import {AccessKeyQuota, AccessKeyRepository} from '../model/access_key';
 
 import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
-import {ServerConfigJson} from './server_config';
 
 describe('ServerAccessKeyRepository', () => {
   it('Repos with non-existent files are created with no access keys', (done) => {
@@ -165,10 +164,10 @@ describe('ServerAccessKeyRepository', () => {
   it('can remove access key quotas', async (done) => {
     const repo = createRepo();
     const accessKey = await repo.createNewAccessKey();
-    await expect(repo.setAccessKeyQuota(accessKey.id, {data: {bytes: 100}, window: {hours: 24}}))
+    expect(await repo.setAccessKeyQuota(accessKey.id, {data: {bytes: 100}, window: {hours: 24}}))
         .toBeTruthy();
     expect(repo.listAccessKeys()[0].quotaUsage).toBeDefined();
-    expect(repo.removeAccessKeyQuota(accessKey.id)).toBeTruthy();
+    expect(await repo.removeAccessKeyQuota(accessKey.id)).toBeTruthy();
     expect(repo.listAccessKeys()[0].quotaUsage).toBeUndefined();
     done();
   });
@@ -193,7 +192,7 @@ describe('ServerAccessKeyRepository', () => {
     expect(server.getAccessKeys().length).toEqual(1);
 
     // Remove the quota; expect the key to be under quota and enabled.
-    expect(repo.removeAccessKeyQuota(accessKey.id)).toBeTruthy();
+    expect(await repo.removeAccessKeyQuota(accessKey.id)).toBeTruthy();
     expect(server.getAccessKeys().length).toEqual(2);
     const accessKeys = await repo.listAccessKeys();
     expect(accessKeys[0].isOverQuota()).toBeFalsy();

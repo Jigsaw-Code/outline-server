@@ -21,10 +21,7 @@ import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyQuota, AccessKeyQuotaUsage, AccessKeyRepository, ProxyParams} from '../model/access_key';
-import {ShadowsocksAccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
-
-import {ManagerMetrics} from './manager_metrics';
-import {ServerConfigJson} from './server_config';
+import {ShadowsocksServer} from '../model/shadowsocks_server';
 
 // The format as json of access keys in the config file.
 interface AccessKeyJson {
@@ -233,7 +230,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       quotaStatusChanged = quotaStatusChanged || await this.updateAccessKeyQuotaStatus(accessKey);
     }
     if (quotaStatusChanged) {
-      this.updateServer();
+      await this.updateServer();
     }
   }
 
