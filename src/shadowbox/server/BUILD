@@ -52,9 +52,13 @@ ts_library(
     srcs = ["manager_service.spec.ts"],
     deps = [
         ":manager_service",
+        ":server_access_key",
+        ":server_config",
+        ":shared_metrics",
         "//src/shadowbox/infrastructure:get_port",
         "//src/shadowbox/infrastructure:json_config",
         "//src/shadowbox/model",
+        "//src/shadowbox/server/mocks",
         "@npm//@types/jasmine",
     ],
     testonly = True,

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as restify from 'restify';
-import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
+import {makeConfig, SIP002_URI} from 'ShadowsocksConfig';
 
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';

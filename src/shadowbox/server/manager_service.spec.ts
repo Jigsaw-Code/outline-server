@@ -239,7 +239,7 @@ describe('ShadowsocksManagerService', () => {
           responseProcessed = true;  // required for afterEach to pass.
         }
       };
-      service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, done);
+      await service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, done);
     });
     it('returns 409 when quota is missing values', async (done) => {
       const repo = getAccessKeyRepository();
@@ -255,7 +255,7 @@ describe('ShadowsocksManagerService', () => {
         expect(error.statusCode).toEqual(409);
       });
       quota = {window: {hours: 1}} as AccessKeyQuota;
-      service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, (error) => {
+      await service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, (error) => {
         expect(error.statusCode).toEqual(409);
         responseProcessed = true;  // required for afterEach to pass.
         done();
@@ -267,7 +267,7 @@ describe('ShadowsocksManagerService', () => {
       const accessKey = await repo.createNewAccessKey();
       const quota = {data: {bytes: -1}, window: {hours: 24}};
       const res = {send: (httpCode, data) => {}};
-      service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, (error) => {
+      await service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, (error) => {
         expect(error.statusCode).toEqual(409);
         responseProcessed = true;  // required for afterEach to pass.
         done();
@@ -279,7 +279,7 @@ describe('ShadowsocksManagerService', () => {
       const accessKey = await repo.createNewAccessKey();
       const quota = {data: {bytes: 1000}, window: {hours: -24}};
       const res = {send: (httpCode, data) => {}};
-      service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, (error) => {
+      await service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, (error) => {
         expect(error.statusCode).toEqual(409);
         responseProcessed = true;  // required for afterEach to pass.
         done();
@@ -290,7 +290,7 @@ describe('ShadowsocksManagerService', () => {
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
       const quota = {data: {bytes: 1000}, window: {hours: 24}};
       const res = {send: (httpCode, data) => {}};
-      service.setAccessKeyQuota({params: {id: 'doesnotexist', quota}}, res, (error) => {
+      await service.setAccessKeyQuota({params: {id: 'doesnotexist', quota}}, res, (error) => {
         expect(error.statusCode).toEqual(404);
         responseProcessed = true;  // required for afterEach to pass.
         done();
@@ -303,7 +303,7 @@ describe('ShadowsocksManagerService', () => {
       const accessKey = await repo.createNewAccessKey();
       const quota = {data: {bytes: 10000}, window: {hours: 48}};
       const res = {send: (httpCode, data) => {}};
-      service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, (error) => {
+      await service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, (error) => {
         expect(error.statusCode).toEqual(500);
         responseProcessed = true;  // required for afterEach to pass.
         done();
@@ -317,7 +317,7 @@ describe('ShadowsocksManagerService', () => {
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
       const quota = {data: {bytes: 10000}, window: {hours: 48}};
       const accessKey = await repo.createNewAccessKey();
-      repo.setAccessKeyQuota(accessKey.id, quota);
+      await repo.setAccessKeyQuota(accessKey.id, quota);
       expect(accessKey.quotaUsage.quota).toEqual(quota);
       expect(accessKey.quotaUsage.usage.bytes).toEqual(0);
       const res = {
@@ -329,13 +329,13 @@ describe('ShadowsocksManagerService', () => {
           responseProcessed = true;  // required for afterEach to pass.
         }
       };
-      service.removeAccessKeyQuota({params: {id: accessKey.id}}, res, done);
+      await service.removeAccessKeyQuota({params: {id: accessKey.id}}, res, done);
     });
     it('returns 404 when the access key is not found', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
       const res = {send: (httpCode, data) => {}};
-      service.removeAccessKeyQuota({params: {id: 'doesnotexist'}}, res, (error) => {
+      await service.removeAccessKeyQuota({params: {id: 'doesnotexist'}}, res, (error) => {
         expect(error.statusCode).toEqual(404);
         responseProcessed = true;  // required for afterEach to pass.
         done();
@@ -347,7 +347,7 @@ describe('ShadowsocksManagerService', () => {
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
       const accessKey = await repo.createNewAccessKey();
       const res = {send: (httpCode, data) => {}};
-      service.removeAccessKeyQuota({params: {id: accessKey.id}}, res, (error) => {
+      await service.removeAccessKeyQuota({params: {id: accessKey.id}}, res, (error) => {
         expect(error.statusCode).toEqual(500);
         responseProcessed = true;  // required for afterEach to pass.
         done();
