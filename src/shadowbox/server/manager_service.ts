@@ -91,8 +91,8 @@ interface SetShareMetricsParams {
   metricsEnabled: boolean;
 }
 
-function invalidPortArgument(message: string) { 
-  return new restify.InvalidContentError(message);
+function invalidPortArgument(message: string) {
+  return new restify.BadRequestError(message);
 }
 
 // The ShadowsocksManagerService manages the access keys that can use the server
@@ -160,9 +160,9 @@ export class ShadowsocksManagerService {
       Promise<void> {
     try {
       logging.debug(`setPortForNewAccessKeys request ${JSON.stringify(req.params)}`);
-      const port = Number.parseInt(req.params.portStr, 10);
+      const port = Number.parseFloat(req.params.portStr);
       if (Number.isNaN(port)) {
-        return next(invalidPortArgument(`Expected an integer port, instead got ${port}`));
+        return next(invalidPortArgument(`Expected an numeric port, instead got ${port}`));
       }
       await this.accessKeys.setPortForNewAccessKeys(port);
       this.serverConfig.data().portForNewAccessKeys = port;

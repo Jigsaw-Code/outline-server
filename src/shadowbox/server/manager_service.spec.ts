@@ -195,13 +195,13 @@ describe('ShadowsocksManagerService', () => {
       const res = {
         send: (httpCode) => {
           fail(
-              `setPortForNewAccessKeys should have failed with 409 Conflict, instead succeeded with code ${
+              `setPortForNewAccessKeys should have failed with 400 Bad Request, instead succeeded with code ${
                   httpCode}`);
         }
       };
       const next = (error) => {
-        // Conflict
-        expect(error.statusCode).toEqual(409);
+        // Bad Request
+        expect(error.statusCode).toEqual(400);
       };
 
       await service.setPortForNewAccessKeys(stringifiedPortRequest(-1), res, next);
@@ -221,13 +221,13 @@ describe('ShadowsocksManagerService', () => {
       const res = {
         send: (httpCode) => {
           fail(
-              `setPortForNewAccessKeys should have failed with 403 Forbidden, instead succeeded with code ${
+              `setPortForNewAccessKeys should have failed with 409 Conflict, instead succeeded with code ${
                   httpCode}`);
         }
       };
       const next = (error) => {
-        // Forbidden
-        expect(error.statusCode).toEqual(403);
+        // Conflict
+        expect(error.statusCode).toEqual(409);
         responseProcessed = true;
         done();
       };
@@ -245,7 +245,8 @@ describe('ShadowsocksManagerService', () => {
 
       await service.createNewAccessKey({params: {}}, {send: () => {}}, () => {});
 
-      await service.setPortForNewAccessKeys(stringifiedPortRequest(newPort), {send: () => {}}, () => {});
+      await service.setPortForNewAccessKeys(
+          stringifiedPortRequest(newPort), {send: () => {}}, () => {});
 
       const res = {
         send: (httpCode) => {
@@ -271,12 +272,12 @@ describe('ShadowsocksManagerService', () => {
       const res = {
         send: (httpCode) => {
           fail(
-              `setPortForNewAccessKeys should have failed with 409 Conflict, instead succeeded with code ${
+              `setPortForNewAccessKeys should have failed with 400 BadRequest, instead succeeded with code ${
                   httpCode}`);
         }
       };
       const next = (error) => {
-        expect(error.statusCode).toEqual(409);
+        expect(error.statusCode).toEqual(400);
         responseProcessed = true;
         done();
       };
