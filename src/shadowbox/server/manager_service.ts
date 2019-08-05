@@ -53,7 +53,7 @@ interface RequestParams {
   name?: string;
   metricsEnabled?: boolean;
   quota?: AccessKeyQuota;
-  port?: number;
+  portStr?: string;
 }
 interface RequestType {
   params: RequestParams;
@@ -89,6 +89,10 @@ export function bindService(
 
 interface SetShareMetricsParams {
   metricsEnabled: boolean;
+}
+
+function invalidPortArgument(message: string) { 
+  return new restify.InvalidContentError(message);
 }
 
 // The ShadowsocksManagerService manages the access keys that can use the server
@@ -156,9 +160,9 @@ export class ShadowsocksManagerService {
       Promise<void> {
     try {
       logging.debug(`setPortForNewAccessKeys request ${JSON.stringify(req.params)}`);
-      const port = req.params.port;
-      if (typeof port !== 'number') {
-        return next(new restify.InvalidArgumentError(port));
+      const port = Number.parseInt(req.params.portStr, 10);
+      if (Number.isNaN(port)) {
+        return next(invalidPortArgument(`Expected an integer port, instead got ${port}`));
       }
       await this.accessKeys.setPortForNewAccessKeys(port);
       this.serverConfig.data().portForNewAccessKeys = port;
@@ -168,9 +172,9 @@ export class ShadowsocksManagerService {
     } catch (error) {
       logging.error(error);
       if (error instanceof errors.InvalidPortNumber) {
-        return next(new restify.InvalidArgumentError(error.message));
+        return next(invalidPortArgument(error.message));
       } else if (error instanceof errors.PortUnavailable) {
-        return next(new restify.ForbiddenError(error.message));
+        return next(new restify.ConflictError(error.message));
       }
       return next(new restify.InternalServerError(error));
     }
