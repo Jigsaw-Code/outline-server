@@ -72,7 +72,8 @@ export function bindService(
   apiServer.put(`${apiPrefix}/name`, service.renameServer.bind(service));
   apiServer.get(`${apiPrefix}/server`, service.getServer.bind(service));
   apiServer.put(
-      `${apiPrefix}/server/port-for-new-access-keys`, service.setPortForNewAccessKeys.bind(service));
+      `${apiPrefix}/server/port-for-new-access-keys`,
+      service.setPortForNewAccessKeys.bind(service));
 
   apiServer.post(`${apiPrefix}/access-keys`, service.createNewAccessKey.bind(service));
   apiServer.get(`${apiPrefix}/access-keys`, service.listAccessKeys.bind(service));
