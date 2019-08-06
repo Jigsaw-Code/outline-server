@@ -150,9 +150,6 @@ describe('ShadowsocksManagerService', () => {
     });
   });
   describe('setPortForNewAccessKeys', () => {
-    function stringifiedPortRequest(port: number) {
-      return {params: {portStr: port.toString()}};
-    }
     it('changes ports for new access keys', async (done) => {
       const repo = getAccessKeyRepository();
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
@@ -164,7 +161,7 @@ describe('ShadowsocksManagerService', () => {
           expect(httpCode).toEqual(204);
         }
       };
-      await service.setPortForNewAccessKeys(stringifiedPortRequest(newPort), res, () => {});
+      await service.setPortForNewAccessKeys({params: {port: newPort}}, res, () => {});
       const newKey = await repo.createNewAccessKey();
       expect(newKey.proxyParams.portNumber).toEqual(newPort);
       expect(oldKey.proxyParams.portNumber).not.toEqual(newPort);
@@ -184,7 +181,7 @@ describe('ShadowsocksManagerService', () => {
           responseProcessed = true;
         }
       };
-      await service.setPortForNewAccessKeys(stringifiedPortRequest(newPort), res, done);
+      await service.setPortForNewAccessKeys({params: {port: newPort}}, res, done);
     });
 
     it('rejects invalid port numbers', async (done) => {
@@ -204,10 +201,10 @@ describe('ShadowsocksManagerService', () => {
         expect(error.statusCode).toEqual(400);
       };
 
-      await service.setPortForNewAccessKeys(stringifiedPortRequest(-1), res, next);
-      await service.setPortForNewAccessKeys(stringifiedPortRequest(0), res, next);
-      await service.setPortForNewAccessKeys(stringifiedPortRequest(100.1), res, next);
-      await service.setPortForNewAccessKeys(stringifiedPortRequest(65536), res, next);
+      await service.setPortForNewAccessKeys({params: {port: -1}}, res, next);
+      await service.setPortForNewAccessKeys({params: {port: 0}}, res, next);
+      await service.setPortForNewAccessKeys({params: {port: 100.1}}, res, next);
+      await service.setPortForNewAccessKeys({params: {port: 65536}}, res, next);
 
       responseProcessed = true;
       done();
@@ -234,7 +231,7 @@ describe('ShadowsocksManagerService', () => {
 
       const server = new net.Server();
       server.listen(newPort, async () => {
-        await service.setPortForNewAccessKeys(stringifiedPortRequest(newPort), res, next);
+        await service.setPortForNewAccessKeys({params: {port: newPort}}, res, next);
       });
     });
 
@@ -246,7 +243,7 @@ describe('ShadowsocksManagerService', () => {
       await service.createNewAccessKey({params: {}}, {send: () => {}}, () => {});
 
       await service.setPortForNewAccessKeys(
-          stringifiedPortRequest(newPort), {send: () => {}}, () => {});
+          {params: {port: newPort}}, {send: () => {}}, () => {});
 
       const res = {
         send: (httpCode) => {
@@ -257,7 +254,7 @@ describe('ShadowsocksManagerService', () => {
 
       const firstKeyConnection = new net.Server();
       firstKeyConnection.listen(oldPort, async () => {
-        await service.setPortForNewAccessKeys(stringifiedPortRequest(oldPort), res, () => {});
+        await service.setPortForNewAccessKeys({params: {port: oldPort}}, res, () => {});
         firstKeyConnection.close();
         done();
       });
@@ -269,6 +266,8 @@ describe('ShadowsocksManagerService', () => {
       const service = new ShadowsocksManagerService('name', serverConfig, repo, null, null);
 
       const noPort = {params: {}};
+      const nonNumericPort = {params: {port: "abc"}};
+      
       const res = {
         send: (httpCode) => {
           fail(
@@ -278,11 +277,14 @@ describe('ShadowsocksManagerService', () => {
       };
       const next = (error) => {
         expect(error.statusCode).toEqual(400);
-        responseProcessed = true;
-        done();
       };
 
       await service.setPortForNewAccessKeys(noPort, res, next);
+      // tslint:disable-next-line: no-any
+      await service.setPortForNewAccessKeys((nonNumericPort as any) as {params: {port: number}}, res, next);
+      
+      responseProcessed = true;
+      done();
     });
   });
 

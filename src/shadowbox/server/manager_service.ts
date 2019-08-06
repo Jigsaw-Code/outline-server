@@ -53,7 +53,7 @@ interface RequestParams {
   name?: string;
   metricsEnabled?: boolean;
   quota?: AccessKeyQuota;
-  portStr?: string;
+  port?: number;
 }
 interface RequestType {
   params: RequestParams;
@@ -160,11 +160,19 @@ export class ShadowsocksManagerService {
   public async setPortForNewAccessKeys(req: RequestType, res: ResponseType, next: restify.Next):
       Promise<void> {
     try {
-      logging.debug(`setPortForNewAccessKeys request ${JSON.stringify(req.params)}`);
-      const port = Number.parseFloat(req.params.portStr);
+      logging.debug(`setPort[ForNewAccessKeys request ${JSON.stringify(req.params)}`);
+      if (!req.params.port) {
+        return next(invalidPortArgument("Expected a port argument but found none."));
+      }
+
+      const port = req.params.port;
       if (Number.isNaN(port)) {
         return next(invalidPortArgument(`Expected an numeric port, instead got ${port}`));
       }
+      if(port < 1 || port > 65535) {
+        return next(invalidPortArgument(`Expected a positive port number up to 65535, instead got ${port}`));
+      }
+      
       await this.accessKeys.setPortForNewAccessKeys(port);
       this.serverConfig.data().portForNewAccessKeys = port;
       this.serverConfig.write();
