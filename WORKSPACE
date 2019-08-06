@@ -36,3 +36,24 @@ install_bazel_dependencies()
 # Setup TypeScript toolchain 
 load("@npm_bazel_typescript//:index.bzl", "ts_setup_workspace")
 ts_setup_workspace()
+
+http_archive(
+    name = "outline-ss-server",
+    urls = ["https://github.com/Jigsaw-Code/outline-ss-server/releases/download/v1.0.5/outline-ss-server_1.0.5_linux_x86_64.tar.gz"],
+    sha256 = "c19eb07e06313fcfcde2cdb93567b9a98d78374b70a047a0cb913ca9bd8993e4",
+    build_file_content = """
+package(default_visibility=["//visibility:public"])
+exports_files(["outline-ss-server"])
+"""
+)
+
+http_archive(
+    name = "prometheus",
+    urls = ["https://github.com/prometheus/prometheus/releases/download/v2.11.1/prometheus-2.11.1.linux-amd64.tar.gz"],
+    sha256 = "50b5f4dfd3f358518c1aaa3bd7df2e90780bdb5292b5c996137c2b1e81102390",
+    strip_prefix = "prometheus-2.11.1.linux-amd64",
+    build_file_content = """
+package(default_visibility=["//visibility:public"])
+exports_files(["prometheus"])
+"""
+)

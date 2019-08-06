@@ -179,8 +179,10 @@ async function main() {
       process.env.SB_DEFAULT_SERVER_NAME || 'Outline Server', serverConfig, accessKeyRepository,
       managerMetrics, metricsPublisher);
 
-  const certificateFilename = process.env.SB_CERTIFICATE_FILE;
-  const privateKeyFilename = process.env.SB_PRIVATE_KEY_FILE;
+  const certificateFilename =
+      process.env.SB_CERTIFICATE_FILE || getPersistentFilename('shadowbox-selfsigned.crt');
+  const privateKeyFilename =
+      process.env.SB_PRIVATE_KEY_FILE || getPersistentFilename('shadowbox-selfsigned.key');
   const apiServer = restify.createServer({
     certificate: fs.readFileSync(certificateFilename),
     key: fs.readFileSync(privateKeyFilename)

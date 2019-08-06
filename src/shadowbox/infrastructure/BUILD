@@ -91,6 +91,9 @@ ts_library(
         "@npm//mkdirp",
         "@npm//js-yaml",
     ],
+    data = [
+        "@prometheus//:prometheus",
+    ],
 )
 
 ts_library(

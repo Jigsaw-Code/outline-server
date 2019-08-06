@@ -109,6 +109,9 @@ ts_library(
         "@npm//mkdirp",
         "@npm//@types/node",
     ],
+    data = [
+        "@outline-ss-server//:outline-ss-server",
+    ],
 )
 
 ts_library(

@@ -80,7 +80,8 @@ export function runPrometheusScraper(
       }
       const commandArguments = ['--config.file', configFilename];
       commandArguments.push(...args);
-      const runProcess = child_process.spawn('/root/shadowbox/bin/prometheus', commandArguments);
+      const runProcess = child_process.spawn(
+          path.join(process.env.RUNFILES, 'prometheus/prometheus'), commandArguments);
       runProcess.on('error', (error) => {
         logging.error(`Error spawning prometheus: ${error}`);
       });
