@@ -197,9 +197,9 @@
     "@types/bunyan" "*"
     "@types/node" "*"
 
-ShadowsocksConfig@Jigsaw-Code/outline-shadowsocksconfig#master:
+ShadowsocksConfig@Jigsaw-Code/outline-shadowsocksconfig#05c3fd9138be354c89b963c6bb04386ed967c87c:
   version "0.0.8"
-  resolved "https://codeload.github.com/Jigsaw-Code/outline-shadowsocksconfig/tar.gz/cf5a1ea13d8b3c2c612ed68ce7c4035b26006aef"
+  resolved "https://codeload.github.com/Jigsaw-Code/outline-shadowsocksconfig/tar.gz/05c3fd9138be354c89b963c6bb04386ed967c87c"
   dependencies:
     base-64 "^0.1.0"
     punycode "^1.4.1"
