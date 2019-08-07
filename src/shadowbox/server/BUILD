@@ -114,6 +114,18 @@ ts_library(
     ],
 )
 
+sh_binary(
+    name = "run_server",
+    srcs = ["run_server.sh"],
+    deps = [
+        "//src/shadowbox/scripts:make_test_certificate",
+        "@bazel_tools//tools/bash/runfiles",
+    ],
+    data = [
+        ":server",
+    ],
+)
+
 ts_library(
     name = "server_access_key",
     srcs = ["server_access_key.ts"],
