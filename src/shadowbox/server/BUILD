@@ -123,6 +123,7 @@ sh_binary(
     ],
     data = [
         ":server",
+        "//third_party/maxmind:GeoLite2-Country/GeoLite2-Country.mmdb",
     ],
 )
 

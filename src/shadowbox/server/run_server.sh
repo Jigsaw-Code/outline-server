@@ -28,10 +28,11 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2>/dev/null || \
 
 export LOG_LEVEL="${LOG_LEVEL:-debug}"
 export SB_PUBLIC_IP="${SB_PUBLIC_IP:-$(curl https://ipinfo.io/ip)}"
-# WARNING: The SB_API_PREFIX should be kept secret!
+# WARNING: The SB_API_PREFIX should be kept secret in a real server!
 export SB_API_PREFIX=TestApiPrefix
 export SB_METRICS_URL=https://metrics-test.uproxy.org
 export SB_STATE_DIR=/tmp/outline
+export SB_MMDB_LOCATION=$(rlocation org_getoutline/third_party/maxmind/GeoLite2-Country/GeoLite2-Country.mmdb)
 
 $(rlocation org_getoutline/src/shadowbox/scripts/make_test_certificate.sh) $SB_STATE_DIR
 

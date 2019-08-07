@@ -33,8 +33,9 @@ import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_ke
 import * as server_config from './server_config';
 import {OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollectorClient, SharedMetricsPublisher} from './shared_metrics';
 
-const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
-const MMDB_LOCATION = '/var/lib/libmaxminddb/GeoLite2-Country.mmdb';
+const STATE_DIR = process.env.SB_STATE_DIR || '/root/shadowbox/persisted-state';
+const MMDB_LOCATION =
+    process.env.SB_MMDB_LOCATION || '/var/lib/libmaxminddb/GeoLite2-Country.mmdb';
 
 async function exportPrometheusMetrics(registry: prometheus.Registry, port): Promise<http.Server> {
   return new Promise<http.Server>((resolve, _) => {
@@ -206,8 +207,7 @@ async function main() {
 }
 
 function getPersistentFilename(file: string): string {
-  const stateDir = process.env.SB_STATE_DIR || DEFAULT_STATE_DIR;
-  return path.join(stateDir, file);
+  return path.join(STATE_DIR, file);
 }
 
 process.on('unhandledRejection', (error: Error) => {
