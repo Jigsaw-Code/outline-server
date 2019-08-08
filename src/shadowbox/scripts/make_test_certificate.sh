@@ -17,8 +17,7 @@
 # Make a certificate for development purposes, and populate the
 # corresponding environment variables.
 
-readonly STATE_DIR=$1
-readonly CERTIFICATE_NAME="$STATE_DIR/shadowbox-selfsigned"
+readonly CERTIFICATE_NAME="$1/shadowbox-selfsigned"
 export SB_CERTIFICATE_FILE="${CERTIFICATE_NAME}.crt"
 export SB_PRIVATE_KEY_FILE="${CERTIFICATE_NAME}.key"
 declare -a openssl_req_flags=(
