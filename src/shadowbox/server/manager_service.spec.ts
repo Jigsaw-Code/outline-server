@@ -242,8 +242,7 @@ describe('ShadowsocksManagerService', () => {
 
       await service.createNewAccessKey({params: {}}, {send: () => {}}, () => {});
 
-      await service.setPortForNewAccessKeys(
-          {params: {port: newPort}}, {send: () => {}}, () => {});
+      await service.setPortForNewAccessKeys({params: {port: newPort}}, {send: () => {}}, () => {});
 
       const res = {
         send: (httpCode) => {
@@ -266,8 +265,8 @@ describe('ShadowsocksManagerService', () => {
       const service = new ShadowsocksManagerService('name', serverConfig, repo, null, null);
 
       const noPort = {params: {}};
-      const nonNumericPort = {params: {port: "abc"}};
-      
+      const nonNumericPort = {params: {port: 'abc'}};
+
       const res = {
         send: (httpCode) => {
           fail(
@@ -280,9 +279,10 @@ describe('ShadowsocksManagerService', () => {
       };
 
       await service.setPortForNewAccessKeys(noPort, res, next);
-      // tslint:disable-next-line: no-any
-      await service.setPortForNewAccessKeys((nonNumericPort as any) as {params: {port: number}}, res, next);
-      
+      await service.setPortForNewAccessKeys(
+        // tslint:disable-next-line: no-any
+          (nonNumericPort as any) as {params: {port: number}}, res, next);
+
       responseProcessed = true;
       done();
     });

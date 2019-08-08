@@ -162,17 +162,18 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`setPort[ForNewAccessKeys request ${JSON.stringify(req.params)}`);
       if (!req.params.port) {
-        return next(invalidPortArgument("Expected a port argument but found none."));
+        return next(invalidPortArgument(`Expected a port argument but found none. Request: ${req}`));
       }
 
       const port = req.params.port;
       if (Number.isNaN(port)) {
         return next(invalidPortArgument(`Expected an numeric port, instead got ${port}`));
       }
-      if(port < 1 || port > 65535) {
-        return next(invalidPortArgument(`Expected a positive port number up to 65535, instead got ${port}`));
+      if (port < 1 || port > 65535) {
+        return next(invalidPortArgument(
+            `Expected a positive port number up to 65535, instead got ${port}`));
       }
-      
+
       await this.accessKeys.setPortForNewAccessKeys(port);
       this.serverConfig.data().portForNewAccessKeys = port;
       this.serverConfig.write();

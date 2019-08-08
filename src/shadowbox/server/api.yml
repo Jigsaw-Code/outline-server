@@ -44,7 +44,7 @@ paths:
                   type: number
             examples:
               '0':
-                value: '{port: 12345}'
+                value: '{"port": 12345}'
       responses:
         '204':
           description: The default port was sucessfully changed.

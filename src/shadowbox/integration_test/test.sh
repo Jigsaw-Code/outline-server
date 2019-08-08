@@ -89,6 +89,7 @@ function cleanup() {
 
   # Sets everything up
   export SB_API_PREFIX=TestApiPrefix
+  SB_API_URL=https://shadowbox/${SB_API_PREFIX}
   docker-compose up --build -d
 
   # Wait for target to come up.
@@ -111,13 +112,13 @@ function cleanup() {
 
   # Create new shadowbox user.
   # TODO(bemasc): Verify that the server is using the right certificate
-  declare -r NEW_USER_JSON=$(client_curl --insecure -X POST https://shadowbox/${SB_API_PREFIX}/access-keys)
+  declare -r NEW_USER_JSON=$(client_curl --insecure -X POST ${SB_API_URL}/access-keys)
   [[ ${NEW_USER_JSON} == '{"id":"0"'* ]] || fail "Fail to create user"
   declare -r SS_USER_ARGUMENTS=$(ss_arguments_for_user $NEW_USER_JSON)
 
   # Verify that we handle deletions well
-  client_curl --insecure -X POST https://shadowbox/${SB_API_PREFIX}/access-keys > /dev/null
-  client_curl --insecure -X DELETE https://shadowbox/${SB_API_PREFIX}/access-keys/1 > /dev/null
+  client_curl --insecure -X POST ${SB_API_URL}/access-keys > /dev/null
+  client_curl --insecure -X DELETE ${SB_API_URL}/access-keys/1 > /dev/null
 
   # Start Shadowsocks client and wait for it to be ready
   declare -r LOCAL_SOCKS_PORT=5555
@@ -138,11 +139,22 @@ function cleanup() {
     || fail "Could not fetch $INTERNET_TARGET_URL through shadowbox."
 
   # Verify we can't access the URL anymore after the key is deleted
-  client_curl --insecure -X DELETE https://shadowbox/${SB_API_PREFIX}/access-keys/0 > /dev/null
+  client_curl --insecure -X DELETE ${SB_API_URL}/access-keys/0 > /dev/null
   # Exit code 56 is "Connection reset by peer".
   client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT --connect-timeout 1 $INTERNET_TARGET_URL &> /dev/null \
     && fail "Deleted access key is still active" || (($? == 56))
 
+  # Verify that we can change the port for new access keys
+  client_curl --insecure -X PUT -H "Content-Type: application/json" -d '{"port": 12345}' ${SB_API_URL}/server/port-for-new-access-keys \
+    || fail "Couldn't change the port for new access keys"
+
+  ACCESS_KEY_JSON=$(client_curl --insecure -X POST ${SB_API_URL}/access-keys \
+    || fail "Couldn't get a new access key after changing port")
+  
+  if [[ "${ACCESS_KEY_JSON}" != *'"port":12345'* ]]; then
+    fail "Port for new access keys wasn't changed.  Newly created access key: ${ACCESS_KEY_JSON}"
+  fi
+  
   # Verify no errors occurred.
   readonly SHADOWBOX_LOG=$OUTPUT_DIR/shadowbox-log.txt
   if docker logs $SHADOWBOX_CONTAINER 2>&1 | tee $SHADOWBOX_LOG | egrep -q "^E|level=error|ERROR:"; then
