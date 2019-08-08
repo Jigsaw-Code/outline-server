@@ -6,4 +6,17 @@
 #   so that ts_library rules still use it by default.
 #   See https://www.npmjs.com/package/@bazel/typescript#installation
 exports_files(["tsconfig.json", "tsconfig.nodejs.json"], visibility = ["//:__subpackages__"])
+    
+config_setting(
+    name = "linux",
+    constraint_values = [
+        "@platforms//os:linux",
+    ],
+)
 
+config_setting(
+    name = "macos",
+    constraint_values = [
+        "@platforms//os:osx",
+    ],
+)

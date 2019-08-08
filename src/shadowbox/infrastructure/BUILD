@@ -92,7 +92,7 @@ ts_library(
         "@npm//js-yaml",
     ],
     data = [
-        "@prometheus//:prometheus",
+        "//third_party:prometheus"
     ],
 )
 

@@ -34,6 +34,6 @@ export SB_METRICS_URL=https://metrics-test.uproxy.org
 export SB_STATE_DIR=/tmp/outline
 export SB_MMDB_LOCATION=$(rlocation org_getoutline/third_party/maxmind/GeoLite2-Country/GeoLite2-Country.mmdb)
 
+mkdir -p $SB_STATE_DIR
 $(rlocation org_getoutline/src/shadowbox/scripts/make_test_certificate.sh) $SB_STATE_DIR
-
 $(rlocation org_getoutline/src/shadowbox/server/server)

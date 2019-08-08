@@ -37,23 +37,42 @@ install_bazel_dependencies()
 load("@npm_bazel_typescript//:index.bzl", "ts_setup_workspace")
 ts_setup_workspace()
 
-http_archive(
-    name = "outline-ss-server",
-    urls = ["https://github.com/Jigsaw-Code/outline-ss-server/releases/download/v1.0.5/outline-ss-server_1.0.5_linux_x86_64.tar.gz"],
-    sha256 = "c19eb07e06313fcfcde2cdb93567b9a98d78374b70a047a0cb913ca9bd8993e4",
-    build_file_content = """
+OUTLINE_SS_SERVER_BUILD = """
 package(default_visibility=["//visibility:public"])
 exports_files(["outline-ss-server"])
 """
+
+http_archive(
+    name = "outline-ss-server-linux-amd64",
+    urls = ["https://github.com/Jigsaw-Code/outline-ss-server/releases/download/v1.0.5/outline-ss-server_1.0.5_linux_x86_64.tar.gz"],
+    sha256 = "c19eb07e06313fcfcde2cdb93567b9a98d78374b70a047a0cb913ca9bd8993e4",
+    build_file_content = OUTLINE_SS_SERVER_BUILD
 )
 
 http_archive(
-    name = "prometheus",
-    urls = ["https://github.com/prometheus/prometheus/releases/download/v2.11.1/prometheus-2.11.1.linux-amd64.tar.gz"],
-    sha256 = "50b5f4dfd3f358518c1aaa3bd7df2e90780bdb5292b5c996137c2b1e81102390",
-    strip_prefix = "prometheus-2.11.1.linux-amd64",
-    build_file_content = """
+    name = "outline-ss-server-macos-amd64",
+    urls = ["https://github.com/Jigsaw-Code/outline-ss-server/releases/download/v1.0.5/outline-ss-server_1.0.5_macos_x86_64.tar.gz"],
+    sha256 = "a58ec0d4aca5151f3ae409ac41f0c67f0ea9992d82948cc2a4ddd1906c1e31fa",
+    build_file_content = OUTLINE_SS_SERVER_BUILD
+)
+
+PROMETHEUS_BUILD = """
 package(default_visibility=["//visibility:public"])
 exports_files(["prometheus"])
 """
+
+http_archive(
+    name = "prometheus-linux-amd64",
+    urls = ["https://github.com/prometheus/prometheus/releases/download/v2.11.1/prometheus-2.11.1.linux-amd64.tar.gz"],
+    sha256 = "50b5f4dfd3f358518c1aaa3bd7df2e90780bdb5292b5c996137c2b1e81102390",
+    strip_prefix = "prometheus-2.11.1.linux-amd64",
+    build_file_content = PROMETHEUS_BUILD
+)
+
+http_archive(
+    name = "prometheus-macos-amd64",
+    urls = ["https://github.com/prometheus/prometheus/releases/download/v2.11.1/prometheus-2.11.1.darwin-amd64.tar.gz"],
+    sha256 = "3528df5d8a464422ebfa6feff7ecb9f0987a4535cbb89f40159d2f6a5e5c9b9a",
+    strip_prefix = "prometheus-2.11.1.darwin-amd64",
+    build_file_content = PROMETHEUS_BUILD
 )

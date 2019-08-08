@@ -110,7 +110,7 @@ ts_library(
         "@npm//@types/node",
     ],
     data = [
-        "@outline-ss-server//:outline-ss-server",
+        "//third_party:outline-ss-server",
     ],
 )
 

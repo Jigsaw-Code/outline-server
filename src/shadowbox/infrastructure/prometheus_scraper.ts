@@ -81,7 +81,8 @@ export function runPrometheusScraper(
       const commandArguments = ['--config.file', configFilename];
       commandArguments.push(...args);
       const runProcess = child_process.spawn(
-          path.join(process.env.RUNFILES, 'prometheus/prometheus'), commandArguments);
+          path.join(process.env.RUNFILES, 'org_getoutline/third_party/prometheus'),
+          commandArguments);
       runProcess.on('error', (error) => {
         logging.error(`Error spawning prometheus: ${error}`);
       });

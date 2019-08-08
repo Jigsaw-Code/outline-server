@@ -83,7 +83,8 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
       commandArguments.push('-verbose');
     }
     this.ssProcess = child_process.spawn(
-        path.join(process.env.RUNFILES, 'outline-ss-server/outline-ss-server'), commandArguments);
+        path.join(process.env.RUNFILES, 'org_getoutline/third_party/outline-ss-server'),
+        commandArguments);
     this.ssProcess.on('error', (error) => {
       logging.error(`Error spawning outline-ss-server: ${error}`);
     });
