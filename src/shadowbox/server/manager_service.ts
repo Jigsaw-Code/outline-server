@@ -164,7 +164,7 @@ export class ShadowsocksManagerService {
       }
 
       const port = req.params.port;
-      if (typeof port !== "number") {
+      if (typeof port !== 'number') {
         return next(invalidPortArgument(`Expected an numeric port, instead got ${port}`));
       }
       if (port < 1 || port > 65535) {
