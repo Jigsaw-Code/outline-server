@@ -265,7 +265,6 @@ describe('ShadowsocksManagerService', () => {
       const service = new ShadowsocksManagerService('name', serverConfig, repo, null, null);
 
       const noPort = {params: {}};
-      const nonNumericPort = {params: {port: 'abc'}};
 
       const res = {
         send: (httpCode) => {
@@ -279,6 +278,8 @@ describe('ShadowsocksManagerService', () => {
       };
 
       await service.setPortForNewAccessKeys(noPort, res, next);
+
+      const nonNumericPort = {params: {port: 'abc'}};
       await service.setPortForNewAccessKeys(
         // tslint:disable-next-line: no-any
           (nonNumericPort as any) as {params: {port: number}}, res, next);

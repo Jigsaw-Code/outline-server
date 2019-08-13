@@ -167,10 +167,6 @@ export class ShadowsocksManagerService {
       if (typeof port !== 'number') {
         return next(invalidPortArgument(`Expected an numeric port, instead got ${port}`));
       }
-      if (port < 1 || port > 65535) {
-        return next(invalidPortArgument(
-            `Expected a positive port number up to 65535, instead got ${port}`));
-      }
 
       await this.accessKeys.setPortForNewAccessKeys(port);
       this.serverConfig.data().portForNewAccessKeys = port;
