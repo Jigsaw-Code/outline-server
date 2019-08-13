@@ -92,10 +92,6 @@ interface SetShareMetricsParams {
   metricsEnabled: boolean;
 }
 
-function invalidPortArgument(message: string) {
-  return new restify.BadRequestError(message);
-}
-
 // The ShadowsocksManagerService manages the access keys that can use the server
 // as a proxy using Shadowsocks. It runs an instance of the Shadowsocks server
 // for each existing access key, with the port and password assigned for that access key.
@@ -159,6 +155,7 @@ export class ShadowsocksManagerService {
   // Sets the default ports for new access keys
   public async setPortForNewAccessKeys(req: RequestType, res: ResponseType, next: restify.Next):
       Promise<void> {
+    const invalidPortArgument = (message: string) => new restify.BadRequestError(message);
     try {
       logging.debug(`setPort[ForNewAccessKeys request ${JSON.stringify(req.params)}`);
       if (!req.params.port) {
@@ -167,7 +164,7 @@ export class ShadowsocksManagerService {
       }
 
       const port = req.params.port;
-      if (Number.isNaN(port)) {
+      if (typeof port !== "number") {
         return next(invalidPortArgument(`Expected an numeric port, instead got ${port}`));
       }
       if (port < 1 || port > 65535) {
