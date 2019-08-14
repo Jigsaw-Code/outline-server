@@ -159,13 +159,13 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`setPort[ForNewAccessKeys request ${JSON.stringify(req.params)}`);
       if (!req.params.port) {
-        return next(
-            invalidPortArgument('Parameter `port` is missing'));
+        return next(invalidPortArgument('Parameter `port` is missing'));
       }
 
       const port = req.params.port;
       if (typeof port !== 'number') {
-        return next(invalidPortArgument(`Expected an numeric port, instead got ${port} of type ${typeof port}`));
+        return next(invalidPortArgument(
+            `Expected an numeric port, instead got ${port} of type ${typeof port}`));
       }
 
       await this.accessKeys.setPortForNewAccessKeys(port);
