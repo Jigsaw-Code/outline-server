@@ -52,8 +52,6 @@ paths:
           description: The requested port wasn't an integer from 1 through 65535, or the request had no port parameter.
         '409':
           description: The requested port was already in use by another service.
-        '500':
-          description: An internal server error occurred.
   
   /name:
     put:

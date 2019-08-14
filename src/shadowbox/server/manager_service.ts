@@ -155,16 +155,15 @@ export class ShadowsocksManagerService {
   // Sets the default ports for new access keys
   public async setPortForNewAccessKeys(req: RequestType, res: ResponseType, next: restify.Next):
       Promise<void> {
-    const invalidPortArgument = (message: string) => new restify.BadRequestError(message);
     try {
       logging.debug(`setPort[ForNewAccessKeys request ${JSON.stringify(req.params)}`);
       if (!req.params.port) {
-        return next(invalidPortArgument('Parameter `port` is missing'));
+        return next(new restify.MissingParameterError({statusCode: 400}, 'Parameter `port` is missing'));
       }
 
       const port = req.params.port;
       if (typeof port !== 'number') {
-        return next(invalidPortArgument(
+        return next(new restify.InvalidArgumentError({statusCode: 400},
             `Expected an numeric port, instead got ${port} of type ${typeof port}`));
       }
 
@@ -176,7 +175,7 @@ export class ShadowsocksManagerService {
     } catch (error) {
       logging.error(error);
       if (error instanceof errors.InvalidPortNumber) {
-        return next(invalidPortArgument(error.message));
+        return next(new restify.InvalidArgumentError({statusCode: 400}, error.message));
       } else if (error instanceof errors.PortUnavailable) {
         return next(new restify.ConflictError(error.message));
       }
