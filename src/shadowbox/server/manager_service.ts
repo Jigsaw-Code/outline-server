@@ -158,12 +158,14 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`setPort[ForNewAccessKeys request ${JSON.stringify(req.params)}`);
       if (!req.params.port) {
-        return next(new restify.MissingParameterError({statusCode: 400}, 'Parameter `port` is missing'));
+        return next(
+            new restify.MissingParameterError({statusCode: 400}, 'Parameter `port` is missing'));
       }
 
       const port = req.params.port;
       if (typeof port !== 'number') {
-        return next(new restify.InvalidArgumentError({statusCode: 400},
+        return next(new restify.InvalidArgumentError(
+            {statusCode: 400},
             `Expected an numeric port, instead got ${port} of type ${typeof port}`));
       }
 
