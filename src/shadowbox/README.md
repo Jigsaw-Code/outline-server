@@ -85,7 +85,7 @@ In order to utilize the Management API, you'll need to know the apiUrl for your 
 You can obtain this information from the "Settings" tab of the server page in the Outline Manager.
 Alternatively, you can check the 'access.txt' file under the '/opt/outline' directory of an Outline server. An example apiUrl is: https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z.
 
-See [Full API Documentation](https://rebilly.github.io/ReDoc/?url=https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/shadowbox/server/api.yml).
+See [Full API Documentation](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/shadowbox/server/api.yml).
 The OpenAPI specification can be found at [api.yml](./api.yml).
 
 ### Examples
