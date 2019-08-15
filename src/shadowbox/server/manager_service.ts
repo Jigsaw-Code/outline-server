@@ -18,6 +18,7 @@ import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {AccessKey, AccessKeyQuota, AccessKeyRepository} from '../model/access_key';
+import * as errors from '../model/errors';
 
 import {ManagerMetrics} from './manager_metrics';
 import {ServerConfigJson} from './server_config';
@@ -52,6 +53,7 @@ interface RequestParams {
   name?: string;
   metricsEnabled?: boolean;
   quota?: AccessKeyQuota;
+  port?: number;
 }
 interface RequestType {
   params: RequestParams;
@@ -69,9 +71,13 @@ export function bindService(
     apiServer: restify.Server, apiPrefix: string, service: ShadowsocksManagerService) {
   apiServer.put(`${apiPrefix}/name`, service.renameServer.bind(service));
   apiServer.get(`${apiPrefix}/server`, service.getServer.bind(service));
+  apiServer.put(
+      `${apiPrefix}/server/port-for-new-access-keys`,
+      service.setPortForNewAccessKeys.bind(service));
 
   apiServer.post(`${apiPrefix}/access-keys`, service.createNewAccessKey.bind(service));
   apiServer.get(`${apiPrefix}/access-keys`, service.listAccessKeys.bind(service));
+
   apiServer.del(`${apiPrefix}/access-keys/:id`, service.removeAccessKey.bind(service));
   apiServer.put(`${apiPrefix}/access-keys/:id/name`, service.renameAccessKey.bind(service));
   apiServer.put(`${apiPrefix}/access-keys/:id/quota`, service.setAccessKeyQuota.bind(service));
@@ -143,6 +149,39 @@ export class ShadowsocksManagerService {
     } catch (error) {
       logging.error(error);
       return next(new restify.InternalServerError());
+    }
+  }
+
+  // Sets the default ports for new access keys
+  public async setPortForNewAccessKeys(req: RequestType, res: ResponseType, next: restify.Next):
+      Promise<void> {
+    try {
+      logging.debug(`setPort[ForNewAccessKeys request ${JSON.stringify(req.params)}`);
+      if (!req.params.port) {
+        return next(
+            new restify.MissingParameterError({statusCode: 400}, 'Parameter `port` is missing'));
+      }
+
+      const port = req.params.port;
+      if (typeof port !== 'number') {
+        return next(new restify.InvalidArgumentError(
+            {statusCode: 400},
+            `Expected an numeric port, instead got ${port} of type ${typeof port}`));
+      }
+
+      await this.accessKeys.setPortForNewAccessKeys(port);
+      this.serverConfig.data().portForNewAccessKeys = port;
+      this.serverConfig.write();
+      res.send(HttpSuccess.NO_CONTENT);
+      next();
+    } catch (error) {
+      logging.error(error);
+      if (error instanceof errors.InvalidPortNumber) {
+        return next(new restify.InvalidArgumentError({statusCode: 400}, error.message));
+      } else if (error instanceof errors.PortUnavailable) {
+        return next(new restify.ConflictError(error.message));
+      }
+      return next(new restify.InternalServerError(error));
     }
   }
 

@@ -53,10 +53,6 @@ export class PortProvider {
       return port;
     }
   }
-
-  freePort(port: number) {
-    this.reservedPorts.delete(port);
-  }
 }
 
 function getRandomPortOver1023() {
@@ -67,7 +63,7 @@ interface ServerError extends Error {
   code: string;
 }
 
-function isPortUsed(port: number): Promise<boolean> {
+export function isPortUsed(port: number): Promise<boolean> {
   return new Promise((resolve, reject) => {
     let isUsed = false;
     const server = new net.Server();

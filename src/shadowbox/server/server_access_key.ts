@@ -16,15 +16,13 @@ import * as randomstring from 'randomstring';
 import * as uuidv4 from 'uuid/v4';
 
 import {Clock} from '../infrastructure/clock';
-import {PortProvider} from '../infrastructure/get_port';
+import {isPortUsed} from '../infrastructure/get_port';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyQuota, AccessKeyQuotaUsage, AccessKeyRepository, ProxyParams} from '../model/access_key';
-import {ShadowsocksAccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
-
-import {ManagerMetrics} from './manager_metrics';
-import {ServerConfigJson} from './server_config';
+import * as errors from '../model/errors';
+import {ShadowsocksServer} from '../model/shadowsocks_server';
 
 // The format as json of access keys in the config file.
 interface AccessKeyJson {
@@ -42,9 +40,6 @@ export interface AccessKeyConfigJson {
   accessKeys?: AccessKeyJson[];
   // Next AccessKeyId to use.
   nextId?: number;
-
-  // DEPRECATED: Use ServerConfigJson.portForNewAccessKeys instead.
-  defaultPort?: number;
 }
 
 // AccessKey implementation with write access enabled on properties that may change.
@@ -92,15 +87,15 @@ function makeAccessKeyJson(accessKey: AccessKey): AccessKeyJson {
 }
 
 // AccessKeyRepository that keeps its state in a config file and uses ShadowsocksServer
-// to start and stop per-access-key Shadowsocks instances.
+// to start and stop per-access-key Shadowsocks instances.  Requires external validation
+// that portForNewAccessKeys is valid.
 export class ServerAccessKeyRepository implements AccessKeyRepository {
   private static QUOTA_ENFORCEMENT_INTERVAL_MS = 60 * 60 * 1000;  // 1h
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
   private accessKeys: ServerAccessKey[];
-  private portForNewAccessKeys: number|undefined;
 
   constructor(
-      private portProvider: PortProvider, private proxyHostname: string,
+      private portForNewAccessKeys: number, private proxyHostname: string,
       private keyConfig: JsonConfig<AccessKeyConfigJson>,
       private shadowsocksServer: ShadowsocksServer, private prometheusClient: PrometheusClient) {
     if (this.keyConfig.data().accessKeys === undefined) {
@@ -126,19 +121,30 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     }, ServerAccessKeyRepository.QUOTA_ENFORCEMENT_INTERVAL_MS);
   }
 
-  enableSinglePort(portForNewAccessKeys: number) {
-    this.portForNewAccessKeys = portForNewAccessKeys;
+  private isExistingAccessKeyPort(port: number): boolean {
+    return this.accessKeys.some((key) => {
+      return key.proxyParams.portNumber === port;
+    });
+  }
+
+  async setPortForNewAccessKeys(port: number): Promise<void> {
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+      throw new errors.InvalidPortNumber(port.toString());
+    }
+    if (!this.isExistingAccessKeyPort(port) && await isPortUsed(port)) {
+      throw new errors.PortUnavailable(port);
+    }
+    this.portForNewAccessKeys = port;
   }
 
   async createNewAccessKey(): Promise<AccessKey> {
-    const port = this.portForNewAccessKeys || await this.portProvider.reserveNewPort();
     const id = this.keyConfig.data().nextId.toString();
     this.keyConfig.data().nextId += 1;
     const metricsId = uuidv4();
     const password = generatePassword();
     const proxyParams = {
       hostname: this.proxyHostname,
-      portNumber: port,
+      portNumber: this.portForNewAccessKeys,
       encryptionMethod: this.NEW_USER_ENCRYPTION_METHOD,
       password,
     };
@@ -153,7 +159,6 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     for (let ai = 0; ai < this.accessKeys.length; ai++) {
       const accessKey = this.accessKeys[ai];
       if (accessKey.id === id) {
-        this.portProvider.freePort(accessKey.proxyParams.portNumber);
         this.accessKeys.splice(ai, 1);
         this.saveAccessKeys();
         this.updateServer();

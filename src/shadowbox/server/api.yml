@@ -28,6 +28,31 @@ paths:
                 '0':
                   value: >-
                     {"name":"My Server","serverId":"000-000-000-000","metricsEnabled":true,"createdTimestampMs":1536613192052,"portForNewAccessKeys":1234}
+  /server/port-for-new-access-keys:
+    put:
+      description: Changes the default port for newly created access keys.  This can be a port already used for access keys.
+      tags:
+        - Access Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                port:
+                  type: number
+            examples:
+              '0':
+                value: '{"port": 12345}'
+      responses:
+        '204':
+          description: The default port was sucessfully changed.
+        '400':
+          description: The requested port wasn't an integer from 1 through 65535, or the request had no port parameter.
+        '409':
+          description: The requested port was already in use by another service.
+  
   /name:
     put:
       description: Renames the server
