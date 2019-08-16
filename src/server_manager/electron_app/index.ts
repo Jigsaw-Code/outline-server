@@ -148,6 +148,19 @@ function getWebAppUrl() {
   return webAppUrlString;
 }
 
+// Digital Ocean stopped sending 'Acces-Control-Allow-Origin' headers in some API responses
+// (i.e. v2/droplets). As a workaround, intercept DO API requests and preemptively inject the
+// header to allow our origin.
+function workaroundDigitalOceanApiCors() {
+  const headersFilter = {urls: ['https://api.digitalocean.com/*']};
+  electron.session.defaultSession.webRequest.onHeadersReceived(
+      // tslint:disable-next-line:no-any
+      headersFilter, (details: any, callback: Function) => {
+        details.responseHeaders['access-control-allow-origin'] = ['outline://web_app'];
+        callback(details);
+      });
+}
+
 function main() {
   // prevent window being garbage collected
   let mainWindow: Electron.BrowserWindow;
@@ -175,16 +188,8 @@ function main() {
       electron.Menu.setApplicationMenu(electron.Menu.buildFromTemplate(menuTemplate));
     }
 
-    // Digital Ocean stopped sending 'Acces-Control-Allow-Origin' headers in some responses
-    // (i.e. v2/droplets). As a workaround, intercept DO API requests and preemptively inject the
-    // header to allow our origin.
-    const headersFilter = {urls: ['https://api.digitalocean.com/*']};
-    electron.session.defaultSession.webRequest.onHeadersReceived(
-        // tslint:disable-next-line:no-any
-        headersFilter, (details: any, callback: Function) => {
-          details.responseHeaders['access-control-allow-origin'] = ['outline://web_app'];
-          callback(details);
-        });
+    workaroundDigitalOceanApiCors();
+
     // Register a custom protocol so we can use absolute paths in the web app.
     // This also acts as a kind of chroot for the web app, so it cannot access
     // the user's filesystem. Hostnames are ignored.
