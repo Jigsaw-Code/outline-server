@@ -79,6 +79,7 @@ function createMainWindow() {
       nodeIntegration: false,
       preload: path.join(__dirname, 'preload.js'),
       nativeWindowOpen: true,
+      webSecurity: false,
       webviewTag: false
     }
   });
