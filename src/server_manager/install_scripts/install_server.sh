@@ -356,6 +356,25 @@ Make sure to open the following ports on your firewall, router or cloud provider
 "
 }
 
+validate_ipv4() {
+  local readonly input="${1}"
+  local readonly fail=`echo "Invalid IPV4 address ${1}"`
+  if ! [[ `echo "${input}" | awk -F"." '{print NF}'` -eq 4 ]]; then
+    echo "${fail}"
+  fi
+
+  for octet in "${input//./,}"; do
+    if ! [[ "${octet}" =~ '^[0-9]{1,3}$' ]]; then
+      echo "${fail}"
+      exit 1
+    elif [[ "${octet}" -lt 0 || "${octet}" -gt 255 ]]; then
+        echo "${fail}"
+        exit 1
+    fi
+  done
+  echo ""
+}
+
 install_shadowbox() {
   # Make sure we don't leak readable files to other users.
   umask 0007
@@ -377,8 +396,12 @@ install_shadowbox() {
   readonly SB_IMAGE=${SB_IMAGE:-quay.io/outline/shadowbox:stable}
 
   log_for_sentry "Setting PUBLIC_HOSTNAME"
-  # TODO(fortuna): Make sure this is IPv4
   PUBLIC_HOSTNAME=${FLAGS_HOSTNAME:-${SB_PUBLIC_IP:-$(curl -4s https://ipinfo.io/ip)}}
+  local readonly validation=`validate_ipv4 ${PUBLIC_HOSTNAME}`
+  if ! [[ -z "${validation}" ]]; then
+    echo "${validation}"
+    exit 1
+  fi
 
   if [[ -z $PUBLIC_HOSTNAME ]]; then
     local readonly MSG="Failed to determine the server's IP address."
