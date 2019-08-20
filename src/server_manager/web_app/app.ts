@@ -773,7 +773,6 @@ export class App {
     }
 
     view.metricsEnabled = selectedServer.getMetricsEnabled();
-    view.selectedTab = 'connections';
     this.appRoot.showServerView();
     this.showMetricsOptInWhenNeeded(selectedServer, view);
 
