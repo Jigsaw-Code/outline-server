@@ -17,7 +17,7 @@ import * as net from 'net';
 import {ManualClock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
 import {InMemoryConfig} from '../infrastructure/json_config';
-import {AccessKeyQuota, AccessKeyRepository} from '../model/access_key';
+import {AccessKeyLimit, AccessKeyRepository} from '../model/access_key';
 import * as errors from '../model/errors';
 
 import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
@@ -38,11 +38,11 @@ describe('ServerAccessKeyRepository', () => {
     });
   });
 
-  it('Creates access keys without quota and under quota', async (done) => {
+  it('Creates access keys without limit and under limit', async (done) => {
     const repo = new RepoBuilder().build();
     const accessKey = await repo.createNewAccessKey();
-    expect(accessKey.quotaUsage).toBeUndefined();
-    expect(accessKey.isOverQuota()).toBeFalsy();
+    expect(accessKey.limitUsage).toBeUndefined();
+    expect(accessKey.isOverLimit()).toBeFalsy();
     done();
   });
 
@@ -166,53 +166,53 @@ describe('ServerAccessKeyRepository', () => {
     });
   });
 
-  it('Can set access key quota', async (done) => {
+  it('Can set access key limit', async (done) => {
     const repo = new RepoBuilder().build();
     const accessKey = await repo.createNewAccessKey();
-    const quota = {data: {bytes: 5000}, window: {hours: 24}};
-    await expectNoAsyncThrow(repo.setAccessKeyQuota.bind(repo, accessKey.id, quota));
-    expect(accessKey.quotaUsage.quota).toEqual(quota);
-    expect(accessKey.quotaUsage.usage.bytes).toEqual(0);
+    const limit = {data: {bytes: 5000}, timeframe: {hours: 24}};
+    await expectNoAsyncThrow(repo.setAccessKeyLimit.bind(repo, accessKey.id, limit));
+    expect(accessKey.limitUsage.limit).toEqual(limit);
+    expect(accessKey.limitUsage.usage.bytes).toEqual(0);
     done();
   });
 
-  it('setAccessKeyQuota throws for missing keys', async (done) => {
+  it('setAccessKeyLimit throws for missing keys', async (done) => {
     const repo = new RepoBuilder().build();
     await repo.createNewAccessKey();
-    const quota = {data: {bytes: 1000}, window: {hours: 24}};
+    const limit = {data: {bytes: 1000}, timeframe: {hours: 24}};
     await expectAsyncThrow(
-        repo.setAccessKeyQuota.bind(repo, 'doesnotexist', quota), errors.AccessKeyNotFound);
+        repo.setAccessKeyLimit.bind(repo, 'doesnotexist', limit), errors.AccessKeyNotFound);
     done();
   });
 
-  it('setAccessKeyQuota fails with disallowed quota values', async (done) => {
+  it('setAccessKeyLimit fails with disallowed limit values', async (done) => {
     const repo = new RepoBuilder().build();
     const accessKey = await repo.createNewAccessKey();
     // Negative values
-    const negativeBytesQuota = {data: {bytes: -1000}, window: {hours: 24}};
+    const negativeBytesQuota = {data: {bytes: -1000}, timeframe: {hours: 24}};
     await expectAsyncThrow(
-        repo.setAccessKeyQuota.bind(repo, accessKey.id, negativeBytesQuota),
-        errors.InvalidAccessKeyQuota);
-    const negativeWindowQuota = {data: {bytes: 1000}, window: {hours: -24}};
+        repo.setAccessKeyLimit.bind(repo, accessKey.id, negativeBytesQuota),
+        errors.InvalidAccessKeyLimit);
+    const negativeTimeframeQuota = {data: {bytes: 1000}, timeframe: {hours: -24}};
     await expectAsyncThrow(
-        repo.setAccessKeyQuota.bind(repo, accessKey.id, negativeWindowQuota),
-        errors.InvalidAccessKeyQuota);
+        repo.setAccessKeyLimit.bind(repo, accessKey.id, negativeTimeframeQuota),
+        errors.InvalidAccessKeyLimit);
     // Missing properties
-    const missingDataQuota = {window: {hours: 24}} as AccessKeyQuota;
+    const missingDataQuota = {timeframe: {hours: 24}} as AccessKeyLimit;
     await expectAsyncThrow(
-        repo.setAccessKeyQuota.bind(repo, accessKey.id, missingDataQuota),
-        errors.InvalidAccessKeyQuota);
-    const missingWindowQuota = {data: {bytes: 1000}} as AccessKeyQuota;
+        repo.setAccessKeyLimit.bind(repo, accessKey.id, missingDataQuota),
+        errors.InvalidAccessKeyLimit);
+    const missingTimeframeQuota = {data: {bytes: 1000}} as AccessKeyLimit;
     await expectAsyncThrow(
-        repo.setAccessKeyQuota.bind(repo, accessKey.id, missingWindowQuota),
-        errors.InvalidAccessKeyQuota);
-    // Undefined quota
+        repo.setAccessKeyLimit.bind(repo, accessKey.id, missingTimeframeQuota),
+        errors.InvalidAccessKeyLimit);
+    // Undefined limit
     await expectAsyncThrow(
-        repo.setAccessKeyQuota.bind(repo, accessKey.id, undefined), errors.InvalidAccessKeyQuota);
+        repo.setAccessKeyLimit.bind(repo, accessKey.id, undefined), errors.InvalidAccessKeyLimit);
     done();
   });
 
-  it('setAccessKeyQuota updates keys quota status', async (done) => {
+  it('setAccessKeyLimit updates keys limit status', async (done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 200});
     const repo =
@@ -221,47 +221,47 @@ describe('ServerAccessKeyRepository', () => {
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
 
-    await repo.setAccessKeyQuota(accessKey1.id, {data: {bytes: 200}, window: {hours: 1}});
-    expect(accessKey1.isOverQuota()).toBeTruthy();
-    expect(accessKey2.isOverQuota()).toBeFalsy();
+    await repo.setAccessKeyLimit(accessKey1.id, {data: {bytes: 200}, timeframe: {hours: 1}});
+    expect(accessKey1.isOverLimit()).toBeTruthy();
+    expect(accessKey2.isOverLimit()).toBeFalsy();
     // We determine which access keys have been enabled/disabled by accessing them from
     // the server's perspective, ensuring `server.update` has been called.
     let serverAccessKeys = server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(1);
     expect(serverAccessKeys[0].id).toEqual(accessKey2.id);
-    // The over-quota access key should be re-enabled after increasing its quota, while the
-    // under-quota key should be disabled after setting its quota.
+    // The over-limit access key should be re-enabled after increasing its limit, while the
+    // under-limit key should be disabled after setting its limit.
     prometheusClient.bytesTransferredById = {'0': 800, '1': 199};
-    await repo.setAccessKeyQuota(accessKey1.id, {data: {bytes: 1000}, window: {hours: 1}});
-    await repo.setAccessKeyQuota(accessKey2.id, {data: {bytes: 100}, window: {hours: 1}});
-    expect(accessKey1.isOverQuota()).toBeFalsy();
-    expect(accessKey2.isOverQuota()).toBeTruthy();
+    await repo.setAccessKeyLimit(accessKey1.id, {data: {bytes: 1000}, timeframe: {hours: 1}});
+    await repo.setAccessKeyLimit(accessKey2.id, {data: {bytes: 100}, timeframe: {hours: 1}});
+    expect(accessKey1.isOverLimit()).toBeFalsy();
+    expect(accessKey2.isOverLimit()).toBeTruthy();
     serverAccessKeys = server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(1);
     expect(serverAccessKeys[0].id).toEqual(accessKey1.id);
     done();
   });
 
-  it('can remove access key quotas', async (done) => {
+  it('can remove access key limits', async (done) => {
     const repo = new RepoBuilder().build();
     const accessKey = await repo.createNewAccessKey();
-    const quota = {data: {bytes: 100}, window: {hours: 24}};
-    await repo.setAccessKeyQuota(accessKey.id, quota);
-    expect(accessKey.quotaUsage).toBeDefined();
-    await expectNoAsyncThrow(repo.removeAccessKeyQuota.bind(repo, accessKey.id));
-    expect(accessKey.quotaUsage).toBeUndefined();
+    const limit = {data: {bytes: 100}, timeframe: {hours: 24}};
+    await repo.setAccessKeyLimit(accessKey.id, limit);
+    expect(accessKey.limitUsage).toBeDefined();
+    await expectNoAsyncThrow(repo.removeAccessKeyLimit.bind(repo, accessKey.id));
+    expect(accessKey.limitUsage).toBeUndefined();
     done();
   });
 
-  it('removeAccessKeyQuota throws for missing keys', async (done) => {
+  it('removeAccessKeyLimit throws for missing keys', async (done) => {
     const repo = new RepoBuilder().build();
     await repo.createNewAccessKey();
     await expectAsyncThrow(
-        repo.removeAccessKeyQuota.bind(repo, 'doesnotexist'), errors.AccessKeyNotFound);
+        repo.removeAccessKeyLimit.bind(repo, 'doesnotexist'), errors.AccessKeyNotFound);
     done();
   });
 
-  it('removeAccessKeyQuota restores over-quota access keys', async (done) => {
+  it('removeAccessKeyLimit restores over-limit access keys', async (done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 100});
     const repo =
@@ -269,46 +269,46 @@ describe('ServerAccessKeyRepository', () => {
 
     const accessKey = await repo.createNewAccessKey();
     await repo.createNewAccessKey();
-    await repo.setAccessKeyQuota(accessKey.id, {data: {bytes: 100}, window: {hours: 1}});
+    await repo.setAccessKeyLimit(accessKey.id, {data: {bytes: 100}, timeframe: {hours: 1}});
     expect(server.getAccessKeys().length).toEqual(1);
 
-    // Remove the quota; expect the key to be under quota and enabled.
-    await expectNoAsyncThrow(repo.removeAccessKeyQuota.bind(repo, accessKey.id));
+    // Remove the limit; expect the key to be under limit and enabled.
+    await expectNoAsyncThrow(repo.removeAccessKeyLimit.bind(repo, accessKey.id));
     expect(server.getAccessKeys().length).toEqual(2);
     const accessKeys = await repo.listAccessKeys();
-    expect(accessKeys[0].isOverQuota()).toBeFalsy();
-    expect(accessKeys[1].isOverQuota()).toBeFalsy();
-    expect(accessKeys[0].quotaUsage).toBeUndefined();
-    expect(accessKeys[1].quotaUsage).toBeUndefined();
+    expect(accessKeys[0].isOverLimit()).toBeFalsy();
+    expect(accessKeys[1].isOverLimit()).toBeFalsy();
+    expect(accessKeys[0].limitUsage).toBeUndefined();
+    expect(accessKeys[1].limitUsage).toBeUndefined();
     done();
   });
 
-  it('enforceAccessKeyQuotas updates keys quota status', async (done) => {
+  it('enforceAccessKeyLimits updates keys limit status', async (done) => {
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 100});
     const repo = new RepoBuilder().prometheusClient(prometheusClient).build();
 
     const accessKey1 = await repo.createNewAccessKey();
     await repo.createNewAccessKey();
-    await repo.setAccessKeyQuota(accessKey1.id, {data: {bytes: 200}, window: {hours: 1}});
+    await repo.setAccessKeyLimit(accessKey1.id, {data: {bytes: 200}, timeframe: {hours: 1}});
 
-    await repo.enforceAccessKeyQuotas();
+    await repo.enforceAccessKeyLimits();
     let accessKeys = await repo.listAccessKeys();
-    expect(accessKeys[0].isOverQuota()).toBeTruthy();
-    expect(accessKeys[1].isOverQuota()).toBeFalsy();
-    expect(accessKeys[0].quotaUsage.usage.bytes).toEqual(500);
-    expect(accessKeys[1].quotaUsage).toBeUndefined();
+    expect(accessKeys[0].isOverLimit()).toBeTruthy();
+    expect(accessKeys[1].isOverLimit()).toBeFalsy();
+    expect(accessKeys[0].limitUsage.usage.bytes).toEqual(500);
+    expect(accessKeys[1].limitUsage).toBeUndefined();
 
     prometheusClient.bytesTransferredById = {'0': 100, '1': 100};
-    await repo.enforceAccessKeyQuotas();
+    await repo.enforceAccessKeyLimits();
     accessKeys = await repo.listAccessKeys();
-    expect(accessKeys[0].isOverQuota()).toBeFalsy();
-    expect(accessKeys[1].isOverQuota()).toBeFalsy();
-    expect(accessKeys[0].quotaUsage.usage.bytes).toEqual(100);
-    expect(accessKeys[1].quotaUsage).toBeUndefined();
+    expect(accessKeys[0].isOverLimit()).toBeFalsy();
+    expect(accessKeys[1].isOverLimit()).toBeFalsy();
+    expect(accessKeys[0].limitUsage.usage.bytes).toEqual(100);
+    expect(accessKeys[1].limitUsage).toBeUndefined();
     done();
   });
 
-  it('enforceAccessKeyQuotas enables and disables keys', async (done) => {
+  it('enforceAccessKeyLimits enables and disables keys', async (done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 100});
     const repo =
@@ -316,16 +316,16 @@ describe('ServerAccessKeyRepository', () => {
 
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
-    await repo.setAccessKeyQuota(accessKey1.id, {data: {bytes: 200}, window: {hours: 1}});
+    await repo.setAccessKeyLimit(accessKey1.id, {data: {bytes: 200}, timeframe: {hours: 1}});
 
-    await repo.enforceAccessKeyQuotas();
+    await repo.enforceAccessKeyLimits();
     const accessKeys = await repo.listAccessKeys();
     let serverAccessKeys = server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(1);
     expect(serverAccessKeys[0].id).toEqual(accessKey2.id);
 
     prometheusClient.bytesTransferredById = {'0': 100, '1': 100};
-    await repo.enforceAccessKeyQuotas();
+    await repo.enforceAccessKeyLimits();
     serverAccessKeys = server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(2);
     done();
@@ -337,7 +337,7 @@ describe('ServerAccessKeyRepository', () => {
     // Create 2 new access keys
     await Promise.all([repo1.createNewAccessKey(), repo1.createNewAccessKey()]);
     // Modify properties
-    await repo1.setAccessKeyQuota('0', {data: {bytes: 100}, window: {hours: 12}});
+    await repo1.setAccessKeyLimit('0', {data: {bytes: 100}, timeframe: {hours: 12}});
     repo1.renameAccessKey('1', 'name');
 
     // Create a 2nd repo from the same config file. This simulates what
@@ -384,7 +384,7 @@ describe('ServerAccessKeyRepository', () => {
     done();
   });
 
-  it('start periodically enforces access key quotas', async (done) => {
+  it('start periodically enforces access key limits', async (done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 300, '2': 400});
     const repo =
@@ -392,30 +392,30 @@ describe('ServerAccessKeyRepository', () => {
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
     const accessKey3 = await repo.createNewAccessKey();
-    await repo.setAccessKeyQuota(accessKey1.id, {data: {bytes: 300}, window: {hours: 1}});
-    await repo.setAccessKeyQuota(accessKey2.id, {data: {bytes: 100}, window: {hours: 1}});
+    await repo.setAccessKeyLimit(accessKey1.id, {data: {bytes: 300}, timeframe: {hours: 1}});
+    await repo.setAccessKeyLimit(accessKey2.id, {data: {bytes: 100}, timeframe: {hours: 1}});
     const clock = new ManualClock();
 
     await repo.start(clock);
     await clock.runCallbacks();
-    expect(accessKey1.isOverQuota()).toBeTruthy();
-    expect(accessKey2.isOverQuota()).toBeTruthy();
-    expect(accessKey3.isOverQuota()).toBeFalsy();
-    expect(accessKey1.quotaUsage.usage.bytes).toEqual(500);
-    expect(accessKey2.quotaUsage.usage.bytes).toEqual(300);
-    expect(accessKey3.quotaUsage).toBeUndefined();
+    expect(accessKey1.isOverLimit()).toBeTruthy();
+    expect(accessKey2.isOverLimit()).toBeTruthy();
+    expect(accessKey3.isOverLimit()).toBeFalsy();
+    expect(accessKey1.limitUsage.usage.bytes).toEqual(500);
+    expect(accessKey2.limitUsage.usage.bytes).toEqual(300);
+    expect(accessKey3.limitUsage).toBeUndefined();
     let serverAccessKeys = await server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(1);
     expect(serverAccessKeys[0].id).toEqual(accessKey3.id);
     // Simulate a change in usage.
     prometheusClient.bytesTransferredById = {'0': 100, '1': 300, '2': 1000};
     await clock.runCallbacks();
-    expect(accessKey1.isOverQuota()).toBeFalsy();
-    expect(accessKey2.isOverQuota()).toBeTruthy();
-    expect(accessKey3.isOverQuota()).toBeFalsy();
-    expect(accessKey1.quotaUsage.usage.bytes).toEqual(100);
-    expect(accessKey2.quotaUsage.usage.bytes).toEqual(300);
-    expect(accessKey3.quotaUsage).toBeUndefined();
+    expect(accessKey1.isOverLimit()).toBeFalsy();
+    expect(accessKey2.isOverLimit()).toBeTruthy();
+    expect(accessKey3.isOverLimit()).toBeFalsy();
+    expect(accessKey1.limitUsage.usage.bytes).toEqual(100);
+    expect(accessKey2.limitUsage.usage.bytes).toEqual(300);
+    expect(accessKey3.limitUsage).toBeUndefined();
     serverAccessKeys = await server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(2);
     expect(serverAccessKeys[0].id).toEqual(accessKey1.id);

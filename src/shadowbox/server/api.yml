@@ -52,7 +52,7 @@ paths:
           description: The requested port wasn't an integer from 1 through 65535, or the request had no port parameter.
         '409':
           description: The requested port was already in use by another service.
-  
+
   /name:
     put:
       description: Renames the server
@@ -174,17 +174,17 @@ paths:
           description: Access key renamed successfully
         '404':
           description: Access key inexistent
-  /access-keys/{id}/quota:
+  /access-keys/{id}/limit:
     put:
-      description: Sets an access key data transfer quota
+      description: Sets an access key data transfer limit
       tags:
         - Access Key
-        - Quota
+        - Limit
       parameters:
         - name: id
           in: path
           required: true
-          description: The id of the access key to set a quota
+          description: The id of the access key to set a limit
           schema:
             type: string
       requestBody:
@@ -192,30 +192,30 @@ paths:
         content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AccessKeyQuota"
+                $ref: "#/components/schemas/AccessKeyLimit"
               examples:
                 '0':
-                  value: "{quotaBytes: 1000000, windowHours: 24}"
+                  value: "{limitBytes: 1000000, timeframeHours: 24}"
       responses:
         '204':
-          description: Access key quota set successfully
+          description: Access key limit set successfully
         '404':
           description: Access key inexistent
     delete:
-      description: Removes an access key data transfer quota, lifting data transfer restrictions on the key.
+      description: Removes an access key data transfer limit, lifting data transfer restrictions on the key.
       tags:
         - Access Key
-        - Quota
+        - Limit
       parameters:
         - name: id
           in: path
           required: true
-          description: The id of the access key to delete a quota
+          description: The id of the access key to delete a limit
           schema:
             type: string
       responses:
         '204':
-          description: Access key quota deleted successfully.
+          description: Access key limit deleted successfully.
         '404':
           description: Access key inexistent
   /metrics/transfer:
@@ -292,14 +292,14 @@ components:
           type: number
         portForNewAccessKeys:
           type: integer
-    AccessKeyQuota:
+    AccessKeyLimit:
       properties:
         data:
           type: object
           properties:
             bytes:
               type: integer
-        window:
+        timeframe:
           type: object
           properties:
             hours:
@@ -320,5 +320,5 @@ components:
           type: string
         accessUrl:
           type: string
-        quota:
-          $ref: "#/components/schemas/AccessKeyQuota"
+        limit:
+          $ref: "#/components/schemas/AccessKeyLimit"

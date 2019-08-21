@@ -27,19 +27,19 @@ export interface ProxyParams {
   readonly password: string;
 }
 
-// Parameters needed to limit access key data usage over a sliding window.
-export interface AccessKeyQuota {
+// Parameters needed to limit access key data usage over a sliding timeframe.
+export interface AccessKeyLimit {
   // The allowed metered data transfer measured in bytes.
   readonly data: {bytes: number};
-  // The sliding window size in hours.
-  readonly window: {hours: number};
+  // The sliding timeframe size in hours.
+  readonly timeframe: {hours: number};
 }
 
-// Parameters needed to enforce an access key data transfer quota.
-export interface AccessKeyQuotaUsage {
-  // Data transfer quota on this access key.
-  readonly quota: AccessKeyQuota;
-  // Data transferred by this access key over the quota window.
+// Parameters needed to enforce an access key data transfer limit.
+export interface AccessKeyLimitUsage {
+  // Data transfer limit on this access key.
+  readonly limit: AccessKeyLimit;
+  // Data transferred by this access key over the limit timeframe.
   readonly usage: {bytes: number};
 }
 
@@ -53,10 +53,10 @@ export interface AccessKey {
   readonly metricsId: AccessKeyMetricsId;
   // Parameters to access the proxy
   readonly proxyParams: ProxyParams;
-  // Admin-controlled, data transfer quota for this access key. Unlimited if unset.
-  readonly quotaUsage?: AccessKeyQuotaUsage;
-  // Returns whether the access key has exceeded its data transfer quota.
-  isOverQuota(): boolean;
+  // Admin-controlled, data transfer limit for this access key. Unlimited if unset.
+  readonly limitUsage?: AccessKeyLimitUsage;
+  // Returns whether the access key has exceeded its data transfer limit.
+  isOverLimit(): boolean;
 }
 
 export interface AccessKeyRepository {
@@ -72,8 +72,8 @@ export interface AccessKeyRepository {
   renameAccessKey(id: AccessKeyId, name: string): void;
   // Gets the metrics id for a given Access Key.
   getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined;
-  // Sets the transfer quota for the specified access key. Throws on failure.
-  setAccessKeyQuota(id: AccessKeyId, quota: AccessKeyQuota): Promise<void>;
-  // Clears the transfer quota for the specified access key. Throws on failure.
-  removeAccessKeyQuota(id: AccessKeyId): Promise<void>;
+  // Sets the transfer limit for the specified access key. Throws on failure.
+  setAccessKeyLimit(id: AccessKeyId, limit: AccessKeyLimit): Promise<void>;
+  // Clears the transfer limit for the specified access key. Throws on failure.
+  removeAccessKeyLimit(id: AccessKeyId): Promise<void>;
 }

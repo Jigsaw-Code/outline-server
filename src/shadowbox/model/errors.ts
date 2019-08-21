@@ -39,9 +39,9 @@ export class AccessKeyNotFound extends ShadowboxError {
   }
 }
 
-export class InvalidAccessKeyQuota extends ShadowboxError {
+export class InvalidAccessKeyLimit extends ShadowboxError {
   constructor() {
     super(
-        'Must provide a quota value with positive integer values for "data.bytes" and "window.hours"');
+        'Must provide a limit value with positive integer values for "data.bytes" and "timeframe.hours"');
   }
 }

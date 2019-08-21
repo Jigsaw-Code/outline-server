@@ -17,7 +17,7 @@ import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {AccessKey, AccessKeyQuota, AccessKeyRepository} from '../model/access_key';
+import {AccessKey, AccessKeyLimit, AccessKeyRepository} from '../model/access_key';
 import * as errors from '../model/errors';
 
 import {ManagerMetrics} from './manager_metrics';
@@ -42,7 +42,7 @@ function accessKeyToJson(accessKey: AccessKey) {
       password: accessKey.proxyParams.password,
       outline: 1,
     })),
-    quota: accessKey.quotaUsage ? accessKey.quotaUsage.quota : undefined
+    limit: accessKey.limitUsage ? accessKey.limitUsage.limit : undefined
   };
 }
 
@@ -52,7 +52,7 @@ interface RequestParams {
   id?: string;
   name?: string;
   metricsEnabled?: boolean;
-  quota?: AccessKeyQuota;
+  limit?: AccessKeyLimit;
   port?: number;
 }
 interface RequestType {
@@ -80,8 +80,8 @@ export function bindService(
 
   apiServer.del(`${apiPrefix}/access-keys/:id`, service.removeAccessKey.bind(service));
   apiServer.put(`${apiPrefix}/access-keys/:id/name`, service.renameAccessKey.bind(service));
-  apiServer.put(`${apiPrefix}/access-keys/:id/quota`, service.setAccessKeyQuota.bind(service));
-  apiServer.del(`${apiPrefix}/access-keys/:id/quota`, service.removeAccessKeyQuota.bind(service));
+  apiServer.put(`${apiPrefix}/access-keys/:id/limit`, service.setAccessKeyLimit.bind(service));
+  apiServer.del(`${apiPrefix}/access-keys/:id/limit`, service.removeAccessKeyLimit.bind(service));
 
   apiServer.get(`${apiPrefix}/metrics/transfer`, service.getDataUsage.bind(service));
   apiServer.get(`${apiPrefix}/metrics/enabled`, service.getShareMetrics.bind(service));
@@ -217,17 +217,17 @@ export class ShadowsocksManagerService {
     }
   }
 
-  public async setAccessKeyQuota(req: RequestType, res: ResponseType, next: restify.Next) {
+  public async setAccessKeyLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      logging.debug(`setAccessKeyQuota request ${JSON.stringify(req.params)}`);
+      logging.debug(`setAccessKeyLimit request ${JSON.stringify(req.params)}`);
       const accessKeyId = req.params.id;
-      const quota = req.params.quota;
-      await this.accessKeys.setAccessKeyQuota(accessKeyId, quota);
+      const limit = req.params.limit;
+      await this.accessKeys.setAccessKeyLimit(accessKeyId, limit);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
-      if (error instanceof errors.InvalidAccessKeyQuota) {
+      if (error instanceof errors.InvalidAccessKeyLimit) {
         return next(new restify.InvalidArgumentError({statusCode: 400}, error.message));
       } else if (error instanceof errors.AccessKeyNotFound) {
         return next(new restify.NotFoundError(error.message));
@@ -236,11 +236,11 @@ export class ShadowsocksManagerService {
     }
   }
 
-  public async removeAccessKeyQuota(req: RequestType, res: ResponseType, next: restify.Next) {
+  public async removeAccessKeyLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      logging.debug(`removeAccessKeyQuota request ${JSON.stringify(req.params)}`);
+      logging.debug(`removeAccessKeyLimit request ${JSON.stringify(req.params)}`);
       const accessKeyId = req.params.id;
-      await this.accessKeys.removeAccessKeyQuota(accessKeyId);
+      await this.accessKeys.removeAccessKeyLimit(accessKeyId);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
