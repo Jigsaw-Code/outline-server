@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as events from 'events';
-
 import * as errors from '../infrastructure/errors';
 
 export interface DigitalOceanDropletSpecification {

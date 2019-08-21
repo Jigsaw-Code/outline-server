@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {InMemoryStorage} from './app.spec';
-import {DisplayServer, DisplayServerRepository} from './display_server';
+import {DisplayServerRepository} from './display_server';
 
 // Use this helper to compare `DisplayServer`s when we don't care about the
 // `isSynced` property.
