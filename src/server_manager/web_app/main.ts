@@ -48,7 +48,7 @@ document.addEventListener('WebComponentsReady', () => {
 
   // Create and start the app.
   new App(
-      document.getElementById('appRoot'), document.URL, version,
+      document.getElementById('appRoot'), version,
       digitalocean_api.createDigitalOceanSession, digitalOceanServerRepositoryFactory,
       new ManualServerRepository('manualServers'), new DisplayServerRepository(),
       new DigitalOceanTokenManager())

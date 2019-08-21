@@ -25,6 +25,7 @@
     "no-reference": true,
     "no-require-imports": true,
     "no-unused-expression": true,
+    "no-unused-variable": [true, {"ignore-pattern": "^UNUSED"}],
     "no-use-before-declare": false,
     "no-var-keyword": true,
     "object-literal-shorthand": true,
