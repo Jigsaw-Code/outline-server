@@ -228,7 +228,7 @@ export class ShadowsocksManagerService {
     } catch (error) {
       logging.error(error);
       if (error instanceof errors.InvalidAccessKeyQuota) {
-        return next(new restify.InvalidArgumentError(error.message));
+        return next(new restify.InvalidArgumentError({statusCode: 400}, error.message));
       } else if (error instanceof errors.AccessKeyNotFound) {
         return next(new restify.NotFoundError(error.message));
       }

@@ -411,31 +411,31 @@ describe('ShadowsocksManagerService', () => {
       let quota = {data: {bytes: 1}} as AccessKeyQuota;
       const res = {send: (httpCode, data) => {}};
       await service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, (error) => {
-        expect(error.statusCode).toEqual(409);
+        expect(error.statusCode).toEqual(400);
       });
       quota = {window: {}} as AccessKeyQuota;
       await service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, (error) => {
-        expect(error.statusCode).toEqual(409);
+        expect(error.statusCode).toEqual(400);
       });
       quota = {window: {hours: 1}} as AccessKeyQuota;
       service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, (error) => {
-        expect(error.statusCode).toEqual(409);
+        expect(error.statusCode).toEqual(400);
         responseProcessed = true;  // required for afterEach to pass.
         done();
       });
     });
-    it('returns 409 when quota has negative values', async (done) => {
+    it('returns 400 when quota has negative values', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
       const accessKey = await repo.createNewAccessKey();
       let quota = {data: {bytes: -1}, window: {hours: 24}};
       const res = {send: (httpCode, data) => {}};
       await service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, (error) => {
-        expect(error.statusCode).toEqual(409);
+        expect(error.statusCode).toEqual(400);
       });
       quota = {data: {bytes: 1000}, window: {hours: -24}};
       service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, (error) => {
-        expect(error.statusCode).toEqual(409);
+        expect(error.statusCode).toEqual(400);
         responseProcessed = true;  // required for afterEach to pass.
         done();
       });
