@@ -368,11 +368,10 @@ validate_ipv4() {
       echo "${fail}"
       exit 1
     elif [[ "${octet}" -lt 0 || "${octet}" -gt 255 ]]; then
-        echo "${fail}"
-        exit 1
+      echo "${fail}"
+      exit 1
     fi
   done
-  echo ""
 }
 
 install_shadowbox() {
@@ -397,11 +396,7 @@ install_shadowbox() {
 
   log_for_sentry "Setting PUBLIC_HOSTNAME"
   PUBLIC_HOSTNAME=${FLAGS_HOSTNAME:-${SB_PUBLIC_IP:-$(curl -4s https://ipinfo.io/ip)}}
-  local readonly validation=`validate_ipv4 ${PUBLIC_HOSTNAME}`
-  if ! [[ -z "${validation}" ]]; then
-    echo "${validation}"
-    exit 1
-  fi
+  validate_ipv4 "${PUBLIC_HOSTNAME}" || exit 1
 
   if [[ -z $PUBLIC_HOSTNAME ]]; then
     local readonly MSG="Failed to determine the server's IP address."
