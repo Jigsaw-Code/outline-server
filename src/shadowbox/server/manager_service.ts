@@ -156,7 +156,7 @@ export class ShadowsocksManagerService {
   public async setPortForNewAccessKeys(req: RequestType, res: ResponseType, next: restify.Next):
       Promise<void> {
     try {
-      logging.debug(`setPort[ForNewAccessKeys request ${JSON.stringify(req.params)}`);
+      logging.debug(`setPortForNewAccessKeys request ${JSON.stringify(req.params)}`);
       if (!req.params.port) {
         return next(
             new restify.MissingParameterError({statusCode: 400}, 'Parameter `port` is missing'));
@@ -168,7 +168,6 @@ export class ShadowsocksManagerService {
             {statusCode: 400},
             `Expected an numeric port, instead got ${port} of type ${typeof port}`));
       }
-
       await this.accessKeys.setPortForNewAccessKeys(port);
       this.serverConfig.data().portForNewAccessKeys = port;
       this.serverConfig.write();
@@ -190,13 +189,14 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`removeAccessKey request ${JSON.stringify(req.params)}`);
       const accessKeyId = req.params.id;
-      if (!this.accessKeys.removeAccessKey(accessKeyId)) {
-        return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
-      }
+      this.accessKeys.removeAccessKey(accessKeyId);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
+      if (error instanceof errors.AccessKeyNotFound) {
+        return next(new restify.NotFoundError(error.message));
+      }
       return next(new restify.InternalServerError());
     }
   }
@@ -205,13 +205,14 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`renameAccessKey request ${JSON.stringify(req.params)}`);
       const accessKeyId = req.params.id;
-      if (!this.accessKeys.renameAccessKey(accessKeyId, req.params.name)) {
-        return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
-      }
+      this.accessKeys.renameAccessKey(accessKeyId, req.params.name);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
+      if (error instanceof errors.AccessKeyNotFound) {
+        return next(new restify.NotFoundError(error.message));
+      }
       return next(new restify.InternalServerError());
     }
   }
@@ -221,22 +222,16 @@ export class ShadowsocksManagerService {
       logging.debug(`setAccessKeyQuota request ${JSON.stringify(req.params)}`);
       const accessKeyId = req.params.id;
       const quota = req.params.quota;
-      // TODO(alalama): remove these checks once the repository supports typed errors.
-      if (!quota || !quota.data || !quota.window) {
-        return next(new restify.InvalidArgumentError(
-            'Must provide a quota value with "data.bytes" and "window.hours"'));
-      }
-      if (quota.data.bytes < 0 || quota.window.hours < 0) {
-        return next(new restify.InvalidArgumentError('Must provide positive quota values'));
-      }
-      const success = await this.accessKeys.setAccessKeyQuota(accessKeyId, quota);
-      if (!success) {
-        return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
-      }
+      await this.accessKeys.setAccessKeyQuota(accessKeyId, quota);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
+      if (error instanceof errors.InvalidAccessKeyQuota) {
+        return next(new restify.InvalidArgumentError(error.message));
+      } else if (error instanceof errors.AccessKeyNotFound) {
+        return next(new restify.NotFoundError(error.message));
+      }
       return next(new restify.InternalServerError());
     }
   }
@@ -245,14 +240,14 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`removeAccessKeyQuota request ${JSON.stringify(req.params)}`);
       const accessKeyId = req.params.id;
-      const success = await this.accessKeys.removeAccessKeyQuota(accessKeyId);
-      if (!success) {
-        return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
-      }
+      await this.accessKeys.removeAccessKeyQuota(accessKeyId);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
+      if (error instanceof errors.AccessKeyNotFound) {
+        return next(new restify.NotFoundError(error.message));
+      }
       return next(new restify.InternalServerError());
     }
   }

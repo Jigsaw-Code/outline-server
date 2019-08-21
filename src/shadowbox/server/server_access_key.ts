@@ -56,6 +56,11 @@ class ServerAccessKey implements AccessKey {
   }
 }
 
+function isValidAccessKeyQuota(quota: AccessKeyQuota) {
+  return quota && quota.data && quota.window && Number.isInteger(quota.data.bytes) &&
+      quota.data.bytes >= 0 && Number.isInteger(quota.window.hours) && quota.window.hours >= 0;
+}
+
 // Generates a random password for Shadowsocks access keys.
 function generatePassword(): string {
   return randomstring.generate(12);
@@ -155,75 +160,51 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     return accessKey;
   }
 
-  removeAccessKey(id: AccessKeyId): boolean {
+  removeAccessKey(id: AccessKeyId) {
     for (let ai = 0; ai < this.accessKeys.length; ai++) {
       const accessKey = this.accessKeys[ai];
       if (accessKey.id === id) {
         this.accessKeys.splice(ai, 1);
         this.saveAccessKeys();
         this.updateServer();
-        return true;
+        return;
       }
     }
-    return false;
+    throw new errors.AccessKeyNotFound(id);
   }
 
   listAccessKeys(): AccessKey[] {
     return [...this.accessKeys];  // Return a copy of the access key array.
   }
 
-  renameAccessKey(id: AccessKeyId, name: string): boolean {
+  renameAccessKey(id: AccessKeyId, name: string) {
     const accessKey = this.getAccessKey(id);
-    if (!accessKey) {
-      return false;
-    }
     accessKey.name = name;
-    try {
-      this.saveAccessKeys();
-    } catch (error) {
-      return false;
-    }
-    return true;
+    this.saveAccessKeys();
   }
 
-  async setAccessKeyQuota(id: AccessKeyId, quota: AccessKeyQuota): Promise<boolean> {
-    if (!quota || !quota.data || !quota.window || quota.data.bytes < 0 || quota.window.hours < 0) {
-      return false;
+  async setAccessKeyQuota(id: AccessKeyId, quota: AccessKeyQuota) {
+    if (!isValidAccessKeyQuota(quota)) {
+      throw new errors.InvalidAccessKeyQuota();
     }
     const accessKey = this.getAccessKey(id);
-    if (!accessKey) {
-      return false;
-    }
     accessKey.quotaUsage = {quota, usage: {bytes: 0}};
-    try {
-      this.saveAccessKeys();
-      const quotaStautsChanged = await this.updateAccessKeyQuotaStatus(accessKey);
-      if (quotaStautsChanged) {
-        // Reflect the access key quota status if it changed with the new quota.
-        await this.updateServer();
-      }
-    } catch (error) {
-      return false;
+    this.saveAccessKeys();
+    const quotaStautsChanged = await this.updateAccessKeyQuotaStatus(accessKey);
+    if (quotaStautsChanged) {
+      // Reflect the access key quota status if it changed with the new quota.
+      await this.updateServer();
     }
-    return true;
   }
 
-  async removeAccessKeyQuota(id: AccessKeyId): Promise<boolean> {
+  async removeAccessKeyQuota(id: AccessKeyId) {
     const accessKey = this.getAccessKey(id);
-    if (!accessKey) {
-      return false;
-    }
     const wasOverQuota = accessKey.isOverQuota();
     accessKey.quotaUsage = undefined;
-    try {
-      this.saveAccessKeys();
-      if (wasOverQuota) {
-        await this.updateServer();
-      }
-    } catch (error) {
-      return false;
+    this.saveAccessKeys();
+    if (wasOverQuota) {
+      await this.updateServer();
     }
-    return true;
   }
 
   getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined {
@@ -235,10 +216,10 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   async enforceAccessKeyQuotas() {
     let quotaStatusChanged = false;
     for (const accessKey of this.accessKeys) {
-      quotaStatusChanged = quotaStatusChanged || await this.updateAccessKeyQuotaStatus(accessKey);
+      quotaStatusChanged = await this.updateAccessKeyQuotaStatus(accessKey) || quotaStatusChanged;
     }
     if (quotaStatusChanged) {
-      this.updateServer();
+      await this.updateServer();
     }
   }
 
@@ -293,21 +274,17 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private saveAccessKeys() {
-    try {
-      this.keyConfig.data().accessKeys = this.accessKeys.map(key => makeAccessKeyJson(key));
-      this.keyConfig.write();
-    } catch (error) {
-      throw new Error(`Failed to save access key config: ${error}`);
-    }
+    this.keyConfig.data().accessKeys = this.accessKeys.map(key => makeAccessKeyJson(key));
+    this.keyConfig.write();
   }
 
-  // Returns a reference to the access key with `id`, or undefined if the key is not found.
-  private getAccessKey(id: AccessKeyId): ServerAccessKey|undefined {
+  // Returns a reference to the access key with `id`, or throws if the key is not found.
+  private getAccessKey(id: AccessKeyId): ServerAccessKey {
     for (const accessKey of this.accessKeys) {
       if (accessKey.id === id) {
         return accessKey;
       }
     }
-    return undefined;
+    throw new errors.AccessKeyNotFound(id);
   }
 }

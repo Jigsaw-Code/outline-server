@@ -27,8 +27,10 @@ interface ServerInfo {
   name: string;
 }
 
-const newPort = 12345;
-const oldPort = 54321;
+const NEW_PORT = 12345;
+const OLD_PORT = 54321;
+const EXPECTED_ACCESS_KEY_PROPERTIES =
+    ['id', 'name', 'password', 'port', 'method', 'accessUrl', 'quota'].sort();
 
 describe('ShadowsocksManagerService', () => {
   // After processing the response callback, we should set
@@ -117,6 +119,30 @@ describe('ShadowsocksManagerService', () => {
             service.listAccessKeys({params: {}}, res, done);
           });
     });
+    it('lists access keys with expected properties', async (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerService('', null, repo, null, null);
+      const accessKey = await repo.createNewAccessKey();
+      await repo.createNewAccessKey();
+      const quota = {data: {bytes: 10000}, window: {hours: 48}};
+      await repo.setAccessKeyQuota(accessKey.id, quota);
+      const accessKeyName = 'new name';
+      await repo.renameAccessKey(accessKey.id, accessKeyName);
+      const res = {
+        send: (httpCode, data) => {
+          expect(httpCode).toEqual(200);
+          expect(data.accessKeys.length).toEqual(2);
+          const serviceAccessKey1 = data.accessKeys[0];
+          const serviceAccessKey2 = data.accessKeys[1];
+          expect(Object.keys(serviceAccessKey1).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
+          expect(Object.keys(serviceAccessKey2).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
+          expect(serviceAccessKey1.name).toEqual(accessKeyName);
+          expect(serviceAccessKey1.quota).toEqual(quota);
+          responseProcessed = true;  // required for afterEach to pass.
+        }
+      };
+      service.listAccessKeys({params: {}}, res, done);
+    });
   });
 
   describe('createNewAccessKey', () => {
@@ -128,9 +154,7 @@ describe('ShadowsocksManagerService', () => {
       const res = {
         send: (httpCode, data) => {
           expect(httpCode).toEqual(201);
-          const expectedProperties =
-              ['id', 'name', 'password', 'port', 'method', 'accessUrl', 'quota'];
-          expect(Object.keys(data).sort()).toEqual(expectedProperties.sort());
+          expect(Object.keys(data).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
           responseProcessed = true;  // required for afterEach to pass.
         }
       };
@@ -161,10 +185,10 @@ describe('ShadowsocksManagerService', () => {
           expect(httpCode).toEqual(204);
         }
       };
-      await service.setPortForNewAccessKeys({params: {port: newPort}}, res, () => {});
+      await service.setPortForNewAccessKeys({params: {port: NEW_PORT}}, res, () => {});
       const newKey = await repo.createNewAccessKey();
-      expect(newKey.proxyParams.portNumber).toEqual(newPort);
-      expect(oldKey.proxyParams.portNumber).not.toEqual(newPort);
+      expect(newKey.proxyParams.portNumber).toEqual(NEW_PORT);
+      expect(oldKey.proxyParams.portNumber).not.toEqual(NEW_PORT);
       responseProcessed = true;
       done();
     });
@@ -177,11 +201,11 @@ describe('ShadowsocksManagerService', () => {
       const res = {
         send: (httpCode) => {
           expect(httpCode).toEqual(204);
-          expect(serverConfig.data().portForNewAccessKeys).toEqual(newPort);
+          expect(serverConfig.data().portForNewAccessKeys).toEqual(NEW_PORT);
           responseProcessed = true;
         }
       };
-      await service.setPortForNewAccessKeys({params: {port: newPort}}, res, done);
+      await service.setPortForNewAccessKeys({params: {port: NEW_PORT}}, res, done);
     });
 
     it('rejects invalid port numbers', async (done) => {
@@ -230,8 +254,8 @@ describe('ShadowsocksManagerService', () => {
       };
 
       const server = new net.Server();
-      server.listen(newPort, async () => {
-        await service.setPortForNewAccessKeys({params: {port: newPort}}, res, next);
+      server.listen(NEW_PORT, async () => {
+        await service.setPortForNewAccessKeys({params: {port: NEW_PORT}}, res, next);
       });
     });
 
@@ -241,9 +265,7 @@ describe('ShadowsocksManagerService', () => {
       const service = new ShadowsocksManagerService('name', serverConfig, repo, null, null);
 
       await service.createNewAccessKey({params: {}}, {send: () => {}}, () => {});
-
-      await service.setPortForNewAccessKeys({params: {port: newPort}}, {send: () => {}}, () => {});
-
+      await service.setPortForNewAccessKeys({params: {port: NEW_PORT}}, {send: () => {}}, () => {});
       const res = {
         send: (httpCode) => {
           expect(httpCode).toEqual(204);
@@ -252,8 +274,8 @@ describe('ShadowsocksManagerService', () => {
       };
 
       const firstKeyConnection = new net.Server();
-      firstKeyConnection.listen(oldPort, async () => {
-        await service.setPortForNewAccessKeys({params: {port: oldPort}}, res, () => {});
+      firstKeyConnection.listen(OLD_PORT, async () => {
+        await service.setPortForNewAccessKeys({params: {port: OLD_PORT}}, res, () => {});
         firstKeyConnection.close();
         done();
       });
@@ -265,7 +287,6 @@ describe('ShadowsocksManagerService', () => {
       const service = new ShadowsocksManagerService('name', serverConfig, repo, null, null);
 
       const noPort = {params: {}};
-
       const res = {
         send: (httpCode) => {
           fail(
@@ -376,7 +397,6 @@ describe('ShadowsocksManagerService', () => {
       const res = {
         send: (httpCode, data) => {
           expect(httpCode).toEqual(204);
-          const accessKey = getFirstAccessKey(repo);
           expect(accessKey.quotaUsage.quota).toEqual(quota);
           expect(accessKey.isOverQuota()).toBeFalsy();
           responseProcessed = true;  // required for afterEach to pass.
@@ -404,24 +424,16 @@ describe('ShadowsocksManagerService', () => {
         done();
       });
     });
-    it('returns 409 when quota bytes is negative', async (done) => {
+    it('returns 409 when quota has negative values', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
       const accessKey = await repo.createNewAccessKey();
-      const quota = {data: {bytes: -1}, window: {hours: 24}};
+      let quota = {data: {bytes: -1}, window: {hours: 24}};
       const res = {send: (httpCode, data) => {}};
-      service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, (error) => {
+      await service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, (error) => {
         expect(error.statusCode).toEqual(409);
-        responseProcessed = true;  // required for afterEach to pass.
-        done();
       });
-    });
-    it('returns 409 when quota window is negative', async (done) => {
-      const repo = getAccessKeyRepository();
-      const service = new ShadowsocksManagerService('default name', null, repo, null, null);
-      const accessKey = await repo.createNewAccessKey();
-      const quota = {data: {bytes: 1000}, window: {hours: -24}};
-      const res = {send: (httpCode, data) => {}};
+      quota = {data: {bytes: 1000}, window: {hours: -24}};
       service.setAccessKeyQuota({params: {id: accessKey.id, quota}}, res, (error) => {
         expect(error.statusCode).toEqual(409);
         responseProcessed = true;  // required for afterEach to pass.
@@ -466,7 +478,6 @@ describe('ShadowsocksManagerService', () => {
       const res = {
         send: (httpCode, data) => {
           expect(httpCode).toEqual(204);
-          const accessKey = getFirstAccessKey(repo);
           expect(accessKey.quotaUsage).toBeUndefined();
           expect(accessKey.isOverQuota()).toBeFalsy();
           responseProcessed = true;  // required for afterEach to pass.
@@ -566,6 +577,6 @@ function fakeSharedMetricsReporter(): SharedMetricsPublisher {
 
 function getAccessKeyRepository(): AccessKeyRepository {
   return new ServerAccessKeyRepository(
-      oldPort, 'hostname', new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}),
+      OLD_PORT, 'hostname', new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}),
       new FakeShadowsocksServer(), new FakePrometheusClient({}));
 }

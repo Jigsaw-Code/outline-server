@@ -50,19 +50,17 @@ describe('ServerAccessKeyRepository', () => {
     const repo = new RepoBuilder().build();
     repo.createNewAccessKey().then((accessKey) => {
       expect(countAccessKeys(repo)).toEqual(1);
-      const removeResult = repo.removeAccessKey(accessKey.id);
-      expect(removeResult).toEqual(true);
+      expect(repo.removeAccessKey.bind(repo, accessKey.id)).not.toThrow();
       expect(countAccessKeys(repo)).toEqual(0);
       done();
     });
   });
 
-  it('removeAccessKey returns false for missing keys', (done) => {
+  it('removeAccessKey throws for missing keys', (done) => {
     const repo = new RepoBuilder().build();
     repo.createNewAccessKey().then((accessKey) => {
       expect(countAccessKeys(repo)).toEqual(1);
-      const removeResult = repo.removeAccessKey('badId');
-      expect(removeResult).toEqual(false);
+      expect(repo.removeAccessKey.bind(repo, 'badId')).toThrowError(errors.AccessKeyNotFound);
       expect(countAccessKeys(repo)).toEqual(1);
       done();
     });
@@ -72,8 +70,7 @@ describe('ServerAccessKeyRepository', () => {
     const repo = new RepoBuilder().build();
     repo.createNewAccessKey().then((accessKey) => {
       const NEW_NAME = 'newName';
-      const renameResult = repo.renameAccessKey(accessKey.id, NEW_NAME);
-      expect(renameResult).toEqual(true);
+      expect(repo.renameAccessKey.bind(repo, accessKey.id, NEW_NAME)).not.toThrow();
       // List keys again and expect to see the NEW_NAME.
       const accessKeys = repo.listAccessKeys();
       expect(accessKeys[0].name).toEqual(NEW_NAME);
@@ -81,12 +78,12 @@ describe('ServerAccessKeyRepository', () => {
     });
   });
 
-  it('renameAccessKey returns false for missing keys', (done) => {
+  it('renameAccessKey throws for missing keys', (done) => {
     const repo = new RepoBuilder().build();
     repo.createNewAccessKey().then((accessKey) => {
       const NEW_NAME = 'newName';
-      const renameResult = repo.renameAccessKey('badId', NEW_NAME);
-      expect(renameResult).toEqual(false);
+      expect(repo.renameAccessKey.bind(repo, 'badId', NEW_NAME))
+          .toThrowError(errors.AccessKeyNotFound);
       // List keys again and expect to NOT see the NEW_NAME.
       const accessKeys = repo.listAccessKeys();
       expect(accessKeys[0].name).not.toEqual(NEW_NAME);
@@ -127,20 +124,12 @@ describe('ServerAccessKeyRepository', () => {
 
   it('setPortForNewAccessKeys rejects invalid port numbers', async (done) => {
     const repo = new RepoBuilder().build();
-    // jasmine.toThrowError expects a function and makes the code
-    // hard to read.
-    const expectThrow = async (port: number) => {
-      try {
-        await repo.setPortForNewAccessKeys(port);
-        fail(`setPortForNewAccessKeys should reject invalid port number ${port}.`);
-      } catch (error) {
-        expect(error instanceof errors.InvalidPortNumber).toBeTruthy();
-      }
-    };
-    await expectThrow(0);
-    await expectThrow(-1);
-    await expectThrow(100.1);
-    await expectThrow(65536);
+    await expectAsyncThrow(repo.setPortForNewAccessKeys.bind(repo, 0), errors.InvalidPortNumber);
+    await expectAsyncThrow(repo.setPortForNewAccessKeys.bind(repo, -1), errors.InvalidPortNumber);
+    await expectAsyncThrow(
+        repo.setPortForNewAccessKeys.bind(repo, 100.1), errors.InvalidPortNumber);
+    await expectAsyncThrow(
+        repo.setPortForNewAccessKeys.bind(repo, 65536), errors.InvalidPortNumber);
     done();
   });
 
@@ -167,25 +156,11 @@ describe('ServerAccessKeyRepository', () => {
     const repo = new RepoBuilder().port(oldPort).build();
     await repo.createNewAccessKey();
 
-    // jasmine.toThrowError expects a function and makes the code
-    // hard to read.  We also can't do anything like
-    // `expect(repo.setPortForNewAccessKeys.bind(repo, port)).not.toThrow()`
-    // since setPortForNewAccessKeys is async and this would lead to false positives
-    // when expect() returns before setPortForNewAccessKeys throws.
-    const expectNoThrow = async (port: number) => {
-      try {
-        await repo.setPortForNewAccessKeys(port);
-      } catch (error) {
-        fail(`setPortForNewAccessKeys should accept port ${port}.`);
-      }
-    };
-
-    await expectNoThrow(await portProvider.reserveNewPort());
-
+    await expectNoAsyncThrow(portProvider.reserveNewPort.bind(portProvider));
     // simulate the first key's connection on its port
     const server = new net.Server();
     server.listen(oldPort, async () => {
-      await expectNoThrow(oldPort);
+      await expectNoAsyncThrow(repo.setPortForNewAccessKeys.bind(repo, oldPort));
       server.close();
       done();
     });
@@ -195,18 +170,18 @@ describe('ServerAccessKeyRepository', () => {
     const repo = new RepoBuilder().build();
     const accessKey = await repo.createNewAccessKey();
     const quota = {data: {bytes: 5000}, window: {hours: 24}};
-    expect(await repo.setAccessKeyQuota(accessKey.id, quota)).toBeTruthy();
-    const accessKeys = repo.listAccessKeys();
-    expect(accessKeys[0].quotaUsage.quota).toEqual(quota);
-    expect(accessKeys[0].quotaUsage.usage.bytes).toEqual(0);
+    await expectNoAsyncThrow(repo.setAccessKeyQuota.bind(repo, accessKey.id, quota));
+    expect(accessKey.quotaUsage.quota).toEqual(quota);
+    expect(accessKey.quotaUsage.usage.bytes).toEqual(0);
     done();
   });
 
-  it('setAccessKeyQuota returns false for missing keys', async (done) => {
+  it('setAccessKeyQuota throws for missing keys', async (done) => {
     const repo = new RepoBuilder().build();
     await repo.createNewAccessKey();
     const quota = {data: {bytes: 1000}, window: {hours: 24}};
-    expect(await repo.setAccessKeyQuota('doesnotexist', quota)).toBeFalsy();
+    await expectAsyncThrow(
+        repo.setAccessKeyQuota.bind(repo, 'doesnotexist', quota), errors.AccessKeyNotFound);
     done();
   });
 
@@ -215,16 +190,25 @@ describe('ServerAccessKeyRepository', () => {
     const accessKey = await repo.createNewAccessKey();
     // Negative values
     const negativeBytesQuota = {data: {bytes: -1000}, window: {hours: 24}};
-    expect(await repo.setAccessKeyQuota(accessKey.id, negativeBytesQuota)).toBeFalsy();
+    await expectAsyncThrow(
+        repo.setAccessKeyQuota.bind(repo, accessKey.id, negativeBytesQuota),
+        errors.InvalidAccessKeyQuota);
     const negativeWindowQuota = {data: {bytes: 1000}, window: {hours: -24}};
-    expect(await repo.setAccessKeyQuota(accessKey.id, negativeWindowQuota)).toBeFalsy();
+    await expectAsyncThrow(
+        repo.setAccessKeyQuota.bind(repo, accessKey.id, negativeWindowQuota),
+        errors.InvalidAccessKeyQuota);
     // Missing properties
     const missingDataQuota = {window: {hours: 24}} as AccessKeyQuota;
-    expect(await repo.setAccessKeyQuota(accessKey.id, missingDataQuota)).toBeFalsy();
+    await expectAsyncThrow(
+        repo.setAccessKeyQuota.bind(repo, accessKey.id, missingDataQuota),
+        errors.InvalidAccessKeyQuota);
     const missingWindowQuota = {data: {bytes: 1000}} as AccessKeyQuota;
-    expect(await repo.setAccessKeyQuota(accessKey.id, missingWindowQuota)).toBeFalsy();
+    await expectAsyncThrow(
+        repo.setAccessKeyQuota.bind(repo, accessKey.id, missingWindowQuota),
+        errors.InvalidAccessKeyQuota);
     // Undefined quota
-    expect(await repo.setAccessKeyQuota(accessKey.id, undefined)).toBeFalsy();
+    await expectAsyncThrow(
+        repo.setAccessKeyQuota.bind(repo, accessKey.id, undefined), errors.InvalidAccessKeyQuota);
     done();
   });
 
@@ -238,9 +222,8 @@ describe('ServerAccessKeyRepository', () => {
     const accessKey2 = await repo.createNewAccessKey();
 
     await repo.setAccessKeyQuota(accessKey1.id, {data: {bytes: 200}, window: {hours: 1}});
-    let accessKeys = await repo.listAccessKeys();
-    expect(accessKeys[0].isOverQuota()).toBeTruthy();
-    expect(accessKeys[1].isOverQuota()).toBeFalsy();
+    expect(accessKey1.isOverQuota()).toBeTruthy();
+    expect(accessKey2.isOverQuota()).toBeFalsy();
     // We determine which access keys have been enabled/disabled by accessing them from
     // the server's perspective, ensuring `server.update` has been called.
     let serverAccessKeys = server.getAccessKeys();
@@ -251,9 +234,8 @@ describe('ServerAccessKeyRepository', () => {
     prometheusClient.bytesTransferredById = {'0': 800, '1': 199};
     await repo.setAccessKeyQuota(accessKey1.id, {data: {bytes: 1000}, window: {hours: 1}});
     await repo.setAccessKeyQuota(accessKey2.id, {data: {bytes: 100}, window: {hours: 1}});
-    accessKeys = await repo.listAccessKeys();
-    expect(accessKeys[0].isOverQuota()).toBeFalsy();
-    expect(accessKeys[1].isOverQuota()).toBeTruthy();
+    expect(accessKey1.isOverQuota()).toBeFalsy();
+    expect(accessKey2.isOverQuota()).toBeTruthy();
     serverAccessKeys = server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(1);
     expect(serverAccessKeys[0].id).toEqual(accessKey1.id);
@@ -263,22 +245,23 @@ describe('ServerAccessKeyRepository', () => {
   it('can remove access key quotas', async (done) => {
     const repo = new RepoBuilder().build();
     const accessKey = await repo.createNewAccessKey();
-    await expect(repo.setAccessKeyQuota(accessKey.id, {data: {bytes: 100}, window: {hours: 24}}))
-        .toBeTruthy();
-    expect(repo.listAccessKeys()[0].quotaUsage).toBeDefined();
-    expect(repo.removeAccessKeyQuota(accessKey.id)).toBeTruthy();
-    expect(repo.listAccessKeys()[0].quotaUsage).toBeUndefined();
+    const quota = {data: {bytes: 100}, window: {hours: 24}};
+    await repo.setAccessKeyQuota(accessKey.id, quota);
+    expect(accessKey.quotaUsage).toBeDefined();
+    await expectNoAsyncThrow(repo.removeAccessKeyQuota.bind(repo, accessKey.id));
+    expect(accessKey.quotaUsage).toBeUndefined();
     done();
   });
 
-  it('removeAccessKeyQuota returns false for missing keys', async (done) => {
+  it('removeAccessKeyQuota throws for missing keys', async (done) => {
     const repo = new RepoBuilder().build();
     await repo.createNewAccessKey();
-    expect(await repo.removeAccessKeyQuota('doesnotexist')).toBeFalsy();
+    await expectAsyncThrow(
+        repo.removeAccessKeyQuota.bind(repo, 'doesnotexist'), errors.AccessKeyNotFound);
     done();
   });
 
-  it('removeAccessKeyQuota restores over-quota access keys when removing quota ', async (done) => {
+  it('removeAccessKeyQuota restores over-quota access keys', async (done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 100});
     const repo =
@@ -290,7 +273,7 @@ describe('ServerAccessKeyRepository', () => {
     expect(server.getAccessKeys().length).toEqual(1);
 
     // Remove the quota; expect the key to be under quota and enabled.
-    expect(repo.removeAccessKeyQuota(accessKey.id)).toBeTruthy();
+    await expectNoAsyncThrow(repo.removeAccessKeyQuota.bind(repo, accessKey.id));
     expect(server.getAccessKeys().length).toEqual(2);
     const accessKeys = await repo.listAccessKeys();
     expect(accessKeys[0].isOverQuota()).toBeFalsy();
@@ -300,7 +283,7 @@ describe('ServerAccessKeyRepository', () => {
     done();
   });
 
-  it('enforceAccessKeyQuotas updates keys quota status ', async (done) => {
+  it('enforceAccessKeyQuotas updates keys quota status', async (done) => {
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 100});
     const repo = new RepoBuilder().prometheusClient(prometheusClient).build();
 
@@ -403,10 +386,9 @@ describe('ServerAccessKeyRepository', () => {
 
   it('start periodically enforces access key quotas', async (done) => {
     const server = new FakeShadowsocksServer();
-    const prometheusClient = new FakePrometheusClient({'0': 500, '1': 300, '2': 1000});
+    const prometheusClient = new FakePrometheusClient({'0': 500, '1': 300, '2': 400});
     const repo =
         new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
-
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
     const accessKey3 = await repo.createNewAccessKey();
@@ -416,27 +398,24 @@ describe('ServerAccessKeyRepository', () => {
 
     await repo.start(clock);
     await clock.runCallbacks();
-    let accessKeys = await repo.listAccessKeys();
-    expect(accessKeys[0].isOverQuota()).toBeTruthy();
-    expect(accessKeys[1].isOverQuota()).toBeTruthy();
-    expect(accessKeys[2].isOverQuota()).toBeFalsy();
-    expect(accessKeys[0].quotaUsage.usage.bytes).toEqual(500);
-    expect(accessKeys[1].quotaUsage.usage.bytes).toEqual(300);
-    expect(accessKeys[2].quotaUsage).toBeUndefined();
+    expect(accessKey1.isOverQuota()).toBeTruthy();
+    expect(accessKey2.isOverQuota()).toBeTruthy();
+    expect(accessKey3.isOverQuota()).toBeFalsy();
+    expect(accessKey1.quotaUsage.usage.bytes).toEqual(500);
+    expect(accessKey2.quotaUsage.usage.bytes).toEqual(300);
+    expect(accessKey3.quotaUsage).toBeUndefined();
     let serverAccessKeys = await server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(1);
     expect(serverAccessKeys[0].id).toEqual(accessKey3.id);
-
     // Simulate a change in usage.
     prometheusClient.bytesTransferredById = {'0': 100, '1': 300, '2': 1000};
     await clock.runCallbacks();
-    accessKeys = await repo.listAccessKeys();
-    expect(accessKeys[0].isOverQuota()).toBeFalsy();
-    expect(accessKeys[1].isOverQuota()).toBeTruthy();
-    expect(accessKeys[2].isOverQuota()).toBeFalsy();
-    expect(accessKeys[0].quotaUsage.usage.bytes).toEqual(100);
-    expect(accessKeys[1].quotaUsage.usage.bytes).toEqual(300);
-    expect(accessKeys[2].quotaUsage).toBeUndefined();
+    expect(accessKey1.isOverQuota()).toBeFalsy();
+    expect(accessKey2.isOverQuota()).toBeTruthy();
+    expect(accessKey3.isOverQuota()).toBeFalsy();
+    expect(accessKey1.quotaUsage.usage.bytes).toEqual(100);
+    expect(accessKey2.quotaUsage.usage.bytes).toEqual(300);
+    expect(accessKey3.quotaUsage).toBeUndefined();
     serverAccessKeys = await server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(2);
     expect(serverAccessKeys[0].id).toEqual(accessKey1.id);
@@ -460,6 +439,30 @@ describe('ServerAccessKeyRepository', () => {
     done();
   });
 });
+
+// Convenience function to expect that an asynchronous function does not throw an error. Note that
+// jasmine.toThrowError lacks asynchronous support and could lead to false positives.
+async function expectNoAsyncThrow(fn: Function) {
+  try {
+    await fn();
+  } catch (e) {
+    fail(`Unexpected error thrown: ${e}`);
+  }
+}
+
+// Convenience function to expect that an asynchronous function throws an error. Fails if the thrown
+// error does not match `errorType`, when defined.
+// tslint:disable-next-line:no-any
+async function expectAsyncThrow(fn: Function, errorType?: new (...args: any[]) => Error) {
+  try {
+    await fn();
+    fail(`Expected error to be thrown`);
+  } catch (e) {
+    if (!!errorType && !(e instanceof errorType)) {
+      fail(`Thrown error is not of type ${errorType.name}. Got ${e.name}`);
+    }
+  }
+}
 
 function countAccessKeys(repo: AccessKeyRepository) {
   return repo.listAccessKeys().length;

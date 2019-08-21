@@ -32,3 +32,16 @@ export class PortUnavailable extends ShadowboxError {
     super(port.toString());
   }
 }
+
+export class AccessKeyNotFound extends ShadowboxError {
+  constructor(accessKeyId?: string) {
+    super(`Access key "${accessKeyId}" not found`);
+  }
+}
+
+export class InvalidAccessKeyQuota extends ShadowboxError {
+  constructor() {
+    super(
+        'Must provide a quota value with positive integer values for "data.bytes" and "window.hours"');
+  }
+}
