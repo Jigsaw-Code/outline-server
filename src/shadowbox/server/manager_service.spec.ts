@@ -472,7 +472,7 @@ describe('ShadowsocksManagerService', () => {
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
       const limit = {data: {bytes: 10000}, timeframe: {hours: 48}};
       const accessKey = await repo.createNewAccessKey();
-      repo.setAccessKeyLimit(accessKey.id, limit);
+      await repo.setAccessKeyLimit(accessKey.id, limit);
       expect(accessKey.limitUsage.limit).toEqual(limit);
       expect(accessKey.limitUsage.usage.bytes).toEqual(0);
       const res = {
