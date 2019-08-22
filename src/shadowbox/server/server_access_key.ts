@@ -96,7 +96,7 @@ function makeAccessKeyJson(accessKey: AccessKey): AccessKeyJson {
 // to start and stop per-access-key Shadowsocks instances.  Requires external validation
 // that portForNewAccessKeys is valid.
 export class ServerAccessKeyRepository implements AccessKeyRepository {
-  private static QUOTA_ENFORCEMENT_INTERVAL_MS = 60 * 60 * 1000;  // 1h
+  private static LIMIT_ENFORCEMENT_INTERVAL_MS = 60 * 60 * 1000;  // 1h
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
   private accessKeys: ServerAccessKey[];
 
@@ -124,7 +124,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       } catch (e) {
         logging.error(`Failed to enforce access key limits: ${e}`);
       }
-    }, ServerAccessKeyRepository.QUOTA_ENFORCEMENT_INTERVAL_MS);
+    }, ServerAccessKeyRepository.LIMIT_ENFORCEMENT_INTERVAL_MS);
   }
 
   private isExistingAccessKeyPort(port: number): boolean {
