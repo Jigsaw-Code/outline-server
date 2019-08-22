@@ -287,23 +287,21 @@ describe('ServerAccessKeyRepository', () => {
     const repo = new RepoBuilder().prometheusClient(prometheusClient).build();
 
     const accessKey1 = await repo.createNewAccessKey();
-    await repo.createNewAccessKey();
+    const accessKey2 = await repo.createNewAccessKey();
     await repo.setAccessKeyLimit(accessKey1.id, {data: {bytes: 200}, timeframe: {hours: 1}});
 
     await repo.enforceAccessKeyLimits();
-    let accessKeys = await repo.listAccessKeys();
-    expect(accessKeys[0].isOverLimit()).toBeTruthy();
-    expect(accessKeys[1].isOverLimit()).toBeFalsy();
-    expect(accessKeys[0].limitUsage.usage.bytes).toEqual(500);
-    expect(accessKeys[1].limitUsage).toBeUndefined();
+    expect(accessKey1.isOverLimit()).toBeTruthy();
+    expect(accessKey2.isOverLimit()).toBeFalsy();
+    expect(accessKey1.limitUsage.usage.bytes).toEqual(500);
+    expect(accessKey2.limitUsage).toBeUndefined();
 
     prometheusClient.bytesTransferredById = {'0': 100, '1': 100};
     await repo.enforceAccessKeyLimits();
-    accessKeys = await repo.listAccessKeys();
-    expect(accessKeys[0].isOverLimit()).toBeFalsy();
-    expect(accessKeys[1].isOverLimit()).toBeFalsy();
-    expect(accessKeys[0].limitUsage.usage.bytes).toEqual(100);
-    expect(accessKeys[1].limitUsage).toBeUndefined();
+    expect(accessKey1.isOverLimit()).toBeFalsy();
+    expect(accessKey2.isOverLimit()).toBeFalsy();
+    expect(accessKey1.limitUsage.usage.bytes).toEqual(100);
+    expect(accessKey2.limitUsage).toBeUndefined();
     done();
   });
 
