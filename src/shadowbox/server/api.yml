@@ -174,7 +174,7 @@ paths:
           description: Access key renamed successfully
         '404':
           description: Access key inexistent
-  /access-keys/{id}/limit:
+  /access-keys/{id}/data-limit:
     put:
       description: Sets an access key data transfer limit
       tags:
@@ -192,7 +192,7 @@ paths:
         content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AccessKeyLimit"
+                $ref: "#/components/schemas/AccessKeyDataLimit"
               examples:
                 '0':
                   value: "{limitBytes: 1000000, timeframeHours: 24}"
@@ -292,7 +292,7 @@ components:
           type: number
         portForNewAccessKeys:
           type: integer
-    AccessKeyLimit:
+    AccessKeyDataLimit:
       properties:
         data:
           type: object
@@ -321,4 +321,4 @@ components:
         accessUrl:
           type: string
         limit:
-          $ref: "#/components/schemas/AccessKeyLimit"
+          $ref: "#/components/schemas/AccessKeyDataLimit"

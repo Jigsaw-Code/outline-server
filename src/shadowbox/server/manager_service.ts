@@ -17,7 +17,7 @@ import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {AccessKey, AccessKeyLimit, AccessKeyRepository} from '../model/access_key';
+import {AccessKey, AccessKeyDataLimit, AccessKeyRepository} from '../model/access_key';
 import * as errors from '../model/errors';
 
 import {ManagerMetrics} from './manager_metrics';
@@ -42,7 +42,7 @@ function accessKeyToJson(accessKey: AccessKey) {
       password: accessKey.proxyParams.password,
       outline: 1,
     })),
-    limit: accessKey.limitUsage ? accessKey.limitUsage.limit : undefined
+    limit: accessKey.dataLimitUsage ? accessKey.dataLimitUsage.limit : undefined
   };
 }
 
@@ -52,7 +52,7 @@ interface RequestParams {
   id?: string;
   name?: string;
   metricsEnabled?: boolean;
-  limit?: AccessKeyLimit;
+  limit?: AccessKeyDataLimit;
   port?: number;
 }
 interface RequestType {
@@ -80,8 +80,10 @@ export function bindService(
 
   apiServer.del(`${apiPrefix}/access-keys/:id`, service.removeAccessKey.bind(service));
   apiServer.put(`${apiPrefix}/access-keys/:id/name`, service.renameAccessKey.bind(service));
-  apiServer.put(`${apiPrefix}/access-keys/:id/limit`, service.setAccessKeyLimit.bind(service));
-  apiServer.del(`${apiPrefix}/access-keys/:id/limit`, service.removeAccessKeyLimit.bind(service));
+  apiServer.put(
+      `${apiPrefix}/access-keys/:id/data-limit`, service.setAccessKeyDataLimit.bind(service));
+  apiServer.del(
+      `${apiPrefix}/access-keys/:id/data-limit`, service.removeAccessKeyDataLimit.bind(service));
 
   apiServer.get(`${apiPrefix}/metrics/transfer`, service.getDataUsage.bind(service));
   apiServer.get(`${apiPrefix}/metrics/enabled`, service.getShareMetrics.bind(service));
@@ -217,17 +219,21 @@ export class ShadowsocksManagerService {
     }
   }
 
-  public async setAccessKeyLimit(req: RequestType, res: ResponseType, next: restify.Next) {
+  public async setAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      logging.debug(`setAccessKeyLimit request ${JSON.stringify(req.params)}`);
+      logging.debug(`setAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
       const accessKeyId = req.params.id;
       const limit = req.params.limit;
-      await this.accessKeys.setAccessKeyLimit(accessKeyId, limit);
+      if (!limit) {
+        return next(
+            new restify.MissingParameterError({statusCode: 400}, 'Missing `limit` parameter'));
+      }
+      await this.accessKeys.setAccessKeyDataLimit(accessKeyId, limit);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
-      if (error instanceof errors.InvalidAccessKeyLimit) {
+      if (error instanceof errors.InvalidAccessKeyDataLimit) {
         return next(new restify.InvalidArgumentError({statusCode: 400}, error.message));
       } else if (error instanceof errors.AccessKeyNotFound) {
         return next(new restify.NotFoundError(error.message));
@@ -236,11 +242,11 @@ export class ShadowsocksManagerService {
     }
   }
 
-  public async removeAccessKeyLimit(req: RequestType, res: ResponseType, next: restify.Next) {
+  public async removeAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      logging.debug(`removeAccessKeyLimit request ${JSON.stringify(req.params)}`);
+      logging.debug(`removeAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
       const accessKeyId = req.params.id;
-      await this.accessKeys.removeAccessKeyLimit(accessKeyId);
+      await this.accessKeys.removeAccessKeyDataLimit(accessKeyId);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {

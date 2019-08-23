@@ -20,7 +20,7 @@ import {isPortUsed} from '../infrastructure/get_port';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
-import {AccessKey, AccessKeyId, AccessKeyLimit, AccessKeyLimitUsage, AccessKeyMetricsId, AccessKeyRepository, ProxyParams} from '../model/access_key';
+import {AccessKey, AccessKeyDataLimit, AccessKeyDataLimitUsage, AccessKeyId, AccessKeyMetricsId, AccessKeyRepository, ProxyParams} from '../model/access_key';
 import * as errors from '../model/errors';
 import {ShadowsocksServer} from '../model/shadowsocks_server';
 
@@ -32,7 +32,7 @@ interface AccessKeyJson {
   password: string;
   port: number;
   encryptionMethod?: string;
-  limit?: AccessKeyLimit;
+  limit?: AccessKeyDataLimit;
 }
 
 // The configuration file format as json.
@@ -46,17 +46,17 @@ export interface AccessKeyConfigJson {
 class ServerAccessKey implements AccessKey {
   constructor(
       readonly id: AccessKeyId, public name: string, public metricsId: AccessKeyMetricsId,
-      readonly proxyParams: ProxyParams, public limitUsage?: AccessKeyLimitUsage) {}
+      readonly proxyParams: ProxyParams, public dataLimitUsage?: AccessKeyDataLimitUsage) {}
 
-  isOverLimit(): boolean {
-    if (!this.limitUsage) {
+  isOverDataLimit(): boolean {
+    if (!this.dataLimitUsage) {
       return false;
     }
-    return this.limitUsage.usage.bytes > this.limitUsage.limit.data.bytes;
+    return this.dataLimitUsage.usage.bytes > this.dataLimitUsage.limit.data.bytes;
   }
 }
 
-function isValidAccessKeyLimit(limit: AccessKeyLimit) {
+function isValidAccessKeyDataLimit(limit: AccessKeyDataLimit) {
   return limit && limit.data && limit.timeframe && Number.isInteger(limit.data.bytes) &&
       limit.data.bytes >= 0 && Number.isInteger(limit.timeframe.hours) &&
       limit.timeframe.hours >= 0;
@@ -74,10 +74,10 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyJson): AccessKe
     encryptionMethod: accessKeyJson.encryptionMethod,
     password: accessKeyJson.password,
   };
-  const limitUsage =
+  const dataLimitUsage =
       accessKeyJson.limit ? {limit: accessKeyJson.limit, usage: {bytes: 0}} : undefined;
   return new ServerAccessKey(
-      accessKeyJson.id, accessKeyJson.name, accessKeyJson.metricsId, proxyParams, limitUsage);
+      accessKeyJson.id, accessKeyJson.name, accessKeyJson.metricsId, proxyParams, dataLimitUsage);
 }
 
 function makeAccessKeyJson(accessKey: AccessKey): AccessKeyJson {
@@ -88,7 +88,7 @@ function makeAccessKeyJson(accessKey: AccessKey): AccessKeyJson {
     password: accessKey.proxyParams.password,
     port: accessKey.proxyParams.portNumber,
     encryptionMethod: accessKey.proxyParams.encryptionMethod,
-    limit: accessKey.limitUsage ? accessKey.limitUsage.limit : undefined
+    limit: accessKey.dataLimitUsage ? accessKey.dataLimitUsage.limit : undefined
   };
 }
 
@@ -116,11 +116,11 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   // Starts the Shadowsocks server and exposes the access key configuration to the server.
   // Periodically enforces access key limits.
   async start(clock: Clock): Promise<void> {
-    await this.enforceAccessKeyLimits();
+    await this.enforceAccessKeyDataLimits();
     await this.updateServer();
     clock.setInterval(async () => {
       try {
-        await this.enforceAccessKeyLimits();
+        await this.enforceAccessKeyDataLimits();
       } catch (e) {
         logging.error(`Failed to enforce access key limits: ${e}`);
       }
@@ -184,26 +184,26 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.saveAccessKeys();
   }
 
-  async setAccessKeyLimit(id: AccessKeyId, limit: AccessKeyLimit) {
-    if (!isValidAccessKeyLimit(limit)) {
-      throw new errors.InvalidAccessKeyLimit();
+  async setAccessKeyDataLimit(id: AccessKeyId, limit: AccessKeyDataLimit) {
+    if (!isValidAccessKeyDataLimit(limit)) {
+      throw new errors.InvalidAccessKeyDataLimit();
     }
     const accessKey = this.getAccessKey(id);
-    accessKey.limitUsage = {limit, usage: {bytes: 0}};
+    accessKey.dataLimitUsage = {limit, usage: {bytes: 0}};
     this.saveAccessKeys();
-    const limitStautsChanged = await this.updateAccessKeyLimitStatus(accessKey);
+    const limitStautsChanged = await this.updateAccessKeyDataLimitStatus(accessKey);
     if (limitStautsChanged) {
       // Reflect the access key limit status if it changed with the new limit.
       await this.updateServer();
     }
   }
 
-  async removeAccessKeyLimit(id: AccessKeyId) {
+  async removeAccessKeyDataLimit(id: AccessKeyId) {
     const accessKey = this.getAccessKey(id);
-    const wasOverLimit = accessKey.isOverLimit();
-    accessKey.limitUsage = undefined;
+    const wasOverDataLimit = accessKey.isOverDataLimit();
+    accessKey.dataLimitUsage = undefined;
     this.saveAccessKeys();
-    if (wasOverLimit) {
+    if (wasOverDataLimit) {
       await this.updateServer();
     }
   }
@@ -214,33 +214,34 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   // Compares access key usage with collected metrics, marking them as under or over limit.
-  async enforceAccessKeyLimits() {
+  async enforceAccessKeyDataLimits() {
     let limitStatusChanged = false;
     for (const accessKey of this.accessKeys) {
-      limitStatusChanged = await this.updateAccessKeyLimitStatus(accessKey) || limitStatusChanged;
+      limitStatusChanged =
+          await this.updateAccessKeyDataLimitStatus(accessKey) || limitStatusChanged;
     }
     if (limitStatusChanged) {
       await this.updateServer();
     }
   }
 
-  // Updates `accessKey` limit status by comparing its usage with collected metrics. Returns whether
-  // the limit status changed.
-  private async updateAccessKeyLimitStatus(accessKey: ServerAccessKey): Promise<boolean> {
-    if (!accessKey.limitUsage) {
+  // Updates `accessKey` data limit status by comparing its usage with collected metrics.
+  // Returns whether the data limit status changed.
+  private async updateAccessKeyDataLimitStatus(accessKey: ServerAccessKey): Promise<boolean> {
+    if (!accessKey.dataLimitUsage) {
       return false;  // Don't query the usage of access keys without limit.
     }
-    const wasOverLimit = accessKey.isOverLimit();
+    const wasOverDataLimit = accessKey.isOverDataLimit();
     const bytesTransferred = await this.getOutboundByteTransfer(
-        accessKey.id, accessKey.limitUsage.limit.timeframe.hours);
-    accessKey.limitUsage.usage.bytes = bytesTransferred;
-    const isOverLimit = accessKey.isOverLimit();
-    const limitStatusChanged = isOverLimit !== wasOverLimit;
-    if (limitStatusChanged) {
+        accessKey.id, accessKey.dataLimitUsage.limit.timeframe.hours);
+    accessKey.dataLimitUsage.usage.bytes = bytesTransferred;
+    const isOverDataLimit = accessKey.isOverDataLimit();
+    const dataLimitStatusChanged = isOverDataLimit !== wasOverDataLimit;
+    if (dataLimitStatusChanged) {
       logging.debug(`Access key "${accessKey.id}" limit status changed. Limit: ${
-          JSON.stringify(accessKey.limitUsage)}, isOverLimit: ${isOverLimit}`);
+          JSON.stringify(accessKey.dataLimitUsage)}, isOverDataLimit: ${isOverDataLimit}`);
     }
-    return limitStatusChanged;
+    return dataLimitStatusChanged;
   }
 
   // Retrieves access key outbound data transfer in bytes for `accessKeyId` over `timeframeHours`
@@ -259,7 +260,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private updateServer(): Promise<void> {
-    const serverAccessKeys = this.accessKeys.filter(key => !key.isOverLimit()).map(key => {
+    const serverAccessKeys = this.accessKeys.filter(key => !key.isOverDataLimit()).map(key => {
       return {
         id: key.id,
         port: key.proxyParams.portNumber,
