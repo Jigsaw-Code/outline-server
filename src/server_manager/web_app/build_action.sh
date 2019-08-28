@@ -56,3 +56,5 @@ cp -r $OUT_DIR/browserified/* $STATIC_DIR/
 
 # Copy static resources
 cp -r $ROOT_DIR/src/server_manager/{bower_components,ui_components,index.html,images,messages} $STATIC_DIR
+# Generate CSS rules to mirror the UI in RTL languages.
+node -e "require('./scripts/generate_rtl_css.js')('$STATIC_DIR/ui_components/*.html', '$STATIC_DIR/ui_components')"

@@ -122,7 +122,10 @@
           display: none;
         }
       }
+      /* rtl:ignore */
       .code, #command, paper-textarea {
+        direction: ltr;
+        text-align: left;
         @apply --code-mixin;
       }
       iron-icon {

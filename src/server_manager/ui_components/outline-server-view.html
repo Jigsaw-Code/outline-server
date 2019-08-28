@@ -331,6 +331,11 @@
       .flex-1 {
         flex: 1;
       }
+      /* Mirror icons */
+      :host(:dir(rtl)) iron-icon, :host(:dir(rtl)) .share-button,
+      :host(:dir(rtl)) .access-key-icon {
+        transform: scaleX(-1);
+      }
     </style>
 
     <div class="container">
@@ -719,6 +724,9 @@
         let utilizationPercentage = 0;
         if (monthlyLimitBytes && numBytes) {
           utilizationPercentage = Math.round(numBytes / monthlyLimitBytes * 100);
+        }
+        if (document.documentElement.dir === 'rtl') {
+          return `%${utilizationPercentage}`;
         }
         return `${utilizationPercentage}%`
       },
