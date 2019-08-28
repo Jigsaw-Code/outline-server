@@ -27,19 +27,19 @@ export interface ProxyParams {
   readonly password: string;
 }
 
-// Parameters needed to limit access key data usage over a sliding window.
-export interface AccessKeyQuota {
+// Parameters needed to limit access key data usage over a sliding timeframe.
+export interface AccessKeyDataLimit {
   // The allowed metered data transfer measured in bytes.
   readonly data: {bytes: number};
-  // The sliding window size in hours.
-  readonly window: {hours: number};
+  // The sliding timeframe size in hours.
+  readonly timeframe: {hours: number};
 }
 
-// Parameters needed to enforce an access key data transfer quota.
-export interface AccessKeyQuotaUsage {
-  // Data transfer quota on this access key.
-  readonly quota: AccessKeyQuota;
-  // Data transferred by this access key over the quota window.
+// Parameters needed to enforce an access key data transfer limit.
+export interface AccessKeyDataLimitUsage {
+  // Data transfer limit on this access key.
+  readonly limit: AccessKeyDataLimit;
+  // Data transferred by this access key over the limit timeframe.
   readonly usage: {bytes: number};
 }
 
@@ -53,28 +53,27 @@ export interface AccessKey {
   readonly metricsId: AccessKeyMetricsId;
   // Parameters to access the proxy
   readonly proxyParams: ProxyParams;
-  // Admin-controlled, data transfer quota for this access key. Unlimited if unset.
-  readonly quotaUsage?: AccessKeyQuotaUsage;
-  // Returns whether the access key has exceeded its data transfer quota.
-  isOverQuota(): boolean;
+  // Admin-controlled, data transfer limit for this access key. Unlimited if unset.
+  readonly dataLimitUsage?: AccessKeyDataLimitUsage;
+  // Returns whether the access key has exceeded its data transfer limit.
+  isOverDataLimit(): boolean;
 }
 
 export interface AccessKeyRepository {
   // Creates a new access key. Parameters are chosen automatically.
   createNewAccessKey(): Promise<AccessKey>;
-  // Removes the access key given its id.  Returns true if successful.
-  removeAccessKey(id: AccessKeyId): boolean;
+  // Removes the access key given its id. Throws on failure.
+  removeAccessKey(id: AccessKeyId);
   // Lists all existing access keys
   listAccessKeys(): AccessKey[];
   // Changes the port for new access keys.
   setPortForNewAccessKeys(port: number): Promise<void>;
-  // Apply the specified update to the specified access key.
-  // Returns true if successful.
-  renameAccessKey(id: AccessKeyId, name: string): boolean;
+  // Apply the specified update to the specified access key. Throws on failure.
+  renameAccessKey(id: AccessKeyId, name: string): void;
   // Gets the metrics id for a given Access Key.
   getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined;
-  // Sets the transfer quota for the specified access key. Returns true if successful.
-  setAccessKeyQuota(id: AccessKeyId, quota: AccessKeyQuota): Promise<boolean>;
-  // Clears the transfer quota for the specified access key. Returns true if successful.
-  removeAccessKeyQuota(id: AccessKeyId): Promise<boolean>;
+  // Sets the transfer limit for the specified access key. Throws on failure.
+  setAccessKeyDataLimit(id: AccessKeyId, limit: AccessKeyDataLimit): Promise<void>;
+  // Clears the transfer limit for the specified access key. Throws on failure.
+  removeAccessKeyDataLimit(id: AccessKeyId): Promise<void>;
 }

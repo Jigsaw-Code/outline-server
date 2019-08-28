@@ -20,7 +20,7 @@ import {isPortUsed} from '../infrastructure/get_port';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
-import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyQuota, AccessKeyQuotaUsage, AccessKeyRepository, ProxyParams} from '../model/access_key';
+import {AccessKey, AccessKeyDataLimit, AccessKeyDataLimitUsage, AccessKeyId, AccessKeyMetricsId, AccessKeyRepository, ProxyParams} from '../model/access_key';
 import * as errors from '../model/errors';
 import {ShadowsocksServer} from '../model/shadowsocks_server';
 
@@ -32,7 +32,7 @@ interface AccessKeyJson {
   password: string;
   port: number;
   encryptionMethod?: string;
-  quota?: AccessKeyQuota;
+  limit?: AccessKeyDataLimit;
 }
 
 // The configuration file format as json.
@@ -46,14 +46,20 @@ export interface AccessKeyConfigJson {
 class ServerAccessKey implements AccessKey {
   constructor(
       readonly id: AccessKeyId, public name: string, public metricsId: AccessKeyMetricsId,
-      readonly proxyParams: ProxyParams, public quotaUsage?: AccessKeyQuotaUsage) {}
+      readonly proxyParams: ProxyParams, public dataLimitUsage?: AccessKeyDataLimitUsage) {}
 
-  isOverQuota(): boolean {
-    if (!this.quotaUsage) {
+  isOverDataLimit(): boolean {
+    if (!this.dataLimitUsage) {
       return false;
     }
-    return this.quotaUsage.usage.bytes > this.quotaUsage.quota.data.bytes;
+    return this.dataLimitUsage.usage.bytes > this.dataLimitUsage.limit.data.bytes;
   }
+}
+
+function isValidAccessKeyDataLimit(limit: AccessKeyDataLimit) {
+  return limit && limit.data && limit.timeframe && Number.isInteger(limit.data.bytes) &&
+      limit.data.bytes >= 0 && Number.isInteger(limit.timeframe.hours) &&
+      limit.timeframe.hours >= 0;
 }
 
 // Generates a random password for Shadowsocks access keys.
@@ -68,10 +74,10 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyJson): AccessKe
     encryptionMethod: accessKeyJson.encryptionMethod,
     password: accessKeyJson.password,
   };
-  const quotaUsage =
-      accessKeyJson.quota ? {quota: accessKeyJson.quota, usage: {bytes: 0}} : undefined;
+  const dataLimitUsage =
+      accessKeyJson.limit ? {limit: accessKeyJson.limit, usage: {bytes: 0}} : undefined;
   return new ServerAccessKey(
-      accessKeyJson.id, accessKeyJson.name, accessKeyJson.metricsId, proxyParams, quotaUsage);
+      accessKeyJson.id, accessKeyJson.name, accessKeyJson.metricsId, proxyParams, dataLimitUsage);
 }
 
 function makeAccessKeyJson(accessKey: AccessKey): AccessKeyJson {
@@ -82,7 +88,7 @@ function makeAccessKeyJson(accessKey: AccessKey): AccessKeyJson {
     password: accessKey.proxyParams.password,
     port: accessKey.proxyParams.portNumber,
     encryptionMethod: accessKey.proxyParams.encryptionMethod,
-    quota: accessKey.quotaUsage ? accessKey.quotaUsage.quota : undefined
+    limit: accessKey.dataLimitUsage ? accessKey.dataLimitUsage.limit : undefined
   };
 }
 
@@ -90,7 +96,7 @@ function makeAccessKeyJson(accessKey: AccessKey): AccessKeyJson {
 // to start and stop per-access-key Shadowsocks instances.  Requires external validation
 // that portForNewAccessKeys is valid.
 export class ServerAccessKeyRepository implements AccessKeyRepository {
-  private static QUOTA_ENFORCEMENT_INTERVAL_MS = 60 * 60 * 1000;  // 1h
+  private static LIMIT_ENFORCEMENT_INTERVAL_MS = 60 * 60 * 1000;  // 1h
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
   private accessKeys: ServerAccessKey[];
 
@@ -108,17 +114,17 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   // Starts the Shadowsocks server and exposes the access key configuration to the server.
-  // Periodically enforces access key quotas.
+  // Periodically enforces access key limits.
   async start(clock: Clock): Promise<void> {
-    await this.enforceAccessKeyQuotas();
+    await this.enforceAccessKeyDataLimits();
     await this.updateServer();
     clock.setInterval(async () => {
       try {
-        await this.enforceAccessKeyQuotas();
+        await this.enforceAccessKeyDataLimits();
       } catch (e) {
-        logging.error(`Failed to enforce access key quotas: ${e}`);
+        logging.error(`Failed to enforce access key limits: ${e}`);
       }
-    }, ServerAccessKeyRepository.QUOTA_ENFORCEMENT_INTERVAL_MS);
+    }, ServerAccessKeyRepository.LIMIT_ENFORCEMENT_INTERVAL_MS);
   }
 
   private isExistingAccessKeyPort(port: number): boolean {
@@ -155,75 +161,51 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     return accessKey;
   }
 
-  removeAccessKey(id: AccessKeyId): boolean {
+  removeAccessKey(id: AccessKeyId) {
     for (let ai = 0; ai < this.accessKeys.length; ai++) {
       const accessKey = this.accessKeys[ai];
       if (accessKey.id === id) {
         this.accessKeys.splice(ai, 1);
         this.saveAccessKeys();
         this.updateServer();
-        return true;
+        return;
       }
     }
-    return false;
+    throw new errors.AccessKeyNotFound(id);
   }
 
   listAccessKeys(): AccessKey[] {
     return [...this.accessKeys];  // Return a copy of the access key array.
   }
 
-  renameAccessKey(id: AccessKeyId, name: string): boolean {
+  renameAccessKey(id: AccessKeyId, name: string) {
     const accessKey = this.getAccessKey(id);
-    if (!accessKey) {
-      return false;
-    }
     accessKey.name = name;
-    try {
-      this.saveAccessKeys();
-    } catch (error) {
-      return false;
-    }
-    return true;
+    this.saveAccessKeys();
   }
 
-  async setAccessKeyQuota(id: AccessKeyId, quota: AccessKeyQuota): Promise<boolean> {
-    if (!quota || !quota.data || !quota.window || quota.data.bytes < 0 || quota.window.hours < 0) {
-      return false;
+  async setAccessKeyDataLimit(id: AccessKeyId, limit: AccessKeyDataLimit) {
+    if (!isValidAccessKeyDataLimit(limit)) {
+      throw new errors.InvalidAccessKeyDataLimit();
     }
     const accessKey = this.getAccessKey(id);
-    if (!accessKey) {
-      return false;
+    accessKey.dataLimitUsage = {limit, usage: {bytes: 0}};
+    this.saveAccessKeys();
+    const limitStautsChanged = await this.updateAccessKeyDataLimitStatus(accessKey);
+    if (limitStautsChanged) {
+      // Reflect the access key limit status if it changed with the new limit.
+      await this.updateServer();
     }
-    accessKey.quotaUsage = {quota, usage: {bytes: 0}};
-    try {
-      this.saveAccessKeys();
-      const quotaStautsChanged = await this.updateAccessKeyQuotaStatus(accessKey);
-      if (quotaStautsChanged) {
-        // Reflect the access key quota status if it changed with the new quota.
-        await this.updateServer();
-      }
-    } catch (error) {
-      return false;
-    }
-    return true;
   }
 
-  async removeAccessKeyQuota(id: AccessKeyId): Promise<boolean> {
+  async removeAccessKeyDataLimit(id: AccessKeyId) {
     const accessKey = this.getAccessKey(id);
-    if (!accessKey) {
-      return false;
+    const wasOverDataLimit = accessKey.isOverDataLimit();
+    accessKey.dataLimitUsage = undefined;
+    this.saveAccessKeys();
+    if (wasOverDataLimit) {
+      await this.updateServer();
     }
-    const wasOverQuota = accessKey.isOverQuota();
-    accessKey.quotaUsage = undefined;
-    try {
-      this.saveAccessKeys();
-      if (wasOverQuota) {
-        await this.updateServer();
-      }
-    } catch (error) {
-      return false;
-    }
-    return true;
   }
 
   getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined {
@@ -231,44 +213,45 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     return accessKey ? accessKey.metricsId : undefined;
   }
 
-  // Compares access key usage with collected metrics, marking them as under or over quota.
-  async enforceAccessKeyQuotas() {
-    let quotaStatusChanged = false;
+  // Compares access key usage with collected metrics, marking them as under or over limit.
+  async enforceAccessKeyDataLimits() {
+    let limitStatusChanged = false;
     for (const accessKey of this.accessKeys) {
-      quotaStatusChanged = quotaStatusChanged || await this.updateAccessKeyQuotaStatus(accessKey);
+      limitStatusChanged =
+          await this.updateAccessKeyDataLimitStatus(accessKey) || limitStatusChanged;
     }
-    if (quotaStatusChanged) {
-      this.updateServer();
+    if (limitStatusChanged) {
+      await this.updateServer();
     }
   }
 
-  // Updates `accessKey` quota status by comparing its usage with collected metrics. Returns whether
-  // the quota status changed.
-  private async updateAccessKeyQuotaStatus(accessKey: ServerAccessKey): Promise<boolean> {
-    if (!accessKey.quotaUsage) {
-      return false;  // Don't query the usage of access keys without quota.
+  // Updates `accessKey` data limit status by comparing its usage with collected metrics.
+  // Returns whether the data limit status changed.
+  private async updateAccessKeyDataLimitStatus(accessKey: ServerAccessKey): Promise<boolean> {
+    if (!accessKey.dataLimitUsage) {
+      return false;  // Don't query the usage of access keys without limit.
     }
-    const wasOverQuota = accessKey.isOverQuota();
-    const bytesTransferred =
-        await this.getOutboundByteTransfer(accessKey.id, accessKey.quotaUsage.quota.window.hours);
-    accessKey.quotaUsage.usage.bytes = bytesTransferred;
-    const isOverQuota = accessKey.isOverQuota();
-    const quotaStatusChanged = isOverQuota !== wasOverQuota;
-    if (quotaStatusChanged) {
-      logging.debug(`Access key "${accessKey.id}" quota status changed. Quota: ${
-          JSON.stringify(accessKey.quotaUsage)}, isOverQuota: ${isOverQuota}`);
+    const wasOverDataLimit = accessKey.isOverDataLimit();
+    const bytesTransferred = await this.getOutboundByteTransfer(
+        accessKey.id, accessKey.dataLimitUsage.limit.timeframe.hours);
+    accessKey.dataLimitUsage.usage.bytes = bytesTransferred;
+    const isOverDataLimit = accessKey.isOverDataLimit();
+    const dataLimitStatusChanged = isOverDataLimit !== wasOverDataLimit;
+    if (dataLimitStatusChanged) {
+      logging.debug(`Access key "${accessKey.id}" limit status changed. Limit: ${
+          JSON.stringify(accessKey.dataLimitUsage)}, isOverDataLimit: ${isOverDataLimit}`);
     }
-    return quotaStatusChanged;
+    return dataLimitStatusChanged;
   }
 
-  // Retrieves access key outbound data transfer in bytes for `accessKeyId` over `windowHours`
+  // Retrieves access key outbound data transfer in bytes for `accessKeyId` over `timeframeHours`
   // from a Prometheus instance.
-  async getOutboundByteTransfer(accessKeyId: string, windowHours: number): Promise<number> {
+  async getOutboundByteTransfer(accessKeyId: string, timeframeHours: number): Promise<number> {
     const escapedAccessKeyId = JSON.stringify(accessKeyId);
     let bytesTransferred = 0;
     const result = await this.prometheusClient.query(
         `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t",access_key=${escapedAccessKeyId}}[${
-            windowHours}h])) by (access_key)`);
+            timeframeHours}h])) by (access_key)`);
     if (result && result.result[0] && result.result[0].metric['access_key'] === accessKeyId &&
         result.result[0].value && result.result[0].value.length > 1) {
       bytesTransferred = Math.round(parseFloat(result.result[0].value[1])) || 0;
@@ -277,7 +260,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private updateServer(): Promise<void> {
-    const serverAccessKeys = this.accessKeys.filter(key => !key.isOverQuota()).map(key => {
+    const serverAccessKeys = this.accessKeys.filter(key => !key.isOverDataLimit()).map(key => {
       return {
         id: key.id,
         port: key.proxyParams.portNumber,
@@ -293,21 +276,17 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private saveAccessKeys() {
-    try {
-      this.keyConfig.data().accessKeys = this.accessKeys.map(key => makeAccessKeyJson(key));
-      this.keyConfig.write();
-    } catch (error) {
-      throw new Error(`Failed to save access key config: ${error}`);
-    }
+    this.keyConfig.data().accessKeys = this.accessKeys.map(key => makeAccessKeyJson(key));
+    this.keyConfig.write();
   }
 
-  // Returns a reference to the access key with `id`, or undefined if the key is not found.
-  private getAccessKey(id: AccessKeyId): ServerAccessKey|undefined {
+  // Returns a reference to the access key with `id`, or throws if the key is not found.
+  private getAccessKey(id: AccessKeyId): ServerAccessKey {
     for (const accessKey of this.accessKeys) {
       if (accessKey.id === id) {
         return accessKey;
       }
     }
-    return undefined;
+    throw new errors.AccessKeyNotFound(id);
   }
 }

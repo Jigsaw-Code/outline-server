@@ -17,7 +17,7 @@ import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {AccessKey, AccessKeyQuota, AccessKeyRepository} from '../model/access_key';
+import {AccessKey, AccessKeyDataLimit, AccessKeyRepository} from '../model/access_key';
 import * as errors from '../model/errors';
 
 import {ManagerMetrics} from './manager_metrics';
@@ -42,7 +42,7 @@ function accessKeyToJson(accessKey: AccessKey) {
       password: accessKey.proxyParams.password,
       outline: 1,
     })),
-    quota: accessKey.quotaUsage ? accessKey.quotaUsage.quota : undefined
+    limit: accessKey.dataLimitUsage ? accessKey.dataLimitUsage.limit : undefined
   };
 }
 
@@ -52,7 +52,7 @@ interface RequestParams {
   id?: string;
   name?: string;
   metricsEnabled?: boolean;
-  quota?: AccessKeyQuota;
+  limit?: AccessKeyDataLimit;
   port?: number;
 }
 interface RequestType {
@@ -80,8 +80,10 @@ export function bindService(
 
   apiServer.del(`${apiPrefix}/access-keys/:id`, service.removeAccessKey.bind(service));
   apiServer.put(`${apiPrefix}/access-keys/:id/name`, service.renameAccessKey.bind(service));
-  apiServer.put(`${apiPrefix}/access-keys/:id/quota`, service.setAccessKeyQuota.bind(service));
-  apiServer.del(`${apiPrefix}/access-keys/:id/quota`, service.removeAccessKeyQuota.bind(service));
+  apiServer.put(
+      `${apiPrefix}/access-keys/:id/data-limit`, service.setAccessKeyDataLimit.bind(service));
+  apiServer.del(
+      `${apiPrefix}/access-keys/:id/data-limit`, service.removeAccessKeyDataLimit.bind(service));
 
   apiServer.get(`${apiPrefix}/metrics/transfer`, service.getDataUsage.bind(service));
   apiServer.get(`${apiPrefix}/metrics/enabled`, service.getShareMetrics.bind(service));
@@ -156,7 +158,7 @@ export class ShadowsocksManagerService {
   public async setPortForNewAccessKeys(req: RequestType, res: ResponseType, next: restify.Next):
       Promise<void> {
     try {
-      logging.debug(`setPort[ForNewAccessKeys request ${JSON.stringify(req.params)}`);
+      logging.debug(`setPortForNewAccessKeys request ${JSON.stringify(req.params)}`);
       if (!req.params.port) {
         return next(
             new restify.MissingParameterError({statusCode: 400}, 'Parameter `port` is missing'));
@@ -168,7 +170,6 @@ export class ShadowsocksManagerService {
             {statusCode: 400},
             `Expected an numeric port, instead got ${port} of type ${typeof port}`));
       }
-
       await this.accessKeys.setPortForNewAccessKeys(port);
       this.serverConfig.data().portForNewAccessKeys = port;
       this.serverConfig.write();
@@ -190,13 +191,14 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`removeAccessKey request ${JSON.stringify(req.params)}`);
       const accessKeyId = req.params.id;
-      if (!this.accessKeys.removeAccessKey(accessKeyId)) {
-        return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
-      }
+      this.accessKeys.removeAccessKey(accessKeyId);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
+      if (error instanceof errors.AccessKeyNotFound) {
+        return next(new restify.NotFoundError(error.message));
+      }
       return next(new restify.InternalServerError());
     }
   }
@@ -205,54 +207,53 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`renameAccessKey request ${JSON.stringify(req.params)}`);
       const accessKeyId = req.params.id;
-      if (!this.accessKeys.renameAccessKey(accessKeyId, req.params.name)) {
-        return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
-      }
+      this.accessKeys.renameAccessKey(accessKeyId, req.params.name);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
+      if (error instanceof errors.AccessKeyNotFound) {
+        return next(new restify.NotFoundError(error.message));
+      }
       return next(new restify.InternalServerError());
     }
   }
 
-  public async setAccessKeyQuota(req: RequestType, res: ResponseType, next: restify.Next) {
+  public async setAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      logging.debug(`setAccessKeyQuota request ${JSON.stringify(req.params)}`);
+      logging.debug(`setAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
       const accessKeyId = req.params.id;
-      const quota = req.params.quota;
-      // TODO(alalama): remove these checks once the repository supports typed errors.
-      if (!quota || !quota.data || !quota.window) {
-        return next(new restify.InvalidArgumentError(
-            'Must provide a quota value with "data.bytes" and "window.hours"'));
+      const limit = req.params.limit;
+      if (!limit) {
+        return next(
+            new restify.MissingParameterError({statusCode: 400}, 'Missing `limit` parameter'));
       }
-      if (quota.data.bytes < 0 || quota.window.hours < 0) {
-        return next(new restify.InvalidArgumentError('Must provide positive quota values'));
-      }
-      const success = await this.accessKeys.setAccessKeyQuota(accessKeyId, quota);
-      if (!success) {
-        return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
-      }
+      await this.accessKeys.setAccessKeyDataLimit(accessKeyId, limit);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
+      if (error instanceof errors.InvalidAccessKeyDataLimit) {
+        return next(new restify.InvalidArgumentError({statusCode: 400}, error.message));
+      } else if (error instanceof errors.AccessKeyNotFound) {
+        return next(new restify.NotFoundError(error.message));
+      }
       return next(new restify.InternalServerError());
     }
   }
 
-  public async removeAccessKeyQuota(req: RequestType, res: ResponseType, next: restify.Next) {
+  public async removeAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      logging.debug(`removeAccessKeyQuota request ${JSON.stringify(req.params)}`);
+      logging.debug(`removeAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
       const accessKeyId = req.params.id;
-      const success = await this.accessKeys.removeAccessKeyQuota(accessKeyId);
-      if (!success) {
-        return next(new restify.NotFoundError(`No access key found with id ${accessKeyId}`));
-      }
+      await this.accessKeys.removeAccessKeyDataLimit(accessKeyId);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
+      if (error instanceof errors.AccessKeyNotFound) {
+        return next(new restify.NotFoundError(error.message));
+      }
       return next(new restify.InternalServerError());
     }
   }

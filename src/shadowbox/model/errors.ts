@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-class ShadowboxError extends Error {
+class OutlineError extends Error {
   constructor(message: string) {
     super(message);
     // https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-2.html#support-for-newtarget
@@ -20,15 +20,28 @@ class ShadowboxError extends Error {
   }
 }
 
-export class InvalidPortNumber extends ShadowboxError {
+export class InvalidPortNumber extends OutlineError {
   // Since this is the error when a non-numeric value is passed to `port`, it takes type `string`.
   constructor(public port: string) {
     super(port);
   }
 }
 
-export class PortUnavailable extends ShadowboxError {
+export class PortUnavailable extends OutlineError {
   constructor(public port: number) {
     super(port.toString());
+  }
+}
+
+export class AccessKeyNotFound extends OutlineError {
+  constructor(accessKeyId?: string) {
+    super(`Access key "${accessKeyId}" not found`);
+  }
+}
+
+export class InvalidAccessKeyDataLimit extends OutlineError {
+  constructor() {
+    super(
+        'Must provide a limit value with positive integer values for "data.bytes" and "timeframe.hours"');
   }
 }
