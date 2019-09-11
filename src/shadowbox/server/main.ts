@@ -142,7 +142,7 @@ async function main() {
   }
   const accessKeyRepository = new ServerAccessKeyRepository(
       serverConfig.data().portForNewAccessKeys, proxyHostname, accessKeyConfig, shadowsocksServer,
-      prometheusClient);
+      prometheusClient, serverConfig.data().dataUsageTimeframe);
 
   const metricsReader = new PrometheusUsageMetrics(prometheusClient);
   const toMetricsId = (id: AccessKeyId) => {

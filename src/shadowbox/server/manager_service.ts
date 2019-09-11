@@ -54,6 +54,7 @@ interface RequestParams {
   metricsEnabled?: boolean;
   limit?: AccessKeyDataLimit;
   port?: number;
+  hours?: number;
 }
 interface RequestType {
   params: RequestParams;
@@ -74,6 +75,8 @@ export function bindService(
   apiServer.put(
       `${apiPrefix}/server/port-for-new-access-keys`,
       service.setPortForNewAccessKeys.bind(service));
+  apiServer.put(
+      `${apiPrefix}/server/data-usage-timeframe`, service.setDataUsageTimeframe.bind(service));
 
   apiServer.post(`${apiPrefix}/access-keys`, service.createNewAccessKey.bind(service));
   apiServer.get(`${apiPrefix}/access-keys`, service.listAccessKeys.bind(service));
@@ -122,7 +125,8 @@ export class ShadowsocksManagerService {
       serverId: this.serverConfig.data().serverId,
       metricsEnabled: this.serverConfig.data().metricsEnabled || false,
       createdTimestampMs: this.serverConfig.data().createdTimestampMs,
-      portForNewAccessKeys: this.serverConfig.data().portForNewAccessKeys
+      portForNewAccessKeys: this.serverConfig.data().portForNewAccessKeys,
+      dataUsageTimeframe: this.serverConfig.data().dataUsageTimeframe
     });
     next();
   }
@@ -258,9 +262,33 @@ export class ShadowsocksManagerService {
     }
   }
 
+  public async setDataUsageTimeframe(req: RequestType, res: ResponseType, next: restify.Next) {
+    try {
+      logging.debug(`setDataUsageTimeframe request ${JSON.stringify(req.params)}`);
+      const hours = req.params.hours;
+      if (!hours) {
+        return next(
+            new restify.MissingParameterError({statusCode: 400}, 'Missing `hours` parameter'));
+      }
+      const dataUsageTimeframe = {hours};
+      await this.accessKeys.setDataLimitTimeframe(dataUsageTimeframe);
+      this.serverConfig.data().dataUsageTimeframe = dataUsageTimeframe;
+      this.serverConfig.write();
+      res.send(HttpSuccess.NO_CONTENT);
+      return next();
+    } catch (error) {
+      logging.error(error);
+      if (error instanceof errors.InvalidDataLimitTimeframe) {
+        return next(new restify.InvalidArgumentError({statusCode: 400}, error.message));
+      }
+      return next(new restify.InternalServerError());
+    }
+  }
+
   public async getDataUsage(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      res.send(HttpSuccess.OK, await this.managerMetrics.get30DayByteTransfer());
+      const timeframe = this.serverConfig.data().dataUsageTimeframe;
+      res.send(HttpSuccess.OK, await this.managerMetrics.getOutboundByteTransfer(timeframe));
       return next();
     } catch (error) {
       logging.error(error);

@@ -151,7 +151,7 @@ export interface AccessKey {
   accessUrl: string;
 }
 
-// Byte transfer stats for the past 30 days, including both inbound and outbound.
+// Byte transfer stats for a sliding timeframe, including both inbound and outbound.
 // TODO: this is copied at src/shadowbox/model/metrics.ts.  Both copies should
 // be kept in sync, until we can find a way to share code between the web_app
 // and shadowbox.

@@ -122,7 +122,7 @@ curl --insecure -X DELETE $API_URL/access-keys/2
 Set an access key data limit
 (e.g. limit outbound data transfer for access key 2 to 1MB over a 24 hour sliding timeframe)
 ```
-curl -v --insecure -X PUT -H "Content-Type: application/json" -d '{"limit": {"data": {"bytes": 1000}, "timeframe": {"hours": 1}}}' $API_URL/access-keys/2/data-limit
+curl -v --insecure -X PUT -H "Content-Type: application/json" -d '{"limit": {"bytes": 1000}}' $API_URL/access-keys/2/data-limit
 ```
 
 Remove an access key data limit

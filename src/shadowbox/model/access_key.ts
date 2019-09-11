@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {DataUsageTimeframe} from '../model/metrics';
+
 export type AccessKeyId = string;
 export type AccessKeyMetricsId = string;
 
@@ -27,20 +29,15 @@ export interface ProxyParams {
   readonly password: string;
 }
 
-// Parameters needed to limit access key data usage over a sliding timeframe.
-export interface AccessKeyDataLimit {
-  // The allowed metered data transfer measured in bytes.
-  readonly data: {bytes: number};
-  // The sliding timeframe size in hours.
-  readonly timeframe: {hours: number};
-}
+// Data transfer limit measured in bytes.
+export interface AccessKeyDataLimit { readonly bytes: number; }
 
-// Parameters needed to enforce an access key data transfer limit.
+// Parameters needed to limit access key data usage.
 export interface AccessKeyDataLimitUsage {
   // Data transfer limit on this access key.
   readonly limit: AccessKeyDataLimit;
-  // Data transferred by this access key over the limit timeframe.
-  readonly usage: {bytes: number};
+  // Data transferred by this access key over a timeframe specified by the server.
+  usageBytes: number;
 }
 
 // AccessKey is what admins work with. It gives ProxyParams a name and identity.
@@ -76,4 +73,6 @@ export interface AccessKeyRepository {
   setAccessKeyDataLimit(id: AccessKeyId, limit: AccessKeyDataLimit): Promise<void>;
   // Clears the transfer limit for the specified access key. Throws on failure.
   removeAccessKeyDataLimit(id: AccessKeyId): Promise<void>;
+  // Sets the data usage timeframe for access key data limit enforcement. Throws on failure.
+  setDataLimitTimeframe(timeframe: DataUsageTimeframe): Promise<void>;
 }

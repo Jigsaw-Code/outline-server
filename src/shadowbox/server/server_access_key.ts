@@ -22,7 +22,9 @@ import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {AccessKey, AccessKeyDataLimit, AccessKeyDataLimitUsage, AccessKeyId, AccessKeyMetricsId, AccessKeyRepository, ProxyParams} from '../model/access_key';
 import * as errors from '../model/errors';
+import {DataUsageTimeframe} from '../model/metrics';
 import {ShadowsocksServer} from '../model/shadowsocks_server';
+import {PrometheusManagerMetrics} from './manager_metrics';
 
 // The format as json of access keys in the config file.
 interface AccessKeyJson {
@@ -52,14 +54,12 @@ class ServerAccessKey implements AccessKey {
     if (!this.dataLimitUsage) {
       return false;
     }
-    return this.dataLimitUsage.usage.bytes > this.dataLimitUsage.limit.data.bytes;
+    return this.dataLimitUsage.usageBytes > this.dataLimitUsage.limit.bytes;
   }
 }
 
 function isValidAccessKeyDataLimit(limit: AccessKeyDataLimit) {
-  return limit && limit.data && limit.timeframe && Number.isInteger(limit.data.bytes) &&
-      limit.data.bytes >= 0 && Number.isInteger(limit.timeframe.hours) &&
-      limit.timeframe.hours >= 0;
+  return limit && Number.isInteger(limit.bytes) && limit.bytes >= 0;
 }
 
 // Generates a random password for Shadowsocks access keys.
@@ -75,7 +75,7 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyJson): AccessKe
     password: accessKeyJson.password,
   };
   const dataLimitUsage =
-      accessKeyJson.limit ? {limit: accessKeyJson.limit, usage: {bytes: 0}} : undefined;
+      accessKeyJson.limit ? {limit: accessKeyJson.limit, usageBytes: 0} : undefined;
   return new ServerAccessKey(
       accessKeyJson.id, accessKeyJson.name, accessKeyJson.metricsId, proxyParams, dataLimitUsage);
 }
@@ -96,14 +96,15 @@ function makeAccessKeyJson(accessKey: AccessKey): AccessKeyJson {
 // to start and stop per-access-key Shadowsocks instances.  Requires external validation
 // that portForNewAccessKeys is valid.
 export class ServerAccessKeyRepository implements AccessKeyRepository {
-  private static LIMIT_ENFORCEMENT_INTERVAL_MS = 60 * 60 * 1000;  // 1h
+  private static DATA_LIMITS_ENFORCEMENT_INTERVAL_MS = 60 * 60 * 1000;  // 1h
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
   private accessKeys: ServerAccessKey[];
 
   constructor(
       private portForNewAccessKeys: number, private proxyHostname: string,
       private keyConfig: JsonConfig<AccessKeyConfigJson>,
-      private shadowsocksServer: ShadowsocksServer, private prometheusClient: PrometheusClient) {
+      private shadowsocksServer: ShadowsocksServer, private prometheusClient: PrometheusClient,
+      private dataLimitTimeframe: DataUsageTimeframe) {
     if (this.keyConfig.data().accessKeys === undefined) {
       this.keyConfig.data().accessKeys = [];
     }
@@ -124,7 +125,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       } catch (e) {
         logging.error(`Failed to enforce access key limits: ${e}`);
       }
-    }, ServerAccessKeyRepository.LIMIT_ENFORCEMENT_INTERVAL_MS);
+    }, ServerAccessKeyRepository.DATA_LIMITS_ENFORCEMENT_INTERVAL_MS);
   }
 
   private isExistingAccessKeyPort(port: number): boolean {
@@ -189,10 +190,11 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       throw new errors.InvalidAccessKeyDataLimit();
     }
     const accessKey = this.getAccessKey(id);
-    accessKey.dataLimitUsage = {limit, usage: {bytes: 0}};
+    const wasOverDataLimit = accessKey.isOverDataLimit();
+    const bytesTransferred = await this.getOutboundByteTransfer(id);
+    accessKey.dataLimitUsage = {limit, usageBytes: bytesTransferred};
     this.saveAccessKeys();
-    const limitStautsChanged = await this.updateAccessKeyDataLimitStatus(accessKey);
-    if (limitStautsChanged) {
+    if (wasOverDataLimit !== accessKey.isOverDataLimit()) {
       // Reflect the access key limit status if it changed with the new limit.
       await this.updateServer();
     }
@@ -208,6 +210,18 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     }
   }
 
+  async setDataLimitTimeframe(timeframe: DataUsageTimeframe) {
+    if (!timeframe || !Number.isInteger(timeframe.hours) || timeframe.hours < 0) {
+      throw new errors.InvalidDataLimitTimeframe();
+    }
+    this.dataLimitTimeframe = timeframe;
+    await this.enforceAccessKeyDataLimits();
+  }
+
+  getDataLimitTimeframe(): DataUsageTimeframe {
+    return this.dataLimitTimeframe;
+  }
+
   getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined {
     const accessKey = this.getAccessKey(id);
     return accessKey ? accessKey.metricsId : undefined;
@@ -215,43 +229,32 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
 
   // Compares access key usage with collected metrics, marking them as under or over limit.
   async enforceAccessKeyDataLimits() {
+    const accessKeysWithDataLimits = this.accessKeys.filter(key => !!key.dataLimitUsage);
+    if (accessKeysWithDataLimits.length === 0) {
+      return;
+    }
+    const metrics = new PrometheusManagerMetrics(this.prometheusClient);
+    const bytesTransferredById =
+        (await metrics.getOutboundByteTransfer(this.dataLimitTimeframe)).bytesTransferredByUserId;
     let limitStatusChanged = false;
-    for (const accessKey of this.accessKeys) {
-      limitStatusChanged =
-          await this.updateAccessKeyDataLimitStatus(accessKey) || limitStatusChanged;
+    for (const accessKey of accessKeysWithDataLimits) {
+      const wasOverDataLimit = accessKey.isOverDataLimit();
+      accessKey.dataLimitUsage.usageBytes = bytesTransferredById[accessKey.id] || 0;
+      limitStatusChanged = accessKey.isOverDataLimit() !== wasOverDataLimit || limitStatusChanged;
     }
     if (limitStatusChanged) {
       await this.updateServer();
     }
   }
 
-  // Updates `accessKey` data limit status by comparing its usage with collected metrics.
-  // Returns whether the data limit status changed.
-  private async updateAccessKeyDataLimitStatus(accessKey: ServerAccessKey): Promise<boolean> {
-    if (!accessKey.dataLimitUsage) {
-      return false;  // Don't query the usage of access keys without limit.
-    }
-    const wasOverDataLimit = accessKey.isOverDataLimit();
-    const bytesTransferred = await this.getOutboundByteTransfer(
-        accessKey.id, accessKey.dataLimitUsage.limit.timeframe.hours);
-    accessKey.dataLimitUsage.usage.bytes = bytesTransferred;
-    const isOverDataLimit = accessKey.isOverDataLimit();
-    const dataLimitStatusChanged = isOverDataLimit !== wasOverDataLimit;
-    if (dataLimitStatusChanged) {
-      logging.debug(`Access key "${accessKey.id}" limit status changed. Limit: ${
-          JSON.stringify(accessKey.dataLimitUsage)}, isOverDataLimit: ${isOverDataLimit}`);
-    }
-    return dataLimitStatusChanged;
-  }
-
-  // Retrieves access key outbound data transfer in bytes for `accessKeyId` over `timeframeHours`
-  // from a Prometheus instance.
-  async getOutboundByteTransfer(accessKeyId: string, timeframeHours: number): Promise<number> {
+  // Retrieves access key outbound data transfer in bytes for `accessKeyId` from a Prometheus
+  // instance.
+  async getOutboundByteTransfer(accessKeyId: string): Promise<number> {
     const escapedAccessKeyId = JSON.stringify(accessKeyId);
     let bytesTransferred = 0;
     const result = await this.prometheusClient.query(
         `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t",access_key=${escapedAccessKeyId}}[${
-            timeframeHours}h])) by (access_key)`);
+            this.dataLimitTimeframe.hours}h])) by (access_key)`);
     if (result && result.result[0] && result.result[0].metric['access_key'] === accessKeyId &&
         result.result[0].value && result.result[0].value.length > 1) {
       bytesTransferred = Math.round(parseFloat(result.result[0].value[1])) || 0;

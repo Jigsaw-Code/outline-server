@@ -16,6 +16,7 @@ import * as net from 'net';
 
 import {InMemoryConfig} from '../infrastructure/json_config';
 import {AccessKey, AccessKeyDataLimit, AccessKeyRepository} from '../model/access_key';
+import {DataUsageTimeframe} from '../model/metrics';
 
 import {ShadowsocksManagerService} from './manager_service';
 import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
@@ -25,6 +26,7 @@ import {SharedMetricsPublisher} from './shared_metrics';
 
 interface ServerInfo {
   name: string;
+  dataUsageTimeframe: DataUsageTimeframe;
 }
 
 const NEW_PORT = 12345;
@@ -68,6 +70,22 @@ describe('ShadowsocksManagerService', () => {
             send: (httpCode, data: ServerInfo) => {
               expect(httpCode).toEqual(200);
               expect(data.name).toEqual('Server');
+              responseProcessed = true;
+            }
+          },
+          done);
+    });
+    it('Returns data usage timeframe in server config', (done) => {
+      const repo = getAccessKeyRepository();
+      const serverConfig = new InMemoryConfig({} as ServerConfigJson);
+      const timeframe = {hours: 24 * 30};
+      serverConfig.data().dataUsageTimeframe = timeframe;
+      const service = new ShadowsocksManagerService('default name', serverConfig, repo, null, null);
+      service.getServer(
+          {params: {}}, {
+            send: (httpCode, data: ServerInfo) => {
+              expect(httpCode).toEqual(200);
+              expect(data.dataUsageTimeframe).toEqual(timeframe);
               responseProcessed = true;
             }
           },
@@ -124,7 +142,7 @@ describe('ShadowsocksManagerService', () => {
       const service = new ShadowsocksManagerService('', null, repo, null, null);
       const accessKey = await repo.createNewAccessKey();
       await repo.createNewAccessKey();
-      const limit = {data: {bytes: 10000}, timeframe: {hours: 48}};
+      const limit = {bytes: 10000};
       await repo.setAccessKeyDataLimit(accessKey.id, limit);
       const accessKeyName = 'new name';
       await repo.renameAccessKey(accessKey.id, accessKeyName);
@@ -393,7 +411,7 @@ describe('ShadowsocksManagerService', () => {
       const accessKey = await repo.createNewAccessKey();
       expect(accessKey.dataLimitUsage).toBeUndefined();
       expect(accessKey.isOverDataLimit()).toBeFalsy();
-      const limit = {data: {bytes: 10000}, timeframe: {hours: 48}};
+      const limit = {bytes: 10000};
       const res = {
         send: (httpCode, data) => {
           expect(httpCode).toEqual(204);
@@ -408,16 +426,8 @@ describe('ShadowsocksManagerService', () => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
       const accessKey = await repo.createNewAccessKey();
-      let limit = {data: {bytes: 1}} as AccessKeyDataLimit;
+      const limit = {} as AccessKeyDataLimit;
       const res = {send: (httpCode, data) => {}};
-      await service.setAccessKeyDataLimit({params: {id: accessKey.id, limit}}, res, (error) => {
-        expect(error.statusCode).toEqual(400);
-      });
-      limit = {timeframe: {}} as AccessKeyDataLimit;
-      await service.setAccessKeyDataLimit({params: {id: accessKey.id, limit}}, res, (error) => {
-        expect(error.statusCode).toEqual(400);
-      });
-      limit = {timeframe: {hours: 1}} as AccessKeyDataLimit;
       service.setAccessKeyDataLimit({params: {id: accessKey.id, limit}}, res, (error) => {
         expect(error.statusCode).toEqual(400);
         responseProcessed = true;  // required for afterEach to pass.
@@ -428,12 +438,8 @@ describe('ShadowsocksManagerService', () => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
       const accessKey = await repo.createNewAccessKey();
-      let limit = {data: {bytes: -1}, timeframe: {hours: 24}};
+      const limit = {bytes: -1};
       const res = {send: (httpCode, data) => {}};
-      await service.setAccessKeyDataLimit({params: {id: accessKey.id, limit}}, res, (error) => {
-        expect(error.statusCode).toEqual(400);
-      });
-      limit = {data: {bytes: 1000}, timeframe: {hours: -24}};
       service.setAccessKeyDataLimit({params: {id: accessKey.id, limit}}, res, (error) => {
         expect(error.statusCode).toEqual(400);
         responseProcessed = true;  // required for afterEach to pass.
@@ -443,7 +449,7 @@ describe('ShadowsocksManagerService', () => {
     it('returns 404 when the access key is not found', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
-      const limit = {data: {bytes: 1000}, timeframe: {hours: 24}};
+      const limit = {bytes: 1000};
       const res = {send: (httpCode, data) => {}};
       service.setAccessKeyDataLimit({params: {id: 'doesnotexist', limit}}, res, (error) => {
         expect(error.statusCode).toEqual(404);
@@ -456,7 +462,7 @@ describe('ShadowsocksManagerService', () => {
       spyOn(repo, 'setAccessKeyDataLimit').and.throwError('cannot write to disk');
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
       const accessKey = await repo.createNewAccessKey();
-      const limit = {data: {bytes: 10000}, timeframe: {hours: 48}};
+      const limit = {bytes: 10000};
       const res = {send: (httpCode, data) => {}};
       service.setAccessKeyDataLimit({params: {id: accessKey.id, limit}}, res, (error) => {
         expect(error.statusCode).toEqual(500);
@@ -470,11 +476,11 @@ describe('ShadowsocksManagerService', () => {
     it('clears access key limit', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
-      const limit = {data: {bytes: 10000}, timeframe: {hours: 48}};
+      const limit = {bytes: 10000};
       const accessKey = await repo.createNewAccessKey();
       await repo.setAccessKeyDataLimit(accessKey.id, limit);
       expect(accessKey.dataLimitUsage.limit).toEqual(limit);
-      expect(accessKey.dataLimitUsage.usage.bytes).toEqual(0);
+      expect(accessKey.dataLimitUsage.usageBytes).toEqual(0);
       const res = {
         send: (httpCode, data) => {
           expect(httpCode).toEqual(204);
@@ -503,6 +509,55 @@ describe('ShadowsocksManagerService', () => {
       const res = {send: (httpCode, data) => {}};
       service.removeAccessKeyDataLimit({params: {id: accessKey.id}}, res, (error) => {
         expect(error.statusCode).toEqual(500);
+        responseProcessed = true;  // required for afterEach to pass.
+        done();
+      });
+    });
+  });
+
+  describe('setDataUsageTimeframe', () => {
+    it('sets data usage timeframe', (done) => {
+      const repo = getAccessKeyRepository();
+      const serverConfig = new InMemoryConfig({} as ServerConfigJson);
+      serverConfig.data().dataUsageTimeframe = {hours: 123};
+      const service = new ShadowsocksManagerService('default name', serverConfig, repo, null, null);
+      const hours = 456;
+      const res = {
+        send: (httpCode, data) => {
+          expect(httpCode).toEqual(204);
+          expect(serverConfig.data().dataUsageTimeframe.hours).toEqual(hours);
+          responseProcessed = true;  // required for afterEach to pass.
+        }
+      };
+      service.setDataUsageTimeframe({params: {hours}}, res, done);
+    });
+    it('returns 400 when the hours value is missing or invalid', async (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerService('default name', null, repo, null, null);
+      const res = {send: (httpCode, data) => {}};
+      await service.setDataUsageTimeframe({params: {}}, res, (error) => {
+        expect(error.statusCode).toEqual(400);
+      });
+      await service.setDataUsageTimeframe({params: {hours: -1}}, res, (error) => {
+        expect(error.statusCode).toEqual(400);
+      });
+      await service.setDataUsageTimeframe({params: {hours: 0.1}}, res, (error) => {
+        expect(error.statusCode).toEqual(400);
+        responseProcessed = true;  // required for afterEach to pass.
+        done();
+      });
+    });
+    it('returns 500 when the repository throws an exception', async (done) => {
+      const repo = getAccessKeyRepository();
+      spyOn(repo, 'setDataLimitTimeframe').and.throwError('cannot write to disk');
+      const serverConfig = new InMemoryConfig({} as ServerConfigJson);
+      const service = new ShadowsocksManagerService('default name', serverConfig, repo, null, null);
+      serverConfig.data().dataUsageTimeframe = {hours: 123};
+      const res = {send: (httpCode, data) => {}};
+      service.setDataUsageTimeframe({params: {hours: 456}}, res, (error) => {
+        expect(error.statusCode).toEqual(500);
+        // The change should not have been persisted.
+        expect(serverConfig.data().dataUsageTimeframe.hours).toEqual(123);
         responseProcessed = true;  // required for afterEach to pass.
         done();
       });
@@ -578,5 +633,5 @@ function fakeSharedMetricsReporter(): SharedMetricsPublisher {
 function getAccessKeyRepository(): AccessKeyRepository {
   return new ServerAccessKeyRepository(
       OLD_PORT, 'hostname', new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}),
-      new FakeShadowsocksServer(), new FakePrometheusClient({}));
+      new FakeShadowsocksServer(), new FakePrometheusClient({}), {hours: 24 * 30});
 }

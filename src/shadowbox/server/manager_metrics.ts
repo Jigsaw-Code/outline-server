@@ -13,23 +13,23 @@
 // limitations under the License.
 
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
-import {DataUsageByUser} from '../model/metrics';
+import {DataUsageByUser, DataUsageTimeframe} from '../model/metrics';
 
 export interface ManagerMetrics {
-  get30DayByteTransfer(): Promise<DataUsageByUser>;
+  getOutboundByteTransfer(timeframe: DataUsageTimeframe): Promise<DataUsageByUser>;
 }
 
 // Reads manager metrics from a Prometheus instance.
 export class PrometheusManagerMetrics implements ManagerMetrics {
   constructor(private prometheusClient: PrometheusClient) {}
 
-  async get30DayByteTransfer(): Promise<DataUsageByUser> {
+  async getOutboundByteTransfer(timeframe: DataUsageTimeframe): Promise<DataUsageByUser> {
     // TODO(fortuna): Consider pre-computing this to save server's CPU.
     // We measure only traffic leaving the server, since that's what DigitalOcean charges.
     // TODO: Display all directions to admin
-    // TODO: Remove >p< once ss-libev support is gone.
-    const result = await this.prometheusClient.query(
-        'sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t|>p<"}[30d])) by (access_key)');
+    const result =
+        await this.prometheusClient.query(`sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t"}[${
+            timeframe.hours}h])) by (access_key)`);
     const usage = {} as {[userId: string]: number};
     for (const entry of result.result) {
       const bytes = Math.round(parseFloat(entry.value[1]));
