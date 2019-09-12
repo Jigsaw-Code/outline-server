@@ -262,16 +262,19 @@ export class ShadowsocksManagerService {
     }
   }
 
-  public async setDataUsageTimeframe(req: RequestType, res: ResponseType, next: restify.Next) {
+  public setDataUsageTimeframe(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`setDataUsageTimeframe request ${JSON.stringify(req.params)}`);
       const hours = req.params.hours;
       if (hours === undefined) {  // The access key repository will validate the value.
         return next(
             new restify.MissingParameterError({statusCode: 400}, 'Missing `hours` parameter'));
+      } else if (!Number.isInteger(hours)) {
+        return next(new restify.InvalidArgumentError(
+            {statusCode: 400}, '`hours` must be an integer'));
       }
       const dataUsageTimeframe = {hours};
-      await this.accessKeys.setDataUsageTimeframe(dataUsageTimeframe);
+      this.accessKeys.setDataUsageTimeframe(dataUsageTimeframe);
       this.serverConfig.data().dataUsageTimeframe = dataUsageTimeframe;
       this.serverConfig.write();
       res.send(HttpSuccess.NO_CONTENT);
