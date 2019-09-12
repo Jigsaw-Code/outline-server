@@ -432,18 +432,18 @@ describe('ServerAccessKeyRepository', () => {
     done();
   });
 
-  it('getOutboundByteTransfer', async (done) => {
+  it('getUsageBytes', async (done) => {
     const prometheusClient = new FakePrometheusClient({'0': 1024});
     const repo = new RepoBuilder().prometheusClient(prometheusClient).build();
-    const bytesTransferred = await repo.getOutboundByteTransfer('0');
+    const bytesTransferred = await repo.getUsageBytes('0');
     expect(bytesTransferred).toEqual(1024);
     done();
   });
 
-  it('getOutboundByteTransfer returns zero when ID is missing', async (done) => {
+  it('getUsageBytes returns zero when ID is missing', async (done) => {
     const prometheusClient = new FakePrometheusClient({'0': 1024});
     const repo = new RepoBuilder().prometheusClient(prometheusClient).build();
-    const bytesTransferred = await repo.getOutboundByteTransfer('doesnotexist');
+    const bytesTransferred = await repo.getUsageBytes('doesnotexist');
     expect(bytesTransferred).toEqual(0);
     done();
   });

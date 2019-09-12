@@ -190,7 +190,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       throw new errors.InvalidAccessKeyDataLimit();
     }
     const accessKey = this.getAccessKey(id);
-    const usageBytes = await this.getOutboundByteTransfer(id);
+    const usageBytes = await this.getUsageBytes(id);
     const limitStatusChanged = this.updateAccessKeyDataLimitStatus(accessKey, {limit, usageBytes});
     this.saveAccessKeys();
     if (limitStatusChanged) {
@@ -258,7 +258,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
 
   // Retrieves access key outbound data transfer in bytes for `accessKeyId` from a Prometheus
   // instance.
-  async getOutboundByteTransfer(accessKeyId: string): Promise<number> {
+  async getUsageBytes(accessKeyId: string): Promise<number> {
     const escapedAccessKeyId = JSON.stringify(accessKeyId);
     let bytesTransferred = 0;
     const result = await this.prometheusClient.query(
