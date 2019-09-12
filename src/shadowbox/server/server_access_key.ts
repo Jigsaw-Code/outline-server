@@ -190,20 +190,17 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       throw new errors.InvalidAccessKeyDataLimit();
     }
     const accessKey = this.getAccessKey(id);
-    const wasOverDataLimit = accessKey.isOverDataLimit();
-    const bytesTransferred = await this.getOutboundByteTransfer(id);
-    accessKey.dataLimitUsage = {limit, usageBytes: bytesTransferred};
+    const usageBytes = await this.getOutboundByteTransfer(id);
+    const limitStatusChanged = this.updateAccessKeyDataLimitStatus(accessKey, {limit, usageBytes});
     this.saveAccessKeys();
-    if (wasOverDataLimit !== accessKey.isOverDataLimit()) {
-      // Reflect the access key limit status if it changed with the new limit.
+    if (limitStatusChanged) {
       await this.updateServer();
     }
   }
 
   async removeAccessKeyDataLimit(id: AccessKeyId) {
     const accessKey = this.getAccessKey(id);
-    const wasOverDataLimit = accessKey.isOverDataLimit();
-    accessKey.dataLimitUsage = undefined;
+    const wasOverDataLimit = this.updateAccessKeyDataLimitStatus(accessKey, undefined);
     this.saveAccessKeys();
     if (wasOverDataLimit) {
       await this.updateServer();
@@ -238,13 +235,25 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
         (await metrics.getOutboundByteTransfer(this.dataLimitTimeframe)).bytesTransferredByUserId;
     let limitStatusChanged = false;
     for (const accessKey of accessKeysWithDataLimits) {
-      const wasOverDataLimit = accessKey.isOverDataLimit();
-      accessKey.dataLimitUsage.usageBytes = bytesTransferredById[accessKey.id] || 0;
-      limitStatusChanged = accessKey.isOverDataLimit() !== wasOverDataLimit || limitStatusChanged;
+      const dataLimitUsage = {
+        limit: accessKey.dataLimitUsage.limit,
+        usageBytes: bytesTransferredById[accessKey.id] || 0
+      };
+      limitStatusChanged =
+          this.updateAccessKeyDataLimitStatus(accessKey, dataLimitUsage) || limitStatusChanged;
     }
     if (limitStatusChanged) {
       await this.updateServer();
     }
+  }
+
+  // Updates `accessKey` data limit status by recording `dataLimitUsage`.
+  // Returns whether the limit status changed.
+  private updateAccessKeyDataLimitStatus(
+      accessKey: ServerAccessKey, dataLimitUsage?: AccessKeyDataLimitUsage): boolean {
+    const wasOverDataLimit = accessKey.isOverDataLimit();
+    accessKey.dataLimitUsage = dataLimitUsage;
+    return accessKey.isOverDataLimit() !== wasOverDataLimit;
   }
 
   // Retrieves access key outbound data transfer in bytes for `accessKeyId` from a Prometheus
