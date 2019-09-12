@@ -448,18 +448,18 @@ describe('ServerAccessKeyRepository', () => {
     done();
   });
 
-  it('getDataLimitTimeframe returns the data limit timeframe', async (done) => {
+  it('getDataUsageTimeframe returns the data limit timeframe', async (done) => {
     const timeframe = {hours: 12345};
     const repo = new RepoBuilder().dataUsageTimeframe(timeframe).build();
-    expect(repo.getDataLimitTimeframe()).toEqual(timeframe);
+    expect(repo.getDataUsageTimeframe()).toEqual(timeframe);
     done();
   });
 
-  it('setDataLimitTimeframe sets the data limit timeframe', async (done) => {
+  it('setDataUsageTimeframe sets the data limit timeframe', async (done) => {
     const repo = new RepoBuilder().build();
     const timeframe = {hours: 12345};
-    await repo.setDataLimitTimeframe(timeframe);
-    expect(repo.getDataLimitTimeframe()).toEqual(timeframe);
+    await repo.setDataUsageTimeframe(timeframe);
+    expect(repo.getDataUsageTimeframe()).toEqual(timeframe);
     done();
   });
 });

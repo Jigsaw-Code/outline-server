@@ -207,7 +207,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     }
   }
 
-  async setDataLimitTimeframe(timeframe: DataUsageTimeframe) {
+  async setDataUsageTimeframe(timeframe: DataUsageTimeframe) {
     if (!timeframe || !Number.isInteger(timeframe.hours) || timeframe.hours <= 0) {
       throw new errors.InvalidDataLimitTimeframe();
     }
@@ -215,7 +215,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     await this.enforceAccessKeyDataLimits();
   }
 
-  getDataLimitTimeframe(): DataUsageTimeframe {
+  getDataUsageTimeframe(): DataUsageTimeframe {
     return this.dataLimitTimeframe;
   }
 

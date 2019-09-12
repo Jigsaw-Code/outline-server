@@ -552,7 +552,7 @@ describe('ShadowsocksManagerService', () => {
     });
     it('returns 500 when the repository throws an exception', async (done) => {
       const repo = getAccessKeyRepository();
-      spyOn(repo, 'setDataLimitTimeframe').and.throwError('cannot write to disk');
+      spyOn(repo, 'setDataUsageTimeframe').and.throwError('cannot write to disk');
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
       const service = new ShadowsocksManagerService('default name', serverConfig, repo, null, null);
       serverConfig.data().dataUsageTimeframe = {hours: 123};

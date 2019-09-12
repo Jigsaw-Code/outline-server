@@ -74,5 +74,5 @@ export interface AccessKeyRepository {
   // Clears the transfer limit for the specified access key. Throws on failure.
   removeAccessKeyDataLimit(id: AccessKeyId): Promise<void>;
   // Sets the data usage timeframe for access key data limit enforcement. Throws on failure.
-  setDataLimitTimeframe(timeframe: DataUsageTimeframe): Promise<void>;
+  setDataUsageTimeframe(timeframe: DataUsageTimeframe): Promise<void>;
 }

@@ -271,7 +271,7 @@ export class ShadowsocksManagerService {
             new restify.MissingParameterError({statusCode: 400}, 'Missing `hours` parameter'));
       }
       const dataUsageTimeframe = {hours};
-      await this.accessKeys.setDataLimitTimeframe(dataUsageTimeframe);
+      await this.accessKeys.setDataUsageTimeframe(dataUsageTimeframe);
       this.serverConfig.data().dataUsageTimeframe = dataUsageTimeframe;
       this.serverConfig.write();
       res.send(HttpSuccess.NO_CONTENT);
