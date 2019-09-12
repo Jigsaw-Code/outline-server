@@ -17,7 +17,7 @@ import * as net from 'net';
 import {ManualClock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
 import {InMemoryConfig} from '../infrastructure/json_config';
-import {AccessKeyDataLimit, AccessKeyRepository} from '../model/access_key';
+import {AccessKeyRepository, DataUsage} from '../model/access_key';
 import * as errors from '../model/errors';
 import {DataUsageTimeframe} from '../model/metrics';
 
@@ -42,7 +42,7 @@ describe('ServerAccessKeyRepository', () => {
   it('Creates access keys without limit and under limit', async (done) => {
     const repo = new RepoBuilder().build();
     const accessKey = await repo.createNewAccessKey();
-    expect(accessKey.dataLimitUsage).toBeUndefined();
+    expect(accessKey.dataLimit).toBeUndefined();
     expect(accessKey.isOverDataLimit()).toBeFalsy();
     done();
   });
@@ -172,8 +172,8 @@ describe('ServerAccessKeyRepository', () => {
     const accessKey = await repo.createNewAccessKey();
     const limit = {bytes: 5000};
     await expectNoAsyncThrow(repo.setAccessKeyDataLimit.bind(repo, accessKey.id, limit));
-    expect(accessKey.dataLimitUsage.limit).toEqual(limit);
-    expect(accessKey.dataLimitUsage.usageBytes).toEqual(0);
+    expect(accessKey.dataLimit).toEqual(limit);
+    expect(accessKey.dataUsage.bytes).toEqual(0);
     done();
   });
 
@@ -195,7 +195,7 @@ describe('ServerAccessKeyRepository', () => {
         repo.setAccessKeyDataLimit.bind(repo, accessKey.id, negativeBytesLimit),
         errors.InvalidAccessKeyDataLimit);
     // Missing properties
-    const missingDataLimit = {} as AccessKeyDataLimit;
+    const missingDataLimit = {} as DataUsage;
     await expectAsyncThrow(
         repo.setAccessKeyDataLimit.bind(repo, accessKey.id, missingDataLimit),
         errors.InvalidAccessKeyDataLimit);
@@ -211,9 +211,9 @@ describe('ServerAccessKeyRepository', () => {
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 200});
     const repo =
         new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
-
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
+    await repo.start(new ManualClock());
 
     await repo.setAccessKeyDataLimit(accessKey1.id, {bytes: 200});
     expect(accessKey1.isOverDataLimit()).toBeTruthy();
@@ -241,9 +241,9 @@ describe('ServerAccessKeyRepository', () => {
     const accessKey = await repo.createNewAccessKey();
     const limit = {bytes: 100};
     await repo.setAccessKeyDataLimit(accessKey.id, limit);
-    expect(accessKey.dataLimitUsage).toBeDefined();
+    expect(accessKey.dataLimit).toBeDefined();
     await expectNoAsyncThrow(repo.removeAccessKeyDataLimit.bind(repo, accessKey.id));
-    expect(accessKey.dataLimitUsage).toBeUndefined();
+    expect(accessKey.dataLimit).toBeUndefined();
     done();
   });
 
@@ -263,6 +263,7 @@ describe('ServerAccessKeyRepository', () => {
 
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
+    await repo.start(new ManualClock());
     await repo.setAccessKeyDataLimit(accessKey1.id, {bytes: 100});
     expect(server.getAccessKeys().length).toEqual(1);
 
@@ -271,8 +272,8 @@ describe('ServerAccessKeyRepository', () => {
     expect(server.getAccessKeys().length).toEqual(2);
     expect(accessKey1.isOverDataLimit()).toBeFalsy();
     expect(accessKey2.isOverDataLimit()).toBeFalsy();
-    expect(accessKey1.dataLimitUsage).toBeUndefined();
-    expect(accessKey2.dataLimitUsage).toBeUndefined();
+    expect(accessKey1.dataLimit).toBeUndefined();
+    expect(accessKey2.dataLimit).toBeUndefined();
     done();
   });
 
@@ -293,11 +294,11 @@ describe('ServerAccessKeyRepository', () => {
     }
     await repo.enforceAccessKeyDataLimits();
     for (const key of repo.listAccessKeys()) {
-      const hasDataLimit = !!key.dataLimitUsage;
+      const hasDataLimit = !!key.dataLimit;
       // Keys with data limits should be over the limit; keys without a limit shouldn't.
       expect(key.isOverDataLimit()).toEqual(hasDataLimit);
       if (hasDataLimit) {
-        expect(key.dataLimitUsage.usageBytes).toEqual(bytesTransferredById[key.id]);
+        expect(key.dataUsage.bytes).toEqual(bytesTransferredById[key.id]);
       }
     }
     // Simulate a change in usage.
@@ -310,9 +311,7 @@ describe('ServerAccessKeyRepository', () => {
     for (const key of repo.listAccessKeys()) {
       // All keys should be under the data limit.
       expect(key.isOverDataLimit()).toBeFalsy();
-      if (key.dataLimitUsage) {
-        expect(key.dataLimitUsage.usageBytes).toEqual(bytesTransferredById[key.id]);
-      }
+      expect(key.dataUsage.bytes).toEqual(bytesTransferredById[key.id]);
     }
     done();
   });
@@ -410,9 +409,9 @@ describe('ServerAccessKeyRepository', () => {
     expect(accessKey1.isOverDataLimit()).toBeTruthy();
     expect(accessKey2.isOverDataLimit()).toBeTruthy();
     expect(accessKey3.isOverDataLimit()).toBeFalsy();
-    expect(accessKey1.dataLimitUsage.usageBytes).toEqual(500);
-    expect(accessKey2.dataLimitUsage.usageBytes).toEqual(300);
-    expect(accessKey3.dataLimitUsage).toBeUndefined();
+    expect(accessKey1.dataUsage.bytes).toEqual(500);
+    expect(accessKey2.dataUsage.bytes).toEqual(300);
+    expect(accessKey3.dataLimit).toBeUndefined();
     let serverAccessKeys = await server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(1);
     expect(serverAccessKeys[0].id).toEqual(accessKey3.id);
@@ -422,29 +421,13 @@ describe('ServerAccessKeyRepository', () => {
     expect(accessKey1.isOverDataLimit()).toBeFalsy();
     expect(accessKey2.isOverDataLimit()).toBeTruthy();
     expect(accessKey3.isOverDataLimit()).toBeFalsy();
-    expect(accessKey1.dataLimitUsage.usageBytes).toEqual(100);
-    expect(accessKey2.dataLimitUsage.usageBytes).toEqual(300);
-    expect(accessKey3.dataLimitUsage).toBeUndefined();
+    expect(accessKey1.dataUsage.bytes).toEqual(100);
+    expect(accessKey2.dataUsage.bytes).toEqual(300);
+    expect(accessKey3.dataLimit).toBeUndefined();
     serverAccessKeys = await server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(2);
     expect(serverAccessKeys[0].id).toEqual(accessKey1.id);
     expect(serverAccessKeys[1].id).toEqual(accessKey3.id);
-    done();
-  });
-
-  it('getUsageBytes', async (done) => {
-    const prometheusClient = new FakePrometheusClient({'0': 1024});
-    const repo = new RepoBuilder().prometheusClient(prometheusClient).build();
-    const bytesTransferred = await repo.getUsageBytes('0');
-    expect(bytesTransferred).toEqual(1024);
-    done();
-  });
-
-  it('getUsageBytes returns zero when ID is missing', async (done) => {
-    const prometheusClient = new FakePrometheusClient({'0': 1024});
-    const repo = new RepoBuilder().prometheusClient(prometheusClient).build();
-    const bytesTransferred = await repo.getUsageBytes('doesnotexist');
-    expect(bytesTransferred).toEqual(0);
     done();
   });
 

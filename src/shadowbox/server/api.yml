@@ -185,7 +185,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AccessKeyDataLimit"
+              $ref: "#/components/schemas/DataUsage"
             examples:
               '0':
                 value: "{bytes: 10000}"
@@ -212,7 +212,7 @@ paths:
         content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AccessKeyDataLimit"
+                $ref: "#/components/schemas/DataUsage"
               examples:
                 '0':
                   value: "{bytes: 10000}"
@@ -322,7 +322,7 @@ components:
         hours:
           type: integer
 
-    AccessKeyDataLimit:
+    DataUsage:
       properties:
         bytes:
           type: integer
@@ -344,4 +344,4 @@ components:
         accessUrl:
           type: string
         limit:
-          $ref: "#/components/schemas/AccessKeyDataLimit"
+          $ref: "#/components/schemas/DataUsage"

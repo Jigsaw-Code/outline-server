@@ -17,7 +17,7 @@ import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {AccessKey, AccessKeyDataLimit, AccessKeyRepository} from '../model/access_key';
+import {AccessKey, AccessKeyRepository, DataUsage} from '../model/access_key';
 import * as errors from '../model/errors';
 
 import {ManagerMetrics} from './manager_metrics';
@@ -42,7 +42,7 @@ function accessKeyToJson(accessKey: AccessKey) {
       password: accessKey.proxyParams.password,
       outline: 1,
     })),
-    limit: accessKey.dataLimitUsage ? accessKey.dataLimitUsage.limit : undefined
+    dataLimit: accessKey.dataLimit
   };
 }
 
@@ -52,7 +52,7 @@ interface RequestParams {
   id?: string;
   name?: string;
   metricsEnabled?: boolean;
-  limit?: AccessKeyDataLimit;
+  limit?: DataUsage;
   port?: number;
   hours?: number;
 }

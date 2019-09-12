@@ -15,7 +15,7 @@
 import * as net from 'net';
 
 import {InMemoryConfig} from '../infrastructure/json_config';
-import {AccessKey, AccessKeyDataLimit, AccessKeyRepository} from '../model/access_key';
+import {AccessKey, AccessKeyRepository, DataUsage} from '../model/access_key';
 import {DataUsageTimeframe} from '../model/metrics';
 
 import {ShadowsocksManagerService} from './manager_service';
@@ -32,7 +32,7 @@ interface ServerInfo {
 const NEW_PORT = 12345;
 const OLD_PORT = 54321;
 const EXPECTED_ACCESS_KEY_PROPERTIES =
-    ['id', 'name', 'password', 'port', 'method', 'accessUrl', 'limit'].sort();
+    ['id', 'name', 'password', 'port', 'method', 'accessUrl', 'dataLimit'].sort();
 
 describe('ShadowsocksManagerService', () => {
   // After processing the response callback, we should set
@@ -155,7 +155,7 @@ describe('ShadowsocksManagerService', () => {
           expect(Object.keys(serviceAccessKey1).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
           expect(Object.keys(serviceAccessKey2).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
           expect(serviceAccessKey1.name).toEqual(accessKeyName);
-          expect(serviceAccessKey1.limit).toEqual(limit);
+          expect(serviceAccessKey1.dataLimit).toEqual(limit);
           responseProcessed = true;  // required for afterEach to pass.
         }
       };
@@ -409,13 +409,13 @@ describe('ShadowsocksManagerService', () => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
       const accessKey = await repo.createNewAccessKey();
-      expect(accessKey.dataLimitUsage).toBeUndefined();
+      expect(accessKey.dataLimit).toBeUndefined();
       expect(accessKey.isOverDataLimit()).toBeFalsy();
       const limit = {bytes: 10000};
       const res = {
         send: (httpCode, data) => {
           expect(httpCode).toEqual(204);
-          expect(accessKey.dataLimitUsage.limit).toEqual(limit);
+          expect(accessKey.dataLimit).toEqual(limit);
           expect(accessKey.isOverDataLimit()).toBeFalsy();
           responseProcessed = true;  // required for afterEach to pass.
         }
@@ -426,7 +426,7 @@ describe('ShadowsocksManagerService', () => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
       const accessKey = await repo.createNewAccessKey();
-      const limit = {} as AccessKeyDataLimit;
+      const limit = {} as DataUsage;
       const res = {send: (httpCode, data) => {}};
       service.setAccessKeyDataLimit({params: {id: accessKey.id, limit}}, res, (error) => {
         expect(error.statusCode).toEqual(400);
@@ -479,12 +479,12 @@ describe('ShadowsocksManagerService', () => {
       const limit = {bytes: 10000};
       const accessKey = await repo.createNewAccessKey();
       await repo.setAccessKeyDataLimit(accessKey.id, limit);
-      expect(accessKey.dataLimitUsage.limit).toEqual(limit);
-      expect(accessKey.dataLimitUsage.usageBytes).toEqual(0);
+      expect(accessKey.dataLimit).toEqual(limit);
+      expect(accessKey.dataUsage.bytes).toEqual(0);
       const res = {
         send: (httpCode, data) => {
           expect(httpCode).toEqual(204);
-          expect(accessKey.dataLimitUsage).toBeUndefined();
+          expect(accessKey.dataLimit).toBeUndefined();
           expect(accessKey.isOverDataLimit()).toBeFalsy();
           responseProcessed = true;  // required for afterEach to pass.
         }

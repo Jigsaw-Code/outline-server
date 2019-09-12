@@ -56,13 +56,7 @@ export class FakePrometheusClient extends PrometheusClient {
 
   async query(query: string): Promise<QueryResultData> {
     const accessKeyIdMatch = query.match(/access_key="(.*?)"/);
-    let accessKeyIds: string[];
-    if (accessKeyIdMatch && accessKeyIdMatch[1]) {
-      // Return query results only for the specified access key.
-      accessKeyIds = [accessKeyIdMatch[1]];
-    } else {
-      accessKeyIds = Object.keys(this.bytesTransferredById);
-    }
+    const accessKeyIds = Object.keys(this.bytesTransferredById);
     const queryResultData = {result: []} as QueryResultData;
     for (const accessKeyId of accessKeyIds) {
       const bytesTransferred = this.bytesTransferredById[accessKeyId] || 0;
