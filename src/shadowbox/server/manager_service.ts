@@ -266,7 +266,7 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`setDataUsageTimeframe request ${JSON.stringify(req.params)}`);
       const hours = req.params.hours;
-      if (!hours) {
+      if (hours === undefined) {  // The access key repository will validate the value.
         return next(
             new restify.MissingParameterError({statusCode: 400}, 'Missing `hours` parameter'));
       }

@@ -208,7 +208,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   async setDataLimitTimeframe(timeframe: DataUsageTimeframe) {
-    if (!timeframe || !Number.isInteger(timeframe.hours) || timeframe.hours < 0) {
+    if (!timeframe || !Number.isInteger(timeframe.hours) || timeframe.hours <= 0) {
       throw new errors.InvalidDataLimitTimeframe();
     }
     this.dataLimitTimeframe = timeframe;

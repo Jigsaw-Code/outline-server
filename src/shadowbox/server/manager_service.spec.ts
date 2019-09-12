@@ -541,6 +541,9 @@ describe('ShadowsocksManagerService', () => {
       await service.setDataUsageTimeframe({params: {hours: -1}}, res, (error) => {
         expect(error.statusCode).toEqual(400);
       });
+      await service.setDataUsageTimeframe({params: {hours: 0}}, res, (error) => {
+        expect(error.statusCode).toEqual(400);
+      });
       await service.setDataUsageTimeframe({params: {hours: 0.1}}, res, (error) => {
         expect(error.statusCode).toEqual(400);
         responseProcessed = true;  // required for afterEach to pass.
