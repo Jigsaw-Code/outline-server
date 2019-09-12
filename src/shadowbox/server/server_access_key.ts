@@ -60,7 +60,7 @@ class ServerAccessKey implements AccessKey {
 }
 
 function isValidAccessKeyDataLimit(limit: DataUsage) {
-  return limit && Number.isInteger(limit.bytes) && limit.bytes >= 0;
+  return limit && limit.bytes >= 0;
 }
 
 // Generates a random password for Shadowsocks access keys.

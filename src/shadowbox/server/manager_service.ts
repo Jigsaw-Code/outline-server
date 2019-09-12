@@ -231,6 +231,9 @@ export class ShadowsocksManagerService {
       if (!limit) {
         return next(
             new restify.MissingParameterError({statusCode: 400}, 'Missing `limit` parameter'));
+      } else if (!Number.isInteger(limit.bytes)) {
+        return next(
+            new restify.InvalidArgumentError({statusCode: 400}, '`limit` must be an integer'));
       }
       await this.accessKeys.setAccessKeyDataLimit(accessKeyId, limit);
       res.send(HttpSuccess.NO_CONTENT);
@@ -270,8 +273,8 @@ export class ShadowsocksManagerService {
         return next(
             new restify.MissingParameterError({statusCode: 400}, 'Missing `hours` parameter'));
       } else if (!Number.isInteger(hours)) {
-        return next(new restify.InvalidArgumentError(
-            {statusCode: 400}, '`hours` must be an integer'));
+        return next(
+            new restify.InvalidArgumentError({statusCode: 400}, '`hours` must be an integer'));
       }
       const dataUsageTimeframe = {hours};
       this.accessKeys.setDataUsageTimeframe(dataUsageTimeframe);
