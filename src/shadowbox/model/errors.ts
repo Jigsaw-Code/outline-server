@@ -41,7 +41,7 @@ export class AccessKeyNotFound extends OutlineError {
 
 export class InvalidAccessKeyDataLimit extends OutlineError {
   constructor() {
-    super('Must provide a limit with a positive integer value for "bytes"');
+    super('Must provide a limit with a non-negative integer value for "bytes"');
   }
 }
 
