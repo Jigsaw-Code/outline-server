@@ -127,15 +127,17 @@ async function main() {
       new OutlineShadowsocksServer(
           getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation)
           .enableCountryMetrics(MMDB_LOCATION);
-  runPrometheusScraper(
+  const prometheusEndpoint = `http://${prometheusLocation}`;
+  // Wait for Prometheus to be up and running.
+  await runPrometheusScraper(
       [
         '--storage.tsdb.retention', '31d', '--storage.tsdb.path',
         getPersistentFilename('prometheus/data'), '--web.listen-address', prometheusLocation,
         '--log.level', verbose ? 'debug' : 'info'
       ],
-      getPersistentFilename('prometheus/config.yml'), prometheusConfigJson);
+      getPersistentFilename('prometheus/config.yml'), prometheusConfigJson, prometheusEndpoint);
 
-  const prometheusClient = new PrometheusClient(`http://${prometheusLocation}`);
+  const prometheusClient = new PrometheusClient(prometheusEndpoint);
   if (!serverConfig.data().portForNewAccessKeys) {
     serverConfig.data().portForNewAccessKeys = await portProvider.reserveNewPort();
     serverConfig.write();

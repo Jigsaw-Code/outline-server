@@ -70,11 +70,12 @@ export class PrometheusClient {
 }
 
 export function runPrometheusScraper(
-    args: string[], configFilename: string, configJson: {}): Promise<child_process.ChildProcess> {
+    args: string[], configFilename: string, configJson: {},
+    prometheusEndpoint: string): Promise<child_process.ChildProcess> {
   mkdirp.sync(path.dirname(configFilename));
   const ymlTxt = jsyaml.safeDump(configJson, {'sortKeys': true});
   return new Promise((resolve, reject) => {
-    fs.writeFile(configFilename, ymlTxt, 'utf-8', (err) => {
+    fs.writeFile(configFilename, ymlTxt, 'utf-8', async (err) => {
       if (err) {
         reject(err);
       }
@@ -92,7 +93,29 @@ export function runPrometheusScraper(
       // TODO(fortuna): Consider saving the output and expose it through the manager service.
       runProcess.stdout.pipe(process.stdout);
       runProcess.stderr.pipe(process.stderr);
+
+      await waitForPrometheusReady(prometheusEndpoint);
       resolve(runProcess);
+    });
+  });
+}
+
+async function waitForPrometheusReady(prometheusEndpoint: string) {
+  logging.debug('Waiting for Prometheus to be ready...');
+  let ready = false;
+  while (!ready) {
+    ready = await isPrometheusReady(prometheusEndpoint);
+  }
+  logging.debug('Prometheus is ready');
+}
+
+function isPrometheusReady(prometheusEndpoint: string): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    http.get(prometheusEndpoint, (response) => {
+          resolve(true);
+        }).on('error', (e) => {
+      // Prometheus is not ready yet.
+      resolve(false);
     });
   });
 }
