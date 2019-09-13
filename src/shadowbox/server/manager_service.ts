@@ -292,6 +292,8 @@ export class ShadowsocksManagerService {
   }
 
   public async getDataUsage(req: RequestType, res: ResponseType, next: restify.Next) {
+    // TODO(alalama): use AccessKey.dataUsage to avoid querying Prometheus. Deprecate this call in
+    // the manager in favor of `GET /access-keys`.
     try {
       const timeframe = this.serverConfig.data().dataUsageTimeframe;
       res.send(HttpSuccess.OK, await this.managerMetrics.getOutboundByteTransfer(timeframe));
