@@ -342,7 +342,7 @@ function check_firewall() {
      FIREWALL_STATUS="\
 You won’t be able to access it externally, despite your server being correctly
 set up, because there's a firewall (in this machine, your router or cloud
-provider) that is preventing incoming connections to ports ${API_PORT} and ${ACCESS_KEY_PORTS}."
+provider) that is preventing incoming connections to the management port ${API_PORT} and the access key port(s) ${ACCESS_KEY_PORTS}."
   else
     FIREWALL_STATUS="\
 If you have connection problems, it may be that your router or cloud provider
