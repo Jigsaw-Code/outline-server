@@ -94,7 +94,6 @@ export async function runPrometheusScraper(
   runProcess.on('exit', (code, signal) => {
     logging.info(`prometheus has exited with error. Code: ${code}, Signal: ${signal}`);
   });
-  // TODO(fortuna): Disable this for production.
   // TODO(fortuna): Consider saving the output and expose it through the manager service.
   runProcess.stdout.pipe(process.stdout);
   runProcess.stderr.pipe(process.stderr);
