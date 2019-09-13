@@ -321,11 +321,13 @@ components:
       properties:
         hours:
           type: integer
+          minimum: 1
 
     DataUsage:
       properties:
         bytes:
           type: integer
+          minimum: 0
 
     AccessKey:
       required:

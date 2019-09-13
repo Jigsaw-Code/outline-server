@@ -52,7 +52,7 @@ interface RequestParams {
   id?: string;
   name?: string;
   metricsEnabled?: boolean;
-  limit?: DataUsage;
+  limit?: DataUsage|{};
   port?: number;
   hours?: number;
 }
@@ -227,7 +227,7 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`setAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
       const accessKeyId = req.params.id;
-      const limit = req.params.limit;
+      const limit = req.params.limit as DataUsage;
       if (!limit) {
         return next(
             new restify.MissingParameterError({statusCode: 400}, 'Missing `limit` parameter'));
