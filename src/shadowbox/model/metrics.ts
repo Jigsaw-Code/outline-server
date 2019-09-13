@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Byte transfer metrics for the past 30 days, including both inbound and outbound.
+// Byte transfer metrics for a sliding timeframe, including both inbound and outbound.
 // TODO: this is copied at src/model/server.ts.  Both copies should
 // be kept in sync, until we can find a way to share code between the web_app
 // and shadowbox.
@@ -23,3 +23,6 @@ export interface DataUsageByUser {
   // TODO: rename this to AccessKeyId in a backwards compatible way.
   bytesTransferredByUserId: {[userId: string]: number};
 }
+
+// Sliding time frame for measuring data utilization.
+export interface DataUsageTimeframe { hours: number; }

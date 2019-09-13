@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {DataUsageTimeframe} from '../model/metrics';
+
 export type AccessKeyId = string;
 export type AccessKeyMetricsId = string;
 
@@ -27,21 +29,8 @@ export interface ProxyParams {
   readonly password: string;
 }
 
-// Parameters needed to limit access key data usage over a sliding timeframe.
-export interface AccessKeyDataLimit {
-  // The allowed metered data transfer measured in bytes.
-  readonly data: {bytes: number};
-  // The sliding timeframe size in hours.
-  readonly timeframe: {hours: number};
-}
-
-// Parameters needed to enforce an access key data transfer limit.
-export interface AccessKeyDataLimitUsage {
-  // Data transfer limit on this access key.
-  readonly limit: AccessKeyDataLimit;
-  // Data transferred by this access key over the limit timeframe.
-  readonly usage: {bytes: number};
-}
+// Data transfer measured in bytes.
+export interface DataUsage { readonly bytes: number; }
 
 // AccessKey is what admins work with. It gives ProxyParams a name and identity.
 export interface AccessKey {
@@ -54,7 +43,9 @@ export interface AccessKey {
   // Parameters to access the proxy
   readonly proxyParams: ProxyParams;
   // Admin-controlled, data transfer limit for this access key. Unlimited if unset.
-  readonly dataLimitUsage?: AccessKeyDataLimitUsage;
+  readonly dataLimit?: DataUsage;
+  // Data transferred by this access key over a timeframe specified by the server.
+  readonly dataUsage: DataUsage;
   // Returns whether the access key has exceeded its data transfer limit.
   isOverDataLimit(): boolean;
 }
@@ -73,7 +64,9 @@ export interface AccessKeyRepository {
   // Gets the metrics id for a given Access Key.
   getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined;
   // Sets the transfer limit for the specified access key. Throws on failure.
-  setAccessKeyDataLimit(id: AccessKeyId, limit: AccessKeyDataLimit): Promise<void>;
+  setAccessKeyDataLimit(id: AccessKeyId, limit: DataUsage): Promise<void>;
   // Clears the transfer limit for the specified access key. Throws on failure.
   removeAccessKeyDataLimit(id: AccessKeyId): Promise<void>;
+  // Sets the data usage timeframe for access key data limit enforcement. Throws on failure.
+  setDataUsageTimeframe(timeframe: DataUsageTimeframe): Promise<void>;
 }

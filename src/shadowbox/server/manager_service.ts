@@ -17,7 +17,7 @@ import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {AccessKey, AccessKeyDataLimit, AccessKeyRepository} from '../model/access_key';
+import {AccessKey, AccessKeyRepository, DataUsage} from '../model/access_key';
 import * as errors from '../model/errors';
 
 import {ManagerMetrics} from './manager_metrics';
@@ -42,7 +42,7 @@ function accessKeyToJson(accessKey: AccessKey) {
       password: accessKey.proxyParams.password,
       outline: 1,
     })),
-    limit: accessKey.dataLimitUsage ? accessKey.dataLimitUsage.limit : undefined
+    dataLimit: accessKey.dataLimit
   };
 }
 
@@ -52,8 +52,9 @@ interface RequestParams {
   id?: string;
   name?: string;
   metricsEnabled?: boolean;
-  limit?: AccessKeyDataLimit;
+  limit?: DataUsage|{};
   port?: number;
+  hours?: number;
 }
 interface RequestType {
   params: RequestParams;
@@ -74,6 +75,8 @@ export function bindService(
   apiServer.put(
       `${apiPrefix}/server/port-for-new-access-keys`,
       service.setPortForNewAccessKeys.bind(service));
+  apiServer.put(
+      `${apiPrefix}/server/data-usage-timeframe`, service.setDataUsageTimeframe.bind(service));
 
   apiServer.post(`${apiPrefix}/access-keys`, service.createNewAccessKey.bind(service));
   apiServer.get(`${apiPrefix}/access-keys`, service.listAccessKeys.bind(service));
@@ -122,7 +125,8 @@ export class ShadowsocksManagerService {
       serverId: this.serverConfig.data().serverId,
       metricsEnabled: this.serverConfig.data().metricsEnabled || false,
       createdTimestampMs: this.serverConfig.data().createdTimestampMs,
-      portForNewAccessKeys: this.serverConfig.data().portForNewAccessKeys
+      portForNewAccessKeys: this.serverConfig.data().portForNewAccessKeys,
+      dataUsageTimeframe: this.serverConfig.data().dataUsageTimeframe
     });
     next();
   }
@@ -223,10 +227,13 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`setAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
       const accessKeyId = req.params.id;
-      const limit = req.params.limit;
+      const limit = req.params.limit as DataUsage;
       if (!limit) {
         return next(
             new restify.MissingParameterError({statusCode: 400}, 'Missing `limit` parameter'));
+      } else if (!Number.isInteger(limit.bytes)) {
+        return next(
+            new restify.InvalidArgumentError({statusCode: 400}, '`limit` must be an integer'));
       }
       await this.accessKeys.setAccessKeyDataLimit(accessKeyId, limit);
       res.send(HttpSuccess.NO_CONTENT);
@@ -258,9 +265,38 @@ export class ShadowsocksManagerService {
     }
   }
 
-  public async getDataUsage(req: RequestType, res: ResponseType, next: restify.Next) {
+  public setDataUsageTimeframe(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      res.send(HttpSuccess.OK, await this.managerMetrics.get30DayByteTransfer());
+      logging.debug(`setDataUsageTimeframe request ${JSON.stringify(req.params)}`);
+      const hours = req.params.hours;
+      if (hours === undefined) {  // The access key repository will validate the value.
+        return next(
+            new restify.MissingParameterError({statusCode: 400}, 'Missing `hours` parameter'));
+      } else if (!Number.isInteger(hours)) {
+        return next(
+            new restify.InvalidArgumentError({statusCode: 400}, '`hours` must be an integer'));
+      }
+      const dataUsageTimeframe = {hours};
+      this.accessKeys.setDataUsageTimeframe(dataUsageTimeframe);
+      this.serverConfig.data().dataUsageTimeframe = dataUsageTimeframe;
+      this.serverConfig.write();
+      res.send(HttpSuccess.NO_CONTENT);
+      return next();
+    } catch (error) {
+      logging.error(error);
+      if (error instanceof errors.InvalidDataLimitTimeframe) {
+        return next(new restify.InvalidArgumentError({statusCode: 400}, error.message));
+      }
+      return next(new restify.InternalServerError());
+    }
+  }
+
+  public async getDataUsage(req: RequestType, res: ResponseType, next: restify.Next) {
+    // TODO(alalama): use AccessKey.dataUsage to avoid querying Prometheus. Deprecate this call in
+    // the manager in favor of `GET /access-keys`.
+    try {
+      const timeframe = this.serverConfig.data().dataUsageTimeframe;
+      res.send(HttpSuccess.OK, await this.managerMetrics.getOutboundByteTransfer(timeframe));
       return next();
     } catch (error) {
       logging.error(error);

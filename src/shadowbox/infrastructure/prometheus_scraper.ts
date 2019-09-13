@@ -69,30 +69,54 @@ export class PrometheusClient {
   }
 }
 
-export function runPrometheusScraper(
-    args: string[], configFilename: string, configJson: {}): Promise<child_process.ChildProcess> {
+export async function runPrometheusScraper(
+    args: string[], configFilename: string, configJson: {},
+    prometheusEndpoint: string): Promise<child_process.ChildProcess> {
   mkdirp.sync(path.dirname(configFilename));
   const ymlTxt = jsyaml.safeDump(configJson, {'sortKeys': true});
-  return new Promise((resolve, reject) => {
+  // Write the file asynchronously to prevent blocking the node thread.
+  await new Promise((resolve, reject) => {
     fs.writeFile(configFilename, ymlTxt, 'utf-8', (err) => {
       if (err) {
         reject(err);
+      } else {
+        resolve();
       }
-      const commandArguments = ['--config.file', configFilename];
-      commandArguments.push(...args);
-      const runProcess = child_process.spawn('/root/shadowbox/bin/prometheus', commandArguments);
-      runProcess.on('error', (error) => {
-        logging.error(`Error spawning prometheus: ${error}`);
-      });
-      // TODO(fortuna): Add restart logic.
-      runProcess.on('exit', (code, signal) => {
-        logging.info(`prometheus has exited with error. Code: ${code}, Signal: ${signal}`);
-      });
-      // TODO(fortuna): Disable this for production.
-      // TODO(fortuna): Consider saving the output and expose it through the manager service.
-      runProcess.stdout.pipe(process.stdout);
-      runProcess.stderr.pipe(process.stderr);
-      resolve(runProcess);
+    });
+  });
+  const commandArguments = ['--config.file', configFilename];
+  commandArguments.push(...args);
+  const runProcess = child_process.spawn('/root/shadowbox/bin/prometheus', commandArguments);
+  runProcess.on('error', (error) => {
+    logging.error(`Error spawning prometheus: ${error}`);
+  });
+  // TODO(fortuna): Add restart logic.
+  runProcess.on('exit', (code, signal) => {
+    logging.info(`prometheus has exited with error. Code: ${code}, Signal: ${signal}`);
+  });
+  // TODO(fortuna): Consider saving the output and expose it through the manager service.
+  runProcess.stdout.pipe(process.stdout);
+  runProcess.stderr.pipe(process.stderr);
+
+  await waitForPrometheusReady(prometheusEndpoint);
+  return runProcess;
+}
+
+async function waitForPrometheusReady(prometheusEndpoint: string) {
+  logging.debug('Waiting for Prometheus to be ready...');
+  while (!(await isHttpEndpointHealthy(prometheusEndpoint))) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  logging.debug('Prometheus is ready');
+}
+
+function isHttpEndpointHealthy(endpoint: string): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    http.get(endpoint, (response) => {
+          resolve(true);
+        }).on('error', (e) => {
+      // Prometheus is not ready yet.
+      resolve(false);
     });
   });
 }

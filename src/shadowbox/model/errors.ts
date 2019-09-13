@@ -41,7 +41,12 @@ export class AccessKeyNotFound extends OutlineError {
 
 export class InvalidAccessKeyDataLimit extends OutlineError {
   constructor() {
-    super(
-        'Must provide a limit value with positive integer values for "data.bytes" and "timeframe.hours"');
+    super('Must provide a limit with a non-negative integer value for "bytes"');
+  }
+}
+
+export class InvalidDataLimitTimeframe extends OutlineError {
+  constructor() {
+    super('Must provide a timeframe with a positive integer values for "hours"');
   }
 }
