@@ -69,31 +69,38 @@ export class PrometheusClient {
   }
 }
 
-export function runPrometheusScraper(
+export async function runPrometheusScraper(
     args: string[], configFilename: string, configJson: {},
     prometheusEndpoint: string): Promise<child_process.ChildProcess> {
   mkdirp.sync(path.dirname(configFilename));
   const ymlTxt = jsyaml.safeDump(configJson, {'sortKeys': true});
-  fs.writeFileSync(configFilename, ymlTxt, 'utf-8');
-  return new Promise(async (resolve, reject) => {
-    const commandArguments = ['--config.file', configFilename];
-    commandArguments.push(...args);
-    const runProcess = child_process.spawn('/root/shadowbox/bin/prometheus', commandArguments);
-    runProcess.on('error', (error) => {
-      logging.error(`Error spawning prometheus: ${error}`);
+  // Write the file asynchronously to prevent blocking the node thread.
+  await new Promise((resolve, reject) => {
+    fs.writeFile(configFilename, ymlTxt, 'utf-8', (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
     });
-    // TODO(fortuna): Add restart logic.
-    runProcess.on('exit', (code, signal) => {
-      logging.info(`prometheus has exited with error. Code: ${code}, Signal: ${signal}`);
-    });
-    // TODO(fortuna): Disable this for production.
-    // TODO(fortuna): Consider saving the output and expose it through the manager service.
-    runProcess.stdout.pipe(process.stdout);
-    runProcess.stderr.pipe(process.stderr);
-
-    await waitForPrometheusReady(prometheusEndpoint);
-    resolve(runProcess);
   });
+  const commandArguments = ['--config.file', configFilename];
+  commandArguments.push(...args);
+  const runProcess = child_process.spawn('/root/shadowbox/bin/prometheus', commandArguments);
+  runProcess.on('error', (error) => {
+    logging.error(`Error spawning prometheus: ${error}`);
+  });
+  // TODO(fortuna): Add restart logic.
+  runProcess.on('exit', (code, signal) => {
+    logging.info(`prometheus has exited with error. Code: ${code}, Signal: ${signal}`);
+  });
+  // TODO(fortuna): Disable this for production.
+  // TODO(fortuna): Consider saving the output and expose it through the manager service.
+  runProcess.stdout.pipe(process.stdout);
+  runProcess.stderr.pipe(process.stderr);
+
+  await waitForPrometheusReady(prometheusEndpoint);
+  return runProcess;
 }
 
 async function waitForPrometheusReady(prometheusEndpoint: string) {
