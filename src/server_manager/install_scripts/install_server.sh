@@ -330,18 +330,19 @@ function add_api_url_to_config() {
 }
 
 function check_firewall() {
-  local readonly ACCESS_KEY_PORT=$(curl --insecure -s ${LOCAL_API_URL}/access-keys | 
+  local readonly ACCESS_KEY_PORTS=$(curl --insecure -s ${LOCAL_API_URL}/access-keys | 
       docker exec -i shadowbox node -e '
           const fs = require("fs");
           const accessKeys = JSON.parse(fs.readFileSync(0, {encoding: "utf-8"}));
-          console.log(accessKeys["accessKeys"][0]["port"]);
-      ')
+          const ports = accessKeys["accessKeys"].map(key => Number(key["port"]));
+          console.log([...new Set(ports)]);
+      ' | tr -d '\n')
   if ! curl --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" -s "${PUBLIC_API_URL}/access-keys" >/dev/null; then
      log_error "BLOCKED"
      FIREWALL_STATUS="\
 You won’t be able to access it externally, despite your server being correctly
 set up, because there's a firewall (in this machine, your router or cloud
-provider) that is preventing incoming connections to ports ${API_PORT} and ${ACCESS_KEY_PORT}."
+provider) that is preventing incoming connections to ports ${API_PORT} and ${ACCESS_KEY_PORTS}."
   else
     FIREWALL_STATUS="\
 If you have connection problems, it may be that your router or cloud provider
@@ -352,7 +353,7 @@ $FIREWALL_STATUS
 
 Make sure to open the following ports on your firewall, router or cloud provider:
 - Management port ${API_PORT}, for TCP
-- Access key port ${ACCESS_KEY_PORT}, for TCP and UDP
+- Access key ports ${ACCESS_KEY_PORTS} for TCP and UDP
 "
 }
 
