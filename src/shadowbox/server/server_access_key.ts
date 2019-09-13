@@ -59,7 +59,7 @@ class ServerAccessKey implements AccessKey {
   }
 }
 
-function isValidAccessKeyDataLimit(limit: DataUsage) {
+function isValidAccessKeyDataLimit(limit: DataUsage): boolean {
   return limit && limit.bytes >= 0;
 }
 
