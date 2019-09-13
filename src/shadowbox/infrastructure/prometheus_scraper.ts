@@ -99,9 +99,7 @@ export function runPrometheusScraper(
 async function waitForPrometheusReady(prometheusEndpoint: string) {
   logging.debug('Waiting for Prometheus to be ready...');
   while (!(await isHttpEndpointHealthy(prometheusEndpoint))) {
-    await new Promise((resolve) => setTimeout(() => {
-                        resolve();
-                      }, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
   logging.debug('Prometheus is ready');
 }
