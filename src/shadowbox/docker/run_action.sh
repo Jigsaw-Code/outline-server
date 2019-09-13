@@ -17,12 +17,16 @@
 do_action shadowbox/docker/build
 
 readonly OUTLINE_DIR=/tmp/outline
-mkdir -p $OUTLINE_DIR && touch "$OUTLINE_DIR/config.json"
+readonly STATE_DIR=$OUTLINE_DIR/persisted-state
+readonly STATE_CONFIG=$STATE_DIR/shadowbox_server_config.json
+mkdir -p $STATE_DIR && touch "$OUTLINE_DIR/config.json"
+[[ -e $STATE_CONFIG ]] || echo "{\"hostname\":\"127.0.0.1\"}" > $STATE_CONFIG
 source $ROOT_DIR/src/shadowbox/scripts/make_test_certificate.sh "${OUTLINE_DIR}"
 
 # TODO: mount a folder rather than individual files.
 declare -a docker_bindings=(
   -v "$OUTLINE_DIR/config.json":/root/shadowbox/shadowbox_config.json
+  -v "$STATE_DIR":/root/shadowbox/persisted-state
   -v "$OUTLINE_DIR/stats.json":/root/shadowbox/shadowbox_stats.json
   -v ${SB_CERTIFICATE_FILE}:${SB_CERTIFICATE_FILE}
   -v ${SB_PRIVATE_KEY_FILE}:${SB_PRIVATE_KEY_FILE}
