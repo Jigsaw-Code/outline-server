@@ -99,9 +99,8 @@ async function main() {
     process.exit(1);
   }
 
-
   logging.debug(`=== Config ===`);
-  logging.debug(`SB_PUBLIC_IP: ${proxyHostname}`);
+  logging.debug(`Hostname: ${proxyHostname}`);
   logging.debug(`SB_METRICS_URL: ${metricsCollectorUrl}`);
   logging.debug(`==============`);
 
