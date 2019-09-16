@@ -318,7 +318,7 @@ export class ShadowsocksManagerService {
       return next();
     } catch (error) {
       logging.error(error);
-      if (error instanceof errors.InvalidDataLimitTimeframe) {
+      if (error instanceof errors.InvalidDataUsageTimeframe) {
         return next(new restify.InvalidArgumentError({statusCode: 400}, error.message));
       }
       return next(new restify.InternalServerError());
