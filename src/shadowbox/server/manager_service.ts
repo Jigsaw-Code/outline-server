@@ -98,7 +98,7 @@ interface SetShareMetricsParams {
 }
 
 // User type guard to validate that `params` is of type RequestParams and contains `property`.
-function hasParameter(params: RequestParams|{}, property: string): params is RequestParams {
+function isRequestParam(params: RequestParams|{}, property: string): params is RequestParams {
   return property in (params as RequestParams);
 }
 
@@ -113,7 +113,7 @@ export class ShadowsocksManagerService {
 
   public renameServer(req: RequestType, res: ResponseType, next: restify.Next): void {
     logging.debug(`renameServer request ${JSON.stringify(req.params)}`);
-    if (!hasParameter(req.params, 'name')) {
+    if (!isRequestParam(req.params, 'name')) {
       return next(
           new restify.MissingParameterError({statusCode: 400}, 'Parameter `name` is missing'));
     }
@@ -173,7 +173,7 @@ export class ShadowsocksManagerService {
       Promise<void> {
     try {
       logging.debug(`setPortForNewAccessKeys request ${JSON.stringify(req.params)}`);
-      if (!hasParameter(req.params, 'port')) {
+      if (!isRequestParam(req.params, 'port')) {
         return next(
             new restify.MissingParameterError({statusCode: 400}, 'Parameter `port` is missing'));
       }
@@ -203,7 +203,7 @@ export class ShadowsocksManagerService {
   public removeAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
     try {
       logging.debug(`removeAccessKey request ${JSON.stringify(req.params)}`);
-      if (!hasParameter(req.params, 'id')) {
+      if (!isRequestParam(req.params, 'id')) {
         return next(
             new restify.MissingParameterError({statusCode: 400}, 'Parameter `id` is missing'));
       }
@@ -223,10 +223,11 @@ export class ShadowsocksManagerService {
   public renameAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
     try {
       logging.debug(`renameAccessKey request ${JSON.stringify(req.params)}`);
-      if (!hasParameter(req.params, 'id')) {
+      if (!isRequestParam(req.params, 'id')) {
         return next(
             new restify.MissingParameterError({statusCode: 400}, 'Parameter `id` is missing'));
-      } else if (!hasParameter(req.params, 'name')) {
+      }
+      if (!isRequestParam(req.params, 'name')) {
         return next(
             new restify.MissingParameterError({statusCode: 400}, 'Parameter `name` is missing'));
       }
@@ -246,10 +247,11 @@ export class ShadowsocksManagerService {
   public async setAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`setAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
-      if (!hasParameter(req.params, 'id')) {
+      if (!isRequestParam(req.params, 'id')) {
         return next(
             new restify.MissingParameterError({statusCode: 400}, 'Parameter `id` is missing'));
-      } else if (!hasParameter(req.params, 'limit')) {
+      }
+      if (!isRequestParam(req.params, 'limit')) {
         return next(
             new restify.MissingParameterError({statusCode: 400}, 'Parameter `limit` is missing'));
       }
@@ -279,7 +281,7 @@ export class ShadowsocksManagerService {
   public async removeAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`removeAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
-      if (!hasParameter(req.params, 'id')) {
+      if (!isRequestParam(req.params, 'id')) {
         return next(
             new restify.MissingParameterError({statusCode: 400}, 'Parameter `id` is missing'));
       }
@@ -299,7 +301,7 @@ export class ShadowsocksManagerService {
   public setDataUsageTimeframe(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`setDataUsageTimeframe request ${JSON.stringify(req.params)}`);
-      if (!hasParameter(req.params, 'hours')) {
+      if (!isRequestParam(req.params, 'hours')) {
         return next(
             new restify.MissingParameterError({statusCode: 400}, 'Parameter `hours` is missing'));
       }
@@ -343,7 +345,7 @@ export class ShadowsocksManagerService {
 
   public setShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
     logging.debug(`setShareMetrics request ${JSON.stringify(req.params)}`);
-    if (!hasParameter(req.params, 'metricsEnabled')) {
+    if (!isRequestParam(req.params, 'metricsEnabled')) {
       return next(new restify.MissingParameterError(
           {statusCode: 400}, 'Parameter `metricsEnabled` is missing'));
     }
