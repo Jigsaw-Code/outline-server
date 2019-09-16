@@ -536,7 +536,7 @@
     "description": "This string appears in the DigitalOcean account creation flow as a paragraph. Displayed when the user's DigitalOcean account has been successfully activated."
   },
   "oauth_activate_account": {
-    "message": "Activate you DigitalOcean account.",
+    "message": "Activate your DigitalOcean account.",
     "description": "This string appears in the DigitalOcean account creation flow as a header. Displayed when the account has been created but not yet active. DigitalOcean is a cloud provider name and should not be translated."
   },
   "oauth_billing": {
@@ -570,10 +570,6 @@
   "oauth_verify_tag": {
     "message": "Confirm your email...",
     "description": "This string appears in the DigitalOcean account creation flow as a paragraph. Displayed when the user has not yet confirmed the registered email for their DigitalOcean account."
-  },
-  "oauth_verify_title": {
-    "message": "Activate you DigitalOcean account.",
-    "description": "This string appears in the DigitalOcean account creation flow as a title. Displayed when the user has not yet activated their DigitalOcean account."
   },
   "okay": {
     "message": "OK",
