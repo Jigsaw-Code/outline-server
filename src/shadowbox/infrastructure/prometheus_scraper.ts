@@ -97,8 +97,7 @@ export async function runPrometheusScraper(
   // TODO(fortuna): Consider saving the output and expose it through the manager service.
   runProcess.stdout.pipe(process.stdout);
   runProcess.stderr.pipe(process.stderr);
-
-  await waitForPrometheusReady(prometheusEndpoint);
+  await waitForPrometheusReady(`${prometheusEndpoint}/api/v1/status/flags`);
   return runProcess;
 }
 
@@ -113,7 +112,7 @@ async function waitForPrometheusReady(prometheusEndpoint: string) {
 function isHttpEndpointHealthy(endpoint: string): Promise<boolean> {
   return new Promise((resolve, reject) => {
     http.get(endpoint, (response) => {
-          resolve(true);
+          resolve(response.statusCode >= 200 && response.statusCode < 300);
         }).on('error', (e) => {
       // Prometheus is not ready yet.
       resolve(false);
