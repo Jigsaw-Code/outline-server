@@ -27,8 +27,6 @@
 #     only by do_install_server.sh.
 # WATCHTOWER_REFRESH_SECONDS: refresh interval in seconds to check for updates,
 #     defaults to 3600.
-# WATCHTOWER_IMAGE: The Watchtower Docker image to use e.g. v2tec/watchtower:armhf.
-# Defaults to v2tec/watchtower:latest
 #
 # Deprecated:
 # SB_PUBLIC_IP: Use the --hostname flag instead
@@ -298,8 +296,7 @@ function start_watchtower() {
   docker_watchtower_flags+=(-v /var/run/docker.sock:/var/run/docker.sock)
   # By itself, local messes up the return code.
   local readonly STDERR_OUTPUT
-  readonly WATCHTOWER_IMAGE=${WATCHTOWER_IMAGE:-v2tec/watchtower}
-  STDERR_OUTPUT=$(docker run -d "${docker_watchtower_flags[@]}" ${WATCHTOWER_IMAGE} --cleanup --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS 2>&1 >/dev/null)
+  STDERR_OUTPUT=$(docker run -d "${docker_watchtower_flags[@]}" v2tec/watchtower:armhf-latest --cleanup --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS 2>&1 >/dev/null)
   local readonly RET=$?
   if [[ $RET -eq 0 ]]; then
     return 0
@@ -333,7 +330,7 @@ function add_api_url_to_config() {
 }
 
 function check_firewall() {
-  local readonly ACCESS_KEY_PORT=$(curl --insecure -s ${LOCAL_API_URL}/access-keys | 
+  local readonly ACCESS_KEY_PORT=$(curl --insecure -s ${LOCAL_API_URL}/access-keys |
       docker exec -i shadowbox node -e '
           const fs = require("fs");
           const accessKeys = JSON.parse(fs.readFileSync(0, {encoding: "utf-8"}));
@@ -377,7 +374,7 @@ install_shadowbox() {
     API_PORT=${SB_API_PORT:-$(get_random_port)}
   fi
   readonly ACCESS_CONFIG=${ACCESS_CONFIG:-$SHADOWBOX_DIR/access.txt}
-  readonly SB_IMAGE=${SB_IMAGE:-quay.io/outline/shadowbox:stable}
+  readonly SB_IMAGE=${SB_IMAGE:-oreoluwa/shadowbox.arm:latest}
 
   log_for_sentry "Setting PUBLIC_HOSTNAME"
   # TODO(fortuna): Make sure this is IPv4
