@@ -148,7 +148,11 @@ async function main() {
 
   const metricsReader = new PrometheusUsageMetrics(prometheusClient);
   const toMetricsId = (id: AccessKeyId) => {
-    return accessKeyRepository.getMetricsId(id);
+    try {
+      return accessKeyRepository.getMetricsId(id);
+    } catch (e) {
+      logging.warn(`Failed to get metrics id for access key ${id}: ${e}`);
+    }
   };
   const managerMetrics = new PrometheusManagerMetrics(prometheusClient);
   const metricsCollector = new RestMetricsCollectorClient(metricsCollectorUrl);
