@@ -205,6 +205,18 @@
     "message": "Could not load keys",
     "description": "This string appears in an error notification toast. It is shown when there is an error retrieving a server access keys."
   },
+  "error_keys_port_bad_input": {
+    "message": "The port must be an integer between 1 and 65,535.",
+    "description": "This string appears in an inline error message.  It signifies that the input number for the port for new access keys is invalid."
+  },
+  "error_keys_port_in_use": {
+    "message": "The port is already in use on the server.",
+    "description": "This string appears in an inline error message.  It signifies that the input port for new access keys is already being used on the server and is unavailable."
+  },
+  "error_keys_port_not_saved": {
+    "messages": "Not Saved",
+    "description": "This string appears in an error notification toast.  It signifies failure to submit user input to change the port number for new access keys."
+  },
   "error_licenses": {
     "message": "Could not load licenses.",
     "description": "This string appears in a dialog that shows the application's software licenses. It is shown instead of the licenses' text when loading them fails."
@@ -212,6 +224,10 @@
   "error_metrics": {
     "message": "Error setting metrics enabled",
     "description": "This string appears in an error notification toast. It is shown when there is an error enabling or disabling a server's metrics reporting."
+  },
+  "error_network": {
+    "messages": "A network error occurred.",
+    "description": "This string indicates that an error happened due to network errors like not being connected to the internet."
   },
   "error_server_creation": {
     "message": "There was an error creating your Outline server.",
@@ -252,6 +268,10 @@
         "example": "New York Outline Server, Amsterdam Outline Server"
       }
     }
+  },
+  "error_unknown": {
+    "message": "An unknown error occurred.",
+    "description": "This string signifies that an error we didn't expect was encountered."
   },
   "feedback_cloud_provider": {
     "message": "Select cloud provider",
@@ -515,6 +535,14 @@
     "message": "Key removed",
     "description": "This string appears in a transient notification toast. It is shown when a server access key has been successfully removed."
   },
+  "notification_keys_saving": {
+    "message": "Saving...",
+    "description": "This string appears in a transient notification toast.  It is shown while submitting user input for a new port number to create access keys to the server."
+  },
+  "notification_keys_port_saved": {
+    "message": "Saved",
+    "description": "This string appears in a transient notification toast.  It is shown on a successful submission of user input to change the port number for new access keys."
+  },
   "notification_server_destroyed": {
     "message": "Server destroyed",
     "description": "This string appears in a transient notification toast. It is shown when a server has been successfully destroyed."
@@ -716,6 +744,14 @@
   "settings_access_key_port": {
     "message": "Port for new access keys",
     "description": "This string appears in the server settings view as a label for the server port number used to create new access keys."
+  },
+  "settings_access_key_port_save": {
+    "message": "Save",
+    "description": "This string appears as text on a button to submit the new server port number used to create new access keys."
+  },
+  "settings_access_key_port_cancel": {
+    "message": "Cancel",
+    "description": "This string appears as text on a button to undo changes to the server port number without submitting."
   },
   "settings_metrics_header": {
     "message": "Share anonymous metrics",

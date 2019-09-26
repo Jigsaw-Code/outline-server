@@ -106,6 +106,10 @@ export class App {
       this.renameAccessKey(event.detail.accessKeyId, event.detail.newName, event.detail.entry);
     });
 
+    appRoot.addEventListener('ChangePortForNewAccessKeysRequested', (event: PolymerEvent) => {
+      this.setPortForNewAccessKeys(event.detail.port, event.detail.success, event.detail.fail);
+    });
+
     // The UI wants us to validate a server management URL.
     // "Reply" by setting a field on the relevant template.
     appRoot.addEventListener('ManualServerEdited', (event: PolymerEvent) => {
@@ -909,6 +913,30 @@ export class App {
           this.appRoot.showError(this.appRoot.localize('error-key-rename'));
           entry.revertName();
         });
+  }
+
+  private setPortForNewAccessKeys(port: number, success: () => void, fail: (message: string) => void) {
+    //TODO(NOW) localize
+    this.appRoot.showNotification(this.appRoot.localize("notification-keys-port-saving"));
+    const response = this.selectedServer.setPortForNewAccessKeys(port);
+    console.log(`response: ${response}`);
+    response.then(() => {
+      this.appRoot.showNotification(this.appRoot.localize("notification-keys-port-saved"));
+      success();
+    }).catch((error) => {
+      this.appRoot.showError(this.appRoot.localize("error-keys-port-not-saved"));
+      console.error(`Failed to set port for new access keys to ${port}: ${error}`);
+      if (error.isNetworkError()) {
+        fail(this.appRoot.localize("error-network"));
+        return;
+      }
+      const code = error.response.status;
+      if (code === 409) {
+        fail(this.appRoot.localize("error-keys-port-in-use"));
+        return;
+      }
+      fail(this.appRoot.localize("error-unknown"));
+    });
   }
 
   // Returns promise which fulfills when the server is created successfully,
