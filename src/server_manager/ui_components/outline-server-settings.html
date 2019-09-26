@@ -291,7 +291,7 @@
           return;
         }
         let port = Number(input.value);
-        if (port !== port || (port < 1 || port > 65535) || !Number.isInteger(port)) {
+        if (Number.isNaN(port) || (port < 1 || port > 65535) || !Number.isInteger(port)) {
           input.invalid = true;
           this.$.keysPortSaveButton.disabled = true;
           input.errorMessage = this.localize('error-keys-port-bad-input');
