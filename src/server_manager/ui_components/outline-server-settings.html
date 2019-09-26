@@ -193,7 +193,6 @@
         isServerManaged: Boolean,
         name: String,
         metricsEnabled: { type: Boolean, observer: '_metricsEnabledChanged' },
-        serverPortForNewAccessKeysValid: {type: Boolean, value: false},
         // Initialize to null so we can use the hidden attribute, which does not work well with undefined values.
         serverId: {type: String, value: null},
         serverHostname: {type: String, value: null},
@@ -255,6 +254,7 @@
       },
       _handleKeysPortServerSuccess() {
         console.info('Port successfully changed');
+        this.serverPortForNewAccessKeys = Number(this.$.keysPortInput.value);
         this._keysPortButtonsVisible(false);
         this.$.keysPortInput.readonly = false;
       },
@@ -268,11 +268,19 @@
         input.focus();
       },
       _handleKeysPortSave: function() {
+        const input = this.$.keysPortInput;
+        if (Number(input.value) === this.serverPortForNewAccessKeys) {
+          this._handleKeysPortCancel();
+          return;
+        };
         this._keysPortButtonsEnabled(false);
-        this.$.keysPortInput.readonly = true;
-        this.$.keysPortInput.invalid = false;
-        this.fire('ChangePortForNewAccessKeysRequested', 
-                  {port: Number(this.$.keysPortInput.value), success: this._handleKeysPortServerSuccess.bind(this), fail: this._handleKeysPortServerFail.bind(this)});
+        input.readonly = true;
+        input.invalid = false;
+        this.fire('ChangePortForNewAccessKeysRequested', {
+          port: Number(this.$.keysPortInput.value), 
+          success: this._handleKeysPortServerSuccess.bind(this), 
+          fail: this._handleKeysPortServerFail.bind(this)
+        });
       },
       _handleKeysPortCancel: function() {
         this.$.keysPortInput.value = this.serverPortForNewAccessKeys;
