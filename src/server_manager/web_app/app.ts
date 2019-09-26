@@ -918,7 +918,6 @@ export class App {
   private setPortForNewAccessKeys(port: number, success: () => void, fail: (message: string) => void) {
     this.appRoot.showNotification(this.appRoot.localize("notification-keys-port-saving"));
     const response = this.selectedServer.setPortForNewAccessKeys(port);
-    console.log(`response: ${response}`);
     response.then(() => {
       this.appRoot.showNotification(this.appRoot.localize("notification-keys-port-saved"));
       success();

@@ -254,12 +254,12 @@
         this._keysPortButtonsEnabled(true);
       },
       _handleKeysPortServerSuccess() {
-        console.log('Port successfully changed');
+        console.info('Port successfully changed');
         this._keysPortButtonsVisible(false);
         this.$.keysPortInput.readonly = false;
       },
       _handleKeysPortServerFail(message) {
-        console.log('Port failed to be changed');
+        console.error('Port failed to be changed');
         const input = this.$.keysPortInput;
         this._keysPortButtonsEnabled(true); 
         input.invalid = true;
