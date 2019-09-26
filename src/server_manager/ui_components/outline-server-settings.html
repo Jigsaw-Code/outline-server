@@ -163,7 +163,6 @@
             <p class="detail">[[localize('settings-server-rename')]]</p>
             <div id="portForNewAccessKeysContainer">
               <paper-input id="keysPortInput" value="[[serverPortForNewAccessKeys]]" label="[[localize('settings-access-key-port')]]" maxlength="5" error-color="#ffffff" error-message="ERRORMESSSAGE" hidden$="[[!serverPortForNewAccessKeys]]" on-click="_handleKeysPortClick" on-keyup="_handleKeysPortInputKeyDown" always-float-label maxlength="100"></paper-input>
-              <!-- TODO localize button text-->
               <paper-button id="keysPortCancelButton" hidden="true" on-click="_handleKeysPortCancel">[[localize('settings-access-key-port-cancel')]]</paper-button>
               <paper-button id="keysPortSaveButton" hidden="true" on-click="_handleKeysPortSave">[[localize('settings-access-key-port-save')]]</paper-button>
             </div>
