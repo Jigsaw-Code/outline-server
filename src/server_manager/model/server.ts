@@ -60,7 +60,7 @@ export interface Server {
   getPortForNewAccessKeys(): number|undefined;
 
   // Changes the port newly created access keys connect to.
-  setPortForNewAccessKeys?(port: number): Promise<void>;
+  setPortForNewAccessKeys(port: number): Promise<void>;
 }
 
 // Manual servers are servers which the user has independently setup to run

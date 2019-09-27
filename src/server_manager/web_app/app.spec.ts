@@ -375,6 +375,9 @@ class FakeServer implements server.Server {
   getPortForNewAccessKeys(): number|undefined {
     return undefined;
   }
+  setPortForNewAccessKeys(): Promise<void> {
+    return Promise.reject(new Error('FakeServer.setPortForNewAccessKeys not implemented'));
+  }
 }
 
 class FakeManualServer extends FakeServer implements server.ManualServer {

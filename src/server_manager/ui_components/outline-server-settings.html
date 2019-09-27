@@ -250,7 +250,9 @@
       },
       _handleKeysPortClick: function() {
         this._keysPortButtonsVisible(true);
-        this._keysPortButtonsEnabled(true);
+        const invalid = this.$.keysPortInput.invalid;
+        this.$.keysPortSaveButton.disabled = invvalid;
+        this.$.keysPortCancelButton.disabled = false;
       },
       _handleKeysPortServerSuccess() {
         console.info('Port successfully changed');
@@ -293,7 +295,7 @@
           this._handleKeysPortCancel();
           input.blur();
           return; 
-        } else if (event.key === 'Enter') {
+        } else if (event.key === 'Enter' && !input.invalid) {
           this._handleKeysPortSave();
           input.blur();
           return;
