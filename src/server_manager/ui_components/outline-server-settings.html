@@ -251,7 +251,7 @@
       _handleKeysPortClick: function() {
         this._keysPortButtonsVisible(true);
         const invalid = this.$.keysPortInput.invalid;
-        this.$.keysPortSaveButton.disabled = invvalid;
+        this.$.keysPortSaveButton.disabled = invalid;
         this.$.keysPortCancelButton.disabled = false;
       },
       _handleKeysPortServerSuccess() {
