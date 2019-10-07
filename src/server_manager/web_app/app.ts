@@ -916,13 +916,13 @@ export class App {
   }
 
   private setPortForNewAccessKeys(port: number, success: () => void, fail: (message: string) => void) {
-    this.appRoot.showNotification(this.appRoot.localize("notification-keys-port-saving"));
+    this.appRoot.showNotification(this.appRoot.localize("saving"));
     const response = this.selectedServer.setPortForNewAccessKeys(port);
     response.then(() => {
-      this.appRoot.showNotification(this.appRoot.localize("notification-keys-port-saved"));
+      this.appRoot.showNotification(this.appRoot.localize("saved"));
       success();
     }).catch((error) => {
-      this.appRoot.showError(this.appRoot.localize("error-keys-port-not-saved"));
+      this.appRoot.showError(this.appRoot.localize("error-not-saved"));
       console.error(`Failed to set port for new access keys to ${port}: ${error}`);
       if (error.isNetworkError()) {
         fail(this.appRoot.localize("error-network"));
@@ -933,7 +933,7 @@ export class App {
         fail(this.appRoot.localize("error-keys-port-in-use"));
         return;
       }
-      fail(this.appRoot.localize("error-unknown"));
+      fail(this.appRoot.localize("error-unexpected"));
     });
   }
 

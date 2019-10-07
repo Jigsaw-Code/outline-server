@@ -59,7 +59,7 @@ export interface Server {
   // Returns undefined if the server doesn't have a port set.
   getPortForNewAccessKeys(): number|undefined;
 
-  // Changes the port newly created access keys connect to.
+  // Changes the port number for new access keys.
   setPortForNewAccessKeys(port: number): Promise<void>;
 }
 

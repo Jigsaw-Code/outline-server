@@ -162,9 +162,9 @@
             <paper-input id="serverNameInput" class="server-name" value="{{name}}" label="[[localize('settings-server-name')]]" always-float-label maxlength="100" on-keydown="_handleNameInputKeyDown" on-blur="_handleNameInputBlur"></paper-input>
             <p class="detail">[[localize('settings-server-rename')]]</p>
             <div id="portForNewAccessKeysContainer">
-              <paper-input id="keysPortInput" value="[[serverPortForNewAccessKeys]]" label="[[localize('settings-access-key-port')]]" maxlength="5" error-color="#ffffff" error-message="ERRORMESSSAGE" hidden$="[[!serverPortForNewAccessKeys]]" on-click="_handleKeysPortClick" on-keyup="_handleKeysPortInputKeyDown" always-float-label maxlength="100"></paper-input>
-              <paper-button id="keysPortCancelButton" hidden="true" on-click="_handleKeysPortCancel">[[localize('settings-access-key-port-cancel')]]</paper-button>
-              <paper-button id="keysPortSaveButton" hidden="true" on-click="_handleKeysPortSave">[[localize('settings-access-key-port-save')]]</paper-button>
+              <paper-input id="keysPortInput" value="[[serverPortForNewAccessKeys]]" label="[[localize('settings-access-key-port')]]" maxlength="5" error-message="" hidden$="[[!serverPortForNewAccessKeys]]" on-click="_handleKeysPortClick" on-keyup="_handleKeysPortInputKeyDown" always-float-label maxlength="100"></paper-input>
+              <paper-button id="keysPortCancelButton" hidden="true" on-click="_handleKeysPortCancel">[[localize('cancel')]]</paper-button>
+              <paper-button id="keysPortSaveButton" hidden="true" on-click="_handleKeysPortSave">[[localize('save')]]</paper-button>
             </div>
             <paper-input readonly value="[[serverHostname]]" label="[[localize('settings-server-hostname')]]" hidden$="[[!serverHostname]]" always-float-label maxlength="100"></paper-input>
             <paper-input readonly value="[[serverManagementApiUrl]]" label="[[localize('settings-server-api-url')]]" hidden$="[[!serverManagementApiUrl]]" always-float-label maxlength="100"></paper-input>
@@ -240,16 +240,16 @@
           this.fire(metricsSignal);
         }
       },
-      _keysPortButtonsVisible: function(visible) {
+      _toggleKeysPortButtonsVisible: function(visible) {
         this.$.keysPortSaveButton.hidden = !visible;
         this.$.keysPortCancelButton.hidden = !visible;
       },
-      _keysPortButtonsEnabled: function(enabled) {
+      _toggleKeysPortButtonsEnabled: function(enabled) {
         this.$.keysPortSaveButton.disabled = !enabled;
         this.$.keysPortCancelButton.disabled = !enabled;
       },
       _handleKeysPortClick: function() {
-        this._keysPortButtonsVisible(true);
+        this._toggleKeysPortButtonsVisible(true);
         const invalid = this.$.keysPortInput.invalid;
         this.$.keysPortSaveButton.disabled = invalid;
         this.$.keysPortCancelButton.disabled = false;
@@ -257,13 +257,13 @@
       _handleKeysPortServerSuccess() {
         console.info('Port successfully changed');
         this.serverPortForNewAccessKeys = Number(this.$.keysPortInput.value);
-        this._keysPortButtonsVisible(false);
+        this._toggleKeysPortButtonsVisible(false);
         this.$.keysPortInput.readonly = false;
       },
       _handleKeysPortServerFail(message) {
         console.error('Port failed to be changed');
         const input = this.$.keysPortInput;
-        this._keysPortButtonsEnabled(true); 
+        this._toggleKeysPortButtonsEnabled(true); 
         input.invalid = true;
         input.errorMessage = message;
         input.readonly = false;
@@ -275,7 +275,7 @@
           this._handleKeysPortCancel();
           return;
         };
-        this._keysPortButtonsEnabled(false);
+        this._toggleKeysPortButtonsEnabled(false);
         input.readonly = true;
         input.invalid = false;
         this.fire('ChangePortForNewAccessKeysRequested', {
@@ -287,7 +287,7 @@
       _handleKeysPortCancel: function() {
         this.$.keysPortInput.value = this.serverPortForNewAccessKeys;
         this.$.keysPortInput.invalid = false;
-        this._keysPortButtonsVisible(false);
+        this._toggleKeysPortButtonsVisible(false);
       },
       _handleKeysPortInputKeyDown: function(e) {
         let input = this.$.keysPortInput;

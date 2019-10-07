@@ -213,10 +213,6 @@
     "message": "The port is already in use on the server.",
     "description": "This string appears in an inline error message.  It signifies that the input port for new access keys is already being used on the server and is unavailable."
   },
-  "error_keys_port_not_saved": {
-    "messages": "Not Saved",
-    "description": "This string appears in an error notification toast.  It signifies failure to submit user input to change the port number for new access keys."
-  },
   "error_licenses": {
     "message": "Could not load licenses.",
     "description": "This string appears in a dialog that shows the application's software licenses. It is shown instead of the licenses' text when loading them fails."
@@ -228,6 +224,10 @@
   "error_network": {
     "messages": "A network error occurred.",
     "description": "This string indicates that an error happened due to network errors like not being connected to the internet."
+  },
+  "error_not_saved": {
+    "messages": "Not Saved",
+    "description": "This string appears in an error notification toast.  It signifies failure to submit user input to change the port number for new access keys."
   },
   "error_server_creation": {
     "message": "There was an error creating your Outline server.",
@@ -269,7 +269,7 @@
       }
     }
   },
-  "error_unknown": {
+  "error_unexpected": {
     "message": "An unknown error occurred.",
     "description": "This string signifies that an error we didn't expect was encountered."
   },
@@ -535,14 +535,6 @@
     "message": "Key removed",
     "description": "This string appears in a transient notification toast. It is shown when a server access key has been successfully removed."
   },
-  "notification_keys_saving": {
-    "message": "Saving...",
-    "description": "This string appears in a transient notification toast.  It is shown while submitting user input for a new port number to create access keys to the server."
-  },
-  "notification_keys_port_saved": {
-    "message": "Saved",
-    "description": "This string appears in a transient notification toast.  It is shown on a successful submission of user input to change the port number for new access keys."
-  },
   "notification_server_destroyed": {
     "message": "Server destroyed",
     "description": "This string appears in a transient notification toast. It is shown when a server has been successfully destroyed."
@@ -622,6 +614,18 @@
   "retry": {
     "message": "Retry",
     "description": "This string appears across the application as a button. It allows the user to retry a failed operation."
+  },
+  "save": {
+    "message": "Save",
+    "description": "This string appears across the application as a button.  It allows the user to submit some input"
+  },
+  "saved": {
+    "message": "Saved",
+    "description": "This string appears across the application as a transient notification toast.  It appears when user input has been accepted."
+  },
+  "saving": {
+    "message": "Saving...",
+    "description": "This string appears across the application as a transient notification toast.  It appears when user input is being processed."
   },
   "server_access": {
     "message": "Server access",
@@ -744,14 +748,6 @@
   "settings_access_key_port": {
     "message": "Port for new access keys",
     "description": "This string appears in the server settings view as a label for the server port number used to create new access keys."
-  },
-  "settings_access_key_port_save": {
-    "message": "Save",
-    "description": "This string appears as text on a button to submit the new server port number used to create new access keys."
-  },
-  "settings_access_key_port_cancel": {
-    "message": "Cancel",
-    "description": "This string appears as text on a button to undo changes to the server port number without submitting."
   },
   "settings_metrics_header": {
     "message": "Share anonymous metrics",
