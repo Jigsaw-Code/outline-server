@@ -214,7 +214,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
 
   setDataUsageTimeframe(timeframe: DataUsageTimeframe): Promise<void> {
     if (!timeframe || timeframe.hours <= 0) {
-      throw new errors.InvalidDataLimitTimeframe();
+      throw new errors.InvalidDataUsageTimeframe();
     }
     this.dataLimitTimeframe = timeframe;
     return this.enforceAccessKeyDataLimits();

@@ -111,31 +111,25 @@ describe('ShadowsocksManagerService', () => {
   });
 
   describe('listAccessKeys', () => {
-    it('lists access keys in order', (done) => {
+    it('lists access keys in order', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
-
       // Create 2 access keys with names.
-      Promise
-          .all([
-            createNewAccessKeyWithName(repo, 'keyName1'),
-            createNewAccessKeyWithName(repo, 'keyName2')
-          ])
-          .then((keys) => {
-            // Verify that response returns keys in correct order with correct names.
-            const res = {
-              send: (httpCode, data) => {
-                expect(httpCode).toEqual(200);
-                expect(data.accessKeys.length).toEqual(2);
-                expect(data.accessKeys[0].name).toEqual(keys[0].name);
-                expect(data.accessKeys[0].id).toEqual(keys[0].id);
-                expect(data.accessKeys[1].name).toEqual(keys[1].name);
-                expect(data.accessKeys[1].id).toEqual(keys[1].id);
-                responseProcessed = true;  // required for afterEach to pass.
-              }
-            };
-            service.listAccessKeys({params: {}}, res, done);
-          });
+      const key1 = await createNewAccessKeyWithName(repo, 'keyName1');
+      const key2 = await createNewAccessKeyWithName(repo, 'keyName2');
+      // Verify that response returns keys in correct order with correct names.
+      const res = {
+        send: (httpCode, data) => {
+          expect(httpCode).toEqual(200);
+          expect(data.accessKeys.length).toEqual(2);
+          expect(data.accessKeys[0].name).toEqual(key1.name);
+          expect(data.accessKeys[0].id).toEqual(key1.id);
+          expect(data.accessKeys[1].name).toEqual(key2.name);
+          expect(data.accessKeys[1].id).toEqual(key2.id);
+          responseProcessed = true;  // required for afterEach to pass.
+        }
+      };
+      service.listAccessKeys({params: {}}, res, done);
     });
     it('lists access keys with expected properties', async (done) => {
       const repo = getAccessKeyRepository();
@@ -329,77 +323,79 @@ describe('ShadowsocksManagerService', () => {
   });
 
   describe('removeAccessKey', () => {
-    it('removes keys', (done) => {
+    it('removes keys', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
-
-      // Create 2 access keys with names.
-      Promise
-          .all([
-            createNewAccessKeyWithName(repo, 'keyName1'),
-            createNewAccessKeyWithName(repo, 'keyName2')
-          ])
-          .then((keys) => {
-            const res = {
-              send: (httpCode, data) => {
-                expect(httpCode).toEqual(204);
-                // expect that the only remaining key is the 2nd key we created.
-                expect(getFirstAccessKey(repo).id === keys[1].id);
-                responseProcessed = true;  // required for afterEach to pass.
-              }
-            };
-            // remove the 1st key.
-            service.removeAccessKey({params: {id: keys[0].id}}, res, done);
-          });
+      const key1 = await repo.createNewAccessKey();
+      const key2 = await repo.createNewAccessKey();
+      const res = {
+        send: (httpCode, data) => {
+          expect(httpCode).toEqual(204);
+          // expect that the only remaining key is the 2nd key we created.
+          const keys = repo.listAccessKeys();
+          expect(keys.length).toEqual(1);
+          expect(keys[0].id === key2.id);
+          responseProcessed = true;  // required for afterEach to pass.
+        }
+      };
+      // remove the 1st key.
+      service.removeAccessKey({params: {id: key1.id}}, res, done);
     });
-    it('Remove returns a 500 when the repository throws an exception', (done) => {
+    it('Remove returns a 500 when the repository throws an exception', async (done) => {
       const repo = getAccessKeyRepository();
       spyOn(repo, 'removeAccessKey').and.throwError('cannot write to disk');
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
-
-      // Create 2 access keys with names.
-      createNewAccessKeyWithName(repo, 'keyName1').then((key) => {
-        const res = {send: (httpCode, data) => {}};
-        service.removeAccessKey({params: {id: key.id}}, res, (error) => {
-          expect(error.statusCode).toEqual(500);
-          responseProcessed = true;  // required for afterEach to pass.
-          done();
-        });
+      const key = await createNewAccessKeyWithName(repo, 'keyName1');
+      const res = {send: (httpCode, data) => {}};
+      service.removeAccessKey({params: {id: key.id}}, res, (error) => {
+        expect(error.statusCode).toEqual(500);
+        responseProcessed = true;  // required for afterEach to pass.
+        done();
       });
     });
   });
 
   describe('renameAccessKey', () => {
-    it('renames keys', (done) => {
+    it('renames keys', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
       const OLD_NAME = 'oldName';
       const NEW_NAME = 'newName';
 
-      createNewAccessKeyWithName(repo, OLD_NAME).then((key) => {
-        expect(getFirstAccessKey(repo).name === OLD_NAME);
-        const res = {
-          send: (httpCode, data) => {
-            expect(httpCode).toEqual(204);
-            expect(getFirstAccessKey(repo).name === NEW_NAME);
-            responseProcessed = true;  // required for afterEach to pass.
-          }
-        };
-        service.renameAccessKey({params: {id: key.id, name: NEW_NAME}}, res, done);
+      const key = await createNewAccessKeyWithName(repo, OLD_NAME);
+      expect(key.name === OLD_NAME);
+      const res = {
+        send: (httpCode, data) => {
+          expect(httpCode).toEqual(204);
+          expect(key.name === NEW_NAME);
+          responseProcessed = true;  // required for afterEach to pass.
+        }
+      };
+      service.renameAccessKey({params: {id: key.id, name: NEW_NAME}}, res, done);
+    });
+    it('Rename returns a 400 when the access key id is not a string', async (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerService('default name', null, repo, null, null);
+
+      const key = await repo.createNewAccessKey();
+      const res = {send: (httpCode, data) => {}};
+      service.renameAccessKey({params: {id: 123}}, res, (error) => {
+        expect(error.statusCode).toEqual(400);
+        responseProcessed = true;  // required for afterEach to pass.
+        done();
       });
     });
-    it('Rename returns a 500 when the repository throws an exception', (done) => {
+    it('Rename returns a 500 when the repository throws an exception', async (done) => {
       const repo = getAccessKeyRepository();
       spyOn(repo, 'renameAccessKey').and.throwError('cannot write to disk');
       const service = new ShadowsocksManagerService('default name', null, repo, null, null);
 
-      createNewAccessKeyWithName(repo, 'oldName').then((key) => {
-        const res = {send: (httpCode, data) => {}};
-        service.renameAccessKey({params: {id: key.id, name: 'newName'}}, res, (error) => {
-          expect(error.statusCode).toEqual(500);
-          responseProcessed = true;  // required for afterEach to pass.
-          done();
-        });
+      const key = await createNewAccessKeyWithName(repo, 'oldName');
+      const res = {send: (httpCode, data) => {}};
+      service.renameAccessKey({params: {id: key.id, name: 'newName'}}, res, (error) => {
+        expect(error.statusCode).toEqual(500);
+        responseProcessed = true;  // required for afterEach to pass.
+        done();
       });
     });
   });
@@ -602,10 +598,6 @@ describe('ShadowsocksManagerService', () => {
     });
   });
 });
-
-function getFirstAccessKey(repo: AccessKeyRepository) {
-  return repo.listAccessKeys()[0];
-}
 
 async function createNewAccessKeyWithName(
     repo: AccessKeyRepository, name: string): Promise<AccessKey> {

@@ -46,16 +46,19 @@ function accessKeyToJson(accessKey: AccessKey) {
   };
 }
 
+// Type to reflect that we receive untyped JSON request parameters.
+interface RequestParams {
+  // Supported parameters:
+  //   id: string
+  //   name: string
+  //   metricsEnabled: boolean
+  //   limit: DataUsage
+  //   port: number
+  //   hours: number
+  [param: string]: unknown;
+}
 // Simplified request and response type interfaces containing only the
 // properties we actually use, to make testing easier.
-interface RequestParams {
-  id?: string;
-  name?: string;
-  metricsEnabled?: boolean;
-  limit?: DataUsage|{};
-  port?: number;
-  hours?: number;
-}
 interface RequestType {
   params: RequestParams;
 }
@@ -93,8 +96,14 @@ export function bindService(
   apiServer.put(`${apiPrefix}/metrics/enabled`, service.setShareMetrics.bind(service));
 }
 
-interface SetShareMetricsParams {
-  metricsEnabled: boolean;
+function validateAccessKeyId(accessKeyId: unknown): string {
+  if (!accessKeyId) {
+    throw new restify.MissingParameterError({statusCode: 400}, 'Parameter `id` is missing');
+  } else if (typeof accessKeyId !== 'string') {
+    throw new restify.InvalidArgumentError(
+        {statusCode: 400}, 'Parameter `id` must be of type string');
+  }
+  return accessKeyId;
 }
 
 // The ShadowsocksManagerService manages the access keys that can use the server
@@ -107,7 +116,12 @@ export class ShadowsocksManagerService {
       private metricsPublisher: SharedMetricsPublisher) {}
 
   public renameServer(req: RequestType, res: ResponseType, next: restify.Next): void {
+    logging.debug(`renameServer request ${JSON.stringify(req.params)}`);
     const name = req.params.name;
+    if (!name) {
+      return next(
+          new restify.MissingParameterError({statusCode: 400}, 'Parameter `name` is missing'));
+    }
     if (typeof name !== 'string' || name.length > 100) {
       next(new restify.InvalidArgumentError(
           `Requested server name should be a string <= 100 characters long.  Got ${name}`));
@@ -163,16 +177,14 @@ export class ShadowsocksManagerService {
       Promise<void> {
     try {
       logging.debug(`setPortForNewAccessKeys request ${JSON.stringify(req.params)}`);
-      if (!req.params.port) {
+      const port = req.params.port;
+      if (!port) {
         return next(
             new restify.MissingParameterError({statusCode: 400}, 'Parameter `port` is missing'));
-      }
-
-      const port = req.params.port;
-      if (typeof port !== 'number') {
+      } else if (typeof port !== 'number') {
         return next(new restify.InvalidArgumentError(
             {statusCode: 400},
-            `Expected an numeric port, instead got ${port} of type ${typeof port}`));
+            `Expected a numeric port, instead got ${port} of type ${typeof port}`));
       }
       await this.accessKeys.setPortForNewAccessKeys(port);
       this.serverConfig.data().portForNewAccessKeys = port;
@@ -194,7 +206,7 @@ export class ShadowsocksManagerService {
   public removeAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
     try {
       logging.debug(`removeAccessKey request ${JSON.stringify(req.params)}`);
-      const accessKeyId = req.params.id;
+      const accessKeyId = validateAccessKeyId(req.params.id);
       this.accessKeys.removeAccessKey(accessKeyId);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
@@ -202,6 +214,8 @@ export class ShadowsocksManagerService {
       logging.error(error);
       if (error instanceof errors.AccessKeyNotFound) {
         return next(new restify.NotFoundError(error.message));
+      } else if (error instanceof restify.HttpError) {
+        return next(error);
       }
       return next(new restify.InternalServerError());
     }
@@ -210,14 +224,24 @@ export class ShadowsocksManagerService {
   public renameAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
     try {
       logging.debug(`renameAccessKey request ${JSON.stringify(req.params)}`);
-      const accessKeyId = req.params.id;
-      this.accessKeys.renameAccessKey(accessKeyId, req.params.name);
+      const accessKeyId = validateAccessKeyId(req.params.id);
+      const name = req.params.name;
+      if (!name) {
+        return next(
+            new restify.MissingParameterError({statusCode: 400}, 'Parameter `name` is missing'));
+      } else if (typeof name !== 'string') {
+        return next(new restify.InvalidArgumentError(
+            {statusCode: 400}, 'Parameter `name` must be of type string'));
+      }
+      this.accessKeys.renameAccessKey(accessKeyId, name);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
       if (error instanceof errors.AccessKeyNotFound) {
         return next(new restify.NotFoundError(error.message));
+      } else if (error instanceof restify.HttpError) {
+        return next(error);
       }
       return next(new restify.InternalServerError());
     }
@@ -226,14 +250,14 @@ export class ShadowsocksManagerService {
   public async setAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`setAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
-      const accessKeyId = req.params.id;
+      const accessKeyId = validateAccessKeyId(req.params.id);
       const limit = req.params.limit as DataUsage;
       if (!limit) {
         return next(
-            new restify.MissingParameterError({statusCode: 400}, 'Missing `limit` parameter'));
+            new restify.MissingParameterError({statusCode: 400}, 'Parameter `limit` is missing'));
       } else if (!Number.isInteger(limit.bytes)) {
-        return next(
-            new restify.InvalidArgumentError({statusCode: 400}, '`limit` must be an integer'));
+        return next(new restify.InvalidArgumentError(
+            {statusCode: 400}, 'Parameter `limit.bytes` must be an integer'));
       }
       await this.accessKeys.setAccessKeyDataLimit(accessKeyId, limit);
       res.send(HttpSuccess.NO_CONTENT);
@@ -244,6 +268,8 @@ export class ShadowsocksManagerService {
         return next(new restify.InvalidArgumentError({statusCode: 400}, error.message));
       } else if (error instanceof errors.AccessKeyNotFound) {
         return next(new restify.NotFoundError(error.message));
+      } else if (error instanceof restify.HttpError) {
+        return next(error);
       }
       return next(new restify.InternalServerError());
     }
@@ -252,7 +278,7 @@ export class ShadowsocksManagerService {
   public async removeAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`removeAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
-      const accessKeyId = req.params.id;
+      const accessKeyId = validateAccessKeyId(req.params.id);
       await this.accessKeys.removeAccessKeyDataLimit(accessKeyId);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
@@ -260,6 +286,8 @@ export class ShadowsocksManagerService {
       logging.error(error);
       if (error instanceof errors.AccessKeyNotFound) {
         return next(new restify.NotFoundError(error.message));
+      } else if (error instanceof restify.HttpError) {
+        return next(error);
       }
       return next(new restify.InternalServerError());
     }
@@ -269,12 +297,14 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`setDataUsageTimeframe request ${JSON.stringify(req.params)}`);
       const hours = req.params.hours;
-      if (hours === undefined) {  // The access key repository will validate the value.
+      if (!hours) {
         return next(
-            new restify.MissingParameterError({statusCode: 400}, 'Missing `hours` parameter'));
-      } else if (!Number.isInteger(hours)) {
-        return next(
-            new restify.InvalidArgumentError({statusCode: 400}, '`hours` must be an integer'));
+            new restify.MissingParameterError({statusCode: 400}, 'Parameter `hours` is missing'));
+      }
+      if (typeof hours !== 'number' ||
+          !Number.isInteger(hours)) {  // The access key repository will validate the value.
+        return next(new restify.InvalidArgumentError(
+            {statusCode: 400}, 'Parameter `hours` must be an integer'));
       }
       const dataUsageTimeframe = {hours};
       this.accessKeys.setDataUsageTimeframe(dataUsageTimeframe);
@@ -284,7 +314,7 @@ export class ShadowsocksManagerService {
       return next();
     } catch (error) {
       logging.error(error);
-      if (error instanceof errors.InvalidDataLimitTimeframe) {
+      if (error instanceof errors.InvalidDataUsageTimeframe) {
         return next(new restify.InvalidArgumentError({statusCode: 400}, error.message));
       }
       return next(new restify.InternalServerError());
@@ -310,18 +340,16 @@ export class ShadowsocksManagerService {
   }
 
   public setShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
-    if (!req.params) {
-      return next(
-          new restify.BadRequestError(`No params attached to request.  Instead got ${req}`));
+    logging.debug(`setShareMetrics request ${JSON.stringify(req.params)}`);
+    const metricsEnabled = req.params.metricsEnabled;
+    if (metricsEnabled === undefined || metricsEnabled === null) {
+      return next(new restify.MissingParameterError(
+          {statusCode: 400}, 'Parameter `metricsEnabled` is missing'));
+    } else if (typeof metricsEnabled !== 'boolean') {
+      return next(new restify.InvalidArgumentError(
+          {statusCode: 400}, 'Parameter `hours` must be an integer'));
     }
-    const enabledType = typeof req.params.metricsEnabled;
-    if (enabledType !== 'boolean') {
-      return next(
-          new restify.BadRequestError(`Expected metricsEnabled to be boolean.  Instead got ${
-              req.params.metricsEnabled}, with type ${enabledType}.`));
-    }
-    const enabled = req.params.metricsEnabled;
-    if (enabled) {
+    if (metricsEnabled) {
       this.metricsPublisher.startSharing();
     } else {
       this.metricsPublisher.stopSharing();
