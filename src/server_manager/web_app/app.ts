@@ -915,13 +915,13 @@ export class App {
         });
   }
 
-  private setPortForNewAccessKeys(port: number, success: () => void, fail: (message: string) => void) {
+  private async setPortForNewAccessKeys(port: number, success: () => void, fail: (message: string) => void) {
     this.appRoot.showNotification(this.appRoot.localize("saving"));
-    const response = this.selectedServer.setPortForNewAccessKeys(port);
-    response.then(() => {
+    try {
+      await this.selectedServer.setPortForNewAccessKeys(port);
       this.appRoot.showNotification(this.appRoot.localize("saved"));
       success();
-    }).catch((error) => {
+    } catch (error) {
       this.appRoot.showError(this.appRoot.localize("error-not-saved"));
       console.error(`Failed to set port for new access keys to ${port}: ${error}`);
       if (error.isNetworkError()) {
@@ -934,7 +934,7 @@ export class App {
         return;
       }
       fail(this.appRoot.localize("error-unexpected"));
-    });
+    }
   }
 
   // Returns promise which fulfills when the server is created successfully,

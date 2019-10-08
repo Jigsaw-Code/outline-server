@@ -53,7 +53,7 @@
   "error-server-unreachable": "Your Outline Server was installed correctly, but we are not able to connect to it. Most likely this is because your server's firewall rules are blocking incoming connections. Please review them and make sure to allow incoming TCP connections on ports ranging from 1024 to 65535.",
   "error-server-unreachable-title": "Unable to connect to your Outline Server",
   "error-servers-removed": "{serverNames} no longer present in your DigitalOcean account.",
-  "error-unexpected": "An unknown error occurred.",
+  "error-unexpected": "An unexpected error occurred.",
   "feedback-cloud-provider": "Select cloud provider",
   "feedback-cloud-provider-error": "Please select a cloud provider.",
   "feedback-connection": "Can't connect to my server",

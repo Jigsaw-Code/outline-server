@@ -270,7 +270,7 @@
     }
   },
   "error_unexpected": {
-    "message": "An unknown error occurred.",
+    "message": "An unexpected error occurred.",
     "description": "This string signifies that an error we didn't expect was encountered."
   },
   "feedback_cloud_provider": {
