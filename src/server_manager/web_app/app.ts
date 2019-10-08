@@ -923,7 +923,6 @@ export class App {
       success();
     } catch (error) {
       this.appRoot.showError(this.appRoot.localize("error-not-saved"));
-      console.error(`Failed to set port for new access keys to ${port}: ${error}`);
       if (error.isNetworkError()) {
         fail(this.appRoot.localize("error-network"));
         return;

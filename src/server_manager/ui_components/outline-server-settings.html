@@ -100,6 +100,8 @@
         --paper-checkbox-unchecked-color: var(--light-gray);
         --paper-checkbox-unchecked-ink-color: var(--primary-green);
       }
+      /* Skip processing these with postcss-rtl as it incorrectly parses the border-color
+         in the paper-input-container-underline-focus mixin. https://github.com/vkalinichev/postcss-rtl/issues/50 */
       /* rtl:begin:ignore */
       paper-input {
         /* Removes extra padding added by children of paper-input */
@@ -257,13 +259,11 @@
         this.$.keysPortCancelButton.disabled = false;
       },
       _handleKeysPortServerSuccess() {
-        console.info('Port successfully changed');
         this.serverPortForNewAccessKeys = Number(this.$.keysPortInput.value);
         this._toggleKeysPortButtonsVisible(false);
         this.$.keysPortInput.readonly = false;
       },
       _handleKeysPortServerFail(message) {
-        console.error('Port failed to be changed');
         const input = this.$.keysPortInput;
         this._toggleKeysPortButtonsEnabled(true); 
         input.invalid = true;
