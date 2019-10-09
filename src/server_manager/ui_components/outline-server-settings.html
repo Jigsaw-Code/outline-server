@@ -202,7 +202,7 @@
         serverHostname: {type: String, value: null},
         serverManagementApiUrl: {type: String, value: null},
         serverPortForNewAccessKeys: {type: Number, value: null},
-        isAccessKeyPortEditable: Boolean,
+        isAccessKeyPortEditable: {type: Boolean, value: false},
         serverCreationDate: {type: String, value: null},
         serverLocation: {type: String, value: null},
         serverMonthlyCost: {type: String, value: null},
@@ -254,7 +254,9 @@
         this.$.keysPortCancelButton.disabled = !enabled;
       },
       _handleKeysPortClick: function() {
-        if (!this.isAccessKeyPortEditable) { return; }
+        if (!this.isAccessKeyPortEditable) { 
+          return;
+        }
         this._toggleKeysPortButtonsVisible(true);
         const invalid = this.$.keysPortInput.invalid;
         this.$.keysPortSaveButton.disabled = invalid;

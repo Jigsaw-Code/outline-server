@@ -55,10 +55,12 @@ function isManualServer(testServer: server.Server): testServer is server.ManualS
 
 async function isAccessKeyPortEditable(server: server.Server): Promise<boolean> {
   try {
-    await server.setPortForNewAccessKeys(server.getPortForNewAccessKeys());
-    return true;
-  } catch (e) {
+    // -1 always fails, making this idempotent
+    await server.setPortForNewAccessKeys(-1);
+    // unreachable unless something went HORRIBLY WRONG
     return false;
+  } catch (e) {
+    return !e.isNetworkError() && e.response.code !== 404;
   }
 } 
 
