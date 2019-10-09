@@ -60,7 +60,7 @@ async function isAccessKeyPortEditable(server: server.Server): Promise<boolean> 
     // unreachable unless something went HORRIBLY WRONG
     return false;
   } catch (e) {
-    return !e.isNetworkError() && e.response.code !== 404;
+    return !e.isNetworkError() && e.response.status === 400;
   }
 } 
 
