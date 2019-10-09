@@ -53,6 +53,17 @@ function isManualServer(testServer: server.Server): testServer is server.ManualS
   return !!(testServer as server.ManualServer).forget;
 }
 
+async function isAccessKeyPortEditable(server: server.Server): Promise<boolean> {
+  try {
+    // -1 always fails, making this idempotent
+    await server.setPortForNewAccessKeys(-1);
+    // unreachable unless something went HORRIBLY WRONG
+    return false;
+  } catch (e) {
+    return !e.isNetworkError() && e.response.status === 400;
+  }
+} 
+
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -478,8 +489,8 @@ export class App {
     server.isHealthy().then((isHealthy) => {
       if (isHealthy) {
         // Sync the server display in case it was previously unreachable.
-        this.syncServerToDisplay(server).then(() => {
-          this.showServer(server, displayServer);
+        this.syncServerToDisplay(server).then(async () => {
+          await this.showServer(server, displayServer);
         });
       } else {
         // Display the unreachable server state within the server view.
@@ -744,11 +755,11 @@ export class App {
   private async syncAndShowServer(server: server.Server, timeoutMs = 250) {
     const displayServer = await this.syncServerToDisplay(server);
     await this.syncDisplayServersToUi();
-    this.showServer(server, displayServer);
+    await this.showServer(server, displayServer);
   }
 
   // Show the server management screen. Assumes the server is healthy.
-  private showServer(selectedServer: server.Server, selectedDisplayServer: DisplayServer): void {
+  private async showServer(selectedServer: server.Server, selectedDisplayServer: DisplayServer): Promise<void> {
     this.selectedServer = selectedServer;
     this.appRoot.selectedServer = selectedDisplayServer;
     this.displayServerRepository.storeLastDisplayedServerId(selectedDisplayServer.id);
@@ -761,6 +772,7 @@ export class App {
     view.serverHostname = selectedServer.getHostname();
     view.serverManagementApiUrl = selectedServer.getManagementApiUrl();
     view.serverPortForNewAccessKeys = selectedServer.getPortForNewAccessKeys();
+    view.isAccessKeyPortEditable = await isAccessKeyPortEditable(selectedServer);
     view.serverCreationDate = selectedServer.getCreatedDate().toLocaleString(
         this.appRoot.language, {year: 'numeric', month: 'long', day: 'numeric'});
 
