@@ -166,7 +166,7 @@
             <paper-input id="serverNameInput" class="server-name" value="{{name}}" label="[[localize('settings-server-name')]]" always-float-label maxlength="100" on-keydown="_handleNameInputKeyDown" on-blur="_handleNameInputBlur"></paper-input>
             <p class="detail">[[localize('settings-server-rename')]]</p>
             <div id="portForNewAccessKeysContainer">
-              <paper-input id="keysPortInput" allowed-pattern="[0-9]{1,5}" value="[[serverPortForNewAccessKeys]]" label="[[localize('settings-access-key-port')]]" maxlength="5" hidden$="[[!serverPortForNewAccessKeys]]" on-click="_handleKeysPortClick" on-keyup="_handleKeysPortInputKeyDown" always-float-label maxlength="100"></paper-input>
+              <paper-input id="keysPortInput" allowed-pattern="[0-9]{1,5}" value="[[serverPortForNewAccessKeys]]" label="[[localize('settings-access-key-port')]]" maxlength="5" hidden$="[[!serverPortForNewAccessKeys]]" on-tap="_handleKeysPortTap" on-keyup="_handleKeysPortInputKeyDown" always-float-label maxlength="100"></paper-input>
               <paper-button id="keysPortCancelButton" hidden="true" on-click="_handleKeysPortCancel">[[localize('cancel')]]</paper-button>
               <paper-button id="keysPortSaveButton" hidden="true" on-click="_handleKeysPortSave">[[localize('save')]]</paper-button>
             </div>
@@ -252,7 +252,7 @@
         this.$.keysPortSaveButton.disabled = !enabled;
         this.$.keysPortCancelButton.disabled = !enabled;
       },
-      _handleKeysPortClick: function() {
+      _handleKeysPortTap: function() {
         this._toggleKeysPortButtonsVisible(true);
         const invalid = this.$.keysPortInput.invalid;
         this.$.keysPortSaveButton.disabled = invalid;
