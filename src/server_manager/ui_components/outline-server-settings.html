@@ -244,28 +244,28 @@
           this.fire(metricsSignal);
         }
       },
-      _toggleKeysPortButtonsVisible: function(visible) {
+      _setKeysPortButtonsVisible: function(visible) {
         this.$.keysPortSaveButton.hidden = !visible;
         this.$.keysPortCancelButton.hidden = !visible;
       },
-      _toggleKeysPortButtonsEnabled: function(enabled) {
+      _setKeysPortButtonsEnabled: function(enabled) {
         this.$.keysPortSaveButton.disabled = !enabled;
         this.$.keysPortCancelButton.disabled = !enabled;
       },
       _handleKeysPortTap: function() {
-        this._toggleKeysPortButtonsVisible(true);
+        this._setKeysPortButtonsVisible(true);
         const invalid = this.$.keysPortInput.invalid;
         this.$.keysPortSaveButton.disabled = invalid;
         this.$.keysPortCancelButton.disabled = false;
       },
       _handleKeysPortServerSuccess() {
         this.serverPortForNewAccessKeys = Number(this.$.keysPortInput.value);
-        this._toggleKeysPortButtonsVisible(false);
+        this._setKeysPortButtonsVisible(false);
         this.$.keysPortInput.readonly = false;
       },
       _handleKeysPortServerFail(message) {
         const input = this.$.keysPortInput;
-        this._toggleKeysPortButtonsEnabled(true); 
+        this._setKeysPortButtonsEnabled(true); 
         input.invalid = true;
         input.errorMessage = message;
         input.readonly = false;
@@ -277,7 +277,7 @@
           this._handleKeysPortCancel();
           return;
         };
-        this._toggleKeysPortButtonsEnabled(false);
+        this._setKeysPortButtonsEnabled(false);
         input.readonly = true;
         input.invalid = false;
         this.fire('ChangePortForNewAccessKeysRequested', {
@@ -289,7 +289,7 @@
       _handleKeysPortCancel: function() {
         this.$.keysPortInput.value = this.serverPortForNewAccessKeys;
         this.$.keysPortInput.invalid = false;
-        this._toggleKeysPortButtonsVisible(false);
+        this._setKeysPortButtonsVisible(false);
       },
       _handleKeysPortInputKeyDown: function(e) {
         let input = this.$.keysPortInput;
