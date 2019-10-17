@@ -37,7 +37,7 @@ interface PolymerEvent extends Event {
 //   https://www.digitalocean.com/help/referral-program/
 const UNUSED_DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
 
-const CHANGE_KEYS_PORT_VERSION = "0.2.0";
+const CHANGE_KEYS_PORT_VERSION = "1.0.0";
 
 interface UiAccessKey {
   id: string;
