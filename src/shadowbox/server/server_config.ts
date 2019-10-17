@@ -34,6 +34,7 @@ export interface ServerConfigJson {
   rollouts?: RolloutConfigJson[];
   // Sliding timeframe, in hours, used to measure data usage and enforce data limits.
   dataUsageTimeframe?: DataUsageTimeframe;
+  // We don't serialize the shadowbox version, this is obtained dynamically from node.
 }
 
 // Serialized format for rollouts.

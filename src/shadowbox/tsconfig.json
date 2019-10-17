@@ -5,7 +5,8 @@
     "noImplicitAny": false,
     "noImplicitThis": true,
     "module": "commonjs",
-    "rootDir": "."
+    "rootDir": ".",
+    "resolveJsonModule": true
   },
   "include": [
     "server/main.ts",

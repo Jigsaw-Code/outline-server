@@ -28,6 +28,7 @@ export interface ServerConfig {
   serverId: string;
   createdTimestampMs: number;
   portForNewAccessKeys: number;
+  version: string;
 }
 
 export class ShadowboxServer implements server.Server {
@@ -78,6 +79,10 @@ export class ShadowboxServer implements server.Server {
     return this.apiRequest<void>('name', requestOptions).then(() => {
       this.serverConfig.name = name;
     });
+  }
+
+  getVersion(): string {
+    return this.serverConfig.version;
   }
 
   getMetricsEnabled(): boolean {

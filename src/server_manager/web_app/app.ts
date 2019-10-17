@@ -14,6 +14,7 @@
 
 import * as sentry from '@sentry/electron';
 import * as events from 'events';
+import * as semver from 'semver';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
@@ -35,6 +36,8 @@ interface PolymerEvent extends Event {
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
 const UNUSED_DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
+
+const CHANGE_KEYS_PORT_VERSION = "0.2.0";
 
 interface UiAccessKey {
   id: string;
@@ -538,7 +541,7 @@ export class App {
         return Promise.reject(e);
       }
 
-      return new Promise((resolve, reject) => {
+      return new Promise<T>((resolve, reject) => {
         this.appRoot.showConnectivityDialog((retry: boolean) => {
           if (retry) {
             this.digitalOceanRetry(f).then(resolve, reject);
@@ -761,6 +764,8 @@ export class App {
     view.serverHostname = selectedServer.getHostname();
     view.serverManagementApiUrl = selectedServer.getManagementApiUrl();
     view.serverPortForNewAccessKeys = selectedServer.getPortForNewAccessKeys();
+    const version = this.selectedServer.getVersion();
+    view.isAccessKeyPortEditable = version && semver.gte(version, CHANGE_KEYS_PORT_VERSION);
     view.serverCreationDate = selectedServer.getCreatedDate().toLocaleString(
         this.appRoot.language, {year: 'numeric', month: 'long', day: 'numeric'});
 

@@ -16,6 +16,9 @@ export interface Server {
   // Get the server's name for display.
   getName(): string;
 
+  // Gets the version of the shadowbox binary the server is running
+  getVersion(): string;
+
   // Updates the server name.
   setName(name: string): Promise<void>;
 
