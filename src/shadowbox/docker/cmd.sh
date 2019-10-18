@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+export SB_PUBLIC_IP=${SB_PUBLIC_IP:-$(curl https://ipinfo.io/ip)}
 export SB_METRICS_URL=${SB_METRICS_URL:-https://metrics-prod.uproxy.org}
 
 # Make sure we don't leak readable files to other users.
