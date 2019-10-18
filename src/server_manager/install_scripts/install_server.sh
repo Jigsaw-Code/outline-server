@@ -251,13 +251,8 @@ function write_config() {
   if [[ $FLAGS_KEYS_PORT != 0 ]]; then
     config+=("\"portForNewAccessKeys\":$FLAGS_KEYS_PORT")
   fi
-  config+=("\"hostname\":\"${PUBLIC_HOSTNAME}\"")
-  if [[ ${#config[@]} > 0 ]]; then
-  echo "config address: $STATE_DIR/shadowbox_server_config.json"
-    echo "{"$(join , "${config[@]}")"}" > $STATE_DIR/shadowbox_server_config.json
-    echo "config:"
-    cat $STATE_DIR/shadowbox_server_config.json
-  fi
+  config+=$(printf '"hostname": "%q"' ${PUBLIC_HOSTNAME})
+  echo "{"$(join , "${config[@]}")"}" > $STATE_DIR/shadowbox_server_config.json
 }
 
 function start_shadowbox() {

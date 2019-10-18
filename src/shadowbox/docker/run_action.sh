@@ -18,16 +18,16 @@ do_action shadowbox/docker/build
 
 readonly OUTLINE_DIR=/tmp/outline
 readonly STATE_DIR=$OUTLINE_DIR/persisted-state
+readonly CONTAINER_STATE_DIR=/root/shadowbox/persisted-state
 readonly STATE_CONFIG=$STATE_DIR/shadowbox_server_config.json
-mkdir -p $STATE_DIR && touch "$OUTLINE_DIR/config.json"
-[[ -e $STATE_CONFIG ]] || echo "{\"hostname\":\"127.0.0.1\"}" > $STATE_CONFIG
+mkdir -p $STATE_DIR && touch "$STATE_DIR/shadowbox_config.json"
+[[ -e $STATE_CONFIG ]] || echo '{"hostname":"127.0.0.1"}' > $STATE_CONFIG
 source $ROOT_DIR/src/shadowbox/scripts/make_test_certificate.sh "${OUTLINE_DIR}"
 
 # TODO: mount a folder rather than individual files.
 declare -a docker_bindings=(
-  -v "$OUTLINE_DIR/config.json":/root/shadowbox/shadowbox_config.json
-  -v "$STATE_DIR":/root/shadowbox/persisted-state
-  -v "$OUTLINE_DIR/stats.json":/root/shadowbox/shadowbox_stats.json
+  -v "$STATE_DIR":${CONTAINER_STATE_DIR}
+  -e "SB_STATE_DIR=${CONTAINER_STATE_DIR}"
   -v ${SB_CERTIFICATE_FILE}:${SB_CERTIFICATE_FILE}
   -v ${SB_PRIVATE_KEY_FILE}:${SB_PRIVATE_KEY_FILE}
   -e "LOG_LEVEL=${LOG_LEVEL:-debug}"
@@ -36,4 +36,6 @@ declare -a docker_bindings=(
   -e SB_PRIVATE_KEY_FILE=${SB_PRIVATE_KEY_FILE}
 )
 
-docker run --rm -it --network=host --name shadowbox "${docker_bindings[@]}" outline/shadowbox
+echo "Running image ${SB_IMAGE}"
+
+docker run --rm -it --network=host --name shadowbox "${docker_bindings[@]}" ${SB_IMAGE}

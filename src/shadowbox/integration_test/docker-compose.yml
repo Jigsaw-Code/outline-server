@@ -16,9 +16,8 @@ services:
     stop_signal: SIGKILL
 
   shadowbox:
-    image: ${SHADOWBOX_IMAGE:-outline/shadowbox}
+    image: ${SB_IMAGE:-outline/shadowbox}
     environment:
-      - SB_PUBLIC_IP=shadowbox
       - SB_API_PORT=443
       - SB_API_PREFIX=${SB_API_PREFIX}
       - LOG_LEVEL=debug
@@ -34,6 +33,7 @@ services:
     volumes:
       - ${SB_CERTIFICATE_FILE}:/root/shadowbox/test.crt
       - ${SB_PRIVATE_KEY_FILE}:/root/shadowbox/test.key
+      - ${TMP_STATE_DIR}:/root/shadowbox/persisted-state
     # The user management service doesn't quit with SIGTERM
     stop_signal: SIGKILL
 

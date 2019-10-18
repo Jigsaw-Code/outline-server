@@ -56,6 +56,7 @@ export function readServerConfig(filename: string): json_config.JsonConfig<Serve
     config.data().metricsEnabled = config.data().metricsEnabled || false;
     config.data().createdTimestampMs = config.data().createdTimestampMs || Date.now();
     config.data().dataUsageTimeframe = config.data().dataUsageTimeframe || {hours: 30 * 24};
+    config.data().hostname = config.data().hostname || process.env.SB_PUBLIC_IP;
     config.write();
     return config;
   } catch (error) {
