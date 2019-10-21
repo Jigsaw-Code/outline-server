@@ -110,7 +110,7 @@ export class App {
     });
 
     appRoot.addEventListener('ChangePortForNewAccessKeysRequested', (event: PolymerEvent) => {
-      this.setPortForNewAccessKeys(event.detail.port, event.detail.success, event.detail.fail);
+      this.setPortForNewAccessKeys(event.detail.port, event.detail.serverSettings);
     });
 
     // The UI wants us to validate a server management URL.
@@ -920,24 +920,24 @@ export class App {
         });
   }
 
-  private async setPortForNewAccessKeys(port: number, success: () => void, fail: (message: string) => void) {
+  private async setPortForNewAccessKeys(port: number, serverSettings: Polymer) {
     this.appRoot.showNotification(this.appRoot.localize("saving"));
     try {
       await this.selectedServer.setPortForNewAccessKeys(port);
       this.appRoot.showNotification(this.appRoot.localize("saved"));
-      success();
+      serverSettings.setKeysPortSaved();
     } catch (error) {
       this.appRoot.showError(this.appRoot.localize("error-not-saved"));
       if (error.isNetworkError()) {
-        fail(this.appRoot.localize("error-network"));
+        serverSettings.setKeysPortErrorState(this.appRoot.localize("error-network"));
         return;
       }
       const code = error.response.status;
       if (code === 409) {
-        fail(this.appRoot.localize("error-keys-port-in-use"));
+        serverSettings.setKeysPortErrorState(this.appRoot.localize("error-keys-port-in-use"));
         return;
       }
-      fail(this.appRoot.localize("error-unexpected"));
+      serverSettings.setKeysPortErrorState(this.appRoot.localize("error-unexpected"));
     }
   }
 

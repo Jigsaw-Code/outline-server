@@ -166,9 +166,9 @@
             <paper-input id="serverNameInput" class="server-name" value="{{name}}" label="[[localize('settings-server-name')]]" always-float-label maxlength="100" on-keydown="_handleNameInputKeyDown" on-blur="_handleNameInputBlur"></paper-input>
             <p class="detail">[[localize('settings-server-rename')]]</p>
             <div id="portForNewAccessKeysContainer">
-              <paper-input id="keysPortInput" readonly$="[[!isAccessKeyPortEditable]]" allowed-pattern="[0-9]{1,5}" value="[[serverPortForNewAccessKeys]]" label="[[localize('settings-access-key-port')]]" maxlength="5" hidden$="[[!serverPortForNewAccessKeys]]" on-tap="_handleKeysPortTap" on-keyup="_handleKeysPortInputKeyDown" always-float-label maxlength="100"></paper-input>
-              <paper-button id="keysPortCancelButton" hidden="true" on-tap="_handleKeysPortCancel">[[localize('cancel')]]</paper-button>
-              <paper-button id="keysPortSaveButton" hidden="true" on-tap="_handleKeysPortSave">[[localize('save')]]</paper-button>
+              <paper-input id="keysPortInput" readonly$="[[!isAccessKeyPortEditable]]" allowed-pattern="[0-9]{1,5}" value="[[serverPortForNewAccessKeys]]" label="[[localize('settings-access-key-port')]]" maxlength="5" hidden$="[[!serverPortForNewAccessKeys]]" on-tap="setKeysPortEditing" on-keyup="_handleKeysPortInputKeyUp" always-float-label maxlength="100"></paper-input>
+              <paper-button id="keysPortCancelButton" hidden$="[[!showKeysPortButtons]]" disabled$="[[!enableKeysPortButtons]]" on-tap="cancelKeysPortEdit">[[localize('cancel')]]</paper-button>
+              <paper-button id="keysPortSaveButton" hidden$="[[!showKeysPortButtons]]" disabled$="[[!enableKeysPortButtons]]" on-tap="saveKeysPort">[[localize('save')]]</paper-button>
             </div>
             <paper-input readonly value="[[serverHostname]]" label="[[localize('settings-server-hostname')]]" hidden$="[[!serverHostname]]" always-float-label maxlength="100"></paper-input>
             <paper-input readonly value="[[serverManagementApiUrl]]" label="[[localize('settings-server-api-url')]]" hidden$="[[!serverManagementApiUrl]]" always-float-label maxlength="100"></paper-input>
@@ -208,6 +208,8 @@
         serverMonthlyCost: {type: String, value: null},
         serverMonthlyTransferLimit: {type: String, value: null},
         localize: {type: Function, readonly: true},
+        enableKeysPortButtons: {type: Boolean, value: false},
+        showKeysPortButtons: {type: Boolean, value: false}
       },
       update: function(name, metricsEnabled) {
         this.initialName = name;
@@ -245,64 +247,59 @@
           this.fire(metricsSignal);
         }
       },
-      _setKeysPortButtonsVisible: function(visible) {
-        this.$.keysPortSaveButton.hidden = !visible;
-        this.$.keysPortCancelButton.hidden = !visible;
-      },
-      _setKeysPortButtonsEnabled: function(enabled) {
-        this.$.keysPortSaveButton.disabled = !enabled;
-        this.$.keysPortCancelButton.disabled = !enabled;
-      },
-      _handleKeysPortTap: function() {
+      setKeysPortEditing: function() {
         if (!this.isAccessKeyPortEditable) { 
           return;
         }
-        this._setKeysPortButtonsVisible(true);
+        this.showKeysPortButtons = true;
         const invalid = this.$.keysPortInput.invalid;
         this.$.keysPortSaveButton.disabled = invalid;
         this.$.keysPortCancelButton.disabled = false;
       },
-      _handleKeysPortServerSuccess() {
+      setKeysPortSaved: function() {
         this.serverPortForNewAccessKeys = Number(this.$.keysPortInput.value);
-        this._setKeysPortButtonsVisible(false);
+        this.showKeysPortButtons = false;
         this.$.keysPortInput.readonly = false;
       },
-      _handleKeysPortServerFail(message) {
+      setKeysPortErrorState: function(message) {
         const input = this.$.keysPortInput;
-        this._setKeysPortButtonsEnabled(true); 
+        this.enableKeysPortButtons = true; 
         input.invalid = true;
         input.errorMessage = message;
         input.readonly = false;
         input.focus();
       },
-      _handleKeysPortSave: function() {
+      saveKeysPort: function() {
         const input = this.$.keysPortInput;
         if (Number(input.value) === this.serverPortForNewAccessKeys) {
-          this._handleKeysPortCancel();
+          this.cancelKeysPortEdit();
           return;
         };
-        this._setKeysPortButtonsEnabled(false);
+        this.enableKeysPortButtons = false;
         input.readonly = true;
         input.invalid = false;
         this.fire('ChangePortForNewAccessKeysRequested', {
           port: Number(this.$.keysPortInput.value), 
-          success: this._handleKeysPortServerSuccess.bind(this), 
-          fail: this._handleKeysPortServerFail.bind(this)
+          serverSettings: this
         });
       },
-      _handleKeysPortCancel: function() {
+      cancelKeysPortEdit: function() {
         this.$.keysPortInput.value = this.serverPortForNewAccessKeys;
         this.$.keysPortInput.invalid = false;
-        this._setKeysPortButtonsVisible(false);
+        this.showKeysPortButtons = false;
       },
-      _handleKeysPortInputKeyDown: function(e) {
+      _handleKeysPortInputKeyUp: function(e) {
         let input = this.$.keysPortInput;
+        const badInputMessage = this.localize('error-keys-port-bad-input');
         if (event.key === 'Escape') {
-          this._handleKeysPortCancel();
+          this.cancelKeysPortEdit();
           input.blur();
           return; 
-        } else if (event.key === 'Enter' && !input.invalid) {
-          this._handleKeysPortSave();
+        } else if (event.key === 'Enter') {
+          if (input.invalid && input.errorMessage === badInputMessage) {
+            return;
+          }
+          this.saveKeysPort();
           input.blur();
           return;
         }
@@ -310,7 +307,7 @@
         if (Number.isNaN(port) || (port < 1 || port > 65535) || !Number.isInteger(port)) {
           input.invalid = true;
           this.$.keysPortSaveButton.disabled = true;
-          input.errorMessage = this.localize('error-keys-port-bad-input');
+          input.errorMessage = badInputMessage;
         } else {
           input.invalid = false;
           this.$.keysPortSaveButton.disabled = false;

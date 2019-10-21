@@ -336,8 +336,7 @@ class FakeServer implements server.Server {
     return Promise.resolve();
   }
   getVersion() {
-    // Date of the initial commit to shadowsocks
-    return '20.4.2012';
+    return '1.2.3';
   }
   listAccessKeys() {
     return Promise.resolve([]);
