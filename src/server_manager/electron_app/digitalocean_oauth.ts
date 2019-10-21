@@ -17,6 +17,7 @@ import * as crypto from 'crypto';
 import * as electron from 'electron';
 import * as express from 'express';
 import * as http from 'http';
+import {AddressInfo} from 'net';
 import * as path from 'path';
 import * as request from 'request';
 
@@ -188,7 +189,7 @@ export function runOauth(): OauthSession {
     listenOnFirstPort(server, REGISTERED_REDIRECTS.map(e => e.port))
         .then((index) => {
           const {port, clientId} = REGISTERED_REDIRECTS[index];
-          const address = server.address();
+          const address = server.address() as AddressInfo;
           console.log(`OAuth target listening on ${address.address}:${address.port}`);
 
           const oauthUrl = `https://cloud.digitalocean.com/v1/oauth/authorize?client_id=${

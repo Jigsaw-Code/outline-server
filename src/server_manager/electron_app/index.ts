@@ -91,7 +91,8 @@ function createMainWindow() {
   const handleNavigation = (event: Event, url: string) => {
     try {
       const parsed: URL = new URL(url);
-      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:' ||
+          parsed.protocol === 'macappstore:') {
         shell.openExternal(url);
       } else {
         console.warn(`Refusing to open URL with protocol "${parsed.protocol}"`);
