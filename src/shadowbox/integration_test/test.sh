@@ -74,7 +74,11 @@ function fail() {
 
 function cleanup() {
   status=$?
-  (($DEBUG != 0)) || docker-compose --project-name=integrationtest down
+  if (($DEBUG != 0))
+  then
+    docker-compose --project-name=integrationtest down
+    rm -r ${TMP_STATE_DIR}
+  fi
   return $status
 }
 
