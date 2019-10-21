@@ -296,11 +296,10 @@
           input.blur();
           return; 
         } else if (event.key === 'Enter') {
-          if (input.invalid && input.errorMessage === badInputMessage) {
-            return;
+          if (!input.invalid) {  
+            this.saveKeysPort();
+            input.blur();
           }
-          this.saveKeysPort();
-          input.blur();
           return;
         }
         let port = Number(input.value);
