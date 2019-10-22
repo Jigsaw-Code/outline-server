@@ -19,8 +19,8 @@ do_action shadowbox/docker/build
 readonly OUTLINE_DIR=/tmp/outline
 readonly HOST_STATE_DIR=$OUTLINE_DIR/persisted-state
 readonly CONTAINER_STATE_DIR=/root/shadowbox/persisted-state
-readonly STATE_CONFIG=$STATE_DIR/shadowbox_server_config.json
-mkdir -p $STATE_DIR && touch "$STATE_DIR/shadowbox_config.json"
+readonly STATE_CONFIG=$HOST_STATE_DIR/shadowbox_server_config.json
+mkdir -p $HOST_STATE_DIR && touch "$HOST_STATE_DIR/shadowbox_config.json"
 [[ -e $STATE_CONFIG ]] || echo '{"hostname":"127.0.0.1"}' > $STATE_CONFIG
 source $ROOT_DIR/src/shadowbox/scripts/make_test_certificate.sh "${OUTLINE_DIR}"
 
