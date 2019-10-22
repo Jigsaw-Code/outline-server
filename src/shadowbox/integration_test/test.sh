@@ -30,6 +30,8 @@
 #
 # Each node runs on a different Docker container.
 
+set -x
+
 export DOCKER_CONTENT_TRUST=${DOCKER_CONTENT_TRUST:-1}
 
 readonly OUTPUT_DIR=$(mktemp -d)
