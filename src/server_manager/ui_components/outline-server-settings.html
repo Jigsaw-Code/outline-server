@@ -291,11 +291,11 @@
       _handleKeysPortInputKeyUp: function(e) {
         let input = this.$.keysPortInput;
         const badInputMessage = this.localize('error-keys-port-bad-input');
-        if (event.key === 'Escape') {
+        if (e.key === 'Escape') {
           this.cancelKeysPortEdit();
           input.blur();
           return; 
-        } else if (event.key === 'Enter') {
+        } else if (e.key === 'Enter') {
           if (!input.invalid) {  
             this.saveKeysPort();
             input.blur();
