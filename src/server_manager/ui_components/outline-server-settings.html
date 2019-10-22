@@ -60,12 +60,38 @@
         justify-content: space-between;
         align-items: flex-start;
       }
+      #portForNewAccessKeysContainer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
       .detail {
         margin-top: 0px;
         font-size: 12px;
       }
       .clickable {
         cursor: pointer;
+      }
+      #keysPortSaveButton {
+        background: var(--primary-green);
+        color: #fff;
+        height: 36px;
+        width: 83px;
+      }
+      #keysPortSaveButton[disabled] {
+        background-color: rgba(255, 255, 255, .12);
+        color: rgba(255, 255, 255, .3);
+      }
+      #keysPortCancelButton {
+        color: #fff;
+        width: 83px;
+      }
+      #keysPortCancelButton[disabled] {
+        color:rgba(255, 255, 255, 0.3);
+        background-color: rgba(0, 0, 0, 0);
+      }
+      #portForNewAccessKeysContainer {
+        max-width: 545px;
       }
       paper-checkbox {
         /* We want the ink to be the color we're going to, not coming from */
@@ -74,9 +100,14 @@
         --paper-checkbox-unchecked-color: var(--light-gray);
         --paper-checkbox-unchecked-ink-color: var(--primary-green);
       }
+      /* Skip processing these with postcss-rtl as it incorrectly parses the border-color
+         in the paper-input-container-underline-focus mixin. https://github.com/vkalinichev/postcss-rtl/issues/50 */
+      /* rtl:begin:ignore */
       paper-input {
         /* Removes extra padding added by children of paper-input */
         margin-top: -8px;
+        /* Create space for error messages */
+        margin-bottom: 14px;
         --paper-input-container-label-focus: {
           color: var(--primary-green);
         };
@@ -90,9 +121,10 @@
         --paper-input-container-color: var(--medium-gray);
         --paper-input-container-input: {
           color: #fff;
-        }
-
+        };
+        --paper-input-container-invalid-color: #f28b82;
       }
+      /* rtl:end:ignore */
       paper-input[readonly] {
         --paper-input-container-underline: {
           display: none;
@@ -133,7 +165,11 @@
             <h3>[[localize('settings-server-info')]]</h3>
             <paper-input id="serverNameInput" class="server-name" value="{{name}}" label="[[localize('settings-server-name')]]" always-float-label maxlength="100" on-keydown="_handleNameInputKeyDown" on-blur="_handleNameInputBlur"></paper-input>
             <p class="detail">[[localize('settings-server-rename')]]</p>
-            <paper-input readonly value="[[serverPortForNewAccessKeys]]" label="[[localize('settings-access-key-port')]]" hidden$="[[!serverPortForNewAccessKeys]]" always-float-label maxlength="100"></paper-input>
+            <div id="portForNewAccessKeysContainer">
+              <paper-input id="keysPortInput" readonly$="[[!isAccessKeyPortEditable]]" allowed-pattern="[0-9]{1,5}" value="[[serverPortForNewAccessKeys]]" label="[[localize('settings-access-key-port')]]" maxlength="5" hidden$="[[!serverPortForNewAccessKeys]]" on-tap="setKeysPortEditing" on-keyup="_handleKeysPortInputKeyUp" always-float-label maxlength="100"></paper-input>
+              <paper-button id="keysPortCancelButton" hidden$="[[!showKeysPortButtons]]" disabled$="[[!enableKeysPortButtons]]" on-tap="cancelKeysPortEdit">[[localize('cancel')]]</paper-button>
+              <paper-button id="keysPortSaveButton" hidden$="[[!showKeysPortButtons]]" disabled$="[[!enableKeysPortButtons]]" on-tap="saveKeysPort">[[localize('save')]]</paper-button>
+            </div>
             <paper-input readonly value="[[serverHostname]]" label="[[localize('settings-server-hostname')]]" hidden$="[[!serverHostname]]" always-float-label maxlength="100"></paper-input>
             <paper-input readonly value="[[serverManagementApiUrl]]" label="[[localize('settings-server-api-url')]]" hidden$="[[!serverManagementApiUrl]]" always-float-label maxlength="100"></paper-input>
             <paper-input readonly value="[[serverCreationDate]]" label="[[localize('settings-server-creation')]]" hidden$="[[!serverCreationDate]]" always-float-label maxlength="100"></paper-input>
@@ -166,11 +202,14 @@
         serverHostname: {type: String, value: null},
         serverManagementApiUrl: {type: String, value: null},
         serverPortForNewAccessKeys: {type: Number, value: null},
+        isAccessKeyPortEditable: {type: Boolean, value: false},
         serverCreationDate: {type: String, value: null},
         serverLocation: {type: String, value: null},
         serverMonthlyCost: {type: String, value: null},
         serverMonthlyTransferLimit: {type: String, value: null},
         localize: {type: Function, readonly: true},
+        enableKeysPortButtons: {type: Boolean, value: false},
+        showKeysPortButtons: {type: Boolean, value: false}
       },
       update: function(name, metricsEnabled) {
         this.initialName = name;
@@ -208,6 +247,71 @@
           this.fire(metricsSignal);
         }
       },
+      setKeysPortEditing: function() {
+        if (!this.isAccessKeyPortEditable) { 
+          return;
+        }
+        this.showKeysPortButtons = true;
+        const invalid = this.$.keysPortInput.invalid;
+        this.$.keysPortSaveButton.disabled = invalid;
+        this.$.keysPortCancelButton.disabled = false;
+      },
+      setKeysPortSaved: function() {
+        this.serverPortForNewAccessKeys = Number(this.$.keysPortInput.value);
+        this.showKeysPortButtons = false;
+        this.$.keysPortInput.readonly = false;
+      },
+      setKeysPortErrorState: function(message) {
+        const input = this.$.keysPortInput;
+        this.enableKeysPortButtons = true; 
+        input.invalid = true;
+        input.errorMessage = message;
+        input.readonly = false;
+        input.focus();
+      },
+      saveKeysPort: function() {
+        const input = this.$.keysPortInput;
+        if (Number(input.value) === this.serverPortForNewAccessKeys) {
+          this.cancelKeysPortEdit();
+          return;
+        };
+        this.enableKeysPortButtons = false;
+        input.readonly = true;
+        input.invalid = false;
+        this.fire('ChangePortForNewAccessKeysRequested', {
+          port: Number(this.$.keysPortInput.value), 
+          serverSettings: this
+        });
+      },
+      cancelKeysPortEdit: function() {
+        this.$.keysPortInput.value = this.serverPortForNewAccessKeys;
+        this.$.keysPortInput.invalid = false;
+        this.showKeysPortButtons = false;
+      },
+      _handleKeysPortInputKeyUp: function(e) {
+        let input = this.$.keysPortInput;
+        const badInputMessage = this.localize('error-keys-port-bad-input');
+        if (event.key === 'Escape') {
+          this.cancelKeysPortEdit();
+          input.blur();
+          return; 
+        } else if (event.key === 'Enter') {
+          if (!input.invalid) {  
+            this.saveKeysPort();
+            input.blur();
+          }
+          return;
+        }
+        let port = Number(input.value);
+        if (Number.isNaN(port) || (port < 1 || port > 65535) || !Number.isInteger(port)) {
+          input.invalid = true;
+          this.$.keysPortSaveButton.disabled = true;
+          input.errorMessage = badInputMessage;
+        } else {
+          input.invalid = false;
+          this.$.keysPortSaveButton.disabled = false;
+        }
+      }
     });
   </script>
 </dom-module>

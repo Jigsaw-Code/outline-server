@@ -28,6 +28,7 @@ export interface ServerConfig {
   serverId: string;
   createdTimestampMs: number;
   portForNewAccessKeys: number;
+  version: string;
 }
 
 export class ShadowboxServer implements server.Server {
@@ -78,6 +79,10 @@ export class ShadowboxServer implements server.Server {
     return this.apiRequest<void>('name', requestOptions).then(() => {
       this.serverConfig.name = name;
     });
+  }
+
+  getVersion(): string {
+    return this.serverConfig.version;
   }
 
   getMetricsEnabled(): boolean {
@@ -141,6 +146,18 @@ export class ShadowboxServer implements server.Server {
     } catch (e) {
       return undefined;
     }
+  }
+
+  setPortForNewAccessKeys(newPort: number): Promise<void> {
+    console.info(`setPortForNewAcessKeys: ${newPort}`);
+    const requestOptions: RequestInit = {
+      method: 'PUT',
+      headers: new Headers({'Content-Type': 'application/json'}),
+      body: JSON.stringify({"port": newPort})
+    };
+    return this.apiRequest<void>('server/port-for-new-access-keys', requestOptions).then(() => {
+      this.serverConfig.portForNewAccessKeys = newPort;
+    });
   }
 
   private getServerConfig(): Promise<ServerConfig> {

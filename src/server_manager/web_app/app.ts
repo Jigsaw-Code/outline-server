@@ -14,6 +14,7 @@
 
 import * as sentry from '@sentry/electron';
 import * as events from 'events';
+import * as semver from 'semver';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
@@ -35,6 +36,8 @@ interface PolymerEvent extends Event {
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
 const UNUSED_DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
+
+const CHANGE_KEYS_PORT_VERSION = "1.0.0";
 
 interface UiAccessKey {
   id: string;
@@ -104,6 +107,10 @@ export class App {
 
     appRoot.addEventListener('RenameAccessKeyRequested', (event: PolymerEvent) => {
       this.renameAccessKey(event.detail.accessKeyId, event.detail.newName, event.detail.entry);
+    });
+
+    appRoot.addEventListener('ChangePortForNewAccessKeysRequested', (event: PolymerEvent) => {
+      this.setPortForNewAccessKeys(event.detail.port, event.detail.serverSettings);
     });
 
     // The UI wants us to validate a server management URL.
@@ -534,7 +541,7 @@ export class App {
         return Promise.reject(e);
       }
 
-      return new Promise((resolve, reject) => {
+      return new Promise<T>((resolve, reject) => {
         this.appRoot.showConnectivityDialog((retry: boolean) => {
           if (retry) {
             this.digitalOceanRetry(f).then(resolve, reject);
@@ -757,6 +764,8 @@ export class App {
     view.serverHostname = selectedServer.getHostname();
     view.serverManagementApiUrl = selectedServer.getManagementApiUrl();
     view.serverPortForNewAccessKeys = selectedServer.getPortForNewAccessKeys();
+    const version = this.selectedServer.getVersion();
+    view.isAccessKeyPortEditable = version && semver.gte(version, CHANGE_KEYS_PORT_VERSION);
     view.serverCreationDate = selectedServer.getCreatedDate().toLocaleString(
         this.appRoot.language, {year: 'numeric', month: 'long', day: 'numeric'});
 
@@ -909,6 +918,27 @@ export class App {
           this.appRoot.showError(this.appRoot.localize('error-key-rename'));
           entry.revertName();
         });
+  }
+
+  private async setPortForNewAccessKeys(port: number, serverSettings: Polymer) {
+    this.appRoot.showNotification(this.appRoot.localize("saving"));
+    try {
+      await this.selectedServer.setPortForNewAccessKeys(port);
+      this.appRoot.showNotification(this.appRoot.localize("saved"));
+      serverSettings.setKeysPortSaved();
+    } catch (error) {
+      this.appRoot.showError(this.appRoot.localize("error-not-saved"));
+      if (error.isNetworkError()) {
+        serverSettings.setKeysPortErrorState(this.appRoot.localize("error-network"));
+        return;
+      }
+      const code = error.response.status;
+      if (code === 409) {
+        serverSettings.setKeysPortErrorState(this.appRoot.localize("error-keys-port-in-use"));
+        return;
+      }
+      serverSettings.setKeysPortErrorState(this.appRoot.localize("error-unexpected"));
+    }
   }
 
   // Returns promise which fulfills when the server is created successfully,

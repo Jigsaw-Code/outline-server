@@ -501,6 +501,7 @@
             server-hostname="[[serverHostname]]"
             server-management-api-url="[[serverManagementApiUrl]]"
             server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]"
+            is-access-key-port-editable="[[isAccessKeyPortEditable]]"
             server-creation-date="[[serverCreationDate]]"
             server-monthly-cost="[[monthlyCost]]"
             server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]"
@@ -540,6 +541,7 @@
         serverHostname: String,
         serverManagementApiUrl: String,
         serverPortForNewAccessKeys: Number,
+        isAccessKeyPortEditable: {type: Boolean, value: false},
         serverCreationDate: String,
         serverLocation: String,
         isServerManaged: Boolean,

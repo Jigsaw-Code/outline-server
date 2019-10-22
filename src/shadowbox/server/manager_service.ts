@@ -14,6 +14,7 @@
 
 import * as restify from 'restify';
 import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
+import {version} from '../package.json';
 
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
@@ -140,7 +141,8 @@ export class ShadowsocksManagerService {
       metricsEnabled: this.serverConfig.data().metricsEnabled || false,
       createdTimestampMs: this.serverConfig.data().createdTimestampMs,
       portForNewAccessKeys: this.serverConfig.data().portForNewAccessKeys,
-      dataUsageTimeframe: this.serverConfig.data().dataUsageTimeframe
+      dataUsageTimeframe: this.serverConfig.data().dataUsageTimeframe,
+      version
     });
     next();
   }
