@@ -25,11 +25,11 @@ result=0
 
 if ./test.sh > $LOGFILE 2>&1 ; then
   echo "Test Passed!"
+  rm $LOGFILE
 else
   result=$?
   echo "Test Failed!  Logs:"
   cat $LOGFILE   
 fi
 
-rm $LOGFILE
 exit $result
