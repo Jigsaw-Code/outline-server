@@ -16,5 +16,19 @@
 
 do_action shadowbox/docker/build
 
+LOGFILE=$(mktemp)
+echo "Running Shadowbox integration test.  Logs at $LOGFILE."
+
 cd src/shadowbox/integration_test
-./test.sh
+./test.sh > $LOGFILE
+
+result=$?
+if [[ $result -eq 0 ]]; then
+  echo "Test Passed!"
+else
+  echo "Test Failed!  Logs:"
+  cat $LOGFILE   
+fi
+
+rm $LOGFILE
+exit $result
