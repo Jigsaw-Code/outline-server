@@ -222,11 +222,11 @@
     "description": "This string appears in an error notification toast. It is shown when there is an error enabling or disabling a server's metrics reporting."
   },
   "error_network": {
-    "messages": "A network error occurred.",
+    "message": "A network error occurred.",
     "description": "This string indicates that an error happened due to network errors like not being connected to the internet."
   },
   "error_not_saved": {
-    "messages": "Not Saved",
+    "message": "Not Saved",
     "description": "This string appears in an error notification toast.  It signifies failure to submit user input to change the port number for new access keys."
   },
   "error_server_creation": {
