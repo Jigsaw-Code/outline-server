@@ -24,11 +24,12 @@ export function getMenuTemplate(debugMode: boolean): Electron.MenuItemConstructo
     template.push(
         // From default_app's main.js.
         {
-          submenu: [
+          role: 'appMenu',
+          submenu: electron.Menu.buildFromTemplate([
             {role: 'about'}, {type: 'separator'}, {role: 'services', submenu: []},
-            {type: 'separator'}, {role: 'hide'}, {role: 'hideothers'}, {role: 'unhide'},
+            {type: 'separator'}, {role: 'hide'}, {role: 'hideOthers'}, {role: 'unhide'},
             {type: 'separator'}, {role: 'quit'}
-          ]
+          ])
         },
         // editMenu is required for copy+paste keyboard shortcuts to work on Mac.
         {role: 'editMenu'});
@@ -37,7 +38,7 @@ export function getMenuTemplate(debugMode: boolean): Electron.MenuItemConstructo
   if (debugMode) {
     template.push({
       label: 'Developer',
-      submenu: [{role: 'reload'}, {role: 'forcereload'}, {role: 'toggledevtools'}]
+      submenu: electron.Menu.buildFromTemplate([{role: 'reload'}, {role: 'forceReload'}, {role: 'toggleDevTools'}])
     });
   }
 
