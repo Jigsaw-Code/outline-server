@@ -28,7 +28,7 @@
     "@types/semver": "^5.5.0",
     "bower": "^1.8.0",
     "browserify": "^14.5.0",
-    "electron": "^7.0.0",
+    "electron": "7.0.0",
     "electron-builder": "^21.2.0",
     "electron-icon-maker": "^0.0.4",
     "gulp": "^4.0.0",
