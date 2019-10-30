@@ -63,8 +63,9 @@ function ss_arguments_for_user() {
 }
 
 # Runs curl on the client container.
+readonly CURL_OUTPUT=$(mktemp)
 function client_curl() {
-  docker exec $CLIENT_CONTAINER curl --silent --show-error "$@"
+  docker exec $CLIENT_CONTAINER curl --silent --show-error "$@" | tee $CURL_OUTPUT
 }
 
 function fail() {
@@ -75,6 +76,9 @@ function fail() {
 function cleanup() {
   status=$?
   (($DEBUG != 0)) || docker-compose --project-name=integrationtest down
+  echo "Last curl output:"
+  cat $CURL_OUTPUT
+  rm $CURL_OUTPUT
   return $status
 }
 
