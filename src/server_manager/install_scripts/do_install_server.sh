@@ -188,7 +188,7 @@ wait $install_pid
 
 # Install the DigitalOcean Agent, for improved monitoring:
 # https://www.digitalocean.com/docs/monitoring/quickstart/#enable-the-digitalocean-agent-on-existing-droplets
-# 
+#
 # Since the server manager looks only for the tags created in the previous
 # step, this does not slow down server creation.
-curl -sSL https://agent.digitalocean.com/install.sh | sh
+curl -sSL https://repos.insights.digitalocean.com/install.sh | bash
