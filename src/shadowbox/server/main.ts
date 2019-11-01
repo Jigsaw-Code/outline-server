@@ -103,7 +103,7 @@ async function main() {
 
   const nodeMetricsPort = await portProvider.reserveFirstFreePort(prometheusPort + 1);
   exportPrometheusMetrics(prometheus.register, nodeMetricsPort);
-  const nodeMetricsLocation = `localhost:${nodeMetricsPort}`;
+  const nodeMetricsLocation = `127.0.0.1:${nodeMetricsPort}`;
 
   const ssMetricsPort = await portProvider.reserveFirstFreePort(nodeMetricsPort + 1);
   logging.info(`Prometheus is at ${prometheusLocation}`);
@@ -119,7 +119,7 @@ async function main() {
     ]
   };
 
-  const ssMetricsLocation = `localhost:${ssMetricsPort}`;
+  const ssMetricsLocation = `127.0.0.1:${ssMetricsPort}`;
   logging.info(`outline-ss-server metrics is at ${ssMetricsLocation}`);
   prometheusConfigJson.scrape_configs.push(
       {job_name: 'outline-server-ss', static_configs: [{targets: [ssMetricsLocation]}]});
@@ -148,7 +148,11 @@ async function main() {
 
   const metricsReader = new PrometheusUsageMetrics(prometheusClient);
   const toMetricsId = (id: AccessKeyId) => {
-    return accessKeyRepository.getMetricsId(id);
+    try {
+      return accessKeyRepository.getMetricsId(id);
+    } catch (e) {
+      logging.warn(`Failed to get metrics id for access key ${id}: ${e}`);
+    }
   };
   const managerMetrics = new PrometheusManagerMetrics(prometheusClient);
   const metricsCollector = new RestMetricsCollectorClient(metricsCollectorUrl);

@@ -74,6 +74,7 @@ function createMainWindow() {
     height: 1024,
     minWidth: 600,
     minHeight: 768,
+    maximizable: false,
     icon: path.join(__dirname, 'web_app', 'ui_components', 'icons', 'launcher.png'),
     webPreferences: {
       nodeIntegration: false,
@@ -91,7 +92,8 @@ function createMainWindow() {
   const handleNavigation = (event: Event, url: string) => {
     try {
       const parsed: URL = new URL(url);
-      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:' ||
+          parsed.protocol === 'macappstore:') {
         shell.openExternal(url);
       } else {
         console.warn(`Refusing to open URL with protocol "${parsed.protocol}"`);
@@ -113,10 +115,6 @@ function createMainWindow() {
       autoUpdater.checkForUpdates();
     }
   });
-
-  // Disable window maximization.  Setting "maximizable: false" in BrowserWindow
-  // options does not work as documented.
-  win.setMaximizable(false);
 
   return win;
 }
@@ -182,9 +180,13 @@ function main() {
   let mainWindow: Electron.BrowserWindow;
 
   // Mark secure to avoid mixed content warnings when loading DigitalOcean pages via https://.
-  electron.protocol.registerStandardSchemes(['outline'], {secure: true});
+  electron.protocol.registerSchemesAsPrivileged([{ scheme: 'outline', privileges: { standard: true, secure: true } }]);
 
-  const isSecondInstance = app.makeSingleInstance((argv, workingDirectory) => {
+  if(!app.requestSingleInstanceLock()) {
+    console.log('another instance is running - exiting');
+    app.quit();
+  }
+  app.on('second-instance', () => {
     // Someone tried to run a second instance, we should focus our window.
     if (mainWindow) {
       if (mainWindow.isMinimized()) {
@@ -193,10 +195,6 @@ function main() {
       mainWindow.focus();
     }
   });
-
-  if (isSecondInstance) {
-    app.quit();
-  }
 
   app.on('ready', () => {
     const menuTemplate = menu.getMenuTemplate(debugMode);

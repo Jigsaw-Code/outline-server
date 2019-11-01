@@ -45,7 +45,7 @@ export class InvalidAccessKeyDataLimit extends OutlineError {
   }
 }
 
-export class InvalidDataLimitTimeframe extends OutlineError {
+export class InvalidDataUsageTimeframe extends OutlineError {
   constructor() {
     super('Must provide a timeframe with a positive integer values for "hours"');
   }

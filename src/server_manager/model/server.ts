@@ -16,6 +16,9 @@ export interface Server {
   // Get the server's name for display.
   getName(): string;
 
+  // Gets the version of the shadowbox binary the server is running
+  getVersion(): string;
+
   // Updates the server name.
   setName(name: string): Promise<void>;
 
@@ -58,6 +61,9 @@ export interface Server {
   // Returns the port number for new access keys.
   // Returns undefined if the server doesn't have a port set.
   getPortForNewAccessKeys(): number|undefined;
+
+  // Changes the port number for new access keys.
+  setPortForNewAccessKeys(port: number): Promise<void>;
 }
 
 // Manual servers are servers which the user has independently setup to run

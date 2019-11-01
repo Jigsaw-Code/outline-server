@@ -117,15 +117,17 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   // Starts the Shadowsocks server and exposes the access key configuration to the server.
   // Periodically enforces access key limits.
   async start(clock: Clock): Promise<void> {
-    await this.enforceAccessKeyDataLimits();
-    await this.updateServer();
-    clock.setInterval(async () => {
+    const tryEnforceDataLimits = async () => {
       try {
         await this.enforceAccessKeyDataLimits();
       } catch (e) {
         logging.error(`Failed to enforce access key limits: ${e}`);
       }
-    }, ServerAccessKeyRepository.DATA_LIMITS_ENFORCEMENT_INTERVAL_MS);
+    };
+    await tryEnforceDataLimits();
+    await this.updateServer();
+    clock.setInterval(
+        tryEnforceDataLimits, ServerAccessKeyRepository.DATA_LIMITS_ENFORCEMENT_INTERVAL_MS);
   }
 
   private isExistingAccessKeyPort(port: number): boolean {
@@ -212,7 +214,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
 
   setDataUsageTimeframe(timeframe: DataUsageTimeframe): Promise<void> {
     if (!timeframe || timeframe.hours <= 0) {
-      throw new errors.InvalidDataLimitTimeframe();
+      throw new errors.InvalidDataUsageTimeframe();
     }
     this.dataLimitTimeframe = timeframe;
     return this.enforceAccessKeyDataLimits();

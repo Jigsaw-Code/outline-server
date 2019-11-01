@@ -335,6 +335,9 @@ class FakeServer implements server.Server {
     this.name = name;
     return Promise.resolve();
   }
+  getVersion() {
+    return '1.2.3';
+  }
   listAccessKeys() {
     return Promise.resolve([]);
   }
@@ -374,6 +377,9 @@ class FakeServer implements server.Server {
   }
   getPortForNewAccessKeys(): number|undefined {
     return undefined;
+  }
+  setPortForNewAccessKeys(): Promise<void> {
+    return Promise.reject(new Error('FakeServer.setPortForNewAccessKeys not implemented'));
   }
 }
 
