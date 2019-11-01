@@ -1,39 +1,35 @@
-ARG SS_VERSION=1.0.7
-# bundled prometheus version is 2.4.3
-ARG PM_VERSION=2.4.3
-ARG PM_ARCHITECTURE=armv7
+# Copyright 2018 The Outline Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-# =======
-# Stage 1 Build most recent outline-ss-server in the upstream branch
-# =======
-FROM golang:alpine AS ss_builder
-
-RUN apk add --update git upx && rm -rf /var/cache/apk/*
-
-WORKDIR /tmp
-
-ARG SS_VERSION
-
-RUN git clone --branch "v${SS_VERSION}" https://github.com/Jigsaw-Code/outline-ss-server --single-branch
-
-WORKDIR /tmp/outline-ss-server
-
-RUN GOOS=linux GOARCH=arm GOARM=7 go build -o /app/outline-ss-server
-
-RUN upx -5 /app/outline-ss-server
-
-# =======
-# Stage 2 Build outline-ss-server for use
-# =======
+# See versions at https://hub.docker.com/_/node/
 FROM node:8.15.0-alpine
 
-ARG SS_VERSION
-ARG PM_VERSION
-ARG PM_ARCHITECTURE
+# Versions can be found at https://github.com/Jigsaw-Code/outline-ss-server/releases
+ARG SS_VERSION=1.0.7
+ARG SS_ARCHITECTURE=x86_64
+
+# bundled prometheus version is 2.4.3
+ARG PM_VERSION=2.4.3
+ARG PM_ARCHITECTURE=amd64
 
 # Save metadata on the software versions we are using.
 LABEL shadowbox.node_version=8.15.0
 LABEL shadowbox.outline-ss-server_version="${SS_VERSION}"
+LABEL shadowbox.prometheus_version="${PM_VERSION}"
+
+ARG GITHUB_RELEASE
+LABEL shadowbox.github.release="${GITHUB_RELEASE}"
 
 # We use curl to detect the server's public IP.
 RUN apk add --no-cache curl
@@ -46,8 +42,9 @@ RUN /etc/periodic/weekly/update_mmdb
 WORKDIR /root/shadowbox
 
 RUN mkdir bin
-
-COPY --from=ss_builder /app/outline-ss-server bin/
+RUN curl -SsL \
+      https://github.com/Jigsaw-Code/outline-ss-server/releases/download/v${SS_VERSION}/outline-ss-server_${SS_VERSION}_linux_${SS_ARCHITECTURE}.tar.gz | \
+        tar xz -C bin outline-ss-server
 RUN curl -SsL \
       https://github.com/prometheus/prometheus/releases/download/v${PM_VERSION}/prometheus-${PM_VERSION}.linux-${PM_ARCHITECTURE}.tar.gz | \
         tar xz --strip=1 -C bin prometheus-${PM_VERSION}.linux-${PM_ARCHITECTURE}/prometheus
