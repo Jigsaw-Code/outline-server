@@ -192,5 +192,14 @@
   "share-invite-instructions": "ጊትኸብ ላይ ያለውን የግብዣ ትዕዛዞች ይከተሉ",
   "share-invite-trouble": "የግብዛ መገናኛውን ለማግኘት ችግር ገጠምዎት?",
   "share-title": "መግቢያዎን ያጋሩ",
-  "terms-of-service": "የ{openLink}Outline (አውትላይን) መመሪያዎችን አንብቤ ተረድቻለሁ{closeLink}"
+  "terms-of-service": "የ{openLink}Outline (አውትላይን) መመሪያዎችን አንብቤ ተረድቻለሁ{closeLink}",
+  "---TODO--": "The following strings are in English due to missing AM integration with the translation pipeline. Import and translate these.",
+  "error-keys-port-bad-input": "The port must be an integer between 1 and 65,535.",
+  "error-keys-port-in-use": "The port is already in use on the server.",
+  "error-network": "A network error occurred.",
+  "error-not-saved": "Not Saved",
+  "error-unexpected": "An unexpected error occurred.",
+  "save": "Save",
+  "saved": "Saved",
+  "saving": "Saving..."
 }

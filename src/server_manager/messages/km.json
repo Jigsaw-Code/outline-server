@@ -191,5 +191,14 @@
   "share-invite-instructions": "អនុវត្តតាមការណែនាំការអញ្ជើញរបស់យើងនៅលើ GitHub:",
   "share-invite-trouble": "មានបញ្ហាក្នុងការចូលប្រើតំណអញ្ជើញ?",
   "share-title": "ចែករំលែកការចូល",
-  "terms-of-service": "ខ្ញុំបានអានហើយយល់ពី {openLink} លក្ខខណ្ឌប្រើប្រាស់របស់Outline {closeLink}"
+  "terms-of-service": "ខ្ញុំបានអានហើយយល់ពី {openLink} លក្ខខណ្ឌប្រើប្រាស់របស់Outline {closeLink}",
+  "---TODO--": "The following strings are in English due to missing KM integration with the translation pipeline. Import and translate these.",
+  "error-keys-port-bad-input": "The port must be an integer between 1 and 65,535.",
+  "error-keys-port-in-use": "The port is already in use on the server.",
+  "error-network": "A network error occurred.",
+  "error-not-saved": "Not Saved",
+  "error-unexpected": "An unexpected error occurred.",
+  "save": "Save",
+  "saved": "Saved",
+  "saving": "Saving..."
 }
