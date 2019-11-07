@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Do not delete: used by app-root.html.
+import '../ui_components/app_root';
+
 import * as sentry from '@sentry/electron';
 import * as events from 'events';
 import * as semver from 'semver';
@@ -24,9 +27,6 @@ import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
-
-// Do not delete: used by app-root.html.
-import '../ui_components/app_root';
 
 // tslint:disable-next-line:no-any
 type Polymer = HTMLElement&any;

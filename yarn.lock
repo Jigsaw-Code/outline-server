@@ -142,7 +142,30 @@
     through2 "^3.0.0"
     xdg-basedir "^3.0.0"
 
-"@polymer/polymer@^3.3.0":
+"@polymer/app-localize-behavior@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@polymer/app-localize-behavior/-/app-localize-behavior-3.0.1.tgz#b787dc15c4399fdd006851cacb6107a9580edf06"
+  integrity sha512-0OZuUIMlfYvSJbB+clU+UaEuSDsvyu997xM3aRW33mGWijgUFMprWUQIP12RM8Ob/2i7WXJPn5ew3ir+rwTARg==
+  dependencies:
+    "@polymer/iron-ajax" "^3.0.0-pre.26"
+    "@polymer/polymer" "^3.0.0"
+    intl-messageformat "^2.2.0"
+
+"@polymer/decorators@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@polymer/decorators/-/decorators-3.0.0.tgz#e4212ac976d9abd1210f560b6e1be4165c1c0183"
+  integrity sha512-qh+VID9nDV9q3ABvIfWgm7/+udl7v2HKsMLPXFm8tj1fI7qr7yWJMFwS3xWBkMmuNPtmkS8MDP0vqLAQIEOWzg==
+  dependencies:
+    "@polymer/polymer" "^3.0.5"
+
+"@polymer/iron-ajax@^3.0.0-pre.26":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@polymer/iron-ajax/-/iron-ajax-3.0.1.tgz#831781be31ced011ac7243a46e34a775a4bb3133"
+  integrity sha512-7+TPEAfWsRdhj1Y8UeF1759ktpVu+c3sG16rJiUC3wF9+woQ9xI1zUm2d59i7Yc3aDEJrR/Q8Y262KlOvyGVNg==
+  dependencies:
+    "@polymer/polymer" "^3.0.0"
+
+"@polymer/polymer@^3.0.0", "@polymer/polymer@^3.0.5", "@polymer/polymer@^3.3.0":
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/@polymer/polymer/-/polymer-3.3.0.tgz#52a0665ac29654728e8f46e8ee178c02c49efdd0"
   integrity sha512-rij7suomS7DxdBamnwr/Xa0V5hpypf7I9oYKseF2FWz5Xh2a3wJNpVjgJy1adXVCxqIyPhghsrthnfCt7EblsQ==
@@ -3504,6 +3527,18 @@ interpret@^1.1.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/interpret/-/interpret-1.2.0.tgz#d5061a6224be58e8083985f5014d844359576296"
   integrity sha512-mT34yGKMNceBQUoVn7iCDKDntA7SC6gycMAWzGx1z/CMCTV7b2AAtXlo3nRyHZ1FelRkQbQjprHSYGwzLtkVbw==
+
+intl-messageformat-parser@1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/intl-messageformat-parser/-/intl-messageformat-parser-1.4.0.tgz#b43d45a97468cadbe44331d74bb1e8dea44fc075"
+  integrity sha1-tD1FqXRoytvkQzHXS7Ho3qRPwHU=
+
+intl-messageformat@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/intl-messageformat/-/intl-messageformat-2.2.0.tgz#345bcd46de630b7683330c2e52177ff5eab484fc"
+  integrity sha1-NFvNRt5jC3aDMwwuUhd/9eq0hPw=
+  dependencies:
+    intl-messageformat-parser "1.4.0"
 
 invert-kv@^1.0.0:
   version "1.0.0"

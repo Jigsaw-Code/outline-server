@@ -9,6 +9,8 @@
     "email": "info@getoutline.org"
   },
   "dependencies": {
+    "@polymer/app-localize-behavior": "^3.0.1",
+    "@polymer/decorators": "^3.0.0",
     "@polymer/polymer": "^3.3.0",
     "@sentry/electron": "^0.8.1",
     "body-parser": "^1.18.3",
