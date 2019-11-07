@@ -122,6 +122,8 @@ jobs:
 
     - stage: release
       os: osx
+      # electron-builder requires macOS >=10.13.6 for signing to work.
+      osx_image: xcode10.1
       env:
         - DESC=macos manager
       script:
