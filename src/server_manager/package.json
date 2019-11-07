@@ -9,6 +9,7 @@
     "email": "info@getoutline.org"
   },
   "dependencies": {
+    "@polymer/polymer": "^3.3.0",
     "@sentry/electron": "^0.8.1",
     "body-parser": "^1.18.3",
     "bytes": "^3.1.0",
@@ -27,7 +28,7 @@
     "@types/request": "^2.47.1",
     "@types/semver": "^5.5.0",
     "bower": "^1.8.0",
-    "browserify": "^14.5.0",
+    "browserify": "^16.5.0",
     "electron": "7.0.0",
     "electron-builder": "^21.2.0",
     "electron-icon-maker": "^0.0.4",

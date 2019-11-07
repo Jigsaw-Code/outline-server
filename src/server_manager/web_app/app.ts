@@ -25,6 +25,9 @@ import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
 
+// Do not delete: used by app-root.html.
+import '../ui_components/app_root';
+
 // tslint:disable-next-line:no-any
 type Polymer = HTMLElement&any;
 
