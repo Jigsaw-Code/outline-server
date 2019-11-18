@@ -27,7 +27,38 @@ paths:
               examples:
                 '0':
                   value: >-
-                    {"name":"My Server","serverId":"000-000-000-000","metricsEnabled":true,"createdTimestampMs":1536613192052,"portForNewAccessKeys":1234}
+                    {"name":"My Server","serverId":"000-000-000-000","metricsEnabled":true,"createdTimestampMs":1536613192052,"portForNewAccessKeys":1234, "version": "1.0.0"}
+  /server/hostname:
+    put:
+      tags:
+        - Server
+      description: Changes the server's hostname.  Must be a valid hostname or IP address.
+      requestBody:
+        required: true 
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hostname:
+                  type: string
+            examples:
+              'hostname':
+                value: '{"hostname": www.example.org}'
+              'IP address':
+                value: '{"hostname": "127.0.0.1"}'
+      responses:
+        '204': 
+          description: The hostname was successfully changed.
+        '400':
+          description: An invalid hostname or IP address was provided.
+        '404': 
+          description: No server could be found with the given hostname.
+        '406':
+          description: The server found with the provided hostname isn't a Shadowbox server.
+        '500':
+          description: An internal error occurred.
+
   /server/port-for-new-access-keys:
     put:
       description: Changes the default port for newly created access keys.  This can be a port already used for access keys.
@@ -47,7 +78,7 @@ paths:
                 value: '{"port": 12345}'
       responses:
         '204':
-          description: The default port was sucessfully changed.
+          description: The default port was successfully changed.
         '400':
           description: The requested port wasn't an integer from 1 through 65535, or the request had no port parameter.
         '409':
@@ -69,7 +100,7 @@ paths:
                 value: "{hours: 24}"
       responses:
         '204':
-          description: The data usage timeframe was sucessfully changed.
+          description: The data usage timeframe was successfully changed.
         '400':
           description: Invalid timeframe value.
 
@@ -247,7 +278,7 @@ paths:
         - Access Key
       responses:
         '200':
-          description: The data tranferred by each access key
+          description: The data transferred by each access key
           content:
             application/json:
               schema:
@@ -316,6 +347,9 @@ components:
           type: integer
         dataUsageTimeframe:
           $ref: "#/components/schemas/DataUsageTimeframe"
+        version:
+          type: pattern
+          pattern: '^\d*\.\d*\.\d*$'
 
     DataUsageTimeframe:
       properties:
