@@ -35,6 +35,8 @@ export interface ServerConfigJson {
   // Sliding timeframe, in hours, used to measure data usage and enforce data limits.
   dataUsageTimeframe?: DataUsageTimeframe;
   // We don't serialize the shadowbox version, this is obtained dynamically from node.
+  // Public proxy hostname.
+  hostname?: string;
 }
 
 // Serialized format for rollouts.
@@ -54,6 +56,7 @@ export function readServerConfig(filename: string): json_config.JsonConfig<Serve
     config.data().metricsEnabled = config.data().metricsEnabled || false;
     config.data().createdTimestampMs = config.data().createdTimestampMs || Date.now();
     config.data().dataUsageTimeframe = config.data().dataUsageTimeframe || {hours: 30 * 24};
+    config.data().hostname = config.data().hostname || process.env.SB_PUBLIC_IP;
     config.write();
     return config;
   } catch (error) {

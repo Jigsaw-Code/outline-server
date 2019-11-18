@@ -74,7 +74,10 @@ function fail() {
 
 function cleanup() {
   status=$?
-  (($DEBUG != 0)) || docker-compose --project-name=integrationtest down
+  if (($DEBUG != 0)); then
+    docker-compose --project-name=integrationtest down
+    rm -r ${TMP_STATE_DIR}
+  fi
   return $status
 }
 
@@ -92,6 +95,8 @@ function cleanup() {
   # Sets everything up
   export SB_API_PREFIX=TestApiPrefix
   SB_API_URL=https://shadowbox/${SB_API_PREFIX}
+  export TMP_STATE_DIR=$(mktemp -d)
+  echo '{"hostname": "shadowbox"}' > ${TMP_STATE_DIR}/shadowbox_server_config.json
   docker-compose --project-name=integrationtest up --build -d
 
   # Wait for target to come up.
