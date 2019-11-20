@@ -52,10 +52,6 @@ paths:
           description: The hostname was successfully changed.
         '400':
           description: An invalid hostname or IP address was provided.
-        '404': 
-          description: No server could be found with the given hostname.
-        '406':
-          description: The server found with the provided hostname isn't a Shadowbox server.
         '500':
           description: An internal error occurred.
 
