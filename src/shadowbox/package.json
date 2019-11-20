@@ -16,7 +16,8 @@
     "randomstring": "^1.1.5",
     "request-lite": "^2.40.1",
     "restify": "^4.3.0",
-    "uuid": "^3.1.0"
+    "uuid": "^3.1.0",
+    "validator": "^12.0.0"
   },
   "devDependencies": {
     "@types/js-yaml": "^3.11.2",
