@@ -32,7 +32,7 @@ paths:
     put:
       tags:
         - Server
-      description: Changes the hostname for new access keys.  DNS must be set up for the hostname independently of this API.
+      description: Changes the hostname for new access keys.  Must be a valid hostname or IP address.  If it's a hostname, DNS must be set up independently of this API.
       requestBody:
         required: true 
         content:
