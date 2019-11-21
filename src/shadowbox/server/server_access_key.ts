@@ -22,7 +22,6 @@ import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyRepository, DataUsage, ProxyParams} from '../model/access_key';
 import * as errors from '../model/errors';
-import {DataUsageTimeframe} from '../model/metrics';
 import {ShadowsocksServer} from '../model/shadowsocks_server';
 import {PrometheusManagerMetrics} from './manager_metrics';
 
@@ -103,8 +102,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   constructor(
       private portForNewAccessKeys: number, private proxyHostname: string,
       private keyConfig: JsonConfig<AccessKeyConfigJson>,
-      private shadowsocksServer: ShadowsocksServer, private prometheusClient: PrometheusClient,
-      private dataLimitTimeframe: DataUsageTimeframe) {
+      private shadowsocksServer: ShadowsocksServer, private prometheusClient: PrometheusClient) {
     if (this.keyConfig.data().accessKeys === undefined) {
       this.keyConfig.data().accessKeys = [];
     }
@@ -212,18 +210,6 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     return Promise.resolve();
   }
 
-  setDataUsageTimeframe(timeframe: DataUsageTimeframe): Promise<void> {
-    if (!timeframe || timeframe.hours <= 0) {
-      throw new errors.InvalidDataUsageTimeframe();
-    }
-    this.dataLimitTimeframe = timeframe;
-    return this.enforceAccessKeyDataLimits();
-  }
-
-  getDataUsageTimeframe(): DataUsageTimeframe {
-    return this.dataLimitTimeframe;
-  }
-
   getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined {
     const accessKey = this.getAccessKey(id);
     return accessKey ? accessKey.metricsId : undefined;
@@ -234,7 +220,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   async enforceAccessKeyDataLimits() {
     const metrics = new PrometheusManagerMetrics(this.prometheusClient);
     const bytesTransferredById =
-        (await metrics.getOutboundByteTransfer(this.dataLimitTimeframe)).bytesTransferredByUserId;
+        (await metrics.getOutboundByteTransfer({hours: 30 * 24})).bytesTransferredByUserId;
     let limitStatusChanged = false;
     for (const accessKey of this.accessKeys) {
       const wasOverDataLimit = accessKey.isOverDataLimit();
