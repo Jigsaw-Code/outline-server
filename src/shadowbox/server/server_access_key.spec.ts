@@ -19,7 +19,6 @@ import {PortProvider} from '../infrastructure/get_port';
 import {InMemoryConfig} from '../infrastructure/json_config';
 import {AccessKeyRepository, DataUsage} from '../model/access_key';
 import * as errors from '../model/errors';
-import {DataUsageTimeframe} from '../model/metrics';
 
 import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
@@ -430,21 +429,6 @@ describe('ServerAccessKeyRepository', () => {
     expect(serverAccessKeys[1].id).toEqual(accessKey3.id);
     done();
   });
-
-  it('getDataUsageTimeframe returns the data limit timeframe', async (done) => {
-    const timeframe = {hours: 12345};
-    const repo = new RepoBuilder().dataUsageTimeframe(timeframe).build();
-    expect(repo.getDataUsageTimeframe()).toEqual(timeframe);
-    done();
-  });
-
-  it('setDataUsageTimeframe sets the data limit timeframe', async (done) => {
-    const repo = new RepoBuilder().build();
-    const timeframe = {hours: 12345};
-    await repo.setDataUsageTimeframe(timeframe);
-    expect(repo.getDataUsageTimeframe()).toEqual(timeframe);
-    done();
-  });
 });
 
 // Convenience function to expect that an asynchronous function does not throw an error. Note that
@@ -480,7 +464,6 @@ class RepoBuilder {
   private keyConfig_ = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
   private shadowsocksServer_ = new FakeShadowsocksServer();
   private prometheusClient_ = new FakePrometheusClient({});
-  private dataUsageTimeframe_ = {hours: 30 * 24};
 
   public port(port: number): RepoBuilder {
     this.port_ = port;
@@ -498,14 +481,9 @@ class RepoBuilder {
     this.prometheusClient_ = prometheusClient;
     return this;
   }
-  public dataUsageTimeframe(dataUsageTimeframe: DataUsageTimeframe) {
-    this.dataUsageTimeframe_ = dataUsageTimeframe;
-    return this;
-  }
 
   public build(): ServerAccessKeyRepository {
     return new ServerAccessKeyRepository(
-        this.port_, 'hostname', this.keyConfig_, this.shadowsocksServer_, this.prometheusClient_,
-        this.dataUsageTimeframe_);
+        this.port_, 'hostname', this.keyConfig_, this.shadowsocksServer_, this.prometheusClient_);
   }
 }

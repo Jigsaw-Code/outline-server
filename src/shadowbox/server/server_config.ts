@@ -15,7 +15,6 @@
 import * as uuidv4 from 'uuid/v4';
 
 import * as json_config from '../infrastructure/json_config';
-import {DataUsageTimeframe} from '../model/metrics';
 
 // Serialized format for the server config.
 // WARNING: Renaming fields will break backwards-compatibility.
@@ -32,8 +31,6 @@ export interface ServerConfigJson {
   portForNewAccessKeys?: number;
   // Which staged rollouts we should force enabled or disabled.
   rollouts?: RolloutConfigJson[];
-  // Sliding timeframe, in hours, used to measure data usage and enforce data limits.
-  dataUsageTimeframe?: DataUsageTimeframe;
   // We don't serialize the shadowbox version, this is obtained dynamically from node.
   // Public proxy hostname.
   hostname?: string;
@@ -55,7 +52,6 @@ export function readServerConfig(filename: string): json_config.JsonConfig<Serve
     config.data().serverId = config.data().serverId || uuidv4();
     config.data().metricsEnabled = config.data().metricsEnabled || false;
     config.data().createdTimestampMs = config.data().createdTimestampMs || Date.now();
-    config.data().dataUsageTimeframe = config.data().dataUsageTimeframe || {hours: 30 * 24};
     config.data().hostname = config.data().hostname || process.env.SB_PUBLIC_IP;
     config.write();
     return config;
