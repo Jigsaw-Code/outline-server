@@ -125,6 +125,10 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     });
   }
 
+  setHostname(hostname: string): void {
+    this.proxyHostname = hostname;
+  }
+
   async setPortForNewAccessKeys(port: number): Promise<void> {
     if (!Number.isInteger(port) || port < 1 || port > 65535) {
       throw new errors.InvalidPortNumber(port.toString());

@@ -161,6 +161,8 @@ function cleanup() {
   if [[ "${ACCESS_KEY_JSON}" != *'"port":12345'* ]]; then
     fail "Port for new access keys wasn't changed.  Newly created access key: ${ACCESS_KEY_JSON}"
   fi
+
+  echo "${ACCESS_KEY_JSON}"
   
   # Verify no errors occurred.
   readonly SHADOWBOX_LOG=$OUTPUT_DIR/shadowbox-log.txt

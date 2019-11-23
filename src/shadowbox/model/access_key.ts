@@ -55,6 +55,8 @@ export interface AccessKeyRepository {
   listAccessKeys(): AccessKey[];
   // Changes the port for new access keys.
   setPortForNewAccessKeys(port: number): Promise<void>;
+  // Changes the hostname for new access keys.
+  setHostname(hostname: string): void;
   // Apply the specified update to the specified access key. Throws on failure.
   renameAccessKey(id: AccessKeyId, name: string): void;
   // Gets the metrics id for a given Access Key.
