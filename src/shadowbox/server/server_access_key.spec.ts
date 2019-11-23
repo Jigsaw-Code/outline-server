@@ -445,6 +445,15 @@ describe('ServerAccessKeyRepository', () => {
     expect(repo.getDataUsageTimeframe()).toEqual(timeframe);
     done();
   });
+  
+  it('setHostname changes hostname for new keys', async (done) => {
+    const newHostname = "host2";
+    const repo = new RepoBuilder().build();
+    repo.setHostname(newHostname);
+    const key = await repo.createNewAccessKey();
+    expect(key.proxyParams.hostname).toEqual(newHostname);
+    done();
+  });
 });
 
 // Convenience function to expect that an asynchronous function does not throw an error. Note that

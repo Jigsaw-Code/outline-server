@@ -13,8 +13,7 @@
 // limitations under the License.
 
 import * as restify from 'restify';
-import isIp from 'validator/lib/isIP';
-import isFQDN from 'validator/lib/isFQDN';
+import * as ipRegex from 'ip-regex';
 import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 import {version} from '../package.json';
 
@@ -78,7 +77,7 @@ export function bindService(
     apiServer: restify.Server, apiPrefix: string, service: ShadowsocksManagerService) {
   apiServer.put(`${apiPrefix}/name`, service.renameServer.bind(service));
   apiServer.get(`${apiPrefix}/server`, service.getServer.bind(service));
-  apiServer.put(`${apiPrefix}/server/hostname`, service.changeHostname.bind(service));
+  apiServer.put(`${apiPrefix}/server/hostname-for-new-access-keys`, service.changeHostname.bind(service));
   apiServer.put(
       `${apiPrefix}/server/port-for-new-access-keys`,
       service.setPortForNewAccessKeys.bind(service));
@@ -153,24 +152,30 @@ export class ShadowsocksManagerService {
   // Changes the server's hostname.  Hostname must be a valid domain or IP address
   public changeHostname(req: RequestType, res: ResponseType, next: restify.Next): void {
     logging.debug(`changeHostname request: ${JSON.stringify(req.params)}`);
+
     const hostname = req.params.hostname;
-    if (!hostname) {
-      return next(new restify.MissingParameterError({statusCode: 400}, 'parameter `hostname` is missing'));
-    } 
-    if (typeof hostname !== 'string') {
-      return next(new restify.InvalidArgumentError(
-        {statusCode: 400},
-        `Expected a hostname string, instead got ${hostname} of type ${typeof hostname}`));
+    if (typeof hostname === 'undefined') {
+      return next(new restify.MissingParameterError({statusCode: 400}, "hostname must be provided"));
     }
-    // FQDN stands for "Fully-Qualified Domain Name"
-    if (!isIp(hostname) && !isFQDN(hostname)) {
-      return next(new restify.InvalidArgumentError(
-        {statusCode: 400},
-        `Expected a valid hostname or IP address, instead got ${hostname}`));
+    if (typeof hostname !== 'string') {
+      return next(
+        new restify.InvalidArgumentError(
+          {statusCode: 400},
+          `Expected hostname to be a string, instead got ${hostname} of type ${typeof hostname}`));
+    }
+    // Hostnames can have any number of segments of alphanumeric characters and hyphens, separated by periods.
+    // No segment may start or end with a hyphen.
+    const hostnameRegex = /^([a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?\.)*[A-Za-z0-9]([A-Za-z0-9\-]*[A-Za-z0-9])?$/;
+    if (!hostnameRegex.test(hostname) && !ipRegex({includeBoundaries: true}).test(hostname)) {
+      return next(
+        new restify.InvalidArgumentError(
+          {statusCode: 400},
+          `Hostname ${hostname} isn't a valid hostname or IP address`));
     }
 
     this.serverConfig.data().hostname = hostname;
     this.serverConfig.write();
+    this.accessKeys.setHostname(hostname);
     res.send(204);
     next();
   }

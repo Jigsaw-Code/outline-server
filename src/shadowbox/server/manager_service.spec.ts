@@ -25,7 +25,6 @@ import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_ke
 import {ServerConfigJson} from './server_config';
 import {SharedMetricsPublisher} from './shared_metrics';
 import { ManagerMetrics } from './manager_metrics';
-import { doesNotThrow } from 'assert';
 
 interface ServerInfo {
   name: string;
@@ -113,50 +112,46 @@ describe('ShadowsocksManagerService', () => {
     });
   });
 
-  describe('putHostname', () => {
-    it('Accepts valid hostnames and IPs', (done) => {
-      const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).build();
-
-      const res = {
-        send: (httpCode) => {
-          expect(httpCode).toEqual(204);
-        }
-      };
-
-      service.changeHostname({params: {hostname: "localhost"}}, res, () => {});
-      service.changeHostname({params: {hostname: "example.com"}}, res, () => {});
-      service.changeHostname({params: {hostname: "www.example.org"}}, res, () => {});
-      service.changeHostname({params: {hostname: "www.exa-mple.tw"}}, res, () => {});
-      service.changeHostname({params: {hostname: "123abc.co.uk"}}, res, () => {});
-      service.changeHostname({params: {hostname: "93.184.216.34"}}, res, () => {});
-      service.changeHostname({params: {hostname: "::0"}}, res, () => {});
-      service.changeHostname({params: {hostname: "2606:2800:220:1:248:1893:25c8:1946"}}, res, () => {});
-      responseProcessed = true;
-      done();
-    });
-    it('Rejects malformed hostnames and IPs', (done) => {
-      const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).build();
-
-      const res = { send: (httpCode) => {} };
-      const next = (error) => {
-        expect(error.statusCode).toEqual(400);
-      };
-
-      service.changeHostname({params: {hostname: ""}}, res, next);
-      service.changeHostname({params: {hostname: "-abc.com"}}, res, next);
-      service.changeHostname({params: {hostname: "abc-.com"}}, res, next);
-      service.changeHostname({params: {hostname: "abc.com/def"}}, res, next);
-      service.changeHostname({params: {hostname: "i_have_underscores.net"}}, res, next);
-      service.changeHostname({params: {hostname: "127.0.0.300"}}, res, next);
-      service.changeHostname({params: {hostname: "gggg:ggg:220:1:248:1893:25c8:1946"}}, res, next);
-      responseProcessed = true;
-      done();
-    });
+  describe('changeHostname', () => {
+    const goodHostnames = [
+      "localhost","example.com","www.example.org","www.exa-mple.tw","123abc.co.uk","93.184.216.34","::0","2606:2800:220:1:248:1893:25c8:1946"
+    ];
+    for (const hostname of goodHostnames) {
+      it(`accepts ${hostname}`, (done) => {
+        const serverConfig = new InMemoryConfig({} as ServerConfigJson);
+        const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(getAccessKeyRepository()).build();
+  
+        const res = {
+          send: (httpCode) => {
+            expect(httpCode).toEqual(204);
+            responseProcessed = true;
+          }
+        };
+  
+        service.changeHostname({params: {hostname}}, res, done);
+      });
+    }
+    const badHostnames = [
+      "","-abc.com","abc-.com","abc.com/def","i_have_underscores.net","gggg:ggg:220:1:248:1893:25c8:1946"
+    ];
+    for (const hostname of badHostnames) {
+      it(`rejects ${hostname}`, (done) => {
+        const serverConfig = new InMemoryConfig({} as ServerConfigJson);
+        const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(getAccessKeyRepository()).build();
+  
+        const res = { send: (httpCode) => {} };
+        const next = (error) => {
+          expect(error.statusCode).toEqual(400);
+          responseProcessed = true;
+          done();
+        };
+  
+        service.changeHostname({params: {hostname}}, res, next);
+      });
+    }
     it('Changes the server\'s hostname', (done) => {
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).build();
+      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(getAccessKeyRepository()).build();
       const hostname = "www.example.org";
       const res = {
         send: (httpCode) => {
@@ -169,7 +164,7 @@ describe('ShadowsocksManagerService', () => {
     });
     it('Rejects missing hostname', (done) => {
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).build();
+      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(getAccessKeyRepository()).build();
       const res = { send: (httpCode) => {} };
       const next = (error) => {
         expect(error.statusCode).toEqual(400);
@@ -181,7 +176,7 @@ describe('ShadowsocksManagerService', () => {
     });
     it('Rejects non-string hostname', (done) => {
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).build();
+      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(getAccessKeyRepository()).build();
       const res = { send: (httpCode) => {} };
       const next = (error) => {
         expect(error.statusCode).toEqual(400);
