@@ -162,7 +162,17 @@ function cleanup() {
     fail "Port for new access keys wasn't changed.  Newly created access key: ${ACCESS_KEY_JSON}"
   fi
 
-  echo "${ACCESS_KEY_JSON}"
+  # Verify that we can change teh hostname for new access keys
+  NEW_HOSTNAME="newhostname"
+  client_curl --insecure -X PUT -H 'Content-Type: application/json' -d '{"hostname": "'${NEW_HOSTNAME}'"}' ${SB_API_URL}/server/hostname-for-new-access-keys \
+    || fail "Couldn't change hostname for new access keys"
+
+  ACCESS_KEY_JSON=$(client_curl --insecure -X POST ${SB_API_URL}/access-keys \
+    || fail "Couldn't get a new access key after changing hostname")
+  
+  if [[ "${ACCESS_KEY_JSON}" != *"@${NEW_HOSTNAME}:"* ]]; then
+    fail "Hostname for new access keys wasn't changed.  Newly created access key: ${ACCESS_KEY_JSON}"
+  fi
   
   # Verify no errors occurred.
   readonly SHADOWBOX_LOG=$OUTPUT_DIR/shadowbox-log.txt
