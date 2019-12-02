@@ -25,6 +25,9 @@ LABEL shadowbox.outline-ss-server_version="${SS_VERSION}"
 ARG GITHUB_RELEASE
 LABEL shadowbox.github.release="${GITHUB_RELEASE}"
 
+# Set watchtower to automatically fetch docker image updates
+LABEL com.centurylinklabs.watchtower.enable=true
+
 # We use curl to detect the server's public IP.
 RUN apk add --no-cache curl
 
