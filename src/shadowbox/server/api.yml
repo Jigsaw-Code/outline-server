@@ -28,11 +28,11 @@ paths:
                 '0':
                   value: >-
                     {"name":"My Server","serverId":"000-000-000-000","metricsEnabled":true,"createdTimestampMs":1536613192052,"portForNewAccessKeys":1234, "version": "1.0.0"}
-  /server/hostname-for-new-access-keys:
+  /server/hostname-for-access-keys:
     put:
       tags:
         - Server
-      description: Changes the hostname for new access keys.  Must be a valid hostname or IP address.  If it's a hostname, DNS must be set up independently of this API.
+      description: Changes the hostname for access keys.  Must be a valid hostname or IP address.  If it's a hostname, DNS must be set up independently of this API.
       requestBody:
         required: true 
         content:
