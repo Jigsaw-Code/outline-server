@@ -111,7 +111,7 @@ describe('ShadowsocksManagerService', () => {
     });
   });
 
-  describe('changeHostname', () => {
+  describe('setHostnameForAccessKeys', () => {
     it(`accepts valid hostnames`, (done) => {
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
       const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(getAccessKeyRepository()).build();
@@ -126,7 +126,7 @@ describe('ShadowsocksManagerService', () => {
         "-bad", "localhost","example.com","www.example.org","www.exa-mple.tw","123abc.co.uk","93.184.216.34","::0","2606:2800:220:1:248:1893:25c8:1946"
       ];
       for (const hostname of goodHostnames) {
-        service.changeHostname({params: {hostname}}, res, () => {});
+        service.setHostnameForAccessKeys({params: {hostname}}, res, () => {});
       }
 
       responseProcessed = true;
@@ -146,7 +146,7 @@ describe('ShadowsocksManagerService', () => {
         null, "","-abc.com","abc-.com","abc.com/def","i_have_underscores.net","gggg:ggg:220:1:248:1893:25c8:1946"
       ];
       for (const hostname of badHostnames) {
-        service.changeHostname({params: {hostname}}, res, next);
+        service.setHostnameForAccessKeys({params: {hostname}}, res, next);
       }
 
       responseProcessed = true;
@@ -163,7 +163,7 @@ describe('ShadowsocksManagerService', () => {
           responseProcessed = true;
         }
       };
-      service.changeHostname({params: {hostname}}, res, done);
+      service.setHostnameForAccessKeys({params: {hostname}}, res, done);
     });
     it('Rejects missing hostname', (done) => {
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
@@ -175,7 +175,7 @@ describe('ShadowsocksManagerService', () => {
         done();
       };
       const missingHostname = { params: {} } as {params: {hostname: string}};
-      service.changeHostname(missingHostname, res, next);
+      service.setHostnameForAccessKeys(missingHostname, res, next);
     });
     it('Rejects non-string hostname', (done) => {
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
@@ -188,7 +188,7 @@ describe('ShadowsocksManagerService', () => {
       };
       // tslint:disable-next-line: no-any
       const badHostname = ({ params: {hostname: 123} } as any ) as {params: {hostname: string}};
-      service.changeHostname(badHostname, res, next);
+      service.setHostnameForAccessKeys(badHostname, res, next);
     });
   });
 

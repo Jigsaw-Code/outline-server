@@ -77,7 +77,7 @@ export function bindService(
     apiServer: restify.Server, apiPrefix: string, service: ShadowsocksManagerService) {
   apiServer.put(`${apiPrefix}/name`, service.renameServer.bind(service));
   apiServer.get(`${apiPrefix}/server`, service.getServer.bind(service));
-  apiServer.put(`${apiPrefix}/server/hostname-for-new-access-keys`, service.changeHostname.bind(service));
+  apiServer.put(`${apiPrefix}/server/hostname-for-new-access-keys`, service.setHostnameForAccessKeys.bind(service));
   apiServer.put(
       `${apiPrefix}/server/port-for-new-access-keys`,
       service.setPortForNewAccessKeys.bind(service));
@@ -150,7 +150,7 @@ export class ShadowsocksManagerService {
   }
 
   // Changes the server's hostname.  Hostname must be a valid domain or IP address
-  public changeHostname(req: RequestType, res: ResponseType, next: restify.Next): void {
+  public setHostnameForAccessKeys(req: RequestType, res: ResponseType, next: restify.Next): void {
     logging.debug(`changeHostname request: ${JSON.stringify(req.params)}`);
 
     const hostname = req.params.hostname;
