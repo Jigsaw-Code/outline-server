@@ -176,7 +176,7 @@ export class ShadowsocksManagerService {
     this.serverConfig.data().hostname = hostname;
     this.serverConfig.write();
     this.accessKeys.setHostname(hostname);
-    res.send(204);
+    res.send(HttpSuccess.NO_CONTENT);
     next();
   }
 
