@@ -260,6 +260,7 @@ function start_shadowbox() {
   # rather than pass in the environment.
   declare -a docker_shadowbox_flags=(
     --name shadowbox --restart=always --net=host
+    --label=com.centurylinklabs.watchtower.enable=true
     -v "${STATE_DIR}:${STATE_DIR}"
     -e "SB_STATE_DIR=${STATE_DIR}"
     -e "SB_API_PORT=${API_PORT}"
