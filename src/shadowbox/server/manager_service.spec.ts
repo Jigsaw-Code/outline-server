@@ -25,6 +25,7 @@ import {SharedMetricsPublisher} from './shared_metrics';
 
 interface ServerInfo {
   name: string;
+  accessKeyDataLimit?: DataLimit;
 }
 
 const NEW_PORT = 12345;
@@ -59,15 +60,18 @@ describe('ShadowsocksManagerService', () => {
           },
           done);
     });
-    it('Return saved name', (done) => {
+    it('Returns persisted properties', (done) => {
       const repo = getAccessKeyRepository();
-      const serverConfig = new InMemoryConfig({name: 'Server'} as ServerConfigJson);
+      const accessKeyDataLimit = {bytes: 999};
+      const serverConfig =
+          new InMemoryConfig({name: 'Server', accessKeyDataLimit} as ServerConfigJson);
       const service = new ShadowsocksManagerService('default name', serverConfig, repo, null, null);
       service.getServer(
           {params: {}}, {
             send: (httpCode, data: ServerInfo) => {
               expect(httpCode).toEqual(200);
               expect(data.name).toEqual('Server');
+              expect(data.accessKeyDataLimit).toEqual(accessKeyDataLimit);
               responseProcessed = true;
             }
           },
