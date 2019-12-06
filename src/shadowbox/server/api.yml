@@ -165,7 +165,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DataUsage"
+              $ref: "#/components/schemas/DataLimit"
             examples:
               '0':
                 value: "{bytes: 10000}"
@@ -192,7 +192,7 @@ paths:
         content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DataUsage"
+                $ref: "#/components/schemas/DataLimit"
               examples:
                 '0':
                   value: "{bytes: 10000}"
@@ -295,7 +295,7 @@ components:
         portForNewAccessKeys:
           type: integer
 
-    DataUsage:
+    DataLimit:
       properties:
         bytes:
           type: integer
@@ -318,4 +318,4 @@ components:
         accessUrl:
           type: string
         limit:
-          $ref: "#/components/schemas/DataUsage"
+          $ref: "#/components/schemas/DataLimit"
