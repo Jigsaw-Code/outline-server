@@ -253,10 +253,10 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`setAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
       const limit = req.params.limit as DataLimit;
-      if (limit === undefined) {
+      if (!limit) {
         return next(
             new restify.MissingParameterError({statusCode: 400}, 'Missing `limit` parameter'));
-      } else if (!!limit && !Number.isInteger(limit.bytes)) {
+      } else if (!Number.isInteger(limit.bytes)) {
         return next(
             new restify.InvalidArgumentError({statusCode: 400}, '`limit` must be an integer'));
       }

@@ -395,7 +395,15 @@ describe('ShadowsocksManagerService', () => {
           expect(httpCode).toEqual(204);
           expect(serverConfig.data().accessKeyDataLimit).toEqual(limit);
           expect(repo.setAccessKeyDataLimit).toHaveBeenCalledWith(limit);
-          responseProcessed = true;  // required for afterEach to pass.
+          service.getServer(
+              {params: {}}, {
+                send: (httpCode, data: ServerInfo) => {
+                  expect(httpCode).toEqual(200);
+                  expect(data.accessKeyDataLimit).toEqual(limit);
+                  responseProcessed = true;  // required for afterEach to pass.
+                }
+              },
+              done);
         }
       };
       service.setAccessKeyDataLimit({params: {limit}}, res, done);
