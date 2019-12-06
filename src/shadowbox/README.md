@@ -119,15 +119,15 @@ Remove an access key
 curl --insecure -X DELETE $API_URL/access-keys/2
 ```
 
-Set an access key data limit
-(e.g. limit outbound data transfer for access key 2 to 1MB over 30 days)
+Set a data limit for all access keys
+(e.g. limit outbound data transfer access keys to 1MB over 30 days)
 ```
-curl -v --insecure -X PUT -H "Content-Type: application/json" -d '{"limit": {"bytes": 1000}}' $API_URL/access-keys/2/data-limit
+curl -v --insecure -X PUT -H "Content-Type: application/json" -d '{"limit": {"bytes": 1000}}' $API_URL/experimental/access-key-data-limit
 ```
 
-Remove an access key data limit
+Remove the access key data limit
 ```
-curl -v --insecure -X DELETE $API_URL/access-keys/2/data-limit
+curl -v --insecure -X DELETE $API_URL/experimental/access-key-data-limit
 ```
 
 ## Testing
