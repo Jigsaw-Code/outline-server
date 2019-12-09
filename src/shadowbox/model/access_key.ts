@@ -27,7 +27,7 @@ export interface ProxyParams {
   readonly password: string;
 }
 
-// Data transfer allowance, measured in bytes.
+// Data transfer allowance, measured in bytes. Must be a serializable JSON object.
 export interface DataLimit {
   readonly bytes: number;
 }
