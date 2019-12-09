@@ -27,8 +27,10 @@ export interface ProxyParams {
   readonly password: string;
 }
 
-// Data transfer measured in bytes.
-export interface DataUsage { readonly bytes: number; }
+// Data transfer allowance, measured in bytes. Must be a serializable JSON object.
+export interface DataLimit {
+  readonly bytes: number;
+}
 
 // AccessKey is what admins work with. It gives ProxyParams a name and identity.
 export interface AccessKey {
@@ -40,12 +42,8 @@ export interface AccessKey {
   readonly metricsId: AccessKeyMetricsId;
   // Parameters to access the proxy
   readonly proxyParams: ProxyParams;
-  // Admin-controlled, data transfer limit for this access key. Unlimited if unset.
-  readonly dataLimit?: DataUsage;
-  // Data transferred by this access key over a 30 day sliding timeframe.
-  readonly dataUsage: DataUsage;
-  // Returns whether the access key has exceeded its data transfer limit.
-  isOverDataLimit(): boolean;
+  // Whether the access key has exceeded the data transfer limit.
+  readonly isOverDataLimit: boolean;
 }
 
 export interface AccessKeyRepository {
@@ -61,8 +59,8 @@ export interface AccessKeyRepository {
   renameAccessKey(id: AccessKeyId, name: string): void;
   // Gets the metrics id for a given Access Key.
   getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined;
-  // Sets the transfer limit for the specified access key. Throws on failure.
-  setAccessKeyDataLimit(id: AccessKeyId, limit: DataUsage): Promise<void>;
-  // Clears the transfer limit for the specified access key. Throws on failure.
-  removeAccessKeyDataLimit(id: AccessKeyId): Promise<void>;
+  // Sets a data transfer limit for all access keys.
+  setAccessKeyDataLimit(limit: DataLimit): Promise<void>;
+  // Removes the access key data transfer limit.
+  removeAccessKeyDataLimit(): Promise<void>;
 }

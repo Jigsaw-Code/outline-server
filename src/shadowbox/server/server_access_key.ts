@@ -20,7 +20,7 @@ import {isPortUsed} from '../infrastructure/get_port';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
-import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyRepository, DataUsage, ProxyParams} from '../model/access_key';
+import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyRepository, DataLimit, ProxyParams} from '../model/access_key';
 import * as errors from '../model/errors';
 import {ShadowsocksServer} from '../model/shadowsocks_server';
 import {PrometheusManagerMetrics} from './manager_metrics';
@@ -33,7 +33,6 @@ interface AccessKeyJson {
   password: string;
   port: number;
   encryptionMethod?: string;
-  dataLimit?: DataUsage;
 }
 
 // The configuration file format as json.
@@ -45,20 +44,13 @@ export interface AccessKeyConfigJson {
 
 // AccessKey implementation with write access enabled on properties that may change.
 class ServerAccessKey implements AccessKey {
-  public dataUsage: DataUsage = {bytes: 0};
+  public isOverDataLimit = false;
   constructor(
       readonly id: AccessKeyId, public name: string, public metricsId: AccessKeyMetricsId,
-      readonly proxyParams: ProxyParams, public dataLimit?: DataUsage) {}
-
-  isOverDataLimit(): boolean {
-    if (!this.dataLimit) {
-      return false;
-    }
-    return this.dataUsage.bytes > this.dataLimit.bytes;
-  }
+      readonly proxyParams: ProxyParams) {}
 }
 
-function isValidAccessKeyDataLimit(limit: DataUsage): boolean {
+function isValidAccessKeyDataLimit(limit: DataLimit): boolean {
   return limit && limit.bytes >= 0;
 }
 
@@ -75,8 +67,7 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyJson): AccessKe
     password: accessKeyJson.password,
   };
   return new ServerAccessKey(
-      accessKeyJson.id, accessKeyJson.name, accessKeyJson.metricsId, proxyParams,
-      accessKeyJson.dataLimit);
+      accessKeyJson.id, accessKeyJson.name, accessKeyJson.metricsId, proxyParams);
 }
 
 function makeAccessKeyJson(accessKey: AccessKey): AccessKeyJson {
@@ -86,8 +77,7 @@ function makeAccessKeyJson(accessKey: AccessKey): AccessKeyJson {
     name: accessKey.name,
     password: accessKey.proxyParams.password,
     port: accessKey.proxyParams.portNumber,
-    encryptionMethod: accessKey.proxyParams.encryptionMethod,
-    dataLimit: accessKey.dataLimit
+    encryptionMethod: accessKey.proxyParams.encryptionMethod
   };
 }
 
@@ -102,7 +92,8 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   constructor(
       private portForNewAccessKeys: number, private proxyHostname: string,
       private keyConfig: JsonConfig<AccessKeyConfigJson>,
-      private shadowsocksServer: ShadowsocksServer, private prometheusClient: PrometheusClient) {
+      private shadowsocksServer: ShadowsocksServer, private prometheusClient: PrometheusClient,
+      private accessKeyDataLimit?: DataLimit) {
     if (this.keyConfig.data().accessKeys === undefined) {
       this.keyConfig.data().accessKeys = [];
     }
@@ -155,7 +146,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       encryptionMethod: this.NEW_USER_ENCRYPTION_METHOD,
       password,
     };
-    const accessKey = new ServerAccessKey(id, '', metricsId, proxyParams, undefined);
+    const accessKey = new ServerAccessKey(id, '', metricsId, proxyParams);
     this.accessKeys.push(accessKey);
     this.saveAccessKeys();
     await this.updateServer();
@@ -185,29 +176,21 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.saveAccessKeys();
   }
 
-  setAccessKeyDataLimit(id: AccessKeyId, limit: DataUsage): Promise<void> {
+  get dataLimit(): DataLimit|undefined {
+    return this.accessKeyDataLimit;
+  }
+
+  setAccessKeyDataLimit(limit: DataLimit): Promise<void> {
     if (!isValidAccessKeyDataLimit(limit)) {
       throw new errors.InvalidAccessKeyDataLimit();
     }
-    const accessKey = this.getAccessKey(id);
-    const wasOverDataLimit = accessKey.isOverDataLimit();
-    accessKey.dataLimit = limit;
-    this.saveAccessKeys();
-    if (accessKey.isOverDataLimit() !== wasOverDataLimit) {
-      return this.updateServer();
-    }
-    return Promise.resolve();
+    this.accessKeyDataLimit = limit;
+    return this.enforceAccessKeyDataLimits();
   }
 
-  removeAccessKeyDataLimit(id: AccessKeyId): Promise<void> {
-    const accessKey = this.getAccessKey(id);
-    const wasOverDataLimit = accessKey.isOverDataLimit();
-    delete accessKey.dataLimit;
-    this.saveAccessKeys();
-    if (wasOverDataLimit) {
-      return this.updateServer();
-    }
-    return Promise.resolve();
+  removeAccessKeyDataLimit(): Promise<void> {
+    delete this.accessKeyDataLimit;
+    return this.enforceAccessKeyDataLimits();
   }
 
   getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined {
@@ -223,9 +206,11 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
         (await metrics.getOutboundByteTransfer({hours: 30 * 24})).bytesTransferredByUserId;
     let limitStatusChanged = false;
     for (const accessKey of this.accessKeys) {
-      const wasOverDataLimit = accessKey.isOverDataLimit();
-      accessKey.dataUsage = {bytes: bytesTransferredById[accessKey.id] || 0};
-      limitStatusChanged = accessKey.isOverDataLimit() !== wasOverDataLimit || limitStatusChanged;
+      const usageBytes = bytesTransferredById[accessKey.id] || 0;
+      const wasOverDataLimit = accessKey.isOverDataLimit;
+      accessKey.isOverDataLimit =
+          this.accessKeyDataLimit ? usageBytes > this.accessKeyDataLimit.bytes : false;
+      limitStatusChanged = accessKey.isOverDataLimit !== wasOverDataLimit || limitStatusChanged;
     }
     if (limitStatusChanged) {
       await this.updateServer();
@@ -233,7 +218,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private updateServer(): Promise<void> {
-    const serverAccessKeys = this.accessKeys.filter(key => !key.isOverDataLimit()).map(key => {
+    const serverAccessKeys = this.accessKeys.filter(key => !key.isOverDataLimit).map(key => {
       return {
         id: key.id,
         port: key.proxyParams.portNumber,
