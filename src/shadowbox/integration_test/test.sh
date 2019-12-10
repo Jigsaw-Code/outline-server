@@ -33,7 +33,6 @@
 set -x
 
 export DOCKER_CONTENT_TRUST=${DOCKER_CONTENT_TRUST:-1}
-export CLOUDSDK_PYTHON=/usr/bin/python2
 
 readonly OUTPUT_DIR=$(mktemp -d)
 # TODO(fortuna): Make it possible to run multiple tests in parallel by adding a
@@ -165,7 +164,7 @@ function cleanup() {
 
   # Verify that we can change the hostname for new access keys
   NEW_HOSTNAME="newhostname"
-  client_curl --insecure -X PUT -H 'Content-Type: application/json' -d '{"hostname": "'${NEW_HOSTNAME}'"}' ${SB_API_URL}/server/hostname-for-new-access-keys \
+  client_curl --insecure -X PUT -H 'Content-Type: application/json' -d '{"hostname": "'${NEW_HOSTNAME}'"}' ${SB_API_URL}/server/hostname-for-access-keys \
     || fail "Couldn't change hostname for new access keys"
 
   ACCESS_KEY_JSON=$(client_curl --insecure -X POST ${SB_API_URL}/access-keys \
