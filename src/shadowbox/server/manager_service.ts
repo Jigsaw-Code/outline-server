@@ -15,12 +15,12 @@
 import * as restify from 'restify';
 import * as ipRegex from 'ip-regex';
 import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
-import {version} from '../package.json';
 
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {AccessKey, AccessKeyRepository, DataUsage} from '../model/access_key';
+import {AccessKey, AccessKeyRepository, DataLimit} from '../model/access_key';
 import * as errors from '../model/errors';
+import {version} from '../package.json';
 
 import {ManagerMetrics} from './manager_metrics';
 import {ServerConfigJson} from './server_config';
@@ -43,8 +43,7 @@ function accessKeyToJson(accessKey: AccessKey) {
       method: accessKey.proxyParams.encryptionMethod,
       password: accessKey.proxyParams.password,
       outline: 1,
-    })),
-    dataLimit: accessKey.dataLimit
+    }))
   };
 }
 
@@ -54,7 +53,7 @@ interface RequestParams {
   //   id: string
   //   name: string
   //   metricsEnabled: boolean
-  //   limit: DataUsage
+  //   limit: DataLimit
   //   port: number
   //   hours: number
   [param: string]: unknown;
@@ -81,22 +80,24 @@ export function bindService(
   apiServer.put(
       `${apiPrefix}/server/port-for-new-access-keys`,
       service.setPortForNewAccessKeys.bind(service));
-  apiServer.put(
-      `${apiPrefix}/server/data-usage-timeframe`, service.setDataUsageTimeframe.bind(service));
 
   apiServer.post(`${apiPrefix}/access-keys`, service.createNewAccessKey.bind(service));
   apiServer.get(`${apiPrefix}/access-keys`, service.listAccessKeys.bind(service));
 
   apiServer.del(`${apiPrefix}/access-keys/:id`, service.removeAccessKey.bind(service));
   apiServer.put(`${apiPrefix}/access-keys/:id/name`, service.renameAccessKey.bind(service));
-  apiServer.put(
-      `${apiPrefix}/access-keys/:id/data-limit`, service.setAccessKeyDataLimit.bind(service));
-  apiServer.del(
-      `${apiPrefix}/access-keys/:id/data-limit`, service.removeAccessKeyDataLimit.bind(service));
 
   apiServer.get(`${apiPrefix}/metrics/transfer`, service.getDataUsage.bind(service));
   apiServer.get(`${apiPrefix}/metrics/enabled`, service.getShareMetrics.bind(service));
   apiServer.put(`${apiPrefix}/metrics/enabled`, service.setShareMetrics.bind(service));
+
+  // Experimental APIs
+  apiServer.put(
+      `${apiPrefix}/experimental/access-key-data-limit`,
+      service.setAccessKeyDataLimit.bind(service));
+  apiServer.del(
+      `${apiPrefix}/experimental/access-key-data-limit`,
+      service.removeAccessKeyDataLimit.bind(service));
 }
 
 function validateAccessKeyId(accessKeyId: unknown): string {
@@ -142,9 +143,8 @@ export class ShadowsocksManagerService {
       serverId: this.serverConfig.data().serverId,
       metricsEnabled: this.serverConfig.data().metricsEnabled || false,
       createdTimestampMs: this.serverConfig.data().createdTimestampMs,
-      portForNewAccessKeys: this.serverConfig.data().portForNewAccessKeys,
-      dataUsageTimeframe: this.serverConfig.data().dataUsageTimeframe,
-      version
+      version,
+      accessKeyDataLimit: this.serverConfig.data().accessKeyDataLimit
     });
     next();
   }
@@ -285,26 +285,23 @@ export class ShadowsocksManagerService {
   public async setAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`setAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
-      const accessKeyId = validateAccessKeyId(req.params.id);
-      const limit = req.params.limit as DataUsage;
+      const limit = req.params.limit as DataLimit;
       if (!limit) {
         return next(
-            new restify.MissingParameterError({statusCode: 400}, 'Parameter `limit` is missing'));
+            new restify.MissingParameterError({statusCode: 400}, 'Missing `limit` parameter'));
       } else if (!Number.isInteger(limit.bytes)) {
-        return next(new restify.InvalidArgumentError(
-            {statusCode: 400}, 'Parameter `limit.bytes` must be an integer'));
+        return next(
+            new restify.InvalidArgumentError({statusCode: 400}, '`limit` must be an integer'));
       }
-      await this.accessKeys.setAccessKeyDataLimit(accessKeyId, limit);
+      this.accessKeys.setAccessKeyDataLimit(limit);
+      this.serverConfig.data().accessKeyDataLimit = limit;
+      this.serverConfig.write();
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
       if (error instanceof errors.InvalidAccessKeyDataLimit) {
         return next(new restify.InvalidArgumentError({statusCode: 400}, error.message));
-      } else if (error instanceof errors.AccessKeyNotFound) {
-        return next(new restify.NotFoundError(error.message));
-      } else if (error instanceof restify.HttpError) {
-        return next(error);
       }
       return next(new restify.InternalServerError());
     }
@@ -313,55 +310,20 @@ export class ShadowsocksManagerService {
   public async removeAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`removeAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
-      const accessKeyId = validateAccessKeyId(req.params.id);
-      await this.accessKeys.removeAccessKeyDataLimit(accessKeyId);
-      res.send(HttpSuccess.NO_CONTENT);
-      return next();
-    } catch (error) {
-      logging.error(error);
-      if (error instanceof errors.AccessKeyNotFound) {
-        return next(new restify.NotFoundError(error.message));
-      } else if (error instanceof restify.HttpError) {
-        return next(error);
-      }
-      return next(new restify.InternalServerError());
-    }
-  }
-
-  public setDataUsageTimeframe(req: RequestType, res: ResponseType, next: restify.Next) {
-    try {
-      logging.debug(`setDataUsageTimeframe request ${JSON.stringify(req.params)}`);
-      const hours = req.params.hours;
-      if (!hours) {
-        return next(
-            new restify.MissingParameterError({statusCode: 400}, 'Parameter `hours` is missing'));
-      }
-      if (typeof hours !== 'number' ||
-          !Number.isInteger(hours)) {  // The access key repository will validate the value.
-        return next(new restify.InvalidArgumentError(
-            {statusCode: 400}, 'Parameter `hours` must be an integer'));
-      }
-      const dataUsageTimeframe = {hours};
-      this.accessKeys.setDataUsageTimeframe(dataUsageTimeframe);
-      this.serverConfig.data().dataUsageTimeframe = dataUsageTimeframe;
+      await this.accessKeys.removeAccessKeyDataLimit();
+      delete this.serverConfig.data().accessKeyDataLimit;
       this.serverConfig.write();
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
-      if (error instanceof errors.InvalidDataUsageTimeframe) {
-        return next(new restify.InvalidArgumentError({statusCode: 400}, error.message));
-      }
       return next(new restify.InternalServerError());
     }
   }
 
   public async getDataUsage(req: RequestType, res: ResponseType, next: restify.Next) {
-    // TODO(alalama): use AccessKey.dataUsage to avoid querying Prometheus. Deprecate this call in
-    // the manager in favor of `GET /access-keys`.
     try {
-      const timeframe = this.serverConfig.data().dataUsageTimeframe;
-      res.send(HttpSuccess.OK, await this.managerMetrics.getOutboundByteTransfer(timeframe));
+      res.send(HttpSuccess.OK, await this.managerMetrics.getOutboundByteTransfer({hours: 30 * 24}));
       return next();
     } catch (error) {
       logging.error(error);

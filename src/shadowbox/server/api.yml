@@ -212,59 +212,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DataUsage"
+              $ref: "#/components/schemas/DataLimit"
             examples:
               '0':
                 value: "{bytes: 10000}"
       responses:
         '204':
           description: Access key renamed successfully
-        '404':
-          description: Access key inexistent
-  /access-keys/{id}/data-limit:
-    put:
-      description: Sets an access key data transfer limit
-      tags:
-        - Access Key
-        - Limit
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The id of the access key to set a limit
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DataUsage"
-              examples:
-                '0':
-                  value: "{bytes: 10000}"
-      responses:
-        '204':
-          description: Access key limit set successfully
-        '400':
-          description: Invalid data limit
-        '404':
-          description: Access key inexistent
-    delete:
-      description: Removes an access key data transfer limit, lifting data transfer restrictions on the key.
-      tags:
-        - Access Key
-        - Limit
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The id of the access key to delete a limit
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Access key limit deleted successfully.
         '404':
           description: Access key inexistent
   /metrics/transfer:
@@ -326,6 +280,34 @@ paths:
           description: Setting successful
         '400':
           description: Invalid request
+  /experimental/access-key-data-limit:
+    put:
+      description: Sets a data transfer limit for all access keys
+      tags:
+        - Access Key
+        - Limit
+      requestBody:
+        required: true
+        content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataLimit"
+              examples:
+                '0':
+                  value: "limit: {bytes: 10000}"
+      responses:
+        '204':
+          description: Access key data limit set successfully
+        '400':
+          description: Invalid data limit
+    delete:
+      description: Removes the access key data limit, lifting data transfer restrictions on all access keys.
+      tags:
+        - Access Key
+        - Limit
+      responses:
+        '204':
+          description: Access key limit deleted successfully.
 
 components:
   schemas:
@@ -353,7 +335,7 @@ components:
           type: integer
           minimum: 1
 
-    DataUsage:
+    DataLimit:
       properties:
         bytes:
           type: integer
@@ -375,5 +357,3 @@ components:
           type: string
         accessUrl:
           type: string
-        limit:
-          $ref: "#/components/schemas/DataUsage"

@@ -44,9 +44,3 @@ export class InvalidAccessKeyDataLimit extends OutlineError {
     super('Must provide a limit with a non-negative integer value for "bytes"');
   }
 }
-
-export class InvalidDataUsageTimeframe extends OutlineError {
-  constructor() {
-    super('Must provide a timeframe with a positive integer values for "hours"');
-  }
-}
