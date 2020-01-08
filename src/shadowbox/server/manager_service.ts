@@ -142,6 +142,7 @@ export class ShadowsocksManagerService {
       metricsEnabled: this.serverConfig.data().metricsEnabled || false,
       createdTimestampMs: this.serverConfig.data().createdTimestampMs,
       version,
+      port: this.serverConfig.data().portForNewAccessKeys,
       accessKeyDataLimit: this.serverConfig.data().accessKeyDataLimit
     });
     next();
