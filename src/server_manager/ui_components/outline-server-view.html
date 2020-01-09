@@ -25,6 +25,7 @@
 <link rel='import' href='../bower_components/paper-menu-button/paper-menu-button.html'>
 <link rel='import' href='../bower_components/paper-progress/paper-progress.html'>
 <link rel='import' href='../bower_components/paper-tabs/paper-tabs.html'>
+<link rel='import' href='../bower_components/paper-tooltip/paper-tooltip.html'>
 
 <link rel='import' href='./cloud-install-styles.html'>
 <link rel='import' href='./outline-iconset.html'>
@@ -188,15 +189,20 @@
         align-items: center;
       }
       .measurement-container paper-progress {
-        height: 3px;
         max-width: 72px;
         margin: 0 24px 0 12px;
+        border: 1px solid var(--primary-green);
+        border-radius: 2px;
+        --paper-progress-height: 8px;
         --paper-progress-active-color: var(--primary-green);
       }
       @media (max-width: 640px) {
         .measurement-container paper-progress {
           width: 48px;
         }
+      }
+      paper-progress.tooltip:hover {
+        cursor: pointer;
       }
       .measurement {
         /* Space the usage bars evenly */
@@ -317,9 +323,6 @@
         font-size: 16px;
         margin: 0px 0px 12px 0px;
       }
-      outline-help-bubble paper-button {
-        color: white;
-      }
       outline-help-bubble img {
         width: 76px;
         height: auto;
@@ -360,7 +363,7 @@
         <div class="tabs-spacer"></div>
         <paper-tabs selected="{{selectedTab}}" attr-for-selected="name" noink>
           <paper-tab name="connections">[[localize('server-connections')]]</paper-tab>
-          <paper-tab name="settings">[[localize('server-settings')]]</paper-tab>
+          <paper-tab name="settings" id="settingsTab">[[localize('server-settings')]]</paper-tab>
         </paper-tabs>
       </div>
 
@@ -437,7 +440,10 @@
               </span>
               <span class="measurement-container">
                   <span class="measurement">[[_formatBytesTransferred(myConnection.transferredBytes, "...")]]</span>
-                  <paper-progress value='[[myConnection.relativeTraffic]]'></paper-progress>
+                  <paper-progress value="[[myConnection.relativeTraffic]]" class$="[[_computeTooltipClass(isAccessKeyDataLimitEnabled)]]"></paper-progress>
+                  <paper-tooltip animation-delay="0" offset="0" position="top" hidden$="[[!isAccessKeyDataLimitEnabled]]">
+                    [[_getDataLimitsUsageString(myConnection)]]
+                  </paper-tooltip>
                 </span>
               <span class="actions">
                 <span class="flex-1">
@@ -462,7 +468,10 @@
                 </span>
                 <span class="measurement-container">
                   <span class="measurement">[[_formatBytesTransferred(item.transferredBytes, "...")]]</span>
-                  <paper-progress value='[[item.relativeTraffic]]'></paper-progress>
+                  <paper-progress value='[[item.relativeTraffic]]' class$="[[_computeTooltipClass(isAccessKeyDataLimitEnabled)]]"></paper-progress>
+                  <paper-tooltip animation-delay="0" offset="0" position="top" hidden$="[[!isAccessKeyDataLimitEnabled]]">
+                    [[_getDataLimitsUsageString(item)]]
+                  </paper-tooltip>
                 </span>
                 <span class="actions">
                   <span class="flex-1">
@@ -502,6 +511,10 @@
             server-management-api-url="[[serverManagementApiUrl]]"
             server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]"
             is-access-key-port-editable="[[isAccessKeyPortEditable]]"
+            access-key-data-limit="{{accessKeyDataLimit}}"
+            is-access-key-data-limit-enabled="{{isAccessKeyDataLimitEnabled}}"
+            data-limits-availability-date="[[dataLimitsAvailabilityDate]]"
+            can-set-access-key-data-limit="[[canSetAccessKeyDataLimit]]"
             server-creation-date="[[serverCreationDate]]"
             server-monthly-cost="[[monthlyCost]]"
             server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]"
@@ -525,6 +538,11 @@
       <p>[[localize('server-help-access-key-description')]]</p>
       <paper-button on-tap="showGetConnectedHelpBubble">[[localize('server-help-access-key-next')]]</paper-button>
     </outline-help-bubble>
+    <outline-help-bubble id="dataLimitsHelpBubble" vertical-align="top" horizontal-align="right">
+      <h3>[[localize('data-limits-dialog-title')]]</h3>
+      <p>[[localize('data-limits-dialog-text')]]</p>
+      <paper-button on-tap="closeDataLimitsHelpBubble">[[localize('ok')]]</paper-button>
+    </outline-help-bubble>
 
   </template>
   <script>
@@ -544,6 +562,10 @@
         isAccessKeyPortEditable: {type: Boolean, value: false},
         serverCreationDate: String,
         serverLocation: String,
+        accessKeyDataLimit: {type: Object, value: undefined},
+        isAccessKeyDataLimitEnabled: {type: Boolean},
+        canSetAccessKeyDataLimit: {type: Boolean, value: false},
+        dataLimitsAvailabilityDate: {type: String},
         isServerManaged: Boolean,
         isServerReachable: Boolean,
         // Callback for retrying to display an unreachable server.
@@ -695,9 +717,9 @@
 
         // Show 0 decimals for < 1MB, 1 decimal for >= 1MB, 2 decimals for >= 1GB.
         let numDecimals = 0;
-        if (numBytes >= Math.pow(2, 30)) {
+        if (numBytes >= 10 ** 9) {
           numDecimals = 2;
-        } else if (numBytes >= Math.pow(2, 20)) {
+        } else if (numBytes >= 10 ** 6) {
           numDecimals = 1;
         }
 
@@ -749,6 +771,12 @@
           this.$.getConnectedHelpBubble.hide();
         }
       },
+      _selectedTabChanged(selectedTab) {
+        if (this.selectedTab === 'settings') {
+          this.$.addAccessKeyHelpBubble.hide();
+          this.$.serverSettings.update(this.serverName, this.metricsEnabled);
+        }
+      },
       showGetConnectedHelpBubble: function() {
         if (this.myConnection) {
           this.$.addAccessKeyHelpBubble.hide();
@@ -758,31 +786,36 @@
       closeGetConnectedHelpBubble: function() {
         this.$.getConnectedHelpBubble.hide();
       },
-      _selectedTabChanged(selectedTab) {
-        if (this.selectedTab === 'settings') {
-          this.$.addAccessKeyHelpBubble.hide();
-          this.$.serverSettings.update(this.serverName, this.metricsEnabled);
-        }
+      closeDataLimitsHelpBubble: function() {
+        this.$.dataLimitsHelpBubble.hide();
+      },
+      showDataLimitsHelpBubble: function() {
+        this.showHelpBubbleOnce('dataLimitsHelpBubble', 'settingsTab', 'up', 'right');
       },
       // initHelpBubbles should be called after this outline-server-view
       // is on the screen (e.g. selected in iron-pages).  If help bubbles
       // are initialized before this point, setPosition will not work and
       // they will appear in the top left of the view.
       initHelpBubbles: function() {
-        this.showHelpBubbleOnce('addAccessKeyHelpBubble', 'addAccessKeyRow', 'down', 'left');
+        if (!this.showHelpBubbleOnce('addAccessKeyHelpBubble', 'addAccessKeyRow', 'down', 'left') &&
+            this.canSetAccessKeyDataLimit) {
+          // Show the data limits help bubble if the access key one has been already shown.
+          this.showDataLimitsHelpBubble();
+        }
       },
       showHelpBubbleOnce: function(helpBubbleId, positionTargetId,
                                    arrowDirection='down', arrowAlignment='right') {
         const storageKey = helpBubbleId + '-dismissed';
         if (window.localStorage.getItem(storageKey)) {
           // Help bubble has already been dismissed, nothing to show.
-          return;
+          return false;
         }
         const helpBubble = this.$[helpBubbleId];
         helpBubble.show(this.$[positionTargetId], arrowDirection, arrowAlignment);
         helpBubble.addEventListener('outline-help-bubble-dismissed', function(e) {
           window.localStorage.setItem(storageKey, true);
         }.bind(this));
+        return true;
       },
       isRegularConnection: function(item) {
         return item.id !== MY_CONNECTION_USER_ID;
@@ -824,6 +857,17 @@
       },
       removeServer: function() {
         this.fire('ForgetServerRequested');
+      },
+      _computeTooltipClass: function(isAccessKeyDataLimitEnabled) {
+        return isAccessKeyDataLimitEnabled ? 'tooltip' : '';
+      },
+      _getDataLimitsUsageString: function(accessKey) {
+        if (!this.accessKeyDataLimit) {
+          return '';
+        }
+        const used = this._formatBytesTransferred(accessKey.transferredBytes, '0');
+        const total = this.accessKeyDataLimit.value + ' ' + this.accessKeyDataLimit.unit;
+        return this.localize('data-limits-usage', 'used', used, 'total', total);
       }
     });
   </script>

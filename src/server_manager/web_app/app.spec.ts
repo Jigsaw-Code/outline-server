@@ -381,6 +381,15 @@ class FakeServer implements server.Server {
   setPortForNewAccessKeys(): Promise<void> {
     return Promise.reject(new Error('FakeServer.setPortForNewAccessKeys not implemented'));
   }
+  setAccessKeyDataLimit(limit: server.DataLimit): Promise<void> {
+    return Promise.reject(new Error('FakeServer.setAccessKeyDataLimit not implemented'));
+  }
+  removeAccessKeyDataLimit(): Promise<void> {
+    return Promise.resolve();
+  }
+  getAccessKeyDataLimit(): server.DataLimit|undefined {
+    return undefined;
+  }
 }
 
 class FakeManualServer extends FakeServer implements server.ManualServer {

@@ -15,8 +15,9 @@
 -->
 <link rel='import' href='../bower_components/polymer/polymer.html'>
 <link rel='import' href='../bower_components/paper-button/paper-button.html'>
+<link rel='import' href='../bower_components/paper-dropdown-menu/paper-dropdown-menu.html'>
 <link rel='import' href='../bower_components/paper-input/paper-input.html'>
-<link rel='import' href='../bower_components/paper-checkbox/paper-checkbox.html'>
+<link rel='import' href='../bower_components/paper-toggle-button/paper-toggle-button.html'>
 
 <link rel='import' href='./cloud-install-styles.html'>
 <link rel='import' href='./outline-iconset.html'>
@@ -55,10 +56,34 @@
         width: 60%;
         color: var(--medium-gray);
       }
-      #metricsHeader {
+      #experiments p {
+        width: 100%;
+      }
+      .sub-section {
+        background: var(--border-color);
+        padding: 12px;
+        margin: 24px 0;
+        display: flex;
+        align-items: center;
+        border-radius: 2px;
+      }
+      .sub-section iron-icon {
+        margin-right: 1em;
+      }
+      .space-between {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
+      }
+      .data-limits-input {
+        display: flex;
+        align-items: center;
+      }
+      .data-limits-input paper-input:not([readonly]) {
+        width: auto;
+        --paper-input-container: {
+          width: 120px;
+        };
       }
       #portForNewAccessKeysContainer {
         display: flex;
@@ -93,11 +118,11 @@
       #portForNewAccessKeysContainer {
         max-width: 545px;
       }
-      paper-checkbox {
-        /* We want the ink to be the color we're going to, not coming from */
-        --paper-checkbox-checked-color: var(--primary-green);
-        --paper-checkbox-checked-ink-color: var(--dark-gray);
-        --paper-checkbox-unchecked-color: var(--light-gray);
+      paper-toggle-button {
+        --paper-toggle-button-checked-bar-color: var(--primary-green);
+        --paper-toggle-button-checked-button-color: var(--primary-green);
+        --paper-toggle-button-checked-ink-color: var(--primary-green);
+        --paper-toggle-button-unchecked-bar-color: var(--dark-gray);
         --paper-checkbox-unchecked-ink-color: var(--primary-green);
       }
       /* Skip processing these with postcss-rtl as it incorrectly parses the border-color
@@ -146,6 +171,31 @@
       paper-input:not([readonly]) {
         width: 60%;
       }
+      paper-dropdown-menu {
+        --paper-input-container: {
+          text-align: center;
+          width: 64px;
+        };
+        --paper-input-container-input: {
+          color: var(--medium-gray);
+        };
+        --paper-dropdown-menu-ripple: {
+          display: none;
+        };
+        --paper-input-container-underline: {
+          display: none;
+        };
+        --paper-input-container-underline-focus: {
+          display: none;
+        }
+      }
+      #data-limits-container .space-between h3 {
+        font-weight: normal;
+        margin-bottom: 8px;
+      }
+      #data-limits-container .space-between p {
+        margin: 0 0 24px 0;
+      }
     </style>
     <div class="container">
       <div class="content">
@@ -176,13 +226,44 @@
             <paper-input readonly value="[[serverId]]" label="[[localize('settings-server-id')]]" hidden$="[[!serverId]]" always-float-label maxlength="100"></paper-input>
           </div>
         </div>
+        <!-- Experiments -->
+        <div id="experiments" class="setting card-section" hidden$="[[!shouldShowExperiments]]">
+            <iron-icon class="setting-icon" icon="icons:build"></iron-icon>
+            <div>
+              <h3>[[localize('experiments')]]</h3>
+              <!-- TODO: link to feedback form -->
+              <p inner-h-t-m-l="[[localize('experiments-description', 'openLink', '<a href=#>', 'closeLink', '</a>')]]"></p>
+              <div class="sub-section">
+                <iron-icon icon="icons:error-outline"></iron-icon>
+                <p inner-h-t-m-l="[[localize('experiments-disclaimer', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
+              </div>
+              <div id="data-limits-container" hidden$="[[!canSetAccessKeyDataLimit]]">
+                <div class="space-between">
+                  <div>
+                    <h3>[[localize('data-limits')]]</h3>
+                    <p>[[localize('data-limits-description', 'date', dataLimitsAvailabilityDate)]]</p>
+                  </div>
+                  <paper-toggle-button id="dataLimitsToggle" checked="{{isAccessKeyDataLimitEnabled}}" on-checked-changed="_accessKeyDataLimitEnabledChanged"></paper-toggle-button>
+                </div>
+                <div class="data-limits-input" hidden$="[[!isAccessKeyDataLimitEnabled]]">
+                  <paper-input id="accessKeyDataLimitInput" value="[[accessKeyDataLimit.value]]" label="Data limit per key" always-float-label allowed-pattern="[0-9]+" required auto-validate maxlength="9" on-keydown="_handleAccessKeyDataLimitInputKeyDown" on-blur="_requestSetAccessKeyDataLimit"></paper-input>
+                  <paper-dropdown-menu no-label-float>
+                    <paper-listbox id="accessKeyDataLimitUnits" slot="dropdown-content" selected="[[accessKeyDataLimit.unit]]" attr-for-selected="name" on-selected-changed="_requestSetAccessKeyDataLimit">
+                      <paper-item name="MB">MB</paper-item>
+                      <paper-item name="GB">GB</paper-item>
+                    </paper-listbox>
+                  </paper-dropdown-menu>
+                </div>
+              </div>
+            </div>
+        </div>
         <!-- Metrics controls -->
         <div class="setting card-section">
           <iron-icon class="setting-icon" icon="editor:insert-chart"></iron-icon>
           <div>
-            <div id="metricsHeader">
+            <div class="space-between">
               <h3>[[localize('settings-metrics-header')]]</h3>
-              <paper-checkbox id="metricsCheckbox" checked="{{metricsEnabled}}"></paper-checkbox>
+              <paper-toggle-button checked="{{metricsEnabled}}"></paper-toggle-button>
             </div>
             <p inner-h-t-m-l="[[localize('metrics-description', 'openLink', '<a class=link href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
           </div>
@@ -203,13 +284,18 @@
         serverManagementApiUrl: {type: String, value: null},
         serverPortForNewAccessKeys: {type: Number, value: null},
         isAccessKeyPortEditable: {type: Boolean, value: false},
+        isAccessKeyDataLimitEnabled: {type: Boolean, notify: true},
+        accessKeyDataLimit: {type: Object, value: null}, // type: app.DisplayDataAmount
+        canSetAccessKeyDataLimit: {type: Boolean, value: false},
+        dataLimitsAvailabilityDate: {type: String},
         serverCreationDate: {type: String, value: null},
         serverLocation: {type: String, value: null},
         serverMonthlyCost: {type: String, value: null},
         serverMonthlyTransferLimit: {type: String, value: null},
         localize: {type: Function, readonly: true},
         enableKeysPortButtons: {type: Boolean, value: false},
-        showKeysPortButtons: {type: Boolean, value: false}
+        showKeysPortButtons: {type: Boolean, value: false},
+        shouldShowExperiments: {type: Boolean, computed: '_computeShouldShowExperiments(canSetAccessKeyDataLimit)'},
       },
       update: function(name, metricsEnabled) {
         this.initialName = name;
@@ -248,7 +334,7 @@
         }
       },
       setKeysPortEditing: function() {
-        if (!this.isAccessKeyPortEditable) { 
+        if (!this.isAccessKeyPortEditable) {
           return;
         }
         this.showKeysPortButtons = true;
@@ -263,7 +349,7 @@
       },
       setKeysPortErrorState: function(message) {
         const input = this.$.keysPortInput;
-        this.enableKeysPortButtons = true; 
+        this.enableKeysPortButtons = true;
         input.invalid = true;
         input.errorMessage = message;
         input.readonly = false;
@@ -279,7 +365,7 @@
         input.readonly = true;
         input.invalid = false;
         this.fire('ChangePortForNewAccessKeysRequested', {
-          port: Number(this.$.keysPortInput.value), 
+          port: Number(this.$.keysPortInput.value),
           serverSettings: this
         });
       },
@@ -294,9 +380,9 @@
         if (e.key === 'Escape') {
           this.cancelKeysPortEdit();
           input.blur();
-          return; 
+          return;
         } else if (e.key === 'Enter') {
-          if (!input.invalid) {  
+          if (!input.invalid) {
             this.saveKeysPort();
             input.blur();
           }
@@ -311,6 +397,39 @@
           input.invalid = false;
           this.$.keysPortSaveButton.disabled = false;
         }
+      },
+      _accessKeyDataLimitEnabledChanged: function(e) {
+        const wasDataLimitEnabled = this.isAccessKeyDataLimitEnabled;
+        const isDataLimitEnabled = e.detail.value;
+        if (isDataLimitEnabled === undefined || wasDataLimitEnabled === undefined) {
+          return;
+        } else if (isDataLimitEnabled === wasDataLimitEnabled) {
+          return;
+        }
+        if (isDataLimitEnabled) {
+          this._requestSetAccessKeyDataLimit();
+        } else {
+          this.fire('RemoveAccessKeyDataLimitRequested');
+        }
+      },
+      _handleAccessKeyDataLimitInputKeyDown: function(event) {
+        if (event.key === 'Escape') {
+          this.$.accessKeyDataLimitInput.value = this.accessKeyDataLimit.value;
+          this.$.accessKeyDataLimitInput.blur();
+        } else if (event.key === 'Enter') {
+          this.$.accessKeyDataLimitInput.blur();
+        }
+      },
+      _requestSetAccessKeyDataLimit: function() {
+        if (this.$.accessKeyDataLimitInput.invalid) {
+          return;
+        }
+        const value = Number(this.$.accessKeyDataLimitInput.value);
+        const unit = this.$.accessKeyDataLimitUnits.selected;
+        this.fire('SetAccessKeyDataLimitRequested', {limit: {value, unit}});
+      },
+      _computeShouldShowExperiments: function(canSetAccessKeyDataLimit) {
+        return canSetAccessKeyDataLimit;
       }
     });
   </script>

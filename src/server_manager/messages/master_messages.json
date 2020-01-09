@@ -145,6 +145,42 @@
     "message": "Remove Server?",
     "description": "This string appears in a dialog that requests user confirmation for removing a server from the application. 'Remove' in this context does not imply server deletion."
   },
+  "data_limits": {
+    "message": "Data limits",
+    "description": "This string appears as a title in a section to configure access key data transfer limits."
+  },
+  "data_limits_description": {
+    "message": "Set a 30 day trailing data transfer limit for access keys on this server. Available until $DATE$.",
+    "description": "This string appears as an explanation to the access key data transfer limits feature.",
+    "placeholders": {
+      "DATE": {
+        "content": "{date}",
+        "example": "December 9, 2019"
+      }
+    }
+  },
+  "data_limits_dialog_text": {
+    "message": "Go to the Settings tab to set a data transfer limit for access keys on this server.",
+    "description": "This string appears as a text in a dialog to advertise the data limits feature."
+  },
+  "data_limits_dialog_title": {
+    "message": "Avoid data overages",
+    "description": "This string appears as a title in a dialog to advertise the data limits feature."
+  },
+  "data_limits_usage": {
+    "message": "$USED$ of $TOTAL$ used",
+    "description": "This string appears as a title in a dialog to advertise the data limits feature.",
+    "placeholders": {
+      "USED": {
+        "content": "{used}",
+        "example": "10 GB"
+      },
+      "TOTAL": {
+        "content": "{total}",
+        "example": "50 GB"
+      }
+    }
+  },
   "destroy": {
     "message": "Destroy",
     "description": "This string appears as a button in a dialog that requests user confirmation for destroying a server. Clicking the button causes the server to be deleted."
@@ -272,6 +308,42 @@
   "error_unexpected": {
     "message": "An unexpected error occurred.",
     "description": "This string signifies that an error we didn't expect was encountered."
+  },
+  "error_set_data_limit": {
+    "message": "Could not set access key data limit",
+    "description": "This string appears in an error notification toast. It is shown on failure to set a data transfer limit on access keys."
+  },
+  "error_remove_data_limit": {
+    "message": "Could not disable access key data limit",
+    "description": "This string appears in an error notification toast. It is shown on failure to remove a data transfer limit on access keys."
+  },
+  "experiments": {
+    "message": "Experiments",
+    "description": "This string is the title of a section that displays opt-in experimental features."
+  },
+  "experiments_description": {
+    "message": "Test new features and provide us with $START_OF_LINK$feedback$END_OF_LINK$ before they are released.",
+    "description": "This string is the description of a section that displays opt-in experimental features.",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
+  },
+  "experiments_disclaimer": {
+    "message": "Experiments are in development and may change or be removed from the app. If you are currently reporting metrics, use of experimental features will be included. Please the $START_OF_LINK$data collection policy$END_OF_LINK$ for more details.",
+    "description": "This string provides a disclaimer to opting into experimental features.",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
   },
   "feedback_cloud_provider": {
     "message": "Select cloud provider",
@@ -652,11 +724,11 @@
     "description": "This string appears within the server view as a header of the section that displays server information and access keys."
   },
   "server_data_transfer": {
-    "message": "Data transferred / 30 days",
+    "message": "Data transferred / last 30 days",
     "description": "This string appears within the server view as the header of a card that displays the amount of data transferred by the server."
   },
   "server_data_used": {
-    "message": "Allowance used / 30 days",
+    "message": "Allowance used / last 30 days",
     "description": "This string appears within the server view as the header of a card that displays the amount of data transferred by the server as a percentage of the total available data."
   },
   "server_destroy": {
@@ -730,7 +802,7 @@
     "description": "This string appears within a server view as a header. Displayed when a server's information cannot be displayed because it is not reachable. Prompts the user to retry contacting the server or destroy it."
   },
   "server_usage": {
-    "message": "Usage / 30 days",
+    "message": "Usage (last 30 days)",
     "description": "This string appears within the server view as a header of a table column that displays the breakdown of data usage by access key."
   },
   "servers_add": {

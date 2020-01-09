@@ -25,8 +25,9 @@
         z-index: 100;
       }
       .helpContent {
-        background-color: var(--primary-green);
-        padding: 32px 32px 32px 32px;
+        background-color: #FFF;
+        color: #000;
+        padding: 24px;
         font-size: 14px;
         width: 250px;
         border-radius: 4px;
@@ -68,31 +69,40 @@
         display: inline-block;
       }
       .upArrow {
-        border-bottom: 10px solid var(--primary-green);
+        border-bottom: 10px solid #FFF;
         border-left: 10px solid transparent;
         border-right: 10px solid transparent;
       }
       .downArrow {
-        border-top: 10px solid var(--primary-green);
+        border-top: 10px solid #FFF;
         border-left: 10px solid transparent;
         border-right: 10px solid transparent;
       }
       .rightArrow {
-        border-left: 10px solid var(--primary-green);
+        border-left: 10px solid #FFF;
         border-top: 10px solid transparent;
         border-bottom: 10px solid transparent;
       }
       .leftArrow {
-        border-right: 10px solid var(--primary-green);
+        border-right: 10px solid #FFF;
         border-top: 10px solid transparent;
         border-bottom: 10px solid transparent;
       }
-      :host(.offset-right) .upArrowWrapper, :host(.offset-right) .downArrowWrapper {
-        margin-left: 30%;
+      /* rtl:begin:ignore */
+      /* Multiple :host selectors must not have spacing between them */
+      :host(:dir(ltr)):host(.offset-right) .upArrowWrapper, :host(:dir(ltr)):host(.offset-right) .downArrowWrapper {
+        margin-left: 35%;
       }
-      :host(.offset-left) .upArrowWrapper, :host(.offset-left) .downArrowWrapper {
-        margin-left: -30%;
+      :host(:dir(ltr)):host(.offset-left) .upArrowWrapper, :host(:dir(ltr)):host(.offset-left) .downArrowWrapper {
+        margin-left: -35%;
       }
+      :host(:dir(rtl)):host(.offset-right) .upArrowWrapper, :host(:dir(rtl)):host(.offset-right) .downArrowWrapper {
+        margin-right: 35%;
+      }
+      :host(:dir(rtl)):host(.offset-left) .upArrowWrapper, :host(:dir(rtl)):host(.offset-left) .downArrowWrapper {
+        margin-right: -35%;
+      }
+      /* rtl:end:ignore */
     </style>
     <div class="rightArrowWrapper"><div class="rightArrow"></div></div>
     <div class="leftArrowWrapper"><div class="leftArrow"></div></div>
