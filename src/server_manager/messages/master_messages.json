@@ -189,6 +189,10 @@
     "message": "Failed to submit feedback. Please try again.",
     "description": "This string appears in an error notification toast. It is shown when there is an error submitting the user's feedback."
   },
+  "error_hostname_invalid": {
+    "message": "Must be an IPv4 address or valid hostname.",
+    "description": "This string appears in an inline error message.  It signifies that the user has input an invalid hostname."
+  },
   "error_key_add": {
     "message": "Failed to add key",
     "description": "This string appears in an error notification toast. It is shown when there is an error creating a server access key."

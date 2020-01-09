@@ -55,6 +55,9 @@ export interface Server {
   // Returns the server's domain name or IP address.
   getHostname(): string;
 
+  // Changes the hostname for shared access keys.
+  setHostname(hostname: string): Promise<void>;
+
   // Returns the server's management API URL.
   getManagementApiUrl(): string;
 
