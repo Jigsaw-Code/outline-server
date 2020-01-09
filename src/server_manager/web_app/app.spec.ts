@@ -324,6 +324,8 @@ class FakeServer implements server.Server {
   private name = 'serverName';
   private metricsEnabled = false;
   private id: string;
+  hostname = 'fake-server';
+  readonly invalidHostname = 'invalidHostname';
   apiUrl: string;
   constructor() {
     this.id = Math.random().toString();
@@ -368,6 +370,12 @@ class FakeServer implements server.Server {
   }
   removeAccessKey(accessKeyId: server.AccessKeyId) {
     return Promise.reject(new Error('FakeServer.removeAccessKey not implemented'));
+  }
+  setHostname(hostname: string) {
+    if (hostname === this.invalidHostname) {
+      return Promise.reject();
+    }
+    this.hostname = hostname;
   }
   getHostname() {
     return 'fake-server';
