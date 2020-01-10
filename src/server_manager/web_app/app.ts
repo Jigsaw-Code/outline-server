@@ -766,7 +766,7 @@ export class App {
     view.isServerReachable = true;
     view.serverId = selectedServer.getServerId();
     view.serverName = selectedServer.getName();
-    view.serverHostname = selectedServer.getHostname();
+    view.serverHostname = selectedServer.getHostnameForAccessKeys();
     view.serverManagementApiUrl = selectedServer.getManagementApiUrl();
     view.serverPortForNewAccessKeys = selectedServer.getPortForNewAccessKeys();
     const version = this.selectedServer.getVersion();
@@ -926,41 +926,41 @@ export class App {
         });
   }
 
-  private async setHostnameForAccessKeys(hostname: string, ui: Polymer) {
+  private async setHostnameForAccessKeys(hostname: string, serverSettings: Polymer) {
     this.appRoot.showNotification(this.appRoot.localize("saving"));
     try {
-      await this.selectedServer.setHostname(hostname);
+      await this.selectedServer.setHostnameForAccessKeys(hostname);
       this.appRoot.showNotification(this.appRoot.localize("saved"));
-      ui.enterSavedState();
+      serverSettings.enterSavedState();
     } catch (error) {
       this.appRoot.showError(this.appRoot.localize("error-not-saved"));
       if (error.isNetworkError()) {
-        ui.enterErrorState(this.appRoot.localize("error-network"));
+        serverSettings.enterErrorState(this.appRoot.localize("error-network"));
         return;
       }
       const message = error.response.status === 400 ? "error-hostname-invalid" : "error-unexpected";
-      ui.enterErrorState(this.appRoot.localize(message));
+      serverSettings.enterErrorState(this.appRoot.localize(message));
     }
   }
 
-  private async setPortForNewAccessKeys(port: number, ui: Polymer) {
+  private async setPortForNewAccessKeys(port: number, serverSettings: Polymer) {
     this.appRoot.showNotification(this.appRoot.localize("saving"));
     try {
       await this.selectedServer.setPortForNewAccessKeys(port);
       this.appRoot.showNotification(this.appRoot.localize("saved"));
-      ui.enterSavedState();
+      serverSettings.enterSavedState();
     } catch (error) {
       this.appRoot.showError(this.appRoot.localize("error-not-saved"));
       if (error.isNetworkError()) {
-        ui.enterErrorState(this.appRoot.localize("error-network"));
+        serverSettings.enterErrorState(this.appRoot.localize("error-network"));
         return;
       }
       const code = error.response.status;
       if (code === 409) {
-        ui.enterErrorState(this.appRoot.localize("error-keys-port-in-use"));
+        serverSettings.enterErrorState(this.appRoot.localize("error-keys-port-in-use"));
         return;
       }
-      ui.enterErrorState(this.appRoot.localize("error-unexpected"));
+      serverSettings.enterErrorState(this.appRoot.localize("error-unexpected"));
     }
   }
 

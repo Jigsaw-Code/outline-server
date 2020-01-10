@@ -27,10 +27,8 @@
         * allowed-pattern: Regex describing what inputs are allowed.  Users will be prevented from
             entering inputs which don't follow the pattern.  Default: ".*"
         * max-length: The number of characters allowed in the input.  Default: Number.POSITIVE_INFINITY
-        * client-side-validator: A function which takes a string and returns whether or not the current
-            value of the input is valid.  This function will be called on every keystroke. Default: () => true
-        * client-side-validation-failure-message: The displayed failure message if the client side
-            validator fails. Default: null
+        * client-side-validator: A function which takes a string and returns either an empty string on success
+            or an error message on failure.  This function will be called on every keystroke. Default: () => ""
         * event: The name of the event fired when the save button is tapped.  Passes the
             current input value as "value" and the Polymer object as "ui".  The handler for this event
             MUST call ui.setSavedState() or ui.setErrorState(message) depending on its result. Default: null
@@ -103,12 +101,11 @@
                 allowedPattern: { type: String, value: ".*" },
                 maxLength: { type: Number, value: Number.POSITIVE_INFINITY },
                 value: { type: String, value: null },
-                // `value` here is evaluated.  If it were simply `() => true`, then clientSideValidator
-                // would default to just `true`, not a function returning true.
+                // `value` here is evaluated.  If it were simply `() => "`, then clientSideValidator
+                // would default to just "", not a function returning "".
                 // Note also that we can't use paper-input's validator attribute because it will fight
                 // with any server-side validation and cause unpredictable results.
-                clientSideValidator: { type: Function, readonly: true, value: () => { return () => true; } },
-                clientSideValidationFailureMessage: { type: String, value: null },
+                clientSideValidator: { type: Function, readonly: true, value: () => { return () => ""; } },
                 // Properties affecting the buttons
                 _showButtons: { type: Boolean, value: false },
                 _enableButtons: { type: Boolean, value: false },
@@ -130,10 +127,11 @@
                     }
                     return;
                 }
-                if (!this.clientSideValidator(input.value)) {
+                const validationError = this.clientSideValidator(input.value);
+                if (validationError) {
                     input.invalid = true;
                     this._select("SaveButton").disabled = true;
-                    input.errorMessage = this.clientSideValidationFailureMessage;
+                    input.errorMessage = validationError;
                 } else {
                     input.invalid = false;
                     this._select("SaveButton").disabled = false;
