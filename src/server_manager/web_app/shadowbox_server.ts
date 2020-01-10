@@ -130,7 +130,7 @@ export class ShadowboxServer implements server.Server {
     return new Date(this.serverConfig.createdTimestampMs);
   }
 
-  async setHostname(hostname: string): Promise<void> {
+  async setHostnameForAccessKeys(hostname: string): Promise<void> {
     console.info(`setHostname ${hostname}`);
     this.serverConfig.hostnameForAccessKeys = hostname;
     const requestOptions: RequestInit = {
@@ -143,7 +143,7 @@ export class ShadowboxServer implements server.Server {
     });
   }
 
-  getHostname(): string {
+  getHostnameForAccessKeys(): string {
     try {
       return this.serverConfig.hostnameForAccessKeys || new URL(this.managementApiAddress).hostname;
     } catch (e) {
