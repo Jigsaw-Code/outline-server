@@ -11,8 +11,9 @@
 * Ensure `bower_components` and `node_modules` are up to date and only include dependencies of the Electron app by running `yarn run clean && yarn && yarn do yarn do server_manager/web_app/build`
 * `cd src/server_manager`
 * `yarn workspace outline-manager licenses generate-disclaimer --prod > /tmp/yarn`
-* `node <bower-disclaimer repo root>/build > /tmp/bower`
+* `pushd <bower-disclaimer root> && yarn run clean && yarn && yarn licenses generate-disclaimer > /tmp/bower && popd`
 * `cat /tmp/{yarn,bower} > ui_components/licenses/licenses.txt`
+* `cat ui_components/licenses/db-ip_license.txt >> ui_components/licenses/licenses.txt`
 
 Done!
 
