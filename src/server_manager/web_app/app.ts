@@ -111,11 +111,11 @@ export class App {
     });
 
     appRoot.addEventListener('ChangePortForNewAccessKeysRequested', (event: PolymerEvent) => {
-      this.setPortForNewAccessKeys(event.detail.value, event.detail.ui);
+      this.setPortForNewAccessKeys(event.detail.validatedInput, event.detail.ui);
     });
 
     appRoot.addEventListener('ChangeHostnameForAccessKeysRequested', (event: PolymerEvent) => {
-      this.setHostnameForAccessKeys(event.detail.value, event.detail.ui);
+      this.setHostnameForAccessKeys(event.detail.validatedInput, event.detail.ui);
     });
 
     // The UI wants us to validate a server management URL.
