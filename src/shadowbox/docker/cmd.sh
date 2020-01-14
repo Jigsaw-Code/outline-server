@@ -38,7 +38,7 @@ umask 0007
 # upon a limit of 32k files.
 ulimit -n 32768
 
-# Start cron, which is used to check for updates to the DB-IP database
+# Start cron, which is used to check for updates to the IP-to-country database
 crond
 
 node app/server/main.js
