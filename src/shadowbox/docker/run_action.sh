@@ -38,4 +38,4 @@ declare -a docker_bindings=(
 
 echo "Running image ${SB_IMAGE}"
 
-docker run --rm -it --network=host --name shadowbox "${docker_bindings[@]}" ${SB_IMAGE}
+docker run --rm -it --network=host --name shadowbox "${docker_bindings[@]}" ${SB_IMAGE:-outline/shadowbox}
