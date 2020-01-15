@@ -334,7 +334,7 @@
     }
   },
   "experiments_disclaimer": {
-    "message": "Experiments are in development and may change or be removed from the app. If you are currently reporting metrics, use of experimental features will be included. Please the $START_OF_LINK$data collection policy$END_OF_LINK$ for more details.",
+    "message": "Experiments are in development and may change or be removed from the app. If you are currently reporting metrics, use of experimental features will be included. Please see the $START_OF_LINK$data collection policy$END_OF_LINK$ for more details.",
     "description": "This string provides a disclaimer to opting into experimental features.",
     "placeholders": {
       "END_OF_LINK": {

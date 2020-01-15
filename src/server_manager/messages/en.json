@@ -63,7 +63,7 @@
   "error-unexpected": "An unexpected error occurred.",
   "experiments": "Experiments",
   "experiments-description": "Test new features and provide us with {openLink}feedback{closeLink} before they are released.",
-  "experiments-disclaimer": "Experiments are in development and may change or be removed from the app. If you are currently reporting metrics, use of experimental features will be included. Please the {openLink}data collection policy{closeLink} for more details.",
+  "experiments-disclaimer": "Experiments are in development and may change or be removed from the app. If you are currently reporting metrics, use of experimental features will be included. Please see the {openLink}data collection policy{closeLink} for more details.",
   "feedback-cloud-provider": "Select cloud provider",
   "feedback-cloud-provider-error": "Please select a cloud provider.",
   "feedback-connection": "Can't connect to my server",

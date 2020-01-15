@@ -286,8 +286,8 @@
         isAccessKeyPortEditable: {type: Boolean, value: false},
         isAccessKeyDataLimitEnabled: {type: Boolean, notify: true},
         accessKeyDataLimit: {type: Object, value: null}, // type: app.DisplayDataAmount
-        canSetAccessKeyDataLimit: {type: Boolean, value: false},
-        dataLimitsAvailabilityDate: {type: String},
+        canSetAccessKeyDataLimit: {type: Boolean, value: false}, // Whether the server supports data limits.
+        dataLimitsAvailabilityDate: {type: String}, // Date by which the feature stops being an experiment.
         serverCreationDate: {type: String, value: null},
         serverLocation: {type: String, value: null},
         serverMonthlyCost: {type: String, value: null},

@@ -39,6 +39,7 @@ const UNUSED_DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
 
 const CHANGE_KEYS_PORT_VERSION = "1.0.0";
 const DATA_LIMITS_VERSION = '1.1.0';
+// Date by which the data limits feature experiment will be permanently added or removed.
 const DATA_LIMITS_AVAILABILITY_DATE = new Date('2020-04-01');
 const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
 
@@ -56,6 +57,53 @@ interface DisplayDataAmount {
   value: number;
 }
 
+function dataLimitToDisplayDataAmount(limit: server.DataLimit): DisplayDataAmount|null {
+  if (!limit) {
+    return null;
+  }
+  const bytes = limit.bytes;
+  if (bytes >= 10 ** 9) {
+    return {value: Math.floor(bytes / (10 ** 9)), unit: 'GB'};
+  }
+  return {value: Math.floor(bytes / (10 ** 6)), unit: 'MB'};
+}
+
+function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.DataLimit|null {
+  if (!dataAmount) {
+    return null;
+  }
+  if (dataAmount.unit === 'GB') {
+    return {bytes: dataAmount.value * (10 ** 9)};
+  } else if (dataAmount.unit === 'MB') {
+    return {bytes: dataAmount.value * (10 ** 6)};
+  }
+  return {bytes: dataAmount.value};
+}
+
+// Compute the suggested data limit based on the server's transfer capacity and number of access
+// keys.
+async function computeDefaultAccessKeyDataLimit(
+    server: server.Server, accessKeys?: server.AccessKey[]): Promise<server.DataLimit> {
+  try {
+    // Assume non-managed servers have a data transfer capacity of 1TB.
+    let serverTransferCapacity: server.DataAmount = {terabytes: 1};
+    if (isManagedServer(server)) {
+      serverTransferCapacity = server.getHost().getMonthlyOutboundTransferLimit();
+    }
+    if (!accessKeys) {
+      accessKeys = await server.listAccessKeys();
+    }
+    let dataLimitBytes = serverTransferCapacity.terabytes * (10 ** 12) / (accessKeys.length || 1);
+    if (dataLimitBytes > MAX_ACCESS_KEY_DATA_LIMIT_BYTES) {
+      dataLimitBytes = MAX_ACCESS_KEY_DATA_LIMIT_BYTES;
+    }
+    return {bytes: dataLimitBytes};
+  } catch (e) {
+    console.error(`Failed to compute default access key data limit: ${e}`);
+    return {bytes: MAX_ACCESS_KEY_DATA_LIMIT_BYTES};
+  }
+}
+
 function isManagedServer(testServer: server.Server): testServer is server.ManagedServer {
   return !!(testServer as server.ManagedServer).getHost;
 }
@@ -66,6 +114,10 @@ function isManualServer(testServer: server.Server): testServer is server.ManualS
 
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function localizeDate(date: Date, language: string): string {
+  return date.toLocaleString(language, {year: 'numeric', month: 'long', day: 'numeric'});
 }
 
 type DigitalOceanSessionFactory = (accessToken: string) => digitalocean_api.DigitalOceanSession;
@@ -118,7 +170,7 @@ export class App {
     });
 
     appRoot.addEventListener('SetAccessKeyDataLimitRequested', (event: PolymerEvent) => {
-      this.setAccessKeyDataLimit(this.displayDataAmountToDataLimit(event.detail.limit));
+      this.setAccessKeyDataLimit(displayDataAmountToDataLimit(event.detail.limit));
     });
 
     appRoot.addEventListener('RemoveAccessKeyDataLimitRequested', (event: PolymerEvent) => {
@@ -780,10 +832,10 @@ export class App {
     view.serverHostname = selectedServer.getHostname();
     view.serverManagementApiUrl = selectedServer.getManagementApiUrl();
     view.serverPortForNewAccessKeys = selectedServer.getPortForNewAccessKeys();
-    view.serverCreationDate = this.localizeDate(selectedServer.getCreatedDate());
-    view.dataLimitsAvailabilityDate = this.localizeDate(DATA_LIMITS_AVAILABILITY_DATE);
-    view.accessKeyDataLimit =
-        this.dataLimitToDisplayDataAmount(selectedServer.getAccessKeyDataLimit());
+    view.serverCreationDate = localizeDate(selectedServer.getCreatedDate(), this.appRoot.language);
+    view.dataLimitsAvailabilityDate =
+        localizeDate(DATA_LIMITS_AVAILABILITY_DATE, this.appRoot.language);
+    view.accessKeyDataLimit = dataLimitToDisplayDataAmount(selectedServer.getAccessKeyDataLimit());
     view.isAccessKeyDataLimitEnabled = !!view.accessKeyDataLimit;
 
     const version = this.selectedServer.getVersion();
@@ -810,8 +862,8 @@ export class App {
       const serverAccessKeys = await selectedServer.listAccessKeys();
       view.accessKeyRows = serverAccessKeys.map(this.convertToUiAccessKey.bind(this));
       if (!view.accessKeyDataLimit) {
-        view.accessKeyDataLimit = this.dataLimitToDisplayDataAmount(
-            await this.computeDefaultAccessKeyDataLimit(selectedServer, serverAccessKeys));
+        view.accessKeyDataLimit = dataLimitToDisplayDataAmount(
+            await computeDefaultAccessKeyDataLimit(selectedServer, serverAccessKeys));
       }
       // Initialize help bubbles once the page has rendered.
       setTimeout(() => {
@@ -968,13 +1020,13 @@ export class App {
     try {
       await this.selectedServer.setAccessKeyDataLimit(limit);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
-      serverView.accessKeyDataLimit = this.dataLimitToDisplayDataAmount(limit);
+      serverView.accessKeyDataLimit = dataLimitToDisplayDataAmount(limit);
       this.refreshTransferStats(this.selectedServer, serverView);
     } catch (error) {
       console.error(`Failed to set access key data limit: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-set-data-limit'));
-      serverView.accessKeyDataLimit = this.dataLimitToDisplayDataAmount(
-          previousLimit || await this.computeDefaultAccessKeyDataLimit(this.selectedServer));
+      serverView.accessKeyDataLimit = dataLimitToDisplayDataAmount(
+          previousLimit || await computeDefaultAccessKeyDataLimit(this.selectedServer));
       serverView.isAccessKeyDataLimitEnabled = !!previousLimit;
     }
   }
@@ -989,53 +1041,6 @@ export class App {
       console.error(`Failed to remove access key data limit: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-remove-data-limit'));
       serverView.isAccessKeyDataLimitEnabled = true;
-    }
-  }
-
-  private dataLimitToDisplayDataAmount(limit: server.DataLimit): DisplayDataAmount|null {
-    if (!limit) {
-      return null;
-    }
-    const bytes = limit.bytes;
-    if (bytes >= 10 ** 9) {
-      return {value: Math.round(bytes / (10 ** 9)), unit: 'GB'};
-    }
-    return {value: Math.ceil(bytes / (10 ** 6)), unit: 'MB'};
-  }
-
-  private displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.DataLimit {
-    if (!dataAmount) {
-      return null;
-    }
-    if (dataAmount.unit === 'GB') {
-      return {bytes: dataAmount.value * (10 ** 9)};
-    } else if (dataAmount.unit === 'MB') {
-      return {bytes: dataAmount.value * (10 ** 6)};
-    }
-    return {bytes: dataAmount.value};
-  }
-
-  // Compute the suggested data limit based on the server's transfer capacity and number of access
-  // keys.
-  private async computeDefaultAccessKeyDataLimit(
-      server: server.Server, accessKeys?: server.AccessKey[]): Promise<server.DataLimit> {
-    try {
-      // Assume non-managed servers have a data transfer capacity of 1TB.
-      let serverTransferCapacity: server.DataAmount = {terabytes: 1};
-      if (isManagedServer(server)) {
-        serverTransferCapacity = server.getHost().getMonthlyOutboundTransferLimit();
-      }
-      if (!accessKeys) {
-        accessKeys = await server.listAccessKeys();
-      }
-      let dataLimitBytes = serverTransferCapacity.terabytes * (10 ** 12) / accessKeys.length;
-      if (dataLimitBytes > MAX_ACCESS_KEY_DATA_LIMIT_BYTES) {
-        dataLimitBytes = MAX_ACCESS_KEY_DATA_LIMIT_BYTES;
-      }
-      return {bytes: dataLimitBytes};
-    } catch (e) {
-      console.error(`Failed to compute default access key data limit: ${e}`);
-      return {bytes: MAX_ACCESS_KEY_DATA_LIMIT_BYTES};
     }
   }
 
@@ -1200,10 +1205,5 @@ export class App {
       this.appRoot.selectedServer = null;
       this.showCreateServer();
     });
-  }
-
-  private localizeDate(date: Date) {
-    return date.toLocaleString(
-        this.appRoot.language, {year: 'numeric', month: 'long', day: 'numeric'});
   }
 }
