@@ -1,7 +1,9 @@
 #!/bin/sh
 
-# Download the DB-IP country database into the same location
+# Download the IP-to-country MMDB database into the same location
 # used by Alpine's libmaxminddb package.
+
+# IP Geolocation by DB-IP (https://db-ip.com)
 
 TMPDIR="$(mktemp -d)"
 FILENAME="dbip-country-lite.mmdb"
