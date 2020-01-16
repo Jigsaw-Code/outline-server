@@ -562,10 +562,10 @@
         isAccessKeyPortEditable: {type: Boolean, value: false},
         serverCreationDate: String,
         serverLocation: String,
-        accessKeyDataLimit: {type: Object, value: undefined},
+        accessKeyDataLimit: {type: Object, value: null},
         isAccessKeyDataLimitEnabled: {type: Boolean},
-        canSetAccessKeyDataLimit: {type: Boolean, value: false},
-        dataLimitsAvailabilityDate: {type: String},
+        canSetAccessKeyDataLimit: {type: Boolean, value: false}, // Whether the server supports data limits.
+        dataLimitsAvailabilityDate: {type: String}, // Date by which the feature stops being an experiment.
         isServerManaged: Boolean,
         isServerReachable: Boolean,
         // Callback for retrying to display an unreachable server.

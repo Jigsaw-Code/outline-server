@@ -150,7 +150,7 @@
     "description": "This string appears as a title in a section to configure access key data transfer limits."
   },
   "data_limits_description": {
-    "message": "Set a 30 day trailing data transfer limit for access keys on this server. Available until $DATE$.",
+    "message": "Set a 30 day trailing data transfer limit for access keys on this server. Available at least until $DATE$.",
     "description": "This string appears as an explanation to the access key data transfer limits feature.",
     "placeholders": {
       "DATE": {
