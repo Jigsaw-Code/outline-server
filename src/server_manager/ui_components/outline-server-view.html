@@ -536,7 +536,7 @@
       <img src="images/key-tip-2x.png">
       <h3>[[localize('server-help-access-key-title')]]</h3>
       <p>[[localize('server-help-access-key-description')]]</p>
-      <paper-button on-tap="showGetConnectedHelpBubble">[[localize('server-help-access-key-next')]]</paper-button>
+      <paper-button on-tap="closeAddAccessKeyHelpBubble">[[localize('server-help-access-key-next')]]</paper-button>
     </outline-help-bubble>
     <outline-help-bubble id="dataLimitsHelpBubble" vertical-align="top" horizontal-align="right">
       <h3>[[localize('data-limits-dialog-title')]]</h3>
@@ -773,15 +773,27 @@
       },
       _selectedTabChanged(selectedTab) {
         if (this.selectedTab === 'settings') {
-          this.$.addAccessKeyHelpBubble.hide();
+          this.closeAddAccessKeyHelpBubble();
+          this.closeGetConnectedHelpBubble();
+          this.closeDataLimitsHelpBubble();
           this.$.serverSettings.update(this.serverName, this.metricsEnabled);
         }
       },
+      // Help bubbles should be shown after this outline-server-view
+      // is on the screen (e.g. selected in iron-pages). If help bubbles
+      // are initialized before this point, setPosition will not work and
+      // they will appear in the top left of the view.
       showGetConnectedHelpBubble: function() {
-        if (this.myConnection) {
-          this.$.addAccessKeyHelpBubble.hide();
-          this.showHelpBubbleOnce('getConnectedHelpBubble', 'managerRow');
-        }
+        return this._showHelpBubble('getConnectedHelpBubble', 'managerRow');
+      },
+      showAddAccessKeyHelpBubble: function() {
+        return this._showHelpBubble('addAccessKeyHelpBubble', 'addAccessKeyRow', 'down', 'left')
+      },
+      showDataLimitsHelpBubble: function() {
+        return this._showHelpBubble('dataLimitsHelpBubble', 'settingsTab', 'up', 'right');
+      },
+      closeAddAccessKeyHelpBubble: function() {
+        this.$.addAccessKeyHelpBubble.hide();
       },
       closeGetConnectedHelpBubble: function() {
         this.$.getConnectedHelpBubble.hide();
@@ -789,33 +801,13 @@
       closeDataLimitsHelpBubble: function() {
         this.$.dataLimitsHelpBubble.hide();
       },
-      showDataLimitsHelpBubble: function() {
-        this.showHelpBubbleOnce('dataLimitsHelpBubble', 'settingsTab', 'up', 'right');
-      },
-      // initHelpBubbles should be called after this outline-server-view
-      // is on the screen (e.g. selected in iron-pages).  If help bubbles
-      // are initialized before this point, setPosition will not work and
-      // they will appear in the top left of the view.
-      initHelpBubbles: function() {
-        if (!this.showHelpBubbleOnce('addAccessKeyHelpBubble', 'addAccessKeyRow', 'down', 'left') &&
-            this.canSetAccessKeyDataLimit) {
-          // Show the data limits help bubble if the access key one has been already shown.
-          this.showDataLimitsHelpBubble();
-        }
-      },
-      showHelpBubbleOnce: function(helpBubbleId, positionTargetId,
-                                   arrowDirection='down', arrowAlignment='right') {
-        const storageKey = helpBubbleId + '-dismissed';
-        if (window.localStorage.getItem(storageKey)) {
-          // Help bubble has already been dismissed, nothing to show.
-          return false;
-        }
-        const helpBubble = this.$[helpBubbleId];
-        helpBubble.show(this.$[positionTargetId], arrowDirection, arrowAlignment);
-        helpBubble.addEventListener('outline-help-bubble-dismissed', function(e) {
-          window.localStorage.setItem(storageKey, true);
-        }.bind(this));
-        return true;
+      _showHelpBubble: function(helpBubbleId, positionTargetId,arrowDirection='down',
+                                arrowAlignment='right') {
+        return new Promise((resolve) => {
+          const helpBubble = this.$[helpBubbleId];
+          helpBubble.show(this.$[positionTargetId], arrowDirection, arrowAlignment);
+          helpBubble.addEventListener('outline-help-bubble-dismissed', resolve);
+        });
       },
       isRegularConnection: function(item) {
         return item.id !== MY_CONNECTION_USER_ID;

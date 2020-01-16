@@ -104,6 +104,22 @@ async function computeDefaultAccessKeyDataLimit(
   }
 }
 
+async function showHelpBubblesOnce(serverView: Polymer) {
+  if (!window.localStorage.getItem('addAccessKeyHelpBubble-dismissed')) {
+    await serverView.showAddAccessKeyHelpBubble();
+    window.localStorage.setItem('addAccessKeyHelpBubble-dismissed', 'true');
+  }
+  if (!window.localStorage.getItem('getConnectedHelpBubble-dismissed')) {
+    await serverView.showGetConnectedHelpBubble();
+    window.localStorage.setItem('getConnectedHelpBubble-dismissed', 'true');
+  }
+  if (!window.localStorage.getItem('dataLimitsHelpBubble-dismissed') &&
+      serverView.canSetAccessKeyDataLimit) {
+    await serverView.showDataLimitsHelpBubble();
+    window.localStorage.setItem('dataLimitsHelpBubble-dismissed', 'true');
+  }
+}
+
 function isManagedServer(testServer: server.Server): testServer is server.ManagedServer {
   return !!(testServer as server.ManagedServer).getHost;
 }
@@ -865,9 +881,9 @@ export class App {
         view.accessKeyDataLimit = dataLimitToDisplayDataAmount(
             await computeDefaultAccessKeyDataLimit(selectedServer, serverAccessKeys));
       }
-      // Initialize help bubbles once the page has rendered.
+      // Show help bubbles once the page has rendered.
       setTimeout(() => {
-        view.initHelpBubbles();
+        showHelpBubblesOnce(view);
       }, 250);
     } catch (error) {
       console.error(`Failed to load access keys: ${error}`);
@@ -981,7 +997,6 @@ export class App {
       relativeTraffic: 0
     };
   }
-
 
   private addAccessKey() {
     this.selectedServer.addAccessKey()
