@@ -34,7 +34,7 @@ import * as server_config from './server_config';
 import {OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollectorClient, SharedMetricsPublisher} from './shared_metrics';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
-const MMDB_LOCATION = '/var/lib/libmaxminddb/dbip-country-lite.mmdb';
+const MMDB_LOCATION = '/var/lib/libmaxminddb/ip-country.mmdb';
 
 async function exportPrometheusMetrics(registry: prometheus.Registry, port): Promise<http.Server> {
   return new Promise<http.Server>((resolve, _) => {

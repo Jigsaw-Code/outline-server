@@ -6,17 +6,17 @@
 # IP Geolocation by DB-IP (https://db-ip.com)
 
 TMPDIR="$(mktemp -d)"
-FILENAME="dbip-country-lite.mmdb"
+FILENAME="ip-country.mmdb"
 
 # We need to make sure that we grab an existing database at install-time
-for monthdelta in {0..11}; do
-    if [[ $monthdelta -gt 10 ]]; then
+for monthdelta in {0..10}; do
+    newdate=$(date --date="-$monthdelta month" +%Y-%m)
+    ADDRESS="https://download.db-ip.com/free/ip-country-${newdate}.mmdb.gz"
+    curl --fail --silent "${ADDRESS}" -o "$TMPDIR/$FILENAME.gz" > /dev/null && break
+    if (( $monthdelta == 10 )); then
         # A weird exit code on purpose -- we should catch this long before it triggers
         exit 2
     fi
-    newdate=$(date --date="-$monthdelta month" +%Y-%m)
-    ADDRESS="https://download.db-ip.com/free/dbip-country-lite-${newdate}.mmdb.gz"
-    curl --fail --silent "${ADDRESS}" -o "$TMPDIR/$FILENAME.gz" > /dev/null && break
 done
 
 gunzip "$TMPDIR/$FILENAME.gz"
