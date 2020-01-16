@@ -32,7 +32,7 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
       private readonly metricsLocation: string) {}
 
   // Annotates the Prometheus data metrics with countries.
-  // ipCountryFilename is the location of the GeoLite2-Country.mmdb file.
+  // ipCountryFilename is the location of the ip-country.mmdb IP-to-country database file.
   enableCountryMetrics(ipCountryFilename: string): OutlineShadowsocksServer {
     this.ipCountryFilename = ipCountryFilename;
     return this;
