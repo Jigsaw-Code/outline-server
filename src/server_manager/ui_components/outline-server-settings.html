@@ -101,7 +101,7 @@
             <paper-input id="serverNameInput" class="server-name" value="{{name}}" label="[[localize('settings-server-name')]]" always-float-label maxlength="100" on-keydown="_handleNameInputKeyDown" on-blur="_handleNameInputBlur"></paper-input>
             <p class="detail">[[localize('settings-server-rename')]]</p>
             <outline-validated-input
-              editable="[[isAccessKeyPortEditable]]" visible="[[serverPortForNewAccessKeys]]" label="[[localize('settings-access-key-port')]]" allowed-pattern="[0-9]{1,5}" max-length="5" value="[[serverPortForNewAccessKeys]]" client-side-validator="[[_validate]]" event="ChangePortForNewAccessKeysRequested" localize="[[localize]]"
+              editable="[[isAccessKeyPortEditable]]" visible="[[serverPortForNewAccessKeys]]" label="[[localize('settings-access-key-port')]]" allowed-pattern="[0-9]{1,5}" max-length="5" value="[[serverPortForNewAccessKeys]]" client-side-validator="[[_validatePort]]" event="ChangePortForNewAccessKeysRequested" localize="[[localize]]"
             ></outline-validated-input>
             <outline-validated-input
               editable="[[isHostnameEditable]]" visible="[[serverHostname]]" label="[[localize('settings-server-hostname')]]" max-length="253" value="[[serverHostname]]" event="ChangeHostnameForAccessKeysRequested" localize="[[localize]]"
@@ -183,7 +183,7 @@
           this.fire(metricsSignal);
         }
       },
-      _validate: function(value) {
+      _validatePort: function(value) {
         const port = Number(value);
         const valid = !Number.isNaN(port) && port >= 1 && port <= 65535 && Number.isInteger(port);
         return valid ? "" : this.localize("error-keys-port-bad-input");
