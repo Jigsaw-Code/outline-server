@@ -324,7 +324,6 @@ class FakeServer implements server.Server {
   private name = 'serverName';
   private metricsEnabled = false;
   private id: string;
-  hostname = 'fake-server';
   apiUrl: string;
   constructor() {
     this.id = Math.random().toString();
