@@ -21,6 +21,12 @@ for monthdelta in $(seq 10); do
     fi
 done
 
+<<<<<<< HEAD
+=======
+gunzip "$TMPDIR/$FILENAME.gz"
+LIBDIR="/var/lib/libmaxminddb"
+curl --silent "https://geolite.maxmind.com/download/geoip/database/$FILENAME.gz" -o "$TMPDIR/$FILENAME.gz"
+>>>>>>> 1a33fef... Fix update_mmdb and the Docker image to work on Alpine (#559)
 gunzip "$TMPDIR/$FILENAME.gz"
 LIBDIR="/var/lib/libmaxminddb"
 mkdir -p $LIBDIR
