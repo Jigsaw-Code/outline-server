@@ -9,7 +9,7 @@ TMPDIR="$(mktemp -d)"
 FILENAME="ip-country.mmdb"
 
 # We need to make sure that we grab an existing database at install-time
-for monthdelta in {0..10}; do
+for monthdelta in 0 1 2 3 4 5 6 7 8 9 10; do
     newdate=$(date --date="-$monthdelta month" +%Y-%m)
     ADDRESS="https://download.db-ip.com/free/ip-country-${newdate}.mmdb.gz"
     curl --fail --silent "${ADDRESS}" -o "$TMPDIR/$FILENAME.gz" > /dev/null && break
