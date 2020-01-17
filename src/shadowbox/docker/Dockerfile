@@ -25,11 +25,9 @@ LABEL shadowbox.outline-ss-server_version="${SS_VERSION}"
 ARG GITHUB_RELEASE
 LABEL shadowbox.github.release="${GITHUB_RELEASE}"
 
-# We use curl to detect the server's public IP.
-RUN apk add --no-cache curl
-
-# We need to use the --date option in `date` to safely grab the ip-to-country database
-RUN apk add --update coreutils
+# We use curl to detect the server's public IP. We need to use the --date option in `date` to
+# safely grab the ip-to-country database
+RUN apk add --no-cache --upgrade coreutils curl
 
 COPY src/shadowbox/scripts scripts/
 COPY src/shadowbox/scripts/update_mmdb.sh /etc/periodic/weekly/update_mmdb
