@@ -16,7 +16,7 @@
 FROM node:8.15.0-alpine
 
 # Versions can be found at https://github.com/Jigsaw-Code/outline-ss-server/releases
-ARG SS_VERSION=1.0.7
+ARG SS_VERSION=1.0.8
 
 # Save metadata on the software versions we are using.
 LABEL shadowbox.node_version=8.15.0
@@ -27,6 +27,9 @@ LABEL shadowbox.github.release="${GITHUB_RELEASE}"
 
 # We use curl to detect the server's public IP.
 RUN apk add --no-cache curl
+
+# We need to use the --date option in `date` to safely grab the ip-to-country database
+RUN apk add --update coreutils
 
 COPY src/shadowbox/scripts scripts/
 COPY src/shadowbox/scripts/update_mmdb.sh /etc/periodic/weekly/update_mmdb
