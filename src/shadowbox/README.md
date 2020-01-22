@@ -25,14 +25,12 @@ Use `sudo --preserve-env` if you need to pass environment variables. Use `bash -
 
 ### Prerequisites
 
-Besides [Node](https://nodejs.org/en/download/) and [Yarn](https://yarnpkg.com/en/docs/install), you will also need:
+You will need [Node](https://nodejs.org/en/download/) and [Yarn](https://yarnpkg.com/en/docs/install), and [curl](https://https://curl.haxx.se/).  If you want to run Shadowbox as a Docker container, you will also need:
 
 1. [Docker 1.13+](https://docs.docker.com/engine/installation/)
 1. [docker-compose 1.11+](https://docs.docker.com/compose/install/)
 
 ### Running Shadowbox as a Node.js app
-
-> **NOTE:**: This is currently broken. Use the docker option instead.
 
 Build and run the server as a Node.js app:
 ```
