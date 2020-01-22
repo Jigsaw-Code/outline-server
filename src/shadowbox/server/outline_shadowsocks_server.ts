@@ -17,6 +17,7 @@ import * as fs from 'fs';
 import * as jsyaml from 'js-yaml';
 import * as mkdirp from 'mkdirp';
 import * as path from 'path';
+import * as process from 'process';
 
 import * as logging from '../infrastructure/logging';
 import {ShadowsocksAccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
@@ -82,7 +83,8 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
     if (this.verbose) {
       commandArguments.push('-verbose');
     }
-    this.ssProcess = child_process.spawn('/root/shadowbox/bin/outline-ss-server', commandArguments);
+    const sbBinDir = process.env.SB_BIN_DIR || '/root/shadowbox/bin';
+    this.ssProcess = child_process.spawn(`${sbBinDir}/outline-ss-server`, commandArguments);
     this.ssProcess.on('error', (error) => {
       logging.error(`Error spawning outline-ss-server: ${error}`);
     });

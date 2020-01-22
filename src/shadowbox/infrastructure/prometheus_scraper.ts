@@ -19,6 +19,7 @@ import * as http from 'http';
 import * as jsyaml from 'js-yaml';
 import * as mkdirp from 'mkdirp';
 import * as path from 'path';
+import * as process from 'process';
 
 import * as logging from '../infrastructure/logging';
 
@@ -86,7 +87,8 @@ export async function runPrometheusScraper(
   });
   const commandArguments = ['--config.file', configFilename];
   commandArguments.push(...args);
-  const runProcess = child_process.spawn('/root/shadowbox/bin/prometheus', commandArguments);
+  const sbBinDir = process.env.SB_BIN_DIR || '/root/shadowbox/bin';
+  const runProcess = child_process.spawn(`${sbBinDir}/prometheus`, commandArguments);
   runProcess.on('error', (error) => {
     logging.error(`Error spawning prometheus: ${error}`);
   });

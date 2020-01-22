@@ -14,9 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo "** Currently broken, use yarn do shadowbox/docker/run instead **" >&2
-exit 1
-
 do_action shadowbox/server/build
 
 export LOG_LEVEL="${LOG_LEVEL:-debug}"
@@ -25,9 +22,15 @@ export SB_PUBLIC_IP="${SB_PUBLIC_IP:-$(curl https://ipinfo.io/ip)}"
 export SB_API_PREFIX=TestApiPrefix
 export SB_METRICS_URL=https://metrics-test.uproxy.org
 export SB_STATE_DIR=/tmp/outline
+mkdir -p ${SB_STATE_DIR}
+export SB_BIN_DIR=${SB_BIN_DIR:-$(mktemp -d)}
+mkdir -p ${SB_BIN_DIR}
 
-source $ROOT_DIR/src/shadowbox/scripts/make_test_certificate.sh $SB_STATE_DIR
+cp third_party/prometheus/prometheus ${SB_BIN_DIR}/prometheus
+SS_VERSION=1.0.8
+curl -SsL https://github.com/Jigsaw-Code/outline-ss-server/releases/download/v${SS_VERSION}/outline-ss-server_${SS_VERSION}_linux_x86_64.tar.gz \
+    | tar xz -C ${SB_BIN_DIR} outline-ss-server
 
-# This will fail because it expects prometheus and outline-ss-server to be in /root/shadowbox/bin.
-# TODO: Fix it
+source src/shadowbox/scripts/make_test_certificate.sh $SB_STATE_DIR
+
 node $BUILD_DIR/shadowbox/app/server/main
