@@ -251,7 +251,8 @@ function write_config() {
   if [[ $FLAGS_KEYS_PORT != 0 ]]; then
     config+=("\"portForNewAccessKeys\": $FLAGS_KEYS_PORT")
   fi
-  config+=("\"hostname\": \"$PUBLIC_HOSTNAME\"")
+  # printf is needed to escape the hostname.
+  config+=("$(printf '"hostname": "%q"' ${PUBLIC_HOSTNAME})")
   echo "{"$(join , "${config[@]}")"}" > $STATE_DIR/shadowbox_server_config.json
 }
 
