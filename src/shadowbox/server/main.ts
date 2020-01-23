@@ -33,7 +33,7 @@ import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_ke
 import * as server_config from './server_config';
 import {OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollectorClient, SharedMetricsPublisher} from './shared_metrics';
 
-const DEFAULT_ROOT_DIR = '/root/shadowbox';
+const ROOT_DIR = process.env.SB_ROOT_DIR || '/root/shadowbox';
 const MMDB_LOCATION = '/var/lib/libmaxminddb/ip-country.mmdb';
 
 async function exportPrometheusMetrics(registry: prometheus.Registry, port): Promise<http.Server> {
@@ -123,9 +123,10 @@ async function main() {
   logging.info(`outline-ss-server metrics is at ${ssMetricsLocation}`);
   prometheusConfigJson.scrape_configs.push(
       {job_name: 'outline-server-ss', static_configs: [{targets: [ssMetricsLocation]}]});
+
   const shadowsocksServer =
       new OutlineShadowsocksServer(
-          getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation)
+          getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation, `${ROOT_DIR}/bin`)
           .enableCountryMetrics(MMDB_LOCATION);
   const prometheusEndpoint = `http://${prometheusLocation}`;
   // Wait for Prometheus to be up and running.
@@ -135,7 +136,7 @@ async function main() {
         getPersistentFilename('prometheus/data'), '--web.listen-address', prometheusLocation,
         '--log.level', verbose ? 'debug' : 'info'
       ],
-      getPersistentFilename('prometheus/config.yml'), prometheusConfigJson, prometheusEndpoint);
+      getPersistentFilename('prometheus/config.yml'), prometheusConfigJson, prometheusEndpoint, `${ROOT_DIR}/bin`);
 
   const prometheusClient = new PrometheusClient(prometheusEndpoint);
   if (!serverConfig.data().portForNewAccessKeys) {
@@ -187,7 +188,7 @@ async function main() {
 }
 
 function getPersistentFilename(file: string): string {
-  const stateDir = `${process.env.SB_ROOT_DIR || DEFAULT_ROOT_DIR}/persisted-state`;
+  const stateDir = `${ROOT_DIR}/persisted-state`;
   return path.join(stateDir, file);
 }
 

@@ -30,7 +30,7 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
   // configFilename is the location for the outline-ss-server config.
   constructor(
       private readonly configFilename: string, private readonly verbose: boolean,
-      private readonly metricsLocation: string) {}
+      private readonly metricsLocation: string, private readonly binDir: string) {}
 
   // Annotates the Prometheus data metrics with countries.
   // ipCountryFilename is the location of the ip-country.mmdb IP-to-country database file.
@@ -83,8 +83,7 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
     if (this.verbose) {
       commandArguments.push('-verbose');
     }
-    const sbBinDir = process.env.SB_BIN_DIR || '/root/shadowbox/bin';
-    this.ssProcess = child_process.spawn(`${sbBinDir}/outline-ss-server`, commandArguments);
+    this.ssProcess = child_process.spawn(`${this.binDir}/outline-ss-server`, commandArguments);
     this.ssProcess.on('error', (error) => {
       logging.error(`Error spawning outline-ss-server: ${error}`);
     });
