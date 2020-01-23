@@ -33,7 +33,7 @@ import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_ke
 import * as server_config from './server_config';
 import {OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollectorClient, SharedMetricsPublisher} from './shared_metrics';
 
-const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
+const DEFAULT_ROOT_DIR = '/root/shadowbox';
 const MMDB_LOCATION = '/var/lib/libmaxminddb/ip-country.mmdb';
 
 async function exportPrometheusMetrics(registry: prometheus.Registry, port): Promise<http.Server> {
@@ -187,7 +187,7 @@ async function main() {
 }
 
 function getPersistentFilename(file: string): string {
-  const stateDir = process.env.SB_STATE_DIR || DEFAULT_STATE_DIR;
+  const stateDir = `${process.env.SB_ROOT_DIR || DEFAULT_ROOT_DIR}/persisted-state`;
   return path.join(stateDir, file);
 }
 

@@ -261,7 +261,7 @@ function start_shadowbox() {
   declare -a docker_shadowbox_flags=(
     --name shadowbox --restart=always --net=host
     -v "${STATE_DIR}:${STATE_DIR}"
-    -e "SB_STATE_DIR=${STATE_DIR}"
+    -e "SB_ROOT_DIR=${SHADOWBOX_DIR}"
     -e "SB_API_PORT=${API_PORT}"
     -e "SB_API_PREFIX=${SB_API_PREFIX}"
     -e "SB_CERTIFICATE_FILE=${SB_CERTIFICATE_FILE}"
