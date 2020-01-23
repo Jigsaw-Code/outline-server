@@ -249,9 +249,10 @@ function join() {
 function write_config() {
   declare -a config=()
   if [[ $FLAGS_KEYS_PORT != 0 ]]; then
-    config+=("\"portForNewAccessKeys\":$FLAGS_KEYS_PORT")
+    config+=("\"portForNewAccessKeys\": $FLAGS_KEYS_PORT")
   fi
-  config+=$(printf '"hostname": "%q"' ${PUBLIC_HOSTNAME})
+  # printf is needed to escape the hostname.
+  config+=("$(printf '"hostname": "%q"' ${PUBLIC_HOSTNAME})")
   echo "{"$(join , "${config[@]}")"}" > $STATE_DIR/shadowbox_server_config.json
 }
 
@@ -329,7 +330,7 @@ function add_api_url_to_config() {
 
 function check_firewall() {
   # TODO(cohenjon) This is incorrect if access keys are using more than one port.
-  local readonly ACCESS_KEY_PORT=$(curl --insecure -s ${LOCAL_API_URL}/access-keys | 
+  local readonly ACCESS_KEY_PORT=$(curl --insecure -s ${LOCAL_API_URL}/access-keys |
       docker exec -i shadowbox node -e '
           const fs = require("fs");
           const accessKeys = JSON.parse(fs.readFileSync(0, {encoding: "utf-8"}));
