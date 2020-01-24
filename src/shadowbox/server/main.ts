@@ -34,7 +34,7 @@ import * as server_config from './server_config';
 import {OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollectorClient, SharedMetricsPublisher} from './shared_metrics';
 
 const ROOT_DIR = process.env.SB_ROOT_DIR || '/root/shadowbox';
-const MMDB_LOCATION = '/var/lib/libmaxminddb/ip-country.mmdb';
+const MMDB_LOCATION = getPersistentFilename('ip-country.mmdb');
 
 async function exportPrometheusMetrics(registry: prometheus.Registry, port): Promise<http.Server> {
   return new Promise<http.Server>((resolve, _) => {
