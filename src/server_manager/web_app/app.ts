@@ -114,7 +114,7 @@ async function showHelpBubblesOnce(serverView: Polymer) {
     window.localStorage.setItem('getConnectedHelpBubble-dismissed', 'true');
   }
   if (!window.localStorage.getItem('dataLimitsHelpBubble-dismissed') &&
-      serverView.canSetAccessKeyDataLimit) {
+      serverView.supportsAccessKeyDataLimit) {
     await serverView.showDataLimitsHelpBubble();
     window.localStorage.setItem('dataLimitsHelpBubble-dismissed', 'true');
   }
@@ -856,7 +856,7 @@ export class App {
 
     const version = this.selectedServer.getVersion();
     view.isAccessKeyPortEditable = version && semver.gte(version, CHANGE_KEYS_PORT_VERSION);
-    view.canSetAccessKeyDataLimit = version && semver.gte(version, DATA_LIMITS_VERSION);
+    view.supportsAccessKeyDataLimit = version && semver.gte(version, DATA_LIMITS_VERSION);
 
     if (isManagedServer(selectedServer)) {
       view.isServerManaged = true;

@@ -237,7 +237,7 @@
                 <iron-icon icon="icons:error-outline"></iron-icon>
                 <p inner-h-t-m-l="[[localize('experiments-disclaimer', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
               </div>
-              <div id="data-limits-container" hidden$="[[!canSetAccessKeyDataLimit]]">
+              <div id="data-limits-container" hidden$="[[!supportsAccessKeyDataLimit]]">
                 <div class="space-between">
                   <div>
                     <h3>[[localize('data-limits')]]</h3>
@@ -286,7 +286,7 @@
         isAccessKeyPortEditable: {type: Boolean, value: false},
         isAccessKeyDataLimitEnabled: {type: Boolean, notify: true},
         accessKeyDataLimit: {type: Object, value: null}, // type: app.DisplayDataAmount
-        canSetAccessKeyDataLimit: {type: Boolean, value: false}, // Whether the server supports data limits.
+        supportsAccessKeyDataLimit: {type: Boolean, value: false}, // Whether the server supports data limits.
         dataLimitsAvailabilityDate: {type: String}, // Date by which the feature stops being an experiment.
         serverCreationDate: {type: String, value: null},
         serverLocation: {type: String, value: null},
@@ -295,7 +295,7 @@
         localize: {type: Function, readonly: true},
         enableKeysPortButtons: {type: Boolean, value: false},
         showKeysPortButtons: {type: Boolean, value: false},
-        shouldShowExperiments: {type: Boolean, computed: '_computeShouldShowExperiments(canSetAccessKeyDataLimit)'},
+        shouldShowExperiments: {type: Boolean, computed: '_computeShouldShowExperiments(supportsAccessKeyDataLimit)'},
       },
       update: function(name, metricsEnabled) {
         this.initialName = name;
@@ -428,8 +428,8 @@
         const unit = this.$.accessKeyDataLimitUnits.selected;
         this.fire('SetAccessKeyDataLimitRequested', {limit: {value, unit}});
       },
-      _computeShouldShowExperiments: function(canSetAccessKeyDataLimit) {
-        return canSetAccessKeyDataLimit;
+      _computeShouldShowExperiments: function(supportsAccessKeyDataLimit) {
+        return supportsAccessKeyDataLimit;
       }
     });
   </script>
