@@ -147,12 +147,14 @@
         this.positionTarget = positionTarget;
         this.refit();
 
-        // Listen to scroll event so the help bubble can reposition if needed.
+        // Listen to scroll and resize events so the help bubble can reposition if needed.
         window.addEventListener('scroll', this.refit.bind(this));
+        window.addEventListener('resize', this.refit.bind(this));
       },
       hide: function() {
         this.setAttribute('hidden', true);
         window.removeEventListener('scroll', this.refit.bind(this));
+        window.removeEventListener('resize', this.refit.bind(this));
         this.fire('outline-help-bubble-dismissed');
       }
     });
