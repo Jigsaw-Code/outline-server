@@ -53,22 +53,22 @@
       }
       .setting p {
         margin-bottom: 12px;
-        width: 60%;
+        width: 80%;
         color: var(--medium-gray);
       }
-      #experiments p {
+      #experiments .sub-section p {
         width: 100%;
       }
       .sub-section {
         background: var(--border-color);
-        padding: 12px;
+        padding: 16px;
         margin: 24px 0;
         display: flex;
         align-items: center;
         border-radius: 2px;
       }
       .sub-section iron-icon {
-        margin-right: 1em;
+        margin-right: 16px;
       }
       .space-between {
         display: flex;
@@ -188,6 +188,10 @@
         --paper-input-container-underline-focus: {
           display: none;
         }
+      }
+      paper-listbox paper-item:hover {
+          cursor: pointer;
+          background-color: #eee;
       }
       #data-limits-container .space-between h3 {
         font-weight: normal;

@@ -191,17 +191,19 @@
       .measurement-container paper-progress {
         max-width: 72px;
         margin: 0 24px 0 12px;
-        border: 1px solid var(--primary-green);
-        border-radius: 2px;
         --paper-progress-height: 8px;
         --paper-progress-active-color: var(--primary-green);
+      }
+      .measurement-container paper-progress.data-limits {
+        border: 1px solid var(--primary-green);
+        border-radius: 2px;
       }
       @media (max-width: 640px) {
         .measurement-container paper-progress {
           width: 48px;
         }
       }
-      paper-progress.tooltip:hover {
+      paper-progress.data-limits:hover {
         cursor: pointer;
       }
       .measurement {
@@ -440,7 +442,7 @@
               </span>
               <span class="measurement-container">
                   <span class="measurement">[[_formatBytesTransferred(myConnection.transferredBytes, "...")]]</span>
-                  <paper-progress value="[[myConnection.relativeTraffic]]" class$="[[_computeTooltipClass(isAccessKeyDataLimitEnabled)]]"></paper-progress>
+                  <paper-progress value="[[myConnection.relativeTraffic]]" class$="[[_computePaperProgressClass(isAccessKeyDataLimitEnabled)]]"></paper-progress>
                   <paper-tooltip animation-delay="0" offset="0" position="top" hidden$="[[!isAccessKeyDataLimitEnabled]]">
                     [[_getDataLimitsUsageString(myConnection)]]
                   </paper-tooltip>
@@ -468,7 +470,7 @@
                 </span>
                 <span class="measurement-container">
                   <span class="measurement">[[_formatBytesTransferred(item.transferredBytes, "...")]]</span>
-                  <paper-progress value='[[item.relativeTraffic]]' class$="[[_computeTooltipClass(isAccessKeyDataLimitEnabled)]]"></paper-progress>
+                  <paper-progress value='[[item.relativeTraffic]]' class$="[[_computePaperProgressClass(isAccessKeyDataLimitEnabled)]]"></paper-progress>
                   <paper-tooltip animation-delay="0" offset="0" position="top" hidden$="[[!isAccessKeyDataLimitEnabled]]">
                     [[_getDataLimitsUsageString(item)]]
                   </paper-tooltip>
@@ -850,8 +852,8 @@
       removeServer: function() {
         this.fire('ForgetServerRequested');
       },
-      _computeTooltipClass: function(isAccessKeyDataLimitEnabled) {
-        return isAccessKeyDataLimitEnabled ? 'tooltip' : '';
+      _computePaperProgressClass: function(isAccessKeyDataLimitEnabled) {
+        return isAccessKeyDataLimitEnabled ? 'data-limits' : '';
       },
       _getDataLimitsUsageString: function(accessKey) {
         if (!this.accessKeyDataLimit) {
