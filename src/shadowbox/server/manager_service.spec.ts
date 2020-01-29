@@ -14,7 +14,7 @@
 
 import * as net from 'net';
 
-import {InMemoryConfig} from '../infrastructure/json_config';
+import {InMemoryConfig, JsonConfig} from '../infrastructure/json_config';
 import {AccessKey, AccessKeyRepository, DataLimit} from '../model/access_key';
 
 import {ShadowsocksManagerService} from './manager_service';
