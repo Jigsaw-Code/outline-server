@@ -189,7 +189,7 @@ export class ShadowsocksManagerService {
     for (const accessKey of this.accessKeys.listAccessKeys()) {
       response.accessKeys.push(accessKeyToJson(accessKey));
     }
-    logging.debug(`listAccessKeys response ${response}`);
+    logging.debug(`listAccessKeys response ${JSON.stringify(response)}`);
     res.send(HttpSuccess.OK, response);
     return next();
   }
@@ -201,6 +201,7 @@ export class ShadowsocksManagerService {
       this.accessKeys.createNewAccessKey().then((accessKey) => {
         const accessKeyJson = accessKeyToJson(accessKey);
         res.send(201, accessKeyJson);
+        logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);
         return next();
       });
     } catch (error) {
@@ -325,7 +326,10 @@ export class ShadowsocksManagerService {
 
   public async getDataUsage(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      res.send(HttpSuccess.OK, await this.managerMetrics.getOutboundByteTransfer({hours: 30 * 24}));
+      logging.debug(`getDataUsage request ${JSON.stringify(req.params)}`);
+      const response = await this.managerMetrics.getOutboundByteTransfer({hours: 30 * 24});
+      res.send(HttpSuccess.OK, response);
+      logging.debug(`getDataUsage response ${JSON.stringify(response)}`);
       return next();
     } catch (error) {
       logging.error(error);
@@ -334,7 +338,10 @@ export class ShadowsocksManagerService {
   }
 
   public getShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
-    res.send(HttpSuccess.OK, {metricsEnabled: this.metricsPublisher.isSharingEnabled()});
+    logging.debug(`getShareMetrics request ${JSON.stringify(req.params)}`);
+    const response = {metricsEnabled: this.metricsPublisher.isSharingEnabled()};
+    res.send(HttpSuccess.OK, response);
+    logging.debug(`getShareMetrics response: ${JSON.stringify(response)}`);
     next();
   }
 
