@@ -79,26 +79,6 @@ paths:
           description: The requested port wasn't an integer from 1 through 65535, or the request had no port parameter.
         '409':
           description: The requested port was already in use by another service.
-  /server/data-usage-timeframe:
-    put:
-      description: Sets the sliding timeframe for measuring data usage and enforcing access keys data limits.
-      tags:
-        - Server
-        - Data limit
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DataUsageTimeframe"
-            examples:
-              '0':
-                value: "{hours: 24}"
-      responses:
-        '204':
-          description: The data usage timeframe was successfully changed.
-        '400':
-          description: Invalid timeframe value.
 
   /name:
     put:
@@ -323,17 +303,6 @@ components:
           type: number
         portForNewAccessKeys:
           type: integer
-        dataUsageTimeframe:
-          $ref: "#/components/schemas/DataUsageTimeframe"
-        version:
-          type: pattern
-          pattern: '^\d*\.\d*\.\d*$'
-
-    DataUsageTimeframe:
-      properties:
-        hours:
-          type: integer
-          minimum: 1
 
     DataLimit:
       properties:

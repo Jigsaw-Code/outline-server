@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Download the GeoLite2 country database into the same location
+# Download the IP-to-country MMDB database into the same location
 # used by Alpine's libmaxminddb package.
 
 # IP Geolocation by DB-IP (https://db-ip.com)
@@ -23,8 +23,6 @@ done
 
 gunzip "$TMPDIR/$FILENAME.gz"
 LIBDIR="/var/lib/libmaxminddb"
-curl --silent "https://geolite.maxmind.com/download/geoip/database/$FILENAME.gz" -o "$TMPDIR/$FILENAME.gz"
-gunzip "$TMPDIR/$FILENAME.gz"
 mkdir -p $LIBDIR
 mv -f "$TMPDIR/$FILENAME" $LIBDIR
 rmdir $TMPDIR

@@ -36,6 +36,7 @@
   "error-do-auth": "Authentication with DigitalOcean failed",
   "error-do-regions": "Failed to get list of available regions",
   "error-feedback": "Failed to submit feedback. Please try again.",
+  "error-hostname-invalid": "Must be an IP address or valid hostname.",
   "error-key-add": "Failed to add key",
   "error-key-remove": "Failed to remove key",
   "error-key-rename": "Failed to rename key",
