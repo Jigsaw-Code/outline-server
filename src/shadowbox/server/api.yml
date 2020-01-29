@@ -303,20 +303,6 @@ components:
           type: number
         portForNewAccessKeys:
           type: integer
-<<<<<<< HEAD
-=======
-        dataUsageTimeframe:
-          $ref: "#/components/schemas/DataUsageTimeframe"
-        version:
-          type: pattern
-          pattern: '^\d*\.\d*\.\d*$'
-
-    DataUsageTimeframe:
-      properties:
-        hours:
-          type: integer
-          minimum: 1
->>>>>>> c31f29c... API for the new endpoint to change the server hostname. (#534)
 
     DataLimit:
       properties:

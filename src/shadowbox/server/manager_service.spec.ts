@@ -64,9 +64,8 @@ describe('ShadowsocksManagerService', () => {
     it('Returns persisted properties', (done) => {
       const repo = getAccessKeyRepository();
       const accessKeyDataLimit = {bytes: 999};
-      const serverConfig =
-          new InMemoryConfig({name: 'Server', accessKeyDataLimit} as ServerConfigJson);
-      const service = new ShadowsocksManagerService('default name', serverConfig, repo, null, null);
+      const serverConfig = new InMemoryConfig({name: 'Server', accessKeyDataLimit} as ServerConfigJson);
+      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(repo).build();
       service.getServer(
           {params: {}}, {
             send: (httpCode, data: ServerInfo) => {
@@ -470,7 +469,7 @@ describe('ShadowsocksManagerService', () => {
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
       const repo = getAccessKeyRepository();
       spyOn(repo, 'setAccessKeyDataLimit');
-      const service = new ShadowsocksManagerService('default name', serverConfig, repo, null, null);
+      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(repo).build();
       const limit = {bytes: 10000};
       const res = {
         send: (httpCode, data) => {
@@ -518,7 +517,7 @@ describe('ShadowsocksManagerService', () => {
       const repo = getAccessKeyRepository();
       spyOn(repo, 'setAccessKeyDataLimit').and.throwError('cannot write to disk');
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
-      const accessKey = await repo.createNewAccessKey();
+      await repo.createNewAccessKey();
       const limit = {bytes: 10000};
       const res = {send: (httpCode, data) => {}};
       service.setAccessKeyDataLimit({params: {limit}}, res, (error) => {
@@ -535,7 +534,7 @@ describe('ShadowsocksManagerService', () => {
       const serverConfig = new InMemoryConfig({'accessKeyDataLimit': limit} as ServerConfigJson);
       const repo = getAccessKeyRepository();
       spyOn(repo, 'removeAccessKeyDataLimit').and.callThrough();
-      const service = new ShadowsocksManagerService('default name', serverConfig, repo, null, null);
+      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(repo).build();
       await repo.setAccessKeyDataLimit(limit);
       const res = {
         send: (httpCode, data) => {
