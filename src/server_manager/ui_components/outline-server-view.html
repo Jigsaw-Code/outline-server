@@ -499,6 +499,7 @@
             id="serverSettings"
             server-id="[[serverId]]"
             server-hostname="[[serverHostname]]"
+            is-hostname-editable="[[isHostnameEditable]]"
             server-management-api-url="[[serverManagementApiUrl]]"
             server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]"
             is-access-key-port-editable="[[isAccessKeyPortEditable]]"
@@ -539,6 +540,7 @@
         serverId: String,
         serverName: String,
         serverHostname: String,
+        isHostnameEditable: {type: Boolean, value: false},
         serverManagementApiUrl: String,
         serverPortForNewAccessKeys: Number,
         isAccessKeyPortEditable: {type: Boolean, value: false},
