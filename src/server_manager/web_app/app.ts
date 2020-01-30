@@ -37,8 +37,9 @@ interface PolymerEvent extends Event {
 //   https://www.digitalocean.com/help/referral-program/
 const UNUSED_DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
 
-const CHANGE_KEYS_PORT_VERSION = "1.0.0";
+const CHANGE_KEYS_PORT_VERSION = '1.0.0';
 const DATA_LIMITS_VERSION = '1.1.0';
+const CHANGE_HOSTNAME_VERSION = '1.2.0';
 // Date by which the data limits feature experiment will be permanently added or removed.
 const DATA_LIMITS_AVAILABILITY_DATE = new Date('2020-04-01');
 const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
@@ -194,7 +195,11 @@ export class App {
     });
 
     appRoot.addEventListener('ChangePortForNewAccessKeysRequested', (event: PolymerEvent) => {
-      this.setPortForNewAccessKeys(event.detail.port, event.detail.serverSettings);
+      this.setPortForNewAccessKeys(event.detail.validatedInput, event.detail.ui);
+    });
+
+    appRoot.addEventListener('ChangeHostnameForAccessKeysRequested', (event: PolymerEvent) => {
+      this.setHostnameForAccessKeys(event.detail.validatedInput, event.detail.ui);
     });
 
     // The UI wants us to validate a server management URL.
@@ -845,7 +850,7 @@ export class App {
     view.isServerReachable = true;
     view.serverId = selectedServer.getServerId();
     view.serverName = selectedServer.getName();
-    view.serverHostname = selectedServer.getHostname();
+    view.serverHostname = selectedServer.getHostnameForAccessKeys();
     view.serverManagementApiUrl = selectedServer.getManagementApiUrl();
     view.serverPortForNewAccessKeys = selectedServer.getPortForNewAccessKeys();
     view.serverCreationDate = localizeDate(selectedServer.getCreatedDate(), this.appRoot.language);
@@ -857,6 +862,7 @@ export class App {
     const version = this.selectedServer.getVersion();
     view.isAccessKeyPortEditable = version && semver.gte(version, CHANGE_KEYS_PORT_VERSION);
     view.supportsAccessKeyDataLimit = version && semver.gte(version, DATA_LIMITS_VERSION);
+    view.isHostnameEditable = version && semver.gte(version, CHANGE_HOSTNAME_VERSION);
 
     if (isManagedServer(selectedServer)) {
       view.isServerManaged = true;
@@ -1059,24 +1065,41 @@ export class App {
     }
   }
 
+  private async setHostnameForAccessKeys(hostname: string, serverSettings: Polymer) {
+    this.appRoot.showNotification(this.appRoot.localize("saving"));
+    try {
+      await this.selectedServer.setHostnameForAccessKeys(hostname);
+      this.appRoot.showNotification(this.appRoot.localize("saved"));
+      serverSettings.enterSavedState();
+    } catch (error) {
+      this.appRoot.showError(this.appRoot.localize("error-not-saved"));
+      if (error.isNetworkError()) {
+        serverSettings.enterErrorState(this.appRoot.localize("error-network"));
+        return;
+      }
+      const message = error.response.status === 400 ? "error-hostname-invalid" : "error-unexpected";
+      serverSettings.enterErrorState(this.appRoot.localize(message));
+    }
+  }
+
   private async setPortForNewAccessKeys(port: number, serverSettings: Polymer) {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
     try {
       await this.selectedServer.setPortForNewAccessKeys(port);
-      this.appRoot.showNotification(this.appRoot.localize('saved'));
-      serverSettings.setKeysPortSaved();
+      this.appRoot.showNotification(this.appRoot.localize("saved"));
+      serverSettings.enterSavedState();
     } catch (error) {
       this.appRoot.showError(this.appRoot.localize('error-not-saved'));
       if (error.isNetworkError()) {
-        serverSettings.setKeysPortErrorState(this.appRoot.localize('error-network'));
+        serverSettings.enterErrorState(this.appRoot.localize("error-network"));
         return;
       }
       const code = error.response.status;
       if (code === 409) {
-        serverSettings.setKeysPortErrorState(this.appRoot.localize('error-keys-port-in-use'));
+        serverSettings.enterErrorState(this.appRoot.localize("error-keys-port-in-use"));
         return;
       }
-      serverSettings.setKeysPortErrorState(this.appRoot.localize('error-unexpected'));
+      serverSettings.enterErrorState(this.appRoot.localize("error-unexpected"));
     }
   }
 

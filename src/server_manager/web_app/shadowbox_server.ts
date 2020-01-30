@@ -28,6 +28,7 @@ export interface ServerConfig {
   serverId: string;
   createdTimestampMs: number;
   portForNewAccessKeys: number;
+  hostnameForAccessKeys: string;
   version: string;
   accessKeyDataLimit?: server.DataLimit;
 }
@@ -154,12 +155,26 @@ export class ShadowboxServer implements server.Server {
     return new Date(this.serverConfig.createdTimestampMs);
   }
 
-  getHostname(): string {
+  async setHostnameForAccessKeys(hostname: string): Promise<void> {
+    console.info(`setHostname ${hostname}`);
+    this.serverConfig.hostnameForAccessKeys = hostname;
+    const requestOptions: RequestInit = {
+      method: 'PUT',
+      headers: new Headers({'Content-Type': 'application/json'}),
+      body: JSON.stringify({hostname})
+    };
+    return this.apiRequest<void>('server/hostname-for-access-keys', requestOptions).then(() => {
+      this.serverConfig.hostnameForAccessKeys = hostname;
+    });
+  }
+
+  getHostnameForAccessKeys(): string {
     try {
-      return new URL(this.managementApiAddress).hostname;
+      return this.serverConfig.hostnameForAccessKeys || new URL(this.managementApiAddress).hostname;
     } catch (e) {
       return '';
     }
+    
   }
 
   getPortForNewAccessKeys(): number|undefined {
@@ -174,7 +189,7 @@ export class ShadowboxServer implements server.Server {
   }
 
   setPortForNewAccessKeys(newPort: number): Promise<void> {
-    console.info(`setPortForNewAcessKeys: ${newPort}`);
+    console.info(`setPortForNewAccessKeys: ${newPort}`);
     const requestOptions: RequestInit = {
       method: 'PUT',
       headers: new Headers({'Content-Type': 'application/json'}),

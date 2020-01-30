@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as restify from 'restify';
+import * as ipRegex from 'ip-regex';
 import {makeConfig, SIP002_URI} from 'ShadowsocksConfig/shadowsocks_config';
 
 import {JsonConfig} from '../infrastructure/json_config';
@@ -75,6 +76,7 @@ export function bindService(
     apiServer: restify.Server, apiPrefix: string, service: ShadowsocksManagerService) {
   apiServer.put(`${apiPrefix}/name`, service.renameServer.bind(service));
   apiServer.get(`${apiPrefix}/server`, service.getServer.bind(service));
+  apiServer.put(`${apiPrefix}/server/hostname-for-access-keys`, service.setHostnameForAccessKeys.bind(service));
   apiServer.put(
       `${apiPrefix}/server/port-for-new-access-keys`,
       service.setPortForNewAccessKeys.bind(service));
@@ -142,9 +144,41 @@ export class ShadowsocksManagerService {
       metricsEnabled: this.serverConfig.data().metricsEnabled || false,
       createdTimestampMs: this.serverConfig.data().createdTimestampMs,
       version,
+      accessKeyDataLimit: this.serverConfig.data().accessKeyDataLimit,
       portForNewAccessKeys: this.serverConfig.data().portForNewAccessKeys,
-      accessKeyDataLimit: this.serverConfig.data().accessKeyDataLimit
+      hostnameForAccessKeys: this.serverConfig.data().hostname
     });
+    next();
+  }
+
+  // Changes the server's hostname.  Hostname must be a valid domain or IP address
+  public setHostnameForAccessKeys(req: RequestType, res: ResponseType, next: restify.Next): void {
+    logging.debug(`changeHostname request: ${JSON.stringify(req.params)}`);
+
+    const hostname = req.params.hostname;
+    if (typeof hostname === 'undefined') {
+      return next(new restify.MissingParameterError({statusCode: 400}, "hostname must be provided"));
+    }
+    if (typeof hostname !== 'string') {
+      return next(
+        new restify.InvalidArgumentError(
+          {statusCode: 400},
+          `Expected hostname to be a string, instead got ${hostname} of type ${typeof hostname}`));
+    }
+    // Hostnames can have any number of segments of alphanumeric characters and hyphens, separated by periods.
+    // No segment may start or end with a hyphen.
+    const hostnameRegex = /^([a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?\.)*[A-Za-z0-9]([A-Za-z0-9\-]*[A-Za-z0-9])?$/;
+    if (!hostnameRegex.test(hostname) && !ipRegex({includeBoundaries: true}).test(hostname)) {
+      return next(
+        new restify.InvalidArgumentError(
+          {statusCode: 400},
+          `Hostname ${hostname} isn't a valid hostname or IP address`));
+    }
+
+    this.serverConfig.data().hostname = hostname;
+    this.serverConfig.write();
+    this.accessKeys.setHostname(hostname);
+    res.send(HttpSuccess.NO_CONTENT);
     next();
   }
 
@@ -155,7 +189,7 @@ export class ShadowsocksManagerService {
     for (const accessKey of this.accessKeys.listAccessKeys()) {
       response.accessKeys.push(accessKeyToJson(accessKey));
     }
-    logging.debug(`listAccessKeys response ${response}`);
+    logging.debug(`listAccessKeys response ${JSON.stringify(response)}`);
     res.send(HttpSuccess.OK, response);
     return next();
   }
@@ -167,6 +201,7 @@ export class ShadowsocksManagerService {
       this.accessKeys.createNewAccessKey().then((accessKey) => {
         const accessKeyJson = accessKeyToJson(accessKey);
         res.send(201, accessKeyJson);
+        logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);
         return next();
       });
     } catch (error) {
@@ -291,7 +326,10 @@ export class ShadowsocksManagerService {
 
   public async getDataUsage(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      res.send(HttpSuccess.OK, await this.managerMetrics.getOutboundByteTransfer({hours: 30 * 24}));
+      logging.debug(`getDataUsage request ${JSON.stringify(req.params)}`);
+      const response = await this.managerMetrics.getOutboundByteTransfer({hours: 30 * 24});
+      res.send(HttpSuccess.OK, response);
+      logging.debug(`getDataUsage response ${JSON.stringify(response)}`);
       return next();
     } catch (error) {
       logging.error(error);
@@ -300,7 +338,10 @@ export class ShadowsocksManagerService {
   }
 
   public getShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
-    res.send(HttpSuccess.OK, {metricsEnabled: this.metricsPublisher.isSharingEnabled()});
+    logging.debug(`getShareMetrics request ${JSON.stringify(req.params)}`);
+    const response = {metricsEnabled: this.metricsPublisher.isSharingEnabled()};
+    res.send(HttpSuccess.OK, response);
+    logging.debug(`getShareMetrics response: ${JSON.stringify(response)}`);
     next();
   }
 
