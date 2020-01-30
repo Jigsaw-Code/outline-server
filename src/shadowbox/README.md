@@ -160,7 +160,7 @@ client <-> shadowbox <-> target
 To test clients that rely on fetching a docker image from Dockerhub, you can push an image to your account and modify the
 client to use your image. To push your own image:
 ```
-yarn shadowbox_docker_build && docker tag quay.io/outline/shadowbox $USER/shadowbox && docker push $USER/shadowbox
+yarn do shadowbox/docker/build && docker tag quay.io/outline/shadowbox $USER/shadowbox && docker push $USER/shadowbox
 ```
 
 If you need to test an unsigned image (e.g. your dev one):
