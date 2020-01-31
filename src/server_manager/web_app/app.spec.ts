@@ -370,7 +370,7 @@ class FakeServer implements server.Server {
     return Promise.reject(new Error('FakeServer.removeAccessKey not implemented'));
   }
   setHostnameForAccessKeys(hostname: string) {
-    return Promise.reject(new Error("FakeServer.setHostname not implemented"));
+    return Promise.reject(new Error('FakeServer.setHostname not implemented'));
   }
   getHostnameForAccessKeys() {
     return 'fake-server';

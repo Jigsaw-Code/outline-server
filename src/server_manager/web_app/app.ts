@@ -1066,18 +1066,18 @@ export class App {
   }
 
   private async setHostnameForAccessKeys(hostname: string, serverSettings: Polymer) {
-    this.appRoot.showNotification(this.appRoot.localize("saving"));
+    this.appRoot.showNotification(this.appRoot.localize('saving'));
     try {
       await this.selectedServer.setHostnameForAccessKeys(hostname);
-      this.appRoot.showNotification(this.appRoot.localize("saved"));
+      this.appRoot.showNotification(this.appRoot.localize('saved'));
       serverSettings.enterSavedState();
     } catch (error) {
-      this.appRoot.showError(this.appRoot.localize("error-not-saved"));
+      this.appRoot.showError(this.appRoot.localize('error-not-saved'));
       if (error.isNetworkError()) {
-        serverSettings.enterErrorState(this.appRoot.localize("error-network"));
+        serverSettings.enterErrorState(this.appRoot.localize('error-network'));
         return;
       }
-      const message = error.response.status === 400 ? "error-hostname-invalid" : "error-unexpected";
+      const message = error.response.status === 400 ? 'error-hostname-invalid' : 'error-unexpected';
       serverSettings.enterErrorState(this.appRoot.localize(message));
     }
   }
@@ -1086,20 +1086,20 @@ export class App {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
     try {
       await this.selectedServer.setPortForNewAccessKeys(port);
-      this.appRoot.showNotification(this.appRoot.localize("saved"));
+      this.appRoot.showNotification(this.appRoot.localize('saved'));
       serverSettings.enterSavedState();
     } catch (error) {
       this.appRoot.showError(this.appRoot.localize('error-not-saved'));
       if (error.isNetworkError()) {
-        serverSettings.enterErrorState(this.appRoot.localize("error-network"));
+        serverSettings.enterErrorState(this.appRoot.localize('error-network'));
         return;
       }
       const code = error.response.status;
       if (code === 409) {
-        serverSettings.enterErrorState(this.appRoot.localize("error-keys-port-in-use"));
+        serverSettings.enterErrorState(this.appRoot.localize('error-keys-port-in-use'));
         return;
       }
-      serverSettings.enterErrorState(this.appRoot.localize("error-unexpected"));
+      serverSettings.enterErrorState(this.appRoot.localize('error-unexpected'));
     }
   }
 

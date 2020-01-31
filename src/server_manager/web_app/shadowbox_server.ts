@@ -174,7 +174,6 @@ export class ShadowboxServer implements server.Server {
     } catch (e) {
       return '';
     }
-    
   }
 
   getPortForNewAccessKeys(): number|undefined {
