@@ -119,15 +119,15 @@ Remove an access key
 curl --insecure -X DELETE $API_URL/access-keys/2
 ```
 
-Set an access key data limit
-(e.g. limit outbound data transfer for access key 2 to 1MB over 30 days)
+Set a data limit for all access keys
+(e.g. limit outbound data transfer access keys to 1MB over 30 days)
 ```
-curl -v --insecure -X PUT -H "Content-Type: application/json" -d '{"limit": {"bytes": 1000}}' $API_URL/access-keys/2/data-limit
+curl -v --insecure -X PUT -H "Content-Type: application/json" -d '{"limit": {"bytes": 1000}}' $API_URL/experimental/access-key-data-limit
 ```
 
-Remove an access key data limit
+Remove the access key data limit
 ```
-curl -v --insecure -X DELETE $API_URL/access-keys/2/data-limit
+curl -v --insecure -X DELETE $API_URL/experimental/access-key-data-limit
 ```
 
 ## Testing
@@ -160,7 +160,7 @@ client <-> shadowbox <-> target
 To test clients that rely on fetching a docker image from Dockerhub, you can push an image to your account and modify the
 client to use your image. To push your own image:
 ```
-yarn shadowbox_docker_build && docker tag quay.io/outline/shadowbox $USER/shadowbox && docker push $USER/shadowbox
+yarn do shadowbox/docker/build && docker tag quay.io/outline/shadowbox $USER/shadowbox && docker push $USER/shadowbox
 ```
 
 If you need to test an unsigned image (e.g. your dev one):

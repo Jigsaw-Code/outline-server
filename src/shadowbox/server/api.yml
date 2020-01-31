@@ -27,7 +27,34 @@ paths:
               examples:
                 '0':
                   value: >-
-                    {"name":"My Server","serverId":"000-000-000-000","metricsEnabled":true,"createdTimestampMs":1536613192052,"portForNewAccessKeys":1234}
+                    {"name":"My Server","serverId":"000-000-000-000","metricsEnabled":true,"createdTimestampMs":1536613192052,"portForNewAccessKeys":1234, "version": "1.0.0"}
+  /server/hostname-for-access-keys:
+    put:
+      tags:
+        - Server
+      description: Changes the hostname for access keys.  Must be a valid hostname or IP address.  If it's a hostname, DNS must be set up independently of this API.
+      requestBody:
+        required: true 
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hostname:
+                  type: string
+            examples:
+              'hostname':
+                value: '{"hostname": www.example.org}'
+              'IP address':
+                value: '{"hostname": "127.0.0.1"}'
+      responses:
+        '204': 
+          description: The hostname was successfully changed.
+        '400':
+          description: An invalid hostname or IP address was provided.
+        '500':
+          description: An internal error occurred.  This could be thrown if there were network errors while validating the hostname
+
   /server/port-for-new-access-keys:
     put:
       description: Changes the default port for newly created access keys.  This can be a port already used for access keys.
@@ -47,7 +74,7 @@ paths:
                 value: '{"port": 12345}'
       responses:
         '204':
-          description: The default port was sucessfully changed.
+          description: The default port was successfully changed.
         '400':
           description: The requested port wasn't an integer from 1 through 65535, or the request had no port parameter.
         '409':
@@ -165,59 +192,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DataUsage"
+              $ref: "#/components/schemas/DataLimit"
             examples:
               '0':
                 value: "{bytes: 10000}"
       responses:
         '204':
           description: Access key renamed successfully
-        '404':
-          description: Access key inexistent
-  /access-keys/{id}/data-limit:
-    put:
-      description: Sets an access key data transfer limit
-      tags:
-        - Access Key
-        - Limit
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The id of the access key to set a limit
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DataUsage"
-              examples:
-                '0':
-                  value: "{bytes: 10000}"
-      responses:
-        '204':
-          description: Access key limit set successfully
-        '400':
-          description: Invalid data limit
-        '404':
-          description: Access key inexistent
-    delete:
-      description: Removes an access key data transfer limit, lifting data transfer restrictions on the key.
-      tags:
-        - Access Key
-        - Limit
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: The id of the access key to delete a limit
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Access key limit deleted successfully.
         '404':
           description: Access key inexistent
   /metrics/transfer:
@@ -227,7 +208,7 @@ paths:
         - Access Key
       responses:
         '200':
-          description: The data tranferred by each access key
+          description: The data transferred by each access key
           content:
             application/json:
               schema:
@@ -279,6 +260,34 @@ paths:
           description: Setting successful
         '400':
           description: Invalid request
+  /experimental/access-key-data-limit:
+    put:
+      description: Sets a data transfer limit for all access keys
+      tags:
+        - Access Key
+        - Limit
+      requestBody:
+        required: true
+        content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataLimit"
+              examples:
+                '0':
+                  value: "limit: {bytes: 10000}"
+      responses:
+        '204':
+          description: Access key data limit set successfully
+        '400':
+          description: Invalid data limit
+    delete:
+      description: Removes the access key data limit, lifting data transfer restrictions on all access keys.
+      tags:
+        - Access Key
+        - Limit
+      responses:
+        '204':
+          description: Access key limit deleted successfully.
 
 components:
   schemas:
@@ -295,7 +304,7 @@ components:
         portForNewAccessKeys:
           type: integer
 
-    DataUsage:
+    DataLimit:
       properties:
         bytes:
           type: integer
@@ -317,5 +326,3 @@ components:
           type: string
         accessUrl:
           type: string
-        limit:
-          $ref: "#/components/schemas/DataUsage"
