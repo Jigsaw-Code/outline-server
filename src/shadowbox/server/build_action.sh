@@ -14,6 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+adjust_paths_for_cygwin () {
+    if [[ $(uname) == CYGWIN* ]]; then
+        echo $(cygpath ${@})
+    else
+        echo ${@}
+    fi
+}
+
 readonly OUT_DIR=$BUILD_DIR/shadowbox
 rm -rf $OUT_DIR
 
@@ -26,6 +34,6 @@ tsc -p src/shadowbox --outDir $OUT_DIR/js
 readonly APP_DIR=$OUT_DIR/app
 mkdir -p $APP_DIR
 # Copy built code, without test files.
-rsync --exclude='**/*.spec.js' --exclude='mocks' -r $OUT_DIR/js/* $APP_DIR/
+rsync --exclude='**/*.spec.js' --exclude='mocks' -r $(adjust_paths_for_cygwin $OUT_DIR/js/* $APP_DIR/)
 # Copy static resources
 cp -r $ROOT_DIR/src/shadowbox/package.json $APP_DIR
