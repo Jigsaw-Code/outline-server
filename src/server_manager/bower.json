@@ -35,7 +35,6 @@
     "paper-progress": "PolymerElements/paper-progress#^2.0.1",
     "paper-tabs": "PolymerElements/paper-tabs#^2.1.1",
     "paper-toast": "PolymerElements/paper-toast#^2.0.0",
-    "paper-toggle-button": "PolymerElements/paper-toggle-button#^2.0.0",
     "paper-tooltip": "PolymerElements/paper-tooltip#^2.0.0",
     "web-animations-js": "web-animations/web-animations-js",
     "webcomponentsjs": "webcomponents/webcomponentsjs#^v1.1.0"

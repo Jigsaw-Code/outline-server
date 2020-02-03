@@ -197,9 +197,17 @@
     "message": "This error may be due to a firewall on your network or temporary connectivity issues with digitalocean.com.",
     "description": "This string appears in a dialog as a paragraph. It is shown when a DigitalOcean server cannot be reached. DigitalOcean is a cloud server provider."
   },
+  "disabled": {
+    "message": "Disabled",
+    "description": "This string appears across the application as a drop-down menu option. It allows the user to deactivate features."
+  },
   "done": {
     "message": "Done",
     "description": "This string appears across the application as a button. It lets the user indicate that an action, such as entering text or reading a dialog, has been completed."
+  },
+  "enabled": {
+    "message": "Enabled",
+    "description": "This string appears across the application as a drop-down menu option. It allows the user to activate features."
   },
   "error_connectivity": {
     "message": "We're having trouble connecting to your DigitalOcean account. This is sometimes a temporary problem with DigitalOcean or with your internet connection. If retrying doesn't work, logging into DigitalOcean again should fix the problem.",

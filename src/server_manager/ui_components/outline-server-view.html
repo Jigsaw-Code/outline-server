@@ -510,7 +510,10 @@
             id="serverSettings"
             server-id="[[serverId]]"
             server-hostname="[[serverHostname]]"
+            server-name="[[serverName]]"
+            initial-name="[[serverName]]"
             is-hostname-editable="[[isHostnameEditable]]"
+            metrics-enabled="{{metricsEnabled}}"
             server-management-api-url="[[serverManagementApiUrl]]"
             server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]"
             is-access-key-port-editable="[[isAccessKeyPortEditable]]"
@@ -780,7 +783,6 @@
           this.closeAddAccessKeyHelpBubble();
           this.closeGetConnectedHelpBubble();
           this.closeDataLimitsHelpBubble();
-          this.$.serverSettings.update(this.serverName, this.metricsEnabled);
         }
       },
       // Help bubbles should be shown after this outline-server-view
