@@ -72,7 +72,7 @@ export class PrometheusClient {
 
 export async function runPrometheusScraper(
     args: string[], configFilename: string, configJson: {},
-    prometheusEndpoint: string, prometheusBinDir: string): Promise<child_process.ChildProcess> {
+    prometheusEndpoint: string, prometheusBinary: string): Promise<child_process.ChildProcess> {
   mkdirp.sync(path.dirname(configFilename));
   const ymlTxt = jsyaml.safeDump(configJson, {'sortKeys': true});
   // Write the file asynchronously to prevent blocking the node thread.
@@ -87,7 +87,7 @@ export async function runPrometheusScraper(
   });
   const commandArguments = ['--config.file', configFilename];
   commandArguments.push(...args);
-  const runProcess = child_process.spawn(`${prometheusBinDir}/prometheus`, commandArguments);
+  const runProcess = child_process.spawn(prometheusBinary, commandArguments);
   runProcess.on('error', (error) => {
     logging.error(`Error spawning prometheus: ${error}`);
   });

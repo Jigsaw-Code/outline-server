@@ -135,7 +135,7 @@ async function main() {
         getPersistentFilename('prometheus/data'), '--web.listen-address', prometheusLocation,
         '--log.level', verbose ? 'debug' : 'info'
       ],
-      getPersistentFilename('prometheus/config.yml'), prometheusConfigJson, prometheusEndpoint, `${ROOT_DIR}/bin`);
+      getPersistentFilename('prometheus/config.yml'), prometheusConfigJson, prometheusEndpoint, `${ROOT_DIR}/bin/prometheus`);
 
   const prometheusClient = new PrometheusClient(prometheusEndpoint);
   if (!serverConfig.data().portForNewAccessKeys) {
