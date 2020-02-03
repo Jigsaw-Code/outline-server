@@ -125,7 +125,7 @@ async function main() {
 
   const shadowsocksServer =
       new OutlineShadowsocksServer(
-          getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation, `${ROOT_DIR}/bin`)
+          getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation, `${ROOT_DIR}/bin/outline-ss-server`)
           .enableCountryMetrics(MMDB_LOCATION);
   const prometheusEndpoint = `http://${prometheusLocation}`;
   // Wait for Prometheus to be up and running.
