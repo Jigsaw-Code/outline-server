@@ -22,7 +22,7 @@ for monthdelta in $(seq 10); do
 done
 
 gunzip "$TMPDIR/$FILENAME.gz"
-DB_DIR="/root/shadowbox/persisted-state"
+DB_DIR="/var/lib/libmaxminddb"
 mkdir -p $LIBDIR
 mv -f "$TMPDIR/$FILENAME" $DB_DIR
 rmdir $TMPDIR
