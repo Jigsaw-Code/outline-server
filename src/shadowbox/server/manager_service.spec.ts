@@ -17,12 +17,12 @@ import * as net from 'net';
 import {InMemoryConfig, JsonConfig} from '../infrastructure/json_config';
 import {AccessKey, AccessKeyRepository, DataLimit} from '../model/access_key';
 
+import {ManagerMetrics} from './manager_metrics';
 import {ShadowsocksManagerService} from './manager_service';
 import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
 import {ServerConfigJson} from './server_config';
 import {SharedMetricsPublisher} from './shared_metrics';
-import { ManagerMetrics } from './manager_metrics';
 
 interface ServerInfo {
   name: string;
@@ -50,7 +50,10 @@ describe('ShadowsocksManagerService', () => {
     it('Return default name if name is absent', (done) => {
       const repo = getAccessKeyRepository();
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(repo).build();
+      const service = new ShadowsocksManagerServiceBuilder()
+                          .serverConfig(serverConfig)
+                          .accessKeys(repo)
+                          .build();
       service.getServer(
           {params: {}}, {
             send: (httpCode, data: ServerInfo) => {
@@ -64,8 +67,12 @@ describe('ShadowsocksManagerService', () => {
     it('Returns persisted properties', (done) => {
       const repo = getAccessKeyRepository();
       const accessKeyDataLimit = {bytes: 999};
-      const serverConfig = new InMemoryConfig({name: 'Server', accessKeyDataLimit} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(repo).build();
+      const serverConfig =
+          new InMemoryConfig({name: 'Server', accessKeyDataLimit} as ServerConfigJson);
+      const service = new ShadowsocksManagerServiceBuilder()
+                          .serverConfig(serverConfig)
+                          .accessKeys(repo)
+                          .build();
       service.getServer(
           {params: {}}, {
             send: (httpCode, data: ServerInfo) => {
@@ -83,7 +90,10 @@ describe('ShadowsocksManagerService', () => {
     it('Rename changes the server name', (done) => {
       const repo = getAccessKeyRepository();
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(repo).build();
+      const service = new ShadowsocksManagerServiceBuilder()
+                          .serverConfig(serverConfig)
+                          .accessKeys(repo)
+                          .build();
       service.renameServer(
           {params: {name: 'new name'}}, {
             send: (httpCode, _) => {
@@ -99,16 +109,20 @@ describe('ShadowsocksManagerService', () => {
   describe('setHostnameForAccessKeys', () => {
     it(`accepts valid hostnames`, (done) => {
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(getAccessKeyRepository()).build();
+      const service = new ShadowsocksManagerServiceBuilder()
+                          .serverConfig(serverConfig)
+                          .accessKeys(getAccessKeyRepository())
+                          .build();
 
       const res = {
         send: (httpCode) => {
           expect(httpCode).toEqual(204);
         }
       };
-      
+
       const goodHostnames = [
-        "-bad", "localhost","example.com","www.example.org","www.exa-mple.tw","123abc.co.uk","93.184.216.34","::0","2606:2800:220:1:248:1893:25c8:1946"
+        '-bad', 'localhost', 'example.com', 'www.example.org', 'www.exa-mple.tw', '123abc.co.uk',
+        '93.184.216.34', '::0', '2606:2800:220:1:248:1893:25c8:1946'
       ];
       for (const hostname of goodHostnames) {
         service.setHostnameForAccessKeys({params: {hostname}}, res, () => {});
@@ -119,16 +133,20 @@ describe('ShadowsocksManagerService', () => {
     });
     it(`rejects invalid hostnames`, (done) => {
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(getAccessKeyRepository()).build();
+      const service = new ShadowsocksManagerServiceBuilder()
+                          .serverConfig(serverConfig)
+                          .accessKeys(getAccessKeyRepository())
+                          .build();
 
-      const res = { send: (httpCode) => {} };
+      const res = {send: (httpCode) => {}};
       const next = (error) => {
         expect(error.statusCode).toEqual(400);
       };
 
 
       const badHostnames = [
-        null, "","-abc.com","abc-.com","abc.com/def","i_have_underscores.net","gggg:ggg:220:1:248:1893:25c8:1946"
+        null, '', '-abc.com', 'abc-.com', 'abc.com/def', 'i_have_underscores.net',
+        'gggg:ggg:220:1:248:1893:25c8:1946'
       ];
       for (const hostname of badHostnames) {
         service.setHostnameForAccessKeys({params: {hostname}}, res, next);
@@ -139,8 +157,11 @@ describe('ShadowsocksManagerService', () => {
     });
     it('Changes the server\'s hostname', (done) => {
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(getAccessKeyRepository()).build();
-      const hostname = "www.example.org";
+      const service = new ShadowsocksManagerServiceBuilder()
+                          .serverConfig(serverConfig)
+                          .accessKeys(getAccessKeyRepository())
+                          .build();
+      const hostname = 'www.example.org';
       const res = {
         send: (httpCode) => {
           expect(httpCode).toEqual(204);
@@ -152,27 +173,33 @@ describe('ShadowsocksManagerService', () => {
     });
     it('Rejects missing hostname', (done) => {
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(getAccessKeyRepository()).build();
-      const res = { send: (httpCode) => {} };
+      const service = new ShadowsocksManagerServiceBuilder()
+                          .serverConfig(serverConfig)
+                          .accessKeys(getAccessKeyRepository())
+                          .build();
+      const res = {send: (httpCode) => {}};
       const next = (error) => {
         expect(error.statusCode).toEqual(400);
         responseProcessed = true;
         done();
       };
-      const missingHostname = { params: {} } as {params: {hostname: string}};
+      const missingHostname = {params: {}} as {params: {hostname: string}};
       service.setHostnameForAccessKeys(missingHostname, res, next);
     });
     it('Rejects non-string hostname', (done) => {
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(getAccessKeyRepository()).build();
-      const res = { send: (httpCode) => {} };
+      const service = new ShadowsocksManagerServiceBuilder()
+                          .serverConfig(serverConfig)
+                          .accessKeys(getAccessKeyRepository())
+                          .build();
+      const res = {send: (httpCode) => {}};
       const next = (error) => {
         expect(error.statusCode).toEqual(400);
         responseProcessed = true;
         done();
       };
       // tslint:disable-next-line: no-any
-      const badHostname = ({ params: {hostname: 123} } as any ) as {params: {hostname: string}};
+      const badHostname = ({params: {hostname: 123}} as any) as {params: {hostname: string}};
       service.setHostnameForAccessKeys(badHostname, res, next);
     });
   });
@@ -253,7 +280,10 @@ describe('ShadowsocksManagerService', () => {
     it('changes ports for new access keys', async (done) => {
       const repo = getAccessKeyRepository();
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(repo).build();
+      const service = new ShadowsocksManagerServiceBuilder()
+                          .serverConfig(serverConfig)
+                          .accessKeys(repo)
+                          .build();
 
       const oldKey = await repo.createNewAccessKey();
       const res = {
@@ -272,7 +302,10 @@ describe('ShadowsocksManagerService', () => {
     it('changes the server config', async (done) => {
       const repo = getAccessKeyRepository();
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(repo).build();
+      const service = new ShadowsocksManagerServiceBuilder()
+                          .serverConfig(serverConfig)
+                          .accessKeys(repo)
+                          .build();
 
       const res = {
         send: (httpCode) => {
@@ -287,7 +320,10 @@ describe('ShadowsocksManagerService', () => {
     it('rejects invalid port numbers', async (done) => {
       const repo = getAccessKeyRepository();
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(repo).build();
+      const service = new ShadowsocksManagerServiceBuilder()
+                          .serverConfig(serverConfig)
+                          .accessKeys(repo)
+                          .build();
 
       const res = {
         send: (httpCode) => {
@@ -313,7 +349,10 @@ describe('ShadowsocksManagerService', () => {
     it('rejects port numbers already in use', async (done) => {
       const repo = getAccessKeyRepository();
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(repo).build();
+      const service = new ShadowsocksManagerServiceBuilder()
+                          .serverConfig(serverConfig)
+                          .accessKeys(repo)
+                          .build();
 
       const res = {
         send: (httpCode) => {
@@ -338,7 +377,10 @@ describe('ShadowsocksManagerService', () => {
     it('accepts port numbers already in use by access keys', async (done) => {
       const repo = getAccessKeyRepository();
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(repo).build();
+      const service = new ShadowsocksManagerServiceBuilder()
+                          .serverConfig(serverConfig)
+                          .accessKeys(repo)
+                          .build();
 
       await service.createNewAccessKey({params: {}}, {send: () => {}}, () => {});
       await service.setPortForNewAccessKeys({params: {port: NEW_PORT}}, {send: () => {}}, () => {});
@@ -360,7 +402,10 @@ describe('ShadowsocksManagerService', () => {
     it('rejects malformed requests', async (done) => {
       const repo = getAccessKeyRepository();
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(repo).build();
+      const service = new ShadowsocksManagerServiceBuilder()
+                          .serverConfig(serverConfig)
+                          .accessKeys(repo)
+                          .build();
 
       const noPort = {params: {}};
       const res = {
@@ -469,7 +514,10 @@ describe('ShadowsocksManagerService', () => {
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
       const repo = getAccessKeyRepository();
       spyOn(repo, 'setAccessKeyDataLimit');
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(repo).build();
+      const service = new ShadowsocksManagerServiceBuilder()
+                          .serverConfig(serverConfig)
+                          .accessKeys(repo)
+                          .build();
       const limit = {bytes: 10000};
       const res = {
         send: (httpCode, data) => {
@@ -534,7 +582,10 @@ describe('ShadowsocksManagerService', () => {
       const serverConfig = new InMemoryConfig({'accessKeyDataLimit': limit} as ServerConfigJson);
       const repo = getAccessKeyRepository();
       spyOn(repo, 'removeAccessKeyDataLimit').and.callThrough();
-      const service = new ShadowsocksManagerServiceBuilder().serverConfig(serverConfig).accessKeys(repo).build();
+      const service = new ShadowsocksManagerServiceBuilder()
+                          .serverConfig(serverConfig)
+                          .accessKeys(repo)
+                          .build();
       await repo.setAccessKeyDataLimit(limit);
       const res = {
         send: (httpCode, data) => {
@@ -564,7 +615,8 @@ describe('ShadowsocksManagerService', () => {
     it('Returns value from sharedMetrics', (done) => {
       const sharedMetrics = fakeSharedMetricsReporter();
       sharedMetrics.startSharing();
-      const service = new ShadowsocksManagerServiceBuilder().metricsPublisher(sharedMetrics).build();
+      const service =
+          new ShadowsocksManagerServiceBuilder().metricsPublisher(sharedMetrics).build();
       service.getShareMetrics(
           {params: {}}, {
             send: (httpCode, data: {metricsEnabled: boolean}) => {
@@ -580,7 +632,8 @@ describe('ShadowsocksManagerService', () => {
     it('Sets value in the config', (done) => {
       const sharedMetrics = fakeSharedMetricsReporter();
       sharedMetrics.stopSharing();
-      const service = new ShadowsocksManagerServiceBuilder().metricsPublisher(sharedMetrics).build();
+      const service =
+          new ShadowsocksManagerServiceBuilder().metricsPublisher(sharedMetrics).build();
       service.setShareMetrics(
           {params: {metricsEnabled: true}}, {
             send: (httpCode, _) => {
@@ -627,7 +680,9 @@ class ShadowsocksManagerServiceBuilder {
   }
 
   build(): ShadowsocksManagerService {
-    return new ShadowsocksManagerService(this.defaultServerName_, this.serverConfig_, this.accessKeys_, this.managerMetrics_, this.metricsPublisher_);
+    return new ShadowsocksManagerService(
+        this.defaultServerName_, this.serverConfig_, this.accessKeys_, this.managerMetrics_,
+        this.metricsPublisher_);
   }
 }
 

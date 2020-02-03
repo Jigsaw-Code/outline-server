@@ -30,6 +30,7 @@ export interface ServerConfig {
   portForNewAccessKeys: number;
   hostnameForAccessKeys: string;
   version: string;
+  accessKeyDataLimit?: server.DataLimit;
 }
 
 export class ShadowboxServer implements server.Server {
@@ -60,6 +61,30 @@ export class ShadowboxServer implements server.Server {
   removeAccessKey(accessKeyId: server.AccessKeyId): Promise<void> {
     console.info('Removing access key');
     return this.apiRequest<void>('access-keys/' + accessKeyId, {method: 'DELETE'});
+  }
+
+  setAccessKeyDataLimit(limit: server.DataLimit): Promise<void> {
+    console.info(`Setting access key data limit: ${JSON.stringify(limit)}`);
+    const requestOptions = {
+      method: 'PUT',
+      headers: new Headers({'Content-Type': 'application/json'}),
+      body: JSON.stringify({limit})
+    };
+    return this.apiRequest<void>('experimental/access-key-data-limit', requestOptions).then(() => {
+      this.serverConfig.accessKeyDataLimit = limit;
+    });
+  }
+
+  removeAccessKeyDataLimit(): Promise<void> {
+    console.info(`Removing access key data limit`);
+    return this.apiRequest<void>('experimental/access-key-data-limit', {method: 'DELETE'})
+        .then(() => {
+          delete this.serverConfig.accessKeyDataLimit;
+        });
+  }
+
+  getAccessKeyDataLimit(): server.DataLimit|undefined {
+    return this.serverConfig.accessKeyDataLimit;
   }
 
   getDataUsage(): Promise<server.DataUsageByAccessKey> {
@@ -149,7 +174,6 @@ export class ShadowboxServer implements server.Server {
     } catch (e) {
       return '';
     }
-    
   }
 
   getPortForNewAccessKeys(): number|undefined {

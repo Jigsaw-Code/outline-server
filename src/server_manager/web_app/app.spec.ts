@@ -370,7 +370,7 @@ class FakeServer implements server.Server {
     return Promise.reject(new Error('FakeServer.removeAccessKey not implemented'));
   }
   setHostnameForAccessKeys(hostname: string) {
-    return Promise.reject(new Error("FakeServer.setHostname not implemented"));
+    return Promise.reject(new Error('FakeServer.setHostname not implemented'));
   }
   getHostnameForAccessKeys() {
     return 'fake-server';
@@ -383,6 +383,15 @@ class FakeServer implements server.Server {
   }
   setPortForNewAccessKeys(): Promise<void> {
     return Promise.reject(new Error('FakeServer.setPortForNewAccessKeys not implemented'));
+  }
+  setAccessKeyDataLimit(limit: server.DataLimit): Promise<void> {
+    return Promise.reject(new Error('FakeServer.setAccessKeyDataLimit not implemented'));
+  }
+  removeAccessKeyDataLimit(): Promise<void> {
+    return Promise.resolve();
+  }
+  getAccessKeyDataLimit(): server.DataLimit|undefined {
+    return undefined;
   }
 }
 

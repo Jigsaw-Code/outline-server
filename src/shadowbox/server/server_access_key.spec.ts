@@ -385,9 +385,9 @@ describe('ServerAccessKeyRepository', () => {
     expect(serverAccessKeys[1].id).toEqual(accessKey2.id);
     done();
   });
-  
+
   it('setHostname changes hostname for new keys', async (done) => {
-    const newHostname = "host2";
+    const newHostname = 'host2';
     const repo = new RepoBuilder().build();
     repo.setHostname(newHostname);
     const key = await repo.createNewAccessKey();
