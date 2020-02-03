@@ -33,7 +33,7 @@ import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_ke
 import * as server_config from './server_config';
 import {OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollectorClient, SharedMetricsPublisher} from './shared_metrics';
 
-const ROOT_DIR = process.env.SB_ROOT_DIR || '/root/shadowbox';
+const OUTLINE_DIR = process.env.SB_ROOT_DIR || '/root/shadowbox';
 const MMDB_LOCATION = '/var/lib/libmaxminddb/ip-country.mmdb';
 async function exportPrometheusMetrics(registry: prometheus.Registry, port): Promise<http.Server> {
   return new Promise<http.Server>((resolve, _) => {
@@ -125,7 +125,7 @@ async function main() {
 
   const shadowsocksServer =
       new OutlineShadowsocksServer(
-          getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation, `${ROOT_DIR}/bin/outline-ss-server`)
+          getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation, relativePathFromOutlineRoot('bin/outline-ss-server'))
           .enableCountryMetrics(MMDB_LOCATION);
   const prometheusEndpoint = `http://${prometheusLocation}`;
   // Wait for Prometheus to be up and running.
@@ -135,7 +135,7 @@ async function main() {
         getPersistentFilename('prometheus/data'), '--web.listen-address', prometheusLocation,
         '--log.level', verbose ? 'debug' : 'info'
       ],
-      getPersistentFilename('prometheus/config.yml'), prometheusConfigJson, prometheusEndpoint, `${ROOT_DIR}/bin/prometheus`);
+      getPersistentFilename('prometheus/config.yml'), prometheusConfigJson, prometheusEndpoint, relativePathFromOutlineRoot('bin/prometheus'));
 
   const prometheusClient = new PrometheusClient(prometheusEndpoint);
   if (!serverConfig.data().portForNewAccessKeys) {
@@ -186,9 +186,12 @@ async function main() {
   await accessKeyRepository.start(new RealClock());
 }
 
+function relativePathFromOutlineRoot(file:string): string {
+  return path.join(OUTLINE_DIR, file);
+}
+
 function getPersistentFilename(file: string): string {
-  const stateDir = `${ROOT_DIR}/persisted-state`;
-  return path.join(stateDir, file);
+  return path.join(relativePathFromOutlineRoot('persisted-state'), file);
 }
 
 process.on('unhandledRejection', (error: Error) => {
