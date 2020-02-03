@@ -33,7 +33,7 @@ import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_ke
 import * as server_config from './server_config';
 import {OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollectorClient, SharedMetricsPublisher} from './shared_metrics';
 
-const OUTLINE_DIR = process.env.SB_ROOT_DIR || '/root/shadowbox';
+const OUTLINE_DIR = process.env.SB_OUTLINE_DIR || '/root/shadowbox';
 const MMDB_LOCATION = '/var/lib/libmaxminddb/ip-country.mmdb';
 async function exportPrometheusMetrics(registry: prometheus.Registry, port): Promise<http.Server> {
   return new Promise<http.Server>((resolve, _) => {

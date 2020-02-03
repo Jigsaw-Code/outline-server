@@ -28,7 +28,7 @@ source $ROOT_DIR/src/shadowbox/scripts/make_test_certificate.sh "${HOST_OUTLINE_
 # TODO: mount a folder rather than individual files.
 declare -a docker_bindings=(
   -v "$HOST_STATE_DIR":${CONTAINER_STATE_DIR}
-  -e "SB_ROOT_DIR=${CONTAINER_OUTLINE_DIR}"
+  -e "SB_OUTLINE_DIR=${CONTAINER_OUTLINE_DIR}"
   -v ${SB_CERTIFICATE_FILE}:${SB_CERTIFICATE_FILE}
   -v ${SB_PRIVATE_KEY_FILE}:${SB_PRIVATE_KEY_FILE}
   -e "LOG_LEVEL=${LOG_LEVEL:-debug}"

@@ -23,6 +23,6 @@ done
 
 gunzip "$TMPDIR/$FILENAME.gz"
 DB_DIR="/var/lib/libmaxminddb"
-mkdir -p $LIBDIR
+mkdir -p $DB_DIR
 mv -f "$TMPDIR/$FILENAME" $DB_DIR
 rmdir $TMPDIR
