@@ -334,8 +334,12 @@
     "description": "This string is the title of a section that displays opt-in experimental features."
   },
   "experiments_description": {
-    "message": "Test new features and provide us with $START_OF_LINK$feedback$END_OF_LINK$ before they are released.",
-    "description": "This string is the description of a section that displays opt-in experimental features.",
+    "message": "Test new features and provide us with feedback before they are released.",
+    "description": "This string is the description of a section that displays opt-in experimental features."
+  },
+  "experiments_disclaimer": {
+    "message": "Experiments are in development and may change or be removed from the app. If you are currently reporting metrics, use of experimental features will be included. Please see the $START_OF_LINK$data collection policy$END_OF_LINK$ for more details.",
+    "description": "This string provides a disclaimer to opting into experimental features.",
     "placeholders": {
       "END_OF_LINK": {
         "content": "{closeLink}"
@@ -345,9 +349,9 @@
       }
     }
   },
-  "experiments_disclaimer": {
-    "message": "Experiments are in development and may change or be removed from the app. If you are currently reporting metrics, use of experimental features will be included. Please see the $START_OF_LINK$data collection policy$END_OF_LINK$ for more details.",
-    "description": "This string provides a disclaimer to opting into experimental features.",
+  "experiments_feedback": {
+    "message": "Have suggestions? $START_OF_LINK$Submit feedback here.$END_OF_LINK$",
+    "description": "This string appears in a section that allows the user to enable experimental features. Allows the user to submit feedback about a particular feature.",
     "placeholders": {
       "END_OF_LINK": {
         "content": "{closeLink}"

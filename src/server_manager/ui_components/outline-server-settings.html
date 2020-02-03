@@ -142,6 +142,10 @@
       #data-limits-container .selection-container p {
         margin: 0 0 24px 0;
       }
+      #data-limits-container .selection-container span {
+        display: block;
+        margin-top: 6px;
+      }
     </style>
     <div class="container">
       <div class="content">
@@ -178,8 +182,7 @@
             <iron-icon class="setting-icon" icon="icons:build"></iron-icon>
             <div>
               <h3>[[localize('experiments')]]</h3>
-              <!-- TODO: link to feedback form -->
-              <p inner-h-t-m-l="[[localize('experiments-description', 'openLink', '<a href=#>', 'closeLink', '</a>')]]"></p>
+              <p>[[localize('experiments-description')]]</p>
               <div class="sub-section">
                 <iron-icon icon="icons:error-outline"></iron-icon>
                 <p inner-h-t-m-l="[[localize('experiments-disclaimer', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
@@ -188,7 +191,11 @@
                 <div class="selection-container">
                   <div class="content">
                     <h3>[[localize('data-limits')]]</h3>
-                    <p>[[localize('data-limits-description', 'date', dataLimitsAvailabilityDate)]]</p>
+                    <p>
+                      [[localize('data-limits-description', 'date', dataLimitsAvailabilityDate)]]<br/>
+                      <!-- TODO: link to feedback form -->
+                      <span inner-h-t-m-l="[[localize('experiments-feedback', 'openLink', '<a href=#>', 'closeLink', '</a>')]]"></span>
+                    </p>
                   </div>
                   <paper-dropdown-menu no-label-float horizontal-align="center">
                     <paper-listbox slot="dropdown-content" selected="{{_computeDataLimitsEnabledName(isAccessKeyDataLimitEnabled)}}" attr-for-selected="name" on-selected-changed="_accessKeyDataLimitEnabledChanged">
