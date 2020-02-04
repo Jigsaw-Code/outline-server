@@ -860,9 +860,11 @@ export class App {
     view.isAccessKeyDataLimitEnabled = !!view.accessKeyDataLimit;
 
     const version = this.selectedServer.getVersion();
-    view.isAccessKeyPortEditable = version && semver.gte(version, CHANGE_KEYS_PORT_VERSION);
-    view.supportsAccessKeyDataLimit = version && semver.gte(version, DATA_LIMITS_VERSION);
-    view.isHostnameEditable = version && semver.gte(version, CHANGE_HOSTNAME_VERSION);
+    if (version) {
+      view.isAccessKeyPortEditable = semver.gte(version, CHANGE_KEYS_PORT_VERSION);
+      view.supportsAccessKeyDataLimit = semver.gte(version, DATA_LIMITS_VERSION);
+      view.isHostnameEditable = semver.gte(version, CHANGE_HOSTNAME_VERSION);
+    }
 
     if (isManagedServer(selectedServer)) {
       view.isServerManaged = true;
@@ -1206,29 +1208,31 @@ export class App {
     });
   }
 
-  private setMetricsEnabled(metricsEnabled: boolean) {
-    this.selectedServer.setMetricsEnabled(metricsEnabled)
-        .then(() => {
-          // Change metricsEnabled property on polymer element to update display.
-          this.appRoot.getServerView(this.appRoot.selectedServer.id).metricsEnabled =
-              metricsEnabled;
-        })
-        .catch((error) => {
-          console.error(`Failed to set metrics enabled: ${error}`);
-          this.appRoot.showError(this.appRoot.localize('error-metrics'));
-        });
+  private async setMetricsEnabled(metricsEnabled: boolean) {
+    try {
+      await this.selectedServer.setMetricsEnabled(metricsEnabled);
+      this.appRoot.showNotification(this.appRoot.localize('saved'));
+      // Change metricsEnabled property on polymer element to update display.
+      this.appRoot.getServerView(this.appRoot.selectedServer.id).metricsEnabled = metricsEnabled;
+    } catch (error) {
+      console.error(`Failed to set metrics enabled: ${error}`);
+      this.appRoot.showError(this.appRoot.localize('error-metrics'));
+    }
   }
 
-  private renameServer(newName: string): void {
-    this.selectedServer.setName(newName)
-        .then(() => {
-          this.appRoot.getServerView(this.appRoot.selectedServer.id).serverName = newName;
-          return this.syncAndShowServer(this.selectedServer);
-        })
-        .catch((error) => {
-          console.error(`Failed to rename server: ${error}`);
-          this.appRoot.showError(this.appRoot.localize('error-server-rename'));
-        });
+  private async renameServer(newName: string) {
+    const view = this.appRoot.getServerView(this.appRoot.selectedServer.id);
+    try {
+      await this.selectedServer.setName(newName);
+      view.serverName = newName;
+      this.syncAndShowServer(this.selectedServer);
+    } catch (error) {
+      console.error(`Failed to rename server: ${error}`);
+      this.appRoot.showError(this.appRoot.localize('error-server-rename'));
+      const oldName = this.selectedServer.getName();
+      view.serverName = oldName;
+      view.$.serverSettings.serverName = oldName;
+    }
   }
 
   private cancelServerCreation(serverToCancel: server.Server): void {
