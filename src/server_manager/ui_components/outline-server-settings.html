@@ -15,6 +15,7 @@
 -->
 <link rel='import' href='../bower_components/polymer/polymer.html'>
 <link rel='import' href='../bower_components/paper-button/paper-button.html'>
+<link rel='import' href='../bower_components/paper-checkbox/paper-checkbox.html'>
 <link rel='import' href='../bower_components/paper-dropdown-menu/paper-dropdown-menu.html'>
 <link rel='import' href='../bower_components/paper-input/paper-input.html'>
 
@@ -55,8 +56,11 @@
       }
       .setting p {
         margin-bottom: 12px;
-        width: 80%;
+        width: 60%;
         color: var(--medium-gray);
+      }
+      #experiments p {
+        width: 80%;
       }
       #experiments .sub-section p {
         width: 100%;
@@ -75,7 +79,7 @@
       .selection-container {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
+        align-items: baseline;
       }
       .selection-container > .content {
         flex: 4;
@@ -146,6 +150,16 @@
         display: block;
         margin-top: 6px;
       }
+      paper-checkbox {
+        /* We want the ink to be the color we're going to, not coming from */
+        --paper-checkbox-checked-color: var(--primary-green);
+        --paper-checkbox-checked-ink-color: var(--dark-gray);
+        --paper-checkbox-unchecked-color: var(--light-gray);
+        --paper-checkbox-unchecked-ink-color: var(--primary-green);
+      }
+      .selection-container paper-checkbox {
+        margin-right: 4px;
+      }
     </style>
     <div class="container">
       <div class="content">
@@ -197,7 +211,9 @@
                       <span inner-h-t-m-l="[[localize('experiments-feedback', 'openLink', '<a href=#>', 'closeLink', '</a>')]]"></span>
                     </p>
                   </div>
-                  <paper-dropdown-menu no-label-float horizontal-align="center">
+                  <!-- NOTE: The dropdown is not automatically sized to the button's width:
+                             https://github.com/PolymerElements/paper-dropdown-menu/issues/229 -->
+                  <paper-dropdown-menu no-label-float horizontal-align="left">
                     <paper-listbox slot="dropdown-content" selected="{{_computeDataLimitsEnabledName(isAccessKeyDataLimitEnabled)}}" attr-for-selected="name" on-selected-changed="_accessKeyDataLimitEnabledChanged">
                       <paper-item name="enabled">[[localize('enabled')]]</paper-item>
                       <paper-item name="disabled">[[localize('disabled')]]</paper-item>
@@ -218,21 +234,14 @@
         </div>
         <!-- Metrics controls -->
         <div class="setting card-section">
-          <!-- <div> -->
-            <iron-icon class="setting-icon" icon="editor:insert-chart"></iron-icon>
+          <iron-icon class="setting-icon" icon="editor:insert-chart"></iron-icon>
+          <div>
             <div class="selection-container">
-              <div class="content">
+              <paper-checkbox checked="{{metricsEnabled}}"></paper-checkbox>
                 <h3>[[localize('settings-metrics-header')]]</h3>
-                <p inner-h-t-m-l="[[localize('metrics-description', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
-              </div>
-              <paper-dropdown-menu no-label-float horizontal-align="center">
-                <paper-listbox slot="dropdown-content" selected="{{_computeMetricsEnabled(metricsEnabled)}}" attr-for-selected="name" on-selected-changed="_metricsEnabledChanged">
-                  <paper-item name="enabled">[[localize('enabled')]]</paper-item>
-                  <paper-item name="disabled">[[localize('disabled')]]</paper-item>
-                </paper-listbox>
-              </paper-dropdown-menu>
             </div>
-          <!-- </div> -->
+            <p inner-h-t-m-l="[[localize('metrics-description', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
+          </div>
         </div>
       </div>
     </div>
@@ -243,7 +252,7 @@
       properties: {
         isServerManaged: Boolean,
         serverName: String,
-        metricsEnabled: {type: Boolean, notify: true},
+        metricsEnabled: {type: Boolean, observer: '_metricsEnabledChanged'},
         // Initialize to null so we can use the hidden attribute, which does not work well with undefined values.
         serverId: {type: String, value: null},
         serverHostname: {type: String, value: null},
@@ -261,6 +270,11 @@
         serverMonthlyTransferLimit: {type: String, value: null},
         localize: {type: Function, readonly: true},
         shouldShowExperiments: {type: Boolean, computed: '_computeShouldShowExperiments(supportsAccessKeyDataLimit)'},
+      },
+      update: function(name, metricsEnabled) {
+        this.initialName = name;
+        this.name = name;
+        this.metricsEnabled = metricsEnabled;
       },
       _handleNameInputKeyDown: function(event) {
         if (event.key === 'Escape') {
@@ -281,15 +295,12 @@
           this.fire('ServerRenameRequested', {newName});
         }
       },
-      _metricsEnabledChanged: function(e) {
-        const oldMetricsEnabled = this.metricsEnabled;
-        const newMetricsEnabled = e.detail.value === 'enabled';
+      _metricsEnabledChanged: function(newMetricsEnabled, oldMetricsEnabled) {
         if (oldMetricsEnabled === undefined || newMetricsEnabled === undefined) {
           return;
         }
         // Fire signal if metrics changed.
         if (newMetricsEnabled !== oldMetricsEnabled) {
-          this.metricsEnabled = newMetricsEnabled;
           const metricsSignal = newMetricsEnabled ?
             'EnableMetricsRequested' : 'DisableMetricsRequested';
           this.fire(metricsSignal);
@@ -310,6 +321,14 @@
           this.fire('RemoveAccessKeyDataLimitRequested');
         }
       },
+      _handleAccessKeyDataLimitInputKeyDown: function(event) {
+        if (event.key === 'Escape') {
+          this.$.accessKeyDataLimitInput.value = this.accessKeyDataLimit.value;
+          this.$.accessKeyDataLimitInput.blur();
+        } else if (event.key === 'Enter') {
+          this.$.accessKeyDataLimitInput.blur();
+        }
+      },
       _requestSetAccessKeyDataLimit: function() {
         if (this.$.accessKeyDataLimitInput.invalid) {
           return;
@@ -319,13 +338,7 @@
         this.fire('SetAccessKeyDataLimitRequested', {limit: {value, unit}});
       },
       _computeDataLimitsEnabledName: function(isAccessKeyDataLimitEnabled) {
-        return this._getBooleanEnabled(isAccessKeyDataLimitEnabled);
-      },
-      _computeMetricsEnabled: function(metricsEnabled) {
-        return this._getBooleanEnabled(metricsEnabled);
-      },
-      _getBooleanEnabled: function(enabled) {
-        return enabled ? 'enabled' : 'disabled';
+        return isAccessKeyDataLimitEnabled ? 'enabled' : 'disabled';
       },
       _computeShouldShowExperiments: function(supportsAccessKeyDataLimit) {
         return supportsAccessKeyDataLimit;
