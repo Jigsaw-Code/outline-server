@@ -259,8 +259,7 @@
         <!-- Install command -->
         <div class="section">
           <div class="section-header">
-            <span class="stepcircle" hidden$="[[!isGenericCloudProvider]]">1</span>
-            <span class="stepcircle" hidden$="[[isGenericCloudProvider]]">2</span>
+            <span class="stepcircle">{{installScriptStepNumber}}</span>
             <div class="instructions">[[localize('manual-server-install-run')]]</div>
           </div>
           <div class="section-content">
@@ -270,8 +269,7 @@
         <!-- Paste input -->
         <div class="section">
           <div class="section-header">
-            <span class="stepcircle" hidden$="[[!isGenericCloudProvider]]">2</span>
-            <span class="stepcircle" hidden$="[[isGenericCloudProvider]]">3</span>
+            <span class="stepcircle">{{pasteJsonStepNumber}}</span>
             <div class="instructions">[[localize('manual-server-install-paste')]]</div>
           </div>
           <div class="section-content">
@@ -290,6 +288,14 @@
     Polymer({
       is: 'outline-manual-server-entry',
       properties: {
+        installScriptStepNumber: {
+          type: Number,
+          value: 2
+        },
+        pasteJsonStepNumber: {
+          type: Number,
+          value: 3
+        },
         placeholderText: {
           type: String,
           value: '{"apiUrl":"https://xxx.xxx.xxx.xxx:xxxxx/xxxxxxxxxxxxxxxxxxxxxx","certSha256":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}'
@@ -298,7 +304,8 @@
         showConnection: Boolean,
         cloudProvider: {
           type: String,
-          value: 'generic'
+          value: 'generic',
+          observer: '_cloudProviderChanged'
         },
         cloudProviderName: {
           type: String,
@@ -345,6 +352,14 @@
         // TODOBEFOREPUSH use $$ to select all drop-downs
         this.$.gcpFirewallDropDown.hide();
         this.$.gcpCreateServerDropDown.hide();
+      },
+      _cloudProviderChanged: function(newProvider) {
+        this.cloudProviderName = this._computeCloudProviderName(newProvider);
+        this.isCloudProviderAws = this._computeIsCloudProviderAws(newProvider);
+        this.isCloudProviderGcp = this._computeIsCloudProviderGcp(newProvider);
+        this.isGenericCloudProvider = this._computeIsGenericCloudProvider(newProvider);
+        this.installScriptStepNumber = this.isGenericCloudProvider ? 1 : this.isCloudProviderGcp ? 3 : 2;
+        this.pasteJsonStepNumber = this.installScriptStepNumber + 1;
       },
       _computeCloudProviderName: function(cloudProvider) {
         switch(cloudProvider) {
