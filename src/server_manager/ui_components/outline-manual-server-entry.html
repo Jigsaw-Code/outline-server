@@ -174,14 +174,27 @@
           <div class="section-header">
             <!-- TODO(alalama): localize numbers  -->
             <span class="stepcircle">1</span>
-            <div class="instructions">[[localize('manual-server-firewall')]]</div>
-            <div class="drop-down" on-tap="_toggleGcpDropDown">
+            <div class="instructions">Create your server</div>
+            <div class="drop-down" on-tap="_toggleGcpCreateServerDropDown">
               <img src="images/gcp-logo.svg" />
               <span>[[localize('manual-server-instructions')]]</span>
-              <iron-icon id="gcpDropDownIcon" icon="arrow-drop-down"></iron-icon>
+              <iron-icon id="gcpCreateServerDropDownIcon" icon="arrow-drop-down"></iron-icon>
             </div>
           </div>
-          <iron-collapse id="gcpDropDown">
+          <iron-collapse id="gcpCreateServerDropDown"></iron-collapse>
+        </div>
+        <div class="section" hidden$="[[!isCloudProviderGcp]]">
+          <div class="section-header">
+            <!-- TODO(alalama): localize numbers  -->
+            <span class="stepcircle">2</span>
+            <div class="instructions">[[localize('manual-server-firewall')]]</div>
+            <div class="drop-down" on-tap="_toggleGcpFirewallDropDown">
+              <img src="images/gcp-logo.svg" />
+              <span>[[localize('manual-server-instructions')]]</span>
+              <iron-icon id="gcpFirewallDropDownIcon" icon="arrow-drop-down"></iron-icon>
+            </div>
+          </div>
+          <iron-collapse id="gcpFirewallDropDown">
             <div class="section-content-instructions">
               <outline-cloud-instructions-view title="[[localize('manual-server-create-firewall')]]" thumbnail-path="images/gcp-thumbnail-1.png" image-path="images/gcp-screenshot-1.png" localize="[[localize]]">
                 <ol>
@@ -329,7 +342,9 @@
         this.$.serverConfig.value = '';
         this.showConnection = false;
         this.$.awsDropDown.hide();
-        this.$.gcpDropDown.hide();
+        // TODOBEFOREPUSH use $$ to select all drop-downs
+        this.$.gcpFirewallDropDown.hide();
+        this.$.gcpCreateServerDropDown.hide();
       },
       _computeCloudProviderName: function(cloudProvider) {
         switch(cloudProvider) {
@@ -350,8 +365,11 @@
       _toggleAwsDropDown: function() {
         this._toggleDropDown(this.$.awsDropDown, this.$.awsDropDownIcon)
       },
-      _toggleGcpDropDown: function() {
-        this._toggleDropDown(this.$.gcpDropDown, this.$.gcpDropDownIcon);
+      _toggleGcpFirewallDropDown: function() {
+        this._toggleDropDown(this.$.gcpFirewallDropDown, this.$.gcpFirewallDropDownIcon);
+      },
+      _toggleGcpCreateServerDropDown: function() {
+        this._toggleDropDown(this.$.gcpCreateServerDropDown, this.$.gcpCreateServerDropDownIcon);
       },
       _toggleDropDown: function(dropDown, icon) {
         dropDown.toggle();
