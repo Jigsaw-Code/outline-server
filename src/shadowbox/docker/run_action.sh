@@ -37,6 +37,7 @@ declare -a docker_bindings=(
   -e SB_PRIVATE_KEY_FILE=${SB_PRIVATE_KEY_FILE}
 )
 
-echo "Running image ${SB_IMAGE}"
+readonly IMAGE=${SB_IMAGE:-quay.io/outline/shadowbox:stable}
+echo "Running image ${IMAGE}"
 
-docker run --rm -it --network=host --name shadowbox "${docker_bindings[@]}" ${SB_IMAGE}
+docker run --rm -it --network=host --name shadowbox "${docker_bindings[@]}" ${IMAGE}
