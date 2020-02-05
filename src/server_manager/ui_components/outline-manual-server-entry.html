@@ -174,6 +174,7 @@
           <div class="section-header">
             <!-- TODO(alalama): localize numbers  -->
             <span class="stepcircle">1</span>
+            <!-- TODOBEFOREMERGE i18n -->
             <div class="instructions">Create your server</div>
             <div class="drop-down" on-tap="_toggleGcpCreateServerDropDown">
               <img src="images/gcp-logo.svg" />
@@ -181,7 +182,28 @@
               <iron-icon id="gcpCreateServerDropDownIcon" icon="arrow-drop-down"></iron-icon>
             </div>
           </div>
-          <iron-collapse id="gcpCreateServerDropDown"></iron-collapse>
+          <iron-collapse id="gcpCreateServerDropDown">
+            <div class="section-content-instructions">
+              <!-- TODOBEFOREMERGE i18n -->
+              <!-- TODOBEFOREMERGE images -->
+              <outline-cloud-instructions-view title="Create a Google Cloud project" thumbnail-path="images/fine.png" image-path="images/greatwave.jpg" localize="[[localize]]">
+                <ol>
+                  <li inner-h-t-m-l="[[localize('gcp-create-project', 'openLink', '<a href=https://console.cloud.google.com/projectcreate>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
+                  <li>Name your project in the "Project name" field.</li>
+                  <li>[[localize('gcp-click-create')]]</li>
+                </ol>
+              </outline-cloud-instructions-view>
+            </div>
+            <div class="section-content-instructions">
+              <!-- TODOBEFOREMERGE i18n -->
+              <!-- TODOBEFOREMERGE images -->
+              <outline-cloud-instructions-view title="Create a VM Instance" thumbnail-path="images/fine.png" image-path="images/greatwave.jpg" localize="[[localize]]">
+                <ol>
+                  <li>[OHHEY2</li>
+                </ol>
+              </outline-cloud-instructions-view>
+            </div>
+          </iron-collapse>
         </div>
         <div class="section" hidden$="[[!isCloudProviderGcp]]">
           <div class="section-header">
@@ -203,7 +225,7 @@
                   <li>[[localize('gcp-firewall-create-2')]]</li>
                   <li>[[localize('gcp-firewall-create-3')]]</li>
                   <li>[[localize('gcp-firewall-create-4')]]</li>
-                  <li>[[localize('gcp-firewall-create-5')]]</li>
+                  <li>[[localize('gcp-click-create')]]</li>
                 </ol>
               </outline-cloud-instructions-view>
             </div>
