@@ -74,6 +74,7 @@
   "feedback-title-install": "Outline Server Installation Failed",
   "gcp-click-create": "Click 'Create'.",
   "gcp-create-project": "{openLink}Create a new Google Cloud Project{closeLink}.",
+  "gcp-create-vm": "{openLink}Create a new VM instance{closeLink}.",
   "gcp-firewall-assign-0": "Navigate to the {openLink}VM instances screen{closeLink}.",
   "gcp-firewall-assign-1": "Click on the instance where you want to host Outline.",
   "gcp-firewall-assign-2": "Click 'EDIT' at the top of the VM Instance details screen.",
