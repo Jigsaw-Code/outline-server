@@ -465,7 +465,7 @@
                     placeholder="{{item.placeholderName}}"
                     value="[[item.name]]"
                     on-blur="_handleNameInputBlur"
-                    on-keydown="_handleNameInputKeyDown">
+                    on-keydown="_handleNameInputKeyDown" />
                 </span>
                 <span class="measurement-container">
                   <span class="measurement">[[_formatBytesTransferred(item.transferredBytes, "...")]]</span>
@@ -634,9 +634,9 @@
         // Force rendering to happen synchronously.  Otherwise we will finish the loop before the new DOM element is added
         this.$.accessKeysContainer.querySelector('dom-repeat').render();
         const inputs = this.$.accessKeysContainer.querySelectorAll(
-          '.access-key-row .access-key-container > input');
+            '.access-key-row .access-key-container > input');
         // NodeLists don't have a find() method.
-        for (key of inputs.values()) {
+        for (const key of inputs.values()) {
           if (key.placeholder === accessKey.placeholderName) {
             key.select();
             break;
