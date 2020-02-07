@@ -169,7 +169,7 @@
   },
   "data_limits_usage": {
     "message": "$USED$ of $TOTAL$ used",
-    "description": "This string appears as a title in a dialog to advertise the data limits feature.",
+    "description": "This string appears in a tooltip when the data limits feature is enabled. It lets the user know how much data an access key has used, relative to the limit.",
     "placeholders": {
       "USED": {
         "content": "{used}",
