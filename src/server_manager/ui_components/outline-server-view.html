@@ -466,7 +466,6 @@
                     value="[[item.name]]"
                     on-blur="_handleNameInputBlur"
                     on-keydown="_handleNameInputKeyDown">
-                  </input>
                 </span>
                 <span class="measurement-container">
                   <span class="measurement">[[_formatBytesTransferred(item.transferredBytes, "...")]]</span>
@@ -632,6 +631,17 @@
         // Push to array using Polymer in order to propagate changes. See
         // https://www.polymer-project.org/1.0/docs/devguide/model-data#array-mutation
         this.push('accessKeyRows', accessKey);
+        // Force rendering to happen synchronously.  Otherwise we will finish the loop before the new DOM element is added
+        this.$.accessKeysContainer.querySelector('dom-repeat').render();
+        const inputs = this.$.accessKeysContainer.querySelectorAll(
+          '.access-key-row .access-key-container > input');
+        // NodeLists don't have a find() method.
+        for (key of inputs.values()) {
+          if (key.placeholder === accessKey.placeholderName) {
+            key.select();
+            break;
+          }
+        }
       },
       removeAccessKey: function(accessKeyId) {
         for (let ui in this.accessKeyRows) {
