@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "Unesite \"0.0.0.0/0\" u polje \"Izvorni IP rasponi\".",
   "gcp-firewall-create-4": "Odaberite \"Dopusti sve\" u \"Protokoli i priključci\".",
   "gcp-firewall-create-5": "Kliknite \"Izradi\".",
-  "key": "Ključ",
+  "key": "Ključ {keyId}",
   "manual-server-assign-firewall": "Dodijeli pravilo o vatrozidu",
   "manual-server-assign-group": "Dodijeli sigurnosnu grupu",
   "manual-server-create-firewall": "Izradite pravilo za vatrozid",

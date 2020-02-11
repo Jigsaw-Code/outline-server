@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "\"Source IP ranges\" (Kaynak IP aralıkları) alanına \"0.0.0.0/0\" yazın.",
   "gcp-firewall-create-4": "\"Protocols and ports\" (Protokoller ve bağlantı noktaları) bölümünde \"Allow all\" (Tümüne izin ver) seçeneğini belirleyin.",
   "gcp-firewall-create-5": "\"Create\" (Oluştur) seçeneğini tıklayın.",
-  "key": "Anahtar",
+  "key": "Anahtar {keyId}",
   "manual-server-assign-firewall": "Güvenlik duvarı kuralı atayın",
   "manual-server-assign-group": "Güvenlik Grubu Atayın",
   "manual-server-create-firewall": "Bir güvenlik duvarı kuralı oluşturun",

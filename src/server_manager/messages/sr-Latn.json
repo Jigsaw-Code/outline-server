@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "Unesite 0.0.0.0/0 u polje Source IP ranges (Opsezi izvornih IP adresa).",
   "gcp-firewall-create-4": "Izaberite Allow all (Dozvoli sve) u odeljku Protocols and ports (Protokoli i portovi).",
   "gcp-firewall-create-5": "Kliknite na Create (Napravi).",
-  "key": "Ključ",
+  "key": "Ključ {keyId}",
   "manual-server-assign-firewall": "Dodelite pravilo zaštitnog zida",
   "manual-server-assign-group": "Dodelite bezbednosnu grupu",
   "manual-server-create-firewall": "Napravite pravilo zaštitnog zida",

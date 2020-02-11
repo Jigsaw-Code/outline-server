@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "Írja be a „0.0.0.0/0” értéket a „Source IP ranges” (Forrás IP-tartományok) mezőbe.",
   "gcp-firewall-create-4": "Válassza az „Allow all” (Az összes engedélyezése) lehetőséget a „Protocols and ports” (Protokollok és portok) szakaszban.",
   "gcp-firewall-create-5": "Kattintson a „Create” (Létrehozás) elemre.",
-  "key": "Kulcs",
+  "key": "Kulcs {keyId}",
   "manual-server-assign-firewall": "Tűzfalszabály hozzárendelése",
   "manual-server-assign-group": "Biztonsági csoport hozzárendelése",
   "manual-server-create-firewall": "Tűzfalszabály létrehozása",

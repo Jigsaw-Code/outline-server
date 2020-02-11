@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "در فیلد «محدوده IP منبع» (Source IP ranges)،‏ «0.0.0.0/0» را تایپ کنید.",
   "gcp-firewall-create-4": "در بخش «پروتکل‌ها و درگاه‌ها» (Protocols and ports)، «همه مجاز باشند» (Allow all) را انتخاب کنید.",
   "gcp-firewall-create-5": "روی «ایجاد»‌ (Create) کلیک کنید.",
-  "key": "کلید",
+  "key": "کلید {keyId}",
   "manual-server-assign-firewall": "تعیین قانون دیوار آتش",
   "manual-server-assign-group": "تعیین گروه امنیتی",
   "manual-server-create-firewall": "ایجاد قانون دیوار آتش",
