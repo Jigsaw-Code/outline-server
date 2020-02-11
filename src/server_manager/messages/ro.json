@@ -97,7 +97,7 @@
   "gcp-firewall-create-3": "Introduceți „0.0.0.0/0” în câmpul „Intervale de adrese IP sursă” (Source IP ranges).",
   "gcp-firewall-create-4": "Selectați „Permiteți tot” (Allow all) în secțiunea „Protocoale și porturi´ (Protocols and ports).",
   "gcp-firewall-create-5": "Dați clic pe „Creați” (Create).",
-  "key": "Cheie",
+  "key": "Cheie {keyId}",
   "manual-server-assign-firewall": "Atribuiți regula de firewall",
   "manual-server-assign-group": "Atribuiți un grup de securitate",
   "manual-server-create-firewall": "Creați o regulă pentru firewall",

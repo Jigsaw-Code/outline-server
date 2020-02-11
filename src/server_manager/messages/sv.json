@@ -97,7 +97,7 @@
   "gcp-firewall-create-3": "Skriv 0.0.0.0/0 i fältet IP-intervall för källan (Source IP ranges).",
   "gcp-firewall-create-4": "Välj Tillåt alla (Allow all) under Protokoll och portar (Protocols and ports).",
   "gcp-firewall-create-5": "Klicka på Skapa (Create).",
-  "key": "Nyckel",
+  "key": "Nyckel {keyId}",
   "manual-server-assign-firewall": "TIlldela brandväggsregler",
   "manual-server-assign-group": "Tilldela säkerhetsgrupp",
   "manual-server-create-firewall": "Skapa en brandväggsregel",

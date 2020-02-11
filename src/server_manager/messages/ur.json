@@ -97,7 +97,7 @@
   "gcp-firewall-create-3": "'سورس IP رینجز Source IP ranges' فیلڈ میں '0.0.0.0/0' ٹائپ کریں۔",
   "gcp-firewall-create-4": "'پروٹوکولز اور پورٹس Protocols and ports' کے اندر 'سبھی اجازت Allow all' منتخب کریں۔",
   "gcp-firewall-create-5": "'تخلیق کریں (Create)' پر کلک کریں۔",
-  "key": "کلید",
+  "key": "کلید {keyId}",
   "manual-server-assign-firewall": "فائروال اصول تفویض کریں",
   "manual-server-assign-group": "سیکیورٹی گروپ تفویض کریں",
   "manual-server-create-firewall": "فائروال اصول تخلیق کریں",

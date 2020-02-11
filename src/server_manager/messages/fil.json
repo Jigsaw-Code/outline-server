@@ -97,7 +97,7 @@
   "gcp-firewall-create-3": "I-type ang '0.0.0.0/0' sa field na 'Mga hanay ng Source IP (Source IP ranges).'",
   "gcp-firewall-create-4": "Piliin ang 'Payagan lahat (Allow all)' sa ilalim ng 'Mga protocol at port (Protocols and ports).'",
   "gcp-firewall-create-5": "I-click ang 'Gumawa (Create).'",
-  "key": "Key",
+  "key": "Key {keyId}",
   "manual-server-assign-firewall": "Magtalaga ng panuntunan sa firewall",
   "manual-server-assign-group": "Magtalaga ng Grupong Panseguridad",
   "manual-server-create-firewall": "Gumawa ng panuntunan sa firewall",

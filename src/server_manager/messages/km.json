@@ -78,7 +78,7 @@
   "gcp-firewall-create-3": "សរសេរ '0.0.0.0/0' ក្នុង 'ជូួរប្រភព IP'",
   "gcp-firewall-create-4": "ជ្រើស 'អនុញ្ញាតទាំងអស់' ក្រោម 'ពិធីការ និងច្រក'។",
   "gcp-firewall-create-5": "ចុច 'បង្កើត'",
-  "key": "កូនសោ",
+  "key": "កូនសោ {keyId}",
   "manual-server-assign-firewall": "កំណត់បទបញ្ជាជញ្ជាំងភ្លើង",
   "manual-server-assign-group": "កំណត់ក្រុមសន្តិសុខ",
   "manual-server-create-firewall": "បង្កើតបទបញ្ជាមួយរបស់ជញ្ជាំងភ្លើង",

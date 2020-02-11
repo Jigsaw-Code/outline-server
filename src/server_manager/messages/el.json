@@ -97,7 +97,7 @@
   "gcp-firewall-create-3": "Πληκτρολογήστε 0.0.0.0/0 στο πεδίο Εύρη IP πηγής (Source IP ranges).",
   "gcp-firewall-create-4": "Επιλέξτε Αποδοχή όλων (Allow all) στην ενότητα Πρωτόκολλα και θύρες (Protocols and ports).",
   "gcp-firewall-create-5": "Κάντε κλικ στη Δημιουργία (Create).",
-  "key": "Κλειδί",
+  "key": "Κλειδί {keyId}",
   "manual-server-assign-firewall": "Εκχώρηση κανόνα τείχους προστασίας",
   "manual-server-assign-group": "Εκχώρηση ομάδας ασφάλειας",
   "manual-server-create-firewall": "Δημιουργήστε έναν κανόνα τείχους προστασίας",

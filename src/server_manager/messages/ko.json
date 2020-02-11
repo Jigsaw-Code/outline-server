@@ -97,7 +97,7 @@
   "gcp-firewall-create-3": "'소스 IP 범위(Source IP ranges)' 입력란에 '0.0.0.0/0'을 입력하세요.",
   "gcp-firewall-create-4": "'프로토콜 및 포트(Protocols and ports)'에서 '모두 허용(Allow all)'을 선택하세요.",
   "gcp-firewall-create-5": "'만들기(Create)'를 클릭하세요.",
-  "key": "키",
+  "key": "키 {keyId}",
   "manual-server-assign-firewall": "방화벽 규칙 할당",
   "manual-server-assign-group": "보안 그룹 할당",
   "manual-server-create-firewall": "방화벽 규칙 만들기",
