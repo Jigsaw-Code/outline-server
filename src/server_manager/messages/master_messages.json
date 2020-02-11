@@ -506,7 +506,8 @@
     "description": "This string appears in the server view as a placeholder for a newly created access key with id number KEY_ID.",
     "placeholders": {
       "KEY_ID": {
-        "content": "{keyId}"
+        "content": "{keyId}",
+        "example": "1"
       }
     }
   },
