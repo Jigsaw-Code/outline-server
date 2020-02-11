@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "Wpisz „0.0.0.0/0” w polu „Source IP ranges” (Zakresy źródłowych adresów IP).",
   "gcp-firewall-create-4": "Wybierz „Allow all” (Zezwól na wszystkie) w polu „Protocols and ports” (Protokoły i porty).",
   "gcp-firewall-create-5": "Kliknij „Create” (Utwórz).",
-  "key": "Klucz",
+  "key": "Klucz {keyId}",
   "manual-server-assign-firewall": "Przypisz regułę zapory sieciowej",
   "manual-server-assign-group": "Przypisz grupę zabezpieczeń",
   "manual-server-create-firewall": "Utwórz regułę zapory sieciowej",

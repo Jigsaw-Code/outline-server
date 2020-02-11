@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "พิมพ์ \"0.0.0.0/0\" ในช่อง \"ช่วง IP ต้นทาง\"",
   "gcp-firewall-create-4": "เลือก \"อนุญาตทั้งหมด\" ในส่วนของ \"โปรโตคอลและพอร์ต\"",
   "gcp-firewall-create-5": "คลิก \"สร้าง\"",
-  "key": "คีย์",
+  "key": "คีย์ {keyId}",
   "manual-server-assign-firewall": "กำหนดกฎไฟร์วอลล์",
   "manual-server-assign-group": "กำหนดกลุ่มรักษาความปลอดภัย",
   "manual-server-create-firewall": "สร้างกฎไฟร์วอลล์",

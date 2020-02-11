@@ -998,7 +998,7 @@ export class App {
   private convertToUiAccessKey(remoteAccessKey: server.AccessKey): UiAccessKey {
     return {
       id: remoteAccessKey.id,
-      placeholderName: `${this.appRoot.localize('key')} ${remoteAccessKey.id}`,
+      placeholderName: `${this.appRoot.localize('key', 'keyId', remoteAccessKey.id)}`,
       name: remoteAccessKey.name,
       accessUrl: remoteAccessKey.accessUrl,
       transferredBytes: 0,

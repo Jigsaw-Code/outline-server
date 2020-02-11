@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "Nhập \"0.0.0.0/0\" vào trường \"Phạm vi IP nguồn\" (Source IP ranges).",
   "gcp-firewall-create-4": "Chọn phần \"Cho phép tất cả\" (Allow all) trong phần \"Giao thức và cổng\" (Protocols and ports).",
   "gcp-firewall-create-5": "Nhấp vào phần \"Tạo\" (Create).",
-  "key": "Khóa",
+  "key": "Khóa {keyId}",
   "manual-server-assign-firewall": "Gán quy tắc tường lửa",
   "manual-server-assign-group": "Gán nhóm bảo mật",
   "manual-server-create-firewall": "Tạo quy tắc cho tường lửa",

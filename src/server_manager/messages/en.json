@@ -97,7 +97,7 @@
   "gcp-firewall-create-3": "Type '0.0.0.0/0' in the 'Source IP ranges' field.",
   "gcp-firewall-create-4": "Select 'Allow all' under 'Protocols and ports'.",
   "gcp-firewall-create-5": "Click 'Create'.",
-  "key": "Key",
+  "key": "Key {keyId}",
   "manual-server-assign-firewall": "Assign firewall rule",
   "manual-server-assign-group": "Assign Security Group",
   "manual-server-create-firewall": "Create a firewall rule",
