@@ -147,6 +147,10 @@ function cleanup() {
 
   # Verify we can't access the URL anymore after the key is deleted
   client_curl --insecure -X DELETE ${SB_API_URL}/access-keys/0 > /dev/null
+  # We need to wait for the local proxy to reload the config file.  Sometimes the next line will
+  # execute before this is complete, resulting in a faulty successful connection to the local proxy.
+  # As this issue is very unlikely to happen in practice, we just sleep here to give time to the server.
+  sleep 1
   # Exit code 56 is "Connection reset by peer".
   client_curl -i -v -x socks5h://localhost:$LOCAL_SOCKS_PORT --connect-timeout 1 $INTERNET_TARGET_URL \
     && fail "Deleted access key is still active" || (($? == 56))
