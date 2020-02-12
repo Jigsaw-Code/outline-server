@@ -1,4 +1,4 @@
-// Copyright 2018 The Outline Authors
+// Copyright 2020 The Outline Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {BigQuery} from '@google-cloud/bigquery';
+import {Table} from '@google-cloud/bigquery';
+import {InsertableTable} from './model';
 
 // TODO(dborkan): HourlyServerMetricsReport and HourlyUserMetricsReport are
 // copied from src/shadowbox/server/metrics.ts - find a way to share these
@@ -29,7 +30,7 @@ interface HourlyUserMetricsReport {
   bytesTransferred: number;
 }
 
-interface ConnectionRow {
+export interface ConnectionRow {
   serverId: string;
   startTimestamp: string;  // ISO formatted string.
   endTimestamp: string;    // ISO formatted string.
@@ -38,24 +39,17 @@ interface ConnectionRow {
   countries: string[];
 }
 
-// Instantiates a client
-const bigqueryProject = new BigQuery({
-  projectId: 'uproxysite'
-});
+export class BigQueryConnectionsTable implements InsertableTable<ConnectionRow> {
+  constructor(private bigqueryTable: Table) {}
 
-export function postServerReport(datasetName: string, tableName: string, serverReport: HourlyServerMetricsReport) {
-  const dataset = bigqueryProject.dataset(datasetName);
-  const table = dataset.table(tableName);
-  const rows = getConnectionRowsFromServerReport(serverReport);
-  return new Promise((fulfill, reject) => {
-    table.insert(rows, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        fulfill();
-      }
-    });
-  });
+  async insert(rows: ConnectionRow|ConnectionRow[]): Promise<void> {
+    await this.bigqueryTable.insert(rows);
+  }
+}
+
+export function postServerReport(
+    table: InsertableTable<ConnectionRow>, serverReport: HourlyServerMetricsReport) {
+  return table.insert(getConnectionRowsFromServerReport(serverReport));
 }
 
 function getConnectionRowsFromServerReport(serverReport: HourlyServerMetricsReport): ConnectionRow[] {

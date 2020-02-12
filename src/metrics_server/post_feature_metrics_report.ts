@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {BigQuery} from '@google-cloud/bigquery';
+import {Table} from '@google-cloud/bigquery';
+import {InsertableTable} from './model';
 
 export interface DailyFeatureMetricsReport {
   serverId: string;
@@ -26,21 +27,24 @@ export interface DailyDataLimitMetricsReport {
 }
 
 // Reflects the feature metrics BigQuery table schema.
-interface FeatureRow {
+export interface FeatureRow {
   serverId: string;
   serverVersion: string;
   timestamp: string;  // ISO formatted string
   dataLimit: DailyDataLimitMetricsReport;
 }
 
-// Instantiates a client
-const bigqueryProject = new BigQuery({projectId: 'uproxysite'});
+export class BigQueryFeaturesTable implements InsertableTable<FeatureRow> {
+  constructor(private bigqueryTable: Table) {}
+
+  async insert(rows: FeatureRow|FeatureRow[]): Promise<void> {
+    await this.bigqueryTable.insert(rows);
+  }
+}
 
 export async function postFeatureMetricsReport(
-    datasetName: string, tableName: string, report: DailyFeatureMetricsReport) {
-  const dataset = bigqueryProject.dataset(datasetName);
-  const table = dataset.table(tableName);
-  const featureRow = {
+    table: InsertableTable<FeatureRow>, report: DailyFeatureMetricsReport) {
+  const featureRow: FeatureRow = {
     serverId: report.serverId,
     serverVersion: report.serverVersion,
     timestamp: new Date(report.timestampUtcMs).toISOString(),

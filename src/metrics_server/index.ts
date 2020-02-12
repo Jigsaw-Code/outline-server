@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {BigQuery} from '@google-cloud/bigquery';
 import * as express from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {DailyDataLimitMetricsReport, isValidFeatureMetricsReport, postFeatureMetricsReport} from './post_feature_metrics_report';
-import {HourlyServerMetricsReport, isValidServerReport, postServerReport} from './post_server_report';
+import * as features from './post_feature_metrics_report';
+import * as connections from './post_server_report';
 
 interface Config {
   datasetName: string;
@@ -32,6 +33,13 @@ function loadConfig(): Config {
 
 const PORT = Number(process.env.PORT) || 8080;
 const config = loadConfig();
+
+const bigqueryDataset = new BigQuery({projectId: 'uproxysite'}).dataset(config.datasetName);
+const connectionsTable = new connections.BigQueryConnectionsTable(
+    bigqueryDataset.table(config.connectionMetricsTableName));
+const featuresTable =
+    new features.BigQueryFeaturesTable(bigqueryDataset.table(config.featureMetricsTableName));
+
 const app = express();
 // Parse the request body for content-type 'application/json'.
 app.use(express.json());
@@ -40,11 +48,11 @@ app.use(express.json());
 // Request body should contain an HourlyServerMetricsReport.
 app.post('/connections', async (req: express.Request, res: express.Response) => {
   try {
-    if (!isValidServerReport(req.body)) {
+    if (!connections.isValidServerReport(req.body)) {
       res.status(400).send('Invalid request');
       return;
     }
-    await postServerReport(config.datasetName, config.connectionMetricsTableName, req.body);
+    await connections.postServerReport(connectionsTable, req.body);
     res.status(200).send('OK');
   } catch (err) {
     res.status(500).send(`Error: ${err}`);
@@ -52,14 +60,14 @@ app.post('/connections', async (req: express.Request, res: express.Response) => 
 });
 
 // Accepts daily feature metrics and inserts them into BigQuery.
-// Request body should contain a `DailyDataLimitMetricsReport`.
+// Request body should contain a `DailyFeatureMetricsReport`.
 app.post('/features', async (req: express.Request, res: express.Response) => {
   try {
-    if (!isValidFeatureMetricsReport(req.body)) {
+    if (!features.isValidFeatureMetricsReport(req.body)) {
       res.status(400).send('Invalid request');
       return;
     }
-    await postFeatureMetricsReport(config.datasetName, config.featureMetricsTableName, req.body);
+    await features.postFeatureMetricsReport(featuresTable, req.body);
     res.status(200).send('OK');
   } catch (err) {
     res.status(500).send(`Error: ${err}`);
