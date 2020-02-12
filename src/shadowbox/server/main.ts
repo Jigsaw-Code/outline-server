@@ -67,7 +67,7 @@ async function main() {
 
   // Default to production metrics, as some old Docker images may not have
   // SB_METRICS_URL properly set.
-  const metricsCollectorUrl = process.env.SB_METRICS_URL || 'https://metrics-prod.uproxy.org';
+  const metricsCollectorUrl = process.env.SB_METRICS_URL || 'https://prod.metrics.getoutline.org';
   if (!process.env.SB_METRICS_URL) {
     logging.warn('process.env.SB_METRICS_URL not set, using default');
   }
