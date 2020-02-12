@@ -168,8 +168,12 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       if (!this.isSharingEnabled()) {
         return;
       }
-      this.reportServerUsageMetrics(await usageMetrics.getUsage());
-      usageMetrics.reset();
+      try {
+        await this.reportServerUsageMetrics(await usageMetrics.getUsage());
+        usageMetrics.reset();
+      } catch (err) {
+        console.error(`Failed to report server usage metrics: ${err}`);
+      }
     }, MS_PER_HOUR);
     // TODO(fortuna): also trigger report on shutdown, so data loss is minimized.
 
@@ -177,7 +181,11 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       if (!this.isSharingEnabled()) {
         return;
       }
-      this.reportFeatureMetrics();
+      try {
+        this.reportFeatureMetrics();
+      } catch (err) {
+        console.error(`Failed to report feature metrics: ${err}`);
+      }
     }, MS_PER_DAY);
   }
 
