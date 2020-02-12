@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 #
-# Copyright 2018 The Outline Authors
+# Copyright 2020 The Outline Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,8 +19,7 @@ BUILD_DIR="build/metrics_server"
 
 yarn do metrics_server/build
 
-cp $SRC_DIR/app_prod.yaml $BUILD_DIR/app.yaml
-cp $SRC_DIR/config_prod.json $BUILD_DIR/config.json
+cp $SRC_DIR/config_dev.json $BUILD_DIR/config.json
 cp $SRC_DIR/package.json $BUILD_DIR/
 
-gcloud app deploy $SRC_DIR/dispatch.yaml $BUILD_DIR --project uproxysite --verbosity info --no-promote --no-stop-previous-version
+yarn node $BUILD_DIR/index.js

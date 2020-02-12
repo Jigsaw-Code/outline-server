@@ -1,0 +1,5 @@
+dispatch:
+  - url: "prod.metrics.getoutline.org/*"
+    service: prod
+  - url: "dev.metrics.getoutline.org/*"
+    service: dev

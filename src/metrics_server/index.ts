@@ -1,4 +1,4 @@
-// Copyright 2018 The Outline Authors
+// Copyright 2020 The Outline Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,36 +15,14 @@
 import * as express from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
+
+import {DailyDataLimitMetricsReport, isValidFeatureMetricsReport, postFeatureMetricsReport} from './post_feature_metrics_report';
 import {HourlyServerMetricsReport, isValidServerReport, postServerReport} from './post_server_report';
-
-// Accepts hourly connection metrics and inserts them into BigQuery.
-// Request body should contain an HourlyServerMetricsReport.
-exports.reportHourlyConnectionMetrics = (req: express.Request, res: express.Response) => {
-  if (req.method !== 'POST') {
-    res.status(405).send('Method not allowed');
-    return;
-  }
-  if (!isValidServerReport(req.body)) {
-    res.status(400).send('Invalid request');
-    return;
-  }
-
-  const serverReport: HourlyServerMetricsReport = {
-    serverId: req.body.serverId,
-    startUtcMs: req.body.startUtcMs,
-    endUtcMs: req.body.endUtcMs,
-    userReports: req.body.userReports
-  };
-  postServerReport(config.datasetName, config.tableName, serverReport).then(() => {
-    res.status(200).send('OK');
-  }).catch((err: Error) => {
-    res.status(500).send('Error: ' + err);
-  });
-};
 
 interface Config {
   datasetName: string;
-  tableName: string;
+  connectionMetricsTableName: string;
+  featureMetricsTableName: string;
 }
 
 function loadConfig(): Config {
@@ -52,4 +30,42 @@ function loadConfig(): Config {
   return JSON.parse(configText);
 }
 
+const PORT = Number(process.env.PORT) || 8080;
 const config = loadConfig();
+const app = express();
+// Parse the request body for content-type 'application/json'.
+app.use(express.json());
+
+// Accepts hourly connection metrics and inserts them into BigQuery.
+// Request body should contain an HourlyServerMetricsReport.
+app.post('/connections', async (req: express.Request, res: express.Response) => {
+  try {
+    if (!isValidServerReport(req.body)) {
+      res.status(400).send('Invalid request');
+      return;
+    }
+    await postServerReport(config.datasetName, config.connectionMetricsTableName, req.body);
+    res.status(200).send('OK');
+  } catch (err) {
+    res.status(500).send(`Error: ${err}`);
+  }
+});
+
+// Accepts daily feature metrics and inserts them into BigQuery.
+// Request body should contain a `DailyDataLimitMetricsReport`.
+app.post('/features', async (req: express.Request, res: express.Response) => {
+  try {
+    if (!isValidFeatureMetricsReport(req.body)) {
+      res.status(400).send('Invalid request');
+      return;
+    }
+    await postFeatureMetricsReport(config.datasetName, config.featureMetricsTableName, req.body);
+    res.status(200).send('OK');
+  } catch (err) {
+    res.status(500).send(`Error: ${err}`);
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Metrics server listening on port ${PORT}`);
+});
