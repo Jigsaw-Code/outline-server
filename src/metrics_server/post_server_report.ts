@@ -77,7 +77,11 @@ function getConnectionRowsFromServerReport(serverReport: HourlyServerMetricsRepo
 
 // Returns true iff testObject contains a valid HourlyServerMetricsReport.
 // tslint:disable-next-line:no-any
-export function isValidServerReport(testObject: any): boolean {
+export function isValidServerReport(testObject: any): testObject is HourlyServerMetricsReport {
+  if (!testObject) {
+    return false;
+  }
+
   // Check that all required fields are present.
   const requiredServerReportFields = ['serverId', 'startUtcMs', 'endUtcMs', 'userReports'];
   for (const fieldName of requiredServerReportFields) {
