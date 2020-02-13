@@ -109,7 +109,7 @@ function cleanup() {
     fail "Client should not have access to target IP" || (($? == 28))
 
   # Exit code 6 for "Could not resolve host".
-  docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 1 http://target > /dev/null && \
+  docker exec $CLIENT_CONTAINER curl -iv --connect-timeout 1 http://target  && \
     fail "Client should not have access to target host" || (($? == 6))
 
   # Wait for shadowbox to come up.
