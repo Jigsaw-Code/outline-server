@@ -42,7 +42,7 @@ export class BigQueryFeaturesTable implements InsertableTable<FeatureRow> {
   }
 }
 
-export async function postFeatureMetricsReport(
+export async function postFeatureMetrics(
     table: InsertableTable<FeatureRow>, report: DailyFeatureMetricsReport) {
   const featureRow: FeatureRow = {
     serverId: report.serverId,

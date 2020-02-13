@@ -15,16 +15,16 @@
 import {Table} from '@google-cloud/bigquery';
 import {InsertableTable} from './model';
 
-// TODO(dborkan): HourlyServerMetricsReport and HourlyUserMetricsReport are
+// TODO(dborkan): HourlyConnectionMetricsReport and HourlyUserConnectionMetricsReport are
 // copied from src/shadowbox/server/metrics.ts - find a way to share these
 // definitions between shadowbox and the metrics_server.
-export interface HourlyServerMetricsReport {
+export interface HourlyConnectionMetricsReport {
   serverId: string;
   startUtcMs: number;
   endUtcMs: number;
-  userReports: HourlyUserMetricsReport[];
+  userReports: HourlyUserConnectionMetricsReport[];
 }
-interface HourlyUserMetricsReport {
+interface HourlyUserConnectionMetricsReport {
   userId: string;
   countries: string[];
   bytesTransferred: number;
@@ -47,18 +47,18 @@ export class BigQueryConnectionsTable implements InsertableTable<ConnectionRow> 
   }
 }
 
-export function postServerReport(
-    table: InsertableTable<ConnectionRow>, serverReport: HourlyServerMetricsReport) {
-  return table.insert(getConnectionRowsFromServerReport(serverReport));
+export function postConnectionMetrics(
+    table: InsertableTable<ConnectionRow>, report: HourlyConnectionMetricsReport) {
+  return table.insert(getConnectionRowsFromReport(report));
 }
 
-function getConnectionRowsFromServerReport(serverReport: HourlyServerMetricsReport): ConnectionRow[] {
-  const startTimestampStr = new Date(serverReport.startUtcMs).toISOString();
-  const endTimestampStr = new Date(serverReport.endUtcMs).toISOString();
+function getConnectionRowsFromReport(report: HourlyConnectionMetricsReport): ConnectionRow[] {
+  const startTimestampStr = new Date(report.startUtcMs).toISOString();
+  const endTimestampStr = new Date(report.endUtcMs).toISOString();
   const rows = [];
-  for (const userReport of serverReport.userReports) {
+  for (const userReport of report.userReports) {
     rows.push({
-      serverId: serverReport.serverId,
+      serverId: report.serverId,
       startTimestamp: startTimestampStr,
       endTimestamp: endTimestampStr,
       userId: userReport.userId,
@@ -69,16 +69,17 @@ function getConnectionRowsFromServerReport(serverReport: HourlyServerMetricsRepo
   return rows;
 }
 
-// Returns true iff testObject contains a valid HourlyServerMetricsReport.
+// Returns true iff testObject contains a valid HourlyConnectionMetricsReport.
 // tslint:disable-next-line:no-any
-export function isValidServerReport(testObject: any): testObject is HourlyServerMetricsReport {
+export function isValidConnectionMetricsReport(testObject: any):
+    testObject is HourlyConnectionMetricsReport {
   if (!testObject) {
     return false;
   }
 
   // Check that all required fields are present.
-  const requiredServerReportFields = ['serverId', 'startUtcMs', 'endUtcMs', 'userReports'];
-  for (const fieldName of requiredServerReportFields) {
+  const requiredConnectionMetricsFields = ['serverId', 'startUtcMs', 'endUtcMs', 'userReports'];
+  for (const fieldName of requiredConnectionMetricsFields) {
     if (!testObject[fieldName]) {
       return false;
     }
@@ -111,6 +112,6 @@ export function isValidServerReport(testObject: any): testObject is HourlyServer
     }
   }
 
-  // Request is a valid HourlyServerMetricsReport.
+  // Request is a valid HourlyConnectionMetricsReport.
   return true;
 }

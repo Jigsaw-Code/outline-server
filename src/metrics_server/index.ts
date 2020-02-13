@@ -17,8 +17,8 @@ import * as express from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import * as features from './post_feature_metrics_report';
-import * as connections from './post_server_report';
+import * as connections from './connection_metrics';
+import * as features from './feature_metrics';
 
 interface Config {
   datasetName: string;
@@ -48,11 +48,11 @@ app.use(express.json());
 // Request body should contain an HourlyServerMetricsReport.
 app.post('/connections', async (req: express.Request, res: express.Response) => {
   try {
-    if (!connections.isValidServerReport(req.body)) {
+    if (!connections.isValidConnectionMetricsReport(req.body)) {
       res.status(400).send('Invalid request');
       return;
     }
-    await connections.postServerReport(connectionsTable, req.body);
+    await connections.postConnectionMetrics(connectionsTable, req.body);
     res.status(200).send('OK');
   } catch (err) {
     res.status(500).send(`Error: ${err}`);
@@ -67,7 +67,7 @@ app.post('/features', async (req: express.Request, res: express.Response) => {
       res.status(400).send('Invalid request');
       return;
     }
-    await features.postFeatureMetricsReport(featuresTable, req.body);
+    await features.postFeatureMetrics(featuresTable, req.body);
     res.status(200).send('OK');
   } catch (err) {
     res.status(500).send(`Error: ${err}`);
