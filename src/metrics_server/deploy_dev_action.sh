@@ -17,6 +17,8 @@
 SRC_DIR="src/metrics_server"
 BUILD_DIR="build/metrics_server"
 
+rm -rf $BUILD_DIR
+
 yarn do metrics_server/build
 
 cp $SRC_DIR/app_dev.yaml $BUILD_DIR/app.yaml
