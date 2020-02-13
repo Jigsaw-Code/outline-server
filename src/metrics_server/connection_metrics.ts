@@ -85,8 +85,14 @@ export function isValidConnectionMetricsReport(testObject: any):
     }
   }
 
-  // Check that startUtcMs is not after endUtcMs.
-  if (testObject.startUtcMs >= testObject.endUtcMs) {
+  // Check that `serverId` is a string.
+  if (typeof testObject.serverId !== 'string') {
+    return false;
+  }
+
+  // Check timestamp types and that startUtcMs is not after endUtcMs.
+  if (typeof testObject.startUtcMs !== 'number' || typeof testObject.endUtcMs !== 'number' ||
+      testObject.startUtcMs >= testObject.endUtcMs) {
     return false;
   }
 
@@ -99,16 +105,29 @@ export function isValidConnectionMetricsReport(testObject: any):
   const MIN_BYTES_TRANSFERRED = 0;
   const MAX_BYTES_TRANSFERRED = 1 * Math.pow(2, 40);  // 1 TB.
   for (const userReport of testObject.userReports) {
-    // Test that each userReport contains valid fields.
+    // Test that each `userReport` contains the required fields.
     for (const fieldName of requiredUserReportFields) {
       if (!userReport[fieldName]) {
         return false;
       }
     }
-    // Check that bytesTransferred is between min and max transfer limits
-    if (userReport.bytesTransferred < MIN_BYTES_TRANSFERRED ||
+    // Check that `userId` is a string.
+    if (typeof userReport.userId !== 'string') {
+      return false;
+    }
+
+    // Check that `bytesTransferred` is a number between min and max transfer limits
+    if (typeof userReport.bytesTransferred !== 'number' ||
+        userReport.bytesTransferred < MIN_BYTES_TRANSFERRED ||
         userReport.bytesTransferred > MAX_BYTES_TRANSFERRED) {
       return false;
+    }
+
+    // Check that `countries` are strings.
+    for (const country of userReport.countries) {
+      if (typeof country !== 'string') {
+        return false;
+      }
     }
   }
 
