@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Metrics server integration test. Calls the metrics development environment and queries BigQuery
+# Metrics server integration test. Posts metrics to the development environment and queries BigQuery
 # to ensure the rows have been inserted to the features and connections tables.
 BIGQUERY_PROJECT=uproxysite
 BIGQUERY_DATASET=uproxy_metrics_dev
@@ -32,6 +32,7 @@ CONNECTIONS_EXPECTED_RESPONSE="$TMPDIR/connections_expected_res.json"
 FEATURES_REQUEST="$TMPDIR/features_req.json"
 FEATURES_RESPONSE="$TMPDIR/features_res.json"
 FEATURES_EXPECTED_RESPONSE="$TMPDIR/features_expected_res.json"
+
 TIMESTAMP=$(date +%s%3N)
 SERVER_ID=$(uuidgen)
 SERVER_VERSION=$(uuidgen)
@@ -39,7 +40,9 @@ USER_ID1=$(uuidgen)
 USER_ID2=$(uuidgen)
 # BYTES_TRANSFERRED2 < BYTES_TRANSFERRED1 so we can order the records before comparing them.
 BYTES_TRANSFERRED1=$((2 + RANDOM % 100))
-BYTES_TRANSFERRED2=$(($BYTES_TRANSFERRED1-1))
+BYTES_TRANSFERRED2=$(($BYTES_TRANSFERRED1 - 1))
+
+echo "Using tmp directory $TMPDIR"
 
 # Write the request data to temporary files.
 cat << EOF > $CONNECTIONS_REQUEST
