@@ -495,7 +495,18 @@
                 </span>
               </div>
             </template>
-            </div>
+          </div>
+              <div class="access-key-row" hidden$="{{!_newAccessKey}}">
+                <span class="access-key-container" id="newAccessKey">
+                  <img class="access-key-icon" src="images/key-avatar.svg">
+                  <input type="text" class="access-key-name"
+                    id="newKeyInput"
+                    placeholder=""
+                    value=""
+                    on-blur="_handleNewKeyBlur"
+                    on-keydown="_handleNameInputKeyDown"/>
+                </span>
+              </div>
             <!-- add key button -->
             <div class="access-key-row" id="addAccessKeyRow">
               <span class="access-key-container">
@@ -608,6 +619,10 @@
           type: Number,
           value: 1
         },
+        _newAccessKey: {
+          type: Object,
+          value: null
+        },
         localize: {
           type: Function,
           readonly: true
@@ -627,14 +642,17 @@
       //   relativeTraffic: number;
       // }
       addAccessKey: function(accessKey) {
-        // TODO(fortuna): Restore loading animation.
-        // TODO(fortuna): Restore highlighting.
-        // Push to array using Polymer in order to propagate changes. See
-        // https://www.polymer-project.org/1.0/docs/devguide/model-data#array-mutation
-        this.push('accessKeyRows', accessKey);
-        // Force rendering to happen synchronously.  Otherwise we will finish the loop before the new DOM element is added
-        this.$.accessKeysContainer.querySelector('dom-repeat').render();
-        this.$.accessKeysContainer.querySelector(`#accesskey${accessKey.id}`).select();
+        this._newAccessKey = accessKey;
+        const input = this.$.newKeyInput;
+        input.placeholder = accessKey.placeholderName;
+        input.value = accessKey.name;
+        input.select();
+      },
+      _handleNewKeyBlur: function(e) {
+        const input = e.target;
+        this._newAccessKey.name = input.value;
+        this.push('accessKeyRows', this._newAccessKey);
+        this._newAccessKey = null;
       },
       removeAccessKey: function(accessKeyId) {
         for (let ui in this.accessKeyRows) {
@@ -839,13 +857,11 @@
           return function(a, b) {
             const aName = (a.name || a.placeholderName).toLowerCase();
             const bName = (b.name || b.placeholderName).toLowerCase();
-            console.log(`${aName} =?= ${bName}`)
             if (aName === bName) {
               console.log("equal");
               return 0;
             }
             const out = (aName < bName ? -1 : 1) * this.accessKeySortDirection;
-            console.log(`${out}`);
             return out;
           }.bind(this);
         }
