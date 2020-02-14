@@ -630,7 +630,7 @@
         },
         accessKeySortBy: {
           type: String,
-          value: 'creationOrder'
+          value: 'name'
         },
         accessKeySortDirection: {
           // 1 == ascending, -1 == descending
@@ -882,22 +882,17 @@
             return (a.transferredBytes - b.transferredBytes) * this.accessKeySortDirection;
           }.bind(this);
         }
-        if(accessKeySortBy === 'name') {
-          return function(a, b) {
-            const aName = (a.name || a.placeholderName).toLowerCase();
-            const bName = (b.name || b.placeholderName).toLowerCase();
-            if (aName === bName) {
-              console.log("equal");
-              return 0;
-            }
-            const out = (aName < bName ? -1 : 1) * this.accessKeySortDirection;
-            return out;
-          }.bind(this);
-        }
-        // Default to sorting by order the keys were added.
+        // Default to sorting by name
         return function(a, b) {
-          return (a - b) * this.accessKeySortDirection;
+          const aName = (a.name || a.placeholderName).toLowerCase();
+          const bName = (b.name || b.placeholderName).toLowerCase();
+          if (aName === bName) {
+            return 0;
+          }
+          const out = (aName < bName ? -1 : 1) * this.accessKeySortDirection;
+          return out;
         }.bind(this);
+        
       },
       _computeShouldShowSortIcon: function(accessKeySortBy, accessKeySortDirection,
                                            elementSortBy, elementSortDirection) {
