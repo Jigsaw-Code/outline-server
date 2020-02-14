@@ -183,6 +183,23 @@
         /* 24px (share icon) + 40px (overflow menu) + 8px (margin) */
         min-width: 72px;
       }
+      .highlight-on-hover:hover {
+        cursor: pointer;
+        color: #FFFFFF;
+      }
+      .header-row > span {
+        height: 16px;
+      }
+      .header-row > span > iron-icon {
+        height: 16px;
+      }
+      .header-row > .access-key-container {
+        flex: 2;
+      }
+      .header-row > .hover-spacer {
+        display: flex;
+        flex: 2;
+      }
       .measurement-container {
         display: flex;
         flex: 3;
@@ -419,15 +436,16 @@
           <div class="access-key-list card-section">
             <!-- header row -->
             <div class="access-key-row header-row">
-              <span class="access-key-container" on-tap="_setSortByOrToggleDirection" data-sort-by="name">
+              <span class="access-key-container highlight-on-hover" on-tap="_setSortByOrToggleDirection" data-sort-by="name">
                 [[localize('server-access-keys')]]
-                <iron-icon class="sort-icon" icon="arrow-drop-down" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'name', -1)]]"></iron-icon>
-                <iron-icon class="sort-icon" icon="arrow-drop-up" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'name', 1)]]"></iron-icon>
+                <iron-icon class="sort-icon" icon="arrow-downward" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'name', -1)]]"></iron-icon>
+                <iron-icon class="sort-icon" icon="arrow-upward" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'name', 1)]]"></iron-icon>
               </span>
-              <span class="measurement-container" on-tap="_setSortByOrToggleDirection" data-sort-by="usage">
+              <span class="hover-spacer"></span>
+              <span class="measurement-container highlight-on-hover" on-tap="_setSortByOrToggleDirection" data-sort-by="usage">
                 [[localize('server-usage')]]
-                <iron-icon class="sort-icon" icon="arrow-drop-down" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'usage', -1)]]"></iron-icon>
-                <iron-icon class="sort-icon" icon="arrow-drop-up" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'usage', 1)]]"></iron-icon>
+                <iron-icon class="sort-icon" icon="arrow-downward" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'usage', -1)]]"></iron-icon>
+                <iron-icon class="sort-icon" icon="arrow-upward" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'usage', 1)]]"></iron-icon>
               </span>
               <span class="flex-1 header-row-spacer"></span>
             </div>
