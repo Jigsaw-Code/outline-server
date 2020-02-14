@@ -650,8 +650,19 @@
       },
       _handleNewKeyBlur: function(e) {
         const input = e.target;
-        this._newAccessKey.name = input.value;
-        this.push('accessKeyRows', this._newAccessKey);
+        const accessKey = this._newAccessKey;
+        this.fire('RenameAccessKeyRequested', {
+          accessKeyId: this._newAccessKey.id,
+          newName: input.value,
+          entry: {
+            commitName: () => {
+              accessKey.name = input.value;
+              this.push('accessKeyRows', accessKey);
+            },
+            revertName: () => {}
+          }
+        });
+
         this._newAccessKey = null;
       },
       removeAccessKey: function(accessKeyId) {
