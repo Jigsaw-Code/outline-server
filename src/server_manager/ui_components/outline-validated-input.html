@@ -33,13 +33,13 @@
       MUST call ui.setSavedState() or ui.setErrorState(message) depending on its result. Default: null
 -->
 
-<link rel='import' href='./cloud-install-styles.html'>
-<link rel='import' href='./outline-server-settings-styles.html'>
+<link rel="import" href="./cloud-install-styles.html" />
+<link rel="import" href="./outline-server-settings-styles.html" />
 
-<dom-module id='outline-validated-input'>
+<dom-module id="outline-validated-input">
   <template>
-    <style include='cloud-install-styles'></style>
-    <style include='outline-server-settings-styles'></style>
+    <style include="cloud-install-styles"></style>
+    <style include="outline-server-settings-styles"></style>
     <style>
       #container {
         display: flex;
@@ -72,7 +72,7 @@
       }
 
       #saveButton[disabled] {
-        background-color: rgba(255, 255, 255, .12);
+        background-color: rgba(255, 255, 255, 0.12);
       }
 
       #cancelButton[disabled] {
@@ -81,12 +81,20 @@
     </style>
     <div id="container" hidden$="[[!visible]]">
       <!-- We use on-focus instead of on-tap to handle the case where text is selected but the tap event isn't fired. -->
-      <paper-input id="input" readonly$="[[!editable]]" allowed-pattern="[[allowedPattern]]" value="[[value]]"
-      label="[[label]]" maxlength="[[maxLength]]" on-focus="_enterEditingState" on-keyup="_onKeyUp"
-      always-float-label>
+      <paper-input
+        id="input"
+        readonly$="[[!editable]]"
+        allowed-pattern="[[allowedPattern]]"
+        value="[[value]]"
+        label="[[label]]"
+        maxlength="[[maxLength]]"
+        on-focus="_enterEditingState"
+        on-keyup="_onKeyUp"
+        always-float-label
+      >
       </paper-input>
       <paper-button id="cancelButton" hidden$="[[!_showButtons]]" disabled$="[[!_enableButtons]]" on-tap="_cancel">
-      [[localize('cancel')]]
+        [[localize('cancel')]]
       </paper-button>
       <paper-button id="saveButton" hidden$="[[!_showButtons]]" disabled$="[[!_enableButtons]]" on-tap="_save">
         [[localize('save')]]
@@ -95,35 +103,41 @@
   </template>
   <script>
     Polymer({
-      is: 'outline-validated-input',
+      is: "outline-validated-input",
       properties: {
         // Properties affecting the whole element
-        editable: { type: Boolean, value: false },
-        visible: { type: Boolean, value: false },
+        editable: {type: Boolean, value: false},
+        visible: {type: Boolean, value: false},
         // Properties affecting the input
-        label: { type: String, readonly: true, value: null },
-        allowedPattern: { type: String, value: ".*" },
-        maxLength: { type: Number, value: Number.POSITIVE_INFINITY },
-        value: { type: String, value: null },
+        label: {type: String, readonly: true, value: null},
+        allowedPattern: {type: String, value: ".*"},
+        maxLength: {type: Number, value: Number.POSITIVE_INFINITY},
+        value: {type: String, value: null},
         // `value` here is evaluated.  If it were simply `() => "`, then clientSideValidator
         // would default to just "", not a function returning "".
         // Note also that we can't use paper-input's validator attribute because it will fight
         // with any server-side validation and cause unpredictable results.
-        clientSideValidator: { type: Function, readonly: true, value: () => { return () => ""; } },
+        clientSideValidator: {
+          type: Function,
+          readonly: true,
+          value: () => {
+            return () => "";
+          },
+        },
         // Properties affecting the buttons
-        _showButtons: { type: Boolean, value: false },
-        _enableButtons: { type: Boolean, value: false },
+        _showButtons: {type: Boolean, value: false},
+        _enableButtons: {type: Boolean, value: false},
         // Other properties
-        event: { type: String, value: null },
-        localize: { type: Function, readonly: true }
+        event: {type: String, value: null},
+        localize: {type: Function, readonly: true},
       },
-      _onKeyUp: function (e) {
+      _onKeyUp: function(e) {
         const input = this.$.input;
-        if (e.key === 'Escape') {
+        if (e.key === "Escape") {
           this._cancel();
           input.blur();
           return;
-        } else if (e.key === 'Enter') {
+        } else if (e.key === "Enter") {
           if (!input.invalid) {
             this._save();
             input.blur();
@@ -140,19 +154,19 @@
           this.$.saveButton.disabled = false;
         }
       },
-      _cancel: function () {
+      _cancel: function() {
         const input = this.$.input;
         input.value = this.value;
         input.invalid = false;
         this._showButtons = false;
       },
-      _save: function () {
+      _save: function() {
         const input = this.$.input;
         const value = input.value;
         if (value === this.value) {
           this._cancel();
           return;
-        };
+        }
         this.$.cancelButton.disabled = true;
         this.$.saveButton.disabled = true;
         input.readonly = true;
@@ -164,10 +178,10 @@
 
         this.fire(this.event, {
           validatedInput: typedValue,
-          ui: this
+          ui: this,
         });
       },
-      _enterEditingState: function () {
+      _enterEditingState: function() {
         if (!this.editable) {
           return;
         }
@@ -175,20 +189,20 @@
         this.$.cancelButton.disabled = false;
         this.$.saveButton.disabled = this.$.input.invalid;
       },
-      enterSavedState: function () {
+      enterSavedState: function() {
         const input = this.$.input;
         this.value = input.value;
         this._showButtons = false;
         input.readonly = false;
       },
-      enterErrorState: function (message) {
+      enterErrorState: function(message) {
         const input = this.$.input;
         this._enableButtons = true;
         input.errorMessage = message;
         input.invalid = true;
         input.readonly = false;
         input.focus();
-      }
+      },
     });
   </script>
 </dom-module>
