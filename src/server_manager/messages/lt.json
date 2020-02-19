@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "Lauke „Šaltinio IP diapazonai“ (Source IP ranges) įveskite „0.0.0.0/0“.",
   "gcp-firewall-create-4": "Skiltyje „Protokolai ir prievadai“ (Protocols and ports) pasirinkite „Leisti viską“ (Allow all).",
   "gcp-firewall-create-5": "Spustelėkite „Kurti“ (Create).",
-  "key": "Raktas",
+  "key": "Raktas {keyId}",
   "manual-server-assign-firewall": "Priskirkite užkardos taisyklę",
   "manual-server-assign-group": "Priskirkite saugos grupes",
   "manual-server-create-firewall": "Sukurkite užkardos taisyklę",

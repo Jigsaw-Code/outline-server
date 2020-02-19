@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "Geben Sie \"0.0.0.0/0\" in das Feld \"Quell-IP-Bereiche\" ein.",
   "gcp-firewall-create-4": "Wählen Sie unter \"Protokolle und Ports\" die Option \"Alle zulassen\" aus.",
   "gcp-firewall-create-5": "Klicken Sie auf \"Erstellen\".",
-  "key": "Schlüssel",
+  "key": "Schlüssel {keyId}",
   "manual-server-assign-firewall": "Firewallregel zuweisen",
   "manual-server-assign-group": "Sicherheitsgruppe zuweisen",
   "manual-server-create-firewall": "Firewallregel erstellen",

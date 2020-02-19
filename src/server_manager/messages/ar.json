@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "اكتب 0.0.0.0/0 في حقل \"نطاقات عنوان IP المصدر\" (Source IP ranges).",
   "gcp-firewall-create-4": "اختَر \"السماح بالكل\" (Allow all) ضمن \"البروتوكولات والمنافذ\" (Protocols and ports).",
   "gcp-firewall-create-5": "انقر على \"إنشاء\" (Create).",
-  "key": "المفتاح",
+  "key": "المفتاح {keyId}",
   "manual-server-assign-firewall": "تخصيص قاعدة للجدار الناري",
   "manual-server-assign-group": "تخصيص مجموعة أمان",
   "manual-server-create-firewall": "إنشاء قاعدة جدار ناري",

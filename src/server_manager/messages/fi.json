@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "Kirjoita Source IP ranges (Lähteen IP-osoitealueet) ‑kenttään 0.0.0.0/0.",
   "gcp-firewall-create-4": "Valitse Protocols and ports (Protokollat ja portit) ‑osiosta Allow all (Salli kaikki).",
   "gcp-firewall-create-5": "Klikkaa Create (Luo).",
-  "key": "Avain",
+  "key": "Avain {keyId}",
   "manual-server-assign-firewall": "Määritä palomuurisääntö",
   "manual-server-assign-group": "Määritä suojausryhmä",
   "manual-server-create-firewall": "Luo palomuurisääntö",
