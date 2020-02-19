@@ -8,6 +8,14 @@
     "name": "The Outline authors",
     "email": "info@getoutline.org"
   },
+  "build": {
+    "afterSign": "src/server_manager/electron_app/notarize.js",
+    "mac": {
+      "hardenedRuntime": true,
+      "entitlements": "src/server_manager/electron_app/macos.entitlements",
+      "entitlementsInherit": "src/server_manager/electron_app/macos.entitlements"
+    }
+  },
   "dependencies": {
     "@sentry/electron": "^0.8.1",
     "body-parser": "^1.18.3",
@@ -31,6 +39,7 @@
     "electron": "7.0.0",
     "electron-builder": "^21.2.0",
     "electron-icon-maker": "^0.0.4",
+    "electron-notarize": "^0.2.1",
     "gulp": "^4.0.0",
     "gulp-posthtml": "^3.0.4",
     "gulp-replace": "^1.0.0",
