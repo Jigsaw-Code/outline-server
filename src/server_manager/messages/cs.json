@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "Do pole Source IP ranges (Rozsahy IP zdrojů) zadejte „0.0.0.0/0“.",
   "gcp-firewall-create-4": "V sekci Protocols and ports (Protokoly a porty) vyberte možnost Allow all (Povolit vše).",
   "gcp-firewall-create-5": "Klikněte na Create (Vytvořit).",
-  "key": "Klíč {keyId}",
+  "key": "Klíč",
   "manual-server-assign-firewall": "Přiřazení pravidla pro firewall",
   "manual-server-assign-group": "Přiřazení bezpečnostní skupiny",
   "manual-server-create-firewall": "Vytvoření pravidla pro firewall",

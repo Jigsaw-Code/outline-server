@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "'स्रोत आईपी सीमा (Source IP ranges)' फ़ील्ड में '0.0.0.0/0' लिखें.",
   "gcp-firewall-create-4": "'प्रोटोकॉल और पोर्ट (Protocols and ports)' में जाकर 'सभी की अनुमति दें ('Allow all)' चुनें.",
   "gcp-firewall-create-5": "'बनाएं (Create)' पर क्लिक करें.",
-  "key": "कुंजी {keyId}",
+  "key": "कुंजी",
   "manual-server-assign-firewall": "फ़ायरवॉल नियम असाइन करें",
   "manual-server-assign-group": "सुरक्षा ग्रुप असाइन करें",
   "manual-server-create-firewall": "फ़ायरवॉल नियम बनाएं",

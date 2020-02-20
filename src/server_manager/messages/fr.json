@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "Saisissez \"0.0.0.0/0\" dans le champ \"Source IP ranges\" (Plages d'adresses IP sources).",
   "gcp-firewall-create-4": "Sélectionnez \"Allow all\" (Tout autoriser) sous \"Protocols and ports\" (Protocoles et ports).",
   "gcp-firewall-create-5": "Cliquez sur \"Create\" (Créer).",
-  "key": "Clé {keyId}",
+  "key": "Clé",
   "manual-server-assign-firewall": "Attribuer une règle de pare-feu",
   "manual-server-assign-group": "Attribuer un groupe de sécurité",
   "manual-server-create-firewall": "Créer une règle de pare-feu",

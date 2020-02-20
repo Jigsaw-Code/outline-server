@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "Ketik '0.0.0.0/0' di kolom 'Rentang IP sumber (Source IP ranges)'.",
   "gcp-firewall-create-4": "Pilih 'Izinkan semua (Allow all)' di bagian 'Protokol dan port (Protocols and ports)'.",
   "gcp-firewall-create-5": "Klik 'Buat (Create)'.",
-  "key": "Kunci {keyId}",
+  "key": "Kunci",
   "manual-server-assign-firewall": "Tetapkan aturan firewall",
   "manual-server-assign-group": "Tetapkan Grup Keamanan",
   "manual-server-create-firewall": "Buat aturan firewall",

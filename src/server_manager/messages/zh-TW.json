@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "在 [Source IP ranges] (來源 IP 範圍) 欄位中輸入「0.0.0.0/0」。",
   "gcp-firewall-create-4": "選取「Protocols and ports」(通訊協定和通訊埠) 下方的 [Allow all] (全部允許)。",
   "gcp-firewall-create-5": "按一下 [Create] (建立)。",
-  "key": "金鑰 {keyId}",
+  "key": "金鑰",
   "manual-server-assign-firewall": "指派防火牆規則",
   "manual-server-assign-group": "指派安全性群組",
   "manual-server-create-firewall": "建立防火牆規則",

@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "Laukā “Source IP ranges” (Mērķa IP diapazoni) ierakstiet “0.0.0.0/0”.",
   "gcp-firewall-create-4": "Sadaļā “Protocols and ports” (Protokoli un porti) atlasiet vienumu “Allow all” (Atļaut visus).",
   "gcp-firewall-create-5": "Noklikšķiniet uz “Create” (Izveidot).",
-  "key": "Atslēga {keyId}",
+  "key": "Atslēga",
   "manual-server-assign-firewall": "Ugunsmūra kārtulas piešķiršana",
   "manual-server-assign-group": "Drošības grupas piešķiršana",
   "manual-server-create-firewall": "Ugunsmūra kārtulas izveide",

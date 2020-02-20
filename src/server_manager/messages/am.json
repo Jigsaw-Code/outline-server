@@ -78,7 +78,7 @@
   "gcp-firewall-create-3": "'0.0.0.0/0' የሚለውን 'የምንጪ አይፒ ዝርዝር' ('Source IP ranges) ላይ ይሙሉ።",
   "gcp-firewall-create-4": "'በፕሮቶኮልስ እና ፖርትስ' ('Protocols and ports') ሥር 'ሁሉንም ይፍቀዱ' ('Allow all') የሚለውን ይምረጡ።",
   "gcp-firewall-create-5": "'ይፍጠሩ' የሚለው ክሊክ ያድርጉ።",
-  "key": "ቁልፍ {keyId}",
+  "key": "ቁልፍ",
   "manual-server-assign-firewall": "የፋየርዎል መመሪያዎችን ያኑሩ",
   "manual-server-assign-group": "የደኅንነት ቡድን ያኑሩ",
   "manual-server-create-firewall": "የፋይርዎል መመሪያዎችን ይፍጠሩ",

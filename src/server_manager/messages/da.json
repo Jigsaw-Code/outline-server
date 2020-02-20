@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "Skriv \"0.0.0.0/0\" i feltet \"Source IP ranges\" (Kildens IP-områder).",
   "gcp-firewall-create-4": "Vælg \"Allow all\" (Tillad alle) under \"Protocols and ports\" (Protokoller og porte).",
   "gcp-firewall-create-5": "Klik på \"Create\" (Opret).",
-  "key": "Nøgle {keyId}",
+  "key": "Nøgle",
   "manual-server-assign-firewall": "Tildel firewallregel",
   "manual-server-assign-group": "Tildel sikkerhedsgruppe",
   "manual-server-create-firewall": "Opret en firewallregel",

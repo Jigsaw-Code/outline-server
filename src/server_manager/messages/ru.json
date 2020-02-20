@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "Введите \"0.0.0.0/0\" в поле Source IP ranges (Диапазоны IP-адресов источника).",
   "gcp-firewall-create-4": "Выберите Allow all (Разрешить все) в разделе Protocols and ports (Протоколы и порты).",
   "gcp-firewall-create-5": "Нажмите Create (Создать).",
-  "key": "Ключ {keyId}",
+  "key": "Ключ",
   "manual-server-assign-firewall": "Настройте правило брандмауэра",
   "manual-server-assign-group": "Назначьте группу безопасности",
   "manual-server-create-firewall": "Создайте правило для брандмауэра",

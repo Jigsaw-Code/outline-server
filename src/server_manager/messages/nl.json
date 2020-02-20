@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "Typ '0.0.0.0/0' in het veld 'Bron-IP-bereik' (Source IP ranges).",
   "gcp-firewall-create-4": "Selecteer 'Alles toestaan' (Allow all) onder 'Protocollen en poorten' (Protocols and ports).",
   "gcp-firewall-create-5": "Klik op 'Maken' (Create).",
-  "key": "Sleutel {keyId}",
+  "key": "Sleutel",
   "manual-server-assign-firewall": "Firewallregel toewijzen",
   "manual-server-assign-group": "Beveiligingsgroep toewijzen",
   "manual-server-create-firewall": "Een firewallregel maken",

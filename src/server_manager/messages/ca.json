@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "Escriu \"0.0.0.0/0\"·al camp Source IP ranges (Intervals d'IP d'origen).",
   "gcp-firewall-create-4": "Selecciona Allow all (Permet-ho tot ) a Protocols and ports (Protocols i ports).",
   "gcp-firewall-create-5": "Fes clic a Create (Crea).",
-  "key": "Clau {keyId}",
+  "key": "Clau",
   "manual-server-assign-firewall": "Assigna una regla de tallafoc",
   "manual-server-assign-group": "Assigna un grup de seguretat",
   "manual-server-create-firewall": "Crea una regla de tallafoc",

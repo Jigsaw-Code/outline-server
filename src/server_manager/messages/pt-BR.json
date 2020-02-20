@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "Digite \"0.0.0.0/0\" no campo \"Intervalos de IP de origem\" (Source IP ranges).",
   "gcp-firewall-create-4": "Em \"Protocolos e portas\" (Protocols and ports), selecione \"Permitir todos\" (Allow all).",
   "gcp-firewall-create-5": "Clique em \"Criar\" (Create).",
-  "key": "Chave {keyId}",
+  "key": "Chave",
   "manual-server-assign-firewall": "Atribuir regra de firewall",
   "manual-server-assign-group": "Atribuir grupo de segurança",
   "manual-server-create-firewall": "Criar uma regra de firewall",

@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "כותבים \"'0.0.0.0/0\" בשדה \"Source IP ranges\" [טווחי כתובות IP של המקור].",
   "gcp-firewall-create-4": "בקטע \"Protocols and ports\" [פרוטוקולים ויציאות] לוחצים על \"Allow all\" [אישור הכול].",
   "gcp-firewall-create-5": "לוחצים על \"Create\" [יצירה].",
-  "key": "מפתח {keyId}",
+  "key": "מפתח",
   "manual-server-assign-firewall": "הגדרת כלל לחומת האש",
   "manual-server-assign-group": "הקצאת קבוצת אבטחה",
   "manual-server-create-firewall": "יצירת כלל לחומת האש",

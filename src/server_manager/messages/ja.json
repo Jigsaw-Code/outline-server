@@ -83,7 +83,7 @@
   "gcp-firewall-create-3": "[ソース IP の範囲（Source IP ranges）] 欄に「0.0.0.0/0」と入力します。",
   "gcp-firewall-create-4": "[プロトコルとポート（Protocols and ports）] で [すべて許可（Allow all）] を選択します。",
   "gcp-firewall-create-5": "[作成（Create）] をクリックします。",
-  "key": "キー {keyId}",
+  "key": "キー",
   "manual-server-assign-firewall": "ファイアウォール ルールの割り当て",
   "manual-server-assign-group": "セキュリティ グループの割り当て",
   "manual-server-create-firewall": "ファイアウォール ルールの作成",
