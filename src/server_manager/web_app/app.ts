@@ -41,7 +41,7 @@ const CHANGE_KEYS_PORT_VERSION = '1.0.0';
 const DATA_LIMITS_VERSION = '1.1.0';
 const CHANGE_HOSTNAME_VERSION = '1.2.0';
 // Date by which the data limits feature experiment will be permanently added or removed.
-const DATA_LIMITS_AVAILABILITY_DATE = new Date('2020-04-01');
+const DATA_LIMITS_AVAILABILITY_DATE = new Date('2020-06-02');
 const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
 
 interface UiAccessKey {
