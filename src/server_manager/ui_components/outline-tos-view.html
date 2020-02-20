@@ -14,9 +14,9 @@
   limitations under the License.
 -->
 
-<dom-module id='outline-tos-view'>
+<dom-module id="outline-tos-view">
   <template>
-    <style include='cloud-install-styles'></style>
+    <style include="cloud-install-styles"></style>
     <style>
       :host {
         background-color: #263238;
@@ -52,13 +52,15 @@
       <img id="logo" src="images/launcher-icon.png" />
     </div>
     <div id="tos">
-        <span inner-h-t-m-l="[[localize('terms-of-service', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html>', 'closeLink', '</a>')]]"></span>
-        <paper-button on-tap="acceptTermsOfService">[[localize('okay')]]</paper-button>
+      <span
+        inner-h-t-m-l="[[localize('terms-of-service', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html>', 'closeLink', '</a>')]]"
+      ></span>
+      <paper-button on-tap="acceptTermsOfService">[[localize('okay')]]</paper-button>
     </div>
   </template>
   <script>
     Polymer({
-      is: 'outline-tos-view',
+      is: "outline-tos-view",
       properties: {
         hasAcceptedTermsOfService: {
           type: Boolean,
@@ -67,8 +69,8 @@
         },
         localize: {
           type: Function,
-          readonly: true
-        }
+          readonly: true,
+        },
       },
       acceptTermsOfService: function() {
         this.hasAcceptedTermsOfService = true;

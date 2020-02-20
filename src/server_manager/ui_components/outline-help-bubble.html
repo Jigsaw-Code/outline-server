@@ -14,12 +14,12 @@
   limitations under the License.
 -->
 
-<link rel='import' href='../bower_components/polymer/polymer.html'>
-<link rel='import' href='../bower_components/iron-fit-behavior/iron-fit-behavior.html'>
+<link rel="import" href="../bower_components/polymer/polymer.html" />
+<link rel="import" href="../bower_components/iron-fit-behavior/iron-fit-behavior.html" />
 
-<dom-module id='outline-help-bubble'>
+<dom-module id="outline-help-bubble">
   <template>
-    <style include='cloud-install-styles'></style>
+    <style include="cloud-install-styles"></style>
     <style>
       :host {
         margin: 10px;
@@ -29,15 +29,18 @@
         color: var(--primary-green);
       }
       .helpContent {
-        background-color: #FFF;
+        background-color: #fff;
         color: #000;
         padding: 24px;
         font-size: 14px;
         width: 250px;
         border-radius: 4px;
-        box-shadow: 0 8px 10px 0 rgba(0,0,0,0.20);
+        box-shadow: 0 8px 10px 0 rgba(0, 0, 0, 0.2);
       }
-      .upArrowWrapper, .downArrowWrapper, .rightArrowWrapper, .leftArrowWrapper {
+      .upArrowWrapper,
+      .downArrowWrapper,
+      .rightArrowWrapper,
+      .leftArrowWrapper {
         display: none;
         position: absolute;
         text-align: center;
@@ -67,43 +70,50 @@
         top: 8px;
         left: -10px;
       }
-      .upArrow, .downArrow, .rightArrow, .leftArrow {
+      .upArrow,
+      .downArrow,
+      .rightArrow,
+      .leftArrow {
         width: 0px;
         height: 0px;
         display: inline-block;
       }
       .upArrow {
-        border-bottom: 10px solid #FFF;
+        border-bottom: 10px solid #fff;
         border-left: 10px solid transparent;
         border-right: 10px solid transparent;
       }
       .downArrow {
-        border-top: 10px solid #FFF;
+        border-top: 10px solid #fff;
         border-left: 10px solid transparent;
         border-right: 10px solid transparent;
       }
       .rightArrow {
-        border-left: 10px solid #FFF;
+        border-left: 10px solid #fff;
         border-top: 10px solid transparent;
         border-bottom: 10px solid transparent;
       }
       .leftArrow {
-        border-right: 10px solid #FFF;
+        border-right: 10px solid #fff;
         border-top: 10px solid transparent;
         border-bottom: 10px solid transparent;
       }
       /* rtl:begin:ignore */
       /* Multiple :host selectors must not have spacing between them */
-      :host(:dir(ltr)):host(.offset-right) .upArrowWrapper, :host(:dir(ltr)):host(.offset-right) .downArrowWrapper {
+      :host(:dir(ltr)):host(.offset-right) .upArrowWrapper,
+      :host(:dir(ltr)):host(.offset-right) .downArrowWrapper {
         margin-left: 35%;
       }
-      :host(:dir(ltr)):host(.offset-left) .upArrowWrapper, :host(:dir(ltr)):host(.offset-left) .downArrowWrapper {
+      :host(:dir(ltr)):host(.offset-left) .upArrowWrapper,
+      :host(:dir(ltr)):host(.offset-left) .downArrowWrapper {
         margin-left: -35%;
       }
-      :host(:dir(rtl)):host(.offset-right) .upArrowWrapper, :host(:dir(rtl)):host(.offset-right) .downArrowWrapper {
+      :host(:dir(rtl)):host(.offset-right) .upArrowWrapper,
+      :host(:dir(rtl)):host(.offset-right) .downArrowWrapper {
         margin-right: 35%;
       }
-      :host(:dir(rtl)):host(.offset-left) .upArrowWrapper, :host(:dir(rtl)):host(.offset-left) .downArrowWrapper {
+      :host(:dir(rtl)):host(.offset-left) .upArrowWrapper,
+      :host(:dir(rtl)):host(.offset-left) .downArrowWrapper {
         margin-right: -35%;
       }
       /* rtl:end:ignore */
@@ -116,31 +126,30 @@
   </template>
   <script>
     Polymer({
-      is: 'outline-help-bubble',
+      is: "outline-help-bubble",
       behaviors: [
         // Take all behaviors from IronFitBehavior, used for positioning relative
         // to .positionTarget.
-        Polymer.IronFitBehavior
+        Polymer.IronFitBehavior,
       ],
       ready: function() {
         // Prevent help bubble from overlapping with it's positionTarget.
-        this.setAttribute('no-overlap', true);
+        this.setAttribute("no-overlap", true);
 
         // Help bubble should default to hidden until show is called.
-        this.setAttribute('hidden', true);
+        this.setAttribute("hidden", true);
       },
       show: function(positionTarget, arrowDirection, leftOrRightOffset) {
-        this.removeAttribute('hidden');
+        this.removeAttribute("hidden");
 
         // Set arrow direction.
-        this.classList.add('showArrow-' + arrowDirection);
+        this.classList.add("showArrow-" + arrowDirection);
 
         // Apply left or right offset to arrow, e.g. display an up-pointing
         // arrow on the top right.
-        const isUpOrDown = arrowDirection === 'up' || arrowDirection === 'down';
-        if (isUpOrDown &&
-            (leftOrRightOffset === 'left' || leftOrRightOffset === 'right')) {
-          this.classList.add('offset-' + leftOrRightOffset);
+        const isUpOrDown = arrowDirection === "up" || arrowDirection === "down";
+        if (isUpOrDown && (leftOrRightOffset === "left" || leftOrRightOffset === "right")) {
+          this.classList.add("offset-" + leftOrRightOffset);
         }
 
         // Position the help bubble.
@@ -148,15 +157,15 @@
         this.refit();
 
         // Listen to scroll and resize events so the help bubble can reposition if needed.
-        window.addEventListener('scroll', this.refit.bind(this));
-        window.addEventListener('resize', this.refit.bind(this));
+        window.addEventListener("scroll", this.refit.bind(this));
+        window.addEventListener("resize", this.refit.bind(this));
       },
       hide: function() {
-        this.setAttribute('hidden', true);
-        window.removeEventListener('scroll', this.refit.bind(this));
-        window.removeEventListener('resize', this.refit.bind(this));
-        this.fire('outline-help-bubble-dismissed');
-      }
+        this.setAttribute("hidden", true);
+        window.removeEventListener("scroll", this.refit.bind(this));
+        window.removeEventListener("resize", this.refit.bind(this));
+        this.fire("outline-help-bubble-dismissed");
+      },
     });
   </script>
 </dom-module>
