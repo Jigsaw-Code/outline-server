@@ -9,11 +9,11 @@
     "email": "info@getoutline.org"
   },
   "build": {
-    "afterSign": "src/server_manager/electron_app/notarize.js",
+    "afterSign": "src/server_manager/electron_app/release/notarize.js",
     "mac": {
       "hardenedRuntime": true,
-      "entitlements": "src/server_manager/electron_app/macos.entitlements",
-      "entitlementsInherit": "src/server_manager/electron_app/macos.entitlements"
+      "entitlements": "src/server_manager/electron_app/release/macos.entitlements",
+      "entitlementsInherit": "src/server_manager/electron_app/release/macos.entitlements"
     }
   },
   "dependencies": {
