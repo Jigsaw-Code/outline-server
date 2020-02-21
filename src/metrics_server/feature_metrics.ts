@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {Table} from '@google-cloud/bigquery';
-import {InsertableTable} from './model';
+import {InsertableTable} from './infrastructure/table';
 
 export interface DailyFeatureMetricsReport {
   serverId: string;
@@ -50,7 +50,7 @@ export async function postFeatureMetrics(
     timestamp: new Date(report.timestampUtcMs).toISOString(),
     dataLimit: report.dataLimit
   };
-  return table.insert(featureRow);
+  return table.insert([featureRow]);
 }
 
 // Returns true iff `obj` contains a valid DailyFeatureMetricsReport.

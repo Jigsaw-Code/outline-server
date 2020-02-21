@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {Table} from '@google-cloud/bigquery';
-import {InsertableTable} from './model';
+import {InsertableTable} from './infrastructure/table';
 
 // TODO(dborkan): HourlyConnectionMetricsReport and HourlyUserConnectionMetricsReport are
 // copied from src/shadowbox/server/metrics.ts - find a way to share these
@@ -42,7 +42,7 @@ export interface ConnectionRow {
 export class BigQueryConnectionsTable implements InsertableTable<ConnectionRow> {
   constructor(private bigqueryTable: Table) {}
 
-  async insert(rows: ConnectionRow|ConnectionRow[]): Promise<void> {
+  async insert(rows: ConnectionRow[]): Promise<void> {
     await this.bigqueryTable.insert(rows);
   }
 }

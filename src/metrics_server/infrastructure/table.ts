@@ -14,5 +14,5 @@
 
 // Generic table interface that supports row insertion.
 export interface InsertableTable<T> {
-  insert(rows: T|T[]): Promise<void>;
+  insert(rows: T[]): Promise<void>;
 }

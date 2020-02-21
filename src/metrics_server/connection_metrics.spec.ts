@@ -13,12 +13,12 @@
 // limitations under the License.
 
 import {ConnectionRow, HourlyConnectionMetricsReport, isValidConnectionMetricsReport, postConnectionMetrics} from './connection_metrics';
-import {InsertableTable} from './model';
+import {InsertableTable} from './infrastructure/table';
 
 class FakeConnectionsTable implements InsertableTable<ConnectionRow> {
-  public rows: ConnectionRow|ConnectionRow[]|undefined;
+  public rows: ConnectionRow[]|undefined;
 
-  async insert(rows: ConnectionRow|ConnectionRow[]) {
+  async insert(rows: ConnectionRow[]) {
     this.rows = rows;
   }
 }

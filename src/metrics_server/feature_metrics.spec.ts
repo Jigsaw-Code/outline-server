@@ -13,12 +13,12 @@
 // limitations under the License.
 
 import {DailyFeatureMetricsReport, FeatureRow, isValidFeatureMetricsReport, postFeatureMetrics} from './feature_metrics';
-import {InsertableTable} from './model';
+import {InsertableTable} from './infrastructure/table';
 
 class FakeFeaturesTable implements InsertableTable<FeatureRow> {
-  public rows: FeatureRow|FeatureRow[]|undefined;
+  public rows: FeatureRow[]|undefined;
 
-  async insert(rows: FeatureRow|FeatureRow[]) {
+  async insert(rows: FeatureRow[]) {
     this.rows = rows;
   }
 }
@@ -33,12 +33,12 @@ describe('postFeatureMetrics', () => {
       dataLimit: {enabled: false}
     };
     await postFeatureMetrics(table, report);
-    const rows: FeatureRow = {
+    const rows: FeatureRow[] = [{
       serverId: report.serverId,
       serverVersion: report.serverVersion,
       timestamp: new Date(report.timestampUtcMs).toISOString(),
       dataLimit: report.dataLimit
-    };
+    }];
     expect(table.rows).toEqual(rows);
   });
 });
