@@ -885,6 +885,7 @@ export class App {
     try {
       const serverAccessKeys = await selectedServer.listAccessKeys();
       view.accessKeyRows = serverAccessKeys.map(this.convertToUiAccessKey.bind(this));
+      view.newAccessKeyRows = [];
       if (!view.accessKeyDataLimit) {
         view.accessKeyDataLimit = dataLimitToDisplayDataAmount(
             await computeDefaultAccessKeyDataLimit(selectedServer, serverAccessKeys));

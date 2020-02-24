@@ -243,6 +243,9 @@
         flex: 4;
         align-items: center;
       }
+      #newAccessKeysContainer .access-key-container {
+        flex: 7;
+      }
       .sort-icon {
         /* Disable click events on the sorting icons, so that the event gets propagated to the
            parent, which defines the dataset elements needed for displaying the icon. */
@@ -536,7 +539,7 @@
                     <input
                       type="text"
                       class="access-key-name"
-                      id$="accesskey[[item.id]]"
+                      id$="access-key-[[item.id]]"
                       placeholder="{{item.placeholderName}}"
                       value="[[item.name]]"
                       on-blur="_handleNameInputBlur"
@@ -590,19 +593,56 @@
                 </div>
               </template>
             </div>
-            <div class="access-key-row" hidden$="{{!_newAccessKey}}">
-              <span class="access-key-container" id="newAccessKey">
-                <img class="access-key-icon" src="images/key-avatar.svg" />
-                <input
-                  type="text"
-                  class="access-key-name"
-                  id="newKeyInput"
-                  placeholder=""
-                  value=""
-                  on-blur="_handleNewKeyBlur"
-                  on-keydown="_handleNameInputKeyDown"
-                />
-              </span>
+            <div id="newAccessKeysContainer">
+              <!-- rows for each newly added access key -->
+              <template
+                is="dom-repeat"
+                items="{{newAccessKeyRows}}"
+              >
+                <div class="access-key-row">
+                  <span class="access-key-container">
+                    <img class="access-key-icon" src="images/key-avatar.svg" />
+                    <input
+                      type="text"
+                      class="access-key-name"
+                      id$="new-access-key-[[item.id]]"
+                      placeholder="{{item.placeholderName}}"
+                      value="[[item.name]]"
+                      on-blur="_handleNameInputBlur"
+                      on-keydown="_handleNameInputKeyDown"
+                    />
+                  </span>
+                  <span class="actions">
+                    <span class="flex-1">
+                      <paper-icon-button
+                        icon="outline-iconset:share"
+                        class="share-button"
+                        on-tap="_handleShareCodePressed"
+                      ></paper-icon-button>
+                    </span>
+                    <span class="flex-1">
+                      <paper-menu-button
+                        horizontal-align="right"
+                        class="overflow-menu"
+                        close-on-activate
+                        no-animations
+                        no-overlap
+                        dynamic-align
+                      >
+                        <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
+                        <paper-listbox slot="dropdown-content">
+                          <paper-item on-tap="_handleRenameAccessKeyPressed">
+                            <iron-icon icon="icons:create"></iron-icon>[[localize('server-access-key-rename')]]
+                          </paper-item>
+                          <paper-item on-tap="_handleRemoveAccessKeyPressed">
+                            <iron-icon icon="icons:delete"></iron-icon>[[localize('remove')]]
+                          </paper-item>
+                        </paper-listbox>
+                      </paper-menu-button>
+                    </span>
+                  </span>
+                </div>
+              </template>
             </div>
             <!-- add key button -->
             <div class="access-key-row" id="addAccessKeyRow">
@@ -694,6 +734,7 @@
         myConnection: Object,
         totalInboundBytes: Number,
         accessKeyRows: {type: Array, value: []},
+        newAccessKeyRows: {type: Array, value: []},
         hasNonAdminAccessKeys: Boolean,
         metricsEnabled: Boolean,
         // Initialize monthlyOutboundTransferBytes and monthlyCost to 0, so they can
@@ -744,35 +785,23 @@
       //   relativeTraffic: number;
       // }
       addAccessKey: function(accessKey) {
-        this._newAccessKey = accessKey;
-        const input = this.$.newKeyInput;
-        input.placeholder = accessKey.placeholderName;
-        input.value = accessKey.name;
+        this.push("newAccessKeyRows", accessKey);
+        this.$.newAccessKeysContainer.querySelector("dom-repeat").render();
+        const input = this.$$(`#new-access-key-${accessKey.id}`);
         input.select();
       },
-      _handleNewKeyBlur: function(e) {
-        const input = e.target;
-        const accessKey = this._newAccessKey;
-        this.fire("RenameAccessKeyRequested", {
-          entry: {
-            commitName: () => {
-              accessKey.name = input.value;
-              this.push("accessKeyRows", accessKey);
-              this._newAccessKey = null;
-            },
-            revertName: () => {
-              this._newAccessKey = null;
-            },
-          },
-        });
-      },
       removeAccessKey: function(accessKeyId) {
-        for (let ui in this.accessKeyRows) {
-          if (this.accessKeyRows[ui].id === accessKeyId) {
-            this.splice("accessKeyRows", ui, 1);
+        const itemWithSameId = (key) => key.id === accessKeyId;
+        let rows = "accessKeyRows";
+        let index = this.accessKeyRows.findIndex(itemWithSameId);
+        if (index === -1) {
+          index = this.newAccessKeyRows.findIndex(itemWithSameId);
+          if (index === -1) {
             return;
           }
+          rows = "newAccessKeyRows";
         }
+        this.splice(rows, index, 1);
       },
       _handleAddAccessKeyPressed: function() {
         this.fire("AddAccessKeyRequested");
@@ -812,9 +841,7 @@
         });
       },
       _handleRenameAccessKeyPressed: function(event) {
-        const input = this.$.accessKeysContainer.querySelectorAll(".access-key-row .access-key-container > input")[
-          event.model.index
-        ];
+        const input = this.$$(`#access-key-${event.model.item.id}`) || this.$$(`#new-access-key-${event.model.item.id}`);
         // This needs to be deferred because the closing menu messes up with the focus.
         window.setTimeout(() => {
           input.focus();
