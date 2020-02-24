@@ -676,12 +676,13 @@
             commitName: () => {
               accessKey.name = input.value;
               this.push('accessKeyRows', accessKey);
+              this._newAccessKey = null;
             },
-            revertName: () => {}
+            revertName: () => {
+              this._newAccessKey = null;
+            }
           }
         });
-
-        this._newAccessKey = null;
       },
       removeAccessKey: function(accessKeyId) {
         for (let ui in this.accessKeyRows) {
