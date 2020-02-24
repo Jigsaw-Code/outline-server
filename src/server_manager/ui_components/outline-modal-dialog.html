@@ -14,11 +14,11 @@
   limitations under the License.
 -->
 
-<link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html" />
 
-<dom-module id='outline-modal-dialog'>
+<dom-module id="outline-modal-dialog">
   <template>
-    <style include='cloud-install-styles'></style>
+    <style include="cloud-install-styles"></style>
     <style>
       :host {
         margin: 0px;
@@ -30,23 +30,23 @@
         color: var(--primary-green);
       }
     </style>
-    <paper-dialog id='dialog' modal>
+    <paper-dialog id="dialog" modal>
       <h3 hidden$="[[!title]]">[[title]]</h3>
       <div>[[text]]</div>
       <p class="buttons">
         <template is="dom-repeat" items="{{buttons}}">
-          <paper-button dialog-dismiss on-tap='buttonTapped'>[[item]]</paper-button>
+          <paper-button dialog-dismiss on-tap="buttonTapped">[[item]]</paper-button>
         </template>
       </p>
     </paper-dialog>
   </template>
   <script>
     Polymer({
-      is: 'outline-modal-dialog',
+      is: "outline-modal-dialog",
       properties: {
         title: String,
         text: String,
-        buttons: String
+        buttons: String,
       },
       // Returns a Promise which fulfills with the index of the button clicked.
       open: function(title, text, buttons) {
@@ -64,11 +64,11 @@
       },
       buttonTapped: function(event) {
         if (!this.fulfill) {
-          console.error('outline-modal-dialog: this.fulfill not defined');
+          console.error("outline-modal-dialog: this.fulfill not defined");
           return;
         }
-        this.fulfill(event.model.index)
-      }
+        this.fulfill(event.model.index);
+      },
     });
   </script>
 </dom-module>
