@@ -13,18 +13,18 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<link rel='import' href='../bower_components/polymer/polymer.html'>
-<link rel='import' href='../bower_components/iron-collapse/iron-collapse.html'>
-<link rel='import' href='../bower_components/iron-icon/iron-icon.html'>
-<link rel='import' href='../bower_components/iron-icons/iron-icons.html'>
-<link rel='import' href='../bower_components/paper-button/paper-button.html'>
-<link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
-<link rel='import' href='../bower_components/paper-input/paper-textarea.html'>
-<link rel='import' href='../bower_components/paper-progress/paper-progress.html'>
-<link rel="import" href="./cloud-install-styles.html">
-<link rel="import" href="./outline-cloud-instructions-view.html">
-<link rel="import" href="./outline-step-view.html">
-<link rel="import" href="./style.css">
+<link rel="import" href="../bower_components/polymer/polymer.html" />
+<link rel="import" href="../bower_components/iron-collapse/iron-collapse.html" />
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html" />
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html" />
+<link rel="import" href="../bower_components/paper-button/paper-button.html" />
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html" />
+<link rel="import" href="../bower_components/paper-input/paper-textarea.html" />
+<link rel="import" href="../bower_components/paper-progress/paper-progress.html" />
+<link rel="import" href="./cloud-install-styles.html" />
+<link rel="import" href="./outline-cloud-instructions-view.html" />
+<link rel="import" href="./outline-step-view.html" />
+<link rel="import" href="./style.css" />
 
 <dom-module id="outline-manual-server-entry">
   <template>
@@ -76,7 +76,8 @@
         text-align: center;
         line-height: 26px;
       }
-      .drop-down, .drop-down iron-icon {
+      .drop-down,
+      .drop-down iron-icon {
         color: #fff;
       }
       .drop-down > * {
@@ -92,7 +93,7 @@
       .section-content {
         margin: 24px 12px 0 48px;
         padding: 24px;
-        background-color: #ECEFF1;
+        background-color: #eceff1;
         border-radius: 4px;
       }
       .section-content-instructions {
@@ -102,10 +103,10 @@
         margin-bottom: 24px;
       }
       .section-content-instructions a {
-        color: #00BFA5;
+        color: #00bfa5;
       }
       .section-content-instructions iron-icon {
-        color: #00BFA5;
+        color: #00bfa5;
         width: 16px;
         height: 16px;
         margin-left: 4px;
@@ -123,7 +124,9 @@
         }
       }
       /* rtl:ignore */
-      .code, #command, paper-textarea {
+      .code,
+      #command,
+      paper-textarea {
         direction: ltr;
         text-align: left;
         @apply --code-mixin;
@@ -183,9 +186,16 @@
           </div>
           <iron-collapse id="gcpDropDown">
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view title="[[localize('manual-server-create-firewall')]]" thumbnail-path="images/gcp-thumbnail-1.png" image-path="images/gcp-screenshot-1.png" localize="[[localize]]">
+              <outline-cloud-instructions-view
+                title="[[localize('manual-server-create-firewall')]]"
+                thumbnail-path="images/gcp-thumbnail-1.png"
+                image-path="images/gcp-screenshot-1.png"
+                localize="[[localize]]"
+              >
                 <ol>
-                  <li inner-h-t-m-l="[[localize('gcp-firewall-create-0', 'openLink', '<a href=https://console.cloud.google.com/networking/firewalls/add>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
+                  <li
+                    inner-h-t-m-l="[[localize('gcp-firewall-create-0', 'openLink', '<a href=https://console.cloud.google.com/networking/firewalls/add>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
+                  ></li>
                   <li>[[localize('gcp-firewall-create-1')]]</li>
                   <li>[[localize('gcp-firewall-create-2')]]</li>
                   <li>[[localize('gcp-firewall-create-3')]]</li>
@@ -195,9 +205,16 @@
               </outline-cloud-instructions-view>
             </div>
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view title="[[localize('manual-server-assign-firewall')]]" thumbnail-path="images/gcp-thumbnail-2.png" image-path="images/gcp-screenshot-2.png"" localize="[[localize]]">
+              <outline-cloud-instructions-view
+                title="[[localize('manual-server-assign-firewall')]]"
+                thumbnail-path="images/gcp-thumbnail-2.png"
+                image-path="images/gcp-screenshot-2.png"
+                localize="[[localize]]"
+              >
                 <ol>
-                  <li inner-h-t-m-l="[[localize('gcp-firewall-assign-0', 'openLink', '<a href=https://console.cloud.google.com/compute/instances>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
+                  <li
+                    inner-h-t-m-l="[[localize('gcp-firewall-assign-0', 'openLink', '<a href=https://console.cloud.google.com/compute/instances>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
+                  ></li>
                   <li>[[localize('gcp-firewall-assign-1')]]</li>
                   <li>[[localize('gcp-firewall-assign-2')]]</li>
                   <li>[[localize('gcp-firewall-assign-3')]]</li>
@@ -220,9 +237,16 @@
           </div>
           <iron-collapse id="awsDropDown">
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view title="[[localize('manual-server-create-group')]]" thumbnail-path="images/aws-thumbnail-1.png" image-path="images/aws-screenshot-1.png" localize="[[localize]]">
+              <outline-cloud-instructions-view
+                title="[[localize('manual-server-create-group')]]"
+                thumbnail-path="images/aws-thumbnail-1.png"
+                image-path="images/aws-screenshot-1.png"
+                localize="[[localize]]"
+              >
                 <ol>
-                  <li inner-h-t-m-l="[[localize('aws-group-create-0', 'openLink', '<a href=https://console.aws.amazon.com/ec2/v2/home>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
+                  <li
+                    inner-h-t-m-l="[[localize('aws-group-create-0', 'openLink', '<a href=https://console.aws.amazon.com/ec2/v2/home>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
+                  ></li>
                   <li>[[localize('aws-group-create-1')]]</li>
                   <li>[[localize('aws-group-create-2')]]</li>
                   <li>[[localize('aws-group-create-3')]]</li>
@@ -232,9 +256,16 @@
               </outline-cloud-instructions-view>
             </div>
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view title="[[localize('manual-server-assign-group')]]" thumbnail-path="images/aws-thumbnail-2.png" image-path="images/aws-screenshot-2.png" localize="[[localize]]">
+              <outline-cloud-instructions-view
+                title="[[localize('manual-server-assign-group')]]"
+                thumbnail-path="images/aws-thumbnail-2.png"
+                image-path="images/aws-screenshot-2.png"
+                localize="[[localize]]"
+              >
                 <ol>
-                  <li inner-h-t-m-l="[[localize('aws-group-assign-0', 'openLink', '<a href=https://console.aws.amazon.com/ec2/v2/home#Instances:sort=instanceId>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
+                  <li
+                    inner-h-t-m-l="[[localize('aws-group-assign-0', 'openLink', '<a href=https://console.aws.amazon.com/ec2/v2/home#Instances:sort=instanceId>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
+                  ></li>
                   <li>[[localize('aws-group-assign-1')]]</li>
                   <li>[[localize('aws-group-assign-2')]]</li>
                   <li>[[localize('aws-group-assign-3')]]</li>
@@ -251,7 +282,10 @@
             <div class="instructions">[[localize('manual-server-install-run')]]</div>
           </div>
           <div class="section-content">
-            <div id="command">sudo bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"</div>
+            <div id="command">
+              sudo bash -c "$(wget -qO-
+              https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"
+            </div>
           </div>
         </div>
         <!-- Paste input -->
@@ -262,46 +296,57 @@
             <div class="instructions">[[localize('manual-server-install-paste')]]</div>
           </div>
           <div class="section-content">
-            <paper-textarea id="serverConfig" type="text" placeholder$="[[placeholderText]]" class="code" rows="4" max-rows="4" no-label-float on-value-changed='onServerConfigChanged'></paper-textarea>
+            <paper-textarea
+              id="serverConfig"
+              type="text"
+              placeholder$="[[placeholderText]]"
+              class="code"
+              rows="4"
+              max-rows="4"
+              no-label-float
+              on-value-changed="onServerConfigChanged"
+            ></paper-textarea>
           </div>
         </div>
         <div id="button-row">
           <paper-button id="cancelButton" on-tap="cancelTapped" class="secondary">[[localize('cancel')]]</paper-button>
-          <paper-button id="doneButton" on-tap="doneTapped" class="primary" disabled$='[[!enableDoneButton]]'>[[localize('done')]]</paper-button>
+          <paper-button id="doneButton" on-tap="doneTapped" class="primary" disabled$="[[!enableDoneButton]]"
+            >[[localize('done')]]</paper-button
+          >
         </div>
-        <paper-progress hidden$='[[!showConnection]]' indeterminate class="slow"></paper-progress>
+        <paper-progress hidden$="[[!showConnection]]" indeterminate class="slow"></paper-progress>
       </div>
     </outline-step-view>
   </template>
   <script>
     Polymer({
-      is: 'outline-manual-server-entry',
+      is: "outline-manual-server-entry",
       properties: {
         placeholderText: {
           type: String,
-          value: '{"apiUrl":"https://xxx.xxx.xxx.xxx:xxxxx/xxxxxxxxxxxxxxxxxxxxxx","certSha256":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}'
-
+          value:
+            '{"apiUrl":"https://xxx.xxx.xxx.xxx:xxxxx/xxxxxxxxxxxxxxxxxxxxxx","certSha256":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}',
         },
         showConnection: Boolean,
         cloudProvider: {
           type: String,
-          value: 'generic'
+          value: "generic",
         },
         cloudProviderName: {
           type: String,
-          computed: '_computeCloudProviderName(cloudProvider)'
+          computed: "_computeCloudProviderName(cloudProvider)",
         },
         isCloudProviderAws: {
           type: Boolean,
-          computed: '_computeIsCloudProviderAws(cloudProvider)'
+          computed: "_computeIsCloudProviderAws(cloudProvider)",
         },
         isCloudProviderGcp: {
           type: Boolean,
-          computed: '_computeIsCloudProviderGcp(cloudProvider)'
+          computed: "_computeIsCloudProviderGcp(cloudProvider)",
         },
         isGenericCloudProvider: {
           type: Boolean,
-          computed: '_computeIsGenericCloudProvider(cloudProvider)'
+          computed: "_computeIsGenericCloudProvider(cloudProvider)",
         },
         enableDoneButton: {
           type: Boolean,
@@ -314,54 +359,57 @@
       },
       doneTapped: function() {
         this.showConnection = true;
-        this.fire('ManualServerEntered', {
-          userInput: this.$.serverConfig.value
+        this.fire("ManualServerEntered", {
+          userInput: this.$.serverConfig.value,
         });
       },
       cancelTapped: function() {
-        this.fire('ManualServerEntryCancelled');
+        this.fire("ManualServerEntryCancelled");
       },
       retryTapped: function() {
         this.showConnection = false;
         this.doneTapped();
       },
       clear: function() {
-        this.$.serverConfig.value = '';
+        this.$.serverConfig.value = "";
         this.showConnection = false;
         this.$.awsDropDown.hide();
         this.$.gcpDropDown.hide();
       },
       _computeCloudProviderName: function(cloudProvider) {
-        switch(cloudProvider) {
-          case 'aws': return 'Amazon Web Services';
-          case 'gcp': return 'Google Cloud Platform';
-          default: return '';
+        switch (cloudProvider) {
+          case "aws":
+            return "Amazon Web Services";
+          case "gcp":
+            return "Google Cloud Platform";
+          default:
+            return "";
         }
       },
       _computeIsCloudProviderAws: function(cloudProvider) {
-        return cloudProvider === 'aws'
+        return cloudProvider === "aws";
       },
       _computeIsCloudProviderGcp: function(cloudProvider) {
-        return cloudProvider === 'gcp'
+        return cloudProvider === "gcp";
       },
       _computeIsGenericCloudProvider: function(cloudProvider) {
-        return cloudProvider === 'generic';
+        return cloudProvider === "generic";
       },
       _toggleAwsDropDown: function() {
-        this._toggleDropDown(this.$.awsDropDown, this.$.awsDropDownIcon)
+        this._toggleDropDown(this.$.awsDropDown, this.$.awsDropDownIcon);
       },
       _toggleGcpDropDown: function() {
         this._toggleDropDown(this.$.gcpDropDown, this.$.gcpDropDownIcon);
       },
       _toggleDropDown: function(dropDown, icon) {
         dropDown.toggle();
-        icon.icon = dropDown.opened ? 'arrow-drop-up' : 'arrow-drop-down';
+        icon.icon = dropDown.opened ? "arrow-drop-up" : "arrow-drop-down";
       },
-      onServerConfigChanged: function () {
-        this.fire('ManualServerEdited', {
-          userInput: this.$.serverConfig.value
+      onServerConfigChanged: function() {
+        this.fire("ManualServerEdited", {
+          userInput: this.$.serverConfig.value,
         });
-      }
+      },
     });
   </script>
 </dom-module>

@@ -13,11 +13,11 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<link rel='import' href='../bower_components/polymer/polymer.html'>
-<link rel='import' href='../bower_components/paper-button/paper-button.html'>
-<link rel="import" href="./cloud-install-styles.html">
-<link rel="import" href="./outline-step-view.html">
-<link rel="import" href="./style.css">
+<link rel="import" href="../bower_components/polymer/polymer.html" />
+<link rel="import" href="../bower_components/paper-button/paper-button.html" />
+<link rel="import" href="./cloud-install-styles.html" />
+<link rel="import" href="./outline-step-view.html" />
+<link rel="import" href="./style.css" />
 
 <dom-module id="outline-intro-step">
   <template>
@@ -25,10 +25,10 @@
     <style>
       :host {
         text-align: center;
-        --manual-server-green: #00BFA5;
-        --aws-orange: #FF9900;
-        --gcp-blue: #4285F4;
-        --do-blue: #1565C0;
+        --manual-server-green: #00bfa5;
+        --aws-orange: #ff9900;
+        --gcp-blue: #4285f4;
+        --do-blue: #1565c0;
       }
       .container {
         display: flex;
@@ -56,10 +56,11 @@
       }
       /* Card shadows (common to all cards).` */
       .card:hover {
-        box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.20), 0 4px 5px 0 rgba(0, 0, 0, 0.10), 0 1px 10px 0 rgba(0, 0, 0, 0.20);
+        box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2), 0 4px 5px 0 rgba(0, 0, 0, 0.1), 0 1px 10px 0 rgba(0, 0, 0, 0.2);
       }
       .card:active {
-        box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.20), 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2), 0 8px 10px 1px rgba(0, 0, 0, 0.14),
+          0 3px 14px 2px rgba(0, 0, 0, 0.12);
       }
       /* DigitalOcean card background colours (gets brighter, inactive -> active). */
       .card#digital-ocean {
@@ -87,11 +88,13 @@
       }
       .card .tag {
         font-weight: 500;
-        letter-spacing: .05em;
+        letter-spacing: 0.05em;
         font-size: 10px;
         text-transform: uppercase;
       }
-      .card#digital-ocean .tag, .card#digital-ocean .email, .card p {
+      .card#digital-ocean .tag,
+      .card#digital-ocean .email,
+      .card p {
         color: var(--medium-gray);
       }
       .card#manual-server .tag {
@@ -142,29 +145,29 @@
       #digital-ocean .description ul {
         /* NOTE: this URL must be relative to the ui_components sub dir,
            unlike our <img src="..."> attributes */
-        list-style-image: url('../images/check_white.svg');
+        list-style-image: url("../images/check_white.svg");
       }
       #manual-server .description ul {
-        list-style-image: url('../images/check_green.svg');
+        list-style-image: url("../images/check_green.svg");
       }
       #aws .description ul {
-        list-style-image: url('../images/check_orange.svg');
+        list-style-image: url("../images/check_orange.svg");
       }
       #gcp .description ul {
-        list-style-image: url('../images/check_blue.svg');
+        list-style-image: url("../images/check_blue.svg");
       }
       /* Reverse check icon for RTL languages */
       :host(:dir(rtl)) #digital-ocean .description ul {
-        list-style-image: url('../images/check_white_rtl.svg');
+        list-style-image: url("../images/check_white_rtl.svg");
       }
       :host(:dir(rtl)) #manual-server .description ul {
-        list-style-image: url('../images/check_green_rtl.svg');
+        list-style-image: url("../images/check_green_rtl.svg");
       }
       :host(:dir(rtl)) #aws .description ul {
-       list-style-image: url('../images/check_orange_rtl.svg');
+        list-style-image: url("../images/check_orange_rtl.svg");
       }
       :host(:dir(rtl)) #gcp .description ul {
-        list-style-image: url('../images/check_blue_rtl.svg');
+        list-style-image: url("../images/check_blue_rtl.svg");
       }
     </style>
 
@@ -177,7 +180,7 @@
           <div class="card-header">
             <div class="tag" hidden$="{{isSignedInToDigitalOcean}}">[[localize('setup-recommended')]]</div>
             <div class="email" hidden$="{{!isSignedInToDigitalOcean}}">{{digitalOceanEmail}}</div>
-            <img src="images/do_white_logo.svg">
+            <img src="images/do_white_logo.svg" />
           </div>
           <div class="card-title">DigitalOcean</div>
           <div class="card-body">
@@ -194,15 +197,19 @@
             </div>
           </div>
           <div class="card-footer">
-            <paper-button class="primary" hidden$="{{isSignedInToDigitalOcean}}">[[localize('setup-action')]]</paper-button>
-            <paper-button class="primary" hidden$="{{!isSignedInToDigitalOcean}}">[[localize('setup-create')]]</paper-button>
+            <paper-button class="primary" hidden$="{{isSignedInToDigitalOcean}}"
+              >[[localize('setup-action')]]</paper-button
+            >
+            <paper-button class="primary" hidden$="{{!isSignedInToDigitalOcean}}"
+              >[[localize('setup-create')]]</paper-button
+            >
           </div>
         </div>
 
         <div id="gcp" class="card" on-tap="setUpGcpTapped">
           <div class="card-header">
             <div class="tag">[[localize('setup-advanced')]]</div>
-            <img src="images/gcp-logo.svg">
+            <img src="images/gcp-logo.svg" />
           </div>
           <div class="card-title">Google Cloud Platform</div>
           <div class="card-body">
@@ -222,7 +229,7 @@
         <div id="aws" class="card" on-tap="setUpAwsTapped">
           <div class="card-header">
             <div class="tag">[[localize('setup-advanced')]]</div>
-            <img src="images/aws-logo.svg">
+            <img src="images/aws-logo.svg" />
           </div>
           <div class="card-title">Amazon Web Services</div>
           <div class="card-body">
@@ -242,11 +249,11 @@
         <div id="manual-server" class="card" on-tap="setUpGenericCloudProviderTapped">
           <div class="card-header">
             <div class="tag">[[localize('setup-advanced')]]</div>
-            <img src="images/cloud.svg">
+            <img src="images/cloud.svg" />
           </div>
           <div class="card-title">[[localize('setup-anywhere')]]</div>
           <div class="card-body">
-            <div class='description'>
+            <div class="description">
               <ul>
                 <li>[[localize('setup-tested')]]</li>
                 <li>[[localize('setup-simple-commands')]]</li>
@@ -257,14 +264,12 @@
             <paper-button on-tap="setUpGenericCloudProviderTapped">[[localize('setup-action')]]</paper-button>
           </div>
         </div>
-
       </div>
     </outline-step-view>
-
   </template>
   <script>
     Polymer({
-      is: 'outline-intro-step',
+      is: "outline-intro-step",
       properties: {
         isSignedInToDigitalOcean: Boolean,
         digitalOceanEmail: String,
@@ -274,17 +279,17 @@
         },
       },
       connectToDigitalOceanTapped: function() {
-        this.fire('ConnectToDigitalOcean');
+        this.fire("ConnectToDigitalOcean");
       },
       setUpGenericCloudProviderTapped: function() {
-        this.fire('SetUpGenericCloudProviderRequested');
+        this.fire("SetUpGenericCloudProviderRequested");
       },
       setUpAwsTapped: function() {
-        this.fire('SetUpAwsRequested');
+        this.fire("SetUpAwsRequested");
       },
       setUpGcpTapped: function() {
-        this.fire('SetUpGcpRequested');
-      }
+        this.fire("SetUpGcpRequested");
+      },
     });
   </script>
 </dom-module>

@@ -13,7 +13,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<link rel='import' href='../bower_components/polymer/polymer.html'>
+<link rel="import" href="../bower_components/polymer/polymer.html" />
 
 <!-- This is similar to the client's, except this spins endlessly and does not
 support different connection states -->
@@ -44,39 +44,39 @@ support different connection states -->
         position: absolute;
       }
       #sm {
-        top:  60px;
+        top: 60px;
         left: 60px;
         height: 40px;
-        width:  40px;
-        animation: rotating 2.0s linear infinite;
+        width: 40px;
+        animation: rotating 2s linear infinite;
         z-index: 3;
       }
       #md {
-        top:  30px;
+        top: 30px;
         left: 30px;
         height: 100px;
-        width:  100px;
+        width: 100px;
         animation: rotating 2.1s linear infinite;
         z-index: 2;
       }
       #lg {
-        top:  0;
+        top: 0;
         left: 0;
         height: 160px;
-        width:  160px;
+        width: 160px;
         animation: rotating 2.2s linear infinite;
         z-index: 1;
       }
     </style>
     <div id="container">
-      <img id="lg" src="images/connected_large.png">
-      <img id="md" src="images/connected_large.png">
-      <img id="sm" src="images/connected_large.png">
+      <img id="lg" src="images/connected_large.png" />
+      <img id="md" src="images/connected_large.png" />
+      <img id="sm" src="images/connected_large.png" />
     </div>
   </template>
   <script>
     Polymer({
-      is: 'outline-progress-spinner'
+      is: "outline-progress-spinner",
     });
   </script>
 </dom-module>

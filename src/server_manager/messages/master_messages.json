@@ -169,7 +169,7 @@
   },
   "data_limits_usage": {
     "message": "$USED$ of $TOTAL$ used",
-    "description": "This string appears as a title in a dialog to advertise the data limits feature.",
+    "description": "This string appears in a tooltip when the data limits feature is enabled. It lets the user know how much data an access key has used, relative to the limit.",
     "placeholders": {
       "USED": {
         "content": "{used}",
@@ -502,8 +502,14 @@
     "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'Create' should be translated and included untranslated in parentheses."
   },
   "key": {
-    "message": "Key",
-    "description": "This string appears in the server view as a placeholder for a newly created access key."
+    "message": "Key $KEY_ID$",
+    "description": "This string appears in the server view as a placeholder for a newly created access key with id number KEY_ID.",
+    "placeholders": {
+      "KEY_ID": {
+        "content": "{keyId}",
+        "example": "1"
+      }
+    }
   },
   "manual_server_assign_firewall": {
     "message": "Assign firewall rule",

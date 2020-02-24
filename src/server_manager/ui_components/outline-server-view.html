@@ -13,34 +13,34 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<link rel='import' href='../bower_components/polymer/polymer.html'>
-<link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
-<link rel='import' href='../bower_components/iron-icons/iron-icons.html'>
-<link rel='import' href='../bower_components/iron-pages/iron-pages.html'>
-<link rel='import' href='../bower_components/iron-icons/editor-icons.html'>
-<link rel='import' href='../bower_components/iron-icons/social-icons.html'>
-<link rel='import' href='../bower_components/paper-icon-button/paper-icon-button.html'>
-<link rel='import' href='../bower_components/paper-item/paper-item.html'>
-<link rel='import' href='../bower_components/paper-listbox/paper-listbox.html'>
-<link rel='import' href='../bower_components/paper-menu-button/paper-menu-button.html'>
-<link rel='import' href='../bower_components/paper-progress/paper-progress.html'>
-<link rel='import' href='../bower_components/paper-tabs/paper-tabs.html'>
-<link rel='import' href='../bower_components/paper-tooltip/paper-tooltip.html'>
+<link rel="import" href="../bower_components/polymer/polymer.html" />
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html" />
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html" />
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html" />
+<link rel="import" href="../bower_components/iron-icons/editor-icons.html" />
+<link rel="import" href="../bower_components/iron-icons/social-icons.html" />
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html" />
+<link rel="import" href="../bower_components/paper-item/paper-item.html" />
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html" />
+<link rel="import" href="../bower_components/paper-menu-button/paper-menu-button.html" />
+<link rel="import" href="../bower_components/paper-progress/paper-progress.html" />
+<link rel="import" href="../bower_components/paper-tabs/paper-tabs.html" />
+<link rel="import" href="../bower_components/paper-tooltip/paper-tooltip.html" />
 
-<link rel='import' href='./cloud-install-styles.html'>
-<link rel='import' href='./outline-iconset.html'>
-<link rel='import' href='./outline-help-bubble.html'>
-<link rel='import' href='./outline-metrics-option-dialog.html'>
-<link rel='import' href='./outline-server-settings.html'>
-<link rel='import' href='./outline-share-dialog.html'>
+<link rel="import" href="./cloud-install-styles.html" />
+<link rel="import" href="./outline-iconset.html" />
+<link rel="import" href="./outline-help-bubble.html" />
+<link rel="import" href="./outline-metrics-option-dialog.html" />
+<link rel="import" href="./outline-server-settings.html" />
+<link rel="import" href="./outline-share-dialog.html" />
 
-<script src='../node_modules.js'></script>
+<script src="../node_modules.js"></script>
 
-<dom-module id='outline-server-view'>
+<dom-module id="outline-server-view">
   <template>
-    <style include='cloud-install-styles'></style>
+    <style include="cloud-install-styles"></style>
     <style>
-     .container {
+      .container {
         display: flex;
         flex-direction: column;
         padding: 24px;
@@ -62,7 +62,9 @@
           color: var(--dark-gray);
         }
       }
-      div[name="connections"], div[name="settings"], .access-key-list {
+      div[name="connections"],
+      div[name="settings"],
+      .access-key-list {
         margin-top: 24px;
       }
       .server-header {
@@ -79,11 +81,12 @@
       .server-name h3 {
         font-size: 36px;
         font-weight: 400;
-        color: #FFFFFF;
+        color: #ffffff;
         flex: 11;
         margin: 0 0 6px 0;
       }
-      .server-location, .unreachable-server paper-button {
+      .server-location,
+      .unreachable-server paper-button {
         color: var(--medium-gray);
       }
       .unreachable-server {
@@ -121,7 +124,7 @@
       }
       .stats {
         margin: 30px 0 18px 0;
-        color: #FFF;
+        color: #fff;
         white-space: nowrap;
       }
       .stats > * {
@@ -132,7 +135,8 @@
       .stats h3 {
         font-size: 48px;
       }
-      .stats p, .stats-card p {
+      .stats p,
+      .stats-card p {
         margin: 0;
         font-size: 14px;
         font-weight: normal;
@@ -149,10 +153,12 @@
           font-size: 12px;
         }
       }
-      .transfer-stats .stats, .transfer-stats .stats p {
+      .transfer-stats .stats,
+      .transfer-stats .stats p {
         color: var(--primary-green);
       }
-      .stats-card p, .stats-card iron-icon {
+      .stats-card p,
+      .stats-card iron-icon {
         color: var(--medium-gray);
       }
       .access-key-list {
@@ -321,7 +327,8 @@
         align-items: center;
         text-align: end;
       }
-      .connect-button, .share-button {
+      .connect-button,
+      .share-button {
         color: white;
         padding: 0;
         margin: 0;
@@ -336,7 +343,7 @@
         text-align: center;
       }
       outline-help-bubble h3 {
-        padding-bottom :0;
+        padding-bottom: 0;
         font-weight: 500;
         line-height: 28px;
         font-size: 16px;
@@ -354,7 +361,8 @@
         flex: 1;
       }
       /* Mirror icons */
-      :host(:dir(rtl)) iron-icon, :host(:dir(rtl)) .share-button,
+      :host(:dir(rtl)) iron-icon,
+      :host(:dir(rtl)) .share-button,
       :host(:dir(rtl)) .access-key-icon {
         transform: scaleX(-1);
       }
@@ -364,7 +372,15 @@
       <div class="server-header">
         <div class="server-name">
           <h3>[[serverName]]</h3>
-          <paper-menu-button horizontal-align="right" class="overflow-menu flex-1" hidden$="{{!isServerReachable}}" close-on-activate no-animations dynamic-align no-overlap>
+          <paper-menu-button
+            horizontal-align="right"
+            class="overflow-menu flex-1"
+            hidden$="{{!isServerReachable}}"
+            close-on-activate
+            no-animations
+            dynamic-align
+            no-overlap
+          >
             <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
             <paper-listbox slot="dropdown-content">
               <paper-item hidden$="[[!isServerManaged]]" on-tap="destroyServer">
@@ -390,14 +406,15 @@
       <div class="card-section unreachable-server" hidden$="{{isServerReachable}}">
         <img class="server-img" src="images/server-unreachable.png" />
         <h3>[[localize('server-unreachable')]]</h3>
-        <p>
-          <div>[[localize('server-unreachable-description')]]</div>
-          <span hidden$="{{isServerManaged}}">[[localize('server-unreachable-managed-description')]]</span>
-          <span hidden$="{{!isServerManaged}}">[[localize('server-unreachable-manual-description')]]</span>
-        </p>
+        <p></p>
+        <div>[[localize('server-unreachable-description')]]</div>
+        <span hidden$="{{isServerManaged}}">[[localize('server-unreachable-managed-description')]]</span>
+        <span hidden$="{{!isServerManaged}}">[[localize('server-unreachable-manual-description')]]</span>
         <div class="button-container">
           <paper-button on-tap="removeServer" hidden$="{{isServerManaged}}">[[localize('server-remove')]]</paper-button>
-          <paper-button on-tap="destroyServer" hidden$="{{!isServerManaged}}">[[localize('server-destroy')]]</paper-button>
+          <paper-button on-tap="destroyServer" hidden$="{{!isServerManaged}}"
+            >[[localize('server-destroy')]]</paper-button
+          >
           <paper-button on-tap="retryDisplayingServer" class="try-again-btn">[[localize('retry')]]</paper-button>
         </div>
       </div>
@@ -415,7 +432,7 @@
             </div>
             <div hidden$="[[!isServerManaged]]" class="stats-card card-section">
               <div>
-                <img class="digital-ocean-icon" src="images/do_white_logo.svg"/>
+                <img class="digital-ocean-icon" src="images/do_white_logo.svg" />
               </div>
               <div class="stats">
                 <h3>[[managedServerUtilzationPercentage]]</h3>
@@ -438,36 +455,59 @@
             <div class="access-key-row header-row">
               <span class="access-key-container highlight-on-hover" on-tap="_setSortByOrToggleDirection" data-sort-by="name">
                 [[localize('server-access-keys')]]
-                <iron-icon class="sort-icon" icon="arrow-downward" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'name', -1)]]"></iron-icon>
-                <iron-icon class="sort-icon" icon="arrow-upward" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'name', 1)]]"></iron-icon>
+                <iron-icon
+                  class="sort-icon"
+                  icon="arrow-drop-down"
+                  hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'name', -1)]]"
+                ></iron-icon>
+                <iron-icon
+                  class="sort-icon"
+                  icon="arrow-drop-up"
+                  hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'name', 1)]]"
+                ></iron-icon>
               </span>
               <span class="hover-spacer"></span>
               <span class="measurement-container highlight-on-hover" on-tap="_setSortByOrToggleDirection" data-sort-by="usage">
                 [[localize('server-usage')]]
-                <iron-icon class="sort-icon" icon="arrow-downward" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'usage', -1)]]"></iron-icon>
-                <iron-icon class="sort-icon" icon="arrow-upward" hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'usage', 1)]]"></iron-icon>
+                <iron-icon
+                  class="sort-icon"
+                  icon="arrow-drop-down"
+                  hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'usage', -1)]]"
+                ></iron-icon>
+                <iron-icon
+                  class="sort-icon"
+                  icon="arrow-drop-up"
+                  hidden$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'usage', 1)]]"
+                ></iron-icon>
               </span>
               <span class="flex-1 header-row-spacer"></span>
             </div>
             <!-- admin row -->
             <div class="access-key-row" id="managerRow">
               <span class="access-key-container">
-                <img class="manager-access-key-icon access-key-icon" src="images/manager-key-avatar.svg">
+                <img class="manager-access-key-icon access-key-icon" src="images/manager-key-avatar.svg" />
                 <div class="access-key-name">
                   <div>[[localize('server-my-access-key')]]</div>
                   <div id="manager-access-key-description">[[localize('server-connect-devices')]]</div>
                 </div>
               </span>
               <span class="measurement-container">
-                  <span class="measurement">[[_formatBytesTransferred(myConnection.transferredBytes, "...")]]</span>
-                  <paper-progress value="[[myConnection.relativeTraffic]]" class$="[[_computePaperProgressClass(isAccessKeyDataLimitEnabled)]]"></paper-progress>
-                  <paper-tooltip animation-delay="0" offset="0" position="top" hidden$="[[!isAccessKeyDataLimitEnabled]]">
-                    [[_getDataLimitsUsageString(myConnection)]]
-                  </paper-tooltip>
-                </span>
+                <span class="measurement">[[_formatBytesTransferred(myConnection.transferredBytes, "...")]]</span>
+                <paper-progress
+                  value="[[myConnection.relativeTraffic]]"
+                  class$="[[_computePaperProgressClass(isAccessKeyDataLimitEnabled)]]"
+                ></paper-progress>
+                <paper-tooltip animation-delay="0" offset="0" position="top" hidden$="[[!isAccessKeyDataLimitEnabled]]">
+                  [[_getDataLimitsUsageString(myConnection)]]
+                </paper-tooltip>
+              </span>
               <span class="actions">
                 <span class="flex-1">
-                  <paper-icon-button icon="outline-iconset:devices" class="connect-button" on-tap="_handleConnectPressed"></paper-icon-button>
+                  <paper-icon-button
+                    icon="outline-iconset:devices"
+                    class="connect-button"
+                    on-tap="_handleConnectPressed"
+                  ></paper-icon-button>
                 </span>
                 <span class="overflow-menu flex-1"></span>
               </span>
@@ -498,12 +538,19 @@
                     <paper-icon-button icon="outline-iconset:share" class="share-button" on-tap="_handleShareCodePressed"></paper-icon-button>
                   </span>
                   <span class="flex-1">
-                    <paper-menu-button horizontal-align="right" class="overflow-menu" close-on-activate no-animations no-overlap dynamic-align>
+                    <paper-menu-button
+                      horizontal-align="right"
+                      class="overflow-menu"
+                      close-on-activate
+                      no-animations
+                      no-overlap
+                      dynamic-align
+                    >
                       <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
                       <paper-listbox slot="dropdown-content">
-                      <paper-item on-tap="_handleRenameAccessKeyPressed">
-                        <iron-icon icon="icons:create"></iron-icon>[[localize('server-access-key-rename')]]
-                      </paper-item>
+                        <paper-item on-tap="_handleRenameAccessKeyPressed">
+                          <iron-icon icon="icons:create"></iron-icon>[[localize('server-access-key-rename')]]
+                        </paper-item>
                         <paper-item on-tap="_handleRemoveAccessKeyPressed">
                           <iron-icon icon="icons:delete"></iron-icon>[[localize('remove')]]
                         </paper-item>
@@ -528,7 +575,12 @@
             <!-- add key button -->
             <div class="access-key-row" id="addAccessKeyRow">
               <span class="access-key-container">
-                <paper-icon-button icon="icons:add" on-tap="_handleAddAccessKeyPressed" id="addAccessKeyButton" class="access-key-icon"></paper-icon-button>
+                <paper-icon-button
+                  icon="icons:add"
+                  on-tap="_handleAddAccessKeyPressed"
+                  id="addAccessKeyButton"
+                  class="access-key-icon"
+                ></paper-icon-button>
                 <div class="add-new-key" on-tap="_handleAddAccessKeyPressed">[[localize('server-access-key-new')]]</div>
               </span>
             </div>
@@ -553,20 +605,21 @@
             server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]"
             is-server-managed="[[isServerManaged]]"
             server-location="[[serverLocation]]"
-            localize="[[localize]]">
+            localize="[[localize]]"
+          >
           </outline-server-settings>
         </div>
       </iron-pages>
     </div>
 
     <outline-help-bubble id="getConnectedHelpBubble" vertical-align="bottom" horizontal-align="right">
-      <img src="images/connect-tip-2x.png">
+      <img src="images/connect-tip-2x.png" />
       <h3>[[localize('server-help-connection-title')]]</h3>
       <p>[[localize('server-help-connection-description')]]</p>
       <paper-button on-tap="closeGetConnectedHelpBubble">[[localize('server-help-connection-ok')]]</paper-button>
     </outline-help-bubble>
     <outline-help-bubble id="addAccessKeyHelpBubble" vertical-align="bottom" horizontal-align="left">
-      <img src="images/key-tip-2x.png">
+      <img src="images/key-tip-2x.png" />
       <h3>[[localize('server-help-access-key-title')]]</h3>
       <p>[[localize('server-help-access-key-description')]]</p>
       <paper-button on-tap="closeAddAccessKeyHelpBubble">[[localize('server-help-access-key-next')]]</paper-button>
@@ -576,15 +629,14 @@
       <p>[[localize('data-limits-dialog-text')]]</p>
       <paper-button on-tap="closeDataLimitsHelpBubble">[[localize('ok')]]</paper-button>
     </outline-help-bubble>
-
   </template>
   <script>
-    const MY_CONNECTION_USER_ID = '0';
+    const MY_CONNECTION_USER_ID = "0";
 
     Polymer({
-      is: 'outline-server-view',
-      created: function () {
-        this.bytes = require('bytes');
+      is: "outline-server-view",
+      created: function() {
+        this.bytes = require("bytes");
       },
       properties: {
         serverId: String,
@@ -622,20 +674,20 @@
         monthlyCost: {type: Number, value: 0},
         selectedTab: {
           type: String,
-          value: 'connections',
+          value: "connections",
         },
         managedServerUtilzationPercentage: {
           type: Number,
-          computed: '_computeManagedServerUtilzationPercentage(totalInboundBytes, monthlyOutboundTransferBytes)',
+          computed: "_computeManagedServerUtilzationPercentage(totalInboundBytes, monthlyOutboundTransferBytes)",
         },
         accessKeySortBy: {
           type: String,
-          value: 'name'
+          value: "name",
         },
         accessKeySortDirection: {
           // 1 == ascending, -1 == descending
           type: Number,
-          value: 1
+          value: 1,
         },
         _newAccessKey: {
           type: Object,
@@ -643,13 +695,13 @@
         },
         localize: {
           type: Function,
-          readonly: true
+          readonly: true,
         },
       },
       observers: [
-        '_accessKeysAddedOrRemoved(accessKeyRows.splices)',
-        '_myConnectionChanged(myConnection)',
-        '_selectedTabChanged(selectedTab)',
+        "_accessKeysAddedOrRemoved(accessKeyRows.splices)",
+        "_myConnectionChanged(myConnection)",
+        "_selectedTabChanged(selectedTab)",
       ],
       // Parameter `accessKey` has the format {
       //   id: string,
@@ -670,8 +722,6 @@
         const input = e.target;
         const accessKey = this._newAccessKey;
         this.fire('RenameAccessKeyRequested', {
-          accessKeyId: this._newAccessKey.id,
-          newName: input.value,
           entry: {
             commitName: () => {
               accessKey.name = input.value;
@@ -687,22 +737,22 @@
       removeAccessKey: function(accessKeyId) {
         for (let ui in this.accessKeyRows) {
           if (this.accessKeyRows[ui].id === accessKeyId) {
-            this.splice('accessKeyRows', ui, 1);
+            this.splice("accessKeyRows", ui, 1);
             return;
           }
         }
       },
       _handleAddAccessKeyPressed: function() {
-        this.fire('AddAccessKeyRequested');
+        this.fire("AddAccessKeyRequested");
         this.$.addAccessKeyHelpBubble.hide();
       },
       _handleNameInputKeyDown: function(event) {
         const input = event.target;
-        if (event.key === 'Escape') {
+        if (event.key === "Escape") {
           const accessKey = event.model.item;
           input.value = accessKey.name;
           input.blur();
-        } else if (event.key === 'Enter') {
+        } else if (event.key === "Enter") {
           input.blur();
         }
       },
@@ -714,7 +764,7 @@
           return;
         }
         input.disabled = true;
-        this.fire('RenameAccessKeyRequested', {
+        this.fire("RenameAccessKeyRequested", {
           accessKeyId: accessKey.id,
           newName: displayName,
           entry: {
@@ -725,46 +775,49 @@
             revertName: () => {
               input.value = accessKey.name;
               input.disabled = false;
-            }
-          }
+            },
+          },
         });
       },
       _handleRenameAccessKeyPressed: function(event) {
-        const input = this.$.accessKeysContainer.querySelectorAll(
-            '.access-key-row .access-key-container > input')[event.model.index];
+        const input = this.$.accessKeysContainer.querySelectorAll(".access-key-row .access-key-container > input")[
+          event.model.index
+        ];
         // This needs to be deferred because the closing menu messes up with the focus.
-        window.setTimeout(() => { input.focus() }, 0);
+        window.setTimeout(() => {
+          input.focus();
+        }, 0);
       },
       _handleConnectPressed: function() {
         this.$.getConnectedHelpBubble.hide();
-        this.fire('OpenGetConnectedDialogRequested', {accessKey: this.myConnection.accessUrl});
+        this.fire("OpenGetConnectedDialogRequested", {accessKey: this.myConnection.accessUrl});
       },
       _handleShareCodePressed: function(event) {
         const accessKey = event.model.item;
-        this.fire('OpenShareDialogRequested', {accessKey: accessKey.accessUrl});
+        this.fire("OpenShareDialogRequested", {accessKey: accessKey.accessUrl});
       },
       _handleRemoveAccessKeyPressed: function(e) {
         const accessKey = e.model.item;
-        this.fire('RemoveAccessKeyRequested', {accessKeyId: accessKey.id});
+        this.fire("RemoveAccessKeyRequested", {accessKeyId: accessKey.id});
       },
       _encodeURIComponent: encodeURIComponent,
       setServerTransferredData(totalBytes) {
-        this.totalInboundBytes = totalBytes
+        this.totalInboundBytes = totalBytes;
       },
       updateAccessKeyRow(accessKeyId, fields) {
         if (accessKeyId === MY_CONNECTION_USER_ID) {
-          newAccessKeyRow = Object.assign({}, this.get('myConnection'), fields);
-          this.set('myConnection', newAccessKeyRow);
+          newAccessKeyRow = Object.assign({}, this.get("myConnection"), fields);
+          this.set("myConnection", newAccessKeyRow);
         }
         for (let ui in this.accessKeyRows) {
           if (this.accessKeyRows[ui].id === accessKeyId) {
-            newAccessKeyRow = Object.assign({}, this.get(['accessKeyRows', ui]), fields);
-            this.set(['accessKeyRows', ui], newAccessKeyRow);
+            newAccessKeyRow = Object.assign({}, this.get(["accessKeyRows", ui]), fields);
+            this.set(["accessKeyRows", ui], newAccessKeyRow);
             return;
           }
         }
       },
-      _formatBytesTransferred: function (numBytes, emptyValue = '') {
+      _formatBytesTransferred: function(numBytes, emptyValue = "") {
         if (!numBytes) {
           // numBytes may not be set for manual servers, or may be 0 for
           // unused access keys.
@@ -779,9 +832,9 @@
           numDecimals = 1;
         }
 
-        return this.bytes(numBytes, { unitSeparator: ' ', decimalPlaces: numDecimals });
+        return this.bytes(numBytes, {unitSeparator: " ", decimalPlaces: numDecimals});
       },
-      _getFormattedTransferredUnit: function(numBytes, emptyValue = '') {
+      _getFormattedTransferredUnit: function(numBytes, emptyValue = "") {
         const formattedTransfer = this._formatBytesTransferred(numBytes);
         if (!formattedTransfer) {
           return emptyValue;
@@ -792,7 +845,7 @@
         }
         return units.pop();
       },
-      _getFormattedTransferredValue: function(numBytes, emptyValue = '') {
+      _getFormattedTransferredValue: function(numBytes, emptyValue = "") {
         const formattedTransfer = this._formatBytesTransferred(numBytes);
         if (!formattedTransfer) {
           return emptyValue;
@@ -803,12 +856,12 @@
       _computeManagedServerUtilzationPercentage: function(numBytes, monthlyLimitBytes) {
         let utilizationPercentage = 0;
         if (monthlyLimitBytes && numBytes) {
-          utilizationPercentage = Math.round(numBytes / monthlyLimitBytes * 100);
+          utilizationPercentage = Math.round((numBytes / monthlyLimitBytes) * 100);
         }
-        if (document.documentElement.dir === 'rtl') {
+        if (document.documentElement.dir === "rtl") {
           return `%${utilizationPercentage}`;
         }
-        return `${utilizationPercentage}%`
+        return `${utilizationPercentage}%`;
       },
       _accessKeysAddedOrRemoved: function(changeRecord) {
         // Check for myConnection and regular access keys.
@@ -828,7 +881,7 @@
         }
       },
       _selectedTabChanged(selectedTab) {
-        if (this.selectedTab === 'settings') {
+        if (this.selectedTab === "settings") {
           this.closeAddAccessKeyHelpBubble();
           this.closeGetConnectedHelpBubble();
           this.closeDataLimitsHelpBubble();
@@ -840,13 +893,13 @@
       // are initialized before this point, setPosition will not work and
       // they will appear in the top left of the view.
       showGetConnectedHelpBubble: function() {
-        return this._showHelpBubble('getConnectedHelpBubble', 'managerRow');
+        return this._showHelpBubble("getConnectedHelpBubble", "managerRow");
       },
       showAddAccessKeyHelpBubble: function() {
-        return this._showHelpBubble('addAccessKeyHelpBubble', 'addAccessKeyRow', 'down', 'left')
+        return this._showHelpBubble("addAccessKeyHelpBubble", "addAccessKeyRow", "down", "left");
       },
       showDataLimitsHelpBubble: function() {
-        return this._showHelpBubble('dataLimitsHelpBubble', 'settingsTab', 'up', 'right');
+        return this._showHelpBubble("dataLimitsHelpBubble", "settingsTab", "up", "right");
       },
       closeAddAccessKeyHelpBubble: function() {
         this.$.addAccessKeyHelpBubble.hide();
@@ -857,12 +910,11 @@
       closeDataLimitsHelpBubble: function() {
         this.$.dataLimitsHelpBubble.hide();
       },
-      _showHelpBubble: function(helpBubbleId, positionTargetId, arrowDirection='down',
-                                arrowAlignment='right') {
-        return new Promise((resolve) => {
+      _showHelpBubble: function(helpBubbleId, positionTargetId, arrowDirection = "down", arrowAlignment = "right") {
+        return new Promise(resolve => {
           const helpBubble = this.$[helpBubbleId];
           helpBubble.show(this.$[positionTargetId], arrowDirection, arrowAlignment);
-          helpBubble.addEventListener('outline-help-bubble-dismissed', resolve);
+          helpBubble.addEventListener("outline-help-bubble-dismissed", resolve);
         });
       },
       isRegularConnection: function(item) {
@@ -878,7 +930,7 @@
         this.accessKeySortDirection *= -1; // Toggle sort direction.
       },
       _sortAccessKeys: function(accessKeySortBy, accessKeySortDirection) {
-        if (accessKeySortBy === 'usage') {
+        if (accessKeySortBy === "usage") {
           return function(a, b) {
             return (a.transferredBytes - b.transferredBytes) * this.accessKeySortDirection;
           }.bind(this);
@@ -895,27 +947,31 @@
         }.bind(this);
         
       },
-      _computeShouldShowSortIcon: function(accessKeySortBy, accessKeySortDirection,
-                                           elementSortBy, elementSortDirection) {
+      _computeShouldShowSortIcon: function(
+        accessKeySortBy,
+        accessKeySortDirection,
+        elementSortBy,
+        elementSortDirection
+      ) {
         return accessKeySortBy === elementSortBy && accessKeySortDirection === elementSortDirection;
       },
       destroyServer: function() {
-        this.fire('DeleteServerRequested');
+        this.fire("DeleteServerRequested");
       },
       removeServer: function() {
-        this.fire('ForgetServerRequested');
+        this.fire("ForgetServerRequested");
       },
       _computePaperProgressClass: function(isAccessKeyDataLimitEnabled) {
-        return isAccessKeyDataLimitEnabled ? 'data-limits' : '';
+        return isAccessKeyDataLimitEnabled ? "data-limits" : "";
       },
       _getDataLimitsUsageString: function(accessKey) {
         if (!this.accessKeyDataLimit) {
-          return '';
+          return "";
         }
-        const used = this._formatBytesTransferred(accessKey.transferredBytes, '0');
-        const total = this.accessKeyDataLimit.value + ' ' + this.accessKeyDataLimit.unit;
-        return this.localize('data-limits-usage', 'used', used, 'total', total);
-      }
+        const used = this._formatBytesTransferred(accessKey.transferredBytes, "0");
+        const total = this.accessKeyDataLimit.value + " " + this.accessKeyDataLimit.unit;
+        return this.localize("data-limits-usage", "used", used, "total", total);
+      },
     });
   </script>
 </dom-module>

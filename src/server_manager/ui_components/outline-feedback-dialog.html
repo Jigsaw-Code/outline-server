@@ -14,20 +14,20 @@
   limitations under the License.
 -->
 
-<link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
-<link rel='import' href='../bower_components/paper-dropdown-menu/paper-dropdown-menu.html'>
-<link rel='import' href='../bower_components/paper-item/paper-item.html'>
-<link rel='import' href='../bower_components/paper-listbox/paper-listbox.html'>
-<link rel='import' href='../bower_components/paper-input/paper-input.html'>
-<link rel='import' href='../bower_components/paper-input/paper-textarea.html'>
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html" />
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html" />
+<link rel="import" href="../bower_components/paper-item/paper-item.html" />
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html" />
+<link rel="import" href="../bower_components/paper-input/paper-input.html" />
+<link rel="import" href="../bower_components/paper-input/paper-textarea.html" />
 
 <!-- this is needed to fix the "KeyframeEffect is not defined"
 see https://github.com/PolymerElements/paper-swatch-picker/issues/36 -->
-<link rel='import' href='../bower_components/web-animations-js/web-animations-next.min.html'>
+<link rel="import" href="../bower_components/web-animations-js/web-animations-next.min.html" />
 
-<dom-module id='outline-feedback-dialog'>
+<dom-module id="outline-feedback-dialog">
   <template>
-    <style include='cloud-install-styles'></style>
+    <style include="cloud-install-styles"></style>
     <style>
       :host {
         margin: 0px;
@@ -75,19 +75,23 @@ see https://github.com/PolymerElements/paper-swatch-picker/issues/36 -->
         display: none;
       }
       .installationFailed #userFeedback {
-        background-color: #ECEFF1;
+        background-color: #eceff1;
         margin-top: 1em;
       }
       .installationFailed #feedbackExplanation {
         display: block;
       }
     </style>
-    <paper-dialog id='dialog' modal>
+    <paper-dialog id="dialog" modal>
       <h2>[[title]]</h2>
-      <div id='feedbackWrapper'>
-        <p id='feedbackExplanation'>[[feedbackExplanation]]</p>
-        <paper-dropdown-menu id='feedbackCategory' horizontal-align='left' on-selected-item-changed='feedbackCategoryChanged'>
-          <paper-listbox id='feedbackCategoryListbox' slot='dropdown-content' class='dropdown-content' selected='0'>
+      <div id="feedbackWrapper">
+        <p id="feedbackExplanation">[[feedbackExplanation]]</p>
+        <paper-dropdown-menu
+          id="feedbackCategory"
+          horizontal-align="left"
+          on-selected-item-changed="feedbackCategoryChanged"
+        >
+          <paper-listbox id="feedbackCategoryListbox" slot="dropdown-content" class="dropdown-content" selected="0">
             <paper-item>[[localize('feedback-general')]]</paper-item>
             <paper-item>[[localize('feedback-install')]]</paper-item>
             <paper-item>[[localize('feedback-connection')]]</paper-item>
@@ -96,47 +100,69 @@ see https://github.com/PolymerElements/paper-swatch-picker/issues/36 -->
             <paper-item>[[localize('feedback-suggestion')]]</paper-item>
           </paper-listbox>
         </paper-dropdown-menu>
-        <paper-dropdown-menu id="cloudProvider" horizontal-align="left" placeholder="[[localize('feedback-cloud-provider')]]" hidden$="[[!shouldShowCloudProvider]]" error-message="[[localize('feedback-cloud-provider-error')]]">
-          <paper-listbox id='cloudProviderListbox' slot='dropdown-content' class='dropdown-content'>
+        <paper-dropdown-menu
+          id="cloudProvider"
+          horizontal-align="left"
+          placeholder="[[localize('feedback-cloud-provider')]]"
+          hidden$="[[!shouldShowCloudProvider]]"
+          error-message="[[localize('feedback-cloud-provider-error')]]"
+        >
+          <paper-listbox id="cloudProviderListbox" slot="dropdown-content" class="dropdown-content">
             <paper-item>DigitalOcean</paper-item>
             <paper-item>Amazon Web Services</paper-item>
             <paper-item>Google Cloud Platform</paper-item>
             <paper-item>[[localize('feedback-other')]]</paper-item>
           </paper-listbox>
         </paper-dropdown-menu>
-        <paper-input id="userEmail" type="text" placeholder="[[localize('feedback-email')]]" on-value-changed="userEmailValueChanged"></paper-input>
-        <p class="disclaimer" hidden$=[[!shouldShowLanguageDisclaimer]]>[[localize('feedback-disclaimer')]]</p>
-        <paper-textarea id="userFeedback" type="text" label="[[localize('feedback-label')]]" always-float-label rows="4" error-message="[[localize('feedback-error')]]" on-value-changed="userFeedbackValueChanged"></paper-textarea>
-        <p inner-h-t-m-l="[[localize('feedback-privacy', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]">
-        </p>
-      </div>  <!-- end of #feedbackWrapper -->
+        <paper-input
+          id="userEmail"
+          type="text"
+          placeholder="[[localize('feedback-email')]]"
+          on-value-changed="userEmailValueChanged"
+        ></paper-input>
+        <p class="disclaimer" hidden$="[[!shouldShowLanguageDisclaimer]]">[[localize('feedback-disclaimer')]]</p>
+        <paper-textarea
+          id="userFeedback"
+          type="text"
+          label="[[localize('feedback-label')]]"
+          always-float-label
+          rows="4"
+          error-message="[[localize('feedback-error')]]"
+          on-value-changed="userFeedbackValueChanged"
+        ></paper-textarea>
+        <p
+          inner-h-t-m-l="[[localize('feedback-privacy', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"
+        ></p>
+      </div>
+      <!-- end of #feedbackWrapper -->
       <p class="buttons">
         <paper-button dialog-dismiss>[[localize('cancel')]]</paper-button>
-        <paper-button autofocus on-tap='submitTappedHandler'>[[localize('feedback-submit')]]</paper-button>
+        <paper-button autofocus on-tap="submitTappedHandler">[[localize('feedback-submit')]]</paper-button>
       </p>
     </paper-dialog>
   </template>
   <script>
     Polymer({
-      is: 'outline-feedback-dialog',
+      is: "outline-feedback-dialog",
       properties: {
         title: String,
         feedbackExplanation: String,
         feedbackCategories: {
           type: Object,
           readonly: true,
-          value: { // Maps a category to its `feedbackCategoryListbox` item index.
+          value: {
+            // Maps a category to its `feedbackCategoryListbox` item index.
             GENERAL: 0,
             INSTALLATION: 1,
             CONNECTION: 2,
             CONNECTION_OTHERS: 3,
             MANAGEMENT: 4,
             SUGGESTIONS: 5,
-          }
+          },
         },
         hasEnteredEmail: {
           type: Boolean,
-          value: false
+          value: false,
         },
         shouldShowCloudProvider: {
           type: Boolean,
@@ -144,31 +170,31 @@ see https://github.com/PolymerElements/paper-swatch-picker/issues/36 -->
         },
         shouldShowLanguageDisclaimer: {
           type: Boolean,
-          computed: '_computeShouldShowLanguageDisclaimer(hasEnteredEmail)',
+          computed: "_computeShouldShowLanguageDisclaimer(hasEnteredEmail)",
         },
         localize: {
           type: Function,
-          readonly: true
+          readonly: true,
         },
       },
       open: function(prepopulatedMessage, showInstallationFailed) {
         // Clear all fields, in case feedback had already been entered.
         if (showInstallationFailed) {
-          this.title = this.localize('feedback-title-install');
-          this.feedbackExplanation = this.localize('feedback-explanation-install');
-          this.$.dialog.classList.add('installationFailed');
+          this.title = this.localize("feedback-title-install");
+          this.feedbackExplanation = this.localize("feedback-explanation-install");
+          this.$.dialog.classList.add("installationFailed");
           this.$.feedbackCategoryListbox.selected = this.feedbackCategories.INSTALLATION;
         } else {
-          this.title = this.localize('feedback-title-generic');
-          this.feedbackExplanation = '';
-          this.$.dialog.classList.remove('installationFailed');
+          this.title = this.localize("feedback-title-generic");
+          this.feedbackExplanation = "";
+          this.$.dialog.classList.remove("installationFailed");
           // TODO(alalama): figure out why the localized category doesn't get displayed the first
           // time opening the dialog.
           this.$.feedbackCategoryListbox.selected = this.feedbackCategories.GENERAL;
         }
         this.$.userFeedback.invalid = false;
-        this.$.userFeedback.value = prepopulatedMessage || '';
-        this.$.userEmail.value = '';
+        this.$.userFeedback.value = prepopulatedMessage || "";
+        this.$.userEmail.value = "";
         this.$.cloudProviderListbox.selected = undefined;
         this.$.dialog.open();
       },
@@ -185,19 +211,21 @@ see https://github.com/PolymerElements/paper-swatch-picker/issues/36 -->
         };
         const selectedCloudProvider = this.$.cloudProvider.selectedItemLabel;
         if (this.shouldShowCloudProvider && !!selectedCloudProvider) {
-          data['cloudProvider'] = selectedCloudProvider;
+          data["cloudProvider"] = selectedCloudProvider;
         }
-        this.fire('SubmitFeedback', data);
+        this.fire("SubmitFeedback", data);
         this.$.dialog.close();
       },
-      userEmailValueChanged: function () {
+      userEmailValueChanged: function() {
         this.hasEnteredEmail = !!this.$.userEmail.value;
       },
       feedbackCategoryChanged: function() {
         const selectedCategory = this.$.feedbackCategoryListbox.selected;
-        if (selectedCategory === this.feedbackCategories.INSTALLATION ||
-            selectedCategory === this.feedbackCategories.CONNECTION ||
-            selectedCategory === this.feedbackCategories.CONNECTION_OTHERS) {
+        if (
+          selectedCategory === this.feedbackCategories.INSTALLATION ||
+          selectedCategory === this.feedbackCategories.CONNECTION ||
+          selectedCategory === this.feedbackCategories.CONNECTION_OTHERS
+        ) {
           this.shouldShowCloudProvider = true;
         } else {
           this.shouldShowCloudProvider = false;
@@ -213,7 +241,7 @@ see https://github.com/PolymerElements/paper-swatch-picker/issues/36 -->
       },
       // Returns whether the window's locale is English (i.e. EN, en-US) and the user has
       // entered their email.
-      _computeShouldShowLanguageDisclaimer: function (hasEnteredEmail) {
+      _computeShouldShowLanguageDisclaimer: function(hasEnteredEmail) {
         return !window.navigator.language.match(/^en/i) && hasEnteredEmail;
       },
     });
