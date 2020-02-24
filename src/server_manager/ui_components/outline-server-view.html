@@ -191,7 +191,7 @@
       }
       .highlight-on-hover:hover {
         cursor: pointer;
-        color: #FFFFFF;
+        color: #ffffff;
       }
       .header-row > span {
         height: 16px;
@@ -453,7 +453,11 @@
           <div class="access-key-list card-section">
             <!-- header row -->
             <div class="access-key-row header-row">
-              <span class="access-key-container highlight-on-hover" on-tap="_setSortByOrToggleDirection" data-sort-by="name">
+              <span
+                class="access-key-container highlight-on-hover"
+                on-tap="_setSortByOrToggleDirection"
+                data-sort-by="name"
+              >
                 [[localize('server-access-keys')]]
                 <iron-icon
                   class="sort-icon"
@@ -467,7 +471,11 @@
                 ></iron-icon>
               </span>
               <span class="hover-spacer"></span>
-              <span class="measurement-container highlight-on-hover" on-tap="_setSortByOrToggleDirection" data-sort-by="usage">
+              <span
+                class="measurement-container highlight-on-hover"
+                on-tap="_setSortByOrToggleDirection"
+                data-sort-by="usage"
+              >
                 [[localize('server-usage')]]
                 <iron-icon
                   class="sort-icon"
@@ -513,65 +521,89 @@
               </span>
             </div>
             <div id="accessKeysContainer">
-            <!-- rows for each access key -->
-            <template is="dom-repeat" items="{{accessKeyRows}}" filter="isRegularConnection" sort="{{_sortAccessKeys(accessKeySortBy, accessKeySortDirection)}}" observe="name transferredBytes">
-              <!-- TODO(alalama): why is observe not responding to rename? -->
-              <div class="access-key-row">
-                <span class="access-key-container">
-                  <img class="access-key-icon" src="images/key-avatar.svg">
-                  <input type="text" class="access-key-name"
-                    id$="accesskey[[item.id]]"
-                    placeholder="{{item.placeholderName}}"
-                    value="[[item.name]]"
-                    on-blur="_handleNameInputBlur"
-                    on-keydown="_handleNameInputKeyDown" />
-                </span>
-                <span class="measurement-container">
-                  <span class="measurement">[[_formatBytesTransferred(item.transferredBytes, "...")]]</span>
-                  <paper-progress value='[[item.relativeTraffic]]' class$="[[_computePaperProgressClass(isAccessKeyDataLimitEnabled)]]"></paper-progress>
-                  <paper-tooltip animation-delay="0" offset="0" position="top" hidden$="[[!isAccessKeyDataLimitEnabled]]">
-                    [[_getDataLimitsUsageString(item)]]
-                  </paper-tooltip>
-                </span>
-                <span class="actions">
-                  <span class="flex-1">
-                    <paper-icon-button icon="outline-iconset:share" class="share-button" on-tap="_handleShareCodePressed"></paper-icon-button>
+              <!-- rows for each access key -->
+              <template
+                is="dom-repeat"
+                items="{{accessKeyRows}}"
+                filter="isRegularConnection"
+                sort="{{_sortAccessKeys(accessKeySortBy, accessKeySortDirection)}}"
+                observe="name transferredBytes"
+              >
+                <!-- TODO(alalama): why is observe not responding to rename? -->
+                <div class="access-key-row">
+                  <span class="access-key-container">
+                    <img class="access-key-icon" src="images/key-avatar.svg" />
+                    <input
+                      type="text"
+                      class="access-key-name"
+                      id$="accesskey[[item.id]]"
+                      placeholder="{{item.placeholderName}}"
+                      value="[[item.name]]"
+                      on-blur="_handleNameInputBlur"
+                      on-keydown="_handleNameInputKeyDown"
+                    />
                   </span>
-                  <span class="flex-1">
-                    <paper-menu-button
-                      horizontal-align="right"
-                      class="overflow-menu"
-                      close-on-activate
-                      no-animations
-                      no-overlap
-                      dynamic-align
+                  <span class="measurement-container">
+                    <span class="measurement">[[_formatBytesTransferred(item.transferredBytes, "...")]]</span>
+                    <paper-progress
+                      value="[[item.relativeTraffic]]"
+                      class$="[[_computePaperProgressClass(isAccessKeyDataLimitEnabled)]]"
+                    ></paper-progress>
+                    <paper-tooltip
+                      animation-delay="0"
+                      offset="0"
+                      position="top"
+                      hidden$="[[!isAccessKeyDataLimitEnabled]]"
                     >
-                      <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
-                      <paper-listbox slot="dropdown-content">
-                        <paper-item on-tap="_handleRenameAccessKeyPressed">
-                          <iron-icon icon="icons:create"></iron-icon>[[localize('server-access-key-rename')]]
-                        </paper-item>
-                        <paper-item on-tap="_handleRemoveAccessKeyPressed">
-                          <iron-icon icon="icons:delete"></iron-icon>[[localize('remove')]]
-                        </paper-item>
-                      </paper-listbox>
-                    </paper-menu-button>
+                      [[_getDataLimitsUsageString(item)]]
+                    </paper-tooltip>
                   </span>
-                </span>
-              </div>
-            </template>
-          </div>
-              <div class="access-key-row" hidden$="{{!_newAccessKey}}">
-                <span class="access-key-container" id="newAccessKey">
-                  <img class="access-key-icon" src="images/key-avatar.svg">
-                  <input type="text" class="access-key-name"
-                    id="newKeyInput"
-                    placeholder=""
-                    value=""
-                    on-blur="_handleNewKeyBlur"
-                    on-keydown="_handleNameInputKeyDown"/>
-                </span>
-              </div>
+                  <span class="actions">
+                    <span class="flex-1">
+                      <paper-icon-button
+                        icon="outline-iconset:share"
+                        class="share-button"
+                        on-tap="_handleShareCodePressed"
+                      ></paper-icon-button>
+                    </span>
+                    <span class="flex-1">
+                      <paper-menu-button
+                        horizontal-align="right"
+                        class="overflow-menu"
+                        close-on-activate
+                        no-animations
+                        no-overlap
+                        dynamic-align
+                      >
+                        <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
+                        <paper-listbox slot="dropdown-content">
+                          <paper-item on-tap="_handleRenameAccessKeyPressed">
+                            <iron-icon icon="icons:create"></iron-icon>[[localize('server-access-key-rename')]]
+                          </paper-item>
+                          <paper-item on-tap="_handleRemoveAccessKeyPressed">
+                            <iron-icon icon="icons:delete"></iron-icon>[[localize('remove')]]
+                          </paper-item>
+                        </paper-listbox>
+                      </paper-menu-button>
+                    </span>
+                  </span>
+                </div>
+              </template>
+            </div>
+            <div class="access-key-row" hidden$="{{!_newAccessKey}}">
+              <span class="access-key-container" id="newAccessKey">
+                <img class="access-key-icon" src="images/key-avatar.svg" />
+                <input
+                  type="text"
+                  class="access-key-name"
+                  id="newKeyInput"
+                  placeholder=""
+                  value=""
+                  on-blur="_handleNewKeyBlur"
+                  on-keydown="_handleNameInputKeyDown"
+                />
+              </span>
+            </div>
             <!-- add key button -->
             <div class="access-key-row" id="addAccessKeyRow">
               <span class="access-key-container">
@@ -691,7 +723,7 @@
         },
         _newAccessKey: {
           type: Object,
-          value: null
+          value: null,
         },
         localize: {
           type: Function,
@@ -721,17 +753,17 @@
       _handleNewKeyBlur: function(e) {
         const input = e.target;
         const accessKey = this._newAccessKey;
-        this.fire('RenameAccessKeyRequested', {
+        this.fire("RenameAccessKeyRequested", {
           entry: {
             commitName: () => {
               accessKey.name = input.value;
-              this.push('accessKeyRows', accessKey);
+              this.push("accessKeyRows", accessKey);
               this._newAccessKey = null;
             },
             revertName: () => {
               this._newAccessKey = null;
-            }
-          }
+            },
+          },
         });
       },
       removeAccessKey: function(accessKeyId) {
@@ -945,7 +977,6 @@
           const out = (aName < bName ? -1 : 1) * this.accessKeySortDirection;
           return out;
         }.bind(this);
-        
       },
       _computeShouldShowSortIcon: function(
         accessKeySortBy,
