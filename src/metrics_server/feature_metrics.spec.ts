@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DailyFeatureMetricsReport, FeatureRow, isValidFeatureMetricsReport, postFeatureMetrics} from './feature_metrics';
+import {FeatureRow, isValidFeatureMetricsReport, postFeatureMetrics} from './feature_metrics';
 import {InsertableTable} from './infrastructure/table';
+import {DailyFeatureMetricsReport} from './model';
 
 class FakeFeaturesTable implements InsertableTable<FeatureRow> {
   public rows: FeatureRow[]|undefined;

@@ -13,18 +13,9 @@
 // limitations under the License.
 
 import {Table} from '@google-cloud/bigquery';
+
 import {InsertableTable} from './infrastructure/table';
-
-export interface DailyFeatureMetricsReport {
-  serverId: string;
-  serverVersion: string;
-  timestampUtcMs: number;
-  dataLimit: DailyDataLimitMetricsReport;
-}
-
-export interface DailyDataLimitMetricsReport {
-  enabled: boolean;
-}
+import {DailyDataLimitMetricsReport, DailyFeatureMetricsReport} from './model';
 
 // Reflects the feature metrics BigQuery table schema.
 export interface FeatureRow {

@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {ConnectionRow, HourlyConnectionMetricsReport, isValidConnectionMetricsReport, postConnectionMetrics} from './connection_metrics';
+import {ConnectionRow, isValidConnectionMetricsReport, postConnectionMetrics} from './connection_metrics';
 import {InsertableTable} from './infrastructure/table';
+import {HourlyConnectionMetricsReport} from './model';
 
 class FakeConnectionsTable implements InsertableTable<ConnectionRow> {
   public rows: ConnectionRow[]|undefined;

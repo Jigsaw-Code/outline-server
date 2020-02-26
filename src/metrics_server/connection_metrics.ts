@@ -14,21 +14,7 @@
 
 import {Table} from '@google-cloud/bigquery';
 import {InsertableTable} from './infrastructure/table';
-
-// TODO(dborkan): HourlyConnectionMetricsReport and HourlyUserConnectionMetricsReport are
-// copied from src/shadowbox/server/metrics.ts - find a way to share these
-// definitions between shadowbox and the metrics_server.
-export interface HourlyConnectionMetricsReport {
-  serverId: string;
-  startUtcMs: number;
-  endUtcMs: number;
-  userReports: HourlyUserConnectionMetricsReport[];
-}
-interface HourlyUserConnectionMetricsReport {
-  userId: string;
-  countries: string[];
-  bytesTransferred: number;
-}
+import {HourlyConnectionMetricsReport, HourlyUserConnectionMetricsReport} from './model';
 
 export interface ConnectionRow {
   serverId: string;
