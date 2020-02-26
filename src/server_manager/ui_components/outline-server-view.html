@@ -996,13 +996,12 @@
         }
         // Default to sorting by name
         return function(a, b) {
-          const aName = (a.name || a.placeholderName).toLowerCase();
-          const bName = (b.name || b.placeholderName).toLowerCase();
+          const aName = (a.name || a.placeholderName).toUpperCase();
+          const bName = (b.name || b.placeholderName).toUpperCase();
           if (aName === bName) {
             return 0;
           }
-          const out = (aName < bName ? -1 : 1) * this.accessKeySortDirection;
-          return out;
+          return (aName < bName ? -1 : 1) * this.accessKeySortDirection;
         }.bind(this);
       },
       _computeShouldShowSortIcon: function(
