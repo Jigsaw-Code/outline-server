@@ -57,15 +57,15 @@ function reserveExistingAccessKeyPorts(
   dedupedPorts.forEach(p => portProvider.addReservedPort(p));
 }
 
-function createRolloutTracker(serverConfig: json_config.JsonConfig<server_config.ServerConfigJson>):	
-    RolloutTracker {	
+function createRolloutTracker(serverConfig: json_config.JsonConfig<server_config.ServerConfigJson>):
+    RolloutTracker {
   const rollouts = new RolloutTracker(serverConfig.data().serverId);
-  if (serverConfig.data().rollouts) {	
-    for (const rollout of serverConfig.data().rollouts) {	
-      rollouts.forceRollout(rollout.id, rollout.enabled);	
-    }	
-  }	
-  return rollouts;	
+  if (serverConfig.data().rollouts) {
+    for (const rollout of serverConfig.data().rollouts) {
+      rollouts.forceRollout(rollout.id, rollout.enabled);
+    }
+  }
+  return rollouts;
 }
 
 async function main() {
@@ -140,9 +140,9 @@ async function main() {
           getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation)
           .enableCountryMetrics(MMDB_LOCATION);
   // Add rollout at 0%, so we can override in the config.
-  const replayProtectionEnabled = createRolloutTracker(serverConfig).isRolloutEnabled('replay-protection', 0);
-  logging.info(`Replay protection enabled: ${replayProtectionEnabled}`);
-  if (replayProtectionEnabled) {
+  const isReplayProtectionEnabled = createRolloutTracker(serverConfig).isRolloutEnabled('replay-protection', 0);
+  logging.info(`Replay protection enabled: ${isReplayProtectionEnabled}`);
+  if (isReplayProtectionEnabled) {
     shadowsocksServer.enableReplayProtection();
   }
   const prometheusEndpoint = `http://${prometheusLocation}`;
