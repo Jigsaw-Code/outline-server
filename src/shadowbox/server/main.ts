@@ -24,6 +24,7 @@ import {PortProvider} from '../infrastructure/get_port';
 import * as json_config from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient, runPrometheusScraper} from '../infrastructure/prometheus_scraper';
+import {RolloutTracker} from '../infrastructure/rollout';	
 import {AccessKeyId} from '../model/access_key';
 
 import {PrometheusManagerMetrics} from './manager_metrics';
@@ -54,6 +55,17 @@ function reserveExistingAccessKeyPorts(
   const accessKeys = keyConfig.data().accessKeys || [];
   const dedupedPorts = new Set(accessKeys.map(ak => ak.port));
   dedupedPorts.forEach(p => portProvider.addReservedPort(p));
+}
+
+function createRolloutTracker(serverConfig: json_config.JsonConfig<server_config.ServerConfigJson>):	
+    RolloutTracker {	
+  const rollouts = new RolloutTracker(serverConfig.data().serverId);
+  if (serverConfig.data().rollouts) {	
+    for (const rollout of serverConfig.data().rollouts) {	
+      rollouts.forceRollout(rollout.id, rollout.enabled);	
+    }	
+  }	
+  return rollouts;	
 }
 
 async function main() {
@@ -127,6 +139,12 @@ async function main() {
       new OutlineShadowsocksServer(
           getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation)
           .enableCountryMetrics(MMDB_LOCATION);
+  // Add rollout at 0%, so we can override in the config.
+  const replayProtectionEnabled = createRolloutTracker(serverConfig).isRolloutEnabled('replay-protection', 0);
+  logging.info(`Replay protection enabled: ${replayProtectionEnabled}`);
+  if (replayProtectionEnabled) {
+    shadowsocksServer.enableReplayProtection();
+  }
   const prometheusEndpoint = `http://${prometheusLocation}`;
   // Wait for Prometheus to be up and running.
   await runPrometheusScraper(
