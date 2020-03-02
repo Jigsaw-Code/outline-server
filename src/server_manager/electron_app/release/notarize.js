@@ -19,7 +19,9 @@ const {notarize} = require('electron-notarize');
 // and `APPLE_PASSWORD`, the password to the account.
 exports.default = async function(context) {
   const {electronPlatformName, appOutDir} = context;
-  if (electronPlatformName !== 'darwin') {
+  if (electronPlatformName !== 'darwin' || !process.env.CSC_LINK) {
+    // Skip notarization if not releasing macOS or if the app is unsigned (i.e. packaging).
+    // `CSC_LINK` is the path to a signing certificate; setting it makes Electron sign the app.
     return;
   }
 
