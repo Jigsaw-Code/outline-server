@@ -19,10 +19,12 @@ import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {AccessKeyId, AccessKeyMetricsId} from '../model/access_key';
+import {version} from '../package.json';
 
 import {ServerConfigJson} from './server_config';
 
 const MS_PER_HOUR = 60 * 60 * 1000;
+const MS_PER_DAY = 24 * MS_PER_HOUR;
 const SANCTIONED_COUNTRIES = new Set(['CU', 'KP', 'SY']);
 
 // Used internally to track key usage.
@@ -47,6 +49,21 @@ export interface HourlyUserMetricsReportJson {
   userId: string;
   countries: string[];
   bytesTransferred: number;
+}
+
+// JSON format for the feature metrics report.
+// Field renames will break backwards-compatibility.
+export interface DailyFeatureMetricsReportJson {
+  serverId: string;
+  serverVersion: string;
+  timestampUtcMs: number;
+  dataLimit: DailyDataLimitMetricsReportJson;
+}
+
+// JSON format for the data limit feature metrics report.
+// Field renames will break backwards-compatibility.
+export interface DailyDataLimitMetricsReportJson {
+  enabled: boolean;
 }
 
 export interface SharedMetricsPublisher {
@@ -92,18 +109,27 @@ export class PrometheusUsageMetrics implements UsageMetrics {
 }
 
 export interface MetricsCollectorClient {
-  collectMetrics(reportJson: HourlyServerMetricsReportJson): Promise<void>;
+  collectServerUsageMetrics(reportJson: HourlyServerMetricsReportJson): Promise<void>;
+  collectFeatureMetrics(reportJson: DailyFeatureMetricsReportJson): Promise<void>;
 }
 
 export class RestMetricsCollectorClient {
   constructor(private serviceUrl: string) {}
 
-  collectMetrics(reportJson: HourlyServerMetricsReportJson): Promise<void> {
+  collectServerUsageMetrics(reportJson: HourlyServerMetricsReportJson): Promise<void> {
+    return this.postMetrics('/connections', JSON.stringify(reportJson));
+  }
+
+  collectFeatureMetrics(reportJson: DailyFeatureMetricsReportJson): Promise<void> {
+    return this.postMetrics('/features', JSON.stringify(reportJson));
+  }
+
+  private postMetrics(urlPath: string, reportJson: string): Promise<void> {
     const options = {
-      url: this.serviceUrl,
+      url: `${this.serviceUrl}${urlPath}`,
       headers: {'Content-Type': 'application/json'},
       method: 'POST',
-      body: JSON.stringify(reportJson)
+      body: reportJson
     };
     logging.info('Posting metrics: ' + JSON.stringify(options));
     return new Promise((resolve, reject) => {
@@ -142,10 +168,25 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       if (!this.isSharingEnabled()) {
         return;
       }
-      this.reportMetrics(await usageMetrics.getUsage());
-      usageMetrics.reset();
+      try {
+        await this.reportServerUsageMetrics(await usageMetrics.getUsage());
+        usageMetrics.reset();
+      } catch (err) {
+        console.error(`Failed to report server usage metrics: ${err}`);
+      }
     }, MS_PER_HOUR);
     // TODO(fortuna): also trigger report on shutdown, so data loss is minimized.
+
+    this.clock.setInterval(async () => {
+      if (!this.isSharingEnabled()) {
+        return;
+      }
+      try {
+        this.reportFeatureMetrics();
+      } catch (err) {
+        console.error(`Failed to report feature metrics: ${err}`);
+      }
+    }, MS_PER_DAY);
   }
 
   startSharing() {
@@ -162,7 +203,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
     return this.serverConfig.data().metricsEnabled || false;
   }
 
-  private async reportMetrics(usageMetrics: KeyUsage[]): Promise<void> {
+  private async reportServerUsageMetrics(usageMetrics: KeyUsage[]): Promise<void> {
     const reportEndTimestampMs = this.clock.now();
 
     const userReports = [] as HourlyUserMetricsReportJson[];
@@ -190,7 +231,17 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
     if (userReports.length === 0) {
       return;
     }
-    await this.metricsCollector.collectMetrics(report);
+    await this.metricsCollector.collectServerUsageMetrics(report);
+  }
+
+  private async reportFeatureMetrics(): Promise<void> {
+    const featureMetricsReport = {
+      serverId: this.serverConfig.data().serverId,
+      serverVersion: version,
+      timestampUtcMs: this.clock.now(),
+      dataLimit: {enabled: !!this.serverConfig.data().accessKeyDataLimit},
+    };
+    await this.metricsCollector.collectFeatureMetrics(featureMetricsReport);
   }
 }
 

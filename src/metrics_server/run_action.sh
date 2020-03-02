@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 #
-# Copyright 2018 The Outline Authors
+# Copyright 2020 The Outline Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,10 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+SRC_DIR="src/metrics_server"
+BUILD_DIR="build/metrics_server"
+
 yarn do metrics_server/build
 
-cp src/metrics_server/config_test.json build/metrics_server/config.json
+cp $SRC_DIR/config_dev.json $BUILD_DIR/config.json
+cp $SRC_DIR/package.json $BUILD_DIR/
 
-cp src/metrics_server/package.json build/metrics_server/
-
-gcloud --project=uproxysite functions deploy reportHourlyConnectionMetricsTest --trigger-http --source=build/metrics_server --entry-point=reportHourlyConnectionMetrics
+yarn node $BUILD_DIR/index.js

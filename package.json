@@ -21,7 +21,7 @@
   ],
   "husky": {
     "hooks": {
-      "pre-commit": "yarn tslint --fix 'src/**/*.ts' -e '**/bower_components/**' -e '**/node_modules/**' && yarn git-clang-format"
+      "pre-commit": "yarn tslint --fix 'src/**/*.ts' -e '**/bower_components/**' -e '**/node_modules/**' && yarn git-clang-format && yarn pretty-quick --staged --pattern '**/*.html'"
     }
   }
 }

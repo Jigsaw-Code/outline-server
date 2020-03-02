@@ -16,13 +16,17 @@
 
 do_action shadowbox/docker/build
 
-readonly OUTLINE_DIR=/tmp/outline
-readonly HOST_STATE_DIR=$OUTLINE_DIR/persisted-state
+readonly RUN_ID="${RUN_ID:-$(date +%Y-%m-%d-%H%M%S)}"
+readonly RUN_DIR="/tmp/outline/$RUN_ID"
+echo "Using directory $RUN_DIR"
+
+readonly HOST_STATE_DIR="$RUN_DIR/persisted-state"
 readonly CONTAINER_STATE_DIR=/root/shadowbox/persisted-state
 readonly STATE_CONFIG=$HOST_STATE_DIR/shadowbox_server_config.json
-mkdir -p $HOST_STATE_DIR && touch "$HOST_STATE_DIR/shadowbox_config.json"
+
+[[ -d "${HOST_STATE_DIR}" ]] || mkdir -p $HOST_STATE_DIR
 [[ -e $STATE_CONFIG ]] || echo '{"hostname":"127.0.0.1"}' > $STATE_CONFIG
-source $ROOT_DIR/src/shadowbox/scripts/make_test_certificate.sh "${OUTLINE_DIR}"
+source $ROOT_DIR/src/shadowbox/scripts/make_test_certificate.sh "${RUN_DIR}"
 
 # TODO: mount a folder rather than individual files.
 declare -a docker_bindings=(
@@ -34,8 +38,10 @@ declare -a docker_bindings=(
   -e SB_API_PREFIX=TestApiPrefix
   -e SB_CERTIFICATE_FILE=${SB_CERTIFICATE_FILE}
   -e SB_PRIVATE_KEY_FILE=${SB_PRIVATE_KEY_FILE}
+  -e SB_METRICS_URL=${SB_METRICS_URL:-}
 )
 
-echo "Running image ${SB_IMAGE}"
+readonly IMAGE="${SB_IMAGE:-outline/shadowbox}"
+echo "Running image ${IMAGE}"
 
-docker run --rm -it --network=host --name shadowbox "${docker_bindings[@]}" ${SB_IMAGE:-outline/shadowbox}
+docker run --rm -it --network=host --name shadowbox "${docker_bindings[@]}" ${IMAGE}

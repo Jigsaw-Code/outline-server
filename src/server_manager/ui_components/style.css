@@ -18,7 +18,9 @@
 
 /* If Polymer fails to load, this prevents the styles in <core-style> elements
    from being erroneously displayed to the user. */
-core-style { display: none; }
+core-style {
+  display: none;
+}
 
 paper-dropdown {
   box-shadow: 0px 0px 20px #999999;
@@ -36,7 +38,7 @@ body {
   font-family: "Roboto", sans-serif;
   font-size: 14px;
   font-weight: 400;
-  color:rgba(0,0,0,0.54);
+  color: rgba(0, 0, 0, 0.54);
 }
 
 div#wrapper {
@@ -65,9 +67,11 @@ section:last-of-type {
 
 /* headings */
 
-
-h1, h2, h3, h4 {
-  color: rgba(0,0,0,0.87);
+h1,
+h2,
+h3,
+h4 {
+  color: rgba(0, 0, 0, 0.87);
   line-height: 1.5em;
 }
 
@@ -90,13 +94,13 @@ h3 {
   padding: 14px 12% 32px 12%;
 }
 
-h3 span{
+h3 span {
   font-weight: 500;
 }
 
 h4 {
   font-size: 14px;
-  font-weight:500;
+  font-weight: 500;
 }
 
 /* normal text and links */
@@ -111,7 +115,7 @@ a {
 }
 
 a:hover {
-  color: #00AC9B;
+  color: #00ac9b;
 }
 
 p a {

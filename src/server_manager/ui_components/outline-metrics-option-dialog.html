@@ -13,33 +13,37 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<link rel='import' href='../bower_components/polymer/polymer.html'>
-<link rel='import' href='../bower_components/paper-button/paper-button.html'>
-<link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
+<link rel="import" href="../bower_components/polymer/polymer.html" />
+<link rel="import" href="../bower_components/paper-button/paper-button.html" />
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html" />
 
-<link rel='import' href='./cloud-install-styles.html'>
+<link rel="import" href="./cloud-install-styles.html" />
 
-<dom-module id='outline-metrics-option-dialog'>
+<dom-module id="outline-metrics-option-dialog">
   <template>
-    <style include='cloud-install-styles'>
+    <style include="cloud-install-styles">
       .link {
         text-decoration: underline;
         color: rgba(0, 0, 0, 0.54);
       }
     </style>
-    <paper-dialog id='metricsEnabledDialog' modal>
-      <div class='dialogBanner'><img src='images/metrics.png'></div>
+    <paper-dialog id="metricsEnabledDialog" modal>
+      <div class="dialogBanner"><img src="images/metrics.png" /></div>
       <h3>[[localize('metrics-title')]]</h3>
-      <p inner-h-t-m-l="[[localize('metrics-description', 'openLink', '<a class=link href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
-      <div class='buttons'>
-        <paper-button dialog-dismiss on-tap='disableMetricsRequested'>[[localize('metrics-skip')]]</paper-button>
-        <paper-button autofocus dialog-dismiss on-tap='enableMetricsRequested'>[[localize('metrics-share')]]</paper-button>
+      <p
+        inner-h-t-m-l="[[localize('metrics-description', 'openLink', '<a class=link href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"
+      ></p>
+      <div class="buttons">
+        <paper-button dialog-dismiss on-tap="disableMetricsRequested">[[localize('metrics-skip')]]</paper-button>
+        <paper-button autofocus dialog-dismiss on-tap="enableMetricsRequested"
+          >[[localize('metrics-share')]]</paper-button
+        >
       </div>
     </paper-dialog>
   </template>
   <script>
     Polymer({
-      is: 'outline-metrics-option-dialog',
+      is: "outline-metrics-option-dialog",
       properties: {
         localize: {
           type: Function,
@@ -50,11 +54,11 @@
         this.$.metricsEnabledDialog.open();
       },
       enableMetricsRequested: function() {
-        this.fire('EnableMetricsRequested');
+        this.fire("EnableMetricsRequested");
       },
       disableMetricsRequested: function() {
-        this.fire('DisableMetricsRequested');
-      }
+        this.fire("DisableMetricsRequested");
+      },
     });
   </script>
 </dom-module>
