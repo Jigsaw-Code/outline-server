@@ -67,16 +67,21 @@ jobs:
 
     - stage: deploy
       env:
-        - DESC=shadowbox docker image
+        - DESC=shadowbox docker image with multi-archs
       sudo: required
       services: docker
       script:
-        - yarn do shadowbox/docker/build
+        # https://github.com/ldez/seihon is used to manage multi-arch deployment
+        - |
+          curl -sfL https://raw.githubusercontent.com/ldez/seihon/7d38218cc397499330219dd76a39f26e2b545f81/godownloader.sh | bash -s -- -b .
+          chmod +x seihon
+          sudo mv seihon /usr/local/bin
+        - docker run --rm --privileged hypriot/qemu-register
+        - yarn do shadowbox/server/build
         - docker login quay.io -u="$QUAY_IO_USERNAME" -p="$QUAY_IO_PASSWORD"
-        - docker tag outline/shadowbox quay.io/outline/shadowbox:$TRAVIS_TAG
-        - docker push quay.io/outline/shadowbox:$TRAVIS_TAG
-        - docker tag outline/shadowbox quay.io/outline/shadowbox:daily
-        - docker push quay.io/outline/shadowbox:daily
+        # skipping arm.v7 because the base docker image(node:8.15.0-alpine) doesn't have a arm.v7 manifest included,
+        # sh -c 'DOCKER_CLI_EXPERIMENTAL=enabled docker manifest inspect node:8.15.0-alpine'
+        - seihon publish -v "${TRAVIS_TAG}" -v "daily" -i quay.io/outline/shadowbox --dry-run=false --template src/shadowbox/docker/tmpl.Dockerfile -b node:8.15.0-alpine --targets=arm.v6,arm.v8,amd64,386
 
     - stage: deploy
       env:
