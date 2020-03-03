@@ -291,11 +291,6 @@
                     under "Region"
                   </li>
                   <li>Select "f1-micro" under "Machine type"</li>
-                  <li>Click "Change" under "Boot disk"</li>
-                  <li>
-                    Choose "CoreOS" under Operating System, and "CoreOS stable"
-                    under Version
-                  </li>
                   <li>
                     Click "Management, security, disks, networking, sole
                     tenancy", then "Networking"
@@ -487,9 +482,11 @@
         this.showConnection = false;
         this.$.awsDropDown.hide();
         // TODOBEFOREPUSH use $$ to select all drop-downs
-        this.$.gcpFirewallDropDown.hide();
-        this.$.gcpCreateServerDropDown.hide();
+        for (const dropdown of Polymer.dom(this.root).querySelectorAll("iron-collapse")) {
+          dropdown.hide();
+        }
       },
+      // TODO(cohenjon) Provide encapsulation for cloud-specific details once we overhaul the AWS directions
       _cloudProviderChanged: function(newProvider) {
         this.cloudProviderName = this._computeCloudProviderName(newProvider);
         this.isCloudProviderAws = this._computeIsCloudProviderAws(newProvider);
