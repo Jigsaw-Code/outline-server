@@ -13,18 +13,24 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<link rel='import' href='../bower_components/polymer/polymer.html'>
-<link rel='import' href='../bower_components/iron-collapse/iron-collapse.html'>
-<link rel='import' href='../bower_components/iron-icon/iron-icon.html'>
-<link rel='import' href='../bower_components/iron-icons/iron-icons.html'>
-<link rel='import' href='../bower_components/paper-button/paper-button.html'>
-<link rel='import' href='../bower_components/paper-dialog/paper-dialog.html'>
-<link rel='import' href='../bower_components/paper-input/paper-textarea.html'>
-<link rel='import' href='../bower_components/paper-progress/paper-progress.html'>
-<link rel="import" href="./cloud-install-styles.html">
-<link rel="import" href="./outline-cloud-instructions-view.html">
-<link rel="import" href="./outline-step-view.html">
-<link rel="import" href="./style.css">
+<link rel="import" href="../bower_components/polymer/polymer.html" />
+<link
+  rel="import"
+  href="../bower_components/iron-collapse/iron-collapse.html"
+/>
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html" />
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html" />
+<link rel="import" href="../bower_components/paper-button/paper-button.html" />
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html" />
+<link rel="import" href="../bower_components/paper-input/paper-textarea.html" />
+<link
+  rel="import"
+  href="../bower_components/paper-progress/paper-progress.html"
+/>
+<link rel="import" href="./cloud-install-styles.html" />
+<link rel="import" href="./outline-cloud-instructions-view.html" />
+<link rel="import" href="./outline-step-view.html" />
+<link rel="import" href="./style.css" />
 
 <dom-module id="outline-manual-server-entry">
   <template>
@@ -76,7 +82,8 @@
         text-align: center;
         line-height: 26px;
       }
-      .drop-down, .drop-down iron-icon {
+      .drop-down,
+      .drop-down iron-icon {
         color: #fff;
       }
       .drop-down > * {
@@ -92,7 +99,7 @@
       .section-content {
         margin: 24px 12px 0 48px;
         padding: 24px;
-        background-color: #ECEFF1;
+        background-color: #eceff1;
         border-radius: 4px;
       }
       .section-content-instructions {
@@ -102,10 +109,10 @@
         margin-bottom: 24px;
       }
       .section-content-instructions a {
-        color: #00BFA5;
+        color: #00bfa5;
       }
       .section-content-instructions iron-icon {
-        color: #00BFA5;
+        color: #00bfa5;
         width: 16px;
         height: 16px;
         margin-left: 4px;
@@ -123,7 +130,9 @@
         }
       }
       /* rtl:ignore */
-      .code, #command, paper-textarea {
+      .code,
+      #command,
+      paper-textarea {
         direction: ltr;
         text-align: left;
         @apply --code-mixin;
@@ -166,7 +175,10 @@
     </style>
     <outline-step-view>
       <span slot="step-title">[[localize('manual-server-title')]]</span>
-      <span slot="step-description">[[localize('manual-server-description', 'cloudProvider', cloudProviderName)]]</span>
+      <span slot="step-description"
+        >[[localize('manual-server-description', 'cloudProvider',
+        cloudProviderName)]]</span
+      >
 
       <div class="card">
         <!-- GCP -->
@@ -179,16 +191,26 @@
             <div class="drop-down" on-tap="_toggleGcpCreateProjectDropDown">
               <img src="images/gcp-logo.svg" />
               <span>[[localize('manual-server-instructions')]]</span>
-              <iron-icon id="gcpCreateProjectDropDownIcon" icon="arrow-drop-down"></iron-icon>
+              <iron-icon
+                id="gcpCreateProjectDropDownIcon"
+                icon="arrow-drop-down"
+              ></iron-icon>
             </div>
           </div>
           <iron-collapse id="gcpCreateProjectDropDown">
             <div class="section-content-instructions">
               <!-- TODOBEFOREMERGE i18n -->
               <!-- TODOBEFOREMERGE images -->
-              <outline-cloud-instructions-view title="Create a Google Cloud project" thumbnail-path="images/fine.png" image-path="images/greatwave.jpg" localize="[[localize]]">
+              <outline-cloud-instructions-view
+                title="Create a Google Cloud project"
+                thumbnail-path="images/fine.png"
+                image-path="images/greatwave.jpg"
+                localize="[[localize]]"
+              >
                 <ol>
-                  <li inner-h-t-m-l="[[localize('gcp-create-project', 'openLink', '<a href=https://console.cloud.google.com/projectcreate>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
+                  <li
+                    inner-h-t-m-l="[[localize('gcp-create-project', 'openLink', '<a href=https://console.cloud.google.com/projectcreate>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
+                  ></li>
                   <li>Name your project in the "Project name" field.</li>
                   <li>[[localize('gcp-click-create')]]</li>
                 </ol>
@@ -200,18 +222,30 @@
           <div class="section-header">
             <!-- TODO(alalama): localize numbers  -->
             <span class="stepcircle">2</span>
-            <div class="instructions">[[localize('manual-server-firewall')]]</div>
+            <div class="instructions">
+              [[localize('manual-server-firewall')]]
+            </div>
             <div class="drop-down" on-tap="_toggleGcpFirewallDropDown">
               <img src="images/gcp-logo.svg" />
               <span>[[localize('manual-server-instructions')]]</span>
-              <iron-icon id="gcpFirewallDropDownIcon" icon="arrow-drop-down"></iron-icon>
+              <iron-icon
+                id="gcpFirewallDropDownIcon"
+                icon="arrow-drop-down"
+              ></iron-icon>
             </div>
           </div>
           <iron-collapse id="gcpFirewallDropDown">
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view title="[[localize('manual-server-create-firewall')]]" thumbnail-path="images/gcp-thumbnail-1.png" image-path="images/gcp-screenshot-1.png" localize="[[localize]]">
+              <outline-cloud-instructions-view
+                title="[[localize('manual-server-create-firewall')]]"
+                thumbnail-path="images/gcp-thumbnail-1.png"
+                image-path="images/gcp-screenshot-1.png"
+                localize="[[localize]]"
+              >
                 <ol>
-                  <li inner-h-t-m-l="[[localize('gcp-firewall-create-0', 'openLink', '<a href=https://console.cloud.google.com/networking/firewalls/add>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
+                  <li
+                    inner-h-t-m-l="[[localize('gcp-firewall-create-0', 'openLink', '<a href=https://console.cloud.google.com/networking/firewalls/add>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
+                  ></li>
                   <li>[[localize('gcp-firewall-create-1')]]</li>
                   <li>[[localize('gcp-firewall-create-2')]]</li>
                   <li>[[localize('gcp-firewall-create-3')]]</li>
@@ -231,22 +265,41 @@
             <div class="drop-down" on-tap="_toggleGcpCreateServerDropDown">
               <img src="images/gcp-logo.svg" />
               <span>[[localize('manual-server-instructions')]]</span>
-              <iron-icon id="gcpCreateServerDropDownIcon" icon="arrow-drop-down"></iron-icon>
+              <iron-icon
+                id="gcpCreateServerDropDownIcon"
+                icon="arrow-drop-down"
+              ></iron-icon>
             </div>
           </div>
           <iron-collapse id="gcpCreateServerDropDown">
             <div class="section-content-instructions">
               <!-- TODOBEFOREMERGE i18n -->
               <!-- TODOBEFOREMERGE images -->
-              <outline-cloud-instructions-view title="Create a VM Instance" thumbnail-path="images/fine.png" image-path="images/greatwave.jpg" localize="[[localize]]">
+              <outline-cloud-instructions-view
+                title="Create a VM Instance"
+                thumbnail-path="images/fine.png"
+                image-path="images/greatwave.jpg"
+                localize="[[localize]]"
+              >
                 <ol>
-                  <li inner-h-t-m-l="[[localize('gcp-create-vm', 'openLink', '<a href=https://console.cloud.google.com/compute/instancesAdd>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
+                  <li
+                    inner-h-t-m-l="[[localize('gcp-create-vm', 'openLink', '<a href=https://console.cloud.google.com/compute/instancesAdd>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
+                  ></li>
                   <li>Type "outline-server" in the "Name" field</li>
-                  <li>Select a region close to where the server's users will be under "Region"</li>
+                  <li>
+                    Select a region close to where the server's users will be
+                    under "Region"
+                  </li>
                   <li>Select "f1-micro" under "Machine type"</li>
                   <li>Click "Change" under "Boot disk"</li>
-                  <li>Choose "CoreOS" under Operating System, and "CoreOS stable" under Version</li>
-                  <li>Click "Management, security, disks, networking, sole tenancy", then "Networking"</li>
+                  <li>
+                    Choose "CoreOS" under Operating System, and "CoreOS stable"
+                    under Version
+                  </li>
+                  <li>
+                    Click "Management, security, disks, networking, sole
+                    tenancy", then "Networking"
+                  </li>
                   <li>Type "outline" in the "Network tags" field</li>
                   <li>[[localize('gcp-click-create')]]</li>
                 </ol>
@@ -258,18 +311,30 @@
         <div class="section" hidden$="[[!isCloudProviderAws]]">
           <div class="section-header">
             <span class="stepcircle">1</span>
-            <div class="instructions">[[localize('manual-server-firewall')]]</div>
+            <div class="instructions">
+              [[localize('manual-server-firewall')]]
+            </div>
             <div class="drop-down" on-tap="_toggleAwsDropDown">
               <img id="aws-logo" src="images/aws-logo.svg" />
               <span>[[localize('manual-server-instructions')]]</span>
-              <iron-icon id="awsDropDownIcon" icon="arrow-drop-down"></iron-icon>
+              <iron-icon
+                id="awsDropDownIcon"
+                icon="arrow-drop-down"
+              ></iron-icon>
             </div>
           </div>
           <iron-collapse id="awsDropDown">
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view title="[[localize('manual-server-create-group')]]" thumbnail-path="images/aws-thumbnail-1.png" image-path="images/aws-screenshot-1.png" localize="[[localize]]">
+              <outline-cloud-instructions-view
+                title="[[localize('manual-server-create-group')]]"
+                thumbnail-path="images/aws-thumbnail-1.png"
+                image-path="images/aws-screenshot-1.png"
+                localize="[[localize]]"
+              >
                 <ol>
-                  <li inner-h-t-m-l="[[localize('aws-group-create-0', 'openLink', '<a href=https://console.aws.amazon.com/ec2/v2/home>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
+                  <li
+                    inner-h-t-m-l="[[localize('aws-group-create-0', 'openLink', '<a href=https://console.aws.amazon.com/ec2/v2/home>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
+                  ></li>
                   <li>[[localize('aws-group-create-1')]]</li>
                   <li>[[localize('aws-group-create-2')]]</li>
                   <li>[[localize('aws-group-create-3')]]</li>
@@ -279,9 +344,16 @@
               </outline-cloud-instructions-view>
             </div>
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view title="[[localize('manual-server-assign-group')]]" thumbnail-path="images/aws-thumbnail-2.png" image-path="images/aws-screenshot-2.png" localize="[[localize]]">
+              <outline-cloud-instructions-view
+                title="[[localize('manual-server-assign-group')]]"
+                thumbnail-path="images/aws-thumbnail-2.png"
+                image-path="images/aws-screenshot-2.png"
+                localize="[[localize]]"
+              >
                 <ol>
-                  <li inner-h-t-m-l="[[localize('aws-group-assign-0', 'openLink', '<a href=https://console.aws.amazon.com/ec2/v2/home#Instances:sort=instanceId>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
+                  <li
+                    inner-h-t-m-l="[[localize('aws-group-assign-0', 'openLink', '<a href=https://console.aws.amazon.com/ec2/v2/home#Instances:sort=instanceId>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
+                  ></li>
                   <li>[[localize('aws-group-assign-1')]]</li>
                   <li>[[localize('aws-group-assign-2')]]</li>
                   <li>[[localize('aws-group-assign-3')]]</li>
@@ -294,33 +366,64 @@
         <div class="section">
           <div class="section-header">
             <span class="stepcircle">{{installScriptStepNumber}}</span>
-            <div class="instructions">[[localize('manual-server-install-run')]]</div>
+            <div class="instructions">
+              [[localize('manual-server-install-run')]]
+            </div>
           </div>
           <div class="section-content">
-            <div id="command">sudo bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"</div>
+            <div id="command">
+              sudo bash -c "$(wget -qO-
+              https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"
+            </div>
           </div>
         </div>
         <!-- Paste input -->
         <div class="section">
           <div class="section-header">
             <span class="stepcircle">{{pasteJsonStepNumber}}</span>
-            <div class="instructions">[[localize('manual-server-install-paste')]]</div>
+            <div class="instructions">
+              [[localize('manual-server-install-paste')]]
+            </div>
           </div>
           <div class="section-content">
-            <paper-textarea id="serverConfig" type="text" placeholder$="[[placeholderText]]" class="code" rows="4" max-rows="4" no-label-float on-value-changed='onServerConfigChanged'></paper-textarea>
+            <paper-textarea
+              id="serverConfig"
+              type="text"
+              placeholder$="[[placeholderText]]"
+              class="code"
+              rows="4"
+              max-rows="4"
+              no-label-float
+              on-value-changed="onServerConfigChanged"
+            ></paper-textarea>
           </div>
         </div>
         <div id="button-row">
-          <paper-button id="cancelButton" on-tap="cancelTapped" class="secondary">[[localize('cancel')]]</paper-button>
-          <paper-button id="doneButton" on-tap="doneTapped" class="primary" disabled$='[[!enableDoneButton]]'>[[localize('done')]]</paper-button>
+          <paper-button
+            id="cancelButton"
+            on-tap="cancelTapped"
+            class="secondary"
+            >[[localize('cancel')]]</paper-button
+          >
+          <paper-button
+            id="doneButton"
+            on-tap="doneTapped"
+            class="primary"
+            disabled$="[[!enableDoneButton]]"
+            >[[localize('done')]]</paper-button
+          >
         </div>
-        <paper-progress hidden$='[[!showConnection]]' indeterminate class="slow"></paper-progress>
+        <paper-progress
+          hidden$="[[!showConnection]]"
+          indeterminate
+          class="slow"
+        ></paper-progress>
       </div>
     </outline-step-view>
   </template>
   <script>
     Polymer({
-      is: 'outline-manual-server-entry',
+      is: "outline-manual-server-entry",
       properties: {
         installScriptStepNumber: {
           type: Number,
@@ -332,55 +435,55 @@
         },
         placeholderText: {
           type: String,
-          value: '{"apiUrl":"https://xxx.xxx.xxx.xxx:xxxxx/xxxxxxxxxxxxxxxxxxxxxx","certSha256":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}'
-
+          value:
+            '{"apiUrl":"https://xxx.xxx.xxx.xxx:xxxxx/xxxxxxxxxxxxxxxxxxxxxx","certSha256":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}'
         },
         showConnection: Boolean,
         cloudProvider: {
           type: String,
-          value: 'generic',
-          observer: '_cloudProviderChanged'
+          value: "generic",
+          observer: "_cloudProviderChanged"
         },
         cloudProviderName: {
           type: String,
-          computed: '_computeCloudProviderName(cloudProvider)'
+          computed: "_computeCloudProviderName(cloudProvider)"
         },
         isCloudProviderAws: {
           type: Boolean,
-          computed: '_computeIsCloudProviderAws(cloudProvider)'
+          computed: "_computeIsCloudProviderAws(cloudProvider)"
         },
         isCloudProviderGcp: {
           type: Boolean,
-          computed: '_computeIsCloudProviderGcp(cloudProvider)'
+          computed: "_computeIsCloudProviderGcp(cloudProvider)"
         },
         isGenericCloudProvider: {
           type: Boolean,
-          computed: '_computeIsGenericCloudProvider(cloudProvider)'
+          computed: "_computeIsGenericCloudProvider(cloudProvider)"
         },
         enableDoneButton: {
           type: Boolean,
-          value: false,
+          value: false
         },
         localize: {
           type: Function,
-          readonly: true,
-        },
+          readonly: true
+        }
       },
       doneTapped: function() {
         this.showConnection = true;
-        this.fire('ManualServerEntered', {
+        this.fire("ManualServerEntered", {
           userInput: this.$.serverConfig.value
         });
       },
       cancelTapped: function() {
-        this.fire('ManualServerEntryCancelled');
+        this.fire("ManualServerEntryCancelled");
       },
       retryTapped: function() {
         this.showConnection = false;
         this.doneTapped();
       },
       clear: function() {
-        this.$.serverConfig.value = '';
+        this.$.serverConfig.value = "";
         this.showConnection = false;
         this.$.awsDropDown.hide();
         // TODOBEFOREPUSH use $$ to select all drop-downs
@@ -391,44 +494,62 @@
         this.cloudProviderName = this._computeCloudProviderName(newProvider);
         this.isCloudProviderAws = this._computeIsCloudProviderAws(newProvider);
         this.isCloudProviderGcp = this._computeIsCloudProviderGcp(newProvider);
-        this.isGenericCloudProvider = this._computeIsGenericCloudProvider(newProvider);
-        this.installScriptStepNumber = this.isGenericCloudProvider ? 1 : this.isCloudProviderGcp ? 4 : 2;
+        this.isGenericCloudProvider = this._computeIsGenericCloudProvider(
+          newProvider
+        );
+        this.installScriptStepNumber = this.isGenericCloudProvider
+          ? 1
+          : this.isCloudProviderGcp
+          ? 4
+          : 2;
         this.pasteJsonStepNumber = this.installScriptStepNumber + 1;
       },
       _computeCloudProviderName: function(cloudProvider) {
-        switch(cloudProvider) {
-          case 'aws': return 'Amazon Web Services';
-          case 'gcp': return 'Google Cloud Platform';
-          default: return '';
+        switch (cloudProvider) {
+          case "aws":
+            return "Amazon Web Services";
+          case "gcp":
+            return "Google Cloud Platform";
+          default:
+            return "";
         }
       },
       _computeIsCloudProviderAws: function(cloudProvider) {
-        return cloudProvider === 'aws'
+        return cloudProvider === "aws";
       },
       _computeIsCloudProviderGcp: function(cloudProvider) {
-        return cloudProvider === 'gcp'
+        return cloudProvider === "gcp";
       },
       _computeIsGenericCloudProvider: function(cloudProvider) {
-        return cloudProvider === 'generic';
+        return cloudProvider === "generic";
       },
       _toggleAwsDropDown: function() {
-        this._toggleDropDown(this.$.awsDropDown, this.$.awsDropDownIcon)
+        this._toggleDropDown(this.$.awsDropDown, this.$.awsDropDownIcon);
       },
       _toggleGcpFirewallDropDown: function() {
-        this._toggleDropDown(this.$.gcpFirewallDropDown, this.$.gcpFirewallDropDownIcon);
+        this._toggleDropDown(
+          this.$.gcpFirewallDropDown,
+          this.$.gcpFirewallDropDownIcon
+        );
       },
       _toggleGcpCreateServerDropDown: function() {
-        this._toggleDropDown(this.$.gcpCreateServerDropDown, this.$.gcpCreateServerDropDownIcon);
+        this._toggleDropDown(
+          this.$.gcpCreateServerDropDown,
+          this.$.gcpCreateServerDropDownIcon
+        );
       },
       _toggleGcpCreateProjectDropDown: function() {
-        this._toggleDropDown(this.$.gcpCreateProjectDropDown, this.$.gcpCreateProjectDropDownIcon);
+        this._toggleDropDown(
+          this.$.gcpCreateProjectDropDown,
+          this.$.gcpCreateProjectDropDownIcon
+        );
       },
       _toggleDropDown: function(dropDown, icon) {
         dropDown.toggle();
-        icon.icon = dropDown.opened ? 'arrow-drop-up' : 'arrow-drop-down';
+        icon.icon = dropDown.opened ? "arrow-drop-up" : "arrow-drop-down";
       },
-      onServerConfigChanged: function () {
-        this.fire('ManualServerEdited', {
+      onServerConfigChanged: function() {
+        this.fire("ManualServerEdited", {
           userInput: this.$.serverConfig.value
         });
       }
