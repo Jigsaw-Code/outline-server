@@ -703,6 +703,7 @@
         // TODO(fortuna): Restore loading animation.
         // TODO(fortuna): Restore highlighting.
         this.push("accessKeyRows", accessKey);
+        // Force render the access key list so that the input is present in the DOM
         this.$.accessKeysContainer.querySelector("dom-repeat").render();
         const input = this.$$(`#access-key-${accessKey.id}`);
         input.select();
