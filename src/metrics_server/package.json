@@ -13,8 +13,8 @@
     "express": "^4.17.1"
   },
   "devDependencies": {
-    "@types/express": "^4.17.2",
-    "@google-cloud/storage": "^2.3.1"
+    "@google-cloud/storage": "^2.3.1",
+    "@types/express": "^4.17.3"
   },
   "scripts": {
     "start": "node ./index.js"

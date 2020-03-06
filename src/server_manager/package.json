@@ -29,14 +29,18 @@
     "request": "^2.87.0",
     "request-lite": "^2.40.1"
   },
+  "comments": [
+    "@types/node can't have a major version update due to typing changes in node 13.  Electron depends on ^12 and we get 13, which breaks us"
+  ],
   "devDependencies": {
     "@types/bytes": "^3.0.0",
     "@types/node-forge": "^0.6.9",
+    "@types/node": "~12.0.0",
     "@types/request": "^2.47.1",
     "@types/semver": "^5.5.0",
     "bower": "^1.8.0",
     "browserify": "^14.5.0",
-    "electron": "7.0.0",
+    "electron": "~7.0.0",
     "electron-builder": "^21.2.0",
     "electron-icon-maker": "^0.0.4",
     "electron-notarize": "^0.2.1",
