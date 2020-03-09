@@ -510,6 +510,7 @@
                     <input
                       type="text"
                       class="access-key-name"
+                      id$="access-key-[[item.id]]"
                       placeholder="{{item.placeholderName}}"
                       value="[[item.name]]"
                       on-blur="_handleNameInputBlur"
@@ -701,9 +702,11 @@
       addAccessKey: function(accessKey) {
         // TODO(fortuna): Restore loading animation.
         // TODO(fortuna): Restore highlighting.
-        // Push to array using Polymer in order to propagate changes. See
-        // https://www.polymer-project.org/1.0/docs/devguide/model-data#array-mutation
         this.push("accessKeyRows", accessKey);
+        // Force render the access key list so that the input is present in the DOM
+        this.$.accessKeysContainer.querySelector("dom-repeat").render();
+        const input = this.$$(`#access-key-${accessKey.id}`);
+        input.select();
       },
       removeAccessKey: function(accessKeyId) {
         for (let ui in this.accessKeyRows) {

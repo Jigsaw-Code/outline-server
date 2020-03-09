@@ -46,7 +46,7 @@ app.use(express.json());
 
 // Accepts hourly connection metrics and inserts them into BigQuery.
 // Request body should contain an HourlyServerMetricsReport.
-app.post('/connections', async (req: express.Request, res: express.Response) => {
+app.post('/connections', async (req: express.Request, res: express.Response<string>) => {
   try {
     if (!connections.isValidConnectionMetricsReport(req.body)) {
       res.status(400).send('Invalid request');
@@ -61,7 +61,7 @@ app.post('/connections', async (req: express.Request, res: express.Response) => 
 
 // Accepts daily feature metrics and inserts them into BigQuery.
 // Request body should contain a `DailyFeatureMetricsReport`.
-app.post('/features', async (req: express.Request, res: express.Response) => {
+app.post('/features', async (req: express.Request, res: express.Response<string>) => {
   try {
     if (!features.isValidFeatureMetricsReport(req.body)) {
       res.status(400).send('Invalid request');
