@@ -30,7 +30,8 @@
     "request-lite": "^2.40.1"
   },
   "comments": [
-    "@types/node can't have a major version update due to typing changes in node 13.  Electron depends on ^12 and we get 13, which breaks us"
+    "@types/node can't have a major version update due to typing changes in node 13.  Electron depends on ^12 and we get 13, which breaks us",
+    "Pin electron version (i.e. 7.0.1, not ~7.0.0) as a workaround for issue https://github.com/electron-userland/electron-builder/issues/4157"
   ],
   "devDependencies": {
     "@types/bytes": "^3.0.0",
@@ -40,8 +41,8 @@
     "@types/semver": "^5.5.0",
     "bower": "^1.8.0",
     "browserify": "^14.5.0",
-    "electron": "~7.0.0",
-    "electron-builder": "^21.2.0",
+    "electron": "7.0.1",
+    "electron-builder": "~22.4.0",
     "electron-icon-maker": "^0.0.4",
     "electron-notarize": "^0.2.1",
     "gulp": "^4.0.0",
