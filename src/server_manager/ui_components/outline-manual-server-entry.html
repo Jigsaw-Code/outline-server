@@ -197,7 +197,7 @@
               ></iron-icon>
             </div>
           </div>
-          <iron-collapse id="gcpCreateProjectDropDown">
+          <iron-collapse id="gcpCreateProjectDropDown" class="instructions-collapse">
             <div class="section-content-instructions">
               <!-- TODOBEFOREMERGE i18n -->
               <!-- TODOBEFOREMERGE images -->
@@ -234,7 +234,7 @@
               ></iron-icon>
             </div>
           </div>
-          <iron-collapse id="gcpFirewallDropDown">
+          <iron-collapse id="gcpFirewallDropDown" class="instructions-collapse">
             <div class="section-content-instructions">
               <outline-cloud-instructions-view
                 title="[[localize('manual-server-create-firewall')]]"
@@ -271,7 +271,7 @@
               ></iron-icon>
             </div>
           </div>
-          <iron-collapse id="gcpCreateServerDropDown">
+          <iron-collapse id="gcpCreateServerDropDown" class="instructions-collapse">
             <div class="section-content-instructions">
               <!-- TODOBEFOREMERGE i18n -->
               <!-- TODOBEFOREMERGE images -->
@@ -318,7 +318,7 @@
               ></iron-icon>
             </div>
           </div>
-          <iron-collapse id="awsDropDown">
+          <iron-collapse id="awsDropDown" class="instructions-collapse">
             <div class="section-content-instructions">
               <outline-cloud-instructions-view
                 title="[[localize('manual-server-create-group')]]"
@@ -480,9 +480,8 @@
       clear: function() {
         this.$.serverConfig.value = "";
         this.showConnection = false;
-        this.$.awsDropDown.hide();
         // TODOBEFOREPUSH use $$ to select all drop-downs
-        for (const dropdown of Polymer.dom(this.root).querySelectorAll("iron-collapse")) {
+        for (const dropdown of Polymer.dom(this.root).querySelectorAll(".instructions-collapse")) {
           dropdown.hide();
         }
       },
@@ -494,11 +493,13 @@
         this.isGenericCloudProvider = this._computeIsGenericCloudProvider(
           newProvider
         );
-        this.installScriptStepNumber = this.isGenericCloudProvider
-          ? 1
-          : this.isCloudProviderGcp
-          ? 4
-          : 2;
+        if (this.isGenericCloudProvider) {
+          this.installScriptStepNumber = 1;
+        } else if (this.isCloudProviderGcp) {
+          this.installScriptStepNumber = 4;
+        } else {
+          this.installScriptStepNumber = 2;
+        }
         this.pasteJsonStepNumber = this.installScriptStepNumber + 1;
       },
       _computeCloudProviderName: function(cloudProvider) {
