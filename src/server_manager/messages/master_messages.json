@@ -353,6 +353,42 @@
     "message": "Outline Server Installation Failed",
     "description": "This string appears in the feedback dialog as a header. The feedback dialog gets automatically displayed with this header when a server installation fails."
   },
+  "gcp_create_new_project": {
+    "message": "$START_OF_LINK$Create a new Google Cloud Project$END_OF_LINK$.",
+    "description": "This string appears in the server setup view as a card header for creating a new Google Cloud project",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
+  },
+  "gcp_create_new_vm": {
+    "message": "$START_OF_LINK$Create a new VM instance$END_OF_LINK$.",
+    "description": "This string appears in the server setup view as an section header for instructions for creating a VM on Google Cloud.",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
+  },
+  "gcp_create_project": {
+    "message": "Create a Google Cloud project",
+    "description": "This string appears as a header of a set of instructions for creating a new Google Cloud project"
+  },
+  "gcp_create_server": {
+    "message": "Create your Google Cloud Project",
+    "description": "This string appears in the server setup view as a section header for creating a new Google Cloud project"
+  },
+  "gcp_create_vm": {
+    "message": "Create a VM Instance",
+    "description": "This string appears as a header for a set of instructions for creating a new Google Cloud VM"
+  },
   "gcp_firewall_assign_0": {
     "message": "Navigate to the $START_OF_LINK$VM instances screen$END_OF_LINK$.",
     "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform.",
@@ -412,6 +448,30 @@
   "gcp_firewall_create_5": {
     "message": "Click 'Create'.",
     "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'Create' should be translated and included untranslated in parentheses."
+  },
+  "gcp_name_your_project": {
+    "message": "Name your project in the \"Project name\" field.",
+    "description": "This string appears as instructions for naming a new Google Cloud Project.  The translation for 'Project Name' should match that used in the Google Cloud Console"
+  },
+  "gcp_select_machine_type": {
+    "message": "Select \"f1-micro\" under \"Machine type\"",
+    "description": "This string appears as an instruction for selecting the machine type for a new Google Cloud VM.  The translation for 'Machine type' should match that used in the Google Cloud Console."
+  },
+  "gcp_select_networking": {
+    "message": "Click \"Management, security, disks, networking, sole tenancy\", then \"Networking\"",
+    "description": "This string appears as an instruction to find  the networking options when creating a new Google Cloud VM.  The translations for 'Management, security, disks, networking, sole tenancy' and 'Networking' should match that used in the Google Cloud Console"
+  },
+  "gcp_select_region": {
+    "message": "Select a region close to where the server's users will be under \"Region\".",
+    "description": "This string appears as an instruction for selecting a region for a new Google Cloud VM.  The translation for 'Region' should match that used in the Google Cloud Console."
+  },
+  "gcp_type_network_tag": {
+    "message": "Type \"outline\" in the \"Network tags\" field",
+    "description": "This string appears as an instruction for specifying a network tag in a new Google Cloud VM.  The translation for 'Network tags' should match that used in the Google Cloud Console"
+  },
+  "gcp_type_outline_server": {
+    "message": "Type \"outline-server\" in the \"Name\" field.",
+    "description": "This string is an instruction in directions for creating a new Google Cloud VM.  The translation for 'Name' should match that used in the Google Cloud Console"
   },
   "key": {
     "message": "Key",
