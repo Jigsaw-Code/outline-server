@@ -800,9 +800,9 @@
 
         // Show 0 decimals for < 1MB, 1 decimal for >= 1MB, 2 decimals for >= 1GB.
         let numDecimals = 0;
-        if (numBytes >= 10 ** 9) {
+        if (numBytes >= 2 ** 30) {
           numDecimals = 2;
-        } else if (numBytes >= 10 ** 6) {
+        } else if (numBytes >= 2 ** 20) {
           numDecimals = 1;
         }
 
