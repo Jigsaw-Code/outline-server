@@ -255,6 +255,14 @@
               always-float-label
               maxlength="100"
             ></paper-input>
+            <paper-input
+              readonly
+              value="[[serverShadowboxVersion]]"
+              label="[[localize('settings-server-shadowbox-version')]]"
+              hidden$="[[!serverShadowboxVersion]]"
+              always-float-label
+              maxlength="100"
+            ></paper-input>
           </div>
         </div>
         <!-- Experiments -->
@@ -351,6 +359,7 @@
         serverHostname: {type: String, value: null},
         serverManagementApiUrl: {type: String, value: null},
         serverPortForNewAccessKeys: {type: Number, value: null},
+        serverShadowboxVersion: {type: String, value: null},
         isAccessKeyPortEditable: {type: Boolean, value: false},
         isAccessKeyDataLimitEnabled: {type: Boolean, notify: true},
         accessKeyDataLimit: {type: Object, value: null}, // type: app.DisplayDataAmount

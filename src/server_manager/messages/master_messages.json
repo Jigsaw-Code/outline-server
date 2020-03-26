@@ -883,6 +883,10 @@
     "message": "Set a new name for your server. Note that this will not be reflected on the devices of the users that you invited to connect to it.",
     "description": "This string appears in the server settings view as a paragraph below the server's name. Informs the user about the implications of renaming a server."
   },
+  "settings_server_shadowbox_version": {
+    "message": "Shadowbox version",
+    "description": "This string appears in the server settings view as a label for the server's Shadowbox version."
+  },
   "settings_transfer_limit": {
     "message": "Data transfer allowance",
     "description": "This string appears in the server settings view as a label for the server's data transfer allowance."

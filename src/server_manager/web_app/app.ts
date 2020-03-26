@@ -854,6 +854,7 @@ export class App {
     view.serverManagementApiUrl = selectedServer.getManagementApiUrl();
     view.serverPortForNewAccessKeys = selectedServer.getPortForNewAccessKeys();
     view.serverCreationDate = localizeDate(selectedServer.getCreatedDate(), this.appRoot.language);
+    view.serverShadowboxVersion = selectedServer.getVersion();
     view.dataLimitsAvailabilityDate =
         localizeDate(DATA_LIMITS_AVAILABILITY_DATE, this.appRoot.language);
     view.accessKeyDataLimit = dataLimitToDisplayDataAmount(selectedServer.getAccessKeyDataLimit());
