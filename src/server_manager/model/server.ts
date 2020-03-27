@@ -37,6 +37,15 @@ export interface Server {
   // Removes the access key given by id.
   removeAccessKey(accessKeyId: AccessKeyId): Promise<void>;
 
+  // Sets a data transfer limit over a 30 day rolling window for all access keys.
+  setAccessKeyDataLimit(limit: DataLimit): Promise<void>;
+
+  // Returns the access key data transfer limit, or undefined if it has not been set.
+  getAccessKeyDataLimit(): DataLimit|undefined;
+
+  // Removes the access key data transfer limit.
+  removeAccessKeyDataLimit(): Promise<void>;
+
   // Returns whether metrics are enabled.
   getMetricsEnabled(): boolean;
 
@@ -53,7 +62,10 @@ export interface Server {
   getCreatedDate(): Date;
 
   // Returns the server's domain name or IP address.
-  getHostname(): string;
+  getHostnameForAccessKeys(): string;
+
+  // Changes the hostname for shared access keys.
+  setHostnameForAccessKeys(hostname: string): Promise<void>;
 
   // Returns the server's management API URL.
   getManagementApiUrl(): string;
@@ -144,7 +156,6 @@ export interface ManualServerRepository {
   listServers(): Promise<ManualServer[]>;
   // Adds a manual server using the config (e.g. user input).
   addServer(config: ManualServerConfig): Promise<ManualServer>;
-
   // Retrieves a server with `config`.
   findServer(config: ManualServerConfig): ManualServer|undefined;
 }
@@ -168,4 +179,10 @@ export interface DataUsageByAccessKey {
   // TODO: this still says "UserId", changing to "AccessKeyId" will require
   // a change on the shadowbox server.
   bytesTransferredByUserId: {[accessKeyId: string]: number};
+}
+
+// Data transfer allowance, measured in bytes.
+// NOTE: Must be kept in sync with the definition in src/shadowbox/access_key.ts.
+export interface DataLimit {
+  readonly bytes: number;
 }

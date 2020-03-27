@@ -13,7 +13,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<link rel='import' href='../bower_components/polymer/polymer.html'>
+<link rel="import" href="../bower_components/polymer/polymer.html" />
 
 <!-- Polymer style module to share styles between steps
 https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules -->
@@ -21,18 +21,18 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
   <template>
     <style>
       :host {
-        --primary-green: #00BFA5;
+        --primary-green: #00bfa5;
         --background-color: #263238;
         --background-contrast-color: #2e3a3f;
         --light-gray: rgba(255, 255, 255, 0.87);
         --medium-gray: rgba(255, 255, 255, 0.54);
-        --dark-gray: rgba(0,0, 0, 0.87);
-        --border-color: rgba(255,255, 255, 0.12);
+        --dark-gray: rgba(0, 0, 0, 0.87);
+        --border-color: rgba(255, 255, 255, 0.12);
       }
 
       #title {
         font-weight: 100;
-        color: rgba(0, 0, 0, .87);
+        color: rgba(0, 0, 0, 0.87);
         font-size: 24px;
         line-height: 1.5em;
         display: inline-block;
@@ -52,7 +52,7 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
       }
 
       paper-button.primary {
-        transition: .5s;
+        transition: 0.5s;
         color: white;
         background-color: var(--background-color);
         width: 56%;
@@ -68,10 +68,10 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
       }
 
       paper-progress {
-         background: var(--background-contrast-color);
+        background: var(--background-contrast-color);
         --paper-progress-active-color: var(--primary-green);
-        --paper-progress-container-color: var(--background-contrast-color);;
-        --paper-progress-transition-duration: 1.0s;
+        --paper-progress-container-color: var(--background-contrast-color);
+        --paper-progress-transition-duration: 1s;
         --paper-progress-transition-timing-function: linear;
         width: 100%;
       }
@@ -81,14 +81,22 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
       }
 
       paper-dropdown-menu {
-        width: 100%;
+        --paper-input-container-underline: {
+          color: var(--primary-green);
+        }
+      }
+
+      paper-input,
+      paper-textarea,
+      paper-dropdown-menu {
+        --paper-input-container-focus-color: var(--primary-green);
       }
 
       app-toolbar {
-        color: #EEE;
+        color: #eee;
         font-size: 12px;
         font-weight: 300;
-        letter-spacing: .02em;
+        letter-spacing: 0.02em;
         color: var(--light-gray);
         padding: 0;
         min-height: 60px;
@@ -112,7 +120,6 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
         margin-bottom: 24px;
       }
 
-
       paper-dialog {
         max-width: 540px;
         min-width: 480px;
@@ -124,8 +131,7 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
         margin: 0;
       }
 
-
-      paper-dialog-scrollable img{
+      paper-dialog-scrollable img {
         padding-top: 24px;
         padding-bottom: 24px;
       }
@@ -141,6 +147,13 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
         height: 150px;
       }
 
+      paper-tooltip {
+        --paper-tooltip-text-color: #000;
+        --paper-tooltip-background: #fff;
+        --paper-tooltip-duration-in: 100;
+        --paper-tooltip-duration-out: 100;
+      }
+
       .instructions-list {
         margin: auto;
         padding-right: 42px;
@@ -149,7 +162,7 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
       }
 
       .instructions-list ol {
-        margin: 0 0 0 0 ;
+        margin: 0 0 0 0;
         padding: 0 24px 0 56px;
         text-align: center !important;
       }
@@ -159,9 +172,8 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
         text-align: left;
       }
 
-
       .instructions-list li:before {
-       padding: 0 0 30px 20px;
+        padding: 0 0 30px 20px;
       }
 
       .instructions-list paper-button {
@@ -184,8 +196,8 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
       }
 
       .walkthrough {
-        background: #FFFFFF;
-        box-shadow: 0 3px 5px 0 rgba(0,0,0,0.10), 0 2px 4px 0 rgba(0,0,0,0.1), 0 4px 4px 0 rgba(0,0,0, .12);
+        background: #ffffff;
+        box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.1), 0 2px 4px 0 rgba(0, 0, 0, 0.1), 0 4px 4px 0 rgba(0, 0, 0, 0.12);
         top: 0px;
         display: block;
       }
@@ -193,7 +205,7 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
       .walkthrough h3 {
         font-size: 14px;
         line-height: 24px;
-        color: rgba(0,0,0,0.87);
+        color: rgba(0, 0, 0, 0.87);
         max-width: 70%;
         margin: auto;
         padding: 0px 0px 24px 0px;
@@ -202,6 +214,7 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
 
       a {
         text-decoration: none;
+        color: var(--primary-green);
       }
 
       /*
@@ -226,7 +239,5 @@ https://www.polymer-project.org/2.0/docs/devguide/style-shadow-dom#style-modules
         transform: scaleX(-1);
       }
     </style>
-
   </template>
-
 </dom-module>

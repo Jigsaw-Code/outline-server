@@ -24,6 +24,7 @@ import {PortProvider} from '../infrastructure/get_port';
 import * as json_config from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient, runPrometheusScraper} from '../infrastructure/prometheus_scraper';
+import {RolloutTracker} from '../infrastructure/rollout';	
 import {AccessKeyId} from '../model/access_key';
 
 import {PrometheusManagerMetrics} from './manager_metrics';
@@ -34,7 +35,7 @@ import * as server_config from './server_config';
 import {OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollectorClient, SharedMetricsPublisher} from './shared_metrics';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
-const MMDB_LOCATION = '/var/lib/libmaxminddb/GeoLite2-Country.mmdb';
+const MMDB_LOCATION = '/var/lib/libmaxminddb/ip-country.mmdb';
 
 async function exportPrometheusMetrics(registry: prometheus.Registry, port): Promise<http.Server> {
   return new Promise<http.Server>((resolve, _) => {
@@ -56,6 +57,17 @@ function reserveExistingAccessKeyPorts(
   dedupedPorts.forEach(p => portProvider.addReservedPort(p));
 }
 
+function createRolloutTracker(serverConfig: json_config.JsonConfig<server_config.ServerConfigJson>):
+    RolloutTracker {
+  const rollouts = new RolloutTracker(serverConfig.data().serverId);
+  if (serverConfig.data().rollouts) {
+    for (const rollout of serverConfig.data().rollouts) {
+      rollouts.forceRollout(rollout.id, rollout.enabled);
+    }
+  }
+  return rollouts;
+}
+
 async function main() {
   const verbose = process.env.LOG_LEVEL === 'debug';
   const portProvider = new PortProvider();
@@ -67,7 +79,7 @@ async function main() {
 
   // Default to production metrics, as some old Docker images may not have
   // SB_METRICS_URL properly set.
-  const metricsCollectorUrl = process.env.SB_METRICS_URL || 'https://metrics-prod.uproxy.org';
+  const metricsCollectorUrl = process.env.SB_METRICS_URL || 'https://prod.metrics.getoutline.org';
   if (!process.env.SB_METRICS_URL) {
     logging.warn('process.env.SB_METRICS_URL not set, using default');
   }
@@ -127,6 +139,12 @@ async function main() {
       new OutlineShadowsocksServer(
           getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation)
           .enableCountryMetrics(MMDB_LOCATION);
+  // Add rollout at 0%, so we can override in the config.
+  const isReplayProtectionEnabled = createRolloutTracker(serverConfig).isRolloutEnabled('replay-protection', 0);
+  logging.info(`Replay protection enabled: ${isReplayProtectionEnabled}`);
+  if (isReplayProtectionEnabled) {
+    shadowsocksServer.enableReplayProtection();
+  }
   const prometheusEndpoint = `http://${prometheusLocation}`;
   // Wait for Prometheus to be up and running.
   await runPrometheusScraper(

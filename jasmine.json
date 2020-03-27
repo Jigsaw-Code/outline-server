@@ -1,6 +1,7 @@
 {
   "spec_dir": ".",
   "spec_files": [
+    "build/metrics_server/**/*.spec.js",
     "build/server_manager/electron_app/js/**/*.spec.js",
     "build/server_manager/web_app/**/*.spec.js",
     "build/shadowbox/js/**/*.spec.js"

@@ -14,19 +14,13 @@
   limitations under the License.
 -->
 <link rel="import" href="../bower_components/polymer/polymer.html" />
-<link
-  rel="import"
-  href="../bower_components/iron-collapse/iron-collapse.html"
-/>
+<link rel="import" href="../bower_components/iron-collapse/iron-collapse.html" />
 <link rel="import" href="../bower_components/iron-icon/iron-icon.html" />
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html" />
 <link rel="import" href="../bower_components/paper-button/paper-button.html" />
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html" />
 <link rel="import" href="../bower_components/paper-input/paper-textarea.html" />
-<link
-  rel="import"
-  href="../bower_components/paper-progress/paper-progress.html"
-/>
+<link rel="import" href="../bower_components/paper-progress/paper-progress.html" />
 <link rel="import" href="./cloud-install-styles.html" />
 <link rel="import" href="./outline-cloud-instructions-view.html" />
 <link rel="import" href="./outline-step-view.html" />
@@ -175,10 +169,7 @@
     </style>
     <outline-step-view>
       <span slot="step-title">[[localize('manual-server-title')]]</span>
-      <span slot="step-description"
-        >[[localize('manual-server-description', 'cloudProvider',
-        cloudProviderName)]]</span
-      >
+      <span slot="step-description">[[localize('manual-server-description', 'cloudProvider', cloudProviderName)]]</span>
 
       <div class="card">
         <!-- GCP -->
@@ -190,10 +181,7 @@
             <div class="drop-down" on-tap="_toggleGcpCreateServerDropDown">
               <img src="images/gcp-logo.svg" />
               <span>[[localize('manual-server-instructions')]]</span>
-              <iron-icon
-                id="gcpCreateServerDropDownIcon"
-                icon="arrow-drop-down"
-              ></iron-icon>
+              <iron-icon id="gcpCreateServerDropDownIcon" icon="arrow-drop-down"></iron-icon>
             </div>
           </div>
           <iron-collapse id="gcpCreateServerDropDown" class="instructions-collapse">
@@ -266,10 +254,7 @@
             <div class="drop-down" on-tap="_toggleAwsDropDown">
               <img id="aws-logo" src="images/aws-logo.svg" />
               <span>[[localize('manual-server-instructions')]]</span>
-              <iron-icon
-                id="awsDropDownIcon"
-                icon="arrow-drop-down"
-              ></iron-icon>
+              <iron-icon id="awsDropDownIcon" icon="arrow-drop-down"></iron-icon>
             </div>
           </div>
           <iron-collapse id="awsDropDown" class="instructions-collapse">
@@ -348,25 +333,12 @@
           </div>
         </div>
         <div id="button-row">
-          <paper-button
-            id="cancelButton"
-            on-tap="cancelTapped"
-            class="secondary"
-            >[[localize('cancel')]]</paper-button
-          >
-          <paper-button
-            id="doneButton"
-            on-tap="doneTapped"
-            class="primary"
-            disabled$="[[!enableDoneButton]]"
+          <paper-button id="cancelButton" on-tap="cancelTapped" class="secondary">[[localize('cancel')]]</paper-button>
+          <paper-button id="doneButton" on-tap="doneTapped" class="primary" disabled$="[[!enableDoneButton]]"
             >[[localize('done')]]</paper-button
           >
         </div>
-        <paper-progress
-          hidden$="[[!showConnection]]"
-          indeterminate
-          class="slow"
-        ></paper-progress>
+        <paper-progress hidden$="[[!showConnection]]" indeterminate class="slow"></paper-progress>
       </div>
     </outline-step-view>
   </template>
@@ -376,52 +348,52 @@
       properties: {
         installScriptStepNumber: {
           type: Number,
-          value: 2
+          value: 2,
         },
         pasteJsonStepNumber: {
           type: Number,
-          value: 3
+          value: 3,
         },
         placeholderText: {
           type: String,
           value:
-            '{"apiUrl":"https://xxx.xxx.xxx.xxx:xxxxx/xxxxxxxxxxxxxxxxxxxxxx","certSha256":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}'
+            '{"apiUrl":"https://xxx.xxx.xxx.xxx:xxxxx/xxxxxxxxxxxxxxxxxxxxxx","certSha256":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}',
         },
         showConnection: Boolean,
         cloudProvider: {
           type: String,
           value: "generic",
-          observer: "_cloudProviderChanged"
+          observer: "_cloudProviderChanged",
         },
         cloudProviderName: {
           type: String,
-          computed: "_computeCloudProviderName(cloudProvider)"
+          computed: "_computeCloudProviderName(cloudProvider)",
         },
         isCloudProviderAws: {
           type: Boolean,
-          computed: "_computeIsCloudProviderAws(cloudProvider)"
+          computed: "_computeIsCloudProviderAws(cloudProvider)",
         },
         isCloudProviderGcp: {
           type: Boolean,
-          computed: "_computeIsCloudProviderGcp(cloudProvider)"
+          computed: "_computeIsCloudProviderGcp(cloudProvider)",
         },
         isGenericCloudProvider: {
           type: Boolean,
-          computed: "_computeIsGenericCloudProvider(cloudProvider)"
+          computed: "_computeIsGenericCloudProvider(cloudProvider)",
         },
         enableDoneButton: {
           type: Boolean,
-          value: false
+          value: false,
         },
         localize: {
           type: Function,
-          readonly: true
-        }
+          readonly: true,
+        },
       },
       doneTapped: function() {
         this.showConnection = true;
         this.fire("ManualServerEntered", {
-          userInput: this.$.serverConfig.value
+          userInput: this.$.serverConfig.value,
         });
       },
       cancelTapped: function() {
@@ -443,9 +415,7 @@
         this.cloudProviderName = this._computeCloudProviderName(newProvider);
         this.isCloudProviderAws = this._computeIsCloudProviderAws(newProvider);
         this.isCloudProviderGcp = this._computeIsCloudProviderGcp(newProvider);
-        this.isGenericCloudProvider = this._computeIsGenericCloudProvider(
-          newProvider
-        );
+        this.isGenericCloudProvider = this._computeIsGenericCloudProvider(newProvider);
         this.installScriptStepNumber = this.isGenericCloudProvider ? 1 : 2;
         this.pasteJsonStepNumber = this.installScriptStepNumber + 1;
       },
@@ -472,22 +442,13 @@
         this._toggleDropDown(this.$.awsDropDown, this.$.awsDropDownIcon);
       },
       _toggleGcpFirewallDropDown: function() {
-        this._toggleDropDown(
-          this.$.gcpFirewallDropDown,
-          this.$.gcpFirewallDropDownIcon
-        );
+        this._toggleDropDown(this.$.gcpFirewallDropDown, this.$.gcpFirewallDropDownIcon);
       },
       _toggleGcpCreateServerDropDown: function() {
-        this._toggleDropDown(
-          this.$.gcpCreateServerDropDown,
-          this.$.gcpCreateServerDropDownIcon
-        );
+        this._toggleDropDown(this.$.gcpCreateServerDropDown, this.$.gcpCreateServerDropDownIcon);
       },
       _toggleGcpCreateProjectDropDown: function() {
-        this._toggleDropDown(
-          this.$.gcpCreateProjectDropDown,
-          this.$.gcpCreateProjectDropDownIcon
-        );
+        this._toggleDropDown(this.$.gcpCreateProjectDropDown, this.$.gcpCreateProjectDropDownIcon);
       },
       _toggleDropDown: function(dropDown, icon) {
         dropDown.toggle();
@@ -495,9 +456,9 @@
       },
       onServerConfigChanged: function() {
         this.fire("ManualServerEdited", {
-          userInput: this.$.serverConfig.value
+          userInput: this.$.serverConfig.value,
         });
-      }
+      },
     });
   </script>
 </dom-module>

@@ -25,6 +25,7 @@ import {ShadowsocksAccessKey, ShadowsocksServer} from '../model/shadowsocks_serv
 export class OutlineShadowsocksServer implements ShadowsocksServer {
   private ssProcess: child_process.ChildProcess;
   private ipCountryFilename = '';
+  private isReplayProtectionEnabled = false;
 
   // configFilename is the location for the outline-ss-server config.
   constructor(
@@ -32,9 +33,14 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
       private readonly metricsLocation: string) {}
 
   // Annotates the Prometheus data metrics with countries.
-  // ipCountryFilename is the location of the GeoLite2-Country.mmdb file.
+  // ipCountryFilename is the location of the ip-country.mmdb IP-to-country database file.
   enableCountryMetrics(ipCountryFilename: string): OutlineShadowsocksServer {
     this.ipCountryFilename = ipCountryFilename;
+    return this;
+  }
+  
+  enableReplayProtection(): OutlineShadowsocksServer {
+    this.isReplayProtectionEnabled = true;
     return this;
   }
 
@@ -81,6 +87,9 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
     }
     if (this.verbose) {
       commandArguments.push('-verbose');
+    }
+    if (this.isReplayProtectionEnabled) {
+      commandArguments.push('--replay_history=10000');
     }
     this.ssProcess = child_process.spawn('/root/shadowbox/bin/outline-ss-server', commandArguments);
     this.ssProcess.on('error', (error) => {

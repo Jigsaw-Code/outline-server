@@ -249,9 +249,10 @@ function join() {
 function write_config() {
   declare -a config=()
   if [[ $FLAGS_KEYS_PORT != 0 ]]; then
-    config+=("\"portForNewAccessKeys\":$FLAGS_KEYS_PORT")
+    config+=("\"portForNewAccessKeys\": $FLAGS_KEYS_PORT")
   fi
-  config+=$(printf '"hostname": "%q"' ${PUBLIC_HOSTNAME})
+  # printf is needed to escape the hostname.
+  config+=("$(printf '"hostname": "%q"' ${PUBLIC_HOSTNAME})")
   echo "{"$(join , "${config[@]}")"}" > $STATE_DIR/shadowbox_server_config.json
 }
 
@@ -260,6 +261,7 @@ function start_shadowbox() {
   # rather than pass in the environment.
   declare -a docker_shadowbox_flags=(
     --name shadowbox --restart=always --net=host
+    --label=com.centurylinklabs.watchtower.enable=true
     -v "${STATE_DIR}:${STATE_DIR}"
     -e "SB_STATE_DIR=${STATE_DIR}"
     -e "SB_API_PORT=${API_PORT}"
@@ -294,7 +296,7 @@ function start_watchtower() {
   docker_watchtower_flags+=(-v /var/run/docker.sock:/var/run/docker.sock)
   # By itself, local messes up the return code.
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(docker run -d "${docker_watchtower_flags[@]}" v2tec/watchtower --cleanup --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS 2>&1 >/dev/null)
+  STDERR_OUTPUT=$(docker run -d "${docker_watchtower_flags[@]}" containrrr/watchtower --cleanup --label-enable --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS 2>&1 >/dev/null)
   local readonly RET=$?
   if [[ $RET -eq 0 ]]; then
     return 0
@@ -329,7 +331,7 @@ function add_api_url_to_config() {
 
 function check_firewall() {
   # TODO(cohenjon) This is incorrect if access keys are using more than one port.
-  local readonly ACCESS_KEY_PORT=$(curl --insecure -s ${LOCAL_API_URL}/access-keys | 
+  local readonly ACCESS_KEY_PORT=$(curl --insecure -s ${LOCAL_API_URL}/access-keys |
       docker exec -i shadowbox node -e '
           const fs = require("fs");
           const accessKeys = JSON.parse(fs.readFileSync(0, {encoding: "utf-8"}));

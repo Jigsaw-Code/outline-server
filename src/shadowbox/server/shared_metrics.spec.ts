@@ -15,9 +15,10 @@
 import {ManualClock} from '../infrastructure/clock';
 import {InMemoryConfig} from '../infrastructure/json_config';
 import {AccessKeyId} from '../model/access_key';
+import {version} from '../package.json';
 
 import {ServerConfigJson} from './server_config';
-import {HourlyServerMetricsReportJson, KeyUsage, MetricsCollectorClient, OutlineSharedMetricsPublisher, UsageMetrics} from './shared_metrics';
+import {DailyFeatureMetricsReportJson, HourlyServerMetricsReportJson, KeyUsage, MetricsCollectorClient, OutlineSharedMetricsPublisher, UsageMetrics} from './shared_metrics';
 
 describe('OutlineSharedMetricsPublisher', () => {
   describe('Enable/Disable', () => {
@@ -44,7 +45,7 @@ describe('OutlineSharedMetricsPublisher', () => {
     });
   });
   describe('Metrics Reporting', () => {
-    it('reports metrics correctly', async () => {
+    it('reports server usage metrics correctly', async () => {
       const clock = new ManualClock();
       let startTime = clock.nowMs;
       const serverConfig = new InMemoryConfig<ServerConfigJson>({serverId: 'server-id'});
@@ -63,7 +64,7 @@ describe('OutlineSharedMetricsPublisher', () => {
 
       clock.nowMs += 60 * 60 * 1000;
       await clock.runCallbacks();
-      expect(metricsCollector.collectedReport).toEqual({
+      expect(metricsCollector.collectedServerUsageReport).toEqual({
         serverId: 'server-id',
         startUtcMs: startTime,
         endUtcMs: clock.nowMs,
@@ -82,7 +83,7 @@ describe('OutlineSharedMetricsPublisher', () => {
 
       clock.nowMs += 60 * 60 * 1000;
       await clock.runCallbacks();
-      expect(metricsCollector.collectedReport).toEqual({
+      expect(metricsCollector.collectedServerUsageReport).toEqual({
         serverId: 'server-id',
         startUtcMs: startTime,
         endUtcMs: clock.nowMs,
@@ -113,7 +114,7 @@ describe('OutlineSharedMetricsPublisher', () => {
 
       clock.nowMs += 60 * 60 * 1000;
       await clock.runCallbacks();
-      expect(metricsCollector.collectedReport).toEqual({
+      expect(metricsCollector.collectedServerUsageReport).toEqual({
         serverId: 'server-id',
         startUtcMs: startTime,
         endUtcMs: clock.nowMs,
@@ -125,14 +126,61 @@ describe('OutlineSharedMetricsPublisher', () => {
       publisher.stopSharing();
     });
   });
+  it('reports feature metrics correctly', async () => {
+    const clock = new ManualClock();
+    let timestamp = clock.nowMs;
+    const serverConfig = new InMemoryConfig<ServerConfigJson>(
+        {serverId: 'server-id', accessKeyDataLimit: {bytes: 123}});
+    const metricsCollector = new FakeMetricsCollector();
+    const publisher = new OutlineSharedMetricsPublisher(
+        clock, serverConfig, new ManualUsageMetrics(), (id: AccessKeyId) => '', metricsCollector);
+
+    publisher.startSharing();
+    await clock.runCallbacks();
+    expect(metricsCollector.collectedFeatureMetricsReport).toEqual({
+      serverId: 'server-id',
+      serverVersion: version,
+      timestampUtcMs: timestamp,
+      dataLimit: {enabled: true}
+    });
+    clock.nowMs += 24 * 60 * 60 * 1000;
+    timestamp = clock.nowMs;
+
+    delete serverConfig.data().accessKeyDataLimit;
+    await clock.runCallbacks();
+    expect(metricsCollector.collectedFeatureMetricsReport).toEqual({
+      serverId: 'server-id',
+      serverVersion: version,
+      timestampUtcMs: timestamp,
+      dataLimit: {enabled: false}
+    });
+  });
+  it('does not report metrics when sharing is disabled', async () => {
+    const clock = new ManualClock();
+    const serverConfig =
+        new InMemoryConfig<ServerConfigJson>({serverId: 'server-id', metricsEnabled: false});
+    const metricsCollector = new FakeMetricsCollector();
+    spyOn(metricsCollector, 'collectServerUsageMetrics').and.callThrough();
+    spyOn(metricsCollector, 'collectFeatureMetrics').and.callThrough();
+    const publisher = new OutlineSharedMetricsPublisher(
+        clock, serverConfig, new ManualUsageMetrics(), (id: AccessKeyId) => '', metricsCollector);
+
+    await clock.runCallbacks();
+    expect(metricsCollector.collectServerUsageMetrics).not.toHaveBeenCalled();
+    expect(metricsCollector.collectFeatureMetrics).not.toHaveBeenCalled();
+  });
 });
 
 class FakeMetricsCollector implements MetricsCollectorClient {
-  public collectedReport: HourlyServerMetricsReportJson;
+  public collectedServerUsageReport: HourlyServerMetricsReportJson;
+  public collectedFeatureMetricsReport: DailyFeatureMetricsReportJson;
 
-  collectMetrics(report) {
-    this.collectedReport = report;
-    return Promise.resolve();
+  async collectServerUsageMetrics(report) {
+    this.collectedServerUsageReport = report;
+  }
+
+  async collectFeatureMetrics(report) {
+    this.collectedFeatureMetricsReport = report;
   }
 }
 

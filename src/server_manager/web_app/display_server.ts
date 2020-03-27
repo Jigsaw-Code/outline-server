@@ -25,7 +25,8 @@ export interface DisplayServer {
 export async function makeDisplayServer(server: server.Server) {
   return {
     id: server.getManagementApiUrl(),
-    name: await server.isHealthy().catch((e) => false) ? server.getName() : server.getHostname(),
+    name: await server.isHealthy().catch((e) => false) ? server.getName() :
+                                                         server.getHostnameForAccessKeys(),
     isManaged: !!(server as server.ManagedServer).getHost,
     isSynced: true
   };

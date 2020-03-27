@@ -17,7 +17,7 @@ import * as express from 'express';
 
 import {postSentryEventToSalesforce, shouldPostEventToSalesforce} from './post_sentry_event_to_salesforce';
 
-exports.postSentryEventToSalesforce = (req: express.Request, res: express.Response) => {
+exports.postSentryEventToSalesforce = (req: express.Request, res: express.Response<string>) => {
   if (req.method !== 'POST') {
     return res.status(405).send('Method not allowed');
   }

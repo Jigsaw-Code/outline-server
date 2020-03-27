@@ -13,15 +13,14 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<link rel='import' href='../bower_components/polymer/polymer.html'>
-<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
-<link rel='import' href='../bower_components/paper-button/paper-button.html'>
+<link rel="import" href="../bower_components/polymer/polymer.html" />
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html" />
+<link rel="import" href="../bower_components/paper-button/paper-button.html" />
 
 <dom-module id="outline-cloud-instructions-view">
   <template>
     <style include="cloud-install-styles">
       :host {
-
       }
       .container {
         border: 1px solid var(--border-color);
@@ -51,7 +50,7 @@
       }
       .overlay {
         position: absolute;
-        background: rgb(38,50,56);
+        background: rgb(38, 50, 56);
         opacity: 0;
         display: flex;
         justify-content: center;
@@ -75,12 +74,14 @@
     <div class="container">
       <div class="header">
         <div class="title">[[title]]</div>
-        <div class="showme" on-tap="_openImage">[[localize('manual-server-show-me')]]<iron-icon icon="open-in-new"></iron-icon></div>
+        <div class="showme" on-tap="_openImage">
+          [[localize('manual-server-show-me')]]<iron-icon icon="open-in-new"></iron-icon>
+        </div>
       </div>
       <div class="thumbnail overlay" on-tap="_openImage">
         <iron-icon icon="open-in-new"></iron-icon>
       </div>
-      <img class="thumbnail" src$="[[thumbnailPath]]"></img>
+      <img class="thumbnail" src$="[[thumbnailPath]]" />
       <div class="instructions">
         <slot></slot>
       </div>
@@ -88,7 +89,7 @@
   </template>
   <script>
     Polymer({
-      is: 'outline-cloud-instructions-view',
+      is: "outline-cloud-instructions-view",
       properties: {
         title: String,
         imagePath: String,
@@ -97,8 +98,8 @@
         localize: {type: Function, readonly: true},
       },
       _openImage: function() {
-        this.fire('OpenImageRequested', {imagePath: this.imagePath});
-      }
+        this.fire("OpenImageRequested", {imagePath: this.imagePath});
+      },
     });
   </script>
 </dom-module>

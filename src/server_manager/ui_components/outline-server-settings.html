@@ -13,17 +13,21 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<link rel='import' href='../bower_components/polymer/polymer.html'>
-<link rel='import' href='../bower_components/paper-button/paper-button.html'>
-<link rel='import' href='../bower_components/paper-input/paper-input.html'>
-<link rel='import' href='../bower_components/paper-checkbox/paper-checkbox.html'>
+<link rel="import" href="../bower_components/polymer/polymer.html" />
+<link rel="import" href="../bower_components/paper-button/paper-button.html" />
+<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html" />
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html" />
+<link rel="import" href="../bower_components/paper-input/paper-input.html" />
 
-<link rel='import' href='./cloud-install-styles.html'>
-<link rel='import' href='./outline-iconset.html'>
+<link rel="import" href="./cloud-install-styles.html" />
+<link rel="import" href="./outline-server-settings-styles.html" />
+<link rel="import" href="./outline-iconset.html" />
+<link rel="import" href="./outline-validated-input.html" />
 
-<dom-module id='outline-server-settings'>
+<dom-module id="outline-server-settings">
   <template>
-    <style include='cloud-install-styles'></style>
+    <style include="cloud-install-styles"></style>
+    <style include="outline-server-settings-styles"></style>
     <style>
       .content {
         flex-grow: 1;
@@ -35,7 +39,8 @@
       .setting:not(:first-child) {
         margin-top: 8px;
       }
-      .setting-icon, img.setting-icon {
+      .setting-icon,
+      img.setting-icon {
         margin-right: 24px;
         color: #fff;
         opacity: 0.87;
@@ -55,43 +60,96 @@
         width: 60%;
         color: var(--medium-gray);
       }
-      #metricsHeader {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
+      #experiments p {
+        width: 80%;
       }
-      #portForNewAccessKeysContainer {
+      #experiments .sub-section p {
+        width: 100%;
+      }
+      .sub-section {
+        background: var(--border-color);
+        padding: 16px;
+        margin: 24px 0;
+        display: flex;
+        align-items: center;
+        border-radius: 2px;
+      }
+      .sub-section iron-icon {
+        margin-right: 16px;
+      }
+      .selection-container {
         display: flex;
         justify-content: space-between;
+        align-items: baseline;
+      }
+      .selection-container > .content {
+        flex: 4;
+      }
+      .selection-container > paper-dropdown-menu {
+        flex: 1;
+      }
+      .data-limits-input {
+        display: flex;
         align-items: center;
+      }
+      .data-limits-input paper-input:not([readonly]) {
+        width: auto;
+        --paper-input-container: {
+          width: 120px;
+        }
       }
       .detail {
         margin-top: 0px;
         font-size: 12px;
       }
-      .clickable {
+      paper-input:not([readonly]) {
+        width: 60%;
+      }
+      paper-dropdown-menu {
+        border: 1px solid var(--medium-gray);
+        border-radius: 4px;
+        max-width: 150px;
+        --paper-input-container: {
+          padding: 0 4px;
+          text-align: center;
+        }
+        --paper-input-container-input: {
+          color: var(--medium-gray);
+          font-size: 14px;
+        }
+        --paper-dropdown-menu-ripple: {
+          display: none;
+        }
+        --paper-input-container-underline: {
+          display: none;
+        }
+        --paper-input-container-underline-focus: {
+          display: none;
+        }
+      }
+      .data-limits-input paper-dropdown-menu {
+        border: none;
+        --paper-input-container: {
+          width: 64px;
+        }
+      }
+      paper-listbox paper-item {
+        font-size: 14px;
+      }
+      paper-listbox paper-item:hover {
         cursor: pointer;
+        background-color: #eee;
       }
-      #keysPortSaveButton {
-        background: var(--primary-green);
-        color: #fff;
-        height: 36px;
-        width: 83px;
+      #data-limits-container .selection-container h3 {
+        font-weight: normal;
+        margin-bottom: 8px;
       }
-      #keysPortSaveButton[disabled] {
-        background-color: rgba(255, 255, 255, .12);
-        color: rgba(255, 255, 255, .3);
+      #data-limits-container .selection-container p {
+        margin: 0 0 24px 0;
       }
-      #keysPortCancelButton {
-        color: #fff;
-        width: 83px;
-      }
-      #keysPortCancelButton[disabled] {
-        color:rgba(255, 255, 255, 0.3);
-        background-color: rgba(0, 0, 0, 0);
-      }
-      #portForNewAccessKeysContainer {
-        max-width: 545px;
+      #data-limits-container .selection-container span {
+        display: block;
+        margin-top: 6px;
       }
       paper-checkbox {
         /* We want the ink to be the color we're going to, not coming from */
@@ -100,91 +158,182 @@
         --paper-checkbox-unchecked-color: var(--light-gray);
         --paper-checkbox-unchecked-ink-color: var(--primary-green);
       }
-      /* Skip processing these with postcss-rtl as it incorrectly parses the border-color
-         in the paper-input-container-underline-focus mixin. https://github.com/vkalinichev/postcss-rtl/issues/50 */
-      /* rtl:begin:ignore */
-      paper-input {
-        /* Removes extra padding added by children of paper-input */
-        margin-top: -8px;
-        /* Create space for error messages */
-        margin-bottom: 14px;
-        --paper-input-container-label-focus: {
-          color: var(--primary-green);
-        };
-        --paper-input-container-underline-focus: {
-          border-color: var(--primary-green);
-        };
-        --paper-input-container-label: {
-          font-size: 14px;
-          line-height: 22px;
-        };
-        --paper-input-container-color: var(--medium-gray);
-        --paper-input-container-input: {
-          color: #fff;
-        };
-        --paper-input-container-invalid-color: #f28b82;
-      }
-      /* rtl:end:ignore */
-      paper-input[readonly] {
-        --paper-input-container-underline: {
-          display: none;
-        };
-        --paper-input-container-underline-focus: {
-          display: none;
-        };
-        --paper-input-container-underline-disabled: {
-          display: none;
-        };
-        --paper-input-container-disabled: {
-          opacity: 1;
-        }
-      }
-      .link {
-        text-decoration: underline;
-        color: var(--medium-gray);
-      }
-      paper-input:not([readonly]) {
-        width: 60%;
+      .selection-container paper-checkbox {
+        margin-right: 4px;
       }
     </style>
     <div class="container">
       <div class="content">
         <!-- DO information -->
         <div class="setting card-section" hidden$="[[!isServerManaged]]">
-          <img class="setting-icon digital-ocean-icon" src="images/do_white_logo.svg"/>
+          <img class="setting-icon digital-ocean-icon" src="images/do_white_logo.svg" />
           <div>
             <h3>DigitalOcean</h3>
-            <paper-input readonly value="[[serverLocation]]" label="[[localize('settings-server-location')]]" hidden$="[[!serverLocation]]" always-float-label maxlength="100"></paper-input>
-            <paper-input readonly value="[[serverMonthlyCost]] USD" label="[[localize('settings-server-cost')]]" hidden$="[[!serverMonthlyCost]]" always-float-label maxlength="100"></paper-input>
-            <paper-input readonly value="[[serverMonthlyTransferLimit]]" label="[[localize('settings-transfer-limit')]]" hidden$="[[!serverMonthlyTransferLimit]]" always-float-label maxlength="100"></paper-input>
+            <paper-input
+              readonly
+              value="[[serverLocation]]"
+              label="[[localize('settings-server-location')]]"
+              hidden$="[[!serverLocation]]"
+              always-float-label
+              maxlength="100"
+            ></paper-input>
+            <paper-input
+              readonly
+              value="[[serverMonthlyCost]] USD"
+              label="[[localize('settings-server-cost')]]"
+              hidden$="[[!serverMonthlyCost]]"
+              always-float-label
+              maxlength="100"
+            ></paper-input>
+            <paper-input
+              readonly
+              value="[[serverMonthlyTransferLimit]]"
+              label="[[localize('settings-transfer-limit')]]"
+              hidden$="[[!serverMonthlyTransferLimit]]"
+              always-float-label
+              maxlength="100"
+            ></paper-input>
           </div>
         </div>
         <div class="setting card-section">
           <iron-icon class="setting-icon" icon="outline-iconset:outline"></iron-icon>
           <div>
             <h3>[[localize('settings-server-info')]]</h3>
-            <paper-input id="serverNameInput" class="server-name" value="{{name}}" label="[[localize('settings-server-name')]]" always-float-label maxlength="100" on-keydown="_handleNameInputKeyDown" on-blur="_handleNameInputBlur"></paper-input>
+            <!-- TODO: consider making this an outline-validated-input -->
+            <paper-input
+              id="serverNameInput"
+              class="server-name"
+              value="{{serverName}}"
+              label="[[localize('settings-server-name')]]"
+              always-float-label
+              maxlength="100"
+              on-keydown="_handleNameInputKeyDown"
+              on-blur="_handleNameInputBlur"
+            ></paper-input>
             <p class="detail">[[localize('settings-server-rename')]]</p>
-            <div id="portForNewAccessKeysContainer">
-              <paper-input id="keysPortInput" readonly$="[[!isAccessKeyPortEditable]]" allowed-pattern="[0-9]{1,5}" value="[[serverPortForNewAccessKeys]]" label="[[localize('settings-access-key-port')]]" maxlength="5" hidden$="[[!serverPortForNewAccessKeys]]" on-tap="setKeysPortEditing" on-keyup="_handleKeysPortInputKeyUp" always-float-label maxlength="100"></paper-input>
-              <paper-button id="keysPortCancelButton" hidden$="[[!showKeysPortButtons]]" disabled$="[[!enableKeysPortButtons]]" on-tap="cancelKeysPortEdit">[[localize('cancel')]]</paper-button>
-              <paper-button id="keysPortSaveButton" hidden$="[[!showKeysPortButtons]]" disabled$="[[!enableKeysPortButtons]]" on-tap="saveKeysPort">[[localize('save')]]</paper-button>
+            <outline-validated-input
+              editable="[[isAccessKeyPortEditable]]"
+              visible="[[serverPortForNewAccessKeys]]"
+              label="[[localize('settings-access-key-port')]]"
+              allowed-pattern="[0-9]{1,5}"
+              max-length="5"
+              value="[[serverPortForNewAccessKeys]]"
+              client-side-validator="[[_validatePort]]"
+              event="ChangePortForNewAccessKeysRequested"
+              localize="[[localize]]"
+            ></outline-validated-input>
+            <outline-validated-input
+              editable="[[isHostnameEditable]]"
+              visible="[[serverHostname]]"
+              label="[[localize('settings-server-hostname')]]"
+              max-length="253"
+              value="[[serverHostname]]"
+              event="ChangeHostnameForAccessKeysRequested"
+              localize="[[localize]]"
+            ></outline-validated-input>
+            <paper-input
+              readonly
+              value="[[serverManagementApiUrl]]"
+              label="[[localize('settings-server-api-url')]]"
+              hidden$="[[!serverManagementApiUrl]]"
+              always-float-label
+              maxlength="100"
+            ></paper-input>
+            <paper-input
+              readonly
+              value="[[serverCreationDate]]"
+              label="[[localize('settings-server-creation')]]"
+              hidden$="[[!serverCreationDate]]"
+              always-float-label
+              maxlength="100"
+            ></paper-input>
+            <paper-input
+              readonly
+              value="[[serverId]]"
+              label="[[localize('settings-server-id')]]"
+              hidden$="[[!serverId]]"
+              always-float-label
+              maxlength="100"
+            ></paper-input>
+          </div>
+        </div>
+        <!-- Experiments -->
+        <div id="experiments" class="setting card-section" hidden$="[[!shouldShowExperiments]]">
+          <iron-icon class="setting-icon" icon="icons:build"></iron-icon>
+          <div>
+            <h3>[[localize('experiments')]]</h3>
+            <p>[[localize('experiments-description')]]</p>
+            <div class="sub-section">
+              <iron-icon icon="icons:error-outline"></iron-icon>
+              <p
+                inner-h-t-m-l="[[localize('experiments-disclaimer', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"
+              ></p>
             </div>
-            <paper-input readonly value="[[serverHostname]]" label="[[localize('settings-server-hostname')]]" hidden$="[[!serverHostname]]" always-float-label maxlength="100"></paper-input>
-            <paper-input readonly value="[[serverManagementApiUrl]]" label="[[localize('settings-server-api-url')]]" hidden$="[[!serverManagementApiUrl]]" always-float-label maxlength="100"></paper-input>
-            <paper-input readonly value="[[serverCreationDate]]" label="[[localize('settings-server-creation')]]" hidden$="[[!serverCreationDate]]" always-float-label maxlength="100"></paper-input>
-            <paper-input readonly value="[[serverId]]" label="[[localize('settings-server-id')]]" hidden$="[[!serverId]]" always-float-label maxlength="100"></paper-input>
+            <div id="data-limits-container" hidden$="[[!supportsAccessKeyDataLimit]]">
+              <div class="selection-container">
+                <div class="content">
+                  <h3>[[localize('data-limits')]]</h3>
+                  <p>
+                    [[localize('data-limits-description', 'date', dataLimitsAvailabilityDate)]]<br />
+                    <span
+                      inner-h-t-m-l="[[localize('experiments-feedback', 'openLink', '<a href=https://docs.google.com/forms/d/e/1FAIpQLSfP7q9GnJCQyWMpFTLd9zwCm7cvUa-2NR8a8SznwMSbuRnrWg/viewform>', 'closeLink', '</a>')]]"
+                    ></span>
+                  </p>
+                </div>
+                <!-- NOTE: The dropdown is not automatically sized to the button's width:
+                             https://github.com/PolymerElements/paper-dropdown-menu/issues/229 -->
+                <paper-dropdown-menu no-label-float horizontal-align="left">
+                  <paper-listbox
+                    slot="dropdown-content"
+                    selected="{{_computeDataLimitsEnabledName(isAccessKeyDataLimitEnabled)}}"
+                    attr-for-selected="name"
+                    on-selected-changed="_accessKeyDataLimitEnabledChanged"
+                  >
+                    <paper-item name="enabled">[[localize('enabled')]]</paper-item>
+                    <paper-item name="disabled">[[localize('disabled')]]</paper-item>
+                  </paper-listbox>
+                </paper-dropdown-menu>
+              </div>
+              <div class="data-limits-input" hidden$="[[!isAccessKeyDataLimitEnabled]]">
+                <paper-input
+                  id="accessKeyDataLimitInput"
+                  value="[[accessKeyDataLimit.value]]"
+                  label="Data limit per key"
+                  always-float-label
+                  allowed-pattern="[0-9]+"
+                  required
+                  auto-validate
+                  maxlength="9"
+                  on-keydown="_handleAccessKeyDataLimitInputKeyDown"
+                  on-blur="_requestSetAccessKeyDataLimit"
+                ></paper-input>
+                <paper-dropdown-menu no-label-float>
+                  <paper-listbox
+                    id="accessKeyDataLimitUnits"
+                    slot="dropdown-content"
+                    selected="[[accessKeyDataLimit.unit]]"
+                    attr-for-selected="name"
+                    on-selected-changed="_requestSetAccessKeyDataLimit"
+                  >
+                    <paper-item name="MB">MB</paper-item>
+                    <paper-item name="GB">GB</paper-item>
+                  </paper-listbox>
+                </paper-dropdown-menu>
+              </div>
+            </div>
           </div>
         </div>
         <!-- Metrics controls -->
         <div class="setting card-section">
           <iron-icon class="setting-icon" icon="editor:insert-chart"></iron-icon>
           <div>
-            <div id="metricsHeader">
+            <div class="selection-container">
+              <paper-checkbox checked="{{metricsEnabled}}"></paper-checkbox>
               <h3>[[localize('settings-metrics-header')]]</h3>
-              <paper-checkbox id="metricsCheckbox" checked="{{metricsEnabled}}"></paper-checkbox>
             </div>
-            <p inner-h-t-m-l="[[localize('metrics-description', 'openLink', '<a class=link href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
+            <p
+              inner-h-t-m-l="[[localize('metrics-description', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"
+            ></p>
           </div>
         </div>
       </div>
@@ -192,24 +341,28 @@
   </template>
   <script>
     Polymer({
-      is: 'outline-server-settings',
+      is: "outline-server-settings",
       properties: {
         isServerManaged: Boolean,
-        name: String,
-        metricsEnabled: { type: Boolean, observer: '_metricsEnabledChanged' },
+        serverName: String,
+        metricsEnabled: {type: Boolean, observer: "_metricsEnabledChanged"},
         // Initialize to null so we can use the hidden attribute, which does not work well with undefined values.
         serverId: {type: String, value: null},
         serverHostname: {type: String, value: null},
         serverManagementApiUrl: {type: String, value: null},
         serverPortForNewAccessKeys: {type: Number, value: null},
         isAccessKeyPortEditable: {type: Boolean, value: false},
+        isAccessKeyDataLimitEnabled: {type: Boolean, notify: true},
+        accessKeyDataLimit: {type: Object, value: null}, // type: app.DisplayDataAmount
+        supportsAccessKeyDataLimit: {type: Boolean, value: false}, // Whether the server supports data limits.
+        dataLimitsAvailabilityDate: {type: String}, // Date by which the feature stops being an experiment.
+        isHostnameEditable: {type: Boolean, value: true},
         serverCreationDate: {type: String, value: null},
         serverLocation: {type: String, value: null},
         serverMonthlyCost: {type: String, value: null},
         serverMonthlyTransferLimit: {type: String, value: null},
         localize: {type: Function, readonly: true},
-        enableKeysPortButtons: {type: Boolean, value: false},
-        showKeysPortButtons: {type: Boolean, value: false}
+        shouldShowExperiments: {type: Boolean, computed: "_computeShouldShowExperiments(supportsAccessKeyDataLimit)"},
       },
       update: function(name, metricsEnabled) {
         this.initialName = name;
@@ -217,23 +370,22 @@
         this.metricsEnabled = metricsEnabled;
       },
       _handleNameInputKeyDown: function(event) {
-        if (event.key === 'Escape') {
-          this.name = this.initialName;
+        if (event.key === "Escape") {
+          this.serverName = this.initialName;
           this.$.serverNameInput.blur();
-        } else if (event.key === 'Enter') {
+        } else if (event.key === "Enter") {
           this.$.serverNameInput.blur();
         }
       },
       _handleNameInputBlur: function(event) {
-        const newName = this.name;
+        const newName = this.serverName;
         if (!newName) {
-          this.name = this.initialName;
+          this.serverName = this.initialName;
           return;
         }
         // Fire signal if name has changed.
         if (newName !== this.initialName) {
-          this.initialName = newName
-          this.fire('ServerRenameRequested', {newName});
+          this.fire("ServerRenameRequested", {newName});
         }
       },
       _metricsEnabledChanged: function(newMetricsEnabled, oldMetricsEnabled) {
@@ -242,76 +394,52 @@
         }
         // Fire signal if metrics changed.
         if (newMetricsEnabled !== oldMetricsEnabled) {
-          const metricsSignal = newMetricsEnabled ?
-            'EnableMetricsRequested' : 'DisableMetricsRequested';
+          const metricsSignal = newMetricsEnabled ? "EnableMetricsRequested" : "DisableMetricsRequested";
           this.fire(metricsSignal);
         }
       },
-      setKeysPortEditing: function() {
-        if (!this.isAccessKeyPortEditable) { 
+      _accessKeyDataLimitEnabledChanged: function(e) {
+        const wasDataLimitEnabled = this.isAccessKeyDataLimitEnabled;
+        const isDataLimitEnabled = e.detail.value === "enabled";
+        if (isDataLimitEnabled === undefined || wasDataLimitEnabled === undefined) {
+          return;
+        } else if (isDataLimitEnabled === wasDataLimitEnabled) {
           return;
         }
-        this.showKeysPortButtons = true;
-        const invalid = this.$.keysPortInput.invalid;
-        this.$.keysPortSaveButton.disabled = invalid;
-        this.$.keysPortCancelButton.disabled = false;
-      },
-      setKeysPortSaved: function() {
-        this.serverPortForNewAccessKeys = Number(this.$.keysPortInput.value);
-        this.showKeysPortButtons = false;
-        this.$.keysPortInput.readonly = false;
-      },
-      setKeysPortErrorState: function(message) {
-        const input = this.$.keysPortInput;
-        this.enableKeysPortButtons = true; 
-        input.invalid = true;
-        input.errorMessage = message;
-        input.readonly = false;
-        input.focus();
-      },
-      saveKeysPort: function() {
-        const input = this.$.keysPortInput;
-        if (Number(input.value) === this.serverPortForNewAccessKeys) {
-          this.cancelKeysPortEdit();
-          return;
-        };
-        this.enableKeysPortButtons = false;
-        input.readonly = true;
-        input.invalid = false;
-        this.fire('ChangePortForNewAccessKeysRequested', {
-          port: Number(this.$.keysPortInput.value), 
-          serverSettings: this
-        });
-      },
-      cancelKeysPortEdit: function() {
-        this.$.keysPortInput.value = this.serverPortForNewAccessKeys;
-        this.$.keysPortInput.invalid = false;
-        this.showKeysPortButtons = false;
-      },
-      _handleKeysPortInputKeyUp: function(e) {
-        let input = this.$.keysPortInput;
-        const badInputMessage = this.localize('error-keys-port-bad-input');
-        if (e.key === 'Escape') {
-          this.cancelKeysPortEdit();
-          input.blur();
-          return; 
-        } else if (e.key === 'Enter') {
-          if (!input.invalid) {  
-            this.saveKeysPort();
-            input.blur();
-          }
-          return;
-        }
-        let port = Number(input.value);
-        if (Number.isNaN(port) || (port < 1 || port > 65535) || !Number.isInteger(port)) {
-          input.invalid = true;
-          this.$.keysPortSaveButton.disabled = true;
-          input.errorMessage = badInputMessage;
+        this.isAccessKeyDataLimitEnabled = isDataLimitEnabled;
+        if (isDataLimitEnabled) {
+          this._requestSetAccessKeyDataLimit();
         } else {
-          input.invalid = false;
-          this.$.keysPortSaveButton.disabled = false;
+          this.fire("RemoveAccessKeyDataLimitRequested");
         }
-      }
+      },
+      _handleAccessKeyDataLimitInputKeyDown: function(event) {
+        if (event.key === "Escape") {
+          this.$.accessKeyDataLimitInput.value = this.accessKeyDataLimit.value;
+          this.$.accessKeyDataLimitInput.blur();
+        } else if (event.key === "Enter") {
+          this.$.accessKeyDataLimitInput.blur();
+        }
+      },
+      _requestSetAccessKeyDataLimit: function() {
+        if (this.$.accessKeyDataLimitInput.invalid) {
+          return;
+        }
+        const value = Number(this.$.accessKeyDataLimitInput.value);
+        const unit = this.$.accessKeyDataLimitUnits.selected;
+        this.fire("SetAccessKeyDataLimitRequested", {limit: {value, unit}});
+      },
+      _computeDataLimitsEnabledName: function(isAccessKeyDataLimitEnabled) {
+        return isAccessKeyDataLimitEnabled ? "enabled" : "disabled";
+      },
+      _computeShouldShowExperiments: function(supportsAccessKeyDataLimit) {
+        return supportsAccessKeyDataLimit;
+      },
+      _validatePort: function(value) {
+        const port = Number(value);
+        const valid = !Number.isNaN(port) && port >= 1 && port <= 65535 && Number.isInteger(port);
+        return valid ? "" : this.localize("error-keys-port-bad-input");
+      },
     });
   </script>
 </dom-module>
