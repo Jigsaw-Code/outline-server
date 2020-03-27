@@ -39,6 +39,11 @@ cp -r $BUILD_DIR/server_manager/web_app/static $STATIC_DIR/server_manager/web_ap
 # Our electron app assumes all HTML files will be in the web_app directory.
 cp $MODULE_DIR/loading.html $STATIC_DIR/server_manager/web_app/
 
+# Write dotenv file for exported CI environment variables.
+cat <<EOM > $STATIC_DIR/.env
+SENTRY_DSN=${SENTRY_DSN:-}
+EOM
+
 # Electron requires a package.json file for the app's name, etc.
 # We also need to install NPMs at this location for require()
 # in order for require() to work right in the renderer process, which
