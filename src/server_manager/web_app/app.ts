@@ -870,8 +870,7 @@ export class App {
       view.isServerManaged = true;
       const host = selectedServer.getHost();
       view.monthlyCost = host.getMonthlyCost().usd;
-      view.monthlyOutboundTransferBytes =
-          host.getMonthlyOutboundTransferLimit().terabytes * (2 ** 40);
+      view.monthlyOutboundTransferBytes = host.getMonthlyOutboundTransferLimit().terabytes;
       view.serverLocation = this.getLocalizedCityName(host.getRegionId());
     } else {
       view.isServerManaged = false;

@@ -43,7 +43,7 @@ tsc
 # Browserify node_modules/ (just a couple of key NPMs) and app.
 pushd $OUT_DIR > /dev/null
 mkdir -p browserified/server_manager/web_app
-$NODE_MODULES_BIN_DIR/browserify --require bytes --require clipboard-polyfill -o browserified/node_modules.js
+$NODE_MODULES_BIN_DIR/browserify --require byte-size --require clipboard-polyfill -o browserified/node_modules.js
 $NODE_MODULES_BIN_DIR/browserify js/server_manager/web_app/main.js -s main -o browserified/server_manager/web_app/main.js
 popd > /dev/null
 
