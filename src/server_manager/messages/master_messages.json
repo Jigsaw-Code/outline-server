@@ -501,6 +501,22 @@
     "message": "Click 'Create'.",
     "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'Create' should be translated and included untranslated in parentheses."
   },
+  "hats_data_limits_title": {
+    "message": "Please give us feedback on data limits",
+    "description": "This string appears as the title of a dialog that prompts the user to complete a survey about the data limits feature."
+  },
+  "hats_disclaimer": {
+    "message": "You will be sent to a Google Form in your web browser. By continuing, you agree that Google will use your answers to improve services per the Privacy & Terms.",
+    "description": "This string appears in a dialog that prompts the user to complete a survey as a disclaimer."
+  },
+  "hats_go_to_survey": {
+    "message": "Go to survey",
+    "description": "This string appears in a dialog that prompts the user to complete a survey. It is shown in a button that takes the user to the online survey."
+  },
+  "hats_no_thanks": {
+    "message": "No thanks",
+    "description": "This string appears in a dialog that prompts the user to complete a survey. It is shown in a button that dismisses the dialog."
+  },
   "key": {
     "message": "Key $KEY_ID$",
     "description": "This string appears in the server view as a placeholder for a newly created access key with id number KEY_ID.",

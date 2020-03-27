@@ -31,6 +31,7 @@
 <link rel="import" href="./outline-about-dialog.html" />
 <link rel="import" href="./outline-do-oauth-step.html" />
 <link rel="import" href="./outline-feedback-dialog.html" />
+<link rel="import" href="./outline-hats-dialog.html" />
 <link rel="import" href="./outline-intro-step.html" />
 <link rel="import" href="./outline-manual-server-entry.html" />
 <link rel="import" href="./outline-modal-dialog.html" />
@@ -498,6 +499,7 @@
       ></paper-toast>
 
       <!-- Modal dialogs must be outside the app container; otherwise the backdrop covers them.  -->
+      <outline-hats-dialog id="hatsDialog" localize="[[localize]]"></outline-hats-dialog>
       <outline-feedback-dialog id="feedbackDialog" localize="[[localize]]"></outline-feedback-dialog>
       <outline-about-dialog
         id="aboutDialog"

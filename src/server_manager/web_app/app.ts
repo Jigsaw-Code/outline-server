@@ -43,6 +43,7 @@ const CHANGE_HOSTNAME_VERSION = '1.2.0';
 // Date by which the data limits feature experiment will be permanently added or removed.
 const DATA_LIMITS_AVAILABILITY_DATE = new Date('2020-06-02');
 const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
+const HATS_DIALOG_DELAY_MS = 3000;
 
 interface UiAccessKey {
   id: string;
@@ -118,6 +119,14 @@ async function showHelpBubblesOnce(serverView: Polymer) {
       serverView.supportsAccessKeyDataLimit) {
     await serverView.showDataLimitsHelpBubble();
     window.localStorage.setItem('dataLimitsHelpBubble-dismissed', 'true');
+  }
+}
+
+async function showHatsDialogOnce(
+    hatsDialog: Polymer, surveyId: string, surveyTitle: string, surveyLink: string) {
+  if (!window.localStorage.getItem(surveyId)) {
+    hatsDialog.open(surveyTitle, surveyLink);
+    window.localStorage.setItem(surveyId, 'true');
   }
 }
 
@@ -1045,6 +1054,13 @@ export class App {
       this.appRoot.showNotification(this.appRoot.localize('saved'));
       serverView.accessKeyDataLimit = dataLimitToDisplayDataAmount(limit);
       this.refreshTransferStats(this.selectedServer, serverView);
+      await sleep(HATS_DIALOG_DELAY_MS);
+      if (serverView.isAccessKeyDataLimitEnabled) {
+        // TODO(alalama): survey link
+        showHatsDialogOnce(
+            this.appRoot.$.hatsDialog, 'dataLimitsEnabled-hats-dismissed',
+            this.appRoot.localize('hats-data-limits-title'), '#');
+      }
     } catch (error) {
       console.error(`Failed to set access key data limit: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-set-data-limit'));
@@ -1060,6 +1076,13 @@ export class App {
       await this.selectedServer.removeAccessKeyDataLimit();
       this.appRoot.showNotification(this.appRoot.localize('saved'));
       this.refreshTransferStats(this.selectedServer, serverView);
+      await sleep(HATS_DIALOG_DELAY_MS);
+      if (!serverView.isAccessKeyDataLimitEnabled) {
+        // TODO(alalama): survey link
+        showHatsDialogOnce(
+            this.appRoot.$.hatsDialog, 'dataLimitsDisabled-hats-dismissed',
+            this.appRoot.localize('hats-data-limits-title'), '#');
+      }
     } catch (error) {
       console.error(`Failed to remove access key data limit: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-remove-data-limit'));
