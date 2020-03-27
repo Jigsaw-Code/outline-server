@@ -307,7 +307,7 @@ class DigitalOceanHost implements server.ManagedServerHost {
   getMonthlyOutboundTransferLimit(): server.DataAmount {
     // Details on the bandwidth limits can be found at
     // https://www.digitalocean.com/community/tutorials/digitalocean-bandwidth-billing-faq
-    return {terabytes: this.dropletInfo.size.transfer * (2 ** 40)};
+    return {terabytes: this.dropletInfo.size.transfer};
   }
 
   getMonthlyCost(): server.MonetaryCost {
