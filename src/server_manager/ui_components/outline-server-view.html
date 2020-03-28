@@ -716,10 +716,6 @@
           input.focus();
         }, 0);
       },
-      _handleConnectPressed: function() {
-        this.$.getConnectedHelpBubble.hide();
-        this.fire("OpenGetConnectedDialogRequested", {accessKey: this.myConnection.accessUrl});
-      },
       _handleShareCodePressed: function(event) {
         const accessKey = event.model.item;
         this.fire("OpenShareDialogRequested", {accessKey: accessKey.accessUrl});
@@ -827,9 +823,6 @@
       },
       closeAddAccessKeyHelpBubble: function() {
         this.$.addAccessKeyHelpBubble.hide();
-      },
-      closeGetConnectedHelpBubble: function() {
-        this.$.getConnectedHelpBubble.hide();
       },
       closeDataLimitsHelpBubble: function() {
         this.$.dataLimitsHelpBubble.hide();
