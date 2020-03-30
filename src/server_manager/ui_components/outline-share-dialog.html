@@ -113,17 +113,19 @@
       <div contenteditable id="selectableText" style="-webkit-text-size-adjust: 100%;">
         <p>[[localize('share-invite')]]</p>
 
-        <p><a href$="{{s3Url}}">{{s3Url}}</a></p>
+        <p><a contenteditable="false" href$="{{s3Url}}">{{s3Url}}</a></p>
         <p>-----</p>
         <p>[[localize('share-invite-trouble')]]</p>
         <ol>
           <li>
             [[localize('share-invite-copy-access-key')]]
-            <a href="{{acessKey}}">{{acessKey}}</a>
+            <a href="{{accessKey}}">{{accessKey}}</a>
           </li>
           <li>
             [[localize('share-invite-instructions')]]
-            <a href="https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md"
+            <a
+              contenteditable="false"
+              href="https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md"
               >https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md</a
             >
           </li>
@@ -148,8 +150,8 @@
       created: function() {
         this.clipboard = require("clipboard-polyfill");
       },
-      open: function(acessKey, s3Url) {
-        this.acessKey = acessKey;
+      open: function(accessKey, s3Url) {
+        this.accessKey = accessKey;
         this.s3Url = s3Url;
         this.$.copyText.setAttribute("hidden", true);
         this.$.dialog.open();
@@ -162,7 +164,7 @@
         this.$.copyText.removeAttribute("hidden");
       },
       connectClicked: function() {
-        this.fire("OpenGetConnectedDialogRequested", {accessKey: this.acessKey});
+        this.fire("OpenGetConnectedDialogRequested", {accessKey: this.accessKey});
         this.$.dialog.close();
       },
     });
