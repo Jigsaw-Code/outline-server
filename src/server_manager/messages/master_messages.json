@@ -477,34 +477,6 @@
     "message": "Create a VM Instance",
     "description": "This string appears as a header for a set of instructions for creating a new Google Cloud VM"
   },
-  "gcp_firewall_assign_0": {
-    "message": "Navigate to the $START_OF_LINK$VM instances screen$END_OF_LINK$.",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform.",
-    "placeholders": {
-      "END_OF_LINK": {
-        "content": "{closeLink}"
-      },
-      "START_OF_LINK": {
-        "content": "{openLink}"
-      }
-    }
-  },
-  "gcp_firewall_assign_1": {
-    "message": "Click on the instance where you want to host Outline.",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform."
-  },
-  "gcp_firewall_assign_2": {
-    "message": "Click 'EDIT' at the top of the VM Instance details screen.",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'EDIT' should be translated and included untranslated in parentheses. VM is an acronym for virtual machine."
-  },
-  "gcp_firewall_assign_3": {
-    "message": "Type 'outline' in the 'Network tags' field.",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'Network tags' should be translated and included untranslated in parentheses."
-  },
-  "gcp_firewall_assign_4": {
-    "message": "Click 'SAVE'.",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'SAVE' should be translated and included untranslated in parentheses."
-  },
   "gcp_firewall_create_0": {
     "message": "$START_OF_LINK$Add a new firewall rule$END_OF_LINK$ to your Compute Engine project.",
     "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. Compute Engine is a product of Google Cloud Platform and should not be translated.",
