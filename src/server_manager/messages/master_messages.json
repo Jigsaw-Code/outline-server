@@ -506,7 +506,7 @@
     "description": "This string appears as the title of a dialog that prompts the user to complete a survey about the data limits feature."
   },
   "hats_disclaimer": {
-    "message": "You will be sent to a Google Form in your web browser. By continuing, you agree that Google will use your answers to improve services per the Privacy & Terms.",
+    "message": "By clicking continue you will be sent to a short survey on Google Forms. We recommend taking the survey while connected to Outline.",
     "description": "This string appears in a dialog that prompts the user to complete a survey as a disclaimer."
   },
   "hats_go_to_survey": {
