@@ -38,6 +38,7 @@ const IMAGES_BASENAME =
 const sentryDsn = process.env.SENTRY_DSN;
 
 sentry.init({
+  // Error reporting is a no-op when `sentryDsn` is undefined.
   dsn: sentryDsn || '',
   // Sentry provides a sensible default but we would prefer without the leading "outline-manager@".
   release: electron.app.getVersion(),
