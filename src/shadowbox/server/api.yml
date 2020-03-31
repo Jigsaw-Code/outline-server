@@ -192,7 +192,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DataLimit"
+              $ref: "#/components/schemas/AccesKeyName"
             examples:
               '0':
                 value: '{name: "New Key Name"}'
@@ -309,7 +309,12 @@ components:
         bytes:
           type: integer
           minimum: 0
-
+    AccessKeyName:
+      required:
+        - name
+      properties:
+        name:
+          type: string
     AccessKey:
       required:
         - id
