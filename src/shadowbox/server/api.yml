@@ -312,6 +312,7 @@ components:
         bytes:
           type: integer
           minimum: 0
+
     AccessKey:
       required:
         - id
