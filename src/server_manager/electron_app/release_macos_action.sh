@@ -22,7 +22,7 @@ if [ "$CSC_LINK" == "unset" ]; then
 fi
 
 yarn do server_manager/electron_app/build
-yarn do server_manager/electron_app/write_environment_variables
+yarn do server_manager/electron_app/write_production_environment
 
 # Produces dmg and zip images. The latter is required for auto-update.
 $ROOT_DIR/src/server_manager/node_modules/.bin/electron-builder \
