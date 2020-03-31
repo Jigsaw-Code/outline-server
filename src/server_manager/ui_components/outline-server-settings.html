@@ -257,9 +257,9 @@
             ></paper-input>
             <paper-input
               readonly
-              value="[[serverShadowboxVersion]]"
-              label="[[localize('settings-server-shadowbox-version')]]"
-              hidden$="[[!serverShadowboxVersion]]"
+              value="[[serverVersion]]"
+              label="[[localize('settings-server-version')]]"
+              hidden$="[[!serverVersion]]"
               always-float-label
               maxlength="100"
             ></paper-input>
@@ -359,7 +359,7 @@
         serverHostname: {type: String, value: null},
         serverManagementApiUrl: {type: String, value: null},
         serverPortForNewAccessKeys: {type: Number, value: null},
-        serverShadowboxVersion: {type: String, value: null},
+        serverVersion: {type: String, value: null},
         isAccessKeyPortEditable: {type: Boolean, value: false},
         isAccessKeyDataLimitEnabled: {type: Boolean, notify: true},
         accessKeyDataLimit: {type: Object, value: null}, // type: app.DisplayDataAmount
