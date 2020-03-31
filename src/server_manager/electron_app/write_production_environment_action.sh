@@ -22,6 +22,6 @@ if [[ -z $SENTRY_DSN ]]; then
   exit 1
 fi
 
-cat <<EOM > $$BUILD_DIR/server_manager/electron_app/static/.env
+cat <<EOM > $BUILD_DIR/server_manager/electron_app/static/.env
 SENTRY_DSN=${SENTRY_DSN}
 EOM
