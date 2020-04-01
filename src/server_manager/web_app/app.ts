@@ -122,12 +122,21 @@ async function showHelpBubblesOnce(serverView: Polymer) {
   }
 }
 
+// Displays a survey dialog with title `surveyTitle` and a link to `surveyLink`.
+// Does not display the survey with `surveyId` if it has already been shown to
+// the user or if the current date is after `displayBefore`.
 async function showHatsDialogOnce(
-    hatsDialog: Polymer, surveyId: string, surveyTitle: string, surveyLink: string) {
-  if (!window.localStorage.getItem(surveyId)) {
-    hatsDialog.open(surveyTitle, surveyLink);
-    window.localStorage.setItem(surveyId, 'true');
+    hatsDialog: Polymer, surveyId: string, surveyTitle: string, surveyLink: string,
+    displayBefore?: Date) {
+  const now = new Date();
+  if (displayBefore && now > displayBefore) {
+    return;
   }
+  if (window.localStorage.getItem(surveyId)) {
+    return;
+  }
+  hatsDialog.open(surveyTitle, surveyLink);
+  window.localStorage.setItem(surveyId, 'true');
 }
 
 function isManagedServer(testServer: server.Server): testServer is server.ManagedServer {
@@ -1059,7 +1068,7 @@ export class App {
         // TODO(alalama): survey link
         showHatsDialogOnce(
             this.appRoot.$.hatsDialog, 'dataLimitsEnabled-hats-dismissed',
-            this.appRoot.localize('hats-data-limits-title'), '#');
+            this.appRoot.localize('hats-data-limits-title'), '#', DATA_LIMITS_AVAILABILITY_DATE);
       }
     } catch (error) {
       console.error(`Failed to set access key data limit: ${error}`);
@@ -1081,7 +1090,7 @@ export class App {
         // TODO(alalama): survey link
         showHatsDialogOnce(
             this.appRoot.$.hatsDialog, 'dataLimitsDisabled-hats-dismissed',
-            this.appRoot.localize('hats-data-limits-title'), '#');
+            this.appRoot.localize('hats-data-limits-title'), '#', DATA_LIMITS_AVAILABILITY_DATE);
       }
     } catch (error) {
       console.error(`Failed to remove access key data limit: ${error}`);
