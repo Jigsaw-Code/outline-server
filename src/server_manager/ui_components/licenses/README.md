@@ -8,7 +8,7 @@
 ## Steps
 
 * `cd` to the root of your clone of this repo
-* Ensure `bower_components` and `node_modules` are up to date and only include dependencies of the Electron app by running `yarn run clean && yarn && yarn do yarn do server_manager/web_app/build`
+* Ensure `bower_components` and `node_modules` are up to date and only include dependencies of the Electron app by running `yarn run clean && yarn && yarn do server_manager/web_app/build`
 * `cd src/server_manager`
 * `yarn workspace outline-manager licenses generate-disclaimer --prod > /tmp/yarn`
 * `pushd <bower-disclaimer root> && yarn run clean && yarn && yarn licenses generate-disclaimer > /tmp/bower && popd`

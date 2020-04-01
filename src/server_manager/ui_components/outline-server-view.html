@@ -628,7 +628,13 @@
     Polymer({
       is: "outline-server-view",
       created: function() {
-        this.bytes = require("bytes");
+        this.byteSize = require("byte-size");
+        this.byteSize.defaultOptions({
+          units: "metric",
+          toStringFn: function() {
+            return `${this.value} ${this.unit}`;
+          },
+        });
       },
       properties: {
         serverId: String,
@@ -806,7 +812,7 @@
           numDecimals = 1;
         }
 
-        return this.bytes(numBytes, {unitSeparator: " ", decimalPlaces: numDecimals});
+        return this.byteSize(numBytes, {precision: numDecimals}).toString();
       },
       _getFormattedTransferredUnit: function(numBytes, emptyValue = "") {
         const formattedTransfer = this._formatBytesTransferred(numBytes);
