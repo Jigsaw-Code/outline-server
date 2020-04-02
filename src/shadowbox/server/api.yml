@@ -192,10 +192,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DataLimit"
+              type: object
+              properties:
+                name:
+                  type: string
             examples:
               '0':
-                value: "{bytes: 10000}"
+                value: '{name: "New Key Name"}'
       responses:
         '204':
           description: Access key renamed successfully
@@ -274,7 +277,7 @@ paths:
                 $ref: "#/components/schemas/DataLimit"
               examples:
                 '0':
-                  value: "limit: {bytes: 10000}"
+                  value: "{limit: {bytes: 10000}}"
       responses:
         '204':
           description: Access key data limit set successfully

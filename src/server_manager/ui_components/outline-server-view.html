@@ -214,7 +214,7 @@
       }
       .measurement {
         /* Space the usage bars evenly */
-        min-width: 7ch;
+        min-width: 9ch;
         /* We don't want numbers separated from their units */
         white-space: nowrap;
         font-size: 14px;
@@ -584,6 +584,7 @@
             server-id="[[serverId]]"
             server-hostname="[[serverHostname]]"
             server-name="[[serverName]]"
+            server-version="[[serverVersion]]"
             is-hostname-editable="[[isHostnameEditable]]"
             server-management-api-url="[[serverManagementApiUrl]]"
             server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]"
@@ -628,12 +629,19 @@
     Polymer({
       is: "outline-server-view",
       created: function() {
-        this.bytes = require("bytes");
+        this.byteSize = require("byte-size");
+        this.byteSize.defaultOptions({
+          units: "metric",
+          toStringFn: function() {
+            return `${this.value} ${this.unit}`;
+          },
+        });
       },
       properties: {
         serverId: String,
         serverName: String,
         serverHostname: String,
+        serverVersion: String,
         isHostnameEditable: {type: Boolean, value: false},
         serverManagementApiUrl: String,
         serverPortForNewAccessKeys: Number,
@@ -806,7 +814,7 @@
           numDecimals = 1;
         }
 
-        return this.bytes(numBytes, {unitSeparator: " ", decimalPlaces: numDecimals});
+        return this.byteSize(numBytes, {precision: numDecimals}).toString();
       },
       _getFormattedTransferredUnit: function(numBytes, emptyValue = "") {
         const formattedTransfer = this._formatBytesTransferred(numBytes);
