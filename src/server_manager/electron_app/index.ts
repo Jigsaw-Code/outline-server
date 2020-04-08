@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as sentry from '@sentry/electron';
+import * as dotenv from 'dotenv';
 import * as electron from 'electron';
 import {autoUpdater} from 'electron-updater';
 import * as path from 'path';
@@ -26,16 +27,19 @@ const app = electron.app;
 const ipcMain = electron.ipcMain;
 const shell = electron.shell;
 
+// Run before referencing environment variables.
+dotenv.config({path: path.join(__dirname, '.env')});
+
 const debugMode = process.env.OUTLINE_DEBUG === 'true';
 
 const IMAGES_BASENAME =
     `${path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), 'server_manager', 'web_app')}`;
 
-const sentryDsn =
-    process.env.SENTRY_DSN || 'https://533e56d1b2d64314bd6092a574e6d0f1@sentry.io/215496';
+const sentryDsn = process.env.SENTRY_DSN;
 
 sentry.init({
-  dsn: sentryDsn,
+  // Error reporting is a no-op when `sentryDsn` is undefined.
+  dsn: sentryDsn || '',
   // Sentry provides a sensible default but we would prefer without the leading "outline-manager@".
   release: electron.app.getVersion(),
   maxBreadcrumbs: 100,
@@ -132,7 +136,9 @@ function getWebAppUrl() {
     queryParams.set('metricsUrl', process.env.SB_METRICS_URL);
     console.log(`Will use metrics url ${process.env.SB_METRICS_URL}`);
   }
-  queryParams.set('sentryDsn', sentryDsn);
+  if (sentryDsn) {
+    queryParams.set('sentryDsn', sentryDsn);
+  }
   if (debugMode) {
     queryParams.set('outlineDebugMode', 'true');
     console.log(`Enabling Outline debug mode`);

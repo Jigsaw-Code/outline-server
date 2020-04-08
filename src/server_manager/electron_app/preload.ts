@@ -25,7 +25,7 @@ import * as digitalocean_oauth from './digitalocean_oauth';
 
 // DSN is all we need to specify; for all other config - breadcrumbs, etc., see the main process.
 const params = new URL(document.URL).searchParams;
-sentry.init({dsn: params.get('sentryDsn')});
+sentry.init({dsn: params.get('sentryDsn') || ''});
 
 // tslint:disable-next-line:no-any
 (window as any).whitelistCertificate = (fingerprint: string) => {

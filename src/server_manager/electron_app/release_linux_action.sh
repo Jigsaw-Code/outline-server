@@ -14,4 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-yarn do server_manager/electron_app/package_linux
+yarn do server_manager/electron_app/build
+yarn do server_manager/electron_app/write_production_environment
+
+$ROOT_DIR/src/server_manager/node_modules/.bin/electron-builder \
+  --projectDir=build/server_manager/electron_app/static \
+  --config.asarUnpack=server_manager/web_app/images \
+  --publish=never \
+  --config.publish.provider=generic \
+  --config.publish.url=https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/ \
+  --linux AppImage \
+  --config.linux.icon=icons/png \
+  --config.linux.category=Network \
+  --config.artifactName='Outline-Manager.${ext}'

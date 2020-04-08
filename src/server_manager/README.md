@@ -35,3 +35,13 @@ yarn do server_manager/electron_app/release
 ```
 
 This will perform a clean and reinstall all dependencies to make sure the build is not tainted.
+
+## Error reporting
+
+To enable error reporting through [Sentry](https://sentry.io/) for local builds, run:
+``` bash
+export SENTRY_DSN=[Sentry development API key]
+yarn do server_manager/electron_app/run
+```
+
+Release builds on CI are configured with a production Sentry API key.

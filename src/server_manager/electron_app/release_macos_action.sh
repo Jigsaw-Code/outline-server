@@ -21,4 +21,16 @@ if [ "$CSC_LINK" == "unset" ]; then
   exit 1
 fi
 
-yarn do server_manager/electron_app/package_macos
+yarn do server_manager/electron_app/build
+yarn do server_manager/electron_app/write_production_environment
+
+# Produces dmg and zip images. The latter is required for auto-update.
+$ROOT_DIR/src/server_manager/node_modules/.bin/electron-builder \
+  --projectDir=build/server_manager/electron_app/static \
+  --config.asarUnpack=server_manager/web_app/images \
+  --publish=never \
+  --config.publish.provider=generic \
+  --config.publish.url=https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/ \
+  --mac default \
+  --config.mac.icon=icons/mac/icon.icns \
+  --config.artifactName='Outline-Manager.${ext}'
