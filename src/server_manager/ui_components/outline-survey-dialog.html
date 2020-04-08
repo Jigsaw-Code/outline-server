@@ -18,6 +18,8 @@
 <link rel="import" href="../bower_components/neon-animation/animations/slide-from-bottom-animation.html" />
 <link rel="import" href="../bower_components/paper-button/paper-button.html" />
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html" />
+<link rel="import" href="../bower_components/polymer/polymer-element.html" />
+<link rel="import" href="../bower_components/polymer/lib/mixins/dir-mixin.html" />
 
 <dom-module id="outline-survey-dialog">
   <template>
@@ -98,22 +100,29 @@
     </paper-dialog>
   </template>
   <script>
-    Polymer({
-      is: "outline-survey-dialog",
-      properties: {
-        localize: {
-          type: Function,
-          readonly: true,
-        },
-        surveyLink: String,
-        title: String,
-      },
-      open: function(title, surveyLink) {
+    class OutlineSurveyDialog extends Polymer.DirMixin(Polymer.Element) {
+      static get is() {
+        return "outline-survey-dialog";
+      }
+
+      static get properties() {
+        return {
+          localize: {
+            type: Function,
+            readonly: true,
+          },
+          surveyLink: String,
+          title: String,
+        };
+      }
+
+      open(title, surveyLink) {
         this.title = title;
         this.surveyLink = surveyLink;
         this.$.dialog.horizontalAlign = this.dir === "ltr" ? "left" : "right";
         this.$.dialog.open();
-      },
-    });
+      }
+    }
+    customElements.define(OutlineSurveyDialog.is, OutlineSurveyDialog);
   </script>
 </dom-module>
