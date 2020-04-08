@@ -17,21 +17,16 @@ import * as events from 'events';
 import * as semver from 'semver';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
+import {sleep} from '../infrastructure/async';
 import * as errors from '../infrastructure/errors';
 import * as server from '../model/server';
+import {Surveys} from '../model/survey';
 
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
-
-// tslint:disable-next-line:no-any
-type Polymer = HTMLElement&any;
-
-interface PolymerEvent extends Event {
-  // tslint:disable-next-line:no-any
-  detail: any;
-}
+import {DEFAULT_PROMPT_IMPRESSION_DELAY_MS, SurveyId} from './survey';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -43,7 +38,6 @@ const CHANGE_HOSTNAME_VERSION = '1.2.0';
 // Date by which the data limits feature experiment will be permanently added or removed.
 const DATA_LIMITS_AVAILABILITY_DATE = new Date('2020-06-02');
 const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
-const HATS_DIALOG_DELAY_MS = 3000;
 
 interface UiAccessKey {
   id: string;
@@ -106,7 +100,7 @@ async function computeDefaultAccessKeyDataLimit(
   }
 }
 
-async function showHelpBubblesOnce(serverView: Polymer) {
+async function showHelpBubblesOnce(serverView: polymer.Base) {
   if (!window.localStorage.getItem('addAccessKeyHelpBubble-dismissed')) {
     await serverView.showAddAccessKeyHelpBubble();
     window.localStorage.setItem('addAccessKeyHelpBubble-dismissed', 'true');
@@ -122,33 +116,12 @@ async function showHelpBubblesOnce(serverView: Polymer) {
   }
 }
 
-// Displays a survey dialog with title `surveyTitle` and a link to `surveyLink`.
-// Does not display the survey with `surveyId` if it has already been shown to
-// the user or if the current date is after `displayBefore`.
-async function showHatsDialogOnce(
-    hatsDialog: Polymer, surveyId: string, surveyTitle: string, surveyLink: string,
-    displayBefore?: Date) {
-  const now = new Date();
-  if (displayBefore && now > displayBefore) {
-    return;
-  }
-  if (window.localStorage.getItem(surveyId)) {
-    return;
-  }
-  hatsDialog.open(surveyTitle, surveyLink);
-  window.localStorage.setItem(surveyId, 'true');
-}
-
 function isManagedServer(testServer: server.Server): testServer is server.ManagedServer {
   return !!(testServer as server.ManagedServer).getHost;
 }
 
 function isManualServer(testServer: server.Server): testServer is server.ManualServer {
   return !!(testServer as server.ManualServer).forget;
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function localizeDate(date: Date, language: string): string {
@@ -165,64 +138,64 @@ export class App {
   private serverBeingCreated: server.ManagedServer;
 
   constructor(
-      private appRoot: Polymer, private readonly version: string,
+      private appRoot: polymer.Base, private readonly version: string,
       private createDigitalOceanSession: DigitalOceanSessionFactory,
       private createDigitalOceanServerRepository: DigitalOceanServerRepositoryFactory,
       private manualServerRepository: server.ManualServerRepository,
       private displayServerRepository: DisplayServerRepository,
-      private digitalOceanTokenManager: TokenManager) {
+      private digitalOceanTokenManager: TokenManager, private surveys: Surveys) {
     appRoot.setAttribute('outline-version', this.version);
 
-    appRoot.addEventListener('ConnectToDigitalOcean', (event: PolymerEvent) => {
+    appRoot.addEventListener('ConnectToDigitalOcean', (event: CustomEvent) => {
       this.connectToDigitalOcean();
     });
-    appRoot.addEventListener('SignOutRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('SignOutRequested', (event: CustomEvent) => {
       this.clearCredentialsAndShowIntro();
     });
 
-    appRoot.addEventListener('SetUpServerRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('SetUpServerRequested', (event: CustomEvent) => {
       this.createDigitalOceanServer(event.detail.regionId);
     });
 
-    appRoot.addEventListener('DeleteServerRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('DeleteServerRequested', (event: CustomEvent) => {
       this.deleteSelectedServer();
     });
 
-    appRoot.addEventListener('ForgetServerRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('ForgetServerRequested', (event: CustomEvent) => {
       this.forgetSelectedServer();
     });
 
-    appRoot.addEventListener('AddAccessKeyRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('AddAccessKeyRequested', (event: CustomEvent) => {
       this.addAccessKey();
     });
 
-    appRoot.addEventListener('RemoveAccessKeyRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('RemoveAccessKeyRequested', (event: CustomEvent) => {
       this.removeAccessKey(event.detail.accessKeyId);
     });
 
-    appRoot.addEventListener('RenameAccessKeyRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('RenameAccessKeyRequested', (event: CustomEvent) => {
       this.renameAccessKey(event.detail.accessKeyId, event.detail.newName, event.detail.entry);
     });
 
-    appRoot.addEventListener('SetAccessKeyDataLimitRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('SetAccessKeyDataLimitRequested', (event: CustomEvent) => {
       this.setAccessKeyDataLimit(displayDataAmountToDataLimit(event.detail.limit));
     });
 
-    appRoot.addEventListener('RemoveAccessKeyDataLimitRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('RemoveAccessKeyDataLimitRequested', (event: CustomEvent) => {
       this.removeAccessKeyDataLimit();
     });
 
-    appRoot.addEventListener('ChangePortForNewAccessKeysRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('ChangePortForNewAccessKeysRequested', (event: CustomEvent) => {
       this.setPortForNewAccessKeys(event.detail.validatedInput, event.detail.ui);
     });
 
-    appRoot.addEventListener('ChangeHostnameForAccessKeysRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('ChangeHostnameForAccessKeysRequested', (event: CustomEvent) => {
       this.setHostnameForAccessKeys(event.detail.validatedInput, event.detail.ui);
     });
 
     // The UI wants us to validate a server management URL.
     // "Reply" by setting a field on the relevant template.
-    appRoot.addEventListener('ManualServerEdited', (event: PolymerEvent) => {
+    appRoot.addEventListener('ManualServerEdited', (event: CustomEvent) => {
       let isValid = true;
       try {
         parseManualServerConfig(event.detail.userInput);
@@ -233,7 +206,7 @@ export class App {
       manualServerEntryEl.enableDoneButton = isValid;
     });
 
-    appRoot.addEventListener('ManualServerEntered', (event: PolymerEvent) => {
+    appRoot.addEventListener('ManualServerEntered', (event: CustomEvent) => {
       const userInput = event.detail.userInput;
       const manualServerEntryEl = appRoot.getManualServerEntry();
       this.createManualServer(userInput)
@@ -263,15 +236,15 @@ export class App {
           });
     });
 
-    appRoot.addEventListener('EnableMetricsRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('EnableMetricsRequested', (event: CustomEvent) => {
       this.setMetricsEnabled(true);
     });
 
-    appRoot.addEventListener('DisableMetricsRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('DisableMetricsRequested', (event: CustomEvent) => {
       this.setMetricsEnabled(false);
     });
 
-    appRoot.addEventListener('SubmitFeedback', (event: PolymerEvent) => {
+    appRoot.addEventListener('SubmitFeedback', (event: CustomEvent) => {
       const detail = event.detail;
       try {
         sentry.captureEvent({
@@ -286,28 +259,28 @@ export class App {
       }
     });
 
-    appRoot.addEventListener('ServerRenameRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('ServerRenameRequested', (event: CustomEvent) => {
       this.renameServer(event.detail.newName);
     });
 
-    appRoot.addEventListener('CancelServerCreationRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('CancelServerCreationRequested', (event: CustomEvent) => {
       this.cancelServerCreation(this.selectedServer);
     });
 
-    appRoot.addEventListener('OpenImageRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('OpenImageRequested', (event: CustomEvent) => {
       openImage(event.detail.imagePath);
     });
 
-    appRoot.addEventListener('OpenShareDialogRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('OpenShareDialogRequested', (event: CustomEvent) => {
       const accessKey = event.detail.accessKey;
       this.appRoot.openShareDialog(accessKey, this.getS3InviteUrl(accessKey));
     });
 
-    appRoot.addEventListener('OpenGetConnectedDialogRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('OpenGetConnectedDialogRequested', (event: CustomEvent) => {
       this.appRoot.openGetConnectedDialog(this.getS3InviteUrl(event.detail.accessKey, true));
     });
 
-    appRoot.addEventListener('ShowServerRequested', (event: PolymerEvent) => {
+    appRoot.addEventListener('ShowServerRequested', (event: CustomEvent) => {
       this.handleShowServerRequested(event.detail.displayServerId);
     });
 
@@ -919,7 +892,7 @@ export class App {
     this.showTransferStats(selectedServer, view);
   }
 
-  private showMetricsOptInWhenNeeded(selectedServer: server.Server, serverView: Polymer) {
+  private showMetricsOptInWhenNeeded(selectedServer: server.Server, serverView: polymer.Base) {
     const showMetricsOptInOnce = () => {
       // Sanity check to make sure the running server is still displayed, i.e.
       // it hasn't been deleted.
@@ -949,7 +922,7 @@ export class App {
     }
   }
 
-  private async refreshTransferStats(selectedServer: server.Server, serverView: Polymer) {
+  private async refreshTransferStats(selectedServer: server.Server, serverView: polymer.Base) {
     try {
       const stats = await selectedServer.getDataUsage();
       let totalBytes = 0;
@@ -990,7 +963,7 @@ export class App {
     }
   }
 
-  private showTransferStats(selectedServer: server.Server, serverView: Polymer) {
+  private showTransferStats(selectedServer: server.Server, serverView: polymer.Base) {
     this.refreshTransferStats(selectedServer, serverView);
     // Get transfer stats once per minute for as long as server is selected.
     const statsRefreshRateMs = 60 * 1000;
@@ -1037,7 +1010,7 @@ export class App {
         });
   }
 
-  private renameAccessKey(accessKeyId: string, newName: string, entry: Polymer) {
+  private renameAccessKey(accessKeyId: string, newName: string, entry: polymer.Base) {
     this.selectedServer.renameAccessKey(accessKeyId, newName)
         .then(() => {
           entry.commitName();
@@ -1063,13 +1036,11 @@ export class App {
       this.appRoot.showNotification(this.appRoot.localize('saved'));
       serverView.accessKeyDataLimit = dataLimitToDisplayDataAmount(limit);
       this.refreshTransferStats(this.selectedServer, serverView);
-      await sleep(HATS_DIALOG_DELAY_MS);
-      if (serverView.isAccessKeyDataLimitEnabled) {
-        // TODO(alalama): survey link
-        showHatsDialogOnce(
-            this.appRoot.$.hatsDialog, 'dataLimitsEnabled-hats-dismissed',
-            this.appRoot.localize('hats-data-limits-title'), '#', DATA_LIMITS_AVAILABILITY_DATE);
-      }
+      this.surveys
+          .requestSurvey(
+              SurveyId.DATA_LIMITS_ENABLED, DEFAULT_PROMPT_IMPRESSION_DELAY_MS,
+              DATA_LIMITS_AVAILABILITY_DATE)
+          .present();
     } catch (error) {
       console.error(`Failed to set access key data limit: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-set-data-limit'));
@@ -1085,13 +1056,11 @@ export class App {
       await this.selectedServer.removeAccessKeyDataLimit();
       this.appRoot.showNotification(this.appRoot.localize('saved'));
       this.refreshTransferStats(this.selectedServer, serverView);
-      await sleep(HATS_DIALOG_DELAY_MS);
-      if (!serverView.isAccessKeyDataLimitEnabled) {
-        // TODO(alalama): survey link
-        showHatsDialogOnce(
-            this.appRoot.$.hatsDialog, 'dataLimitsDisabled-hats-dismissed',
-            this.appRoot.localize('hats-data-limits-title'), '#', DATA_LIMITS_AVAILABILITY_DATE);
-      }
+      this.surveys
+          .requestSurvey(
+              SurveyId.DATA_LIMITS_DISABLED, DEFAULT_PROMPT_IMPRESSION_DELAY_MS,
+              DATA_LIMITS_AVAILABILITY_DATE)
+          .present();
     } catch (error) {
       console.error(`Failed to remove access key data limit: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-remove-data-limit'));
@@ -1099,7 +1068,7 @@ export class App {
     }
   }
 
-  private async setHostnameForAccessKeys(hostname: string, serverSettings: Polymer) {
+  private async setHostnameForAccessKeys(hostname: string, serverSettings: polymer.Base) {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
     try {
       await this.selectedServer.setHostnameForAccessKeys(hostname);
@@ -1116,7 +1085,7 @@ export class App {
     }
   }
 
-  private async setPortForNewAccessKeys(port: number, serverSettings: Polymer) {
+  private async setPortForNewAccessKeys(port: number, serverSettings: polymer.Base) {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
     try {
       await this.selectedServer.setPortForNewAccessKeys(port);

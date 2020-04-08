@@ -16,6 +16,7 @@ import * as events from 'events';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as server from '../model/server';
+import {Survey, Surveys} from '../model/survey';
 
 import {App} from './app';
 import {TokenManager} from './digitalocean_oauth';
@@ -243,7 +244,7 @@ function createTestApp(
   return new App(
       polymerAppRoot, VERSION, fakeDigitalOceanSessionFactory,
       fakeDigitalOceanServerRepositoryFactory, manualServerRepo, displayServerRepository,
-      digitalOceanTokenManager);
+      digitalOceanTokenManager, new FakeSurveys());
 }
 
 enum AppRootScreen {
@@ -255,14 +256,13 @@ enum AppRootScreen {
   DIALOG
 }
 
-// TODO: define the AppRoot type.  Currently app.ts just defines the Polymer
-// type as HTMLElement&any.
-class FakePolymerAppRoot {
+class FakePolymerAppRoot implements polymer.Base {
   events = new events.EventEmitter();
   backgroundScreen = AppRootScreen.NONE;
   currentScreen = AppRootScreen.NONE;
   serverView = {setServerTransferredData: () => {}, serverId: '', initHelpBubbles: () => {}};
   serverList: DisplayServer[] = [];
+  is: 'fake-polymer-app-root';
 
   private setScreen(screenId: AppRootScreen) {
     this.currentScreen = screenId;
@@ -515,6 +515,12 @@ class FakeManagedServerRepository implements server.ManagedServerRepository {
 class FakeDisplayServerRepository extends DisplayServerRepository {
   constructor() {
     super(new InMemoryStorage());
+  }
+}
+
+class FakeSurveys implements Surveys {
+  requestSurvey(): Survey {
+    return undefined;
   }
 }
 
