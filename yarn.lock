@@ -361,6 +361,13 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-12.0.12.tgz#cc791b402360db1eaf7176479072f91ee6c6c7ca"
   integrity sha512-Uy0PN4R5vgBUXFoJrKryf5aTk3kJ8Rv3PdlHjl6UaX+Cqp1QE0yPQ68MPXGrZOfG7gZVNDIJZYyot0B9ubXUrQ==
 
+"@types/polymer@^1.2.9":
+  version "1.2.9"
+  resolved "https://registry.yarnpkg.com/@types/polymer/-/polymer-1.2.9.tgz#275449099d1d3a43386bf73c7c49bd30fff844fc"
+  integrity sha512-NlmGXQWRMAWxdQIoJIEtPG7H8bEjPq7Ubn4VoIivFWEKDYSyfRa2e+tdRMMz+LDp6iKUb/xYxy/ZGNDx+6hlqQ==
+  dependencies:
+    "@types/webcomponents.js" "*"
+
 "@types/randomstring@^1.1.6":
   version "1.1.6"
   resolved "https://registry.yarnpkg.com/@types/randomstring/-/randomstring-1.1.6.tgz#45cdc060a6f043d610bcd46503a6887db2a209c3"
@@ -413,6 +420,11 @@
   version "2.3.6"
   resolved "https://registry.yarnpkg.com/@types/tough-cookie/-/tough-cookie-2.3.6.tgz#c880579e087d7a0db13777ff8af689f4ffc7b0d5"
   integrity sha512-wHNBMnkoEBiRAd3s8KTKwIuO9biFtTf0LehITzBhSco+HQI0xkXZbLOD55SW3Aqw3oUkHstkm5SPv58yaAdFPQ==
+
+"@types/webcomponents.js@*":
+  version "0.6.35"
+  resolved "https://registry.yarnpkg.com/@types/webcomponents.js/-/webcomponents.js-0.6.35.tgz#d149c60697ac6e11bc3e96d1ca40aa201a283a56"
+  integrity sha512-plYT958eetZo/JSxz0R1d2oBokcncCa/mdXoTqYmwFTNRvs2iSAk8N8PW1SLj4LjDuVwQuk2GSIqj51b8Fe9Jg==
 
 "@types/yargs-parser@*":
   version "15.0.0"

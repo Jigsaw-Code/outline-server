@@ -37,6 +37,7 @@
     "@types/bytes": "^3.0.0",
     "@types/node-forge": "^0.6.9",
     "@types/node": "~12.0.0",
+    "@types/polymer": "^1.2.9",
     "@types/request": "^2.47.1",
     "@types/semver": "^5.5.0",
     "bower": "^1.8.0",
