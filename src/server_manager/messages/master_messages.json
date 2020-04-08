@@ -1003,6 +1003,10 @@
     "message": "Help us understand how to improve data limits",
     "description": "This string appears as the title of a dialog that prompts the user to complete a survey about the data limits feature."
   },
+  "survey_decline": {
+    "message": "Decline",
+    "description": "This string appears in a dialog that prompts the user to complete a survey. It is shown in a button that dismisses the dialog."
+  },
   "survey_disclaimer": {
     "message": "By clicking continue you will be sent to a short survey on Google Forms. We recommend taking the survey while connected to Outline.",
     "description": "This string appears in a dialog that prompts the user to complete a survey as a disclaimer."
@@ -1010,10 +1014,6 @@
   "survey_go_to_survey": {
     "message": "Go to survey",
     "description": "This string appears in a dialog that prompts the user to complete a survey. It is shown in a button that takes the user to the online survey."
-  },
-  "survey_no_thanks": {
-    "message": "No thanks",
-    "description": "This string appears in a dialog that prompts the user to complete a survey. It is shown in a button that dismisses the dialog."
   },
   "terms_of_service": {
     "message": "I have read and understood the $START_OF_LINK$Outline Terms of Service$END_OF_LINK$",
