@@ -19,7 +19,7 @@
 <link rel="import" href="../bower_components/paper-button/paper-button.html" />
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html" />
 
-<dom-module id="outline-hats-dialog">
+<dom-module id="outline-survey-dialog">
   <template>
     <style include="cloud-install-styles"></style>
     <style>
@@ -83,23 +83,23 @@
           <h3>[[title]]</h3>
           <div id="button-container">
             <paper-button dialog-dismiss noink>
-              [[localize('hats-no-thanks')]]
+              [[localize('survey-no-thanks')]]
             </paper-button>
             <paper-button dialog-confirm autofocus noink>
-              <a href="[[surveyLink]]">[[localize('hats-go-to-survey')]]</a>
+              <a href="[[surveyLink]]">[[localize('survey-go-to-survey')]]</a>
             </paper-button>
           </div>
         </div>
       </div>
       <div id="disclaimer">
         <hr />
-        <p>[[localize('hats-disclaimer')]]</p>
+        <p>[[localize('survey-disclaimer')]]</p>
       </div>
     </paper-dialog>
   </template>
   <script>
     Polymer({
-      is: "outline-hats-dialog",
+      is: "outline-survey-dialog",
       properties: {
         localize: {
           type: Function,

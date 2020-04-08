@@ -56,7 +56,7 @@ document.addEventListener('WebComponentsReady', () => {
       appRoot, version, digitalocean_api.createDigitalOceanSession,
       digitalOceanServerRepositoryFactory, new ManualServerRepository('manualServers'),
       new DisplayServerRepository(), new DigitalOceanTokenManager(),
-      new OutlineSurveys(appRoot.$.hatsDialog))
+      new OutlineSurveys(appRoot.$.surveyDialog))
       .start();
 });
 

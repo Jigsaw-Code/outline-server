@@ -53,7 +53,7 @@ export class DataLimitsSurvey implements Survey {
       private view: polymer.Base, private storage: Storage, private surveyId: string,
       private surveyLink: string, private promptImpressionDelayMs: number,
       private displayBefore?: Date) {
-    this.surveyTitle = view.localize('hats-data-limits-title');
+    this.surveyTitle = view.localize('survey-data-limits-title');
   }
 
   // Displays a survey dialog for`surveyId` with title `surveyTitle` and a link to `surveyLink`

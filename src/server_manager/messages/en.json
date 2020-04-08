@@ -97,10 +97,6 @@
   "gcp-firewall-create-3": "Type '0.0.0.0/0' in the 'Source IP ranges' field.",
   "gcp-firewall-create-4": "Select 'Allow all' under 'Protocols and ports'.",
   "gcp-firewall-create-5": "Click 'Create'.",
-  "hats-data-limits-title": "Please give us feedback on data limits",
-  "hats-disclaimer": "By clicking continue you will be sent to a short survey on Google Forms. We recommend taking the survey while connected to Outline.",
-  "hats-go-to-survey": "Go to survey",
-  "hats-no-thanks": "No thanks",
   "key": "Key {keyId}",
   "manual-server-assign-firewall": "Assign firewall rule",
   "manual-server-assign-group": "Assign Security Group",
@@ -217,5 +213,9 @@
   "share-invite-instructions": "Follow our invitation instructions on GitHub:",
   "share-invite-trouble": "Having trouble accessing the invitation link?",
   "share-title": "Share access",
+  "survey-data-limits-title": "Help us understand how to improve data limits",
+  "survey-disclaimer": "By clicking continue you will be sent to a short survey on Google Forms. We recommend taking the survey while connected to Outline.",
+  "survey-go-to-survey": "Go to survey",
+  "survey-no-thanks": "No thanks",
   "terms-of-service": "I have read and understood the {openLink}Outline Terms of Service{closeLink}"
 }
