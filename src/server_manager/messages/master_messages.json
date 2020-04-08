@@ -34,7 +34,7 @@
     }
   },
   "aws-lightsail-firewall-0": {
-    "message": "Navigate to the $START_OF_LINK$Amazon Lightsail Dashboard$END_OF_LINK$.",
+    "message": "Navigate to the $START_OF_LINK$Amazon Lightsail$END_OF_LINK$ instances screen.",
     "description": "This string appears within the server setup view as an item of a list that provides instructions to configure firewall rules in Amazon Lightsail. Amazon Lightsail is a product name and should not be translated.",
     "placeholders": {
       "END_OF_LINK": {
