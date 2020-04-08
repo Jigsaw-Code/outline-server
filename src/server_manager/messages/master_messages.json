@@ -33,7 +33,7 @@
       }
     }
   },
-  "aws-lightsail-firewall-0": {
+  "aws_lightsail_firewall_0": {
     "message": "Navigate to the $START_OF_LINK$Amazon Lightsail$END_OF_LINK$ instances screen.",
     "description": "This string appears within the server setup view as an item of a list that provides instructions to configure firewall rules in Amazon Lightsail. Amazon Lightsail is a product name and should not be translated.",
     "placeholders": {
@@ -45,23 +45,23 @@
       }
     }
   },
-  "aws-lightsail-firewall-1": {
+  "aws_lightsail_firewall_1": {
     "message": "Click the instance on which you want to host Outline.",
     "description": "This string appears within the server setup view as an item of a list that provides instructions to configure firewall rules in Amazon Lightsail."
   },
-  "aws-lightsail-firewall-2": {
+  "aws_lightsail_firewall_2": {
     "message": "Navigate to the 'Networking' tab.",
     "description": "This string appears within the server setup view as an item of a list that provides instructions to configure firewall rules in Amazon Lightsail.. 'Networking' should be translated and included untranslated in parentheses."
   },
-  "aws-lightsail-firewall-3": {
+  "aws_lightsail_firewall_3": {
     "message": "In the 'Firewall' section, click 'Add another'.",
     "description": "This string appears within the server setup view as an item of a list that provides instructions to configure firewall rules in Amazon Lightsail. Words in quotes should be translated and included untranslated in parentheses."
   },
-  "aws-lightsail-firewall-4": {
+  "aws_lightsail_firewall_4": {
     "message": "Set 'Application' value to 'All TCP+UDP'.",
     "description": "This string appears within the server setup view as an item of a list that provides instructions to configure firewall rules in Amazon Lightsail. Words in quotes should be translated and included untranslated in parentheses."
   },
-  "aws-lightsail-firewall-5": {
+  "aws_lightsail_firewall_5": {
     "message": "Click 'Save'.",
     "description": "This string appears within the server setup view as an item of a list that provides instructions to configure firewall rules in Amazon Lightsail. Words in quotes should be translated and included untranslated in parentheses."
   },
