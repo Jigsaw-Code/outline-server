@@ -26,7 +26,6 @@ import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
-import {DEFAULT_PROMPT_IMPRESSION_DELAY_MS, SurveyId} from './survey';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -36,7 +35,7 @@ const CHANGE_KEYS_PORT_VERSION = '1.0.0';
 const DATA_LIMITS_VERSION = '1.1.0';
 const CHANGE_HOSTNAME_VERSION = '1.2.0';
 // Date by which the data limits feature experiment will be permanently added or removed.
-const DATA_LIMITS_AVAILABILITY_DATE = new Date('2020-06-02');
+export const DATA_LIMITS_AVAILABILITY_DATE = new Date('2020-06-02');
 const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
 
 interface UiAccessKey {
@@ -1036,11 +1035,7 @@ export class App {
       this.appRoot.showNotification(this.appRoot.localize('saved'));
       serverView.accessKeyDataLimit = dataLimitToDisplayDataAmount(limit);
       this.refreshTransferStats(this.selectedServer, serverView);
-      this.surveys
-          .requestSurvey(
-              SurveyId.DATA_LIMITS_ENABLED, DEFAULT_PROMPT_IMPRESSION_DELAY_MS,
-              DATA_LIMITS_AVAILABILITY_DATE)
-          .present();
+      this.surveys.presentDataLimitsEnabledSurvey();
     } catch (error) {
       console.error(`Failed to set access key data limit: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-set-data-limit'));
@@ -1056,11 +1051,7 @@ export class App {
       await this.selectedServer.removeAccessKeyDataLimit();
       this.appRoot.showNotification(this.appRoot.localize('saved'));
       this.refreshTransferStats(this.selectedServer, serverView);
-      this.surveys
-          .requestSurvey(
-              SurveyId.DATA_LIMITS_DISABLED, DEFAULT_PROMPT_IMPRESSION_DELAY_MS,
-              DATA_LIMITS_AVAILABILITY_DATE)
-          .present();
+      this.surveys.presentDataLimitsDisabledSurvey();
     } catch (error) {
       console.error(`Failed to remove access key data limit: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-remove-data-limit'));

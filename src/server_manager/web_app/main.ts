@@ -16,7 +16,7 @@ import * as url from 'url';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 
-import {App} from './app';
+import {App, DATA_LIMITS_AVAILABILITY_DATE} from './app';
 import {DigitalOceanTokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServerRepository} from './display_server';
@@ -56,7 +56,7 @@ document.addEventListener('WebComponentsReady', () => {
       appRoot, version, digitalocean_api.createDigitalOceanSession,
       digitalOceanServerRepositoryFactory, new ManualServerRepository('manualServers'),
       new DisplayServerRepository(), new DigitalOceanTokenManager(),
-      new OutlineSurveys(appRoot.$.surveyDialog))
+      new OutlineSurveys(appRoot.$.surveyDialog, localStorage, DATA_LIMITS_AVAILABILITY_DATE))
       .start();
 });
 

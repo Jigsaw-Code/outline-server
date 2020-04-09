@@ -16,7 +16,7 @@ import * as events from 'events';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as server from '../model/server';
-import {Survey, Surveys} from '../model/survey';
+import {Surveys} from '../model/survey';
 
 import {App} from './app';
 import {TokenManager} from './digitalocean_oauth';
@@ -519,9 +519,8 @@ class FakeDisplayServerRepository extends DisplayServerRepository {
 }
 
 class FakeSurveys implements Surveys {
-  requestSurvey(): Survey {
-    return undefined;
-  }
+  async presentDataLimitsEnabledSurvey() {}
+  async presentDataLimitsDisabledSurvey() {}
 }
 
 export class InMemoryStorage implements Storage {

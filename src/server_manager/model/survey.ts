@@ -13,12 +13,8 @@
 // limitations under the License.
 
 export interface Surveys {
-  // Returns a Survey for `surveyId`, configured to be displayed after `promptImpressionDelayMs`,
-  // and only before a date `displayBefore`.
-  requestSurvey(surveyId: string, promptImpressionDelayMs: number, displayBefore?: Date): Survey;
-}
-
-export interface Survey {
-  // Displays the survey.
-  present(): Promise<void>;
+  // Displays a survey when the data limits feature is enabled.
+  presentDataLimitsEnabledSurvey(): Promise<void>;
+  // Displays a survey when the data limits feature is disabled.
+  presentDataLimitsDisabledSurvey(): Promise<void>;
 }

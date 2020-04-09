@@ -13,63 +13,49 @@
 // limitations under the License.
 
 import {sleep} from '../infrastructure/async';
-import {Survey, Surveys} from '../model/survey';
-
-export enum SurveyId {
-  DATA_LIMITS_DISABLED = 'dataLimitsDisabledSurvey',
-  DATA_LIMITS_ENABLED = 'dataLimitsEnabledSurvey'
-}
-
-enum SurveyLink {
-  DATA_LIMITS_DISABLED =
-      'https://docs.google.com/forms/d/e/1FAIpQLSc2ZNx0C1a-alFlXLxhJ8jWk-WgcxqKilFoQ5ToI8HBOK9qRA/viewform',
-  DATA_LIMITS_ENABLED =
-      'https://docs.google.com/forms/d/e/1FAIpQLSeXQ5WUHXQHlF1Ul_ViX52GjTUPlrRB_7rhwbol3dKJfM4Kiw/viewform'
-}
+import {Surveys} from '../model/survey';
 
 export const DEFAULT_PROMPT_IMPRESSION_DELAY_MS = 3000;
 
 export class OutlineSurveys implements Surveys {
-  constructor(private view: polymer.Base, private storage: Storage = localStorage) {}
-
-  requestSurvey(surveyId: string, promptImpressionDelayMs: number, displayBefore?: Date) {
-    if (surveyId === SurveyId.DATA_LIMITS_ENABLED) {
-      return new DataLimitsSurvey(
-          this.view, this.storage, surveyId, SurveyLink.DATA_LIMITS_ENABLED,
-          promptImpressionDelayMs, displayBefore);
-    } else if (surveyId === SurveyId.DATA_LIMITS_DISABLED) {
-      return new DataLimitsSurvey(
-          this.view, this.storage, surveyId, SurveyLink.DATA_LIMITS_DISABLED,
-          promptImpressionDelayMs, displayBefore);
-    }
-    throw new Error(`Failed to find survey with ID: ${surveyId}`);
-  }
-}
-
-export class DataLimitsSurvey implements Survey {
-  private surveyTitle: string;
-
   constructor(
-      private view: polymer.Base, private storage: Storage, private surveyId: string,
-      private surveyLink: string, private promptImpressionDelayMs: number,
-      private displayBefore?: Date) {
-    this.surveyTitle = view.localize('survey-data-limits-title');
+      private view: polymer.Base, private storage: Storage = localStorage,
+      private dataLimitsAvailabilityDate?: Date) {}
+
+  async presentDataLimitsEnabledSurvey() {
+    if (this.isSurveyExpired(this.dataLimitsAvailabilityDate)) {
+      return;
+    }
+    await this.presentSurvey(
+        'dataLimitsEnabledSurvey', this.view.localize('survey-data-limits-title'),
+        'https://docs.google.com/forms/d/e/1FAIpQLSeXQ5WUHXQHlF1Ul_ViX52GjTUPlrRB_7rhwbol3dKJfM4Kiw/viewform');
+  }
+
+  async presentDataLimitsDisabledSurvey() {
+    if (this.isSurveyExpired(this.dataLimitsAvailabilityDate)) {
+      return;
+    }
+    await this.presentSurvey(
+        'dataLimitsDisabledSurvey', this.view.localize('survey-data-limits-title'),
+        'https://docs.google.com/forms/d/e/1FAIpQLSc2ZNx0C1a-alFlXLxhJ8jWk-WgcxqKilFoQ5ToI8HBOK9qRA/viewform');
   }
 
   // Displays a survey dialog for`surveyId` with title `surveyTitle` and a link to `surveyLink`
-  // after `promptImppressionDelayMs` has elapsed.
-  // Does not display the survey if it has already been shown to the user or if the current date
-  // is after `displayBefore`.
-  async present() {
+  // after `promptImpressionDelayMs` has elapsed. Rate-limits the survey to once per user.
+  private async presentSurvey(
+      surveyId: string, surveyTitle: string, surveyLink: string,
+      promptImpressionDelayMs: number = DEFAULT_PROMPT_IMPRESSION_DELAY_MS) {
+    if (this.storage.getItem(surveyId)) {
+      return;
+    }
+    await sleep(promptImpressionDelayMs);
+    this.view.open(surveyTitle, surveyLink);
+    this.storage.setItem(surveyId, 'true');
+  }
+
+  // Returns whether `surveyAvailabilityDate` is in the past.
+  private isSurveyExpired(surveyAvailabilityDate: Date|undefined) {
     const now = new Date();
-    if (this.displayBefore && now > this.displayBefore) {
-      return;
-    }
-    if (this.storage.getItem(this.surveyId)) {
-      return;
-    }
-    await sleep(this.promptImpressionDelayMs);
-    this.view.open(this.surveyTitle, this.surveyLink);
-    this.storage.setItem(this.surveyId, 'true');
+    return surveyAvailabilityDate && now > surveyAvailabilityDate;
   }
 }
