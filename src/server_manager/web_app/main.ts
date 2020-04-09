@@ -16,11 +16,12 @@ import * as url from 'url';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 
-import {App} from './app';
+import {App, DATA_LIMITS_AVAILABILITY_DATE} from './app';
 import {DigitalOceanTokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
+import {DEFAULT_PROMPT_IMPRESSION_DELAY_MS, OutlineSurveys} from './survey';
 
 function ensureString(queryParam: string|string[]): string {
   if (Array.isArray(queryParam)) {
@@ -47,11 +48,17 @@ document.addEventListener('WebComponentsReady', () => {
   };
 
   // Create and start the app.
+  // NOTE: this cast is safe and allows us to leverage Polymer typings since we haven't migrated to
+  // Polymer 3, which adds typescript support.
+  // tslint:disable-next-line:no-any
+  const appRoot: polymer.Base = (document.getElementById('appRoot') as any) as polymer.Base;
   new App(
-      document.getElementById('appRoot'), version,
-      digitalocean_api.createDigitalOceanSession, digitalOceanServerRepositoryFactory,
-      new ManualServerRepository('manualServers'), new DisplayServerRepository(),
-      new DigitalOceanTokenManager())
+      appRoot, version, digitalocean_api.createDigitalOceanSession,
+      digitalOceanServerRepositoryFactory, new ManualServerRepository('manualServers'),
+      new DisplayServerRepository(), new DigitalOceanTokenManager(),
+      new OutlineSurveys(
+          appRoot.$.surveyDialog, localStorage, DEFAULT_PROMPT_IMPRESSION_DELAY_MS,
+          DATA_LIMITS_AVAILABILITY_DATE))
       .start();
 });
 

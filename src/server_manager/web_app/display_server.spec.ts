@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {InMemoryStorage} from './app.spec';
+import {InMemoryStorage} from '../infrastructure/memory_storage';
 import {DisplayServerRepository} from './display_server';
 
 // Use this helper to compare `DisplayServer`s when we don't care about the

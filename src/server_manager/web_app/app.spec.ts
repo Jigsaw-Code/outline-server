@@ -15,7 +15,9 @@
 import * as events from 'events';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
+import {InMemoryStorage} from '../infrastructure/memory_storage';
 import * as server from '../model/server';
+import {Surveys} from '../model/survey';
 
 import {App} from './app';
 import {TokenManager} from './digitalocean_oauth';
@@ -243,7 +245,7 @@ function createTestApp(
   return new App(
       polymerAppRoot, VERSION, fakeDigitalOceanSessionFactory,
       fakeDigitalOceanServerRepositoryFactory, manualServerRepo, displayServerRepository,
-      digitalOceanTokenManager);
+      digitalOceanTokenManager, new FakeSurveys());
 }
 
 enum AppRootScreen {
@@ -255,14 +257,13 @@ enum AppRootScreen {
   DIALOG
 }
 
-// TODO: define the AppRoot type.  Currently app.ts just defines the Polymer
-// type as HTMLElement&any.
-class FakePolymerAppRoot {
+class FakePolymerAppRoot implements polymer.Base {
   events = new events.EventEmitter();
   backgroundScreen = AppRootScreen.NONE;
   currentScreen = AppRootScreen.NONE;
   serverView = {setServerTransferredData: () => {}, serverId: '', initHelpBubbles: () => {}};
   serverList: DisplayServer[] = [];
+  is: 'fake-polymer-app-root';
 
   private setScreen(screenId: AppRootScreen) {
     this.currentScreen = screenId;
@@ -518,30 +519,7 @@ class FakeDisplayServerRepository extends DisplayServerRepository {
   }
 }
 
-export class InMemoryStorage implements Storage {
-  readonly length: number;
-  [key: string]: {};
-  [index: number]: string;
-
-  constructor(private store: Map<string, string> = new Map<string, string>()) {}
-
-  clear(): void {
-    throw new Error('InMemoryStorage.clear not implemented');
-  }
-
-  getItem(key: string): string|null {
-    return this.store.get(key) || null;
-  }
-
-  key(index: number): string|null {
-    throw new Error('InMemoryStorage.key not implemented');
-  }
-
-  removeItem(key: string): void {
-    this.store.delete(key);
-  }
-
-  setItem(key: string, data: string): void {
-    this.store.set(key, data);
-  }
+class FakeSurveys implements Surveys {
+  async presentDataLimitsEnabledSurvey() {}
+  async presentDataLimitsDisabledSurvey() {}
 }
