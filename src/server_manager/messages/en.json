@@ -186,6 +186,7 @@
   "settings-server-location": "Server location",
   "settings-server-name": "Name",
   "settings-server-rename": "Set a new name for your server. Note that this will not be reflected on the devices of the users that you invited to connect to it.",
+  "settings-server-version": "Server version",
   "settings-transfer-limit": "Data transfer allowance",
   "setup-action": "Set up",
   "setup-advanced": "Advanced",

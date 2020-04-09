@@ -19,7 +19,8 @@
   "dependencies": {
     "@sentry/electron": "^0.8.1",
     "body-parser": "^1.18.3",
-    "bytes": "^3.1.0",
+    "byte-size": "^6.2.0",
+    "dotenv": "~8.2.0",
     "clipboard-polyfill": "^2.4.6",
     "electron-updater": "^4.1.2",
     "eventemitter3": "^2.0.3",
@@ -34,7 +35,6 @@
     "Pin electron version (i.e. 7.0.1, not ~7.0.0) as a workaround for issue https://github.com/electron-userland/electron-builder/issues/4157"
   ],
   "devDependencies": {
-    "@types/bytes": "^3.0.0",
     "@types/node-forge": "^0.6.9",
     "@types/node": "~12.0.0",
     "@types/polymer": "^1.2.9",

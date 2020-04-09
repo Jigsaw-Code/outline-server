@@ -60,11 +60,14 @@ document.addEventListener('WebComponentsReady', () => {
       .start();
 });
 
-// Returns Sentry URL for DSN string.
-// e.g. for DSN "https://ee9db4eb185b471ca08c8eb5efbf61f1@sentry.io/214597"
+// Returns Sentry URL for DSN string or undefined if `sentryDsn` is falsy.
+// e.g. for DSN "https://[API_KEY]@sentry.io/[PROJECT_ID]"
 // this will return
-// "https://sentry.io/api/214597/store/?sentry_version=7&sentry_key=ee9db4eb185b471ca08c8eb5efbf61f1"
-function getSentryApiUrl(sentryDsn: string): string {
+// "https://sentry.io/api/[PROJECT_ID]/store/?sentry_version=7&sentry_key=[API_KEY]"
+function getSentryApiUrl(sentryDsn?: string): string|undefined {
+  if (!sentryDsn) {
+    return undefined;
+  }
   const matches = sentryDsn.match(/https:\/\/(\S+)@sentry\.io\/(\d+)/);
   return `https://sentry.io/api/${matches[2]}/store/?sentry_version=7&sentry_key=${matches[1]}`;
 }

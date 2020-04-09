@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 #
-# Copyright 2018 The Outline Authors
+# Copyright 2020 The Outline Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,11 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-do_action server_manager/electron_app/build
+# Writes a dotenv file for CI environment variables.
 
-readonly NODE_MODULES_BIN_DIR=$ROOT_DIR/src/server_manager/node_modules/.bin
+# Fail if any release variables are undefined.
+if [[ -z ${SENTRY_DSN:-} ]]; then
+  echo "SENTRY_DSN is undefined."
+  exit 1
+fi
 
-cd $BUILD_DIR/server_manager/electron_app/static
-OUTLINE_DEBUG=true \
-SB_METRICS_URL=https://dev.metrics.getoutline.org \
-$NODE_MODULES_BIN_DIR/electron .
+cat <<EOM > $BUILD_DIR/server_manager/electron_app/static/.env
+SENTRY_DSN=${SENTRY_DSN}
+EOM
