@@ -20,6 +20,7 @@ export const DEFAULT_PROMPT_IMPRESSION_DELAY_MS = 3000;
 export class OutlineSurveys implements Surveys {
   constructor(
       private view: polymer.Base, private storage: Storage = localStorage,
+      private promptImpressionDelayMs: number = DEFAULT_PROMPT_IMPRESSION_DELAY_MS,
       private dataLimitsAvailabilityDate?: Date) {}
 
   async presentDataLimitsEnabledSurvey() {
@@ -42,13 +43,11 @@ export class OutlineSurveys implements Surveys {
 
   // Displays a survey dialog for`surveyId` with title `surveyTitle` and a link to `surveyLink`
   // after `promptImpressionDelayMs` has elapsed. Rate-limits the survey to once per user.
-  private async presentSurvey(
-      surveyId: string, surveyTitle: string, surveyLink: string,
-      promptImpressionDelayMs: number = DEFAULT_PROMPT_IMPRESSION_DELAY_MS) {
+  private async presentSurvey(surveyId: string, surveyTitle: string, surveyLink: string) {
     if (this.storage.getItem(surveyId)) {
       return;
     }
-    await sleep(promptImpressionDelayMs);
+    await sleep(this.promptImpressionDelayMs);
     this.view.open(surveyTitle, surveyLink);
     this.storage.setItem(surveyId, 'true');
   }

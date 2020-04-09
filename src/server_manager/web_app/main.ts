@@ -21,7 +21,7 @@ import {DigitalOceanTokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
-import {OutlineSurveys} from './survey';
+import {DEFAULT_PROMPT_IMPRESSION_DELAY_MS, OutlineSurveys} from './survey';
 
 function ensureString(queryParam: string|string[]): string {
   if (Array.isArray(queryParam)) {
@@ -56,7 +56,9 @@ document.addEventListener('WebComponentsReady', () => {
       appRoot, version, digitalocean_api.createDigitalOceanSession,
       digitalOceanServerRepositoryFactory, new ManualServerRepository('manualServers'),
       new DisplayServerRepository(), new DigitalOceanTokenManager(),
-      new OutlineSurveys(appRoot.$.surveyDialog, localStorage, DATA_LIMITS_AVAILABILITY_DATE))
+      new OutlineSurveys(
+          appRoot.$.surveyDialog, localStorage, DEFAULT_PROMPT_IMPRESSION_DELAY_MS,
+          DATA_LIMITS_AVAILABILITY_DATE))
       .start();
 });
 

@@ -15,13 +15,13 @@
 import * as events from 'events';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
+import {InMemoryStorage} from '../infrastructure/memory_storage';
 import * as server from '../model/server';
 import {Surveys} from '../model/survey';
 
 import {App} from './app';
 import {TokenManager} from './digitalocean_oauth';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
-import {InMemoryStorage} from './mocks/mocks';
 
 const TOKEN_WITH_NO_SERVERS = 'no-server-token';
 const TOKEN_WITH_ONE_SERVER = 'one-server-token';

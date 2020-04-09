@@ -12,21 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {InMemoryStorage} from '../infrastructure/memory_storage';
 import {Surveys} from '../model/survey';
 
-import {InMemoryStorage} from './mocks/mocks';
-import {DEFAULT_PROMPT_IMPRESSION_DELAY_MS, OutlineSurveys} from './survey';
+import {OutlineSurveys} from './survey';
 
 describe('Surveys', () => {
-  beforeEach(() => {
-    // Increase the test timeout to be greater the delay of displaying two surveys.
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = DEFAULT_PROMPT_IMPRESSION_DELAY_MS * 3;
-  });
-
   it('presents data limits surveys with the correct arguments', async (done) => {
     const view = new FakeSurveyDialog();
     const storage = new InMemoryStorage();
-    const surveys = new OutlineSurveys(view, storage);
+    const surveys = new OutlineSurveys(view, storage, 0);
 
     await surveys.presentDataLimitsEnabledSurvey();
     expect(view.title).toEqual('survey-data-limits-title');
@@ -43,26 +38,27 @@ describe('Surveys', () => {
   });
 
   it('presents data limits surveys after the default prompt impression delay', async (done) => {
+    const TEST_PROMPT_IMPRESSION_DELAY_MS = 750;
     const view = new FakeSurveyDialog();
     const storage = new InMemoryStorage();
-    const surveys = new OutlineSurveys(view, storage);
+    const surveys = new OutlineSurveys(view, storage, TEST_PROMPT_IMPRESSION_DELAY_MS);
 
     let start = Date.now();
     await surveys.presentDataLimitsEnabledSurvey();
     let delay = Date.now() - start;
-    expect(delay).toBeGreaterThanOrEqual(DEFAULT_PROMPT_IMPRESSION_DELAY_MS);
+    expect(delay).toBeGreaterThanOrEqual(TEST_PROMPT_IMPRESSION_DELAY_MS);
 
     start = Date.now();
     await surveys.presentDataLimitsDisabledSurvey();
     delay = Date.now() - start;
-    expect(delay).toBeGreaterThanOrEqual(DEFAULT_PROMPT_IMPRESSION_DELAY_MS);
+    expect(delay).toBeGreaterThanOrEqual(TEST_PROMPT_IMPRESSION_DELAY_MS);
     done();
   });
 
   it('presents data limits surveys once', async (done) => {
     const view = new FakeSurveyDialog();
     const storage = new InMemoryStorage();
-    const surveys = new OutlineSurveys(view, storage);
+    const surveys = new OutlineSurveys(view, storage, 0);
 
     await surveys.presentDataLimitsEnabledSurvey();
     expect(storage.getItem('dataLimitsEnabledSurvey')).toEqual('true');
@@ -81,7 +77,7 @@ describe('Surveys', () => {
     const view = new FakeSurveyDialog();
     const storage = new InMemoryStorage();
     const yesterday = new Date(new Date().setDate(new Date().getDate() - 1));
-    const surveys = new OutlineSurveys(view, storage, yesterday);
+    const surveys = new OutlineSurveys(view, storage, 0, yesterday);
     spyOn(view, 'open');
 
     await surveys.presentDataLimitsEnabledSurvey();

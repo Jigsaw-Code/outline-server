@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {InMemoryStorage} from '../infrastructure/memory_storage';
 import {DisplayServerRepository} from './display_server';
-import {InMemoryStorage} from './mocks/mocks';
 
 // Use this helper to compare `DisplayServer`s when we don't care about the
 // `isSynced` property.
