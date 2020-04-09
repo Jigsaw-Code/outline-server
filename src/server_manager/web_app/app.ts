@@ -17,8 +17,8 @@ import * as events from 'events';
 import * as semver from 'semver';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
-import {sleep} from '../infrastructure/async';
 import * as errors from '../infrastructure/errors';
+import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
 import {Surveys} from '../model/survey';
 
