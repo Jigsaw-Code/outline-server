@@ -21,6 +21,7 @@ import {Surveys} from '../model/survey';
 import {App} from './app';
 import {TokenManager} from './digitalocean_oauth';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
+import {InMemoryStorage} from './mocks/mocks';
 
 const TOKEN_WITH_NO_SERVERS = 'no-server-token';
 const TOKEN_WITH_ONE_SERVER = 'one-server-token';
@@ -521,32 +522,4 @@ class FakeDisplayServerRepository extends DisplayServerRepository {
 class FakeSurveys implements Surveys {
   async presentDataLimitsEnabledSurvey() {}
   async presentDataLimitsDisabledSurvey() {}
-}
-
-export class InMemoryStorage implements Storage {
-  readonly length: number;
-  [key: string]: {};
-  [index: number]: string;
-
-  constructor(private store: Map<string, string> = new Map<string, string>()) {}
-
-  clear(): void {
-    throw new Error('InMemoryStorage.clear not implemented');
-  }
-
-  getItem(key: string): string|null {
-    return this.store.get(key) || null;
-  }
-
-  key(index: number): string|null {
-    throw new Error('InMemoryStorage.key not implemented');
-  }
-
-  removeItem(key: string): void {
-    this.store.delete(key);
-  }
-
-  setItem(key: string, data: string): void {
-    this.store.set(key, data);
-  }
 }
