@@ -510,27 +510,27 @@
     "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'Create' should be translated and included untranslated in parentheses."
   },
   "gcp_name_your_project": {
-    "message": "Name your project in the \"Project name\" field.",
+    "message": "Name your project in the 'Project name' field.",
     "description": "This string appears as instructions for naming a new Google Cloud Project.  'Project Name' should be translated and include untranslated in parentheses"
   },
   "gcp_select_machine_type": {
-    "message": "Select \"f1-micro\" under \"Machine type\"",
+    "message": "Select 'f1-micro' under 'Machine type'",
     "description": "This string appears as an instruction for selecting the machine type for a new Google Cloud VM.  'Machine type' should be translated and include untranslated in parentheses."
   },
   "gcp_select_networking": {
-    "message": "Click \"Management, security, disks, networking, sole tenancy\", then \"Networking\"",
+    "message": "Click 'Management, security, disks, networking, sole tenancy', then 'Networking'",
     "description": "This string appears as an instruction to find  the networking options when creating a new Google Cloud VM.  'Management, security, disks, networking, sole tenancy' and 'Networking' should match that used in the Google Cloud Console should be translated and included untranslated in parentheses."
   },
   "gcp_select_region": {
-    "message": "Select a region close to where the server's users will be under \"Region\".",
+    "message": "Select a region close to where the server's users will be under 'Region'.",
     "description": "This string appears as an instruction for selecting a region for a new Google Cloud VM.  'Region' should be translated and include untranslated in parentheses."
   },
   "gcp_type_network_tag": {
-    "message": "Type \"outline\" in the \"Network tags\" field",
+    "message": "Type 'outline' in the 'Network tags' field",
     "description": "This string appears as an instruction for specifying a network tag in a new Google Cloud VM.  'Network tags' should be translated and include untranslated in parentheses"
   },
   "gcp_type_outline_server": {
-    "message": "Type \"outline-server\" in the \"Name\" field.",
+    "message": "Type 'outline-server' in the 'Name' field.",
     "description": "This string is an instruction in directions for creating a new Google Cloud VM.  'Name' should be translated and include untranslated in parentheses"
   },
   "key": {
