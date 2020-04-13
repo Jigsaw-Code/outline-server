@@ -177,14 +177,30 @@
           <div class="section-header">
             <!-- TODO(alalama): localize numbers  -->
             <span class="stepcircle">1</span>
-            <div class="instructions">[[localize('manual-server-firewall')]]</div>
-            <div class="drop-down" on-tap="_toggleGcpDropDown">
+            <div class="instructions">[[localize('gcp-create-server')]]</div>
+            <div class="drop-down" on-tap="_toggleGcpCreateServerDropDown">
               <img src="images/gcp-logo.svg" />
               <span>[[localize('manual-server-instructions')]]</span>
-              <iron-icon id="gcpDropDownIcon" icon="arrow-drop-down"></iron-icon>
+              <iron-icon id="gcpCreateServerDropDownIcon" icon="arrow-drop-down"></iron-icon>
             </div>
           </div>
-          <iron-collapse id="gcpDropDown">
+          <iron-collapse id="gcpCreateServerDropDown" class="instructions-collapse">
+            <div class="section-content-instructions">
+              <outline-cloud-instructions-view
+                title="[[localize('gcp-create-project')]]"
+                thumbnail-path="images/gcp-create-project-thumbnail.png"
+                image-path="images/gcp-create-project-screenshot.png"
+                localize="[[localize]]"
+              >
+                <ol>
+                  <li
+                    inner-h-t-m-l="[[localize('gcp-create-new-project', 'openLink', '<a href=https://console.cloud.google.com/projectcreate>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
+                  ></li>
+                  <li>[[localize('gcp-name-your-project')]]</li>
+                  <li>[[localize('gcp-click-create')]]</li>
+                </ol>
+              </outline-cloud-instructions-view>
+            </div>
             <div class="section-content-instructions">
               <outline-cloud-instructions-view
                 title="[[localize('manual-server-create-firewall')]]"
@@ -200,25 +216,27 @@
                   <li>[[localize('gcp-firewall-create-2')]]</li>
                   <li>[[localize('gcp-firewall-create-3')]]</li>
                   <li>[[localize('gcp-firewall-create-4')]]</li>
-                  <li>[[localize('gcp-firewall-create-5')]]</li>
+                  <li>[[localize('gcp-click-create')]]</li>
                 </ol>
               </outline-cloud-instructions-view>
             </div>
             <div class="section-content-instructions">
               <outline-cloud-instructions-view
-                title="[[localize('manual-server-assign-firewall')]]"
-                thumbnail-path="images/gcp-thumbnail-2.png"
-                image-path="images/gcp-screenshot-2.png"
+                title="[[localize('gcp-create-vm')]]"
+                thumbnail-path="images/gcp-create-instance-thumbnail.png"
+                image-path="images/gcp-create-instance-screenshot.png"
                 localize="[[localize]]"
               >
                 <ol>
                   <li
-                    inner-h-t-m-l="[[localize('gcp-firewall-assign-0', 'openLink', '<a href=https://console.cloud.google.com/compute/instances>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
+                    inner-h-t-m-l="[[localize('gcp-create-new-vm', 'openLink', '<a href=https://console.cloud.google.com/compute/instancesAdd>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
                   ></li>
-                  <li>[[localize('gcp-firewall-assign-1')]]</li>
-                  <li>[[localize('gcp-firewall-assign-2')]]</li>
-                  <li>[[localize('gcp-firewall-assign-3')]]</li>
-                  <li>[[localize('gcp-firewall-assign-4')]]</li>
+                  <li>[[localize('gcp-type-outline-server')]]</li>
+                  <li>[[localize('gcp-select-region')]]</li>
+                  <li>[[localize('gcp-select-machine-type')]]</li>
+                  <li>[[localize('gcp-select-networking')]]</li>
+                  <li>[[localize('gcp-type-network-tag')]]</li>
+                  <li>[[localize('gcp-click-create')]]</li>
                 </ol>
               </outline-cloud-instructions-view>
             </div>
@@ -228,14 +246,16 @@
         <div class="section" hidden$="[[!isCloudProviderAws]]">
           <div class="section-header">
             <span class="stepcircle">1</span>
-            <div class="instructions">[[localize('manual-server-firewall')]]</div>
+            <div class="instructions">
+              [[localize('manual-server-firewall')]]
+            </div>
             <div class="drop-down" on-tap="_toggleAwsDropDown">
               <img id="aws-logo" src="images/aws-logo.svg" />
               <span>[[localize('manual-server-instructions')]]</span>
               <iron-icon id="awsDropDownIcon" icon="arrow-drop-down"></iron-icon>
             </div>
           </div>
-          <iron-collapse id="awsDropDown">
+          <iron-collapse id="awsDropDown" class="instructions-collapse">
             <div class="section-content-instructions">
               <outline-cloud-instructions-view
                 title="[[localize('manual-server-create-group')]]"
@@ -277,9 +297,10 @@
         <!-- Install command -->
         <div class="section">
           <div class="section-header">
-            <span class="stepcircle" hidden$="[[!isGenericCloudProvider]]">1</span>
-            <span class="stepcircle" hidden$="[[isGenericCloudProvider]]">2</span>
-            <div class="instructions">[[localize('manual-server-install-run')]]</div>
+            <span class="stepcircle">[[installScriptStepNumber]]</span>
+            <div class="instructions">
+              [[localize('manual-server-install-run')]]
+            </div>
           </div>
           <div class="section-content">
             <div id="command">
@@ -291,9 +312,10 @@
         <!-- Paste input -->
         <div class="section">
           <div class="section-header">
-            <span class="stepcircle" hidden$="[[!isGenericCloudProvider]]">2</span>
-            <span class="stepcircle" hidden$="[[isGenericCloudProvider]]">3</span>
-            <div class="instructions">[[localize('manual-server-install-paste')]]</div>
+            <span class="stepcircle">[[pasteJsonStepNumber]]</span>
+            <div class="instructions">
+              [[localize('manual-server-install-paste')]]
+            </div>
           </div>
           <div class="section-content">
             <paper-textarea
@@ -348,6 +370,14 @@
           type: Boolean,
           computed: "_computeIsGenericCloudProvider(cloudProvider)",
         },
+        installScriptStepNumber: {
+          type: Number,
+          computed: "_computeInstallScriptStepNumber(isGenericCloudProvider)",
+        },
+        pasteJsonStepNumber: {
+          type: Number,
+          computed: "_computePasteJsonStepNumber(installScriptStepNumber)",
+        },
         enableDoneButton: {
           type: Boolean,
           value: false,
@@ -373,8 +403,9 @@
       clear: function() {
         this.$.serverConfig.value = "";
         this.showConnection = false;
-        this.$.awsDropDown.hide();
-        this.$.gcpDropDown.hide();
+        for (const dropdown of Polymer.dom(this.root).querySelectorAll(".instructions-collapse")) {
+          dropdown.hide();
+        }
       },
       _computeCloudProviderName: function(cloudProvider) {
         switch (cloudProvider) {
@@ -395,11 +426,23 @@
       _computeIsGenericCloudProvider: function(cloudProvider) {
         return cloudProvider === "generic";
       },
+      _computeInstallScriptStepNumber: function(isGenericCloudProvider) {
+        return isGenericCloudProvider ? 1 : 2;
+      },
+      _computePasteJsonStepNumber: function(installScriptStepNumber) {
+        return installScriptStepNumber + 1;
+      },
       _toggleAwsDropDown: function() {
         this._toggleDropDown(this.$.awsDropDown, this.$.awsDropDownIcon);
       },
-      _toggleGcpDropDown: function() {
-        this._toggleDropDown(this.$.gcpDropDown, this.$.gcpDropDownIcon);
+      _toggleGcpFirewallDropDown: function() {
+        this._toggleDropDown(this.$.gcpFirewallDropDown, this.$.gcpFirewallDropDownIcon);
+      },
+      _toggleGcpCreateServerDropDown: function() {
+        this._toggleDropDown(this.$.gcpCreateServerDropDown, this.$.gcpCreateServerDropDownIcon);
+      },
+      _toggleGcpCreateProjectDropDown: function() {
+        this._toggleDropDown(this.$.gcpCreateProjectDropDown, this.$.gcpCreateProjectDropDownIcon);
       },
       _toggleDropDown: function(dropDown, icon) {
         dropDown.toggle();
