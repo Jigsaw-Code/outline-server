@@ -785,10 +785,6 @@
     "message": "Keys",
     "description": "This string appears within the server view as the unit of a card that displays the number of server access keys."
   },
-  "server_my_access_key": {
-    "message": "My access key",
-    "description": "This string appears within the server view as the header for the default server access key. This key is meant to be used by the server administrator."
-  },
   "server_name": {
     "message": "Outline Server $SEVER_LOCATION$",
     "description": "This string appears within the server view and in the application drawer. It is the default name for a newly created server.",
