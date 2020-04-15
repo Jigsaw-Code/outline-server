@@ -85,22 +85,17 @@
         display: flex;
         justify-content: space-between;
       }
-      #copyButton {
+      .actionButton {
         color: #f1f2f3;
         background-color: #263238;
         width: 40%;
       }
-      #connectButton {
-        color: #f1f2f3;
-        background-color: #263238;
-        width: 40%;
-      }
-      #doneButton {
+      .doneButton {
         color: #009485;
         width: 20%;
       }
       paper-button {
-        padding: 1em 2em 1em 2em;
+        padding: 1em 2em;
       }
     </style>
     <paper-dialog id="dialog" modal>
@@ -132,9 +127,9 @@
         </ol>
       </div>
       <div id="button-row">
-        <paper-button id="copyButton" on-tap="copyClicked">[[localize('share-invite-copy')]]</paper-button>
-        <paper-button id="connectButton" on-tap="connectClicked">[[localize('server-connect-devices')]]</paper-button>
-        <paper-button id="doneButton" dialog-confirm>[[localize('done')]]</paper-button>
+        <paper-button class="actionButton" on-tap="copyClicked">[[localize('share-invite-copy')]]</paper-button>
+        <paper-button class="actionButton" on-tap="connectClicked">[[localize('server-connect-devices')]]</paper-button>
+        <paper-button class="doneButton" dialog-confirm>[[localize('done')]]</paper-button>
       </div>
       <div id="copyText" hidden>[[localize('share-invite-copied')]]</div>
     </paper-dialog>
