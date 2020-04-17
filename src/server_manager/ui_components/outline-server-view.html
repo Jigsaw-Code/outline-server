@@ -564,6 +564,12 @@
       </iron-pages>
     </div>
 
+    <outline-help-bubble id="getConnectedHelpBubble" vertical-align="bottom" horizontal-align="right">
+      <img src="images/connect-tip-2x.png" />
+      <h3>[[localize('server-help-connection-title')]]</h3>
+      <p>[[localize('server-help-connection-description')]]</p>
+      <paper-button on-tap="closeGetConnectedHelpBubble">[[localize('server-help-connection-ok')]]</paper-button>
+    </outline-help-bubble>
     <outline-help-bubble id="addAccessKeyHelpBubble" vertical-align="bottom" horizontal-align="left">
       <img src="images/key-tip-2x.png" />
       <h3>[[localize('server-help-access-key-title')]]</h3>
@@ -716,6 +722,10 @@
           input.focus();
         }, 0);
       },
+      _handleConnectPressed: function() {
+        this.$.getConnectedHelpBubble.hide();
+        this.fire("OpenGetConnectedDialogRequested", {accessKey: this.myConnection.accessUrl});
+      },
       _handleShareCodePressed: function(event) {
         const accessKey = event.model.item;
         this.fire("OpenShareDialogRequested", {accessKey: accessKey.accessUrl});
@@ -807,6 +817,7 @@
       _selectedTabChanged(selectedTab) {
         if (this.selectedTab === "settings") {
           this.closeAddAccessKeyHelpBubble();
+          this.closeGetConnectedHelpBubble();
           this.closeDataLimitsHelpBubble();
           this.$.serverSettings.update(this.serverName, this.metricsEnabled);
         }
@@ -815,6 +826,9 @@
       // is on the screen (e.g. selected in iron-pages). If help bubbles
       // are initialized before this point, setPosition will not work and
       // they will appear in the top left of the view.
+      showGetConnectedHelpBubble: function() {
+        return this._showHelpBubble("getConnectedHelpBubble", "accessKeysContainer");
+      },
       showAddAccessKeyHelpBubble: function() {
         return this._showHelpBubble("addAccessKeyHelpBubble", "addAccessKeyRow", "down", "left");
       },
@@ -823,6 +837,9 @@
       },
       closeAddAccessKeyHelpBubble: function() {
         this.$.addAccessKeyHelpBubble.hide();
+      },
+      closeGetConnectedHelpBubble: function() {
+        this.$.getConnectedHelpBubble.hide();
       },
       closeDataLimitsHelpBubble: function() {
         this.$.dataLimitsHelpBubble.hide();
