@@ -426,7 +426,7 @@
 
           <div class="access-key-list card-section">
             <!-- header row -->
-            <div class="access-key-row header-row" hidden$="{{!accessKeyRows.length}}">
+            <div class="access-key-row header-row" hidden$="[[!accessKeyRows.length]]">
               <span class="access-key-container" on-tap="_setSortByOrToggleDirection" data-sort-by="name">
                 [[localize('server-access-keys')]]
                 <iron-icon
