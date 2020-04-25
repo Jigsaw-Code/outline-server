@@ -514,7 +514,7 @@
       <paper-dialog id="getConnectedDialog" modal>
         <!-- iframe gets inserted here once we are given the invite URL. -->
         <div class="buttons">
-          <paper-button on-tap="closeGetConnectedDialog" autofocus>[[localize('close')]]</paper-button>
+          <paper-button id="closeGetConnectedButton" autofocus>[[localize('close')]]</paper-button>
         </div>
       </paper-dialog>
 
@@ -807,30 +807,6 @@
 
       openShareDialog(accessKey, s3Url) {
         this.$.shareDialog.open(accessKey, s3Url);
-      }
-
-      openGetConnectedDialog(inviteUrl) {
-        const dialog = this.$.getConnectedDialog;
-        if (dialog.children.length > 1) {
-          return; // The iframe is already loading.
-        }
-        // Reset the iframe's state, by replacing it with a newly constructed
-        // iframe. Unfortunately the location.reload API does not work in our case due to
-        // this Chrome error:
-        // "Blocked a frame with origin "outline://web_app" from accessing a cross-origin frame."
-        const iframe = document.createElement("iframe");
-        iframe.onload = function() {
-          dialog.open();
-        };
-        iframe.src = inviteUrl;
-        dialog.insertBefore(iframe, dialog.children[0]);
-      }
-
-      closeGetConnectedDialog() {
-        const dialog = this.$.getConnectedDialog;
-        dialog.close();
-        const oldIframe = dialog.children[0];
-        dialog.removeChild(oldIframe);
       }
 
       showMetricsDialogForNewServer() {
