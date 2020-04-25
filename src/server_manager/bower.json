@@ -23,7 +23,6 @@
     "iron-collapse": "PolymerElements/iron-collapse#^2.2.1",
     "iron-fit-behavior": "PolymerElements/iron-fit-behavior#^2.1.0",
     "iron-pages": "PolymerElements/iron-pages#^2.0.1",
-    "outline-i18n": "Jigsaw-Code/outline-i18n#^0.0.7",
     "paper-button": "PolymerElements/paper-button#^2.0.0",
     "paper-checkbox": "PolymerElements/paper-checkbox#^2.0.4",
     "paper-dialog": "PolymerElements/paper-dialog#^2.0.1",
