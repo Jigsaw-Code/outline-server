@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es6",
     "removeComments": false,
     "noImplicitAny": true,
     "noImplicitThis": true,
@@ -8,13 +8,6 @@
     "rootDir": "src",
     "outDir": "build/server_manager/web_app/js",
     "sourceMap": true,
-    "lib": [
-      "dom",
-      "es5",
-      "es2015.promise",
-      "es2015.iterable",
-      "es2016"
-    ]
   },
   "include": [
     "src/**/*.ts"
