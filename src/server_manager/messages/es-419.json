@@ -85,7 +85,7 @@
   "gcp-create-new-project": "{openLink}Crea un proyecto de Google Cloud nuevo{closeLink}.",
   "gcp-create-new-vm": "{openLink}Crea una instancia de VM nueva{closeLink}.",
   "gcp-create-project": "Crea un proyecto de Google Cloud",
-  "gcp-create-server": "Crea tu proyecto de Google Cloud",
+  "gcp-create-server": "Crea tu servidor de Google Cloud",
   "gcp-create-vm": "Crea una instancia de VM",
   "gcp-firewall-create-0": "{openLink}Agrega una nueva regla de firewall{closeLink} a tu proyecto de Compute Engine.",
   "gcp-firewall-create-1": "Ingresa \"Outline\" en el campo \"Nombre\".",
@@ -218,7 +218,7 @@
   "share-title": "Compartir acceso",
   "survey-data-limits-title": "Ayúdanos a comprender cómo podemos mejorar los límites de datos",
   "survey-decline": "Rechazar",
-  "survey-disclaimer": "Si haces clic en \"Continuar\" (Continue), se te enviará una breve encuesta en Formularios de Google. Te recomendamos que la realices mientras estés conectado a Outline.",
+  "survey-disclaimer": "Si haces clic en \"Continuar\", se te enviará una breve encuesta en Formularios de Google. Te recomendamos que la realices mientras estés conectado a Outline.",
   "survey-go-to-survey": "Ir a la encuesta",
   "terms-of-service": "Leí y comprendí las {openLink}Condiciones del Servicio de Outline{closeLink}"
 }
