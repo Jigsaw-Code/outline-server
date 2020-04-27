@@ -417,6 +417,10 @@
     "message": "Outline Server Installation Failed",
     "description": "This string appears in the feedback dialog as a header. The feedback dialog gets automatically displayed with this header when a server installation fails."
   },
+  "gcp_click_create": {
+    "message": "Click 'Create'.",
+    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'Create' should be translated and included untranslated in parentheses."
+  },
   "gcp_create_new_project": {
     "message": "$START_OF_LINK$Create a new Google Cloud Project$END_OF_LINK$.",
     "description": "This string appears in the server setup view as a card header for creating a new Google Cloud project",
@@ -480,10 +484,6 @@
   "gcp_firewall_create_4": {
     "message": "Select 'Allow all' under 'Protocols and ports'.",
     "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'Allow all' and 'Protocols and ports' should be translated and included untranslated in parentheses."
-  },
-  "gcp_firewall_create_5": {
-    "message": "Click 'Create'.",
-    "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'Create' should be translated and included untranslated in parentheses."
   },
   "gcp_name_your_project": {
     "message": "Name your project in the 'Project name' field.",
