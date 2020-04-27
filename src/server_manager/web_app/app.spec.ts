@@ -257,13 +257,29 @@ enum AppRootScreen {
   DIALOG
 }
 
+class FakeElement {
+  addEventListener(event: string, handler: Function) {}
+  querySelector(query: string) {
+    return new FakeElement();
+  }
+}
+
+class FakeShareDialogElement implements polymer.Base {
+  is = 'fake-share-dialog';
+  $ = {copyButton: new FakeElement()};
+}
+
 class FakePolymerAppRoot implements polymer.Base {
   events = new events.EventEmitter();
   backgroundScreen = AppRootScreen.NONE;
   currentScreen = AppRootScreen.NONE;
   serverView = {setServerTransferredData: () => {}, serverId: '', initHelpBubbles: () => {}};
   serverList: DisplayServer[] = [];
-  is: 'fake-polymer-app-root';
+  is = 'fake-polymer-app-root';
+  $ = {
+    shareDialog: new FakeShareDialogElement(),
+    getConnectedDialog: new FakeElement(),
+  };
 
   private setScreen(screenId: AppRootScreen) {
     this.currentScreen = screenId;
