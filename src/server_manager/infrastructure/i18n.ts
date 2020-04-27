@@ -14,14 +14,14 @@
 
 export class LanguageCode {
   private language: string;
-  private normalized: string;
+  private normalizedLanguage: string;
 
   constructor(languageCodeStr: string) {
     this.language = languageCodeStr;
-    this.normalized = languageCodeStr.toLowerCase();
+    this.normalizedLanguage = languageCodeStr.toLowerCase();
   }
   matches(other: LanguageCode): boolean {
-    return this.normalized === other.normalized;
+    return this.normalizedLanguage === other.normalizedLanguage;
   }
   string(): string {
     return this.language;

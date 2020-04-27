@@ -71,7 +71,7 @@ const SUPPORTED_LANGUAGES: {[key: string]: {id: string, dir: string}} = {
   'zh-TW': {id: 'zh-TW', dir: 'ltr'},
 };
 
-function languageToUse(): i18n.LanguageCode {
+function getLanguageToUse(): i18n.LanguageCode {
   const supportedLanguages = i18n.languageList(Object.keys(SUPPORTED_LANGUAGES));
   const defaultLanguage = new i18n.LanguageCode('en');
   const userLanguages = i18n.getBrowserLanguages();
@@ -104,17 +104,13 @@ document.addEventListener('WebComponentsReady', () => {
   };
 
   // Create and start the app.
-  const language = languageToUse();
+  const language = getLanguageToUse();
   const languageDirection = SUPPORTED_LANGUAGES[language.string()].dir;
   document.documentElement.setAttribute('dir', languageDirection);
-  const appRootEl = document.createElement('app-root');
-  appRootEl.setAttribute('language', language.string());
-  appRootEl.setAttribute('dir', languageDirection);
-  document.body.appendChild(appRootEl);
   // NOTE: this cast is safe and allows us to leverage Polymer typings since we haven't migrated to
   // Polymer 3, which adds typescript support.
-  // tslint:disable-next-line:no-any
-  const appRoot = appRootEl as unknown as polymer.Base;
+  const appRoot = document.getElementById('appRoot') as unknown as polymer.Base;
+  appRoot.setLanguage(language.string(), languageDirection);
   new App(
       appRoot, version, digitalocean_api.createDigitalOceanSession,
       digitalOceanServerRepositoryFactory, new ManualServerRepository('manualServers'),
