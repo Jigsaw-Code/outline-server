@@ -594,20 +594,23 @@
         };
       }
 
-      ready() {
-        super.ready();
-        const messagesUrl = `/messages/${this.language}.json`;
-        this.loadResources(messagesUrl, this.language);
-        const langDir = this.getAttribute("dir");
-        if (langDir === "rtl") {
-          this.$.appDrawer.align = "right";
-          this.$.sideBar.align = "right";
-        }
+      constructor() {
+        super();
         this.addEventListener("RegionSelected", this.handleRegionSelected);
         this.addEventListener("SetUpGenericCloudProviderRequested", this.handleSetUpGenericCloudProviderRequested);
         this.addEventListener("SetUpAwsRequested", this.handleSetUpAwsRequested);
         this.addEventListener("SetUpGcpRequested", this.handleSetUpGcpRequested);
         this.addEventListener("ManualServerEntryCancelled", this.handleManualCancelled);
+      }
+
+      setLanguage(newLanguage, langDir) {
+        const messagesUrl = `/messages/${newLanguage}.json`;
+        this.loadResources(messagesUrl, newLanguage);
+        if (langDir === "rtl") {
+          this.$.appDrawer.align = "right";
+          this.$.sideBar.align = "right";
+        }
+        this.language = newLanguage;
       }
 
       showIntro() {

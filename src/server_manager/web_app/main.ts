@@ -107,14 +107,10 @@ document.addEventListener('WebComponentsReady', () => {
   const language = getLanguageToUse();
   const languageDirection = SUPPORTED_LANGUAGES[language.string()].dir;
   document.documentElement.setAttribute('dir', languageDirection);
-  const appRootEl = document.createElement('app-root');
-  appRootEl.setAttribute('language', language.string());
-  appRootEl.setAttribute('dir', languageDirection);
-  document.body.appendChild(appRootEl);
   // NOTE: this cast is safe and allows us to leverage Polymer typings since we haven't migrated to
   // Polymer 3, which adds typescript support.
-  // tslint:disable-next-line:no-any
-  const appRoot = appRootEl as unknown as polymer.Base;
+  const appRoot = document.getElementById('appRoot') as unknown as polymer.Base;
+  appRoot.setLanguage(language.string(), languageDirection);
   new App(
       appRoot, version, digitalocean_api.createDigitalOceanSession,
       digitalOceanServerRepositoryFactory, new ManualServerRepository('manualServers'),
