@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as events from 'events';
+import {EventEmitter} from 'eventemitter3';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import {InMemoryStorage} from '../infrastructure/memory_storage';
@@ -258,7 +258,7 @@ enum AppRootScreen {
 }
 
 class FakePolymerAppRoot implements polymer.Base {
-  events = new events.EventEmitter();
+  events = new EventEmitter();
   backgroundScreen = AppRootScreen.NONE;
   currentScreen = AppRootScreen.NONE;
   serverView = {setServerTransferredData: () => {}, serverId: '', initHelpBubbles: () => {}};

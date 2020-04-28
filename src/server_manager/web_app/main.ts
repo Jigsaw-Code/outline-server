@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as url from 'url';
-
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as i18n from '../infrastructure/i18n';
 
@@ -79,23 +77,14 @@ function getLanguageToUse(): i18n.LanguageCode {
       .getBestSupportedLanguage(userLanguages);
 }
 
-function ensureString(queryParam: string|string[]): string {
-  if (Array.isArray(queryParam)) {
-    // We pick the last one if the parameter appears multiple times.
-    return queryParam[queryParam.length - 1];
-  } else {
-    return queryParam;
-  }
-}
-
 document.addEventListener('WebComponentsReady', () => {
   // Parse URL query params.
-  const queryParams = url.parse(document.URL, true).query;
-  const debugMode = ensureString(queryParams.outlineDebugMode) === 'true';
-  const metricsUrl = ensureString(queryParams.metricsUrl);
-  const shadowboxImage = ensureString(queryParams.image);
-  const version = ensureString(queryParams.version);
-  const sentryDsn = ensureString(queryParams.sentryDsn);
+  const params = new URL(document.URL).searchParams;
+  const debugMode = params.get('outlineDebugMode') === 'true';
+  const metricsUrl = params.get('metricsUrl');
+  const shadowboxImage = params.get('image');
+  const version = params.get('version');
+  const sentryDsn = params.get('sentryDsn');
 
   // Set DigitalOcean server repository parameters.
   const digitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) => {

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as sentry from '@sentry/electron';
-import * as events from 'events';
+import * as sentry from '@sentry/browser';
+import {EventEmitter} from 'eventemitter3';
 import * as semver from 'semver';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
@@ -480,7 +480,7 @@ export class App {
   // resolves with the servers present in the account.
   private enterDigitalOceanMode(accessToken: string): Promise<server.ManagedServer[]> {
     const doSession = this.createDigitalOceanSession(accessToken);
-    const authEvents = new events.EventEmitter();
+    const authEvents = new EventEmitter();
     let cancelled = false;
     let activatingAccount = false;
 
