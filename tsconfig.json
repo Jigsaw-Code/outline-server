@@ -4,9 +4,7 @@
     "removeComments": false,
     "noImplicitAny": true,
     "noImplicitThis": true,
-    // We must use commonjs because browserify doesn't support es2015 modules.
-    // TODO: Delete and add "moduleResolution: Node" once we move to webpack.
-    "module": "commonjs",
+    "moduleResolution": "Node",
     "rootDir": "src",
     "outDir": "build/server_manager/web_app/js",
     "sourceMap": true,
