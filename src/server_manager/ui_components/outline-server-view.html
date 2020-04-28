@@ -787,6 +787,7 @@
         this.totalInboundBytes = totalBytes;
       },
       updateAccessKeyRow(accessKeyId, fields) {
+        let newAccessKeyRow;
         if (accessKeyId === MY_CONNECTION_USER_ID) {
           newAccessKeyRow = Object.assign({}, this.get("myConnection"), fields);
           this.set("myConnection", newAccessKeyRow);

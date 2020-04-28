@@ -90,12 +90,12 @@ function ensureString(queryParam: string|string[]): string {
 
 document.addEventListener('WebComponentsReady', () => {
   // Parse URL query params.
-  const queryParams = url.parse(document.URL, true).query;
-  const debugMode = ensureString(queryParams.outlineDebugMode) === 'true';
-  const metricsUrl = ensureString(queryParams.metricsUrl);
-  const shadowboxImage = ensureString(queryParams.image);
-  const version = ensureString(queryParams.version);
-  const sentryDsn = ensureString(queryParams.sentryDsn);
+  const params = new URL(document.URL).searchParams;
+  const debugMode = params.get('outlineDebugMode') === 'true';
+  const metricsUrl = params.get('metricsUrl');
+  const shadowboxImage = params.get('image');
+  const version = params.get('version');
+  const sentryDsn = params.get('sentryDsn');
 
   // Set DigitalOcean server repository parameters.
   const digitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) => {

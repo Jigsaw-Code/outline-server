@@ -17,6 +17,7 @@
     }
   },
   "dependencies": {
+    "@sentry/browser": "^5.15.5",
     "@sentry/electron": "^0.8.1",
     "body-parser": "^1.18.3",
     "byte-size": "^6.2.0",
