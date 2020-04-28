@@ -79,15 +79,6 @@ function getLanguageToUse(): i18n.LanguageCode {
       .getBestSupportedLanguage(userLanguages);
 }
 
-function ensureString(queryParam: string|string[]): string {
-  if (Array.isArray(queryParam)) {
-    // We pick the last one if the parameter appears multiple times.
-    return queryParam[queryParam.length - 1];
-  } else {
-    return queryParam;
-  }
-}
-
 document.addEventListener('WebComponentsReady', () => {
   // Parse URL query params.
   const params = new URL(document.URL).searchParams;
