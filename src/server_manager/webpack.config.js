@@ -14,6 +14,7 @@
 
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
+const webpack = require('webpack');
 
 const config = {
   mode: 'production',
@@ -35,6 +36,10 @@ const config = {
   },
   resolve: {extensions: ['.tsx', '.ts', '.js']},
   plugins: [
+    // Hack to protect against @sentry/electron not having process.type defined.
+    new webpack.DefinePlugin({
+      'process.type': JSON.stringify('renderer'),
+    }),
     new CopyPlugin(
         [
           {from: 'bower_components', to: 'bower_components'},
