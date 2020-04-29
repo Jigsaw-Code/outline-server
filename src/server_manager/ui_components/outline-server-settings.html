@@ -353,7 +353,7 @@
       properties: {
         isServerManaged: Boolean,
         serverName: String,
-        metricsEnabled: {type: Boolean, observer: "_metricsEnabledChanged"},
+        metricsEnabled: {type: Boolean, value: null, observer: "_metricsEnabledChanged"},
         // Initialize to null so we can use the hidden attribute, which does not work well with undefined values.
         serverId: {type: String, value: null},
         serverHostname: {type: String, value: null},
@@ -373,10 +373,9 @@
         localize: {type: Function, readonly: true},
         shouldShowExperiments: {type: Boolean, computed: "_computeShouldShowExperiments(supportsAccessKeyDataLimit)"},
       },
-      update: function(name, metricsEnabled) {
+      update: function(name) {
         this.initialName = name;
         this.name = name;
-        this.metricsEnabled = metricsEnabled;
       },
       _handleNameInputKeyDown: function(event) {
         if (event.key === "Escape") {
@@ -398,7 +397,13 @@
         }
       },
       _metricsEnabledChanged: function(newMetricsEnabled, oldMetricsEnabled) {
-        if (oldMetricsEnabled === undefined || newMetricsEnabled === undefined) {
+        // metricsEnabled is initialized to null to avoid firing the first time it is set.
+        if (
+          oldMetricsEnabled === undefined ||
+          newMetricsEnabled === undefined ||
+          oldMetricsEnabled === null ||
+          newMetricsEnabled === null
+        ) {
           return;
         }
         // Fire signal if metrics changed.
