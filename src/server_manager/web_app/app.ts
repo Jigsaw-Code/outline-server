@@ -25,7 +25,9 @@ import {Surveys} from '../model/survey';
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
+import {GetConnectedApp} from './get_connected_app';
 import {parseManualServerConfig} from './management_urls';
+import {ShareDialogApp} from './share_dialog_app';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -144,6 +146,9 @@ export class App {
       private displayServerRepository: DisplayServerRepository,
       private digitalOceanTokenManager: TokenManager, private surveys: Surveys) {
     appRoot.setAttribute('outline-version', this.version);
+
+    const shareApp = new ShareDialogApp(appRoot.$.shareDialog);
+    const getConnectedApp = new GetConnectedApp(appRoot.$.getConnectedDialog);
 
     appRoot.addEventListener('ConnectToDigitalOcean', (event: CustomEvent) => {
       this.connectToDigitalOcean();
@@ -271,12 +276,11 @@ export class App {
     });
 
     appRoot.addEventListener('OpenShareDialogRequested', (event: CustomEvent) => {
-      const accessKey = event.detail.accessKey;
-      this.appRoot.openShareDialog(accessKey, this.getS3InviteUrl(accessKey));
+      shareApp.start(event.detail.accessKey, this.getS3InviteUrl(event.detail.accessKey));
     });
 
     appRoot.addEventListener('OpenGetConnectedDialogRequested', (event: CustomEvent) => {
-      this.appRoot.openGetConnectedDialog(this.getS3InviteUrl(event.detail.accessKey, true));
+      getConnectedApp.start(this.getS3InviteUrl(event.detail.accessKey, true));
     });
 
     appRoot.addEventListener('ShowServerRequested', (event: CustomEvent) => {

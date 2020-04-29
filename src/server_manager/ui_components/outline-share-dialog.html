@@ -120,7 +120,7 @@
         </ol>
       </div>
       <div id="button-row">
-        <paper-button id="copyButton" on-tap="copyClicked">[[localize('share-invite-copy')]]</paper-button>
+        <paper-button id="copyButton">[[localize('share-invite-copy')]]</paper-button>
         <paper-button id="doneButton" dialog-confirm>[[localize('done')]]</paper-button>
       </div>
       <div id="copyText" hidden>[[localize('share-invite-copied')]]</div>
@@ -129,27 +129,16 @@
   <script>
     // TODO(alalama): add a language selector. This should be a separate instance of Polymer.AppLocalizeBehavior
     // so the app language is not changed. Consider refactoring l10n into a separate Polymer behavior.
-    Polymer({
-      is: "outline-share-dialog",
-      properties: {
-        localize: {type: Function, readonly: true},
-      },
-      created: function() {
-        this.clipboard = require("clipboard-polyfill");
-      },
-      open: function(acessKey, s3Url) {
-        this.acessKey = acessKey;
-        this.s3Url = s3Url;
-        this.$.copyText.setAttribute("hidden", true);
-        this.$.dialog.open();
-      },
-      copyClicked: function() {
-        var dt = new this.clipboard.DT();
-        dt.setData("text/plain", this.$.selectableText.innerText);
-        dt.setData("text/html", this.$.selectableText.innerHTML);
-        this.clipboard.write(dt);
-        this.$.copyText.removeAttribute("hidden");
-      },
-    });
+    class ShareDialog extends Polymer.Element {
+      static get is() {
+        return "outline-share-dialog";
+      }
+      static get properties() {
+        return {
+          localize: {type: Function, readonly: true},
+        };
+      }
+    }
+    customElements.define(ShareDialog.is, ShareDialog);
   </script>
 </dom-module>
