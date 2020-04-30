@@ -1,4 +1,4 @@
-<!--
+/*
   Copyright 2018 The Outline Authors
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +12,19 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
--->
+*/
+/*
+  FIXME(polymer-modulizer): the above comments were extracted
+  from HTML and may be out of place here. Review them and
+  then delete this comment!
+*/
+import '@polymer/polymer/polymer-legacy.js';
 
-<link rel="import" href="../bower_components/polymer/polymer.html" />
-<link rel="import" href="../bower_components/iron-fit-behavior/iron-fit-behavior.html" />
-
-<dom-module id="outline-help-bubble">
-  <template>
+import {IronFitBehavior} from '@polymer/iron-fit-behavior/iron-fit-behavior.js';
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
+import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+Polymer({
+  _template: html`
     <style include="cloud-install-styles"></style>
     <style>
       :host {
@@ -123,49 +129,48 @@
     <div class="upArrowWrapper"><div class="upArrow"></div></div>
     <div class="downArrowWrapper"><div class="downArrow"></div></div>
     <div class="helpContent"><slot></slot></div>
-  </template>
-  <script>
-    Polymer({
-      is: "outline-help-bubble",
-      behaviors: [
-        // Take all behaviors from IronFitBehavior, used for positioning relative
-        // to .positionTarget.
-        Polymer.IronFitBehavior,
-      ],
-      ready: function() {
-        // Prevent help bubble from overlapping with it's positionTarget.
-        this.setAttribute("no-overlap", true);
+`,
 
-        // Help bubble should default to hidden until show is called.
-        this.setAttribute("hidden", true);
-      },
-      show: function(positionTarget, arrowDirection, leftOrRightOffset) {
-        this.removeAttribute("hidden");
+  is: 'outline-help-bubble',
 
-        // Set arrow direction.
-        this.classList.add("showArrow-" + arrowDirection);
+  behaviors: [
+    IronFitBehavior,
+  ],
 
-        // Apply left or right offset to arrow, e.g. display an up-pointing
-        // arrow on the top right.
-        const isUpOrDown = arrowDirection === "up" || arrowDirection === "down";
-        if (isUpOrDown && (leftOrRightOffset === "left" || leftOrRightOffset === "right")) {
-          this.classList.add("offset-" + leftOrRightOffset);
-        }
+  ready: function() {
+    // Prevent help bubble from overlapping with it's positionTarget.
+    this.setAttribute('no-overlap', true);
 
-        // Position the help bubble.
-        this.positionTarget = positionTarget;
-        this.refit();
+    // Help bubble should default to hidden until show is called.
+    this.setAttribute('hidden', true);
+  },
 
-        // Listen to scroll and resize events so the help bubble can reposition if needed.
-        window.addEventListener("scroll", this.refit.bind(this));
-        window.addEventListener("resize", this.refit.bind(this));
-      },
-      hide: function() {
-        this.setAttribute("hidden", true);
-        window.removeEventListener("scroll", this.refit.bind(this));
-        window.removeEventListener("resize", this.refit.bind(this));
-        this.fire("outline-help-bubble-dismissed");
-      },
-    });
-  </script>
-</dom-module>
+  show: function(positionTarget, arrowDirection, leftOrRightOffset) {
+    this.removeAttribute('hidden');
+
+    // Set arrow direction.
+    this.classList.add('showArrow-' + arrowDirection);
+
+    // Apply left or right offset to arrow, e.g. display an up-pointing
+    // arrow on the top right.
+    const isUpOrDown = arrowDirection === 'up' || arrowDirection === 'down';
+    if (isUpOrDown && (leftOrRightOffset === 'left' || leftOrRightOffset === 'right')) {
+      this.classList.add('offset-' + leftOrRightOffset);
+    }
+
+    // Position the help bubble.
+    this.positionTarget = positionTarget;
+    this.refit();
+
+    // Listen to scroll and resize events so the help bubble can reposition if needed.
+    window.addEventListener('scroll', this.refit.bind(this));
+    window.addEventListener('resize', this.refit.bind(this));
+  },
+
+  hide: function() {
+    this.setAttribute('hidden', true);
+    window.removeEventListener('scroll', this.refit.bind(this));
+    window.removeEventListener('resize', this.refit.bind(this));
+    this.fire('outline-help-bubble-dismissed');
+  }
+});

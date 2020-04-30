@@ -1,4 +1,4 @@
-<!--
+/*
   Copyright 2018 The Outline Authors
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +12,22 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
--->
-<link rel="import" href="../bower_components/polymer/polymer.html" />
-<link rel="import" href="../bower_components/paper-button/paper-button.html" />
-<link rel="import" href="./cloud-install-styles.html" />
-<link rel="import" href="./outline-step-view.html" />
-<link rel="import" href="./style.css" />
+*/
+/*
+  FIXME(polymer-modulizer): the above comments were extracted
+  from HTML and may be out of place here. Review them and
+  then delete this comment!
+*/
+import '@polymer/polymer/polymer-legacy.js';
 
-<dom-module id="outline-intro-step">
-  <template>
+import '@polymer/paper-button/paper-button.js';
+import './cloud-install-styles.js';
+import './outline-step-view.js';
+import './style.css';
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
+import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+Polymer({
+  _template: html`
     <style include="cloud-install-styles"></style>
     <style>
       :host {
@@ -54,7 +61,7 @@
         cursor: pointer;
         box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.02), 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
       }
-      /* Card shadows (common to all cards).` */
+      /* Card shadows (common to all cards).\` */
       .card:hover {
         box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2), 0 4px 5px 0 rgba(0, 0, 0, 0.1), 0 1px 10px 0 rgba(0, 0, 0, 0.2);
       }
@@ -178,38 +185,34 @@
       <div class="container">
         <div id="digital-ocean" class="card" on-tap="connectToDigitalOceanTapped">
           <div class="card-header">
-            <div class="tag" hidden$="{{isSignedInToDigitalOcean}}">[[localize('setup-recommended')]]</div>
-            <div class="email" hidden$="{{!isSignedInToDigitalOcean}}">{{digitalOceanEmail}}</div>
-            <img src="images/do_white_logo.svg" />
+            <div class="tag" hidden\$="{{isSignedInToDigitalOcean}}">[[localize('setup-recommended')]]</div>
+            <div class="email" hidden\$="{{!isSignedInToDigitalOcean}}">{{digitalOceanEmail}}</div>
+            <img src="images/do_white_logo.svg">
           </div>
           <div class="card-title">DigitalOcean</div>
           <div class="card-body">
             <div class="description">
-              <ul hidden$="{{isSignedInToDigitalOcean}}">
+              <ul hidden\$="{{isSignedInToDigitalOcean}}">
                 <li>[[localize('setup-do-easiest')]]</li>
                 <li>[[localize('setup-do-cost')]]</li>
                 <li>[[localize('setup-do-data')]]</li>
                 <li>[[localize('setup-do-cancel')]]</li>
               </ul>
-              <p hidden$="{{!isSignedInToDigitalOcean}}">
+              <p hidden\$="{{!isSignedInToDigitalOcean}}">
                 [[localize('setup-do-create')]]
               </p>
             </div>
           </div>
           <div class="card-footer">
-            <paper-button class="primary" hidden$="{{isSignedInToDigitalOcean}}"
-              >[[localize('setup-action')]]</paper-button
-            >
-            <paper-button class="primary" hidden$="{{!isSignedInToDigitalOcean}}"
-              >[[localize('setup-create')]]</paper-button
-            >
+            <paper-button class="primary" hidden\$="{{isSignedInToDigitalOcean}}">[[localize('setup-action')]]</paper-button>
+            <paper-button class="primary" hidden\$="{{!isSignedInToDigitalOcean}}">[[localize('setup-create')]]</paper-button>
           </div>
         </div>
 
         <div id="gcp" class="card" on-tap="setUpGcpTapped">
           <div class="card-header">
             <div class="tag">[[localize('setup-advanced')]]</div>
-            <img src="images/gcp-logo.svg" />
+            <img src="images/gcp-logo.svg">
           </div>
           <div class="card-title">Google Cloud Platform</div>
           <div class="card-body">
@@ -229,7 +232,7 @@
         <div id="aws" class="card" on-tap="setUpAwsTapped">
           <div class="card-header">
             <div class="tag">[[localize('setup-advanced')]]</div>
-            <img src="images/aws-logo.svg" />
+            <img src="images/aws-logo.svg">
           </div>
           <div class="card-title">Amazon Lightsail</div>
           <div class="card-body">
@@ -249,7 +252,7 @@
         <div id="manual-server" class="card" on-tap="setUpGenericCloudProviderTapped">
           <div class="card-header">
             <div class="tag">[[localize('setup-advanced')]]</div>
-            <img src="images/cloud.svg" />
+            <img src="images/cloud.svg">
           </div>
           <div class="card-title">[[localize('setup-anywhere')]]</div>
           <div class="card-body">
@@ -266,30 +269,32 @@
         </div>
       </div>
     </outline-step-view>
-  </template>
-  <script>
-    Polymer({
-      is: "outline-intro-step",
-      properties: {
-        isSignedInToDigitalOcean: Boolean,
-        digitalOceanEmail: String,
-        localize: {
-          type: Function,
-          readonly: true,
-        },
-      },
-      connectToDigitalOceanTapped: function() {
-        this.fire("ConnectToDigitalOcean");
-      },
-      setUpGenericCloudProviderTapped: function() {
-        this.fire("SetUpGenericCloudProviderRequested");
-      },
-      setUpAwsTapped: function() {
-        this.fire("SetUpAwsRequested");
-      },
-      setUpGcpTapped: function() {
-        this.fire("SetUpGcpRequested");
-      },
-    });
-  </script>
-</dom-module>
+`,
+
+  is: 'outline-intro-step',
+
+  properties: {
+    isSignedInToDigitalOcean: Boolean,
+    digitalOceanEmail: String,
+    localize: {
+      type: Function,
+      readonly: true,
+    },
+  },
+
+  connectToDigitalOceanTapped: function() {
+    this.fire('ConnectToDigitalOcean');
+  },
+
+  setUpGenericCloudProviderTapped: function() {
+    this.fire('SetUpGenericCloudProviderRequested');
+  },
+
+  setUpAwsTapped: function() {
+    this.fire('SetUpAwsRequested');
+  },
+
+  setUpGcpTapped: function() {
+    this.fire('SetUpGcpRequested');
+  }
+});

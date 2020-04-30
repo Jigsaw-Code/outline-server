@@ -1,4 +1,4 @@
-<!--
+/*
   Copyright 2018 The Outline Authors
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +12,17 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
--->
+*/
+/*
+  FIXME(polymer-modulizer): the above comments were extracted
+  from HTML and may be out of place here. Review them and
+  then delete this comment!
+*/
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
 
-<dom-module id="outline-tos-view">
-  <template>
+import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+Polymer({
+  _template: html`
     <style include="cloud-install-styles"></style>
     <style>
       :host {
@@ -49,32 +56,29 @@
       }
     </style>
     <div class="container">
-      <img id="logo" src="images/launcher-icon.png" />
+      <img id="logo" src="images/launcher-icon.png">
     </div>
     <div id="tos">
-      <span
-        inner-h-t-m-l="[[localize('terms-of-service', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html>', 'closeLink', '</a>')]]"
-      ></span>
+      <span inner-h-t-m-l="[[localize('terms-of-service', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html>', 'closeLink', '</a>')]]"></span>
       <paper-button on-tap="acceptTermsOfService">[[localize('okay')]]</paper-button>
     </div>
-  </template>
-  <script>
-    Polymer({
-      is: "outline-tos-view",
-      properties: {
-        hasAcceptedTermsOfService: {
-          type: Boolean,
-          value: false,
-          notify: true,
-        },
-        localize: {
-          type: Function,
-          readonly: true,
-        },
-      },
-      acceptTermsOfService: function() {
-        this.hasAcceptedTermsOfService = true;
-      },
-    });
-  </script>
-</dom-module>
+`,
+
+  is: 'outline-tos-view',
+
+  properties: {
+    hasAcceptedTermsOfService: {
+      type: Boolean,
+      value: false,
+      notify: true,
+    },
+    localize: {
+      type: Function,
+      readonly: true,
+    },
+  },
+
+  acceptTermsOfService: function() {
+    this.hasAcceptedTermsOfService = true;
+  }
+});

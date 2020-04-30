@@ -1,4 +1,4 @@
-<!--
+/*
   Copyright 2018 The Outline Authors
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +12,20 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
--->
-<link rel="import" href="../bower_components/polymer/polymer.html" />
+*/
+/* This is similar to the client's, except this spins endlessly and does not
+support different connection states */
+/*
+  FIXME(polymer-modulizer): the above comments were extracted
+  from HTML and may be out of place here. Review them and
+  then delete this comment!
+*/
+import '@polymer/polymer/polymer-legacy.js';
 
-<!-- This is similar to the client's, except this spins endlessly and does not
-support different connection states -->
-<dom-module id="outline-progress-spinner">
-  <template>
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
+import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+Polymer({
+  _template: html`
     <style>
       @-webkit-keyframes rotating {
         from {
@@ -69,14 +76,11 @@ support different connection states -->
       }
     </style>
     <div id="container">
-      <img id="lg" src="images/connected_large.png" />
-      <img id="md" src="images/connected_large.png" />
-      <img id="sm" src="images/connected_large.png" />
+      <img id="lg" src="images/connected_large.png">
+      <img id="md" src="images/connected_large.png">
+      <img id="sm" src="images/connected_large.png">
     </div>
-  </template>
-  <script>
-    Polymer({
-      is: "outline-progress-spinner",
-    });
-  </script>
-</dom-module>
+`,
+
+  is: 'outline-progress-spinner'
+});

@@ -22,7 +22,6 @@ readonly OUT_DIR=$BUILD_DIR/server_manager/web_app
 rm -rf $OUT_DIR
 
 # Create do_install_script.ts, which has a variable with the content of do_install_server.sh.
-mkdir -p $OUT_DIR/ts/server_manager/web_app
 mkdir -p $OUT_DIR/sh/server_manager/web_app
 
 pushd $ROOT_DIR/src/server_manager/install_scripts > /dev/null
@@ -31,7 +30,6 @@ popd > /dev/null
 
 # Node.js on Cygwin doesn't like absolute Unix-style paths.
 # So, we'll use relative paths for a few steps such as Browserify.
-
 pushd $ROOT_DIR > /dev/null
 node src/server_manager/install_scripts/build_install_script_ts.node.js \
     build/server_manager/web_app/sh/server_manager/web_app/scripts.tgz > $ROOT_DIR/src/server_manager/install_scripts/do_install_script.ts
@@ -43,13 +41,6 @@ mkdir -p $STATIC_DIR
 # Build main.js
 # TODO(fortuna): Have different production and development builds.
 webpack --mode=development --config=$ROOT_DIR/src/server_manager/webpack.config.js
-
-# Browserify node_modules/ (just a couple of key NPMs) and app.
-# TODO(fortuna): Use polymer-webpack-loader instead.
-pushd $OUT_DIR > /dev/null
-mkdir -p browserified/server_manager/web_app
-$NODE_MODULES_BIN_DIR/browserify --require byte-size --require clipboard-polyfill -o $STATIC_DIR/node_modules.js
-popd > /dev/null
 
 # Generate CSS rules to mirror the UI in RTL languages.
 # TODO(fortuna): Move this to a Webpack loader.

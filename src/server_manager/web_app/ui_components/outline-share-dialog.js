@@ -1,4 +1,4 @@
-<!--
+/*
   Copyright 2018 The Outline Authors
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,12 +12,24 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
--->
-<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html" />
-<link rel="import" href="../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html" />
+*/
+/*
+  FIXME(polymer-modulizer): the above comments were extracted
+  from HTML and may be out of place here. Review them and
+  then delete this comment!
+*/
+import '@polymer/paper-dialog/paper-dialog.js';
 
-<dom-module id="outline-share-dialog">
-  <template>
+import '@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
+import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import * as clipboard from 'clipboard-polyfill';
+
+// TODO(alalama): add a language selector. This should be a separate instance of
+// Polymer.AppLocalizeBehavior so the app language is not changed. Consider refactoring l10n into a
+// separate Polymer behavior.
+Polymer({
+  _template: html`
     <style include="cloud-install-styles"></style>
     <style>
       :host {
@@ -93,17 +105,15 @@
         position: absolute;
       }
     </style>
-    <paper-dialog id="dialog" modal>
+    <paper-dialog id="dialog" modal="">
       <div id="dialog-header">
         <h3>[[localize('share-title')]]</h3>
-        <p
-          inner-h-t-m-l="[[localize('share-description', 'openLink', '<a href=https://securityplanner.org/#/all-recommendations>', 'closeLink', '</a>')]]"
-        ></p>
+        <p inner-h-t-m-l="[[localize('share-description', 'openLink', '<a href=https://securityplanner.org/#/all-recommendations>', 'closeLink', '</a>')]]"></p>
       </div>
-      <div contenteditable id="selectableText" style="-webkit-text-size-adjust: 100%;">
+      <div contenteditable="" id="selectableText" style="-webkit-text-size-adjust: 100%;">
         <p>[[localize('share-invite')]]</p>
 
-        <p><a href$="{{s3Url}}">{{s3Url}}</a></p>
+        <p><a href\$="{{s3Url}}">{{s3Url}}</a></p>
         <p>-----</p>
         <p>[[localize('share-invite-trouble')]]</p>
         <ol>
@@ -113,43 +123,36 @@
           </li>
           <li>
             [[localize('share-invite-instructions')]]
-            <a href="https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md"
-              >https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md</a
-            >
+            <a href="https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md">https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md</a>
           </li>
         </ol>
       </div>
       <div id="button-row">
         <paper-button id="copyButton" on-tap="copyClicked">[[localize('share-invite-copy')]]</paper-button>
-        <paper-button id="doneButton" dialog-confirm>[[localize('done')]]</paper-button>
+        <paper-button id="doneButton" dialog-confirm="">[[localize('done')]]</paper-button>
       </div>
-      <div id="copyText" hidden>[[localize('share-invite-copied')]]</div>
+      <div id="copyText" hidden="">[[localize('share-invite-copied')]]</div>
     </paper-dialog>
-  </template>
-  <script>
-    // TODO(alalama): add a language selector. This should be a separate instance of Polymer.AppLocalizeBehavior
-    // so the app language is not changed. Consider refactoring l10n into a separate Polymer behavior.
-    Polymer({
-      is: "outline-share-dialog",
-      properties: {
-        localize: {type: Function, readonly: true},
-      },
-      created: function() {
-        this.clipboard = require("clipboard-polyfill");
-      },
-      open: function(acessKey, s3Url) {
-        this.acessKey = acessKey;
-        this.s3Url = s3Url;
-        this.$.copyText.setAttribute("hidden", true);
-        this.$.dialog.open();
-      },
-      copyClicked: function() {
-        var dt = new this.clipboard.DT();
-        dt.setData("text/plain", this.$.selectableText.innerText);
-        dt.setData("text/html", this.$.selectableText.innerHTML);
-        this.clipboard.write(dt);
-        this.$.copyText.removeAttribute("hidden");
-      },
-    });
-  </script>
-</dom-module>
+`,
+
+  is: 'outline-share-dialog',
+
+  properties: {
+    localize: {type: Function, readonly: true},
+  },
+
+  open: function(acessKey, s3Url) {
+    this.acessKey = acessKey;
+    this.s3Url = s3Url;
+    this.$.copyText.setAttribute('hidden', true);
+    this.$.dialog.open();
+  },
+
+  copyClicked: function() {
+    var dt = new clipboard.DT();
+    dt.setData('text/plain', this.$.selectableText.innerText);
+    dt.setData('text/html', this.$.selectableText.innerHTML);
+    clipboard.write(dt);
+    this.$.copyText.removeAttribute('hidden');
+  }
+});

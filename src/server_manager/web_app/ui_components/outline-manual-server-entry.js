@@ -1,4 +1,4 @@
-<!--
+/*
   Copyright 2018 The Outline Authors
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,22 +12,31 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
--->
-<link rel="import" href="../bower_components/polymer/polymer.html" />
-<link rel="import" href="../bower_components/iron-collapse/iron-collapse.html" />
-<link rel="import" href="../bower_components/iron-icon/iron-icon.html" />
-<link rel="import" href="../bower_components/iron-icons/iron-icons.html" />
-<link rel="import" href="../bower_components/paper-button/paper-button.html" />
-<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html" />
-<link rel="import" href="../bower_components/paper-input/paper-textarea.html" />
-<link rel="import" href="../bower_components/paper-progress/paper-progress.html" />
-<link rel="import" href="./cloud-install-styles.html" />
-<link rel="import" href="./outline-cloud-instructions-view.html" />
-<link rel="import" href="./outline-step-view.html" />
-<link rel="import" href="./style.css" />
+*/
+/*
+  FIXME(polymer-modulizer): the above comments were extracted
+  from HTML and may be out of place here. Review them and
+  then delete this comment!
+*/
+import '@polymer/polymer/polymer-legacy.js';
+import '@polymer/iron-collapse/iron-collapse.js';
+import '@polymer/iron-icon/iron-icon.js';
+import '@polymer/iron-icons/iron-icons.js';
+import '@polymer/paper-button/paper-button.js';
+import '@polymer/paper-dialog/paper-dialog.js';
+import '@polymer/paper-input/paper-textarea.js';
+import '@polymer/paper-progress/paper-progress.js';
+import './cloud-install-styles.js';
+import './outline-cloud-instructions-view.js';
+import './outline-step-view.js';
+import './style.css';
 
-<dom-module id="outline-manual-server-entry">
-  <template>
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
+import {dom} from '@polymer/polymer/lib/legacy/polymer.dom.js';
+import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+
+Polymer({
+  _template: html`
     <style include="cloud-install-styles"></style>
     <style>
       :host {
@@ -173,45 +182,31 @@
 
       <div class="card">
         <!-- GCP -->
-        <div class="section" hidden$="[[!isCloudProviderGcp]]">
+        <div class="section" hidden\$="[[!isCloudProviderGcp]]">
           <div class="section-header">
             <!-- TODO(alalama): localize numbers  -->
             <span class="stepcircle">1</span>
             <div class="instructions">[[localize('gcp-create-server')]]</div>
             <div class="drop-down" on-tap="_toggleGcpCreateServerDropDown">
-              <img src="images/gcp-logo.svg" />
+              <img src="images/gcp-logo.svg">
               <span>[[localize('manual-server-instructions')]]</span>
               <iron-icon id="gcpCreateServerDropDownIcon" icon="arrow-drop-down"></iron-icon>
             </div>
           </div>
           <iron-collapse id="gcpCreateServerDropDown" class="instructions-collapse">
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view
-                title="[[localize('gcp-create-project')]]"
-                thumbnail-path="images/gcp-create-project-thumbnail.png"
-                image-path="images/gcp-create-project-screenshot.png"
-                localize="[[localize]]"
-              >
+              <outline-cloud-instructions-view title="[[localize('gcp-create-project')]]" thumbnail-path="images/gcp-create-project-thumbnail.png" image-path="images/gcp-create-project-screenshot.png" localize="[[localize]]">
                 <ol>
-                  <li
-                    inner-h-t-m-l="[[localize('gcp-create-new-project', 'openLink', '<a href=https://console.cloud.google.com/projectcreate>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
-                  ></li>
+                  <li inner-h-t-m-l="[[localize('gcp-create-new-project', 'openLink', '<a href=https://console.cloud.google.com/projectcreate>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
                   <li>[[localize('gcp-name-your-project')]]</li>
                   <li>[[localize('gcp-click-create')]]</li>
                 </ol>
               </outline-cloud-instructions-view>
             </div>
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view
-                title="[[localize('manual-server-create-firewall')]]"
-                thumbnail-path="images/gcp-thumbnail-1.png"
-                image-path="images/gcp-screenshot-1.png"
-                localize="[[localize]]"
-              >
+              <outline-cloud-instructions-view title="[[localize('manual-server-create-firewall')]]" thumbnail-path="images/gcp-thumbnail-1.png" image-path="images/gcp-screenshot-1.png" localize="[[localize]]">
                 <ol>
-                  <li
-                    inner-h-t-m-l="[[localize('gcp-firewall-create-0', 'openLink', '<a href=https://console.cloud.google.com/networking/firewalls/add>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
-                  ></li>
+                  <li inner-h-t-m-l="[[localize('gcp-firewall-create-0', 'openLink', '<a href=https://console.cloud.google.com/networking/firewalls/add>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
                   <li>[[localize('gcp-firewall-create-1')]]</li>
                   <li>[[localize('gcp-firewall-create-2')]]</li>
                   <li>[[localize('gcp-firewall-create-3')]]</li>
@@ -221,16 +216,9 @@
               </outline-cloud-instructions-view>
             </div>
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view
-                title="[[localize('gcp-create-vm')]]"
-                thumbnail-path="images/gcp-create-instance-thumbnail.png"
-                image-path="images/gcp-create-instance-screenshot.png"
-                localize="[[localize]]"
-              >
+              <outline-cloud-instructions-view title="[[localize('gcp-create-vm')]]" thumbnail-path="images/gcp-create-instance-thumbnail.png" image-path="images/gcp-create-instance-screenshot.png" localize="[[localize]]">
                 <ol>
-                  <li
-                    inner-h-t-m-l="[[localize('gcp-create-new-vm', 'openLink', '<a href=https://console.cloud.google.com/compute/instancesAdd>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
-                  ></li>
+                  <li inner-h-t-m-l="[[localize('gcp-create-new-vm', 'openLink', '<a href=https://console.cloud.google.com/compute/instancesAdd>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
                   <li>[[localize('gcp-type-outline-server')]]</li>
                   <li>[[localize('gcp-select-region')]]</li>
                   <li>[[localize('gcp-select-machine-type')]]</li>
@@ -243,30 +231,23 @@
           </iron-collapse>
         </div>
         <!-- AWS -->
-        <div class="section" hidden$="[[!isCloudProviderAws]]">
+        <div class="section" hidden\$="[[!isCloudProviderAws]]">
           <div class="section-header">
             <span class="stepcircle">1</span>
             <div class="instructions">
               [[localize('manual-server-firewall')]]
             </div>
             <div class="drop-down" on-tap="_toggleAwsDropDown">
-              <img id="aws-logo" src="images/aws-logo.svg" />
+              <img id="aws-logo" src="images/aws-logo.svg">
               <span>[[localize('manual-server-instructions')]]</span>
               <iron-icon id="awsDropDownIcon" icon="arrow-drop-down"></iron-icon>
             </div>
           </div>
           <iron-collapse id="awsDropDown" class="instructions-collapse">
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view
-                title="[[localize('manual-server-create-group')]]"
-                thumbnail-path="images/aws-lightsail-thumbnail-1.png"
-                image-path="images/aws-lightsail-screenshot-1.png"
-                localize="[[localize]]"
-              >
+              <outline-cloud-instructions-view title="[[localize('manual-server-create-group')]]" thumbnail-path="images/aws-lightsail-thumbnail-1.png" image-path="images/aws-lightsail-screenshot-1.png" localize="[[localize]]">
                 <ol>
-                  <li
-                    inner-h-t-m-l="[[localize('aws-lightsail-firewall-0', 'openLink', '<a href=https://lightsail.aws.amazon.com>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
-                  ></li>
+                  <li inner-h-t-m-l="[[localize('aws-lightsail-firewall-0', 'openLink', '<a href=https://lightsail.aws.amazon.com>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
                   <li>[[localize('aws-lightsail-firewall-1')]]</li>
                   <li>[[localize('aws-lightsail-firewall-2')]]</li>
                   <li>[[localize('aws-lightsail-firewall-3')]]</li>
@@ -287,7 +268,7 @@
           </div>
           <div class="section-content">
             <div id="command">
-              sudo bash -c "$(wget -qO-
+              sudo bash -c "\$(wget -qO-
               https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"
             </div>
           </div>
@@ -301,141 +282,144 @@
             </div>
           </div>
           <div class="section-content">
-            <paper-textarea
-              id="serverConfig"
-              type="text"
-              placeholder$="[[placeholderText]]"
-              class="code"
-              rows="4"
-              max-rows="4"
-              no-label-float
-              on-value-changed="onServerConfigChanged"
-            ></paper-textarea>
+            <paper-textarea id="serverConfig" type="text" placeholder\$="[[placeholderText]]" class="code" rows="4" max-rows="4" no-label-float="" on-value-changed="onServerConfigChanged"></paper-textarea>
           </div>
         </div>
         <div id="button-row">
           <paper-button id="cancelButton" on-tap="cancelTapped" class="secondary">[[localize('cancel')]]</paper-button>
-          <paper-button id="doneButton" on-tap="doneTapped" class="primary" disabled$="[[!enableDoneButton]]"
-            >[[localize('done')]]</paper-button
-          >
+          <paper-button id="doneButton" on-tap="doneTapped" class="primary" disabled\$="[[!enableDoneButton]]">[[localize('done')]]</paper-button>
         </div>
-        <paper-progress hidden$="[[!showConnection]]" indeterminate class="slow"></paper-progress>
+        <paper-progress hidden\$="[[!showConnection]]" indeterminate="" class="slow"></paper-progress>
       </div>
     </outline-step-view>
-  </template>
-  <script>
-    Polymer({
-      is: "outline-manual-server-entry",
-      properties: {
-        placeholderText: {
-          type: String,
-          value:
-            '{"apiUrl":"https://xxx.xxx.xxx.xxx:xxxxx/xxxxxxxxxxxxxxxxxxxxxx","certSha256":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}',
-        },
-        showConnection: Boolean,
-        cloudProvider: {
-          type: String,
-          value: "generic",
-        },
-        cloudProviderName: {
-          type: String,
-          computed: "_computeCloudProviderName(cloudProvider)",
-        },
-        isCloudProviderAws: {
-          type: Boolean,
-          computed: "_computeIsCloudProviderAws(cloudProvider)",
-        },
-        isCloudProviderGcp: {
-          type: Boolean,
-          computed: "_computeIsCloudProviderGcp(cloudProvider)",
-        },
-        isGenericCloudProvider: {
-          type: Boolean,
-          computed: "_computeIsGenericCloudProvider(cloudProvider)",
-        },
-        installScriptStepNumber: {
-          type: Number,
-          computed: "_computeInstallScriptStepNumber(isGenericCloudProvider)",
-        },
-        pasteJsonStepNumber: {
-          type: Number,
-          computed: "_computePasteJsonStepNumber(installScriptStepNumber)",
-        },
-        enableDoneButton: {
-          type: Boolean,
-          value: false,
-        },
-        localize: {
-          type: Function,
-          readonly: true,
-        },
-      },
-      doneTapped: function() {
-        this.showConnection = true;
-        this.fire("ManualServerEntered", {
-          userInput: this.$.serverConfig.value,
-        });
-      },
-      cancelTapped: function() {
-        this.fire("ManualServerEntryCancelled");
-      },
-      retryTapped: function() {
-        this.showConnection = false;
-        this.doneTapped();
-      },
-      clear: function() {
-        this.$.serverConfig.value = "";
-        this.showConnection = false;
-        for (const dropdown of Polymer.dom(this.root).querySelectorAll(".instructions-collapse")) {
-          dropdown.hide();
-        }
-      },
-      _computeCloudProviderName: function(cloudProvider) {
-        switch (cloudProvider) {
-          case "aws":
-            return "Amazon Web Services";
-          case "gcp":
-            return "Google Cloud Platform";
-          default:
-            return "";
-        }
-      },
-      _computeIsCloudProviderAws: function(cloudProvider) {
-        return cloudProvider === "aws";
-      },
-      _computeIsCloudProviderGcp: function(cloudProvider) {
-        return cloudProvider === "gcp";
-      },
-      _computeIsGenericCloudProvider: function(cloudProvider) {
-        return cloudProvider === "generic";
-      },
-      _computeInstallScriptStepNumber: function(isGenericCloudProvider) {
-        return isGenericCloudProvider ? 1 : 2;
-      },
-      _computePasteJsonStepNumber: function(installScriptStepNumber) {
-        return installScriptStepNumber + 1;
-      },
-      _toggleAwsDropDown: function() {
-        this._toggleDropDown(this.$.awsDropDown, this.$.awsDropDownIcon);
-      },
-      _toggleGcpFirewallDropDown: function() {
-        this._toggleDropDown(this.$.gcpFirewallDropDown, this.$.gcpFirewallDropDownIcon);
-      },
-      _toggleGcpCreateServerDropDown: function() {
-        this._toggleDropDown(this.$.gcpCreateServerDropDown, this.$.gcpCreateServerDropDownIcon);
-      },
-      _toggleGcpCreateProjectDropDown: function() {
-        this._toggleDropDown(this.$.gcpCreateProjectDropDown, this.$.gcpCreateProjectDropDownIcon);
-      },
-      _toggleDropDown: function(dropDown, icon) {
-        dropDown.toggle();
-        icon.icon = dropDown.opened ? "arrow-drop-up" : "arrow-drop-down";
-      },
-      onServerConfigChanged: function() {
-        this.fire("ManualServerEdited", {
-          userInput: this.$.serverConfig.value,
-        });
-      },
+`,
+
+  is: 'outline-manual-server-entry',
+
+  properties: {
+    placeholderText: {
+      type: String,
+      value:
+          '{"apiUrl":"https://xxx.xxx.xxx.xxx:xxxxx/xxxxxxxxxxxxxxxxxxxxxx","certSha256":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}',
+    },
+    showConnection: Boolean,
+    cloudProvider: {
+      type: String,
+      value: 'generic',
+    },
+    cloudProviderName: {
+      type: String,
+      computed: '_computeCloudProviderName(cloudProvider)',
+    },
+    isCloudProviderAws: {
+      type: Boolean,
+      computed: '_computeIsCloudProviderAws(cloudProvider)',
+    },
+    isCloudProviderGcp: {
+      type: Boolean,
+      computed: '_computeIsCloudProviderGcp(cloudProvider)',
+    },
+    isGenericCloudProvider: {
+      type: Boolean,
+      computed: '_computeIsGenericCloudProvider(cloudProvider)',
+    },
+    installScriptStepNumber: {
+      type: Number,
+      computed: '_computeInstallScriptStepNumber(isGenericCloudProvider)',
+    },
+    pasteJsonStepNumber: {
+      type: Number,
+      computed: '_computePasteJsonStepNumber(installScriptStepNumber)',
+    },
+    enableDoneButton: {
+      type: Boolean,
+      value: false,
+    },
+    localize: {
+      type: Function,
+      readonly: true,
+    },
+  },
+
+  doneTapped: function() {
+    this.showConnection = true;
+    this.fire('ManualServerEntered', {
+      userInput: this.$.serverConfig.value,
     });
-  </script>
-</dom-module>
+  },
+
+  cancelTapped: function() {
+    this.fire('ManualServerEntryCancelled');
+  },
+
+  retryTapped: function() {
+    this.showConnection = false;
+    this.doneTapped();
+  },
+
+  clear: function() {
+    this.$.serverConfig.value = '';
+    this.showConnection = false;
+    for (const dropdown of dom(this.root).querySelectorAll('.instructions-collapse')) {
+      dropdown.hide();
+    }
+  },
+
+  _computeCloudProviderName: function(cloudProvider) {
+    switch (cloudProvider) {
+      case 'aws':
+        return 'Amazon Web Services';
+      case 'gcp':
+        return 'Google Cloud Platform';
+      default:
+        return '';
+    }
+  },
+
+  _computeIsCloudProviderAws: function(cloudProvider) {
+    return cloudProvider === 'aws';
+  },
+
+  _computeIsCloudProviderGcp: function(cloudProvider) {
+    return cloudProvider === 'gcp';
+  },
+
+  _computeIsGenericCloudProvider: function(cloudProvider) {
+    return cloudProvider === 'generic';
+  },
+
+  _computeInstallScriptStepNumber: function(isGenericCloudProvider) {
+    return isGenericCloudProvider ? 1 : 2;
+  },
+
+  _computePasteJsonStepNumber: function(installScriptStepNumber) {
+    return installScriptStepNumber + 1;
+  },
+
+  _toggleAwsDropDown: function() {
+    this._toggleDropDown(this.$.awsDropDown, this.$.awsDropDownIcon);
+  },
+
+  _toggleGcpFirewallDropDown: function() {
+    this._toggleDropDown(this.$.gcpFirewallDropDown, this.$.gcpFirewallDropDownIcon);
+  },
+
+  _toggleGcpCreateServerDropDown: function() {
+    this._toggleDropDown(this.$.gcpCreateServerDropDown, this.$.gcpCreateServerDropDownIcon);
+  },
+
+  _toggleGcpCreateProjectDropDown: function() {
+    this._toggleDropDown(this.$.gcpCreateProjectDropDown, this.$.gcpCreateProjectDropDownIcon);
+  },
+
+  _toggleDropDown: function(dropDown, icon) {
+    dropDown.toggle();
+    icon.icon = dropDown.opened ? 'arrow-drop-up' : 'arrow-drop-down';
+  },
+
+  onServerConfigChanged: function() {
+    this.fire('ManualServerEdited', {
+      userInput: this.$.serverConfig.value,
+    });
+  }
+});
