@@ -40,9 +40,8 @@ popd > /dev/null
 readonly STATIC_DIR=$OUT_DIR/static
 mkdir -p $STATIC_DIR
 
-# Build main.js
-# TODO(fortuna): Have different production and development builds.
-webpack --mode=development --config=$ROOT_DIR/src/server_manager/webpack.config.js
+# Notice that we forward the build environment if defined
+webpack --config=$ROOT_DIR/src/server_manager/webpack.config.js ${BUILD_ENV:+--mode=${BUILD_ENV}}
 
 # Browserify node_modules/ (just a couple of key NPMs) and app.
 # TODO(fortuna): Use polymer-webpack-loader instead.
