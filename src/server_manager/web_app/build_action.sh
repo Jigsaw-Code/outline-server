@@ -30,24 +30,24 @@ tar --create --gzip -f $OUT_DIR/sh/server_manager/web_app/scripts.tgz *.sh
 popd > /dev/null
 
 # Node.js on Cygwin doesn't like absolute Unix-style paths.
-# So, we'll use relative paths for a few steps such as Browserify.
+# So, we'll use relative paths for webpack and browserify.
 
 pushd $ROOT_DIR > /dev/null
 node src/server_manager/install_scripts/build_install_script_ts.node.js \
     build/server_manager/web_app/sh/server_manager/web_app/scripts.tgz > $ROOT_DIR/src/server_manager/install_scripts/do_install_script.ts
+
+# Notice that we forward the build environment if defined.
+webpack --config=src/server_manager/webpack.config.js ${BUILD_ENV:+--mode=${BUILD_ENV}}
 popd > /dev/null
 
 readonly STATIC_DIR=$OUT_DIR/static
 mkdir -p $STATIC_DIR
 
-# Notice that we forward the build environment if defined
-webpack --config=$ROOT_DIR/src/server_manager/webpack.config.js ${BUILD_ENV:+--mode=${BUILD_ENV}}
-
 # Browserify node_modules/ (just a couple of key NPMs) and app.
 # TODO(fortuna): Use polymer-webpack-loader instead.
 pushd $OUT_DIR > /dev/null
 mkdir -p browserified/server_manager/web_app
-$NODE_MODULES_BIN_DIR/browserify --require byte-size --require clipboard-polyfill -o $STATIC_DIR/node_modules.js
+$NODE_MODULES_BIN_DIR/browserify --require byte-size --require clipboard-polyfill -o static/node_modules.js
 popd > /dev/null
 
 # Generate CSS rules to mirror the UI in RTL languages.
