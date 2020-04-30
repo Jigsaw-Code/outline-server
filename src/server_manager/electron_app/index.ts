@@ -21,7 +21,6 @@ import {URL, URLSearchParams} from 'url';
 
 import {LoadingWindow} from './loading_window';
 import * as menu from './menu';
-import {redactManagerUrl} from './util';
 
 const app = electron.app;
 const ipcMain = electron.ipcMain;
@@ -43,23 +42,11 @@ sentry.init({
   // Sentry provides a sensible default but we would prefer without the leading "outline-manager@".
   release: electron.app.getVersion(),
   maxBreadcrumbs: 100,
-  shouldAddBreadcrumb: (breadcrumb) => {
+  beforeBreadcrumb: (breadcrumb: sentry.Breadcrumb) => {
     // Don't submit breadcrumbs for console.debug.
     if (breadcrumb.category === 'console') {
       if (breadcrumb.level === sentry.Severity.Debug) {
-        return false;
-      }
-    }
-    return true;
-  },
-  beforeBreadcrumb: (breadcrumb) => {
-    // Redact PII from XHR requests.
-    if (breadcrumb.category === 'fetch' && breadcrumb.data && breadcrumb.data.url) {
-      try {
-        breadcrumb.data.url = `(redacted)/${redactManagerUrl(breadcrumb.data.url)}`;
-      } catch (e) {
-        // NOTE: cannot log this failure to console if console breadcrumbs are enabled
-        breadcrumb.data.url = `(error redacting)`;
+        return null;
       }
     }
     return breadcrumb;
