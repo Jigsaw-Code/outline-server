@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // Returns Sentry URL for DSN string or undefined if `sentryDsn` is falsy.
-// e.g. for DSN "https://[API_KEY]@[SUBDOMAIN]ingest.sentry.io/[PROJECT_ID]"
+// e.g. for DSN "https://[API_KEY]@[SUBDOMAIN].ingest.sentry.io/[PROJECT_ID]"
 // this will return
 // "https://[SUBDOMAIN].ingest.sentry.io/api/[PROJECT_ID]/store/?sentry_version=7&sentry_key=[API_KEY]"
 export function getSentryApiUrl(sentryDsn?: string): string|undefined {
