@@ -55,7 +55,8 @@
   },
   "comments": [
     "@types/node can't have a major version update due to typing changes in node 13.  Electron depends on ^12 and we get 13, which breaks us",
-    "Pin electron version (i.e. 7.0.1, not ~7.0.0) as a workaround for issue https://github.com/electron-userland/electron-builder/issues/4157"
+    "Pin electron version (i.e. 7.0.1, not ~7.0.0) as a workaround for issue https://github.com/electron-userland/electron-builder/issues/4157",
+    "The `resolutions` was created by polymer-modulizer. We should check if we still need them."
   ],
   "devDependencies": {
     "@types/node": "~12.0.0",
