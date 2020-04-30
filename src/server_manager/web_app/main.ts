@@ -14,6 +14,7 @@
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as i18n from '../infrastructure/i18n';
+import {getSentryApiUrl} from '../infrastructure/sentry';
 
 import {App, DATA_LIMITS_AVAILABILITY_DATE} from './app';
 import {DigitalOceanTokenManager} from './digitalocean_oauth';
@@ -110,14 +111,3 @@ document.addEventListener('WebComponentsReady', () => {
       .start();
 });
 
-// Returns Sentry URL for DSN string or undefined if `sentryDsn` is falsy.
-// e.g. for DSN "https://[API_KEY]@sentry.io/[PROJECT_ID]"
-// this will return
-// "https://sentry.io/api/[PROJECT_ID]/store/?sentry_version=7&sentry_key=[API_KEY]"
-function getSentryApiUrl(sentryDsn?: string): string|undefined {
-  if (!sentryDsn) {
-    return undefined;
-  }
-  const matches = sentryDsn.match(/https:\/\/(\S+)@sentry\.io\/(\d+)/);
-  return `https://sentry.io/api/${matches[2]}/store/?sentry_version=7&sentry_key=${matches[1]}`;
-}
