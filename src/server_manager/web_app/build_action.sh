@@ -37,24 +37,19 @@ node src/server_manager/install_scripts/build_install_script_ts.node.js \
     build/server_manager/web_app/sh/server_manager/web_app/scripts.tgz > $ROOT_DIR/src/server_manager/install_scripts/do_install_script.ts
 popd > /dev/null
 
-# Compile Typescript
-tsc
-
-# Browserify node_modules/ (just a couple of key NPMs) and app.
-pushd $OUT_DIR > /dev/null
-mkdir -p browserified/server_manager/web_app
-$NODE_MODULES_BIN_DIR/browserify --require byte-size --require clipboard-polyfill -o browserified/node_modules.js
-$NODE_MODULES_BIN_DIR/browserify js/server_manager/web_app/main.js -s main -o browserified/server_manager/web_app/main.js
-popd > /dev/null
-
-# Assemble the web app
 readonly STATIC_DIR=$OUT_DIR/static
 mkdir -p $STATIC_DIR
 
-# Copy built code
-cp -r $OUT_DIR/browserified/* $STATIC_DIR/
+# Notice that we forward the build environment if defined
+webpack --config=$ROOT_DIR/src/server_manager/webpack.config.js ${BUILD_ENV:+--mode=${BUILD_ENV}}
 
-# Copy static resources
-cp -r $ROOT_DIR/src/server_manager/{bower_components,ui_components,index.html,images,messages} $STATIC_DIR
+# Browserify node_modules/ (just a couple of key NPMs) and app.
+# TODO(fortuna): Use polymer-webpack-loader instead.
+pushd $OUT_DIR > /dev/null
+mkdir -p browserified/server_manager/web_app
+$NODE_MODULES_BIN_DIR/browserify --require byte-size --require clipboard-polyfill -o $STATIC_DIR/node_modules.js
+popd > /dev/null
+
 # Generate CSS rules to mirror the UI in RTL languages.
+# TODO(fortuna): Move this to a Webpack loader.
 node -e "require('./scripts/generate_rtl_css.js')('$STATIC_DIR/ui_components/*.html', '$STATIC_DIR/ui_components')"
