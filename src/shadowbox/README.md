@@ -21,6 +21,12 @@ sudo bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-
 
 Use `sudo --preserve-env` if you need to pass environment variables. Use `bash -x` if you need to debug the installation.
 
+You can retrieve access key in following location of docker container
+```
+cat /opt/outline/access.txt
+```
+
+
 ## Running from source code
 
 ### Prerequisites
