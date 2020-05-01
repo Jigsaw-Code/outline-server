@@ -13,36 +13,30 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-/* outline-validated-input
-  This is an input, with a cancel and a save button, which performs client-side validation and has
-  an event-based hook for server-side evaluation.
-
-  Attributes:
-    * editable: Is this input editable?  Default: false
-    * visible: Is this input visible?  Default: false
-    * label: The label for the input.  Default: null
-    * value: The initial value entered in the input.  SHOULD be a valid value.  Default: null
-    * allowed-pattern: Regex describing what inputs are allowed.  Users will be prevented from
-      entering inputs which don't follow the pattern.  Default: ".*"
-    * max-length: The number of characters allowed in the input.  Default: Number.POSITIVE_INFINITY
-    * client-side-validator: A function which takes a string and returns either an empty string on
-  success or an error message on failure.  This function will be called on every keystroke. Default:
-  () => ""
-    * event: The name of the event fired when the save button is tapped.  Passes the
-      current input value as "value" and the Polymer object as "ui".  The handler for this event
-      MUST call ui.setSavedState() or ui.setErrorState(message) depending on its result. Default:
-  null
-*/
-/*
-  FIXME(polymer-modulizer): the above comments were extracted
-  from HTML and may be out of place here. Review them and
-  then delete this comment!
-*/
 import './cloud-install-styles.js';
 
 import './outline-server-settings-styles.js';
 import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+
+// outline-validated-input
+// This is an input, with a cancel and a save button, which performs client-side validation and has
+// an event-based hook for server-side evaluation.
+//
+// Attributes:
+//   * editable: Is this input editable?  Default: false
+//   * visible: Is this input visible?  Default: false
+//   * label: The label for the input.  Default: null
+//   * value: The initial value entered in the input.  SHOULD be a valid value.  Default: null
+//   * allowed-pattern: Regex describing what inputs are allowed.  Users will be prevented from
+//       entering inputs which don't follow the pattern.  Default: ".*"
+//   * max-length: The number of characters allowed in the input.  Default: Number.POSITIVE_INFINITY
+//   * client-side-validator: A function which takes a string and returns either an empty string on
+//       success or an error message on failure.  This function will be called on every keystroke.
+//       Default: () => ""
+//   * event: The name of the event fired when the save button is tapped.  Passes the current input
+//       value as "value" and the Polymer object as "ui".  The handler for this event MUST call
+//       ui.setSavedState() or ui.setErrorState(message) depending on its result. Default: null
 Polymer({
   _template: html`
     <style include="cloud-install-styles"></style>

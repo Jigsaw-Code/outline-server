@@ -13,17 +13,13 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-/* This is similar to the client's, except this spins endlessly and does not
-support different connection states */
-/*
-  FIXME(polymer-modulizer): the above comments were extracted
-  from HTML and may be out of place here. Review them and
-  then delete this comment!
-*/
 import '@polymer/polymer/polymer-legacy.js';
 
 import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+
+// This is similar to the client's, except this spins endlessly and does not
+// support different connection states.
 Polymer({
   _template: html`
     <style>

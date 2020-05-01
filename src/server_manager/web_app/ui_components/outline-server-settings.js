@@ -13,11 +13,6 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-/*
-  FIXME(polymer-modulizer): the above comments were extracted
-  from HTML and may be out of place here. Review them and
-  then delete this comment!
-*/
 import '@polymer/polymer/polymer-legacy.js';
 
 import '@polymer/paper-button/paper-button.js';
@@ -30,6 +25,7 @@ import './outline-iconset.js';
 import './outline-validated-input.js';
 import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+
 Polymer({
   _template: html`
     <style include="cloud-install-styles"></style>

@@ -13,11 +13,6 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-/*
-  FIXME(polymer-modulizer): the above comments were extracted
-  from HTML and may be out of place here. Review them and
-  then delete this comment!
-*/
 import '@polymer/paper-dialog/paper-dialog.js';
 
 import '@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';

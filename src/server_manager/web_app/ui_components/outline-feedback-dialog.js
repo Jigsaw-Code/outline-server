@@ -13,23 +13,19 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-/* this is needed to fix the "KeyframeEffect is not defined"
-see https://github.com/PolymerElements/paper-swatch-picker/issues/36 */
-/*
-  FIXME(polymer-modulizer): the above comments were extracted
-  from HTML and may be out of place here. Review them and
-  then delete this comment!
-*/
 import '@polymer/paper-dialog/paper-dialog.js';
-
 import '@polymer/paper-dropdown-menu/paper-dropdown-menu.js';
 import '@polymer/paper-item/paper-item.js';
 import '@polymer/paper-listbox/paper-listbox.js';
 import '@polymer/paper-input/paper-input.js';
 import '@polymer/paper-input/paper-textarea.js';
+// This is needed to fix the "KeyframeEffect is not defined"
+// see https://github.com/PolymerElements/paper-swatch-picker/issues/36
 import 'web-animations-js/web-animations-next.min.js';
+
 import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+
 Polymer({
   _template: html`
     <style include="cloud-install-styles"></style>
