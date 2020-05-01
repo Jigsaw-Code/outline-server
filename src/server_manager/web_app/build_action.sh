@@ -29,17 +29,18 @@ tar --create --gzip -f $OUT_DIR/sh/server_manager/web_app/scripts.tgz *.sh
 popd > /dev/null
 
 # Node.js on Cygwin doesn't like absolute Unix-style paths.
-# So, we'll use relative paths for a few steps such as Browserify.
+# So, we'll use relative paths for webpack and browserify.
+
 pushd $ROOT_DIR > /dev/null
 node src/server_manager/install_scripts/build_install_script_ts.node.js \
     build/server_manager/web_app/sh/server_manager/web_app/scripts.tgz > $ROOT_DIR/src/server_manager/install_scripts/do_install_script.ts
-popd > /dev/null
 
 readonly STATIC_DIR=$OUT_DIR/static
 mkdir -p $STATIC_DIR
 
-# Notice that we forward the build environment if defined
-webpack --config=$ROOT_DIR/src/server_manager/webpack.config.js ${BUILD_ENV:+--mode=${BUILD_ENV}}
+# Notice that we forward the build environment if defined.
+webpack --config=src/server_manager/webpack.config.js ${BUILD_ENV:+--mode=${BUILD_ENV}}
+popd > /dev/null
 
 # Generate CSS rules to mirror the UI in RTL languages.
 # TODO(fortuna): Move this to a Webpack loader.
