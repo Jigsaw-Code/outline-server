@@ -27,21 +27,24 @@ import {redactManagerUrl} from './util';
 // Configure Sentry to redact PII from the renderer process requests.
 // For all other config see the main process.
 const params = new URL(document.URL).searchParams;
-sentry.init({
-  dsn: params.get('sentryDsn') || '',
-  beforeBreadcrumb: (breadcrumb: sentry.Breadcrumb) => {
-    // Redact PII from fetch requests.
-    if (breadcrumb.category === 'fetch' && breadcrumb.data && breadcrumb.data.url) {
-      try {
-        breadcrumb.data.url = `(redacted)/${redactManagerUrl(breadcrumb.data.url)}`;
-      } catch (e) {
-        // NOTE: cannot log this failure to console if console breadcrumbs are enabled
-        breadcrumb.data.url = `(error redacting)`;
+const sentryDsn = params.get('sentryDsn');
+if (sentryDsn) {
+  sentry.init({
+    dsn: sentryDsn,
+    beforeBreadcrumb: (breadcrumb: sentry.Breadcrumb) => {
+      // Redact PII from fetch requests.
+      if (breadcrumb.category === 'fetch' && breadcrumb.data && breadcrumb.data.url) {
+        try {
+          breadcrumb.data.url = `(redacted)/${redactManagerUrl(breadcrumb.data.url)}`;
+        } catch (e) {
+          // NOTE: cannot log this failure to console if console breadcrumbs are enabled
+          breadcrumb.data.url = `(error redacting)`;
+        }
       }
+      return breadcrumb;
     }
-    return breadcrumb;
-  }
-});
+  });
+}
 
 // tslint:disable-next-line:no-any
 (window as any).whitelistCertificate = (fingerprint: string) => {
