@@ -1,9 +1,9 @@
 {
-  "description": "Create and manage access to Outline servers",
-  "homepage": "https://getoutline.org/",
   "name": "outline-manager",
   "productName": "Outline Manager",
   "version": "1.5.1",
+  "description": "Create and manage access to Outline servers",
+  "homepage": "https://getoutline.org/",
   "author": {
     "name": "The Outline authors",
     "email": "info@getoutline.org"
