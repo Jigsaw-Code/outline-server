@@ -15,9 +15,9 @@
 */
 
 import '@polymer/iron-iconset-svg/iron-iconset-svg.js';
+import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 
-const $_documentContainer = document.createElement('template');
-$_documentContainer.innerHTML = `<iron-iconset-svg name="outline-iconset" size="24">
+const template = html`<iron-iconset-svg name="outline-iconset" size="24">
   <svg>
     <defs>
       <g id="outline">
@@ -38,4 +38,4 @@ $_documentContainer.innerHTML = `<iron-iconset-svg name="outline-iconset" size="
   </svg>
 </iron-iconset-svg>`;
 
-document.head.appendChild($_documentContainer.content);
+document.head.appendChild(template.content);
