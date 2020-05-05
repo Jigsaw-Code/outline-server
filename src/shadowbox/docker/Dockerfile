@@ -38,8 +38,15 @@ WORKDIR /root/shadowbox
 
 RUN mkdir bin && curl -SsL https://github.com/Jigsaw-Code/outline-ss-server/releases/download/v${SS_VERSION}/outline-ss-server_${SS_VERSION}_linux_x86_64.tar.gz | tar xz -C bin outline-ss-server
 COPY third_party/prometheus/prometheus ./bin/
-COPY src/shadowbox/package.json .
+COPY package.json .
 COPY yarn.lock .
+
+# Copy yarn workspace dependencies so `yarn install` can reference them.
+# Note that shadowbox app is already built and only depends on outline-metrics-server types.
+COPY src/metrics_server/index.ts ./src/metrics_server/
+COPY src/metrics_server/package.json ./src/metrics_server/
+COPY src/shadowbox/package.json ./src/shadowbox/
+
 # TODO: Replace with plain old "yarn" once the base image is fixed:
 #       https://github.com/nodejs/docker-node/pull/639
 RUN /opt/yarn-v$YARN_VERSION/bin/yarn install --prod
