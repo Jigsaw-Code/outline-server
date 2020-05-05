@@ -40,13 +40,7 @@ cp -r $BUILD_DIR/server_manager/web_app/static $STATIC_DIR/server_manager/web_ap
 cp $MODULE_DIR/loading.html $STATIC_DIR/server_manager/web_app/
 
 # Electron requires a package.json file for the app's name, etc.
-# We also need to install NPMs at this location for require()
-# in order for require() to work right in the renderer process, which
-# is loaded via a custom protocol.
 cp src/server_manager/package.json yarn.lock $STATIC_DIR
-cd $STATIC_DIR
-yarn install --prod --ignore-scripts
 
 # Icons.
-cd $ROOT_DIR
 electron-icon-maker --input=src/server_manager/images/launcher-icon.png --output=build/server_manager/electron_app/static

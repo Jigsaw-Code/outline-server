@@ -15,6 +15,7 @@
 import * as sentry from '@sentry/electron';
 import {EventEmitter} from 'eventemitter3';
 import * as semver from 'semver';
+import {DataLimit, DataUsageByAccessKey} from 'shadowbox';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
@@ -52,7 +53,7 @@ interface DisplayDataAmount {
   value: number;
 }
 
-function dataLimitToDisplayDataAmount(limit: server.DataLimit): DisplayDataAmount|null {
+function dataLimitToDisplayDataAmount(limit: DataLimit): DisplayDataAmount|null {
   if (!limit) {
     return null;
   }
@@ -63,7 +64,7 @@ function dataLimitToDisplayDataAmount(limit: server.DataLimit): DisplayDataAmoun
   return {value: Math.floor(bytes / (10 ** 6)), unit: 'MB'};
 }
 
-function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.DataLimit|null {
+function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): DataLimit|null {
   if (!dataAmount) {
     return null;
   }
@@ -78,7 +79,7 @@ function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.Dat
 // Compute the suggested data limit based on the server's transfer capacity and number of access
 // keys.
 async function computeDefaultAccessKeyDataLimit(
-    server: server.Server, accessKeys?: server.AccessKey[]): Promise<server.DataLimit> {
+    server: server.Server, accessKeys?: server.AccessKey[]): Promise<DataLimit> {
   try {
     // Assume non-managed servers have a data transfer capacity of 1TB.
     let serverTransferCapacity: server.DataAmount = {terabytes: 1};
@@ -1022,7 +1023,7 @@ export class App {
         });
   }
 
-  private async setAccessKeyDataLimit(limit: server.DataLimit) {
+  private async setAccessKeyDataLimit(limit: DataLimit) {
     if (!limit) {
       return;
     }

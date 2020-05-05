@@ -12,26 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export interface HourlyConnectionMetricsReport {
-  serverId: string;
-  startUtcMs: number;
-  endUtcMs: number;
-  userReports: HourlyUserConnectionMetricsReport[];
-}
+import {DataUsageByUser} from './model/metrics';
 
-export interface HourlyUserConnectionMetricsReport {
-  userId: string;
-  countries: string[];
-  bytesTransferred: number;
-}
+export {DataLimit} from './model/access_key';
 
-export interface DailyFeatureMetricsReport {
-  serverId: string;
-  serverVersion: string;
-  timestampUtcMs: number;
-  dataLimit: DailyDataLimitMetricsReport;
-}
-
-export interface DailyDataLimitMetricsReport {
-  enabled: boolean;
-}
+export type DataUsageByAccessKey = DataUsageByUser;

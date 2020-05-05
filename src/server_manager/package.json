@@ -28,7 +28,8 @@
     "jsonic": "^0.3.1",
     "node-forge": "^0.7.1",
     "request": "^2.87.0",
-    "request-lite": "^2.40.1"
+    "request-lite": "^2.40.1",
+    "shadowbox": "*"
   },
   "comments": [
     "@types/node can't have a major version update due to typing changes in node 13.  Electron depends on ^12 and we get 13, which breaks us",

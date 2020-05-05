@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {DataLimit, DataUsageByAccessKey} from 'shadowbox';
+
 import * as errors from '../infrastructure/errors';
 import * as server from '../model/server';
 
@@ -30,7 +32,7 @@ export interface ServerConfig {
   portForNewAccessKeys: number;
   hostnameForAccessKeys: string;
   version: string;
-  accessKeyDataLimit?: server.DataLimit;
+  accessKeyDataLimit?: DataLimit;
 }
 
 export class ShadowboxServer implements server.Server {
@@ -63,7 +65,7 @@ export class ShadowboxServer implements server.Server {
     return this.apiRequest<void>('access-keys/' + accessKeyId, {method: 'DELETE'});
   }
 
-  setAccessKeyDataLimit(limit: server.DataLimit): Promise<void> {
+  setAccessKeyDataLimit(limit: DataLimit): Promise<void> {
     console.info(`Setting access key data limit: ${JSON.stringify(limit)}`);
     const requestOptions = {
       method: 'PUT',
@@ -83,12 +85,12 @@ export class ShadowboxServer implements server.Server {
         });
   }
 
-  getAccessKeyDataLimit(): server.DataLimit|undefined {
+  getAccessKeyDataLimit(): DataLimit|undefined {
     return this.serverConfig.accessKeyDataLimit;
   }
 
-  getDataUsage(): Promise<server.DataUsageByAccessKey> {
-    return this.apiRequest<server.DataUsageByAccessKey>('metrics/transfer');
+  getDataUsage(): Promise<DataUsageByAccessKey> {
+    return this.apiRequest<DataUsageByAccessKey>('metrics/transfer');
   }
 
   getName(): string {

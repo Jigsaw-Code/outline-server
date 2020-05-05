@@ -50,7 +50,7 @@ export interface AccessKeyRepository {
   // Creates a new access key. Parameters are chosen automatically.
   createNewAccessKey(): Promise<AccessKey>;
   // Removes the access key given its id. Throws on failure.
-  removeAccessKey(id: AccessKeyId);
+  removeAccessKey(id: AccessKeyId): void;
   // Lists all existing access keys
   listAccessKeys(): AccessKey[];
   // Changes the port for new access keys.

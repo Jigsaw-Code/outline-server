@@ -13,9 +13,6 @@
 // limitations under the License.
 
 // Byte transfer metrics for a sliding timeframe, including both inbound and outbound.
-// TODO: this is copied at src/model/server.ts.  Both copies should
-// be kept in sync, until we can find a way to share code between the web_app
-// and shadowbox.
 export interface DataUsageByUser {
   // The userId key should be of type AccessKeyId, however that results in the tsc
   // error TS1023: An index signature parameter type must be 'string' or 'number'.
@@ -25,4 +22,6 @@ export interface DataUsageByUser {
 }
 
 // Sliding time frame for measuring data utilization.
-export interface DataUsageTimeframe { hours: number; }
+export interface DataUsageTimeframe {
+  hours: number;
+}

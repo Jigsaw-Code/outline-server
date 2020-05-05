@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {DataLimit, DataUsageByAccessKey} from 'shadowbox';
+
 export interface Server {
   // Get the server's name for display.
   getName(): string;
@@ -166,23 +168,4 @@ export interface AccessKey {
   id: AccessKeyId;
   name: string;
   accessUrl: string;
-}
-
-// Byte transfer stats for the past 30 days, including both inbound and outbound.
-// TODO: this is copied at src/shadowbox/model/metrics.ts.  Both copies should
-// be kept in sync, until we can find a way to share code between the web_app
-// and shadowbox.
-export interface DataUsageByAccessKey {
-  // The accessKeyId should be of type AccessKeyId, however that results in the tsc
-  // error TS1023: An index signature parameter type must be 'string' or 'number'.
-  // See https://github.com/Microsoft/TypeScript/issues/2491
-  // TODO: this still says "UserId", changing to "AccessKeyId" will require
-  // a change on the shadowbox server.
-  bytesTransferredByUserId: {[accessKeyId: string]: number};
-}
-
-// Data transfer allowance, measured in bytes.
-// NOTE: Must be kept in sync with the definition in src/shadowbox/access_key.ts.
-export interface DataLimit {
-  readonly bytes: number;
 }

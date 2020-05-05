@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import {EventEmitter} from 'eventemitter3';
+import {DataLimit, DataUsageByAccessKey} from 'shadowbox';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import {InMemoryStorage} from '../infrastructure/memory_storage';
@@ -385,13 +386,13 @@ class FakeServer implements server.Server {
   setPortForNewAccessKeys(): Promise<void> {
     return Promise.reject(new Error('FakeServer.setPortForNewAccessKeys not implemented'));
   }
-  setAccessKeyDataLimit(limit: server.DataLimit): Promise<void> {
+  setAccessKeyDataLimit(limit: DataLimit): Promise<void> {
     return Promise.reject(new Error('FakeServer.setAccessKeyDataLimit not implemented'));
   }
   removeAccessKeyDataLimit(): Promise<void> {
     return Promise.resolve();
   }
-  getAccessKeyDataLimit(): server.DataLimit|undefined {
+  getAccessKeyDataLimit(): DataLimit|undefined {
     return undefined;
   }
 }

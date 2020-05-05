@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {DailyFeatureMetricsReport, HourlyConnectionMetricsReport} from 'outline-metrics-server';
+
 import {ManualClock} from '../infrastructure/clock';
 import {InMemoryConfig} from '../infrastructure/json_config';
 import {AccessKeyId} from '../model/access_key';
 import {version} from '../package.json';
 
 import {ServerConfigJson} from './server_config';
-import {DailyFeatureMetricsReportJson, HourlyServerMetricsReportJson, KeyUsage, MetricsCollectorClient, OutlineSharedMetricsPublisher, UsageMetrics} from './shared_metrics';
+import {KeyUsage, MetricsCollectorClient, OutlineSharedMetricsPublisher, UsageMetrics} from './shared_metrics';
 
 describe('OutlineSharedMetricsPublisher', () => {
   describe('Enable/Disable', () => {
@@ -172,8 +174,8 @@ describe('OutlineSharedMetricsPublisher', () => {
 });
 
 class FakeMetricsCollector implements MetricsCollectorClient {
-  public collectedServerUsageReport: HourlyServerMetricsReportJson;
-  public collectedFeatureMetricsReport: DailyFeatureMetricsReportJson;
+  public collectedServerUsageReport: HourlyConnectionMetricsReport;
+  public collectedFeatureMetricsReport: DailyFeatureMetricsReport;
 
   async collectServerUsageMetrics(report) {
     this.collectedServerUsageReport = report;
