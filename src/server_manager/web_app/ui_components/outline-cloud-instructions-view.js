@@ -1,4 +1,4 @@
-<!--
+/*
   Copyright 2018 The Outline Authors
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +12,15 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
--->
-<link rel="import" href="../bower_components/polymer/polymer.html" />
-<link rel="import" href="../bower_components/iron-icons/iron-icons.html" />
-<link rel="import" href="../bower_components/paper-button/paper-button.html" />
+*/
+import '@polymer/polymer/polymer-legacy.js';
 
-<dom-module id="outline-cloud-instructions-view">
-  <template>
+import '@polymer/iron-icons/iron-icons.js';
+import '@polymer/paper-button/paper-button.js';
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
+import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+Polymer({
+  _template: html`
     <style include="cloud-install-styles">
       :host {
       }
@@ -81,25 +83,24 @@
       <div class="thumbnail overlay" on-tap="_openImage">
         <iron-icon icon="open-in-new"></iron-icon>
       </div>
-      <img class="thumbnail" src$="[[thumbnailPath]]" />
+      <img class="thumbnail" src\$="[[thumbnailPath]]">
       <div class="instructions">
         <slot></slot>
       </div>
     </div>
-  </template>
-  <script>
-    Polymer({
-      is: "outline-cloud-instructions-view",
-      properties: {
-        title: String,
-        imagePath: String,
-        thumbnailPath: String,
-        instructions: Array,
-        localize: {type: Function, readonly: true},
-      },
-      _openImage: function() {
-        this.fire("OpenImageRequested", {imagePath: this.imagePath});
-      },
-    });
-  </script>
-</dom-module>
+`,
+
+  is: 'outline-cloud-instructions-view',
+
+  properties: {
+    title: String,
+    imagePath: String,
+    thumbnailPath: String,
+    instructions: Array,
+    localize: {type: Function, readonly: true},
+  },
+
+  _openImage: function() {
+    this.fire('OpenImageRequested', {imagePath: this.imagePath});
+  }
+});

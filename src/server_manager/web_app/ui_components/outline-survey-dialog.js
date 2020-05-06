@@ -1,4 +1,4 @@
-<!--
+/*
   Copyright 2020 The Outline Authors
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,17 +12,20 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
--->
+*/
+import '@polymer/neon-animation/animations/slide-down-animation.js';
+import '@polymer/neon-animation/animations/slide-from-bottom-animation.js';
+import '@polymer/paper-button/paper-button.js';
+import '@polymer/paper-dialog/paper-dialog.js';
 
-<link rel="import" href="../bower_components/neon-animation/animations/slide-down-animation.html" />
-<link rel="import" href="../bower_components/neon-animation/animations/slide-from-bottom-animation.html" />
-<link rel="import" href="../bower_components/paper-button/paper-button.html" />
-<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html" />
-<link rel="import" href="../bower_components/polymer/polymer-element.html" />
-<link rel="import" href="../bower_components/polymer/lib/mixins/dir-mixin.html" />
+import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
+import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import {PolymerElement} from '@polymer/polymer/polymer-element.js';
 
-<dom-module id="outline-survey-dialog">
-  <template>
+class OutlineSurveyDialog extends DirMixin
+(PolymerElement) {
+  static get template() {
+    return html`
     <style include="cloud-install-styles"></style>
     <style>
       :host {
@@ -72,57 +75,49 @@
         line-height: 14px;
       }
     </style>
-    <paper-dialog
-      id="dialog"
-      vertical-align="bottom"
-      no-cancel-on-outside-click
-      entry-animation="slide-from-bottom-animation"
-      exit-animation="slide-down-animation"
-    >
+    <paper-dialog id="dialog" vertical-align="bottom" no-cancel-on-outside-click="" entry-animation="slide-from-bottom-animation" exit-animation="slide-down-animation">
       <div id="container">
-        <img id="outlineLogo" src="images/manager-profile-2x.png" />
+        <img id="outlineLogo" src="images/manager-profile-2x.png">
         <div id="content">
           <h3>[[title]]</h3>
           <div id="button-container">
-            <paper-button dialog-dismiss noink>
+            <paper-button dialog-dismiss="" noink="">
               [[localize('survey-decline')]]
             </paper-button>
-            <paper-button dialog-confirm autofocus noink>
+            <paper-button dialog-confirm="" autofocus="" noink="">
               <a href="[[surveyLink]]">[[localize('survey-go-to-survey')]]</a>
             </paper-button>
           </div>
         </div>
       </div>
       <div id="disclaimer">
-        <hr />
+        <hr>
         <p>[[localize('survey-disclaimer')]]</p>
       </div>
     </paper-dialog>
-  </template>
-  <script>
-    class OutlineSurveyDialog extends Polymer.DirMixin(Polymer.Element) {
-      static get is() {
-        return "outline-survey-dialog";
-      }
+`;
+  }
 
-      static get properties() {
-        return {
-          localize: {
-            type: Function,
-            readonly: true,
-          },
-          surveyLink: String,
-          title: String,
-        };
-      }
+  static get is() {
+    return 'outline-survey-dialog';
+  }
 
-      open(title, surveyLink) {
-        this.title = title;
-        this.surveyLink = surveyLink;
-        this.$.dialog.horizontalAlign = this.dir === "ltr" ? "left" : "right";
-        this.$.dialog.open();
-      }
-    }
-    customElements.define(OutlineSurveyDialog.is, OutlineSurveyDialog);
-  </script>
-</dom-module>
+  static get properties() {
+    return {
+      localize: {
+        type: Function,
+        readonly: true,
+      },
+      surveyLink: String,
+      title: String,
+    };
+  }
+
+  open(title, surveyLink) {
+    this.title = title;
+    this.surveyLink = surveyLink;
+    this.$.dialog.horizontalAlign = this.dir === 'ltr' ? 'left' : 'right';
+    this.$.dialog.open();
+  }
+}
+customElements.define(OutlineSurveyDialog.is, OutlineSurveyDialog);

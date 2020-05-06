@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import './ui_components/app-root.js';
+
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as i18n from '../infrastructure/i18n';
 import {getSentryApiUrl} from '../infrastructure/sentry';
