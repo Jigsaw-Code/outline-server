@@ -18,8 +18,8 @@ const rtl = require('postcss-rtl');
 const CSS_PROCESSOR = postcss([rtl()]);
 
 function processCss(css) {
-  return CSS_PROCESSOR.process(css)
-      .css.replace(/\[dir=rtl\]/g, ':host(:dir(rtl))')
+  return CSS_PROCESSOR.process(css).css
+      .replace(/\[dir=rtl\]/g, ':host(:dir(rtl))')
       .replace(/\[dir=ltr\]/g, ':host(:dir(ltr))')
       .replace(/\[dir\]/g, '');
 }
