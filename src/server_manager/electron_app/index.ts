@@ -35,10 +35,8 @@ const IMAGES_BASENAME =
     `${path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), 'server_manager', 'web_app')}`;
 
 const sentryDsn = process.env.SENTRY_DSN;
-
 if (sentryDsn) {
   sentry.init({
-    // Error reporting is a no-op when `sentryDsn` is undefined.
     dsn: sentryDsn,
     // Sentry provides a sensible default but we would prefer without the leading
     // "outline-manager@".
