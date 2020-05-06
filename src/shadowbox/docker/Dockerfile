@@ -42,7 +42,6 @@ COPY package.json .
 COPY yarn.lock .
 
 # Copy yarn workspace dependencies so `yarn install` can reference them.
-# Note that shadowbox app is already built and only depends on outline-metrics-server types.
 COPY src/metrics_server/index.ts ./src/metrics_server/
 COPY src/metrics_server/package.json ./src/metrics_server/
 COPY src/shadowbox/package.json ./src/shadowbox/
