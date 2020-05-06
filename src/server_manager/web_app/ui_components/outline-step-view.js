@@ -1,4 +1,4 @@
-<!--
+/*
   Copyright 2018 The Outline Authors
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +12,13 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
--->
-<link rel="import" href="../bower_components/polymer/polymer.html" />
+*/
+import '@polymer/polymer/polymer-legacy.js';
 
-<dom-module id="outline-step-view">
-  <template>
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
+import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+Polymer({
+  _template: html`
     <style include="cloud-install-styles">
       :host {
         display: block;
@@ -61,20 +63,18 @@
           <div class="step-title"><slot name="step-title"></slot></div>
           <div class="step-description"><slot name="step-description"></slot></div>
         </div>
-        <div class="step-action" hidden$="[[!displayAction]]"><slot name="step-action"></slot></div>
+        <div class="step-action" hidden\$="[[!displayAction]]"><slot name="step-action"></slot></div>
       </div>
       <slot></slot>
     </div>
-  </template>
-  <script>
-    Polymer({
-      is: "outline-step-view",
-      properties: {
-        displayAction: {
-          type: Boolean,
-          value: false,
-        },
-      },
-    });
-  </script>
-</dom-module>
+`,
+
+  is: 'outline-step-view',
+
+  properties: {
+    displayAction: {
+      type: Boolean,
+      value: false,
+    },
+  }
+});

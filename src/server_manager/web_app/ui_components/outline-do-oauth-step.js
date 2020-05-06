@@ -1,4 +1,4 @@
-<!--
+/*
   Copyright 2018 The Outline Authors
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +12,16 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
--->
-<link rel="import" href="../bower_components/polymer/polymer.html" />
-<link rel="import" href="../bower_components/iron-pages/iron-pages.html" />
-<link rel="import" href="./cloud-install-styles.html" />
-<link rel="import" href="./outline-step-view.html" />
+*/
+import '@polymer/polymer/polymer-legacy.js';
 
-<dom-module id="outline-do-oauth-step">
-  <template>
+import '@polymer/iron-pages/iron-pages.js';
+import './cloud-install-styles.js';
+import './outline-step-view.js';
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
+import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+Polymer({
+  _template: html`
     <style include="cloud-install-styles">
       :host {
       }
@@ -81,7 +83,7 @@
         <span slot="step-description">[[localize('oauth-connect-description')]]</span>
         <paper-card class="card">
           <div class="container">
-            <img src="images/digital_ocean_logo.svg" />
+            <img src="images/digital_ocean_logo.svg">
             <p>[[localize('oauth-connect-tag')]]</p>
           </div>
           <paper-button on-tap="_cancelTapped">[[localize('cancel')]]</paper-button>
@@ -93,7 +95,7 @@
         <span slot="step-description">[[localize('oauth-verify')]]</span>
         <paper-card class="card">
           <div class="container">
-            <img class="mirror" src="images/do_oauth_email.svg" />
+            <img class="mirror" src="images/do_oauth_email.svg">
             <p>[[localize('oauth-verify-tag')]]</p>
           </div>
           <paper-button on-tap="_cancelTapped">[[localize('oauth-sign-out')]]</paper-button>
@@ -105,7 +107,7 @@
         <span slot="step-description">[[localize('oauth-billing')]]</span>
         <paper-card class="card">
           <div class="container">
-            <img class="mirror" src="images/do_oauth_billing.svg" />
+            <img class="mirror" src="images/do_oauth_billing.svg">
             <p>[[localize('oauth-billing-tag')]]</p>
           </div>
           <paper-button on-tap="_cancelTapped">[[localize('oauth-sign-out')]]</paper-button>
@@ -117,49 +119,52 @@
         <span slot="step-description">[[localize('oauth-account-active')]]</span>
         <paper-card class="card">
           <div class="container">
-            <img class="mirror" src="images/do_oauth_done.svg" />
+            <img class="mirror" src="images/do_oauth_done.svg">
             <p>[[localize('oauth-account-active-tag')]]</p>
           </div>
-          <paper-button disabled>[[localize('oauth-sign-out')]]</paper-button>
+          <paper-button disabled="">[[localize('oauth-sign-out')]]</paper-button>
         </paper-card>
       </outline-step-view>
     </iron-pages>
-  </template>
-  <script>
-    Polymer({
-      is: "outline-do-oauth-step",
-      properties: {
-        currentPage: {
-          type: String,
-          value: "connectAccount",
-        },
-        cancelButtonText: {
-          type: String,
-          value: "Cancel",
-        },
-        localize: {
-          type: Function,
-          readonly: true,
-        },
-        onCancel: Function,
-      },
-      _cancelTapped: function() {
-        if (this.onCancel) {
-          this.onCancel();
-        }
-      },
-      showEmailVerification: function() {
-        this.currentPage = "verifyEmail";
-      },
-      showBilling: function() {
-        this.currentPage = "enterBilling";
-      },
-      showAccountActive: function() {
-        this.currentPage = "accountActive";
-      },
-      showConnectAccount: function() {
-        this.currentPage = "connectAccount";
-      },
-    });
-  </script>
-</dom-module>
+`,
+
+  is: 'outline-do-oauth-step',
+
+  properties: {
+    currentPage: {
+      type: String,
+      value: 'connectAccount',
+    },
+    cancelButtonText: {
+      type: String,
+      value: 'Cancel',
+    },
+    localize: {
+      type: Function,
+      readonly: true,
+    },
+    onCancel: Function,
+  },
+
+  _cancelTapped: function() {
+    if (this.onCancel) {
+      this.onCancel();
+    }
+  },
+
+  showEmailVerification: function() {
+    this.currentPage = 'verifyEmail';
+  },
+
+  showBilling: function() {
+    this.currentPage = 'enterBilling';
+  },
+
+  showAccountActive: function() {
+    this.currentPage = 'accountActive';
+  },
+
+  showConnectAccount: function() {
+    this.currentPage = 'connectAccount';
+  }
+});

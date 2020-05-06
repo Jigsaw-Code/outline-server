@@ -22,7 +22,6 @@ readonly OUT_DIR=$BUILD_DIR/server_manager/web_app
 rm -rf $OUT_DIR
 
 # Create do_install_script.ts, which has a variable with the content of do_install_server.sh.
-mkdir -p $OUT_DIR/ts/server_manager/web_app
 mkdir -p $OUT_DIR/sh/server_manager/web_app
 
 pushd $ROOT_DIR/src/server_manager/install_scripts > /dev/null
@@ -36,20 +35,9 @@ pushd $ROOT_DIR > /dev/null
 node src/server_manager/install_scripts/build_install_script_ts.node.js \
     build/server_manager/web_app/sh/server_manager/web_app/scripts.tgz > $ROOT_DIR/src/server_manager/install_scripts/do_install_script.ts
 
-# Notice that we forward the build environment if defined.
-webpack --config=src/server_manager/webpack.config.js ${BUILD_ENV:+--mode=${BUILD_ENV}}
-popd > /dev/null
-
 readonly STATIC_DIR=$OUT_DIR/static
 mkdir -p $STATIC_DIR
 
-# Browserify node_modules/ (just a couple of key NPMs) and app.
-# TODO(fortuna): Use polymer-webpack-loader instead.
-pushd $OUT_DIR > /dev/null
-mkdir -p browserified/server_manager/web_app
-$NODE_MODULES_BIN_DIR/browserify --require byte-size --require clipboard-polyfill -o static/node_modules.js
+# Notice that we forward the build environment if defined.
+webpack --config=src/server_manager/webpack.config.js ${BUILD_ENV:+--mode=${BUILD_ENV}}
 popd > /dev/null
-
-# Generate CSS rules to mirror the UI in RTL languages.
-# TODO(fortuna): Move this to a Webpack loader.
-node -e "require('./scripts/generate_rtl_css.js')('$STATIC_DIR/ui_components/*.html', '$STATIC_DIR/ui_components')"

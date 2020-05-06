@@ -53,6 +53,7 @@ if (sentryDsn) {
     }
   });
 }
+
 // To clearly identify app restarts in Sentry.
 console.info(`Outline Manager is starting`);
 

@@ -1,4 +1,4 @@
-<!--
+/*
   Copyright 2018 The Outline Authors
 
   Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +12,15 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
--->
-<link rel="import" href="../bower_components/polymer/polymer.html" />
-<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html" />
+*/
+import '@polymer/polymer/polymer-legacy.js';
 
-<link rel="import" href="./cloud-install-styles.html" />
-
-<dom-module id="outline-about-dialog">
-  <template>
+import '@polymer/paper-dialog/paper-dialog.js';
+import './cloud-install-styles.js';
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
+import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+Polymer({
+  _template: html`
     <style include="cloud-install-styles">
       #dialog {
         width: 80%;
@@ -58,37 +59,33 @@
       }
     </style>
 
-    <paper-dialog id="dialog" modal>
+    <paper-dialog id="dialog" modal="">
       <div>
-        <img id="outlineLogo" src="images/manager-about-logo2x.png" />
+        <img id="outlineLogo" src="images/manager-about-logo2x.png">
       </div>
       <p id="version" inner-h-t-m-l="[[localize('about-version', 'version', outlineVersion)]]"></p>
-      <p
-        inner-h-t-m-l="[[localize('about-outline', 'jigsawUrl', 'https://jigsaw.google.com', 'shadowsocksUrl', 'https://shadowsocks.org', 'gitHubUrl', 'https://github.com/jigsaw-Code/?q=outline', 'redditUrl', 'https://www.reddit.com/r/outlinevpn', 'mediumUrl', 'https://medium.com/jigsaw')]]"
-      >
-        >
+      <p inner-h-t-m-l="[[localize('about-outline', 'jigsawUrl', 'https://jigsaw.google.com', 'shadowsocksUrl', 'https://shadowsocks.org', 'gitHubUrl', 'https://github.com/jigsaw-Code/?q=outline', 'redditUrl', 'https://www.reddit.com/r/outlinevpn', 'mediumUrl', 'https://medium.com/jigsaw')]]">
+        &gt;
       </p>
       <p>
         <a href="https://jigsaw.google.com/">
-          <img src="images/jigsaw-logo.svg" />
+          <img src="images/jigsaw-logo.svg">
         </a>
       </p>
       <div class="buttons">
-        <paper-button dialog-dismiss autofocus>[[localize('close')]]</paper-button>
+        <paper-button dialog-dismiss="" autofocus="">[[localize('close')]]</paper-button>
       </div>
     </paper-dialog>
-  </template>
+`,
 
-  <script>
-    Polymer({
-      is: "outline-about-dialog",
-      properties: {
-        localize: {type: Function, readonly: true},
-        outlineVersion: String,
-      },
-      open: function() {
-        this.$.dialog.open();
-      },
-    });
-  </script>
-</dom-module>
+  is: 'outline-about-dialog',
+
+  properties: {
+    localize: {type: Function, readonly: true},
+    outlineVersion: String,
+  },
+
+  open: function() {
+    this.$.dialog.open();
+  }
+});

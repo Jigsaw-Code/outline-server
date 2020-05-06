@@ -1,4 +1,4 @@
-// Copyright 2019 The Outline Authors
+// Copyright 2020 The Outline Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,24 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const gulp = require('gulp');
-const posthtml = require('gulp-posthtml');
-const posthtmlcss = require('posthtml-postcss');
+const postcss = require('postcss');
 const rtl = require('postcss-rtl');
-const replace = require('gulp-replace');
 
-// Generates inline CSS RTL mirroring rules for Polymer components.
-module.exports = function(src, dest) {
-  console.log('Generating RTL CSS');
-  const plugins = [rtl()];
-  const options = {from: undefined, sync: true};
-  const filterType = /\/css$/;
-  return gulp.src([src])
-      .pipe(posthtml([posthtmlcss(plugins, options, filterType)]))
+const CSS_PROCESSOR = postcss([rtl()]);
+
+function generateRtlCss(css) {
+  return CSS_PROCESSOR.process(css).css
       // Replace the generated selectors with Shadow DOM selectors for Polymer compatibility.
-      .pipe(replace('[dir=rtl]', ':host(:dir(rtl))'))
-      .pipe(replace('[dir=ltr]', ':host(:dir(ltr))'))
+      .replace(/\[dir=rtl\]/g, ':host(:dir(rtl))')
+      .replace(/\[dir=ltr\]/g, ':host(:dir(ltr))')
       // rtlcss generates [dir] selectors for rules unaffected by directionality; ignore them.
-      .pipe(replace('[dir]', ''))
-      .pipe(gulp.dest(dest));
+      .replace(/\[dir\]/g, '');
+}
+// This is a Webpack loader that searches for <style> blocks and edits the CSS to support RTL
+// in a Polymer element.
+module.exports = function loader(content, map, meta) {
+  const callback = this.async();
+  const styleRe = RegExp(/(<style[^>]*>)(\s*[^<\s](.*\n)*\s*)(<\/style>)/gm);
+  const newContent =
+      content.replace(styleRe, (match, g1, g2, g3, g4) => `${g1}${generateRtlCss(g2)}${g4}`);
+  callback(null, newContent);
+  return;
 }
