@@ -41,7 +41,3 @@ mkdir -p $STATIC_DIR
 # Notice that we forward the build environment if defined.
 webpack --config=src/server_manager/webpack.config.js ${BUILD_ENV:+--mode=${BUILD_ENV}}
 popd > /dev/null
-
-# Generate CSS rules to mirror the UI in RTL languages.
-# TODO(fortuna): Move this to a Webpack loader.
-node -e "require('./scripts/generate_rtl_css.js')('$STATIC_DIR/ui_components/*.html', '$STATIC_DIR/ui_components')"

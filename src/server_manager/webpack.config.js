@@ -37,6 +37,14 @@ const config = {
         exclude: /node_modules/,
         use: [
           'ts-loader',
+          './src/server_manager/css-in-js-rtl-loader',
+        ],
+      },
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: [
+          './src/server_manager/css-in-js-rtl-loader',
         ],
       },
       {
@@ -67,6 +75,7 @@ const config = {
       template: path.resolve(__dirname, './index.html'),
     }),
   ],
+  stats: 'detailed',
 };
 
 module.exports = config;
