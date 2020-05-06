@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {PrometheusClient, QueryResultData} from '../infrastructure/prometheus_scraper';
-import {DataUsageByUser} from '../model/metrics';
+import {DataUsageByAccessKey} from '../model/metrics';
 import {PrometheusManagerMetrics} from './manager_metrics';
 import {FakePrometheusClient} from './mocks/mocks';
 

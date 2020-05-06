@@ -13,17 +13,17 @@
 // limitations under the License.
 
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
-import {DataUsageByUser, DataUsageTimeframe} from '../model/metrics';
+import {DataUsageByAccessKey, DataUsageTimeframe} from '../model/metrics';
 
 export interface ManagerMetrics {
-  getOutboundByteTransfer(timeframe: DataUsageTimeframe): Promise<DataUsageByUser>;
+  getOutboundByteTransfer(timeframe: DataUsageTimeframe): Promise<DataUsageByAccessKey>;
 }
 
 // Reads manager metrics from a Prometheus instance.
 export class PrometheusManagerMetrics implements ManagerMetrics {
   constructor(private prometheusClient: PrometheusClient) {}
 
-  async getOutboundByteTransfer(timeframe: DataUsageTimeframe): Promise<DataUsageByUser> {
+  async getOutboundByteTransfer(timeframe: DataUsageTimeframe): Promise<DataUsageByAccessKey> {
     // TODO(fortuna): Consider pre-computing this to save server's CPU.
     // We measure only traffic leaving the server, since that's what DigitalOcean charges.
     // TODO: Display all directions to admin

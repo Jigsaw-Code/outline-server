@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from './model';
-
 import {BigQuery} from '@google-cloud/bigquery';
 import * as express from 'express';
 import * as fs from 'fs';

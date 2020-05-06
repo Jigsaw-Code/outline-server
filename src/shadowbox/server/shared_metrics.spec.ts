@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DailyFeatureMetricsReport, HourlyConnectionMetricsReport} from 'outline-metrics-server';
+import {DailyFeatureMetricsReport, HourlyConnectionMetricsReport} from 'outline-metrics-server/model';
 
 import {ManualClock} from '../infrastructure/clock';
 import {InMemoryConfig} from '../infrastructure/json_config';

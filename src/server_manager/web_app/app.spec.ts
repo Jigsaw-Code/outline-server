@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {EventEmitter} from 'eventemitter3';
-import {DataLimit, DataUsageByAccessKey} from 'shadowbox';
+import {DataLimit} from 'outline-server/model/access_key';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import {InMemoryStorage} from '../infrastructure/memory_storage';

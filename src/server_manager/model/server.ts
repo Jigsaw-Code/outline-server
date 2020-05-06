@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DataLimit, DataUsageByAccessKey} from 'shadowbox';
+import {DataLimit} from 'outline-server/model/access_key';
+import {DataUsageByAccessKey} from 'outline-server/model/metrics';
+
 
 export interface Server {
   // Get the server's name for display.

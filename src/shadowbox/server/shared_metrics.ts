@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DailyFeatureMetricsReport, HourlyConnectionMetricsReport, HourlyUserConnectionMetricsReport} from 'outline-metrics-server';
+import * as metrics from 'outline-metrics-server/model';
 
 import {Clock} from '../infrastructure/clock';
 import * as follow_redirects from '../infrastructure/follow_redirects';
@@ -78,18 +78,18 @@ export class PrometheusUsageMetrics implements UsageMetrics {
 }
 
 export interface MetricsCollectorClient {
-  collectServerUsageMetrics(reportJson: HourlyConnectionMetricsReport): Promise<void>;
-  collectFeatureMetrics(reportJson: DailyFeatureMetricsReport): Promise<void>;
+  collectServerUsageMetrics(reportJson: metrics.HourlyConnectionMetricsReport): Promise<void>;
+  collectFeatureMetrics(reportJson: metrics.DailyFeatureMetricsReport): Promise<void>;
 }
 
 export class RestMetricsCollectorClient {
   constructor(private serviceUrl: string) {}
 
-  collectServerUsageMetrics(reportJson: HourlyConnectionMetricsReport): Promise<void> {
+  collectServerUsageMetrics(reportJson: metrics.HourlyConnectionMetricsReport): Promise<void> {
     return this.postMetrics('/connections', JSON.stringify(reportJson));
   }
 
-  collectFeatureMetrics(reportJson: DailyFeatureMetricsReport): Promise<void> {
+  collectFeatureMetrics(reportJson: metrics.DailyFeatureMetricsReport): Promise<void> {
     return this.postMetrics('/features', JSON.stringify(reportJson));
   }
 
@@ -175,7 +175,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
   private async reportServerUsageMetrics(usageMetrics: KeyUsage[]): Promise<void> {
     const reportEndTimestampMs = this.clock.now();
 
-    const userReports = [] as HourlyUserConnectionMetricsReport[];
+    const userReports = [] as metrics.HourlyUserConnectionMetricsReport[];
     for (const keyUsage of usageMetrics) {
       if (keyUsage.inboundBytes === 0) {
         continue;
@@ -194,7 +194,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       startUtcMs: this.reportStartTimestampMs,
       endUtcMs: reportEndTimestampMs,
       userReports
-    } as HourlyConnectionMetricsReport;
+    } as metrics.HourlyConnectionMetricsReport;
 
     this.reportStartTimestampMs = reportEndTimestampMs;
     if (userReports.length === 0) {

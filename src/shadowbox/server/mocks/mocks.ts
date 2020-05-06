@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {PrometheusClient, QueryResultData} from '../../infrastructure/prometheus_scraper';
-import {DataUsageByUser} from '../../model/metrics';
+import {DataUsageByAccessKey} from '../../model/metrics';
 import {ShadowsocksAccessKey, ShadowsocksServer} from '../../model/shadowsocks_server';
 import {TextFile} from '../../model/text_file';
 

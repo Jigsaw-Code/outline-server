@@ -14,8 +14,8 @@
 
 import * as sentry from '@sentry/electron';
 import {EventEmitter} from 'eventemitter3';
+import {DataLimit} from 'outline-server/model/access_key';
 import * as semver from 'semver';
-import {DataLimit, DataUsageByAccessKey} from 'shadowbox';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
