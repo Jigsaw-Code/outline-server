@@ -75,7 +75,6 @@ const config = {
       template: path.resolve(__dirname, './index.html'),
     }),
   ],
-  stats: 'detailed',
 };
 
 module.exports = config;
