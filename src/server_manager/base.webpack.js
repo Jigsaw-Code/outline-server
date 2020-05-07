@@ -82,7 +82,7 @@ exports.makeConfig = (options) => {
           ],
           {context: __dirname}),
       new HtmlWebpackPlugin({
-        template: path.resolve(__dirname, './index.html'),
+        template: options.template || path.resolve(__dirname, './index.html'),
       }),
     ],
   };
