@@ -44,13 +44,6 @@ exports.makeConfig = (options) => {
     module: {
       rules: [
         {
-          test: /\.(js|ts)$/,
-          loader: 'babel-loader',
-          options: {
-            presets: ['@babel/preset-env'],
-          }
-        },
-        {
           test: /\.ts(x)?$/,
           exclude: /node_modules/,
           use: [

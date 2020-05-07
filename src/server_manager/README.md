@@ -17,7 +17,7 @@ BUILD_ENV=development yarn do server_manager/electron_app/run
 To run the Outline Manager as a web app on the browser and listen for changes:
 
 ```
-yarn workspace outline-manager run webpack-dev-server --config=browser.webpack.js --open
+yarn do server_manager/web_app/run
 ```
 
 ## Debug an existing binary
