@@ -59,11 +59,14 @@
     "The `resolutions` was created by polymer-modulizer. We should check if we still need them."
   ],
   "devDependencies": {
+    "@babel/core": "^7.9.6",
+    "@babel/preset-env": "^7.9.6",
     "@types/node": "~12.0.0",
     "@types/node-forge": "^0.6.9",
     "@types/polymer": "^1.2.9",
     "@types/request": "^2.47.1",
     "@types/semver": "^5.5.0",
+    "babel-loader": "^8.1.0",
     "bower": "^1.8.0",
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.5.3",
@@ -83,7 +86,8 @@
     "style-loader": "^1.2.1",
     "ts-loader": "^7.0.1",
     "webpack": "^4.43.0",
-    "webpack-cli": "^3.3.11"
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.10.3"
   },
   "prettier": {
     "printWidth": 120,

@@ -39,5 +39,5 @@ readonly STATIC_DIR=$OUT_DIR/static
 mkdir -p $STATIC_DIR
 
 # Notice that we forward the build environment if defined.
-webpack --config=src/server_manager/webpack.config.js ${BUILD_ENV:+--mode=${BUILD_ENV}}
+webpack --config=src/server_manager/electron_renderer.webpack.js ${BUILD_ENV:+--mode=${BUILD_ENV}}
 popd > /dev/null

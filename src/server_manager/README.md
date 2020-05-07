@@ -2,9 +2,17 @@
 
 ## Running
 
-To run the Outline Manager:
+To run the Outline Manager Electron app:
 ```
 yarn do server_manager/electron_app/run
+```
+
+## Development Server
+
+To run the manager as a web app and listen for changes:
+
+```
+yarn workspace outline-manager run webpack-dev-server --config=browser.webpack.js --open
 ```
 
 ## Debug an existing binary
