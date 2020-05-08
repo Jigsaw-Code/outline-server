@@ -28,13 +28,11 @@ exports.makeConfig = (options) => {
       require.resolve('@webcomponents/webcomponentsjs/webcomponents-loader.js'),
       path.resolve(__dirname, './web_app/ui_components/style.css'),
       options.main,
-      // path.resolve(__dirname, './web_app/main.ts'),
     ],
     target: options.target,
     devtool: 'inline-source-map',
     // Run the dev server with `yarn workspace outline-manager run webpack-dev-server --open`
     devServer: {
-      // contentBase: OUTPUT_BASE,
       overlay: true,
     },
     output: {
