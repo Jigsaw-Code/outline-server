@@ -29,11 +29,11 @@
 
 // tslint:disable-next-line:no-any
 (window as any).runDigitalOceanOauth = () => {
-  window.open('https://cloud.digitalocean.com/account/api/tokens/new', 'nopener,noreferrer');
   let isCancelled = false;
   const rejectWrapper = {reject: (error: Error) => {}};
   const result = new Promise((resolve, reject) => {
     rejectWrapper.reject = reject;
+    window.open('https://cloud.digitalocean.com/account/api/tokens/new', 'nopener,noreferrer');
     const apiToken = window.prompt('Please enter your DigitalOcean API token');
     if (apiToken) {
       resolve(apiToken);
