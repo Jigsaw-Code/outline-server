@@ -18,13 +18,14 @@ import * as path from 'path';
 import * as process from 'process';
 import * as prometheus from 'prom-client';
 import * as restify from 'restify';
+import * as corsMiddleware from 'restify-cors-middleware';
 
 import {RealClock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
 import * as json_config from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient, runPrometheusScraper} from '../infrastructure/prometheus_scraper';
-import {RolloutTracker} from '../infrastructure/rollout';	
+import {RolloutTracker} from '../infrastructure/rollout';
 import {AccessKeyId} from '../model/access_key';
 
 import {PrometheusManagerMetrics} from './manager_metrics';
@@ -188,13 +189,15 @@ async function main() {
   });
 
   // Pre-routing handlers
-  apiServer.pre(restify.CORS());
+  const cors =
+      corsMiddleware({origins: ['*'], allowHeaders: [], exposeHeaders: [], credentials: false});
+  apiServer.pre(cors.preflight);
 
   // All routes handlers
   const apiPrefix = process.env.SB_API_PREFIX ? `/${process.env.SB_API_PREFIX}` : '';
   apiServer.pre(restify.pre.sanitizePath());
-  apiServer.use(restify.jsonp());
-  apiServer.use(restify.bodyParser());
+  apiServer.use(restify.plugins.jsonp());
+  apiServer.use(restify.plugins.bodyParser());
   bindService(apiServer, apiPrefix, managerService);
 
   apiServer.listen(apiPortNumber, () => {
