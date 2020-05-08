@@ -3,6 +3,7 @@ import IntlMessageFormat from 'intl-messageformat';
 import '../ui_components/outline-about-dialog';
 import '../ui_components/outline-do-oauth-step';
 import '../ui_components/outline-feedback-dialog';
+import '../ui_components/outline-share-dialog';
 import '../ui_components/outline-survey-dialog';
 
 
@@ -95,6 +96,13 @@ export class TestApp extends LitElement {
         <button @tap=${() => this.select('outline-feedback-dialog').open('Pre-populated message', false)
         }>Open Dialog</button>
         <outline-feedback-dialog .localize=${this.localize} dir=${this.dir}></outline-feedback-dialog>
+      </div>
+
+      <div class="widget">
+        <h2>outline-share-dialog</h2>
+        <button @tap=${() => this.select('outline-share-dialog').open('<ACCESS_KEY>', '<INVITE_URL>')
+        }>Open Dialog</button>
+        <outline-share-dialog .localize=${this.localize} dir=${this.dir}></outline-share-dialog>
       </div>
 
       <div class="widget">
