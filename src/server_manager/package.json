@@ -66,7 +66,6 @@
     "@types/polymer": "^1.2.9",
     "@types/request": "^2.47.1",
     "@types/semver": "^5.5.0",
-    "bower": "^1.8.0",
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.5.3",
     "electron": "7.0.1",

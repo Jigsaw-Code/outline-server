@@ -10,7 +10,8 @@
     "typescript": "^3.8.3"
   },
   "engines": {
-    "yarn": ">=1.0"
+    "yarn": ">=1.0",
+    "node": "^12"
   },
   "scripts": {
     "clean": "rm -rf src/server_manager/bower_components/ src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts",
@@ -21,7 +22,7 @@
   ],
   "husky": {
     "hooks": {
-      "pre-commit": "yarn tslint --fix 'src/**/*.ts' -e '**/bower_components/**' -e '**/node_modules/**' && yarn git-clang-format && yarn pretty-quick --staged --pattern '**/*.html'"
+      "pre-commit": "yarn tslint --fix 'src/**/*.ts' -e '**/node_modules/**' && yarn git-clang-format && yarn pretty-quick --staged --pattern '**/*.html'"
     }
   }
 }
