@@ -1,3 +1,5 @@
+import IntlMessageFormat from 'intl-messageformat';
+
 import '../ui_components/outline-about-dialog';
 import '../ui_components/outline-do-oauth-step';
 import '../ui_components/outline-feedback-dialog';
@@ -14,16 +16,36 @@ interface FeedbackDialog {
   open(prepopulatedMessage: string, showInstallationFailed: boolean): void;
 }
 
-function escapeHtml(html: string) {
-  const el = document.createElement('div');
-  el.innerText = html;
-  return el.innerHTML;
+async function makeLocalize(language: string) {
+  let messages: any;
+  try {
+    messages = await (await fetch(`./messages/${language}.json`)).json();
+  } catch (e) {
+    window.alert(`Could not load messages for language "${language}"`);
+  }
+  return (msgId: string, ...args: string[]): string => {
+    const params = {} as any;
+    for (let i = 0; i < args.length; i += 2) {
+      params[args[i]] = args[i + 1];
+    }
+    console.log(`localize(${msgId}, ${JSON.stringify(params)})`);
+    if (!messages) {
+      // Fallback that shows message id and params.
+      return `${msgId}(${JSON.stringify(params, null, " ")})`;
+    }
+    // Ideally we would pre-parse ang cache the IntlMessageFormat objects,
+    // but it's ok here because it's a test app.
+    console.log(messages[msgId]);
+    const formatter = new IntlMessageFormat(messages[msgId], language);
+    return formatter.format(params) as string;
+  };
 }
 
 @customElement('outline-test-app')
 export class TestApp extends LitElement {
-  @property() language = 'en';
-  @property() dir = 'ltr';
+  @property({type: String}) dir = 'ltr';
+  @property({type: Function}) localize: Function;
+  private language = '';
 
   static get styles() {
     return css`
@@ -45,15 +67,13 @@ export class TestApp extends LitElement {
   constructor() {
     super();
     console.log('Created');
+    this.setLanguage('en');
   }
 
   render() {
     return html`
       <h1>Outline Manager Components Gallery</h1>
-      <label for="dir-select" @change=${this.__changeDirection}>Direction: <select id="dir-select">
-        <option value="ltr" selected>LTR</option>
-        <option value="rtl">RTL</option>
-      </select>
+      ${this.pageControls}
       
       <div class="widget">
         <h2>outline-about-dialog</h2>
@@ -84,18 +104,28 @@ export class TestApp extends LitElement {
       </div>
     `;
   }
-  
-  localize(msgId: string, ...args: string[]): string {
-    // TODO(fortuna): Use the actual messages.
-    const parts = [] as string[];
-    for (let i = 0; i < args.length; i += 2) {
-      parts.push(`${escapeHtml(args[i])}: ${escapeHtml(args[i + 1])}`);
-    }
-    return `${msgId}(${parts.join(', ')})`;
+
+  get pageControls() {
+    return html`<p>
+      <label for="language">Language:</label><input type="text" id="language" value="${this.language}">
+      <button @tap=${() => this.setLanguage((this.shadowRoot.querySelector('#language') as HTMLInputElement).value)
+      }>Set Language</button>
+    </p>
+    <p>
+      <label for="dir-select" @change=${(e: Event) => this.dir = (e.target as HTMLSelectElement).value
+      }>Direction: <select id="dir-select">
+        <option value="ltr" selected>LTR</option>
+        <option value="rtl">RTL</option>
+      </select>
+    </p>`;
   }
 
-  private __changeDirection(e: Event) {
-    this.dir = (e.target as HTMLSelectElement).value;
+  async setLanguage(newLanguage: string) {
+    if (newLanguage === this.language) {
+      return;
+    }
+    this.localize = await makeLocalize(newLanguage);
+    this.language = newLanguage;    
   }
 
   openDialog(selector: string) {
