@@ -21,7 +21,7 @@ FROM node@sha256:12b2154fb459fa5f42c54771524609db041e7ef3465935d0ca82940d2d72669
 ARG SS_VERSION=1.1.0
 
 # Save metadata on the software versions we are using.
-LABEL shadowbox.node_version=8.15.0
+LABEL shadowbox.node_version=12.16.3
 LABEL shadowbox.outline-ss-server_version="${SS_VERSION}"
 
 ARG GITHUB_RELEASE
