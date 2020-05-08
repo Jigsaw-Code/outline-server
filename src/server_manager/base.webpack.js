@@ -35,10 +35,7 @@ exports.makeConfig = (options) => {
     devServer: {
       overlay: true,
     },
-    output: {
-      path: OUTPUT_BASE,
-      filename: 'main.js'
-    },
+    output: {path: OUTPUT_BASE, filename: 'main.js'},
     module: {
       rules: [
         {
