@@ -1,3 +1,17 @@
+// Copyright 2020 The Outline Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 import IntlMessageFormat from 'intl-messageformat';
 
 import '../ui_components/outline-about-dialog';
@@ -5,7 +19,6 @@ import '../ui_components/outline-do-oauth-step';
 import '../ui_components/outline-feedback-dialog';
 import '../ui_components/outline-share-dialog';
 import '../ui_components/outline-survey-dialog';
-
 
 import {css, customElement, html, LitElement, property} from 'lit-element';
 
@@ -17,6 +30,7 @@ async function makeLocalize(language: string) {
     window.alert(`Could not load messages for language "${language}"`);
   }
   return (msgId: string, ...args: string[]): string => {
+    // tslint:disable-next-line:no-any
     const params = {} as {[key: string]: any};
     for (let i = 0; i < args.length; i += 2) {
       params[args[i]] = args[i + 1];
@@ -25,7 +39,7 @@ async function makeLocalize(language: string) {
       // Fallback that shows message id and params.
       return `${msgId}(${JSON.stringify(params, null, " ")})`;
     }
-    // Ideally we would pre-parse ang cache the IntlMessageFormat objects,
+    // Ideally we would pre-parse and cache the IntlMessageFormat objects,
     // but it's ok here because it's a test app.
     const formatter = new IntlMessageFormat(messages[msgId], language);
     return formatter.format(params) as string;
@@ -69,6 +83,7 @@ export class TestApp extends LitElement {
     this.language = newLanguage;    
   }
 
+  // tslint:disable-next-line:no-any
   private select(querySelector: string): any {
     return this.shadowRoot.querySelector(querySelector);
   }
