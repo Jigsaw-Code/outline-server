@@ -16,14 +16,8 @@
 
 set -eu
 
-readonly OUT_DIR=$BUILD_DIR/server_manager/web_app
-rm -rf $OUT_DIR
+rm -rf $BUILD_DIR/server_manager/web_app
 
 do_action server_manager/web_app/build_install_script
 
-# Node.js on Cygwin doesn't like absolute Unix-style paths.
-# So, we use a relative path as input to webpack.
-pushd $ROOT_DIR > /dev/null
-# Notice that we forward the build environment if defined.
-webpack --config=src/server_manager/electron_renderer.webpack.js ${BUILD_ENV:+--mode=${BUILD_ENV}}
-popd > /dev/null
+yarn workspace outline-manager run webpack-dev-server --config=browser.webpack.js --open

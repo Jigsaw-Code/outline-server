@@ -531,7 +531,7 @@ class AppRoot extends mixinBehaviors
   }
 
   setLanguage(newLanguage, langDir) {
-    const messagesUrl = `/messages/${newLanguage}.json`;
+    const messagesUrl = `./messages/${newLanguage}.json`;
     this.loadResources(messagesUrl, newLanguage);
     if (langDir === 'rtl') {
       this.$.appDrawer.align = 'right';
