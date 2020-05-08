@@ -14,7 +14,7 @@
 
 # Newer node images have no valid content trust data.
 # Pin the image node:12.16.3-alpine (linux/amd64) by hash.
-# See versions at https://hub.docker.com/_/node/
+# See versions at https://hub.docker.com/_/node?tab=tags&name=alpine
 FROM node@sha256:12b2154fb459fa5f42c54771524609db041e7ef3465935d0ca82940d2d72669d
 
 # Versions can be found at https://github.com/Jigsaw-Code/outline-ss-server/releases
