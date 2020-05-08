@@ -21,14 +21,12 @@ async function makeLocalize(language: string) {
     for (let i = 0; i < args.length; i += 2) {
       params[args[i]] = args[i + 1];
     }
-    console.log(`localize(${msgId}, ${JSON.stringify(params)})`);
     if (!messages) {
       // Fallback that shows message id and params.
       return `${msgId}(${JSON.stringify(params, null, " ")})`;
     }
     // Ideally we would pre-parse ang cache the IntlMessageFormat objects,
     // but it's ok here because it's a test app.
-    console.log(messages[msgId]);
     const formatter = new IntlMessageFormat(messages[msgId], language);
     return formatter.format(params) as string;
   };
