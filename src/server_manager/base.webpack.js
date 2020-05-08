@@ -28,19 +28,14 @@ exports.makeConfig = (options) => {
       require.resolve('@webcomponents/webcomponentsjs/webcomponents-loader.js'),
       path.resolve(__dirname, './web_app/ui_components/style.css'),
       options.main,
-      // path.resolve(__dirname, './web_app/main.ts'),
     ],
     target: options.target,
     devtool: 'inline-source-map',
     // Run the dev server with `yarn workspace outline-manager run webpack-dev-server --open`
     devServer: {
-      // contentBase: OUTPUT_BASE,
       overlay: true,
     },
-    output: {
-      path: OUTPUT_BASE,
-      filename: 'main.js'
-    },
+    output: {path: OUTPUT_BASE, filename: 'main.js'},
     module: {
       rules: [
         {
@@ -73,6 +68,9 @@ exports.makeConfig = (options) => {
         // Statically link the Roboto font, rather than link to fonts.googleapis.com
         'window.polymerSkipLoadingFontRoboto': JSON.stringify(true),
       }),
+      // @sentry/electron depends on electron code, even though it's never activated
+      // in the browser. Webpack still tries to build it, but fails with missing APIs.
+      // The IgnorePlugin prevents the compilation of the electron dependency.
       new webpack.IgnorePlugin(/^electron$/),
       new CopyPlugin(
           [

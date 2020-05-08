@@ -12,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# See versions at https://hub.docker.com/_/node/
-FROM node:8.15.0-alpine
+# Newer node images have no valid content trust data.
+# Pin the image node:12.16.3-alpine (linux/amd64) by hash.
+# See versions at https://hub.docker.com/_/node?tab=tags&name=alpine
+FROM node@sha256:12b2154fb459fa5f42c54771524609db041e7ef3465935d0ca82940d2d72669d
 
 # Versions can be found at https://github.com/Jigsaw-Code/outline-ss-server/releases
 ARG SS_VERSION=1.1.0
 
 # Save metadata on the software versions we are using.
-LABEL shadowbox.node_version=8.15.0
+LABEL shadowbox.node_version=12.16.3
 LABEL shadowbox.outline-ss-server_version="${SS_VERSION}"
 
 ARG GITHUB_RELEASE
@@ -40,9 +42,8 @@ RUN mkdir bin && curl -SsL https://github.com/Jigsaw-Code/outline-ss-server/rele
 COPY third_party/prometheus/prometheus ./bin/
 COPY src/shadowbox/package.json .
 COPY yarn.lock .
-# TODO: Replace with plain old "yarn" once the base image is fixed:
-#       https://github.com/nodejs/docker-node/pull/639
-RUN /opt/yarn-v$YARN_VERSION/bin/yarn install --prod
+
+RUN yarn install --prod
 
 # Install management service
 COPY build/shadowbox/app app/
