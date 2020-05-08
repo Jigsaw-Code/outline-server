@@ -71,6 +71,9 @@ exports.makeConfig = (options) => {
         // Statically link the Roboto font, rather than link to fonts.googleapis.com
         'window.polymerSkipLoadingFontRoboto': JSON.stringify(true),
       }),
+      // @sentry/electron depends on electron code, even though it's never activated
+      // in the browser. Webpack still tries to build it, but fails with missing APIs.
+      // The IgnorePlugin prevents the compilation of the electron dependency.
       new webpack.IgnorePlugin(/^electron$/),
       new CopyPlugin(
           [
