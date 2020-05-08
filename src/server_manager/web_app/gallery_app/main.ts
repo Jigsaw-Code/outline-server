@@ -8,23 +8,15 @@ import '../ui_components/outline-survey-dialog';
 
 import {css, customElement, html, LitElement, property} from 'lit-element';
 
-interface Dialog {
-  open(): void;
-}
-
-interface FeedbackDialog {
-  open(prepopulatedMessage: string, showInstallationFailed: boolean): void;
-}
-
 async function makeLocalize(language: string) {
-  let messages: any;
+  let messages: {[key: string]: string};
   try {
     messages = await (await fetch(`./messages/${language}.json`)).json();
   } catch (e) {
     window.alert(`Could not load messages for language "${language}"`);
   }
   return (msgId: string, ...args: string[]): string => {
-    const params = {} as any;
+    const params = {} as {[key: string]: any};
     for (let i = 0; i < args.length; i += 2) {
       params[args[i]] = args[i + 1];
     }
@@ -70,6 +62,18 @@ export class TestApp extends LitElement {
     this.setLanguage('en');
   }
 
+  async setLanguage(newLanguage: string) {
+    if (newLanguage === this.language) {
+      return;
+    }
+    this.localize = await makeLocalize(newLanguage);
+    this.language = newLanguage;    
+  }
+
+  private select(querySelector: string): any {
+    return this.shadowRoot.querySelector(querySelector);
+  }
+
   render() {
     return html`
       <h1>Outline Manager Components Gallery</h1>
@@ -77,7 +81,7 @@ export class TestApp extends LitElement {
       
       <div class="widget">
         <h2>outline-about-dialog</h2>
-        <button @tap=${() => this.openDialog('outline-about-dialog')}>Open Dialog</button>
+        <button @tap=${() => this.select('outline-about-dialog').open()}>Open Dialog</button>
         <outline-about-dialog .localize=${this.localize} dir=${this.dir} outline-version="1.2.3"></outline-about-dialog>
       </div>
       
@@ -88,19 +92,16 @@ export class TestApp extends LitElement {
 
       <div class="widget">
         <h2>outline-feedback-dialog</h2>
-        <button @tap=${() => (this.shadowRoot.querySelector('outline-feedback-dialog') as unknown as FeedbackDialog
-        ).open('Pre-populated message', false)}>Open Dialog</button>
+        <button @tap=${() => this.select('outline-feedback-dialog').open('Pre-populated message', false)
+        }>Open Dialog</button>
         <outline-feedback-dialog .localize=${this.localize} dir=${this.dir}></outline-feedback-dialog>
       </div>
 
       <div class="widget">
         <h2>outline-survey-dialog</h2>
-        <button @tap=${() => this.openDialog('outline-survey-dialog')}>Open Dialog</button>
-        <!-- TODO(fortuna): the input title is not being localized. Should it? -->
-        <outline-survey-dialog .localize=${this.localize} dir=${this.dir}
-            title="Survey Title"
-            survey-link="https://getoutline.org"
-        ></outline-survey-dialog>
+        <button @tap=${() => this.select('outline-survey-dialog').open('Survey title', 'https://getoutline.org')
+        }>Open Dialog</button>
+        <outline-survey-dialog .localize=${this.localize} dir=${this.dir}></outline-survey-dialog>
       </div>
     `;
   }
@@ -118,17 +119,5 @@ export class TestApp extends LitElement {
         <option value="rtl">RTL</option>
       </select>
     </p>`;
-  }
-
-  async setLanguage(newLanguage: string) {
-    if (newLanguage === this.language) {
-      return;
-    }
-    this.localize = await makeLocalize(newLanguage);
-    this.language = newLanguage;    
-  }
-
-  openDialog(selector: string) {
-    (this.shadowRoot.querySelector(selector) as unknown as Dialog).open();
   }
 }

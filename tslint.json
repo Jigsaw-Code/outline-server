@@ -16,7 +16,8 @@
     "label-position": true,
     "new-parens": true,
     "no-angle-bracket-type-assertion": true,
-    "no-any": true,
+    // no-any is a pain when working with untyped dependencies in .js, such as our ui components.
+    // "no-any": true,
     "no-construct": true,
     "no-debugger": true,
     "no-default-export": true,
