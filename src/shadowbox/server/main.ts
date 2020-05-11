@@ -192,12 +192,12 @@ async function main() {
   const cors =
       corsMiddleware({origins: ['*'], allowHeaders: [], exposeHeaders: [], credentials: false});
   apiServer.pre(cors.preflight);
+  apiServer.pre(restify.pre.sanitizePath());
 
   // All routes handlers
   const apiPrefix = process.env.SB_API_PREFIX ? `/${process.env.SB_API_PREFIX}` : '';
-  apiServer.pre(restify.pre.sanitizePath());
   apiServer.use(restify.plugins.jsonp());
-  apiServer.use(restify.plugins.bodyParser());
+  apiServer.use(restify.plugins.bodyParser({mapParams: true}));
   apiServer.use(cors.actual);
   bindService(apiServer, apiPrefix, managerService);
 
