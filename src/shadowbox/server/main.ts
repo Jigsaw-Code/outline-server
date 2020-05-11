@@ -198,6 +198,7 @@ async function main() {
   apiServer.pre(restify.pre.sanitizePath());
   apiServer.use(restify.plugins.jsonp());
   apiServer.use(restify.plugins.bodyParser());
+  apiServer.use(cors.actual);
   bindService(apiServer, apiPrefix, managerService);
 
   apiServer.listen(apiPortNumber, () => {
