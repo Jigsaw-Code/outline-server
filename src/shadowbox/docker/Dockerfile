@@ -29,24 +29,27 @@ LABEL shadowbox.github.release="${GITHUB_RELEASE}"
 
 # We use curl to detect the server's public IP. We need to use the --date option in `date` to
 # safely grab the ip-to-country database
-RUN apk add --no-cache --upgrade coreutils curl
+RUN apk add --no-cache --upgrade coreutils curl bash
 
 COPY src/shadowbox/scripts scripts/
 COPY src/shadowbox/scripts/update_mmdb.sh /etc/periodic/weekly/update_mmdb
 
 RUN /etc/periodic/weekly/update_mmdb
 
+WORKDIR /build
+
+# Build shadowbox.
+COPY . .
+RUN yarn install
+RUN ROOT_DIR=/build yarn do shadowbox/server/build
+
 WORKDIR /root/shadowbox
 
+# Install shadowbox and third party dependencies
+RUN cp -r /build/build/shadowbox/app app && rm -rf /build
 RUN mkdir bin && curl -SsL https://github.com/Jigsaw-Code/outline-ss-server/releases/download/v${SS_VERSION}/outline-ss-server_${SS_VERSION}_linux_x86_64.tar.gz | tar xz -C bin outline-ss-server
 COPY third_party/prometheus/prometheus ./bin/
 COPY src/shadowbox/package.json .
-COPY yarn.lock .
-
-RUN yarn install --prod
-
-# Install management service
-COPY build/shadowbox/app app/
 
 # Create default state directory.
 RUN mkdir -p /root/shadowbox/persisted-state
