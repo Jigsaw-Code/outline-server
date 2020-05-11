@@ -16,13 +16,16 @@
     "prom-client": "^11.1.3",
     "randomstring": "^1.1.5",
     "request-lite": "^2.40.1",
-    "restify": "^4.3.0",
+    "restify": "^8.5.1",
+    "restify-errors": "^8.0.2",
+    "restify-cors-middleware": "^1.1.1",
     "uuid": "^3.1.0"
   },
   "devDependencies": {
     "@types/js-yaml": "^3.11.2",
     "@types/node": "^8",
     "@types/randomstring": "^1.1.6",
-    "@types/restify": "^2.0.41"
+    "@types/restify": "^8.4.2",
+    "@types/restify-cors-middleware": "^1.0.1"
   }
 }
