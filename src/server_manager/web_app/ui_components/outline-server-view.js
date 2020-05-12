@@ -46,6 +46,15 @@ byte_size.defaultOptions({
 
 const MY_CONNECTION_USER_ID = '0';
 
+// Makes an CustomEvent that bubbles up beyond the shadow root.
+function makePublicEvent(eventName, detail) {
+  const params = {bubbles: true, composed: true};
+  if (detail !== undefined) {
+    params.detail = detail;
+  }
+  return new CustomEvent(eventName, params);
+}
+
 export class ServerView extends DirMixin(PolymerElement) {
   static get template() {
     return html`
@@ -648,7 +657,7 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   _handleAddAccessKeyPressed() {
-    this.dispatchEvent(new CustomEvent('AddAccessKeyRequested', {bubbles: true, composed: true}));
+    this.dispatchEvent(makePublicEvent('AddAccessKeyRequested'));
     this.$.addAccessKeyHelpBubble.hide();
   }
 
@@ -671,22 +680,20 @@ export class ServerView extends DirMixin(PolymerElement) {
       return;
     }
     input.disabled = true;
-    this.dispatchEvent(new CustomEvent('RenameAccessKeyRequested', {
-      detail: {
-        accessKeyId: accessKey.id,
-        newName: displayName,
-        entry: {
-          commitName: () => {
-            accessKey.name = displayName;
-            input.disabled = false;
-          },
-          revertName: () => {
-            input.value = accessKey.name;
-            input.disabled = false;
-          },
+    this.dispatchEvent(makePublicEvent('RenameAccessKeyRequested', {
+      accessKeyId: accessKey.id,
+      newName: displayName,
+      entry: {
+        commitName: () => {
+          accessKey.name = displayName;
+          input.disabled = false;
+        },
+        revertName: () => {
+          input.value = accessKey.name;
+          input.disabled = false;
         },
       },
-      bubbles: true, composed: true}));
+    }));
   }
 
   _handleRenameAccessKeyPressed(event) {
@@ -700,23 +707,19 @@ export class ServerView extends DirMixin(PolymerElement) {
 
   _handleConnectPressed() {
     this.$.getConnectedHelpBubble.hide();
-    this.dispatchEvent(new CustomEvent('OpenGetConnectedDialogRequested', {
-      detail: {accessKey: this.myConnection.accessUrl},
-      bubbles: true, composed: true}));
+    this.dispatchEvent(makePublicEvent(
+        'OpenGetConnectedDialogRequested', {accessKey: this.myConnection.accessUrl}));
   }
 
   _handleShareCodePressed(event) {
     const accessKey = event.model.item;
-    this.dispatchEvent(new CustomEvent('OpenShareDialogRequested', {
-      detail: {accessKey: accessKey.accessUrl},
-      bubbles: true, composed: true}));
+    this.dispatchEvent(
+        makePublicEvent('OpenShareDialogRequested', {accessKey: accessKey.accessUrl}));
   }
 
   _handleRemoveAccessKeyPressed(e) {
     const accessKey = e.model.item;
-    this.dispatchEvent(new CustomEvent('RemoveAccessKeyRequested', {
-      detail: {accessKeyId: accessKey.id},
-      bubbles: true, composed: true}));
+    this.dispatchEvent(makePublicEvent('RemoveAccessKeyRequested', {accessKeyId: accessKey.id}));
   }
 
   setServerTransferredData(totalBytes) {
@@ -893,11 +896,11 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   destroyServer() {
-    this.dispatchEvent(new CustomEvent('DeleteServerRequested', {bubbles: true, composed: true}));
+    this.dispatchEvent(makePublicEvent('DeleteServerRequested'));
   }
 
   removeServer() {
-    this.dispatchEvent(new CustomEvent('ForgetServerRequested', {bubbles: true, composed: true}));
+    this.dispatchEvent(makePublicEvent('ForgetServerRequested'));
   }
 
   _computePaperProgressClass(isAccessKeyDataLimitEnabled) {
