@@ -38,7 +38,7 @@ RUN /etc/periodic/weekly/update_mmdb
 
 WORKDIR /build
 
-# Build shadowbox.
+# Build shadowbox. Run `yarn` in the container to retrieve the right dependencies for the image.
 COPY . .
 RUN yarn install
 RUN ROOT_DIR=/build yarn do shadowbox/server/build
