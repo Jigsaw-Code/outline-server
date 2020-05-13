@@ -13,8 +13,6 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import '@polymer/polymer/polymer-legacy.js';
-
 import '@polymer/paper-dialog/paper-dialog.js';
 import '@polymer/iron-icons/iron-icons.js';
 import '@polymer/iron-pages/iron-pages.js';
@@ -33,8 +31,9 @@ import './outline-help-bubble.js';
 import './outline-metrics-option-dialog.js';
 import './outline-server-settings.js';
 import './outline-share-dialog.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import {html, PolymerElement} from '@polymer/polymer';
+import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
+
 
 import * as byte_size from 'byte-size';
 
@@ -47,8 +46,18 @@ byte_size.defaultOptions({
 
 const MY_CONNECTION_USER_ID = '0';
 
-Polymer({
-  _template: html`
+// Makes an CustomEvent that bubbles up beyond the shadow root.
+function makePublicEvent(eventName, detail) {
+  const params = {bubbles: true, composed: true};
+  if (detail !== undefined) {
+    params.detail = detail;
+  }
+  return new CustomEvent(eventName, params);
+}
+
+export class ServerView extends DirMixin(PolymerElement) {
+  static get template() {
+    return html`
     <style include="cloud-install-styles"></style>
     <style>
       .container {
@@ -542,76 +551,83 @@ Polymer({
       <p>[[localize('data-limits-dialog-text')]]</p>
       <paper-button on-tap="closeDataLimitsHelpBubble">[[localize('ok')]]</paper-button>
     </outline-help-bubble>
-`,
+    `;
+    }
 
-  is: 'outline-server-view',
+    static get is() {
+      return 'outline-server-view';
+    }
 
-  properties: {
-    serverId: String,
-    serverName: String,
-    serverHostname: String,
-    serverVersion: String,
-    isHostnameEditable: {type: Boolean, value: false},
-    serverManagementApiUrl: String,
-    serverPortForNewAccessKeys: Number,
-    isAccessKeyPortEditable: {type: Boolean, value: false},
-    serverCreationDate: String,
-    serverLocation: String,
-    accessKeyDataLimit: {type: Object, value: null},
-    isAccessKeyDataLimitEnabled: {type: Boolean},
-    supportsAccessKeyDataLimit:
-        {type: Boolean, value: false},  // Whether the server supports data limits.
-    dataLimitsAvailabilityDate:
-        {type: String},  // Date by which the feature stops being an experiment.
-    isServerManaged: Boolean,
-    isServerReachable: Boolean,
-    // Callback for retrying to display an unreachable server.
-    retryDisplayingServer: Function,
-    // myConnection has the same fields as each item in accessKeyRows.  It may
-    // be unset in some old versions of Outline that allowed deleting this
-    // row.
-    myConnection: Object,
-    totalInboundBytes: Number,
-    accessKeyRows: {type: Array, value: []},
-    hasNonAdminAccessKeys: Boolean,
-    metricsEnabled: Boolean,
-    // Initialize monthlyOutboundTransferBytes and monthlyCost to 0, so they can
-    // be bound to hidden attributes.  Initializing to undefined does not
-    // cause hidden$=... expressions to be evaluated and so elements may be
-    // shown incorrectly.  See:
-    //   https://stackoverflow.com/questions/33700125/polymer-1-0-hidden-attribute-negate-operator
-    //   https://www.polymer-project.org/1.0/docs/devguide/data-binding.html
-    monthlyOutboundTransferBytes: {type: Number, value: 0},
-    monthlyCost: {type: Number, value: 0},
-    selectedTab: {
-      type: String,
-      value: 'connections',
-    },
-    managedServerUtilzationPercentage: {
-      type: Number,
-      computed:
-          '_computeManagedServerUtilzationPercentage(totalInboundBytes, monthlyOutboundTransferBytes)',
-    },
-    accessKeySortBy: {
-      type: String,
-      value: 'name',
-    },
-    accessKeySortDirection: {
-      // 1 == ascending, -1 == descending
-      type: Number,
-      value: 1,
-    },
-    localize: {
-      type: Function,
-      readonly: true,
-    },
-  },
+    static get properties() {
+      return {
+        serverId: String,
+        serverName: String,
+        serverHostname: String,
+        serverVersion: String,
+        isHostnameEditable: {type: Boolean, value: false},
+        serverManagementApiUrl: String,
+        serverPortForNewAccessKeys: Number,
+        isAccessKeyPortEditable: {type: Boolean, value: false},
+        serverCreationDate: String,
+        serverLocation: String,
+        accessKeyDataLimit: {type: Object, value: null},
+        isAccessKeyDataLimitEnabled: {type: Boolean},
+        supportsAccessKeyDataLimit:
+            {type: Boolean, value: false},  // Whether the server supports data limits.
+        dataLimitsAvailabilityDate:
+            {type: String},  // Date by which the feature stops being an experiment.
+        isServerManaged: Boolean,
+        isServerReachable: Boolean,
+        // Callback for retrying to display an unreachable server.
+        retryDisplayingServer: Function,
+        // myConnection has the same fields as each item in accessKeyRows.  It may
+        // be unset in some old versions of Outline that allowed deleting this
+        // row.
+        myConnection: Object,
+        totalInboundBytes: Number,
+        accessKeyRows: {type: Array, value: []},
+        hasNonAdminAccessKeys: Boolean,
+        metricsEnabled: Boolean,
+        // Initialize monthlyOutboundTransferBytes and monthlyCost to 0, so they can
+        // be bound to hidden attributes.  Initializing to undefined does not
+        // cause hidden$=... expressions to be evaluated and so elements may be
+        // shown incorrectly.  See:
+        //   https://stackoverflow.com/questions/33700125/polymer-1-0-hidden-attribute-negate-operator
+        //   https://www.polymer-project.org/1.0/docs/devguide/data-binding.html
+        monthlyOutboundTransferBytes: {type: Number, value: 0},
+        monthlyCost: {type: Number, value: 0},
+        selectedTab: {
+          type: String,
+          value: 'connections',
+        },
+        managedServerUtilzationPercentage: {
+          type: Number,
+          computed:
+              '_computeManagedServerUtilzationPercentage(totalInboundBytes, monthlyOutboundTransferBytes)',
+        },
+        accessKeySortBy: {
+          type: String,
+          value: 'name',
+        },
+        accessKeySortDirection: {
+          // 1 == ascending, -1 == descending
+          type: Number,
+          value: 1,
+        },
+        localize: {
+          type: Function,
+          readonly: true,
+        },
+      };
+    }
 
-  observers: [
-    '_accessKeysAddedOrRemoved(accessKeyRows.splices)',
-    '_myConnectionChanged(myConnection)',
-    '_selectedTabChanged(selectedTab)',
-  ],
+    static get observers() {
+      return [
+        '_accessKeysAddedOrRemoved(accessKeyRows.splices)',
+        '_myConnectionChanged(myConnection)',
+        '_selectedTabChanged(selectedTab)',
+      ];
+    }
 
   // Parameter `accessKey` has the format {
   //   id: string,
@@ -621,7 +637,7 @@ Polymer({
   //   transferredBytes: number;
   //   relativeTraffic: number;
   // }
-  addAccessKey: function(accessKey) {
+  addAccessKey(accessKey) {
     // TODO(fortuna): Restore loading animation.
     // TODO(fortuna): Restore highlighting.
     this.push('accessKeyRows', accessKey);
@@ -629,23 +645,23 @@ Polymer({
     this.$.accessKeysContainer.querySelector('dom-repeat').render();
     const input = this.$$(`#access-key-${accessKey.id}`);
     input.select();
-  },
+  }
 
-  removeAccessKey: function(accessKeyId) {
+  removeAccessKey(accessKeyId) {
     for (let ui in this.accessKeyRows) {
       if (this.accessKeyRows[ui].id === accessKeyId) {
         this.splice('accessKeyRows', ui, 1);
         return;
       }
     }
-  },
+  }
 
-  _handleAddAccessKeyPressed: function() {
-    this.fire('AddAccessKeyRequested');
+  _handleAddAccessKeyPressed() {
+    this.dispatchEvent(makePublicEvent('AddAccessKeyRequested'));
     this.$.addAccessKeyHelpBubble.hide();
-  },
+  }
 
-  _handleNameInputKeyDown: function(event) {
+  _handleNameInputKeyDown(event) {
     const input = event.target;
     if (event.key === 'Escape') {
       const accessKey = event.model.item;
@@ -654,9 +670,9 @@ Polymer({
     } else if (event.key === 'Enter') {
       input.blur();
     }
-  },
+  }
 
-  _handleNameInputBlur: function(event) {
+  _handleNameInputBlur(event) {
     const input = event.target;
     const accessKey = event.model.item;
     const displayName = input.value;
@@ -664,7 +680,7 @@ Polymer({
       return;
     }
     input.disabled = true;
-    this.fire('RenameAccessKeyRequested', {
+    this.dispatchEvent(makePublicEvent('RenameAccessKeyRequested', {
       accessKeyId: accessKey.id,
       newName: displayName,
       entry: {
@@ -677,38 +693,38 @@ Polymer({
           input.disabled = false;
         },
       },
-    });
-  },
+    }));
+  }
 
-  _handleRenameAccessKeyPressed: function(event) {
+  _handleRenameAccessKeyPressed(event) {
     const input = this.$.accessKeysContainer.querySelectorAll(
         '.access-key-row .access-key-container > input')[event.model.index];
     // This needs to be deferred because the closing menu messes up with the focus.
     window.setTimeout(() => {
       input.focus();
     }, 0);
-  },
+  }
 
-  _handleConnectPressed: function() {
+  _handleConnectPressed() {
     this.$.getConnectedHelpBubble.hide();
-    this.fire('OpenGetConnectedDialogRequested', {accessKey: this.myConnection.accessUrl});
-  },
+    this.dispatchEvent(makePublicEvent(
+        'OpenGetConnectedDialogRequested', {accessKey: this.myConnection.accessUrl}));
+  }
 
-  _handleShareCodePressed: function(event) {
+  _handleShareCodePressed(event) {
     const accessKey = event.model.item;
-    this.fire('OpenShareDialogRequested', {accessKey: accessKey.accessUrl});
-  },
+    this.dispatchEvent(
+        makePublicEvent('OpenShareDialogRequested', {accessKey: accessKey.accessUrl}));
+  }
 
-  _handleRemoveAccessKeyPressed: function(e) {
+  _handleRemoveAccessKeyPressed(e) {
     const accessKey = e.model.item;
-    this.fire('RemoveAccessKeyRequested', {accessKeyId: accessKey.id});
-  },
-
-  _encodeURIComponent: encodeURIComponent,
+    this.dispatchEvent(makePublicEvent('RemoveAccessKeyRequested', {accessKeyId: accessKey.id}));
+  }
 
   setServerTransferredData(totalBytes) {
     this.totalInboundBytes = totalBytes;
-  },
+  }
 
   updateAccessKeyRow(accessKeyId, fields) {
     let newAccessKeyRow;
@@ -723,9 +739,9 @@ Polymer({
         return;
       }
     }
-  },
+  }
 
-  _formatBytesTransferred: function(numBytes, emptyValue = '') {
+  _formatBytesTransferred(numBytes, emptyValue = '') {
     if (!numBytes) {
       // numBytes may not be set for manual servers, or may be 0 for
       // unused access keys.
@@ -741,9 +757,9 @@ Polymer({
     }
 
     return byte_size(numBytes, {precision: numDecimals}).toString();
-  },
+  }
 
-  _getFormattedTransferredUnit: function(numBytes, emptyValue = '') {
+  _getFormattedTransferredUnit(numBytes, emptyValue = '') {
     const formattedTransfer = this._formatBytesTransferred(numBytes);
     if (!formattedTransfer) {
       return emptyValue;
@@ -753,18 +769,18 @@ Polymer({
       return emptyValue;
     }
     return units.pop();
-  },
+  }
 
-  _getFormattedTransferredValue: function(numBytes, emptyValue = '') {
+  _getFormattedTransferredValue(numBytes, emptyValue = '') {
     const formattedTransfer = this._formatBytesTransferred(numBytes);
     if (!formattedTransfer) {
       return emptyValue;
     }
     const value = parseFloat(formattedTransfer);
     return !!value ? value : emptyValue;
-  },
+  }
 
-  _computeManagedServerUtilzationPercentage: function(numBytes, monthlyLimitBytes) {
+  _computeManagedServerUtilzationPercentage(numBytes, monthlyLimitBytes) {
     let utilizationPercentage = 0;
     if (monthlyLimitBytes && numBytes) {
       utilizationPercentage = Math.round((numBytes / monthlyLimitBytes) * 100);
@@ -773,9 +789,9 @@ Polymer({
       return `%${utilizationPercentage}`;
     }
     return `${utilizationPercentage}%`;
-  },
+  }
 
-  _accessKeysAddedOrRemoved: function(changeRecord) {
+  _accessKeysAddedOrRemoved(changeRecord) {
     // Check for myConnection and regular access keys.
     let hasNonAdminAccessKeys = false;
     for (let ui in this.accessKeyRows) {
@@ -786,13 +802,13 @@ Polymer({
       }
     }
     this.hasNonAdminAccessKeys = hasNonAdminAccessKeys;
-  },
+  }
 
-  _myConnectionChanged: function(myConnection) {
+  _myConnectionChanged(myConnection) {
     if (!myConnection) {
       this.$.getConnectedHelpBubble.hide();
     }
-  },
+  }
 
   _selectedTabChanged(selectedTab) {
     if (this.selectedTab === 'settings') {
@@ -801,50 +817,50 @@ Polymer({
       this.closeDataLimitsHelpBubble();
       this.$.serverSettings.update(this.serverName, this.metricsEnabled);
     }
-  },
+  }
 
   // Help bubbles should be shown after this outline-server-view
   // is on the screen (e.g. selected in iron-pages). If help bubbles
   // are initialized before this point, setPosition will not work and
   // they will appear in the top left of the view.
-  showGetConnectedHelpBubble: function() {
+  showGetConnectedHelpBubble() {
     return this._showHelpBubble('getConnectedHelpBubble', 'managerRow');
-  },
+  }
 
-  showAddAccessKeyHelpBubble: function() {
+  showAddAccessKeyHelpBubble() {
     return this._showHelpBubble('addAccessKeyHelpBubble', 'addAccessKeyRow', 'down', 'left');
-  },
+  }
 
-  showDataLimitsHelpBubble: function() {
+  showDataLimitsHelpBubble() {
     return this._showHelpBubble('dataLimitsHelpBubble', 'settingsTab', 'up', 'right');
-  },
+  }
 
-  closeAddAccessKeyHelpBubble: function() {
+  closeAddAccessKeyHelpBubble() {
     this.$.addAccessKeyHelpBubble.hide();
-  },
+  }
 
-  closeGetConnectedHelpBubble: function() {
+  closeGetConnectedHelpBubble() {
     this.$.getConnectedHelpBubble.hide();
-  },
+  }
 
-  closeDataLimitsHelpBubble: function() {
+  closeDataLimitsHelpBubble() {
     this.$.dataLimitsHelpBubble.hide();
-  },
+  }
 
-  _showHelpBubble: function(
+  _showHelpBubble(
       helpBubbleId, positionTargetId, arrowDirection = 'down', arrowAlignment = 'right') {
     return new Promise(resolve => {
       const helpBubble = this.$[helpBubbleId];
       helpBubble.show(this.$[positionTargetId], arrowDirection, arrowAlignment);
       helpBubble.addEventListener('outline-help-bubble-dismissed', resolve);
     });
-  },
+  }
 
-  isRegularConnection: function(item) {
+  isRegularConnection(item) {
     return item.id !== MY_CONNECTION_USER_ID;
-  },
+  }
 
-  _setSortByOrToggleDirection: function(e) {
+  _setSortByOrToggleDirection(e) {
     const sortBy = e.target.dataset.sortBy;
     if (this.accessKeySortBy !== sortBy) {
       this.accessKeySortBy = sortBy;
@@ -852,9 +868,9 @@ Polymer({
       return;
     }
     this.accessKeySortDirection *= -1;  // Toggle sort direction.
-  },
+  }
 
-  _sortAccessKeys: function(accessKeySortBy, accessKeySortDirection) {
+  _sortAccessKeys(accessKeySortBy, accessKeySortDirection) {
     if (accessKeySortBy === 'usage') {
       return function(a, b) {
         return (a.transferredBytes - b.transferredBytes) * this.accessKeySortDirection;
@@ -872,26 +888,26 @@ Polymer({
       }
       return 0;
     }.bind(this);
-  },
+  }
 
-  _computeShouldShowSortIcon: function(
+  _computeShouldShowSortIcon(
       accessKeySortBy, accessKeySortDirection, elementSortBy, elementSortDirection) {
     return accessKeySortBy === elementSortBy && accessKeySortDirection === elementSortDirection;
-  },
+  }
 
-  destroyServer: function() {
-    this.fire('DeleteServerRequested');
-  },
+  destroyServer() {
+    this.dispatchEvent(makePublicEvent('DeleteServerRequested'));
+  }
 
-  removeServer: function() {
-    this.fire('ForgetServerRequested');
-  },
+  removeServer() {
+    this.dispatchEvent(makePublicEvent('ForgetServerRequested'));
+  }
 
-  _computePaperProgressClass: function(isAccessKeyDataLimitEnabled) {
+  _computePaperProgressClass(isAccessKeyDataLimitEnabled) {
     return isAccessKeyDataLimitEnabled ? 'data-limits' : '';
-  },
+  }
 
-  _getDataLimitsUsageString: function(accessKey) {
+  _getDataLimitsUsageString(accessKey) {
     if (!this.accessKeyDataLimit) {
       return '';
     }
@@ -899,4 +915,6 @@ Polymer({
     const total = this.accessKeyDataLimit.value + ' ' + this.accessKeyDataLimit.unit;
     return this.localize('data-limits-usage', 'used', used, 'total', total);
   }
-});
+}
+
+customElements.define(ServerView.is, ServerView);
