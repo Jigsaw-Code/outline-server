@@ -150,7 +150,6 @@ function workaroundDigitalOceanApiCors() {
   electron.session.defaultSession.webRequest.onHeadersReceived(
       // tslint:disable-next-line:no-any
       headersFilter, (details: electron.OnHeadersReceivedListenerDetails, callback: (response: any) => void) => {
-        console.error(details);
         if (details.method === 'OPTIONS') {
           details.responseHeaders['access-control-allow-origin'] = 'outline://web_app';
           if (details.statusCode === 403) {
