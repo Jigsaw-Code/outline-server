@@ -149,21 +149,21 @@ function workaroundDigitalOceanApiCors() {
   const headersFilter = {urls: ['https://api.digitalocean.com/*']};
   electron.session.defaultSession.webRequest.onHeadersReceived(
       // tslint:disable-next-line:no-any
-      headersFilter, (details: any, callback: Function) => {
+      headersFilter, (details: electron.OnHeadersReceivedListenerDetails, callback: (response: any) => void) => {
+        console.error(details);
         if (details.method === 'OPTIONS') {
-          details.responseHeaders['access-control-allow-origin'] = ['outline://web_app'];
+          details.responseHeaders['access-control-allow-origin'] = 'outline://web_app';
           if (details.statusCode === 403) {
             details.statusCode = 200;
             details.statusLine = 'HTTP/1.1 200';
-            details.responseHeaders['status'] = ['200'];
-            details.responseHeaders['access-control-allow-headers'] =
-                [details.headers['Access-Control-Request-Headers']];
-            details.responseHeaders['access-control-allow-credentials'] = ['true'];
+            details.responseHeaders['status'] = '200';
+            details.responseHeaders['access-control-allow-headers'] = 'authorization,content-type';
+            details.responseHeaders['access-control-allow-credentials'] = 'true';
             details.responseHeaders['access-control-allow-methods'] =
-                ['GET, POST, PUT, PATCH, DELETE, OPTIONS'];
+                'GET, POST, PUT, PATCH, DELETE, OPTIONS';
             details.responseHeaders['access-control-expose-headers'] =
-                ['RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset, Total, Link'];
-            details.responseHeaders['access-control-max-age'] = ['86400'];
+                'RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset, Total, Link';
+            details.responseHeaders['access-control-max-age'] = '86400';
           }
         }
         callback(details);
