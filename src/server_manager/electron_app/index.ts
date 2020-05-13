@@ -156,7 +156,7 @@ function workaroundDigitalOceanApiCors() {
             details.statusCode = 200;
             details.statusLine = 'HTTP/1.1 200';
             details.responseHeaders['status'] = '200';
-            details.responseHeaders['access-control-allow-headers'] = 'authorization,content-type';
+            details.responseHeaders['access-control-allow-headers'] = '*';
             details.responseHeaders['access-control-allow-credentials'] = 'true';
             details.responseHeaders['access-control-allow-methods'] =
                 'GET, POST, PUT, PATCH, DELETE, OPTIONS';
