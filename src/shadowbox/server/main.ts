@@ -124,7 +124,7 @@ async function main() {
 
   const prometheusConfigJson = {
     global: {
-      scrape_interval: '15s',
+      scrape_interval: '1m',
     },
     scrape_configs: [
       {job_name: 'prometheus', static_configs: [{targets: [prometheusLocation]}]},
