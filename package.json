@@ -14,7 +14,7 @@
     "node": "^12"
   },
   "scripts": {
-    "clean": "rm -rf src/server_manager/bower_components/ src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts",
+    "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts",
     "do": "bash ./scripts/do_action.sh"
   },
   "workspaces": [
