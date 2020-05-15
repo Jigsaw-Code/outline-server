@@ -24,8 +24,15 @@ FROM ${NODE_IMAGE} AS build
 RUN apk add --no-cache --upgrade bash
 WORKDIR /
 
-COPY . .
+# Don't copy node_modules and other things not needed for install.
+COPY package.json yarn.lock ./
+COPY src/shadowbox/package.json src/shadowbox/
 RUN yarn install
+
+# We copy the source code only after yarn install, so that source code changes don't trigger re-installs.
+COPY scripts scripts/
+COPY src src/
+COPY tsconfig.json ./
 RUN ROOT_DIR=/ yarn do shadowbox/server/build
 
 # shadowbox image
