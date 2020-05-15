@@ -17,8 +17,8 @@
     "randomstring": "^1.1.5",
     "request-lite": "^2.40.1",
     "restify": "^8.5.1",
-    "restify-errors": "^8.0.2",
     "restify-cors-middleware": "^1.1.1",
+    "restify-errors": "^8.0.2",
     "uuid": "^3.1.0"
   },
   "devDependencies": {
@@ -26,6 +26,9 @@
     "@types/node": "^8",
     "@types/randomstring": "^1.1.6",
     "@types/restify": "^8.4.2",
-    "@types/restify-cors-middleware": "^1.0.1"
+    "@types/restify-cors-middleware": "^1.0.1",
+    "ts-loader": "^7.0.4",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11"
   }
 }
