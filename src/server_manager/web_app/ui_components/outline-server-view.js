@@ -643,7 +643,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     this.push('accessKeyRows', accessKey);
     // Force render the access key list so that the input is present in the DOM
     this.$.accessKeysContainer.querySelector('dom-repeat').render();
-    const input = this.$$(`#access-key-${accessKey.id}`);
+    const input = this.shadowRoot.querySelector(`#access-key-${accessKey.id}`);
     input.select();
   }
 
