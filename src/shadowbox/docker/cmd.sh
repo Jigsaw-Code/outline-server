@@ -41,4 +41,4 @@ ulimit -n 32768
 # Start cron, which is used to check for updates to the IP-to-country database
 crond
 
-node app/server/main.js
+node app/main.js

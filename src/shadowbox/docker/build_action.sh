@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-do_action shadowbox/server/build
-
 export DOCKER_CONTENT_TRUST=${DOCKER_CONTENT_TRUST:-1}
+# Enable Docker BuildKit (https://docs.docker.com/develop/develop-images/build_enhancements)
+export DOCKER_BUILDKIT=1
 docker build --force-rm --build-arg GITHUB_RELEASE="${TRAVIS_TAG:-none}" -t ${SB_IMAGE:-outline/shadowbox} $ROOT_DIR -f src/shadowbox/docker/Dockerfile
