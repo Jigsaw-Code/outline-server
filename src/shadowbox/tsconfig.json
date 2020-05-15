@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "target": "es2015",
     "removeComments": false,
     "noImplicitAny": false,
     "noImplicitThis": true,
     "module": "commonjs",
     "rootDir": ".",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "sourceMap": true
   },
   "include": [
     "server/main.ts",

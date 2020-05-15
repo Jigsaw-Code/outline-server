@@ -16,16 +16,6 @@
 
 readonly OUT_DIR=$BUILD_DIR/shadowbox
 rm -rf $OUT_DIR
+mkdir -p $OUT_DIR
 
-mkdir -p $OUT_DIR/js
-
-# Compile Typescript
-tsc -p src/shadowbox --outDir $OUT_DIR/js
-
-# Assemble the node app
-readonly APP_DIR=$OUT_DIR/app
-mkdir -p $APP_DIR
-# Copy built code, without test files.
-rsync --exclude='**/*.spec.js' --exclude='mocks' -r $OUT_DIR/js/* $APP_DIR/
-# Copy static resources
-cp -r $ROOT_DIR/src/shadowbox/package.json $APP_DIR
+webpack --config=src/shadowbox/webpack.config.js ${BUILD_ENV:+--mode=${BUILD_ENV}}

@@ -44,8 +44,10 @@ function makeLogMessage(level: LevelPrefix, callsite: Callsite, message: string)
   // See
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
   const timeStr = new Date().toISOString();
-  return `${level}${timeStr} ${process.pid} ${path.basename(callsite.getFileName())}:${
-      callsite.getLineNumber()}] ${message}`;
+  // TODO(alalama): preserve the source file structure in the webpack build so we can use
+  // `callsite.getFileName()`.
+  return `${level}${timeStr} ${process.pid} ${
+      path.basename(callsite.getFileName() || __filename)}:${callsite.getLineNumber()}] ${message}`;
 }
 
 export function error(message: string) {
