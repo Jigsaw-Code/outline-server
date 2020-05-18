@@ -55,6 +55,23 @@ function makePublicEvent(eventName, detail) {
   return new CustomEvent(eventName, params);
 }
 
+/**
+ * An access key to be displayed
+ * @typedef {Object} DisplayAccessKey
+ * @prop {string} id
+ * @prop {string} placeholderName
+ * @prop {string} name
+ * @prop {string} accessUrl
+ * @prop {number} transferredBytes
+ * @prop {number} relativeTraffic
+ */
+
+/**
+ * An access key data limit
+ * @typedef {Object} DataLimit
+ * @readonly @prop {number} bytes
+ */
+
 export class ServerView extends DirMixin(PolymerElement) {
   static get template() {
     return html`
@@ -629,23 +646,50 @@ export class ServerView extends DirMixin(PolymerElement) {
       ];
     }
 
-  // Parameter `accessKey` has the format {
-  //   id: string,
-  //   placeholderName: string,
-  //   name: string,
-  //   accessUrl: string,
-  //   transferredBytes: number;
-  //   relativeTraffic: number;
-  // }
-  addAccessKey(accessKey) {
-    // TODO(fortuna): Restore loading animation.
-    // TODO(fortuna): Restore highlighting.
-    this.push('accessKeyRows', accessKey);
-    // Force render the access key list so that the input is present in the DOM
-    this.$.accessKeysContainer.querySelector('dom-repeat').render();
-    const input = this.shadowRoot.querySelector(`#access-key-${accessKey.id}`);
-    input.select();
-  }
+    constructor() {
+      super();
+      this.serverId = '';
+      this.serverName = '';
+      this.serverHostname = '';
+      this.serverVersion = '';
+      this.isHostnameEditable = false;
+      this.serverManagementApiUrl = '';
+      /** @type {number} */
+      this.serverPortForNewAccessKeys = null;
+      this.isAccessKeyPortEditable = false;
+      this.serverCreationDate = '';
+      this.serverLocation = '';
+      /** @type {DataLimit} */
+      this.accessKeyDataLimit = null;
+      this.isAccessKeyDataLimitEnabled = false;
+      this.supportsAccessKeyDataLimit = false;
+      this.dataLimitsAvailabilityDate = '';
+      this.isServerManaged = false;
+      this.isServerReachable = false;
+      /** @type {Function} */
+      this.retryDisplayingServer = null;
+      // myConnection: Object,
+      this.totalInboundBytes = 0;
+      /** @type {DisplayAccessKey[]} */
+      this.accessKeyRows = [];
+      this.hasNonAdminAccessKeys = false;
+      this.metricsEnabled = true;
+      this.monthlyOutboundTransferBytes = 0;
+      this.monthlyCost = 0;
+    }
+
+    /**
+     * @param {DisplayAccessKey} accessKey
+     */
+    addAccessKey(accessKey) {
+      // TODO(fortuna): Restore loading animation.
+      // TODO(fortuna): Restore highlighting.
+      this.push('accessKeyRows', accessKey);
+      // Force render the access key list so that the input is present in the DOM
+      this.$.accessKeysContainer.querySelector('dom-repeat').render();
+      const input = this.shadowRoot.querySelector(`#access-key-${accessKey.id}`);
+      input.select();
+    }
 
   removeAccessKey(accessKeyId) {
     for (let ui in this.accessKeyRows) {

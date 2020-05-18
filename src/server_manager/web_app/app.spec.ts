@@ -21,7 +21,9 @@ import {Surveys} from '../model/survey';
 
 import {App} from './app';
 import {TokenManager} from './digitalocean_oauth';
-import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
+import {DisplayServerRepository, makeDisplayServer} from './display_server';
+import {AppRoot, DisplayServer} from './ui_components/app-root.js';
+import {ServerView} from './ui_components/outline-server-view.js';
 
 const TOKEN_WITH_NO_SERVERS = 'no-server-token';
 const TOKEN_WITH_ONE_SERVER = 'one-server-token';
@@ -257,11 +259,12 @@ enum AppRootScreen {
   DIALOG
 }
 
-class FakePolymerAppRoot implements polymer.Base {
+class FakePolymerAppRoot extends AppRoot {
   events = new EventEmitter();
   backgroundScreen = AppRootScreen.NONE;
   currentScreen = AppRootScreen.NONE;
-  serverView = {setServerTransferredData: () => {}, serverId: '', initHelpBubbles: () => {}};
+  serverView = {setServerTransferredData: () => {}, serverId: '', initHelpBubbles: () => {}} as
+      unknown as ServerView;
   serverList: DisplayServer[] = [];
   is: 'fake-polymer-app-root';
 
@@ -304,7 +307,7 @@ class FakePolymerAppRoot implements polymer.Base {
     this.backgroundScreen = AppRootScreen.NONE;
   }
 
-  getServerView() {
+  getServerView(serverId: string): ServerView {
     return this.serverView;
   }
 

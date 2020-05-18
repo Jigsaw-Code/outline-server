@@ -36,7 +36,6 @@ import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
 import './outline-region-picker-step.js';
 import './outline-server-progress-step.js';
-import './outline-server-view.js';
 import './outline-tos-view.js';
 
 import {AppLocalizeBehavior} from '@polymer/app-localize-behavior/app-localize-behavior.js';
@@ -44,9 +43,20 @@ import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 import {PolymerElement} from '@polymer/polymer/polymer-element.js';
 
+import {ServerView} from './outline-server-view.js';
+
 const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
 
-class AppRoot extends mixinBehaviors
+/**
+ * A server to be displayed
+ * @typedef {Object} DisplayServer
+ * @property {string} id - The id of the server
+ * @property {string} name - The display name of the server
+ * @property {boolean} isManaged - Whether the server host is managed by the Outline Manager
+ * @property {boolean=} isSynced - Whether the server information is updated
+ */
+
+export class AppRoot extends mixinBehaviors
 ([AppLocalizeBehavior], PolymerElement) {
   static get template() {
     return html`
@@ -522,6 +532,8 @@ class AppRoot extends mixinBehaviors
 
   constructor() {
     super();
+    /** @type {DisplayServer} */
+    this.selectedServer = undefined;
     this.addEventListener('RegionSelected', this.handleRegionSelected);
     this.addEventListener(
         'SetUpGenericCloudProviderRequested', this.handleSetUpGenericCloudProviderRequested);
@@ -530,6 +542,11 @@ class AppRoot extends mixinBehaviors
     this.addEventListener('ManualServerEntryCancelled', this.handleManualCancelled);
   }
 
+  /**
+   * Sets the language and direction for the application
+   * @param {string} newLanguage
+   * @param {string} langDir
+   */
   setLanguage(newLanguage, langDir) {
     const messagesUrl = `./messages/${newLanguage}.json`;
     this.loadResources(messagesUrl, newLanguage);
@@ -585,6 +602,11 @@ class AppRoot extends mixinBehaviors
     this.currentPage = 'serverView';
   }
 
+  /**
+   * Gets the ServerView for the server given by its id
+   * @param {string} displayServerId
+   * @returns {ServerView}
+   */
   getServerView(displayServerId) {
     if (!displayServerId) {
       return null;
@@ -629,6 +651,11 @@ class AppRoot extends mixinBehaviors
     this.showToast(message, durationMs);
   }
 
+  /**
+   * Show a toast with a message
+   * @param {string} message
+   * @param {number} duration in seconds
+   */
   showToast(message, duration) {
     const toast = this.$.toast;
     toast.close();

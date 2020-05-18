@@ -9,6 +9,7 @@
     "outDir": "build/server_manager/web_app/js",
     "sourceMap": true,
     "experimentalDecorators":true,
+    "allowJs": true,
   },
   "include": [
     "src/**/*.ts"

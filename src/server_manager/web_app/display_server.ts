@@ -13,13 +13,7 @@
 // limitations under the License.
 
 import * as server from '../model/server';
-
-export interface DisplayServer {
-  id: string;
-  name: string;
-  isManaged: boolean;
-  isSynced?: boolean;
-}
+import {DisplayServer} from './ui_components/app-root.js';
 
 // Returns a `DisplayServer` corresponding to `server`.
 export async function makeDisplayServer(server: server.Server) {
