@@ -28,7 +28,7 @@ import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './displ
 import {parseManualServerConfig} from './management_urls';
 
 import {AppRoot} from './ui_components/app-root.js';
-import {DisplayAccessKey, ServerView} from './ui_components/outline-server-view.js';
+import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -40,11 +40,6 @@ const CHANGE_HOSTNAME_VERSION = '1.2.0';
 // Date by which the data limits feature experiment will be permanently added or removed.
 export const DATA_LIMITS_AVAILABILITY_DATE = new Date('2020-06-02');
 const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
-
-interface DisplayDataAmount {
-  unit: 'MB'|'GB';
-  value: number;
-}
 
 function dataLimitToDisplayDataAmount(limit: server.DataLimit): DisplayDataAmount|null {
   if (!limit) {

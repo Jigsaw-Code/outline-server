@@ -67,9 +67,9 @@ function makePublicEvent(eventName, detail) {
  */
 
 /**
- * An access key data limit
- * @typedef {Object} DataLimit
- * @readonly @prop {number} bytes
+ * @typedef {Object} DisplayDataAmount
+ * @prop {'MB'|'GB'} unit
+ * @prop {number} value
  */
 
 export class ServerView extends DirMixin(PolymerElement) {
@@ -634,7 +634,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.isAccessKeyPortEditable = false;
       this.serverCreationDate = '';
       this.serverLocation = '';
-      /** @type {DataLimit} */
+      /** @type {DisplayDataAmount} */
       this.accessKeyDataLimit = null;
       this.isAccessKeyDataLimitEnabled = false;
       /** Whether the server supports data limits. */
