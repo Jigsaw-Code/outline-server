@@ -470,30 +470,15 @@ export class AppRoot extends mixinBehaviors
   static get properties() {
     return {
       // Properties language and useKeyIfMissing are used by Polymer.AppLocalizeBehavior.
-      language: {
-        type: String,
-        readonly: true,
-      },
-      useKeyIfMissing: {
-        type: Boolean,
-        value: true,
-      },
-      serverList: {
-        type: Array,
-        value: [],
-      },
-      selectedServer: {
-        type: Object,  // DisplayServer in display_server.ts
-        value: undefined,
-      },
+      language: {type: String, readonly: true},
+      useKeyIfMissing: {type: Boolean},
+      serverList: {type: Array},
+      selectedServer: {type: Object},
       hasManualServers: {
         type: Boolean,
         computed: '_computeHasManualServers(serverList.*)',
       },
-      adminEmail: {
-        type: String,
-        value: '',
-      },
+      adminEmail: {type: String},
       isSignedInToDigitalOcean: {
         type: Boolean,
         computed: '_computeIsSignedInToDigitalOcean(adminEmail)',
@@ -508,14 +493,8 @@ export class AppRoot extends mixinBehaviors
         type: Boolean,
         computed: '_computeHasAcceptedTermsOfService(userAcceptedTos)',
       },
-      currentPage: {
-        type: String,
-        value: 'intro',
-      },
-      shouldShowSideBar: {
-        type: Boolean,
-        value: false,
-      },
+      currentPage: {type: String},
+      shouldShowSideBar: {type: Boolean},
       sideBarMarginClass: {
         type: String,
         computed: '_computeSideBarMarginClass(shouldShowSideBar)',
@@ -527,6 +506,16 @@ export class AppRoot extends mixinBehaviors
     super();
     /** @type {DisplayServer} */
     this.selectedServer = undefined;
+    this.language = '';
+    this.useKeyIfMissing = true;
+    /** @type {DisplayServer[]} */
+    this.serverList = [];
+    this.adminEmail = '';
+    this.outlineVersion = '';
+    this.currentPage = 'intro';
+    this.shouldShowSideBar = false;
+
+
     this.addEventListener('RegionSelected', this.handleRegionSelected);
     this.addEventListener(
         'SetUpGenericCloudProviderRequested', this.handleSetUpGenericCloudProviderRequested);
@@ -583,6 +572,10 @@ export class AppRoot extends mixinBehaviors
     return this.$.manualEntry;
   }
 
+  /**
+   * @param {string} serverName
+   * @param {boolean} showCancelButton
+   */
   showProgress(serverName, showCancelButton) {
     this.currentPage = 'serverProgressStep';
     this.$.serverProgressStep.serverName = serverName;
@@ -608,7 +601,7 @@ export class AppRoot extends mixinBehaviors
     return this.$.serverView.querySelector(`#serverView-${selectedServerId}`);
   }
 
-  handleRegionSelected(e) {
+  handleRegionSelected(/** @type {Event} */ e) {
     this.fire('SetUpServerRequested', {
       regionId: this.$.regionPicker.getSelectedRegionId(),
     });
@@ -626,7 +619,7 @@ export class AppRoot extends mixinBehaviors
     this.handleManualServerSelected('gcp');
   }
 
-  handleManualServerSelected(cloudProvider) {
+  handleManualServerSelected(/** @type {'generic'|'aws'|'gcp'} */ cloudProvider) {
     this.$.manualEntry.clear();
     this.$.manualEntry.cloudProvider = cloudProvider;
     this.currentPage = 'manualEntry';
@@ -636,11 +629,11 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
   }
 
-  showError(errorMsg) {
+  showError(/** @type {string} */ errorMsg) {
     this.showToast(errorMsg, Infinity);
   }
 
-  showNotification(message, durationMs = 3000) {
+  showNotification(/** @type {string} */ message, durationMs = 3000) {
     this.showToast(message, durationMs);
   }
 
@@ -667,8 +660,11 @@ export class AppRoot extends mixinBehaviors
     this.$.toast.close();
   }
 
-  // cb is a function which accepts a single boolean which is true iff
-  // the user chose to retry the failing operation.
+  /**
+   * @param {(retry: boolean) => void} cb a function which accepts a single boolean which is true
+   *     iff
+   *      the user chose to retry the failing operation.
+   */
   showConnectivityDialog(cb) {
     const dialogTitle = this.localize('error-connectivity-title');
     const dialogText = this.localize('error-connectivity');
@@ -688,6 +684,10 @@ export class AppRoot extends mixinBehaviors
         });
   }
 
+  /**
+   * @param {string} errorTitle
+   * @param {string} errorText
+   */
   showManualServerError(errorTitle, errorText) {
     this.showModalDialog(errorTitle, errorText, [this.localize('cancel'), this.localize('retry')])
         .then(clickedButtonIndex => {
@@ -750,7 +750,7 @@ export class AppRoot extends mixinBehaviors
     this.fire('SignOutRequested');
   }
 
-  openManualInstallFeedback(prepopulatedMessage) {
+  openManualInstallFeedback(/** @type {string} */ prepopulatedMessage) {
     this.$.feedbackDialog.open(prepopulatedMessage, true);
   }
 
@@ -758,7 +758,7 @@ export class AppRoot extends mixinBehaviors
     this.$.shareDialog.open(accessKey, s3Url);
   }
 
-  openGetConnectedDialog(inviteUrl) {
+  openGetConnectedDialog(/** @type {string} */ inviteUrl) {
     const dialog = this.$.getConnectedDialog;
     if (dialog.children.length > 1) {
       return;  // The iframe is already loading.
@@ -786,7 +786,12 @@ export class AppRoot extends mixinBehaviors
     this.$.metricsDialog.showMetricsOptInDialog();
   }
 
-  // Returns a Promise which fulfills with the index of the button clicked.
+  /**
+   * @param {string} title
+   * @param {string} text
+   * @param {string[]} buttons
+   * @returns {Promise<number>} a Promise which fulfills with the index of the button clicked.
+   */
   showModalDialog(title, text, buttons) {
     return this.$.modalDialog.open(title, text, buttons);
   }

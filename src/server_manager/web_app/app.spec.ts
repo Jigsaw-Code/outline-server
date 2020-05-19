@@ -293,9 +293,9 @@ class FakePolymerAppRoot extends AppRoot {
   showModalDialog() {
     this.backgroundScreen = this.currentScreen;
     this.setScreen(AppRootScreen.DIALOG);
-    const promise = new Promise(() => {});
+    const promise = new Promise<number>(() => 0);
     // Supress Promise not handled warning.
-    promise.then(() => {});
+    promise.then(v => v);
     return promise;
   }
 
