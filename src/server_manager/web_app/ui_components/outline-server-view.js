@@ -581,60 +581,35 @@ export class ServerView extends DirMixin(PolymerElement) {
         serverName: String,
         serverHostname: String,
         serverVersion: String,
-        isHostnameEditable: {type: Boolean, value: false},
+        isHostnameEditable: {type: Boolean},
         serverManagementApiUrl: String,
         serverPortForNewAccessKeys: Number,
-        isAccessKeyPortEditable: {type: Boolean, value: false},
+        isAccessKeyPortEditable: {type: Boolean},
         serverCreationDate: String,
         serverLocation: String,
-        accessKeyDataLimit: {type: Object, value: null},
+        accessKeyDataLimit: {type: Object},
         isAccessKeyDataLimitEnabled: {type: Boolean},
-        supportsAccessKeyDataLimit:
-            {type: Boolean, value: false},  // Whether the server supports data limits.
-        dataLimitsAvailabilityDate:
-            {type: String},  // Date by which the feature stops being an experiment.
+        supportsAccessKeyDataLimit: {type: Boolean},
+        dataLimitsAvailabilityDate: {type: String},
         isServerManaged: Boolean,
         isServerReachable: Boolean,
-        // Callback for retrying to display an unreachable server.
         retryDisplayingServer: Function,
-        // myConnection has the same fields as each item in accessKeyRows.  It may
-        // be unset in some old versions of Outline that allowed deleting this
-        // row.
         myConnection: Object,
         totalInboundBytes: Number,
-        accessKeyRows: {type: Array, value: []},
+        accessKeyRows: {type: Array},
         hasNonAdminAccessKeys: Boolean,
         metricsEnabled: Boolean,
-        // Initialize monthlyOutboundTransferBytes and monthlyCost to 0, so they can
-        // be bound to hidden attributes.  Initializing to undefined does not
-        // cause hidden$=... expressions to be evaluated and so elements may be
-        // shown incorrectly.  See:
-        //   https://stackoverflow.com/questions/33700125/polymer-1-0-hidden-attribute-negate-operator
-        //   https://www.polymer-project.org/1.0/docs/devguide/data-binding.html
-        monthlyOutboundTransferBytes: {type: Number, value: 0},
-        monthlyCost: {type: Number, value: 0},
-        selectedTab: {
-          type: String,
-          value: 'connections',
-        },
+        monthlyOutboundTransferBytes: {type: Number},
+        monthlyCost: {type: Number},
+        selectedTab: {type: String},
         managedServerUtilzationPercentage: {
           type: Number,
           computed:
               '_computeManagedServerUtilzationPercentage(totalInboundBytes, monthlyOutboundTransferBytes)',
         },
-        accessKeySortBy: {
-          type: String,
-          value: 'name',
-        },
-        accessKeySortDirection: {
-          // 1 == ascending, -1 == descending
-          type: Number,
-          value: 1,
-        },
-        localize: {
-          type: Function,
-          readonly: true,
-        },
+        accessKeySortBy: {type: String},
+        accessKeySortDirection: {type: Number},
+        localize: {type: Function, readonly: true},
       };
     }
 
@@ -662,20 +637,42 @@ export class ServerView extends DirMixin(PolymerElement) {
       /** @type {DataLimit} */
       this.accessKeyDataLimit = null;
       this.isAccessKeyDataLimitEnabled = false;
+      /** Whether the server supports data limits. */
       this.supportsAccessKeyDataLimit = false;
+      /** Date by which the feature stops being an experiment. */
       this.dataLimitsAvailabilityDate = '';
       this.isServerManaged = false;
       this.isServerReachable = false;
-      /** @type {Function} */
+      /**
+       *  Callback for retrying to display an unreachable server.
+       *  @type {Function}
+       */
       this.retryDisplayingServer = null;
-      // myConnection: Object,
+      /**
+       *  myConnection has the same fields as each item in accessKeyRows.  It may
+       *  be unset in some old versions of Outline that allowed deleting this row
+       *  @type {DisplayAccessKey}
+       */
+      this.myConnection = null;
       this.totalInboundBytes = 0;
       /** @type {DisplayAccessKey[]} */
       this.accessKeyRows = [];
       this.hasNonAdminAccessKeys = false;
       this.metricsEnabled = true;
+      // Initialize monthlyOutboundTransferBytes and monthlyCost to 0, so they can
+      // be bound to hidden attributes.  Initializing to undefined does not
+      // cause hidden$=... expressions to be evaluated and so elements may be
+      // shown incorrectly.  See:
+      //   https://stackoverflow.com/questions/33700125/polymer-1-0-hidden-attribute-negate-operator
+      //   https://www.polymer-project.org/1.0/docs/devguide/data-binding.html
       this.monthlyOutboundTransferBytes = 0;
       this.monthlyCost = 0;
+      this.selectedTab = 'connections';
+      this.accessKeySortBy = 'name';
+      /** The direction to sort: 1 == ascending, -1 == descending */
+      this.accessKeySortDirection = 1;
+      /** @type {Function} */
+      this.localize = null;
     }
 
     /**
