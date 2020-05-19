@@ -21,8 +21,8 @@ import {Surveys} from '../model/survey';
 
 import {App} from './app';
 import {TokenManager} from './digitalocean_oauth';
-import {DisplayServerRepository, makeDisplayServer} from './display_server';
-import {AppRoot, DisplayServer} from './ui_components/app-root.js';
+import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
+import {AppRoot} from './ui_components/app-root.js';
 import {ServerView} from './ui_components/outline-server-view.js';
 
 const TOKEN_WITH_NO_SERVERS = 'no-server-token';

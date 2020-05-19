@@ -24,11 +24,11 @@ import {Surveys} from '../model/survey';
 
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
-import {DisplayServerRepository, makeDisplayServer} from './display_server';
+import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
 
-import {AppRoot, DisplayServer} from './ui_components/app-root.js';
-import {ServerView} from './ui_components/outline-server-view.js';
+import {AppRoot} from './ui_components/app-root.js';
+import {DisplayAccessKey, ServerView} from './ui_components/outline-server-view.js';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -40,15 +40,6 @@ const CHANGE_HOSTNAME_VERSION = '1.2.0';
 // Date by which the data limits feature experiment will be permanently added or removed.
 export const DATA_LIMITS_AVAILABILITY_DATE = new Date('2020-06-02');
 const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
-
-interface UiAccessKey {
-  id: string;
-  placeholderName: string;
-  name: string;
-  accessUrl: string;
-  transferredBytes: number;
-  relativeTraffic: number;
-}
 
 interface DisplayDataAmount {
   unit: 'MB'|'GB';
@@ -989,7 +980,7 @@ export class App {
 
   // Converts the access key from the remote service format to the
   // format used by outline-server-view.
-  private convertToUiAccessKey(remoteAccessKey: server.AccessKey): UiAccessKey {
+  private convertToUiAccessKey(remoteAccessKey: server.AccessKey): DisplayAccessKey {
     return {
       id: remoteAccessKey.id,
       placeholderName: `${this.appRoot.localize('key', 'keyId', remoteAccessKey.id)}`,

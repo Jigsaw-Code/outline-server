@@ -43,18 +43,11 @@ import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 import {PolymerElement} from '@polymer/polymer/polymer-element.js';
 
+import {DisplayServer} from '../display_server';
+
 import {ServerView} from './outline-server-view.js';
 
 const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
-
-/**
- * A server to be displayed
- * @typedef {Object} DisplayServer
- * @property {string} id - The id of the server
- * @property {string} name - The display name of the server
- * @property {boolean} isManaged - Whether the server host is managed by the Outline Manager
- * @property {boolean=} isSynced - Whether the server information is updated
- */
 
 export class AppRoot extends mixinBehaviors
 ([AppLocalizeBehavior], PolymerElement) {
