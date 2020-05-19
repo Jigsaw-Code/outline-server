@@ -645,7 +645,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.isServerReachable = false;
       /**
        *  Callback for retrying to display an unreachable server.
-       *  @type {Function}
+       *  @type {() => void)}
        */
       this.retryDisplayingServer = null;
       /**
@@ -671,7 +671,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.accessKeySortBy = 'name';
       /** The direction to sort: 1 == ascending, -1 == descending */
       this.accessKeySortDirection = 1;
-      /** @type {Function} */
+      /** @type {(msgId: string, ...params: string[]) => string} */
       this.localize = null;
     }
 
