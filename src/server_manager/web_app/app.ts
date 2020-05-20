@@ -27,6 +27,9 @@ import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
 
+import {AppRoot} from './ui_components/app-root.js';
+import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
+
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
 const UNUSED_DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
@@ -37,20 +40,6 @@ const CHANGE_HOSTNAME_VERSION = '1.2.0';
 // Date by which the data limits feature experiment will be permanently added or removed.
 export const DATA_LIMITS_AVAILABILITY_DATE = new Date('2020-06-02');
 const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
-
-interface UiAccessKey {
-  id: string;
-  placeholderName: string;
-  name: string;
-  accessUrl: string;
-  transferredBytes: number;
-  relativeTraffic: number;
-}
-
-interface DisplayDataAmount {
-  unit: 'MB'|'GB';
-  value: number;
-}
 
 function dataLimitToDisplayDataAmount(limit: server.DataLimit): DisplayDataAmount|null {
   if (!limit) {
@@ -99,7 +88,7 @@ async function computeDefaultAccessKeyDataLimit(
   }
 }
 
-async function showHelpBubblesOnce(serverView: polymer.Base) {
+async function showHelpBubblesOnce(serverView: ServerView) {
   if (!window.localStorage.getItem('addAccessKeyHelpBubble-dismissed')) {
     await serverView.showAddAccessKeyHelpBubble();
     window.localStorage.setItem('addAccessKeyHelpBubble-dismissed', 'true');
@@ -137,7 +126,7 @@ export class App {
   private serverBeingCreated: server.ManagedServer;
 
   constructor(
-      private appRoot: polymer.Base, private readonly version: string,
+      private appRoot: AppRoot, private readonly version: string,
       private createDigitalOceanSession: DigitalOceanSessionFactory,
       private createDigitalOceanServerRepository: DigitalOceanServerRepositoryFactory,
       private manualServerRepository: server.ManualServerRepository,
@@ -565,7 +554,7 @@ export class App {
         });
       } else {
         // Display the unreachable server state within the server view.
-        const serverView = this.appRoot.getServerView(displayServer.id);
+        const serverView = this.appRoot.getServerView(displayServer.id) as ServerView;
         serverView.isServerReachable = false;
         serverView.isServerManaged = isManagedServer(server);
         serverView.serverName = displayServer.name;  // Don't get the name from the remote server.
@@ -892,7 +881,7 @@ export class App {
     this.showTransferStats(selectedServer, view);
   }
 
-  private showMetricsOptInWhenNeeded(selectedServer: server.Server, serverView: polymer.Base) {
+  private showMetricsOptInWhenNeeded(selectedServer: server.Server, serverView: ServerView) {
     const showMetricsOptInOnce = () => {
       // Sanity check to make sure the running server is still displayed, i.e.
       // it hasn't been deleted.
@@ -922,7 +911,7 @@ export class App {
     }
   }
 
-  private async refreshTransferStats(selectedServer: server.Server, serverView: polymer.Base) {
+  private async refreshTransferStats(selectedServer: server.Server, serverView: ServerView) {
     try {
       const stats = await selectedServer.getDataUsage();
       let totalBytes = 0;
@@ -963,7 +952,7 @@ export class App {
     }
   }
 
-  private showTransferStats(selectedServer: server.Server, serverView: polymer.Base) {
+  private showTransferStats(selectedServer: server.Server, serverView: ServerView) {
     this.refreshTransferStats(selectedServer, serverView);
     // Get transfer stats once per minute for as long as server is selected.
     const statsRefreshRateMs = 60 * 1000;
@@ -986,7 +975,7 @@ export class App {
 
   // Converts the access key from the remote service format to the
   // format used by outline-server-view.
-  private convertToUiAccessKey(remoteAccessKey: server.AccessKey): UiAccessKey {
+  private convertToUiAccessKey(remoteAccessKey: server.AccessKey): DisplayAccessKey {
     return {
       id: remoteAccessKey.id,
       placeholderName: `${this.appRoot.localize('key', 'keyId', remoteAccessKey.id)}`,
@@ -1224,7 +1213,8 @@ export class App {
       this.appRoot.showError(this.appRoot.localize('error-server-rename'));
       const oldName = this.selectedServer.getName();
       view.serverName = oldName;
-      view.$.serverSettings.serverName = oldName;
+      // tslint:disable-next-line:no-any
+      (view.$.serverSettings as any).serverName = oldName;
     }
   }
 
