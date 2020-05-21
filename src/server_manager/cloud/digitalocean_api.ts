@@ -100,7 +100,7 @@ class RestApiSession implements DigitalOceanSession {
 
   public getAccount(): Promise<Account> {
     console.info('Requesting account');
-    return this.request<{account: Account}>('GET', 'account/').then((response) => {
+    return this.request<{account: Account}>('GET', 'account').then((response) => {
       return response.account;
     });
   }
@@ -179,7 +179,7 @@ class RestApiSession implements DigitalOceanSession {
 
   public getDroplet(dropletId: number): Promise<DropletInfo> {
     console.info('Requesting droplet');
-    return this.request<{droplet: DropletInfo}>('GET', 'droplets/' + dropletId).then((response) => {
+    return this.request<{droplet: DropletInfo}>('GET', 'droplets' + dropletId).then((response) => {
       return response.droplet;
     });
   }
@@ -192,7 +192,7 @@ class RestApiSession implements DigitalOceanSession {
 
   public getDropletsByTag(tag: string): Promise<DropletInfo[]> {
     console.info('Requesting droplet by tag');
-    return this.request<{droplets: DropletInfo[]}>('GET', `droplets/?tag_name=${encodeURI(tag)}`)
+    return this.request<{droplets: DropletInfo[]}>('GET', `droplets?tag_name=${encodeURI(tag)}`)
         .then((response) => {
           return response.droplets;
         });
@@ -200,7 +200,7 @@ class RestApiSession implements DigitalOceanSession {
 
   public getDroplets(): Promise<DropletInfo[]> {
     console.info('Requesting droplets');
-    return this.request<{droplets: DropletInfo[]}>('GET', 'droplets/').then((response) => {
+    return this.request<{droplets: DropletInfo[]}>('GET', 'droplets').then((response) => {
       return response.droplets;
     });
   }

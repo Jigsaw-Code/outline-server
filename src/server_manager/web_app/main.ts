@@ -24,6 +24,7 @@ import * as digitalocean_server from './digitalocean_server';
 import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
 import {DEFAULT_PROMPT_IMPRESSION_DELAY_MS, OutlineSurveys} from './survey';
+import {AppRoot} from './ui_components/app-root.js';
 
 const SUPPORTED_LANGUAGES: {[key: string]: {id: string, dir: string}} = {
   'am': {id: 'am', dir: 'ltr'},
@@ -101,7 +102,7 @@ document.addEventListener('WebComponentsReady', () => {
   document.documentElement.setAttribute('dir', languageDirection);
   // NOTE: this cast is safe and allows us to leverage Polymer typings since we haven't migrated to
   // Polymer 3, which adds typescript support.
-  const appRoot = document.getElementById('appRoot') as unknown as polymer.Base;
+  const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
   appRoot.setLanguage(language.string(), languageDirection);
   new App(
       appRoot, version, digitalocean_api.createDigitalOceanSession,
