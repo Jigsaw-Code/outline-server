@@ -179,7 +179,7 @@ class RestApiSession implements DigitalOceanSession {
 
   public getDroplet(dropletId: number): Promise<DropletInfo> {
     console.info('Requesting droplet');
-    return this.request<{droplet: DropletInfo}>('GET', 'droplets' + dropletId).then((response) => {
+    return this.request<{droplet: DropletInfo}>('GET', 'droplets/' + dropletId).then((response) => {
       return response.droplet;
     });
   }
