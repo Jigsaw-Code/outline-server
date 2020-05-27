@@ -69,7 +69,20 @@ export class PrometheusClient {
   }
 }
 
-export async function writePrometheusConfigToDisk(configFilename: string, configJson: {}) {
+export async function startPrometheus(
+    prometheusConfigFilename: string, prometheusEndpoint: string,
+    prometheusTsdbFilename: string, prometheusLocation: string,
+    configJson: {}, verbose: boolean) {
+  await writePrometheusConfigToDisk(prometheusConfigFilename, configJson);
+  const processArgs = [
+    '--config.file', prometheusConfigFilename, '--storage.tsdb.retention', '31d',
+    '--storage.tsdb.path', prometheusTsdbFilename, '--web.listen-address',
+    prometheusLocation, '--log.level', verbose ? 'debug' : 'info'
+  ];
+  await spawnPrometheusSubprocess(processArgs, prometheusEndpoint);
+}
+
+async function writePrometheusConfigToDisk(configFilename: string, configJson: {}) {
   await mkdirp.sync(path.dirname(configFilename));
   const ymlTxt = jsyaml.safeDump(configJson, {'sortKeys': true});
   // Write the file asynchronously to prevent blocking the node thread.
@@ -84,17 +97,17 @@ export async function writePrometheusConfigToDisk(configFilename: string, config
   });
 }
 
-export async function runPrometheusScraper(
-    args: string[], prometheusEndpoint: string): Promise<child_process.ChildProcess> {
+async function spawnPrometheusSubprocess(
+    processArgs: string[], prometheusEndpoint: string): Promise<child_process.ChildProcess> {
   logging.info('Starting Prometheus...');
-  const runProcess = child_process.spawn('/root/shadowbox/bin/prometheus', args);
+  const runProcess = child_process.spawn('/root/shadowbox/bin/prometheus', processArgs);
   runProcess.on('error', (error) => {
     logging.error(`Error spawning Prometheus: ${error}`);
   });
   runProcess.on('exit', (code, signal) => {
     logging.info(`Prometheus has exited with error. Code: ${code}, Signal: ${signal}`);
     logging.info('Restarting Prometheus...');
-    runPrometheusScraper(args, prometheusEndpoint);
+    spawnPrometheusSubprocess(processArgs, prometheusEndpoint);
   });
   // TODO(fortuna): Consider saving the output and expose it through the manager service.
   runProcess.stdout.pipe(process.stdout);

@@ -24,11 +24,7 @@ import {RealClock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
 import * as json_config from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {
-  PrometheusClient,
-  runPrometheusScraper,
-  writePrometheusConfigToDisk
-} from '../infrastructure/prometheus_scraper';
+import {PrometheusClient, startPrometheus} from '../infrastructure/prometheus_scraper';
 import {RolloutTracker} from '../infrastructure/rollout';
 import {AccessKeyId} from '../model/access_key';
 
@@ -153,17 +149,11 @@ async function main() {
 
   // Start Prometheus subprocess and wait for it to be up and running.
   const prometheusConfigFilename = getPersistentFilename('prometheus/config.yml');
+  const prometheusTsdbFilename = getPersistentFilename('prometheus/data');
   const prometheusEndpoint = `http://${prometheusLocation}`;
-  await writePrometheusConfigToDisk(prometheusConfigFilename, prometheusConfigJson);
-  await runPrometheusScraper(
-      [
-        '--config.file', prometheusConfigFilename,
-        '--storage.tsdb.retention', '31d',
-        '--storage.tsdb.path', getPersistentFilename('prometheus/data'),
-        '--web.listen-address', prometheusLocation,
-        '--log.level', verbose ? 'debug' : 'info'
-      ],
-      prometheusEndpoint);
+  await startPrometheus(
+      prometheusConfigFilename, prometheusEndpoint, prometheusTsdbFilename,
+      prometheusLocation, prometheusConfigJson, verbose);
 
   const prometheusClient = new PrometheusClient(prometheusEndpoint);
   if (!serverConfig.data().portForNewAccessKeys) {
