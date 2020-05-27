@@ -69,10 +69,8 @@ export class PrometheusClient {
   }
 }
 
-export async function runPrometheusScraper(
-    args: string[], configFilename: string, configJson: {},
-    prometheusEndpoint: string): Promise<child_process.ChildProcess> {
-  mkdirp.sync(path.dirname(configFilename));
+export async function writePrometheusConfigToDisk(configFilename: string, configJson: {}) {
+  await mkdirp.sync(path.dirname(configFilename));
   const ymlTxt = jsyaml.safeDump(configJson, {'sortKeys': true});
   // Write the file asynchronously to prevent blocking the node thread.
   await new Promise((resolve, reject) => {
@@ -84,15 +82,19 @@ export async function runPrometheusScraper(
       }
     });
   });
-  const commandArguments = ['--config.file', configFilename];
-  commandArguments.push(...args);
-  const runProcess = child_process.spawn('/root/shadowbox/bin/prometheus', commandArguments);
+}
+
+export async function runPrometheusScraper(
+    args: string[], prometheusEndpoint: string): Promise<child_process.ChildProcess> {
+  logging.info('Starting Prometheus...');
+  const runProcess = child_process.spawn('/root/shadowbox/bin/prometheus', args);
   runProcess.on('error', (error) => {
-    logging.error(`Error spawning prometheus: ${error}`);
+    logging.error(`Error spawning Prometheus: ${error}`);
   });
-  // TODO(fortuna): Add restart logic.
   runProcess.on('exit', (code, signal) => {
-    logging.info(`prometheus has exited with error. Code: ${code}, Signal: ${signal}`);
+    logging.info(`Prometheus has exited with error. Code: ${code}, Signal: ${signal}`);
+    logging.info('Restarting Prometheus...');
+    runPrometheusScraper(args, prometheusEndpoint);
   });
   // TODO(fortuna): Consider saving the output and expose it through the manager service.
   runProcess.stdout.pipe(process.stdout);
@@ -102,11 +104,11 @@ export async function runPrometheusScraper(
 }
 
 async function waitForPrometheusReady(prometheusEndpoint: string) {
-  logging.debug('Waiting for Prometheus to be ready...');
+  logging.info('Waiting for Prometheus to be ready...');
   while (!(await isHttpEndpointHealthy(prometheusEndpoint))) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
-  logging.debug('Prometheus is ready');
+  logging.info('Prometheus is ready!');
 }
 
 function isHttpEndpointHealthy(endpoint: string): Promise<boolean> {
