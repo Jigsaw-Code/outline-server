@@ -70,14 +70,13 @@ export class PrometheusClient {
 }
 
 export async function startPrometheus(
-    prometheusConfigFilename: string, prometheusEndpoint: string,
-    prometheusTsdbFilename: string, prometheusLocation: string,
-    configJson: {}, verbose: boolean) {
+    prometheusConfigFilename: string, prometheusEndpoint: string, prometheusTsdbFilename: string,
+    prometheusLocation: string, configJson: {}, verbose: boolean) {
   await writePrometheusConfigToDisk(prometheusConfigFilename, configJson);
   const processArgs = [
     '--config.file', prometheusConfigFilename, '--storage.tsdb.retention', '31d',
-    '--storage.tsdb.path', prometheusTsdbFilename, '--web.listen-address',
-    prometheusLocation, '--log.level', verbose ? 'debug' : 'info'
+    '--storage.tsdb.path', prometheusTsdbFilename, '--web.listen-address', prometheusLocation,
+    '--log.level', verbose ? 'debug' : 'info'
   ];
   await spawnPrometheusSubprocess(processArgs, prometheusEndpoint);
 }

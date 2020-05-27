@@ -152,8 +152,8 @@ async function main() {
   const prometheusTsdbFilename = getPersistentFilename('prometheus/data');
   const prometheusEndpoint = `http://${prometheusLocation}`;
   await startPrometheus(
-      prometheusConfigFilename, prometheusEndpoint, prometheusTsdbFilename,
-      prometheusLocation, prometheusConfigJson, verbose);
+      prometheusConfigFilename, prometheusEndpoint, prometheusTsdbFilename, prometheusLocation,
+      prometheusConfigJson, verbose);
 
   const prometheusClient = new PrometheusClient(prometheusEndpoint);
   if (!serverConfig.data().portForNewAccessKeys) {
