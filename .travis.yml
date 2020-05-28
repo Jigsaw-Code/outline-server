@@ -6,7 +6,6 @@ node_js:
 cache:
   yarn: true
   directories:
-    - $HOME/.cache/bower
     - $HOME/.cache/electron
     - $HOME/.cache/electron-builder
 

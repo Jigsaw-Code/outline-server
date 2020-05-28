@@ -12,42 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as request from 'request-lite';
-
-interface Response {
-  statusCode: number;
-  headers: {location?: string};
-}
-
-interface Options {
-  url: string;
-  method?: string;
-  headers?: {};
-  body?: string;
-  followRedirect?: boolean;
-  followAllRedirects?: boolean;
-}
+import fetch, {RequestInit, Response} from 'node-fetch';
 
 // Makes an http(s) request, and follows any redirect with the same request
 // without changing the request method or body.  This is used because typical
 // http(s) clients follow redirects for POST/PUT/DELETE requests by changing the
-// method to GET and removing the request body.  Function signature matches the
-// request/request-lite function.
-export function requestFollowRedirectsWithSameMethodAndBody(
-    options: Options, callback: (error: Error, response: Response, body: string) => void): void {
+// method to GET and removing the request body.  The options parameter matches the
+// fetch() function.
+export async function requestFollowRedirectsWithSameMethodAndBody(
+    url: string, options: RequestInit): Promise<Response> {
   // Make a copy of options to modify parameters.
-  const modifiedOptions = Object.assign({}, options);
-  modifiedOptions.followAllRedirects = false;
-  modifiedOptions.followRedirect = false;
-  request(modifiedOptions, (error, response, body) => {
-    if (!error && response.statusCode >= 300 && response.statusCode < 400 &&
-        response.headers.location) {
-      // Request has been redirected, try again at the new location.
-      modifiedOptions.url = response.headers.location;
-      return requestFollowRedirectsWithSameMethodAndBody(modifiedOptions, callback);
+  const manualRedirectOptions = {
+    ...options,
+    redirect: 'manual' as RequestRedirect,
+  };
+  let response: Response;
+  for (let i = 0; i < 10; i++) {
+    response = await fetch(url, manualRedirectOptions);
+    if (response.status >= 300 && response.status < 400) {
+      url = response.headers.get('location');
     } else {
-      // Request has not been redirected, invoke callback.
-      return callback(error, response, body);
+      break;
     }
-  });
+  }
+  return response;
 }

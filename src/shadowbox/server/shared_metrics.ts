@@ -124,25 +124,23 @@ export class RestMetricsCollectorClient {
     return this.postMetrics('/features', JSON.stringify(reportJson));
   }
 
-  private postMetrics(urlPath: string, reportJson: string): Promise<void> {
+  private async postMetrics(urlPath: string, reportJson: string): Promise<void> {
     const options = {
-      url: `${this.serviceUrl}${urlPath}`,
       headers: {'Content-Type': 'application/json'},
       method: 'POST',
       body: reportJson
     };
-    logging.info('Posting metrics: ' + JSON.stringify(options));
-    return new Promise((resolve, reject) => {
-      follow_redirects.requestFollowRedirectsWithSameMethodAndBody(
-          options, (error, response, body) => {
-            if (error) {
-              reject(error);
-              return;
-            }
-            logging.info('Metrics server responded with status ' + response.statusCode);
-            resolve();
-          });
-    });
+    const url = `${this.serviceUrl}${urlPath}`;
+    logging.info(`Posting metrics to ${url} with options ${JSON.stringify(options)}`);
+    try {
+      const response =
+          await follow_redirects.requestFollowRedirectsWithSameMethodAndBody(url, options);
+      if (!response.ok) {
+        throw new Error(`Got status ${response.status}`);
+      }
+    } catch (e) {
+      throw new Error(`Failed to post to metrics server: ${e}`);
+    }
   }
 }
 
@@ -172,7 +170,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
         await this.reportServerUsageMetrics(await usageMetrics.getUsage());
         usageMetrics.reset();
       } catch (err) {
-        console.error(`Failed to report server usage metrics: ${err}`);
+        logging.error(`Failed to report server usage metrics: ${err}`);
       }
     }, MS_PER_HOUR);
     // TODO(fortuna): also trigger report on shutdown, so data loss is minimized.
@@ -182,9 +180,9 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
         return;
       }
       try {
-        this.reportFeatureMetrics();
+        await this.reportFeatureMetrics();
       } catch (err) {
-        console.error(`Failed to report feature metrics: ${err}`);
+        logging.error(`Failed to report feature metrics: ${err}`);
       }
     }, MS_PER_DAY);
   }
