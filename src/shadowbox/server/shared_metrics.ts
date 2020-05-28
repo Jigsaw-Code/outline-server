@@ -124,25 +124,21 @@ export class RestMetricsCollectorClient {
     return this.postMetrics('/features', JSON.stringify(reportJson));
   }
 
-  private postMetrics(urlPath: string, reportJson: string): Promise<void> {
+  private async postMetrics(urlPath: string, reportJson: string): Promise<void> {
     const options = {
-      url: `${this.serviceUrl}${urlPath}`,
       headers: {'Content-Type': 'application/json'},
       method: 'POST',
       body: reportJson
     };
-    logging.info('Posting metrics: ' + JSON.stringify(options));
-    return new Promise((resolve, reject) => {
-      follow_redirects.requestFollowRedirectsWithSameMethodAndBody(
-          options, (error, response, body) => {
-            if (error) {
-              reject(error);
-              return;
-            }
-            logging.info('Metrics server responded with status ' + response.statusCode);
-            resolve();
-          });
-    });
+    const url = `${this.serviceUrl}${urlPath}`;
+    logging.info(`Posting metrics to ${url} with options ${JSON.stringify(options)}`);
+    try {
+      const response =
+          await follow_redirects.requestFollowRedirectsWithSameMethodAndBody(url, options);
+      logging.info(`Metrics server responded with status ${response.status}`);
+    } catch (e) {
+      logging.error(`Failed to post to metrics server: ${e}`);
+    }
   }
 }
 
