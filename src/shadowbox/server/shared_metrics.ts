@@ -135,9 +135,11 @@ export class RestMetricsCollectorClient {
     try {
       const response =
           await follow_redirects.requestFollowRedirectsWithSameMethodAndBody(url, options);
-      logging.info(`Metrics server responded with status ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`Got status ${response.status}`);
+      }
     } catch (e) {
-      logging.error(`Failed to post to metrics server: ${e}`);
+      throw new Error(`Failed to post to metrics server: ${e}`);
     }
   }
 }
