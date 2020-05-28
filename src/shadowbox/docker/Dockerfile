@@ -36,7 +36,7 @@ RUN ROOT_DIR=/ yarn do shadowbox/server/build
 FROM ${NODE_IMAGE}
 
 # Versions can be found at https://github.com/Jigsaw-Code/outline-ss-server/releases
-ARG SS_VERSION=1.1.2
+ARG SS_VERSION=1.1.3
 
 # Save metadata on the software versions we are using.
 LABEL shadowbox.node_version=12.16.3
@@ -57,10 +57,10 @@ RUN /etc/periodic/weekly/update_mmdb
 WORKDIR /root/shadowbox
 
 # Install shadowbox and third party dependencies.
-COPY --from=build /build/shadowbox/app app
 RUN mkdir bin && curl -SsL https://github.com/Jigsaw-Code/outline-ss-server/releases/download/v${SS_VERSION}/outline-ss-server_${SS_VERSION}_linux_x86_64.tar.gz | tar xz -C bin outline-ss-server
 COPY third_party/prometheus/prometheus ./bin/
 COPY src/shadowbox/package.json .
+COPY --from=build /build/shadowbox/app app
 
 # Create default state directory.
 RUN mkdir -p /root/shadowbox/persisted-state
