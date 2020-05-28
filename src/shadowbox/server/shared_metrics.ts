@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {http, https} from 'follow-redirects';
 
 import {Clock} from '../infrastructure/clock';
-import * as follow_redirects from '../infrastructure/follow_redirects';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
@@ -125,23 +125,32 @@ export class RestMetricsCollectorClient {
   }
 
   private postMetrics(urlPath: string, reportJson: string): Promise<void> {
+    const url = new URL(this.serviceUrl);
+    let requestModule = https;
+    if (url.protocol === 'http') {
+      requestModule = http;
+    }
     const options = {
-      url: `${this.serviceUrl}${urlPath}`,
-      headers: {'Content-Type': 'application/json'},
-      method: 'POST',
-      body: reportJson
+      hostname: url.hostname,
+      path: urlPath,
+      headers: {'Content-Type': 'application/json', 'Content-Length': reportJson.length},
+      method: 'POST'
     };
-    logging.info('Posting metrics: ' + JSON.stringify(options));
+    logging.info(`Posting metrics to ${this.serviceUrl}${urlPath}: ${reportJson}`);
     return new Promise((resolve, reject) => {
-      follow_redirects.requestFollowRedirectsWithSameMethodAndBody(
-          options, (error, response, body) => {
-            if (error) {
-              reject(error);
-              return;
-            }
-            logging.info('Metrics server responded with status ' + response.statusCode);
-            resolve();
-          });
+      const req = requestModule.request(options, (res) => {
+        const statusCode = res.statusCode;
+        if (statusCode >= 200 && statusCode < 300) {
+          resolve();
+        } else {
+          reject(new Error(`metrics server request failed with status code ${statusCode}`));
+        }
+      });
+      req.on('error', (e) => {
+        reject(e);
+      });
+      req.write(reportJson);
+      req.end();
     });
   }
 }
@@ -182,7 +191,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
         return;
       }
       try {
-        this.reportFeatureMetrics();
+        await this.reportFeatureMetrics();
       } catch (err) {
         console.error(`Failed to report feature metrics: ${err}`);
       }
