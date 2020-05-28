@@ -26,15 +26,14 @@ export async function requestFollowRedirectsWithSameMethodAndBody(
     ...options,
     redirect: 'manual' as RequestRedirect,
   };
-  while (true) {
-    const response = await fetch(url, manualRedirectOptions);
+  let response: Response;
+  for (let i = 0; i < 10; i++) {
+    response = await fetch(url, manualRedirectOptions);
     if (response.status >= 300 && response.status < 400) {
-      const newUrl = response.headers.get('location');
-      if (!newUrl || newUrl === url) {
-        return response;
-      }
+      url = response.headers.get('location');
     } else {
-      return response;
+      break;
     }
   }
+  return response;
 }
