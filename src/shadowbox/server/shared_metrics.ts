@@ -178,7 +178,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
         return;
       }
       try {
-        this.reportFeatureMetrics();
+        await this.reportFeatureMetrics();
       } catch (err) {
         logging.error(`Failed to report feature metrics: ${err}`);
       }
