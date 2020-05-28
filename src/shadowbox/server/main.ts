@@ -156,7 +156,8 @@ async function main() {
     '--storage.tsdb.path', prometheusTsdbFilename, '--web.listen-address', prometheusLocation,
     '--log.level', verbose ? 'debug' : 'info'
   ];
-  await startPrometheus(prometheusConfigFilename, prometheusConfigJson, prometheusArgs, prometheusEndpoint);
+  await startPrometheus(
+      prometheusConfigFilename, prometheusConfigJson, prometheusArgs, prometheusEndpoint);
 
   const prometheusClient = new PrometheusClient(prometheusEndpoint);
   if (!serverConfig.data().portForNewAccessKeys) {
