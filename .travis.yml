@@ -14,13 +14,13 @@ before_install:
   # https://docs.travis-ci.com/user/languages/javascript-with-nodejs#Travis-CI-supports-yarn
   - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.12.3
   - export PATH="$HOME/.yarn/bin:$PATH"
-  # Install Docker 19.03.8 for BuildKit support if running on linux. See https://docs.travis-ci.com/user/docker/
+  # Install latest Docker for BuildKit support if running on linux. See https://docs.travis-ci.com/user/docker/
   - |
     if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
       curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
       sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
       sudo apt-get update
-      sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce=5:19.03.8~3-0~ubuntu-xenial
+      sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
     fi;
 
 stages:
