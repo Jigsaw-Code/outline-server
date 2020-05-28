@@ -70,15 +70,9 @@ export class PrometheusClient {
 }
 
 export async function startPrometheus(
-    prometheusConfigFilename: string, prometheusEndpoint: string, prometheusTsdbFilename: string,
-    prometheusLocation: string, configJson: {}, verbose: boolean) {
-  await writePrometheusConfigToDisk(prometheusConfigFilename, configJson);
-  const processArgs = [
-    '--config.file', prometheusConfigFilename, '--storage.tsdb.retention', '31d',
-    '--storage.tsdb.path', prometheusTsdbFilename, '--web.listen-address', prometheusLocation,
-    '--log.level', verbose ? 'debug' : 'info'
-  ];
-  await spawnPrometheusSubprocess(processArgs, prometheusEndpoint);
+    configFilename: string, configJson: {}, processArgs: string[], endpoint: string) {
+  await writePrometheusConfigToDisk(configFilename, configJson);
+  await spawnPrometheusSubprocess(processArgs, endpoint);
 }
 
 async function writePrometheusConfigToDisk(configFilename: string, configJson: {}) {
@@ -98,29 +92,28 @@ async function writePrometheusConfigToDisk(configFilename: string, configJson: {
 
 async function spawnPrometheusSubprocess(
     processArgs: string[], prometheusEndpoint: string): Promise<child_process.ChildProcess> {
-  logging.info('Starting Prometheus...');
+  logging.info(`Starting Prometheus with args [${processArgs}]`);
   const runProcess = child_process.spawn('/root/shadowbox/bin/prometheus', processArgs);
   runProcess.on('error', (error) => {
     logging.error(`Error spawning Prometheus: ${error}`);
   });
   runProcess.on('exit', (code, signal) => {
-    logging.info(`Prometheus has exited with error. Code: ${code}, Signal: ${signal}`);
-    logging.info('Restarting Prometheus...');
+    logging.error(`Prometheus has exited with error. Code: ${code}, Signal: ${signal}`);
+    logging.error('Restarting Prometheus...');
     spawnPrometheusSubprocess(processArgs, prometheusEndpoint);
   });
   // TODO(fortuna): Consider saving the output and expose it through the manager service.
   runProcess.stdout.pipe(process.stdout);
   runProcess.stderr.pipe(process.stderr);
   await waitForPrometheusReady(`${prometheusEndpoint}/api/v1/status/flags`);
+  logging.info('Prometheus is ready!');
   return runProcess;
 }
 
 async function waitForPrometheusReady(prometheusEndpoint: string) {
-  logging.info('Waiting for Prometheus to be ready...');
   while (!(await isHttpEndpointHealthy(prometheusEndpoint))) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
-  logging.info('Prometheus is ready!');
 }
 
 function isHttpEndpointHealthy(endpoint: string): Promise<boolean> {

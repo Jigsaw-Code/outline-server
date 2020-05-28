@@ -151,9 +151,12 @@ async function main() {
   const prometheusConfigFilename = getPersistentFilename('prometheus/config.yml');
   const prometheusTsdbFilename = getPersistentFilename('prometheus/data');
   const prometheusEndpoint = `http://${prometheusLocation}`;
-  await startPrometheus(
-      prometheusConfigFilename, prometheusEndpoint, prometheusTsdbFilename, prometheusLocation,
-      prometheusConfigJson, verbose);
+  const prometheusArgs = [
+    '--config.file', prometheusConfigFilename, '--storage.tsdb.retention.time', '31d',
+    '--storage.tsdb.path', prometheusTsdbFilename, '--web.listen-address', prometheusLocation,
+    '--log.level', verbose ? 'debug' : 'info'
+  ];
+  await startPrometheus(prometheusConfigFilename, prometheusConfigJson, prometheusArgs, prometheusEndpoint);
 
   const prometheusClient = new PrometheusClient(prometheusEndpoint);
   if (!serverConfig.data().portForNewAccessKeys) {
