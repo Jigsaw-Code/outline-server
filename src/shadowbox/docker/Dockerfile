@@ -38,7 +38,7 @@ RUN ROOT_DIR=/ yarn do shadowbox/server/build
 FROM node@sha256:12b2154fb459fa5f42c54771524609db041e7ef3465935d0ca82940d2d72669d
 
 # Versions can be found at https://github.com/Jigsaw-Code/outline-ss-server/releases
-ARG SS_VERSION=1.1.3
+ARG SS_VERSION=1.1.4
 
 # Save metadata on the software versions we are using.
 LABEL shadowbox.node_version=12.16.3
