@@ -92,8 +92,8 @@ function test_with_retries() {
   local max_attempts="${4:-5}"          # Maximum number of attempts
   local attempt_count=0
 
-  until $(${test_command}); do
-      if [[ ${attempt_count} -eq ${max_attempts} ]]; then
+  until $(${test_command} || (($? == ${expected_result_code}))); do
+      if [[ ${attempt_count} -ne ${max_attempts} ]]; then
         echo "Max attempts reached (${attempt_count}/${max_attempts})"
         fail ${failure_message}
       fi
