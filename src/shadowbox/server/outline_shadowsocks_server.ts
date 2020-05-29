@@ -27,7 +27,7 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
   private ipCountryFilename = '';
   private isReplayProtectionEnabled = false;
 
-  // binFilename is the location of the outline-ss-server binary.
+  // binaryFilename is the location for the outline-ss-server binary.
   // configFilename is the location for the outline-ss-server config.
   constructor(
       private readonly binaryFilename: string, private readonly configFilename: string,
