@@ -94,7 +94,7 @@ function test_with_retries() {
 
   until (${test_command} > /dev/null || (($? == ${expected_result_code}))); do
       echo "Test (${attempt_count}/${max_attempts}) failed with result: $?"
-      if [[ ${attempt_count} -le ${max_attempts} ]]; then
+      if [[ ${attempt_count} -gt ${max_attempts} ]]; then
         echo "Max attempts reached (${attempt_count}/${max_attempts})"
         fail ${failure_message}
       fi
