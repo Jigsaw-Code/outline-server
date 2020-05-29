@@ -92,7 +92,7 @@ function test_with_retries() {
   local RETRY_DELAY_SECONDS=5
   local attempt_count=0
 
-  until (${test_command} || (($? == ${expected_result_code}))); do
+  until (${test_command} > /dev/null || (($? == ${expected_result_code}))); do
       echo "Test (${attempt_count}/${max_attempts}) failed with result: $?"
       if [[ ${attempt_count} == ${max_attempts} ]]; then
         echo "Max attempts reached (${attempt_count}/${max_attempts})"
@@ -132,7 +132,7 @@ function test_with_retries() {
     fail "Client should not have access to target IP" || (($? == 28))
 
   # Exit code 6 for "Could not resolve host".
-  test_with_retries "docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 1 http://target > /dev/null" \
+  test_with_retries "docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 1 http://target" \
     "6" "Client should not have access to target host"
 
   # Wait for shadowbox to come up.
@@ -171,7 +171,7 @@ function test_with_retries() {
   # Verify we can't access the URL anymore after the key is deleted
   client_curl --insecure -X DELETE ${SB_API_URL}/access-keys/0 > /dev/null
   # Exit code 56 is "Connection reset by peer".
-  test_with_retries "client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT --connect-timeout 1 $INTERNET_TARGET_URL &> /dev/null" \
+  test_with_retries "client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT --connect-timeout 1 $INTERNET_TARGET_URL" \
     "56" "Deleted access key is still active"
 
   # Verify that we can change the port for new access keys
