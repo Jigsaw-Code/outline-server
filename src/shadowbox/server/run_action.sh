@@ -34,7 +34,7 @@ readonly STATE_CONFIG=${SB_STATE_DIR}/shadowbox_server_config.json
 
 # Install third_party dependencies
 OS="linux"
-if [[ `uname` == "Darwin" ]] then;
+if [[ `uname` == "Darwin" ]]; then
   OS="macos"
 fi
 mkdir -p $SB_BIN_DIR
