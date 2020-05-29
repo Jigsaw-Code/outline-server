@@ -84,13 +84,13 @@ function cleanup() {
 # Runs a test command and checks for expected result code and retries on failure.
 # Use for tests that are idempotent and flaky.
 function test_with_retries() {
-  local RETRY_DELAY_SECONDS = 5
+  local RETRY_DELAY_SECONDS=5
 
-  local test_command = ${1}             # Test command to run
-  local expected_result_code = ${2}     # Expected result code
-  local failure_message = ${3}          # Message to display on failure
-  local max_attempts = ${4:-5}          # Maximum number of attempts
-  local attempt_count = 0
+  local test_command="${1}"             # Test command to run
+  local expected_result_code="${2}"     # Expected result code
+  local failure_message="${3}"          # Message to display on failure
+  local max_attempts="${4:-5}"          # Maximum number of attempts
+  local attempt_count=0
 
   until $(${test_command}); do
       if [[ ${attempt_count} -eq ${max_attempts} ]]; then
