@@ -36,6 +36,7 @@ import * as server_config from './server_config';
 import {OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollectorClient, SharedMetricsPublisher} from './shared_metrics';
 
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
+const DEFAULT_BIN_DIR = '/root/shadowbox/bin';
 const MMDB_LOCATION = '/var/lib/libmaxminddb/ip-country.mmdb';
 
 async function exportPrometheusMetrics(registry: prometheus.Registry, port): Promise<http.Server> {
@@ -138,6 +139,7 @@ async function main() {
       {job_name: 'outline-server-ss', static_configs: [{targets: [ssMetricsLocation]}]});
   const shadowsocksServer =
       new OutlineShadowsocksServer(
+          getBinaryFilename('outline-ss-server'),
           getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation)
           .enableCountryMetrics(MMDB_LOCATION);
   // Add rollout at 0%, so we can override in the config.
@@ -151,13 +153,15 @@ async function main() {
   const prometheusConfigFilename = getPersistentFilename('prometheus/config.yml');
   const prometheusTsdbFilename = getPersistentFilename('prometheus/data');
   const prometheusEndpoint = `http://${prometheusLocation}`;
+  const promehteusBinary = getBinaryFilename('prometheus');
   const prometheusArgs = [
     '--config.file', prometheusConfigFilename, '--storage.tsdb.retention.time', '31d',
     '--storage.tsdb.path', prometheusTsdbFilename, '--web.listen-address', prometheusLocation,
     '--log.level', verbose ? 'debug' : 'info'
   ];
   await startPrometheus(
-      prometheusConfigFilename, prometheusConfigJson, prometheusArgs, prometheusEndpoint);
+      promehteusBinary, prometheusConfigFilename, prometheusConfigJson, prometheusArgs,
+      prometheusEndpoint);
 
   const prometheusClient = new PrometheusClient(prometheusEndpoint);
   if (!serverConfig.data().portForNewAccessKeys) {
@@ -214,6 +218,11 @@ async function main() {
 function getPersistentFilename(file: string): string {
   const stateDir = process.env.SB_STATE_DIR || DEFAULT_STATE_DIR;
   return path.join(stateDir, file);
+}
+
+function getBinaryFilename(file: string): string {
+  const binDir = process.env.SB_BIN_DIR || DEFAULT_BIN_DIR;
+  return path.join(binDir, file);
 }
 
 process.on('unhandledRejection', (error: Error) => {

@@ -70,9 +70,10 @@ export class PrometheusClient {
 }
 
 export async function startPrometheus(
-    configFilename: string, configJson: {}, processArgs: string[], endpoint: string) {
+    binaryFilename: string, configFilename: string, configJson: {}, processArgs: string[],
+    endpoint: string) {
   await writePrometheusConfigToDisk(configFilename, configJson);
-  await spawnPrometheusSubprocess(processArgs, endpoint);
+  await spawnPrometheusSubprocess(binaryFilename, processArgs, endpoint);
 }
 
 async function writePrometheusConfigToDisk(configFilename: string, configJson: {}) {
@@ -91,16 +92,17 @@ async function writePrometheusConfigToDisk(configFilename: string, configJson: {
 }
 
 async function spawnPrometheusSubprocess(
-    processArgs: string[], prometheusEndpoint: string): Promise<child_process.ChildProcess> {
+    binaryFilename: string, processArgs: string[],
+    prometheusEndpoint: string): Promise<child_process.ChildProcess> {
   logging.info(`Starting Prometheus with args [${processArgs}]`);
-  const runProcess = child_process.spawn('/root/shadowbox/bin/prometheus', processArgs);
+  const runProcess = child_process.spawn(binaryFilename, processArgs);
   runProcess.on('error', (error) => {
     logging.error(`Error spawning Prometheus: ${error}`);
   });
   runProcess.on('exit', (code, signal) => {
     logging.error(`Prometheus has exited with error. Code: ${code}, Signal: ${signal}`);
     logging.error('Restarting Prometheus...');
-    spawnPrometheusSubprocess(processArgs, prometheusEndpoint);
+    spawnPrometheusSubprocess(binaryFilename, processArgs, prometheusEndpoint);
   });
   // TODO(fortuna): Consider saving the output and expose it through the manager service.
   runProcess.stdout.pipe(process.stdout);
