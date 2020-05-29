@@ -92,13 +92,14 @@ function test_with_retries() {
   local RETRY_DELAY_SECONDS=5
   local attempt_count=0
 
-  until $(${test_command}  || (($? == ${expected_result_code}))); do
-      if [[ ${attempt_count} -eq ${max_attempts} ]]; then
+  until (${test_command} || (($? == ${expected_result_code}))); do
+      echo "Test (${attempt_count}/${max_attempts}) failed with result: $?"
+      if [[ ${attempt_count} == ${max_attempts} ]]; then
         echo "Max attempts reached (${attempt_count}/${max_attempts})"
         fail ${failure_message}
       fi
 
-      ((attempt_count++))
+      attempt_count=$((attempt_count+1))
       sleep ${RETRY_DELAY_SECONDS}
   done
 }
