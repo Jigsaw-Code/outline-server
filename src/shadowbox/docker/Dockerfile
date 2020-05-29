@@ -37,12 +37,10 @@ RUN ROOT_DIR=/ yarn do shadowbox/server/build
 # shadowbox image
 FROM node@sha256:12b2154fb459fa5f42c54771524609db041e7ef3465935d0ca82940d2d72669d
 
-# Keep in sync with version in third_party/outline-ss-server
-ARG SS_VERSION=1.1.4
-
 # Save metadata on the software versions we are using.
 LABEL shadowbox.node_version=12.16.3
-LABEL shadowbox.outline-ss-server_version="${SS_VERSION}"
+# Keep in sync with version in third_party/outline-ss-server
+LABEL shadowbox.outline-ss-server_version=1.1.4
 
 ARG GITHUB_RELEASE
 LABEL shadowbox.github.release="${GITHUB_RELEASE}"
