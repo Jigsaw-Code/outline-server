@@ -137,11 +137,13 @@ async function main() {
   logging.info(`outline-ss-server metrics is at ${ssMetricsLocation}`);
   prometheusConfigJson.scrape_configs.push(
       {job_name: 'outline-server-ss', static_configs: [{targets: [ssMetricsLocation]}]});
-  const shadowsocksServer =
-      new OutlineShadowsocksServer(
-          getBinaryFilename('outline-ss-server'),
-          getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation)
-          .enableCountryMetrics(MMDB_LOCATION);
+  const shadowsocksServer = new OutlineShadowsocksServer(
+      getBinaryFilename('outline-ss-server'), getPersistentFilename('outline-ss-server/config.yml'),
+      verbose, ssMetricsLocation);
+  if (fs.existsSync(MMDB_LOCATION)) {
+    shadowsocksServer.enableCountryMetrics(MMDB_LOCATION);
+  }
+
   // Add rollout at 0%, so we can override in the config.
   const isReplayProtectionEnabled = createRolloutTracker(serverConfig).isRolloutEnabled('replay-protection', 0);
   logging.info(`Replay protection enabled: ${isReplayProtectionEnabled}`);
