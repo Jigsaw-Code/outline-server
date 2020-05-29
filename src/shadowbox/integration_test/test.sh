@@ -85,13 +85,14 @@ function cleanup() {
 # Use for tests that are idempotent and flaky.
 function test_with_retries() {
   local test_command="${1}"             # Test command to run
-  local failure_message="${2}"          # Message to display on failure
-  local max_attempts="${3:-5}"          # Maximum number of attempts
+  local expected_result_code="${2}"     # Result code to expected for test command
+  local failure_message="${3}"          # Message to display on failure
+  local max_attempts="${4:-5}"          # Maximum number of attempts
 
   local RETRY_DELAY_SECONDS=5
   local attempt_count=0
 
-  until $(${test_command}); do
+  until $(${test_command}  || (($? == ${expected_result_code}))); do
       if [[ ${attempt_count} -eq ${max_attempts} ]]; then
         echo "Max attempts reached (${attempt_count}/${max_attempts})"
         fail ${failure_message}
@@ -130,8 +131,8 @@ function test_with_retries() {
     fail "Client should not have access to target IP" || (($? == 28))
 
   # Exit code 6 for "Could not resolve host".
-  test_with_retries "docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 1 http://target > /dev/null || (($? == 6))" \
-    "Client should not have access to target host"
+  test_with_retries "docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 1 http://target > /dev/null" \
+    "6" "Client should not have access to target host"
 
   # Wait for shadowbox to come up.
   wait_for_resource https://localhost:20443/access-keys
@@ -169,8 +170,8 @@ function test_with_retries() {
   # Verify we can't access the URL anymore after the key is deleted
   client_curl --insecure -X DELETE ${SB_API_URL}/access-keys/0 > /dev/null
   # Exit code 56 is "Connection reset by peer".
-  test_with_retries "client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT --connect-timeout 1 $INTERNET_TARGET_URL &> /dev/null || (($? == 56))" \
-    "Deleted access key is still active"
+  test_with_retries "client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT --connect-timeout 1 $INTERNET_TARGET_URL &> /dev/null" \
+    "56" "Deleted access key is still active"
 
   # Verify that we can change the port for new access keys
   client_curl --insecure -X PUT -H "Content-Type: application/json" -d '{"port": 12345}' ${SB_API_URL}/server/port-for-new-access-keys \
