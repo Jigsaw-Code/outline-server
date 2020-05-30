@@ -82,26 +82,30 @@ function cleanup() {
 }
 
 # Runs a test command and checks for expected result code and retries on failure.
-# Use for tests that are idempotent and flaky.
 function test_with_retries() {
-  local test_command="${1}"             # Test command to run
-  local expected_result_code="${2}"     # Result code to expected for test command
-  local failure_message="${3}"          # Message to display on failure
-  local max_attempts="${4:-5}"          # Maximum number of attempts
+  local test_function=${1}
+  local max_attempts=${2:-5}
 
-  local RETRY_DELAY_SECONDS=5
-  local attempt_count=1
-
-  until (${test_command} > /dev/null || (($? == ${expected_result_code}))); do
-      echo "Test (${attempt_count}/${max_attempts}) failed with result: $?"
-      if [[ ${attempt_count} -gt ${max_attempts} ]]; then
-        echo "Max attempts reached (${attempt_count}/${max_attempts})"
-        fail ${failure_message}
-      fi
-
-      attempt_count=$((attempt_count+1))
-      sleep ${RETRY_DELAY_SECONDS}
+  for ((i=1; i<=${max_attempts}; i++))
+  do
+    output=$(${test_function})
+    result_code=$?
+    if [ $result_code -eq 0 ]; then
+      break
+    fi
+    echo "Attempt (${i}/${max_attempts}): output=${output}, result_code=${result_code}"
+    sleep 5
   done
+}
+
+function client_does_not_have_access_to_target_host() {
+  docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 1 http://target > /dev/null \
+    && fail "Client should not have access to target host" || (($? == 6))
+}
+
+function deleted_access_key_is_inactive() {
+  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT --connect-timeout 1 $INTERNET_TARGET_URL &> /dev/null \
+    && fail "Deleted access key is still active" || (($? == 56))
 }
 
 # Start a subprocess for trap
@@ -132,8 +136,7 @@ function test_with_retries() {
     fail "Client should not have access to target IP" || (($? == 28))
 
   # Exit code 6 for "Could not resolve host".
-  test_with_retries "docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 1 http://target" \
-    "6" "Client should not have access to target host"
+  test_with_retries client_does_not_have_access_to_target_host
 
   # Wait for shadowbox to come up.
   wait_for_resource https://localhost:20443/access-keys
