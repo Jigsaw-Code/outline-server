@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Newer node images have no valid content trust data.
-# Pin the image node:12.16.3-alpine (linux/amd64) by hash.
-# See versions at https://hub.docker.com/_/node?tab=tags&name=alpine
+ARG NODE_IMAGE
 
 # Multi-stage build: use a build image to prevent bloating the shadowbox image with dependencies.
 # Run `yarn` and build inside the container to package the right dependencies for the image.
-FROM node@sha256:12b2154fb459fa5f42c54771524609db041e7ef3465935d0ca82940d2d72669d AS build
+FROM ${NODE_IMAGE} AS build
 
 RUN apk add --no-cache --upgrade bash
 WORKDIR /
@@ -35,7 +33,7 @@ COPY tsconfig.json ./
 RUN ROOT_DIR=/ yarn do shadowbox/server/build
 
 # shadowbox image
-FROM node@sha256:12b2154fb459fa5f42c54771524609db041e7ef3465935d0ca82940d2d72669d
+FROM ${NODE_IMAGE}
 
 # Versions can be found at https://github.com/Jigsaw-Code/outline-ss-server/releases
 ARG SS_VERSION=1.1.4
