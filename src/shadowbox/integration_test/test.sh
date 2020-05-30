@@ -174,8 +174,7 @@ function deleted_access_key_is_inactive() {
   # Verify we can't access the URL anymore after the key is deleted
   client_curl --insecure -X DELETE ${SB_API_URL}/access-keys/0 > /dev/null
   # Exit code 56 is "Connection reset by peer".
-  test_with_retries "client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT --connect-timeout 1 $INTERNET_TARGET_URL" \
-    "56" "Deleted access key is still active"
+  test_with_retries deleted_access_key_is_inactive
 
   # Verify that we can change the port for new access keys
   client_curl --insecure -X PUT -H "Content-Type: application/json" -d '{"port": 12345}' ${SB_API_URL}/server/port-for-new-access-keys \
