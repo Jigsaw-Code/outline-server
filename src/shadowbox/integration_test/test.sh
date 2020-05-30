@@ -96,6 +96,7 @@ function test_with_retries() {
     echo "Attempt (${i}/${max_attempts}): output=${output}, result_code=${result_code}"
     sleep 5
   done
+  fail ${1}
 }
 
 function client_does_not_have_access_to_target_host() {
