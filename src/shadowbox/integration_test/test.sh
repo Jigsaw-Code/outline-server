@@ -91,7 +91,7 @@ function test_with_retries() {
     output=$(${test_function})
     result_code=$?
     if [ $result_code -eq 0 ]; then
-      break
+      return
     fi
     echo "Attempt (${i}/${max_attempts}): output=${output}, result_code=${result_code}"
     sleep 5
