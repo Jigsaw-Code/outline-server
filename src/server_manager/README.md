@@ -20,6 +20,16 @@ To run the Outline Manager as a web app on the browser and listen for changes:
 yarn do server_manager/web_app/run
 ```
 
+## Gallery Server for UI Development
+
+We have a server app to for quickly iterating on UI components.  To spin it up, run
+
+```
+yarn do server_manager/web_app/run_gallery
+```
+
+Changes to UI components will be hot reloaded into the gallery.
+
 ## Debug an existing binary
 
 You can run an existing binary in debug mode by setting `OUTLINE_DEBUG=true`.
