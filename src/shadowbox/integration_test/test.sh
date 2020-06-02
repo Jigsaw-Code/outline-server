@@ -99,12 +99,50 @@ function test_with_retries() {
   fail ${1}
 }
 
+function private_address_not_accessible_through_shadowbox() {
+  # Exit code 52 is "Empty server response".
+  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $TARGET_IP &> /dev/null \
+    && fail "Target host in a private network accessible through shadowbox" || (($? == 52))
+}
+
+function fetch_url_through_shadowbox() {
+  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $INTERNET_TARGET_URL \
+    || fail "Could not fetch $INTERNET_TARGET_URL through shadowbox."
+}
+
+function change_port_for_access_keys() {
+  client_curl --insecure -X PUT -H "Content-Type: application/json" -d '{"port": 12345}' ${SB_API_URL}/server/port-for-new-access-keys \
+    || fail "Couldn't change the port for new access keys"
+
+  local access_key_json=$(client_curl --insecure -X POST ${SB_API_URL}/access-keys \
+    || fail "Couldn't get a new access key after changing port")
+
+  if [[ "${access_key_json}" != *'"port":12345'* ]]; then
+    fail "Port for new access keys wasn't changed.  Newly created access key: ${access_key_json}"
+  fi
+}
+
+function change_hostname_for_access_keys() {
+  local new_hostname="newhostname"
+  client_curl --insecure -X PUT -H 'Content-Type: application/json' -d '{"hostname": "'${new_hostname}'"}' ${SB_API_URL}/server/hostname-for-access-keys \
+    || fail "Couldn't change hostname for new access keys"
+
+  local access_key_json=$(client_curl --insecure -X POST ${SB_API_URL}/access-keys \
+    || fail "Couldn't get a new access key after changing hostname")
+
+  if [[ "${access_key_json}" != *"@${new_hostname}:"* ]]; then
+    fail "Hostname for new access keys wasn't changed.  Newly created access key: ${access_key_json}"
+  fi
+}
+
 function client_does_not_have_access_to_target_host() {
   docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 1 http://target > /dev/null \
     && fail "Client should not have access to target host" || (($? == 6))
 }
 
 function deleted_access_key_is_inactive() {
+  client_curl --insecure -X DELETE ${SB_API_URL}/access-keys/0 > /dev/null
+  # Exit code 56 is "Connection reset by peer".
   client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT --connect-timeout 1 $INTERNET_TARGET_URL &> /dev/null \
     && fail "Deleted access key is still active" || (($? == 56))
 }
@@ -164,41 +202,19 @@ function deleted_access_key_is_inactive() {
   done
 
   # Verify the server blocks requests to hosts on private addresses.
-  # Exit code 52 is "Empty server response".
-  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $TARGET_IP &> /dev/null \
-    && fail "Target host in a private network accessible through shadowbox" || (($? == 52))
+  test_with_retries private_address_not_accessible_through_shadowbox
 
   # Verify we can retrieve the internet target URL.
-  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $INTERNET_TARGET_URL \
-    || fail "Could not fetch $INTERNET_TARGET_URL through shadowbox."
+  test_with_retries fetch_url_through_shadowbox
 
   # Verify we can't access the URL anymore after the key is deleted
-  client_curl --insecure -X DELETE ${SB_API_URL}/access-keys/0 > /dev/null
-  # Exit code 56 is "Connection reset by peer".
   test_with_retries deleted_access_key_is_inactive
 
   # Verify that we can change the port for new access keys
-  client_curl --insecure -X PUT -H "Content-Type: application/json" -d '{"port": 12345}' ${SB_API_URL}/server/port-for-new-access-keys \
-    || fail "Couldn't change the port for new access keys"
-
-  ACCESS_KEY_JSON=$(client_curl --insecure -X POST ${SB_API_URL}/access-keys \
-    || fail "Couldn't get a new access key after changing port")
-  
-  if [[ "${ACCESS_KEY_JSON}" != *'"port":12345'* ]]; then
-    fail "Port for new access keys wasn't changed.  Newly created access key: ${ACCESS_KEY_JSON}"
-  fi
+  test_with_retries change_port_for_access_keys
 
   # Verify that we can change the hostname for new access keys
-  NEW_HOSTNAME="newhostname"
-  client_curl --insecure -X PUT -H 'Content-Type: application/json' -d '{"hostname": "'${NEW_HOSTNAME}'"}' ${SB_API_URL}/server/hostname-for-access-keys \
-    || fail "Couldn't change hostname for new access keys"
-
-  ACCESS_KEY_JSON=$(client_curl --insecure -X POST ${SB_API_URL}/access-keys \
-    || fail "Couldn't get a new access key after changing hostname")
-  
-  if [[ "${ACCESS_KEY_JSON}" != *"@${NEW_HOSTNAME}:"* ]]; then
-    fail "Hostname for new access keys wasn't changed.  Newly created access key: ${ACCESS_KEY_JSON}"
-  fi
+  test_with_retries change_hostname_for_access_keys
   
   # Verify no errors occurred.
   readonly SHADOWBOX_LOG=$OUTPUT_DIR/shadowbox-log.txt
