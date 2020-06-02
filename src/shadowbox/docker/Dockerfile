@@ -64,6 +64,4 @@ WORKDIR /opt/outline-server
 COPY src/shadowbox/package.json .
 COPY --from=build /build/shadowbox/ .
 
-COPY src/shadowbox/docker/cmd.sh /
-
-CMD /cmd.sh
+CMD ./cmd.sh

@@ -26,3 +26,6 @@ readonly BIN_DIR="$OUT_DIR/bin"
 mkdir -p $BIN_DIR
 cp "$ROOT_DIR/third_party/prometheus/$OS/prometheus" $BIN_DIR/
 cp "$ROOT_DIR/third_party/outline-ss-server/$OS/outline-ss-server" $BIN_DIR/
+
+# Copy docker entry point script
+cp "$ROOT_DIR/src/shadowbox/docker/cmd.sh" $OUT_DIR/
