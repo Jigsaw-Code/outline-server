@@ -32,6 +32,7 @@ RUN yarn install
 COPY scripts scripts/
 COPY src src/
 COPY tsconfig.json ./
+COPY third_party third_party
 RUN ROOT_DIR=/ yarn do shadowbox/server/build
 
 # shadowbox image
@@ -54,17 +55,14 @@ COPY src/shadowbox/scripts/update_mmdb.sh /etc/periodic/weekly/update_mmdb
 
 RUN /etc/periodic/weekly/update_mmdb
 
-WORKDIR /root/shadowbox
-
-# Install shadowbox and third party dependencies.
-RUN mkdir bin
-COPY third_party/outline-ss-server/linux/outline-ss-server ./bin/
-COPY third_party/prometheus/linux/prometheus ./bin/
-COPY src/shadowbox/package.json .
-COPY --from=build /build/shadowbox/app app
-
 # Create default state directory.
 RUN mkdir -p /root/shadowbox/persisted-state
+
+WORKDIR /opt/outline-server
+
+# Install shadowbox and third party dependencies.
+COPY src/shadowbox/package.json .
+COPY --from=build /build/shadowbox/ .
 
 COPY src/shadowbox/docker/cmd.sh /
 

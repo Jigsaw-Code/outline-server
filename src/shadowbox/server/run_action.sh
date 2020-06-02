@@ -26,20 +26,10 @@ export SB_PUBLIC_IP="${SB_PUBLIC_IP:-$(curl https://ipinfo.io/ip)}"
 export SB_API_PREFIX=TestApiPrefix
 export SB_METRICS_URL=https://dev.metrics.getoutline.org
 export SB_STATE_DIR="${RUN_DIR}/persisted-state"
-export SB_BIN_DIR="${RUN_DIR}/bin"
 readonly STATE_CONFIG=${SB_STATE_DIR}/shadowbox_server_config.json
 
 [[ -d "${SB_STATE_DIR}" ]] || mkdir -p $SB_STATE_DIR
 [[ -e $STATE_CONFIG ]] || echo '{"hostname":"127.0.0.1"}' > $STATE_CONFIG
-
-# Install third_party dependencies
-OS="linux"
-if [[ `uname` == "Darwin" ]]; then
-  OS="macos"
-fi
-mkdir -p $SB_BIN_DIR
-cp $ROOT_DIR/third_party/prometheus/$OS/prometheus $SB_BIN_DIR/
-cp $ROOT_DIR/third_party/outline-ss-server/$OS/outline-ss-server $SB_BIN_DIR/
 
 source $ROOT_DIR/src/shadowbox/scripts/make_test_certificate.sh $RUN_DIR
 
