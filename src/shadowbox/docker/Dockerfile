@@ -56,10 +56,14 @@ RUN /etc/periodic/weekly/update_mmdb
 # Create default state directory.
 RUN mkdir -p /root/shadowbox/persisted-state
 
+# Install shadowbox.
 WORKDIR /opt/outline-server
 
-# Install shadowbox and third party dependencies.
-COPY src/shadowbox/package.json .
+# The shadowbox build directory has the following structure:
+#   - app/          (bundled node app)
+#   - bin/          (binary dependencies)
+#   - cmd.sh        (docker entry script)
+#   - package.json  (shadowbox package.json)
 COPY --from=build /build/shadowbox/ .
 
 CMD ./cmd.sh
