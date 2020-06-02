@@ -90,7 +90,7 @@ function test_with_retries() {
   do
     output=$(${test_function})
     result_code=$?
-    if [[ $result_code == 0 ]]; then
+    if [[ $result_code -eq 0 ]]; then
       return
     fi
     echo "Attempt (${i}/${max_attempts}): output=${output}, result_code=${result_code}"
