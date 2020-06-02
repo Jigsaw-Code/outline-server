@@ -24,6 +24,10 @@ const config = {
     path: path.resolve(__dirname, '../../build/shadowbox/app'),
   },
   module: {rules: [{test: /\.ts(x)?$/, use: 'ts-loader'}]},
+  node: {
+    // Use the regular node behavior, the directory name of the output file when run.
+    __dirname: false
+  },
   plugins: [
     // WORKAROUND: some of our (transitive) dependencies use node-gently, which hijacks `require`.
     // Setting global.GENTLY to false makes these dependencies use standard require.
