@@ -14,5 +14,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-do_action shadowbox/server/build
+tsc -p $ROOT_DIR/src/shadowbox --outDir $BUILD_DIR/js/shadowbox
 jasmine --config=$ROOT_DIR/jasmine.json
