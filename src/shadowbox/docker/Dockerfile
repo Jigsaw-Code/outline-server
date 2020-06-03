@@ -62,8 +62,8 @@ WORKDIR /opt/outline-server
 # The shadowbox build directory has the following structure:
 #   - app/          (bundled node app)
 #   - bin/          (binary dependencies)
-#   - cmd.sh        (docker entry script)
 #   - package.json  (shadowbox package.json)
 COPY --from=build /build/shadowbox/ .
 
-CMD ./cmd.sh
+COPY src/shadowbox/docker/cmd.sh /
+CMD /cmd.sh
