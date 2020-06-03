@@ -16,6 +16,15 @@
 
 export DOCKER_CONTENT_TRUST=${DOCKER_CONTENT_TRUST:-1}
 # Enable Docker BuildKit (https://docs.docker.com/develop/develop-images/build_enhancements)
-# TODO(fortuna): Re-enable after we figure out how to make it work on Travis: https://github.com/moby/buildkit/issues/606
-# export DOCKER_BUILDKIT=1
-docker build --force-rm --build-arg GITHUB_RELEASE="${TRAVIS_TAG:-none}" -t ${SB_IMAGE:-outline/shadowbox} $ROOT_DIR -f src/shadowbox/docker/Dockerfile
+export DOCKER_BUILDKIT=1
+
+# Newer node images have no valid content trust data.
+# Pin the image node:12.16.3-alpine (linux/amd64) by hash.
+# See versions at https://hub.docker.com/_/node?tab=tags&name=alpine
+readonly NODE_IMAGE="node@sha256:12b2154fb459fa5f42c54771524609db041e7ef3465935d0ca82940d2d72669d"
+
+# Doing an explicit `docker pull` of the container base image to work around an issue where
+# Travis fails to pull the base image when using BuildKit. Seems to be related to:
+# https://github.com/moby/buildkit/issues/606 and https://github.com/moby/buildkit/issues/1397
+docker pull "${NODE_IMAGE}"
+docker build --force-rm --build-arg NODE_IMAGE="${NODE_IMAGE}" --build-arg GITHUB_RELEASE="${TRAVIS_TAG:-none}" -t ${SB_IMAGE:-outline/shadowbox} $ROOT_DIR -f src/shadowbox/docker/Dockerfile

@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Newer node images have no valid content trust data.
-# Pin the image node:12.16.3-alpine (linux/amd64) by hash.
-# See versions at https://hub.docker.com/_/node?tab=tags&name=alpine
+ARG NODE_IMAGE
 
 # Multi-stage build: use a build image to prevent bloating the shadowbox image with dependencies.
 # Run `yarn` and build inside the container to package the right dependencies for the image.
-FROM node@sha256:12b2154fb459fa5f42c54771524609db041e7ef3465935d0ca82940d2d72669d AS build
+FROM ${NODE_IMAGE} AS build
 
 RUN apk add --no-cache --upgrade bash
 WORKDIR /
@@ -32,17 +30,16 @@ RUN yarn install
 COPY scripts scripts/
 COPY src src/
 COPY tsconfig.json ./
+COPY third_party third_party
 RUN ROOT_DIR=/ yarn do shadowbox/server/build
 
 # shadowbox image
-FROM node@sha256:12b2154fb459fa5f42c54771524609db041e7ef3465935d0ca82940d2d72669d
-
-# Versions can be found at https://github.com/Jigsaw-Code/outline-ss-server/releases
-ARG SS_VERSION=1.1.4
+FROM ${NODE_IMAGE}
 
 # Save metadata on the software versions we are using.
 LABEL shadowbox.node_version=12.16.3
-LABEL shadowbox.outline-ss-server_version="${SS_VERSION}"
+# Keep in sync with version in third_party/outline-ss-server
+LABEL shadowbox.outline-ss-server_version=1.1.4
 
 ARG GITHUB_RELEASE
 LABEL shadowbox.github.release="${GITHUB_RELEASE}"
@@ -56,17 +53,17 @@ COPY src/shadowbox/scripts/update_mmdb.sh /etc/periodic/weekly/update_mmdb
 
 RUN /etc/periodic/weekly/update_mmdb
 
-WORKDIR /root/shadowbox
-
-# Install shadowbox and third party dependencies.
-RUN mkdir bin && curl -SsL https://github.com/Jigsaw-Code/outline-ss-server/releases/download/v${SS_VERSION}/outline-ss-server_${SS_VERSION}_linux_x86_64.tar.gz | tar xz -C bin outline-ss-server
-COPY third_party/prometheus/prometheus ./bin/
-COPY src/shadowbox/package.json .
-COPY --from=build /build/shadowbox/app app
-
 # Create default state directory.
 RUN mkdir -p /root/shadowbox/persisted-state
 
-COPY src/shadowbox/docker/cmd.sh /
+# Install shadowbox.
+WORKDIR /opt/outline-server
 
-CMD /cmd.sh
+# The shadowbox build directory has the following structure:
+#   - app/          (bundled node app)
+#   - bin/          (binary dependencies)
+#   - cmd.sh        (docker entry script)
+#   - package.json  (shadowbox package.json)
+COPY --from=build /build/shadowbox/ .
+
+CMD ./cmd.sh
