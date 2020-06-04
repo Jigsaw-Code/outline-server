@@ -14,9 +14,9 @@
 
 // Makes an CustomEvent that bubbles up beyond the shadow root.
 export function makePublicEvent<T>(eventName: string, detail: T) {
-    const params: CustomEventInit<T> = {bubbles: true, composed: true};
-    if (detail !== undefined) {
-        params.detail = detail;
-    }
-    return new CustomEvent(eventName, params);
+  const params: CustomEventInit<T> = {bubbles: true, composed: true};
+  if (detail !== undefined) {
+    params.detail = detail;
+  }
+  return new CustomEvent(eventName, params);
 }

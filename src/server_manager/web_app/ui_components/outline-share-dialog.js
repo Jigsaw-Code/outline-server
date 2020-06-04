@@ -19,7 +19,7 @@ import '@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
 import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 import * as clipboard from 'clipboard-polyfill';
-import {makePublicEvent} from "../../infrastructure/events";
+import {makePublicEvent} from '../../infrastructure/events';
 
 // TODO(alalama): add a language selector. This should be a separate instance of
 // Polymer.AppLocalizeBehavior so the app language is not changed. Consider refactoring l10n into a
@@ -163,7 +163,8 @@ Polymer({
   },
 
   connectClicked: function() {
-    this.dispatchEvent(makePublicEvent('OpenGetConnectedDialogRequested', {accessKey: this.accessKey}));
+    this.dispatchEvent(
+        makePublicEvent('OpenGetConnectedDialogRequested', {accessKey: this.accessKey}));
     this.$.dialog.close();
   }
 });

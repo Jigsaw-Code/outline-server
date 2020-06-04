@@ -36,7 +36,7 @@ import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
 
 
 import * as byte_size from 'byte-size';
-import {makePublicEvent} from "../../infrastructure/events";
+import {makePublicEvent} from '../../infrastructure/events';
 
 byte_size.defaultOptions({
   units: 'metric',
