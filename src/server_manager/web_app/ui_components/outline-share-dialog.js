@@ -161,11 +161,7 @@ Polymer({
   },
 
   connectClicked: function() {
-    const params = {
-      bubbles: true,
-      composed: true,
-      detail: {accessKey: this.accessKey}
-    };
+    const params = {bubbles: true, composed: true, detail: {accessKey: this.accessKey}};
     const event = new CustomEvent('OpenGetConnectedDialogRequested', params);
     this.dispatchEvent(event);
     this.$.dialog.close();

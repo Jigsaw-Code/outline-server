@@ -18,7 +18,8 @@ const rtl = require('postcss-rtl');
 const CSS_PROCESSOR = postcss([rtl()]);
 
 function generateRtlCss(css) {
-  return CSS_PROCESSOR.process(css).css
+  return CSS_PROCESSOR.process(css)
+      .css
       // Replace the generated selectors with Shadow DOM selectors for Polymer compatibility.
       .replace(/\[dir=rtl\]/g, ':host(:dir(rtl))')
       .replace(/\[dir=ltr\]/g, ':host(:dir(ltr))')
