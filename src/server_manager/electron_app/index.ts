@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as sentry from '@sentry/electron';
+import * as dotenv from 'dotenv';
 import * as electron from 'electron';
 import {autoUpdater} from 'electron-updater';
 import * as path from 'path';
@@ -20,47 +21,39 @@ import {URL, URLSearchParams} from 'url';
 
 import {LoadingWindow} from './loading_window';
 import * as menu from './menu';
-import {redactManagerUrl} from './util';
 
 const app = electron.app;
 const ipcMain = electron.ipcMain;
 const shell = electron.shell;
+
+// Run before referencing environment variables.
+dotenv.config({path: path.join(__dirname, '.env')});
 
 const debugMode = process.env.OUTLINE_DEBUG === 'true';
 
 const IMAGES_BASENAME =
     `${path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), 'server_manager', 'web_app')}`;
 
-const sentryDsn =
-    process.env.SENTRY_DSN || 'https://533e56d1b2d64314bd6092a574e6d0f1@sentry.io/215496';
+const sentryDsn = process.env.SENTRY_DSN;
+if (sentryDsn) {
+  sentry.init({
+    dsn: sentryDsn,
+    // Sentry provides a sensible default but we would prefer without the leading
+    // "outline-manager@".
+    release: electron.app.getVersion(),
+    maxBreadcrumbs: 100,
+    beforeBreadcrumb: (breadcrumb: sentry.Breadcrumb) => {
+      // Don't submit breadcrumbs for console.debug.
+      if (breadcrumb.category === 'console') {
+        if (breadcrumb.level === sentry.Severity.Debug) {
+          return null;
+        }
+      }
+      return breadcrumb;
+    }
+  });
+}
 
-sentry.init({
-  dsn: sentryDsn,
-  // Sentry provides a sensible default but we would prefer without the leading "outline-manager@".
-  release: electron.app.getVersion(),
-  maxBreadcrumbs: 100,
-  shouldAddBreadcrumb: (breadcrumb) => {
-    // Don't submit breadcrumbs for console.debug.
-    if (breadcrumb.category === 'console') {
-      if (breadcrumb.level === sentry.Severity.Debug) {
-        return false;
-      }
-    }
-    return true;
-  },
-  beforeBreadcrumb: (breadcrumb) => {
-    // Redact PII from XHR requests.
-    if (breadcrumb.category === 'fetch' && breadcrumb.data && breadcrumb.data.url) {
-      try {
-        breadcrumb.data.url = `(redacted)/${redactManagerUrl(breadcrumb.data.url)}`;
-      } catch (e) {
-        // NOTE: cannot log this failure to console if console breadcrumbs are enabled
-        breadcrumb.data.url = `(error redacting)`;
-      }
-    }
-    return breadcrumb;
-  }
-});
 // To clearly identify app restarts in Sentry.
 console.info(`Outline Manager is starting`);
 
@@ -132,7 +125,9 @@ function getWebAppUrl() {
     queryParams.set('metricsUrl', process.env.SB_METRICS_URL);
     console.log(`Will use metrics url ${process.env.SB_METRICS_URL}`);
   }
-  queryParams.set('sentryDsn', sentryDsn);
+  if (sentryDsn) {
+    queryParams.set('sentryDsn', sentryDsn);
+  }
   if (debugMode) {
     queryParams.set('outlineDebugMode', 'true');
     console.log(`Enabling Outline debug mode`);
@@ -152,26 +147,24 @@ function getWebAppUrl() {
 // status code and inject CORS response headers.
 function workaroundDigitalOceanApiCors() {
   const headersFilter = {urls: ['https://api.digitalocean.com/*']};
-  electron.session.defaultSession.webRequest.onHeadersReceived(
-      // tslint:disable-next-line:no-any
-      headersFilter, (details: any, callback: Function) => {
+  electron.session.defaultSession.webRequest.onHeadersReceived(headersFilter,
+      (details: electron.OnHeadersReceivedListenerDetails, callback: (response: electron.CallbackResponse) => void) => {
         if (details.method === 'OPTIONS') {
-          details.responseHeaders['access-control-allow-origin'] = ['outline://web_app'];
+          details.responseHeaders['access-control-allow-origin'] = 'outline://web_app';
           if (details.statusCode === 403) {
             details.statusCode = 200;
             details.statusLine = 'HTTP/1.1 200';
-            details.responseHeaders['status'] = ['200'];
-            details.responseHeaders['access-control-allow-headers'] =
-                [details.headers['Access-Control-Request-Headers']];
-            details.responseHeaders['access-control-allow-credentials'] = ['true'];
+            details.responseHeaders['status'] = '200';
+            details.responseHeaders['access-control-allow-headers'] = '*';
+            details.responseHeaders['access-control-allow-credentials'] = 'true';
             details.responseHeaders['access-control-allow-methods'] =
-                ['GET, POST, PUT, PATCH, DELETE, OPTIONS'];
+                'GET, POST, PUT, PATCH, DELETE, OPTIONS';
             details.responseHeaders['access-control-expose-headers'] =
-                ['RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset, Total, Link'];
-            details.responseHeaders['access-control-max-age'] = ['86400'];
+                'RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset, Total, Link';
+            details.responseHeaders['access-control-max-age'] = '86400';
           }
         }
-        callback(details);
+        callback(details as electron.CallbackResponse);
       });
 }
 

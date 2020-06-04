@@ -15,6 +15,7 @@
 # limitations under the License.
 
 yarn do server_manager/electron_app/build
+yarn do server_manager/electron_app/write_production_environment
 
 $ROOT_DIR/src/server_manager/node_modules/.bin/electron-builder \
   --projectDir=build/server_manager/electron_app/static \

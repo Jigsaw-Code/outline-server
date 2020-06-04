@@ -10,9 +10,9 @@ third_party {
   }
   url {
     type: ARCHIVE
-    value: "https://github.com/prometheus/prometheus/releases/download/v2.4.3/prometheus-2.4.3.linux-amd64.tar.gz"
+    value: "https://github.com/prometheus/prometheus/releases/download/v2.18.1/prometheus-2.18.1.linux-amd64.tar.gz"
   }
-  version: "2.4.3"
-  last_upgrade_date { year: 2018 month: 10 day: 4 }
+  version: "2.18.1"
+  last_upgrade_date { year: 2020 month: 5 day: 14 }
   license_type: PERMISSIVE
 }

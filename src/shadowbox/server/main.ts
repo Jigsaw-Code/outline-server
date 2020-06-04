@@ -18,13 +18,14 @@ import * as path from 'path';
 import * as process from 'process';
 import * as prometheus from 'prom-client';
 import * as restify from 'restify';
+import * as corsMiddleware from 'restify-cors-middleware';
 
 import {RealClock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
 import * as json_config from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {PrometheusClient, runPrometheusScraper} from '../infrastructure/prometheus_scraper';
-import {RolloutTracker} from '../infrastructure/rollout';	
+import {PrometheusClient, startPrometheus} from '../infrastructure/prometheus_scraper';
+import {RolloutTracker} from '../infrastructure/rollout';
 import {AccessKeyId} from '../model/access_key';
 
 import {PrometheusManagerMetrics} from './manager_metrics';
@@ -34,6 +35,7 @@ import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_ke
 import * as server_config from './server_config';
 import {OutlineSharedMetricsPublisher, PrometheusUsageMetrics, RestMetricsCollectorClient, SharedMetricsPublisher} from './shared_metrics';
 
+const APP_BASE_DIR = path.join(__dirname, '..');
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
 const MMDB_LOCATION = '/var/lib/libmaxminddb/ip-country.mmdb';
 
@@ -123,7 +125,7 @@ async function main() {
 
   const prometheusConfigJson = {
     global: {
-      scrape_interval: '15s',
+      scrape_interval: '1m',
     },
     scrape_configs: [
       {job_name: 'prometheus', static_configs: [{targets: [prometheusLocation]}]},
@@ -135,25 +137,33 @@ async function main() {
   logging.info(`outline-ss-server metrics is at ${ssMetricsLocation}`);
   prometheusConfigJson.scrape_configs.push(
       {job_name: 'outline-server-ss', static_configs: [{targets: [ssMetricsLocation]}]});
-  const shadowsocksServer =
-      new OutlineShadowsocksServer(
-          getPersistentFilename('outline-ss-server/config.yml'), verbose, ssMetricsLocation)
-          .enableCountryMetrics(MMDB_LOCATION);
+  const shadowsocksServer = new OutlineShadowsocksServer(
+      getBinaryFilename('outline-ss-server'), getPersistentFilename('outline-ss-server/config.yml'),
+      verbose, ssMetricsLocation);
+  if (fs.existsSync(MMDB_LOCATION)) {
+    shadowsocksServer.enableCountryMetrics(MMDB_LOCATION);
+  }
+
   // Add rollout at 0%, so we can override in the config.
-  const isReplayProtectionEnabled = createRolloutTracker(serverConfig).isRolloutEnabled('replay-protection', 0);
+  const isReplayProtectionEnabled = createRolloutTracker(serverConfig).isRolloutEnabled('replay-protection', 1);
   logging.info(`Replay protection enabled: ${isReplayProtectionEnabled}`);
   if (isReplayProtectionEnabled) {
     shadowsocksServer.enableReplayProtection();
   }
+
+  // Start Prometheus subprocess and wait for it to be up and running.
+  const prometheusConfigFilename = getPersistentFilename('prometheus/config.yml');
+  const prometheusTsdbFilename = getPersistentFilename('prometheus/data');
   const prometheusEndpoint = `http://${prometheusLocation}`;
-  // Wait for Prometheus to be up and running.
-  await runPrometheusScraper(
-      [
-        '--storage.tsdb.retention', '31d', '--storage.tsdb.path',
-        getPersistentFilename('prometheus/data'), '--web.listen-address', prometheusLocation,
-        '--log.level', verbose ? 'debug' : 'info'
-      ],
-      getPersistentFilename('prometheus/config.yml'), prometheusConfigJson, prometheusEndpoint);
+  const prometheusBinary = getBinaryFilename('prometheus');
+  const prometheusArgs = [
+    '--config.file', prometheusConfigFilename, '--storage.tsdb.retention.time', '31d',
+    '--storage.tsdb.path', prometheusTsdbFilename, '--web.listen-address', prometheusLocation,
+    '--log.level', verbose ? 'debug' : 'info'
+  ];
+  await startPrometheus(
+      prometheusBinary, prometheusConfigFilename, prometheusConfigJson, prometheusArgs,
+      prometheusEndpoint);
 
   const prometheusClient = new PrometheusClient(prometheusEndpoint);
   if (!serverConfig.data().portForNewAccessKeys) {
@@ -188,13 +198,16 @@ async function main() {
   });
 
   // Pre-routing handlers
-  apiServer.pre(restify.CORS());
+  const cors =
+      corsMiddleware({origins: ['*'], allowHeaders: [], exposeHeaders: [], credentials: false});
+  apiServer.pre(cors.preflight);
+  apiServer.pre(restify.pre.sanitizePath());
 
   // All routes handlers
   const apiPrefix = process.env.SB_API_PREFIX ? `/${process.env.SB_API_PREFIX}` : '';
-  apiServer.pre(restify.pre.sanitizePath());
-  apiServer.use(restify.jsonp());
-  apiServer.use(restify.bodyParser());
+  apiServer.use(restify.plugins.jsonp());
+  apiServer.use(restify.plugins.bodyParser({mapParams: true}));
+  apiServer.use(cors.actual);
   bindService(apiServer, apiPrefix, managerService);
 
   apiServer.listen(apiPortNumber, () => {
@@ -207,6 +220,11 @@ async function main() {
 function getPersistentFilename(file: string): string {
   const stateDir = process.env.SB_STATE_DIR || DEFAULT_STATE_DIR;
   return path.join(stateDir, file);
+}
+
+function getBinaryFilename(file: string): string {
+  const binDir = path.join(APP_BASE_DIR, 'bin');
+  return path.join(binDir, file);
 }
 
 process.on('unhandledRejection', (error: Error) => {

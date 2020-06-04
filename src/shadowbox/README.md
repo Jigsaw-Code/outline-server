@@ -25,14 +25,14 @@ Use `sudo --preserve-env` if you need to pass environment variables. Use `bash -
 
 ### Prerequisites
 
+Shadowbox supports running on linux and macOS hosts.
+
 Besides [Node](https://nodejs.org/en/download/) and [Yarn](https://yarnpkg.com/en/docs/install), you will also need:
 
 1. [Docker 1.13+](https://docs.docker.com/engine/installation/)
 1. [docker-compose 1.11+](https://docs.docker.com/compose/install/)
 
 ### Running Shadowbox as a Node.js app
-
-> **NOTE:**: This is currently broken. Use the docker option instead.
 
 Build and run the server as a Node.js app:
 ```
@@ -41,10 +41,6 @@ yarn do shadowbox/server/run
 The output will be at `build/shadowbox/app`.
 
 ### Running Shadowbox as a Docker container
-
-> **NOTE**: This does not currently work in Docker on Mac due to use of
-`--network=host` and integrity checks failing. For now, please see the Manual
-testing section below.
 
 ### With docker command
 

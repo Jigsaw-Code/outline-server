@@ -14,20 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo "** Currently broken, use yarn do shadowbox/docker/run instead **" >&2
-exit 1
-
 do_action shadowbox/server/build
+
+readonly RUN_ID="${RUN_ID:-$(date +%Y-%m-%d-%H%M%S)}"
+readonly RUN_DIR="/tmp/outline/$RUN_ID"
+echo "Using directory $RUN_DIR"
 
 export LOG_LEVEL="${LOG_LEVEL:-debug}"
 export SB_PUBLIC_IP="${SB_PUBLIC_IP:-$(curl https://ipinfo.io/ip)}"
 # WARNING: The SB_API_PREFIX should be kept secret!
 export SB_API_PREFIX=TestApiPrefix
 export SB_METRICS_URL=https://dev.metrics.getoutline.org
-export SB_STATE_DIR=/tmp/outline
+export SB_STATE_DIR="${RUN_DIR}/persisted-state"
+readonly STATE_CONFIG=${SB_STATE_DIR}/shadowbox_server_config.json
 
-source $ROOT_DIR/src/shadowbox/scripts/make_test_certificate.sh $SB_STATE_DIR
+[[ -d "${SB_STATE_DIR}" ]] || mkdir -p $SB_STATE_DIR
+[[ -e $STATE_CONFIG ]] || echo '{"hostname":"127.0.0.1"}' > $STATE_CONFIG
 
-# This will fail because it expects prometheus and outline-ss-server to be in /root/shadowbox/bin.
-# TODO: Fix it
-node $BUILD_DIR/shadowbox/app/server/main
+source $ROOT_DIR/src/shadowbox/scripts/make_test_certificate.sh $RUN_DIR
+
+node $BUILD_DIR/shadowbox/app/main.js

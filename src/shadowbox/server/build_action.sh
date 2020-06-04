@@ -16,16 +16,16 @@
 
 readonly OUT_DIR=$BUILD_DIR/shadowbox
 rm -rf $OUT_DIR
+mkdir -p $OUT_DIR
 
-mkdir -p $OUT_DIR/js
+webpack --config=src/shadowbox/webpack.config.js ${BUILD_ENV:+--mode=${BUILD_ENV}}
 
-# Compile Typescript
-tsc -p src/shadowbox --outDir $OUT_DIR/js
+# Install third_party dependencies
+readonly OS=$([[ `uname` == "Darwin" ]] && echo "macos" || echo "linux")
+readonly BIN_DIR="$OUT_DIR/bin"
+mkdir -p $BIN_DIR
+cp "$ROOT_DIR/third_party/prometheus/$OS/prometheus" $BIN_DIR/
+cp "$ROOT_DIR/third_party/outline-ss-server/$OS/outline-ss-server" $BIN_DIR/
 
-# Assemble the node app
-readonly APP_DIR=$OUT_DIR/app
-mkdir -p $APP_DIR
-# Copy built code, without test files.
-rsync --exclude='**/*.spec.js' --exclude='mocks' -r $OUT_DIR/js/* $APP_DIR/
-# Copy static resources
-cp -r $ROOT_DIR/src/shadowbox/package.json $APP_DIR
+# Copy shadowbox package.json
+cp "$ROOT_DIR/src/shadowbox/package.json" $OUT_DIR/
