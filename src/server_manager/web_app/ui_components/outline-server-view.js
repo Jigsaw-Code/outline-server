@@ -586,12 +586,6 @@ export class ServerView extends DirMixin(PolymerElement) {
     };
   }
 
-  static get observers() {
-    return [
-      '_selectedTabChanged(selectedTab)',
-    ];
-  }
-
   constructor() {
     super();
     this.serverId = '';
