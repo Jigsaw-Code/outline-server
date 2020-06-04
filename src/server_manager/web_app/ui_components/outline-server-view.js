@@ -36,6 +36,7 @@ import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
 
 
 import * as byte_size from 'byte-size';
+import {makePublicEvent} from "../../infrastructure/events";
 
 byte_size.defaultOptions({
   units: 'metric',
@@ -43,15 +44,6 @@ byte_size.defaultOptions({
     return `${this.value} ${this.unit}`;
   },
 });
-
-// Makes an CustomEvent that bubbles up beyond the shadow root.
-function makePublicEvent(eventName, detail) {
-  const params = {bubbles: true, composed: true};
-  if (detail !== undefined) {
-    params.detail = detail;
-  }
-  return new CustomEvent(eventName, params);
-}
 
 /**
  * An access key to be displayed
