@@ -566,7 +566,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       metricsEnabled: Boolean,
       monthlyOutboundTransferBytes: {type: Number},
       monthlyCost: {type: Number},
-      selectedTab: {type: String},
+      selectedTab: {type: String, observer: '_selectedTabChanged'},
       managedServerUtilzationPercentage: {
         type: Number,
         computed:
