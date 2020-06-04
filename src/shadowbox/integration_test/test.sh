@@ -88,11 +88,10 @@ function test_with_retries() {
 
   for ((i=1; i<=${max_attempts}; i++))
   do
-    # The script will exit if the below test returns with a non-zero status code
-    # (due to set -e), so we capture the result code separately.
-    $(${test_function}) && result_code=$? || result_code=$?
-    if [[ $result_code == 0 ]]; then
+    if ${test_function}; then
       return
+    else
+      result_code=$?
     fi
     echo "Attempt (${i}/${max_attempts}): result_code=${result_code}"
     sleep 5
