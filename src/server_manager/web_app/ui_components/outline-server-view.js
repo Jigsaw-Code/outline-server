@@ -605,12 +605,6 @@ export class ServerView extends DirMixin(PolymerElement) {
      *  @type {() => void)}
      */
     this.retryDisplayingServer = null;
-    /**
-     *  myConnection has the same fields as each item in accessKeyRows.  It may
-     *  be unset in some old versions of Outline that allowed deleting this row
-     *  @type {DisplayAccessKey}
-     */
-    this.myConnection = null;
     this.totalInboundBytes = 0;
     /** @type {DisplayAccessKey[]} */
     this.accessKeyRows = [];
