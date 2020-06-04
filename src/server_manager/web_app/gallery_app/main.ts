@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import IntlMessageFormat from 'intl-messageformat';
+
 import '../ui_components/outline-about-dialog';
 import '../ui_components/outline-do-oauth-step';
 import '../ui_components/outline-feedback-dialog';
 import '../ui_components/outline-share-dialog';
 import '../ui_components/outline-survey-dialog';
 
-import IntlMessageFormat from 'intl-messageformat';
 import {css, customElement, html, LitElement, property} from 'lit-element';
 
 async function makeLocalize(language: string) {
@@ -36,7 +37,7 @@ async function makeLocalize(language: string) {
     }
     if (!messages) {
       // Fallback that shows message id and params.
-      return `${msgId}(${JSON.stringify(params, null, ' ')})`;
+      return `${msgId}(${JSON.stringify(params, null, " ")})`;
     }
     // Ideally we would pre-parse and cache the IntlMessageFormat objects,
     // but it's ok here because it's a test app.
@@ -95,8 +96,7 @@ export class TestApp extends LitElement {
       <div class="widget">
         <h2>outline-about-dialog</h2>
         <button @tap=${() => this.select('outline-about-dialog').open()}>Open Dialog</button>
-        <outline-about-dialog .localize=${this.localize} dir=${
-        this.dir} outline-version="1.2.3"></outline-about-dialog>
+        <outline-about-dialog .localize=${this.localize} dir=${this.dir} outline-version="1.2.3"></outline-about-dialog>
       </div>
       
       <div class="widget">
@@ -106,26 +106,22 @@ export class TestApp extends LitElement {
 
       <div class="widget">
         <h2>outline-feedback-dialog</h2>
-        <button @tap=${
-        () => this.select('outline-feedback-dialog')
-                  .open('Pre-populated message', false)}>Open Dialog</button>
-        <outline-feedback-dialog .localize=${this.localize} dir=${
-        this.dir}></outline-feedback-dialog>
+        <button @tap=${() => this.select('outline-feedback-dialog').open('Pre-populated message', false)
+        }>Open Dialog</button>
+        <outline-feedback-dialog .localize=${this.localize} dir=${this.dir}></outline-feedback-dialog>
       </div>
 
       <div class="widget">
         <h2>outline-share-dialog</h2>
-        <button @tap=${
-        () => this.select('outline-share-dialog')
-                  .open('<ACCESS_KEY>', '<INVITE_URL>')}>Open Dialog</button>
+        <button @tap=${() => this.select('outline-share-dialog').open('<ACCESS_KEY>', '<INVITE_URL>')
+        }>Open Dialog</button>
         <outline-share-dialog .localize=${this.localize} dir=${this.dir}></outline-share-dialog>
       </div>
 
       <div class="widget">
         <h2>outline-survey-dialog</h2>
-        <button @tap=${
-        () => this.select('outline-survey-dialog')
-                  .open('Survey title', 'https://getoutline.org')}>Open Dialog</button>
+        <button @tap=${() => this.select('outline-survey-dialog').open('Survey title', 'https://getoutline.org')
+        }>Open Dialog</button>
         <outline-survey-dialog .localize=${this.localize} dir=${this.dir}></outline-survey-dialog>
       </div>
     `;
@@ -133,16 +129,13 @@ export class TestApp extends LitElement {
 
   get pageControls() {
     return html`<p>
-      <label for="language">Language:</label><input type="text" id="language" value="${
-        this.language}">
-      <button @tap=${
-        () => this.setLanguage((this.shadowRoot.querySelector('#language') as HTMLInputElement)
-                                   .value)}>Set Language</button>
+      <label for="language">Language:</label><input type="text" id="language" value="${this.language}">
+      <button @tap=${() => this.setLanguage((this.shadowRoot.querySelector('#language') as HTMLInputElement).value)
+      }>Set Language</button>
     </p>
     <p>
-      <label for="dir-select" @change=${
-        (e: Event) => this.dir =
-            (e.target as HTMLSelectElement).value}>Direction: <select id="dir-select">
+      <label for="dir-select" @change=${(e: Event) => this.dir = (e.target as HTMLSelectElement).value
+      }>Direction: <select id="dir-select">
         <option value="ltr" selected>LTR</option>
         <option value="rtl">RTL</option>
       </select>

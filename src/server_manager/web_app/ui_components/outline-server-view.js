@@ -70,8 +70,7 @@ function makePublicEvent(eventName, detail) {
  * @prop {number} value
  */
 
-export class ServerView extends DirMixin
-(PolymerElement) {
+export class ServerView extends DirMixin(PolymerElement) {
   static get template() {
     return html`
     <style include="cloud-install-styles"></style>
@@ -491,7 +490,7 @@ export class ServerView extends DirMixin
                     </paper-tooltip>
                   </span>
                   <span class="actions">
-                    <span class="flex-1" id="blah">
+                    <span class="flex-1">
                       <paper-icon-button icon="outline-iconset:share" class="share-button" on-tap="_handleShareCodePressed"></paper-icon-button>
                     </span>
                     <span class="flex-1">

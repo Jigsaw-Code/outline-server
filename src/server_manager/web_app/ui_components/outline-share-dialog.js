@@ -113,6 +113,7 @@ Polymer({
       <div contenteditable="" id="selectableText" style="-webkit-text-size-adjust: 100%;">
         <p>[[localize('share-invite')]]</p>
         <p><a contenteditable="false" href$="{{s3Url}}">{{s3Url}}</a></p>
+
         <p>-----</p>
         <p>[[localize('share-invite-trouble')]]</p>
         <ol>
