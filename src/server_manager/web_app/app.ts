@@ -25,10 +25,9 @@ import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
-
+import {ServerManagementApp} from './server_management_app';
 import {AppRoot} from './ui_components/app-root.js';
 import {DisplayAccessKey, ServerView} from './ui_components/outline-server-view.js';
-import {ServerManagementApp} from "./server_management_app";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/

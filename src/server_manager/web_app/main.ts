@@ -23,9 +23,9 @@ import {DigitalOceanTokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
+import {DATA_LIMITS_AVAILABILITY_DATE, ServerManagementApp} from './server_management_app';
 import {DEFAULT_PROMPT_IMPRESSION_DELAY_MS, OutlineSurveys} from './survey';
 import {AppRoot} from './ui_components/app-root.js';
-import {DATA_LIMITS_AVAILABILITY_DATE, ServerManagementApp} from "./server_management_app";
 
 const SUPPORTED_LANGUAGES: {[key: string]: {id: string, dir: string}} = {
   'am': {id: 'am', dir: 'ltr'},

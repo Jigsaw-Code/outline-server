@@ -47,12 +47,12 @@ export class ServerManagementApp {
     view.serverManagementApiUrl = server.getManagementApiUrl();
     view.serverPortForNewAccessKeys = server.getPortForNewAccessKeys();
     view.serverCreationDate =
-      ServerManagementApp.localizeDate(server.getCreatedDate(), this.appRoot.language);
+        ServerManagementApp.localizeDate(server.getCreatedDate(), this.appRoot.language);
     view.serverVersion = server.getVersion();
     view.dataLimitsAvailabilityDate =
-      ServerManagementApp.localizeDate(DATA_LIMITS_AVAILABILITY_DATE, this.appRoot.language);
+        ServerManagementApp.localizeDate(DATA_LIMITS_AVAILABILITY_DATE, this.appRoot.language);
     view.accessKeyDataLimit =
-      ServerManagementApp.dataLimitToDisplayDataAmount(server.getAccessKeyDataLimit());
+        ServerManagementApp.dataLimitToDisplayDataAmount(server.getAccessKeyDataLimit());
     view.isAccessKeyDataLimitEnabled = !!view.accessKeyDataLimit;
 
     const version = server.getVersion();
@@ -67,7 +67,7 @@ export class ServerManagementApp {
       const host = server.getHost();
       view.monthlyCost = host.getMonthlyCost().usd;
       view.monthlyOutboundTransferBytes =
-        host.getMonthlyOutboundTransferLimit().terabytes * (10 ** 12);
+          host.getMonthlyOutboundTransferLimit().terabytes * (10 ** 12);
       view.serverLocation = this.getLocalizedCityName(host.getRegionId());
     } else {
       view.isServerManaged = false;
@@ -83,7 +83,7 @@ export class ServerManagementApp {
       view.accessKeyRows = serverAccessKeys.map(this.convertToUiAccessKey.bind(this));
       if (!view.accessKeyDataLimit) {
         view.accessKeyDataLimit = ServerManagementApp.dataLimitToDisplayDataAmount(
-          await ServerManagementApp.computeDefaultAccessKeyDataLimit(server, serverAccessKeys));
+            await ServerManagementApp.computeDefaultAccessKeyDataLimit(server, serverAccessKeys));
       }
       // Show help bubbles once the page has rendered.
       setTimeout(() => {
@@ -178,7 +178,7 @@ export class ServerManagementApp {
         const accessKeyId = accessKey.id;
         const transferredBytes = stats.bytesTransferredByUserId[accessKeyId] || 0;
         let relativeTraffic =
-          totalBytes ? 100 * transferredBytes / totalBytes : (accessKeyDataLimit ? 100 : 0);
+            totalBytes ? 100 * transferredBytes / totalBytes : (accessKeyDataLimit ? 100 : 0);
         if (relativeTraffic > 100) {
           // Can happen when a data limit is set on an access key that already exceeds it.
           relativeTraffic = 100;
@@ -239,7 +239,7 @@ export class ServerManagementApp {
   }
 
   public renameAccessKey(
-    server: Server, accessKeyId: string, newName: string, entry: polymer.Base) {
+      server: Server, accessKeyId: string, newName: string, entry: polymer.Base) {
     server.renameAccessKey(accessKeyId, newName)
       .then(() => {
         entry.commitName();
@@ -282,7 +282,7 @@ export class ServerManagementApp {
       console.error(`Failed to set access key data limit: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-set-data-limit'));
       serverView.accessKeyDataLimit = ServerManagementApp.dataLimitToDisplayDataAmount(
-        previousLimit || await ServerManagementApp.computeDefaultAccessKeyDataLimit(server));
+          previousLimit || await ServerManagementApp.computeDefaultAccessKeyDataLimit(server));
       serverView.isAccessKeyDataLimitEnabled = !!previousLimit;
     }
   }
@@ -301,7 +301,7 @@ export class ServerManagementApp {
   }
 
   public async setHostnameForAccessKeys(
-    server: Server, hostname: string, serverSettings: polymer.Base) {
+      server: Server, hostname: string, serverSettings: polymer.Base) {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
     try {
       await server.setHostnameForAccessKeys(hostname);
@@ -353,7 +353,7 @@ export class ServerManagementApp {
       window.localStorage.setItem('getConnectedHelpBubble-dismissed', 'true');
     }
     if (!window.localStorage.getItem('dataLimitsHelpBubble-dismissed') &&
-      serverView.supportsAccessKeyDataLimit) {
+        serverView.supportsAccessKeyDataLimit) {
       await serverView.showDataLimitsHelpBubble();
       window.localStorage.setItem('dataLimitsHelpBubble-dismissed', 'true');
     }
@@ -373,7 +373,7 @@ export class ServerManagementApp {
   // Compute the suggested data limit based on the server's transfer capacity and number of access
   // keys.
   private static async computeDefaultAccessKeyDataLimit(
-    server: server.Server, accessKeys?: server.AccessKey[]): Promise<server.DataLimit> {
+      server: server.Server, accessKeys?: server.AccessKey[]): Promise<server.DataLimit> {
     try {
       // Assume non-managed servers have a data transfer capacity of 1TB.
       let serverTransferCapacity: server.DataAmount = {terabytes: 1};
