@@ -768,19 +768,6 @@ export class App {
         encodeURIComponent(accessUrl)}`;
   }
 
-  // Converts the access key from the remote service format to the
-  // format used by outline-server-view.
-  private convertToUiAccessKey(remoteAccessKey: server.AccessKey): DisplayAccessKey {
-    return {
-      id: remoteAccessKey.id,
-      placeholderName: `${this.appRoot.localize('key', 'keyId', remoteAccessKey.id)}`,
-      name: remoteAccessKey.name,
-      accessUrl: remoteAccessKey.accessUrl,
-      transferredBytes: 0,
-      relativeTraffic: 0
-    };
-  }
-
   // Returns promise which fulfills when the server is created successfully,
   // or rejects with an error message that can be displayed to the user.
   public createManualServer(userInput: string): Promise<void> {
