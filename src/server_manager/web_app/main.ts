@@ -18,13 +18,14 @@ import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as i18n from '../infrastructure/i18n';
 import {getSentryApiUrl} from '../infrastructure/sentry';
 
-import {App, DATA_LIMITS_AVAILABILITY_DATE} from './app';
+import {App} from './app';
 import {DigitalOceanTokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
 import {DEFAULT_PROMPT_IMPRESSION_DELAY_MS, OutlineSurveys} from './survey';
 import {AppRoot} from './ui_components/app-root.js';
+import {DATA_LIMITS_AVAILABILITY_DATE, ServerManagementApp} from "./server_management_app";
 
 const SUPPORTED_LANGUAGES: {[key: string]: {id: string, dir: string}} = {
   'am': {id: 'am', dir: 'ltr'},
@@ -78,7 +79,7 @@ function getLanguageToUse(): i18n.LanguageCode {
   const defaultLanguage = new i18n.LanguageCode('en');
   const userLanguages = i18n.getBrowserLanguages();
   return new i18n.LanguageMatcher(supportedLanguages, defaultLanguage)
-      .getBestSupportedLanguage(userLanguages);
+    .getBestSupportedLanguage(userLanguages);
 }
 
 document.addEventListener('WebComponentsReady', () => {
@@ -93,7 +94,7 @@ document.addEventListener('WebComponentsReady', () => {
   // Set DigitalOcean server repository parameters.
   const digitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) => {
     return new digitalocean_server.DigitaloceanServerRepository(
-        session, shadowboxImage, metricsUrl, getSentryApiUrl(sentryDsn), debugMode);
+      session, shadowboxImage, metricsUrl, getSentryApiUrl(sentryDsn), debugMode);
   };
 
   // Create and start the app.
@@ -105,12 +106,13 @@ document.addEventListener('WebComponentsReady', () => {
   const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
   appRoot.setLanguage(language.string(), languageDirection);
   new App(
-      appRoot, version, digitalocean_api.createDigitalOceanSession,
-      digitalOceanServerRepositoryFactory, new ManualServerRepository('manualServers'),
-      new DisplayServerRepository(), new DigitalOceanTokenManager(),
-      new OutlineSurveys(
-          appRoot.$.surveyDialog, localStorage, DEFAULT_PROMPT_IMPRESSION_DELAY_MS,
-          DATA_LIMITS_AVAILABILITY_DATE))
-      .start();
+    appRoot, new ServerManagementApp(appRoot), version,
+    digitalocean_api.createDigitalOceanSession, digitalOceanServerRepositoryFactory,
+    new ManualServerRepository('manualServers'), new DisplayServerRepository(),
+    new DigitalOceanTokenManager(),
+    new OutlineSurveys(
+      appRoot.$.surveyDialog, localStorage, DEFAULT_PROMPT_IMPRESSION_DELAY_MS,
+      DATA_LIMITS_AVAILABILITY_DATE))
+    .start();
 });
 
