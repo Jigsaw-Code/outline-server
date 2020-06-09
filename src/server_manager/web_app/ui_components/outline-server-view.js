@@ -30,13 +30,14 @@ import './outline-iconset.js';
 import './outline-metrics-option-dialog.js';
 import './outline-server-settings.js';
 import './outline-share-dialog.js';
-import {HelpBubble} from './outline-help-bubble';
+
 import {html, PolymerElement} from '@polymer/polymer';
 import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
-
-
 import * as byte_size from 'byte-size';
+
 import {makePublicEvent} from '../../infrastructure/events';
+
+import {HelpBubble} from './outline-help-bubble';
 
 byte_size.defaultOptions({
   units: 'metric',
@@ -806,7 +807,8 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   showDataLimitsHelpBubble() {
-    if (!window.localStorage.getItem('dataLimitsHelpBubble-dismissed') && this.supportsAccessKeyDataLimit) {
+    if (!window.localStorage.getItem('dataLimitsHelpBubble-dismissed') &&
+        this.supportsAccessKeyDataLimit) {
       return this._showHelpBubble('dataLimitsHelpBubble', 'settingsTab', 'up', 'right');
     }
   }
