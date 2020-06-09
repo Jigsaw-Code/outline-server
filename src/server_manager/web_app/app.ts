@@ -27,7 +27,7 @@ import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './displ
 import {parseManualServerConfig} from './management_urls';
 import {ServerManagementApp} from './server_management_app';
 import {AppRoot} from './ui_components/app-root.js';
-import {DisplayAccessKey, ServerView} from './ui_components/outline-server-view.js';
+import {ServerView} from './ui_components/outline-server-view.js';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -164,8 +164,10 @@ export class App {
     //       depend on `selectedServer`.
     // Server management events
     appRoot.addEventListener('ServerRenameRequested', (event: CustomEvent) => {
-      serverManagementApp.renameServer(this.selectedServer, event.detail.newName).then(() => {
-        this.syncAndShowServer(this.selectedServer);
+      this.getServerFromRepository(event.detail.displayServer).then((server) => {
+        serverManagementApp.renameServer(server, event.detail.newName).then(() => {
+          this.syncAndShowServer(server);
+        });
       });
     });
     appRoot.addEventListener('ChangePortForNewAccessKeysRequested', (event: CustomEvent) => {
@@ -179,14 +181,20 @@ export class App {
 
     // Access key events
     appRoot.addEventListener('AddAccessKeyRequested', (event: CustomEvent) => {
-      serverManagementApp.addAccessKey(this.selectedServer);
+      this.getServerFromRepository(event.detail.displayServer).then((server) => {
+        serverManagementApp.addAccessKey(server);
+      });
     });
     appRoot.addEventListener('RemoveAccessKeyRequested', (event: CustomEvent) => {
-      serverManagementApp.removeAccessKey(this.selectedServer, event.detail.accessKeyId);
+      this.getServerFromRepository(event.detail.displayServer).then((server) => {
+        serverManagementApp.removeAccessKey(server, event.detail.accessKeyId);
+      });
     });
     appRoot.addEventListener('RenameAccessKeyRequested', (event: CustomEvent) => {
-      serverManagementApp.renameAccessKey(
-        this.selectedServer, event.detail.accessKeyId, event.detail.newName, event.detail.entry);
+      this.getServerFromRepository(event.detail.displayServer).then((server) => {
+        serverManagementApp.renameAccessKey(
+            server, event.detail.accessKeyId, event.detail.newName, event.detail.entry);
+      });
     });
 
     // Metric events
@@ -199,19 +207,23 @@ export class App {
 
     // Data limits feature events
     appRoot.addEventListener('SetAccessKeyDataLimitRequested', (event: CustomEvent) => {
-      serverManagementApp
-        .setAccessKeyDataLimit(
-          this.selectedServer,
-          ServerManagementApp.displayDataAmountToDataLimit(event.detail.limit))
-        .then((result) => {
-          if (result) {
-            this.surveys.presentDataLimitsEnabledSurvey();
-          }
-        });
+      this.getServerFromRepository(event.detail.displayServer).then((server) => {
+        serverManagementApp
+          .setAccessKeyDataLimit(
+            server,
+            ServerManagementApp.displayDataAmountToDataLimit(event.detail.limit))
+          .then((result) => {
+            if (result) {
+              this.surveys.presentDataLimitsEnabledSurvey();
+            }
+          });
+      });
     });
     appRoot.addEventListener('RemoveAccessKeyDataLimitRequested', (event: CustomEvent) => {
-      serverManagementApp.removeAccessKeyDataLimit(this.selectedServer).then(() => {
-        this.surveys.presentDataLimitsDisabledSurvey();
+      this.getServerFromRepository(event.detail.displayServer).then((server) => {
+        serverManagementApp.removeAccessKeyDataLimit(server).then(() => {
+          this.surveys.presentDataLimitsDisabledSurvey();
+        });
       });
     });
   }
@@ -492,6 +504,7 @@ export class App {
         // Sync the server display in case it was previously unreachable.
         this.syncServerToDisplay(server).then(() => {
           this.displayServerRepository.storeLastDisplayedServerId(displayServer.id);
+          this.selectedServer = server;
           this.serverManagementApp.showServer(server, displayServer);
         });
       } else {
@@ -758,6 +771,7 @@ export class App {
     const displayServer = await this.syncServerToDisplay(server);
     await this.syncDisplayServersToUi();
     this.displayServerRepository.storeLastDisplayedServerId(displayServer.id);
+    this.selectedServer = server;
     await this.serverManagementApp.showServer(server, displayServer);
   }
 

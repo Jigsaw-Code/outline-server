@@ -698,8 +698,17 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   _handleAddAccessKeyPressed() {
-    this.dispatchEvent(makePublicEvent('AddAccessKeyRequested'));
+    const detail = { displayServer: this._makeDisplayServer() };
+    this.dispatchEvent(makePublicEvent('AddAccessKeyRequested', detail));
     this.$.addAccessKeyHelpBubble.hide();
+  }
+
+  _makeDisplayServer() {
+    return  {
+      id: this.serverManagementApiUrl,
+      name: this.serverName,
+      isManaged: this.isServerManaged
+    };
   }
 
   _handleNameInputKeyDown(event) {
@@ -724,6 +733,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     this.dispatchEvent(makePublicEvent('RenameAccessKeyRequested', {
       accessKeyId: accessKey.id,
       newName: displayName,
+      displayServer: this._makeDisplayServer(),
       entry: {
         commitName: () => {
           accessKey.name = displayName;
@@ -760,7 +770,10 @@ export class ServerView extends DirMixin(PolymerElement) {
 
   _handleRemoveAccessKeyPressed(e) {
     const accessKey = e.model.item;
-    this.dispatchEvent(makePublicEvent('RemoveAccessKeyRequested', {accessKeyId: accessKey.id}));
+    this.dispatchEvent(makePublicEvent('RemoveAccessKeyRequested', {
+      accessKeyId: accessKey.id,
+      displayServer: this._makeDisplayServer()
+    }));
   }
 
   setServerTransferredData(totalBytes) {

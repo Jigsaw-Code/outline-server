@@ -299,7 +299,10 @@ Polymer({
     }
     // Fire signal if name has changed.
     if (newName !== this.initialName) {
-      this.fire('ServerRenameRequested', {newName});
+      this.fire('ServerRenameRequested', {
+        newName,
+        displayServer: this._makeDisplayServer()
+      });
     }
   },
 
@@ -327,7 +330,9 @@ Polymer({
     if (isDataLimitEnabled) {
       this._requestSetAccessKeyDataLimit();
     } else {
-      this.fire('RemoveAccessKeyDataLimitRequested');
+      this.fire('RemoveAccessKeyDataLimitRequested', {
+        displayServer: this._makeDisplayServer()
+      });
     }
   },
 
@@ -346,7 +351,10 @@ Polymer({
     }
     const value = Number(this.$.accessKeyDataLimitInput.value);
     const unit = this.$.accessKeyDataLimitUnits.selected;
-    this.fire('SetAccessKeyDataLimitRequested', {limit: {value, unit}});
+    this.fire('SetAccessKeyDataLimitRequested', {
+      limit: {value, unit},
+      displayServer: this._makeDisplayServer()
+    });
   },
 
   _computeDataLimitsEnabledName: function(isAccessKeyDataLimitEnabled) {
@@ -361,5 +369,13 @@ Polymer({
     const port = Number(value);
     const valid = !Number.isNaN(port) && port >= 1 && port <= 65535 && Number.isInteger(port);
     return valid ? '' : this.localize('error-keys-port-bad-input');
+  },
+
+  _makeDisplayServer() {
+    return  {
+      id: this.serverManagementApiUrl,
+      name: this.serverName,
+      isManaged: this.isServerManaged
+    };
   }
 });
