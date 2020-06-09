@@ -135,15 +135,6 @@ export class HelpBubble extends mixinBehaviors
     return 'outline-help-bubble';
   }
 
-  static get properties() {
-    return {isActive: {type: Boolean, computed: '_computeIsActive()'}};
-  }
-
-  constructor() {
-    super();
-    this.active = false;
-  }
-
   ready() {
     super.ready();
     // Prevent help bubble from overlapping with it's positionTarget.
@@ -182,7 +173,7 @@ export class HelpBubble extends mixinBehaviors
     this.fire('outline-help-bubble-dismissed');
   }
 
-  _computeIsActive() {
+  isDisplayed() {
     return !this.hasAttribute('hidden');
   }
 }

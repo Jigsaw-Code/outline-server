@@ -819,31 +819,31 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   closeAddAccessKeyHelpBubble() {
-    this.$.addAccessKeyHelpBubble.hide();
-    if (this.$.addAccessKeyHelpBubble.isActive) {
+    if (this.$.addAccessKeyHelpBubble.isDisplayed()) {
       window.localStorage.setItem('addAccessKeyHelpBubble-dismissed', 'true');
     }
+    this.$.addAccessKeyHelpBubble.hide();
   }
 
   closeGetConnectedHelpBubble() {
-    this.$.getConnectedHelpBubble.hide();
-    if (this.$.getConnectedHelpBubble.isActive) {
+    if (this.$.getConnectedHelpBubble.isDisplayed()) {
       window.localStorage.setItem('getConnectedHelpBubble-dismissed', 'true');
     }
+    this.$.getConnectedHelpBubble.hide();
   }
 
   closeDataLimitsHelpBubble() {
-    this.$.dataLimitsHelpBubble.hide();
-    if (this.$.dataLimitsHelpBubble.isActive) {
+    if (this.$.dataLimitsHelpBubble.isDisplayed()) {
       window.localStorage.setItem('dataLimitsHelpBubble-dismissed', 'true');
     }
+    this.$.dataLimitsHelpBubble.hide();
   }
 
   closeKeySharingHelpBubble() {
-    this.$.keySharingHelpBubble.hide();
-    if (this.$.keySharingHelpBubble.isActive) {
+    if (this.$.keySharingHelpBubble.isDisplayed()) {
       window.localStorage.setItem('keySharingHelpBubble-dismissed', 'true');
     }
+    this.$.keySharingHelpBubble.hide();
   }
 
   _showHelpBubble(
