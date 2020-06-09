@@ -165,6 +165,8 @@
   "server-help-connection-description": "Click here to install the Outline client app, using your personal access key to your Outline server.",
   "server-help-connection-ok": "Okay, got it!",
   "server-help-connection-title": "You are not connected yet!",
+  "server-help-key-sharing-title": "Share access",
+  "server-help-key-sharing-description": "Click here to give someone access to your server.",
   "server-keys": "Keys",
   "server-name": "Outline Server {serverLocation}",
   "server-remove": "Remove server",

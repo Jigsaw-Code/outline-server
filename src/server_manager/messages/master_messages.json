@@ -789,6 +789,14 @@
     "message": "You are not connected yet!",
     "description": "This string appears within a help bubble as a header. The help bubble provides information about connecting to the server."
   },
+  "server_help_key_sharing_title": {
+    "message": "Share access",
+    "description": "This string appears within a help bubble as a header. The help bubble provides information about sharing an access key."
+  },
+  "server_help_key_sharing_description": {
+    "message": "Click here to give someone access to your server.",
+    "description": "This string appears within a help bubble as a header. The help bubble provides information about sharing an access key."
+  },
   "server_keys": {
     "message": "Keys",
     "description": "This string appears within the server view as the unit of a card that displays the number of server access keys."

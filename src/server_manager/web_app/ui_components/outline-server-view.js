@@ -30,14 +30,13 @@ import './outline-iconset.js';
 import './outline-metrics-option-dialog.js';
 import './outline-server-settings.js';
 import './outline-share-dialog.js';
+import './outline-help-bubble.js';
 
 import {html, PolymerElement} from '@polymer/polymer';
 import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
 import * as byte_size from 'byte-size';
 
 import {makePublicEvent} from '../../infrastructure/events';
-
-import {HelpBubble} from './outline-help-bubble';
 
 byte_size.defaultOptions({
   units: 'metric',
@@ -531,10 +530,10 @@ export class ServerView extends DirMixin(PolymerElement) {
       <p>[[localize('server-help-access-key-description')]]</p>
       <paper-button on-tap="closeAddAccessKeyHelpBubble">[[localize('server-help-access-key-next')]]</paper-button>
     </outline-help-bubble>
-    <outline-help-bubble id="keySharingHelpBubble" vertical-align="bottom" horizontal-align="left">
+    <outline-help-bubble id="keySharingHelpBubble" vertical-align="bottom" horizontal-align="right">
       <img src="images/key-tip-2x.png">
-      <h3>Share access</h3>
-      <p>Share this key to give someone access to your server.</p>
+      <h3>[[localize('server-help-key-sharing-title')]]</h3>
+      <p>[[localize('server-help-key-sharing-description')]]</p>
       <paper-button on-tap="closeKeySharingHelpBubble">[[localize('ok')]]</paper-button>
     </outline-help-bubble>
     <outline-help-bubble id="dataLimitsHelpBubble" vertical-align="top" horizontal-align="right">
@@ -821,22 +820,30 @@ export class ServerView extends DirMixin(PolymerElement) {
 
   closeAddAccessKeyHelpBubble() {
     this.$.addAccessKeyHelpBubble.hide();
-    window.localStorage.setItem('addAccessKeyHelpBubble-dismissed', 'true');
+    if (this.$.addAccessKeyHelpBubble.isActive) {
+      window.localStorage.setItem('addAccessKeyHelpBubble-dismissed', 'true');
+    }
   }
 
   closeGetConnectedHelpBubble() {
     this.$.getConnectedHelpBubble.hide();
-    window.localStorage.setItem('getConnectedHelpBubble-dismissed', 'true');
+    if (this.$.getConnectedHelpBubble.isActive) {
+      window.localStorage.setItem('getConnectedHelpBubble-dismissed', 'true');
+    }
   }
 
   closeDataLimitsHelpBubble() {
     this.$.dataLimitsHelpBubble.hide();
-    window.localStorage.setItem('dataLimitsHelpBubble-dismissed', 'true');
+    if (this.$.dataLimitsHelpBubble.isActive) {
+      window.localStorage.setItem('dataLimitsHelpBubble-dismissed', 'true');
+    }
   }
 
   closeKeySharingHelpBubble() {
     this.$.keySharingHelpBubble.hide();
-    window.localStorage.setItem('keySharingHelpBubble-dismissed', 'true');
+    if (this.$.keySharingHelpBubble.isActive) {
+      window.localStorage.setItem('keySharingHelpBubble-dismissed', 'true');
+    }
   }
 
   _showHelpBubble(

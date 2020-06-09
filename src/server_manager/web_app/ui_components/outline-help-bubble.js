@@ -13,13 +13,16 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import '@polymer/polymer/polymer-legacy.js';
+import '@polymer/paper-button/paper-button.js';
+import './cloud-install-styles.js';
 
 import {IronFitBehavior} from '@polymer/iron-fit-behavior/iron-fit-behavior.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-Polymer({
-  _template: html`
+import {html, PolymerElement} from '@polymer/polymer';
+import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class.js';
+
+export class HelpBubble extends mixinBehaviors([IronFitBehavior], PolymerElement) {
+  static get template() {
+    return html`
     <style include="cloud-install-styles"></style>
     <style>
       :host {
@@ -124,23 +127,34 @@ Polymer({
     <div class="upArrowWrapper"><div class="upArrow"></div></div>
     <div class="downArrowWrapper"><div class="downArrow"></div></div>
     <div class="helpContent"><slot></slot></div>
-`,
+    `;
+  }
 
-  is: 'outline-help-bubble',
+  static get is() {
+    return 'outline-help-bubble';
+  }
 
-  behaviors: [
-    IronFitBehavior,
-  ],
+  static get properties() {
+    return {
+      isActive: {type: Boolean, computed: '_computeIsActive()'}
+    };
+  }
 
-  ready: function() {
+  constructor() {
+    super();
+    this.active = false;
+  }
+
+  ready() {
+    super.ready();
     // Prevent help bubble from overlapping with it's positionTarget.
     this.setAttribute('no-overlap', true);
 
     // Help bubble should default to hidden until show is called.
     this.setAttribute('hidden', true);
-  },
+  }
 
-  show: function(positionTarget, arrowDirection, leftOrRightOffset) {
+  show(positionTarget, arrowDirection, leftOrRightOffset) {
     this.removeAttribute('hidden');
 
     // Set arrow direction.
@@ -160,12 +174,18 @@ Polymer({
     // Listen to scroll and resize events so the help bubble can reposition if needed.
     window.addEventListener('scroll', this.refit.bind(this));
     window.addEventListener('resize', this.refit.bind(this));
-  },
+  }
 
-  hide: function() {
+  hide() {
     this.setAttribute('hidden', true);
     window.removeEventListener('scroll', this.refit.bind(this));
     window.removeEventListener('resize', this.refit.bind(this));
     this.fire('outline-help-bubble-dismissed');
   }
-});
+
+  _computeIsActive() {
+    return !this.hasAttribute('hidden');
+  }
+}
+
+customElements.define(HelpBubble.is, HelpBubble);
