@@ -299,10 +299,7 @@ Polymer({
     }
     // Fire signal if name has changed.
     if (newName !== this.initialName) {
-      this.fire('ServerRenameRequested', {
-        newName,
-        displayServer: this._makeDisplayServer()
-      });
+      this.fire('ServerRenameRequested', {newName, displayServer: this._makeDisplayServer()});
     }
   },
 
@@ -330,9 +327,7 @@ Polymer({
     if (isDataLimitEnabled) {
       this._requestSetAccessKeyDataLimit();
     } else {
-      this.fire('RemoveAccessKeyDataLimitRequested', {
-        displayServer: this._makeDisplayServer()
-      });
+      this.fire('RemoveAccessKeyDataLimitRequested', {displayServer: this._makeDisplayServer()});
     }
   },
 
@@ -351,10 +346,9 @@ Polymer({
     }
     const value = Number(this.$.accessKeyDataLimitInput.value);
     const unit = this.$.accessKeyDataLimitUnits.selected;
-    this.fire('SetAccessKeyDataLimitRequested', {
-      limit: {value, unit},
-      displayServer: this._makeDisplayServer()
-    });
+    this.fire(
+        'SetAccessKeyDataLimitRequested',
+        {limit: {value, unit}, displayServer: this._makeDisplayServer()});
   },
 
   _computeDataLimitsEnabledName: function(isAccessKeyDataLimitEnabled) {
@@ -372,7 +366,7 @@ Polymer({
   },
 
   _makeDisplayServer() {
-    return  {
+    return {
       id: this.serverManagementApiUrl,
       name: this.serverName,
       isManaged: this.isServerManaged

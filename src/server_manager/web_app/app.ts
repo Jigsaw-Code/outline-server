@@ -209,14 +209,13 @@ export class App {
     appRoot.addEventListener('SetAccessKeyDataLimitRequested', (event: CustomEvent) => {
       this.getServerFromRepository(event.detail.displayServer).then((server) => {
         serverManagementApp
-          .setAccessKeyDataLimit(
-            server,
-            ServerManagementApp.displayDataAmountToDataLimit(event.detail.limit))
-          .then((result) => {
-            if (result) {
-              this.surveys.presentDataLimitsEnabledSurvey();
-            }
-          });
+            .setAccessKeyDataLimit(
+                server, ServerManagementApp.displayDataAmountToDataLimit(event.detail.limit))
+            .then((result) => {
+              if (result) {
+                this.surveys.presentDataLimitsEnabledSurvey();
+              }
+            });
       });
     });
     appRoot.addEventListener('RemoveAccessKeyDataLimitRequested', (event: CustomEvent) => {
