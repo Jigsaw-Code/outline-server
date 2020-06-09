@@ -20,7 +20,8 @@ import {IronFitBehavior} from '@polymer/iron-fit-behavior/iron-fit-behavior.js';
 import {html, PolymerElement} from '@polymer/polymer';
 import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class.js';
 
-export class HelpBubble extends mixinBehaviors([IronFitBehavior], PolymerElement) {
+export class HelpBubble extends mixinBehaviors
+([IronFitBehavior], PolymerElement) {
   static get template() {
     return html`
     <style include="cloud-install-styles"></style>
@@ -135,9 +136,7 @@ export class HelpBubble extends mixinBehaviors([IronFitBehavior], PolymerElement
   }
 
   static get properties() {
-    return {
-      isActive: {type: Boolean, computed: '_computeIsActive()'}
-    };
+    return {isActive: {type: Boolean, computed: '_computeIsActive()'}};
   }
 
   constructor() {
