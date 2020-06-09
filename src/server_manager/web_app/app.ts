@@ -89,19 +89,9 @@ async function computeDefaultAccessKeyDataLimit(
 }
 
 async function showHelpBubblesOnce(serverView: ServerView) {
-  if (!window.localStorage.getItem('addAccessKeyHelpBubble-dismissed')) {
-    await serverView.showAddAccessKeyHelpBubble();
-    window.localStorage.setItem('addAccessKeyHelpBubble-dismissed', 'true');
-  }
-  if (!window.localStorage.getItem('getConnectedHelpBubble-dismissed')) {
-    await serverView.showGetConnectedHelpBubble();
-    window.localStorage.setItem('getConnectedHelpBubble-dismissed', 'true');
-  }
-  if (!window.localStorage.getItem('dataLimitsHelpBubble-dismissed') &&
-      serverView.supportsAccessKeyDataLimit) {
-    await serverView.showDataLimitsHelpBubble();
-    window.localStorage.setItem('dataLimitsHelpBubble-dismissed', 'true');
-  }
+  await serverView.showAddAccessKeyHelpBubble();
+  await serverView.showGetConnectedHelpBubble();
+  await serverView.showDataLimitsHelpBubble();
 }
 
 function isManagedServer(testServer: server.Server): testServer is server.ManagedServer {

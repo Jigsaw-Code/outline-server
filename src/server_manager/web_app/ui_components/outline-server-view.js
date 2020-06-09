@@ -27,10 +27,10 @@ import '@polymer/paper-tabs/paper-tabs.js';
 import '@polymer/paper-tooltip/paper-tooltip.js';
 import './cloud-install-styles.js';
 import './outline-iconset.js';
-import './outline-help-bubble.js';
 import './outline-metrics-option-dialog.js';
 import './outline-server-settings.js';
 import './outline-share-dialog.js';
+import {HelpBubble} from './outline-help-bubble';
 import {html, PolymerElement} from '@polymer/polymer';
 import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
 
@@ -530,6 +530,12 @@ export class ServerView extends DirMixin(PolymerElement) {
       <p>[[localize('server-help-access-key-description')]]</p>
       <paper-button on-tap="closeAddAccessKeyHelpBubble">[[localize('server-help-access-key-next')]]</paper-button>
     </outline-help-bubble>
+    <outline-help-bubble id="keySharingHelpBubble" vertical-align="bottom" horizontal-align="left">
+      <img src="images/key-tip-2x.png">
+      <h3>Share access</h3>
+      <p>Share this key to give someone access to your server.</p>
+      <paper-button on-tap="closeKeySharingHelpBubble">[[localize('ok')]]</paper-button>
+    </outline-help-bubble>
     <outline-help-bubble id="dataLimitsHelpBubble" vertical-align="top" horizontal-align="right">
       <h3>[[localize('data-limits-dialog-title')]]</h3>
       <p>[[localize('data-limits-dialog-text')]]</p>
@@ -649,7 +655,8 @@ export class ServerView extends DirMixin(PolymerElement) {
 
   _handleAddAccessKeyPressed() {
     this.dispatchEvent(makePublicEvent('AddAccessKeyRequested'));
-    this.$.addAccessKeyHelpBubble.hide();
+    this.closeAddAccessKeyHelpBubble();
+    this.showKeySharingHelpBubble();
   }
 
   _handleNameInputKeyDown(event) {
@@ -777,6 +784,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.closeAddAccessKeyHelpBubble();
       this.closeGetConnectedHelpBubble();
       this.closeDataLimitsHelpBubble();
+      this.closeKeySharingHelpBubble();
       this.$.serverSettings.update(this.serverName, this.metricsEnabled);
     }
   }
@@ -785,28 +793,48 @@ export class ServerView extends DirMixin(PolymerElement) {
   // is on the screen (e.g. selected in iron-pages). If help bubbles
   // are initialized before this point, setPosition will not work and
   // they will appear in the top left of the view.
-  showGetConnectedHelpBubble() {
-    return this._showHelpBubble('getConnectedHelpBubble', 'accessKeysContainer', 'down', 'right');
+  showAddAccessKeyHelpBubble() {
+    if (!window.localStorage.getItem('addAccessKeyHelpBubble-dismissed')) {
+      return this._showHelpBubble('addAccessKeyHelpBubble', 'addAccessKeyRow', 'down', 'left');
+    }
   }
 
-  showAddAccessKeyHelpBubble() {
-    return this._showHelpBubble('addAccessKeyHelpBubble', 'addAccessKeyRow', 'down', 'left');
+  showGetConnectedHelpBubble() {
+    if (!window.localStorage.getItem('getConnectedHelpBubble-dismissed')) {
+      return this._showHelpBubble('getConnectedHelpBubble', 'accessKeysContainer', 'down', 'right');
+    }
   }
 
   showDataLimitsHelpBubble() {
-    return this._showHelpBubble('dataLimitsHelpBubble', 'settingsTab', 'up', 'right');
+    if (!window.localStorage.getItem('dataLimitsHelpBubble-dismissed') && this.supportsAccessKeyDataLimit) {
+      return this._showHelpBubble('dataLimitsHelpBubble', 'settingsTab', 'up', 'right');
+    }
+  }
+
+  showKeySharingHelpBubble() {
+    if (!window.localStorage.getItem('keySharingHelpBubble-dismissed')) {
+      return this._showHelpBubble('keySharingHelpBubble', 'accessKeysContainer', 'down', 'right');
+    }
   }
 
   closeAddAccessKeyHelpBubble() {
     this.$.addAccessKeyHelpBubble.hide();
+    window.localStorage.setItem('addAccessKeyHelpBubble-dismissed', 'true');
   }
 
   closeGetConnectedHelpBubble() {
     this.$.getConnectedHelpBubble.hide();
+    window.localStorage.setItem('getConnectedHelpBubble-dismissed', 'true');
   }
 
   closeDataLimitsHelpBubble() {
     this.$.dataLimitsHelpBubble.hide();
+    window.localStorage.setItem('dataLimitsHelpBubble-dismissed', 'true');
+  }
+
+  closeKeySharingHelpBubble() {
+    this.$.keySharingHelpBubble.hide();
+    window.localStorage.setItem('keySharingHelpBubble-dismissed', 'true');
   }
 
   _showHelpBubble(
