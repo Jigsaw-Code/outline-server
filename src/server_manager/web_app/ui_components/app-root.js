@@ -291,6 +291,9 @@ export class AppRoot extends mixinBehaviors
       .side-bar-section > .server-icon {
         margin: 0;
       }
+      .underline-on-hover:hover {
+        text-decoration: underline;
+      }
       #getConnectedDialog {
         height: 562px;
         background: white;
@@ -369,13 +372,13 @@ export class AppRoot extends mixinBehaviors
           <!-- Links section -->
           <paper-listbox on-tap="maybeCloseDrawer">
             <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">[[localize('nav-data-collection')]]</a>
-            <span on-tap="submitFeedbackTapped">[[localize('nav-feedback')]]</span>
+            <span class="underline-on-hover" on-tap="submitFeedbackTapped">[[localize('nav-feedback')]]</span>
             <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">[[localize('nav-help')]]</a>
-            <span on-tap="aboutTapped">[[localize('nav-about')]]</span>
+            <span class="underline-on-hover" on-tap="aboutTapped">[[localize('nav-about')]]</span>
             <div class="legal-links">
               <a href="https://www.google.com/policies/privacy/">[[localize('nav-privacy')]]</a>
               <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">[[localize('nav-terms')]]</a>
-              <span on-tap="showLicensesTapped">[[localize('nav-licenses')]]</span>
+              <span class="underline-on-hover" on-tap="showLicensesTapped">[[localize('nav-licenses')]]</span>
             </div>
           </paper-listbox>
         </app-drawer>
