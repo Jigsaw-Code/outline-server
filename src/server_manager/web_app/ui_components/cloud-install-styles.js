@@ -218,6 +218,10 @@ styleElement.appendChild(html`
     color: var(--primary-green);
   }
 
+  a:hover {
+    text-decoration: underline;
+  }
+
   /*
     Helps make sure elements using both iron-flex-layout and the hidden
     attribute actually hide:
