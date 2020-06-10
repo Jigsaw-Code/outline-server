@@ -236,7 +236,7 @@ Polymer({
           <iron-icon class="setting-icon" icon="editor:insert-chart"></iron-icon>
           <div>
             <div class="selection-container">
-              <paper-checkbox checked="{{metricsEnabled}}"></paper-checkbox>
+              <paper-checkbox checked="{{metricsEnabled}}" on-change="_metricsEnabledChanged"></paper-checkbox>
               <h3>[[localize('settings-metrics-header')]]</h3>
             </div>
             <p inner-h-t-m-l="[[localize('metrics-description', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
@@ -251,7 +251,7 @@ Polymer({
   properties: {
     isServerManaged: Boolean,
     serverName: String,
-    metricsEnabled: {type: Boolean, observer: '_metricsEnabledChanged'},
+    metricsEnabled: Boolean,
     // Initialize to null so we can use the hidden attribute, which does not work well with
     // undefined values.
     serverId: {type: String, value: null},
@@ -276,10 +276,9 @@ Polymer({
         {type: Boolean, computed: '_computeShouldShowExperiments(supportsAccessKeyDataLimit)'},
   },
 
-  update: function(name, metricsEnabled) {
+  setServerName: function(name) {
     this.initialName = name;
     this.name = name;
-    this.metricsEnabled = metricsEnabled;
   },
 
   _handleNameInputKeyDown: function(event) {
@@ -303,16 +302,10 @@ Polymer({
     }
   },
 
-  _metricsEnabledChanged: function(newMetricsEnabled, oldMetricsEnabled) {
-    if (oldMetricsEnabled === undefined || newMetricsEnabled === undefined) {
-      return;
-    }
-    // Fire signal if metrics changed.
-    if (newMetricsEnabled !== oldMetricsEnabled) {
-      const metricsSignal =
-          newMetricsEnabled ? 'EnableMetricsRequested' : 'DisableMetricsRequested';
-      this.fire(metricsSignal);
-    }
+  _metricsEnabledChanged: function() {
+    const metricsSignal =
+        this.metricsEnabled ? 'EnableMetricsRequested' : 'DisableMetricsRequested';
+    this.fire(metricsSignal);
   },
 
   _accessKeyDataLimitEnabledChanged: function(e) {
