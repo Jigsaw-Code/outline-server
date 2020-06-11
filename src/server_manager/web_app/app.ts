@@ -1191,14 +1191,16 @@ export class App {
   }
 
   private async setMetricsEnabled(metricsEnabled: boolean) {
+    const serverView = this.appRoot.getServerView(this.appRoot.selectedServer.id);
     try {
       await this.selectedServer.setMetricsEnabled(metricsEnabled);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
       // Change metricsEnabled property on polymer element to update display.
-      this.appRoot.getServerView(this.appRoot.selectedServer.id).metricsEnabled = metricsEnabled;
+      serverView.metricsEnabled = metricsEnabled;
     } catch (error) {
       console.error(`Failed to set metrics enabled: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-metrics'));
+      serverView.metricsEnabled = !metricsEnabled;
     }
   }
 
