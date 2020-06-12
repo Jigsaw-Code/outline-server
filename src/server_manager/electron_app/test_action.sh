@@ -14,5 +14,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-do_action server_manager/electron_app/build
+tsc -p $ROOT_DIR/src/server_manager/electron_app --outDir $BUILD_DIR/js/server_manager/electron_app
 jasmine --config=$ROOT_DIR/jasmine.json

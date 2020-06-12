@@ -99,7 +99,9 @@ function createMainWindow() {
   win.webContents.on('will-navigate', (event: Event, url: string) => {
     handleNavigation(event, url);
   });
-  win.webContents.on('new-window', handleNavigation.bind(this));
+  win.webContents.on('new-window', (event: Event, url: string) => {
+    handleNavigation(event, url);
+  });
   win.webContents.on('did-finish-load', () => {
     loadingWindow.hide();
 
