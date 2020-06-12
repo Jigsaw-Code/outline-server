@@ -23,15 +23,15 @@ before_install:
     fi;
 
 stages:
-  - name: tag
+  - name: "Server Daily Release"
     if: type = cron
   - name: build and unit test
     if: type != cron
-  - name: integration test
+  - name: "Server Integration Test"
     if: type != cron
-  - name: deploy
-    if: tag =~ ^daily
-  - name: release
+  - name: "deploy"
+    if: tag =~ ^server-
+  - name: "Manager Release"
     if: tag =~ ^v[0-9]
 
 # Stages with the same name define multiple jobs which run in parallel.
@@ -39,9 +39,9 @@ stages:
 # doing, we add a descriptive environment variable.
 jobs:
   include:
-    - stage: tag
+    - stage: "Server Daily Release"
       script:
-        - RELEASE_NAME=daily-$(date -I)
+        - RELEASE_NAME=server-$(date -I)
         - curl --data '{"tag_name":"'$RELEASE_NAME'","name":"'$RELEASE_NAME'","prerelease":true}' https://api.github.com/repos/Jigsaw-Code/outline-server/releases?access_token=$CI_USER_TOKEN
 
     # Ideally, we would split this stage in some way, e.g. by component or by
@@ -60,7 +60,7 @@ jobs:
         - yarn do server_manager/web_app/build
         - yarn do server_manager/web_app/test
 
-    - stage: integration test
+    - stage: "Server Integration Test"
       sudo: required
       services: docker
       script:
@@ -118,7 +118,7 @@ jobs:
 
     # Note that because we cannot currently sign Windows binaries on Travis,
     # these must be manually built and uploaded to the releases page.
-    - stage: release
+    - stage: "Manager Release"
       env:
         - DESC=linux manager
       addons:
@@ -127,7 +127,7 @@ jobs:
           - rpm
       script: yarn do server_manager/electron_app/release_linux
 
-    - stage: release
+    - stage: "Manager Release"
       os: osx
       # electron-builder requires macOS >=10.13.6 for signing to work.
       osx_image: xcode10.1
