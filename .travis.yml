@@ -33,8 +33,6 @@ stages:
     if: tag =~ ^v[0-9]
 
 # Stages with the same name define multiple jobs which run in parallel.
-# To make it more apparent in the Travis UI exactly what each job is
-# doing, we add a descriptive environment variable.
 jobs:
   include:
     - stage: "Server Daily Release"
@@ -73,8 +71,7 @@ jobs:
         - yarn do shadowbox/integration_test/run
 
     - stage: deploy
-      env:
-        - DESC=shadowbox docker image
+      name: Server Docker Image
       sudo: required
       services: docker
       script:
@@ -86,8 +83,7 @@ jobs:
         - docker push quay.io/outline/shadowbox:daily
 
     - stage: deploy
-      env:
-        - DESC=linux manager
+      name: Manager Linux
       addons:
         apt:
           packages:
@@ -96,8 +92,7 @@ jobs:
 
     # https://www.electron.build/multi-platform-build
     - stage: deploy
-      env:
-        - DESC=windows manager
+      name: Manager Windows
       sudo: required
       services: docker
       script:
@@ -111,16 +106,14 @@ jobs:
             /bin/bash -c "yarn do server_manager/electron_app/package_only_windows" || travis_terminate $?
 
     - stage: deploy
-      env:
-        - DESC=macos manager
+      name: Manager macOS
       os: osx
       script: yarn do server_manager/electron_app/package_macos
 
     # Note that because we cannot currently sign Windows binaries on Travis,
     # these must be manually built and uploaded to the releases page.
     - stage: "Manager Release"
-      env:
-        - DESC=linux manager
+      name: Manager Linux
       addons:
         apt:
           packages:
@@ -131,8 +124,7 @@ jobs:
       os: osx
       # electron-builder requires macOS >=10.13.6 for signing to work.
       osx_image: xcode10.1
-      env:
-        - DESC=macos manager
+      name: Manager macOS
       script:
         - openssl aes-256-cbc -K $encrypted_61a49da75942_key -iv $encrypted_61a49da75942_iv -in macos-signing-certificate.p12.enc -out macos-signing-certificate.p12 -d
         - export CSC_LINK=$(pwd)/macos-signing-certificate.p12
