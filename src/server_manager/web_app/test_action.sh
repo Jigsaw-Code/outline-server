@@ -14,5 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# FIXME: this script is not running any unit tests because we do not build standalone js test files
+# when bundling the web app.
+
+rm -rf $BUILD_DIR/js
+
 do_action server_manager/web_app/build
 jasmine --config=$ROOT_DIR/jasmine.json
