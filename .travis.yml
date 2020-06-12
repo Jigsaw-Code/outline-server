@@ -25,7 +25,7 @@ before_install:
 stages:
   - name: "Server Daily Release"
     if: type = cron
-  - name: build and unit test
+  - name: Test
     if: type != cron
   - name: "Server Integration Test"
     if: type != cron
@@ -49,7 +49,7 @@ jobs:
     # command failed. However, since each stage incurs a significantly start-up
     # cost, we combine test and build commands for all components into one fast
     # stage.
-    - stage: build and unit test
+    - stage: Test
       script:
         - yarn do metrics_server/build
         - yarn do sentry_webhook/build
@@ -60,7 +60,8 @@ jobs:
         - yarn do server_manager/web_app/build
         - yarn do server_manager/web_app/test
 
-    - stage: "Server Integration Test"
+    - stage: Test
+      name: "Server Integration Test"
       sudo: required
       services: docker
       script:
