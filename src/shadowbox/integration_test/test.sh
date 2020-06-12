@@ -64,7 +64,7 @@ function ss_arguments_for_user() {
 
 # Runs curl on the client container.
 function client_curl() {
-  docker exec $CLIENT_CONTAINER curl --silent --show-error "$@"
+  docker exec $CLIENT_CONTAINER curl --silent --show-error --connect-timeout 5 "$@"
 }
 
 function fail() {
@@ -148,7 +148,7 @@ function cleanup() {
   # Verify we can't access the URL anymore after the key is deleted
   client_curl --insecure -X DELETE ${SB_API_URL}/access-keys/0 > /dev/null
   # Exit code 56 is "Connection reset by peer".
-  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT --connect-timeout 5 $INTERNET_TARGET_URL &> /dev/null \
+  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $INTERNET_TARGET_URL &> /dev/null \
     && fail "Deleted access key is still active" || (($? == 56))
 
   # Verify that we can change the port for new access keys
