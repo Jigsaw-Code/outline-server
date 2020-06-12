@@ -23,25 +23,21 @@ before_install:
     fi;
 
 stages:
-  - name: tag
+  - name: "Server Daily Release"
     if: type = cron
-  - name: build and unit test
+  - name: Test
     if: type != cron
-  - name: integration test
-    if: type != cron
-  - name: deploy
-    if: tag =~ ^daily
-  - name: release
+  - name: "deploy"
+    if: tag =~ ^server-
+  - name: "Manager Release"
     if: tag =~ ^v[0-9]
 
 # Stages with the same name define multiple jobs which run in parallel.
-# To make it more apparent in the Travis UI exactly what each job is
-# doing, we add a descriptive environment variable.
 jobs:
   include:
-    - stage: tag
+    - stage: "Server Daily Release"
       script:
-        - RELEASE_NAME=daily-$(date -I)
+        - RELEASE_NAME=server-$(date -I)
         - curl --data '{"tag_name":"'$RELEASE_NAME'","name":"'$RELEASE_NAME'","prerelease":true}' https://api.github.com/repos/Jigsaw-Code/outline-server/releases?access_token=$CI_USER_TOKEN
 
     # Ideally, we would split this stage in some way, e.g. by component or by
@@ -49,8 +45,10 @@ jobs:
     # command failed. However, since each stage incurs a significantly start-up
     # cost, we combine test and build commands for all components into one fast
     # stage.
-    - stage: build and unit test
+    - stage: Test
+      name: Unit Tests
       script:
+        - yarn lint
         - yarn do metrics_server/build
         - yarn do sentry_webhook/build
         - yarn do shadowbox/server/build
@@ -60,7 +58,8 @@ jobs:
         - yarn do server_manager/web_app/build
         - yarn do server_manager/web_app/test
 
-    - stage: integration test
+    - stage: Test
+      name: Server Integration Test
       sudo: required
       services: docker
       script:
@@ -70,11 +69,10 @@ jobs:
           curl -L https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m) > docker-compose
           chmod +x docker-compose
           sudo mv docker-compose /usr/local/bin
-        - yarn do shadowbox/integration_test/run
+        - yarn do shadowbox/docker/build && cd src/shadowbox/integration_test && ./test.sh
 
     - stage: deploy
-      env:
-        - DESC=shadowbox docker image
+      name: Server Docker Image
       sudo: required
       services: docker
       script:
@@ -86,8 +84,7 @@ jobs:
         - docker push quay.io/outline/shadowbox:daily
 
     - stage: deploy
-      env:
-        - DESC=linux manager
+      name: Manager Linux
       addons:
         apt:
           packages:
@@ -96,8 +93,7 @@ jobs:
 
     # https://www.electron.build/multi-platform-build
     - stage: deploy
-      env:
-        - DESC=windows manager
+      name: Manager Windows
       sudo: required
       services: docker
       script:
@@ -111,28 +107,25 @@ jobs:
             /bin/bash -c "yarn do server_manager/electron_app/package_only_windows" || travis_terminate $?
 
     - stage: deploy
-      env:
-        - DESC=macos manager
+      name: Manager macOS
       os: osx
       script: yarn do server_manager/electron_app/package_macos
 
     # Note that because we cannot currently sign Windows binaries on Travis,
     # these must be manually built and uploaded to the releases page.
-    - stage: release
-      env:
-        - DESC=linux manager
+    - stage: "Manager Release"
+      name: Manager Linux
       addons:
         apt:
           packages:
           - rpm
       script: yarn do server_manager/electron_app/release_linux
 
-    - stage: release
+    - stage: "Manager Release"
       os: osx
       # electron-builder requires macOS >=10.13.6 for signing to work.
       osx_image: xcode10.1
-      env:
-        - DESC=macos manager
+      name: Manager macOS
       script:
         - openssl aes-256-cbc -K $encrypted_61a49da75942_key -iv $encrypted_61a49da75942_iv -in macos-signing-certificate.p12.enc -out macos-signing-certificate.p12 -d
         - export CSC_LINK=$(pwd)/macos-signing-certificate.p12

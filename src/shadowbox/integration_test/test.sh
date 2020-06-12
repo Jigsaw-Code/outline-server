@@ -64,7 +64,7 @@ function ss_arguments_for_user() {
 
 # Runs curl on the client container.
 function client_curl() {
-  docker exec $CLIENT_CONTAINER curl --silent --show-error "$@"
+  docker exec $CLIENT_CONTAINER curl --silent --show-error --connect-timeout 5 --retry 5 "$@"
 }
 
 function fail() {
@@ -74,9 +74,9 @@ function fail() {
 
 function cleanup() {
   status=$?
-  if (($DEBUG != 0)); then
+  if ((DEBUG != 1)); then
     docker-compose --project-name=integrationtest down
-    rm -r ${TMP_STATE_DIR}
+    rm -rf ${TMP_STATE_DIR} || echo "Failed to cleanup files at ${TMP_STATE_DIR}"
   fi
   return $status
 }
@@ -84,13 +84,13 @@ function cleanup() {
 # Start a subprocess for trap
 (
   set -eu
-  (($DEBUG != 0)) && set -x
-
-  # Make the certificate
-  source ../scripts/make_test_certificate.sh /tmp
+  ((DEBUG == 1)) && set -x
 
   # Ensure proper shut down on exit if not in debug mode
   trap "cleanup" EXIT
+
+  # Make the certificate
+  source ../scripts/make_test_certificate.sh /tmp
 
   # Sets everything up
   export SB_API_PREFIX=TestApiPrefix
@@ -105,11 +105,11 @@ function cleanup() {
 
   # Verify that the client cannot access or even resolve the target
   # Exit code 28 for "Connection timed out".
-  docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 1 $TARGET_IP > /dev/null && \
+  docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 5 $TARGET_IP > /dev/null && \
     fail "Client should not have access to target IP" || (($? == 28))
 
   # Exit code 6 for "Could not resolve host".
-  docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 1 http://target > /dev/null && \
+  docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 5 http://target > /dev/null && \
     fail "Client should not have access to target host" || (($? == 6))
 
   # Wait for shadowbox to come up.
@@ -130,7 +130,7 @@ function cleanup() {
   # Start Shadowsocks client and wait for it to be ready
   declare -r LOCAL_SOCKS_PORT=5555
   docker exec -d $CLIENT_CONTAINER \
-    /go/bin/go-shadowsocks2 $SS_USER_ARGUMENTS -socks :$LOCAL_SOCKS_PORT -verbose \
+    /go/bin/go-shadowsocks2 $SS_USER_ARGUMENTS -socks localhost:$LOCAL_SOCKS_PORT -verbose \
     || fail "Could not start shadowsocks client"
   while ! docker exec $CLIENT_CONTAINER nc -z localhost $LOCAL_SOCKS_PORT; do
     sleep 0.1
@@ -148,7 +148,7 @@ function cleanup() {
   # Verify we can't access the URL anymore after the key is deleted
   client_curl --insecure -X DELETE ${SB_API_URL}/access-keys/0 > /dev/null
   # Exit code 56 is "Connection reset by peer".
-  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT --connect-timeout 1 $INTERNET_TARGET_URL &> /dev/null \
+  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $INTERNET_TARGET_URL &> /dev/null \
     && fail "Deleted access key is still active" || (($? == 56))
 
   # Verify that we can change the port for new access keys
