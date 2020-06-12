@@ -5,19 +5,8 @@
     "noImplicitAny": true,
     "noImplicitThis": true,
     "moduleResolution": "Node",
-    "rootDir": "src",
-    "outDir": "build/server_manager/web_app/js",
     "sourceMap": true,
     "experimentalDecorators":true,
     "allowJs": true,
-  },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "src/server_manager/electron_app/**/*.ts",
-    "src/metrics_server/**/*.ts",
-    "src/shadowbox/**/*.ts"
-  ],
-  "compileOnSave": true
+  }
 }

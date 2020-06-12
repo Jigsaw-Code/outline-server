@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "rootDir": ".",
+  "include": [
+    "**/*.ts"
+  ],
+  "exclude": [
+    "web_app/galery_app",
+    "node_modules"
+  ]
+}
