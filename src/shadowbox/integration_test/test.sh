@@ -64,7 +64,7 @@ function ss_arguments_for_user() {
 
 # Runs curl on the client container.
 function client_curl() {
-  docker exec $CLIENT_CONTAINER curl --silent --show-error --connect-timeout 5 "$@"
+  docker exec $CLIENT_CONTAINER curl --silent --show-error --connect-timeout 5 --retry 5 "$@"
 }
 
 function fail() {
