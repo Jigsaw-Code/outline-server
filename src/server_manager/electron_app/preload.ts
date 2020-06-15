@@ -47,8 +47,8 @@ if (sentryDsn) {
 }
 
 // tslint:disable-next-line:no-any
-(window as any).whitelistCertificate = (fingerprint: string) => {
-  return ipcRenderer.sendSync('whitelist-certificate', fingerprint);
+(window as any).trustCertificate = (fingerprint: string) => {
+  return ipcRenderer.sendSync('trust-certificate', fingerprint);
 };
 
 // tslint:disable-next-line:no-any
