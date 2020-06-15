@@ -417,7 +417,7 @@ export class AppRoot extends mixinBehaviors
                     <template is="dom-repeat" items="{{supportedLanguages}}" as="lang" sort="_sortLanguageNameAscending">
                       <paper-item class="language-item" value="{{lang.id}}">
                         <span class="language-name">{{lang.name}}</span>
-                        <iron-icon icon="check" hidden$="{{_shouldHideCheck(language, lang.id)}}"></iron-icon>
+                        <iron-icon icon="check" hidden$="{{_shouldHideLanguageCheckmark(language, lang.id)}}"></iron-icon>
                       </paper-item>
                     </template>
                   </paper-listbox>
@@ -937,7 +937,7 @@ export class AppRoot extends mixinBehaviors
     return a.name > b.name ? 1 : -1;
   }
 
-  _shouldHideCheck(language, languageCode) {
+  _shouldHideLanguageCheckmark(language, languageCode) {
     return language !== languageCode;
   }
 
