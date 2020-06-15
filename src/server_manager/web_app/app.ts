@@ -247,6 +247,11 @@ export class App {
       }
     });
 
+    appRoot.addEventListener('ChangeLanguage', (event: CustomEvent) => {
+      const detail = event.detail;
+      this.appRoot.setLanguage(detail.languageCode, detail.languageDir);
+    });
+
     appRoot.addEventListener('ServerRenameRequested', (event: CustomEvent) => {
       this.renameServer(event.detail.newName);
     });
