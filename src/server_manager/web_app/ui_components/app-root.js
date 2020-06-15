@@ -587,7 +587,7 @@ export class AppRoot extends mixinBehaviors
     const messagesUrl = `./messages/${language}.json`;
     this.loadResources(messagesUrl, language);
 
-    document.documentElement.setAttribute("dir", direction);
+    document.documentElement.setAttribute('dir', direction);
     const alignDir = direction === 'ltr' ? 'left' : 'right';
     this.$.appDrawer.align = alignDir;
     this.$.sideBar.align = alignDir;
@@ -943,8 +943,7 @@ export class AppRoot extends mixinBehaviors
 
   _languageChanged(event) {
     const code = event.detail.value;
-    const dir = this.supportedLanguages.find(
-        (lang) => { return lang.id === code}).dir;
+    const dir = this.supportedLanguages.find((lang) => {return lang.id === code}).dir;
     this.setLanguage(code, dir);
   }
 
