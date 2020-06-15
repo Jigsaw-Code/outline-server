@@ -402,7 +402,7 @@ export class AppRoot extends mixinBehaviors
               <iron-icon icon="add" slot="item-icon"></iron-icon>[[localize('servers-add')]]
             </paper-icon-item>
           </div>
-            
+
           <!-- Links section -->
           <paper-listbox>
             <span on-tap="maybeCloseDrawer"><a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">[[localize('nav-data-collection')]]</a></span>
