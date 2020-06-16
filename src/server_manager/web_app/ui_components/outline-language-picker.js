@@ -21,7 +21,8 @@ import './cloud-install-styles.js';
 import {html, PolymerElement} from '@polymer/polymer';
 import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class.js';
 
-export class OutlineLanguagePicker extends mixinBehaviors([], PolymerElement) {
+export class OutlineLanguagePicker extends mixinBehaviors
+([], PolymerElement) {
   static get template() {
     return html`
     <style include="cloud-install-styles"></style>
@@ -43,7 +44,6 @@ export class OutlineLanguagePicker extends mixinBehaviors([], PolymerElement) {
         }
       }
       .language-name {
-        text-align: left;
         flex-grow: 1;
       }
     </style>
@@ -57,7 +57,7 @@ export class OutlineLanguagePicker extends mixinBehaviors([], PolymerElement) {
         </template>
       </paper-listbox>
     </paper-dropdown-menu>`;
-    }
+  }
 
   static get is() {
     return 'outline-language-picker';
