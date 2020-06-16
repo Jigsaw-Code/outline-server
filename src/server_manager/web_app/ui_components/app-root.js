@@ -32,6 +32,7 @@ import './outline-do-oauth-step.js';
 import './outline-feedback-dialog.js';
 import './outline-survey-dialog.js';
 import './outline-intro-step.js';
+import './outline-language-picker.js';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
 import './outline-region-picker-step.js';
@@ -232,22 +233,6 @@ export class AppRoot extends mixinBehaviors
       #links-footer {
         margin-top: 36px;
       }
-      #language-icon {
-        padding-top: 10px;
-      }
-      #language-dropdown {
-        padding-left: 22px;
-        --paper-menu-button: {
-          padding: 0;
-        };
-        --paper-input-container: {
-          width: 156px;
-        };
-        --paper-input-container-input: {
-          color: var(--medium-gray);
-          font-size: 14px;
-        };
-      }
       .legal-links {
         margin: 0 -6px 0;
       }
@@ -258,20 +243,15 @@ export class AppRoot extends mixinBehaviors
         display: flex;
         align-items: center;
       }
-      .language-item {
-        display: flex;
-        cursor: pointer;
-        font-size: 16px;
-        padding-left: 24px;
-        --paper-item-selected: {
-          color: var(--primary-green);
-          font-weight: normal;
-        }
+      #language-icon {
+        padding-top: 10px;
       }
-      .language-name {
-        text-align: left;
-        flex-grow: 1;
-      }   
+      #language-dropdown {
+        padding-left: 22px;
+        --paper-input-container: {
+          width: 156px;
+        };
+      }
       app-toolbar [main-title] img {
         height: 16px;
         margin-top: 8px;
@@ -412,16 +392,7 @@ export class AppRoot extends mixinBehaviors
             <div id="links-footer">
               <paper-icon-item id="language-row">
                 <iron-icon id="language-icon" icon="language" slot="item-icon"></iron-icon>
-                <paper-dropdown-menu id="language-dropdown" no-label-float="" vertical-align="bottom">
-                  <paper-listbox slot="dropdown-content" selected="{{language}}" attr-for-selected="value" on-selected-changed="_languageChanged">
-                    <template is="dom-repeat" items="{{supportedLanguages}}" as="lang" sort="_sortLanguageNameAscending">
-                      <paper-item class="language-item" value="{{lang.id}}">
-                        <span class="language-name">{{lang.name}}</span>
-                        <iron-icon icon="check" hidden$="{{_shouldHideLanguageCheckmark(language, lang.id)}}"></iron-icon>
-                      </paper-item>
-                    </template>
-                  </paper-listbox>
-                </paper-dropdown-menu>
+                <outline-language-picker id="language-dropdown" selected-language="{{language}}" languages="{{supportedLanguages}}"></outline-language-picker>
               </paper-icon-item>
               <div class="legal-links" on-tap="maybeCloseDrawer">
                 <a href="https://www.google.com/policies/privacy/">[[localize('nav-privacy')]]</a>
@@ -587,12 +558,10 @@ export class AppRoot extends mixinBehaviors
     const messagesUrl = `./messages/${language}.json`;
     this.loadResources(messagesUrl, language);
 
-    document.documentElement.setAttribute('dir', direction);
     const alignDir = direction === 'ltr' ? 'left' : 'right';
     this.$.appDrawer.align = alignDir;
     this.$.sideBar.align = alignDir;
 
-    window.localStorage.setItem('overrideLanguage', language);
     this.language = language;
   }
 
@@ -942,9 +911,9 @@ export class AppRoot extends mixinBehaviors
   }
 
   _languageChanged(event) {
-    const code = event.detail.value;
-    const dir = this.supportedLanguages.find((lang) => {return lang.id === code}).dir;
-    this.setLanguage(code, dir);
+    const languageCode = event.detail.value;
+    const languageDir = this.supportedLanguages.find((lang) => {return lang.id === code}).dir;
+    this.dispatchEvent(makePublicEvent('SetLanguageRequested', {languageCode, languageDir}));
   }
 
   // Wrapper to encode a string in base64. This is necessary to set the server view IDs to
