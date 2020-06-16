@@ -286,6 +286,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         display: flex;
         flex-direction: column;
         font-weight: 500;
+        flex: 1;
       }
       input.access-key-name {
         font-family: inherit;
@@ -545,7 +546,7 @@ export class ServerView extends DirMixin(PolymerElement) {
           </div>
         </div>
         <div name="settings">
-          <outline-server-settings id="serverSettings" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" access-key-data-limit="{{accessKeyDataLimit}}" is-access-key-data-limit-enabled="{{isAccessKeyDataLimitEnabled}}" data-limits-availability-date="[[dataLimitsAvailabilityDate]]" supports-access-key-data-limit="[[supportsAccessKeyDataLimit]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" localize="[[localize]]">
+          <outline-server-settings id="serverSettings" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" access-key-data-limit="{{accessKeyDataLimit}}" is-access-key-data-limit-enabled="{{isAccessKeyDataLimitEnabled}}" data-limits-availability-date="[[dataLimitsAvailabilityDate]]" supports-access-key-data-limit="[[supportsAccessKeyDataLimit]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" localize="[[localize]]">
           </outline-server-settings>
         </div>
       </iron-pages>
@@ -658,7 +659,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       /** @type {DisplayAccessKey[]} */
       this.accessKeyRows = [];
       this.hasNonAdminAccessKeys = false;
-      this.metricsEnabled = true;
+      this.metricsEnabled = false;
       // Initialize monthlyOutboundTransferBytes and monthlyCost to 0, so they can
       // be bound to hidden attributes.  Initializing to undefined does not
       // cause hidden$=... expressions to be evaluated and so elements may be
@@ -856,7 +857,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.closeAddAccessKeyHelpBubble();
       this.closeGetConnectedHelpBubble();
       this.closeDataLimitsHelpBubble();
-      this.$.serverSettings.update(this.serverName, this.metricsEnabled);
+      this.$.serverSettings.setServerName(this.serverName);
     }
   }
 

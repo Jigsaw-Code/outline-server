@@ -15,14 +15,15 @@
   },
   "scripts": {
     "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts",
-    "do": "bash ./scripts/do_action.sh"
+    "do": "bash ./scripts/do_action.sh",
+    "lint": "tslint 'src/**/*.ts' -e '**/node_modules/**'"
   },
   "workspaces": [
     "src/*"
   ],
   "husky": {
     "hooks": {
-      "pre-commit": "yarn tslint --fix 'src/**/*.ts' -e '**/node_modules/**' && yarn git-clang-format && yarn pretty-quick --staged --pattern '**/*.html'"
+      "pre-commit": "yarn run lint && yarn git-clang-format && yarn pretty-quick --staged --pattern '**/*.html'"
     }
   }
 }
