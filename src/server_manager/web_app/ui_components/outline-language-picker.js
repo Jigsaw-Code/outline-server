@@ -49,7 +49,7 @@ export class OutlineLanguagePicker extends mixinBehaviors
     </style>
     <paper-dropdown-menu no-label-float="" vertical-align="bottom">
       <paper-listbox slot="dropdown-content" selected="{{selectedLanguage}}" attr-for-selected="value" on-selected-changed="_languageChanged">
-        <template is="dom-repeat" items="{{languages}}" as="lang" sort="_sortLanguageNameAscending">
+        <template is="dom-repeat" items="{{languages}}" as="lang">
           <paper-item class="language-item" value="{{lang.id}}">
             <span class="language-name">{{lang.name}}</span>
             <iron-icon icon="check" hidden$="{{_shouldHideLanguageCheckmark(selectedLanguage, lang.id)}}"></iron-icon>
@@ -75,10 +75,6 @@ export class OutlineLanguagePicker extends mixinBehaviors
     super();
     this.selectedLanguage = '';
     this.languages = [];
-  }
-
-  _sortLanguageNameAscending(a, b) {
-    return a.name > b.name ? 1 : -1;
   }
 
   _shouldHideLanguageCheckmark(language, languageCode) {
