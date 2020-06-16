@@ -52,7 +52,7 @@ export class OutlineLanguagePicker extends mixinBehaviors
         <template is="dom-repeat" items="{{languages}}" as="lang">
           <paper-item class="language-item" value="{{lang.id}}">
             <span class="language-name">{{lang.name}}</span>
-            <iron-icon icon="check" hidden$="{{_shouldHideLanguageCheckmark(selectedLanguage, lang.id)}}"></iron-icon>
+            <iron-icon icon="check" hidden$="{{_shouldHideCheckmark(selectedLanguage, lang.id)}}"></iron-icon>
           </paper-item>
         </template>
       </paper-listbox>
@@ -77,7 +77,7 @@ export class OutlineLanguagePicker extends mixinBehaviors
     this.languages = [];
   }
 
-  _shouldHideLanguageCheckmark(language, languageCode) {
+  _shouldHideCheckmark(language, languageCode) {
     return language !== languageCode;
   }
 
@@ -85,11 +85,7 @@ export class OutlineLanguagePicker extends mixinBehaviors
     const languageCode = event.detail.value;
     const languageDir = this.languages.find((lang) => {return lang.id === languageCode}).dir;
 
-    const params = {
-      bubbles: true,
-      composed: true,
-      detail: {languageCode, languageDir}
-    };
+    const params = {bubbles: true, composed: true, detail: {languageCode, languageDir}};
     const customEvent = new CustomEvent('SetLanguageRequested', params);
     this.dispatchEvent(customEvent);
   }
