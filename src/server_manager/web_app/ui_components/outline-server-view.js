@@ -286,6 +286,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         display: flex;
         flex-direction: column;
         font-weight: 500;
+        flex: 1;
       }
       input.access-key-name {
         font-family: inherit;
