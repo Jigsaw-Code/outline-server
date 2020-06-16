@@ -84,17 +84,14 @@ export class OutlineLanguagePicker extends mixinBehaviors
   _languageChanged(event) {
     const languageCode = event.detail.value;
     const languageDir = this.languages.find((lang) => {return lang.id === languageCode}).dir;
-    this.dispatchEvent(this.makePublicEvent('SetLanguageRequested', {languageCode, languageDir}));
-  }
 
-  // TODO: Resync
-  // Makes an CustomEvent that bubbles up beyond the shadow root.
-  makePublicEvent(eventName, detail) {
-    const params = {bubbles: true, composed: true};
-    if (detail !== undefined) {
-      params.detail = detail;
-    }
-    return new CustomEvent(eventName, params);
+    const params = {
+      bubbles: true,
+      composed: true,
+      detail: {languageCode, languageDir}
+    };
+    const customEvent = new CustomEvent('SetLanguageRequested', params);
+    this.dispatchEvent(customEvent);
   }
 }
 

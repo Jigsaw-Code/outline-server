@@ -908,16 +908,6 @@ export class AppRoot extends mixinBehaviors
     });
   }
 
-  _shouldHideLanguageCheckmark(language, languageCode) {
-    return language !== languageCode;
-  }
-
-  _languageChanged(event) {
-    const languageCode = event.detail.value;
-    const languageDir = this.supportedLanguages.find((lang) => {return lang.id === code}).dir;
-    this.dispatchEvent(makePublicEvent('SetLanguageRequested', {languageCode, languageDir}));
-  }
-
   // Wrapper to encode a string in base64. This is necessary to set the server view IDs to
   // the display server IDs, which are URLs, so they can be used with selector methods. The IDs
   // are never decoded.
