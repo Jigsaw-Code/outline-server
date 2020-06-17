@@ -126,14 +126,8 @@
     "description": "This string appears as a title in a section to configure access key data transfer limits."
   },
   "data_limits_description": {
-    "message": "Set a 30 day trailing data transfer limit for access keys on this server. Available at least until $DATE$.",
-    "description": "This string appears as an explanation to the access key data transfer limits feature.",
-    "placeholders": {
-      "DATE": {
-        "content": "{date}",
-        "example": "December 9, 2019"
-      }
-    }
+    "message": "Set a 30 day trailing data transfer limit for access keys on this server.",
+    "description": "This string appears as an explanation to the access key data transfer limits feature."
   },
   "data_limits_dialog_text": {
     "message": "Go to the Settings tab to set a data transfer limit for access keys on this server.",
