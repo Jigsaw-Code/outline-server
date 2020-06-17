@@ -33,6 +33,7 @@ export class SortSpan extends LitElement {
 
   constructor() {
     super();
+    /** @type {-1|0|1} */
     this.direction = 0;
   }
 
