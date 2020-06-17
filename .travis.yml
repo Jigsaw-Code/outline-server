@@ -54,9 +54,8 @@ jobs:
         - yarn do shadowbox/server/build
         - yarn do shadowbox/test
         - yarn do server_manager/electron_app/build
-        - yarn do server_manager/electron_app/test
         - yarn do server_manager/web_app/build
-        - yarn do server_manager/web_app/test
+        - yarn do server_manager/test
 
     - stage: Test
       name: Server Integration Test
