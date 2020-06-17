@@ -18,12 +18,11 @@ import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as i18n from '../infrastructure/i18n';
 import {getSentryApiUrl} from '../infrastructure/sentry';
 
-import {App, DATA_LIMITS_AVAILABILITY_DATE} from './app';
+import {App} from './app';
 import {DigitalOceanTokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
-import {DEFAULT_PROMPT_IMPRESSION_DELAY_MS, OutlineSurveys} from './survey';
 import {AppRoot} from './ui_components/app-root.js';
 
 const SUPPORTED_LANGUAGES: {[key: string]: {id: string, dir: string}} = {
@@ -107,10 +106,7 @@ document.addEventListener('WebComponentsReady', () => {
   new App(
       appRoot, version, digitalocean_api.createDigitalOceanSession,
       digitalOceanServerRepositoryFactory, new ManualServerRepository('manualServers'),
-      new DisplayServerRepository(), new DigitalOceanTokenManager(),
-      new OutlineSurveys(
-          appRoot.$.surveyDialog, localStorage, DEFAULT_PROMPT_IMPRESSION_DELAY_MS,
-          DATA_LIMITS_AVAILABILITY_DATE))
+      new DisplayServerRepository(), new DigitalOceanTokenManager())
       .start();
 });
 

@@ -546,7 +546,7 @@ export class ServerView extends DirMixin(PolymerElement) {
           </div>
         </div>
         <div name="settings">
-          <outline-server-settings id="serverSettings" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" access-key-data-limit="{{accessKeyDataLimit}}" is-access-key-data-limit-enabled="{{isAccessKeyDataLimitEnabled}}" data-limits-availability-date="[[dataLimitsAvailabilityDate]]" supports-access-key-data-limit="[[supportsAccessKeyDataLimit]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" localize="[[localize]]">
+          <outline-server-settings id="serverSettings" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" access-key-data-limit="{{accessKeyDataLimit}}" is-access-key-data-limit-enabled="{{isAccessKeyDataLimitEnabled}}" supports-access-key-data-limit="[[supportsAccessKeyDataLimit]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" localize="[[localize]]">
           </outline-server-settings>
         </div>
       </iron-pages>
@@ -591,7 +591,6 @@ export class ServerView extends DirMixin(PolymerElement) {
         accessKeyDataLimit: {type: Object},
         isAccessKeyDataLimitEnabled: {type: Boolean},
         supportsAccessKeyDataLimit: {type: Boolean},
-        dataLimitsAvailabilityDate: {type: String},
         isServerManaged: Boolean,
         isServerReachable: Boolean,
         retryDisplayingServer: Function,
@@ -640,8 +639,6 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.isAccessKeyDataLimitEnabled = false;
       /** Whether the server supports data limits. */
       this.supportsAccessKeyDataLimit = false;
-      /** Date by which the feature stops being an experiment. */
-      this.dataLimitsAvailabilityDate = '';
       this.isServerManaged = false;
       this.isServerReachable = false;
       /**

@@ -247,7 +247,7 @@ function createTestApp(
   return new App(
       polymerAppRoot, VERSION, fakeDigitalOceanSessionFactory,
       fakeDigitalOceanServerRepositoryFactory, manualServerRepo, displayServerRepository,
-      digitalOceanTokenManager, new FakeSurveys());
+      digitalOceanTokenManager);
 }
 
 enum AppRootScreen {

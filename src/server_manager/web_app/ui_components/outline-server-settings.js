@@ -262,8 +262,6 @@ Polymer({
     accessKeyDataLimit: {type: Object, value: null},  // type: app.DisplayDataAmount
     supportsAccessKeyDataLimit:
         {type: Boolean, value: false},  // Whether the server supports data limits.
-    dataLimitsAvailabilityDate:
-        {type: String},  // Date by which the feature stops being an experiment.
     isHostnameEditable: {type: Boolean, value: true},
     serverCreationDate: {type: String, value: null},
     serverLocation: {type: String, value: null},
