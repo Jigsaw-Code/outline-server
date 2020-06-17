@@ -23,6 +23,7 @@ export class SortSpan extends LitElement {
       :host {
         display: inline-block;
         cursor: pointer;
+        user-select: none;
       }
     `;
   }
