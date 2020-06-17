@@ -924,7 +924,11 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.accessKeySortBy = sortBy;
       this.accessKeySortDirection = 0;
     }
-    this.accessKeySortDirection = (this.accessKeySortDirection + 2) % 3 - 1;
+    // Rotate direction across [-1, 0, +1].
+    this.accessKeySortDirection += 1
+    if (this.accessKeySortDirection > 1) {
+      this.accessKeySortDirection = -1;
+    }
   }
 
   _sortAccessKeys(accessKeySortBy, accessKeySortDirection) {
