@@ -115,7 +115,9 @@ document.addEventListener('WebComponentsReady', () => {
   // Polymer 3, which adds typescript support.
   const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
 
-  appRoot.supportedLanguages = sortLanguageDefsByName(Object.values(SUPPORTED_LANGUAGES));
+  const filteredLanguageDefs = Object.values(SUPPORTED_LANGUAGES)
+      .filter((languageDef) => languageDef.id !== 'zh');
+  appRoot.supportedLanguages = sortLanguageDefsByName(filteredLanguageDefs);
   appRoot.setLanguage(language.string(), languageDirection);
   new App(
       appRoot, version, digitalocean_api.createDigitalOceanSession,
