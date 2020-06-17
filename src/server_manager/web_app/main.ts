@@ -26,7 +26,8 @@ import {ManualServerRepository} from './manual_server';
 import {DEFAULT_PROMPT_IMPRESSION_DELAY_MS, OutlineSurveys} from './survey';
 import {AppRoot} from './ui_components/app-root.js';
 
-const SUPPORTED_LANGUAGES: {[key: string]: {id: string, name: string, dir: string}} = {
+type LanguageDef = {id: string, name: string, dir: string};
+const SUPPORTED_LANGUAGES: {[key: string]: LanguageDef} = {
   'am': {id: 'am', name: 'አማርኛ', dir: 'ltr'},
   'ar': {id: 'ar', name: 'العربية', dir: 'rtl'},
   'bg': {id: 'bg', name: 'Български', dir: 'ltr'},
@@ -85,6 +86,12 @@ function getLanguageToUse(): i18n.LanguageCode {
       .getBestSupportedLanguage(preferredLanguages);
 }
 
+function sortLanguageDefsByName(languageDefs: LanguageDef[]) {
+  return languageDefs.sort((a, b) => {
+    return a.name > b.name ? 1 : -1;
+  });
+}
+
 document.addEventListener('WebComponentsReady', () => {
   // Parse URL query params.
   const params = new URL(document.URL).searchParams;
@@ -108,7 +115,7 @@ document.addEventListener('WebComponentsReady', () => {
   // Polymer 3, which adds typescript support.
   const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
 
-  appRoot.supportedLanguages = Object.values(SUPPORTED_LANGUAGES);
+  appRoot.supportedLanguages = sortLanguageDefsByName(Object.values(SUPPORTED_LANGUAGES));
   appRoot.setLanguage(language.string(), languageDirection);
   new App(
       appRoot, version, digitalocean_api.createDigitalOceanSession,

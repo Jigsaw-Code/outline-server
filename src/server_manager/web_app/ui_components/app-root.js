@@ -234,7 +234,7 @@ export class AppRoot extends mixinBehaviors
         margin-top: 36px;
       }
       .legal-links {
-        margin: 0 -6px 0;
+        margin: 0 -6px;
       }
       .legal-links > * {
         margin: 0 6px;
@@ -392,7 +392,7 @@ export class AppRoot extends mixinBehaviors
             <div id="links-footer">
               <paper-icon-item id="language-row">
                 <iron-icon id="language-icon" icon="language" slot="item-icon"></iron-icon>
-                <outline-language-picker id="language-dropdown" selected-language="{{language}}" languages="{{_sortSupportedLanguages(supportedLanguages)}}"></outline-language-picker>
+                <outline-language-picker id="language-dropdown" selected-language="{{language}}" languages="{{supportedLanguages}}"></outline-language-picker>
               </paper-icon-item>
               <div class="legal-links" on-tap="maybeCloseDrawer">
                 <a href="https://www.google.com/policies/privacy/">[[localize('nav-privacy')]]</a>
@@ -900,12 +900,6 @@ export class AppRoot extends mixinBehaviors
     const server = event.model.server;
     this.fire('ShowServerRequested', {displayServerId: server.id});
     this.maybeCloseDrawer();
-  }
-
-  _sortSupportedLanguages(supportedLanguages) {
-    return supportedLanguages.sort((a, b) => {
-      return a.name > b.name ? 1 : -1;
-    });
   }
 
   // Wrapper to encode a string in base64. This is necessary to set the server view IDs to

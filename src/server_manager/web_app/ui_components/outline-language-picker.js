@@ -19,10 +19,8 @@ import '@polymer/iron-icons/iron-icons.js';
 import './cloud-install-styles.js';
 
 import {html, PolymerElement} from '@polymer/polymer';
-import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class.js';
 
-export class OutlineLanguagePicker extends mixinBehaviors
-([], PolymerElement) {
+export class OutlineLanguagePicker extends PolymerElement {
   static get template() {
     return html`
     <style include="cloud-install-styles"></style>
