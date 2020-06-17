@@ -31,6 +31,7 @@ import './outline-help-bubble.js';
 import './outline-metrics-option-dialog.js';
 import './outline-server-settings.js';
 import './outline-share-dialog.js';
+import './outline-sort-span.js';
 import {html, PolymerElement} from '@polymer/polymer';
 import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
 
@@ -53,6 +54,15 @@ function makePublicEvent(eventName, detail) {
     params.detail = detail;
   }
   return new CustomEvent(eventName, params);
+}
+
+function compare(a, b) {
+  if (a < b) {
+    return -1;
+  } else if (a > b) {
+    return 1;
+  }
+  return 0;
 }
 
 /**
@@ -463,16 +473,16 @@ export class ServerView extends DirMixin(PolymerElement) {
           <div class="access-key-list card-section">
             <!-- header row -->
             <div class="access-key-row header-row">
-              <span class="access-key-container" on-tap="_setSortByOrToggleDirection" data-sort-by="name">
+              <outline-sort-span class="access-key-container"
+                  direction="[[_computeColumnDirection('name', accessKeySortBy, accessKeySortDirection)]]"
+                  on-tap="_setSortByOrToggleDirection" data-sort-by="name">
                 [[localize('server-access-keys')]]
-                <iron-icon class="sort-icon" icon="arrow-drop-down" hidden\$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'name', -1)]]"></iron-icon>
-                <iron-icon class="sort-icon" icon="arrow-drop-up" hidden\$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'name', 1)]]"></iron-icon>
-              </span>
-              <span class="measurement-container" on-tap="_setSortByOrToggleDirection" data-sort-by="usage">
+              </outline-sort-span>
+              <outline-sort-span class="measurement-container"
+                  direction="[[_computeColumnDirection('usage', accessKeySortBy, accessKeySortDirection)]]"
+                  on-tap="_setSortByOrToggleDirection" data-sort-by="usage">
                 [[localize('server-usage')]]
-                <iron-icon class="sort-icon" icon="arrow-drop-down" hidden\$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'usage', -1)]]"></iron-icon>
-                <iron-icon class="sort-icon" icon="arrow-drop-up" hidden\$="[[!_computeShouldShowSortIcon(accessKeySortBy, accessKeySortDirection, 'usage', 1)]]"></iron-icon>
-              </span>
+              </outline-sort-span>
               <span class="flex-1 header-row-spacer"></span>
             </div>
             <!-- admin row -->
@@ -670,7 +680,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.selectedTab = 'connections';
       this.accessKeySortBy = 'name';
       /** The direction to sort: 1 == ascending, -1 == descending */
-      this.accessKeySortDirection = 1;
+      this.accessKeySortDirection = 0;
       /** @type {(msgId: string, ...params: string[]) => string} */
       this.localize = null;
     }
@@ -901,39 +911,44 @@ export class ServerView extends DirMixin(PolymerElement) {
     return item.id !== MY_CONNECTION_USER_ID;
   }
 
+  _computeColumnDirection(columnName, accessKeySortBy, accessKeySortDirection) {
+    if (columnName === accessKeySortBy) {
+      return accessKeySortDirection;
+    }
+    return 0;
+  }
+
   _setSortByOrToggleDirection(e) {
     const sortBy = e.target.dataset.sortBy;
     if (this.accessKeySortBy !== sortBy) {
       this.accessKeySortBy = sortBy;
-      this.accessKeySortDirection = 1;  // Sort ascending initially.
-      return;
+      this.accessKeySortDirection = 0;
     }
-    this.accessKeySortDirection *= -1;  // Toggle sort direction.
+    this.accessKeySortDirection = (this.accessKeySortDirection + 2) % 3 - 1;
   }
 
   _sortAccessKeys(accessKeySortBy, accessKeySortDirection) {
+    if (accessKeySortDirection === 0) {
+      // No sorting.
+      return (a, b) => 0;
+    }
     if (accessKeySortBy === 'usage') {
       return function(a, b) {
-        return (a.transferredBytes - b.transferredBytes) * this.accessKeySortDirection;
+        return (a.transferredBytes - b.transferredBytes) * accessKeySortDirection;
       }.bind(this);
     }
     // Default to sorting by name.
     return function(a, b) {
-      const nameA = a.name.toUpperCase() || a.placeholderName.toUpperCase();
-      const nameB = b.name.toUpperCase() || b.placeholderName.toUpperCase();
-      if (nameA < nameB) {
-        return -1 * this.accessKeySortDirection;
+      if (a.name && b.name) {
+        return compare(a.name.toUpperCase(), b.name.toUpperCase()) * accessKeySortDirection;
+      } else if (a.name) {
+        return -1;
+      } else if (b.name) {
+        return 1
+      } else {
+        return 0;
       }
-      if (nameA > nameB) {
-        return 1 * this.accessKeySortDirection;
-      }
-      return 0;
     }.bind(this);
-  }
-
-  _computeShouldShowSortIcon(
-      accessKeySortBy, accessKeySortDirection, elementSortBy, elementSortDirection) {
-    return accessKeySortBy === elementSortBy && accessKeySortDirection === elementSortDirection;
   }
 
   destroyServer() {
