@@ -121,7 +121,10 @@ export class TestApp extends LitElement {
       
       <div class="widget">
         <h2>outline-sort-icon</h2>
-        <outline-sort-icon>Column Header</outline-sort-icon>
+        <outline-sort-span @tap=${() => {
+          const el = this.select('outline-sort-span');
+          el.direction = (el.direction + 2) % 3 - 1;
+        }}>Column Header</outline-sort-span>
       </div>
 
       <div class="widget">
