@@ -14,10 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# FIXME: this script is not running any unit tests because we do not build standalone js test files
-# when bundling the web app.
+# Use commonjs modules because jasmine runs in node.
+tsc -p $ROOT_DIR/src/server_manager --outDir build/js/server_manager --module commonjs
 
-rm -rf $BUILD_DIR/js
+# FIXME: this script does not run web_app unit tests because dependencies in node_modules
+# (i.e. polymer) use ES6 imports. For now, delete the web_app tests so we can run the rest.
+rm -rf $BUILD_DIR/js/server_manager/web_app
 
-do_action server_manager/web_app/build
 jasmine --config=$ROOT_DIR/jasmine.json
