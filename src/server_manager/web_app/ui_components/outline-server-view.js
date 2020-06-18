@@ -740,8 +740,14 @@ export class ServerView extends DirMixin(PolymerElement) {
       newName: displayName,
       entry: {
         commitName: () => {
-          accessKey.name = displayName;
           input.disabled = false;
+          // Update accessKeyRows so the UI is updated.
+          this.accessKeyRows = this.accessKeyRows.map((row) => {
+            if (row.id !== accessKey.id) {
+              return row
+            }
+            return {...row, name: displayName};
+          }); 
         },
         revertName: () => {
           input.value = accessKey.name;
