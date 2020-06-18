@@ -107,11 +107,11 @@ export function bindService(
       redirect(`${apiPrefix}/server/access-key-data-limit`));
 }
 
-// Returns a request handler that redirects a bound request path to `url` with HTTP status `code`.
-function redirect(url: string, code = 301): restify.RequestHandlerType {
+// Returns a request handler that redirects a bound request path to `url` with HTTP status code 308.
+function redirect(url: string): restify.RequestHandlerType {
   return (req: restify.Request, res: restify.Response, next: restify.Next) => {
-    logging.debug(`Redirecting ${req.url} => ${url} with ${code}`);
-    res.redirect(code, url, next);
+    logging.debug(`Redirecting ${req.url} => ${url}`);
+    res.redirect(308, url, next);
   };
 }
 
