@@ -680,7 +680,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.monthlyCost = 0;
       this.selectedTab = 'connections';
       this.accessKeySortBy = 'name';
-      /** 
+      /**
        * The direction to sort: 1 == ascending, 0 == no sorting, -1 == descending
        * @type {-1|0|1}
        */
