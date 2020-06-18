@@ -681,10 +681,10 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.selectedTab = 'connections';
       this.accessKeySortBy = 'name';
       /**
-       * The direction to sort: 1 == ascending, 0 == no sorting, -1 == descending
-       * @type {-1|0|1}
+       * The direction to sort: 1 == ascending, -1 == descending
+       * @type {-1|1}
        */
-      this.accessKeySortDirection = 0;
+      this.accessKeySortDirection = 1;
       /** @type {(msgId: string, ...params: string[]) => string} */
       this.localize = null;
     }
@@ -932,20 +932,13 @@ export class ServerView extends DirMixin(PolymerElement) {
     const sortBy = e.target.dataset.sortBy;
     if (this.accessKeySortBy !== sortBy) {
       this.accessKeySortBy = sortBy;
-      this.accessKeySortDirection = 0;
-    }
-    // Rotate direction across [-1, 0, +1].
-    this.accessKeySortDirection += 1
-    if (this.accessKeySortDirection > 1) {
-      this.accessKeySortDirection = -1;
+      this.accessKeySortDirection = sortBy == 'usage' ? -1 : 1;
+    } else {
+      this.accessKeySortDirection = this.accessKeySortDirection * -1
     }
   }
 
   _sortAccessKeys(accessKeySortBy, accessKeySortDirection) {
-    if (accessKeySortDirection === 0) {
-      // No sorting.
-      return (a, b) => 0;
-    }
     if (accessKeySortBy === 'usage') {
       return function(a, b) {
         return (a.transferredBytes - b.transferredBytes) * accessKeySortDirection;
