@@ -14,11 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Use commonjs modules because jasmine runs in node.
+# Use commonjs modules, jasmine runs in node.
 tsc -p $ROOT_DIR/src/server_manager --outDir build/js/server_manager --module commonjs
-
-# FIXME: this script does not run web_app unit tests because dependencies in node_modules
-# (i.e. polymer) use ES6 imports. For now, delete the web_app tests so we can run the rest.
-rm -rf $BUILD_DIR/js/server_manager/web_app
-
 jasmine --config=$ROOT_DIR/jasmine.json
