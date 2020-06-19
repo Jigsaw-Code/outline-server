@@ -5,7 +5,8 @@
     "**/*.ts"
   ],
   "exclude": [
+    "node_modules",
     "web_app/galery_app",
-    "node_modules"
+    "web_app/app.spec.ts"
   ]
 }
