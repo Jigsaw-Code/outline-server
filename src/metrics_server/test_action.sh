@@ -14,5 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-yarn do metrics_server/build
+readonly TEST_DIR="${BUILD_DIR}/js/metrics_server/"
+rm -rf $TEST_DIR
+
+tsc -p $ROOT_DIR/src/metrics_server --outDir $TEST_DIR
 jasmine --config=$ROOT_DIR/jasmine.json
+
+rm -rf $TEST_DIR

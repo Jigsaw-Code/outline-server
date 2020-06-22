@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {throws} from 'assert';
-
 import {redactManagerUrl} from './util';
 
 describe('XHR breadcrumbs', () => {
@@ -42,8 +40,8 @@ describe('XHR breadcrumbs', () => {
   });
 
   it('throws on garbage', () => {
-    throws(() => {
+    expect(() => {
       redactManagerUrl('once upon a time');
-    });
+    }).toThrowError(TypeError);
   });
 });
