@@ -14,7 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rm -rf $BUILD_DIR/js
+readonly TEST_DIR="${BUILD_DIR}/js/shadowbox/"
+rm -rf $TEST_DIR
 
-tsc -p $ROOT_DIR/src/shadowbox --outDir $BUILD_DIR/js/shadowbox
+tsc -p $ROOT_DIR/src/shadowbox --outDir $TEST_DIR
 jasmine --config=$ROOT_DIR/jasmine.json
+
+rm -rf $TEST_DIR
