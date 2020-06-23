@@ -32,6 +32,7 @@ import './outline-do-oauth-step.js';
 import './outline-feedback-dialog.js';
 import './outline-survey-dialog.js';
 import './outline-intro-step.js';
+import './outline-language-picker.js';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
 import './outline-region-picker-step.js';
@@ -229,11 +230,27 @@ export class AppRoot extends mixinBehaviors
       #appDrawer a:focus {
         outline: none;
       }
+      #links-footer {
+        margin-top: 36px;
+      }
       .legal-links {
-        margin: 36px -6px 0;
+        margin: 0 -6px;
       }
       .legal-links > * {
         margin: 0 6px;
+      }
+      #language-row {
+        display: flex;
+        align-items: center;
+      }
+      #language-icon {
+        padding-top: 10px;
+      }
+      #language-dropdown {
+        padding-left: 22px;
+        --paper-input-container: {
+          width: 156px;
+        };
       }
       app-toolbar [main-title] img {
         height: 16px;
@@ -367,15 +384,21 @@ export class AppRoot extends mixinBehaviors
           </div>
 
           <!-- Links section -->
-          <paper-listbox on-tap="maybeCloseDrawer">
-            <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">[[localize('nav-data-collection')]]</a>
+          <paper-listbox>
+            <span on-tap="maybeCloseDrawer"><a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">[[localize('nav-data-collection')]]</a></span>
             <span on-tap="submitFeedbackTapped">[[localize('nav-feedback')]]</span>
-            <a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">[[localize('nav-help')]]</a>
+            <span on-tap="maybeCloseDrawer"><a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">[[localize('nav-help')]]</a></span>
             <span on-tap="aboutTapped">[[localize('nav-about')]]</span>
-            <div class="legal-links">
-              <a href="https://www.google.com/policies/privacy/">[[localize('nav-privacy')]]</a>
-              <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">[[localize('nav-terms')]]</a>
-              <span on-tap="showLicensesTapped">[[localize('nav-licenses')]]</span>
+            <div id="links-footer">
+              <paper-icon-item id="language-row">
+                <iron-icon id="language-icon" icon="language" slot="item-icon"></iron-icon>
+                <outline-language-picker id="language-dropdown" selected-language="{{language}}" languages="{{supportedLanguages}}"></outline-language-picker>
+              </paper-icon-item>
+              <div class="legal-links" on-tap="maybeCloseDrawer">
+                <a href="https://www.google.com/policies/privacy/">[[localize('nav-privacy')]]</a>
+                <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">[[localize('nav-terms')]]</a>
+                <span on-tap="showLicensesTapped">[[localize('nav-licenses')]]</span>
+              </div>      
             </div>
           </paper-listbox>
         </app-drawer>
@@ -471,6 +494,8 @@ export class AppRoot extends mixinBehaviors
     return {
       // Properties language and useKeyIfMissing are used by Polymer.AppLocalizeBehavior.
       language: {type: String, readonly: true},
+      // An array of {id, name, dir} language objects.
+      supportedLanguages: {type: Array, readonly: true},
       useKeyIfMissing: {type: Boolean},
       serverList: {type: Array},
       selectedServer: {type: Object},
@@ -507,6 +532,7 @@ export class AppRoot extends mixinBehaviors
     /** @type {DisplayServer} */
     this.selectedServer = undefined;
     this.language = '';
+    this.supportedLanguages = [];
     this.useKeyIfMissing = true;
     /** @type {DisplayServer[]} */
     this.serverList = [];
@@ -514,7 +540,6 @@ export class AppRoot extends mixinBehaviors
     this.outlineVersion = '';
     this.currentPage = 'intro';
     this.shouldShowSideBar = false;
-
 
     this.addEventListener('RegionSelected', this.handleRegionSelected);
     this.addEventListener(
@@ -526,17 +551,18 @@ export class AppRoot extends mixinBehaviors
 
   /**
    * Sets the language and direction for the application
-   * @param {string} newLanguage
-   * @param {string} langDir
+   * @param {string} language
+   * @param {string} direction
    */
-  setLanguage(newLanguage, langDir) {
-    const messagesUrl = `./messages/${newLanguage}.json`;
-    this.loadResources(messagesUrl, newLanguage);
-    if (langDir === 'rtl') {
-      this.$.appDrawer.align = 'right';
-      this.$.sideBar.align = 'right';
-    }
-    this.language = newLanguage;
+  setLanguage(language, direction) {
+    const messagesUrl = `./messages/${language}.json`;
+    this.loadResources(messagesUrl, language);
+
+    const alignDir = direction === 'ltr' ? 'left' : 'right';
+    this.$.appDrawer.align = alignDir;
+    this.$.sideBar.align = alignDir;
+
+    this.language = language;
   }
 
   showIntro() {
@@ -740,10 +766,12 @@ export class AppRoot extends mixinBehaviors
 
   submitFeedbackTapped() {
     this.$.feedbackDialog.open();
+    this.maybeCloseDrawer();
   }
 
   aboutTapped() {
     this.$.aboutDialog.open();
+    this.maybeCloseDrawer();
   }
 
   signOutTapped() {

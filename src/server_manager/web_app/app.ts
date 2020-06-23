@@ -247,6 +247,10 @@ export class App {
       }
     });
 
+    appRoot.addEventListener('SetLanguageRequested', (event: CustomEvent) => {
+      this.setAppLanguage(event.detail.languageCode, event.detail.languageDir);
+    });
+
     appRoot.addEventListener('ServerRenameRequested', (event: CustomEvent) => {
       this.renameServer(event.detail.newName);
     });
@@ -1232,5 +1236,11 @@ export class App {
       this.appRoot.selectedServer = null;
       this.showCreateServer();
     });
+  }
+
+  private setAppLanguage(languageCode: string, languageDir: string) {
+    this.appRoot.setLanguage(languageCode, languageDir);
+    document.documentElement.setAttribute('dir', languageDir);
+    window.localStorage.setItem('overrideLanguage', languageCode);
   }
 }
