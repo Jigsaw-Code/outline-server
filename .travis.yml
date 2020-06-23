@@ -50,13 +50,13 @@ jobs:
       script:
         - yarn lint
         - yarn do metrics_server/build
+        - yarn do metrics_server/test
         - yarn do sentry_webhook/build
         - yarn do shadowbox/server/build
         - yarn do shadowbox/test
         - yarn do server_manager/electron_app/build
-        - yarn do server_manager/electron_app/test
         - yarn do server_manager/web_app/build
-        - yarn do server_manager/web_app/test
+        - yarn do server_manager/test
 
     - stage: Test
       name: Server Integration Test
