@@ -123,7 +123,7 @@ export class TestApp extends LitElement {
         <h2>outline-sort-icon</h2>
         <outline-sort-span dir=${this.dir} direction=1 @tap=${() => {
           const el = this.select('outline-sort-span');
-          el.direction = (el.direction + 2) % 3 - 1;
+          el.direction *= -1;
         }}>Column Header</outline-sort-span>
       </div>
 
