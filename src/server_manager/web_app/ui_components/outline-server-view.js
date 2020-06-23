@@ -934,18 +934,18 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.accessKeySortBy = sortBy;
       this.accessKeySortDirection = sortBy == 'usage' ? -1 : 1;
     } else {
-      this.accessKeySortDirection = this.accessKeySortDirection * -1
+      this.accessKeySortDirection *= -1;
     }
   }
 
   _sortAccessKeys(accessKeySortBy, accessKeySortDirection) {
     if (accessKeySortBy === 'usage') {
-      return function(a, b) {
+      return (a, b) => {
         return (a.transferredBytes - b.transferredBytes) * accessKeySortDirection;
-      }.bind(this);
+      };
     }
     // Default to sorting by name.
-    return function(a, b) {
+    return (a, b) => {
       if (a.name && b.name) {
         return compare(a.name.toUpperCase(), b.name.toUpperCase()) * accessKeySortDirection;
       } else if (a.name) {
@@ -955,7 +955,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       } else {
         return 0;
       }
-    }.bind(this);
+    };
   }
 
   destroyServer() {
