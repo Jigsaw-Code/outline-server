@@ -69,7 +69,6 @@ const SUPPORTED_LANGUAGES: {[key: string]: LanguageDef} = {
   'uk': {id: 'uk', name: 'Українська', dir: 'ltr'},
   'ur': {id: 'ur', name: 'اردو', dir: 'rtl'},
   'vi': {id: 'vi', name: 'Việtnam', dir: 'ltr'},
-  'zh': {id: 'zh', name: '简体中文', dir: 'ltr'},
   'zh-CN': {id: 'zh-CN', name: '简体中文', dir: 'ltr'},
   'zh-TW': {id: 'zh-TW', name: '繁體中文‬‬‪‬', dir: 'ltr'},
 };
@@ -115,8 +114,7 @@ document.addEventListener('WebComponentsReady', () => {
   // Polymer 3, which adds typescript support.
   const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
 
-  const filteredLanguageDefs = Object.values(SUPPORTED_LANGUAGES)
-      .filter((languageDef) => languageDef.id !== 'zh');
+  const filteredLanguageDefs = Object.values(SUPPORTED_LANGUAGES);
   appRoot.supportedLanguages = sortLanguageDefsByName(filteredLanguageDefs);
   appRoot.setLanguage(language.string(), languageDirection);
   new App(
