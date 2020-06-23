@@ -144,8 +144,8 @@ async function main() {
     shadowsocksServer.enableCountryMetrics(MMDB_LOCATION);
   }
 
-  // Add rollout at 0%, so we can override in the config.
-  const isReplayProtectionEnabled = createRolloutTracker(serverConfig).isRolloutEnabled('replay-protection', 1);
+  const isReplayProtectionEnabled =
+      createRolloutTracker(serverConfig).isRolloutEnabled('replay-protection', 10);
   logging.info(`Replay protection enabled: ${isReplayProtectionEnabled}`);
   if (isReplayProtectionEnabled) {
     shadowsocksServer.enableReplayProtection();
