@@ -72,6 +72,7 @@ export class OutlineLanguagePicker extends PolymerElement {
   constructor() {
     super();
     this.selectedLanguage = '';
+    /** @type {Array<{id: string, name: string, dir: "rtl"|"ltr"}>} */
     this.languages = [];
   }
 
