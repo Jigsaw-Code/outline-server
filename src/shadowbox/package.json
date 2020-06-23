@@ -1,7 +1,7 @@
 {
   "name": "outline-server",
   "private": true,
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Outline server",
   "main": "build/server/main.js",
   "author": "Outline",
