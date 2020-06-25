@@ -18,6 +18,7 @@ import '../ui_components/outline-about-dialog';
 import '../ui_components/outline-do-oauth-step';
 import '../ui_components/outline-feedback-dialog';
 import '../ui_components/outline-share-dialog';
+import '../ui_components/outline-sort-span';
 import '../ui_components/outline-survey-dialog';
 
 import {css, customElement, html, LitElement, property} from 'lit-element';
@@ -116,6 +117,14 @@ export class TestApp extends LitElement {
         <button @tap=${() => this.select('outline-share-dialog').open('<ACCESS_KEY>', '<INVITE_URL>')
         }>Open Dialog</button>
         <outline-share-dialog .localize=${this.localize} dir=${this.dir}></outline-share-dialog>
+      </div>
+      
+      <div class="widget">
+        <h2>outline-sort-icon</h2>
+        <outline-sort-span dir=${this.dir} direction=1 @tap=${() => {
+          const el = this.select('outline-sort-span');
+          el.direction *= -1;
+        }}>Column Header</outline-sort-span>
       </div>
 
       <div class="widget">
