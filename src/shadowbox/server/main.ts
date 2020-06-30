@@ -145,7 +145,7 @@ async function main() {
   }
 
   const isReplayProtectionEnabled =
-      createRolloutTracker(serverConfig).isRolloutEnabled('replay-protection', 10);
+      createRolloutTracker(serverConfig).isRolloutEnabled('replay-protection', 100);
   logging.info(`Replay protection enabled: ${isReplayProtectionEnabled}`);
   if (isReplayProtectionEnabled) {
     shadowsocksServer.enableReplayProtection();
