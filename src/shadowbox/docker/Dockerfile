@@ -39,7 +39,7 @@ FROM ${NODE_IMAGE}
 # Save metadata on the software versions we are using.
 LABEL shadowbox.node_version=12.16.3
 # Keep in sync with version in third_party/outline-ss-server
-LABEL shadowbox.outline-ss-server_version=1.1.6
+LABEL shadowbox.outline-ss-server_version=1.1.7
 
 ARG GITHUB_RELEASE
 LABEL shadowbox.github.release="${GITHUB_RELEASE}"
