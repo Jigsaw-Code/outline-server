@@ -137,6 +137,18 @@
     "message": "Avoid data overages",
     "description": "This string appears as a title in a dialog to advertise the data limits feature."
   },
+  "data_limits_disclaimer": {
+    "message": "If you are currently reporting metrics, use of the data limits feature will be included. Please see the $START_OF_LINK$data collection policy$END_OF_LINK$ for more details.",
+    "description": "This string provides a disclaimer to opting into experimental features.",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
+  },
   "data_limits_usage": {
     "message": "$USED$ of $TOTAL$ used",
     "description": "This string appears in a tooltip when the data limits feature is enabled. It lets the user know how much data an access key has used, relative to the limit.",

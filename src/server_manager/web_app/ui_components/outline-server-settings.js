@@ -100,6 +100,12 @@ Polymer({
           width: 120px;
         }
       }
+      .data-limits-disclaimer {
+        margin: 0 0 8px 0;
+      }
+      .data-limits-disclaimer p {
+        width: 100%;
+      }
       .detail {
         margin-top: 0px;
         font-size: 12px;
@@ -206,6 +212,10 @@ Polymer({
                 </paper-listbox>
               </paper-dropdown-menu>
             </div>
+            <div class="sub-section data-limits-disclaimer" hidden\$="[[!shouldShowFeatureMetricsDisclaimer]]">
+              <iron-icon icon="icons:error-outline"></iron-icon>
+              <p inner-h-t-m-l="[[localize('data-limits-disclaimer', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
+            </div>
             <div class="data-limits-input" hidden\$="[[!isAccessKeyDataLimitEnabled]]">
               <paper-input id="accessKeyDataLimitInput" value="[[accessKeyDataLimit.value]]" label="Data limit per key" always-float-label="" allowed-pattern="[0-9]+" required="" auto-validate="" maxlength="9" on-keydown="_handleAccessKeyDataLimitInputKeyDown" on-blur="_requestSetAccessKeyDataLimit"></paper-input>
               <paper-dropdown-menu no-label-float="">
@@ -262,6 +272,7 @@ Polymer({
     accessKeyDataLimit: {type: Object, value: null},  // type: app.DisplayDataAmount
     supportsAccessKeyDataLimit:
         {type: Boolean, value: false},  // Whether the server supports data limits.
+    shouldShowFeatureMetricsDisclaimer: {type: Boolean, value: false},
     isHostnameEditable: {type: Boolean, value: true},
     serverCreationDate: {type: String, value: null},
     serverLocation: {type: String, value: null},

@@ -25,6 +25,7 @@
   "data-limits-description": "Set a 30 day trailing data transfer limit for access keys on this server.",
   "data-limits-dialog-text": "Go to the Settings tab to set a data transfer limit for access keys on this server.",
   "data-limits-dialog-title": "Avoid data overages",
+  "data-limits-disclaimer": "If you are currently reporting metrics, use of the data limits features will be included. Please see the {openLink}data collection policy{closeLink} for more details.",
   "data-limits-usage": "{used} of {total} used",
   "destroy": "Destroy",
   "digitalocean-disconnect": "Disconnect",
