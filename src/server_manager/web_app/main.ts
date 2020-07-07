@@ -25,7 +25,11 @@ import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
 
-type LanguageDef = {id: string, name: string, dir: string};
+type LanguageDef = {
+  id: string,
+  name: string,
+  dir: string
+};
 const SUPPORTED_LANGUAGES: {[key: string]: LanguageDef} = {
   'am': {id: 'am', name: 'አማርኛ', dir: 'ltr'},
   'ar': {id: 'ar', name: 'العربية', dir: 'rtl'},
