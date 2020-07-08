@@ -138,8 +138,8 @@
     "description": "This string appears as a title in a dialog to advertise the data limits feature."
   },
   "data_limits_disclaimer": {
-    "message": "If you are currently reporting metrics, use of the data limits feature will be included. Please see the $START_OF_LINK$data collection policy$END_OF_LINK$ for more details.",
-    "description": "This string provides a disclaimer to opting into experimental features.",
+    "message": "Since you are currently reporting metrics, use of the data limits feature will be included. Please see the $START_OF_LINK$data collection policy$END_OF_LINK$ for more details.",
+    "description": "This string provides a data collection disclaimer to opting into the data limits features.",
     "placeholders": {
       "END_OF_LINK": {
         "content": "{closeLink}"
