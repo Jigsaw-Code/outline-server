@@ -89,9 +89,11 @@ async function computeDefaultAccessKeyDataLimit(
 // policy. We only show it if all the following conditions are true:
 //   - data limits feature is not already enabled
 //   - opt-in metrics are enabled
+//   - user has not previously seen the data limits help bubble
 //   - user has not previously seen this disclaimer
 function shouldShowFeatureMetricsDisclaimer(server: server.Server): boolean {
   return !server.getAccessKeyDataLimit() && server.getMetricsEnabled() &&
+      !window.localStorage.getItem('dataLimitsHelpBubble-dismissed') &&
       !window.localStorage.getItem('dataLimits-feature-collection-disclaimer');
 }
 
