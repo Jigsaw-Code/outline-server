@@ -85,16 +85,11 @@ async function computeDefaultAccessKeyDataLimit(
   }
 }
 
-// Returns whether we should display a disclaimer for the updated feature metrics data collection
-// policy. We only show it if all the following conditions are true:
-//   - data limits feature is not already enabled
-//   - opt-in metrics are enabled
-//   - user has not previously seen the data limits help bubble
-//   - user has not previously seen this disclaimer
-function shouldShowFeatureMetricsDisclaimer(server: server.Server): boolean {
-  return !server.getAccessKeyDataLimit() && server.getMetricsEnabled() &&
-      !window.localStorage.getItem('dataLimitsHelpBubble-dismissed') &&
-      !window.localStorage.getItem('dataLimits-feature-collection-disclaimer');
+// Returns whether the user has seen a disclaimer for the updated feature metrics data collection
+// policy.
+function hasFeatureMetricsConsent(): boolean {
+  return !!window.localStorage.getItem('dataLimitsHelpBubble-dismissed') &&
+      !!window.localStorage.getItem('dataLimits-feature-collection-consent');
 }
 
 async function showHelpBubblesOnce(serverView: ServerView) {
@@ -849,7 +844,8 @@ export class App {
     view.serverVersion = selectedServer.getVersion();
     view.accessKeyDataLimit = dataLimitToDisplayDataAmount(selectedServer.getAccessKeyDataLimit());
     view.isAccessKeyDataLimitEnabled = !!view.accessKeyDataLimit;
-    view.shouldShowFeatureMetricsDisclaimer = shouldShowFeatureMetricsDisclaimer(selectedServer);
+    view.showFeatureMetricsDisclaimer = selectedServer.getMetricsEnabled() &&
+        !selectedServer.getAccessKeyDataLimit() && !hasFeatureMetricsConsent();
 
     const version = this.selectedServer.getVersion();
     if (version) {
@@ -1038,8 +1034,8 @@ export class App {
       serverView.accessKeyDataLimit = dataLimitToDisplayDataAmount(limit);
       this.refreshTransferStats(this.selectedServer, serverView);
       // Don't display the feature collection disclaimer anymore.
-      serverView.shouldShowFeatureMetricsDisclaimer = false;
-      window.localStorage.setItem('dataLimits-feature-collection-disclaimer', 'true');
+      serverView.showFeatureMetricsDisclaimer = false;
+      window.localStorage.setItem('dataLimits-feature-collection-consent', 'true');
     } catch (error) {
       console.error(`Failed to set access key data limit: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-set-data-limit'));

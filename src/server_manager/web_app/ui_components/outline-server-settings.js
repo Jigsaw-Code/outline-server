@@ -212,7 +212,7 @@ Polymer({
                 </paper-listbox>
               </paper-dropdown-menu>
             </div>
-            <div class="sub-section data-limits-disclaimer" hidden\$="[[!shouldShowFeatureMetricsDisclaimer]]">
+            <div class="sub-section data-limits-disclaimer" hidden\$="[[!showFeatureMetricsDisclaimer]]">
               <iron-icon icon="icons:error-outline"></iron-icon>
               <p inner-h-t-m-l="[[localize('data-limits-disclaimer', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
             </div>
@@ -272,7 +272,7 @@ Polymer({
     accessKeyDataLimit: {type: Object, value: null},  // type: app.DisplayDataAmount
     supportsAccessKeyDataLimit:
         {type: Boolean, value: false},  // Whether the server supports data limits.
-    shouldShowFeatureMetricsDisclaimer: {type: Boolean, value: false},
+    showFeatureMetricsDisclaimer: {type: Boolean, value: false},
     isHostnameEditable: {type: Boolean, value: true},
     serverCreationDate: {type: String, value: null},
     serverLocation: {type: String, value: null},
