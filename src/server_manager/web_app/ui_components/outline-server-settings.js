@@ -100,6 +100,12 @@ Polymer({
           width: 120px;
         }
       }
+      .data-limits-disclaimer {
+        margin: 0 0 8px 0;
+      }
+      .data-limits-disclaimer p {
+        width: 100%;
+      }
       .detail {
         margin-top: 0px;
         font-size: 12px;
@@ -142,12 +148,9 @@ Polymer({
         cursor: pointer;
         background-color: #eee;
       }
-      #data-limits-container .selection-container h3 {
-        font-weight: normal;
-        margin-bottom: 8px;
-      }
       #data-limits-container .selection-container p {
         margin: 0 0 24px 0;
+        width: 80%;
       }
       #data-limits-container .selection-container span {
         display: block;
@@ -191,6 +194,39 @@ Polymer({
             <paper-input readonly="" value="[[serverVersion]]" label="[[localize('settings-server-version')]]" hidden\$="[[!serverVersion]]" always-float-label="" maxlength="100"></paper-input>
           </div>
         </div>
+        <!-- Data limits -->
+        <div class="setting card-section" hidden\$="[[!supportsAccessKeyDataLimit]]">
+          <iron-icon class="setting-icon" icon="icons:perm-data-setting"></iron-icon>
+          <div id="data-limits-container">
+            <div class="selection-container">
+              <div class="content">
+                <h3>[[localize('data-limits')]]</h3>
+                <p>[[localize('data-limits-description')]]</p>
+              </div>
+              <!-- NOTE: The dropdown is not automatically sized to the button's width:
+                           https://github.com/PolymerElements/paper-dropdown-menu/issues/229 -->
+              <paper-dropdown-menu no-label-float="" horizontal-align="left">
+                <paper-listbox slot="dropdown-content" selected="{{_computeDataLimitsEnabledName(isAccessKeyDataLimitEnabled)}}" attr-for-selected="name" on-selected-changed="_accessKeyDataLimitEnabledChanged">
+                  <paper-item name="enabled">[[localize('enabled')]]</paper-item>
+                  <paper-item name="disabled">[[localize('disabled')]]</paper-item>
+                </paper-listbox>
+              </paper-dropdown-menu>
+            </div>
+            <div class="sub-section data-limits-disclaimer" hidden\$="[[!showFeatureMetricsDisclaimer]]">
+              <iron-icon icon="icons:error-outline"></iron-icon>
+              <p inner-h-t-m-l="[[localize('data-limits-disclaimer', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
+            </div>
+            <div class="data-limits-input" hidden\$="[[!isAccessKeyDataLimitEnabled]]">
+              <paper-input id="accessKeyDataLimitInput" value="[[accessKeyDataLimit.value]]" label="Data limit per key" always-float-label="" allowed-pattern="[0-9]+" required="" auto-validate="" maxlength="9" on-keydown="_handleAccessKeyDataLimitInputKeyDown" on-blur="_requestSetAccessKeyDataLimit"></paper-input>
+              <paper-dropdown-menu no-label-float="">
+                <paper-listbox id="accessKeyDataLimitUnits" slot="dropdown-content" selected="[[accessKeyDataLimit.unit]]" attr-for-selected="name" on-selected-changed="_requestSetAccessKeyDataLimit">
+                  <paper-item name="MB">MB</paper-item>
+                  <paper-item name="GB">GB</paper-item>
+                </paper-listbox>
+              </paper-dropdown-menu>
+            </div>
+          </div>
+        </div>
         <!-- Experiments -->
         <div id="experiments" class="setting card-section" hidden\$="[[!shouldShowExperiments]]">
           <iron-icon class="setting-icon" icon="icons:build"></iron-icon>
@@ -200,34 +236,6 @@ Polymer({
             <div class="sub-section">
               <iron-icon icon="icons:error-outline"></iron-icon>
               <p inner-h-t-m-l="[[localize('experiments-disclaimer', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
-            </div>
-            <div id="data-limits-container" hidden\$="[[!supportsAccessKeyDataLimit]]">
-              <div class="selection-container">
-                <div class="content">
-                  <h3>[[localize('data-limits')]]</h3>
-                  <p>
-                    [[localize('data-limits-description', 'date', dataLimitsAvailabilityDate)]]<br>
-                    <span inner-h-t-m-l="[[localize('experiments-feedback', 'openLink', '<a href=https://docs.google.com/forms/d/e/1FAIpQLSfP7q9GnJCQyWMpFTLd9zwCm7cvUa-2NR8a8SznwMSbuRnrWg/viewform>', 'closeLink', '</a>')]]"></span>
-                  </p>
-                </div>
-                <!-- NOTE: The dropdown is not automatically sized to the button's width:
-                             https://github.com/PolymerElements/paper-dropdown-menu/issues/229 -->
-                <paper-dropdown-menu no-label-float="" horizontal-align="left">
-                  <paper-listbox slot="dropdown-content" selected="{{_computeDataLimitsEnabledName(isAccessKeyDataLimitEnabled)}}" attr-for-selected="name" on-selected-changed="_accessKeyDataLimitEnabledChanged">
-                    <paper-item name="enabled">[[localize('enabled')]]</paper-item>
-                    <paper-item name="disabled">[[localize('disabled')]]</paper-item>
-                  </paper-listbox>
-                </paper-dropdown-menu>
-              </div>
-              <div class="data-limits-input" hidden\$="[[!isAccessKeyDataLimitEnabled]]">
-                <paper-input id="accessKeyDataLimitInput" value="[[accessKeyDataLimit.value]]" label="Data limit per key" always-float-label="" allowed-pattern="[0-9]+" required="" auto-validate="" maxlength="9" on-keydown="_handleAccessKeyDataLimitInputKeyDown" on-blur="_requestSetAccessKeyDataLimit"></paper-input>
-                <paper-dropdown-menu no-label-float="">
-                  <paper-listbox id="accessKeyDataLimitUnits" slot="dropdown-content" selected="[[accessKeyDataLimit.unit]]" attr-for-selected="name" on-selected-changed="_requestSetAccessKeyDataLimit">
-                    <paper-item name="MB">MB</paper-item>
-                    <paper-item name="GB">GB</paper-item>
-                  </paper-listbox>
-                </paper-dropdown-menu>
-              </div>
             </div>
           </div>
         </div>
@@ -264,16 +272,14 @@ Polymer({
     accessKeyDataLimit: {type: Object, value: null},  // type: app.DisplayDataAmount
     supportsAccessKeyDataLimit:
         {type: Boolean, value: false},  // Whether the server supports data limits.
-    dataLimitsAvailabilityDate:
-        {type: String},  // Date by which the feature stops being an experiment.
+    showFeatureMetricsDisclaimer: {type: Boolean, value: false},
     isHostnameEditable: {type: Boolean, value: true},
     serverCreationDate: {type: String, value: null},
     serverLocation: {type: String, value: null},
     serverMonthlyCost: {type: String, value: null},
     serverMonthlyTransferLimit: {type: String, value: null},
     localize: {type: Function, readonly: true},
-    shouldShowExperiments:
-        {type: Boolean, computed: '_computeShouldShowExperiments(supportsAccessKeyDataLimit)'},
+    shouldShowExperiments: {type: Boolean, value: false},
   },
 
   setServerName: function(name) {
@@ -344,10 +350,6 @@ Polymer({
 
   _computeDataLimitsEnabledName: function(isAccessKeyDataLimitEnabled) {
     return isAccessKeyDataLimitEnabled ? 'enabled' : 'disabled';
-  },
-
-  _computeShouldShowExperiments: function(supportsAccessKeyDataLimit) {
-    return supportsAccessKeyDataLimit;
   },
 
   _validatePort: function(value) {

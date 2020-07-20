@@ -78,6 +78,10 @@ export function bindService(
   apiServer.put(`${apiPrefix}/name`, service.renameServer.bind(service));
   apiServer.get(`${apiPrefix}/server`, service.getServer.bind(service));
   apiServer.put(
+      `${apiPrefix}/server/access-key-data-limit`, service.setAccessKeyDataLimit.bind(service));
+  apiServer.del(
+      `${apiPrefix}/server/access-key-data-limit`, service.removeAccessKeyDataLimit.bind(service));
+  apiServer.put(
       `${apiPrefix}/server/hostname-for-access-keys`,
       service.setHostnameForAccessKeys.bind(service));
   apiServer.put(
@@ -94,13 +98,21 @@ export function bindService(
   apiServer.get(`${apiPrefix}/metrics/enabled`, service.getShareMetrics.bind(service));
   apiServer.put(`${apiPrefix}/metrics/enabled`, service.setShareMetrics.bind(service));
 
-  // Experimental APIs
+  // Redirect former experimental APIs
   apiServer.put(
       `${apiPrefix}/experimental/access-key-data-limit`,
-      service.setAccessKeyDataLimit.bind(service));
+      redirect(`${apiPrefix}/server/access-key-data-limit`));
   apiServer.del(
       `${apiPrefix}/experimental/access-key-data-limit`,
-      service.removeAccessKeyDataLimit.bind(service));
+      redirect(`${apiPrefix}/server/access-key-data-limit`));
+}
+
+// Returns a request handler that redirects a bound request path to `url` with HTTP status code 308.
+function redirect(url: string): restify.RequestHandlerType {
+  return (req: restify.Request, res: restify.Response, next: restify.Next) => {
+    logging.debug(`Redirecting ${req.url} => ${url}`);
+    res.redirect(308, url, next);
+  };
 }
 
 function validateAccessKeyId(accessKeyId: unknown): string {
