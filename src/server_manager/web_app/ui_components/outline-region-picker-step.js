@@ -13,30 +13,18 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import '@polymer/polymer/polymer-legacy.js';
-
 import '@polymer/paper-button/paper-button.js';
 import '@polymer/paper-progress/paper-progress.js';
 import '@polymer/iron-icon/iron-icon.js';
 import '@polymer/iron-icons/iron-icons.js';
 import './cloud-install-styles.js';
 import './outline-step-view.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-const FLAG_IMAGE_DIR = 'images/flags';
-const flagById = {
-  ams: `${FLAG_IMAGE_DIR}/netherlands.png`,
-  sgp: `${FLAG_IMAGE_DIR}/singapore.png`,
-  blr: `${FLAG_IMAGE_DIR}/india.png`,
-  fra: `${FLAG_IMAGE_DIR}/germany.png`,
-  lon: `${FLAG_IMAGE_DIR}/uk.png`,
-  sfo: `${FLAG_IMAGE_DIR}/us.png`,
-  tor: `${FLAG_IMAGE_DIR}/canada.png`,
-  nyc: `${FLAG_IMAGE_DIR}/us.png`,
-};
 
-Polymer({
-  _template: html`
+import {html, PolymerElement} from '@polymer/polymer';
+
+export class OutlineRegionPicker extends PolymerElement {
+  static get template() {
+    return html`
     <style include="cloud-install-styles"></style>
 
     <style>
@@ -106,95 +94,85 @@ Polymer({
       <span slot="step-title">[[localize('region-title')]]</span>
       <span slot="step-description">[[localize('region-description')]]</span>
       <span slot="step-action">
-        <paper-button id="createServerButton" on-tap="handleCreateServerTap" disabled\$="[[!isCreateButtonEnabled(creatingServer, selectedCityId)]]">
+        <paper-button id="createServerButton" on-tap="_handleCreateServerTap" disabled\$="[[!_isCreateButtonEnabled(creatingServer, selectedLocationId)]]">
           [[localize('region-setup')]]
         </paper-button>
       </span>
       <div class="card-content" id="cityContainer">
-        <template is="dom-repeat" items="{{cities}}">
-          <input type="radio" city\$="{{item}}" name="city" id\$="{{item}}" disabled\$="{{!isAvailable(availableRegionIds, item)}}" on-change="citySelected" \\="">
+        <template is="dom-repeat" items="{{locations}}">
+          <input type="radio" location\$="{{item}}" name="location" id\$="{{item}}" disabled\$="{{!_isLocationAvailable(item)}}" on-change="_locationSelected" \\="">
           <label for\$="{{item}}" class="city-button">
-            <iron-icon icon="check-circle" hidden\$="{{!_isSelectedCity(selectedCityId, item)}}"></iron-icon>
-            <img class="flag" src\$="{{getFlag(item)}}">
-            <div class="city-name">{{getCityName(item, localize)}}</div>
+            <iron-icon icon="check-circle" hidden\$="{{!_isLocationSelected(selectedLocationId, item.id)}}"></iron-icon>
+            <img class="flag" src\$="{{item.flag}}">
+            <div class="city-name">{{item.name}}</div>
           </label>
         </template>
       </div>
       <paper-progress hidden\$="[[!creatingServer]]" indeterminate="" class="slow"></paper-progress>
     </outline-step-view>
-`,
+    `;
+  }
 
-  is: 'outline-region-picker-step',
+  static get is() {
+    return 'outline-region-picker-step';
+  }
 
-  properties: {
-    cities: {
-      type: Array,
-      readonly: true,
-      value: Object.keys(flagById),
-    },
-    availableRegionIds: {
-      // One-to-one map from cityIds to regionIds.
-      type: Object,
-      readonly: true,
-      value: {},
-    },
-    selectedCityId: String,
-    creatingServer: Boolean,
-    localize: {
-      type: Function,
-      readonly: true,
-    },
-  },
+  static get properties() {
+    return {
+      locations: {
+        type: Array,
+        readonly: true,
+      },
+      selectedLocationId: String,
+      creatingServer: {
+        type: Boolean,
+        value: false,
+      },
+      localize: {
+        type: Function,
+        readonly: true,
+      },
+    };
+  }
 
-  handleCreateServerTap: function() {
-    this.creatingServer = true;
-    this.fire('RegionSelected');
-  },
+  init() {
+    this._clearSelectedLocation();
+  }
 
-  getCityName: function(cityId, localize) {
-    if (!this.localize) {
-      return '';
-    }
-    return this.localize(`city-${cityId}`) || '';
-  },
-
-  getFlag: function(cityId) {
-    return flagById[cityId] || '';
-  },
-
-  isAvailable: function(map, cityId) {
-    if (!map) {
-      return false;
-    }
-    return cityId in map;
-  },
-
-  citySelected: function(event) {
-    this.selectedCityId = event.model.get('item');
-  },
-
-  _isSelectedCity: function(selectedCityId, cityId) {
-    if (!selectedCityId) {
-      return false;
-    }
-    return selectedCityId === cityId;
-  },
-
-  getSelectedRegionId: function() {
-    return this.availableRegionIds[this.selectedCityId];
-  },
-
-  init: function() {
-    this.creatingServer = false;
-    this.selectedCityId = null;
+  _clearSelectedLocation() {
+    this.selectedLocationId = null;
     // Ensure that no radio button is checked.
     const checkedCityElement = this.$.cityContainer.querySelector('input[name="city"]:checked');
     if (checkedCityElement) {
       checkedCityElement.checked = false;
     }
-  },
-
-  isCreateButtonEnabled: function(creatingServer, selectedCityId) {
-    return !creatingServer && selectedCityId;
   }
-});
+
+  _isLocationAvailable(location) {
+    return location.available;
+  }
+
+  _isLocationSelected(selectedLocationId, id) {
+    if (!selectedLocationId) {
+      return false;
+    }
+    return selectedLocationId === id;
+  }
+
+  _isCreateButtonEnabled(creatingServer, selectedLocationId) {
+    return !creatingServer && selectedLocationId;
+  }
+
+  _locationSelected(event) {
+    this.selectedLocationId = event.model.get('item').id;
+  }
+
+  _handleCreateServerTap() {
+    const selectedLocation = this.locations.find(location => location.id === this.selectedLocationId);
+    const params = {bubbles: true, composed: true, detail: {selectedRegionId: selectedLocation.locationId}};
+    const customEvent = new CustomEvent('RegionSelected', params);
+    this.dispatchEvent(customEvent);
+  }
+}
+
+customElements.define(OutlineRegionPicker.is, OutlineRegionPicker);

@@ -28,6 +28,7 @@ import {parseManualServerConfig} from './management_urls';
 
 import {AppRoot} from './ui_components/app-root.js';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
+import {RegionId} from "../model/server";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -724,16 +725,43 @@ export class App {
         })
         .then(
             (map) => {
-              // Change from a list of regions per location to just one region per location.
-              // Where there are multiple working regions in one location, arbitrarily use the
-              // first.
-              const availableRegionIds: {[cityId: string]: server.RegionId} = {};
-              for (const cityId in map) {
-                if (map[cityId].length > 0) {
-                  availableRegionIds[cityId] = map[cityId][0];
-                }
-              }
-              regionPicker.availableRegionIds = availableRegionIds;
+              // // Change from a list of regions per location to just one region per location.
+              // // Where there are multiple working regions in one location, arbitrarily use the
+              // // first.
+              // const availableRegionIds: {[cityId: string]: server.RegionId} = {};
+              // for (const cityId in map) {
+              //   if (map[cityId].length > 0) {
+              //     availableRegionIds[cityId] = map[cityId][0];
+              //   }
+              // }
+              // regionPicker.availableRegionIds = availableRegionIds;
+
+              const FLAG_IMAGE_DIR = 'images/flags';
+              const flagByCityId: {[cityId: string]: string} = {
+                ams: `${FLAG_IMAGE_DIR}/netherlands.png`,
+                sgp: `${FLAG_IMAGE_DIR}/singapore.png`,
+                blr: `${FLAG_IMAGE_DIR}/india.png`,
+                fra: `${FLAG_IMAGE_DIR}/germany.png`,
+                lon: `${FLAG_IMAGE_DIR}/uk.png`,
+                sfo: `${FLAG_IMAGE_DIR}/us.png`,
+                tor: `${FLAG_IMAGE_DIR}/canada.png`,
+                nyc: `${FLAG_IMAGE_DIR}/us.png`,
+              };
+
+              console.log(JSON.stringify(map));
+              const locations: Array<{}> = [];
+              Object.entries(map).forEach(([cityId, regionIds]) => {
+                locations.push({
+                  id: cityId,
+                  name: this.appRoot.localize(`city-${cityId}`),
+                  flag: flagByCityId[cityId] || '',
+                  locationId: regionIds[0],
+                  available: regionIds.length > 0,
+                });
+              });
+
+              console.log(JSON.stringify(locations));
+              regionPicker.locations = locations;
             },
             (e) => {
               console.error(`Failed to get list of available regions: ${e}`);

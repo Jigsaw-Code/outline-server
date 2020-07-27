@@ -629,7 +629,7 @@ export class AppRoot extends mixinBehaviors
 
   handleRegionSelected(/** @type {Event} */ e) {
     this.fire('SetUpServerRequested', {
-      regionId: this.$.regionPicker.getSelectedRegionId(),
+      regionId: e.detail.selectedRegionId,
     });
   }
 
