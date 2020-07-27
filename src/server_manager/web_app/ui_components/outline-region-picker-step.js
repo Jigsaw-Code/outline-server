@@ -168,8 +168,13 @@ export class OutlineRegionPicker extends PolymerElement {
   }
 
   _handleCreateServerTap() {
-    const selectedLocation = this.locations.find(location => location.id === this.selectedLocationId);
-    const params = {bubbles: true, composed: true, detail: {selectedRegionId: selectedLocation.locationId}};
+    const selectedLocation =
+        this.locations.find(location => location.id === this.selectedLocationId);
+    const params = {
+      bubbles: true,
+      composed: true,
+      detail: {selectedRegionId: selectedLocation.locationId}
+    };
     const customEvent = new CustomEvent('RegionSelected', params);
     this.dispatchEvent(customEvent);
   }
