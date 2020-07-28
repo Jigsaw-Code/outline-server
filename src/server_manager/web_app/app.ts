@@ -1258,10 +1258,9 @@ export class App {
 
   private createLocationModel(cityId: string, regionIds: string[]): Location {
     return {
-      id: cityId,
+      id: regionIds[0],
       name: this.appRoot.localize(`city-${cityId}`),
       flag: DIGITALOCEAN_FLAG_MAPPING[cityId] || '',
-      locationId: regionIds[0],
       available: regionIds.length > 0,
     };
   }

@@ -19,7 +19,7 @@ import '@polymer/iron-icon/iron-icon';
 import '@polymer/iron-icons/iron-icons';
 import './outline-step-view';
 
-import {css, customElement, html, LitElement, property} from 'lit-element';
+import {css, customElement, html, LitElement, property, unsafeCSS} from 'lit-element';
 
 import {styleElement} from './cloud-install-styles';
 
@@ -27,19 +27,20 @@ export interface Location {
   id: string;
   name: string;
   flag: string;
-  locationId: string;
   available: boolean;
 }
 
 @customElement('outline-region-picker-step')
 export class OutlineRegionPicker extends LitElement {
   @property({type: Array}) locations: Location[] = [];
-  @property({type: String}) selectedLocationId: string;
-  @property({type: Boolean}) isServerBeingCreated: boolean;
+  @property({type: String}) selectedLocationId: string = null;
+  @property({type: Boolean}) isServerBeingCreated = false;
   @property({type: Function}) localize: Function;
 
   static get styles() {
+    const styles = styleElement.querySelector('template').content.textContent;
     return css`
+      ${unsafeCSS(styles)}
       input[type="radio"] {
         display: none;
       }
@@ -105,9 +106,7 @@ export class OutlineRegionPicker extends LitElement {
   }
 
   render() {
-    const styles = styleElement.querySelector('template').content;
     return html`
-    ${styles}
     <outline-step-view display-action="">
       <span slot="step-title">${this.localize('region-title')}</span>
       <span slot="step-description">${this.localize('region-description')}</span>
@@ -119,26 +118,22 @@ export class OutlineRegionPicker extends LitElement {
       <div class="card-content" id="cityContainer">
         ${this.locations.map(item => {
           return html`
-          <input type="radio" id="card-${item.id}" name="${item.id}" ?disabled="${!item.available}" .checked="${this._isLocationSelected(this.selectedLocationId, item.id)}" @tap="${this._locationSelected}">
+          <input type="radio" id="card-${item.id}" name="${item.id}" ?disabled="${!item.available}" .checked="${this.selectedLocationId === item.id}" @tap="${this._locationSelected}">
           <label for="card-${item.id}" class="city-button">
-            <iron-icon icon="check-circle" ?hidden="${!this._isLocationSelected(this.selectedLocationId, item.id)}"></iron-icon>
+            ${this.selectedLocationId === item.id ? html`<iron-icon icon="check-circle"></iron-icon>` : ''}
             <img class="flag" src="${item.flag}">
             <div class="city-name">${item.name}</div>
           </label>`;
         })}
       </div>
-      <paper-progress .hidden="${!this.isServerBeingCreated}" indeterminate="" class="slow"></paper-progress>
+      ${this.isServerBeingCreated ? html`<paper-progress indeterminate="" class="slow"></paper-progress>` : ''}
     </outline-step-view>
     `;
   }
 
-  init(): void {
+  reset(): void {
     this.isServerBeingCreated = false;
     this.selectedLocationId = null;
-  }
-
-  _isLocationSelected(selectedLocationId: string, locationId: string): boolean {
-    return selectedLocationId === locationId;
   }
 
   _isCreateButtonEnabled(isCreatingServer: boolean, selectedLocationId: string): boolean {
@@ -157,7 +152,7 @@ export class OutlineRegionPicker extends LitElement {
     const params = {
       bubbles: true,
       composed: true,
-      detail: {selectedRegionId: selectedLocation.locationId}
+      detail: {selectedRegionId: selectedLocation.id}
     };
     const customEvent = new CustomEvent('RegionSelected', params);
     this.dispatchEvent(customEvent);

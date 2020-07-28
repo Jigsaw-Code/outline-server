@@ -590,7 +590,7 @@ export class AppRoot extends mixinBehaviors
 
   getAndShowRegionPicker() {
     this.currentPage = 'regionPicker';
-    this.$.regionPicker.init();
+    this.$.regionPicker.reset();
     return this.$.regionPicker;
   }
 
