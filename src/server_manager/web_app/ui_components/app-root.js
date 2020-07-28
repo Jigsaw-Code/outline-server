@@ -35,7 +35,7 @@ import './outline-intro-step.js';
 import './outline-language-picker.js';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
-import './outline-region-picker-step.js';
+import './outline-region-picker-step';
 import './outline-server-progress-step.js';
 import './outline-tos-view.js';
 

@@ -18,7 +18,7 @@ import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 
 // Polymer style module to share styles between steps
 // https://polymer-library.polymer-project.org/3.0/docs/devguide/style-shadow-dom#share-styles-between-elements
-const styleElement = document.createElement('dom-module');
+export const styleElement = document.createElement('dom-module');
 styleElement.appendChild(html`
 <style>
   :host {

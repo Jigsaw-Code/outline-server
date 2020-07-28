@@ -20,7 +20,7 @@ import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
-import {RegionId} from '../model/server';
+import {Location} from './ui_components/outline-region-picker-step';
 
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
@@ -37,6 +37,19 @@ const CHANGE_KEYS_PORT_VERSION = '1.0.0';
 const DATA_LIMITS_VERSION = '1.1.0';
 const CHANGE_HOSTNAME_VERSION = '1.2.0';
 const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
+
+// DigitalOcean mapping of regions to flags
+const FLAG_IMAGE_DIR = 'images/flags';
+const DIGITALOCEAN_FLAG_MAPPING: {[cityId: string]: string} = {
+  ams: `${FLAG_IMAGE_DIR}/netherlands.png`,
+  sgp: `${FLAG_IMAGE_DIR}/singapore.png`,
+  blr: `${FLAG_IMAGE_DIR}/india.png`,
+  fra: `${FLAG_IMAGE_DIR}/germany.png`,
+  lon: `${FLAG_IMAGE_DIR}/uk.png`,
+  sfo: `${FLAG_IMAGE_DIR}/us.png`,
+  tor: `${FLAG_IMAGE_DIR}/canada.png`,
+  nyc: `${FLAG_IMAGE_DIR}/us.png`,
+};
 
 function dataLimitToDisplayDataAmount(limit: server.DataLimit): DisplayDataAmount|null {
   if (!limit) {
@@ -724,42 +737,16 @@ export class App {
         })
         .then(
             (map) => {
-              // // Change from a list of regions per location to just one region per location.
-              // // Where there are multiple working regions in one location, arbitrarily use the
-              // // first.
-              // const availableRegionIds: {[cityId: string]: server.RegionId} = {};
-              // for (const cityId in map) {
-              //   if (map[cityId].length > 0) {
-              //     availableRegionIds[cityId] = map[cityId][0];
-              //   }
-              // }
-              // regionPicker.availableRegionIds = availableRegionIds;
-
-              const FLAG_IMAGE_DIR = 'images/flags';
-              const flagByCityId: {[cityId: string]: string} = {
-                ams: `${FLAG_IMAGE_DIR}/netherlands.png`,
-                sgp: `${FLAG_IMAGE_DIR}/singapore.png`,
-                blr: `${FLAG_IMAGE_DIR}/india.png`,
-                fra: `${FLAG_IMAGE_DIR}/germany.png`,
-                lon: `${FLAG_IMAGE_DIR}/uk.png`,
-                sfo: `${FLAG_IMAGE_DIR}/us.png`,
-                tor: `${FLAG_IMAGE_DIR}/canada.png`,
-                nyc: `${FLAG_IMAGE_DIR}/us.png`,
-              };
-
-              console.log(JSON.stringify(map));
-              const locations: Array<{}> = [];
+              const locations: Location[] = [];
               Object.entries(map).forEach(([cityId, regionIds]) => {
                 locations.push({
                   id: cityId,
                   name: this.appRoot.localize(`city-${cityId}`),
-                  flag: flagByCityId[cityId] || '',
+                  flag: DIGITALOCEAN_FLAG_MAPPING[cityId] || '',
                   locationId: regionIds[0],
                   available: regionIds.length > 0,
                 });
               });
-
-              console.log(JSON.stringify(locations));
               regionPicker.locations = locations;
             },
             (e) => {

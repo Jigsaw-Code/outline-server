@@ -13,21 +13,31 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import '@polymer/paper-button/paper-button.js';
-import '@polymer/paper-progress/paper-progress.js';
-import '@polymer/iron-icon/iron-icon.js';
-import '@polymer/iron-icons/iron-icons.js';
-import './cloud-install-styles.js';
-import './outline-step-view.js';
+import '@polymer/paper-button/paper-button';
+import '@polymer/paper-progress/paper-progress';
+import '@polymer/iron-icon/iron-icon';
+import '@polymer/iron-icons/iron-icons';
+import './outline-step-view';
+import {styleElement} from './cloud-install-styles';
+import {css, customElement, html, LitElement, property} from 'lit-element';
 
-import {html, PolymerElement} from '@polymer/polymer';
+export interface Location {
+  id: string;
+  name: string;
+  flag: string;
+  locationId: string;
+  available: boolean;
+}
 
-export class OutlineRegionPicker extends PolymerElement {
-  static get template() {
-    return html`
-    <style include="cloud-install-styles"></style>
+@customElement('outline-region-picker-step')
+export class OutlineRegionPicker extends LitElement {
+  @property({type: Array}) locations: Location[] = [];
+  @property({type: String}) selectedLocationId: string;
+  @property({type: Boolean}) isServerBeingCreated: boolean;
+  @property({type: Function}) localize: Function;
 
-    <style>
+  static get styles() {
+    return css`
       input[type="radio"] {
         display: none;
       }
@@ -89,85 +99,57 @@ export class OutlineRegionPicker extends PolymerElement {
         right: 0;
         margin: 6px;
       }
-    </style>
+    `;
+  }
+
+  render() {
+    const styles = styleElement.querySelector('template').content;
+    return html`
+    ${styles}
     <outline-step-view display-action="">
-      <span slot="step-title">[[localize('region-title')]]</span>
-      <span slot="step-description">[[localize('region-description')]]</span>
+      <span slot="step-title">${this.localize('region-title')}</span>
+      <span slot="step-description">${this.localize('region-description')}</span>
       <span slot="step-action">
-        <paper-button id="createServerButton" on-tap="_handleCreateServerTap" disabled\$="[[!_isCreateButtonEnabled(creatingServer, selectedLocationId)]]">
-          [[localize('region-setup')]]
+        <paper-button id="createServerButton" @tap="${this._handleCreateServerTap}" ?disabled="${!this._isCreateButtonEnabled(this.isServerBeingCreated, this.selectedLocationId)}">
+          ${this.localize('region-setup')}
         </paper-button>
       </span>
       <div class="card-content" id="cityContainer">
-        <template is="dom-repeat" items="{{locations}}">
-          <input type="radio" location\$="{{item}}" name="location" id\$="{{item}}" disabled\$="{{!_isLocationAvailable(item)}}" on-change="_locationSelected" \\="">
-          <label for\$="{{item}}" class="city-button">
-            <iron-icon icon="check-circle" hidden\$="{{!_isLocationSelected(selectedLocationId, item.id)}}"></iron-icon>
-            <img class="flag" src\$="{{item.flag}}">
-            <div class="city-name">{{item.name}}</div>
-          </label>
-        </template>
+        ${this.locations.map(item => {
+          return html`
+          <input type="radio" id="card-${item.id}" name="${item.id}" ?disabled="${!item.available}" .checked="${this._isLocationSelected(this.selectedLocationId, item.id)}" @tap="${this._locationSelected}">
+          <label for="card-${item.id}" class="city-button">
+            <iron-icon icon="check-circle" ?hidden="${!this._isLocationSelected(this.selectedLocationId, item.id)}"></iron-icon>
+            <img class="flag" src="${item.flag}">
+            <div class="city-name">${item.name}</div>
+          </label>`;
+        })}
       </div>
-      <paper-progress hidden\$="[[!creatingServer]]" indeterminate="" class="slow"></paper-progress>
+      <paper-progress .hidden="${!this.isServerBeingCreated}" indeterminate="" class="slow"></paper-progress>
     </outline-step-view>
     `;
   }
 
-  static get is() {
-    return 'outline-region-picker-step';
-  }
-
-  static get properties() {
-    return {
-      locations: {
-        type: Array,
-        readonly: true,
-      },
-      selectedLocationId: String,
-      creatingServer: {
-        type: Boolean,
-        value: false,
-      },
-      localize: {
-        type: Function,
-        readonly: true,
-      },
-    };
-  }
-
-  init() {
-    this._clearSelectedLocation();
-  }
-
-  _clearSelectedLocation() {
+  init(): void {
+    this.isServerBeingCreated = false;
     this.selectedLocationId = null;
-    // Ensure that no radio button is checked.
-    const checkedCityElement = this.$.cityContainer.querySelector('input[name="city"]:checked');
-    if (checkedCityElement) {
-      checkedCityElement.checked = false;
-    }
   }
 
-  _isLocationAvailable(location) {
-    return location.available;
+  _isLocationSelected(selectedLocationId: string, locationId: string): boolean {
+    return selectedLocationId === locationId;
   }
 
-  _isLocationSelected(selectedLocationId, id) {
-    if (!selectedLocationId) {
-      return false;
-    }
-    return selectedLocationId === id;
+  _isCreateButtonEnabled(isCreatingServer: boolean, selectedLocationId: string): boolean {
+    return !isCreatingServer && selectedLocationId != null;
   }
 
-  _isCreateButtonEnabled(creatingServer, selectedLocationId) {
-    return !creatingServer && selectedLocationId;
+  _locationSelected(event: Event): void {
+    const inputEl = event.target as HTMLInputElement;
+    this.selectedLocationId = inputEl.name;
   }
 
-  _locationSelected(event) {
-    this.selectedLocationId = event.model.get('item').id;
-  }
-
-  _handleCreateServerTap() {
+  _handleCreateServerTap(): void {
+    this.isServerBeingCreated = true;
     const selectedLocation =
         this.locations.find(location => location.id === this.selectedLocationId);
     const params = {
@@ -179,5 +161,3 @@ export class OutlineRegionPicker extends PolymerElement {
     this.dispatchEvent(customEvent);
   }
 }
-
-customElements.define(OutlineRegionPicker.is, OutlineRegionPicker);
