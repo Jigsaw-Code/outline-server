@@ -20,13 +20,13 @@ import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
-import {Location} from './ui_components/outline-region-picker-step';
 
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
+import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
 
 // The Outline DigitalOcean team's referral code:

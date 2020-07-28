@@ -18,8 +18,10 @@ import '@polymer/paper-progress/paper-progress';
 import '@polymer/iron-icon/iron-icon';
 import '@polymer/iron-icons/iron-icons';
 import './outline-step-view';
-import {styleElement} from './cloud-install-styles';
+
 import {css, customElement, html, LitElement, property} from 'lit-element';
+
+import {styleElement} from './cloud-install-styles';
 
 export interface Location {
   id: string;
@@ -110,22 +112,28 @@ export class OutlineRegionPicker extends LitElement {
       <span slot="step-title">${this.localize('region-title')}</span>
       <span slot="step-description">${this.localize('region-description')}</span>
       <span slot="step-action">
-        <paper-button id="createServerButton" @tap="${this._handleCreateServerTap}" ?disabled="${!this._isCreateButtonEnabled(this.isServerBeingCreated, this.selectedLocationId)}">
+        <paper-button id="createServerButton" @tap="${this._handleCreateServerTap}" ?disabled="${
+        !this._isCreateButtonEnabled(this.isServerBeingCreated, this.selectedLocationId)}">
           ${this.localize('region-setup')}
         </paper-button>
       </span>
       <div class="card-content" id="cityContainer">
         ${this.locations.map(item => {
-          return html`
-          <input type="radio" id="card-${item.id}" name="${item.id}" ?disabled="${!item.available}" .checked="${this._isLocationSelected(this.selectedLocationId, item.id)}" @tap="${this._locationSelected}">
+      return html`
+          <input type="radio" id="card-${item.id}" name="${item.id}" ?disabled="${
+          !item.available}" .checked="${
+          this._isLocationSelected(
+              this.selectedLocationId, item.id)}" @tap="${this._locationSelected}">
           <label for="card-${item.id}" class="city-button">
-            <iron-icon icon="check-circle" ?hidden="${!this._isLocationSelected(this.selectedLocationId, item.id)}"></iron-icon>
+            <iron-icon icon="check-circle" ?hidden="${
+          !this._isLocationSelected(this.selectedLocationId, item.id)}"></iron-icon>
             <img class="flag" src="${item.flag}">
             <div class="city-name">${item.name}</div>
           </label>`;
-        })}
+    })}
       </div>
-      <paper-progress .hidden="${!this.isServerBeingCreated}" indeterminate="" class="slow"></paper-progress>
+      <paper-progress .hidden="${
+        !this.isServerBeingCreated}" indeterminate="" class="slow"></paper-progress>
     </outline-step-view>
     `;
   }
