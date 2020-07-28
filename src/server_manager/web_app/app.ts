@@ -737,15 +737,8 @@ export class App {
         })
         .then(
             (map) => {
-              const locations: Location[] = [];
-              Object.entries(map).forEach(([cityId, regionIds]) => {
-                locations.push({
-                  id: cityId,
-                  name: this.appRoot.localize(`city-${cityId}`),
-                  flag: DIGITALOCEAN_FLAG_MAPPING[cityId] || '',
-                  locationId: regionIds[0],
-                  available: regionIds.length > 0,
-                });
+              const locations = Object.entries(map).map(([cityId, regionIds]) => {
+                return this.createLocationModel(cityId, regionIds);
               });
               regionPicker.locations = locations;
             },
@@ -1261,5 +1254,15 @@ export class App {
     this.appRoot.setLanguage(languageCode, languageDir);
     document.documentElement.setAttribute('dir', languageDir);
     window.localStorage.setItem('overrideLanguage', languageCode);
+  }
+
+  private createLocationModel(cityId: string, regionIds: string[]): Location {
+    return {
+      id: cityId,
+      name: this.appRoot.localize(`city-${cityId}`),
+      flag: DIGITALOCEAN_FLAG_MAPPING[cityId] || '',
+      locationId: regionIds[0],
+      available: regionIds.length > 0,
+    };
   }
 }
