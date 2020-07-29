@@ -118,7 +118,7 @@ export class OutlineRegionPicker extends LitElement {
       <div class="card-content" id="cityContainer">
         ${this.locations.map(item => {
           return html`
-          <input type="radio" id="card-${item.id}" name="${item.id}" ?disabled="${!item.available}" .checked="${this.selectedLocationId === item.id}" @tap="${this._locationSelected}">
+          <input type="radio" id="card-${item.id}" name="city" value="${item.id}" ?disabled="${!item.available}" .checked="${this.selectedLocationId === item.id}" @change="${this._locationSelected}">
           <label for="card-${item.id}" class="city-button">
             ${this.selectedLocationId === item.id ? html`<iron-icon icon="check-circle"></iron-icon>` : ''}
             <img class="flag" src="${item.flag}">
@@ -142,17 +142,15 @@ export class OutlineRegionPicker extends LitElement {
 
   _locationSelected(event: Event): void {
     const inputEl = event.target as HTMLInputElement;
-    this.selectedLocationId = inputEl.name;
+    this.selectedLocationId = inputEl.value;
   }
 
   _handleCreateServerTap(): void {
     this.isServerBeingCreated = true;
-    const selectedLocation =
-        this.locations.find(location => location.id === this.selectedLocationId);
     const params = {
       bubbles: true,
       composed: true,
-      detail: {selectedRegionId: selectedLocation.id}
+      detail: {selectedRegionId: this.selectedLocationId}
     };
     const customEvent = new CustomEvent('RegionSelected', params);
     this.dispatchEvent(customEvent);
