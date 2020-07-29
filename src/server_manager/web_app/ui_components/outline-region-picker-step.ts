@@ -21,7 +21,7 @@ import './outline-step-view';
 
 import {css, customElement, html, LitElement, property, unsafeCSS} from 'lit-element';
 
-import {styleElement} from './cloud-install-styles';
+import {COMMON_STYLES} from './cloud-install-styles';
 
 export interface Location {
   id: string;
@@ -38,9 +38,8 @@ export class OutlineRegionPicker extends LitElement {
   @property({type: Function}) localize: Function;
 
   static get styles() {
-    const styles = styleElement.querySelector('template').content.textContent;
     return css`
-      ${unsafeCSS(styles)}
+      ${COMMON_STYLES}
       input[type="radio"] {
         display: none;
       }
