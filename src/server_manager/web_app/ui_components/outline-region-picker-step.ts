@@ -38,8 +38,7 @@ export class OutlineRegionPicker extends LitElement {
   @property({type: Function}) localize: Function;
 
   static get styles() {
-    return css`
-      ${COMMON_STYLES}
+    return [COMMON_STYLES, css`
       input[type="radio"] {
         display: none;
       }
@@ -101,7 +100,7 @@ export class OutlineRegionPicker extends LitElement {
         right: 0;
         margin: 6px;
       }
-    `;
+    `];
   }
 
   render() {
