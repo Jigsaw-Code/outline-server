@@ -58,7 +58,6 @@ export class OutlineRegionPicker extends LitElement {
         min-width: calc(25% - 24px);
         position: relative;
         margin: 4px;
-        padding-top: 24px;
         text-align: center;
         border: 1px solid;
         border-color: rgba(0, 0, 0, 0);
@@ -93,12 +92,14 @@ export class OutlineRegionPicker extends LitElement {
         flex-flow: wrap;
         padding-top: 24px;
       }
+      .card-header {
+        height: 24px;
+        display: flex;
+        justify-content: flex-end;
+      }
       iron-icon {
         color: var(--primary-green);
-        position: absolute;
-        top: 0;
-        right: 0;
-        margin: 6px;
+        padding: 6px 6px 0px 6px;
       }
     `];
   }
@@ -118,7 +119,9 @@ export class OutlineRegionPicker extends LitElement {
           return html`
           <input type="radio" id="card-${item.id}" name="city" value="${item.id}" ?disabled="${!item.available}" .checked="${this.selectedLocationId === item.id}" @change="${this._locationSelected}">
           <label for="card-${item.id}" class="city-button">
-            ${this.selectedLocationId === item.id ? html`<iron-icon icon="check-circle"></iron-icon>` : ''}
+            <div class="card-header">
+              ${this.selectedLocationId === item.id ? html`<iron-icon icon="check-circle"></iron-icon>` : ''}
+            </div>
             <img class="flag" src="${item.flag}">
             <div class="city-name">${item.name}</div>
           </label>`;
