@@ -35,7 +35,7 @@ import './outline-intro-step.js';
 import './outline-language-picker.js';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
-import './outline-region-picker-step.js';
+import './outline-region-picker-step';
 import './outline-server-progress-step.js';
 import './outline-tos-view.js';
 
@@ -590,7 +590,7 @@ export class AppRoot extends mixinBehaviors
 
   getAndShowRegionPicker() {
     this.currentPage = 'regionPicker';
-    this.$.regionPicker.init();
+    this.$.regionPicker.reset();
     return this.$.regionPicker;
   }
 
@@ -629,7 +629,7 @@ export class AppRoot extends mixinBehaviors
 
   handleRegionSelected(/** @type {Event} */ e) {
     this.fire('SetUpServerRequested', {
-      regionId: this.$.regionPicker.getSelectedRegionId(),
+      regionId: e.detail.selectedRegionId,
     });
   }
 
