@@ -198,34 +198,34 @@ export class App {
       manualServerEntryEl.enableDoneButton = isValid;
     });
 
-    appRoot.addEventListener('ManualServerEntered', (event: CustomEvent) => {
+    appRoot.addEventListener('ManualServerEntered', async (event: CustomEvent) => {
       const userInput = event.detail.userInput;
       const manualServerEntryEl = appRoot.getManualServerEntry();
-      this.createManualServer(userInput)
-          .then(() => {
-            // Clear fields on outline-manual-server-entry (e.g. dismiss the connecting popup).
-            manualServerEntryEl.clear();
-          })
-          .catch((e: Error) => {
-            // Remove the progress indicator.
-            manualServerEntryEl.showConnection = false;
-            // Display either error dialog or feedback depending on error type.
-            if (e instanceof errors.UnreachableServerError) {
-              const errorTitle = appRoot.localize('error-server-unreachable-title');
-              const errorMessage = appRoot.localize('error-server-unreachable');
-              this.appRoot.showManualServerError(errorTitle, errorMessage);
-            } else {
-              // TODO(alalama): with UI validation, this code path never gets executed. Remove?
-              let errorMessage = '';
-              if (e.message) {
-                errorMessage += `${e.message}\n`;
-              }
-              if (userInput) {
-                errorMessage += userInput;
-              }
-              appRoot.openManualInstallFeedback(errorMessage);
-            }
-          });
+
+      try {
+        // Clear fields on outline-manual-server-entry (e.g. dismiss the connecting popup).
+        manualServerEntryEl.clear();
+      } catch (e) {
+        // Remove the progress indicator.
+        manualServerEntryEl.showConnection = false;
+        // Display either error dialog or feedback depending on error type.
+        if (e instanceof errors.UnreachableServerError) {
+          const errorTitle = appRoot.localize('error-server-unreachable-title');
+          const errorMessage = appRoot.localize('error-server-unreachable');
+          this.appRoot.showManualServerError(errorTitle, errorMessage);
+        } else {
+          // TODO(alalama): with UI validation, this code path never gets executed. Remove?
+          let errorMessage = '';
+          if (e.message) {
+            errorMessage += `${e.message}\n`;
+          }
+          if (userInput) {
+            errorMessage += userInput;
+          }
+          appRoot.openManualInstallFeedback(errorMessage);
+        }
+      }
+      await this.createManualServer(userInput);
     });
 
     appRoot.addEventListener('EnableMetricsRequested', (event: CustomEvent) => {
@@ -294,19 +294,15 @@ export class App {
         this.enterDigitalOceanMode(accessToken).catch(e => [] as server.ManagedServer[]) :
         Promise.resolve([]);
 
-    return Promise.all([manualServersPromise, managedServersPromise])
-        .then(([manualServers, managedServers]) => {
-          const installedManagedServers =
-              managedServers.filter(server => server.isInstallCompleted());
-          const serverBeingCreated = managedServers.find(server => !server.isInstallCompleted());
-          if (!!serverBeingCreated) {
-            this.syncServerCreationToUi(serverBeingCreated);
-          }
-          return this.syncServersToDisplay(manualServers.concat(installedManagedServers));
-        })
-        .then(() => {
-          this.maybeShowLastDisplayedServer();
-        });
+    const [manualServers, managedServers] = await Promise.all([manualServersPromise, managedServersPromise]);
+    const installedManagedServers =
+        managedServers.filter(server => server.isInstallCompleted());
+    const serverBeingCreated = managedServers.find(server => !server.isInstallCompleted());
+    if (!!serverBeingCreated) {
+      this.syncServerCreationToUi(serverBeingCreated);
+    }
+    await this.syncServersToDisplay(manualServers.concat(installedManagedServers));
+    this.maybeShowLastDisplayedServer();
   }
 
   private async syncServersToDisplay(servers: server.Server[]) {
@@ -370,12 +366,11 @@ export class App {
   // Updates the UI with the stored display servers and server creation in progress, if any.
   private async syncDisplayServersToUi() {
     const displayServerBeingCreated = this.getDisplayServerBeingCreated();
-    await this.displayServerRepository.listServers().then((displayServers) => {
-      if (!!displayServerBeingCreated) {
-        displayServers.push(displayServerBeingCreated);
-      }
-      this.appRoot.serverList = displayServers;
-    });
+    const displayServers = await this.displayServerRepository.listServers();
+    if (!!displayServerBeingCreated) {
+      displayServers.push(displayServerBeingCreated);
+    }
+    this.appRoot.serverList = displayServers;
   }
 
   // Removes `displayServer` from the UI.
@@ -488,28 +483,28 @@ export class App {
         reject(new Error('User canceled'));
       };
       const oauthUi = this.appRoot.getDigitalOceanOauthFlow(cancelAccountStateVerification);
-      const query = () => {
+      const query = async () => {
         if (cancelled) {
           return;
         }
-        this.digitalOceanRetry(() => {
-              if (cancelled) {
-                return Promise.reject('Authorization cancelled');
-              }
-              return doSession.getAccount();
-            })
-            .then((account) => {
-              authEvents.emit('account-update', account);
-            })
-            .catch((error) => {
-              if (!cancelled) {
-                this.showIntro();
-                const msg = `Failed to get DigitalOcean account information: ${error}`;
-                console.error(msg);
-                this.appRoot.showError(this.appRoot.localize('error-do-account-info'));
-                reject(new Error(msg));
-              }
-            });
+
+        try {
+          const account = await this.digitalOceanRetry(() => {
+            if (cancelled) {
+              return Promise.reject('Authorization cancelled');
+            }
+            return doSession.getAccount();
+          });
+          authEvents.emit('account-update', account);
+        } catch (error) {
+          if (!cancelled) {
+            this.showIntro();
+            const msg = `Failed to get DigitalOcean account information: ${error}`;
+            console.error(msg);
+            this.appRoot.showError(this.appRoot.localize('error-do-account-info'));
+            reject(new Error(msg));
+          }
+        }
       };
 
       authEvents.on('account-update', (account: digitalocean_api.Account) => {
@@ -549,7 +544,7 @@ export class App {
         }
       });
 
-      query();
+      return query();
     });
   }
 
@@ -639,8 +634,8 @@ export class App {
     this.appRoot.showNotification(this.appRoot.localize('notification-app-update'), 60000);
   }
 
-  private connectToDigitalOcean() {
-    const accessToken = this.digitalOceanTokenManager.getStoredToken();
+  private async connectToDigitalOcean() {
+    let accessToken = this.digitalOceanTokenManager.getStoredToken();
     if (accessToken) {
       this.enterDigitalOceanMode(accessToken).then((managedServers) => {
         if (!!this.serverBeingCreated) {
@@ -653,6 +648,7 @@ export class App {
       });
       return;
     }
+
     const session = runDigitalOceanOauth();
     const handleOauthFlowCanceled = () => {
       session.cancel();
@@ -660,37 +656,33 @@ export class App {
     };
     this.appRoot.getAndShowDigitalOceanOauthFlow(handleOauthFlowCanceled);
 
-    session.result
-        .then((accessToken) => {
-          // Save accessToken to storage. DigitalOcean tokens
-          // expire after 30 days, unless they are manually revoked by the user.
-          // After 30 days the user will have to sign into DigitalOcean again.
-          // Note we cannot yet use DigitalOcean refresh tokens, as they require
-          // a client_secret to be stored on a server and not visible to end users
-          // in client-side JS.  More details at:
-          // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
-          this.digitalOceanTokenManager.writeTokenToStorage(accessToken);
-          this.enterDigitalOceanMode(accessToken).then((managedServers) => {
-            if (managedServers.length > 0) {
-              this.syncServersToDisplay(managedServers).then(() => {
-                // Show the first server in the list since the user just signed in to DO.
-                const displayServer = this.appRoot.serverList.find(
-                    (displayServer: DisplayServer) => displayServer.isManaged);
-                this.showServerFromRepository(displayServer);
-              });
-            } else {
-              this.showCreateServer();
-            }
-          });
-        })
-        .catch((error) => {
-          if (!session.isCancelled()) {
-            this.clearCredentialsAndShowIntro();
-            bringToFront();
-            console.error(`DigitalOcean authentication failed: ${error}`);
-            this.appRoot.showError(this.appRoot.localize('error-do-auth'));
-          }
-        });
+    try {
+      accessToken = await session.result;
+      // Save accessToken to storage. DigitalOcean tokens
+      // expire after 30 days, unless they are manually revoked by the user.
+      // After 30 days the user will have to sign into DigitalOcean again.
+      // Note we cannot yet use DigitalOcean refresh tokens, as they require
+      // a client_secret to be stored on a server and not visible to end users
+      // in client-side JS.  More details at:
+      // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
+      this.digitalOceanTokenManager.writeTokenToStorage(accessToken);
+      const managedServers = await this.enterDigitalOceanMode(accessToken);
+      if (managedServers.length > 0) {
+        await this.syncServersToDisplay(managedServers);
+        // Show the first server in the list since the user just signed in to DO.
+        const displayServer = this.appRoot.serverList.find((displayServer: DisplayServer) => displayServer.isManaged);
+        this.showServerFromRepository(displayServer);
+      } else {
+        this.showCreateServer();
+      }
+    } catch (error) {
+      if (!session.isCancelled()) {
+        this.clearCredentialsAndShowIntro();
+        bringToFront();
+        console.error(`DigitalOcean authentication failed: ${error}`);
+        this.appRoot.showError(this.appRoot.localize('error-do-auth'));
+      }
+    }
   }
 
   // Clears the credentials and returns to the intro screen.
@@ -715,30 +707,29 @@ export class App {
   }
 
   // Opens the screen to create a server.
-  private showCreateServer() {
+  private async showCreateServer() {
     const regionPicker = this.appRoot.getAndShowRegionPicker();
-    // The region picker initially shows all options as disabled. Options are enabled by this code,
-    // after checking which regions are available.
-    this.digitalOceanRetry(() => {
-          return this.digitalOceanRepository.getRegionMap();
-        })
-        .then(
-            (map) => {
-              // Change from a list of regions per location to just one region per location.
-              // Where there are multiple working regions in one location, arbitrarily use the
-              // first.
-              const availableRegionIds: {[cityId: string]: server.RegionId} = {};
-              for (const cityId in map) {
-                if (map[cityId].length > 0) {
-                  availableRegionIds[cityId] = map[cityId][0];
-                }
-              }
-              regionPicker.availableRegionIds = availableRegionIds;
-            },
-            (e) => {
-              console.error(`Failed to get list of available regions: ${e}`);
-              this.appRoot.showError(this.appRoot.localize('error-do-regions'));
-            });
+
+    try {
+      // The region picker initially shows all options as disabled. Options are enabled by this code,
+      // after checking which regions are available.
+      const map = await this.digitalOceanRetry(() => {
+        return this.digitalOceanRepository.getRegionMap();
+      });
+      // Change from a list of regions per location to just one region per location.
+      // Where there are multiple working regions in one location, arbitrarily use the
+      // first.
+      const availableRegionIds: { [cityId: string]: server.RegionId } = {};
+      for (const cityId in map) {
+        if (map[cityId].length > 0) {
+          availableRegionIds[cityId] = map[cityId][0];
+        }
+      }
+      regionPicker.availableRegionIds = availableRegionIds;
+    } catch (e) {
+      console.error(`Failed to get list of available regions: ${e}`);
+      this.appRoot.showError(this.appRoot.localize('error-do-regions'));
+    }
   }
 
   private showServerCreationProgress() {
@@ -802,21 +793,18 @@ export class App {
 
   // Returns a promise which fulfills once the DigitalOcean droplet is created.
   // Shadowbox may not be fully installed once this promise is fulfilled.
-  public createDigitalOceanServer(regionId: server.RegionId) {
+  public async createDigitalOceanServer(regionId: server.RegionId) {
     const serverName = this.makeLocalizedServerName(regionId);
-    return this
-        .digitalOceanRetry(() => {
-          return this.digitalOceanRepository.createServer(regionId, serverName);
-        })
-        .then((server) => {
-          this.syncServerCreationToUi(server);
-        })
-        .catch((e) => {
-          // Sanity check - this error is not expected to occur, as waitForManagedServerCreation
-          // has it's own error handling.
-          console.error('error from waitForManagedServerCreation');
-          return Promise.reject(e);
-        });
+    try {
+      const server = await this.digitalOceanRetry(
+          () => this.digitalOceanRepository.createServer(regionId, serverName));
+      this.syncServerCreationToUi(server);
+    } catch (error) {
+      // Sanity check - this error is not expected to occur, as waitForManagedServerCreation
+      // has it's own error handling.
+      console.error('error from waitForManagedServerCreation');
+      return Promise.reject(error);
+    }
   }
 
   // Syncs a healthy `server` to the display and shows it.
@@ -994,29 +982,27 @@ export class App {
     };
   }
 
-  private addAccessKey() {
-    this.selectedServer.addAccessKey()
-        .then((serverAccessKey: server.AccessKey) => {
-          const uiAccessKey = this.convertToUiAccessKey(serverAccessKey);
-          this.appRoot.getServerView(this.appRoot.selectedServer.id).addAccessKey(uiAccessKey);
-          this.appRoot.showNotification(this.appRoot.localize('notification-key-added'));
-        })
-        .catch((error) => {
-          console.error(`Failed to add access key: ${error}`);
-          this.appRoot.showError(this.appRoot.localize('error-key-add'));
-        });
+  private async addAccessKey() {
+    try {
+      const serverAccessKey = await this.selectedServer.addAccessKey();
+      const uiAccessKey = this.convertToUiAccessKey(serverAccessKey);
+      this.appRoot.getServerView(this.appRoot.selectedServer.id).addAccessKey(uiAccessKey);
+      this.appRoot.showNotification(this.appRoot.localize('notification-key-added'));
+    } catch (error) {
+      console.error(`Failed to add access key: ${error}`);
+      this.appRoot.showError(this.appRoot.localize('error-key-add'));
+    }
   }
 
-  private renameAccessKey(accessKeyId: string, newName: string, entry: polymer.Base) {
-    this.selectedServer.renameAccessKey(accessKeyId, newName)
-        .then(() => {
-          entry.commitName();
-        })
-        .catch((error) => {
-          console.error(`Failed to rename access key: ${error}`);
-          this.appRoot.showError(this.appRoot.localize('error-key-rename'));
-          entry.revertName();
-        });
+  private async renameAccessKey(accessKeyId: string, newName: string, entry: polymer.Base) {
+    try {
+      await this.selectedServer.renameAccessKey(accessKeyId, newName);
+      entry.commitName();
+    } catch (error) {
+      console.error(`Failed to rename access key: ${error}`);
+      this.appRoot.showError(this.appRoot.localize('error-key-rename'));
+      entry.revertName();
+    }
   }
 
   private async setAccessKeyDataLimit(limit: server.DataLimit) {
@@ -1098,7 +1084,7 @@ export class App {
 
   // Returns promise which fulfills when the server is created successfully,
   // or rejects with an error message that can be displayed to the user.
-  public createManualServer(userInput: string): Promise<void> {
+  public async createManualServer(userInput: string): Promise<void> {
     let serverConfig: server.ManualServerConfig;
     try {
       serverConfig = parseManualServerConfig(userInput);
@@ -1113,35 +1099,32 @@ export class App {
     // are adding an existing server. Query the repository instead to treat the UI accordingly.
     const storedServer = this.manualServerRepository.findServer(serverConfig);
     if (!!storedServer) {
-      return this.syncServerToDisplay(storedServer).then((displayServer) => {
-        this.appRoot.showNotification(this.appRoot.localize('notification-server-exists'), 5000);
-        this.showServerIfHealthy(storedServer, displayServer);
-      });
+      const displayServer = await this.syncServerToDisplay(storedServer);
+      this.appRoot.showNotification(this.appRoot.localize('notification-server-exists'), 5000);
+      this.showServerIfHealthy(storedServer, displayServer);
+      return;
     }
-    return this.manualServerRepository.addServer(serverConfig).then((manualServer) => {
-      return manualServer.isHealthy().then((isHealthy) => {
-        if (isHealthy) {
-          return this.syncAndShowServer(manualServer);
-        } else {
-          // Remove inaccessible manual server from local storage if it was just created.
-          manualServer.forget();
-          console.error('Manual server installed but unreachable.');
-          return Promise.reject(new errors.UnreachableServerError());
-        }
-      });
-    });
+    const manualServer = await this.manualServerRepository.addServer(serverConfig);
+    const isHealthy = manualServer.isHealthy();
+    if (isHealthy) {
+      return this.syncAndShowServer(manualServer);
+    } else {
+      // Remove inaccessible manual server from local storage if it was just created.
+      manualServer.forget();
+      console.error('Manual server installed but unreachable.');
+      return Promise.reject(new errors.UnreachableServerError());
+    }
   }
 
-  private removeAccessKey(accessKeyId: string) {
-    this.selectedServer.removeAccessKey(accessKeyId)
-        .then(() => {
-          this.appRoot.getServerView(this.appRoot.selectedServer.id).removeAccessKey(accessKeyId);
-          this.appRoot.showNotification(this.appRoot.localize('notification-key-removed'));
-        })
-        .catch((error) => {
-          console.error(`Failed to remove access key: ${error}`);
-          this.appRoot.showError(this.appRoot.localize('error-key-remove'));
-        });
+  private async removeAccessKey(accessKeyId: string): Promise<void> {
+    try {
+      await this.selectedServer.removeAccessKey(accessKeyId);
+      this.appRoot.getServerView(this.appRoot.selectedServer.id).removeAccessKey(accessKeyId);
+      this.appRoot.showNotification(this.appRoot.localize('notification-key-removed'));
+    } catch (error) {
+      console.error(`Failed to remove access key: ${error}`);
+      this.appRoot.showError(this.appRoot.localize('error-key-remove'));
+    }
   }
 
   private deleteSelectedServer() {
@@ -1155,26 +1138,22 @@ export class App {
     const confirmationTitle = this.appRoot.localize('confirmation-server-destroy-title');
     const confirmationText = this.appRoot.localize('confirmation-server-destroy');
     const confirmationButton = this.appRoot.localize('destroy');
-    this.appRoot.getConfirmation(confirmationTitle, confirmationText, confirmationButton, () => {
-      this.digitalOceanRetry(() => {
-            return serverToDelete.getHost().delete();
-          })
-          .then(
-              () => {
-                this.removeServerFromDisplay(this.appRoot.selectedServer);
-                this.appRoot.selectedServer = null;
-                this.selectedServer = null;
-                this.showIntro();
-                this.appRoot.showNotification(
-                    this.appRoot.localize('notification-server-destroyed'));
-              },
-              (e) => {
-                // Don't show a toast on the login screen.
-                if (!(e instanceof digitalocean_api.XhrError)) {
-                  console.error(`Failed destroy server: ${e}`);
-                  this.appRoot.showError(this.appRoot.localize('error-server-destroy'));
-                }
-              });
+    this.appRoot.getConfirmation(confirmationTitle, confirmationText, confirmationButton, async () => {
+      try {
+        await this.digitalOceanRetry(() => serverToDelete.getHost().delete());
+        this.removeServerFromDisplay(this.appRoot.selectedServer);
+        this.appRoot.selectedServer = null;
+        this.selectedServer = null;
+        this.showIntro();
+        this.appRoot.showNotification(this.appRoot.localize('notification-server-destroyed'));
+      } catch (e) {
+        // Don't show a toast on the login screen.
+        if (!(e instanceof digitalocean_api.XhrError)) {
+          console.error(`Failed destroy server: ${e}`);
+          this.appRoot.showError(this.appRoot.localize('error-server-destroy'));
+        }
+        return;
+      }
     });
   }
 
@@ -1229,18 +1208,17 @@ export class App {
     }
   }
 
-  private cancelServerCreation(serverToCancel: server.Server): void {
+  private async cancelServerCreation(serverToCancel: server.Server) {
     if (!isManagedServer(serverToCancel)) {
       const msg = 'cannot cancel non-ManagedServer';
       console.error(msg);
       throw new Error(msg);
     }
-    serverToCancel.getHost().delete().then(() => {
-      this.serverBeingCreated = null;
-      this.removeServerFromDisplay(this.appRoot.selectedServer);
-      this.appRoot.selectedServer = null;
-      this.showCreateServer();
-    });
+    await serverToCancel.getHost().delete();
+    this.serverBeingCreated = null;
+    this.removeServerFromDisplay(this.appRoot.selectedServer);
+    this.appRoot.selectedServer = null;
+    this.showCreateServer();
   }
 
   private setAppLanguage(languageCode: string, languageDir: string) {
