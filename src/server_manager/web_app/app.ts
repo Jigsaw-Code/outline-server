@@ -294,9 +294,9 @@ export class App {
         this.enterDigitalOceanMode(accessToken).catch(e => [] as server.ManagedServer[]) :
         Promise.resolve([]);
 
-    const [manualServers, managedServers] = await Promise.all([manualServersPromise, managedServersPromise]);
-    const installedManagedServers =
-        managedServers.filter(server => server.isInstallCompleted());
+    const [manualServers, managedServers] =
+        await Promise.all([manualServersPromise, managedServersPromise]);
+    const installedManagedServers = managedServers.filter(server => server.isInstallCompleted());
     const serverBeingCreated = managedServers.find(server => !server.isInstallCompleted());
     if (!!serverBeingCreated) {
       this.syncServerCreationToUi(serverBeingCreated);
@@ -670,7 +670,8 @@ export class App {
       if (managedServers.length > 0) {
         await this.syncServersToDisplay(managedServers);
         // Show the first server in the list since the user just signed in to DO.
-        const displayServer = this.appRoot.serverList.find((displayServer: DisplayServer) => displayServer.isManaged);
+        const displayServer =
+            this.appRoot.serverList.find((displayServer: DisplayServer) => displayServer.isManaged);
         this.showServerFromRepository(displayServer);
       } else {
         this.showCreateServer();
@@ -711,15 +712,15 @@ export class App {
     const regionPicker = this.appRoot.getAndShowRegionPicker();
 
     try {
-      // The region picker initially shows all options as disabled. Options are enabled by this code,
-      // after checking which regions are available.
+      // The region picker initially shows all options as disabled. Options are enabled by this
+      // code, after checking which regions are available.
       const map = await this.digitalOceanRetry(() => {
         return this.digitalOceanRepository.getRegionMap();
       });
       // Change from a list of regions per location to just one region per location.
       // Where there are multiple working regions in one location, arbitrarily use the
       // first.
-      const availableRegionIds: { [cityId: string]: server.RegionId } = {};
+      const availableRegionIds: {[cityId: string]: server.RegionId} = {};
       for (const cityId in map) {
         if (map[cityId].length > 0) {
           availableRegionIds[cityId] = map[cityId][0];
@@ -1138,23 +1139,24 @@ export class App {
     const confirmationTitle = this.appRoot.localize('confirmation-server-destroy-title');
     const confirmationText = this.appRoot.localize('confirmation-server-destroy');
     const confirmationButton = this.appRoot.localize('destroy');
-    this.appRoot.getConfirmation(confirmationTitle, confirmationText, confirmationButton, async () => {
-      try {
-        await this.digitalOceanRetry(() => serverToDelete.getHost().delete());
-        this.removeServerFromDisplay(this.appRoot.selectedServer);
-        this.appRoot.selectedServer = null;
-        this.selectedServer = null;
-        this.showIntro();
-        this.appRoot.showNotification(this.appRoot.localize('notification-server-destroyed'));
-      } catch (e) {
-        // Don't show a toast on the login screen.
-        if (!(e instanceof digitalocean_api.XhrError)) {
-          console.error(`Failed destroy server: ${e}`);
-          this.appRoot.showError(this.appRoot.localize('error-server-destroy'));
-        }
-        return;
-      }
-    });
+    this.appRoot.getConfirmation(
+        confirmationTitle, confirmationText, confirmationButton, async () => {
+          try {
+            await this.digitalOceanRetry(() => serverToDelete.getHost().delete());
+            this.removeServerFromDisplay(this.appRoot.selectedServer);
+            this.appRoot.selectedServer = null;
+            this.selectedServer = null;
+            this.showIntro();
+            this.appRoot.showNotification(this.appRoot.localize('notification-server-destroyed'));
+          } catch (e) {
+            // Don't show a toast on the login screen.
+            if (!(e instanceof digitalocean_api.XhrError)) {
+              console.error(`Failed destroy server: ${e}`);
+              this.appRoot.showError(this.appRoot.localize('error-server-destroy'));
+            }
+            return;
+          }
+        });
   }
 
   private forgetSelectedServer() {
