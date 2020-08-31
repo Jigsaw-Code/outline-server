@@ -454,12 +454,11 @@ export class App {
     this.showServerFromRepository(lastDisplayedServer);
   }
 
-  private showServerFromRepository(displayServer: DisplayServer) {
-    this.getServerFromRepository(displayServer).then((server) => {
-      if (!!server) {
-        this.showServerIfHealthy(server, displayServer);
-      }
-    });
+  private async showServerFromRepository(displayServer: DisplayServer) {
+    const server = await this.getServerFromRepository(displayServer);
+    if (!!server) {
+      this.showServerIfHealthy(server, displayServer);
+    }
   }
 
   private async handleShowServerRequested(displayServerId: string) {
@@ -561,50 +560,41 @@ export class App {
     });
   }
 
-  private showServerIfHealthy(server: server.Server, displayServer: DisplayServer) {
-    server.isHealthy().then((isHealthy) => {
-      if (isHealthy) {
-        // Sync the server display in case it was previously unreachable.
-        this.syncServerToDisplay(server).then(() => {
-          this.showServer(server, displayServer);
-        });
-      } else {
-        // Display the unreachable server state within the server view.
-        const serverView = this.appRoot.getServerView(displayServer.id) as ServerView;
-        serverView.isServerReachable = false;
-        serverView.isServerManaged = isManagedServer(server);
-        serverView.serverName = displayServer.name;  // Don't get the name from the remote server.
-        serverView.retryDisplayingServer = () => {
-          // Refresh the server list if the server is managed, it may have been deleted outside the
-          // app.
-          let serverExistsPromise = Promise.resolve(true);
-          if (serverView.isServerManaged && !!this.digitalOceanRepository) {
-            serverExistsPromise =
-                this.digitalOceanRepository.listServers().then((managedServers) => {
-                  return this.getServerFromRepository(displayServer).then((server) => {
-                    return !!server;
-                  });
-                });
-          }
-          serverExistsPromise.then((serverExists: boolean) => {
-            if (serverExists) {
-              this.showServerIfHealthy(server, displayServer);
-            } else {
-              // Server has been deleted outside the app.
-              this.appRoot.showError(
-                  this.appRoot.localize('error-server-removed', 'serverName', displayServer.name));
-              this.removeServerFromDisplay(displayServer);
-              this.selectedServer = null;
-              this.appRoot.selectedServer = null;
-              this.showIntro();
-            }
-          });
-        };
-        this.selectedServer = server;
-        this.appRoot.selectedServer = displayServer;
-        this.appRoot.showServerView();
-      }
-    });
+  private async showServerIfHealthy(server: server.Server, displayServer: DisplayServer) {
+    const isHealthy = await server.isHealthy();
+    if (isHealthy) {
+      // Sync the server display in case it was previously unreachable.
+      await this.syncServerToDisplay(server);
+      this.showServer(server, displayServer);
+    } else {
+      // Display the unreachable server state within the server view.
+      const serverView = this.appRoot.getServerView(displayServer.id) as ServerView;
+      serverView.isServerReachable = false;
+      serverView.isServerManaged = isManagedServer(server);
+      serverView.serverName = displayServer.name;  // Don't get the name from the remote server.
+      serverView.retryDisplayingServer = async () => {
+        // Refresh the server list if the server is managed, it may have been deleted outside the app.
+        let serverExists = true;
+        if (serverView.isServerManaged && !!this.digitalOceanRepository) {
+          await this.digitalOceanRepository.listServers();
+          const server = await this.getServerFromRepository(displayServer);
+          serverExists = !!server;
+        }
+        if (serverExists) {
+          this.showServerIfHealthy(server, displayServer);
+        } else {
+          // Server has been deleted outside the app.
+          this.appRoot.showError(this.appRoot.localize('error-server-removed', 'serverName', displayServer.name));
+          this.removeServerFromDisplay(displayServer);
+          this.selectedServer = null;
+          this.appRoot.selectedServer = null;
+          this.showIntro();
+        }
+      };
+      this.selectedServer = server;
+      this.appRoot.selectedServer = displayServer;
+      this.appRoot.showServerView();
+    }
   }
 
   // Intended to add a "retry or re-authenticate?" prompt to DigitalOcean
@@ -650,15 +640,14 @@ export class App {
   private async connectToDigitalOcean() {
     let accessToken = this.digitalOceanTokenManager.getStoredToken();
     if (accessToken) {
-      this.enterDigitalOceanMode(accessToken).then((managedServers) => {
-        if (!!this.serverBeingCreated) {
-          // Disallow creating multiple servers simultaneously.
-          this.showServerCreationProgress();
-          return;
-        }
-        this.syncServersToDisplay(managedServers);
-        this.showCreateServer();
-      });
+      const managedServers = await this.enterDigitalOceanMode(accessToken);
+      if (!!this.serverBeingCreated) {
+        // Disallow creating multiple servers simultaneously.
+        this.showServerCreationProgress();
+        return;
+      }
+      this.syncServersToDisplay(managedServers);
+      this.showCreateServer();
       return;
     }
 
@@ -700,16 +689,16 @@ export class App {
   }
 
   // Clears the credentials and returns to the intro screen.
-  private clearCredentialsAndShowIntro() {
+  private async clearCredentialsAndShowIntro() {
     this.digitalOceanTokenManager.removeTokenFromStorage();
     // Remove display servers from storage.
-    this.displayServerRepository.listServers().then((displayServers: DisplayServer[]) => {
-      for (const displayServer of displayServers) {
-        if (displayServer.isManaged) {
-          this.removeServerFromDisplay(displayServer);
-        }
+    const displayServers = await this.displayServerRepository.listServers();
+    for (const displayServer of displayServers) {
+      if (displayServer.isManaged) {
+        this.removeServerFromDisplay(displayServer);
       }
-    });
+    }
+
     // Reset UI
     this.appRoot.adminEmail = '';
     if (!!this.appRoot.selectedServer && this.appRoot.selectedServer.isManaged) {
@@ -748,43 +737,39 @@ export class App {
     this.appRoot.showProgress(this.appRoot.selectedServer.name, showCancelButton);
   }
 
-  private waitForManagedServerCreation(tryAgain = false): void {
-    this.serverBeingCreated.waitOnInstall(tryAgain)
-        .then(() => {
-          // Unset the instance variable before syncing the server so the UI does not display it.
-          const server = this.serverBeingCreated;
-          this.serverBeingCreated = null;
-          return this.syncAndShowServer(server);
-        })
-        .catch((e) => {
-          console.log(e);
-          if (e instanceof errors.DeletedServerError) {
-            // The user deleted this server, no need to show an error or delete it again.
-            this.serverBeingCreated = null;
-            return;
-          }
-          let errorMessage = this.serverBeingCreated.isInstallCompleted() ?
-              this.appRoot.localize('error-server-unreachable-title') :
-              this.appRoot.localize('error-server-creation');
-          errorMessage += ` ${this.appRoot.localize('digitalocean-unreachable')}`;
-          this.appRoot
-              .showModalDialog(
-                  null,  // Don't display any title.
-                  errorMessage,
-                  [this.appRoot.localize('server-destroy'), this.appRoot.localize('retry')])
-              .then((clickedButtonIndex: number) => {
-                if (clickedButtonIndex === 0) {  // user clicked 'Delete this server'
-                  console.info('Deleting unreachable server');
-                  this.serverBeingCreated.getHost().delete().then(() => {
-                    this.serverBeingCreated = null;
-                    this.showCreateServer();
-                  });
-                } else if (clickedButtonIndex === 1) {  // user clicked 'Try again'.
-                  console.info('Retrying unreachable server');
-                  this.waitForManagedServerCreation(true);
-                }
-              });
-        });
+  private async waitForManagedServerCreation(tryAgain = false): Promise<void> {
+    try {
+      await this.serverBeingCreated.waitOnInstall(tryAgain);
+      // Unset the instance variable before syncing the server so the UI does not display it.
+      const server = this.serverBeingCreated;
+      this.serverBeingCreated = null;
+      return this.syncAndShowServer(server);
+    } catch (e) {
+      console.log(e);
+      if (e instanceof errors.DeletedServerError) {
+        // The user deleted this server, no need to show an error or delete it again.
+        this.serverBeingCreated = null;
+        return;
+      }
+      let errorMessage = this.serverBeingCreated.isInstallCompleted() ?
+          this.appRoot.localize('error-server-unreachable-title') :
+          this.appRoot.localize('error-server-creation');
+      errorMessage += ` ${this.appRoot.localize('digitalocean-unreachable')}`;
+      const clickedButtonIndex = await this.appRoot
+          .showModalDialog(
+              null,  // Don't display any title.
+              errorMessage,
+              [this.appRoot.localize('server-destroy'), this.appRoot.localize('retry')]);
+      if (clickedButtonIndex === 0) {  // user clicked 'Delete this server'
+        console.info('Deleting unreachable server');
+        await this.serverBeingCreated.getHost().delete();
+        this.serverBeingCreated = null;
+        this.showCreateServer();
+      } else if (clickedButtonIndex === 1) {  // user clicked 'Try again'.
+        console.info('Retrying unreachable server');
+        this.waitForManagedServerCreation(true);
+      }
+    }
   }
 
   private getLocalizedCityName(regionId: server.RegionId) {
