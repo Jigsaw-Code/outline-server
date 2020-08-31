@@ -573,7 +573,8 @@ export class App {
       serverView.isServerManaged = isManagedServer(server);
       serverView.serverName = displayServer.name;  // Don't get the name from the remote server.
       serverView.retryDisplayingServer = async () => {
-        // Refresh the server list if the server is managed, it may have been deleted outside the app.
+        // Refresh the server list if the server is managed, it may have been deleted outside the
+        // app.
         let serverExists = true;
         if (serverView.isServerManaged && !!this.digitalOceanRepository) {
           await this.digitalOceanRepository.listServers();
@@ -584,7 +585,8 @@ export class App {
           this.showServerIfHealthy(server, displayServer);
         } else {
           // Server has been deleted outside the app.
-          this.appRoot.showError(this.appRoot.localize('error-server-removed', 'serverName', displayServer.name));
+          this.appRoot.showError(
+              this.appRoot.localize('error-server-removed', 'serverName', displayServer.name));
           this.removeServerFromDisplay(displayServer);
           this.selectedServer = null;
           this.appRoot.selectedServer = null;
@@ -755,11 +757,9 @@ export class App {
           this.appRoot.localize('error-server-unreachable-title') :
           this.appRoot.localize('error-server-creation');
       errorMessage += ` ${this.appRoot.localize('digitalocean-unreachable')}`;
-      const clickedButtonIndex = await this.appRoot
-          .showModalDialog(
-              null,  // Don't display any title.
-              errorMessage,
-              [this.appRoot.localize('server-destroy'), this.appRoot.localize('retry')]);
+      const clickedButtonIndex = await this.appRoot.showModalDialog(
+          null,  // Don't display any title.
+          errorMessage, [this.appRoot.localize('server-destroy'), this.appRoot.localize('retry')]);
       if (clickedButtonIndex === 0) {  // user clicked 'Delete this server'
         console.info('Deleting unreachable server');
         await this.serverBeingCreated.getHost().delete();
