@@ -15,6 +15,7 @@
 */
 
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import {unsafeCSS} from 'lit-element';
 
 // Polymer style module to share styles between steps
 // https://polymer-library.polymer-project.org/3.0/docs/devguide/style-shadow-dom#share-styles-between-elements
@@ -240,5 +241,8 @@ styleElement.appendChild(html`
     transform: scaleX(-1);
   }
 </style>`);
-
 styleElement.register('cloud-install-styles');
+
+// Shared styles for LitElement components
+const commonStyleCss = styleElement.querySelector('template').content.textContent;
+export const COMMON_STYLES = unsafeCSS(commonStyleCss);
