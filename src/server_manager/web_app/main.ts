@@ -16,15 +16,15 @@ import './ui_components/app-root.js';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as i18n from '../infrastructure/i18n';
+import {LocalStorageRepository} from '../infrastructure/repository';
 import {getSentryApiUrl} from '../infrastructure/sentry';
+import {Account} from '../model/account';
 
 import {App} from './app';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
-import {LocalStorageRepository} from "../infrastructure/repository";
-import {Account} from '../model/account';
 
 type LanguageDef = {
   id: string,
@@ -123,9 +123,7 @@ document.addEventListener('WebComponentsReady', () => {
   appRoot.setLanguage(language.string(), languageDirection);
 
   const accountRepository = new LocalStorageRepository<Account, string>(
-      'accounts', localStorage,
-      (account) => account.id,
-      (k1: string, k2: string) => k1 === k2);
+      'accounts', localStorage, (account) => account.id, (k1: string, k2: string) => k1 === k2);
   new App(
       appRoot, version, digitalocean_api.createDigitalOceanSession,
       digitalOceanServerRepositoryFactory, new ManualServerRepository('manualServers'),

@@ -14,10 +14,10 @@
 
 export class LocalStorageRepository<Record, Key> {
   private readonly records: Record[] = [];  // TODO: Switch to map
-  constructor(private storageKey: string,
-              private storage: Storage,
-              private keyExtractor: (r: Record) => Key,
-              private keyComparator: (k1: Key, k2: Key) => boolean) {
+  constructor(
+      private storageKey: string, private storage: Storage,
+      private keyExtractor: (r: Record) => Key,
+      private keyComparator = (k1: Key, k2: Key) => k1 === k2) {
     const serialized = storage.getItem(storageKey);
     if (serialized != null) {
       this.records = JSON.parse(serialized);
