@@ -12,41 +12,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Account, AccountId} from '../model/account';
-
-export class LocalStorageRepository {
-  private readonly accounts: Account[] = [];  // TODO: Switch to map
-  constructor(private storageKey: string, private storage: Storage) {
+export class LocalStorageRepository<Record, Key> {
+  private readonly records: Record[] = [];  // TODO: Switch to map
+  constructor(private storageKey: string,
+              private storage: Storage,
+              private keyExtractor: (r: Record) => Key,
+              private keyComparator: (k1: Key, k2: Key) => boolean) {
     const serialized = storage.getItem(storageKey);
     if (serialized != null) {
-      this.accounts = JSON.parse(serialized);
+      this.records = JSON.parse(serialized);
     }
   }
 
-  add(account: Account): void {
-    this.remove(account.id);
-    this.accounts.push(account);
+  set(record: Record): void {
+    const key = this.keyExtractor(record);
+    this.remove(key);
+    this.records.push(record);
     this.save();
   }
 
-  remove(id: AccountId): void {
-    const index = this.accounts.findIndex((account) => this.compareAccountId(account.id, id));
+  remove(key: Key): void {
+    const index = this.records.findIndex((record) => {
+      const recordKey = this.keyExtractor(record);
+      return this.keyComparator(recordKey, key);
+    });
     if (index > -1) {
-      this.accounts.splice(index, 1);
+      this.records.splice(index, 1);
     }
     this.save();
   }
 
-  get(id: AccountId): Account|undefined {
-    return this.accounts.find((account) => this.compareAccountId(account.id, id));
+  get(key: Key): Record|undefined {
+    return this.records.find((record) => {
+      const recordKey = this.keyExtractor(record);
+      return this.keyComparator(recordKey, key);
+    });
   }
 
-  list(): Account[] {
-    return Array.from(this.accounts.values());
-  }
-
-  private compareAccountId(first: AccountId, second: AccountId) {
-    return first.name === second.name && first.provider === second.provider;
+  list(): Record[] {
+    return Array.from(this.records.values());
   }
 
   private save(): void {

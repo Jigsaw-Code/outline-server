@@ -21,17 +21,22 @@ import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
 
-import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
 import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
+import {LocalStorageRepository} from "../infrastructure/repository";
+import {Account} from '../model/account';
+import {CloudProvider} from "../model/cloud";
+import {DigitalOceanAccountCredential} from "../electron_app/digitalocean_oauth";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
 const UNUSED_DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
+
+const LEGACY_DIGITALOCEAN_ACCOUNT_ID = '_LEGACY_DIGITALOCEAN_ACCOUNT_ID_';
 
 const CHANGE_KEYS_PORT_VERSION = '1.0.0';
 const DATA_LIMITS_VERSION = '1.1.0';
@@ -148,7 +153,7 @@ export class App {
       private createDigitalOceanServerRepository: DigitalOceanServerRepositoryFactory,
       private manualServerRepository: server.ManualServerRepository,
       private displayServerRepository: DisplayServerRepository,
-      private digitalOceanTokenManager: TokenManager) {
+      private accountRepository: LocalStorageRepository<Account, string>) {
     appRoot.setAttribute('outline-version', this.version);
 
     appRoot.addEventListener('ConnectToDigitalOcean', (event: CustomEvent) => {
@@ -302,7 +307,9 @@ export class App {
 
     const manualServersPromise = this.manualServerRepository.listServers();
 
-    const accessToken = this.digitalOceanTokenManager.getStoredToken();
+    const credential =
+        this.accountRepository.get(LEGACY_DIGITALOCEAN_ACCOUNT_ID)?.credential as DigitalOceanAccountCredential;
+    const accessToken = credential?.accessToken;
     const managedServersPromise = !!accessToken ?
         this.enterDigitalOceanMode(accessToken).catch(e => [] as server.ManagedServer[]) :
         Promise.resolve([]);
@@ -640,7 +647,10 @@ export class App {
   }
 
   private async connectToDigitalOcean() {
-    let accessToken = this.digitalOceanTokenManager.getStoredToken();
+    const credential =
+        this.accountRepository.get(LEGACY_DIGITALOCEAN_ACCOUNT_ID)?.credential as DigitalOceanAccountCredential;
+
+    let accessToken = credential?.accessToken;
     if (accessToken) {
       const managedServers = await this.enterDigitalOceanMode(accessToken);
       if (!!this.serverBeingCreated) {
@@ -661,7 +671,9 @@ export class App {
     this.appRoot.getAndShowDigitalOceanOauthFlow(handleOauthFlowCanceled);
 
     try {
-      accessToken = await session.result;
+      const oauthResult = await session.result;
+      accessToken = oauthResult.accessToken;
+
       // Save accessToken to storage. DigitalOcean tokens
       // expire after 30 days, unless they are manually revoked by the user.
       // After 30 days the user will have to sign into DigitalOcean again.
@@ -669,7 +681,17 @@ export class App {
       // a client_secret to be stored on a server and not visible to end users
       // in client-side JS.  More details at:
       // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
-      this.digitalOceanTokenManager.writeTokenToStorage(accessToken);
+
+      const account = {
+        id: LEGACY_DIGITALOCEAN_ACCOUNT_ID,
+        displayName: oauthResult.email,
+        provider: CloudProvider.DigitalOcean,
+        credential: {
+          accessToken: oauthResult.accessToken,
+        },
+      };
+      this.accountRepository.set(account);
+
       const managedServers = await this.enterDigitalOceanMode(accessToken);
       if (managedServers.length > 0) {
         await this.syncServersToDisplay(managedServers);
@@ -692,7 +714,7 @@ export class App {
 
   // Clears the credentials and returns to the intro screen.
   private async clearCredentialsAndShowIntro() {
-    this.digitalOceanTokenManager.removeTokenFromStorage();
+    this.accountRepository.remove(LEGACY_DIGITALOCEAN_ACCOUNT_ID);
     // Remove display servers from storage.
     const displayServers = await this.displayServerRepository.listServers();
     for (const displayServer of displayServers) {

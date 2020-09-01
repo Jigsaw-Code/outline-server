@@ -14,13 +14,9 @@
 
 import {CloudProvider} from './cloud';
 
-export interface AccountId {
-  name: string;
-  provider: CloudProvider;
-}
-
 export interface Account {
-  id: AccountId;
-  credentials: object;
-  connectedTime?: Date;
+  id: string;
+  displayName: string;
+  provider: CloudProvider;
+  credential: object;
 }

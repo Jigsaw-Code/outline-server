@@ -775,7 +775,7 @@ export class AppRoot extends mixinBehaviors
   }
 
   signOutTapped() {
-    this.fire('SignOutRequested');
+    this.fire('SignOutRequested', {email: this.adminEmail});
   }
 
   openManualInstallFeedback(/** @type {string} */ prepopulatedMessage) {

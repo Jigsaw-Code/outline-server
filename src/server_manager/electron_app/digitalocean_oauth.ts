@@ -18,7 +18,6 @@ import * as electron from 'electron';
 import * as express from 'express';
 import * as http from 'http';
 import {AddressInfo} from 'net';
-import * as path from 'path';
 import * as request from 'request';
 
 const REGISTERED_REDIRECTS: Array<{clientId: string, port: number}> = [
@@ -26,6 +25,10 @@ const REGISTERED_REDIRECTS: Array<{clientId: string, port: number}> = [
   {clientId: '4af51205e8d0d8f4a5b84a6b5ca9ea7124f914a5621b6a731ce433c2c7db533b', port: 60434},
   {clientId: '706928a1c91cbd646c4e0d744c8cbdfbf555a944b821ac7812a7314a4649683a', port: 61437}
 ];
+
+export interface DigitalOceanAccountCredential {
+  accessToken: string;
+}
 
 function randomValueHex(len: number): string {
   return crypto.randomBytes(Math.ceil(len / 2))
@@ -103,7 +106,7 @@ function closeWindowHtml(messageHtml: string) {
 
 // Runs the DigitalOcean oauth flow and returns the access token.
 // See https://developers.digitalocean.com/documentation/oauth/ for the OAuth API.
-export function runOauth(): OauthSession {
+export function runOauth(): DigitalOceanOAuthSession {
   const secret = randomValueHex(16);
 
   const app = express();
@@ -146,7 +149,7 @@ export function runOauth(): OauthSession {
   });
 
   const rejectWrapper = {reject: (error: Error) => {}};
-  const result = new Promise<string>((resolve, reject) => {
+  const result = new Promise<DigitalOceanOAuthResult>((resolve, reject) => {
     rejectWrapper.reject = reject;
     // This is the POST endpoint that receives the access token and redirects to either DigitalOcean
     // for the user to complete their account creation, or to a page that closes the window.
@@ -174,7 +177,11 @@ export function runOauth(): OauthSession {
               } else {
                 response.redirect('https://cloud.digitalocean.com');
               }
-              resolve(accessToken);
+              const oauthResult = {
+                email: account.email,
+                accessToken,
+              };
+              resolve(oauthResult);
             })
             .catch(reject);
       } else {

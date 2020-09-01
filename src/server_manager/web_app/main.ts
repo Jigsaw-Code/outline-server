@@ -19,11 +19,12 @@ import * as i18n from '../infrastructure/i18n';
 import {getSentryApiUrl} from '../infrastructure/sentry';
 
 import {App} from './app';
-import {DigitalOceanTokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
+import {LocalStorageRepository} from "../infrastructure/repository";
+import {Account} from '../model/account';
 
 type LanguageDef = {
   id: string,
@@ -109,21 +110,26 @@ document.addEventListener('WebComponentsReady', () => {
         session, shadowboxImage, metricsUrl, getSentryApiUrl(sentryDsn), debugMode);
   };
 
-  // Create and start the app.
-  const language = getLanguageToUse();
-  const languageDirection = SUPPORTED_LANGUAGES[language.string()].dir;
-  document.documentElement.setAttribute('dir', languageDirection);
   // NOTE: this cast is safe and allows us to leverage Polymer typings since we haven't migrated to
   // Polymer 3, which adds typescript support.
   const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
 
+  // Create and start the app.
+  const language = getLanguageToUse();
+  const languageDirection = SUPPORTED_LANGUAGES[language.string()].dir;
+  document.documentElement.setAttribute('dir', languageDirection);
   const filteredLanguageDefs = Object.values(SUPPORTED_LANGUAGES);
   appRoot.supportedLanguages = sortLanguageDefsByName(filteredLanguageDefs);
   appRoot.setLanguage(language.string(), languageDirection);
+
+  const accountRepository = new LocalStorageRepository<Account, string>(
+      'accounts', localStorage,
+      (account) => account.id,
+      (k1: string, k2: string) => k1 === k2);
   new App(
       appRoot, version, digitalocean_api.createDigitalOceanSession,
       digitalOceanServerRepositoryFactory, new ManualServerRepository('manualServers'),
-      new DisplayServerRepository(), new DigitalOceanTokenManager())
+      new DisplayServerRepository(), accountRepository)
       .start();
 });
 
