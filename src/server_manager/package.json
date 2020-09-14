@@ -47,10 +47,13 @@
     "electron-updater": "^4.1.2",
     "eventemitter3": "^2.0.3",
     "express": "^4.16.3",
+    "google-auth-library": "^6.0.6",
+    "googleapis": "^59.0.0",
     "intl-messageformat": "^7",
     "jsonic": "^0.3.1",
     "lit-element": "^2.3.1",
     "node-forge": "^0.7.1",
+    "open": "^7.2.1",
     "request": "^2.87.0",
     "web-animations-js": "^2.3.1"
   },

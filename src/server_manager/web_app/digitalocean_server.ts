@@ -64,7 +64,7 @@ enum InstallState {
   DELETED
 }
 
-class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer {
+export class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer {
   private eventQueue = new EventEmitter();
   private installState: InstallState = InstallState.UNKNOWN;
 
@@ -199,7 +199,7 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
   }
 
   // Refreshes the state from DigitalOcean API.
-  private refreshDropletInfo(): Promise<void> {
+  private refreshDropletInfo(): Promise<DropletInfo> {
     return this.digitalOcean.getDroplet(this.dropletInfo.id).then((newDropletInfo: DropletInfo) => {
       const oldDropletInfo = this.dropletInfo;
       this.dropletInfo = newDropletInfo;
@@ -209,6 +209,7 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
           this.eventQueue.emit('server-active');
         }
       }
+      return newDropletInfo;
     });
   }
 

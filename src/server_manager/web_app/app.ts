@@ -28,7 +28,7 @@ import {AppRoot} from './ui_components/app-root.js';
 import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
 import {LocalStorageRepository} from "../infrastructure/repository";
-import {Account} from '../model/account';
+import {AccountData} from '../model/account';
 import {CloudProvider} from "../model/cloud";
 import {DigitalOceanAccountCredential} from "../electron_app/digitalocean_oauth";
 
@@ -153,7 +153,7 @@ export class App {
       private createDigitalOceanServerRepository: DigitalOceanServerRepositoryFactory,
       private manualServerRepository: server.ManualServerRepository,
       private displayServerRepository: DisplayServerRepository,
-      private accountRepository: LocalStorageRepository<Account, string>) {
+      private accountRepository: LocalStorageRepository<AccountData, string>) {
     appRoot.setAttribute('outline-version', this.version);
 
     appRoot.addEventListener('ConnectToDigitalOcean', (event: CustomEvent) => {

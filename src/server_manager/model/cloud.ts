@@ -13,5 +13,9 @@
 // limitations under the License.
 
 export enum CloudProvider {
-  DigitalOcean = 'DigitalOcean',
+  AWS = "Amazon Web Services",
+  DigitalOcean = "DigitalOcean",
+  GCP = "Google Cloud Platform",
+  Lightsail = "Amazon Lightsail",
+  Linode = "Linode",
 }

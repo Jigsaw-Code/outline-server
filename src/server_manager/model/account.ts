@@ -13,10 +13,40 @@
 // limitations under the License.
 
 import {CloudProvider} from './cloud';
+import {LocalStorageRepository} from "../infrastructure/repository";
+import {CloudProviderService, Location} from "../cloud/cloud_provider_service";
 
-export interface Account {
+export interface AccountData {
   id: string;
   displayName: string;
   provider: CloudProvider;
-  credential: object;
+  credential: unknown;
+}
+
+export type Id = {
+  cloudId: CloudProvider;
+  userId: string;
+};
+
+export class Account {
+  constructor(protected account: AccountData,
+              protected accountRepository: LocalStorageRepository<AccountData, string>,
+              protected cloudProviderService: CloudProviderService) {
+
+  }
+
+  id(): Id {
+    return {
+      cloudId: this.account.provider,
+      userId: this.account.id,
+    };
+  }
+
+  async listLocations(): Promise<Location[]> {
+    return this.cloudProviderService.listLocations();
+  }
+
+  async disconnect(): Promise<void> {
+    this.accountRepository.remove(this.account.id);
+  }
 }
