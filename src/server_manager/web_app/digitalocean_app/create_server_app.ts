@@ -18,7 +18,7 @@ import {customElement, html, LitElement, property} from 'lit-element';
 import * as server from '../../model/server';
 import {App, NotificationManager} from '../app';
 
-import {Location, OutlineRegionPicker} from './outline-region-picker-step';
+import {Location, OutlineRegionPicker} from '../ui_components/outline-region-picker-step';
 
 // DigitalOcean mapping of regions to flags
 const FLAG_IMAGE_DIR = 'images/flags';
@@ -42,7 +42,8 @@ export class DigitalOceanCreateServer extends LitElement {
 
   render() {
     return html`
-        <outline-region-picker-step id="regionPicker" .localize=${this.localize}></outline-region-picker-step>
+        <outline-region-picker-step id="regionPicker" .localize=${
+        this.localize}></outline-region-picker-step>
     `;
   }
 
@@ -62,7 +63,8 @@ export class DigitalOceanCreateServer extends LitElement {
     regionPicker.reset();
 
     try {
-      const map = await this.app.digitalOceanRetry(() => this.digitalOceanRepository.getRegionMap());
+      const map =
+          await this.app.digitalOceanRetry(() => this.digitalOceanRepository.getRegionMap());
       const locations = Object.entries(map).map(([cityId, regionIds]) => {
         return this.createLocationModel(cityId, regionIds);
       });

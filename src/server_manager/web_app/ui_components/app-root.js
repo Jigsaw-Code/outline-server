@@ -33,7 +33,7 @@ import './outline-feedback-dialog.js';
 import './outline-survey-dialog.js';
 import './outline-intro-step.js';
 import './outline-language-picker.js';
-import './digitalocean_create_server_app'; // TODO: Move to ui-components
+import '../digitalocean_app/create_server_app';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
 import './outline-region-picker-step';

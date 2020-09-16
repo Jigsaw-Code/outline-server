@@ -26,7 +26,7 @@ import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
-import {DigitalOceanCreateServer} from './ui_components/digitalocean_create_server_app';
+import {DigitalOceanCreateServer} from './digitalocean_app/create_server_app';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
 
 // The Outline DigitalOcean team's referral code:
