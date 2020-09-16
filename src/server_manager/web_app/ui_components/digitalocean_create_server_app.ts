@@ -13,7 +13,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import {customElement, LitElement, property} from 'lit-element';
+import {customElement, html, LitElement, property} from 'lit-element';
 
 import * as server from '../../model/server';
 import {App, NotificationManager} from '../app';
@@ -40,16 +40,10 @@ export class DigitalOceanCreateServer extends LitElement {
   @property({type: Object}) digitalOceanRepository: server.ManagedServerRepository = null;
   @property({type: Object}) notificationManager: NotificationManager = null;
 
-  private regionPicker: OutlineRegionPicker;
-
-  // @ts-ignore
-  firstUpdated(_changedProperties) {
-    super.firstUpdated(_changedProperties);
-
-    this.regionPicker = new OutlineRegionPicker();
-    this.regionPicker.localize = this.localize;
-    this.shadowRoot.appendChild(this.regionPicker);
-    this.requestUpdate();
+  render() {
+    return html`
+        <outline-region-picker-step id="regionPicker" .localize=${this.localize}></outline-region-picker-step>
+    `;
   }
 
   private createLocationModel(cityId: string, regionIds: string[]): Location {
@@ -64,17 +58,15 @@ export class DigitalOceanCreateServer extends LitElement {
   // The region picker initially shows all options as disabled. Options are enabled by this code,
   // after checking which regions are available.
   async show() {
-    this.regionPicker.reset();
+    const regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
+    regionPicker.reset();
+
     try {
-      const map =
-          await this.app.digitalOceanRetry(() => this.digitalOceanRepository.getRegionMap());
-      console.log(map);
+      const map = await this.app.digitalOceanRetry(() => this.digitalOceanRepository.getRegionMap());
       const locations = Object.entries(map).map(([cityId, regionIds]) => {
         return this.createLocationModel(cityId, regionIds);
       });
-      console.log(locations);
-      // const regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
-      this.regionPicker.locations = locations;
+      regionPicker.locations = locations;
     } catch (err) {
       console.error(`Failed to get list of available regions: ${err}`);
       this.notificationManager.showError(this.localize('error-do-regions'));
