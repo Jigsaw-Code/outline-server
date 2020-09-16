@@ -253,7 +253,7 @@ function createTestApp(
 enum AppRootScreen {
   NONE = 0,
   INTRO,
-  REGION_PICKER,
+  DIGITAL_OCEAN_CREATE_SERVER,
   SERVER_VIEW,
   INSTALL_PROGRESS,
   DIALOG
@@ -277,8 +277,8 @@ class FakePolymerAppRoot extends AppRoot {
     this.setScreen(AppRootScreen.INTRO);
   }
 
-  getAndShowRegionPicker() {
-    this.setScreen(AppRootScreen.REGION_PICKER);
+  getAndShowDigitalOceanCreateServer() {
+    this.setScreen(AppRootScreen.DIGITAL_OCEAN_CREATE_SERVER);
     return {};
   }
 
@@ -294,7 +294,7 @@ class FakePolymerAppRoot extends AppRoot {
     this.backgroundScreen = this.currentScreen;
     this.setScreen(AppRootScreen.DIALOG);
     const promise = new Promise<number>(() => 0);
-    // Supress Promise not handled warning.
+    // Suppress Promise not handled warning.
     promise.then(v => v);
     return promise;
   }

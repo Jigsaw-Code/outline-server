@@ -33,6 +33,7 @@ import './outline-feedback-dialog.js';
 import './outline-survey-dialog.js';
 import './outline-intro-step.js';
 import './outline-language-picker.js';
+import './digitalocean_create_server_app'; // TODO: Move to ui-components
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
 import './outline-region-picker-step';
@@ -409,7 +410,7 @@ export class AppRoot extends mixinBehaviors
               <outline-intro-step id="intro" is-signed-in-to-digital-ocean="{{isSignedInToDigitalOcean}}" digital-ocean-email="{{adminEmail}}" localize="[[localize]]"></outline-intro-step>
               <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
-              <outline-region-picker-step id="regionPicker" localize="[[localize]]"></outline-region-picker-step>
+              <digital-ocean-create-server id="digitalOceanCreateServer" localize="[[localize]]"></digital-ocean-create-server>
               <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
               <div id="serverView">
                 <template is="dom-repeat" items="{{serverList}}" as="server">
@@ -588,10 +589,9 @@ export class AppRoot extends mixinBehaviors
     return oauthFlow;
   }
 
-  getAndShowRegionPicker() {
-    this.currentPage = 'regionPicker';
-    this.$.regionPicker.reset();
-    return this.$.regionPicker;
+  getAndShowDigitalOceanCreateServer() {
+    this.currentPage = 'digitalOceanCreateServer';
+    return this.$.digitalOceanCreateServer;
   }
 
   getManualServerEntry() {
@@ -686,17 +686,21 @@ export class AppRoot extends mixinBehaviors
     this.$.toast.close();
   }
 
+  getToast() {
+    return this.$.toast;
+  }
+
   /**
-   * @param {(retry: boolean) => void} cb a function which accepts a single boolean which is true
+   * @param {(retry: boolean) => Promise<T>} cb a function which accepts a single boolean which is true
    *     iff
    *      the user chose to retry the failing operation.
    */
   showConnectivityDialog(cb) {
     const dialogTitle = this.localize('error-connectivity-title');
     const dialogText = this.localize('error-connectivity');
-    this.showModalDialog(dialogTitle, dialogText, [this.localize('cancel'), this.localize('retry')])
+    return this.showModalDialog(dialogTitle, dialogText, [this.localize('cancel'), this.localize('retry')])
         .then(clickedButtonIndex => {
-          cb(clickedButtonIndex === 1);  // pass true if user clicked retry
+          return cb(clickedButtonIndex === 1);  // pass true if user clicked retry
         });
   }
 

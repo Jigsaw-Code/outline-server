@@ -26,8 +26,8 @@ import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
-import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
+import {DigitalOceanCreateServer} from "./ui_components/digitalocean_create_server_app";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -37,19 +37,6 @@ const CHANGE_KEYS_PORT_VERSION = '1.0.0';
 const DATA_LIMITS_VERSION = '1.1.0';
 const CHANGE_HOSTNAME_VERSION = '1.2.0';
 const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
-
-// DigitalOcean mapping of regions to flags
-const FLAG_IMAGE_DIR = 'images/flags';
-const DIGITALOCEAN_FLAG_MAPPING: {[cityId: string]: string} = {
-  ams: `${FLAG_IMAGE_DIR}/netherlands.png`,
-  sgp: `${FLAG_IMAGE_DIR}/singapore.png`,
-  blr: `${FLAG_IMAGE_DIR}/india.png`,
-  fra: `${FLAG_IMAGE_DIR}/germany.png`,
-  lon: `${FLAG_IMAGE_DIR}/uk.png`,
-  sfo: `${FLAG_IMAGE_DIR}/us.png`,
-  tor: `${FLAG_IMAGE_DIR}/canada.png`,
-  nyc: `${FLAG_IMAGE_DIR}/us.png`,
-};
 
 function dataLimitToDisplayDataAmount(limit: server.DataLimit): DisplayDataAmount|null {
   if (!limit) {
@@ -136,6 +123,36 @@ function localizeDate(date: Date, language: string): string {
 type DigitalOceanSessionFactory = (accessToken: string) => digitalocean_api.DigitalOceanSession;
 type DigitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) =>
     server.ManagedServerRepository;
+
+export class NotificationManager {
+  constructor(private appRoot: AppRoot) {}
+
+  showError(message: string) {
+    this.showToast(message, Infinity);
+  }
+
+  closeError() {
+    this.appRoot.getToast().close();
+  }
+
+  showNotification(message: string, durationMs = 3000) {
+    this.showToast(message, durationMs);
+  }
+
+  private showToast(message: string, duration: number) {
+    const toast = this.appRoot.getToast();
+    toast.close();
+    // Defer in order to trigger the toast animation, otherwise the
+    // update happens in place.
+    setTimeout(() => {
+      toast.show({
+        text: message,
+        duration,
+        noOverlap: true,
+      });
+    }, 0);
+  }
+}
 
 export class App {
   private digitalOceanRepository: server.ManagedServerRepository;
@@ -624,24 +641,20 @@ export class App {
   //       return the UI to its exact prior state. Fortunately, the most likely
   //       time to discover an invalid access token is when the application
   //       starts.
-  private digitalOceanRetry = <T>(f: () => Promise<T>): Promise<T> => {
-    return f().catch((e) => {
-      if (!(e instanceof digitalocean_api.XhrError)) {
-        return Promise.reject(e);
-      }
+  digitalOceanRetry<T>(fn: () => Promise<T>): Promise<T> {
+    return digitalocean_api.digitalOceanRetry(fn, this.retryConnectivityDialog(fn));
+  }
 
-      return new Promise<T>((resolve, reject) => {
-        this.appRoot.showConnectivityDialog((retry: boolean) => {
-          if (retry) {
-            this.digitalOceanRetry(f).then(resolve, reject);
-          } else {
-            this.clearCredentialsAndShowIntro();
-            reject(e);
-          }
-        });
-      });
+  retryConnectivityDialog<T>(fn: () => Promise<T>): (err: Error) => Promise<T> {
+    return (err) => this.appRoot.showConnectivityDialog((retry: boolean) => {
+      if (retry) {
+        return this.digitalOceanRetry(fn);
+      } else {
+        this.clearCredentialsAndShowIntro();
+        throw err;
+      }
     });
-  };
+  }
 
   // Shows the intro screen with overview and options to sign in or sign up.
   private showIntro() {
@@ -727,25 +740,12 @@ export class App {
     }
   }
 
-  // Opens the screen to create a server.
-  private showCreateServer() {
-    const regionPicker = this.appRoot.getAndShowRegionPicker();
-    // The region picker initially shows all options as disabled. Options are enabled by this code,
-    // after checking which regions are available.
-    this.digitalOceanRetry(() => {
-          return this.digitalOceanRepository.getRegionMap();
-        })
-        .then(
-            (map) => {
-              const locations = Object.entries(map).map(([cityId, regionIds]) => {
-                return this.createLocationModel(cityId, regionIds);
-              });
-              regionPicker.locations = locations;
-            },
-            (e) => {
-              console.error(`Failed to get list of available regions: ${e}`);
-              this.appRoot.showError(this.appRoot.localize('error-do-regions'));
-            });
+  private async showCreateServer() {
+    const digitalOceanCreateServer = this.appRoot.getAndShowDigitalOceanCreateServer() as DigitalOceanCreateServer;
+    digitalOceanCreateServer.app = this;
+    digitalOceanCreateServer.digitalOceanRepository = this.digitalOceanRepository;
+    digitalOceanCreateServer.notificationManager = new NotificationManager(this.appRoot);
+    await digitalOceanCreateServer.show();
   }
 
   private showServerCreationProgress() {
@@ -1254,14 +1254,5 @@ export class App {
     this.appRoot.setLanguage(languageCode, languageDir);
     document.documentElement.setAttribute('dir', languageDir);
     window.localStorage.setItem('overrideLanguage', languageCode);
-  }
-
-  private createLocationModel(cityId: string, regionIds: string[]): Location {
-    return {
-      id: regionIds.length > 0 ? regionIds[0] : null,
-      name: this.appRoot.localize(`city-${cityId}`),
-      flag: DIGITALOCEAN_FLAG_MAPPING[cityId] || '',
-      available: regionIds.length > 0,
-    };
   }
 }
