@@ -252,10 +252,11 @@ function makeValidDropletName(name: string): string {
   return name.replace(/[^A-Za-z0-9\-]/g, '');
 }
 
-export async function digitalOceanRetry<T>(f: () => Promise<T>, onError: (err: Error) => Promise<T>): Promise<T> {
+export async function digitalOceanRetry<T>(
+    f: () => Promise<T>, onError: (err: Error) => Promise<T>): Promise<T> {
   try {
     return await f();
-  } catch(err) {
+  } catch (err) {
     if (!(err instanceof XhrError)) {
       return Promise.reject(err);
     }

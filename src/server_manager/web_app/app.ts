@@ -26,8 +26,8 @@ import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
+import {DigitalOceanCreateServer} from './ui_components/digitalocean_create_server_app';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
-import {DigitalOceanCreateServer} from "./ui_components/digitalocean_create_server_app";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -741,7 +741,8 @@ export class App {
   }
 
   private async showCreateServer() {
-    const digitalOceanCreateServer = this.appRoot.getAndShowDigitalOceanCreateServer() as DigitalOceanCreateServer;
+    const digitalOceanCreateServer =
+        this.appRoot.getAndShowDigitalOceanCreateServer() as DigitalOceanCreateServer;
     digitalOceanCreateServer.app = this;
     digitalOceanCreateServer.digitalOceanRepository = this.digitalOceanRepository;
     digitalOceanCreateServer.notificationManager = new NotificationManager(this.appRoot);

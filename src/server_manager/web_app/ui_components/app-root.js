@@ -691,14 +691,14 @@ export class AppRoot extends mixinBehaviors
   }
 
   /**
-   * @param {(retry: boolean) => Promise<T>} cb a function which accepts a single boolean which is true
-   *     iff
-   *      the user chose to retry the failing operation.
+   * @param {(retry: boolean) => Promise<T>} cb a function which accepts a single boolean which is
+   *     true iff the user chose to retry the failing operation.
    */
   showConnectivityDialog(cb) {
     const dialogTitle = this.localize('error-connectivity-title');
     const dialogText = this.localize('error-connectivity');
-    return this.showModalDialog(dialogTitle, dialogText, [this.localize('cancel'), this.localize('retry')])
+    return this
+        .showModalDialog(dialogTitle, dialogText, [this.localize('cancel'), this.localize('retry')])
         .then(clickedButtonIndex => {
           return cb(clickedButtonIndex === 1);  // pass true if user clicked retry
         });

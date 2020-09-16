@@ -14,9 +14,11 @@
   limitations under the License.
 */
 import {customElement, LitElement, property} from 'lit-element';
-import {App, NotificationManager} from "../app";
-import * as server from "../../model/server";
-import {Location, OutlineRegionPicker} from "./outline-region-picker-step";
+
+import * as server from '../../model/server';
+import {App, NotificationManager} from '../app';
+
+import {Location, OutlineRegionPicker} from './outline-region-picker-step';
 
 // DigitalOcean mapping of regions to flags
 const FLAG_IMAGE_DIR = 'images/flags';
@@ -64,7 +66,8 @@ export class DigitalOceanCreateServer extends LitElement {
   async show() {
     this.regionPicker.reset();
     try {
-      const map = await this.app.digitalOceanRetry(() => this.digitalOceanRepository.getRegionMap());
+      const map =
+          await this.app.digitalOceanRetry(() => this.digitalOceanRepository.getRegionMap());
       console.log(map);
       const locations = Object.entries(map).map(([cityId, regionIds]) => {
         return this.createLocationModel(cityId, regionIds);

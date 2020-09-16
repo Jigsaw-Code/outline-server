@@ -107,7 +107,7 @@ export class OutlineRegionPicker extends LitElement {
   render() {
     return html`
     <outline-step-view display-action="">
-      <span slot="step-title">${this.localize('region-title')}Hello</span>
+      <span slot="step-title">${this.localize('region-title')}</span>
       <span slot="step-description">${this.localize('region-description')}</span>
       <span slot="step-action">
         <paper-button id="createServerButton" @tap="${this._handleCreateServerTap}" ?disabled="${!this._isCreateButtonEnabled(this.isServerBeingCreated, this.selectedLocationId)}">
