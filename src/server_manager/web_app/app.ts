@@ -125,14 +125,11 @@ type DigitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOce
     server.ManagedServerRepository;
 
 export class NotificationManager {
-  constructor(private appRoot: AppRoot) {}
+  // @ts-ignore
+  constructor(private toast) {}
 
   showError(message: string) {
     this.showToast(message, Infinity);
-  }
-
-  closeError() {
-    this.appRoot.getToast().close();
   }
 
   showNotification(message: string, durationMs = 3000) {
@@ -140,12 +137,11 @@ export class NotificationManager {
   }
 
   private showToast(message: string, duration: number) {
-    const toast = this.appRoot.getToast();
-    toast.close();
+    this.toast.close();
     // Defer in order to trigger the toast animation, otherwise the
     // update happens in place.
     setTimeout(() => {
-      toast.show({
+      this.toast.show({
         text: message,
         duration,
         noOverlap: true,
@@ -158,6 +154,7 @@ export class App {
   private digitalOceanRepository: server.ManagedServerRepository;
   private selectedServer: server.Server;
   private serverBeingCreated: server.ManagedServer;
+  private notificationManager: NotificationManager;
 
   constructor(
       private appRoot: AppRoot, private readonly version: string,
@@ -166,6 +163,8 @@ export class App {
       private manualServerRepository: server.ManualServerRepository,
       private displayServerRepository: DisplayServerRepository,
       private digitalOceanTokenManager: TokenManager) {
+    this.notificationManager = new NotificationManager(this.appRoot.getToast());
+
     appRoot.setAttribute('outline-version', this.version);
 
     appRoot.addEventListener('ConnectToDigitalOcean', (event: CustomEvent) => {
@@ -274,10 +273,10 @@ export class App {
           user: {email: detail.userEmail},
           tags: {category: detail.feedbackCategory, cloudProvider: detail.cloudProvider}
         });
-        appRoot.showNotification(appRoot.localize('notification-feedback-thanks'));
+        this.notificationManager.showNotification(appRoot.localize('notification-feedback-thanks'));
       } catch (e) {
         console.error(`Failed to submit feedback: ${e}`);
-        appRoot.showError(appRoot.localize('error-feedback'));
+        this.notificationManager.showError(appRoot.localize('error-feedback'));
       }
     });
 
@@ -359,7 +358,7 @@ export class App {
         messageKey = 'error-servers-removed';
         placeholder = 'serverNames';
       }
-      this.appRoot.showError(this.appRoot.localize(messageKey, placeholder, unsyncedServerNames));
+      this.appRoot.notificationManager(this.appRoot.localize(messageKey, placeholder, unsyncedServerNames));
     }
 
     await this.syncDisplayServersToUi();
@@ -536,7 +535,7 @@ export class App {
                 this.showIntro();
                 const msg = `Failed to get DigitalOcean account information: ${error}`;
                 console.error(msg);
-                this.appRoot.showError(this.appRoot.localize('error-do-account-info'));
+                this.notificationManager.showError(this.appRoot.localize('error-do-account-info'));
                 reject(new Error(msg));
               }
             });
@@ -613,7 +612,7 @@ export class App {
               this.showServerIfHealthy(server, displayServer);
             } else {
               // Server has been deleted outside the app.
-              this.appRoot.showError(
+              this.notificationManager.showError(
                   this.appRoot.localize('error-server-removed', 'serverName', displayServer.name));
               this.removeServerFromDisplay(displayServer);
               this.selectedServer = null;
@@ -662,7 +661,7 @@ export class App {
   }
 
   private displayAppUpdateNotification() {
-    this.appRoot.showNotification(this.appRoot.localize('notification-app-update'), 60000);
+    this.notificationManager.showNotification(this.appRoot.localize('notification-app-update'), 60000);
   }
 
   private connectToDigitalOcean() {
@@ -714,7 +713,7 @@ export class App {
             this.clearCredentialsAndShowIntro();
             bringToFront();
             console.error(`DigitalOcean authentication failed: ${error}`);
-            this.appRoot.showError(this.appRoot.localize('error-do-auth'));
+            this.notificationManager.showError(this.appRoot.localize('error-do-auth'));
           }
         });
   }
@@ -891,7 +890,7 @@ export class App {
       }, 250);
     } catch (error) {
       console.error(`Failed to load access keys: ${error}`);
-      this.appRoot.showError(this.appRoot.localize('error-keys-get'));
+      this.notificationManager.showError(this.appRoot.localize('error-keys-get'));
     }
 
     this.showTransferStats(selectedServer, view);
@@ -1007,11 +1006,11 @@ export class App {
         .then((serverAccessKey: server.AccessKey) => {
           const uiAccessKey = this.convertToUiAccessKey(serverAccessKey);
           this.appRoot.getServerView(this.appRoot.selectedServer.id).addAccessKey(uiAccessKey);
-          this.appRoot.showNotification(this.appRoot.localize('notification-key-added'));
+          this.notificationManager.showNotification(this.appRoot.localize('notification-key-added'));
         })
         .catch((error) => {
           console.error(`Failed to add access key: ${error}`);
-          this.appRoot.showError(this.appRoot.localize('error-key-add'));
+          this.notificationManager.showError(this.appRoot.localize('error-key-add'));
         });
   }
 
@@ -1022,7 +1021,7 @@ export class App {
         })
         .catch((error) => {
           console.error(`Failed to rename access key: ${error}`);
-          this.appRoot.showError(this.appRoot.localize('error-key-rename'));
+          this.notificationManager.showError(this.appRoot.localize('error-key-rename'));
           entry.revertName();
         });
   }
@@ -1038,7 +1037,7 @@ export class App {
     const serverView = this.appRoot.getServerView(this.appRoot.selectedServer.id);
     try {
       await this.selectedServer.setAccessKeyDataLimit(limit);
-      this.appRoot.showNotification(this.appRoot.localize('saved'));
+      this.notificationManager.showNotification(this.appRoot.localize('saved'));
       serverView.accessKeyDataLimit = dataLimitToDisplayDataAmount(limit);
       this.refreshTransferStats(this.selectedServer, serverView);
       // Don't display the feature collection disclaimer anymore.
@@ -1046,7 +1045,7 @@ export class App {
       window.localStorage.setItem('dataLimits-feature-collection-notification', 'true');
     } catch (error) {
       console.error(`Failed to set access key data limit: ${error}`);
-      this.appRoot.showError(this.appRoot.localize('error-set-data-limit'));
+      this.notificationManager.showError(this.appRoot.localize('error-set-data-limit'));
       serverView.accessKeyDataLimit = dataLimitToDisplayDataAmount(
           previousLimit || await computeDefaultAccessKeyDataLimit(this.selectedServer));
       serverView.isAccessKeyDataLimitEnabled = !!previousLimit;
@@ -1057,23 +1056,23 @@ export class App {
     const serverView = this.appRoot.getServerView(this.appRoot.selectedServer.id);
     try {
       await this.selectedServer.removeAccessKeyDataLimit();
-      this.appRoot.showNotification(this.appRoot.localize('saved'));
+      this.notificationManager.showNotification(this.appRoot.localize('saved'));
       this.refreshTransferStats(this.selectedServer, serverView);
     } catch (error) {
       console.error(`Failed to remove access key data limit: ${error}`);
-      this.appRoot.showError(this.appRoot.localize('error-remove-data-limit'));
+      this.notificationManager.showError(this.appRoot.localize('error-remove-data-limit'));
       serverView.isAccessKeyDataLimitEnabled = true;
     }
   }
 
   private async setHostnameForAccessKeys(hostname: string, serverSettings: polymer.Base) {
-    this.appRoot.showNotification(this.appRoot.localize('saving'));
+    this.notificationManager.showNotification(this.appRoot.localize('saving'));
     try {
       await this.selectedServer.setHostnameForAccessKeys(hostname);
-      this.appRoot.showNotification(this.appRoot.localize('saved'));
+      this.notificationManager.showNotification(this.appRoot.localize('saved'));
       serverSettings.enterSavedState();
     } catch (error) {
-      this.appRoot.showError(this.appRoot.localize('error-not-saved'));
+      this.notificationManager.showError(this.appRoot.localize('error-not-saved'));
       if (error.isNetworkError()) {
         serverSettings.enterErrorState(this.appRoot.localize('error-network'));
         return;
@@ -1084,13 +1083,13 @@ export class App {
   }
 
   private async setPortForNewAccessKeys(port: number, serverSettings: polymer.Base) {
-    this.appRoot.showNotification(this.appRoot.localize('saving'));
+    this.notificationManager.showNotification(this.appRoot.localize('saving'));
     try {
       await this.selectedServer.setPortForNewAccessKeys(port);
-      this.appRoot.showNotification(this.appRoot.localize('saved'));
+      this.notificationManager.showNotification(this.appRoot.localize('saved'));
       serverSettings.enterSavedState();
     } catch (error) {
-      this.appRoot.showError(this.appRoot.localize('error-not-saved'));
+      this.notificationManager.showError(this.appRoot.localize('error-not-saved'));
       if (error.isNetworkError()) {
         serverSettings.enterErrorState(this.appRoot.localize('error-network'));
         return;
@@ -1122,7 +1121,7 @@ export class App {
     const storedServer = this.manualServerRepository.findServer(serverConfig);
     if (!!storedServer) {
       return this.syncServerToDisplay(storedServer).then((displayServer) => {
-        this.appRoot.showNotification(this.appRoot.localize('notification-server-exists'), 5000);
+        this.notificationManager.showNotification(this.appRoot.localize('notification-server-exists'), 5000);
         this.showServerIfHealthy(storedServer, displayServer);
       });
     }
@@ -1144,11 +1143,11 @@ export class App {
     this.selectedServer.removeAccessKey(accessKeyId)
         .then(() => {
           this.appRoot.getServerView(this.appRoot.selectedServer.id).removeAccessKey(accessKeyId);
-          this.appRoot.showNotification(this.appRoot.localize('notification-key-removed'));
+          this.notificationManager.showNotification(this.appRoot.localize('notification-key-removed'));
         })
         .catch((error) => {
           console.error(`Failed to remove access key: ${error}`);
-          this.appRoot.showError(this.appRoot.localize('error-key-remove'));
+          this.notificationManager.showError(this.appRoot.localize('error-key-remove'));
         });
   }
 
@@ -1173,14 +1172,14 @@ export class App {
                 this.appRoot.selectedServer = null;
                 this.selectedServer = null;
                 this.showIntro();
-                this.appRoot.showNotification(
+                this.notificationManager.showNotification(
                     this.appRoot.localize('notification-server-destroyed'));
               },
               (e) => {
                 // Don't show a toast on the login screen.
                 if (!(e instanceof digitalocean_api.XhrError)) {
                   console.error(`Failed destroy server: ${e}`);
-                  this.appRoot.showError(this.appRoot.localize('error-server-destroy'));
+                  this.notificationManager.showError(this.appRoot.localize('error-server-destroy'));
                 }
               });
     });
@@ -1203,7 +1202,7 @@ export class App {
       this.appRoot.selectedServer = null;
       this.selectedServer = null;
       this.showIntro();
-      this.appRoot.showNotification(this.appRoot.localize('notification-server-removed'));
+      this.notificationManager.showNotification(this.appRoot.localize('notification-server-removed'));
     });
   }
 
@@ -1211,12 +1210,12 @@ export class App {
     const serverView = this.appRoot.getServerView(this.appRoot.selectedServer.id);
     try {
       await this.selectedServer.setMetricsEnabled(metricsEnabled);
-      this.appRoot.showNotification(this.appRoot.localize('saved'));
+      this.notificationManager.showNotification(this.appRoot.localize('saved'));
       // Change metricsEnabled property on polymer element to update display.
       serverView.metricsEnabled = metricsEnabled;
     } catch (error) {
       console.error(`Failed to set metrics enabled: ${error}`);
-      this.appRoot.showError(this.appRoot.localize('error-metrics'));
+      this.notificationManager.showError(this.appRoot.localize('error-metrics'));
       serverView.metricsEnabled = !metricsEnabled;
     }
   }
@@ -1229,7 +1228,7 @@ export class App {
       this.syncAndShowServer(this.selectedServer);
     } catch (error) {
       console.error(`Failed to rename server: ${error}`);
-      this.appRoot.showError(this.appRoot.localize('error-server-rename'));
+      this.notificationManager.showError(this.appRoot.localize('error-server-rename'));
       const oldName = this.selectedServer.getName();
       view.serverName = oldName;
       // tslint:disable-next-line:no-any

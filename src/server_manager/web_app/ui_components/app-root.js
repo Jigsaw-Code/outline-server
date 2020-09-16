@@ -655,39 +655,12 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
   }
 
-  showError(/** @type {string} */ errorMsg) {
-    this.showToast(errorMsg, Infinity);
-  }
-
-  showNotification(/** @type {string} */ message, durationMs = 3000) {
-    this.showToast(message, durationMs);
-  }
-
-  /**
-   * Show a toast with a message
-   * @param {string} message
-   * @param {number} duration in seconds
-   */
-  showToast(message, duration) {
-    const toast = this.$.toast;
-    toast.close();
-    // Defer in order to trigger the toast animation, otherwise the
-    // update happens in place.
-    setTimeout(() => {
-      toast.show({
-        text: message,
-        duration: duration,
-        noOverlap: true,
-      });
-    }, 0);
+  getToast() {
+    return this.$.toast;
   }
 
   closeError() {
     this.$.toast.close();
-  }
-
-  getToast() {
-    return this.$.toast;
   }
 
   /**
