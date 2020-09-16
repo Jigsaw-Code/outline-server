@@ -358,7 +358,8 @@ export class App {
         messageKey = 'error-servers-removed';
         placeholder = 'serverNames';
       }
-      this.appRoot.notificationManager(this.appRoot.localize(messageKey, placeholder, unsyncedServerNames));
+      this.appRoot.notificationManager(
+          this.appRoot.localize(messageKey, placeholder, unsyncedServerNames));
     }
 
     await this.syncDisplayServersToUi();
@@ -661,7 +662,8 @@ export class App {
   }
 
   private displayAppUpdateNotification() {
-    this.notificationManager.showNotification(this.appRoot.localize('notification-app-update'), 60000);
+    this.notificationManager.showNotification(
+        this.appRoot.localize('notification-app-update'), 60000);
   }
 
   private connectToDigitalOcean() {
@@ -1006,7 +1008,8 @@ export class App {
         .then((serverAccessKey: server.AccessKey) => {
           const uiAccessKey = this.convertToUiAccessKey(serverAccessKey);
           this.appRoot.getServerView(this.appRoot.selectedServer.id).addAccessKey(uiAccessKey);
-          this.notificationManager.showNotification(this.appRoot.localize('notification-key-added'));
+          this.notificationManager.showNotification(
+              this.appRoot.localize('notification-key-added'));
         })
         .catch((error) => {
           console.error(`Failed to add access key: ${error}`);
@@ -1121,7 +1124,8 @@ export class App {
     const storedServer = this.manualServerRepository.findServer(serverConfig);
     if (!!storedServer) {
       return this.syncServerToDisplay(storedServer).then((displayServer) => {
-        this.notificationManager.showNotification(this.appRoot.localize('notification-server-exists'), 5000);
+        this.notificationManager.showNotification(
+            this.appRoot.localize('notification-server-exists'), 5000);
         this.showServerIfHealthy(storedServer, displayServer);
       });
     }
@@ -1143,7 +1147,8 @@ export class App {
     this.selectedServer.removeAccessKey(accessKeyId)
         .then(() => {
           this.appRoot.getServerView(this.appRoot.selectedServer.id).removeAccessKey(accessKeyId);
-          this.notificationManager.showNotification(this.appRoot.localize('notification-key-removed'));
+          this.notificationManager.showNotification(
+              this.appRoot.localize('notification-key-removed'));
         })
         .catch((error) => {
           console.error(`Failed to remove access key: ${error}`);
@@ -1202,7 +1207,8 @@ export class App {
       this.appRoot.selectedServer = null;
       this.selectedServer = null;
       this.showIntro();
-      this.notificationManager.showNotification(this.appRoot.localize('notification-server-removed'));
+      this.notificationManager.showNotification(
+          this.appRoot.localize('notification-server-removed'));
     });
   }
 
