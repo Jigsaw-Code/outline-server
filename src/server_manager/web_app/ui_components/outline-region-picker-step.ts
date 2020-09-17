@@ -19,7 +19,7 @@ import '@polymer/iron-icon/iron-icon';
 import '@polymer/iron-icons/iron-icons';
 import './outline-step-view';
 
-import {css, customElement, html, LitElement, property, unsafeCSS} from 'lit-element';
+import {css, customElement, html, LitElement, property} from 'lit-element';
 
 import {COMMON_STYLES} from './cloud-install-styles';
 

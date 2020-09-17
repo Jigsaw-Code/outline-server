@@ -16,8 +16,9 @@
 import {customElement, html, LitElement, property} from 'lit-element';
 
 import * as server from '../../model/server';
-import {App, NotificationManager} from '../app';
+import {App} from '../app';
 
+import {OutlineNotificationView} from "../ui_components/outline-notification-view";
 import {Location, OutlineRegionPicker} from '../ui_components/outline-region-picker-step';
 
 // DigitalOcean mapping of regions to flags
@@ -38,12 +39,12 @@ export class DigitalOceanCreateServer extends LitElement {
   @property({type: Function}) localize: Function;
   @property({type: Object}) app: App = null;
   @property({type: Object}) digitalOceanRepository: server.ManagedServerRepository = null;
-  @property({type: Object}) notificationManager: NotificationManager = null;
+  @property({type: Object}) notificationView: OutlineNotificationView = null;
 
   render() {
     return html`
-        <outline-region-picker-step id="regionPicker" .localize=${
-        this.localize}></outline-region-picker-step>
+        <outline-region-picker-step id="regionPicker" 
+            .localize=${this.localize}></outline-region-picker-step>
     `;
   }
 
@@ -71,7 +72,7 @@ export class DigitalOceanCreateServer extends LitElement {
       regionPicker.locations = locations;
     } catch (err) {
       console.error(`Failed to get list of available regions: ${err}`);
-      this.notificationManager.showError(this.localize('error-do-regions'));
+      this.notificationView.showError(this.localize('error-do-regions'));
     }
   }
 }

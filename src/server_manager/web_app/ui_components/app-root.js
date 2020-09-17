@@ -21,7 +21,6 @@ import '@polymer/iron-icon/iron-icon.js';
 import '@polymer/iron-icons/iron-icons.js';
 import '@polymer/iron-pages/iron-pages.js';
 import '@polymer/paper-icon-button/paper-icon-button.js';
-import '@polymer/paper-toast/paper-toast.js';
 import '@polymer/paper-dialog/paper-dialog.js';
 import '@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
 import '@polymer/paper-listbox/paper-listbox.js';
@@ -36,6 +35,7 @@ import './outline-language-picker.js';
 import '../digitalocean_app/create_server_app';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
+import './outline-notification-view';
 import './outline-region-picker-step';
 import './outline-server-progress-step.js';
 import './outline-tos-view.js';
@@ -75,20 +75,7 @@ export class AppRoot extends mixinBehaviors
           max-width: 920px;
         }
       }
-      #toast {
-        align-items: center;
-        display: flex;
-        justify-content: space-between;
-        padding: 24px;
-        max-width: 450px;
-      }
-      #toast paper-icon-button {
-        /* prevents the icon from resizing when there is a long message in the toast */
-        flex-shrink: 0;
-        padding: 0;
-        height: 20px;
-        width: 20px;
-      }
+
       /* rtl:begin:ignore */
       #appDrawer {
         --app-drawer-content-container: {
@@ -456,7 +443,7 @@ export class AppRoot extends mixinBehaviors
         </div>
       </app-drawer>
 
-      <paper-toast id="toast"><paper-icon-button icon="icons:close" on-tap="closeError"></paper-icon-button></paper-toast>
+      <outline-notification-view id="notificationView"></outline-notification-view>
 
       <!-- Modal dialogs must be outside the app container; otherwise the backdrop covers them.  -->
       <outline-survey-dialog id="surveyDialog" localize="[[localize]]"></outline-survey-dialog>
@@ -655,12 +642,8 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
   }
 
-  getToast() {
-    return this.$.toast;
-  }
-
-  closeError() {
-    this.$.toast.close();
+  getNotificationView() {
+    return this.$.notificationView;
   }
 
   /**
