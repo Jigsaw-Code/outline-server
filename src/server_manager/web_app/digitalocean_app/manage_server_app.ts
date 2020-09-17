@@ -14,16 +14,16 @@
   limitations under the License.
 */
 
-import * as digitalocean_server from "../digitalocean_server";
-import * as errors from "../../infrastructure/errors";
-import * as semver from 'semver';
-import * as server from "../../model/server";
-import {isManagedServer, Server} from "../../model/server";
-
 import {customElement, html, LitElement, property} from 'lit-element';
-import {DisplayServer} from "../display_server";
-import {DisplayAccessKey, DisplayDataAmount, ServerView} from "../ui_components/outline-server-view";
-import {NotificationManager} from "../app";
+import * as semver from 'semver';
+
+import * as errors from '../../infrastructure/errors';
+import * as server from '../../model/server';
+import {isManagedServer, Server} from '../../model/server';
+import {NotificationManager} from '../app';
+import * as digitalocean_server from '../digitalocean_server';
+import {DisplayServer} from '../display_server';
+import {DisplayAccessKey, DisplayDataAmount, ServerView} from '../ui_components/outline-server-view';
 
 const CHANGE_KEYS_PORT_VERSION = '1.0.0';
 const DATA_LIMITS_VERSION = '1.1.0';
@@ -41,28 +41,35 @@ export class ManageServerView extends LitElement {
   private serverView: ServerView;
 
   render() {
-    return html`<outline-server-view id="serverView" .localize=${this.localize}></outline-server-view>`;
+    return html`<outline-server-view id="serverView" .localize=${
+        this.localize}></outline-server-view>`;
   }
 
   connectedCallback(): void {
     super.connectedCallback();
-    this.registerEventListeners();
-    this.serverView = this.getServerView();
+    this.registerEventListeners();  // TODO: May have to remove these on disconnectedCallback if there's a possibility that this gets added twice
+    this.serverView = this.shadowRoot.querySelector(`#serverView`) as ServerView;
   }
 
   private registerEventListeners() {
-    this.shadowRoot.addEventListener('EnableMetricsRequested', (e: CustomEvent) => this.setMetricsEnabled(true));
-    this.shadowRoot.addEventListener('DisableMetricsRequested', (e: CustomEvent) => this.setMetricsEnabled(false));
-    this.shadowRoot.addEventListener('ServerRenameRequested', (e: CustomEvent) => this.renameServer(e.detail.newName));
-    this.shadowRoot.addEventListener('AddAccessKeyRequested', (e: CustomEvent) => this.addAccessKey());
-    this.shadowRoot.addEventListener('RemoveAccessKeyRequested', (e: CustomEvent) => this.removeAccessKey(e.detail.accessKeyId));
+    this.shadowRoot.addEventListener(
+        'EnableMetricsRequested', (e: CustomEvent) => this.setMetricsEnabled(true));
+    this.shadowRoot.addEventListener(
+        'DisableMetricsRequested', (e: CustomEvent) => this.setMetricsEnabled(false));
+    this.shadowRoot.addEventListener(
+        'ServerRenameRequested', (e: CustomEvent) => this.renameServer(e.detail.newName));
+    this.shadowRoot.addEventListener(
+        'AddAccessKeyRequested', (e: CustomEvent) => this.addAccessKey());
+    this.shadowRoot.addEventListener(
+        'RemoveAccessKeyRequested', (e: CustomEvent) => this.removeAccessKey(e.detail.accessKeyId));
     this.shadowRoot.addEventListener('RenameAccessKeyRequested', (e: CustomEvent) => {
       this.renameAccessKey(e.detail.accessKeyId, e.detail.newName, e.detail.entry);
     });
     this.shadowRoot.addEventListener('SetAccessKeyDataLimitRequested', (e: CustomEvent) => {
       this.setAccessKeyDataLimit(ManageServerView.displayDataAmountToDataLimit(e.detail.limit));
     });
-    this.shadowRoot.addEventListener('RemoveAccessKeyDataLimitRequested', (e: CustomEvent) => this.removeAccessKeyDataLimit());
+    this.shadowRoot.addEventListener(
+        'RemoveAccessKeyDataLimitRequested', (e: CustomEvent) => this.removeAccessKeyDataLimit());
     this.shadowRoot.addEventListener('ChangePortForNewAccessKeysRequested', (e: CustomEvent) => {
       this.setPortForNewAccessKeys(e.detail.validatedInput, e.detail.ui);
     });
@@ -77,53 +84,52 @@ export class ManageServerView extends LitElement {
     this.displayServer = selectedDisplayServer;
 
     // Show view and initialize fields from selectedServer.
-    const view = this.getServerView();
-    view.isServerReachable = true;
-    view.serverId = server.getServerId();
-    view.serverName = server.getName();
-    view.serverHostname = server.getHostnameForAccessKeys();
-    view.serverManagementApiUrl = server.getManagementApiUrl();
-    view.serverPortForNewAccessKeys = server.getPortForNewAccessKeys();
-    view.serverCreationDate = ManageServerView.localizeDate(server.getCreatedDate(), this.language);
-    view.serverVersion = server.getVersion();
-    view.accessKeyDataLimit = ManageServerView.dataLimitToDisplayDataAmount(server.getAccessKeyDataLimit());
-    view.isAccessKeyDataLimitEnabled = !!view.accessKeyDataLimit;
-    view.showFeatureMetricsDisclaimer = server.getMetricsEnabled() &&
+    this.serverView.isServerReachable = true;
+    this.serverView.serverId = server.getServerId();
+    this.serverView.serverName = server.getName();
+    this.serverView.serverHostname = server.getHostnameForAccessKeys();
+    this.serverView.serverManagementApiUrl = server.getManagementApiUrl();
+    this.serverView.serverPortForNewAccessKeys = server.getPortForNewAccessKeys();
+    this.serverView.serverCreationDate = ManageServerView.localizeDate(server.getCreatedDate(), this.language);
+    this.serverView.serverVersion = server.getVersion();
+    this.serverView.accessKeyDataLimit = ManageServerView.dataLimitToDisplayDataAmount(server.getAccessKeyDataLimit());
+    this.serverView.isAccessKeyDataLimitEnabled = !!this.serverView.accessKeyDataLimit;
+    this.serverView.showFeatureMetricsDisclaimer = server.getMetricsEnabled() &&
         !server.getAccessKeyDataLimit() && !ManageServerView.hasSeenFeatureMetricsNotification();
 
     const version = server.getVersion();
     if (version) {
-      view.isAccessKeyPortEditable = semver.gte(version, CHANGE_KEYS_PORT_VERSION);
-      view.supportsAccessKeyDataLimit = semver.gte(version, DATA_LIMITS_VERSION);
-      view.isHostnameEditable = semver.gte(version, CHANGE_HOSTNAME_VERSION);
+      this.serverView.isAccessKeyPortEditable = semver.gte(version, CHANGE_KEYS_PORT_VERSION);
+      this.serverView.supportsAccessKeyDataLimit = semver.gte(version, DATA_LIMITS_VERSION);
+      this.serverView.isHostnameEditable = semver.gte(version, CHANGE_HOSTNAME_VERSION);
     }
 
     if (isManagedServer(server)) {
-      view.isServerManaged = true;
+      this.serverView.isServerManaged = true;
       const host = server.getHost();
-      view.monthlyCost = host.getMonthlyCost().usd;
-      view.monthlyOutboundTransferBytes =
+      this.serverView.monthlyCost = host.getMonthlyCost().usd;
+      this.serverView.monthlyOutboundTransferBytes =
           host.getMonthlyOutboundTransferLimit().terabytes * (10 ** 12);
-      view.serverLocation = this.getLocalizedCityName(host.getRegionId());
+      this.serverView.serverLocation = this.getLocalizedCityName(host.getRegionId());
     } else {
-      view.isServerManaged = false;
+      this.serverView.isServerManaged = false;
     }
 
-    view.metricsEnabled = server.getMetricsEnabled();
+    this.serverView.metricsEnabled = server.getMetricsEnabled();
     // this.appRoot.showServerView();
-    this.showMetricsOptInWhenNeeded(server, view);
+    this.showMetricsOptInWhenNeeded(server, this.serverView);
 
     // Load "My Connection" and other access keys.
     try {
       const serverAccessKeys = await server.listAccessKeys();
-      view.accessKeyRows = serverAccessKeys.map(this.convertToUiAccessKey.bind(this));
-      if (!view.accessKeyDataLimit) {
-        view.accessKeyDataLimit = ManageServerView.dataLimitToDisplayDataAmount(
+      this.serverView.accessKeyRows = serverAccessKeys.map(this.convertToUiAccessKey.bind(this));
+      if (!this.serverView.accessKeyDataLimit) {
+        this.serverView.accessKeyDataLimit = ManageServerView.dataLimitToDisplayDataAmount(
             await ManageServerView.computeDefaultAccessKeyDataLimit(server, serverAccessKeys));
       }
       // Show help bubbles once the page has rendered.
       setTimeout(() => {
-        ManageServerView.showHelpBubblesOnce(view);
+        ManageServerView.showHelpBubblesOnce(this.serverView);
       }, 250);
     } catch (error) {
       console.error(`Failed to load access keys: ${error}`);
@@ -131,10 +137,6 @@ export class ManageServerView extends LitElement {
     }
 
     // this.showTransferStats(server, view);
-  }
-
-  private getServerView(): ServerView {
-    return this.shadowRoot.querySelector(`#serverView`) as ServerView;
   }
 
   private async renameServer(newName: string) {

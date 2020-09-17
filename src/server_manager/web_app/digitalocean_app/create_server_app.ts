@@ -15,9 +15,10 @@
 */
 
 import {customElement, html, LitElement, property} from 'lit-element';
+
+import * as server from '../../model/server';
 import {App, NotificationManager} from '../app';
 import {Location, OutlineRegionPicker} from '../ui_components/outline-region-picker-step';
-import * as server from '../../model/server';
 
 // DigitalOcean mapping of regions to flags
 const FLAG_IMAGE_DIR = 'images/flags';

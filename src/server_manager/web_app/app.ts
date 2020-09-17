@@ -19,6 +19,7 @@ import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
+import {isManagedServer, isManualServer} from '../model/server';
 
 import {DigitalOceanCreateServer} from './digitalocean_app/create_server_app';
 import {TokenManager} from './digitalocean_oauth';
@@ -27,7 +28,6 @@ import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './displ
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
 import {ServerView} from './ui_components/outline-server-view.js';
-import {isManagedServer, isManualServer} from "../model/server";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -77,7 +77,6 @@ export class App {
       private displayServerRepository: DisplayServerRepository,
       private digitalOceanTokenManager: TokenManager) {
     this.notificationManager = new NotificationManager(this.appRoot.getToast());
-    this.appRoot.getManageServerView().registerEventListeners(this.appRoot);
 
     appRoot.setAttribute('outline-version', this.version);
 
