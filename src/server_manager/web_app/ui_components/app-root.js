@@ -34,6 +34,7 @@ import './outline-survey-dialog.js';
 import './outline-intro-step.js';
 import './outline-language-picker.js';
 import '../digitalocean_app/create_server_app';
+import '../digitalocean_app/manage_server_app';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
 import './outline-region-picker-step';
@@ -44,10 +45,7 @@ import {AppLocalizeBehavior} from '@polymer/app-localize-behavior/app-localize-b
 import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 import {PolymerElement} from '@polymer/polymer/polymer-element.js';
-
 import {DisplayServer} from '../display_server';
-
-import {ServerView} from './outline-server-view.js';
 
 const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
 
@@ -412,11 +410,7 @@ export class AppRoot extends mixinBehaviors
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
               <digital-ocean-create-server id="digitalOceanCreateServer" localize="[[localize]]"></digital-ocean-create-server>
               <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
-              <div id="serverView">
-                <template is="dom-repeat" items="{{serverList}}" as="server">
-                  <outline-server-view id="serverView-{{_base64Encode(server.id)}}" localize="[[localize]]" hidden\$="{{!_isServerSelected(selectedServer, server)}}"></outline-server-view>
-                </template>
-              </div>
+              <manage-server-view id="manageServer" localize="[[localize]]" language="en-US"></manage-server-view>
             </iron-pages>
           </div>
         </app-header-layout>
@@ -609,22 +603,13 @@ export class AppRoot extends mixinBehaviors
     this.$.serverProgressStep.start();
   }
 
-  showServerView() {
-    this.$.serverProgressStep.stop();
-    this.currentPage = 'serverView';
+  getManageServerView() {
+    return this.$.manageServer;
   }
 
-  /**
-   * Gets the ServerView for the server given by its id
-   * @param {string} displayServerId
-   * @returns {ServerView}
-   */
-  getServerView(displayServerId) {
-    if (!displayServerId) {
-      return null;
-    }
-    const selectedServerId = this._base64Encode(displayServerId);
-    return this.$.serverView.querySelector(`#serverView-${selectedServerId}`);
+  showManageServerView(server, displayServer) {
+    this.currentPage = 'manageServer';
+    this.$.manageServer.showServer(server, displayServer);
   }
 
   handleRegionSelected(/** @type {Event} */ e) {
@@ -879,11 +864,11 @@ export class AppRoot extends mixinBehaviors
     this.maybeCloseDrawer();
   }
 
-  // Wrapper to encode a string in base64. This is necessary to set the server view IDs to
-  // the display server IDs, which are URLs, so they can be used with selector methods. The IDs
-  // are never decoded.
-  _base64Encode(s) {
-    return btoa(s).replace(/=/g, '');
-  }
+  // // Wrapper to encode a string in base64. This is necessary to set the server view IDs to
+  // // the display server IDs, which are URLs, so they can be used with selector methods. The IDs
+  // // are never decoded.
+  // _base64Encode(s) {
+  //   return btoa(s).replace(/=/g, '');
+  // }
 }
 customElements.define(AppRoot.is, AppRoot);

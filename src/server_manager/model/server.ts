@@ -186,3 +186,11 @@ export interface DataUsageByAccessKey {
 export interface DataLimit {
   readonly bytes: number;
 }
+
+export function isManagedServer(server: Server): server is ManagedServer {
+  return !!(server as ManagedServer).getHost;
+}
+
+export function isManualServer(server: Server): server is ManualServer {
+  return !!(server as ManualServer).forget;
+}
