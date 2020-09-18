@@ -15,10 +15,8 @@
 */
 import {customElement, html, LitElement, property} from 'lit-element';
 
-import * as server from '../../model/server';
-import {App} from '../app';
-
-import {OutlineNotificationView} from "../ui_components/outline-notification-view";
+import {ManagedServerRepository} from '../../model/server';
+import {OutlineNotificationView} from '../ui_components/outline-notification-view';
 import {Location, OutlineRegionPicker} from '../ui_components/outline-region-picker-step';
 
 // DigitalOcean mapping of regions to flags
@@ -37,8 +35,6 @@ const DIGITALOCEAN_FLAG_MAPPING: {[cityId: string]: string} = {
 @customElement('digital-ocean-create-server')
 export class DigitalOceanCreateServer extends LitElement {
   @property({type: Function}) localize: Function;
-  @property({type: Object}) app: App = null;
-  @property({type: Object}) digitalOceanRepository: server.ManagedServerRepository = null;
   @property({type: Object}) notificationView: OutlineNotificationView = null;
 
   render() {
@@ -48,24 +44,14 @@ export class DigitalOceanCreateServer extends LitElement {
     `;
   }
 
-  private createLocationModel(cityId: string, regionIds: string[]): Location {
-    return {
-      id: regionIds.length > 0 ? regionIds[0] : null,
-      name: this.localize(`city-${cityId}`),
-      flag: DIGITALOCEAN_FLAG_MAPPING[cityId] || '',
-      available: regionIds.length > 0,
-    };
-  }
-
   // The region picker initially shows all options as disabled. Options are enabled by this code,
   // after checking which regions are available.
-  async show() {
+  async show(digitalOceanRepository: ManagedServerRepository, retryFn: <T>(fn: () => Promise<T>) => Promise<T>) {
     const regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
     regionPicker.reset();
 
     try {
-      const map =
-          await this.app.digitalOceanRetry(() => this.digitalOceanRepository.getRegionMap());
+      const map = await retryFn(() => digitalOceanRepository.getRegionMap());
       const locations = Object.entries(map).map(([cityId, regionIds]) => {
         return this.createLocationModel(cityId, regionIds);
       });
@@ -74,5 +60,14 @@ export class DigitalOceanCreateServer extends LitElement {
       console.error(`Failed to get list of available regions: ${err}`);
       this.notificationView.showError(this.localize('error-do-regions'));
     }
+  }
+
+  private createLocationModel(cityId: string, regionIds: string[]): Location {
+    return {
+      id: regionIds.length > 0 ? regionIds[0] : null,
+      name: this.localize(`city-${cityId}`),
+      flag: DIGITALOCEAN_FLAG_MAPPING[cityId] || '',
+      available: regionIds.length > 0,
+    };
   }
 }

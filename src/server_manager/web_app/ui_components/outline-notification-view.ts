@@ -19,13 +19,13 @@ import '@polymer/paper-icon-button/paper-icon-button.js';
 
 import {PaperToastElement} from '@polymer/paper-toast/paper-toast';
 import {css, customElement, html, LitElement} from 'lit-element';
-import {COMMON_STYLES} from "./cloud-install-styles";
+import {COMMON_STYLES} from './cloud-install-styles';
 
 @customElement('outline-notification-view')
 export class OutlineNotificationView extends LitElement {
-
   static get styles() {
-    return [COMMON_STYLES, css`
+    return [
+      COMMON_STYLES, css`
       paper-toast {
         align-items: center;
         display: flex;
@@ -40,7 +40,8 @@ export class OutlineNotificationView extends LitElement {
         height: 20px;
         width: 20px;
       }
-      `];
+      `
+    ];
   }
 
   render() {

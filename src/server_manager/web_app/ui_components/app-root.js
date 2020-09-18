@@ -398,7 +398,7 @@ export class AppRoot extends mixinBehaviors
               <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
               <digital-ocean-create-server id="digitalOceanCreateServer" localize="[[localize]]"></digital-ocean-create-server>
-              <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
+              <outline-server-progress-step id="serverProgressStep" localize="[[localize]]" notificationView="[[]]"></outline-server-progress-step>
               <div id="serverView">
                 <template is="dom-repeat" items="{{serverList}}" as="server">
                   <outline-server-view id="serverView-{{_base64Encode(server.id)}}" localize="[[localize]]" hidden\$="{{!_isServerSelected(selectedServer, server)}}"></outline-server-view>
@@ -512,6 +512,7 @@ export class AppRoot extends mixinBehaviors
         type: String,
         computed: '_computeSideBarMarginClass(shouldShowSideBar)',
       },
+      notificationView: {type: Object}
     };
   }
 
@@ -535,6 +536,10 @@ export class AppRoot extends mixinBehaviors
     this.addEventListener('SetUpAwsRequested', this.handleSetUpAwsRequested);
     this.addEventListener('SetUpGcpRequested', this.handleSetUpGcpRequested);
     this.addEventListener('ManualServerEntryCancelled', this.handleManualCancelled);
+  }
+
+  attached() {
+    this.notificationView = this.getNotificationView();
   }
 
   /**

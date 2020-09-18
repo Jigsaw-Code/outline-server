@@ -21,14 +21,14 @@ import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
 
+import {DigitalOceanCreateServer} from './digitalocean_app/create_server_app';
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
-import {DigitalOceanCreateServer} from './digitalocean_app/create_server_app';
+import {OutlineNotificationView} from './ui_components/outline-notification-view';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
-import {OutlineNotificationView} from "./ui_components/outline-notification-view";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -139,11 +139,6 @@ export class App {
       private displayServerRepository: DisplayServerRepository,
       private digitalOceanTokenManager: TokenManager) {
     this.notificationView = this.appRoot.getNotificationView();
-
-    if (!this.notificationView) {
-      console.log('Notification view is null');
-    }
-
 
     appRoot.setAttribute('outline-version', this.version);
 
@@ -516,7 +511,8 @@ export class App {
                 this.showIntro();
                 const msg = `Failed to get DigitalOcean account information: ${error}`;
                 console.error(msg);
-                this.appRoot.getNotificationView().showError(this.appRoot.localize('error-do-account-info'));
+                this.appRoot.getNotificationView().showError(
+                    this.appRoot.localize('error-do-account-info'));
                 reject(new Error(msg));
               }
             });
@@ -642,8 +638,7 @@ export class App {
   }
 
   private displayAppUpdateNotification() {
-    this.notificationView.showNotification(
-        this.appRoot.localize('notification-app-update'), 60000);
+    this.notificationView.showNotification(this.appRoot.localize('notification-app-update'), 60000);
   }
 
   private connectToDigitalOcean() {
@@ -724,10 +719,7 @@ export class App {
   private async showCreateServer() {
     const digitalOceanCreateServer =
         this.appRoot.getAndShowDigitalOceanCreateServer() as DigitalOceanCreateServer;
-    digitalOceanCreateServer.app = this;
-    digitalOceanCreateServer.digitalOceanRepository = this.digitalOceanRepository;
-    digitalOceanCreateServer.notificationView = this.notificationView;
-    await digitalOceanCreateServer.show();
+    await digitalOceanCreateServer.show(this.digitalOceanRepository, this.digitalOceanRetry.bind(this));
   }
 
   private showServerCreationProgress() {
@@ -988,8 +980,7 @@ export class App {
         .then((serverAccessKey: server.AccessKey) => {
           const uiAccessKey = this.convertToUiAccessKey(serverAccessKey);
           this.appRoot.getServerView(this.appRoot.selectedServer.id).addAccessKey(uiAccessKey);
-          this.notificationView.showNotification(
-              this.appRoot.localize('notification-key-added'));
+          this.notificationView.showNotification(this.appRoot.localize('notification-key-added'));
         })
         .catch((error) => {
           console.error(`Failed to add access key: ${error}`);
@@ -1127,8 +1118,7 @@ export class App {
     this.selectedServer.removeAccessKey(accessKeyId)
         .then(() => {
           this.appRoot.getServerView(this.appRoot.selectedServer.id).removeAccessKey(accessKeyId);
-          this.notificationView.showNotification(
-              this.appRoot.localize('notification-key-removed'));
+          this.notificationView.showNotification(this.appRoot.localize('notification-key-removed'));
         })
         .catch((error) => {
           console.error(`Failed to remove access key: ${error}`);
@@ -1187,8 +1177,7 @@ export class App {
       this.appRoot.selectedServer = null;
       this.selectedServer = null;
       this.showIntro();
-      this.notificationView.showNotification(
-          this.appRoot.localize('notification-server-removed'));
+      this.notificationView.showNotification(this.appRoot.localize('notification-server-removed'));
     });
   }
 
