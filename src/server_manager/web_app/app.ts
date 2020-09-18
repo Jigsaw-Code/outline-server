@@ -719,7 +719,8 @@ export class App {
   private async showCreateServer() {
     const digitalOceanCreateServer =
         this.appRoot.getAndShowDigitalOceanCreateServer() as DigitalOceanCreateServer;
-    await digitalOceanCreateServer.show(this.digitalOceanRepository, this.digitalOceanRetry.bind(this));
+    await digitalOceanCreateServer.show(
+        this.digitalOceanRepository, this.digitalOceanRetry.bind(this));
   }
 
   private showServerCreationProgress() {

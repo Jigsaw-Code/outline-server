@@ -46,7 +46,9 @@ export class DigitalOceanCreateServer extends LitElement {
 
   // The region picker initially shows all options as disabled. Options are enabled by this code,
   // after checking which regions are available.
-  async show(digitalOceanRepository: ManagedServerRepository, retryFn: <T>(fn: () => Promise<T>) => Promise<T>) {
+  async show(
+      digitalOceanRepository: ManagedServerRepository,
+      retryFn: <T>(fn: () => Promise<T>) => Promise<T>) {
     const regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
     regionPicker.reset();
 
