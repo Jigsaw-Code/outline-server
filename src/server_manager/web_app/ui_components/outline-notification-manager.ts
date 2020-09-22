@@ -21,8 +21,8 @@ import {PaperToastElement} from '@polymer/paper-toast/paper-toast';
 import {css, customElement, html, LitElement} from 'lit-element';
 import {COMMON_STYLES} from './cloud-install-styles';
 
-@customElement('outline-notification-view')
-export class OutlineNotificationView extends LitElement {
+@customElement('outline-notification-manager')
+export class OutlineNotificationManager extends LitElement {
   static get styles() {
     return [
       COMMON_STYLES, css`

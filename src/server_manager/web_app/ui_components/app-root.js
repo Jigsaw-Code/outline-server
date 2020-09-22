@@ -35,7 +35,7 @@ import './outline-language-picker.js';
 import '../digitalocean_app/create_server_app';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
-import './outline-notification-view';
+import './outline-notification-manager';
 import './outline-region-picker-step';
 import './outline-server-progress-step.js';
 import './outline-tos-view.js';
@@ -443,7 +443,7 @@ export class AppRoot extends mixinBehaviors
         </div>
       </app-drawer>
 
-      <outline-notification-view id="notificationView"></outline-notification-view>
+      <outline-notifications id="notificationManager"></outline-notifications>
 
       <!-- Modal dialogs must be outside the app container; otherwise the backdrop covers them.  -->
       <outline-survey-dialog id="surveyDialog" localize="[[localize]]"></outline-survey-dialog>
@@ -539,7 +539,7 @@ export class AppRoot extends mixinBehaviors
 
   ready() {
     super.ready();
-    this.$.digitalOceanCreateServer.notificationView = this.getNotificationView();
+    this.$.digitalOceanCreateServer.notificationManager = this.getNotificationManager();
   }
 
   /**
@@ -647,8 +647,8 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
   }
 
-  getNotificationView() {
-    return this.$.notificationView;
+  getNotificationManager() {
+    return this.$.notificationManager;
   }
 
   /**

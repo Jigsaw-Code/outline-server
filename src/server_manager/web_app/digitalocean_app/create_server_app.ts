@@ -16,7 +16,7 @@
 import {customElement, html, LitElement, property} from 'lit-element';
 
 import {ManagedServerRepository} from '../../model/server';
-import {OutlineNotificationView} from '../ui_components/outline-notification-view';
+import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 import {Location, OutlineRegionPicker} from '../ui_components/outline-region-picker-step';
 
 // DigitalOcean mapping of regions to flags
@@ -35,7 +35,7 @@ const DIGITALOCEAN_FLAG_MAPPING: {[cityId: string]: string} = {
 @customElement('digital-ocean-create-server')
 export class DigitalOceanCreateServer extends LitElement {
   @property({type: Function}) localize: Function;
-  @property({type: Object}) notificationView: OutlineNotificationView = null;
+  @property({type: Object}) notificationManager: OutlineNotificationManager = null;
 
   render() {
     return html`
@@ -60,7 +60,7 @@ export class DigitalOceanCreateServer extends LitElement {
       regionPicker.locations = locations;
     } catch (err) {
       console.error(`Failed to get list of available regions: ${err}`);
-      this.notificationView.showError(this.localize('error-do-regions'));
+      this.notificationManager.showError(this.localize('error-do-regions'));
     }
   }
 
