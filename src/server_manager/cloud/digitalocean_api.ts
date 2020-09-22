@@ -253,13 +253,15 @@ function makeValidDropletName(name: string): string {
 }
 
 export async function digitalOceanRetry<T>(
-    f: () => Promise<T>, onError: (err: Error) => Promise<T>): Promise<T> {
+    f: () => Promise<T>, onAuthError: (err: Error) => Promise<boolean>): Promise<T> {
   try {
     return await f();
   } catch (err) {
-    if (!(err instanceof XhrError)) {
-      return Promise.reject(err);
+    if (err instanceof XhrError) {
+      const retry = await onAuthError(err);
+      if (retry) {
+        return digitalOceanRetry(f, onAuthError);
+      }
     }
-    return onError(err);
   }
 }

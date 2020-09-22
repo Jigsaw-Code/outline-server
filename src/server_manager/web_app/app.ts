@@ -333,7 +333,7 @@ export class App {
         messageKey = 'error-servers-removed';
         placeholder = 'serverNames';
       }
-      this.appRoot.notificationManager(
+      this.notificationView.showError(
           this.appRoot.localize(messageKey, placeholder, unsyncedServerNames));
     }
 
@@ -618,18 +618,16 @@ export class App {
   //       time to discover an invalid access token is when the application
   //       starts.
   digitalOceanRetry<T>(fn: () => Promise<T>): Promise<T> {
-    return digitalocean_api.digitalOceanRetry(fn, this.retryConnectivityDialog(fn));
+    return digitalocean_api.digitalOceanRetry(fn, this.reauthenticateFlow.bind(this));
   }
 
-  retryConnectivityDialog<T>(fn: () => Promise<T>): (err: Error) => Promise<T> {
-    return (err) => this.appRoot.showConnectivityDialog((retry: boolean) => {
-      if (retry) {
-        return this.digitalOceanRetry(fn);
-      } else {
-        this.clearCredentialsAndShowIntro();
-        throw err;
-      }
-    });
+  async reauthenticateFlow(err: Error): Promise<boolean> {
+    const shouldRetry = await this.appRoot.showConnectivityDialog();
+    if (!shouldRetry) {
+      this.clearCredentialsAndShowIntro();
+      throw err;
+    }
+    return shouldRetry;
   }
 
   // Shows the intro screen with overview and options to sign in or sign up.
