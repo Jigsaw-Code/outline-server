@@ -525,31 +525,29 @@ export class App {
             });
       };
 
-      authEvents.on('account-update', (account: digitalocean_api.Account) => {
+      authEvents.on('account-update', async (account: digitalocean_api.Account) => {
         if (cancelled) {
           return [];
         }
         this.appRoot.adminEmail = account.email;
         if (account.status === 'active') {
           bringToFront();
-          let maybeSleep = Promise.resolve();
           if (activatingAccount) {
             // Show the 'account active' screen for a few seconds if the account was activated
             // during this session.
             this.digitalOceanConnectAccountApp.showAccountActive();
-            maybeSleep = sleep(1500);
+            sleep(1500);
           }
-          maybeSleep
-              .then(() => {
-                this.digitalOceanRepository = this.createDigitalOceanServerRepository(doSession);
-                resolve(this.digitalOceanRepository.listServers());
-              })
-              .catch((e) => {
-                this.showIntro();
-                const msg = 'Could not fetch server list from DigitalOcean';
-                console.error(msg);
-                reject(new Error(msg));
-              });
+
+          try {
+            this.digitalOceanRepository = this.createDigitalOceanServerRepository(doSession);
+            resolve(this.digitalOceanRepository.listServers());
+          } catch(e) {
+            this.showIntro();
+            const msg = 'Could not fetch server list from DigitalOcean';
+            console.error(msg);
+            reject(new Error(msg));
+          }
         } else {
           this.appRoot.showDigitalOceanConnectAccountApp();
           activatingAccount = true;
