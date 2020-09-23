@@ -293,10 +293,9 @@ export class App {
   async connectToDigitalOcean(): Promise<server.ManagedServerRepository> {
     let accessToken = this.digitalOceanTokenManager.getStoredToken();
     if (!accessToken) {
-      console.log('Connect account');
       this.appRoot.showDigitalOceanConnectAccountApp();
-      accessToken =
-          await this.digitalOceanConnectAccountApp.startConnectAccountFlow(this.clearCredentialsAndShowIntro);
+      accessToken = await this.digitalOceanConnectAccountApp.startConnectAccountFlow(
+          this.clearCredentialsAndShowIntro);
       // Save accessToken to storage. DigitalOcean tokens
       // expire after 30 days, unless they are manually revoked by the user.
       // After 30 days the user will have to sign into DigitalOcean again.
@@ -307,8 +306,7 @@ export class App {
       this.digitalOceanTokenManager.writeTokenToStorage(accessToken);
     }
 
-    // Verify account flow
-    console.log('Verify account');
+    // Verify account
     const doSession = this.createDigitalOceanSession(accessToken);
     this.digitalOceanConnectAccountApp.onCancel = () => {
       this.clearCredentialsAndShowIntro();
@@ -333,7 +331,6 @@ export class App {
       console.error('Could not fetch server list from DigitalOcean');
       this.showIntro();
     }
-
 
     try {
       if (!!this.serverBeingCreated) {
@@ -630,7 +627,6 @@ export class App {
 
   // Clears the credentials and returns to the intro screen.
   private clearCredentialsAndShowIntro() {
-    console.log('Clearing creds');
     this.digitalOceanTokenManager.removeTokenFromStorage();
     // Remove display servers from storage.
     this.displayServerRepository.listServers().then((displayServers: DisplayServer[]) => {
