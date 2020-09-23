@@ -18,6 +18,7 @@ import * as semver from 'semver';
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import * as server from '../model/server';
+import {ManagedServer} from '../model/server';
 
 import {DigitalOceanConnectAccount} from './digitalocean_app/connect_account_app';
 import {DigitalOceanCreateServer} from './digitalocean_app/create_server_app';
@@ -143,11 +144,9 @@ export class App {
 
     appRoot.setAttribute('outline-version', this.version);
 
-    appRoot.addEventListener('ConnectToDigitalOcean', (event: CustomEvent) => {
-      const connected = this.reconnectToDigitalOcean();
-      if (!connected) {
-        this.connectToDigitalOcean();
-      }
+    appRoot.addEventListener('ConnectToDigitalOcean', async (event: CustomEvent) => {
+      const digitalOceanRepository = await this.connectToDigitalOcean();
+      this.refreshDigitalOceanServers(digitalOceanRepository);
     });
     appRoot.addEventListener('SignOutRequested', (event: CustomEvent) => {
       this.clearCredentialsAndShowIntro();
@@ -291,6 +290,65 @@ export class App {
     onUpdateDownloaded(this.displayAppUpdateNotification.bind(this));
   }
 
+  async connectToDigitalOcean(): Promise<server.ManagedServerRepository> {
+    let accessToken = this.digitalOceanTokenManager.getStoredToken();
+    if (!accessToken) {
+      console.log('Connect account');
+      this.appRoot.showDigitalOceanConnectAccountApp();
+      accessToken = await this.digitalOceanConnectAccountApp.start(this.clearCredentialsAndShowIntro);
+      // Save accessToken to storage. DigitalOcean tokens
+      // expire after 30 days, unless they are manually revoked by the user.
+      // After 30 days the user will have to sign into DigitalOcean again.
+      // Note we cannot yet use DigitalOcean refresh tokens, as they require
+      // a client_secret to be stored on a server and not visible to end users
+      // in client-side JS.  More details at:
+      // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
+      this.digitalOceanTokenManager.writeTokenToStorage(accessToken);
+    }
+
+    // Verify account flow
+    console.log('Verify account');
+    const doSession = this.createDigitalOceanSession(accessToken);
+    this.digitalOceanConnectAccountApp.onCancel = () => {
+      this.clearCredentialsAndShowIntro();
+      throw new Error('User canceled');
+    };
+    this.appRoot.showDigitalOceanConnectAccountApp();
+    const account = await this.digitalOceanConnectAccountApp.verifyAccount(doSession);
+    this.appRoot.adminEmail = account.email;
+
+    return this.createDigitalOceanServerRepository(doSession);
+  }
+
+  async refreshDigitalOceanServers(digitalOceanRepository: server.ManagedServerRepository): Promise<ManagedServer[]> {
+    let managedServers;
+    try {
+      this.digitalOceanRepository = digitalOceanRepository; // TODO: Remove
+      managedServers = await this.digitalOceanRepository.listServers();
+    } catch (error) {
+      console.error('Could not fetch server list from DigitalOcean');
+      this.showIntro();
+    }
+
+    try {
+      if (!!this.serverBeingCreated) {
+        // Disallow creating multiple servers simultaneously.
+        this.showServerCreationProgress();
+      } else if (managedServers.length > 0) {
+        // Show the first server in the list since the user just signed in to DO.
+        await this.syncServersToDisplay(managedServers);
+        const displayServer = this.appRoot.serverList.find((displayServer: DisplayServer) => displayServer.isManaged);
+        this.showServerFromRepository(displayServer);
+      } else {
+        this.showCreateServer();
+      }
+    } catch (error) {
+      this.clearCredentialsAndShowIntro();
+      bringToFront();
+    }
+    return managedServers;
+  }
+
   async start(): Promise<void> {
     this.showIntro();
     await this.syncDisplayServersToUi();
@@ -298,9 +356,9 @@ export class App {
     const manualServersPromise = this.manualServerRepository.listServers();
 
     const accessToken = this.digitalOceanTokenManager.getStoredToken();
-    const managedServersPromise = !!accessToken ?
-        this.enterDigitalOceanMode(accessToken).catch(e => [] as server.ManagedServer[]) :
-        Promise.resolve([]);
+    const doSession = this.createDigitalOceanSession(accessToken);
+    const digitalOceanRepository = this.createDigitalOceanServerRepository(doSession);
+    const managedServersPromise = !!accessToken ? await this.refreshDigitalOceanServers(digitalOceanRepository) : Promise.resolve([]);
 
     return Promise.all([manualServersPromise, managedServersPromise])
         .then(([manualServers, managedServers]) => {
@@ -482,9 +540,7 @@ export class App {
     }
   }
 
-  // Signs in to DigitalOcean through the OAuthFlow. Creates a `ManagedServerRepository` and
-  // resolves with the servers present in the account.
-  private async enterDigitalOceanMode(accessToken: string): Promise<server.ManagedServer[]> {
+  private async verifyAccountFlow(accessToken: string): Promise<void> {
     const doSession = this.createDigitalOceanSession(accessToken);
 
     try {
@@ -496,8 +552,6 @@ export class App {
       this.appRoot.showDigitalOceanConnectAccountApp();
       const account = await this.digitalOceanConnectAccountApp.verifyAccount(doSession);
       this.appRoot.adminEmail = account.email;
-      this.digitalOceanRepository = this.createDigitalOceanServerRepository(doSession);
-      return this.digitalOceanRepository.listServers();
     } catch (error) {
       console.error('Could not fetch server list from DigitalOcean');
       this.showIntro();
@@ -582,56 +636,6 @@ export class App {
 
   private displayAppUpdateNotification() {
     this.notificationManager.showNotification(this.appRoot.localize('notification-app-update'), 60000);
-  }
-
-  private reconnectToDigitalOcean() {
-    const accessToken = this.digitalOceanTokenManager.getStoredToken();
-    if (accessToken) {
-      this.enterDigitalOceanMode(accessToken).then((managedServers) => {
-        if (!!this.serverBeingCreated) {
-          // Disallow creating multiple servers simultaneously.
-          this.showServerCreationProgress();
-          return;
-        }
-        this.syncServersToDisplay(managedServers);
-        this.showCreateServer();
-      });
-    }
-    return accessToken !== null;
-  }
-
-  private async connectToDigitalOcean() {
-    this.appRoot.showDigitalOceanConnectAccountApp();
-    try {
-      const accessToken =
-          await this.digitalOceanConnectAccountApp.start(this.clearCredentialsAndShowIntro);
-
-      // Save accessToken to storage. DigitalOcean tokens
-      // expire after 30 days, unless they are manually revoked by the user.
-      // After 30 days the user will have to sign into DigitalOcean again.
-      // Note we cannot yet use DigitalOcean refresh tokens, as they require
-      // a client_secret to be stored on a server and not visible to end users
-      // in client-side JS.  More details at:
-      // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
-      this.digitalOceanTokenManager.writeTokenToStorage(accessToken);
-      this.enterDigitalOceanMode(accessToken).then((managedServers) => {
-        if (managedServers.length > 0) {
-          this.syncServersToDisplay(managedServers).then(() => {
-            // Show the first server in the list since the user just signed in to DO.
-            const displayServer = this.appRoot.serverList.find(
-                (displayServer: DisplayServer) => displayServer.isManaged);
-            this.showServerFromRepository(displayServer);
-          });
-        } else {
-          this.showCreateServer();
-        }
-      });
-    } catch (error) {
-      // if (!session.isCancelled()) {    // TODO: Determine if this check is necessary.
-      this.clearCredentialsAndShowIntro();
-      bringToFront();
-      // }
-    }
   }
 
   // Clears the credentials and returns to the intro screen.
