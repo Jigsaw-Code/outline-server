@@ -146,21 +146,10 @@ export class App {
     appRoot.setAttribute('outline-version', this.version);
 
     appRoot.addEventListener('ConnectToDigitalOcean', (event: CustomEvent) => {
-      const accessToken = this.digitalOceanTokenManager.getStoredToken();
-      if (accessToken) {
-        this.enterDigitalOceanMode(accessToken).then((managedServers) => {
-          if (!!this.serverBeingCreated) {
-            // Disallow creating multiple servers simultaneously.
-            this.showServerCreationProgress();
-            return;
-          }
-          this.syncServersToDisplay(managedServers);
-          this.showCreateServer();
-        });
-        return;
+      const connected = this.reconnectToDigitalOcean();
+      if (!connected) {
+        this.connectToDigitalOcean();
       }
-
-      this.connectToDigitalOcean();
     });
     appRoot.addEventListener('SignOutRequested', (event: CustomEvent) => {
       this.clearCredentialsAndShowIntro();
@@ -657,11 +646,27 @@ export class App {
     this.notificationManager.showNotification(this.appRoot.localize('notification-app-update'), 60000);
   }
 
+  private reconnectToDigitalOcean() {
+    const accessToken = this.digitalOceanTokenManager.getStoredToken();
+    if (accessToken) {
+      this.enterDigitalOceanMode(accessToken).then((managedServers) => {
+        if (!!this.serverBeingCreated) {
+          // Disallow creating multiple servers simultaneously.
+          this.showServerCreationProgress();
+          return;
+        }
+        this.syncServersToDisplay(managedServers);
+        this.showCreateServer();
+      });
+    }
+    return accessToken !== null;
+  }
+
   private async connectToDigitalOcean() {
     this.appRoot.showDigitalOceanConnectAccountApp();
-
     try {
-      const accessToken = await this.digitalOceanConnectAccountApp.start(this.clearCredentialsAndShowIntro);
+      const accessToken =
+          await this.digitalOceanConnectAccountApp.start(this.clearCredentialsAndShowIntro);
 
       // Save accessToken to storage. DigitalOcean tokens
       // expire after 30 days, unless they are manually revoked by the user.
@@ -685,8 +690,8 @@ export class App {
       });
     } catch (error) {
       // if (!session.isCancelled()) {    // TODO: Determine if this check is necessary.
-        this.clearCredentialsAndShowIntro();
-        bringToFront();
+      this.clearCredentialsAndShowIntro();
+      bringToFront();
       // }
     }
   }
