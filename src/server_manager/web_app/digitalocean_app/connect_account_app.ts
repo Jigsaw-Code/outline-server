@@ -18,8 +18,9 @@ import '@polymer/iron-pages/iron-pages.js';
 import '../ui_components/outline-step-view.js';
 
 import {css, customElement, html, LitElement, property} from 'lit-element';
+
+import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
-import {COMMON_STYLES} from "../ui_components/cloud-install-styles";
 
 @customElement('digital-ocean-connect-account-app')
 export class DigitalOceanConnectAccount extends LitElement {
@@ -29,7 +30,8 @@ export class DigitalOceanConnectAccount extends LitElement {
   @property({type: Object}) notificationManager: OutlineNotificationManager = null;
 
   static get styles() {
-    return [COMMON_STYLES, css`
+    return [
+      COMMON_STYLES, css`
       :host {
       }
       .container {
@@ -82,7 +84,8 @@ export class DigitalOceanConnectAccount extends LitElement {
       :host(:dir(rtl)) .mirror {
         transform: scaleX(-1);
       }
-    `];
+    `
+    ];
   }
 
   render() {
@@ -108,7 +111,8 @@ export class DigitalOceanConnectAccount extends LitElement {
             <img class="mirror" src="images/do_oauth_email.svg">
             <p>${this.localize('oauth-verify-tag')}</p>
           </div>
-          <paper-button @tap="${this.cancelTapped}">${this.localize('oauth-sign-out')}</paper-button>
+          <paper-button @tap="${this.cancelTapped}">${
+        this.localize('oauth-sign-out')}</paper-button>
         </paper-card>
       </outline-step-view>
 
@@ -120,7 +124,8 @@ export class DigitalOceanConnectAccount extends LitElement {
             <img class="mirror" src="images/do_oauth_billing.svg">
             <p>${this.localize('oauth-billing-tag')}</p>
           </div>
-          <paper-button @tap="${this.cancelTapped}">${this.localize('oauth-sign-out')}</paper-button>
+          <paper-button @tap="${this.cancelTapped}">${
+        this.localize('oauth-sign-out')}</paper-button>
         </paper-card>
       </outline-step-view>
 
