@@ -27,7 +27,6 @@ export class DigitalOceanConnectAccount extends LitElement {
   @property({type: Function}) localize: Function;
   @property({type: String}) currentPage = 'connectAccount';
   @property({type: Function}) onCancel: Function;
-  @property({type: Object}) notificationManager: OutlineNotificationManager = null;
 
   static get styles() {
     return [
