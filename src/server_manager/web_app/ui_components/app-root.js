@@ -27,7 +27,7 @@ import '@polymer/paper-listbox/paper-listbox.js';
 import '@polymer/paper-menu-button/paper-menu-button.js';
 import './cloud-install-styles.js';
 import './outline-about-dialog.js';
-import './outline-do-oauth-step.js';
+import '../digitalocean_app/connect_account_app';
 import './outline-feedback-dialog.js';
 import './outline-survey-dialog.js';
 import './outline-intro-step.js';
@@ -395,8 +395,9 @@ export class AppRoot extends mixinBehaviors
           <div class="app-container">
             <iron-pages attr-for-selected="id" selected="{{ currentPage }}">
               <outline-intro-step id="intro" is-signed-in-to-digital-ocean="{{isSignedInToDigitalOcean}}" digital-ocean-email="{{adminEmail}}" localize="[[localize]]"></outline-intro-step>
-              <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
+<!--              <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>-->
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
+              <digital-ocean-connect-account-app id="digitalOceanConnectAccount" localize="[[localize]]"></digital-ocean-connect-account-app>
               <digital-ocean-create-server id="digitalOceanCreateServer" localize="[[localize]]"></digital-ocean-create-server>
               <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
               <div id="serverView">
@@ -564,21 +565,12 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
   }
 
-  getDigitalOceanOauthFlow(onCancel) {
-    const oauthFlow = this.$.digitalOceanOauth;
-    oauthFlow.onCancel = onCancel;
-    return oauthFlow;
+  getDigitalOceanConnectAccountApp() {
+    return this.$.digitalOceanConnectAccount;
   }
 
-  showDigitalOceanOauthFlow() {
-    this.currentPage = 'digitalOceanOauth';
-  }
-
-  getAndShowDigitalOceanOauthFlow(onCancel) {
-    this.currentPage = 'digitalOceanOauth';
-    const oauthFlow = this.getDigitalOceanOauthFlow(onCancel);
-    oauthFlow.showConnectAccount();
-    return oauthFlow;
+  showDigitalOceanConnectAccountApp() {
+    this.currentPage = 'digitalOceanConnectAccount';
   }
 
   getAndShowDigitalOceanCreateServer() {

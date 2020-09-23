@@ -29,6 +29,7 @@ import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
 import {OutlineNotificationManager} from './ui_components/outline-notification-manager';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
+import {DigitalOceanConnectAccount} from "./digitalocean_app/connect_account_app";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -130,6 +131,7 @@ export class App {
   private selectedServer: server.Server;
   private serverBeingCreated: server.ManagedServer;
   private notificationManager: OutlineNotificationManager;
+  private digitalOceanConnectAccountApp: DigitalOceanConnectAccount;
 
   constructor(
       private appRoot: AppRoot, private readonly version: string,
@@ -139,6 +141,7 @@ export class App {
       private displayServerRepository: DisplayServerRepository,
       private digitalOceanTokenManager: TokenManager) {
     this.notificationManager = this.appRoot.getNotificationManager();
+    this.digitalOceanConnectAccountApp = this.appRoot.getDigitalOceanConnectAccountApp();
 
     appRoot.setAttribute('outline-version', this.version);
 
@@ -492,7 +495,8 @@ export class App {
         this.clearCredentialsAndShowIntro();
         reject(new Error('User canceled'));
       };
-      const oauthUi = this.appRoot.getDigitalOceanOauthFlow(cancelAccountStateVerification);
+
+      this.digitalOceanConnectAccountApp.onCancel = cancelAccountStateVerification;
       const query = () => {
         if (cancelled) {
           return;
@@ -529,7 +533,7 @@ export class App {
           if (activatingAccount) {
             // Show the 'account active' screen for a few seconds if the account was activated
             // during this session.
-            oauthUi.showAccountActive();
+            this.digitalOceanConnectAccountApp.showAccountActive();
             maybeSleep = sleep(1500);
           }
           maybeSleep
@@ -544,12 +548,12 @@ export class App {
                 reject(new Error(msg));
               });
         } else {
-          this.appRoot.showDigitalOceanOauthFlow();
+          this.appRoot.showDigitalOceanConnectAccountApp();
           activatingAccount = true;
           if (account.email_verified) {
-            oauthUi.showBilling();
+            this.digitalOceanConnectAccountApp.showBilling();
           } else {
-            oauthUi.showEmailVerification();
+            this.digitalOceanConnectAccountApp.showEmailVerification();
           }
           setTimeout(query, 1000);
         }
@@ -658,7 +662,9 @@ export class App {
       session.cancel();
       this.clearCredentialsAndShowIntro();
     };
-    this.appRoot.getAndShowDigitalOceanOauthFlow(handleOauthFlowCanceled);
+    this.digitalOceanConnectAccountApp.onCancel = handleOauthFlowCanceled;
+    this.digitalOceanConnectAccountApp.showConnectAccount();
+    this.appRoot.showDigitalOceanConnectAccountApp();
 
     session.result
         .then((accessToken) => {
