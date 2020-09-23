@@ -17,12 +17,13 @@ import '@polymer/polymer/polymer-legacy.js';
 import '@polymer/iron-pages/iron-pages.js';
 import '../ui_components/outline-step-view.js';
 
-import {css, customElement, html, LitElement, property} from 'lit-element';
 import {EventEmitter} from 'eventemitter3';
+import {css, customElement, html, LitElement, property} from 'lit-element';
+
+import {Account, DigitalOceanSession} from '../../cloud/digitalocean_api';
+import {sleep} from '../../infrastructure/sleep';
 import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
-import {Account, DigitalOceanSession} from "../../cloud/digitalocean_api";
-import {sleep} from "../../infrastructure/sleep";
 
 @customElement('digital-ocean-connect-account-app')
 export class DigitalOceanConnectAccount extends LitElement {
@@ -176,7 +177,7 @@ export class DigitalOceanConnectAccount extends LitElement {
       }
 
       try {
-        const account = await digitalOceanSession.getAccount();   // TODO: Wrap in retry
+        const account = await digitalOceanSession.getAccount();  // TODO: Wrap in retry
         if (await this.startAccountStatusCheckFlow(account)) {
           return account;
         }
@@ -200,7 +201,8 @@ export class DigitalOceanConnectAccount extends LitElement {
     if (account.status === 'active') {
       bringToFront();
       if (this.activatingAccount) {
-        // Show 'account active' screen for a few seconds if the account was activated during this session.
+        // Show 'account active' screen for a few seconds if the account was activated during this
+        // session.
         this.currentPage = 'accountActive';
         await sleep(1500);
       }

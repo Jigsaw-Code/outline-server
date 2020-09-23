@@ -13,12 +13,10 @@
 // limitations under the License.
 
 import * as sentry from '@sentry/electron';
-import {EventEmitter} from 'eventemitter3';
 import * as semver from 'semver';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
-import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
 
 import {DigitalOceanConnectAccount} from './digitalocean_app/connect_account_app';
