@@ -18,9 +18,11 @@ import '@polymer/iron-pages/iron-pages.js';
 import '../ui_components/outline-step-view.js';
 
 import {css, customElement, html, LitElement, property} from 'lit-element';
-
+import {EventEmitter} from 'eventemitter3';
 import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
+import {Account, DigitalOceanSession} from "../../cloud/digitalocean_api";
+import {sleep} from "../../infrastructure/sleep";
 
 @customElement('digital-ocean-connect-account-app')
 export class DigitalOceanConnectAccount extends LitElement {
@@ -28,6 +30,10 @@ export class DigitalOceanConnectAccount extends LitElement {
   @property({type: String}) currentPage = 'connectAccount';
   @property({type: Function}) onCancel: Function;
   @property({type: Object}) notificationManager: OutlineNotificationManager = null;
+
+  private eventEmitter = new EventEmitter();
+  private cancelled = false;
+  private activatingAccount = false;
 
   static get styles() {
     return [
@@ -143,25 +149,8 @@ export class DigitalOceanConnectAccount extends LitElement {
     </iron-pages>`;
   }
 
-  private cancelTapped() {
-    if (this.onCancel) {
-      this.onCancel();
-    }
-  }
-
-  showEmailVerification() {
-    this.currentPage = 'verifyEmail';
-  }
-
-  showBilling() {
-    this.currentPage = 'enterBilling';
-  }
-
-  showAccountActive() {
-    this.currentPage = 'accountActive';
-  }
-
   async start(onCancel: () => void): Promise<string> {
+    this.resetState();
     const session = runDigitalOceanOauth();
     this.onCancel = () => {
       session.cancel();
@@ -178,5 +167,64 @@ export class DigitalOceanConnectAccount extends LitElement {
       throw error;
     }
     return result;
+  }
+
+  async verifyAccount(digitalOceanSession: DigitalOceanSession): Promise<Account> {
+    while (true) {
+      if (this.cancelled) {
+        return Promise.reject('Authorization cancelled');
+      }
+
+      try {
+        const account = await digitalOceanSession.getAccount();   // TODO: Wrap in retry
+        if (await this.startAccountStatusCheckFlow(account)) {
+          return account;
+        }
+      } catch (error) {
+        if (!this.cancelled) {
+          console.error(`Failed to get DigitalOcean account information: ${error}`);
+          this.notificationManager.showError(this.localize('error-do-account-info'));
+          throw error;
+        }
+      }
+      await sleep(1000);
+    }
+  }
+
+  // Guides the user through the account activation flow. This includes:
+  //  * Email address verification
+  //  * Billing setup
+  //
+  // Returns true if account is active, false otherwise.
+  private async startAccountStatusCheckFlow(account: Account): Promise<boolean> {
+    if (account.status === 'active') {
+      bringToFront();
+      if (this.activatingAccount) {
+        // Show 'account active' screen for a few seconds if the account was activated during this session.
+        this.currentPage = 'accountActive';
+        await sleep(1500);
+      }
+      return true;
+    } else {
+      this.activatingAccount = true;
+      if (account.email_verified) {
+        this.currentPage = 'enterBilling';
+      } else {
+        this.currentPage = 'verifyEmail';
+      }
+      return false;
+    }
+  }
+
+  private cancelTapped() {
+    this.cancelled = true;
+    if (this.onCancel) {
+      this.onCancel();
+    }
+  }
+
+  private resetState() {
+    this.cancelled = false;
+    this.activatingAccount = false;
   }
 }

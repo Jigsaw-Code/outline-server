@@ -486,82 +486,24 @@ export class App {
 
   // Signs in to DigitalOcean through the OAuthFlow. Creates a `ManagedServerRepository` and
   // resolves with the servers present in the account.
-  private enterDigitalOceanMode(accessToken: string): Promise<server.ManagedServer[]> {
+  private async enterDigitalOceanMode(accessToken: string): Promise<server.ManagedServer[]> {
     const doSession = this.createDigitalOceanSession(accessToken);
-    const authEvents = new EventEmitter();
-    let cancelled = false;
-    let activatingAccount = false;
 
-    return new Promise((resolve, reject) => {
-      const cancelAccountStateVerification = () => {
-        cancelled = true;
+    try {
+      this.digitalOceanConnectAccountApp.onCancel = () => {
         this.clearCredentialsAndShowIntro();
-        reject(new Error('User canceled'));
+        throw new Error('User canceled');
       };
 
-      this.digitalOceanConnectAccountApp.onCancel = cancelAccountStateVerification;
-      const query = () => {
-        if (cancelled) {
-          return;
-        }
-        this.digitalOceanRetry(() => {
-              if (cancelled) {
-                return Promise.reject('Authorization cancelled');
-              }
-              return doSession.getAccount();
-            })
-            .then((account) => {
-              authEvents.emit('account-update', account);
-            })
-            .catch((error) => {
-              if (!cancelled) {
-                this.showIntro();
-                const msg = `Failed to get DigitalOcean account information: ${error}`;
-                console.error(msg);
-                this.appRoot.getNotificationView().showError(
-                    this.appRoot.localize('error-do-account-info'));
-                reject(new Error(msg));
-              }
-            });
-      };
-
-      authEvents.on('account-update', async (account: digitalocean_api.Account) => {
-        if (cancelled) {
-          return [];
-        }
-        this.appRoot.adminEmail = account.email;
-        if (account.status === 'active') {
-          bringToFront();
-          if (activatingAccount) {
-            // Show the 'account active' screen for a few seconds if the account was activated
-            // during this session.
-            this.digitalOceanConnectAccountApp.showAccountActive();
-            sleep(1500);
-          }
-
-          try {
-            this.digitalOceanRepository = this.createDigitalOceanServerRepository(doSession);
-            resolve(this.digitalOceanRepository.listServers());
-          } catch(e) {
-            this.showIntro();
-            const msg = 'Could not fetch server list from DigitalOcean';
-            console.error(msg);
-            reject(new Error(msg));
-          }
-        } else {
-          this.appRoot.showDigitalOceanConnectAccountApp();
-          activatingAccount = true;
-          if (account.email_verified) {
-            this.digitalOceanConnectAccountApp.showBilling();
-          } else {
-            this.digitalOceanConnectAccountApp.showEmailVerification();
-          }
-          setTimeout(query, 1000);
-        }
-      });
-
-      query();
-    });
+      this.appRoot.showDigitalOceanConnectAccountApp();
+      const account = await this.digitalOceanConnectAccountApp.verifyAccount(doSession);
+      this.appRoot.adminEmail = account.email;
+      this.digitalOceanRepository = this.createDigitalOceanServerRepository(doSession);
+      return this.digitalOceanRepository.listServers();
+    } catch (error) {
+      console.error('Could not fetch server list from DigitalOcean');
+      this.showIntro();
+    }
   }
 
   private showServerIfHealthy(server: server.Server, displayServer: DisplayServer) {
