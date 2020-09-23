@@ -27,6 +27,7 @@ export class DigitalOceanConnectAccount extends LitElement {
   @property({type: Function}) localize: Function;
   @property({type: String}) currentPage = 'connectAccount';
   @property({type: Function}) onCancel: Function;
+  @property({type: Object}) notificationManager: OutlineNotificationManager = null;
 
   static get styles() {
     return [
@@ -160,7 +161,22 @@ export class DigitalOceanConnectAccount extends LitElement {
     this.currentPage = 'accountActive';
   }
 
-  showConnectAccount() {
+  async start(onCancel: () => void): Promise<string> {
+    const session = runDigitalOceanOauth();
+    this.onCancel = () => {
+      session.cancel();
+      onCancel();
+    };
     this.currentPage = 'connectAccount';
+
+    let result;
+    try {
+      result = await session.result;
+    } catch (error) {
+      console.error(`DigitalOcean authentication failed: ${error}`);
+      this.notificationManager.showError(this.localize('error-do-auth'));
+      throw error;
+    }
+    return result;
   }
 }
