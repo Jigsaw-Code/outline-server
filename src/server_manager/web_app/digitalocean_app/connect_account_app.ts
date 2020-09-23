@@ -150,7 +150,7 @@ export class DigitalOceanConnectAccount extends LitElement {
     </iron-pages>`;
   }
 
-  async start(onCancel: () => void): Promise<string> {
+  async startConnectAccountFlow(onCancel: () => void): Promise<string> {
     this.resetState();
     const session = runDigitalOceanOauth();
     this.onCancel = () => {
@@ -170,7 +170,7 @@ export class DigitalOceanConnectAccount extends LitElement {
     return result;
   }
 
-  async verifyAccount(digitalOceanSession: DigitalOceanSession): Promise<Account> {
+  async startVerifyAccountFlow(digitalOceanSession: DigitalOceanSession): Promise<Account> {
     while (true) {
       if (this.cancelled) {
         return Promise.reject('Authorization cancelled');
@@ -178,7 +178,7 @@ export class DigitalOceanConnectAccount extends LitElement {
 
       try {
         const account = await digitalOceanSession.getAccount();  // TODO: Wrap in retry
-        if (await this.startAccountStatusCheckFlow(account)) {
+        if (await this.checkAccountStatus(account)) {
           return account;
         }
       } catch (error) {
@@ -192,12 +192,10 @@ export class DigitalOceanConnectAccount extends LitElement {
     }
   }
 
-  // Guides the user through the account activation flow. This includes:
-  //  * Email address verification
-  //  * Billing setup
+  // Checks the account status and updates the UI to reflect the current activation state.
   //
   // Returns true if account is active, false otherwise.
-  private async startAccountStatusCheckFlow(account: Account): Promise<boolean> {
+  private async checkAccountStatus(account: Account): Promise<boolean> {
     if (account.status === 'active') {
       bringToFront();
       if (this.activatingAccount) {

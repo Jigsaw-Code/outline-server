@@ -295,7 +295,8 @@ export class App {
     if (!accessToken) {
       console.log('Connect account');
       this.appRoot.showDigitalOceanConnectAccountApp();
-      accessToken = await this.digitalOceanConnectAccountApp.start(this.clearCredentialsAndShowIntro);
+      accessToken =
+          await this.digitalOceanConnectAccountApp.startConnectAccountFlow(this.clearCredentialsAndShowIntro);
       // Save accessToken to storage. DigitalOcean tokens
       // expire after 30 days, unless they are manually revoked by the user.
       // After 30 days the user will have to sign into DigitalOcean again.
@@ -314,21 +315,25 @@ export class App {
       throw new Error('User canceled');
     };
     this.appRoot.showDigitalOceanConnectAccountApp();
-    const account = await this.digitalOceanConnectAccountApp.verifyAccount(doSession);
+    const account = await this.digitalOceanConnectAccountApp.startVerifyAccountFlow(doSession);
     this.appRoot.adminEmail = account.email;
 
     return this.createDigitalOceanServerRepository(doSession);
   }
 
-  async refreshDigitalOceanServers(digitalOceanRepository: server.ManagedServerRepository): Promise<ManagedServer[]> {
+  async refreshDigitalOceanServers(digitalOceanRepository: server.ManagedServerRepository):
+      Promise<ManagedServer[]> {
+    console.log('refreshDigitalOceanServers');
+
     let managedServers;
     try {
-      this.digitalOceanRepository = digitalOceanRepository; // TODO: Remove
+      this.digitalOceanRepository = digitalOceanRepository;  // TODO: Remove
       managedServers = await this.digitalOceanRepository.listServers();
     } catch (error) {
       console.error('Could not fetch server list from DigitalOcean');
       this.showIntro();
     }
+
 
     try {
       if (!!this.serverBeingCreated) {
@@ -337,7 +342,8 @@ export class App {
       } else if (managedServers.length > 0) {
         // Show the first server in the list since the user just signed in to DO.
         await this.syncServersToDisplay(managedServers);
-        const displayServer = this.appRoot.serverList.find((displayServer: DisplayServer) => displayServer.isManaged);
+        const displayServer =
+            this.appRoot.serverList.find((displayServer: DisplayServer) => displayServer.isManaged);
         this.showServerFromRepository(displayServer);
       } else {
         this.showCreateServer();
@@ -358,7 +364,9 @@ export class App {
     const accessToken = this.digitalOceanTokenManager.getStoredToken();
     const doSession = this.createDigitalOceanSession(accessToken);
     const digitalOceanRepository = this.createDigitalOceanServerRepository(doSession);
-    const managedServersPromise = !!accessToken ? await this.refreshDigitalOceanServers(digitalOceanRepository) : Promise.resolve([]);
+    const managedServersPromise = !!accessToken ?
+        await this.refreshDigitalOceanServers(digitalOceanRepository) :
+        Promise.resolve([]);
 
     return Promise.all([manualServersPromise, managedServersPromise])
         .then(([manualServers, managedServers]) => {
@@ -540,24 +548,6 @@ export class App {
     }
   }
 
-  private async verifyAccountFlow(accessToken: string): Promise<void> {
-    const doSession = this.createDigitalOceanSession(accessToken);
-
-    try {
-      this.digitalOceanConnectAccountApp.onCancel = () => {
-        this.clearCredentialsAndShowIntro();
-        throw new Error('User canceled');
-      };
-
-      this.appRoot.showDigitalOceanConnectAccountApp();
-      const account = await this.digitalOceanConnectAccountApp.verifyAccount(doSession);
-      this.appRoot.adminEmail = account.email;
-    } catch (error) {
-      console.error('Could not fetch server list from DigitalOcean');
-      this.showIntro();
-    }
-  }
-
   private showServerIfHealthy(server: server.Server, displayServer: DisplayServer) {
     server.isHealthy().then((isHealthy) => {
       if (isHealthy) {
@@ -640,6 +630,7 @@ export class App {
 
   // Clears the credentials and returns to the intro screen.
   private clearCredentialsAndShowIntro() {
+    console.log('Clearing creds');
     this.digitalOceanTokenManager.removeTokenFromStorage();
     // Remove display servers from storage.
     this.displayServerRepository.listServers().then((displayServers: DisplayServer[]) => {
