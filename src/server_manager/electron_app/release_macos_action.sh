@@ -28,6 +28,7 @@ yarn do server_manager/electron_app/write_production_environment
 $ROOT_DIR/src/server_manager/node_modules/.bin/electron-builder \
   --projectDir=build/server_manager/electron_app/static \
   --config.asarUnpack=server_manager/web_app/images \
+  --config.generateUpdatesFilesForAllChannels=true \
   --publish=never \
   --config.publish.provider=generic \
   --config.publish.url=https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/ \
