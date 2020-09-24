@@ -43,8 +43,10 @@ fi
 
 yarn do server_manager/electron_app/build
 
+readonly BUILD_DIR=build/server_manager/electron_app/static
+
 $ROOT_DIR/src/server_manager/node_modules/.bin/electron-builder \
-  --projectDir=build/server_manager/electron_app/static \
+  --projectDir="${BUILD_DIR}" \
   --config.asarUnpack=server_manager/web_app/images \
   --config.generateUpdatesFilesForAllChannels=true \
   --publish=never \
@@ -54,3 +56,5 @@ $ROOT_DIR/src/server_manager/node_modules/.bin/electron-builder \
   --config.linux.icon=icons/png \
   --config.linux.category=Network \
   --config.artifactName='Outline-Manager.${ext}'
+
+echo "stagingPercentage: $STAGING_PERCENTAGE" >> "${BUILD_DIR}"/dist/$(src/server_manager/scripts/manager_release_channel.sh)-linux.yml
