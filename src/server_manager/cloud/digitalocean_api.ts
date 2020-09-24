@@ -93,7 +93,7 @@ export function createDigitalOceanSession(accessToken: string): DigitalOceanSess
   return new RestApiSession(accessToken);
 }
 
-class RestApiSession implements DigitalOceanSession {
+export class RestApiSession implements DigitalOceanSession {
   // Constructor takes a DigitalOcean access token, which should have
   // read+write permissions.
   constructor(public accessToken: string) {}

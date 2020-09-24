@@ -97,16 +97,17 @@ function sortLanguageDefsByName(languageDefs: LanguageDef[]) {
 document.addEventListener('WebComponentsReady', () => {
   // Parse URL query params.
   const params = new URL(document.URL).searchParams;
-  const debugMode = params.get('outlineDebugMode') === 'true';
-  const metricsUrl = params.get('metricsUrl');
-  const shadowboxImage = params.get('image');
   const version = params.get('version');
-  const sentryDsn = params.get('sentryDsn');
+  // const debugMode = params.get('outlineDebugMode') === 'true';
+  // const metricsUrl = params.get('metricsUrl');
+  // const shadowboxImage = params.get('image');
+  // const sentryDsn = params.get('sentryDsn');
 
-  // Set DigitalOcean server repository parameters.
-  const digitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) => {
-    return new digitalocean_server.DigitaloceanServerRepository(
-        session, shadowboxImage, metricsUrl, getSentryApiUrl(sentryDsn), debugMode);
+  const appSettings = {
+    debugMode: params.get('outlineDebugMode') === 'true',
+    metricsUrl: params.get('metricsUrl'),
+    shadowboxImage: params.get('image'),
+    sentryDsn: params.get('sentryDsn'),
   };
 
   // Create and start the app.
@@ -121,8 +122,7 @@ document.addEventListener('WebComponentsReady', () => {
   appRoot.supportedLanguages = sortLanguageDefsByName(filteredLanguageDefs);
   appRoot.setLanguage(language.string(), languageDirection);
   new App(
-      appRoot, version, digitalocean_api.createDigitalOceanSession,
-      digitalOceanServerRepositoryFactory, new ManualServerRepository('manualServers'),
+      appRoot, version, appSettings, new ManualServerRepository('manualServers'),
       new DisplayServerRepository(), new DigitalOceanTokenManager())
       .start();
 });

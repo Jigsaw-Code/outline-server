@@ -29,6 +29,7 @@ import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
 import {OutlineNotificationManager} from './ui_components/outline-notification-manager';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
+import {DigitalOceanVerifyAccount} from "./digitalocean_app/verify_account_app";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -121,9 +122,12 @@ function localizeDate(date: Date, language: string): string {
   return date.toLocaleString(language, {year: 'numeric', month: 'long', day: 'numeric'});
 }
 
-type DigitalOceanSessionFactory = (accessToken: string) => digitalocean_api.DigitalOceanSession;
-type DigitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) =>
-    server.ManagedServerRepository;
+export interface AppSettings {
+  debugMode: boolean;
+  metricsUrl: string;
+  shadowboxImage: string;
+  sentryDsn: string;
+}
 
 export class App {
   private digitalOceanRepository: server.ManagedServerRepository;
@@ -131,21 +135,29 @@ export class App {
   private serverBeingCreated: server.ManagedServer;
   private notificationManager: OutlineNotificationManager;
   private digitalOceanConnectAccountApp: DigitalOceanConnectAccount;
+  private digitalOceanVerifyAccountApp: DigitalOceanVerifyAccount;
 
   constructor(
-      private appRoot: AppRoot, private readonly version: string,
-      private createDigitalOceanSession: DigitalOceanSessionFactory,
-      private createDigitalOceanServerRepository: DigitalOceanServerRepositoryFactory,
+      private appRoot: AppRoot,
+      private readonly version: string,
+      private appSettings: AppSettings,
       private manualServerRepository: server.ManualServerRepository,
       private displayServerRepository: DisplayServerRepository,
       private digitalOceanTokenManager: TokenManager) {
     this.notificationManager = this.appRoot.getNotificationManager();
-    this.digitalOceanConnectAccountApp = this.appRoot.getDigitalOceanConnectAccountApp();
+    this.digitalOceanConnectAccountApp = this.appRoot.initializeDigitalOceanConnectAccountApp(appSettings, this.notificationManager);
+    this.digitalOceanVerifyAccountApp = this.appRoot.initializeDigitalOceanVerifyAccountApp(this.notificationManager);
 
     appRoot.setAttribute('outline-version', this.version);
 
     appRoot.addEventListener('ConnectToDigitalOcean', async (event: CustomEvent) => {
-      const digitalOceanRepository = await this.connectToDigitalOcean();
+      const digitalOceanRepository = await this.digitalOceanAccountConnect();
+      const account = await digitalOceanRepository.getAccount();
+      this.appRoot.adminEmail = account.id;
+
+      this.appRoot.showDigitalOceanVerifyAccountApp();
+      await this.digitalOceanVerifyAccountApp.start(digitalOceanRepository);
+
       this.refreshDigitalOceanServers(digitalOceanRepository);
     });
     appRoot.addEventListener('SignOutRequested', (event: CustomEvent) => {
@@ -287,15 +299,23 @@ export class App {
       this.handleShowServerRequested(event.detail.displayServerId);
     });
 
+    appRoot.addEventListener('DigitalOceanConnectAccount#Cancelled', (event: CustomEvent) => {
+      this.clearCredentialsAndShowIntro();
+    });
+
+    appRoot.addEventListener('DigitalOceanVerifyAccount#Cancelled', (event: CustomEvent) => {
+      this.clearCredentialsAndShowIntro();
+      throw new Error('User canceled');
+    });
+
     onUpdateDownloaded(this.displayAppUpdateNotification.bind(this));
   }
 
-  async connectToDigitalOcean(): Promise<server.ManagedServerRepository> {
+  async digitalOceanAccountConnect(): Promise<server.ManagedServerRepository> {
     let accessToken = this.digitalOceanTokenManager.getStoredToken();
     if (!accessToken) {
       this.appRoot.showDigitalOceanConnectAccountApp();
-      accessToken = await this.digitalOceanConnectAccountApp.startConnectAccountFlow(
-          this.clearCredentialsAndShowIntro);
+      accessToken = await this.digitalOceanConnectAccountApp.start();
       // Save accessToken to storage. DigitalOcean tokens
       // expire after 30 days, unless they are manually revoked by the user.
       // After 30 days the user will have to sign into DigitalOcean again.
@@ -306,24 +326,11 @@ export class App {
       this.digitalOceanTokenManager.writeTokenToStorage(accessToken);
     }
 
-    // Verify account
-    const doSession = this.createDigitalOceanSession(accessToken);
-    this.digitalOceanConnectAccountApp.onCancel = () => {
-      this.clearCredentialsAndShowIntro();
-      throw new Error('User canceled');
-    };
-    this.appRoot.showDigitalOceanConnectAccountApp();
-    const account = await this.digitalOceanConnectAccountApp.startVerifyAccountFlow(doSession);
-    this.appRoot.adminEmail = account.email;
-
-    return this.createDigitalOceanServerRepository(doSession);
+    return this.digitalOceanConnectAccountApp.fromAccessToken(accessToken);
   }
 
-  async refreshDigitalOceanServers(digitalOceanRepository: server.ManagedServerRepository):
-      Promise<ManagedServer[]> {
-    console.log('refreshDigitalOceanServers');
-
-    let managedServers;
+  async refreshDigitalOceanServers(digitalOceanRepository: server.ManagedServerRepository): Promise<ManagedServer[]> {
+    let managedServers: ManagedServer[] = [];
     try {
       this.digitalOceanRepository = digitalOceanRepository;  // TODO: Remove
       managedServers = await this.digitalOceanRepository.listServers();
@@ -353,14 +360,14 @@ export class App {
   }
 
   async start(): Promise<void> {
+    this.notificationManager = this.appRoot.getNotificationManager();
     this.showIntro();
     await this.syncDisplayServersToUi();
 
     const manualServersPromise = this.manualServerRepository.listServers();
 
     const accessToken = this.digitalOceanTokenManager.getStoredToken();
-    const doSession = this.createDigitalOceanSession(accessToken);
-    const digitalOceanRepository = this.createDigitalOceanServerRepository(doSession);
+    const digitalOceanRepository = this.digitalOceanConnectAccountApp.fromAccessToken(accessToken);
     const managedServersPromise = !!accessToken ?
         await this.refreshDigitalOceanServers(digitalOceanRepository) :
         Promise.resolve([]);

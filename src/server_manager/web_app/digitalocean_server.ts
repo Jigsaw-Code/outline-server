@@ -339,12 +339,20 @@ export function GetCityId(slug: server.RegionId): string {
 
 const MACHINE_SIZE = 's-1vcpu-1gb';
 
-export class DigitaloceanServerRepository implements server.ManagedServerRepository {
+export class DigitalOceanAccount implements server.ManagedServerRepository {
   private servers: DigitaloceanServer[] = [];
 
   constructor(
       private digitalOcean: DigitalOceanSession, private image: string, private metricsUrl: string,
       private sentryApiUrl: string|undefined, private debugMode: boolean) {}
+
+  async getAccount(): Promise<server.Account> {
+    const account = await this.digitalOcean.getAccount();
+    return {
+      id: account.email,
+      account,
+    };
+  }
 
   // Return a map of regions that are available and support our target machine size.
   getRegionMap(): Promise<Readonly<server.RegionMap>> {

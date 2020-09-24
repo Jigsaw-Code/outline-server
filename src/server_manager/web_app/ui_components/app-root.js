@@ -28,6 +28,7 @@ import '@polymer/paper-menu-button/paper-menu-button.js';
 import './cloud-install-styles.js';
 import './outline-about-dialog.js';
 import '../digitalocean_app/connect_account_app';
+import '../digitalocean_app/verify_account_app';
 import './outline-feedback-dialog.js';
 import './outline-survey-dialog.js';
 import './outline-intro-step.js';
@@ -397,6 +398,7 @@ export class AppRoot extends mixinBehaviors
               <outline-intro-step id="intro" is-signed-in-to-digital-ocean="{{isSignedInToDigitalOcean}}" digital-ocean-email="{{adminEmail}}" localize="[[localize]]"></outline-intro-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
               <digital-ocean-connect-account-app id="digitalOceanConnectAccount" localize="[[localize]]"></digital-ocean-connect-account-app>
+              <digital-ocean-verify-account-app id="digitalOceanVerifyAccount" localize="[[localize]]"></digital-ocean-verify-account-app>
               <digital-ocean-create-server id="digitalOceanCreateServer" localize="[[localize]]"></digital-ocean-create-server>
               <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
               <div id="serverView">
@@ -564,12 +566,23 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
   }
 
-  getDigitalOceanConnectAccountApp() {
+  initializeDigitalOceanConnectAccountApp(appSettings, notificationManager) {
+    this.$.digitalOceanConnectAccount.appSettings = appSettings;
+    this.$.digitalOceanConnectAccount.notificationManager = notificationManager;
     return this.$.digitalOceanConnectAccount;
   }
 
   showDigitalOceanConnectAccountApp() {
     this.currentPage = 'digitalOceanConnectAccount';
+  }
+
+  initializeDigitalOceanVerifyAccountApp(notificationManager) {
+    this.$.digitalOceanVerifyAccount.notificationManager = notificationManager;
+    return this.$.digitalOceanVerifyAccount;
+  }
+
+  showDigitalOceanVerifyAccountApp() {
+    this.currentPage = 'digitalOceanVerifyAccount';
   }
 
   getAndShowDigitalOceanCreateServer() {
