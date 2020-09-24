@@ -16,13 +16,15 @@
 import '@polymer/polymer/polymer-legacy.js';
 import '@polymer/iron-pages/iron-pages.js';
 import '../ui_components/outline-step-view.js';
+
 import {css, customElement, html, LitElement, property} from 'lit-element';
-import {COMMON_STYLES} from "../ui_components/cloud-install-styles";
-import {Account} from "../../cloud/digitalocean_api";
-import {sleep} from "../../infrastructure/sleep";
-import {OutlineNotificationManager} from "../ui_components/outline-notification-manager";
-import {makePublicEvent} from "../../infrastructure/events";
-import {ManagedServerRepository} from "../../model/server";
+
+import {Account} from '../../cloud/digitalocean_api';
+import {makePublicEvent} from '../../infrastructure/events';
+import {sleep} from '../../infrastructure/sleep';
+import {ManagedServerRepository} from '../../model/server';
+import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
+import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 
 @customElement('digital-ocean-verify-account-app')
 export class DigitalOceanVerifyAccount extends LitElement {
@@ -142,7 +144,8 @@ export class DigitalOceanVerifyAccount extends LitElement {
       }
 
       try {
-        const getAccountResponse = await digitalOceanRepository.getAccount();  // TODO: Wrap in retry
+        const getAccountResponse =
+            await digitalOceanRepository.getAccount();  // TODO: Wrap in retry
         if (await this.checkAccountStatus(getAccountResponse.account as Account)) {
           return true;
         }
@@ -162,8 +165,9 @@ export class DigitalOceanVerifyAccount extends LitElement {
   // Returns true if account is active, false otherwise.
   private async checkAccountStatus(account: Account): Promise<boolean> {
     if (account.status === 'active') {
-      if(this.activatingAccount) {
-        // Show 'account active' screen for a few seconds if the account was activated during this session.
+      if (this.activatingAccount) {
+        // Show 'account active' screen for a few seconds if the account was activated during this
+        // session.
         this.currentPage = 'accountActive';
         await sleep(1500);
         console.log('sleep');

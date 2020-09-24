@@ -22,6 +22,7 @@ import {ManagedServer} from '../model/server';
 
 import {DigitalOceanConnectAccount} from './digitalocean_app/connect_account_app';
 import {DigitalOceanCreateServer} from './digitalocean_app/create_server_app';
+import {DigitalOceanVerifyAccount} from './digitalocean_app/verify_account_app';
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
@@ -29,7 +30,6 @@ import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
 import {OutlineNotificationManager} from './ui_components/outline-notification-manager';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
-import {DigitalOceanVerifyAccount} from "./digitalocean_app/verify_account_app";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -138,15 +138,15 @@ export class App {
   private digitalOceanVerifyAccountApp: DigitalOceanVerifyAccount;
 
   constructor(
-      private appRoot: AppRoot,
-      private readonly version: string,
-      private appSettings: AppSettings,
+      private appRoot: AppRoot, private readonly version: string, private appSettings: AppSettings,
       private manualServerRepository: server.ManualServerRepository,
       private displayServerRepository: DisplayServerRepository,
       private digitalOceanTokenManager: TokenManager) {
     this.notificationManager = this.appRoot.getNotificationManager();
-    this.digitalOceanConnectAccountApp = this.appRoot.initializeDigitalOceanConnectAccountApp(appSettings, this.notificationManager);
-    this.digitalOceanVerifyAccountApp = this.appRoot.initializeDigitalOceanVerifyAccountApp(this.notificationManager);
+    this.digitalOceanConnectAccountApp =
+        this.appRoot.initializeDigitalOceanConnectAccountApp(appSettings, this.notificationManager);
+    this.digitalOceanVerifyAccountApp =
+        this.appRoot.initializeDigitalOceanVerifyAccountApp(this.notificationManager);
 
     appRoot.setAttribute('outline-version', this.version);
 
@@ -329,7 +329,8 @@ export class App {
     return this.digitalOceanConnectAccountApp.fromAccessToken(accessToken);
   }
 
-  async refreshDigitalOceanServers(digitalOceanRepository: server.ManagedServerRepository): Promise<ManagedServer[]> {
+  async refreshDigitalOceanServers(digitalOceanRepository: server.ManagedServerRepository):
+      Promise<ManagedServer[]> {
     let managedServers: ManagedServer[] = [];
     try {
       this.digitalOceanRepository = digitalOceanRepository;  // TODO: Remove

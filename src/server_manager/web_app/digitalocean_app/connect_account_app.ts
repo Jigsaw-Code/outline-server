@@ -16,15 +16,17 @@
 import '@polymer/polymer/polymer-legacy.js';
 import '@polymer/iron-pages/iron-pages.js';
 import '../ui_components/outline-step-view.js';
+
 import {css, customElement, html, LitElement, property} from 'lit-element';
+
+import {RestApiSession} from '../../cloud/digitalocean_api';
+import {makePublicEvent} from '../../infrastructure/events';
+import {getSentryApiUrl} from '../../infrastructure/sentry';
+import {ManagedServerRepository} from '../../model/server';
+import {AppSettings} from '../app';
+import * as digitalocean_server from '../digitalocean_server';
 import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
-import {makePublicEvent} from "../../infrastructure/events";
-import {ManagedServerRepository} from "../../model/server";
-import {RestApiSession} from "../../cloud/digitalocean_api";
-import * as digitalocean_server from "../digitalocean_server";
-import {getSentryApiUrl} from "../../infrastructure/sentry";
-import {AppSettings} from "../app";
 
 @customElement('digital-ocean-connect-account-app')
 export class DigitalOceanConnectAccount extends LitElement {
