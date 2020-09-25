@@ -13,5 +13,5 @@
 // limitations under the License.
 
 export enum Id {
-  DigitalOcean = "DigitalOcean",
+  DigitalOcean = 'DigitalOcean',
 }

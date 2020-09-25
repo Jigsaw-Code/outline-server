@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as cloud_povider from './cloud_provider';
-import {ManagedServer, RegionId, RegionMap} from "./server";
+import {ManagedServer, RegionId, RegionMap} from './server';
 
 export interface Data {
   id: string;

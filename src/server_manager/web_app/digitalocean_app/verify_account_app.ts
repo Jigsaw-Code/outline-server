@@ -21,9 +21,9 @@ import {css, customElement, html, LitElement, property} from 'lit-element';
 
 import {makePublicEvent} from '../../infrastructure/events';
 import {sleep} from '../../infrastructure/sleep';
+import {DigitalOceanAccount} from '../../model/digitalocean_account';
 import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
-import {DigitalOceanAccount} from "../../model/digitalocean_account";
 
 @customElement('digital-ocean-verify-account-app')
 export class DigitalOceanVerifyAccount extends LitElement {

@@ -17,7 +17,9 @@ import * as semver from 'semver';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
+import {LocalStorageRepository} from '../infrastructure/repository';
 import * as account from '../model/account';
+import {DigitalOceanAccount} from '../model/digitalocean_account';
 import * as server from '../model/server';
 import {ManagedServer} from '../model/server';
 
@@ -30,8 +32,6 @@ import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
 import {OutlineNotificationManager} from './ui_components/outline-notification-manager';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
-import {DigitalOceanAccount} from "../model/digitalocean_account";
-import {LocalStorageRepository} from "../infrastructure/repository";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -147,8 +147,8 @@ export class App {
       private displayServerRepository: DisplayServerRepository,
       private accountRepository: LocalStorageRepository<account.Data, string>) {
     this.notificationManager = this.appRoot.getNotificationManager();
-    this.digitalOceanConnectAccountApp =
-        this.appRoot.initializeDigitalOceanConnectAccountApp(appSettings, accountRepository, this.notificationManager);
+    this.digitalOceanConnectAccountApp = this.appRoot.initializeDigitalOceanConnectAccountApp(
+        appSettings, accountRepository, this.notificationManager);
     this.digitalOceanVerifyAccountApp =
         this.appRoot.initializeDigitalOceanVerifyAccountApp(this.notificationManager);
 
@@ -354,7 +354,8 @@ export class App {
         this.showCreateServer();
       } else if (servers.length > 0 && onStartup) {
         // Show the last "managed" server detail screen on startup.
-        const displayServer = this.appRoot.serverList.find((displayServer: DisplayServer) => displayServer.isManaged);
+        const displayServer =
+            this.appRoot.serverList.find((displayServer: DisplayServer) => displayServer.isManaged);
         this.showServerFromRepository(displayServer);
       }
     } catch (error) {
@@ -378,7 +379,8 @@ export class App {
       managedServersPromise = this.refreshDigitalOceanServers(account);
     }
 
-    const [manualServers, managedServers] = await Promise.all([manualServersPromise, managedServersPromise]);
+    const [manualServers, managedServers] =
+        await Promise.all([manualServersPromise, managedServersPromise]);
     const installedManagedServers = managedServers.filter(server => server.isInstallCompleted());
     this.serverBeingCreated = managedServers.find(server => !server.isInstallCompleted());
     const servers = manualServers.concat(installedManagedServers);

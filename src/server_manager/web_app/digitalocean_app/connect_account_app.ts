@@ -21,14 +21,14 @@ import {css, customElement, html, LitElement, property} from 'lit-element';
 
 import {RestApiSession} from '../../cloud/digitalocean_api';
 import {makePublicEvent} from '../../infrastructure/events';
+import {LocalStorageRepository} from '../../infrastructure/repository';
 import {getSentryApiUrl} from '../../infrastructure/sentry';
+import * as account from '../../model/account';
+import * as cloud_provider from '../../model/cloud_provider';
+import {DigitalOceanAccount} from '../../model/digitalocean_account';
 import {AppSettings} from '../app';
 import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
-import {DigitalOceanAccount} from "../../model/digitalocean_account";
-import {LocalStorageRepository} from "../../infrastructure/repository";
-import * as account from "../../model/account";
-import * as cloud_provider from "../../model/cloud_provider";
 
 @customElement('digital-ocean-connect-account-app')
 export class DigitalOceanConnectAccount extends LitElement {
@@ -137,9 +137,10 @@ export class DigitalOceanConnectAccount extends LitElement {
   async fromAccountData(data: account.Data): Promise<DigitalOceanAccount> {
     const accessToken = data.credential as string;
     const sentryApiUrl = getSentryApiUrl(this.appSettings.sentryDsn);
-    return new DigitalOceanAccount(data, this.accountRepository,
-        new RestApiSession(accessToken), this.appSettings.shadowboxImage,
-        this.appSettings.metricsUrl, sentryApiUrl, this.appSettings.debugMode);
+    return new DigitalOceanAccount(
+        data, this.accountRepository, new RestApiSession(accessToken),
+        this.appSettings.shadowboxImage, this.appSettings.metricsUrl, sentryApiUrl,
+        this.appSettings.debugMode);
   }
 
   private async createAccountData(accessToken: string) {

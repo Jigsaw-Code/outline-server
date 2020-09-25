@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as cloud_provider from './cloud_provider';
+import {DigitalOceanSession, DropletInfo} from '../cloud/digitalocean_api';
+import * as crypto from '../infrastructure/crypto';
+import {LocalStorageRepository} from '../infrastructure/repository';
+import * as do_install_script from '../install_scripts/do_install_script';
+import {DigitalOceanServer, GetCityId} from '../web_app/digitalocean_server';
+
 import * as account from './account';
-import * as crypto from "../infrastructure/crypto";
-import * as do_install_script from "../install_scripts/do_install_script";
-import * as server from "./server";
-import {LocalStorageRepository} from "../infrastructure/repository";
-import {DigitalOceanSession, DropletInfo} from "../cloud/digitalocean_api";
-import {DigitalOceanServer, GetCityId} from "../web_app/digitalocean_server";
+import * as cloud_provider from './cloud_provider';
+import * as server from './server';
 
 const SHADOWBOX_TAG = 'shadowbox';
 const MACHINE_SIZE = 's-1vcpu-1gb';
@@ -27,10 +28,11 @@ const MACHINE_SIZE = 's-1vcpu-1gb';
 export class DigitalOceanAccount implements account.Account {
   private servers: server.ManagedServer[] = [];
 
-  constructor(protected data: account.Data,
-              protected accountRepository: LocalStorageRepository<account.Data, string>,
-              private digitalOcean: DigitalOceanSession, private image: string, private metricsUrl: string,
-              private sentryApiUrl: string|undefined, private debugMode: boolean) {}
+  constructor(
+      protected data: account.Data,
+      protected accountRepository: LocalStorageRepository<account.Data, string>,
+      private digitalOcean: DigitalOceanSession, private image: string, private metricsUrl: string,
+      private sentryApiUrl: string|undefined, private debugMode: boolean) {}
 
   async getEmail() {
     const response = await this.digitalOcean.getAccount();
@@ -74,7 +76,9 @@ export class DigitalOceanAccount implements account.Account {
     console.time('servingServer');
     const onceKeyPair = crypto.generateKeyPair();
     const watchtowerRefreshSeconds = this.image ? 30 : undefined;
-    const installCommand = this.getInstallScript(this.digitalOcean.accessToken, name, this.image, watchtowerRefreshSeconds, this.metricsUrl, this.sentryApiUrl);
+    const installCommand = this.getInstallScript(
+        this.digitalOcean.accessToken, name, this.image, watchtowerRefreshSeconds, this.metricsUrl,
+        this.sentryApiUrl);
 
     const dropletSpec = {
       installCommand,
@@ -131,8 +135,8 @@ export class DigitalOceanAccount implements account.Account {
         `export DO_ACCESS_TOKEN=${sanitizedAccessToken}\n` +
         (image ? `export SB_IMAGE=${image}\n` : '') +
         (watchtowerRefreshSeconds ?
-            `export WATCHTOWER_REFRESH_SECONDS=${watchtowerRefreshSeconds}\n` :
-            '') +
+             `export WATCHTOWER_REFRESH_SECONDS=${watchtowerRefreshSeconds}\n` :
+             '') +
         (sentryApiUrl ? `export SENTRY_API_URL="${sentryApiUrl}"\n` : '') +
         (metricsUrl ? `export SB_METRICS_URL=${metricsUrl}\n` : '') +
         `export SB_DEFAULT_SERVER_NAME="${name}"\n` + do_install_script.SCRIPT;
