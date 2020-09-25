@@ -32,6 +32,7 @@ import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
 import {OutlineNotificationManager} from './ui_components/outline-notification-manager';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
+import {AccountManager} from "../model/account_manager";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -145,7 +146,8 @@ export class App {
       private appRoot: AppRoot, private readonly version: string, private appSettings: AppSettings,
       private manualServerRepository: server.ManualServerRepository,
       private displayServerRepository: DisplayServerRepository,
-      private accountRepository: LocalStorageRepository<account.Data, string>) {
+      private accountRepository: LocalStorageRepository<account.Data, string>,
+      private accountManager: AccountManager) {
     this.notificationManager = this.appRoot.getNotificationManager();
     this.digitalOceanConnectAccountApp = this.appRoot.initializeDigitalOceanConnectAccountApp(
         appSettings, accountRepository, this.notificationManager);
@@ -320,13 +322,11 @@ export class App {
 
     let account;
     if (data) {
-      account = await this.digitalOceanConnectAccountApp.fromAccountData(data);
+      account = await this.digitalOceanConnectAccountApp.createAccountModel(data);
     } else {
       this.appRoot.showDigitalOceanConnectAccountApp();
       account = await this.digitalOceanConnectAccountApp.start();
-      const data = account.getData();
-      data.id = LEGACY_DIGITALOCEAN_ACCOUNT_ID;
-      this.accountRepository.set(data);
+      this.accountManager.add(account);
     }
     return account;
   }
@@ -374,7 +374,7 @@ export class App {
     const data = this.accountRepository.get(LEGACY_DIGITALOCEAN_ACCOUNT_ID);
     let managedServersPromise = Promise.resolve([]);
     if (data) {
-      const account = await this.digitalOceanConnectAccountApp.fromAccountData(data);
+      const account = await this.digitalOceanConnectAccountApp.createAccountModel(data);
       this.appRoot.adminEmail = await account.getEmail();
       managedServersPromise = this.refreshDigitalOceanServers(account);
     }

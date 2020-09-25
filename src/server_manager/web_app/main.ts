@@ -22,6 +22,7 @@ import {App} from './app';
 import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
+import {AccountManager} from "../model/account_manager";
 
 type LanguageDef = {
   id: string,
@@ -117,10 +118,10 @@ document.addEventListener('WebComponentsReady', () => {
 
   const accountRepository = new LocalStorageRepository<account.Data, string>(
       'accounts', localStorage, (account) => account.id, (k1: string, k2: string) => k1 === k2);
-
+  const accountManager = new AccountManager(accountRepository);
   new App(
       appRoot, version, appSettings, new ManualServerRepository('manualServers'),
-      new DisplayServerRepository(), accountRepository)
+      new DisplayServerRepository(), accountRepository, accountManager)
       .start();
 });
 

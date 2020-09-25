@@ -21,9 +21,14 @@ export interface Data {
   credential: unknown;
 }
 
+export interface AccountModelFactory<T extends Account>  {
+  createAccountModel(data: Data): Promise<T>;
+}
+
 // TODO: This is a clone of the ManagedServerRepository interface. We should try
 // to make this generic, or remove it if that's not possible.
 export interface Account {
+  getData(): Data;
   // Lists all existing Shadowboxes. If `fetchFromHost` is true, performs a network request to
   // retrieve the servers; otherwise resolves with a cached server list.
   listServers(fetchFromHost?: boolean): Promise<ManagedServer[]>;

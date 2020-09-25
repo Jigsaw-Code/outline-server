@@ -29,8 +29,8 @@ export class DigitalOceanAccount implements account.Account {
   private servers: server.ManagedServer[] = [];
 
   constructor(
-      protected data: account.Data,
-      protected accountRepository: LocalStorageRepository<account.Data, string>,
+      private data: account.Data,
+      private accountRepository: LocalStorageRepository<account.Data, string>,
       private digitalOcean: DigitalOceanSession, private image: string, private metricsUrl: string,
       private sentryApiUrl: string|undefined, private debugMode: boolean) {}
 

@@ -24,6 +24,7 @@ import {makePublicEvent} from '../../infrastructure/events';
 import {LocalStorageRepository} from '../../infrastructure/repository';
 import {getSentryApiUrl} from '../../infrastructure/sentry';
 import * as account from '../../model/account';
+import {AccountModelFactory} from '../../model/account';
 import * as cloud_provider from '../../model/cloud_provider';
 import {DigitalOceanAccount} from '../../model/digitalocean_account';
 import {AppSettings} from '../app';
@@ -31,7 +32,7 @@ import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 
 @customElement('digital-ocean-connect-account-app')
-export class DigitalOceanConnectAccount extends LitElement {
+export class DigitalOceanConnectAccount extends LitElement implements AccountModelFactory<DigitalOceanAccount> {
   @property({type: Function}) localize: Function;
   @property({type: Object}) appSettings: AppSettings = null;
   @property({type: Object}) accountRepository: LocalStorageRepository<account.Data, string> = null;
@@ -131,10 +132,10 @@ export class DigitalOceanConnectAccount extends LitElement {
     }
 
     const data = await this.createAccountData(accessToken);
-    return this.fromAccountData(data);
+    return this.createAccountModel(data);
   }
 
-  async fromAccountData(data: account.Data): Promise<DigitalOceanAccount> {
+  async createAccountModel(data: account.Data): Promise<DigitalOceanAccount> {
     const accessToken = data.credential as string;
     const sentryApiUrl = getSentryApiUrl(this.appSettings.sentryDsn);
     return new DigitalOceanAccount(
