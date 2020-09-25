@@ -15,25 +15,25 @@
 import * as sentry from '@sentry/electron';
 import * as semver from 'semver';
 
-import * as account from '../model/account';
-import * as cloud_provider from '../model/cloud_provider';
 import * as digitalocean_api from '../cloud/digitalocean_api';
-import * as digitalocean_server from './digitalocean_server';
 import * as errors from '../infrastructure/errors';
-import * as server from '../model/server';
 import {LocalStorageRepository} from '../infrastructure/repository';
+import * as account from '../model/account';
 import {AccountManager} from '../model/account_manager';
+import * as cloud_provider from '../model/cloud_provider';
 import {DigitalOceanAccount} from '../model/digitalocean_account';
+import * as server from '../model/server';
 import {ManagedServer} from '../model/server';
 
 import {DigitalOceanConnectAccountApp} from './digitalocean_app/connect_account_app';
 import {DigitalOceanVerifyAccountApp} from './digitalocean_app/verify_account_app';
+import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
+import {AccountListApp, AccountListSidebarApp} from './ui_components/account-list-app';
 import {AppRoot} from './ui_components/app-root.js';
 import {OutlineNotificationManager} from './ui_components/outline-notification-manager';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
-import {AccountListApp, AccountListSidebarApp} from "./ui_components/account-list-app";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -159,7 +159,8 @@ export class App {
     this.accountListApp = this.appRoot.getAccountListApp();
     this.accountListSidebarApp = this.appRoot.getAccountListSidebarApp();
 
-    this.accountManager.register(cloud_provider.Id.DigitalOcean, this.digitalOceanConnectAccountApp);
+    this.accountManager.register(
+        cloud_provider.Id.DigitalOcean, this.digitalOceanConnectAccountApp);
 
     appRoot.setAttribute('outline-version', this.version);
 

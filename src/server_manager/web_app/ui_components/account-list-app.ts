@@ -18,9 +18,11 @@ import '@polymer/paper-icon-button/paper-icon-button.js';
 import '@polymer/paper-menu-button/paper-menu-button.js';
 
 import {css, customElement, html, LitElement, property} from 'lit-element';
-import {COMMON_STYLES} from "./cloud-install-styles";
-import {Account} from "../../model/account";
-import {makePublicEvent} from "../../infrastructure/events";
+
+import {makePublicEvent} from '../../infrastructure/events';
+import {Account} from '../../model/account';
+
+import {COMMON_STYLES} from './cloud-install-styles';
 
 interface DisplayAccount {
   displayName: string;
@@ -32,7 +34,8 @@ export class AccountListApp extends LitElement {
   @property({type: Array}) displayAccounts: DisplayAccount[] = [];
 
   static get styles() {
-    return [COMMON_STYLES, css`
+    return [
+      COMMON_STYLES, css`
       .servers-section {
         padding: 12px 0;
         border-bottom: 1px solid var(--border-color);
@@ -77,7 +80,8 @@ export class AccountListApp extends LitElement {
         cursor: pointer;
         text-transform: uppercase;
       }
-    `];
+    `
+    ];
   }
 
   render() {
@@ -91,8 +95,10 @@ export class AccountListApp extends LitElement {
             <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
             <div class="do-overflow-menu" slot="dropdown-content">
               <h4>${this.localize('digitalocean-disconnect-account')}</h4>
-              <div class="account-info"><img src="images/digital_ocean_logo.svg">${displayAccount.displayName}</div>
-              <div class="sign-out-button" @tap="${this.onSignOut}">${this.localize('digitalocean-disconnect')}</div>
+              <div class="account-info"><img src="images/digital_ocean_logo.svg">${
+          displayAccount.displayName}</div>
+              <div class="sign-out-button" @tap="${this.onSignOut}">${
+          this.localize('digitalocean-disconnect')}</div>
             </div>
           </paper-menu-button>
         </div>
@@ -124,7 +130,8 @@ export class AccountListSidebarApp extends LitElement {
   @property({type: Array}) displayAccounts: DisplayAccount[] = [];
 
   static get styles() {
-    return [COMMON_STYLES, css`
+    return [
+      COMMON_STYLES, css`
       .side-bar-section {
         display: flex;
         flex-direction: column;
@@ -156,7 +163,8 @@ export class AccountListSidebarApp extends LitElement {
       .side-bar-section > .server-icon {
         margin: 0;
       }
-    `];
+    `
+    ];
   }
 
   render() {
@@ -176,9 +184,7 @@ export class AccountListSidebarApp extends LitElement {
 
   updateAccounts(accounts: Account[]) {
     this.displayAccounts = accounts.map(account => {
-      return {
-        displayName: account.getData().id
-      };
+      return {displayName: account.getData().id};
     });
   }
 }
