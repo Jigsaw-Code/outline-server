@@ -32,7 +32,8 @@ import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 
 @customElement('digital-ocean-connect-account-app')
-export class DigitalOceanConnectAccount extends LitElement implements AccountModelFactory<DigitalOceanAccount> {
+export class DigitalOceanConnectAccount extends LitElement implements
+    AccountModelFactory<DigitalOceanAccount> {
   @property({type: Function}) localize: Function;
   @property({type: Object}) appSettings: AppSettings = null;
   @property({type: Object}) accountRepository: LocalStorageRepository<account.Data, string> = null;

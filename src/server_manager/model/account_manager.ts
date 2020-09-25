@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {LocalStorageRepository} from "../infrastructure/repository";
-import {Account, Data, AccountModelFactory} from "./account";
-import * as cloud_provider from "./cloud_provider";
+import {LocalStorageRepository} from '../infrastructure/repository';
+
+import {Account, AccountModelFactory, Data} from './account';
+import * as cloud_provider from './cloud_provider';
 
 export class AccountManager {
   // TODO: Align generics

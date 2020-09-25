@@ -21,7 +21,7 @@ export interface Data {
   credential: unknown;
 }
 
-export interface AccountModelFactory<T extends Account>  {
+export interface AccountModelFactory<T extends Account> {
   createAccountModel(data: Data): Promise<T>;
 }
 

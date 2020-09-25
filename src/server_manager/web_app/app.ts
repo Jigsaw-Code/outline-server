@@ -19,6 +19,7 @@ import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {LocalStorageRepository} from '../infrastructure/repository';
 import * as account from '../model/account';
+import {AccountManager} from '../model/account_manager';
 import {DigitalOceanAccount} from '../model/digitalocean_account';
 import * as server from '../model/server';
 import {ManagedServer} from '../model/server';
@@ -32,7 +33,6 @@ import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
 import {OutlineNotificationManager} from './ui_components/outline-notification-manager';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
-import {AccountManager} from "../model/account_manager";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/

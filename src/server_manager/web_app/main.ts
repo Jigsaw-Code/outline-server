@@ -17,12 +17,12 @@ import './ui_components/app-root.js';
 import * as i18n from '../infrastructure/i18n';
 import {LocalStorageRepository} from '../infrastructure/repository';
 import * as account from '../model/account';
+import {AccountManager} from '../model/account_manager';
 
 import {App} from './app';
 import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
-import {AccountManager} from "../model/account_manager";
 
 type LanguageDef = {
   id: string,
