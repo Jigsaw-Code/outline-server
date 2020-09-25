@@ -34,4 +34,4 @@ $ROOT_DIR/src/server_manager/node_modules/.bin/electron-builder \
   --config.win.certificateSubjectName='Jigsaw Operations LLC' \
   --config.artifactName='Outline-Manager.${ext}'
 
-echo "stagingPercentage: $STAGING_PERCENTAGE" >> "${BUILD_DIR}"/dist/$(src/server_manager/scripts/manager_release_channel.sh).yml
+src/server_manager/scripts/finish_info_files.sh win $STAGING_PERCENTAGE

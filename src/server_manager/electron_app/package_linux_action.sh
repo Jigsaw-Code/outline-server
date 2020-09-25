@@ -32,4 +32,4 @@ $ROOT_DIR/src/server_manager/node_modules/.bin/electron-builder \
   --config.linux.category=Network \
   --config.artifactName='Outline-Manager.${ext}'
 
-echo "stagingPercentage: $STAGING_PERCENTAGE" >> "${BUILD_DIR}"/dist/$(src/server_manager/scripts/manager_release_channel.sh)-linux.yml
+src/server_manager/scripts/finish_info_files.sh linux $STAGING_PERCENTAGE
