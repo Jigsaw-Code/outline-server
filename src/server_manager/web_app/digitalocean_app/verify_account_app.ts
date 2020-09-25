@@ -19,12 +19,11 @@ import '../ui_components/outline-step-view.js';
 
 import {css, customElement, html, LitElement, property} from 'lit-element';
 
-import {Account} from '../../cloud/digitalocean_api';
 import {makePublicEvent} from '../../infrastructure/events';
 import {sleep} from '../../infrastructure/sleep';
-import {ManagedServerRepository} from '../../model/server';
 import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
+import {DigitalOceanAccount} from "../../model/digitalocean_account";
 
 @customElement('digital-ocean-verify-account-app')
 export class DigitalOceanVerifyAccount extends LitElement {
@@ -133,7 +132,7 @@ export class DigitalOceanVerifyAccount extends LitElement {
     </iron-pages>`;
   }
 
-  async start(digitalOceanRepository: ManagedServerRepository): Promise<boolean> {
+  async start(account: DigitalOceanAccount): Promise<boolean> {
     this.cancelled = false;
     this.activatingAccount = false;
     this.currentPage = 'accountActive';
@@ -144,10 +143,20 @@ export class DigitalOceanVerifyAccount extends LitElement {
       }
 
       try {
-        const getAccountResponse =
-            await digitalOceanRepository.getAccount();  // TODO: Wrap in retry
-        if (await this.checkAccountStatus(getAccountResponse.account as Account)) {
+        if (await account.getStatus()) {
+          // Show 'account activated' screen if activated during this session.
+          if (this.activatingAccount) {
+            this.currentPage = 'accountActive';
+            await sleep(1500);
+          }
           return true;
+        } else {
+          if (await account.isVerified()) {
+            this.currentPage = 'enterBilling';
+          } else {
+            this.currentPage = 'verifyEmail';
+          }
+          this.activatingAccount = true;
         }
       } catch (error) {
         if (!this.cancelled) {
@@ -157,30 +166,6 @@ export class DigitalOceanVerifyAccount extends LitElement {
         }
       }
       await sleep(1000);
-    }
-  }
-
-  // Checks the account status and updates the UI to reflect the current activation state.
-  //
-  // Returns true if account is active, false otherwise.
-  private async checkAccountStatus(account: Account): Promise<boolean> {
-    if (account.status === 'active') {
-      if (this.activatingAccount) {
-        // Show 'account active' screen for a few seconds if the account was activated during this
-        // session.
-        this.currentPage = 'accountActive';
-        await sleep(1500);
-        console.log('sleep');
-      }
-      return true;
-    } else {
-      this.activatingAccount = true;
-      if (account.email_verified) {
-        this.currentPage = 'enterBilling';
-      } else {
-        this.currentPage = 'verifyEmail';
-      }
-      return false;
     }
   }
 

@@ -495,7 +495,7 @@ class FakeManagedServer extends FakeServer implements server.ManagedServer {
   }
 }
 
-class FakeManagedServerRepository implements server.ManagedServerRepository {
+class FakeManagedServerRepository implements server.Account {
   private servers: server.ManagedServer[] = [];
   listServers() {
     return Promise.resolve(this.servers);

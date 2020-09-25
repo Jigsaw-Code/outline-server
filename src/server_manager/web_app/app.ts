@@ -17,23 +17,27 @@ import * as semver from 'semver';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
+import * as account from '../model/account';
 import * as server from '../model/server';
 import {ManagedServer} from '../model/server';
 
 import {DigitalOceanConnectAccount} from './digitalocean_app/connect_account_app';
 import {DigitalOceanCreateServer} from './digitalocean_app/create_server_app';
 import {DigitalOceanVerifyAccount} from './digitalocean_app/verify_account_app';
-import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
 import {OutlineNotificationManager} from './ui_components/outline-notification-manager';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
+import {DigitalOceanAccount} from "../model/digitalocean_account";
+import {LocalStorageRepository} from "../infrastructure/repository";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
 const UNUSED_DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
+
+const LEGACY_DIGITALOCEAN_ACCOUNT_ID = '_LEGACY_DIGITALOCEAN_ACCOUNT_ID_';
 
 const CHANGE_KEYS_PORT_VERSION = '1.0.0';
 const DATA_LIMITS_VERSION = '1.1.0';
@@ -130,7 +134,7 @@ export interface AppSettings {
 }
 
 export class App {
-  private digitalOceanRepository: server.ManagedServerRepository;
+  private digitalOceanAccount: DigitalOceanAccount;
   private selectedServer: server.Server;
   private serverBeingCreated: server.ManagedServer;
   private notificationManager: OutlineNotificationManager;
@@ -141,24 +145,24 @@ export class App {
       private appRoot: AppRoot, private readonly version: string, private appSettings: AppSettings,
       private manualServerRepository: server.ManualServerRepository,
       private displayServerRepository: DisplayServerRepository,
-      private digitalOceanTokenManager: TokenManager) {
+      private accountRepository: LocalStorageRepository<account.Data, string>) {
     this.notificationManager = this.appRoot.getNotificationManager();
     this.digitalOceanConnectAccountApp =
-        this.appRoot.initializeDigitalOceanConnectAccountApp(appSettings, this.notificationManager);
+        this.appRoot.initializeDigitalOceanConnectAccountApp(appSettings, accountRepository, this.notificationManager);
     this.digitalOceanVerifyAccountApp =
         this.appRoot.initializeDigitalOceanVerifyAccountApp(this.notificationManager);
 
     appRoot.setAttribute('outline-version', this.version);
 
     appRoot.addEventListener('ConnectToDigitalOcean', async (event: CustomEvent) => {
-      const digitalOceanRepository = await this.digitalOceanAccountConnect();
-      const account = await digitalOceanRepository.getAccount();
-      this.appRoot.adminEmail = account.id;
+      const account = await this.digitalOceanAccountConnect();
+      this.appRoot.adminEmail = await account.getEmail();
 
       this.appRoot.showDigitalOceanVerifyAccountApp();
-      await this.digitalOceanVerifyAccountApp.start(digitalOceanRepository);
+      await this.digitalOceanVerifyAccountApp.start(account);
 
-      this.refreshDigitalOceanServers(digitalOceanRepository);
+      const managedServers = await this.refreshDigitalOceanServers(account);
+      this.onServersRefreshed(managedServers, false);
     });
     appRoot.addEventListener('SignOutRequested', (event: CustomEvent) => {
       this.clearCredentialsAndShowIntro();
@@ -311,53 +315,52 @@ export class App {
     onUpdateDownloaded(this.displayAppUpdateNotification.bind(this));
   }
 
-  async digitalOceanAccountConnect(): Promise<server.ManagedServerRepository> {
-    let accessToken = this.digitalOceanTokenManager.getStoredToken();
-    if (!accessToken) {
-      this.appRoot.showDigitalOceanConnectAccountApp();
-      accessToken = await this.digitalOceanConnectAccountApp.start();
-      // Save accessToken to storage. DigitalOcean tokens
-      // expire after 30 days, unless they are manually revoked by the user.
-      // After 30 days the user will have to sign into DigitalOcean again.
-      // Note we cannot yet use DigitalOcean refresh tokens, as they require
-      // a client_secret to be stored on a server and not visible to end users
-      // in client-side JS.  More details at:
-      // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
-      this.digitalOceanTokenManager.writeTokenToStorage(accessToken);
-    }
+  async digitalOceanAccountConnect(): Promise<DigitalOceanAccount> {
+    const data = this.accountRepository.get(LEGACY_DIGITALOCEAN_ACCOUNT_ID);
 
-    return this.digitalOceanConnectAccountApp.fromAccessToken(accessToken);
+    let account;
+    if (data) {
+      account = await this.digitalOceanConnectAccountApp.fromAccountData(data);
+    } else {
+      this.appRoot.showDigitalOceanConnectAccountApp();
+      account = await this.digitalOceanConnectAccountApp.start();
+      const data = account.getData();
+      data.id = LEGACY_DIGITALOCEAN_ACCOUNT_ID;
+      this.accountRepository.set(data);
+    }
+    return account;
   }
 
-  async refreshDigitalOceanServers(digitalOceanRepository: server.ManagedServerRepository):
-      Promise<ManagedServer[]> {
-    let managedServers: ManagedServer[] = [];
+  async refreshDigitalOceanServers(account: DigitalOceanAccount): Promise<ManagedServer[]> {
     try {
-      this.digitalOceanRepository = digitalOceanRepository;  // TODO: Remove
-      managedServers = await this.digitalOceanRepository.listServers();
+      this.digitalOceanAccount = account;
+      return await this.digitalOceanAccount.listServers();
     } catch (error) {
       console.error('Could not fetch server list from DigitalOcean');
       this.showIntro();
     }
+  }
 
+  async onServersRefreshed(servers: server.Server[], onStartup: boolean) {
     try {
+      this.syncServersToDisplay(servers);
       if (!!this.serverBeingCreated) {
-        // Disallow creating multiple servers simultaneously.
+        // Show the server creation progress screen to disallow
+        // simultaneously creating multiple servers.
         this.showServerCreationProgress();
-      } else if (managedServers.length > 0) {
-        // Show the first server in the list since the user just signed in to DO.
-        await this.syncServersToDisplay(managedServers);
-        const displayServer =
-            this.appRoot.serverList.find((displayServer: DisplayServer) => displayServer.isManaged);
-        this.showServerFromRepository(displayServer);
-      } else {
+        this.waitForManagedServerCreation();
+      } else if (!onStartup) {
+        // Show the create server app.
         this.showCreateServer();
+      } else if (servers.length > 0 && onStartup) {
+        // Show the last "managed" server detail screen on startup.
+        const displayServer = this.appRoot.serverList.find((displayServer: DisplayServer) => displayServer.isManaged);
+        this.showServerFromRepository(displayServer);
       }
     } catch (error) {
       this.clearCredentialsAndShowIntro();
       bringToFront();
     }
-    return managedServers;
   }
 
   async start(): Promise<void> {
@@ -367,25 +370,19 @@ export class App {
 
     const manualServersPromise = this.manualServerRepository.listServers();
 
-    const accessToken = this.digitalOceanTokenManager.getStoredToken();
-    const digitalOceanRepository = this.digitalOceanConnectAccountApp.fromAccessToken(accessToken);
-    const managedServersPromise = !!accessToken ?
-        await this.refreshDigitalOceanServers(digitalOceanRepository) :
-        Promise.resolve([]);
+    const data = this.accountRepository.get(LEGACY_DIGITALOCEAN_ACCOUNT_ID);
+    let managedServersPromise = Promise.resolve([]);
+    if (data) {
+      const account = await this.digitalOceanConnectAccountApp.fromAccountData(data);
+      this.appRoot.adminEmail = await account.getEmail();
+      managedServersPromise = this.refreshDigitalOceanServers(account);
+    }
 
-    return Promise.all([manualServersPromise, managedServersPromise])
-        .then(([manualServers, managedServers]) => {
-          const installedManagedServers =
-              managedServers.filter(server => server.isInstallCompleted());
-          const serverBeingCreated = managedServers.find(server => !server.isInstallCompleted());
-          if (!!serverBeingCreated) {
-            this.syncServerCreationToUi(serverBeingCreated);
-          }
-          return this.syncServersToDisplay(manualServers.concat(installedManagedServers));
-        })
-        .then(() => {
-          this.maybeShowLastDisplayedServer();
-        });
+    const [manualServers, managedServers] = await Promise.all([manualServersPromise, managedServersPromise]);
+    const installedManagedServers = managedServers.filter(server => server.isInstallCompleted());
+    this.serverBeingCreated = managedServers.find(server => !server.isInstallCompleted());
+    const servers = manualServers.concat(installedManagedServers);
+    this.onServersRefreshed(servers, true);
   }
 
   private async syncServersToDisplay(servers: server.Server[]) {
@@ -469,10 +466,10 @@ export class App {
     const apiManagementUrl = displayServer.id;
     let server: server.Server = null;
     if (displayServer.isManaged) {
-      if (!!this.digitalOceanRepository) {
+      if (!!this.digitalOceanAccount) {
         // Fetch the servers from memory to prevent a leak that happens due to polling when creating
         // a new object for a server whose creation has been cancelled.
-        const managedServers = await this.digitalOceanRepository.listServers(false);
+        const managedServers = await this.digitalOceanAccount.listServers(false);
         server = managedServers.find(
             (managedServer) => managedServer.getManagementApiUrl() === apiManagementUrl);
       }
@@ -506,24 +503,6 @@ export class App {
       name: serverName,
       isManaged: true
     };
-  }
-
-  // Shows the last server displayed, if there is one in local storage and it still exists.
-  private maybeShowLastDisplayedServer() {
-    if (!!this.serverBeingCreated) {
-      // The server being created should be shown regardless of the last user selection.
-      this.displayServerRepository.removeLastDisplayedServerId();
-      return;
-    }
-    const lastDisplayedServerId = this.displayServerRepository.getLastDisplayedServerId();
-    if (!lastDisplayedServerId) {
-      return;  // No server was displayed when user quit the app.
-    }
-    const lastDisplayedServer = this.displayServerRepository.findServer(lastDisplayedServerId);
-    if (!lastDisplayedServer) {
-      return console.debug('Last displayed server ID not found in display sever repository');
-    }
-    this.showServerFromRepository(lastDisplayedServer);
   }
 
   private showServerFromRepository(displayServer: DisplayServer) {
@@ -570,9 +549,9 @@ export class App {
           // Refresh the server list if the server is managed, it may have been deleted outside the
           // app.
           let serverExistsPromise = Promise.resolve(true);
-          if (serverView.isServerManaged && !!this.digitalOceanRepository) {
+          if (serverView.isServerManaged && !!this.digitalOceanAccount) {
             serverExistsPromise =
-                this.digitalOceanRepository.listServers().then((managedServers) => {
+                this.digitalOceanAccount.listServers().then((managedServers) => {
                   return this.getServerFromRepository(displayServer).then((server) => {
                     return !!server;
                   });
@@ -635,7 +614,7 @@ export class App {
 
   // Clears the credentials and returns to the intro screen.
   private clearCredentialsAndShowIntro() {
-    this.digitalOceanTokenManager.removeTokenFromStorage();
+    this.accountRepository.remove(LEGACY_DIGITALOCEAN_ACCOUNT_ID);
     // Remove display servers from storage.
     this.displayServerRepository.listServers().then((displayServers: DisplayServer[]) => {
       for (const displayServer of displayServers) {
@@ -658,7 +637,7 @@ export class App {
     const digitalOceanCreateServer =
         this.appRoot.getAndShowDigitalOceanCreateServer() as DigitalOceanCreateServer;
     await digitalOceanCreateServer.show(
-        this.digitalOceanRepository, this.digitalOceanRetry.bind(this));
+        this.digitalOceanAccount, this.digitalOceanRetry.bind(this));
   }
 
   private showServerCreationProgress() {
@@ -726,7 +705,7 @@ export class App {
     const serverName = this.makeLocalizedServerName(regionId);
     return this
         .digitalOceanRetry(() => {
-          return this.digitalOceanRepository.createServer(regionId, serverName);
+          return this.digitalOceanAccount.createServer(regionId, serverName);
         })
         .then((server) => {
           this.syncServerCreationToUi(server);

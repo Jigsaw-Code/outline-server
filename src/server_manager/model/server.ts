@@ -127,25 +127,6 @@ export type RegionMap = {
   [cityId: string]: RegionId[]
 };
 
-export interface Account {
-  id: string;
-  account: object;
-}
-
-// Repository of ManagedServer objects.  These servers are created by the server
-// manager on cloud providers where we can provide a "magical" user experience,
-// e.g. DigitalOcean.
-export interface ManagedServerRepository {
-  getAccount(): Promise<Account>;
-  // Lists all existing Shadowboxes. If `fetchFromHost` is true, performs a network request to
-  // retrieve the servers; otherwise resolves with a cached server list.
-  listServers(fetchFromHost?: boolean): Promise<ManagedServer[]>;
-  // Return a map of regions that are available and support our target machine size.
-  getRegionMap(): Promise<Readonly<RegionMap>>;
-  // Creates a server and returning it when it becomes active (i.e. the server has
-  // created, not necessarily once shadowbox installation has finished).
-  createServer(region: RegionId, name: string): Promise<ManagedServer>;
-}
 
 // Configuration for manual servers.  This is the output emitted from the
 // shadowbox install script, which is needed for the manager connect to

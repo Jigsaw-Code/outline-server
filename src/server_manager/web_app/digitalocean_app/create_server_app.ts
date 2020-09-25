@@ -15,9 +15,9 @@
 */
 import {customElement, html, LitElement, property} from 'lit-element';
 
-import {ManagedServerRepository} from '../../model/server';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 import {Location, OutlineRegionPicker} from '../ui_components/outline-region-picker-step';
+import {DigitalOceanAccount} from "../../model/digitalocean_account";
 
 // DigitalOcean mapping of regions to flags
 const FLAG_IMAGE_DIR = 'images/flags';
@@ -47,13 +47,13 @@ export class DigitalOceanCreateServer extends LitElement {
   // The region picker initially shows all options as disabled. Options are enabled by this code,
   // after checking which regions are available.
   async show(
-      digitalOceanRepository: ManagedServerRepository,
+      account: DigitalOceanAccount,
       retryFn: <T>(fn: () => Promise<T>) => Promise<T>) {
     const regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
     regionPicker.reset();
 
     try {
-      const map = await retryFn(() => digitalOceanRepository.getRegionMap());
+      const map = await retryFn(() => account.getRegionMap());
       const locations = Object.entries(map).map(([cityId, regionIds]) => {
         return this.createLocationModel(cityId, regionIds);
       });

@@ -22,16 +22,19 @@ import {css, customElement, html, LitElement, property} from 'lit-element';
 import {RestApiSession} from '../../cloud/digitalocean_api';
 import {makePublicEvent} from '../../infrastructure/events';
 import {getSentryApiUrl} from '../../infrastructure/sentry';
-import {ManagedServerRepository} from '../../model/server';
 import {AppSettings} from '../app';
-import * as digitalocean_server from '../digitalocean_server';
 import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
+import {DigitalOceanAccount} from "../../model/digitalocean_account";
+import {LocalStorageRepository} from "../../infrastructure/repository";
+import * as account from "../../model/account";
+import * as cloud_provider from "../../model/cloud_provider";
 
 @customElement('digital-ocean-connect-account-app')
 export class DigitalOceanConnectAccount extends LitElement {
   @property({type: Function}) localize: Function;
   @property({type: Object}) appSettings: AppSettings = null;
+  @property({type: Object}) accountRepository: LocalStorageRepository<account.Data, string> = null;
   @property({type: Object}) notificationManager: OutlineNotificationManager = null;
 
   private session: OauthSession;
@@ -111,7 +114,7 @@ export class DigitalOceanConnectAccount extends LitElement {
     </outline-step-view>`;
   }
 
-  async start(): Promise<string> {
+  async start(): Promise<DigitalOceanAccount> {
     this.session = runDigitalOceanOauth();
 
     let accessToken;
@@ -126,15 +129,27 @@ export class DigitalOceanConnectAccount extends LitElement {
         throw error;
       }
     }
-    return accessToken;
+
+    const data = await this.createAccountData(accessToken);
+    return this.fromAccountData(data);
   }
 
-  fromAccessToken(accessToken: string): ManagedServerRepository {
-    const digitalOceanSession = new RestApiSession(accessToken);
+  async fromAccountData(data: account.Data): Promise<DigitalOceanAccount> {
+    const accessToken = data.credential as string;
     const sentryApiUrl = getSentryApiUrl(this.appSettings.sentryDsn);
-    return new digitalocean_server.DigitalOceanAccount(
-        digitalOceanSession, this.appSettings.shadowboxImage, this.appSettings.metricsUrl,
-        sentryApiUrl, this.appSettings.debugMode);
+    return new DigitalOceanAccount(data, this.accountRepository,
+        new RestApiSession(accessToken), this.appSettings.shadowboxImage,
+        this.appSettings.metricsUrl, sentryApiUrl, this.appSettings.debugMode);
+  }
+
+  private async createAccountData(accessToken: string) {
+    const api = new RestApiSession(accessToken);
+    const getAccountResponse = await api.getAccount();
+    return {
+      id: getAccountResponse.uuid,
+      provider: cloud_provider.Id.DigitalOcean,
+      credential: accessToken,
+    };
   }
 
   private onCancel() {

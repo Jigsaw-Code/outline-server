@@ -566,8 +566,9 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
   }
 
-  initializeDigitalOceanConnectAccountApp(appSettings, notificationManager) {
+  initializeDigitalOceanConnectAccountApp(appSettings, accountRepository, notificationManager) {
     this.$.digitalOceanConnectAccount.appSettings = appSettings;
+    this.$.digitalOceanConnectAccount.accountRepository = accountRepository;
     this.$.digitalOceanConnectAccount.notificationManager = notificationManager;
     return this.$.digitalOceanConnectAccount;
   }

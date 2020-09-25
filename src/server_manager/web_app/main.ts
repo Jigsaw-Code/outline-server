@@ -13,17 +13,14 @@
 // limitations under the License.
 
 import './ui_components/app-root.js';
-
-import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as i18n from '../infrastructure/i18n';
-import {getSentryApiUrl} from '../infrastructure/sentry';
+import * as account from '../model/account';
 
 import {App} from './app';
-import {DigitalOceanTokenManager} from './digitalocean_oauth';
-import * as digitalocean_server from './digitalocean_server';
 import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
+import {LocalStorageRepository} from "../infrastructure/repository";
 
 type LanguageDef = {
   id: string,
@@ -121,9 +118,14 @@ document.addEventListener('WebComponentsReady', () => {
   const filteredLanguageDefs = Object.values(SUPPORTED_LANGUAGES);
   appRoot.supportedLanguages = sortLanguageDefsByName(filteredLanguageDefs);
   appRoot.setLanguage(language.string(), languageDirection);
+
+  const accountRepository = new LocalStorageRepository<account.Data, string>(
+      'accounts', localStorage, (account) => account.id,
+      (k1: string, k2: string) => k1 === k2);
+
   new App(
       appRoot, version, appSettings, new ManualServerRepository('manualServers'),
-      new DisplayServerRepository(), new DigitalOceanTokenManager())
+      new DisplayServerRepository(), accountRepository)
       .start();
 });
 
