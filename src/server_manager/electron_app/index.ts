@@ -245,6 +245,13 @@ function main() {
     }
   });
 
+  ipcMain.on('toggle-beta', () => {
+    const currentChannel = autoUpdater.channel;
+    autoUpdater.channel = currentChannel === 'beta' ? 'latest' : 'beta';
+    console.error(`toggling channel to ${autoUpdater.channel}`);
+    autoUpdater.checkForUpdatesAndNotify();
+  });
+
   app.on('activate', () => {
     if (!mainWindow) {
       mainWindow = createMainWindow();

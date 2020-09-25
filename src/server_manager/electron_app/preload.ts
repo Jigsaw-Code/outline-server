@@ -57,6 +57,12 @@ if (sentryDsn) {
 };
 
 // tslint:disable-next-line:no-any
+(window as any).toggleBeta = () => {
+  console.error("in preload");
+  ipcRenderer.send('toggle-beta');
+};
+
+// tslint:disable-next-line:no-any
 (window as any).onUpdateDownloaded = (callback: () => void) => {
   ipcRenderer.on('update-downloaded', callback);
 };

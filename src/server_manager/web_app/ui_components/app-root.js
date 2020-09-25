@@ -20,6 +20,7 @@ import '@polymer/app-layout/app-toolbar/app-toolbar.js';
 import '@polymer/iron-icon/iron-icon.js';
 import '@polymer/iron-icons/iron-icons.js';
 import '@polymer/iron-pages/iron-pages.js';
+import '@polymer/paper-checkbox/paper-checkbox.js';
 import '@polymer/paper-icon-button/paper-icon-button.js';
 import '@polymer/paper-toast/paper-toast.js';
 import '@polymer/paper-dialog/paper-dialog.js';
@@ -103,6 +104,17 @@ export class AppRoot extends mixinBehaviors
       #appDrawer > * {
         width: 100%;
       }
+
+      paper-checkbox {
+        /* We want the ink to be the color we're going to, not coming from */
+        --paper-checkbox-checked-color: var(--primary-green);
+        --paper-checkbox-checked-ink-color: var(--medium-gray);
+        --paper-checkbox-unchecked-color: var(--medium-gray);
+        --paper-checkbox-unchecked-ink-color: var(--primary-green);
+        --paper-checkbox-label-color: var(--medium-gray);
+        --paper-checkbox-label-checked-color: var(--medium-gray);
+      }
+
       .servers {
         overflow-y: scroll;
         flex: 1;
@@ -389,6 +401,9 @@ export class AppRoot extends mixinBehaviors
             <span on-tap="submitFeedbackTapped">[[localize('nav-feedback')]]</span>
             <span on-tap="maybeCloseDrawer"><a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">[[localize('nav-help')]]</a></span>
             <span on-tap="aboutTapped">[[localize('nav-about')]]</span>
+            <span>
+              <paper-checkbox id="channel-checkbox" on-tap="toggleBetaChannel">Get beta binaries</paper-button>
+            </span>
             <div id="links-footer">
               <paper-icon-item id="language-row">
                 <iron-icon id="language-icon" icon="language" slot="item-icon"></iron-icon>
@@ -900,6 +915,11 @@ export class AppRoot extends mixinBehaviors
     const server = event.model.server;
     this.fire('ShowServerRequested', {displayServerId: server.id});
     this.maybeCloseDrawer();
+  }
+
+  toggleBetaChannel() {
+    console.error("in handler");
+    this.fire('ToggleBetaChannelRequested');
   }
 
   // Wrapper to encode a string in base64. This is necessary to set the server view IDs to

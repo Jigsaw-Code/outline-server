@@ -16,6 +16,7 @@
 
 declare function trustCertificate(fingerprint: string): boolean;
 declare function openImage(basename: string): void;
+declare function toggleBeta(): void;
 declare function onUpdateDownloaded(callback: () => void): void;
 
 // TODO: Move this back to digitalocean_oauth.ts, where it really belongs.
