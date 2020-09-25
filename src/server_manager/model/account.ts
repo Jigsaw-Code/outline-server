@@ -17,14 +17,12 @@ import {ManagedServer, RegionId, RegionMap} from './server';
 
 export interface Data {
   id: string;
-  alias?: string;
   provider: cloud_povider.Id;
   credential: unknown;
 }
 
-// Repository of ManagedServer objects.  These servers are created by the server
-// manager on cloud providers where we can provide a "magical" user experience,
-// e.g. DigitalOcean.
+// TODO: This is a clone of the ManagedServerRepository interface. We should try
+// to make this generic, or remove it if that's not possible.
 export interface Account {
   // Lists all existing Shadowboxes. If `fetchFromHost` is true, performs a network request to
   // retrieve the servers; otherwise resolves with a cached server list.

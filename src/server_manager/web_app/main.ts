@@ -96,11 +96,6 @@ document.addEventListener('WebComponentsReady', () => {
   // Parse URL query params.
   const params = new URL(document.URL).searchParams;
   const version = params.get('version');
-  // const debugMode = params.get('outlineDebugMode') === 'true';
-  // const metricsUrl = params.get('metricsUrl');
-  // const shadowboxImage = params.get('image');
-  // const sentryDsn = params.get('sentryDsn');
-
   const appSettings = {
     debugMode: params.get('outlineDebugMode') === 'true',
     metricsUrl: params.get('metricsUrl'),
