@@ -25,6 +25,7 @@ import '@polymer/paper-dialog/paper-dialog.js';
 import '@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
 import '@polymer/paper-listbox/paper-listbox.js';
 import '@polymer/paper-menu-button/paper-menu-button.js';
+import './account-list-app';
 import './cloud-install-styles.js';
 import './outline-about-dialog.js';
 import '../digitalocean_app/connect_account_app';
@@ -116,33 +117,6 @@ export class AppRoot extends mixinBehaviors
       }
       .servers-header > span {
         flex: 1;
-      }
-      .do-overflow-menu {
-        padding: 24px;
-        color: var(--dark-gray);
-        text-align: left;
-        display: flex;
-        flex-direction: column;
-      }
-      .do-overflow-menu h4 {
-        margin-top: 0;
-        white-space: nowrap;
-      }
-      .do-overflow-menu .account-info {
-        display: flex;
-        align-items: center;
-        color: var(--faded-gray);
-      }
-      .do-overflow-menu .account-info img {
-        margin-right: 12px;
-        width: 24px;
-      }
-      .do-overflow-menu .sign-out-button {
-        margin-top: 24px;
-        align-self: flex-end;
-        font-weight: bold;
-        cursor: pointer;
-        text-transform: uppercase;
       }
       .servers-container {
         padding-right: 12px; /* In case the server name is wraps. */
@@ -327,28 +301,8 @@ export class AppRoot extends mixinBehaviors
 
           <!-- Servers section -->
           <div class="servers">
-            <!-- DigitalOcean servers -->
-            <div class="servers-section" hidden\$="{{!isSignedInToDigitalOcean}}">
-              <div class="servers-header">
-                <span>[[localize('servers-digitalocean')]]</span>
-                <paper-menu-button horizontal-align="left" class="" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
-                  <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
-                  <div class="do-overflow-menu" slot="dropdown-content">
-                    <h4>[[localize('digitalocean-disconnect-account')]]</h4>
-                    <div class="account-info"><img src="images/digital_ocean_logo.svg">{{adminEmail}}</div>
-                    <div class="sign-out-button" on-tap="signOutTapped">[[localize('digitalocean-disconnect')]]</div>
-                  </div>
-                </paper-menu-button>
-              </div>
-              <div class="servers-container">
-                <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
-                  <div class\$="server {{_computeServerClasses(selectedServer, server)}}" data-server\$="[[server]]" on-tap="_showServer">
-                    <img class="server-icon" src\$="images/{{_computeServerImage(selectedServer, server)}}">
-                    <span>{{server.name}}</span>
-                  </div>
-                </template>
-              </div>
-            </div>
+            <!-- Connected accounts -->
+            <account-list-app id="accountListApp" localize="[[localize]]"></account-list-app>
             <!-- Manual servers -->
             <div class="servers-section" hidden\$="{{!hasManualServers}}">
               <div class="servers-header">
@@ -397,9 +351,9 @@ export class AppRoot extends mixinBehaviors
             <iron-pages attr-for-selected="id" selected="{{ currentPage }}">
               <outline-intro-step id="intro" is-signed-in-to-digital-ocean="{{isSignedInToDigitalOcean}}" digital-ocean-email="{{adminEmail}}" localize="[[localize]]"></outline-intro-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
-              <digital-ocean-connect-account-app id="digitalOceanConnectAccount" localize="[[localize]]"></digital-ocean-connect-account-app>
-              <digital-ocean-verify-account-app id="digitalOceanVerifyAccount" localize="[[localize]]"></digital-ocean-verify-account-app>
-              <digital-ocean-create-server id="digitalOceanCreateServer" localize="[[localize]]"></digital-ocean-create-server>
+              <digital-ocean-connect-account-app id="digitalOceanConnectAccountApp" localize="[[localize]]"></digital-ocean-connect-account-app>
+              <digital-ocean-verify-account-app id="digitalOceanVerifyAccountApp" localize="[[localize]]"></digital-ocean-verify-account-app>
+              <digital-ocean-create-server id="digitalOceanCreateServerApp" localize="[[localize]]"></digital-ocean-create-server>
               <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
               <div id="serverView">
                 <template is="dom-repeat" items="{{serverList}}" as="server">
@@ -418,15 +372,8 @@ export class AppRoot extends mixinBehaviors
             <paper-icon-button icon="menu" on-click="_toggleAppDrawer"></paper-icon-button>
           </div>
           <div class="servers">
-            <!-- DigitalOcean servers -->
-            <div class="side-bar-section servers-section" hidden\$="{{!isSignedInToDigitalOcean}}">
-              <img class="provider-icon" src="images/do_white_logo.svg">
-              <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
-                <div class\$="server {{_computeServerClasses(selectedServer, server)}}" data-server\$="[[server]]" on-tap="_showServer">
-                  <img class="server-icon" src\$="images/{{_computeServerImage(selectedServer, server)}}">
-                </div>
-              </template>
-            </div>
+            <!-- Connected accounts-->
+            <account-list-sidebar-app id="accountListSidebarApp"></account-list-sidebar-app>
             <!-- Manual servers -->
             <div class="side-bar-section servers-section" hidden\$="{{!hasManualServers}}">
               <img class="provider-icon" src="images/cloud.svg">
@@ -539,11 +486,6 @@ export class AppRoot extends mixinBehaviors
     this.addEventListener('ManualServerEntryCancelled', this.handleManualCancelled);
   }
 
-  ready() {
-    super.ready();
-    this.$.digitalOceanCreateServer.notificationManager = this.getNotificationManager();
-  }
-
   /**
    * Sets the language and direction for the application
    * @param {string} language
@@ -567,28 +509,36 @@ export class AppRoot extends mixinBehaviors
   }
 
   initializeDigitalOceanConnectAccountApp(appSettings, accountRepository, notificationManager) {
-    this.$.digitalOceanConnectAccount.appSettings = appSettings;
-    this.$.digitalOceanConnectAccount.accountRepository = accountRepository;
-    this.$.digitalOceanConnectAccount.notificationManager = notificationManager;
-    return this.$.digitalOceanConnectAccount;
+    this.$.digitalOceanConnectAccountApp.appSettings = appSettings;
+    this.$.digitalOceanConnectAccountApp.accountRepository = accountRepository;
+    this.$.digitalOceanConnectAccountApp.notificationManager = notificationManager;
+    return this.$.digitalOceanConnectAccountApp;
   }
 
   showDigitalOceanConnectAccountApp() {
-    this.currentPage = 'digitalOceanConnectAccount';
+    this.currentPage = 'digitalOceanConnectAccountApp';
   }
 
   initializeDigitalOceanVerifyAccountApp(notificationManager) {
-    this.$.digitalOceanVerifyAccount.notificationManager = notificationManager;
-    return this.$.digitalOceanVerifyAccount;
+    this.$.digitalOceanVerifyAccountApp.notificationManager = notificationManager;
+    return this.$.digitalOceanVerifyAccountApp;
   }
 
   showDigitalOceanVerifyAccountApp() {
-    this.currentPage = 'digitalOceanVerifyAccount';
+    this.currentPage = 'digitalOceanVerifyAccountApp';
   }
 
-  getAndShowDigitalOceanCreateServer() {
-    this.currentPage = 'digitalOceanCreateServer';
-    return this.$.digitalOceanCreateServer;
+  getAndShowDigitalOceanCreateServerApp() {
+    this.currentPage = 'digitalOceanCreateServerApp';
+    return this.$.digitalOceanCreateServerApp;
+  }
+
+  getAccountListApp() {
+    return this.$.accountListApp;
+  }
+
+  getAccountListSidebarApp() {
+    return this.$.accountListSidebarApp;
   }
 
   getManualServerEntry() {
@@ -741,10 +691,6 @@ export class AppRoot extends mixinBehaviors
   aboutTapped() {
     this.$.aboutDialog.open();
     this.maybeCloseDrawer();
-  }
-
-  signOutTapped() {
-    this.fire('SignOutRequested');
   }
 
   openManualInstallFeedback(/** @type {string} */ prepopulatedMessage) {

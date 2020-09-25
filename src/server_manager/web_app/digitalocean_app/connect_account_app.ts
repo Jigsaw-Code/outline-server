@@ -32,7 +32,7 @@ import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 
 @customElement('digital-ocean-connect-account-app')
-export class DigitalOceanConnectAccount extends LitElement implements
+export class DigitalOceanConnectAccountApp extends LitElement implements
     AccountModelFactory<DigitalOceanAccount> {
   @property({type: Function}) localize: Function;
   @property({type: Object}) appSettings: AppSettings = null;
@@ -150,6 +150,7 @@ export class DigitalOceanConnectAccount extends LitElement implements
     const getAccountResponse = await api.getAccount();
     return {
       id: getAccountResponse.uuid,
+      displayName: getAccountResponse.email,
       provider: cloud_provider.Id.DigitalOcean,
       credential: accessToken,
     };

@@ -15,24 +15,25 @@
 import * as sentry from '@sentry/electron';
 import * as semver from 'semver';
 
-import * as digitalocean_api from '../cloud/digitalocean_api';
-import * as errors from '../infrastructure/errors';
-import {LocalStorageRepository} from '../infrastructure/repository';
 import * as account from '../model/account';
+import * as cloud_provider from '../model/cloud_provider';
+import * as digitalocean_api from '../cloud/digitalocean_api';
+import * as digitalocean_server from './digitalocean_server';
+import * as errors from '../infrastructure/errors';
+import * as server from '../model/server';
+import {LocalStorageRepository} from '../infrastructure/repository';
 import {AccountManager} from '../model/account_manager';
 import {DigitalOceanAccount} from '../model/digitalocean_account';
-import * as server from '../model/server';
 import {ManagedServer} from '../model/server';
 
-import {DigitalOceanConnectAccount} from './digitalocean_app/connect_account_app';
-import {DigitalOceanCreateServer} from './digitalocean_app/create_server_app';
-import {DigitalOceanVerifyAccount} from './digitalocean_app/verify_account_app';
-import * as digitalocean_server from './digitalocean_server';
+import {DigitalOceanConnectAccountApp} from './digitalocean_app/connect_account_app';
+import {DigitalOceanVerifyAccountApp} from './digitalocean_app/verify_account_app';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
 import {OutlineNotificationManager} from './ui_components/outline-notification-manager';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
+import {AccountListApp, AccountListSidebarApp} from "./ui_components/account-list-app";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -139,8 +140,10 @@ export class App {
   private selectedServer: server.Server;
   private serverBeingCreated: server.ManagedServer;
   private notificationManager: OutlineNotificationManager;
-  private digitalOceanConnectAccountApp: DigitalOceanConnectAccount;
-  private digitalOceanVerifyAccountApp: DigitalOceanVerifyAccount;
+  private digitalOceanConnectAccountApp: DigitalOceanConnectAccountApp;
+  private digitalOceanVerifyAccountApp: DigitalOceanVerifyAccountApp;
+  private accountListApp: AccountListApp;
+  private accountListSidebarApp: AccountListSidebarApp;
 
   constructor(
       private appRoot: AppRoot, private readonly version: string, private appSettings: AppSettings,
@@ -153,6 +156,10 @@ export class App {
         appSettings, accountRepository, this.notificationManager);
     this.digitalOceanVerifyAccountApp =
         this.appRoot.initializeDigitalOceanVerifyAccountApp(this.notificationManager);
+    this.accountListApp = this.appRoot.getAccountListApp();
+    this.accountListSidebarApp = this.appRoot.getAccountListSidebarApp();
+
+    this.accountManager.register(cloud_provider.Id.DigitalOcean, this.digitalOceanConnectAccountApp);
 
     appRoot.setAttribute('outline-version', this.version);
 
@@ -164,9 +171,15 @@ export class App {
       await this.digitalOceanVerifyAccountApp.start(account);
 
       const managedServers = await this.refreshDigitalOceanServers(account);
-      this.onServersRefreshed(managedServers, false);
+      await this.onServersRefreshed(managedServers, false);
+
+      this.onAccountRefreshed();
     });
     appRoot.addEventListener('SignOutRequested', (event: CustomEvent) => {
+      this.clearCredentialsAndShowIntro();
+    });
+
+    appRoot.addEventListener('AccountListApp#OnSignOut', (event: CustomEvent) => {
       this.clearCredentialsAndShowIntro();
     });
 
@@ -362,6 +375,12 @@ export class App {
       this.clearCredentialsAndShowIntro();
       bringToFront();
     }
+  }
+
+  async onAccountRefreshed() {
+    const accounts = await this.accountManager.list();
+    this.accountListApp.updateAccounts(accounts);
+    this.accountListSidebarApp.updateAccounts(accounts);
   }
 
   async start(): Promise<void> {
@@ -636,9 +655,8 @@ export class App {
   }
 
   private async showCreateServer() {
-    const digitalOceanCreateServer =
-        this.appRoot.getAndShowDigitalOceanCreateServer() as DigitalOceanCreateServer;
-    await digitalOceanCreateServer.show(
+    const digitalOceanCreateServerApp = this.appRoot.getAndShowDigitalOceanCreateServerApp();
+    await digitalOceanCreateServerApp.show(
         this.digitalOceanAccount, this.digitalOceanRetry.bind(this));
   }
 

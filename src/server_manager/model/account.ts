@@ -17,6 +17,7 @@ import {ManagedServer, RegionId, RegionMap} from './server';
 
 export interface Data {
   id: string;
+  displayName: string;
   provider: cloud_povider.Id;
   credential: unknown;
 }

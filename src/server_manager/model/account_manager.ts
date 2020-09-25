@@ -20,7 +20,7 @@ import * as cloud_provider from './cloud_provider';
 export class AccountManager {
   // TODO: Align generics
   // tslint:disable-next-line:no-any
-  private accountModelFactories: Map<cloud_provider.Id, AccountModelFactory<any>>;
+  private accountModelFactories: Map<cloud_provider.Id, AccountModelFactory<any>> = new Map();
 
   constructor(private accountRepository: LocalStorageRepository<Data, string>) {}
 

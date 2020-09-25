@@ -26,7 +26,7 @@ import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 
 @customElement('digital-ocean-verify-account-app')
-export class DigitalOceanVerifyAccount extends LitElement {
+export class DigitalOceanVerifyAccountApp extends LitElement {
   @property({type: Function}) localize: Function;
   @property({type: String}) currentPage: string;
   @property({type: Object}) notificationManager: OutlineNotificationManager = null;
