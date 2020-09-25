@@ -17,7 +17,7 @@
 # Collects common packaging options.  Meant to be called from the diffrent package_foo and 
 # release_foo scripts.
 # Usage from a packaging script:  
-#     src/server_manager/electron_app/package_$PLATFORM $0 ${@}
+#     src/server_manager/electron_app/package_$PLATFORM $0 $@
 
 readonly YARN_COMMAND="yarn do $(echo "${1}" | sed 's:.*\(src/server_manager/electron_app/.*\)_action.sh:\1:')"
 shift

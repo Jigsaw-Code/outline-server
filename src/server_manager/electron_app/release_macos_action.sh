@@ -21,7 +21,7 @@ if [ "$CSC_LINK" == "unset" ]; then
   exit 1
 fi
 
-STAGING_PERCENTAGE=$(src/server_manager/scripts/get_packaging_opts.sh $0 ${@})
+STAGING_PERCENTAGE=$(src/server_manager/scripts/get_packaging_opts.sh $0 $@)
 
 yarn do server_manager/electron_app/build
 yarn do server_manager/electron_app/write_production_environment
