@@ -280,6 +280,12 @@ export class App {
       openImage(event.detail.imagePath);
     });
 
+    appRoot.addEventListener('ToggleBetaChannelRequested', () => {
+      // Send the message to the main process to change autoUpdater
+      console.error('in app.ts');
+      toggleBeta();
+    });
+
     appRoot.addEventListener('OpenShareDialogRequested', (event: CustomEvent) => {
       const accessKey = event.detail.accessKey;
       this.appRoot.openShareDialog(accessKey, this.getS3InviteUrl(accessKey));
