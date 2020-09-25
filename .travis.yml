@@ -21,7 +21,6 @@ before_install:
       sudo apt-get update
       sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
     fi;
-  - sudo apt-get install jq
 
 stages:
   - name: "Server Daily Release"
