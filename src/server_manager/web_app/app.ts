@@ -282,7 +282,6 @@ export class App {
 
     appRoot.addEventListener('ToggleBetaChannelRequested', () => {
       // Send the message to the main process to change autoUpdater
-      console.error('in app.ts');
       toggleBeta();
     });
 
