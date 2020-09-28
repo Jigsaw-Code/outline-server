@@ -46,8 +46,6 @@ Note: If you are using root (not recommended on your dev machine, maybe in a con
 
 This project uses [Yarn workspaces](https://yarnpkg.com/blog/2017/08/02/introducing-workspaces/).
 
-In order to package or build a release version of the Manager, you will need [jq](https://stedolan.github.io/jq/) to parse `package.json`
-
 
 ## Build System
 
