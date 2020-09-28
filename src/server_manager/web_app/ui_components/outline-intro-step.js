@@ -205,7 +205,7 @@ Polymer({
           </div>
         </div>
 
-        <div id="gcp" class="card" on-tap="setUpGcpTapped">
+        <div id="gcp" class="card" on-tap="connectToGcpTapped">
           <div class="card-header">
             <div class="tag">[[localize('setup-advanced')]]</div>
             <img src="images/gcp-logo.svg">
@@ -282,15 +282,15 @@ Polymer({
     this.fire('ConnectToDigitalOcean');
   },
 
+  connectToGcpTapped: function() {
+    this.fire('ConnectToGcp');
+  },
+
   setUpGenericCloudProviderTapped: function() {
     this.fire('SetUpGenericCloudProviderRequested');
   },
 
   setUpAwsTapped: function() {
     this.fire('SetUpAwsRequested');
-  },
-
-  setUpGcpTapped: function() {
-    this.fire('SetUpGcpRequested');
   }
 });

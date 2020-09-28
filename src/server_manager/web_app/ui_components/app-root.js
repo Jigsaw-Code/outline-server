@@ -28,19 +28,22 @@ import '@polymer/paper-menu-button/paper-menu-button.js';
 import './account-list-app';
 import './cloud-install-styles.js';
 import './outline-about-dialog.js';
-import '../digitalocean_app/connect_account_app';
-import '../digitalocean_app/verify_account_app';
 import './outline-feedback-dialog.js';
 import './outline-survey-dialog.js';
 import './outline-intro-step.js';
 import './outline-language-picker.js';
-import '../digitalocean_app/create_server_app';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
 import './outline-notification-manager';
 import './outline-region-picker-step';
 import './outline-server-progress-step.js';
 import './outline-tos-view.js';
+
+import '../digitalocean_app/connect_account_app';
+import '../digitalocean_app/create_server_app';
+import '../digitalocean_app/verify_account_app';
+import '../gcp_app/connect_account_app';
+import '../gcp_app/create_server_app';
 
 import {AppLocalizeBehavior} from '@polymer/app-localize-behavior/app-localize-behavior.js';
 import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class.js';
@@ -351,15 +354,19 @@ export class AppRoot extends mixinBehaviors
             <iron-pages attr-for-selected="id" selected="{{ currentPage }}">
               <outline-intro-step id="intro" is-signed-in-to-digital-ocean="{{isSignedInToDigitalOcean}}" digital-ocean-email="{{adminEmail}}" localize="[[localize]]"></outline-intro-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
-              <digital-ocean-connect-account-app id="digitalOceanConnectAccountApp" localize="[[localize]]"></digital-ocean-connect-account-app>
-              <digital-ocean-verify-account-app id="digitalOceanVerifyAccountApp" localize="[[localize]]"></digital-ocean-verify-account-app>
-              <digital-ocean-create-server id="digitalOceanCreateServerApp" localize="[[localize]]"></digital-ocean-create-server>
               <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
               <div id="serverView">
                 <template is="dom-repeat" items="{{serverList}}" as="server">
                   <outline-server-view id="serverView-{{_base64Encode(server.id)}}" localize="[[localize]]" hidden\$="{{!_isServerSelected(selectedServer, server)}}"></outline-server-view>
                 </template>
               </div>
+              <!-- DigitalOcean apps -->
+              <digital-ocean-connect-account-app id="digitalOceanConnectAccountApp" localize="[[localize]]"></digital-ocean-connect-account-app>
+              <digital-ocean-create-server id="digitalOceanCreateServerApp" localize="[[localize]]"></digital-ocean-create-server>
+              <digital-ocean-verify-account-app id="digitalOceanVerifyAccountApp" localize="[[localize]]"></digital-ocean-verify-account-app>
+              <!-- GCP apps -->
+              <gcp-connect-account-app id="gcpConnectAccountApp" localize="[[localize]]"></gcp-connect-account-app>
+              <gcp-create-server id="gcpCreateServerApp" localize="[[localize]]"></gcp-create-server>
             </iron-pages>
           </div>
         </app-header-layout>
@@ -478,11 +485,9 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
     this.shouldShowSideBar = false;
 
-    this.addEventListener('RegionSelected', this.handleRegionSelected);
     this.addEventListener(
         'SetUpGenericCloudProviderRequested', this.handleSetUpGenericCloudProviderRequested);
     this.addEventListener('SetUpAwsRequested', this.handleSetUpAwsRequested);
-    this.addEventListener('SetUpGcpRequested', this.handleSetUpGcpRequested);
     this.addEventListener('ManualServerEntryCancelled', this.handleManualCancelled);
   }
 
@@ -533,6 +538,21 @@ export class AppRoot extends mixinBehaviors
     return this.$.digitalOceanCreateServerApp;
   }
 
+  initializeGcpConnectAccountApp(accountRepository, notificationManager) {
+    this.$.gcpConnectAccountApp.accountRepository = accountRepository;
+    this.$.gcpConnectAccountApp.notificationManager = notificationManager;
+    return this.$.gcpConnectAccountApp;
+  }
+
+  showGcpConnectAccountApp() {
+    this.currentPage = 'gcpConnectAccountApp';
+  }
+
+  getAndShowGcpCreateServerApp() {
+    this.currentPage = 'gcpCreateServerApp';
+    return this.$.gcpCreateServerApp;
+  }
+
   getAccountListApp() {
     return this.$.accountListApp;
   }
@@ -574,22 +594,12 @@ export class AppRoot extends mixinBehaviors
     return this.$.serverView.querySelector(`#serverView-${selectedServerId}`);
   }
 
-  handleRegionSelected(/** @type {Event} */ e) {
-    this.fire('SetUpServerRequested', {
-      regionId: e.detail.selectedRegionId,
-    });
-  }
-
   handleSetUpGenericCloudProviderRequested() {
     this.handleManualServerSelected('generic');
   }
 
   handleSetUpAwsRequested() {
     this.handleManualServerSelected('aws');
-  }
-
-  handleSetUpGcpRequested() {
-    this.handleManualServerSelected('gcp');
   }
 
   handleManualServerSelected(/** @type {'generic'|'aws'|'gcp'} */ cloudProvider) {

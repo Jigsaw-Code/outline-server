@@ -14,4 +14,5 @@
 
 export enum Id {
   DigitalOcean = 'DigitalOcean',
+  GCP = 'GoogleCloudPlatform',
 }

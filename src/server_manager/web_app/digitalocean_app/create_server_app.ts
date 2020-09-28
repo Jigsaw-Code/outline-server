@@ -18,6 +18,10 @@ import {customElement, html, LitElement, property} from 'lit-element';
 import {DigitalOceanAccount} from '../../model/digitalocean_account';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 import {Location, OutlineRegionPicker} from '../ui_components/outline-region-picker-step';
+import * as server from "../../model/server";
+import * as digitalocean_server from "../digitalocean_server";
+import {ManagedServer} from "../../model/server";
+import {EventEmitter} from 'eventemitter3';
 
 // DigitalOcean mapping of regions to flags
 const FLAG_IMAGE_DIR = 'images/flags';
@@ -37,6 +41,16 @@ export class DigitalOceanCreateServer extends LitElement {
   @property({type: Function}) localize: Function;
   @property({type: Object}) notificationManager: OutlineNotificationManager = null;
 
+  private account: DigitalOceanAccount;
+  private eventEmitter = new EventEmitter();
+
+  constructor() {
+    super();
+    this.addEventListener('RegionSelected', (event: CustomEvent) => {
+      this.eventEmitter.emit('blah', event.detail.regionId);
+    });
+  }
+
   render() {
     return html`
         <outline-region-picker-step id="regionPicker" 
@@ -46,7 +60,9 @@ export class DigitalOceanCreateServer extends LitElement {
 
   // The region picker initially shows all options as disabled. Options are enabled by this code,
   // after checking which regions are available.
-  async show(account: DigitalOceanAccount, retryFn: <T>(fn: () => Promise<T>) => Promise<T>) {
+  async start(account: DigitalOceanAccount, retryFn: <T>(fn: () => Promise<T>) => Promise<T>): Promise<ManagedServer> {
+    this.account = account;
+
     const regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
     regionPicker.reset();
 
@@ -60,6 +76,18 @@ export class DigitalOceanCreateServer extends LitElement {
       console.error(`Failed to get list of available regions: ${err}`);
       this.notificationManager.showError(this.localize('error-do-regions'));
     }
+
+    return new Promise<ManagedServer>(async (resolve, reject) => {
+      this.eventEmitter.once('blah', async (regionId) => {
+        const server = await this.createServer(this.account, regionId);
+        resolve(server);
+      });
+    });
+  }
+
+  private async createServer(account: DigitalOceanAccount, regionId: server.RegionId): Promise<ManagedServer> {
+    const serverName = this.makeLocalizedServerName(regionId);
+    return account.createServer(regionId, serverName);
   }
 
   private createLocationModel(cityId: string, regionIds: string[]): Location {
@@ -69,5 +97,15 @@ export class DigitalOceanCreateServer extends LitElement {
       flag: DIGITALOCEAN_FLAG_MAPPING[cityId] || '',
       available: regionIds.length > 0,
     };
+  }
+
+  private makeLocalizedServerName(regionId: server.RegionId) {
+    const serverLocation = this.getLocalizedCityName(regionId);
+    return this.localize('server-name', 'serverLocation', serverLocation);
+  }
+
+  private getLocalizedCityName(regionId: server.RegionId) {
+    const cityId = digitalocean_server.GetCityId(regionId);
+    return this.localize(`city-${cityId}`);
   }
 }

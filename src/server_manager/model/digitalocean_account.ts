@@ -34,7 +34,7 @@ export class DigitalOceanAccount implements account.Account {
       private digitalOcean: DigitalOceanSession, private image: string, private metricsUrl: string,
       private sentryApiUrl: string|undefined, private debugMode: boolean) {}
 
-  async getEmail() {
+  async getEmail(): Promise<string> {
     // TODO: Cache the account so that we don't make a network request each time
     // we need account information.
     const response = await this.digitalOcean.getAccount();

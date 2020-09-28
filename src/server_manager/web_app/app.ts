@@ -34,6 +34,8 @@ import {AccountListApp, AccountListSidebarApp} from './ui_components/account-lis
 import {AppRoot} from './ui_components/app-root.js';
 import {OutlineNotificationManager} from './ui_components/outline-notification-manager';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
+import {GcpConnectAccountApp} from "./gcp_app/connect_account_app";
+import {GcpAccount} from "../model/gcp_account";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -142,6 +144,7 @@ export class App {
   private notificationManager: OutlineNotificationManager;
   private digitalOceanConnectAccountApp: DigitalOceanConnectAccountApp;
   private digitalOceanVerifyAccountApp: DigitalOceanVerifyAccountApp;
+  private gcpConnectAccountApp: GcpConnectAccountApp;
   private accountListApp: AccountListApp;
   private accountListSidebarApp: AccountListSidebarApp;
 
@@ -156,11 +159,14 @@ export class App {
         appSettings, accountRepository, this.notificationManager);
     this.digitalOceanVerifyAccountApp =
         this.appRoot.initializeDigitalOceanVerifyAccountApp(this.notificationManager);
+    this.gcpConnectAccountApp =
+        this.appRoot.initializeGcpConnectAccountApp(accountRepository, this.notificationManager);
     this.accountListApp = this.appRoot.getAccountListApp();
     this.accountListSidebarApp = this.appRoot.getAccountListSidebarApp();
 
     this.accountManager.register(
         cloud_provider.Id.DigitalOcean, this.digitalOceanConnectAccountApp);
+    this.accountManager.register(cloud_provider.Id.GCP, this.gcpConnectAccountApp);
 
     appRoot.setAttribute('outline-version', this.version);
 
@@ -171,21 +177,32 @@ export class App {
       this.appRoot.showDigitalOceanVerifyAccountApp();
       await this.digitalOceanVerifyAccountApp.start(account);
 
-      const managedServers = await this.refreshDigitalOceanServers(account);
-      await this.onServersRefreshed(managedServers, false);
+      const managedServers = await this.refreshServers(account);
+      await this.onServersRefreshed(account, managedServers, false);
 
       this.onAccountRefreshed();
     });
+
+    appRoot.addEventListener('ConnectToGcp', async (event: CustomEvent) => {
+      this.appRoot.showGcpConnectAccountApp();
+      const account = await this.gcpConnectAccountApp.start();
+      this.accountManager.add(account);
+
+      // this.appRoot.showDigitalOceanVerifyAccountApp();
+      // await this.digitalOceanVerifyAccountApp.start(account);
+
+      const managedServers = await this.refreshServers(account);
+      await this.onServersRefreshed(account, managedServers, false);
+
+      this.onAccountRefreshed();
+    });
+
     appRoot.addEventListener('SignOutRequested', (event: CustomEvent) => {
       this.clearCredentialsAndShowIntro();
     });
 
     appRoot.addEventListener('AccountListApp#OnSignOut', (event: CustomEvent) => {
       this.clearCredentialsAndShowIntro();
-    });
-
-    appRoot.addEventListener('SetUpServerRequested', (event: CustomEvent) => {
-      this.createDigitalOceanServer(event.detail.regionId);
     });
 
     appRoot.addEventListener('DeleteServerRequested', (event: CustomEvent) => {
@@ -345,17 +362,16 @@ export class App {
     return account;
   }
 
-  async refreshDigitalOceanServers(account: DigitalOceanAccount): Promise<ManagedServer[]> {
+  async refreshServers(account: account.Account): Promise<ManagedServer[]> {
     try {
-      this.digitalOceanAccount = account;
-      return await this.digitalOceanAccount.listServers();
+      return await account.listServers();
     } catch (error) {
-      console.error('Could not fetch server list from DigitalOcean');
+      console.error(`Could not fetch server list from ${account.getData().id}`);
       this.showIntro();
     }
   }
 
-  async onServersRefreshed(servers: server.Server[], onStartup: boolean) {
+  async onServersRefreshed(account: account.Account, servers: server.Server[], onStartup: boolean) {
     try {
       this.syncServersToDisplay(servers);
       if (!!this.serverBeingCreated) {
@@ -365,7 +381,7 @@ export class App {
         this.waitForManagedServerCreation();
       } else if (!onStartup) {
         // Show the create server app.
-        this.showCreateServer();
+        this.showCreateServer(account);
       } else if (servers.length > 0 && onStartup) {
         // Show the last "managed" server detail screen on startup.
         const displayServer =
@@ -389,22 +405,22 @@ export class App {
     this.showIntro();
     await this.syncDisplayServersToUi();
 
-    const manualServersPromise = this.manualServerRepository.listServers();
-
-    const data = this.accountRepository.get(LEGACY_DIGITALOCEAN_ACCOUNT_ID);
-    let managedServersPromise = Promise.resolve([]);
-    if (data) {
-      const account = await this.digitalOceanConnectAccountApp.createAccountModel(data);
-      this.appRoot.adminEmail = await account.getEmail();
-      managedServersPromise = this.refreshDigitalOceanServers(account);
-    }
-
-    const [manualServers, managedServers] =
-        await Promise.all([manualServersPromise, managedServersPromise]);
-    const installedManagedServers = managedServers.filter(server => server.isInstallCompleted());
-    this.serverBeingCreated = managedServers.find(server => !server.isInstallCompleted());
-    const servers = manualServers.concat(installedManagedServers);
-    this.onServersRefreshed(servers, true);
+    // const manualServersPromise = this.manualServerRepository.listServers();
+    //
+    // const data = this.accountRepository.get(LEGACY_DIGITALOCEAN_ACCOUNT_ID);
+    // let managedServersPromise = Promise.resolve([]);
+    // if (data) {
+    //   const account = await this.digitalOceanConnectAccountApp.createAccountModel(data);
+    //   this.appRoot.adminEmail = await account.getEmail();
+    //   managedServersPromise = this.refreshServers(account);
+    // }
+    //
+    // const [manualServers, managedServers] =
+    //     await Promise.all([manualServersPromise, managedServersPromise]);
+    // const installedManagedServers = managedServers.filter(server => server.isInstallCompleted());
+    // this.serverBeingCreated = managedServers.find(server => !server.isInstallCompleted());
+    // const servers = manualServers.concat(installedManagedServers);
+    // this.onServersRefreshed(account, servers, true);
   }
 
   private async syncServersToDisplay(servers: server.Server[]) {
@@ -535,6 +551,16 @@ export class App {
     });
   }
 
+  private makeLocalizedServerName(regionId: server.RegionId) {
+    const serverLocation = this.getLocalizedCityName(regionId);
+    return this.appRoot.localize('server-name', 'serverLocation', serverLocation);
+  }
+
+  private getLocalizedCityName(regionId: server.RegionId) {
+    const cityId = digitalocean_server.GetCityId(regionId);
+    return this.appRoot.localize(`city-${cityId}`);
+  }
+
   private async handleShowServerRequested(displayServerId: string) {
     const displayServer = this.displayServerRepository.findServer(displayServerId) ||
         this.getDisplayServerBeingCreated();
@@ -655,10 +681,16 @@ export class App {
     }
   }
 
-  private async showCreateServer() {
-    const digitalOceanCreateServerApp = this.appRoot.getAndShowDigitalOceanCreateServerApp();
-    await digitalOceanCreateServerApp.show(
-        this.digitalOceanAccount, this.digitalOceanRetry.bind(this));
+  private async showCreateServer(account: account.Account) {
+    const provider = account.getData().provider;
+    if (provider === cloud_provider.Id.DigitalOcean) {
+      const createServerApp = this.appRoot.getAndShowDigitalOceanCreateServerApp();
+      const server = await createServerApp.start(account as DigitalOceanAccount, this.digitalOceanRetry.bind(this));
+      this.syncServerCreationToUi(server);
+    } else if (provider === cloud_provider.Id.GCP) {
+      const createServerApp = this.appRoot.getAndShowGcpCreateServerApp();
+      await createServerApp.show(account as GcpAccount, this.digitalOceanRetry.bind(this));
+    }
   }
 
   private showServerCreationProgress() {
@@ -700,42 +732,13 @@ export class App {
                   console.info('Deleting unreachable server');
                   this.serverBeingCreated.getHost().delete().then(() => {
                     this.serverBeingCreated = null;
-                    this.showCreateServer();
+                    // this.showCreateServer();
                   });
                 } else if (clickedButtonIndex === 1) {  // user clicked 'Try again'.
                   console.info('Retrying unreachable server');
                   this.waitForManagedServerCreation(true);
                 }
               });
-        });
-  }
-
-  private getLocalizedCityName(regionId: server.RegionId) {
-    const cityId = digitalocean_server.GetCityId(regionId);
-    return this.appRoot.localize(`city-${cityId}`);
-  }
-
-  private makeLocalizedServerName(regionId: server.RegionId) {
-    const serverLocation = this.getLocalizedCityName(regionId);
-    return this.appRoot.localize('server-name', 'serverLocation', serverLocation);
-  }
-
-  // Returns a promise which fulfills once the DigitalOcean droplet is created.
-  // Shadowbox may not be fully installed once this promise is fulfilled.
-  public createDigitalOceanServer(regionId: server.RegionId) {
-    const serverName = this.makeLocalizedServerName(regionId);
-    return this
-        .digitalOceanRetry(() => {
-          return this.digitalOceanAccount.createServer(regionId, serverName);
-        })
-        .then((server) => {
-          this.syncServerCreationToUi(server);
-        })
-        .catch((e) => {
-          // Sanity check - this error is not expected to occur, as waitForManagedServerCreation
-          // has it's own error handling.
-          console.error('error from waitForManagedServerCreation');
-          return Promise.reject(e);
         });
   }
 
@@ -1160,7 +1163,7 @@ export class App {
       this.serverBeingCreated = null;
       this.removeServerFromDisplay(this.appRoot.selectedServer);
       this.appRoot.selectedServer = null;
-      this.showCreateServer();
+      // this.showCreateServer();
     });
   }
 
