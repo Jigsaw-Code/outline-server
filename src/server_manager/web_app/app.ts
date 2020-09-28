@@ -22,6 +22,7 @@ import * as account from '../model/account';
 import {AccountManager} from '../model/account_manager';
 import * as cloud_provider from '../model/cloud_provider';
 import {DigitalOceanAccount} from '../model/digitalocean_account';
+import {GcpAccount} from '../model/gcp_account';
 import * as server from '../model/server';
 import {ManagedServer} from '../model/server';
 
@@ -29,13 +30,12 @@ import {DigitalOceanConnectAccountApp} from './digitalocean_app/connect_account_
 import {DigitalOceanVerifyAccountApp} from './digitalocean_app/verify_account_app';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
+import {GcpConnectAccountApp} from './gcp_app/connect_account_app';
 import {parseManualServerConfig} from './management_urls';
 import {AccountListApp, AccountListSidebarApp} from './ui_components/account-list-app';
 import {AppRoot} from './ui_components/app-root.js';
 import {OutlineNotificationManager} from './ui_components/outline-notification-manager';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
-import {GcpConnectAccountApp} from "./gcp_app/connect_account_app";
-import {GcpAccount} from "../model/gcp_account";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -685,7 +685,8 @@ export class App {
     const provider = account.getData().provider;
     if (provider === cloud_provider.Id.DigitalOcean) {
       const createServerApp = this.appRoot.getAndShowDigitalOceanCreateServerApp();
-      const server = await createServerApp.start(account as DigitalOceanAccount, this.digitalOceanRetry.bind(this));
+      const server = await createServerApp.start(
+          account as DigitalOceanAccount, this.digitalOceanRetry.bind(this));
       this.syncServerCreationToUi(server);
     } else if (provider === cloud_provider.Id.GCP) {
       const createServerApp = this.appRoot.getAndShowGcpCreateServerApp();

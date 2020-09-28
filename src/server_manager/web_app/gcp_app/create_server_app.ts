@@ -15,9 +15,9 @@
 */
 import {customElement, html, LitElement, property} from 'lit-element';
 
-import {OutlineNotificationManager} from "../ui_components/outline-notification-manager";
+import {GcpAccount} from '../../model/gcp_account';
+import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 import {Location, OutlineRegionPicker} from '../ui_components/outline-region-picker-step';
-import {GcpAccount} from "../../model/gcp_account";
 
 @customElement('gcp-create-server')
 export class GcpCreateServer extends LitElement {

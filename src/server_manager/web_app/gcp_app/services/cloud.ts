@@ -17,11 +17,11 @@ import * as cloud_provider from '../../../model/cloud_provider';
 export interface Instance {
   id: string;
   name: string;
-  state?: "pending" | "running" | "error" | "unknown" | "stopping" | "terminated";
+  state?: 'pending'|'running'|'error'|'unknown'|'stopping'|'terminated';
   bundle?: Bundle;
   image?: Image;
   location: Location;
-  ip_address?: string; // TODO: support multiple IPs
+  ip_address?: string;  // TODO: support multiple IPs
   // TODO: support both ipv4 and ipv6
   created_at?: Date;
   labels?: Map<string, string>;
@@ -50,7 +50,7 @@ export interface Bundle {
 export type CloudProviderServiceFactory = (account: Account) => Promise<CloudProviderService>;
 
 export interface CloudProviderService {
-  readonly cloudProvider?: cloud_provider.Id; // TODO: Make this abstract.
+  readonly cloudProvider?: cloud_provider.Id;  // TODO: Make this abstract.
 
   createInstance(name: string, bundleId: string, locationId: string): Promise<Instance>;
   deleteInstance(instanceId: string, locationId: string): Promise<void>;

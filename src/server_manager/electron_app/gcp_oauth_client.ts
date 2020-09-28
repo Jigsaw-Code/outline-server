@@ -14,9 +14,9 @@
 
 import * as electron from 'electron';
 import * as express from 'express';
-import {google} from "googleapis";
-import {Credentials} from "google-auth-library/build/src/auth/credentials";
-import {GaxiosError} from "gaxios";
+import {GaxiosError} from 'gaxios';
+import {Credentials} from 'google-auth-library/build/src/auth/credentials';
+import {google} from 'googleapis';
 
 const REDIRECT_PORT = 18535;
 const REDIRECT_URL = `http://localhost:${REDIRECT_PORT}`;
@@ -28,49 +28,48 @@ const OAUTH_CONFIG = {
   // * Add the scopes below to the consent screen.
   // * Create OAuth 2.0 client ID (and secret).
   // * Fill in the missing config values below.
-  project_id: "mpmcroy-server-provisioner",
-  client_id: "276807089705-mbga5q4kilo17ikc20ttadtdvb4d25gd.apps.googleusercontent.com",
-  client_secret: "cBFKMxmcHRWvjXF_GUTjXH8R",
-  auth_uri: "https://accounts.google.com/o/oauth2/auth",
-  token_uri: "https://oauth2.googleapis.com/token",
-  auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+  project_id: 'mpmcroy-server-provisioner',
+  client_id: '276807089705-mbga5q4kilo17ikc20ttadtdvb4d25gd.apps.googleusercontent.com',
+  client_secret: 'cBFKMxmcHRWvjXF_GUTjXH8R',
+  auth_uri: 'https://accounts.google.com/o/oauth2/auth',
+  token_uri: 'https://oauth2.googleapis.com/token',
+  auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
   redirect_uris: [`${REDIRECT_URL}/oauth/callback`],
   scopes: [
-    "https://www.googleapis.com/auth/userinfo.email",
-    "https://www.googleapis.com/auth/cloud-platform",
-    "https://www.googleapis.com/auth/compute",
-    "https://www.googleapis.com/auth/devstorage.full_control",
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/cloud-platform',
+    'https://www.googleapis.com/auth/compute',
+    'https://www.googleapis.com/auth/devstorage.full_control',
   ],
 };
 
 export async function performOauth(): Promise<Credentials> {
   const oauth2Client = new google.auth.OAuth2(
-    OAUTH_CONFIG.client_id,
-    OAUTH_CONFIG.client_secret,
-    OAUTH_CONFIG.redirect_uris[0]
-  );
+      OAUTH_CONFIG.client_id, OAUTH_CONFIG.client_secret, OAUTH_CONFIG.redirect_uris[0]);
   const oauthUrl = oauth2Client.generateAuthUrl({
-    access_type: "offline",
+    access_type: 'offline',
     scope: OAUTH_CONFIG.scopes,
   });
   await electron.shell.openExternal(oauthUrl);
 
   return new Promise<Credentials>((resolve, reject) => {
     const app: express.Application = express();
-    app.get("/oauth/callback", (request: express.Request, response: express.Response) => {
+    app.get('/oauth/callback', (request: express.Request, response: express.Response) => {
       if (request.query.error) {
-        response.send("User denied access");
+        response.send('User denied access');
         reject();
       } else {
-        oauth2Client.getToken(request.query.code as string, (error: GaxiosError | null, credential?: Credentials | null) => {
-          if (error) {
-            response.send("Error");
-            reject();
-          } else {
-            response.send("Success! Please return back to the Outline CLI to continue.");
-            resolve(credential!);
-          }
-        });
+        oauth2Client.getToken(
+            request.query.code as string,
+            (error: GaxiosError|null, credential?: Credentials|null) => {
+              if (error) {
+                response.send('Error');
+                reject();
+              } else {
+                response.send('Success! Please return back to the Outline CLI to continue.');
+                resolve(credential!);
+              }
+            });
       }
     });
     app.listen(REDIRECT_PORT);

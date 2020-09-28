@@ -17,6 +17,7 @@ import '@polymer/polymer/polymer-legacy.js';
 import '@polymer/iron-pages/iron-pages.js';
 import '../ui_components/outline-step-view.js';
 
+import {Credentials} from 'google-auth-library/build/src/auth/credentials';
 import {css, customElement, html, LitElement, property} from 'lit-element';
 
 import {makePublicEvent} from '../../infrastructure/events';
@@ -24,11 +25,11 @@ import {LocalStorageRepository} from '../../infrastructure/repository';
 import * as account from '../../model/account';
 import {AccountModelFactory} from '../../model/account';
 import * as cloud_provider from '../../model/cloud_provider';
+import {GcpAccount} from '../../model/gcp_account';
 import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
-import {Credentials} from "google-auth-library/build/src/auth/credentials";
-import {GcpAccount} from "../../model/gcp_account";
-import {GcpRestApiProviderService, OAuthCredential} from "./services/rest_api_client";
+
+import {GcpRestApiProviderService, OAuthCredential} from './services/rest_api_client';
 
 @customElement('gcp-connect-account-app')
 export class GcpConnectAccountApp extends LitElement implements AccountModelFactory<GcpAccount> {
@@ -126,7 +127,8 @@ export class GcpConnectAccountApp extends LitElement implements AccountModelFact
     const refreshToken = data.credential as string;
     const oauthCredential = new OAuthCredential(refreshToken);
     await oauthCredential.refresh();
-    const providerService = new GcpRestApiProviderService('cloud-spanner-test-179701',  oauthCredential);
+    const providerService =
+        new GcpRestApiProviderService('cloud-spanner-test-179701', oauthCredential);
     return new GcpAccount(providerService, data, this.accountRepository);
   }
 

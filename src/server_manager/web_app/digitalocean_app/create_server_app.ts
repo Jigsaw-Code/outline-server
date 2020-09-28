@@ -13,15 +13,15 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
+import {EventEmitter} from 'eventemitter3';
 import {customElement, html, LitElement, property} from 'lit-element';
 
 import {DigitalOceanAccount} from '../../model/digitalocean_account';
+import * as server from '../../model/server';
+import {ManagedServer} from '../../model/server';
+import * as digitalocean_server from '../digitalocean_server';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 import {Location, OutlineRegionPicker} from '../ui_components/outline-region-picker-step';
-import * as server from "../../model/server";
-import * as digitalocean_server from "../digitalocean_server";
-import {ManagedServer} from "../../model/server";
-import {EventEmitter} from 'eventemitter3';
 
 // DigitalOcean mapping of regions to flags
 const FLAG_IMAGE_DIR = 'images/flags';
@@ -60,7 +60,8 @@ export class DigitalOceanCreateServer extends LitElement {
 
   // The region picker initially shows all options as disabled. Options are enabled by this code,
   // after checking which regions are available.
-  async start(account: DigitalOceanAccount, retryFn: <T>(fn: () => Promise<T>) => Promise<T>): Promise<ManagedServer> {
+  async start(account: DigitalOceanAccount, retryFn: <T>(fn: () => Promise<T>) => Promise<T>):
+      Promise<ManagedServer> {
     this.account = account;
 
     const regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
@@ -85,7 +86,8 @@ export class DigitalOceanCreateServer extends LitElement {
     });
   }
 
-  private async createServer(account: DigitalOceanAccount, regionId: server.RegionId): Promise<ManagedServer> {
+  private async createServer(account: DigitalOceanAccount, regionId: server.RegionId):
+      Promise<ManagedServer> {
     const serverName = this.makeLocalizedServerName(regionId);
     return account.createServer(regionId, serverName);
   }

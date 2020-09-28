@@ -13,16 +13,15 @@
 // limitations under the License.
 
 import {LocalStorageRepository} from '../infrastructure/repository';
+import {GcpRestApiProviderService} from '../web_app/gcp_app/services/rest_api_client';
+import {GcpServer} from '../web_app/gcp_server';
 
 import * as account from './account';
 import * as server from './server';
-import {GcpRestApiProviderService} from "../web_app/gcp_app/services/rest_api_client";
-import {GcpServer} from "../web_app/gcp_server";
 
 export class GcpAccount implements account.Account {
   constructor(
-      private gcpProviderService: GcpRestApiProviderService,
-      private data: account.Data,
+      private gcpProviderService: GcpRestApiProviderService, private data: account.Data,
       private accountRepository: LocalStorageRepository<account.Data, string>) {}
 
   async getEmail(): Promise<string> {
@@ -51,13 +50,14 @@ export class GcpAccount implements account.Account {
   }
 
   async createServer(region: server.RegionId, name: string): Promise<server.ManagedServer> {
-    const instance = await this.gcpProviderService.createInstance(name, "f1-micro", region);
+    const instance = await this.gcpProviderService.createInstance(name, 'f1-micro', region);
     return new GcpServer(instance, this.gcpProviderService);
   }
 
   async listServers(fetchFromHost = true): Promise<server.ManagedServer[]> {
     const instances = await this.gcpProviderService.listInstances();
-    return Promise.all(instances.map((instance) => new GcpServer(instance, this.gcpProviderService)));
+    return Promise.all(
+        instances.map((instance) => new GcpServer(instance, this.gcpProviderService)));
   }
 
   async disconnect(): Promise<void> {

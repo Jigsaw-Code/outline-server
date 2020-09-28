@@ -1,8 +1,9 @@
-import {ShadowboxServer} from "./shadowbox_server";
-import * as server from "../model/server";
-import {DataAmount, ManagedServerHost, MonetaryCost} from "../model/server";
-import {GcpRestApiProviderService} from "./gcp_app/services/rest_api_client";
-import {Instance} from "./gcp_app/services/cloud";
+import * as server from '../model/server';
+import {DataAmount, ManagedServerHost, MonetaryCost} from '../model/server';
+
+import {Instance} from './gcp_app/services/cloud';
+import {GcpRestApiProviderService} from './gcp_app/services/rest_api_client';
+import {ShadowboxServer} from './shadowbox_server';
 
 export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   private readonly gcpHost: GcpHost;
