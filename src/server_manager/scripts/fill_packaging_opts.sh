@@ -17,7 +17,10 @@
 # Collects common packaging options.  Meant to be called from the diffrent package_foo and 
 # release_foo scripts.
 # Usage from a packaging script:  
-#     src/server_manager/electron_app/package_$PLATFORM $0 $@
+#    source src/server_manager/electron_app/package_$PLATFORM $0 $@
+#
+# Note that you MUST use "source" in order to run the script in the same process as the calling
+# script, allowing fill_packaging_opts.sh to fill variables for the caller.
 
 readonly YARN_COMMAND="yarn do $(echo "${1}" | sed 's:.*\(src/server_manager/electron_app/.*\)_action.sh:\1:')"
 shift
@@ -48,7 +51,3 @@ if ((STAGING_PERCENTAGE <= 0)) || ((STAGING_PERCENTAGE > 100)); then
   echo "Staging percentage must be greater than 0 and no more than 100" 1>&2
   exit 1
 fi
-
-# This breaks if we have more than one option.  We could, for example, use jq here to return JSON
-# and jq from the calling script to parse it to variables.
-echo "${STAGING_PERCENTAGE}"
