@@ -21,7 +21,7 @@ fi
 readonly STAGING_PERCENTAGE="${2}"
 readonly BUILD_DIR=build/server_manager/electron_app/static
 
-INFO_FILE_CHANNEL=$(src/server_manager/scripts/manager_release_channel.sh)
+INFO_FILE_CHANNEL=$(src/server_manager/scripts/get_manager_release_channel.sh)
 echo "stagingPercentage: $STAGING_PERCENTAGE" >> "${BUILD_DIR}"/dist/"${INFO_FILE_CHANNEL}${PLATFORM}".yml
 
 # If we cut a staged mainline release, beta testers will take the update as well.
