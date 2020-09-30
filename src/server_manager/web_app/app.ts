@@ -511,7 +511,7 @@ export class App {
                 this.showIntro();
                 const msg = `Failed to get DigitalOcean account information: ${error}`;
                 console.error(msg);
-                this.appRoot.getNotificationView().showError(
+                this.notificationManager.showError(
                     this.appRoot.localize('error-do-account-info'));
                 reject(new Error(msg));
               }
