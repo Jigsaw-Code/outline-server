@@ -397,7 +397,7 @@ export class AppRoot extends mixinBehaviors
               <outline-intro-step id="intro" is-signed-in-to-digital-ocean="{{isSignedInToDigitalOcean}}" digital-ocean-email="{{adminEmail}}" localize="[[localize]]"></outline-intro-step>
               <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
-              <digitalocean-create-server id="digitalOceanCreateServer" localize="[[localize]]"></digitalocean-create-server>
+              <digitalocean-create-server-app id="digitalOceanCreateServerApp" localize="[[localize]]"></digitalocean-create-server-app>
               <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
               <div id="serverView">
                 <template is="dom-repeat" items="{{serverList}}" as="server">
@@ -443,7 +443,7 @@ export class AppRoot extends mixinBehaviors
         </div>
       </app-drawer>
 
-      <outline-notifications id="notificationManager"></outline-notifications>
+      <outline-notification-manager id="notificationManager"></outline-notification-manager>
 
       <!-- Modal dialogs must be outside the app container; otherwise the backdrop covers them.  -->
       <outline-survey-dialog id="surveyDialog" localize="[[localize]]"></outline-survey-dialog>
@@ -529,7 +529,6 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
     this.shouldShowSideBar = false;
 
-    this.addEventListener('RegionSelected', this.handleRegionSelected);
     this.addEventListener(
         'SetUpGenericCloudProviderRequested', this.handleSetUpGenericCloudProviderRequested);
     this.addEventListener('SetUpAwsRequested', this.handleSetUpAwsRequested);
@@ -539,7 +538,7 @@ export class AppRoot extends mixinBehaviors
 
   ready() {
     super.ready();
-    this.$.digitalOceanCreateServer.notificationManager = this.getNotificationManager();
+    this.$.digitalOceanCreateServerApp.setNotificationManager(this.getNotificationManager());
   }
 
   /**
@@ -582,11 +581,11 @@ export class AppRoot extends mixinBehaviors
   }
 
   /**
-   * @returns {DigitalOceanCreateServer}
+   * @returns {DigitalOceanCreateServerApp}
    */
-  getAndShowDigitalOceanCreateServer() {
-    this.currentPage = 'digitalOceanCreateServer';
-    return this.$.digitalOceanCreateServer;
+  getAndShowDigitalOceanCreateServerApp() {
+    this.currentPage = 'digitalOceanCreateServerApp';
+    return this.$.digitalOceanCreateServerApp;
   }
 
   getManualServerEntry() {
@@ -620,12 +619,6 @@ export class AppRoot extends mixinBehaviors
     }
     const selectedServerId = this._base64Encode(displayServerId);
     return this.$.serverView.querySelector(`#serverView-${selectedServerId}`);
-  }
-
-  handleRegionSelected(/** @type {Event} */ e) {
-    this.fire('SetUpServerRequested', {
-      regionId: e.detail.selectedRegionId,
-    });
   }
 
   handleSetUpGenericCloudProviderRequested() {

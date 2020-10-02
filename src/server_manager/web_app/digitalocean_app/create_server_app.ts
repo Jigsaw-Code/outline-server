@@ -35,39 +35,42 @@ const DIGITALOCEAN_FLAG_MAPPING: {[cityId: string]: string} = {
   nyc: `${FLAG_IMAGE_DIR}/us.png`,
 };
 
-@customElement('digitalocean-create-server')
-export class DigitalOceanCreateServer extends LitElement {
+@customElement('digitalocean-create-server-app')
+export class DigitalOceanCreateServerApp extends LitElement {
   // External events
-  public static EVENT_SERVER_CREATED = 'DigitalOceanCreateServer#ServerCreated';
-  public static EVENT_AUTHORIZATION_ERROR = 'DigitalOceanCreateServer#AuthorizationError';
+  public static EVENT_SERVER_CREATED = 'DigitalOceanCreateServerApp#ServerCreated';
+  public static EVENT_AUTHORIZATION_ERROR = 'DigitalOceanCreateServerApp#AuthorizationError';
   // Internal events
-  private static EVENT_CREATE_SERVER_REQUESTED = 'DigitalOceanCreateServer#_RequestCreateServer';
+  private static EVENT_CREATE_SERVER_REQUESTED = 'DigitalOceanCreateServerApp#_RequestCreateServer';
 
   @property({type: Function}) localize: Function;
-  @property({type: Object}) notificationManager: OutlineNotificationManager = null;
 
+  private notificationManager: OutlineNotificationManager;
   private eventEmitter = new EventEmitter();
 
   constructor() {
     super();
     this.addEventListener(OutlineRegionPicker.EVENT_REGION_SELECTED, (event: CustomEvent) => {
       this.eventEmitter.emit(
-          DigitalOceanCreateServer.EVENT_CREATE_SERVER_REQUESTED, event.detail.regionId);
+          DigitalOceanCreateServerApp.EVENT_CREATE_SERVER_REQUESTED, event.detail.regionId);
     });
   }
 
   render() {
-    return html`<outline-region-picker-step .localize=${
-        this.localize}></outline-region-picker-step>`;
+    return html`<outline-region-picker-step .localize=${this.localize}></outline-region-picker-step>`;
+  }
+
+  setNotificationManager(notificationManager: OutlineNotificationManager) {
+    this.notificationManager = notificationManager;
   }
 
   async start(digitalOceanServerRepository: ManagedServerRepository): Promise<void> {
     await this.showRegionPicker(digitalOceanServerRepository);
 
     this.eventEmitter.once(
-        DigitalOceanCreateServer.EVENT_CREATE_SERVER_REQUESTED, async (regionId) => {
-          const server = this.createServer(digitalOceanServerRepository, regionId);
-          const event = makePublicEvent(DigitalOceanCreateServer.EVENT_SERVER_CREATED, {server});
+        DigitalOceanCreateServerApp.EVENT_CREATE_SERVER_REQUESTED, async (regionId) => {
+          const server = await this.createServer(digitalOceanServerRepository, regionId);
+          const event = makePublicEvent(DigitalOceanCreateServerApp.EVENT_SERVER_CREATED, {server});
           this.dispatchEvent(event);
           // TODO: Add create server failed event
         });

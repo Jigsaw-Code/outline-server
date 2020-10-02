@@ -159,7 +159,7 @@ export class OutlineRegionPicker extends LitElement {
     const params = {
       bubbles: true,
       composed: true,
-      detail: {selectedRegionId: this.selectedLocationId}
+      detail: {regionId: this.selectedLocationId}
     };
     const customEvent = new CustomEvent(OutlineRegionPicker.EVENT_REGION_SELECTED, params);
     this.dispatchEvent(customEvent);

@@ -21,7 +21,7 @@ import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
 
-import {DigitalOceanCreateServer} from './digitalocean_app/create_server_app';
+import {DigitalOceanCreateServerApp} from './digitalocean_app/create_server_app';
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
@@ -148,9 +148,8 @@ export class App {
     appRoot.addEventListener('SignOutRequested', (event: CustomEvent) => {
       this.clearCredentialsAndShowIntro();
     });
-
-    appRoot.addEventListener('SetUpServerRequested', (event: CustomEvent) => {
-      this.createDigitalOceanServer(event.detail.regionId);
+    appRoot.addEventListener(DigitalOceanCreateServerApp.EVENT_SERVER_CREATED, (event: CustomEvent) => {
+      this.syncServerCreationToUi(event.detail.server);
     });
 
     appRoot.addEventListener('DeleteServerRequested', (event: CustomEvent) => {
@@ -715,7 +714,7 @@ export class App {
   }
 
   private showCreateServer(): Promise<void> {
-    return this.appRoot.getAndShowDigitalOceanCreateServer().start(this.digitalOceanRepository);
+    return this.appRoot.getAndShowDigitalOceanCreateServerApp().start(this.digitalOceanRepository);
   }
 
   private showServerCreationProgress() {
@@ -775,25 +774,6 @@ export class App {
   private makeLocalizedServerName(regionId: server.RegionId) {
     const serverLocation = this.getLocalizedCityName(regionId);
     return this.appRoot.localize('server-name', 'serverLocation', serverLocation);
-  }
-
-  // Returns a promise which fulfills once the DigitalOcean droplet is created.
-  // Shadowbox may not be fully installed once this promise is fulfilled.
-  public createDigitalOceanServer(regionId: server.RegionId) {
-    const serverName = this.makeLocalizedServerName(regionId);
-    return this
-        .digitalOceanRetry(() => {
-          return this.digitalOceanRepository.createServer(regionId, serverName);
-        })
-        .then((server) => {
-          this.syncServerCreationToUi(server);
-        })
-        .catch((e) => {
-          // Sanity check - this error is not expected to occur, as waitForManagedServerCreation
-          // has it's own error handling.
-          console.error('error from waitForManagedServerCreation');
-          return Promise.reject(e);
-        });
   }
 
   // Syncs a healthy `server` to the display and shows it.
