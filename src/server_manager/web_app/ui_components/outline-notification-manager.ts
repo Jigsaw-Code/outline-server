@@ -18,11 +18,13 @@ import '@polymer/paper-toast/paper-toast.js';
 import '@polymer/paper-icon-button/paper-icon-button.js';
 
 import {PaperToastElement} from '@polymer/paper-toast/paper-toast';
-import {css, customElement, html, LitElement} from 'lit-element';
+import {css, customElement, html, LitElement, property} from 'lit-element';
 import {COMMON_STYLES} from './cloud-install-styles';
 
 @customElement('outline-notification-manager')
 export class OutlineNotificationManager extends LitElement {
+  @property({type: Function}) localize: Function;
+
   static get styles() {
     return [
       COMMON_STYLES, css`
@@ -51,12 +53,16 @@ export class OutlineNotificationManager extends LitElement {
         </paper-toast>`;
   }
 
-  showError(message: string) {
+  showError(messageId: string) {
+    this.showToast(this.localize(messageId), Infinity);
+  }
+
+  showErrorRaw(message: string) {
     this.showToast(message, Infinity);
   }
 
-  showNotification(message: string, durationMs = 3000) {
-    this.showToast(message, durationMs);
+  showNotification(messageId: string, durationMs = 3000) {
+    this.showToast(this.localize(messageId), durationMs);
   }
 
   private showToast(message: string, duration: number) {

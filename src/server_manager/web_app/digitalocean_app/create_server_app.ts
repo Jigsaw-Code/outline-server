@@ -21,6 +21,7 @@ import {ManagedServer, ManagedServerRepository, RegionId} from '../../model/serv
 import * as digitalocean_server from '../digitalocean_server';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 import {Location, OutlineRegionPicker} from '../ui_components/outline-region-picker-step';
+import {XhrError} from "../../cloud/digitalocean_api";
 
 // DigitalOcean mapping of regions to flags
 const FLAG_IMAGE_DIR = 'images/flags';
@@ -38,7 +39,8 @@ const DIGITALOCEAN_FLAG_MAPPING: {[cityId: string]: string} = {
 @customElement('digitalocean-create-server-app')
 export class DigitalOceanCreateServerApp extends LitElement {
   // External events
-  public static EVENT_SERVER_CREATED = 'DigitalOceanCreateServerApp#ServerCreated';
+  public static EVENT_SERVER_CREATE_STARTED = 'DigitalOceanCreateServerApp#ServerCreateStarted';
+  public static EVENT_SERVER_CREATE_FAILED = 'DigitalOceanCreateServerApp#ServerCreateFailed';
   public static EVENT_AUTHORIZATION_ERROR = 'DigitalOceanCreateServerApp#AuthorizationError';
   // Internal events
   private static EVENT_CREATE_SERVER_REQUESTED = 'DigitalOceanCreateServerApp#_RequestCreateServer';
@@ -70,10 +72,15 @@ export class DigitalOceanCreateServerApp extends LitElement {
 
     this.eventEmitter.once(
         DigitalOceanCreateServerApp.EVENT_CREATE_SERVER_REQUESTED, async (regionId) => {
-          const server = await this.createServer(digitalOceanServerRepository, regionId);
-          const event = makePublicEvent(DigitalOceanCreateServerApp.EVENT_SERVER_CREATED, {server});
+          let event;
+          try {
+            const server = await this.createServer(digitalOceanServerRepository, regionId);
+            event = makePublicEvent(DigitalOceanCreateServerApp.EVENT_SERVER_CREATE_STARTED, {server});
+          } catch (error) {
+            this.notificationManager.showError('error-server-creation');
+            event = makePublicEvent(DigitalOceanCreateServerApp.EVENT_SERVER_CREATE_FAILED);
+          }
           this.dispatchEvent(event);
-          // TODO: Add create server failed event
         });
 
     return;
@@ -92,9 +99,14 @@ export class DigitalOceanCreateServerApp extends LitElement {
         return this.createLocationModel(cityId, regionIds);
       });
       regionPicker.locations = locations;
-    } catch (err) {
-      console.error(`Failed to get list of available regions: ${err}`);
-      this.notificationManager.showError(this.localize('error-do-regions'));
+    } catch (error) {
+      if (error instanceof XhrError) {
+        const event = makePublicEvent(DigitalOceanCreateServerApp.EVENT_AUTHORIZATION_ERROR);
+        this.dispatchEvent(event);
+      } else {
+        console.error(`Failed to get list of available regions: ${error}`);
+        this.notificationManager.showError('error-do-regions');
+      }
     }
   }
 

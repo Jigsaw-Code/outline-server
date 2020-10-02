@@ -443,7 +443,7 @@ export class AppRoot extends mixinBehaviors
         </div>
       </app-drawer>
 
-      <outline-notification-manager id="notificationManager"></outline-notification-manager>
+      <outline-notification-manager id="notificationManager" localize="[[localize]]"></outline-notification-manager>
 
       <!-- Modal dialogs must be outside the app container; otherwise the backdrop covers them.  -->
       <outline-survey-dialog id="surveyDialog" localize="[[localize]]"></outline-survey-dialog>
