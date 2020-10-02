@@ -148,9 +148,10 @@ export class App {
     appRoot.addEventListener('SignOutRequested', (event: CustomEvent) => {
       this.clearCredentialsAndShowIntro();
     });
-    appRoot.addEventListener(DigitalOceanCreateServerApp.EVENT_SERVER_CREATED, (event: CustomEvent) => {
-      this.syncServerCreationToUi(event.detail.server);
-    });
+    appRoot.addEventListener(
+        DigitalOceanCreateServerApp.EVENT_SERVER_CREATED, (event: CustomEvent) => {
+          this.syncServerCreationToUi(event.detail.server);
+        });
 
     appRoot.addEventListener('DeleteServerRequested', (event: CustomEvent) => {
       this.deleteSelectedServer();

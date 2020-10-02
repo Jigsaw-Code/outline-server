@@ -57,7 +57,8 @@ export class DigitalOceanCreateServerApp extends LitElement {
   }
 
   render() {
-    return html`<outline-region-picker-step .localize=${this.localize}></outline-region-picker-step>`;
+    return html`<outline-region-picker-step .localize=${
+        this.localize}></outline-region-picker-step>`;
   }
 
   setNotificationManager(notificationManager: OutlineNotificationManager) {
