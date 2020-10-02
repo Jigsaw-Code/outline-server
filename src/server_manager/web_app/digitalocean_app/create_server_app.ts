@@ -1,5 +1,5 @@
 /*
-  Copyright 2018 The Outline Authors
+  Copyright 2020 The Outline Authors
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -13,11 +13,14 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
+import {EventEmitter} from 'eventemitter3';
 import {customElement, html, LitElement, property} from 'lit-element';
 
-import {ManagedServerRepository} from '../../model/server';
+import * as digitalocean_server from '../digitalocean_server';
+import {ManagedServer, ManagedServerRepository, RegionId} from '../../model/server';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 import {Location, OutlineRegionPicker} from '../ui_components/outline-region-picker-step';
+import {makePublicEvent} from "../../infrastructure/dom_events";
 
 // DigitalOcean mapping of regions to flags
 const FLAG_IMAGE_DIR = 'images/flags';
@@ -32,29 +35,51 @@ const DIGITALOCEAN_FLAG_MAPPING: {[cityId: string]: string} = {
   nyc: `${FLAG_IMAGE_DIR}/us.png`,
 };
 
-@customElement('digital-ocean-create-server')
+@customElement('digitalocean-create-server')
 export class DigitalOceanCreateServer extends LitElement {
+  // External events
+  public static EVENT_SERVER_CREATED = 'DigitalOceanCreateServer#ServerCreated';
+  public static EVENT_AUTHORIZATION_ERROR = 'DigitalOceanCreateServer#AuthorizationError';
+  // Internal events
+  private static EVENT_CREATE_SERVER_REQUESTED = 'DigitalOceanCreateServer#_RequestCreateServer';
+
   @property({type: Function}) localize: Function;
   @property({type: Object}) notificationManager: OutlineNotificationManager = null;
 
-  render() {
-    return html`
-        <outline-region-picker-step id="regionPicker" 
-            .localize=${this.localize}></outline-region-picker-step>
-    `;
+  private eventEmitter = new EventEmitter();
+
+  constructor() {
+    super();
+    this.addEventListener(OutlineRegionPicker.EVENT_REGION_SELECTED, (event: CustomEvent) => {
+      this.eventEmitter.emit(DigitalOceanCreateServer.EVENT_CREATE_SERVER_REQUESTED, event.detail.regionId);
+    });
   }
 
-  // The region picker initially shows all options as disabled. Options are enabled by this code,
-  // after checking which regions are available.
-  async show(
-      digitalOceanRepository: ManagedServerRepository,
-      retryFn: <T>(fn: () => Promise<T>) => Promise<T>) {
-    const regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
+  render() {
+    return html`<outline-region-picker-step .localize=${this.localize}></outline-region-picker-step>`;
+  }
+
+  async start(digitalOceanServerRepository: ManagedServerRepository): Promise<void> {
+    await this.showRegionPicker(digitalOceanServerRepository);
+
+    this.eventEmitter.once(DigitalOceanCreateServer.EVENT_CREATE_SERVER_REQUESTED, async (regionId) => {
+      const server = this.createServer(digitalOceanServerRepository, regionId);
+      const event = makePublicEvent(DigitalOceanCreateServer.EVENT_SERVER_CREATED, { server });
+      this.dispatchEvent(event);
+      // TODO: Add create server failed event
+    });
+
+    return;
+  }
+
+  private async showRegionPicker(digitalOceanServerRepository: ManagedServerRepository): Promise<void> {
+    const regionPicker = this.shadowRoot.querySelector('outline-region-picker-step') as OutlineRegionPicker;
     regionPicker.reset();
 
     try {
-      const map = await retryFn(() => digitalOceanRepository.getRegionMap());
-      const locations = Object.entries(map).map(([cityId, regionIds]) => {
+      // TODO: Catch and rethrow authorization error
+      const regionMap = await digitalOceanServerRepository.getRegionMap();
+      const locations = Object.entries(regionMap).map(([cityId, regionIds]) => {
         return this.createLocationModel(cityId, regionIds);
       });
       regionPicker.locations = locations;
@@ -64,6 +89,11 @@ export class DigitalOceanCreateServer extends LitElement {
     }
   }
 
+  private createServer(digitalOceanServerRepository: ManagedServerRepository, regionId: string): Promise<ManagedServer> {
+    const serverName = this.makeLocalizedServerName(regionId);
+    return digitalOceanServerRepository.createServer(regionId, serverName);
+  }
+
   private createLocationModel(cityId: string, regionIds: string[]): Location {
     return {
       id: regionIds.length > 0 ? regionIds[0] : null,
@@ -71,5 +101,15 @@ export class DigitalOceanCreateServer extends LitElement {
       flag: DIGITALOCEAN_FLAG_MAPPING[cityId] || '',
       available: regionIds.length > 0,
     };
+  }
+
+  private makeLocalizedServerName(regionId: RegionId) {
+    const serverLocation = this.getLocalizedCityName(regionId);
+    return this.localize('server-name', 'serverLocation', serverLocation);
+  }
+
+  private getLocalizedCityName(regionId: RegionId) {
+    const cityId = digitalocean_server.GetCityId(regionId);
+    return this.localize(`city-${cityId}`);
   }
 }
