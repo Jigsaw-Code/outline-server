@@ -581,6 +581,9 @@ export class AppRoot extends mixinBehaviors
     return oauthFlow;
   }
 
+  /**
+   * @returns {DigitalOceanCreateServer}
+   */
   getAndShowDigitalOceanCreateServer() {
     this.currentPage = 'digitalOceanCreateServer';
     return this.$.digitalOceanCreateServer;
@@ -647,6 +650,9 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
   }
 
+  /**
+   * @returns {OutlineNotificationManager}
+   */
   getNotificationManager() {
     return this.$.notificationManager;
   }
