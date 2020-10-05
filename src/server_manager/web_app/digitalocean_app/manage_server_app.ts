@@ -20,8 +20,8 @@ import * as semver from 'semver';
 import * as errors from '../../infrastructure/errors';
 import * as server from '../../model/server';
 import {isManagedServer, Server} from '../../model/server';
-import {NotificationManager} from '../app';
 import * as digitalocean_server from '../digitalocean_server';
+import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 import {DisplayServer} from '../display_server';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from '../ui_components/outline-server-view';
 
@@ -30,19 +30,23 @@ const DATA_LIMITS_VERSION = '1.1.0';
 const CHANGE_HOSTNAME_VERSION = '1.2.0';
 const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
 
-@customElement('manage-server-view')
-export class ManageServerView extends LitElement {
+@customElement('outline-manage-server-app')
+export class OutlineManageServerApp extends LitElement {
   @property({type: Function}) localize: Function;
   @property({type: String}) language: string;
   @property({type: Object}) server: Server;
   @property({type: Object}) displayServer: DisplayServer;
-  @property({type: Object}) notificationManager: NotificationManager;
 
+  private notificationManager: OutlineNotificationManager;
   private serverView: ServerView;
 
   render() {
     return html`<outline-server-view id="serverView" .localize=${
         this.localize}></outline-server-view>`;
+  }
+
+  setNotificationManager(notificationManager: OutlineNotificationManager) {
+    this.notificationManager = notificationManager;
   }
 
   connectedCallback(): void {
@@ -66,7 +70,7 @@ export class ManageServerView extends LitElement {
       this.renameAccessKey(e.detail.accessKeyId, e.detail.newName, e.detail.entry);
     });
     this.shadowRoot.addEventListener('SetAccessKeyDataLimitRequested', (e: CustomEvent) => {
-      this.setAccessKeyDataLimit(ManageServerView.displayDataAmountToDataLimit(e.detail.limit));
+      this.setAccessKeyDataLimit(OutlineManageServerApp.displayDataAmountToDataLimit(e.detail.limit));
     });
     this.shadowRoot.addEventListener(
         'RemoveAccessKeyDataLimitRequested', (e: CustomEvent) => this.removeAccessKeyDataLimit());
@@ -90,12 +94,12 @@ export class ManageServerView extends LitElement {
     this.serverView.serverHostname = server.getHostnameForAccessKeys();
     this.serverView.serverManagementApiUrl = server.getManagementApiUrl();
     this.serverView.serverPortForNewAccessKeys = server.getPortForNewAccessKeys();
-    this.serverView.serverCreationDate = ManageServerView.localizeDate(server.getCreatedDate(), this.language);
+    this.serverView.serverCreationDate = OutlineManageServerApp.localizeDate(server.getCreatedDate(), this.language);
     this.serverView.serverVersion = server.getVersion();
-    this.serverView.accessKeyDataLimit = ManageServerView.dataLimitToDisplayDataAmount(server.getAccessKeyDataLimit());
+    this.serverView.accessKeyDataLimit = OutlineManageServerApp.dataLimitToDisplayDataAmount(server.getAccessKeyDataLimit());
     this.serverView.isAccessKeyDataLimitEnabled = !!this.serverView.accessKeyDataLimit;
     this.serverView.showFeatureMetricsDisclaimer = server.getMetricsEnabled() &&
-        !server.getAccessKeyDataLimit() && !ManageServerView.hasSeenFeatureMetricsNotification();
+        !server.getAccessKeyDataLimit() && !OutlineManageServerApp.hasSeenFeatureMetricsNotification();
 
     const version = server.getVersion();
     if (version) {
@@ -124,12 +128,12 @@ export class ManageServerView extends LitElement {
       const serverAccessKeys = await server.listAccessKeys();
       this.serverView.accessKeyRows = serverAccessKeys.map(this.convertToUiAccessKey.bind(this));
       if (!this.serverView.accessKeyDataLimit) {
-        this.serverView.accessKeyDataLimit = ManageServerView.dataLimitToDisplayDataAmount(
-            await ManageServerView.computeDefaultAccessKeyDataLimit(server, serverAccessKeys));
+        this.serverView.accessKeyDataLimit = OutlineManageServerApp.dataLimitToDisplayDataAmount(
+            await OutlineManageServerApp.computeDefaultAccessKeyDataLimit(server, serverAccessKeys));
       }
       // Show help bubbles once the page has rendered.
       setTimeout(() => {
-        ManageServerView.showHelpBubblesOnce(this.serverView);
+        OutlineManageServerApp.showHelpBubblesOnce(this.serverView);
       }, 250);
     } catch (error) {
       console.error(`Failed to load access keys: ${error}`);
@@ -317,7 +321,7 @@ export class ManageServerView extends LitElement {
     try {
       await this.server.setAccessKeyDataLimit(limit);
       this.notificationManager.showNotification(this.localize('saved'));
-      this.serverView.accessKeyDataLimit = ManageServerView.dataLimitToDisplayDataAmount(limit);
+      this.serverView.accessKeyDataLimit = OutlineManageServerApp.dataLimitToDisplayDataAmount(limit);
       this.refreshTransferStats(this.server, this.serverView);
       // Don't display the feature collection disclaimer anymore.
       this.serverView.showFeatureMetricsDisclaimer = false;
@@ -325,8 +329,8 @@ export class ManageServerView extends LitElement {
     } catch (error) {
       console.error(`Failed to set access key data limit: ${error}`);
       this.notificationManager.showError(this.localize('error-set-data-limit'));
-      this.serverView.accessKeyDataLimit = ManageServerView.dataLimitToDisplayDataAmount(
-          previousLimit || await ManageServerView.computeDefaultAccessKeyDataLimit(this.server));
+      this.serverView.accessKeyDataLimit = OutlineManageServerApp.dataLimitToDisplayDataAmount(
+          previousLimit || await OutlineManageServerApp.computeDefaultAccessKeyDataLimit(this.server));
       this.serverView.isAccessKeyDataLimitEnabled = !!previousLimit;
     }
   }

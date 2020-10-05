@@ -21,7 +21,6 @@ import '@polymer/iron-icon/iron-icon.js';
 import '@polymer/iron-icons/iron-icons.js';
 import '@polymer/iron-pages/iron-pages.js';
 import '@polymer/paper-icon-button/paper-icon-button.js';
-import '@polymer/paper-toast/paper-toast.js';
 import '@polymer/paper-dialog/paper-dialog.js';
 import '@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
 import '@polymer/paper-listbox/paper-listbox.js';
@@ -37,6 +36,7 @@ import '../digitalocean_app/create_server_app';
 import '../digitalocean_app/manage_server_app';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
+import './outline-notification-manager';
 import './outline-region-picker-step';
 import './outline-server-progress-step.js';
 import './outline-tos-view.js';
@@ -73,20 +73,7 @@ export class AppRoot extends mixinBehaviors
           max-width: 920px;
         }
       }
-      #toast {
-        align-items: center;
-        display: flex;
-        justify-content: space-between;
-        padding: 24px;
-        max-width: 450px;
-      }
-      #toast paper-icon-button {
-        /* prevents the icon from resizing when there is a long message in the toast */
-        flex-shrink: 0;
-        padding: 0;
-        height: 20px;
-        width: 20px;
-      }
+
       /* rtl:begin:ignore */
       #appDrawer {
         --app-drawer-content-container: {
@@ -408,9 +395,9 @@ export class AppRoot extends mixinBehaviors
               <outline-intro-step id="intro" is-signed-in-to-digital-ocean="{{isSignedInToDigitalOcean}}" digital-ocean-email="{{adminEmail}}" localize="[[localize]]"></outline-intro-step>
               <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
-              <digital-ocean-create-server id="digitalOceanCreateServer" localize="[[localize]]"></digital-ocean-create-server>
+              <digitalocean-create-server-app id="digitalOceanCreateServerApp" localize="[[localize]]"></digitalocean-create-server-app>
               <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
-              <manage-server-view id="manageServer" localize="[[localize]]" language="en-US"></manage-server-view>
+              <outline-manage-server-app id="manageServerApp" localize="[[localize]]" language="en-US"></outline-manage-server-app>
             </iron-pages>
           </div>
         </app-header-layout>
@@ -450,7 +437,7 @@ export class AppRoot extends mixinBehaviors
         </div>
       </app-drawer>
 
-      <paper-toast id="toast"><paper-icon-button icon="icons:close" on-tap="closeError"></paper-icon-button></paper-toast>
+      <outline-notification-manager id="notificationManager" localize="[[localize]]"></outline-notification-manager>
 
       <!-- Modal dialogs must be outside the app container; otherwise the backdrop covers them.  -->
       <outline-survey-dialog id="surveyDialog" localize="[[localize]]"></outline-survey-dialog>
@@ -536,12 +523,17 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
     this.shouldShowSideBar = false;
 
-    this.addEventListener('RegionSelected', this.handleRegionSelected);
     this.addEventListener(
         'SetUpGenericCloudProviderRequested', this.handleSetUpGenericCloudProviderRequested);
     this.addEventListener('SetUpAwsRequested', this.handleSetUpAwsRequested);
     this.addEventListener('SetUpGcpRequested', this.handleSetUpGcpRequested);
     this.addEventListener('ManualServerEntryCancelled', this.handleManualCancelled);
+  }
+
+  ready() {
+    super.ready();
+    this.$.digitalOceanCreateServerApp.setNotificationManager(this.getNotificationManager());
+    this.$.manageServerApp.setNotificationManager(this.getNotificationManager());
   }
 
   /**
@@ -583,9 +575,12 @@ export class AppRoot extends mixinBehaviors
     return oauthFlow;
   }
 
-  getAndShowDigitalOceanCreateServer() {
-    this.currentPage = 'digitalOceanCreateServer';
-    return this.$.digitalOceanCreateServer;
+  /**
+   * @returns {DigitalOceanCreateServerApp}
+   */
+  getAndShowDigitalOceanCreateServerApp() {
+    this.currentPage = 'digitalOceanCreateServerApp';
+    return this.$.digitalOceanCreateServerApp;
   }
 
   getManualServerEntry() {
@@ -603,19 +598,13 @@ export class AppRoot extends mixinBehaviors
     this.$.serverProgressStep.start();
   }
 
-  getManageServerView() {
-    return this.$.manageServer;
+  getManageServerApp() {
+    return this.$.manageServerApp;
   }
 
-  showManageServerView(server, displayServer) {
+  showManageServerApp(server, displayServer) {
     this.currentPage = 'manageServer';
-    this.$.manageServer.showServer(server, displayServer);
-  }
-
-  handleRegionSelected(/** @type {Event} */ e) {
-    this.fire('SetUpServerRequested', {
-      regionId: e.detail.selectedRegionId,
-    });
+    this.$.manageServerApp.showServer(server, displayServer);
   }
 
   handleSetUpGenericCloudProviderRequested() {
@@ -640,25 +629,23 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
   }
 
-  getToast() {
-    return this.$.toast;
-  }
-
-  closeError() {
-    this.$.toast.close();
+  /**
+   * @returns {OutlineNotificationManager}
+   */
+  getNotificationManager() {
+    return this.$.notificationManager;
   }
 
   /**
-   * @param {(retry: boolean) => Promise<T>} cb a function which accepts a single boolean which is
-   *     true iff the user chose to retry the failing operation.
+   *
    */
-  showConnectivityDialog(cb) {
+  showConnectivityDialog() {
     const dialogTitle = this.localize('error-connectivity-title');
     const dialogText = this.localize('error-connectivity');
     return this
         .showModalDialog(dialogTitle, dialogText, [this.localize('cancel'), this.localize('retry')])
         .then(clickedButtonIndex => {
-          return cb(clickedButtonIndex === 1);  // pass true if user clicked retry
+          return clickedButtonIndex === 1;  // return true if user clicked retry
         });
   }
 

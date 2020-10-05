@@ -21,13 +21,14 @@ import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
 import {isManagedServer, isManualServer} from '../model/server';
 
-import {DigitalOceanCreateServer} from './digitalocean_app/create_server_app';
+import {DigitalOceanCreateServerApp} from './digitalocean_app/create_server_app';
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
 import {ServerView} from './ui_components/outline-server-view.js';
+import {OutlineNotificationManager} from './ui_components/outline-notification-manager';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -37,37 +38,11 @@ type DigitalOceanSessionFactory = (accessToken: string) => digitalocean_api.Digi
 type DigitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) =>
     server.ManagedServerRepository;
 
-export class NotificationManager {
-  // @ts-ignore
-  constructor(private toast) {}
-
-  showError(message: string) {
-    this.showToast(message, Infinity);
-  }
-
-  showNotification(message: string, durationMs = 3000) {
-    this.showToast(message, durationMs);
-  }
-
-  private showToast(message: string, duration: number) {
-    this.toast.close();
-    // Defer in order to trigger the toast animation, otherwise the
-    // update happens in place.
-    setTimeout(() => {
-      this.toast.show({
-        text: message,
-        duration,
-        noOverlap: true,
-      });
-    }, 0);
-  }
-}
-
 export class App {
   private digitalOceanRepository: server.ManagedServerRepository;
   private selectedServer: server.Server;
   private serverBeingCreated: server.ManagedServer;
-  private notificationManager: NotificationManager;
+  private notificationManager: OutlineNotificationManager;
 
   constructor(
       private appRoot: AppRoot, private readonly version: string,
@@ -76,7 +51,7 @@ export class App {
       private manualServerRepository: server.ManualServerRepository,
       private displayServerRepository: DisplayServerRepository,
       private digitalOceanTokenManager: TokenManager) {
-    this.notificationManager = new NotificationManager(this.appRoot.getToast());
+    this.notificationManager = this.appRoot.getNotificationManager();
 
     appRoot.setAttribute('outline-version', this.version);
 
@@ -86,10 +61,12 @@ export class App {
     appRoot.addEventListener('SignOutRequested', (event: CustomEvent) => {
       this.clearCredentialsAndShowIntro();
     });
-
-    appRoot.addEventListener('SetUpServerRequested', (event: CustomEvent) => {
-      this.createDigitalOceanServer(event.detail.regionId);
-    });
+    appRoot.addEventListener(
+        DigitalOceanCreateServerApp.EVENT_SERVER_CREATE_STARTED,
+        (event: CustomEvent) => this.syncServerCreationToUi(event.detail.server));
+    appRoot.addEventListener(
+        DigitalOceanCreateServerApp.EVENT_SERVER_CREATE_FAILED,
+        (event: CustomEvent) => this.showIntro());
 
     appRoot.addEventListener('DeleteServerRequested', (event: CustomEvent) => {
       this.deleteSelectedServer();
@@ -150,10 +127,10 @@ export class App {
           user: {email: detail.userEmail},
           tags: {category: detail.feedbackCategory, cloudProvider: detail.cloudProvider}
         });
-        this.notificationManager.showNotification(appRoot.localize('notification-feedback-thanks'));
+        this.notificationManager.showNotification('notification-feedback-thanks');
       } catch (e) {
         console.error(`Failed to submit feedback: ${e}`);
-        this.notificationManager.showError(appRoot.localize('error-feedback'));
+        this.notificationManager.showError('error-feedback');
       }
     });
 
@@ -235,7 +212,7 @@ export class App {
         messageKey = 'error-servers-removed';
         placeholder = 'serverNames';
       }
-      this.appRoot.notificationManager(
+      this.notificationManager.showErrorRaw(
           this.appRoot.localize(messageKey, placeholder, unsyncedServerNames));
     }
 
@@ -413,7 +390,7 @@ export class App {
                 this.showIntro();
                 const msg = `Failed to get DigitalOcean account information: ${error}`;
                 console.error(msg);
-                this.notificationManager.showError(this.appRoot.localize('error-do-account-info'));
+                this.notificationManager.showError('error-do-account-info');
                 reject(new Error(msg));
               }
             });
@@ -467,7 +444,7 @@ export class App {
         this.syncServerToDisplay(server).then(() => {
           this.selectedServer = server;
           this.displayServerRepository.storeLastDisplayedServerId(displayServer.id);
-          this.appRoot.showManageServerView(server, displayServer);
+          this.appRoot.showManageServerApp(server, displayServer);
         });
       } else {
         // Display the unreachable server state within the server view.
@@ -492,7 +469,7 @@ export class App {
               this.showServerIfHealthy(server, displayServer);
             } else {
               // Server has been deleted outside the app.
-              this.notificationManager.showError(
+              this.notificationManager.showErrorRaw(
                   this.appRoot.localize('error-server-removed', 'serverName', displayServer.name));
               this.removeServerFromDisplay(displayServer);
               this.selectedServer = null;
@@ -503,7 +480,7 @@ export class App {
         };
         this.selectedServer = server;
         this.appRoot.selectedServer = displayServer;
-        this.appRoot.showManageServerView(server, displayServer);
+        this.appRoot.showManageServerApp(server, displayServer);
       }
     });
   }
@@ -521,18 +498,16 @@ export class App {
   //       time to discover an invalid access token is when the application
   //       starts.
   digitalOceanRetry<T>(fn: () => Promise<T>): Promise<T> {
-    return digitalocean_api.digitalOceanRetry(fn, this.retryConnectivityDialog(fn));
+    return digitalocean_api.digitalOceanRetry(fn, this.reauthenticateFlow.bind(this));
   }
 
-  retryConnectivityDialog<T>(fn: () => Promise<T>): (err: Error) => Promise<T> {
-    return (err) => this.appRoot.showConnectivityDialog((retry: boolean) => {
-      if (retry) {
-        return this.digitalOceanRetry(fn);
-      } else {
-        this.clearCredentialsAndShowIntro();
-        throw err;
-      }
-    });
+  async reauthenticateFlow(err: Error): Promise<boolean> {
+    const shouldRetry = await this.appRoot.showConnectivityDialog();
+    if (!shouldRetry) {
+      this.clearCredentialsAndShowIntro();
+      throw err;
+    }
+    return shouldRetry;
   }
 
   // Shows the intro screen with overview and options to sign in or sign up.
@@ -541,8 +516,7 @@ export class App {
   }
 
   private displayAppUpdateNotification() {
-    this.notificationManager.showNotification(
-        this.appRoot.localize('notification-app-update'), 60000);
+    this.notificationManager.showNotification('notification-app-update', 60000);
   }
 
   private connectToDigitalOcean() {
@@ -594,7 +568,7 @@ export class App {
             this.clearCredentialsAndShowIntro();
             bringToFront();
             console.error(`DigitalOcean authentication failed: ${error}`);
-            this.notificationManager.showError(this.appRoot.localize('error-do-auth'));
+            this.notificationManager.showError('error-do-auth');
           }
         });
   }
@@ -620,13 +594,8 @@ export class App {
     }
   }
 
-  private async showCreateServer() {
-    const digitalOceanCreateServer =
-        this.appRoot.getAndShowDigitalOceanCreateServer() as DigitalOceanCreateServer;
-    digitalOceanCreateServer.app = this;
-    digitalOceanCreateServer.digitalOceanRepository = this.digitalOceanRepository;
-    digitalOceanCreateServer.notificationManager = new NotificationManager(this.appRoot);
-    await digitalOceanCreateServer.show();
+  private showCreateServer(): Promise<void> {
+    return this.appRoot.getAndShowDigitalOceanCreateServerApp().start(this.digitalOceanRepository);
   }
 
   private showServerCreationProgress() {
@@ -688,32 +657,13 @@ export class App {
     return this.appRoot.localize('server-name', 'serverLocation', serverLocation);
   }
 
-  // Returns a promise which fulfills once the DigitalOcean droplet is created.
-  // Shadowbox may not be fully installed once this promise is fulfilled.
-  public createDigitalOceanServer(regionId: server.RegionId) {
-    const serverName = this.makeLocalizedServerName(regionId);
-    return this
-        .digitalOceanRetry(() => {
-          return this.digitalOceanRepository.createServer(regionId, serverName);
-        })
-        .then((server) => {
-          this.syncServerCreationToUi(server);
-        })
-        .catch((e) => {
-          // Sanity check - this error is not expected to occur, as waitForManagedServerCreation
-          // has it's own error handling.
-          console.error('error from waitForManagedServerCreation');
-          return Promise.reject(e);
-        });
-  }
-
   // Syncs a healthy `server` to the display and shows it.
   private async syncAndShowServer(server: server.Server, timeoutMs = 250) {
     const displayServer = await this.syncServerToDisplay(server);
     await this.syncDisplayServersToUi();
     this.selectedServer = server;
     this.displayServerRepository.storeLastDisplayedServerId(displayServer.id);
-    this.appRoot.showManageServerView(server, displayServer);
+    this.appRoot.showManageServerApp(server, displayServer);
   }
 
   private getS3InviteUrl(accessUrl: string, isAdmin = false) {
@@ -741,8 +691,7 @@ export class App {
     const storedServer = this.manualServerRepository.findServer(serverConfig);
     if (!!storedServer) {
       return this.syncServerToDisplay(storedServer).then((displayServer) => {
-        this.notificationManager.showNotification(
-            this.appRoot.localize('notification-server-exists'), 5000);
+        this.notificationManager.showNotification('notification-server-exists', 5000);
         this.showServerIfHealthy(storedServer, displayServer);
       });
     }
@@ -781,14 +730,13 @@ export class App {
                 this.appRoot.selectedServer = null;
                 this.selectedServer = null;
                 this.showIntro();
-                this.notificationManager.showNotification(
-                    this.appRoot.localize('notification-server-destroyed'));
+                this.notificationManager.showNotification('notification-server-destroyed');
               },
               (e) => {
                 // Don't show a toast on the login screen.
                 if (!(e instanceof digitalocean_api.XhrError)) {
                   console.error(`Failed destroy server: ${e}`);
-                  this.notificationManager.showError(this.appRoot.localize('error-server-destroy'));
+                  this.notificationManager.showError('error-server-destroy');
                 }
               });
     });
@@ -811,8 +759,7 @@ export class App {
       this.appRoot.selectedServer = null;
       this.selectedServer = null;
       this.showIntro();
-      this.notificationManager.showNotification(
-          this.appRoot.localize('notification-server-removed'));
+      this.notificationManager.showNotification('notification-server-removed');
     });
   }
 

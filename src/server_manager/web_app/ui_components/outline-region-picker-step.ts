@@ -19,7 +19,7 @@ import '@polymer/iron-icon/iron-icon';
 import '@polymer/iron-icons/iron-icons';
 import './outline-step-view';
 
-import {css, customElement, html, LitElement, property, unsafeCSS} from 'lit-element';
+import {css, customElement, html, LitElement, property} from 'lit-element';
 
 import {COMMON_STYLES} from './cloud-install-styles';
 
@@ -32,6 +32,9 @@ export interface Location {
 
 @customElement('outline-region-picker-step')
 export class OutlineRegionPicker extends LitElement {
+  // External events
+  public static EVENT_REGION_SELECTED = 'OutlineRegionPicker#RegionSelected';
+
   @property({type: Array}) locations: Location[] = [];
   @property({type: String}) selectedLocationId: string = null;
   @property({type: Boolean}) isServerBeingCreated = false;
@@ -153,12 +156,8 @@ export class OutlineRegionPicker extends LitElement {
 
   _handleCreateServerTap(): void {
     this.isServerBeingCreated = true;
-    const params = {
-      bubbles: true,
-      composed: true,
-      detail: {selectedRegionId: this.selectedLocationId}
-    };
-    const customEvent = new CustomEvent('RegionSelected', params);
+    const params = {bubbles: true, composed: true, detail: {regionId: this.selectedLocationId}};
+    const customEvent = new CustomEvent(OutlineRegionPicker.EVENT_REGION_SELECTED, params);
     this.dispatchEvent(customEvent);
   }
 }
