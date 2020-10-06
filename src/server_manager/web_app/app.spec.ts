@@ -16,6 +16,7 @@ import {EventEmitter} from 'eventemitter3';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import {InMemoryStorage} from '../infrastructure/memory_storage';
+import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
 import {Surveys} from '../model/survey';
 
@@ -24,7 +25,6 @@ import {TokenManager} from './digitalocean_oauth';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {AppRoot} from './ui_components/app-root.js';
 import {ServerView} from './ui_components/outline-server-view.js';
-import {sleep} from "../infrastructure/sleep";
 
 const TOKEN_WITH_NO_SERVERS = 'no-server-token';
 const TOKEN_WITH_ONE_SERVER = 'one-server-token';
@@ -223,9 +223,8 @@ function createTestApp(
     displayServerRepository = new FakeDisplayServerRepository();
   }
   return new App(
-      appRoot, VERSION, fakeDigitalOceanSessionFactory,
-      fakeDigitalOceanServerRepositoryFactory, manualServerRepo, displayServerRepository,
-      digitalOceanTokenManager);
+      appRoot, VERSION, fakeDigitalOceanSessionFactory, fakeDigitalOceanServerRepositoryFactory,
+      manualServerRepo, displayServerRepository, digitalOceanTokenManager);
 }
 
 enum AppRootScreen {

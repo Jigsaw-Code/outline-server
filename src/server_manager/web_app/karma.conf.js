@@ -15,7 +15,7 @@ module.exports = function(config) {
     colors: true,
     logLevel: config.LOG_INFO,
     browsers: ['ChromeHeadless'],
-    singleRun: false,
+    singleRun: true,
     concurrency: Infinity,
     webpack: {
       module: webpackConfig.module,
