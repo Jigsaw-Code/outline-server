@@ -12,19 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {EventEmitter} from 'eventemitter3';
-
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import {InMemoryStorage} from '../infrastructure/memory_storage';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
-import {Surveys} from '../model/survey';
 
 import {App} from './app';
 import {TokenManager} from './digitalocean_oauth';
-import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
+import {DisplayServerRepository, makeDisplayServer} from './display_server';
 import {AppRoot} from './ui_components/app-root.js';
-import {ServerView} from './ui_components/outline-server-view.js';
 
 const TOKEN_WITH_NO_SERVERS = 'no-server-token';
 const TOKEN_WITH_ONE_SERVER = 'one-server-token';
@@ -37,11 +33,13 @@ const TOKEN_WITH_ONE_SERVER = 'one-server-token';
 (global as any).bringToFront = () => {};
 
 // Inject app-root element into DOM once before the test suite runs
-beforeAll(() => {
+beforeAll(async () => {
+  const loadAppRoot = new AppRoot();  // TODO: Remove once figure out how to load AppRoot properly.
+
   const appRootEl = document.createElement('app-root');
   appRootEl.setAttribute('id', 'appRoot');
   document.getElementsByTagName('body')[0].appendChild(appRootEl);
-  const appRoot = appRootEl as unknown as AppRoot;
+  const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
   appRoot.setLanguage('en', 'ltr');
 });
 
@@ -225,80 +223,6 @@ function createTestApp(
   return new App(
       appRoot, VERSION, fakeDigitalOceanSessionFactory, fakeDigitalOceanServerRepositoryFactory,
       manualServerRepo, displayServerRepository, digitalOceanTokenManager);
-}
-
-enum AppRootScreen {
-  NONE = 0,
-  INTRO,
-  REGION_PICKER,
-  SERVER_VIEW,
-  INSTALL_PROGRESS,
-  DIALOG
-}
-
-class FakePolymerAppRoot extends AppRoot {
-  events = new EventEmitter();
-  backgroundScreen = AppRootScreen.NONE;
-  currentScreen = AppRootScreen.NONE;
-  serverView = {setServerTransferredData: () => {}, serverId: '', initHelpBubbles: () => {}} as
-      unknown as ServerView;
-  serverList: DisplayServer[] = [];
-  is: 'fake-polymer-app-root';
-
-  private setScreen(screenId: AppRootScreen) {
-    this.currentScreen = screenId;
-    this.events.emit('screen-change', screenId);
-  }
-
-  showIntro() {
-    this.setScreen(AppRootScreen.INTRO);
-  }
-
-  getAndShowRegionPicker() {
-    this.setScreen(AppRootScreen.REGION_PICKER);
-    return {};
-  }
-
-  getDigitalOceanOauthFlow() {
-    return {};
-  }
-
-  showProgress() {
-    this.setScreen(AppRootScreen.INSTALL_PROGRESS);
-  }
-
-  showModalDialog() {
-    this.backgroundScreen = this.currentScreen;
-    this.setScreen(AppRootScreen.DIALOG);
-    const promise = new Promise<number>(() => 0);
-    // Supress Promise not handled warning.
-    promise.then(v => v);
-    return promise;
-  }
-
-  closeModalDialog() {
-    if (this.currentScreen !== AppRootScreen.DIALOG) {
-      return;
-    }
-    this.setScreen(this.backgroundScreen);
-    this.backgroundScreen = AppRootScreen.NONE;
-  }
-
-  getServerView(serverId: string): ServerView {
-    return this.serverView;
-  }
-
-  showServerView() {
-    this.setScreen(AppRootScreen.SERVER_VIEW);
-  }
-
-  // Methods like setAttribute, addEventListener, and others are currently
-  // no-ops, since we are not yet testing this functionality.
-  // These don't return Promise.reject(..) as that would print error trace,
-  // and throwing an exception would result in breakage.
-  setAttribute() {}
-  addEventListener() {}
-  localize() {}
 }
 
 class FakeServer implements server.Server {
@@ -497,9 +421,4 @@ class FakeDisplayServerRepository extends DisplayServerRepository {
   constructor() {
     super(new InMemoryStorage());
   }
-}
-
-class FakeSurveys implements Surveys {
-  async presentDataLimitsEnabledSurvey() {}
-  async presentDataLimitsDisabledSurvey() {}
 }
