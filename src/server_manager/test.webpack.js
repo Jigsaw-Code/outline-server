@@ -18,7 +18,6 @@ const path = require('path');
 const {makeConfig} = require('./base.webpack.js');
 
 module.exports = makeConfig({
-    main: path.resolve(__dirname, './web_app/app.spec.ts'),
-    target: 'web',
-    defaultMode: 'development',
+  target: 'web',
+  defaultMode: 'development',
 });

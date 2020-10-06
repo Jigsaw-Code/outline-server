@@ -4,22 +4,24 @@ module.exports = function(config) {
   config.set({
     frameworks: ['jasmine'],
     files: [
-      '*.spec.ts',
+      './main.ts',
+      '**.spec.ts',
     ],
     preprocessors: {
-      '*.spec.ts': ['webpack'],
+      '**.spec.ts': ['webpack'],
     },
     reporters: ['progress'],
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
     browsers: ['ChromeHeadless'],
-    singleRun: true,
+    singleRun: false,
     concurrency: Infinity,
     webpack: {
       module: webpackConfig.module,
       resolve: webpackConfig.resolve,
-      plugins: webpackConfig.plugins
+      plugins: webpackConfig.plugins,
+      mode: 'development'
     }
   })
 };
