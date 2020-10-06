@@ -221,6 +221,7 @@ class RestApiSession implements DigitalOceanSession {
           const responseObj = (xhr.response ? JSON.parse(xhr.response) : {});
           resolve(responseObj);
         } else if (xhr.status === 401) {
+          console.error('DigitalOcean request failed with Unauthorized error');
           reject(new XhrError());
         } else {
           // this.response is a JSON object, whose message is an error string.
