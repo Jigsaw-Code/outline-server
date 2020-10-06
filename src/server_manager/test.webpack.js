@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Webpack config to run the Outline Manager on the browser.
+// Webpack config to run the Outline Manager web_app tests.
 
 const path = require('path');
 const {makeConfig} = require('./base.webpack.js');
