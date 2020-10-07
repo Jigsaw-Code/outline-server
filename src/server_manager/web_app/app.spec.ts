@@ -32,15 +32,13 @@ const TOKEN_WITH_ONE_SERVER = 'one-server-token';
 // tslint:disable-next-line:no-any
 (global as any).bringToFront = () => {};
 
-// Inject app-root element into DOM once before the test suite runs
+// Inject app-root element into DOM once before the test suite runs.
 beforeAll(async () => {
-  const loadAppRoot = new AppRoot();  // TODO: Remove once figure out how to load AppRoot properly.
+  // It seems like AppRoot class is not fully loaded/initialized until the
+  // constructor, so we invoke it directly.
+  const loadAppRoot = new AppRoot();
 
-  const appRootEl = document.createElement('app-root');
-  appRootEl.setAttribute('id', 'appRoot');
-  document.getElementsByTagName('body')[0].appendChild(appRootEl);
-  const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
-  appRoot.setLanguage('en', 'ltr');
+  document.body.innerHTML = "<app-root id='appRoot' language='en'></app-root>";
 });
 
 describe('App', () => {

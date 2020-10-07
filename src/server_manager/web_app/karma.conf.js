@@ -12,29 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const webpackConfig = require('../test.webpack.js');
+const {makeConfig} = require('../base.webpack.js');
+
+const baseConfig = makeConfig({
+  defaultMode: 'development'
+});
 
 module.exports = function(config) {
   config.set({
     frameworks: ['jasmine'],
     files: [
-      '**.spec.ts',
+      '**/*.spec.ts',
     ],
     preprocessors: {
-      '**.spec.ts': ['webpack'],
+      '**/*.spec.ts': ['webpack'],
     },
     reporters: ['progress'],
-    port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
     browsers: ['ChromeHeadless'],
     singleRun: true,
     concurrency: Infinity,
     webpack: {
-      module: webpackConfig.module,
-      resolve: webpackConfig.resolve,
-      plugins: webpackConfig.plugins,
-      mode: 'development'
+      module: baseConfig.module,
+      resolve: baseConfig.resolve,
+      plugins: baseConfig.plugins,
+      mode: baseConfig.mode,
     }
   })
 };
