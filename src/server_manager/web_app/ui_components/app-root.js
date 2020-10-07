@@ -694,7 +694,7 @@ export class AppRoot extends mixinBehaviors
   showConnectivityDialog(cb) {
     const dialogTitle = this.localize('error-connectivity-title');
     const dialogText = this.localize('error-connectivity');
-    this.showModalDialog(dialogTitle, dialogText, [this.localize('cancel'), this.localize('retry')])
+    this.showModalDialog(dialogTitle, dialogText, [this.localize('digitalocean-disconnect'), this.localize('retry')])
         .then(clickedButtonIndex => {
           cb(clickedButtonIndex === 1);  // pass true if user clicked retry
         });
