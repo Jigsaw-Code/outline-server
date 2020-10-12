@@ -36,8 +36,6 @@ mkdir -p $STATIC_DIR
 mkdir -p $STATIC_DIR/server_manager
 cp -r $OUT_DIR/js/* $STATIC_DIR
 cp -r $BUILD_DIR/server_manager/web_app/static $STATIC_DIR/server_manager/web_app/
-# Our electron app assumes all HTML files will be in the web_app directory.
-cp $MODULE_DIR/loading.html $STATIC_DIR/server_manager/web_app/
 
 # Electron requires a package.json file for the app's name, etc.
 # We also need to install NPMs at this location for require()

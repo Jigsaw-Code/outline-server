@@ -1,7 +1,7 @@
 {
   "name": "outline-manager",
   "productName": "Outline Manager",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Create and manage access to Outline servers",
   "homepage": "https://getoutline.org/",
   "author": {
@@ -75,6 +75,7 @@
     "gulp-posthtml": "^3.0.4",
     "gulp-replace": "^1.0.0",
     "html-webpack-plugin": "^4.2.1",
+    "node-jq": "^1.11.2",
     "postcss": "^7.0.29",
     "postcss-rtl": "^1.7.3",
     "posthtml-postcss": "^0.2.6",
