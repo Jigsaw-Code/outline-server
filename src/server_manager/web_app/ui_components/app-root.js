@@ -651,7 +651,8 @@ export class AppRoot extends mixinBehaviors
   }
 
   /**
-   *
+   * @returns {Promise<boolean>} a Promise to a boolean identifying which dialog button was clicked.
+   *          Returns true if retry was clicked, false for cancel.
    */
   showConnectivityDialog() {
     const dialogTitle = this.localize('error-connectivity-title');

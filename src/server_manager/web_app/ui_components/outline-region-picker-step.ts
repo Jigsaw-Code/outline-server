@@ -32,8 +32,7 @@ export interface Location {
 
 @customElement('outline-region-picker-step')
 export class OutlineRegionPicker extends LitElement {
-  // External events
-  public static EVENT_REGION_SELECTED = 'OutlineRegionPicker#RegionSelected';
+  public static EVENT_REGION_SELECTED = 'outline-region-picker-region-selected';
 
   @property({type: Array}) locations: Location[] = [];
   @property({type: String}) selectedLocationId: string = null;
@@ -113,8 +112,8 @@ export class OutlineRegionPicker extends LitElement {
       <span slot="step-title">${this.localize('region-title')}</span>
       <span slot="step-description">${this.localize('region-description')}</span>
       <span slot="step-action">
-        <paper-button id="createServerButton" @tap="${this._handleCreateServerTap}" ?disabled="${
-        !this._isCreateButtonEnabled(this.isServerBeingCreated, this.selectedLocationId)}">
+        <paper-button id="createServerButton" @tap="${this._handleCreateServerTap}" 
+            ?disabled="${this.isServerBeingCreated || this.selectedLocationId === null}">
           ${this.localize('region-setup')}
         </paper-button>
       </span>
@@ -143,10 +142,6 @@ export class OutlineRegionPicker extends LitElement {
   reset(): void {
     this.isServerBeingCreated = false;
     this.selectedLocationId = null;
-  }
-
-  _isCreateButtonEnabled(isCreatingServer: boolean, selectedLocationId: string): boolean {
-    return !isCreatingServer && selectedLocationId != null;
   }
 
   _locationSelected(event: Event): void {

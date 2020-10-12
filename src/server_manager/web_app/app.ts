@@ -149,11 +149,8 @@ export class App {
       this.clearCredentialsAndShowIntro();
     });
     appRoot.addEventListener(
-        DigitalOceanCreateServerApp.EVENT_SERVER_CREATE_STARTED,
+        DigitalOceanCreateServerApp.EVENT_SERVER_CREATED,
         (event: CustomEvent) => this.syncServerCreationToUi(event.detail.server));
-    appRoot.addEventListener(
-        DigitalOceanCreateServerApp.EVENT_SERVER_CREATE_FAILED,
-        (event: CustomEvent) => this.showIntro());
 
     appRoot.addEventListener('DeleteServerRequested', (event: CustomEvent) => {
       this.deleteSelectedServer();

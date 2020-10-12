@@ -13,7 +13,6 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import {EventEmitter} from 'eventemitter3';
 import {customElement, html, LitElement, property} from 'lit-element';
 
 import {makePublicEvent} from '../../infrastructure/dom_events';
@@ -38,29 +37,27 @@ const DIGITALOCEAN_FLAG_MAPPING: {[cityId: string]: string} = {
 
 @customElement('digitalocean-create-server-app')
 export class DigitalOceanCreateServerApp extends LitElement {
-  // External events
-  public static EVENT_SERVER_CREATE_STARTED = 'DigitalOceanCreateServerApp#ServerCreateStarted';
-  public static EVENT_SERVER_CREATE_FAILED = 'DigitalOceanCreateServerApp#ServerCreateFailed';
-  public static EVENT_AUTHORIZATION_ERROR = 'DigitalOceanCreateServerApp#AuthorizationError';
-  // Internal events
-  private static EVENT_CREATE_SERVER_REQUESTED = 'DigitalOceanCreateServerApp#_RequestCreateServer';
+  public static EVENT_SERVER_CREATED = 'do-create-server-app-server-created';
+  public static EVENT_AUTHORIZATION_ERROR = 'do-create-server-app-authorization-error';
 
   @property({type: Function}) localize: Function;
 
+  private digitalOceanServerRepository: ManagedServerRepository;
   private notificationManager: OutlineNotificationManager;
-  private eventEmitter = new EventEmitter();
-
-  constructor() {
-    super();
-    this.addEventListener(OutlineRegionPicker.EVENT_REGION_SELECTED, (event: CustomEvent) => {
-      this.eventEmitter.emit(
-          DigitalOceanCreateServerApp.EVENT_CREATE_SERVER_REQUESTED, event.detail.regionId);
-    });
-  }
 
   render() {
-    return html`<outline-region-picker-step .localize=${
-        this.localize}></outline-region-picker-step>`;
+    return html`<outline-region-picker-step .localize=${this.localize} 
+        @outline-region-picker-region-selected="${this.onRegionSelected}"></outline-region-picker-step>`;
+  }
+
+  async onRegionSelected(event: CustomEvent) {
+    try {
+      const server = await this.createServer(this.digitalOceanServerRepository, event.detail.regionId);
+      const serverCreatedEvent = makePublicEvent(DigitalOceanCreateServerApp.EVENT_SERVER_CREATED, {server});
+      this.dispatchEvent(serverCreatedEvent);
+    } catch (error) {
+      this.notificationManager.showError('error-server-creation');
+    }
   }
 
   setNotificationManager(notificationManager: OutlineNotificationManager) {
@@ -68,22 +65,8 @@ export class DigitalOceanCreateServerApp extends LitElement {
   }
 
   async start(digitalOceanServerRepository: ManagedServerRepository): Promise<void> {
-    await this.showRegionPicker(digitalOceanServerRepository);
-
-    this.eventEmitter.once(
-        DigitalOceanCreateServerApp.EVENT_CREATE_SERVER_REQUESTED, async (regionId) => {
-          let event;
-          try {
-            const server = await this.createServer(digitalOceanServerRepository, regionId);
-            event = makePublicEvent(DigitalOceanCreateServerApp.EVENT_SERVER_CREATE_STARTED, {server});
-          } catch (error) {
-            this.notificationManager.showError('error-server-creation');
-            event = makePublicEvent(DigitalOceanCreateServerApp.EVENT_SERVER_CREATE_FAILED);
-          }
-          this.dispatchEvent(event);
-        });
-
-    return;
+    this.digitalOceanServerRepository = digitalOceanServerRepository;
+    return this.showRegionPicker(this.digitalOceanServerRepository);
   }
 
   private async showRegionPicker(digitalOceanServerRepository: ManagedServerRepository):

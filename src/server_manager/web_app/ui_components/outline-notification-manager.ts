@@ -65,13 +65,13 @@ export class OutlineNotificationManager extends LitElement {
     this.showToast(this.localize(messageId), durationMs);
   }
 
-  private showToast(message: string, duration: number) {
+  private showToast(message: string, durationSeconds: number) {
     this.closeToast();
     // Defer in order to trigger the toast animation, otherwise the update happens in place.
     setTimeout(() => {
       this.getToast().show({
         text: message,
-        duration,
+        durationSeconds,
         noOverlap: true,
       });
     }, 0);
