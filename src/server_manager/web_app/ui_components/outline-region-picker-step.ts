@@ -140,7 +140,6 @@ export class OutlineRegionPicker extends LitElement {
   }
 
   reset(): void {
-    this.isServerBeingCreated = false;
     this.selectedLocationId = null;
   }
 
@@ -150,7 +149,6 @@ export class OutlineRegionPicker extends LitElement {
   }
 
   _handleCreateServerTap(): void {
-    this.isServerBeingCreated = true;
     const params = {bubbles: true, composed: true, detail: {regionId: this.selectedLocationId}};
     const customEvent = new CustomEvent(OutlineRegionPicker.EVENT_REGION_SELECTED, params);
     this.dispatchEvent(customEvent);

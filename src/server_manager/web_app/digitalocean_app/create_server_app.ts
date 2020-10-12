@@ -52,6 +52,10 @@ export class DigitalOceanCreateServerApp extends LitElement {
   }
 
   async onRegionSelected(event: CustomEvent) {
+    const regionPicker =
+        this.shadowRoot.querySelector('outline-region-picker-step') as OutlineRegionPicker;
+    regionPicker.isServerBeingCreated = true;
+
     try {
       const server =
           await this.createServer(this.digitalOceanServerRepository, event.detail.regionId);
@@ -76,6 +80,7 @@ export class DigitalOceanCreateServerApp extends LitElement {
       Promise<void> {
     const regionPicker =
         this.shadowRoot.querySelector('outline-region-picker-step') as OutlineRegionPicker;
+    regionPicker.isServerBeingCreated = false;
     regionPicker.reset();
 
     try {
