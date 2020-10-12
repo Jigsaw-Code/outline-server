@@ -47,13 +47,16 @@ export class DigitalOceanCreateServerApp extends LitElement {
 
   render() {
     return html`<outline-region-picker-step .localize=${this.localize} 
-        @outline-region-picker-region-selected="${this.onRegionSelected}"></outline-region-picker-step>`;
+        @outline-region-picker-region-selected="${
+        this.onRegionSelected}"></outline-region-picker-step>`;
   }
 
   async onRegionSelected(event: CustomEvent) {
     try {
-      const server = await this.createServer(this.digitalOceanServerRepository, event.detail.regionId);
-      const serverCreatedEvent = makePublicEvent(DigitalOceanCreateServerApp.EVENT_SERVER_CREATED, {server});
+      const server =
+          await this.createServer(this.digitalOceanServerRepository, event.detail.regionId);
+      const serverCreatedEvent =
+          makePublicEvent(DigitalOceanCreateServerApp.EVENT_SERVER_CREATED, {server});
       this.dispatchEvent(serverCreatedEvent);
     } catch (error) {
       this.notificationManager.showError('error-server-creation');
