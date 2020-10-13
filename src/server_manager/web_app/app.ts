@@ -332,8 +332,7 @@ export class App {
         messageKey = 'error-servers-removed';
         placeholder = 'serverNames';
       }
-      this.notificationManager.showErrorRaw(
-          this.appRoot.localize(messageKey, placeholder, unsyncedServerNames));
+      this.notificationManager.showError(messageKey, placeholder, unsyncedServerNames);
     }
 
     await this.syncDisplayServersToUi();
@@ -587,8 +586,7 @@ export class App {
               this.showServerIfHealthy(server, displayServer);
             } else {
               // Server has been deleted outside the app.
-              this.notificationManager.showErrorRaw(
-                  this.appRoot.localize('error-server-removed', 'serverName', displayServer.name));
+              this.notificationManager.showError('error-server-removed', 'serverName', displayServer.name);
               this.removeServerFromDisplay(displayServer);
               this.selectedServer = null;
               this.appRoot.selectedServer = null;

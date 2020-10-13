@@ -32,7 +32,7 @@ export interface Location {
 
 @customElement('outline-region-picker-step')
 export class OutlineRegionPicker extends LitElement {
-  public static EVENT_REGION_SELECTED = 'outline-region-picker-region-selected';
+  public static EVENT_REGION_SELECTED = 'region-selected';
 
   @property({type: Array}) locations: Location[] = [];
   @property({type: String}) selectedLocationId: string = null;
@@ -140,6 +140,7 @@ export class OutlineRegionPicker extends LitElement {
   }
 
   reset(): void {
+    this.isServerBeingCreated = false;
     this.selectedLocationId = null;
   }
 
@@ -149,7 +150,7 @@ export class OutlineRegionPicker extends LitElement {
   }
 
   _handleCreateServerTap(): void {
-    const params = {bubbles: true, composed: true, detail: {regionId: this.selectedLocationId}};
+    const params = {detail: {regionId: this.selectedLocationId}};
     const customEvent = new CustomEvent(OutlineRegionPicker.EVENT_REGION_SELECTED, params);
     this.dispatchEvent(customEvent);
   }

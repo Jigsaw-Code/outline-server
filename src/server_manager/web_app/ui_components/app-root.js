@@ -538,7 +538,7 @@ export class AppRoot extends mixinBehaviors
 
   ready() {
     super.ready();
-    this.$.digitalOceanCreateServerApp.setNotificationManager(this.getNotificationManager());
+    this.$.digitalOceanCreateServerApp.notificationManager = this.getNotificationManager();
   }
 
   /**

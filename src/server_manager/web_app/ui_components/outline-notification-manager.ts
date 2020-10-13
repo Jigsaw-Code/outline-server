@@ -53,25 +53,21 @@ export class OutlineNotificationManager extends LitElement {
         </paper-toast>`;
   }
 
-  showError(messageId: string) {
-    this.showToast(this.localize(messageId), Infinity);
-  }
-
-  showErrorRaw(message: string) {
-    this.showToast(message, Infinity);
+  showError(messageId: string, ...params: string[]) {
+    this.showToast(this.localize(messageId, ...params), Infinity);
   }
 
   showNotification(messageId: string, durationMs = 3000) {
     this.showToast(this.localize(messageId), durationMs);
   }
 
-  private showToast(message: string, durationSeconds: number) {
+  private showToast(message: string, durationMs: number) {
     this.closeToast();
     // Defer in order to trigger the toast animation, otherwise the update happens in place.
     setTimeout(() => {
       this.getToast().show({
         text: message,
-        durationSeconds,
+        durationMs,
         noOverlap: true,
       });
     }, 0);

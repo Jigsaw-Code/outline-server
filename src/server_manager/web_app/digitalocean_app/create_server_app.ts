@@ -16,7 +16,7 @@
 import {customElement, html, LitElement, property} from 'lit-element';
 
 import {makePublicEvent} from '../../infrastructure/dom_events';
-import {ManagedServer, ManagedServerRepository, RegionId} from '../../model/server';
+import {ManagedServerRepository, RegionId} from '../../model/server';
 import * as digitalocean_server from '../digitalocean_server';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 import {Location, OutlineRegionPicker} from '../ui_components/outline-region-picker-step';
@@ -37,18 +37,17 @@ const DIGITALOCEAN_FLAG_MAPPING: {[cityId: string]: string} = {
 
 @customElement('digitalocean-create-server-app')
 export class DigitalOceanCreateServerApp extends LitElement {
-  public static EVENT_SERVER_CREATED = 'do-create-server-app-server-created';
-  public static EVENT_AUTHORIZATION_ERROR = 'do-create-server-app-authorization-error';
+  public static EVENT_SERVER_CREATED = 'server-created';
+  public static EVENT_AUTHORIZATION_ERROR = 'authorization-error';
 
   @property({type: Function}) localize: Function;
+  @property({type: Object}) notificationManager: OutlineNotificationManager;
 
-  private digitalOceanServerRepository: ManagedServerRepository;
-  private notificationManager: OutlineNotificationManager;
+  private serverRepository: ManagedServerRepository;
 
   render() {
     return html`<outline-region-picker-step .localize=${this.localize} 
-        @outline-region-picker-region-selected="${
-        this.onRegionSelected}"></outline-region-picker-step>`;
+        @region-selected="${this.onRegionSelected}"></outline-region-picker-step>`;
   }
 
   async onRegionSelected(event: CustomEvent) {
@@ -57,8 +56,8 @@ export class DigitalOceanCreateServerApp extends LitElement {
     regionPicker.isServerBeingCreated = true;
 
     try {
-      const server =
-          await this.createServer(this.digitalOceanServerRepository, event.detail.regionId);
+      const serverName = this.makeLocalizedServerName(event.detail.regionId);
+      const server = await this.serverRepository.createServer(event.detail.regionId, serverName);
       const serverCreatedEvent =
           makePublicEvent(DigitalOceanCreateServerApp.EVENT_SERVER_CREATED, {server});
       this.dispatchEvent(serverCreatedEvent);
@@ -67,20 +66,15 @@ export class DigitalOceanCreateServerApp extends LitElement {
     }
   }
 
-  setNotificationManager(notificationManager: OutlineNotificationManager) {
-    this.notificationManager = notificationManager;
-  }
-
   async start(digitalOceanServerRepository: ManagedServerRepository): Promise<void> {
-    this.digitalOceanServerRepository = digitalOceanServerRepository;
-    return this.showRegionPicker(this.digitalOceanServerRepository);
+    this.serverRepository = digitalOceanServerRepository;
+    return this.showRegionPicker(this.serverRepository);
   }
 
   private async showRegionPicker(digitalOceanServerRepository: ManagedServerRepository):
       Promise<void> {
     const regionPicker =
         this.shadowRoot.querySelector('outline-region-picker-step') as OutlineRegionPicker;
-    regionPicker.isServerBeingCreated = false;
     regionPicker.reset();
 
     try {
@@ -99,12 +93,6 @@ export class DigitalOceanCreateServerApp extends LitElement {
         this.notificationManager.showError('error-do-regions');
       }
     }
-  }
-
-  private createServer(digitalOceanServerRepository: ManagedServerRepository, regionId: string):
-      Promise<ManagedServer> {
-    const serverName = this.makeLocalizedServerName(regionId);
-    return digitalOceanServerRepository.createServer(regionId, serverName);
   }
 
   private createLocationModel(cityId: string, regionIds: string[]): Location {
