@@ -157,9 +157,9 @@ async function main() {
   const prometheusEndpoint = `http://${prometheusLocation}`;
   const prometheusBinary = getBinaryFilename('prometheus');
   const prometheusArgs = [
-    '--config.file', prometheusConfigFilename, '--storage.tsdb.retention.time', '31d',
-    '--storage.tsdb.path', prometheusTsdbFilename, '--web.listen-address', prometheusLocation,
-    '--log.level', verbose ? 'debug' : 'info'
+    '--config.file', prometheusConfigFilename, '--web.enable-admin-api',
+    '--storage.tsdb.retention.time', '31d', '--storage.tsdb.path', prometheusTsdbFilename,
+    '--web.listen-address', prometheusLocation, '--log.level', verbose ? 'debug' : 'info'
   ];
   await startPrometheus(
       prometheusBinary, prometheusConfigFilename, prometheusConfigJson, prometheusArgs,
