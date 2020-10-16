@@ -51,7 +51,7 @@ Polymer({
       }
     </style>
     <div class="container">
-      <img id="logo" src="images/launcher-icon.png">
+      <img id="logo" src="images/tos-icon.png">
     </div>
     <div id="tos">
       <span inner-h-t-m-l="[[localize('terms-of-service', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html>', 'closeLink', '</a>')]]"></span>
