@@ -14,7 +14,7 @@
 
 import {EventEmitter} from 'eventemitter3';
 
-import {DigitalOceanSession, DropletInfo} from '../cloud/digitalocean_api';
+import {Account, DigitalOceanSession, DropletInfo, HttpError, NetworkError} from '../cloud/digitalocean_api';
 import * as crypto from '../infrastructure/crypto';
 import * as errors from '../infrastructure/errors';
 import {asciiToHex, hexToString} from '../infrastructure/hex_encoding';
@@ -340,17 +340,23 @@ export function GetCityId(slug: server.RegionId): string {
 const MACHINE_SIZE = 's-1vcpu-1gb';
 
 export class DigitaloceanServerRepository implements server.ManagedServerRepository {
+  // Event that signals an issue connecting to the DigitalOcean API. This
+  // usually means an invalid authentication, CORS, or network issue.
+  public static EVENT_API_CONNECTIVITY_ISSUE = 'api_connectivity_issue';
+
   private servers: DigitaloceanServer[] = [];
 
   constructor(
-      private digitalOcean: DigitalOceanSession, private image: string, private metricsUrl: string,
+      private domainEvents: EventEmitter, private digitalOcean: DigitalOceanSession,
+      private image: string, private metricsUrl: string,
       private sentryApiUrl: string|undefined, private debugMode: boolean) {}
 
   // Return a map of regions that are available and support our target machine size.
-  getRegionMap(): Promise<Readonly<server.RegionMap>> {
-    return this.digitalOcean.getRegionInfo().then((regions) => {
+  async getRegionMap(): Promise<Readonly<server.RegionMap>> {
+    try {
+      const regionInfos = await this.digitalOcean.getRegionInfo();
       const ret: server.RegionMap = {};
-      regions.forEach((region) => {
+      regionInfos.forEach((region) => {
         const cityId = GetCityId(region.slug);
         if (!(cityId in ret)) {
           ret[cityId] = [];
@@ -360,14 +366,15 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
         }
       });
       return ret;
-    });
+    } catch (error) {
+      this.processError(error);
+    }
   }
 
   // Creates a server and returning it when it becomes active.
-  createServer(region: server.RegionId, name: string): Promise<server.ManagedServer> {
+  async createServer(region: server.RegionId, name: string): Promise<server.ManagedServer> {
     console.time('activeServer');
     console.time('servingServer');
-    const onceKeyPair = crypto.generateKeyPair();
     const watchtowerRefreshSeconds = this.image ? 30 : undefined;
     const installCommand = getInstallScript(
         this.digitalOcean.accessToken, name, this.image, watchtowerRefreshSeconds, this.metricsUrl,
@@ -379,39 +386,66 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
       image: 'docker-18-04',
       tags: [SHADOWBOX_TAG],
     };
-    return onceKeyPair
-        .then((keyPair) => {
-          if (this.debugMode) {
-            // Strip carriage returns, which produce weird blank lines when pasted into a terminal.
-            console.debug(
-                `private key for SSH access to new droplet:\n${
-                    keyPair.private.replace(/\r/g, '')}\n\n` +
-                'Use "ssh -i keyfile root@[ip_address]" to connect to the machine');
-          }
-          return this.digitalOcean.createDroplet(name, region, keyPair.public, dropletSpec);
-        })
-        .then((response) => {
-          return this.createDigitalOceanServer(this.digitalOcean, response.droplet);
-        });
+
+    const keyPair = await crypto.generateKeyPair();
+    if (this.debugMode) {
+      // Strip carriage returns, which produce weird blank lines when pasted into a terminal.
+      console.debug(
+          `private key for SSH access to new droplet:\n${
+              keyPair.private.replace(/\r/g, '')}\n\n` +
+          'Use "ssh -i keyfile root@[ip_address]" to connect to the machine');
+    }
+
+    try {
+      const droplet = await this.digitalOcean.createDroplet(name, region, keyPair.public, dropletSpec);
+      const server = new DigitaloceanServer(this.digitalOcean, droplet.droplet);
+      this.servers.push(server);
+      return server;
+    } catch (error) {
+      this.processError(error);
+    }
   }
 
-  listServers(fetchFromHost = true): Promise<server.ManagedServer[]> {
+  async listServers(fetchFromHost = true): Promise<server.ManagedServer[]> {
     if (!fetchFromHost) {
       return Promise.resolve(this.servers);  // Return the in-memory servers.
     }
-    return this.digitalOcean.getDropletsByTag(SHADOWBOX_TAG).then((droplets) => {
-      this.servers = [];
-      return droplets.map((droplet) => {
-        return this.createDigitalOceanServer(this.digitalOcean, droplet);
-      });
-    });
+
+    try {
+      const droplets = await this.digitalOcean.getDropletsByTag(SHADOWBOX_TAG);
+      this.servers = droplets.map((droplet) =>
+          new DigitaloceanServer(this.digitalOcean, droplet));
+      return this.servers;
+    } catch (error) {
+      this.processError(error);
+    }
   }
 
-  // Creates a DigitaloceanServer object and adds it to the in-memory server list.
-  private createDigitalOceanServer(digitalOcean: DigitalOceanSession, dropletInfo: DropletInfo) {
-    const server = new DigitaloceanServer(digitalOcean, dropletInfo);
-    this.servers.push(server);
-    return server;
+  async getAccount(): Promise<Account> {
+    try {
+      return await this.digitalOcean.getAccount();
+    } catch (error) {
+      this.processError(error);
+    }
+  }
+
+  registerApiConnectionIssueListener(fn: () => void) {
+    this.domainEvents.on(DigitaloceanServerRepository.EVENT_API_CONNECTIVITY_ISSUE, fn);
+  }
+
+  private processError(error: Error) {
+    if (error instanceof HttpError) {
+      if (error.getStatusCode() === 401) {
+        this.domainEvents.emit(DigitaloceanServerRepository.EVENT_API_CONNECTIVITY_ISSUE);
+      } else {
+        console.error(`DigitalOcean API request failed with status 
+              ${error.getStatusCode()} and message: ${error.getMessage()}`);
+      }
+    } else if (error instanceof NetworkError) {
+      this.domainEvents.emit(DigitaloceanServerRepository.EVENT_API_CONNECTIVITY_ISSUE);
+    } else {
+      console.error(`DigitalOceanSession error: ${error.message}`);
+    }
   }
 }
 

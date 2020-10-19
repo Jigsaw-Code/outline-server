@@ -282,10 +282,6 @@ class FakePolymerAppRoot extends AppRoot {
     return {};
   }
 
-  getDigitalOceanOauthFlow() {
-    return {};
-  }
-
   showProgress() {
     this.setScreen(AppRootScreen.INSTALL_PROGRESS);
   }

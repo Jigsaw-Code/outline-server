@@ -25,9 +25,9 @@ import '@polymer/paper-dialog/paper-dialog.js';
 import '@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
 import '@polymer/paper-listbox/paper-listbox.js';
 import '@polymer/paper-menu-button/paper-menu-button.js';
+import '../digitalocean_app/oauth-step';
 import './cloud-install-styles.js';
 import './outline-about-dialog.js';
-import './outline-do-oauth-step.js';
 import './outline-feedback-dialog.js';
 import './outline-survey-dialog.js';
 import './outline-intro-step.js';
@@ -563,20 +563,10 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
   }
 
-  getDigitalOceanOauthFlow(onCancel) {
+  getAndShowDigitalOceanOauthFlow(onCancel) {
     const oauthFlow = this.$.digitalOceanOauth;
     oauthFlow.onCancel = onCancel;
-    return oauthFlow;
-  }
-
-  showDigitalOceanOauthFlow() {
     this.currentPage = 'digitalOceanOauth';
-  }
-
-  getAndShowDigitalOceanOauthFlow(onCancel) {
-    this.currentPage = 'digitalOceanOauth';
-    const oauthFlow = this.getDigitalOceanOauthFlow(onCancel);
-    oauthFlow.showConnectAccount();
     return oauthFlow;
   }
 
@@ -652,7 +642,7 @@ export class AppRoot extends mixinBehaviors
 
   /**
    * @returns {Promise<boolean>} a Promise to a boolean identifying which dialog button was clicked.
-   *          Returns true if retry was clicked, false for cancel.
+   *          Returns true if disconnect was clicked, false for cancel.
    */
   showConnectivityDialog() {
     const dialogTitle = this.localize('error-connectivity-title');
@@ -660,9 +650,9 @@ export class AppRoot extends mixinBehaviors
     return this
         .showModalDialog(
             dialogTitle, dialogText,
-            [this.localize('digitalocean-disconnect'), this.localize('retry')])
+            [this.localize('cancel'), this.localize('digitalocean-disconnect')])
         .then(clickedButtonIndex => {
-          return clickedButtonIndex === 1;  // return true if user clicked retry
+          return clickedButtonIndex === 1;  // return true if user clicked disconnect
         });
   }
 

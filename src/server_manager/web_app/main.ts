@@ -14,6 +14,7 @@
 
 import './ui_components/app-root.js';
 
+import {EventEmitter} from 'eventemitter3';
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as i18n from '../infrastructure/i18n';
 import {getSentryApiUrl} from '../infrastructure/sentry';
@@ -103,9 +104,10 @@ document.addEventListener('WebComponentsReady', () => {
   const version = params.get('version');
   const sentryDsn = params.get('sentryDsn');
 
+  const domainEvents = new EventEmitter();
   // Set DigitalOcean server repository parameters.
   const digitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) => {
-    return new digitalocean_server.DigitaloceanServerRepository(
+    return new digitalocean_server.DigitaloceanServerRepository(domainEvents,
         session, shadowboxImage, metricsUrl, getSentryApiUrl(sentryDsn), debugMode);
   };
 

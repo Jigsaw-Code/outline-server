@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as errors from '../infrastructure/errors';
-
 export interface DigitalOceanDropletSpecification {
   installCommand: string;
   size: string;
@@ -23,56 +21,66 @@ export interface DigitalOceanDropletSpecification {
 
 // See definition and example at
 // https://developers.digitalocean.com/documentation/v2/#retrieve-an-existing-droplet-by-id
-export type DropletInfo = Readonly < {
+export type DropletInfo = Readonly<{
   id: number;
   status: 'new'|'active';
   tags: string[];
   region: {readonly slug: string;};
-  size: Readonly < {
+  size: Readonly<{
     transfer: number;
     price_monthly: number;
-  }
-  > ;
-  networks: Readonly < {
-    v4: ReadonlyArray < Readonly < {
+  }>;
+  networks: Readonly<{
+    v4: ReadonlyArray<Readonly<{
       type: string;
       ip_address: string;
-    }
-    >> ;
-  }
-  > ;
-}
-> ;
+    }>>;
+  }>;
+}>;
 
 // Reference:
 // https://developers.digitalocean.com/documentation/v2/#get-user-information
-export type Account = Readonly < {
+export type Account = Readonly<{
   email: string;
   uuid: string;
   email_verified: boolean;
   status: string;
-}
-> ;
+}>;
 
 // Reference:
 // https://developers.digitalocean.com/documentation/v2/#regions
-export type RegionInfo = Readonly < {
+export type RegionInfo = Readonly<{
   slug: string;
   name: string;
   sizes: string[];
   available: boolean;
   features: string[];
-}
-> ;
+}>;
 
-// Marker class for errors due to network or authentication.
-// See below for more details on when this is raised.
-export class XhrError extends errors.OutlineError {
-  constructor() {
-    // No message because XMLHttpRequest.onerror provides no useful info.
-    super();
+// Reference:
+// https://developers.digitalocean.com/documentation/v2/#statuses
+type DigitalOceanError = Readonly<{
+  id: string;
+  message: string;
+  request_id?:string;
+}>;
+
+export class HttpError extends Error {
+  constructor(private statusCode: number, message?: string) {
+    super(message);
+  }
+
+  getStatusCode(): number {
+    return this.statusCode;
+  }
+
+  getMessage(): string|undefined {
+    return this.message;
   }
 }
+
+// Marker class for network and CORS errors.
+export class NetworkError extends Error {}
 
 // This class contains methods to interact with DigitalOcean on behalf of a user.
 export interface DigitalOceanSession {
@@ -216,19 +224,18 @@ class RestApiSession implements DigitalOceanSession {
       xhr.onload = () => {
         // DigitalOcean may return any 2xx status code for success.
         if (xhr.status >= 200 && xhr.status <= 299) {
-          // Parse JSON response if available.  For requests like DELETE
+          // Parse JSON response if available. For requests like DELETE
           // this.response may be empty.
           const responseObj = (xhr.response ? JSON.parse(xhr.response) : {});
           resolve(responseObj);
-        } else if (xhr.status === 401) {
-          console.error('DigitalOcean request failed with Unauthorized error');
-          reject(new XhrError());
-        } else {
-          // this.response is a JSON object, whose message is an error string.
-          const responseJson = JSON.parse(xhr.response);
-          console.error(`DigitalOcean request failed with status ${xhr.status}`);
-          reject(new Error(
-              `XHR ${responseJson.id} failed with ${xhr.status}: ${responseJson.message}`));
+        } else if (xhr.status >= 400 && xhr.status <= 599) {
+          // Client and server errors (400 and 500 range)
+          try {
+            const error: DigitalOceanError = JSON.parse(xhr.response);
+            reject(new HttpError(xhr.status, error.message));
+          } catch (error) {
+            reject(new Error(`Failed to parse DigitalOcean error response: ${xhr.response}`));
+          }
         }
       };
       xhr.onerror = () => {
@@ -241,7 +248,7 @@ class RestApiSession implements DigitalOceanSession {
         // errors, e.g. bad request parameters and even 404s, do *not* raise
         // an onerror event).
         console.error('Failed to perform DigitalOcean request');
-        reject(new XhrError());
+        reject(new NetworkError());
       };
       xhr.send(data ? JSON.stringify(data) : undefined);
     });
@@ -253,18 +260,4 @@ class RestApiSession implements DigitalOceanSession {
 function makeValidDropletName(name: string): string {
   // Remove all characters outside of A-Z, a-z, 0-9 and '-'.
   return name.replace(/[^A-Za-z0-9\-]/g, '');
-}
-
-export async function digitalOceanRetry<T>(
-    f: () => Promise<T>, onAuthError: (err: Error) => Promise<boolean>): Promise<T> {
-  try {
-    return await f();
-  } catch (err) {
-    if (err instanceof XhrError) {
-      const retry = await onAuthError(err);
-      if (retry) {
-        return digitalOceanRetry(f, onAuthError);
-      }
-    }
-  }
 }

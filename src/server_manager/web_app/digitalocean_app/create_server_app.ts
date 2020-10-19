@@ -13,14 +13,18 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import {customElement, html, LitElement, property} from 'lit-element';
+import {css, customElement, html, LitElement, property} from 'lit-element';
 
 import {makePublicEvent} from '../../infrastructure/dom_events';
 import {ManagedServerRepository, RegionId} from '../../model/server';
 import * as digitalocean_server from '../digitalocean_server';
+import {DigitaloceanServerRepository} from '../digitalocean_server';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 import {Location, OutlineRegionPicker} from '../ui_components/outline-region-picker-step';
-import {XhrError} from "../../cloud/digitalocean_api";
+import {HttpError} from "../../cloud/digitalocean_api";
+import {COMMON_STYLES} from "../ui_components/cloud-install-styles";
+
+import {sleep} from "../../infrastructure/sleep";
 
 // DigitalOcean mapping of regions to flags
 const FLAG_IMAGE_DIR = 'images/flags';
@@ -38,22 +42,167 @@ const DIGITALOCEAN_FLAG_MAPPING: {[cityId: string]: string} = {
 @customElement('digitalocean-create-server-app')
 export class DigitalOceanCreateServerApp extends LitElement {
   public static EVENT_SERVER_CREATED = 'server-created';
-  public static EVENT_AUTHORIZATION_ERROR = 'authorization-error';
+  public static EVENT_SERVER_CREATE_CANCELLED = 'server-create-cancelled';
 
   @property({type: Function}) localize: Function;
+  @property({type: String}) currentPage = 'loading';
   @property({type: Object}) notificationManager: OutlineNotificationManager;
 
-  private serverRepository: ManagedServerRepository;
+  private regionPicker: OutlineRegionPicker;
+  private serverRepository: DigitaloceanServerRepository;
 
-  render() {
-    return html`<outline-region-picker-step .localize=${this.localize} 
-        @region-selected="${this.onRegionSelected}"></outline-region-picker-step>`;
+  static get styles() {
+    return [
+      COMMON_STYLES, css`
+      .container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100%;
+        align-items: center;
+        padding: 132px 0;
+        font-size: 14px;
+      }
+      .card {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: space-between;
+        margin: 24px 0;
+        padding: 24px;
+        background: var(--background-contrast-color);
+        box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.14), 0 2px 2px 0 rgba(0, 0, 0, 0.12), 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+        border-radius: 2px;
+      }
+      @media (min-width: 1025px) {
+        paper-card {
+          /* Set min with for the paper-card to grow responsively. */
+          min-width: 600px;
+        }
+      }
+      .card p {
+        color: var(--light-gray);
+        width: 100%;
+        text-align: center;
+      }
+      .card paper-button {
+        color: var(--light-gray);
+        width: 100%;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 2px;
+      }
+      .card paper-button[disabled] {
+        color: var(--medium-gray);
+        background: transparent;
+      }
+      /* Mirror images */
+      :host(:dir(rtl)) .mirror {
+        transform: scaleX(-1);
+      }`];
   }
 
-  async onRegionSelected(event: CustomEvent) {
-    const regionPicker =
-        this.shadowRoot.querySelector('outline-region-picker-step') as OutlineRegionPicker;
-    regionPicker.isServerBeingCreated = true;
+  render() {
+    return html`
+      <iron-pages id="pages" attr-for-selected="id" .selected="${this.currentPage}">
+        <outline-step-view id="loading"></outline-step-view>
+      
+        <outline-step-view id="verifyEmail">
+          <span slot="step-title">${this.localize('oauth-activate-account')}</span>
+          <span slot="step-description">${this.localize('oauth-verify')}</span>
+          <paper-card class="card">
+            <div class="container">
+              <img class="mirror" src="images/do_oauth_email.svg">
+              <p>${this.localize('oauth-verify-tag')}</p>
+            </div>
+            <paper-button @tap="${this.onCancelTapped}">${this.localize('cancel')}</paper-button>
+          </paper-card>
+        </outline-step-view>
+  
+        <outline-step-view id="enterBilling">
+          <span slot="step-title">${this.localize('oauth-activate-account')}</span>
+          <span slot="step-description">${this.localize('oauth-billing')}</span>
+          <paper-card class="card">
+            <div class="container">
+              <img class="mirror" src="images/do_oauth_billing.svg">
+              <p>${this.localize('oauth-billing-tag')}</p>
+            </div>
+            <paper-button @tap="${this.onCancelTapped}">${this.localize('cancel')}</paper-button>
+          </paper-card>
+        </outline-step-view>
+  
+        <outline-step-view id="accountActive">
+          <span slot="step-title">${this.localize('oauth-activate-account')}</span>
+          <span slot="step-description">${this.localize('oauth-account-active')}</span>
+          <paper-card class="card">
+            <div class="container">
+              <img class="mirror" src="images/do_oauth_done.svg">
+              <p>${this.localize('oauth-account-active-tag')}</p>
+            </div>
+          </paper-card>
+        </outline-step-view>
+        
+        <outline-region-picker-step id="regionPicker" .localize=${this.localize}
+            @region-selected="${this.onRegionSelected}"></outline-region-picker-step>
+    </iron-pages>`;
+  }
+
+  async start(digitalOceanServerRepository: DigitaloceanServerRepository): Promise<void> {
+    this.regionPicker = this.shadowRoot.querySelector('outline-region-picker-step') as OutlineRegionPicker;
+    this.serverRepository = digitalOceanServerRepository;
+
+    this.reset();
+    await this.validateAccount();
+    await this.showRegionPicker(this.serverRepository);
+  }
+
+  private async validateAccount() {
+    let activatingAccount = false;
+
+    while (true) {
+      const account = await this.serverRepository.getAccount();
+      if (account.status === 'active') {
+        if (activatingAccount) {
+          this.currentPage = 'accountActive';
+          await sleep(1500);
+        }
+        break;
+      } else {
+        activatingAccount = true;
+        if (!account.email_verified) {
+          this.currentPage = 'verifyEmail';
+        } else {
+          this.currentPage = 'enterBilling';
+        }
+        await sleep(1000);
+      }
+    }
+  }
+
+  private async showRegionPicker(digitalOceanServerRepository: ManagedServerRepository):
+      Promise<void> {
+    this.currentPage = 'regionPicker';
+
+    try {
+      const regionMap = await digitalOceanServerRepository.getRegionMap();
+      const locations = Object.entries(regionMap).map(([cityId, regionIds]) => {
+        return this.createLocationModel(cityId, regionIds);
+      });
+      this.regionPicker.locations = locations;
+    } catch (error) {
+      if (error instanceof HttpError && error.getStatusCode() !== 401) {
+        console.error(`Failed to get list of available regions: ${error}`);
+        this.notificationManager.showError('error-do-regions');
+      }
+    }
+  }
+
+  private reset() {
+    this.currentPage = 'loading';
+    this.regionPicker.reset();
+  }
+
+  private async onRegionSelected(event: CustomEvent) {
+    this.regionPicker.isServerBeingCreated = true;
 
     try {
       const serverName = this.makeLocalizedServerName(event.detail.regionId);
@@ -63,36 +212,14 @@ export class DigitalOceanCreateServerApp extends LitElement {
       this.dispatchEvent(serverCreatedEvent);
     } catch (error) {
       this.notificationManager.showError('error-server-creation');
+    } finally {
+      this.regionPicker.isServerBeingCreated = false;
     }
   }
 
-  async start(digitalOceanServerRepository: ManagedServerRepository): Promise<void> {
-    this.serverRepository = digitalOceanServerRepository;
-    return this.showRegionPicker(this.serverRepository);
-  }
-
-  private async showRegionPicker(digitalOceanServerRepository: ManagedServerRepository):
-      Promise<void> {
-    const regionPicker =
-        this.shadowRoot.querySelector('outline-region-picker-step') as OutlineRegionPicker;
-    regionPicker.reset();
-
-    try {
-      // TODO: Catch and rethrow authorization error
-      const regionMap = await digitalOceanServerRepository.getRegionMap();
-      const locations = Object.entries(regionMap).map(([cityId, regionIds]) => {
-        return this.createLocationModel(cityId, regionIds);
-      });
-      regionPicker.locations = locations;
-    } catch (error) {
-      if (error instanceof XhrError) {
-        const event = makePublicEvent(DigitalOceanCreateServerApp.EVENT_AUTHORIZATION_ERROR);
-        this.dispatchEvent(event);
-      } else {
-        console.error(`Failed to get list of available regions: ${error}`);
-        this.notificationManager.showError('error-do-regions');
-      }
-    }
+  private onCancelTapped() {
+    const customEvent = new CustomEvent(DigitalOceanCreateServerApp.EVENT_SERVER_CREATE_CANCELLED);
+    this.dispatchEvent(customEvent);
   }
 
   private createLocationModel(cityId: string, regionIds: string[]): Location {
