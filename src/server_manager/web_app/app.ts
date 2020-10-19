@@ -76,7 +76,7 @@ function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.Dat
 
 // Compute the suggested data limit based on the server's transfer capacity and number of access
 // keys.
-async function computeDefaultAccessKeyDataLimit(
+async function computeDefaultDefaultDataLimit(
     server: server.Server, accessKeys?: server.AccessKey[]): Promise<server.DataLimit> {
   try {
     // Assume non-managed servers have a data transfer capacity of 1TB.
@@ -115,7 +115,7 @@ async function showHelpBubblesOnce(serverView: ServerView) {
     window.localStorage.setItem('getConnectedHelpBubble-dismissed', 'true');
   }
   if (!window.localStorage.getItem('dataLimitsHelpBubble-dismissed') &&
-      serverView.supportsAccessKeyDataLimit) {
+      serverView.supportsDefaultDataLimit) {
     await serverView.showDataLimitsHelpBubble();
     window.localStorage.setItem('dataLimitsHelpBubble-dismissed', 'true');
   }
@@ -182,12 +182,12 @@ export class App {
       this.renameAccessKey(event.detail.accessKeyId, event.detail.newName, event.detail.entry);
     });
 
-    appRoot.addEventListener('SetAccessKeyDataLimitRequested', (event: CustomEvent) => {
-      this.setAccessKeyDataLimit(displayDataAmountToDataLimit(event.detail.limit));
+    appRoot.addEventListener('SetDefaultDataLimitRequested', (event: CustomEvent) => {
+      this.setDefaultDataLimit(displayDataAmountToDataLimit(event.detail.limit));
     });
 
-    appRoot.addEventListener('RemoveAccessKeyDataLimitRequested', (event: CustomEvent) => {
-      this.removeAccessKeyDataLimit();
+    appRoot.addEventListener('disableDataLimitsRequested', (event: CustomEvent) => {
+      this.disableDataLimits();
     });
 
     appRoot.addEventListener('ChangePortForNewAccessKeysRequested', (event: CustomEvent) => {
@@ -849,15 +849,15 @@ export class App {
     view.serverPortForNewAccessKeys = selectedServer.getPortForNewAccessKeys();
     view.serverCreationDate = localizeDate(selectedServer.getCreatedDate(), this.appRoot.language);
     view.serverVersion = selectedServer.getVersion();
-    view.accessKeyDataLimit = dataLimitToDisplayDataAmount(selectedServer.getAccessKeyDataLimit());
-    view.isAccessKeyDataLimitEnabled = !!view.accessKeyDataLimit;
+    view.defaultDataLimit = dataLimitToDisplayDataAmount(selectedServer.getDefaultDataLimit());
+    view.isDefaultDataLimitEnabled = !!view.defaultDataLimit;
     view.showFeatureMetricsDisclaimer = selectedServer.getMetricsEnabled() &&
-        !selectedServer.getAccessKeyDataLimit() && !hasSeenFeatureMetricsNotification();
+        !selectedServer.getDefaultDataLimit() && !hasSeenFeatureMetricsNotification();
 
     const version = this.selectedServer.getVersion();
     if (version) {
       view.isAccessKeyPortEditable = semver.gte(version, CHANGE_KEYS_PORT_VERSION);
-      view.supportsAccessKeyDataLimit = semver.gte(version, DATA_LIMITS_VERSION);
+      view.supportsDefaultDataLimit = semver.gte(version, DATA_LIMITS_VERSION);
       view.isHostnameEditable = semver.gte(version, CHANGE_HOSTNAME_VERSION);
     }
 
@@ -880,9 +880,9 @@ export class App {
     try {
       const serverAccessKeys = await selectedServer.listAccessKeys();
       view.accessKeyRows = serverAccessKeys.map(this.convertToUiAccessKey.bind(this));
-      if (!view.accessKeyDataLimit) {
-        view.accessKeyDataLimit = dataLimitToDisplayDataAmount(
-            await computeDefaultAccessKeyDataLimit(selectedServer, serverAccessKeys));
+      if (!view.defaultDataLimit) {
+        view.defaultDataLimit = dataLimitToDisplayDataAmount(
+            await computeDefaultDefaultDataLimit(selectedServer, serverAccessKeys));
       }
       // Show help bubbles once the page has rendered.
       setTimeout(() => {
@@ -936,10 +936,10 @@ export class App {
       }
       serverView.setServerTransferredData(totalBytes);
 
-      const accessKeyDataLimit = selectedServer.getAccessKeyDataLimit();
-      if (accessKeyDataLimit) {
+      const defaultDataLimit = selectedServer.getDefaultDataLimit();
+      if (defaultDataLimit) {
         // Make access key data usage relative to the data limit.
-        totalBytes = accessKeyDataLimit.bytes;
+        totalBytes = defaultDataLimit.bytes;
       }
 
       // Update all the displayed access keys, even if usage didn't change, in case the data limit
@@ -948,7 +948,7 @@ export class App {
         const accessKeyId = accessKey.id;
         const transferredBytes = stats.bytesTransferredByUserId[accessKeyId] || 0;
         let relativeTraffic =
-            totalBytes ? 100 * transferredBytes / totalBytes : (accessKeyDataLimit ? 100 : 0);
+            totalBytes ? 100 * transferredBytes / totalBytes : (defaultDataLimit ? 100 : 0);
         if (relativeTraffic > 100) {
           // Can happen when a data limit is set on an access key that already exceeds it.
           relativeTraffic = 100;
@@ -1026,19 +1026,19 @@ export class App {
         });
   }
 
-  private async setAccessKeyDataLimit(limit: server.DataLimit) {
+  private async setDefaultDataLimit(limit: server.DataLimit) {
     if (!limit) {
       return;
     }
-    const previousLimit = this.selectedServer.getAccessKeyDataLimit();
+    const previousLimit = this.selectedServer.getDefaultDataLimit();
     if (previousLimit && limit.bytes === previousLimit.bytes) {
       return;
     }
     const serverView = this.appRoot.getServerView(this.appRoot.selectedServer.id);
     try {
-      await this.selectedServer.setAccessKeyDataLimit(limit);
+      await this.selectedServer.setDefaultDataLimit(limit);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
-      serverView.accessKeyDataLimit = dataLimitToDisplayDataAmount(limit);
+      serverView.defaultDataLimit = dataLimitToDisplayDataAmount(limit);
       this.refreshTransferStats(this.selectedServer, serverView);
       // Don't display the feature collection disclaimer anymore.
       serverView.showFeatureMetricsDisclaimer = false;
@@ -1046,22 +1046,22 @@ export class App {
     } catch (error) {
       console.error(`Failed to set access key data limit: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-set-data-limit'));
-      serverView.accessKeyDataLimit = dataLimitToDisplayDataAmount(
-          previousLimit || await computeDefaultAccessKeyDataLimit(this.selectedServer));
-      serverView.isAccessKeyDataLimitEnabled = !!previousLimit;
+      serverView.defaultDataLimit = dataLimitToDisplayDataAmount(
+          previousLimit || await computeDefaultDefaultDataLimit(this.selectedServer));
+      serverView.isDefaultDataLimitEnabled = !!previousLimit;
     }
   }
 
-  private async removeAccessKeyDataLimit() {
+  private async disableDataLimits() {
     const serverView = this.appRoot.getServerView(this.appRoot.selectedServer.id);
     try {
-      await this.selectedServer.removeAccessKeyDataLimit();
+      await this.selectedServer.disableDataLimits();
       this.appRoot.showNotification(this.appRoot.localize('saved'));
       this.refreshTransferStats(this.selectedServer, serverView);
     } catch (error) {
       console.error(`Failed to remove access key data limit: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-remove-data-limit'));
-      serverView.isAccessKeyDataLimitEnabled = true;
+      serverView.isDefaultDataLimitEnabled = true;
     }
   }
 

@@ -37,14 +37,16 @@ export interface Server {
   // Removes the access key given by id.
   removeAccessKey(accessKeyId: AccessKeyId): Promise<void>;
 
-  // Sets a data transfer limit over a 30 day rolling window for all access keys.
-  setAccessKeyDataLimit(limit: DataLimit): Promise<void>;
+  // Sets a default access key data transfer limit over a 30 day rolling window for all access keys.
+  // Use this method to start enforcement of data limits.
+  setDefaultDataLimit(limit: DataLimit): Promise<void>;
 
-  // Returns the access key data transfer limit, or undefined if it has not been set.
-  getAccessKeyDataLimit(): DataLimit|undefined;
+  // Returns the default data transfer limit, or undefined if it has not been set.
+  getDefaultDataLimit(): DataLimit|undefined;
 
-  // Removes the access key data transfer limit.
-  removeAccessKeyDataLimit(): Promise<void>;
+  // Stops enforcement of access key data limits.  If data limits is re-enabled, all previous
+  // traffic is still accounted for.
+  disableDataLimits(): Promise<void>;
 
   // Returns whether metrics are enabled.
   getMetricsEnabled(): boolean;

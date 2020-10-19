@@ -32,7 +32,7 @@ export interface ServerConfig {
   portForNewAccessKeys: number;
   hostnameForAccessKeys: string;
   version: string;
-  accessKeyDataLimit?: server.DataLimit;
+  defaultDataLimit?: server.DataLimit;
 }
 
 export class ShadowboxServer implements server.Server {
@@ -65,28 +65,28 @@ export class ShadowboxServer implements server.Server {
     return this.apiRequest<void>('access-keys/' + accessKeyId, {method: 'DELETE'});
   }
 
-  async setAccessKeyDataLimit(limit: server.DataLimit): Promise<void> {
+  async setDefaultDataLimit(limit: server.DataLimit): Promise<void> {
     console.info(`Setting access key data limit: ${JSON.stringify(limit)}`);
     const requestOptions = {
       method: 'PUT',
       headers: new Headers({'Content-Type': 'application/json'}),
       body: JSON.stringify({limit})
     };
-    await this.apiRequest<void>(this.getAccessKeyDataLimitPath(), requestOptions);
-    this.serverConfig.accessKeyDataLimit = limit;
+    await this.apiRequest<void>(this.getDefaultDataLimitPath(), requestOptions);
+    this.serverConfig.defaultDataLimit = limit;
   }
 
-  async removeAccessKeyDataLimit(): Promise<void> {
+  async disableDataLimits(): Promise<void> {
     console.info(`Removing access key data limit`);
-    await this.apiRequest<void>(this.getAccessKeyDataLimitPath(), {method: 'DELETE'});
-    delete this.serverConfig.accessKeyDataLimit;
+    await this.apiRequest<void>(this.getDefaultDataLimitPath(), {method: 'DELETE'});
+    delete this.serverConfig.defaultDataLimit;
   }
 
-  getAccessKeyDataLimit(): server.DataLimit|undefined {
-    return this.serverConfig.accessKeyDataLimit;
+  getDefaultDataLimit(): server.DataLimit|undefined {
+    return this.serverConfig.defaultDataLimit;
   }
 
-  private getAccessKeyDataLimitPath(): string {
+  private getDefaultDataLimitPath(): string {
     const version = this.getVersion();
     if (semver.gte(version, '1.4.0')) {
       // Data limits became a permanent feature in shadowbox v1.4.0.

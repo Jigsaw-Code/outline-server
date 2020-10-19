@@ -35,7 +35,7 @@ export interface ServerConfigJson {
   // We don't serialize the shadowbox version, this is obtained dynamically from node.
   // Public proxy hostname.
   hostname?: string;
-  // Data transfer limit applied to all access keys.
+  // Default data transfer limit applied to all access keys.
   accessKeyDataLimit?: DataLimit;
 }
 

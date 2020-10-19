@@ -78,9 +78,9 @@ export function bindService(
   apiServer.put(`${apiPrefix}/name`, service.renameServer.bind(service));
   apiServer.get(`${apiPrefix}/server`, service.getServer.bind(service));
   apiServer.put(
-      `${apiPrefix}/server/access-key-data-limit`, service.setAccessKeyDataLimit.bind(service));
+      `${apiPrefix}/server/access-key-data-limit`, service.setDefaultDataLimit.bind(service));
   apiServer.del(
-      `${apiPrefix}/server/access-key-data-limit`, service.removeAccessKeyDataLimit.bind(service));
+      `${apiPrefix}/server/access-key-data-limit`, service.disableDataLimits.bind(service));
   apiServer.put(
       `${apiPrefix}/server/hostname-for-access-keys`,
       service.setHostnameForAccessKeys.bind(service));
@@ -159,7 +159,7 @@ export class ShadowsocksManagerService {
       metricsEnabled: this.serverConfig.data().metricsEnabled || false,
       createdTimestampMs: this.serverConfig.data().createdTimestampMs,
       version,
-      accessKeyDataLimit: this.serverConfig.data().accessKeyDataLimit,
+      defaultDataLimit: this.serverConfig.data().accessKeyDataLimit,
       portForNewAccessKeys: this.serverConfig.data().portForNewAccessKeys,
       hostnameForAccessKeys: this.serverConfig.data().hostname
     });
@@ -299,9 +299,9 @@ export class ShadowsocksManagerService {
     }
   }
 
-  public async setAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
+  public async setDefaultDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      logging.debug(`setAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
+      logging.debug(`setDefaultDataLimit request ${JSON.stringify(req.params)}`);
       const limit = req.params.limit as DataLimit;
       if (!limit) {
         return next(new restifyErrors.MissingParameterError(
@@ -310,24 +310,24 @@ export class ShadowsocksManagerService {
         return next(new restifyErrors.InvalidArgumentError(
             {statusCode: 400}, '`limit` must be an integer'));
       }
-      this.accessKeys.setAccessKeyDataLimit(limit);
+      this.accessKeys.setDefaultDataLimit(limit);
       this.serverConfig.data().accessKeyDataLimit = limit;
       this.serverConfig.write();
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {
       logging.error(error);
-      if (error instanceof errors.InvalidAccessKeyDataLimit) {
+      if (error instanceof errors.InvalidDefaultDataLimit) {
         return next(new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message));
       }
       return next(new restifyErrors.InternalServerError());
     }
   }
 
-  public async removeAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
+  public async disableDataLimits(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      logging.debug(`removeAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
-      await this.accessKeys.removeAccessKeyDataLimit();
+      logging.debug(`disableDataLimits request ${JSON.stringify(req.params)}`);
+      await this.accessKeys.disableDataLimits();
       delete this.serverConfig.data().accessKeyDataLimit;
       this.serverConfig.write();
       res.send(HttpSuccess.NO_CONTENT);

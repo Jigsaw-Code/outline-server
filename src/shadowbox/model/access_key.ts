@@ -62,7 +62,11 @@ export interface AccessKeyRepository {
   // Gets the metrics id for a given Access Key.
   getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined;
   // Sets a data transfer limit for all access keys.
-  setAccessKeyDataLimit(limit: DataLimit): Promise<void>;
+  setDefaultDataLimit(limit: DataLimit): Promise<void>;
   // Removes the access key data transfer limit.
-  removeAccessKeyDataLimit(): Promise<void>;
+  disableDataLimits(): Promise<void>;
+  // Sets access key `id` to use either the given per-key limit, or sets it to the default limit.
+  // DataLimit can't hold an infinite value since there is no representation of infinity in JSON.
+  // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON
+  // setAccessKeyDataLimit(id: AccessKeyId, limit: DataLimit)
 }
