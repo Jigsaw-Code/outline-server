@@ -38,15 +38,37 @@ const DIGITALOCEAN_FLAG_MAPPING: {[cityId: string]: string} = {
   nyc: `${FLAG_IMAGE_DIR}/us.png`,
 };
 
+/**
+ * A web component that guides a user through the process of creating an Outline
+ * server on DigitalOcean.
+ *
+ * Applications must call {@link start} to begin the server creation flow. The flow
+ * is asynchronous and events will be fired on successful server creation or user
+ * cancellation.
+ */
 @customElement('digitalocean-create-server-app')
 export class DigitalOceanCreateServerApp extends LitElement {
+  /**
+   * Event fired upon successful completion of the DigitalOcean create server flow.
+   * Note that even though the event contains the newly created server, the server
+   * may still be in the process of initializing.
+   *
+   * @event DigitalOceanCreateServerApp#server-created
+   * @property {ManagedServer} server - The newly created ManagedServer domain model.
+   */
   public static EVENT_SERVER_CREATED = 'server-created';
+
+  /**
+   * Event fired when the user cancels the create server flow.
+   *
+   * @event DigitalOceanCreateServerApp#server-create-cancelled
+   */
   public static EVENT_SERVER_CREATE_CANCELLED = 'server-create-cancelled';
 
   @property({type: Function}) localize: Function;
-  @property({type: String}) currentPage = 'loading';
   @property({type: Object}) notificationManager: OutlineNotificationManager;
 
+  private currentPage = 'loading';
   private regionPicker: OutlineRegionPicker;
   private serverRepository: DigitaloceanServerRepository;
 
@@ -146,6 +168,11 @@ export class DigitalOceanCreateServerApp extends LitElement {
     </iron-pages>`;
   }
 
+  /**
+   * Starts the DigitalOcean create server flow.
+   *
+   * @param digitalOceanServerRepository The DigitalOcean account on which to create the Outline server.
+   */
   async start(digitalOceanServerRepository: DigitaloceanServerRepository): Promise<void> {
     this.regionPicker =
         this.shadowRoot.querySelector('outline-region-picker-step') as OutlineRegionPicker;
