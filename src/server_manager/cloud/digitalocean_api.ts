@@ -22,48 +22,24 @@ export interface DigitalOceanDropletSpecification {
 // See definition and example at
 // https://developers.digitalocean.com/documentation/v2/#retrieve-an-existing-droplet-by-id
 export type DropletInfo = Readonly<{
-  id: number;
-  status: 'new'|'active';
-  tags: string[];
-  region: {readonly slug: string;};
-  size: Readonly<{
-    transfer: number;
-    price_monthly: number;
-  }>;
-  networks: Readonly<{
-    v4: ReadonlyArray<Readonly<{
-      type: string;
-      ip_address: string;
-    }>>;
-  }>;
+  id: number; status: 'new' | 'active'; tags: string[]; region: {readonly slug: string;};
+  size: Readonly<{transfer: number; price_monthly: number;}>;
+  networks: Readonly<{v4: ReadonlyArray<Readonly<{type: string; ip_address: string;}>>;}>;
 }>;
 
 // Reference:
 // https://developers.digitalocean.com/documentation/v2/#get-user-information
-export type Account = Readonly<{
-  email: string;
-  uuid: string;
-  email_verified: boolean;
-  status: string;
-}>;
+export type Account =
+    Readonly<{email: string; uuid: string; email_verified: boolean; status: string;}>;
 
 // Reference:
 // https://developers.digitalocean.com/documentation/v2/#regions
-export type RegionInfo = Readonly<{
-  slug: string;
-  name: string;
-  sizes: string[];
-  available: boolean;
-  features: string[];
-}>;
+export type RegionInfo = Readonly<
+    {slug: string; name: string; sizes: string[]; available: boolean; features: string[];}>;
 
 // Reference:
 // https://developers.digitalocean.com/documentation/v2/#statuses
-type DigitalOceanError = Readonly<{
-  id: string;
-  message: string;
-  request_id?:string;
-}>;
+type DigitalOceanError = Readonly<{id: string; message: string; request_id?: string;}>;
 
 export class HttpError extends Error {
   constructor(private statusCode: number, message?: string) {

@@ -15,16 +15,15 @@
 */
 import {css, customElement, html, LitElement, property} from 'lit-element';
 
+import {HttpError} from '../../cloud/digitalocean_api';
 import {makePublicEvent} from '../../infrastructure/dom_events';
+import {sleep} from '../../infrastructure/sleep';
 import {ManagedServerRepository, RegionId} from '../../model/server';
 import * as digitalocean_server from '../digitalocean_server';
 import {DigitaloceanServerRepository} from '../digitalocean_server';
+import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 import {Location, OutlineRegionPicker} from '../ui_components/outline-region-picker-step';
-import {HttpError} from "../../cloud/digitalocean_api";
-import {COMMON_STYLES} from "../ui_components/cloud-install-styles";
-
-import {sleep} from "../../infrastructure/sleep";
 
 // DigitalOcean mapping of regions to flags
 const FLAG_IMAGE_DIR = 'images/flags';
@@ -98,7 +97,8 @@ export class DigitalOceanCreateServerApp extends LitElement {
       /* Mirror images */
       :host(:dir(rtl)) .mirror {
         transform: scaleX(-1);
-      }`];
+      }`
+    ];
   }
 
   render() {
@@ -147,7 +147,8 @@ export class DigitalOceanCreateServerApp extends LitElement {
   }
 
   async start(digitalOceanServerRepository: DigitaloceanServerRepository): Promise<void> {
-    this.regionPicker = this.shadowRoot.querySelector('outline-region-picker-step') as OutlineRegionPicker;
+    this.regionPicker =
+        this.shadowRoot.querySelector('outline-region-picker-step') as OutlineRegionPicker;
     this.serverRepository = digitalOceanServerRepository;
 
     this.reset();

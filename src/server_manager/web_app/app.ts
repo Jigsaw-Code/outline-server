@@ -1029,22 +1029,23 @@ export class App {
     const confirmationTitle = this.appRoot.localize('confirmation-server-destroy-title');
     const confirmationText = this.appRoot.localize('confirmation-server-destroy');
     const confirmationButton = this.appRoot.localize('destroy');
-    this.appRoot.getConfirmation(confirmationTitle, confirmationText, confirmationButton, async () => {
-      try {
-        await serverToDelete.getHost().delete();
-        this.removeServerFromDisplay(this.appRoot.selectedServer);
-        this.appRoot.selectedServer = null;
-        this.selectedServer = null;
-        this.showIntro();
-        this.notificationManager.showNotification('notification-server-destroyed');
-      } catch (error) {
-        // Don't show a toast on the login screen.
-        if (error instanceof digitalocean_api.HttpError && error.getStatusCode() !== 401) {
-          console.error(`Failed destroy server: ${error}`);
-          this.notificationManager.showError('error-server-destroy');
-        }
-      }
-    });
+    this.appRoot.getConfirmation(
+        confirmationTitle, confirmationText, confirmationButton, async () => {
+          try {
+            await serverToDelete.getHost().delete();
+            this.removeServerFromDisplay(this.appRoot.selectedServer);
+            this.appRoot.selectedServer = null;
+            this.selectedServer = null;
+            this.showIntro();
+            this.notificationManager.showNotification('notification-server-destroyed');
+          } catch (error) {
+            // Don't show a toast on the login screen.
+            if (error instanceof digitalocean_api.HttpError && error.getStatusCode() !== 401) {
+              console.error(`Failed destroy server: ${error}`);
+              this.notificationManager.showError('error-server-destroy');
+            }
+          }
+        });
   }
 
   private forgetSelectedServer() {

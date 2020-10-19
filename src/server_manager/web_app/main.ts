@@ -107,8 +107,8 @@ document.addEventListener('WebComponentsReady', () => {
   const domainEvents = new EventEmitter();
   // Set DigitalOcean server repository parameters.
   const digitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) => {
-    return new digitalocean_server.DigitaloceanServerRepository(domainEvents,
-        session, shadowboxImage, metricsUrl, getSentryApiUrl(sentryDsn), debugMode);
+    return new digitalocean_server.DigitaloceanServerRepository(
+        domainEvents, session, shadowboxImage, metricsUrl, getSentryApiUrl(sentryDsn), debugMode);
   };
 
   // Create and start the app.

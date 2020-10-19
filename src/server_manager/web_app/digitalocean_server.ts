@@ -348,8 +348,8 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
 
   constructor(
       private domainEvents: EventEmitter, private digitalOcean: DigitalOceanSession,
-      private image: string, private metricsUrl: string,
-      private sentryApiUrl: string|undefined, private debugMode: boolean) {}
+      private image: string, private metricsUrl: string, private sentryApiUrl: string|undefined,
+      private debugMode: boolean) {}
 
   // Return a map of regions that are available and support our target machine size.
   async getRegionMap(): Promise<Readonly<server.RegionMap>> {
@@ -391,13 +391,13 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
     if (this.debugMode) {
       // Strip carriage returns, which produce weird blank lines when pasted into a terminal.
       console.debug(
-          `private key for SSH access to new droplet:\n${
-              keyPair.private.replace(/\r/g, '')}\n\n` +
+          `private key for SSH access to new droplet:\n${keyPair.private.replace(/\r/g, '')}\n\n` +
           'Use "ssh -i keyfile root@[ip_address]" to connect to the machine');
     }
 
     try {
-      const droplet = await this.digitalOcean.createDroplet(name, region, keyPair.public, dropletSpec);
+      const droplet =
+          await this.digitalOcean.createDroplet(name, region, keyPair.public, dropletSpec);
       const server = new DigitaloceanServer(this.digitalOcean, droplet.droplet);
       this.servers.push(server);
       return server;
@@ -413,8 +413,7 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
 
     try {
       const droplets = await this.digitalOcean.getDropletsByTag(SHADOWBOX_TAG);
-      this.servers = droplets.map((droplet) =>
-          new DigitaloceanServer(this.digitalOcean, droplet));
+      this.servers = droplets.map((droplet) => new DigitaloceanServer(this.digitalOcean, droplet));
       return this.servers;
     } catch (error) {
       this.processError(error);

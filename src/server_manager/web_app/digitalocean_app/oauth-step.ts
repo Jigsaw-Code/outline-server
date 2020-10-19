@@ -13,12 +13,13 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import {css, customElement, html, LitElement, property} from 'lit-element';
-
 import '@polymer/iron-pages/iron-pages.js';
 import '@polymer/paper-button/paper-button.js';
 import '../ui_components/outline-step-view.js';
-import {COMMON_STYLES} from "../ui_components/cloud-install-styles";
+
+import {css, customElement, html, LitElement, property} from 'lit-element';
+
+import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 
 @customElement('outline-do-oauth-step')
 export class DigitalOceanOAuth extends LitElement {
@@ -77,7 +78,8 @@ export class DigitalOceanOAuth extends LitElement {
       /* Mirror images */
       :host(:dir(rtl)) .mirror {
         transform: scaleX(-1);
-      }`];
+      }`
+    ];
   }
 
   render() {
