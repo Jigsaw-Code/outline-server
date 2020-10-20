@@ -171,7 +171,8 @@ export class DigitalOceanCreateServerApp extends LitElement {
   /**
    * Starts the DigitalOcean create server flow.
    *
-   * @param digitalOceanServerRepository The DigitalOcean account on which to create the Outline server.
+   * @param digitalOceanServerRepository The DigitalOcean account on which to create the Outline
+   *     server.
    */
   async start(digitalOceanServerRepository: DigitaloceanServerRepository): Promise<void> {
     this.regionPicker =
