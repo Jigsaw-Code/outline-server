@@ -98,6 +98,7 @@ export function bindService(
   apiServer.del(`${apiPrefix}/access-keys/:id`, service.removeAccessKey.bind(service));
   apiServer.put(`${apiPrefix}/access-keys/:id/name`, service.renameAccessKey.bind(service));
   apiServer.put(`${apiPrefix}/access-keys/:id/data-limit`, service.setAccessKeyDataLimit.bind(service));
+  apiServer.del(`${apiPrefix}/access-keys/:id/data-limit`, service.removeAccessKeyDataLimit.bind(service));
 
   apiServer.get(`${apiPrefix}/metrics/transfer`, service.getDataUsage.bind(service));
   apiServer.get(`${apiPrefix}/metrics/enabled`, service.getShareMetrics.bind(service));
@@ -322,7 +323,23 @@ export class ShadowsocksManagerService {
       logging.debug(`setAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
       const accessKeyId = validateAccessKeyId(req.params.id);
       const limit = validateDataLimit(req.params.limit);
-      this.accessKeys.setAccessKeyDataLimit(accessKeyId, limit);
+      await this.accessKeys.setAccessKeyDataLimit(accessKeyId, limit);
+      res.send(204);
+      return next();
+    } catch(error) {
+      logging.error(error);
+      if (error instanceof errors.AccessKeyNotFound) {
+        return next(new restifyErrors.NotFoundError(error.message));
+      }
+      return next(error);
+    }
+  }
+
+  public async removeAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
+    try {
+      logging.debug(`setAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
+      const accessKeyId = validateAccessKeyId(req.params.id);
+      await this.accessKeys.removeAccessKeyDataLimit(accessKeyId);
       res.send(204);
       return next();
     } catch(error) {
