@@ -68,7 +68,7 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyJson): AccessKe
 }
 
 function accessKeySerializedJson(accessKey: AccessKey): AccessKeyJson {
-  let json: AccessKeyJson = {
+  const json: AccessKeyJson = {
     id: accessKey.id,
     metricsId: accessKey.metricsId,
     name: accessKey.name,

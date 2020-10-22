@@ -552,7 +552,7 @@ describe('ShadowsocksManagerService', () => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
       const keyId = (await repo.createNewAccessKey()).id;
-      let limit: DataLimit = {bytes: -1};
+      const limit: DataLimit = {bytes: -1};
       service.setAccessKeyDataLimit({params: {id: keyId, limit}}, {send: () => {}}, (error) => {
         expect(error.statusCode).toEqual(400);
         responseProcessed = true;
@@ -564,7 +564,7 @@ describe('ShadowsocksManagerService', () => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
       await repo.createNewAccessKey();
-      let limit: DataLimit = {bytes: 1000};
+      const limit: DataLimit = {bytes: 1000};
       service.setAccessKeyDataLimit({params: {id: "not an id", limit}}, {send: () => {}}, (error) => {
         expect(error.statusCode).toEqual(404);
         responseProcessed = true;
