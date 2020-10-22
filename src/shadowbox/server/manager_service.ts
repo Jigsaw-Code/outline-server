@@ -29,7 +29,7 @@ import {SharedMetricsPublisher} from './shared_metrics';
 
 // Creates a AccessKey response.
 function accessKeyResponseJson(accessKey: AccessKey) {
-  let json: Record<string, string|number|DataLimit> = {
+  const json: Record<string, string|number|DataLimit> = {
     // The unique identifier of this access key.
     id: accessKey.id,
     // Admin-controlled, editable name for this access key.
