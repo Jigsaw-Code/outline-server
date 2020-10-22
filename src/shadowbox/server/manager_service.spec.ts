@@ -26,7 +26,7 @@ import {SharedMetricsPublisher} from './shared_metrics';
 
 interface ServerInfo {
   name: string;
-  defaultDataLimit?: DataLimit;
+  accessKeyDataLimit?: DataLimit;
 }
 
 const NEW_PORT = 12345;
@@ -78,7 +78,7 @@ describe('ShadowsocksManagerService', () => {
             send: (httpCode, data: ServerInfo) => {
               expect(httpCode).toEqual(200);
               expect(data.name).toEqual('Server');
-              expect(data.defaultDataLimit).toEqual(defaultDataLimit);
+              expect(data.accessKeyDataLimit).toEqual(defaultDataLimit);
               responseProcessed = true;
             }
           },
@@ -592,7 +592,7 @@ describe('ShadowsocksManagerService', () => {
               {params: {}}, {
                 send: (httpCode, data: ServerInfo) => {
                   expect(httpCode).toEqual(200);
-                  expect(data.defaultDataLimit).toEqual(limit);
+                  expect(data.accessKeyDataLimit).toEqual(limit);
                   responseProcessed = true;  // required for afterEach to pass.
                 }
               },
