@@ -573,6 +573,32 @@ describe('ShadowsocksManagerService', () => {
     });
   });
 
+  describe('removeAccessKeyDataLimit', () => {
+    it('removes an access key data limit', async (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+      const key = await repo.createNewAccessKey();
+      key.dataLimit = {bytes: 1000};
+      const res = {send: (httpCode) => {
+        expect(httpCode).toEqual(204);
+        expect(key.dataLimit).toBeFalsy();
+        responseProcessed = true;
+        done();
+      }};
+      service.removeAccessKeyDataLimit({params: {id: key.id}}, res, () => {});
+    });
+    it('returns 404 for a nonexistent key', async (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+      await repo.createNewAccessKey();
+      service.removeAccessKeyDataLimit({params: {id: "not an id"}}, {send: () => {}}, (error) => {
+        expect(error.statusCode).toEqual(404);
+        responseProcessed = true;
+        done();
+      });
+    });
+  });
+
   describe('setDefaultDataLimit', () => {
     it('sets default data limit', async (done) => {
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
@@ -641,7 +667,7 @@ describe('ShadowsocksManagerService', () => {
   });
 
   describe('removeDefaultDataLimit', () => {
-    it('clears access key limit', async (done) => {
+    it('clears default data limit', async (done) => {
       const limit = {bytes: 10000};
       const serverConfig = new InMemoryConfig({'accessKeyDataLimit': limit} as ServerConfigJson);
       const repo = getAccessKeyRepository();
