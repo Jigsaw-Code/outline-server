@@ -44,6 +44,8 @@ export interface AccessKey {
   readonly proxyParams: ProxyParams;
   // Whether the access key has exceeded the data transfer limit.
   readonly isOverDataLimit: boolean;
+  // The key's current data limit.
+  dataLimit?: DataLimit;
 }
 
 export interface AccessKeyRepository {
@@ -64,9 +66,7 @@ export interface AccessKeyRepository {
   // Sets a data transfer limit for all access keys.
   setDefaultDataLimit(limit: DataLimit): Promise<void>;
   // Removes the access key data transfer limit.
-  disableDataLimits(): Promise<void>;
-  // Sets access key `id` to use either the given per-key limit, or sets it to the default limit.
-  // DataLimit can't hold an infinite value since there is no representation of infinity in JSON.
-  // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON
-  // setAccessKeyDataLimit(id: AccessKeyId, limit: DataLimit)
+  removeDefaultDataLimit(): Promise<void>;
+  // Sets access key `id` to use the given custom data limit.
+  setAccessKeyDataLimit(id: AccessKeyId, limit: DataLimit)
 }

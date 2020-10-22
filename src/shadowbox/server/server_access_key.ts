@@ -33,6 +33,7 @@ interface AccessKeyJson {
   password: string;
   port: number;
   encryptionMethod?: string;
+  dataLimit?: DataLimit;
 }
 
 // The configuration file format as json.
@@ -47,11 +48,7 @@ class ServerAccessKey implements AccessKey {
   public isOverDataLimit = false;
   constructor(
       readonly id: AccessKeyId, public name: string, public metricsId: AccessKeyMetricsId,
-      readonly proxyParams: ProxyParams) {}
-}
-
-function isValidDefaultDataLimit(limit: DataLimit): boolean {
-  return limit && limit.bytes >= 0;
+      readonly proxyParams: ProxyParams, public dataLimit?: DataLimit) {}
 }
 
 // Generates a random password for Shadowsocks access keys.
@@ -70,8 +67,8 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyJson): AccessKe
       accessKeyJson.id, accessKeyJson.name, accessKeyJson.metricsId, proxyParams);
 }
 
-function makeAccessKeyJson(accessKey: AccessKey): AccessKeyJson {
-  return {
+function accessKeySerializedJson(accessKey: AccessKey): AccessKeyJson {
+  let json: AccessKeyJson = {
     id: accessKey.id,
     metricsId: accessKey.metricsId,
     name: accessKey.name,
@@ -79,6 +76,10 @@ function makeAccessKeyJson(accessKey: AccessKey): AccessKeyJson {
     port: accessKey.proxyParams.portNumber,
     encryptionMethod: accessKey.proxyParams.encryptionMethod
   };
+  if (accessKey.dataLimit) {
+    json.dataLimit = accessKey.dataLimit;
+  }
+  return json;
 }
 
 // AccessKeyRepository that keeps its state in a config file and uses ShadowsocksServer
@@ -184,15 +185,22 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     return this.defaultDataLimit;
   }
 
+  setAccessKeyDataLimit(id: AccessKeyId, limit: DataLimit): Promise<void> {
+    this.getAccessKey(id).dataLimit = limit;
+    return this.enforceAccessKeyDataLimits();
+  }
+
+  removeAccessKeyDataLimit(id: AccessKeyId): Promise<void> {
+    delete this.getAccessKey(id).dataLimit;
+    return this.enforceAccessKeyDataLimits();
+  }
+
   setDefaultDataLimit(limit: DataLimit): Promise<void> {
-    if (!isValidDefaultDataLimit(limit)) {
-      throw new errors.InvalidDefaultDataLimit();
-    }
     this.defaultDataLimit = limit;
     return this.enforceAccessKeyDataLimits();
   }
 
-  disableDataLimits(): Promise<void> {
+  removeDefaultDataLimit(): Promise<void> {
     delete this.defaultDataLimit;
     return this.enforceAccessKeyDataLimits();
   }
@@ -212,8 +220,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     for (const accessKey of this.accessKeys) {
       const usageBytes = bytesTransferredById[accessKey.id] || 0;
       const wasOverDataLimit = accessKey.isOverDataLimit;
-      accessKey.isOverDataLimit =
-          this.defaultDataLimit ? usageBytes > this.defaultDataLimit.bytes : false;
+      accessKey.isOverDataLimit = usageBytes > (accessKey.dataLimit || this.defaultDataLimit)?.bytes || false;
       limitStatusChanged = accessKey.isOverDataLimit !== wasOverDataLimit || limitStatusChanged;
     }
     if (limitStatusChanged) {
@@ -238,7 +245,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private saveAccessKeys() {
-    this.keyConfig.data().accessKeys = this.accessKeys.map(key => makeAccessKeyJson(key));
+    this.keyConfig.data().accessKeys = this.accessKeys.map(key => accessKeySerializedJson(key));
     this.keyConfig.write();
   }
 
