@@ -28,6 +28,7 @@ import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
 import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
+import {OutlineIntroStep} from "./ui_components/outline-intro-step";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -151,9 +152,19 @@ export class App {
       private digitalOceanTokenManager: TokenManager) {
     appRoot.setAttribute('outline-version', this.version);
 
-    appRoot.addEventListener('ConnectToDigitalOcean', (event: CustomEvent) => {
-      this.connectToDigitalOcean();
-    });
+    appRoot.addEventListener(
+        OutlineIntroStep.EVENT_AWS_CARD_TAPPED,
+        (event: CustomEvent) => this.appRoot.handleManualServerSelected('aws'));
+    appRoot.addEventListener(
+        OutlineIntroStep.EVENT_DIGITALOCEAN_CARD_TAPPED,
+        (event: CustomEvent) => this.connectToDigitalOcean());
+    appRoot.addEventListener(
+        OutlineIntroStep.EVENT_GCP_TAPPED,
+        (event: CustomEvent) => this.appRoot.handleManualServerSelected('gcp'));
+    appRoot.addEventListener(
+        OutlineIntroStep.EVENT_GENERIC_CLOUD_PROVIDER_CARD_TAPPED,
+        (event: CustomEvent) => this.appRoot.handleManualServerSelected('generic'));
+
     appRoot.addEventListener('SignOutRequested', (event: CustomEvent) => {
       this.clearCredentialsAndShowIntro();
     });

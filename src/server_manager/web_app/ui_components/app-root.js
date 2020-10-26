@@ -31,7 +31,7 @@ import './outline-about-dialog.js';
 import './outline-do-oauth-step.js';
 import './outline-feedback-dialog.js';
 import './outline-survey-dialog.js';
-import './outline-intro-step.js';
+import './outline-intro-step';
 import './outline-language-picker.js';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
@@ -406,7 +406,7 @@ export class AppRoot extends mixinBehaviors
         <app-header-layout>
           <div class="app-container">
             <iron-pages attr-for-selected="id" selected="{{ currentPage }}">
-              <outline-intro-step id="intro" is-signed-in-to-digital-ocean="{{isSignedInToDigitalOcean}}" digital-ocean-email="{{adminEmail}}" localize="[[localize]]"></outline-intro-step>
+              <outline-intro-step id="intro" digital-ocean-email="{{adminEmail}}" localize="[[localize]]"></outline-intro-step>
               <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
               <outline-region-picker-step id="regionPicker" localize="[[localize]]"></outline-region-picker-step>
@@ -542,10 +542,6 @@ export class AppRoot extends mixinBehaviors
     this.shouldShowSideBar = false;
 
     this.addEventListener('RegionSelected', this.handleRegionSelected);
-    this.addEventListener(
-        'SetUpGenericCloudProviderRequested', this.handleSetUpGenericCloudProviderRequested);
-    this.addEventListener('SetUpAwsRequested', this.handleSetUpAwsRequested);
-    this.addEventListener('SetUpGcpRequested', this.handleSetUpGcpRequested);
     this.addEventListener('ManualServerEntryCancelled', this.handleManualCancelled);
   }
 
@@ -631,18 +627,6 @@ export class AppRoot extends mixinBehaviors
     this.fire('SetUpServerRequested', {
       regionId: e.detail.selectedRegionId,
     });
-  }
-
-  handleSetUpGenericCloudProviderRequested() {
-    this.handleManualServerSelected('generic');
-  }
-
-  handleSetUpAwsRequested() {
-    this.handleManualServerSelected('aws');
-  }
-
-  handleSetUpGcpRequested() {
-    this.handleManualServerSelected('gcp');
   }
 
   handleManualServerSelected(/** @type {'generic'|'aws'|'gcp'} */ cloudProvider) {
