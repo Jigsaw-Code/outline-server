@@ -18,7 +18,7 @@ import '@polymer/paper-button/paper-button.js';
 import './outline-step-view.js';
 
 import {css, customElement, html, LitElement, property} from 'lit-element';
-import {COMMON_STYLES} from "./cloud-install-styles";
+import {COMMON_STYLES} from './cloud-install-styles';
 
 @customElement('outline-intro-step')
 export class OutlineIntroStep extends LitElement {
@@ -45,13 +45,15 @@ export class OutlineIntroStep extends LitElement {
    *
    * @event SetUpGenericCloudProviderRequested
    */
-  public static readonly EVENT_GENERIC_CLOUD_PROVIDER_CARD_TAPPED = 'SetUpGenericCloudProviderRequested';
+  public static readonly EVENT_GENERIC_CLOUD_PROVIDER_CARD_TAPPED =
+      'SetUpGenericCloudProviderRequested';
 
   @property({type: Function}) localize: Function;
   @property({type: String}) digitalOceanEmail: string;
 
   static get styles() {
-    return [COMMON_STYLES, css`
+    return [
+      COMMON_STYLES, css`
       :host {
         text-align: center;
         --manual-server-green: #00bfa5;
@@ -197,7 +199,8 @@ export class OutlineIntroStep extends LitElement {
       :host(:dir(rtl)) #gcp .description ul {
         list-style-image: url("../images/check_blue_rtl.svg");
       }
-    `];
+    `
+    ];
   }
 
   render() {
@@ -209,32 +212,32 @@ export class OutlineIntroStep extends LitElement {
         <div class="container">
           <div id="digital-ocean" class="card" @tap="${this.connectToDigitalOceanTapped}">
             <div class="card-header">
-              ${this.digitalOceanEmail ?
-                html`<div class="email">${this.digitalOceanEmail}</div>`:        
-                html`<div class="tag">${this.localize('setup-recommended')}</div>`
-              }
+              ${
+        this.digitalOceanEmail ? html`<div class="email">${this.digitalOceanEmail}</div>` :
+                                 html`<div class="tag">${this.localize('setup-recommended')}</div>`}
               <img src="images/do_white_logo.svg">
             </div>
             <div class="card-title">DigitalOcean</div>
             <div class="card-body">
               <div class="description">
-                ${this.digitalOceanEmail ?
-                  html`
+                ${
+        this.digitalOceanEmail ? html`
                     <p>
                       ${this.localize('setup-do-create')}
                     </p>` :
-                  html`
+                                 html`
                     <ul>
                       <li>${this.localize('setup-do-easiest')}</li>
                       <li>${this.localize('setup-do-cost')}</li>
                       <li>${this.localize('setup-do-data')}</li>
                       <li>${this.localize('setup-do-cancel')}</li>
-                    </ul>` 
-                }
+                    </ul>`}
               </div>
             </div>
             <div class="card-footer">
-              <paper-button class="primary">${this.digitalOceanEmail ? this.localize('setup-create'): this.localize('setup-action')}</paper-button>
+              <paper-button class="primary">${
+        this.digitalOceanEmail ? this.localize('setup-create') :
+                                 this.localize('setup-action')}</paper-button>
             </div>
           </div>
   
@@ -254,7 +257,8 @@ export class OutlineIntroStep extends LitElement {
               </div>
             </div>
             <div class="card-footer">
-              <paper-button @tap="${this.setUpGcpTapped}" class="primary">${this.localize('setup-action')}</paper-button>
+              <paper-button @tap="${this.setUpGcpTapped}" class="primary">${
+        this.localize('setup-action')}</paper-button>
             </div>
           </div>
   
@@ -274,7 +278,8 @@ export class OutlineIntroStep extends LitElement {
               </div>
             </div>
             <div class="card-footer">
-              <paper-button @tap="${this.setUpAwsTapped}" class="primary">${this.localize('setup-action')}</paper-button>
+              <paper-button @tap="${this.setUpAwsTapped}" class="primary">${
+        this.localize('setup-action')}</paper-button>
             </div>
           </div>
   
@@ -293,7 +298,8 @@ export class OutlineIntroStep extends LitElement {
               </div>
             </div>
             <div class="card-footer">
-              <paper-button @tap="${this.setUpGenericCloudProviderTapped}">${this.localize('setup-action')}</paper-button>
+              <paper-button @tap="${this.setUpGenericCloudProviderTapped}">${
+        this.localize('setup-action')}</paper-button>
             </div>
           </div>
         </div>
@@ -314,7 +320,8 @@ export class OutlineIntroStep extends LitElement {
   }
 
   private setUpGenericCloudProviderTapped() {
-    this.dispatchEvent(this.makePublicEvent(OutlineIntroStep.EVENT_GENERIC_CLOUD_PROVIDER_CARD_TAPPED));
+    this.dispatchEvent(
+        this.makePublicEvent(OutlineIntroStep.EVENT_GENERIC_CLOUD_PROVIDER_CARD_TAPPED));
   }
 
   private makePublicEvent(name: string) {
