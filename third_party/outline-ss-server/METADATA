@@ -8,9 +8,9 @@ third_party {
   }
   url {
     type: ARCHIVE
-    value: "https://github.com/Jigsaw-Code/outline-ss-server/releases/tag/v1.2.1"
+    value: "https://github.com/Jigsaw-Code/outline-ss-server/releases/tag/v1.3.1"
   }
   // Keep in sync with the Dockerfile label
-  version: "1.2.1"
-  last_upgrade_date { year: 2020 month: 8 day: 28 }
+  version: "1.3.1"
+  last_upgrade_date { year: 2020 month: 10 day: 27 }
 }
