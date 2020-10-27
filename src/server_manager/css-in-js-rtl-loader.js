@@ -25,13 +25,15 @@ function generateRtlCss(css) {
       // rtlcss generates [dir] selectors for rules unaffected by directionality; ignore them.
       .replace(/\[dir\]/g, '');
 }
-// This is a Webpack loader that searches for <style> blocks and edits the CSS to support RTL
-// in a Polymer element.
+// This is a Webpack loader that searches for <style> and LitElement `css` blocks and edits the CSS
+// to support RTL in a Polymer element.
 module.exports = function loader(content, map, meta) {
   const callback = this.async();
-  const styleRe = RegExp(/(<style[^>]*>)(\s*[^<\s](.*\n)*\s*)(<\/style>)/gm);
-  const newContent =
-      content.replace(styleRe, (match, g1, g2, g3, g4) => `${g1}${generateRtlCss(g2)}${g4}`);
-  callback(null, newContent);
+  const styleTagRe = RegExp(/(<style[^>]*>)(\s*[^<\s](.*\n)*\s*)(<\/style>)/gm);
+  const cssBacktickRe = RegExp(/(css`)([^`]*)(`)/gm);
+  const result = content
+      .replace(styleTagRe, (match, g1, g2, g3, g4) => `${g1}${generateRtlCss(g2)}${g4}`)
+      .replace(cssBacktickRe, (match, g1, g2, g3) => `${g1}${generateRtlCss(g2)}${g3}`);
+  callback(null, result);
   return;
 }
