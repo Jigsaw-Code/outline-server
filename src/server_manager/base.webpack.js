@@ -19,7 +19,7 @@ const webpack = require('webpack');
 
 const OUTPUT_BASE = path.resolve(__dirname, '../../build/server_manager/web_app/static');
 
-const GENERATE_CSS_RTL_LOADER = path.resolve(__dirname, 'css-in-js-rtl-loader.js');
+const GENERATE_CSS_RTL_LOADER = path.resolve(__dirname, 'css-rtl-loader.js');
 
 exports.makeConfig = (options) => {
   return {

@@ -26,7 +26,7 @@ function generateRtlCss(css) {
       .replace(/\[dir\]/g, '');
 }
 // This is a Webpack loader that searches for <style> and LitElement `css` blocks and edits the CSS
-// to support RTL in a Polymer element.
+// to support RTL in a Polymer or LitElement element.
 module.exports = function loader(content, map, meta) {
   const callback = this.async();
   const styleTagRe = RegExp(/(<style[^>]*>)(\s*[^<\s](.*\n)*\s*)(<\/style>)/gm);
