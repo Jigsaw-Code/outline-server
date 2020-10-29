@@ -18,6 +18,7 @@ import '../ui_components/outline-feedback-dialog';
 import '../ui_components/outline-share-dialog';
 import '../ui_components/outline-sort-span';
 import '../ui_components/outline-survey-dialog';
+import '../ui_components/outline-key-settings';
 
 import IntlMessageFormat from 'intl-messageformat';
 import {css, customElement, html, LitElement, property} from 'lit-element';
@@ -92,6 +93,12 @@ export class TestApp extends LitElement {
     return html`
       <h1>Outline Manager Components Gallery</h1>
       ${this.pageControls}
+
+      <div class="widget">
+        <h2>outline-key-settings</h2>
+        <button @tap=${() => this.select('outline-key-settings').open()}>Open Dialog</button>
+        <outline-key-settings dir=${this.dir}></outline-key-settings>
+      </div>
       
       <div class="widget">
         <h2>outline-about-dialog</h2>
