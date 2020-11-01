@@ -17,7 +17,7 @@ const rtl = require('postcss-rtl');
 
 const CSS_PROCESSOR = postcss([rtl()]);
 
-function generateRtlCss(css) {
+function generatePolymerRtlCss(css) {
   return CSS_PROCESSOR.process(css).css
       // Replace the generated selectors with Shadow DOM selectors for Polymer compatibility.
       .replace(/\[dir=rtl\]/g, ':host(:dir(rtl))')
@@ -25,6 +25,14 @@ function generateRtlCss(css) {
       // rtlcss generates [dir] selectors for rules unaffected by directionality; ignore them.
       .replace(/\[dir\]/g, '');
 }
+
+function generateLitElementRtlCss(css) {
+  return CSS_PROCESSOR.process(css).css
+      .replace(/\[dir=rtl\]/g, ':host([dir=rtl])')
+      .replace(/\[dir=ltr\]/g, ':host([dir=ltr])')
+      .replace(/\[dir\]/g, ':host([dir])');
+}
+
 // This is a Webpack loader that searches for <style> and LitElement `css` blocks and edits the CSS
 // to support RTL in a Polymer or LitElement element.
 module.exports = function loader(content, map, meta) {
@@ -32,8 +40,8 @@ module.exports = function loader(content, map, meta) {
   const styleTagRe = RegExp(/(<style[^>]*>)(\s*[^<\s](.*\n)*\s*)(<\/style>)/gm);
   const cssBacktickRe = RegExp(/(css`)([^`]*)(`)/gm);
   const result = content
-      .replace(styleTagRe, (match, g1, g2, g3, g4) => `${g1}${generateRtlCss(g2)}${g4}`)
-      .replace(cssBacktickRe, (match, g1, g2, g3) => `${g1}${generateRtlCss(g2)}${g3}`);
+      .replace(styleTagRe, (match, g1, g2, g3, g4) => `${g1}${generatePolymerRtlCss(g2)}${g4}`)
+      .replace(cssBacktickRe, (match, g1, g2, g3) => `${g1}${generateLitElementRtlCss(g2)}${g3}`);
   callback(null, result);
   return;
 }
