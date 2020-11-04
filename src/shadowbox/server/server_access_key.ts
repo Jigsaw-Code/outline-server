@@ -187,11 +187,13 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
 
   setAccessKeyDataLimit(id: AccessKeyId, limit: DataLimit): Promise<void> {
     this.getAccessKey(id).dataLimit = limit;
+    this.saveAccessKeys();
     return this.enforceAccessKeyDataLimits();
   }
 
   removeAccessKeyDataLimit(id: AccessKeyId): Promise<void> {
     delete this.getAccessKey(id).dataLimit;
+    this.saveAccessKeys();
     return this.enforceAccessKeyDataLimits();
   }
 

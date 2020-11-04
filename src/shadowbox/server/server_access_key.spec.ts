@@ -167,11 +167,13 @@ describe('ServerAccessKeyRepository', () => {
   
   it('setAccessKeyDataLimit can set a custom data limit', async(done) => {
     const server = new FakeShadowsocksServer();
-    const repo = new RepoBuilder().shadowsocksServer(server).build();
+    const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
+    const repo = new RepoBuilder().shadowsocksServer(server).keyConfig(config).build();
     const key = await repo.createNewAccessKey();
     const limit = {bytes: 5000};
     await expectNoAsyncThrow(repo.setAccessKeyDataLimit.bind(repo, key.id, {bytes: 5000}));
-    expect(key.dataLimit).toEqual(limit); 
+    expect(key.dataLimit).toEqual(limit);
+    expect(config.mostRecentWrite.accessKeys[0].dataLimit?.bytes).toEqual(limit.bytes);
     done();
   });
   
@@ -219,10 +221,13 @@ describe('ServerAccessKeyRepository', () => {
   
   it('removeAccessKeyDataLimit can remove a custom data limit', async(done) => {
     const server = new FakeShadowsocksServer();
-    const repo = new RepoBuilder().shadowsocksServer(server).build();
+    const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
+    const repo = new RepoBuilder().shadowsocksServer(server).keyConfig(config).build();
     const key = await repo.createNewAccessKey();
+    await repo.setAccessKeyDataLimit(key.id, {bytes: 1});
     await expectNoAsyncThrow(repo.removeAccessKeyDataLimit.bind(repo, key.id));
     expect(key.dataLimit).toBeFalsy();
+    expect(config.mostRecentWrite.accessKeys[0].dataLimit).not.toBeDefined();
     done();
   });
   
