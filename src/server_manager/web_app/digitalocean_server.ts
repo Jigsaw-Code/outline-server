@@ -84,6 +84,10 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
     return CloudProviderId.DigitalOcean;
   }
 
+  getLocationId(): string {
+    return '';
+  }
+
   waitOnInstall(resetTimeout: boolean): Promise<void> {
     if (resetTimeout) {
       this.installState = InstallState.UNKNOWN;
@@ -190,6 +194,7 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
       const certificateFingerprint = this.getCertificateFingerprint();
       const apiAddress = this.getManagementApiAddress();
       // Loaded both the cert and url without exceptions, they can be set.
+      console.log(certificateFingerprint);
       trustCertificate(certificateFingerprint);
       this.setManagementApiUrl(apiAddress);
       return true;
@@ -270,6 +275,7 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
   private getCertificateFingerprint(): string {
     const fingerprint = this.getTagValue(CERTIFICATE_FINGERPRINT_TAG);
     if (fingerprint) {
+      console.log(fingerprint);
       return btoa(fingerprint);
     } else {
       throw new Error('certificate fingerprint unavailable');
@@ -302,8 +308,13 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
 
 class DigitalOceanHost implements server.ManagedServerHost {
   constructor(
-      private digitalOcean: DigitalOceanSession, private dropletInfo: DropletInfo,
-      private deleteCallback: Function) {}
+      private readonly digitalOcean: DigitalOceanSession,
+      private readonly dropletInfo: DropletInfo,
+      private readonly deleteCallback: Function) {}
+
+  getId(): string {
+    return `${this.dropletInfo.id}`;
+  }
 
   getMonthlyOutboundTransferLimit(): server.DataAmount {
     // Details on the bandwidth limits can be found at
@@ -315,25 +326,13 @@ class DigitalOceanHost implements server.ManagedServerHost {
     return {usd: this.dropletInfo.size.price_monthly};
   }
 
-  getRegionId(): server.RegionId {
-    return this.dropletInfo.region.slug;
-  }
-
   delete(): Promise<void> {
     return this.digitalOcean.deleteDroplet(this.dropletInfo.id).then(() => {
       this.deleteCallback();
     });
   }
-
-  getHostId(): string {
-    return `${this.dropletInfo.id}`;
-  }
 }
 
 function startsWithCaseInsensitive(text: string, prefix: string) {
   return text.slice(0, prefix.length).toLowerCase() === prefix.toLowerCase();
-}
-
-export function GetCityId(slug: server.RegionId): string {
-  return slug.substr(0, 3).toLowerCase();
 }

@@ -17,12 +17,14 @@ import * as semver from 'semver';
 import '../ui_components/outline-server-view';
 
 import {customElement, html, LitElement, property} from "lit-element";
-import {AccessKey, DataAmount, DataLimit, isManagedServer, RegionId, Server} from "../../model/server";
+import {AccessKey, DataAmount, DataLimit, isManagedServer, isManualServer, Server} from "../../model/server";
 import {DisplayServer} from "../display_server";
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from '../ui_components/outline-server-view';
 import {OutlineNotificationManager} from "../ui_components/outline-notification-manager";
-import {GetCityId} from "../digitalocean_server";
 import {ServerApiError} from "../../infrastructure/errors";
+import * as digitalocean_api from "../../cloud/digitalocean_api";
+import {makePublicEvent} from "../../infrastructure/dom_events";
+import {OutlineModalDialog} from "../ui_components/outline-modal-dialog";
 
 const CHANGE_KEYS_PORT_VERSION = '1.0.0';
 const DATA_LIMITS_VERSION = '1.1.0';
@@ -31,6 +33,21 @@ const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
 
 @customElement('manage-server-app')
 export class OutlineManageServerApp extends LitElement {
+  /**
+   * Event that signals that a server was renamed.
+   *
+   * @event server-renamed
+   * @property {Server} server - The renamed server.
+   */
+  public static EVENT_SERVER_RENAMED = 'server-renamed';
+  /**
+   * Event that signals that a server was removed (either forgotten or
+   * deleted).
+   *
+   * @event server-removed
+   */
+  public static EVENT_SERVER_REMOVED = 'server-removed';
+
   @property({type: Function}) localize: Function;
   @property({type: String}) language: string;
   @property({type: Object}) server: Server;
@@ -40,16 +57,14 @@ export class OutlineManageServerApp extends LitElement {
   private serverView: ServerView;
 
   render() {
-    return html`<outline-server-view id="serverView" .localize=${
-        this.localize}></outline-server-view>`;
+    const cloudProvider = isManagedServer(this.server) ? this.server.getCloudProviderId() : '';
+    return html`
+      <outline-server-view id="serverView" .localize=${this.localize} .cloudProvider="${cloudProvider}"></outline-server-view>
+      <outline-modal-dialog id="modalDialog"></outline-modal-dialog>`;
   }
 
   connectedCallback(): void {
     super.connectedCallback();
-    this.registerEventListeners();
-  }
-
-  private registerEventListeners() {
     this.shadowRoot.addEventListener(
         'EnableMetricsRequested', (e: CustomEvent) => this.setMetricsEnabled(true));
     this.shadowRoot.addEventListener(
@@ -74,15 +89,28 @@ export class OutlineManageServerApp extends LitElement {
     this.shadowRoot.addEventListener('ChangeHostnameForAccessKeysRequested', (e: CustomEvent) => {
       this.setHostnameForAccessKeys(e.detail.validatedInput, e.detail.ui);
     });
+    this.shadowRoot.addEventListener(
+        'DeleteServerRequested', async (e: CustomEvent) => this.onDeleteServerRequested());
+    this.shadowRoot.addEventListener(
+        'ForgetServerRequested', async (e: CustomEvent) => this.onForgetServerRequested());
   }
 
-  // Show the server management screen. Assumes the server is healthy.
-  async showServer(server: Server, selectedDisplayServer: DisplayServer) {
+  /**
+   * Show the server management screen.
+   *
+   * @param server - The server domain model.
+   * @param displayServer - The server display model.
+   */
+  async showServer(server: Server, displayServer: DisplayServer) {
     this.server = server;
-    this.displayServer = selectedDisplayServer;
+    this.displayServer = displayServer;
 
     // Show view and initialize fields from selectedServer.
     this.serverView = this.shadowRoot.querySelector(`#serverView`) as ServerView;
+    if (!this.serverView) {
+      return;
+    }
+
     this.serverView.isServerReachable = true;
     this.serverView.serverId = server.getServerId();
     this.serverView.serverName = server.getName();
@@ -109,7 +137,7 @@ export class OutlineManageServerApp extends LitElement {
       this.serverView.monthlyCost = host.getMonthlyCost().usd;
       this.serverView.monthlyOutboundTransferBytes =
           host.getMonthlyOutboundTransferLimit().terabytes * (10 ** 12);
-      this.serverView.serverLocation = this.getLocalizedCityName(host.getRegionId());
+      // this.serverView.serverLocation = this.getLocalizedCityName(server.());
     } else {
       this.serverView.isServerManaged = false;
     }
@@ -151,12 +179,8 @@ export class OutlineManageServerApp extends LitElement {
       (this.serverView.$.serverSettings as any).serverName = oldName;
     }
 
-    const params = {
-      bubbles: true,
-      composed: true,
-    };
-    const customEvent = new CustomEvent('ServerRenamed', params);
-    this.dispatchEvent(customEvent);
+    const event = makePublicEvent(OutlineManageServerApp.EVENT_SERVER_RENAMED, {server: this.server});
+    this.dispatchEvent(event);
   }
 
   private async setMetricsEnabled(metricsEnabled: boolean) {
@@ -380,9 +404,62 @@ export class OutlineManageServerApp extends LitElement {
     }
   }
 
-  private getLocalizedCityName(regionId: RegionId) {
-    const cityId = GetCityId(regionId);
-    return this.localize(`city-${cityId}`);
+  private async onDeleteServerRequested() {
+    const serverToDelete = this.server;
+    if (!isManagedServer(serverToDelete)) {
+      const msg = 'cannot delete non-ManagedServer';
+      console.error(msg);
+      throw new Error(msg);
+    }
+
+    const modalResult = await this.showConfirmationModal(
+        this.localize('confirmation-server-destroy-title'),
+        this.localize('confirmation-server-destroy'),
+        this.localize('destroy'));
+    if (modalResult) {
+      try {
+        await serverToDelete.getHost().delete();
+        this.notificationManager.showNotification('notification-server-destroyed');
+        this.dispatchEvent(makePublicEvent(OutlineManageServerApp.EVENT_SERVER_REMOVED));
+
+        this.server = null;
+        this.displayServer = null;
+      } catch (error) {
+        // Don't show a toast on the login screen.
+        if (error instanceof digitalocean_api.HttpError && error.getStatusCode() !== 401) {
+          console.error(`Failed destroy server: ${error}`);
+          this.notificationManager.showError('error-server-destroy');
+        }
+      }
+    }
+  }
+
+  private async onForgetServerRequested() {
+    const serverToForget = this.server;
+    if (!isManualServer(serverToForget)) {
+      const msg = 'cannot forget non-ManualServer';
+      console.error(msg);
+      throw new Error(msg);
+    }
+
+    const modalResult = await this.showConfirmationModal(
+        this.localize('confirmation-server-remove-title'),
+        this.localize('confirmation-server-remove'),
+        this.localize('remove'));
+    if (modalResult) {
+      serverToForget.forget();
+      this.notificationManager.showNotification('notification-server-removed');
+      this.dispatchEvent(makePublicEvent(OutlineManageServerApp.EVENT_SERVER_REMOVED));
+
+      this.server = null;
+      this.displayServer = null;
+    }
+  }
+
+  private async showConfirmationModal(modalTitle: string, modalText: string, confirmButtonText: string) {
+    const modal = this.shadowRoot.querySelector('#modalDialog') as OutlineModalDialog;
+    const clickedButtonIndex = await modal.open(modalTitle, modalText, [this.localize('cancel'), confirmButtonText]);
+    return clickedButtonIndex === 1;
   }
 
   private static localizeDate(date: Date, language: string): string {

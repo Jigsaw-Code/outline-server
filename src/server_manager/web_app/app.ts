@@ -12,128 +12,96 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {EventEmitter} from 'eventemitter3';
 import * as sentry from '@sentry/electron';
-
-import * as digitalocean_api from '../cloud/digitalocean_api';
+import {EventEmitter} from 'eventemitter3';
 import * as errors from '../infrastructure/errors';
-import {LocalStorageRepository} from '../infrastructure/repository';
-import * as account from '../model/account';
 import {Account} from '../model/account';
 import {AccountManager} from '../model/account_manager';
+import {CloudProviderId} from '../model/cloud';
 import {DigitalOceanAccount} from '../model/digitalocean_account';
 import * as server from '../model/server';
-import {isManagedServer, isManualServer, ManagedServer} from '../model/server';
+import {isManagedServer} from '../model/server';
 
 import {DigitalOceanConnectAccountApp} from './digitalocean_app/connect_account_app';
 import {DigitalOceanCreateServerApp} from './digitalocean_app/create_server_app';
-import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
+import {OutlineIntroStep} from './ui_components/outline-intro-step';
 import {OutlineNotificationManager} from './ui_components/outline-notification-manager';
 import {ServerView} from './ui_components/outline-server-view.js';
-import {CloudProviderId} from "../model/cloud";
-import {OutlineIntroStep} from "./ui_components/outline-intro-step";
-import {GcpConnectAccountApp} from "./gcp_app/connect_account_app";
-import {GcpAccount} from "../model/gcp_account";
-import {LightsailConnectAccountApp} from "./lightsail_app/connect_account_app";
-import {LightsailAccount} from "../model/lightsail_account";
+import {ShadowboxSettings} from "./shadowbox_server";
+import {OutlineManageServerApp} from "./outline_app/manage_server_app";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
 const UNUSED_DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
 
-export interface AppSettings {
-  debugMode: boolean;
-  metricsUrl: string;
-  shadowboxImage: string;
-  sentryDsn: string;
-  domainEvents: EventEmitter;
-}
-
 export class App {
   private digitalOceanAccount: DigitalOceanAccount;
+
   private selectedServer: server.Server;
   private serverBeingCreated: server.ManagedServer;
   private notificationManager: OutlineNotificationManager;
 
   constructor(
-      private appRoot: AppRoot, private readonly version: string, private appSettings: AppSettings,
+      private appRoot: AppRoot, private readonly version: string,
+      private domainEvents: EventEmitter,
+      private shadowboxSettings: ShadowboxSettings,
       private manualServerRepository: server.ManualServerRepository,
       private displayServerRepository: DisplayServerRepository,
-      private accountRepository: LocalStorageRepository<account.Data, string>,
       private accountManager: AccountManager) {
     this.notificationManager = this.appRoot.getNotificationManager();
-    this.appRoot.initializeDigitalOceanConnectAccountApp(appSettings, accountRepository);
-    this.appRoot.initializeGcpConnectAccountApp(appSettings, accountRepository);
-    this.appRoot.initializeLightsailConnectAccountApp(appSettings, accountRepository);
-
-    // this.accountManager.register(CloudProviderId.DigitalOcean, this.digitalOceanConnectAccountApp);
+    const digitalOceanConnectAccountApp =
+        this.appRoot.initializeDigitalOceanConnectAccountApp(accountManager, domainEvents, shadowboxSettings);
+    this.accountManager.initializeCloudProviders(digitalOceanConnectAccountApp);
 
     appRoot.setAttribute('outline-version', this.version);
 
+    // DigitalOcean event listeners
     appRoot.addEventListener(
         OutlineIntroStep.EVENT_DIGITALOCEAN_CARD_TAPPED,
         (event: CustomEvent) => this.appRoot.getAndShowDigitalOceanConnectAccountApp().start());
     appRoot.addEventListener(
-        DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED,
-        async (event: CustomEvent) => {
+        DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED, async (event: CustomEvent) => {
           const account = event.detail.account as DigitalOceanAccount;
-          this.accountManager.add(account);
-          this.appRoot.adminEmail = await account.getEmail();
-          console.log(`email: ${this.appRoot.adminEmail}`);
-          const managedServers = await this.refreshDigitalOceanServers(account);
-          this.onServersRefreshed(managedServers, false, account);
+          this.appRoot.adminEmail = await account.getDisplayName();
+          this.onServersRefreshed(false, account);
+          this.refreshDigitalOceanServers(account);
         });
-
     appRoot.addEventListener(
-        OutlineIntroStep.EVENT_GCP_CARD_TAPPED,
-        (event: CustomEvent) => this.appRoot.getAndShowGcpConnectAccountApp().start());
+        DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECT_CANCELLED,
+        (event: CustomEvent) => this.showIntro());
     appRoot.addEventListener(
-        GcpConnectAccountApp.EVENT_ACCOUNT_CONNECTED,
-        async (event: CustomEvent) => {
-          const account = event.detail.account as GcpAccount;
-          this.appRoot.gcpAccount = account;
-          // this.appRoot.getAndShowGcpCreateServerApp().start(account);
+        DigitalOceanCreateServerApp.EVENT_SERVER_CREATED,
+        (event: CustomEvent) => this.syncServerCreationToUi(event.detail.server));
+    appRoot.addEventListener(
+        DigitalOceanCreateServerApp.EVENT_SERVER_CREATE_CANCELLED,
+        (event: CustomEvent) => this.showIntro());
+    appRoot.addEventListener('DoSignOutRequested', () => {
+      this.digitalOceanAccount.disconnect();
+      this.appRoot.adminEmail = '';
+      this.clearCredentialsAndShowIntro(CloudProviderId.DigitalOcean);
+    });
 
-          const gcpServers = await account.listServers();
-          await this.onServersRefreshed(gcpServers, false, account);
-        });
-
+    // OutlineIntroStep event listeners
     appRoot.addEventListener(
         OutlineIntroStep.EVENT_AWS_CARD_TAPPED,
-        (event: CustomEvent) => this.appRoot.getAndShowLightsailConnectAccountApp().start());
+        (event: CustomEvent) => this.appRoot.handleManualServerSelected('aws'));
     appRoot.addEventListener(
-        LightsailConnectAccountApp.EVENT_ACCOUNT_CONNECTED,
-        async (event: CustomEvent) => {
-          const account = event.detail.account as LightsailAccount;
-          this.appRoot.lightsailAccount = account;
-          // this.appRoot.getAndShowGcpCreateServerApp().start(account);
-
-          const lightsailServers = await account.listServers();
-          await this.onServersRefreshed(lightsailServers, false, account);
-        });
-
+        OutlineIntroStep.EVENT_GCP_CARD_TAPPED,
+        (event: CustomEvent) => this.appRoot.handleManualServerSelected('gcp'));
     appRoot.addEventListener(
         OutlineIntroStep.EVENT_GENERIC_CLOUD_PROVIDER_CARD_TAPPED,
         (event: CustomEvent) => this.appRoot.handleManualServerSelected('generic'));
 
-    appRoot.addEventListener('SignOutRequested', (event: CustomEvent) => {
-      this.clearCredentialsAndShowIntro();
-    });
-
+    // OutlineManageServerApp event listeners
     appRoot.addEventListener(
-        DigitalOceanCreateServerApp.EVENT_SERVER_CREATED,
-        (event: CustomEvent) => this.syncServerCreationToUi(event.detail.server));
-
-    appRoot.addEventListener('DeleteServerRequested', (event: CustomEvent) => {
-      this.deleteSelectedServer();
-    });
-
-    appRoot.addEventListener('ForgetServerRequested', (event: CustomEvent) => {
-      this.forgetSelectedServer();
-    });
+        OutlineManageServerApp.EVENT_SERVER_RENAMED,
+        (event: CustomEvent) => this.syncAndShowServer(this.selectedServer));
+    appRoot.addEventListener(
+        OutlineManageServerApp.EVENT_SERVER_REMOVED,
+        (event: CustomEvent) => this.onServerRemoved());
 
     // The UI wants us to validate a server management URL.
     // "Reply" by setting a field on the relevant template.
@@ -197,10 +165,6 @@ export class App {
       this.setAppLanguage(event.detail.languageCode, event.detail.languageDir);
     });
 
-    appRoot.addEventListener('ServerRenamed', (event: CustomEvent) => {
-      this.syncAndShowServer(this.selectedServer);
-    });
-
     appRoot.addEventListener('CancelServerCreationRequested', (event: CustomEvent) => {
       this.cancelServerCreation(this.selectedServer);
     });
@@ -222,50 +186,7 @@ export class App {
       this.handleShowServerRequested(event.detail.displayServerId);
     });
 
-    appRoot.addEventListener('DigitalOceanConnectAccount#Cancelled', (event: CustomEvent) => {
-      this.clearCredentialsAndShowIntro();
-    });
-
-    appRoot.addEventListener('DigitalOceanVerifyAccount#Cancelled', (event: CustomEvent) => {
-      this.clearCredentialsAndShowIntro();
-      throw new Error('User canceled');
-    });
-
     onUpdateDownloaded(this.displayAppUpdateNotification.bind(this));
-  }
-
-  async refreshDigitalOceanServers(account: DigitalOceanAccount): Promise<ManagedServer[]> {
-    try {
-      this.digitalOceanAccount = account;
-      return await this.digitalOceanAccount.listServers();
-    } catch (error) {
-      console.error('Could not fetch server list from DigitalOcean');
-      this.showIntro();
-    }
-  }
-
-  async onServersRefreshed(servers: server.Server[], onStartup: boolean, account?: Account) {
-    try {
-      this.syncServersToDisplay(servers);
-      if (!!this.serverBeingCreated) {
-        // Show the server creation progress screen to disallow
-        // simultaneously creating multiple servers.
-        this.showServerCreationProgress();
-        this.waitForManagedServerCreation();
-      } else if (!onStartup) {
-        // Show the create server app.
-        this.showCreateServer(account);
-      } else if (servers.length > 0 && onStartup) {
-        // Show the last "managed" server detail screen on startup.
-        const displayServer =
-            this.appRoot.serverList.find((displayServer: DisplayServer) => displayServer.isManaged);
-        this.showServerFromRepository(displayServer);
-      }
-    } catch (error) {
-      console.log(error);
-      this.clearCredentialsAndShowIntro();
-      bringToFront();
-    }
   }
 
   async start(): Promise<void> {
@@ -275,19 +196,98 @@ export class App {
 
     const manualServersPromise = this.manualServerRepository.listServers();
 
-    let managedServersPromise = Promise.resolve([]);
-    const account = await this.digitalOceanConnectAccountApp.loadAccount();
-    if (account) {
-      this.appRoot.adminEmail = await account.getEmail();
-      managedServersPromise = this.refreshDigitalOceanServers(account);
-    }
+    const managedServersPromise = Promise.resolve([]);
+    // const account = await this.digitalOceanConnectAccountApp.loadAccount();
+    // if (account) {
+    //   this.appRoot.adminEmail = await account.getEmail();
+    //   managedServersPromise = this.refreshDigitalOceanServers(account);
+    // }
 
     const [manualServers, managedServers] =
         await Promise.all([manualServersPromise, managedServersPromise]);
     const installedManagedServers = managedServers.filter(server => server.isInstallCompleted());
     this.serverBeingCreated = managedServers.find(server => !server.isInstallCompleted());
     const servers = manualServers.concat(installedManagedServers);
-    this.onServersRefreshed(servers, true);
+
+    this.syncServersToDisplay(servers);
+    this.onServersRefreshed(true);
+  }
+
+  // Returns promise which fulfills when the server is created successfully,
+  // or rejects with an error message that can be displayed to the user.
+  createManualServer(userInput: string): Promise<void> {
+    let serverConfig: server.ManualServerConfig;
+    try {
+      serverConfig = parseManualServerConfig(userInput);
+    } catch (e) {
+      // This shouldn't happen because the UI validates the URL before enabling the DONE button.
+      const msg = `could not parse server config: ${e.message}`;
+      console.error(msg);
+      return Promise.reject(new Error(msg));
+    }
+
+    // Don't let `ManualServerRepository.addServer` throw to avoid redundant error handling if we
+    // are adding an existing server. Query the repository instead to treat the UI accordingly.
+    const storedServer = this.manualServerRepository.findServer(serverConfig);
+    if (!!storedServer) {
+      return this.syncServerToDisplay(storedServer).then((displayServer) => {
+        this.notificationManager.showNotification('notification-server-exists', 5000);
+        this.showServerIfHealthy(storedServer, displayServer);
+      });
+    }
+    return this.manualServerRepository.addServer(serverConfig).then((manualServer) => {
+      return manualServer.isHealthy().then((isHealthy) => {
+        if (isHealthy) {
+          return this.syncAndShowServer(manualServer);
+        } else {
+          // Remove inaccessible manual server from local storage if it was just created.
+          manualServer.forget();
+          console.error('Manual server installed but unreachable.');
+          return Promise.reject(new errors.UnreachableServerError());
+        }
+      });
+    });
+  }
+
+  private async refreshDigitalOceanServers(account: DigitalOceanAccount): Promise<void> {
+    try {
+      this.digitalOceanAccount = account;
+      const servers = await this.digitalOceanAccount.listServers();
+      this.syncServersToDisplay(servers);
+    } catch (error) {
+      console.error('Could not fetch server list from DigitalOcean');
+      this.showIntro();
+    }
+  }
+
+  private onServerRemoved() {
+    this.removeServerFromDisplay(this.appRoot.selectedServer);
+    this.appRoot.selectedServer = null;
+    this.selectedServer = null;
+    this.showIntro();
+  }
+
+  private async onServersRefreshed(onStartup: boolean, account?: Account) {
+    try {
+      const displayServer =
+          this.appRoot.doServerList.find((displayServer: DisplayServer) => displayServer.isManaged);
+      if (!!this.serverBeingCreated) {
+        // Show the server creation progress screen to disallow
+        // simultaneously creating multiple servers.
+        this.showServerCreationProgress();
+        this.waitForManagedServerCreation();
+      } else if (!onStartup) {
+        // Show the create server app.
+        this.showCreateServer(account);
+      } else if (displayServer && onStartup) {
+        // Show the last "managed" server detail screen on startup.
+        this.showServerFromRepository(displayServer);
+      }
+    } catch (error) {
+      console.log(error);
+      this.clearCredentialsAndShowIntro(CloudProviderId.DigitalOcean);
+      bringToFront();
+    }
   }
 
   private async syncServersToDisplay(servers: server.Server[]) {
@@ -326,9 +326,13 @@ export class App {
     const displayServerId = server.getManagementApiUrl();
     let displayServer = this.displayServerRepository.findServer(displayServerId);
     if (!displayServer) {
-      console.debug(`Could not find display server with ID ${displayServerId}`);
+      console.log(`Could not find display server with ID ${displayServerId}`);
       displayServer = await makeDisplayServer(server);
+      console.log(displayServer);
       this.displayServerRepository.addServer(displayServer);
+
+      this.syncDisplayServersToUi();
+
     } else {
       // We may need to update the stored display server if it was persisted when the server was not
       // healthy, or the server has been renamed.
@@ -357,7 +361,6 @@ export class App {
       }
 
       this.appRoot.doServerList = displayServers.filter(displayServer => displayServer.cloudProviderId === CloudProviderId.DigitalOcean);
-      this.appRoot.gcpServerList = displayServers.filter(displayServer => displayServer.cloudProviderId === CloudProviderId.GCP);
       this.appRoot.manualServerList = displayServers.filter(displayServer => !displayServer.isManaged);
     });
   }
@@ -373,12 +376,16 @@ export class App {
     const apiManagementUrl = displayServer.id;
     let server: server.Server = null;
     if (displayServer.isManaged) {
-      if (!!this.digitalOceanAccount) {
+      if (!!this.digitalOceanAccount &&
+          displayServer.cloudProviderId === CloudProviderId.DigitalOcean) {
         // Fetch the servers from memory to prevent a leak that happens due to polling when creating
         // a new object for a server whose creation has been cancelled.
         const managedServers = await this.digitalOceanAccount.listServers(false);
         server = managedServers.find(
             (managedServer) => managedServer.getManagementApiUrl() === apiManagementUrl);
+        if (server) {
+          return server;
+        }
       }
     } else {
       server =
@@ -388,6 +395,8 @@ export class App {
   }
 
   private syncServerCreationToUi(server: server.ManagedServer) {
+    this.syncServerToDisplay(server);
+
     this.serverBeingCreated = server;
     this.syncDisplayServersToUi();
     // Show creation progress for new servers only after we have a ManagedServer object,
@@ -400,14 +409,15 @@ export class App {
     if (!this.serverBeingCreated) {
       return null;
     }
-    // Set name to the default server name for this region. Because the server
-    // is still being created, the getName REST API will not yet be available.
-    const regionId = this.serverBeingCreated.getHost().getRegionId();
-    const serverName = this.makeLocalizedServerName(regionId);
+    // // Set name to the default server name for this region. Because the server
+    // // is still being created, the getName REST API will not yet be available.
+    // const regionId = this.serverBeingCreated.getHost().getRegionId();
+    // const serverName = this.makeLocalizedServerName(regionId);
+
     return {
       // Use the droplet ID until the API URL is available.
-      id: this.serverBeingCreated.getHost().getHostId(),
-      name: serverName,
+      id: this.serverBeingCreated.getHost().getId(),
+      name: this.serverBeingCreated.getName(),
       cloudProviderId: this.serverBeingCreated.getCloudProviderId(),
       isManaged: true
     };
@@ -415,7 +425,6 @@ export class App {
 
   private async showServerFromRepository(displayServer: DisplayServer): Promise<void> {
     const server = await this.getServerFromRepository(displayServer);
-    console.log(`server: ${server}`);
     if (!!server) {
       this.showServerIfHealthy(server, displayServer);
     }
@@ -498,18 +507,12 @@ export class App {
   }
 
   // Clears the credentials and returns to the intro screen.
-  private clearCredentialsAndShowIntro() {
-    this.digitalOceanAccount.disconnect();
+  private async clearCredentialsAndShowIntro(cloudProviderId: CloudProviderId) {
     // Remove display servers from storage.
-    this.displayServerRepository.listServers().then((displayServers: DisplayServer[]) => {
-      for (const displayServer of displayServers) {
-        if (displayServer.isManaged) {
-          this.removeServerFromDisplay(displayServer);
-        }
-      }
-    });
-    // Reset UI
-    this.appRoot.adminEmail = '';
+    const displayServers = await this.displayServerRepository.listServers();
+    displayServers.filter((displayServer) => displayServer.cloudProviderId === cloudProviderId)
+        .map((displayServer) => this.removeServerFromDisplay(displayServer));
+
     if (!!this.appRoot.selectedServer && this.appRoot.selectedServer.isManaged) {
       this.appRoot.selectedServer = null;
       this.showIntro();
@@ -519,20 +522,23 @@ export class App {
   }
 
   private showCreateServer(account: Account): void {
-    const cloudProviderId = account.getCloudProviderId();
+    const cloudProviderId = account.getId().cloudProviderId;
     if (cloudProviderId === CloudProviderId.DigitalOcean) {
       this.appRoot.getAndShowDigitalOceanCreateServerApp().start(account);
-    } else if (cloudProviderId === CloudProviderId.GCP) {
-      this.appRoot.getAndShowGcpCreateServerApp().start(account);
     } else {
       console.log(`Cannot find create server app associated with cloud provider: ${cloudProviderId}`);
+      this.showIntro();
     }
   }
 
   private showServerCreationProgress() {
     // Set selected server, needed for cancel button.
+    console.log('setting app.ts selected server');
+    console.log(this.serverBeingCreated);
     this.selectedServer = this.serverBeingCreated;
     this.appRoot.selectedServer = this.getDisplayServerBeingCreated();
+    console.log('setting app selected server');
+    console.log(this.appRoot.selectedServer);
     // Update UI.  Only show cancel button if the server has not yet finished
     // installation, to prevent accidental deletion when restarting.
     const showCancelButton = !this.serverBeingCreated.isInstallCompleted();
@@ -578,16 +584,6 @@ export class App {
         });
   }
 
-  private getLocalizedCityName(regionId: server.RegionId) {
-    const cityId = digitalocean_server.GetCityId(regionId);
-    return this.appRoot.localize(`city-${cityId}`);
-  }
-
-  private makeLocalizedServerName(regionId: server.RegionId) {
-    const serverLocation = this.getLocalizedCityName(regionId);
-    return this.appRoot.localize('server-name', 'serverLocation', serverLocation);
-  }
-
   // Syncs a healthy `server` to the display and shows it.
   private async syncAndShowServer(server: server.Server, timeoutMs = 250) {
     const displayServer = await this.syncServerToDisplay(server);
@@ -602,93 +598,6 @@ export class App {
     const adminParam = isAdmin ? '?admin_embed' : '';
     return `https://s3.amazonaws.com/outline-vpn/invite.html${adminParam}#${
         encodeURIComponent(accessUrl)}`;
-  }
-
-  // Returns promise which fulfills when the server is created successfully,
-  // or rejects with an error message that can be displayed to the user.
-  public createManualServer(userInput: string): Promise<void> {
-    let serverConfig: server.ManualServerConfig;
-    try {
-      serverConfig = parseManualServerConfig(userInput);
-    } catch (e) {
-      // This shouldn't happen because the UI validates the URL before enabling the DONE button.
-      const msg = `could not parse server config: ${e.message}`;
-      console.error(msg);
-      return Promise.reject(new Error(msg));
-    }
-
-    // Don't let `ManualServerRepository.addServer` throw to avoid redundant error handling if we
-    // are adding an existing server. Query the repository instead to treat the UI accordingly.
-    const storedServer = this.manualServerRepository.findServer(serverConfig);
-    if (!!storedServer) {
-      return this.syncServerToDisplay(storedServer).then((displayServer) => {
-        this.notificationManager.showNotification('notification-server-exists', 5000);
-        this.showServerIfHealthy(storedServer, displayServer);
-      });
-    }
-    return this.manualServerRepository.addServer(serverConfig).then((manualServer) => {
-      return manualServer.isHealthy().then((isHealthy) => {
-        if (isHealthy) {
-          return this.syncAndShowServer(manualServer);
-        } else {
-          // Remove inaccessible manual server from local storage if it was just created.
-          manualServer.forget();
-          console.error('Manual server installed but unreachable.');
-          return Promise.reject(new errors.UnreachableServerError());
-        }
-      });
-    });
-  }
-
-  private deleteSelectedServer() {
-    const serverToDelete = this.selectedServer;
-    if (!isManagedServer(serverToDelete)) {
-      const msg = 'cannot delete non-ManagedServer';
-      console.error(msg);
-      throw new Error(msg);
-    }
-
-    const confirmationTitle = this.appRoot.localize('confirmation-server-destroy-title');
-    const confirmationText = this.appRoot.localize('confirmation-server-destroy');
-    const confirmationButton = this.appRoot.localize('destroy');
-    this.appRoot.getConfirmation(
-        confirmationTitle, confirmationText, confirmationButton, async () => {
-          try {
-            await serverToDelete.getHost().delete();
-            this.removeServerFromDisplay(this.appRoot.selectedServer);
-            this.appRoot.selectedServer = null;
-            this.selectedServer = null;
-            this.showIntro();
-            this.notificationManager.showNotification('notification-server-destroyed');
-          } catch (error) {
-            // Don't show a toast on the login screen.
-            if (error instanceof digitalocean_api.HttpError && error.getStatusCode() !== 401) {
-              console.error(`Failed destroy server: ${error}`);
-              this.notificationManager.showError('error-server-destroy');
-            }
-          }
-        });
-  }
-
-  private forgetSelectedServer() {
-    const serverToForget = this.selectedServer;
-    if (!isManualServer(serverToForget)) {
-      const msg = 'cannot forget non-ManualServer';
-      console.error(msg);
-      throw new Error(msg);
-    }
-
-    const confirmationTitle = this.appRoot.localize('confirmation-server-remove-title');
-    const confirmationText = this.appRoot.localize('confirmation-server-remove');
-    const confirmationButton = this.appRoot.localize('remove');
-    this.appRoot.getConfirmation(confirmationTitle, confirmationText, confirmationButton, () => {
-      serverToForget.forget();
-      this.removeServerFromDisplay(this.appRoot.selectedServer);
-      this.appRoot.selectedServer = null;
-      this.selectedServer = null;
-      this.showIntro();
-      this.notificationManager.showNotification('notification-server-removed');
-    });
   }
 
   private cancelServerCreation(serverToCancel: server.Server): void {

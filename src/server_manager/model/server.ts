@@ -104,16 +104,14 @@ export interface ManagedServer extends Server {
 
 // The managed machine where the Outline Server is running.
 export interface ManagedServerHost {
+  // Returns the virtual host ID.
+  getId(): string;
   // Returns the monthly outbound transfer limit.
   getMonthlyOutboundTransferLimit(): DataAmount;
   // Returns the monthly cost.
   getMonthlyCost(): MonetaryCost;
-  // Returns the server region.
-  getRegionId(): RegionId;
   // Deletes the server - cannot be undone.
   delete(): Promise<void>;
-  // Returns the virtual host ID.
-  getHostId(): string;
 }
 
 export class DataAmount { terabytes: number; }
@@ -122,14 +120,6 @@ export class MonetaryCost {
   // Value in US dollars.
   usd: number;
 }
-
-export type RegionId = string;
-
-// Keys are cityIds like "nyc".  Values are regions like ["nyc1", "nyc3"].
-export type RegionMap = {
-  [cityId: string]: RegionId[]
-};
-
 
 // Configuration for manual servers.  This is the output emitted from the
 // shadowbox install script, which is needed for the manager connect to

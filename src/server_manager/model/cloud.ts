@@ -13,8 +13,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
+/** Enumeration of supported cloud providers. */
 export enum CloudProviderId {
   DigitalOcean = 'DigitalOcean',
-  GCP = 'GoogleCloudPlatform',
-  Lightsail = 'AmazonLightsail',
 }

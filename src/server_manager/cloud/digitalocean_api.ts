@@ -73,11 +73,7 @@ export interface DigitalOceanSession {
   getDroplets(): Promise<DropletInfo[]>;
 }
 
-export function createDigitalOceanSession(accessToken: string): DigitalOceanSession {
-  return new RestApiSession(accessToken);
-}
-
-export class RestApiSession implements DigitalOceanSession {
+export class DigitalOceanApiClient implements DigitalOceanSession {
   // Constructor takes a DigitalOcean access token, which should have
   // read+write permissions.
   constructor(public accessToken: string) {}
@@ -96,7 +92,7 @@ export class RestApiSession implements DigitalOceanSession {
     // Register a key with DigitalOcean, so the user will not get a potentially
     // confusing email with their droplet password, which could get mistaken for
     // an invite.
-    return this.registerKey_(dropletName, publicKeyForSSH).then((keyId: number) => {
+    return this.registerKey(dropletName, publicKeyForSSH).then((keyId: number) => {
       return this.makeCreateDropletRequest(dropletName, region, keyId, dropletSpec);
     });
   }
@@ -151,7 +147,7 @@ export class RestApiSession implements DigitalOceanSession {
   }
 
   // Registers a SSH key with DigitalOcean.
-  private registerKey_(keyName: string, publicKeyForSSH: string): Promise<number> {
+  private registerKey(keyName: string, publicKeyForSSH: string): Promise<number> {
     console.info('Requesting key registration');
     return this
         .request<{ssh_key: {id: number}}>(

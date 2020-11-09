@@ -18,22 +18,16 @@ import '@polymer/iron-pages/iron-pages.js';
 import '../ui_components/outline-step-view.js';
 
 import {css, customElement, html, LitElement, property} from 'lit-element';
-
-import {CloudProviderId} from '../../model/cloud';
-import {RestApiSession} from '../../cloud/digitalocean_api';
-import {makePublicEvent} from '../../infrastructure/events';
-import {LocalStorageRepository} from '../../infrastructure/repository';
-import {getSentryApiUrl} from '../../infrastructure/sentry';
-import * as account from '../../model/account';
 import {DigitalOceanAccount} from '../../model/digitalocean_account';
-import {AppSettings} from '../app';
 import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
-
-const LEGACY_DIGITALOCEAN_ACCOUNT_ID = '_LEGACY_DIGITALOCEAN_ACCOUNT_ID_';
+import {makePublicEvent} from "../../infrastructure/dom_events";
+import {ShadowboxSettings} from "../shadowbox_server";
+import {EventEmitter} from "eventemitter3";
+import {AccountFactory, AccountManager, LEGACY_DIGITALOCEAN_ACCOUNT_ID} from "../../model/account_manager";
 
 @customElement('digitalocean-connect-account-app')
-export class DigitalOceanConnectAccountApp extends LitElement {
+export class DigitalOceanConnectAccountApp extends LitElement implements AccountFactory<DigitalOceanAccount> {
   /**
    * Event fired upon successful completion of the DigitalOcean connect account flow.
    *
@@ -50,9 +44,11 @@ export class DigitalOceanConnectAccountApp extends LitElement {
   public static EVENT_ACCOUNT_CONNECT_CANCELLED = 'digitalocean-account-connect-cancelled';
 
   @property({type: Function}) localize: Function;
-  @property({type: Object}) appSettings: AppSettings = null;
-  @property({type: Object}) accountRepository: LocalStorageRepository<account.Data, string> = null;
+  @property({type: String}) currentPage = 'loading';
+  @property({type: Object}) accountManager: AccountManager = null;
+  @property({type: Object}) domainEvents: EventEmitter = null;
   @property({type: Object}) notificationManager: OutlineNotificationManager = null;
+  @property({type: Object}) shadowboxSettings: ShadowboxSettings = null;
 
   private session: OauthSession;
 
@@ -118,21 +114,27 @@ export class DigitalOceanConnectAccountApp extends LitElement {
 
   render() {
     return html`
-    <outline-step-view id="connectAccount">
-      <span slot="step-title">${this.localize('oauth-connect-title')}</span>
-      <span slot="step-description">${this.localize('oauth-connect-description')}</span>
-      <paper-card class="card">
-        <div class="container">
-          <img src="images/digital_ocean_logo.svg">
-          <p>${this.localize('oauth-connect-tag')}</p>
-        </div>
-        <paper-button @tap="${this.onCancel}">${this.localize('cancel')}</paper-button>
-      </paper-card>
-    </outline-step-view>`;
+      <iron-pages id="pages" attr-for-selected="id" .selected="${this.currentPage}">
+        <outline-step-view id="loading"></outline-step-view>
+        
+        <outline-step-view id="connectAccount">
+          <span slot="step-title">${this.localize('oauth-connect-title')}</span>
+          <span slot="step-description">${this.localize('oauth-connect-description')}</span>
+          <paper-card class="card">
+            <div class="container">
+              <img src="images/digital_ocean_logo.svg">
+              <p>${this.localize('oauth-connect-tag')}</p>
+            </div>
+            <paper-button @tap="${this.onCancel}">${this.localize('cancel')}</paper-button>
+          </paper-card>
+        </outline-step-view>
+      </iron-pages>`;
   }
 
+  /** Starts the connect account user flow. */
   async start(): Promise<void> {
-    const storedAccount = await this.loadAccount();
+    this.reset();
+    const storedAccount = await this.accountManager.loadDigitalOceanAccount();
     if (storedAccount) {
       const serverCreatedEvent =
           makePublicEvent(DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED, {account: storedAccount});
@@ -140,7 +142,9 @@ export class DigitalOceanConnectAccountApp extends LitElement {
       return;
     }
 
+    this.currentPage = 'connectAccount';
     this.session = runDigitalOceanOauth();
+    console.log(this.session);
 
     let accessToken;
     try {
@@ -155,41 +159,27 @@ export class DigitalOceanConnectAccountApp extends LitElement {
       }
     }
 
-    const data = await this.createAccountData(accessToken);
-    const account = await this.createAccountModel(data);
+    const account = this.accountManager.connectDigitalOceanAccount(accessToken);
     const serverCreatedEvent =
         makePublicEvent(DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED, {account});
     this.dispatchEvent(serverCreatedEvent);
+    this.currentPage = 'loading';
   }
 
-  public async loadAccount(): Promise<DigitalOceanAccount|undefined> {
-    const data = this.accountRepository.get(LEGACY_DIGITALOCEAN_ACCOUNT_ID);
-    return data ? await this.createAccountModel(data) : undefined;
+  constructAccount(credentials: object): Promise<DigitalOceanAccount> {
+    return new Promise(() => new DigitalOceanAccount(LEGACY_DIGITALOCEAN_ACCOUNT_ID.cloudSpecificId, credentials as unknown as string, this.domainEvents, this.accountManager, this.shadowboxSettings));
   }
 
-  async createAccountModel(data: account.Data): Promise<DigitalOceanAccount> {
-    const accessToken = data.credential as string;
-    const sentryApiUrl = getSentryApiUrl(this.appSettings.sentryDsn);
-    return new DigitalOceanAccount(
-        this.appSettings.domainEvents, data, this.accountRepository,
-        new RestApiSession(accessToken), this.appSettings.shadowboxImage,
-        this.appSettings.metricsUrl, sentryApiUrl, this.appSettings.debugMode);
-  }
-
-  private async createAccountData(accessToken: string) {
-    const api = new RestApiSession(accessToken);
-    const getAccountResponse = await api.getAccount();
-    return {
-      id: getAccountResponse.uuid,
-      displayName: getAccountResponse.email,
-      provider: CloudProviderId.DigitalOcean,
-      credential: accessToken,
-    };
+  private reset() {
+    if (this.session) {
+      this.session.cancel();
+    }
+    this.currentPage = 'loading';
   }
 
   private onCancel() {
-    this.session.cancel();
     const event = makePublicEvent(DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECT_CANCELLED);
     this.dispatchEvent(event);
+    this.reset();
   }
 }

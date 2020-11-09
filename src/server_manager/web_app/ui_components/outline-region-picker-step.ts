@@ -25,8 +25,8 @@ import {COMMON_STYLES} from './cloud-install-styles';
 
 export interface Location {
   id: string;
-  name: string;
-  flag: string;
+  nameMessageId: string;
+  flagUri: string;
   available: boolean;
 }
 
@@ -112,7 +112,7 @@ export class OutlineRegionPicker extends LitElement {
       <span slot="step-title">${this.localize('region-title')}</span>
       <span slot="step-description">${this.localize('region-description')}</span>
       <span slot="step-action">
-        <paper-button id="createServerButton" @tap="${this._handleCreateServerTap}" 
+        <paper-button @tap="${this._handleCreateServerTap}" 
             ?disabled="${this.isServerBeingCreated || this.selectedLocationId === null}">
           ${this.localize('region-setup')}
         </paper-button>
@@ -126,8 +126,8 @@ export class OutlineRegionPicker extends LitElement {
             <div class="card-header">
               ${this.selectedLocationId === item.id ? html`<iron-icon icon="check-circle"></iron-icon>` : ''}
             </div>
-            <img class="flag" src="${item.flag}">
-            <div class="city-name">${item.name}</div>
+            <img class="flag" src="${item.flagUri}">
+            <div class="city-name">${this.localize(item.nameMessageId)}</div>
           </label>`;
         })}
       </div>

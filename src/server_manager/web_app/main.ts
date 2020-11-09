@@ -17,13 +17,19 @@ import './ui_components/app-root.js';
 import {EventEmitter} from 'eventemitter3';
 import * as i18n from '../infrastructure/i18n';
 import {LocalStorageRepository} from '../infrastructure/repository';
-import * as account from '../model/account';
-import {AccountManager} from '../model/account_manager';
+import {AccountId} from '../model/account';
+import {
+  ACCOUNT_MANAGER_KEY_COMPARATOR,
+  ACCOUNT_MANAGER_KEY_EXTRACTOR,
+  AccountManager,
+  PersistedAccount
+} from '../model/account_manager';
 
 import {App} from './app';
 import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
+import {getSentryApiUrl} from "../infrastructure/sentry";
 
 type LanguageDef = {
   id: string,
@@ -98,12 +104,11 @@ document.addEventListener('WebComponentsReady', () => {
   // Parse URL query params.
   const params = new URL(document.URL).searchParams;
   const version = params.get('version');
-  const appSettings = {
-    debugMode: params.get('outlineDebugMode') === 'true',
+  const shadowboxSettings = {
+    containerImageId: params.get('image'),
     metricsUrl: params.get('metricsUrl'),
-    shadowboxImage: params.get('image'),
-    sentryDsn: params.get('sentryDsn'),
-    domainEvents: new EventEmitter(),
+    sentryApiUrl: getSentryApiUrl(params.get('sentryDsn')),
+    debug: params.get('outlineDebugMode') === 'true',
   };
 
   // Create and start the app.
@@ -118,12 +123,12 @@ document.addEventListener('WebComponentsReady', () => {
   appRoot.supportedLanguages = sortLanguageDefsByName(filteredLanguageDefs);
   appRoot.setLanguage(language.string(), languageDirection);
 
-  const accountRepository = new LocalStorageRepository<account.Data, string>(
-      'accounts', localStorage, (account) => account.id, (k1: string, k2: string) => k1 === k2);
-  const accountManager = new AccountManager(accountRepository);
+  const accountRepository = new LocalStorageRepository<PersistedAccount, AccountId>(
+      'accounts/v1', localStorage, ACCOUNT_MANAGER_KEY_EXTRACTOR,
+      ACCOUNT_MANAGER_KEY_COMPARATOR);
   new App(
-      appRoot, version, appSettings, new ManualServerRepository('manualServers'),
-      new DisplayServerRepository(), accountRepository, accountManager)
+      appRoot, version, new EventEmitter(), shadowboxSettings, new ManualServerRepository('manualServers'),
+      new DisplayServerRepository(), new AccountManager(accountRepository))
       .start();
 });
 

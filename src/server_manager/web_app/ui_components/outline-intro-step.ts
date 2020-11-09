@@ -16,6 +16,7 @@ import './outline-step-view.js';
 
 import {css, customElement, html, LitElement, property} from 'lit-element';
 import {COMMON_STYLES} from './cloud-install-styles';
+import {makePublicEvent} from "../../infrastructure/dom_events";
 
 @customElement('outline-intro-step')
 export class OutlineIntroStep extends LitElement {
@@ -73,6 +74,7 @@ export class OutlineIntroStep extends LitElement {
         padding: 16px 24px 12px 24px;
         margin: 12px 12px 0 0;
         height: 320px;
+        text-align: left;
         color: var(--medium-gray);
         font-weight: normal;
         border-radius: 2px;
@@ -95,13 +97,6 @@ export class OutlineIntroStep extends LitElement {
         background: var(--do-blue);
       }
       .card#digital-ocean:hover {
-        background: rgba(28, 103, 189, 0.92);
-      }
-      /* GCP card background colours (gets brighter, inactive -> active). */
-      .card#gcp {
-        background: var(--do-blue);
-      }
-      .card#gcp:hover {
         background: rgba(28, 103, 189, 0.92);
       }
       /* Non-DigitalOcean card background colours (get darker, inactive -> active). */
@@ -129,16 +124,17 @@ export class OutlineIntroStep extends LitElement {
       }
       .card#digital-ocean .tag,
       .card#digital-ocean .email,
-      .card#gcp .tag,
-      .card#gcp .email,   
       .card p {
         color: var(--medium-gray);
-      }      
+      }
       .card#manual-server .tag {
         color: var(--manual-server-green);
       }
       .card#aws .tag {
         color: var(--aws-orange);
+      }
+      .card#gcp .tag {
+        color: var(--gcp-blue);
       }
       .card-title {
         font-size: 20px;
@@ -159,7 +155,7 @@ export class OutlineIntroStep extends LitElement {
       }
       .card .description ul {
         margin-top: 0px;
-        padding: 0px 20px;
+        padding-left: 16px;
       }
       .card .description ul li {
         margin-bottom: 8px;
@@ -181,14 +177,14 @@ export class OutlineIntroStep extends LitElement {
            unlike our <img src="..."> attributes */
         list-style-image: url("../images/check_white.svg");
       }
-      #gcp .description ul {
-        list-style-image: url("../images/check_white.svg");
-      }
       #manual-server .description ul {
         list-style-image: url("../images/check_green.svg");
       }
       #aws .description ul {
         list-style-image: url("../images/check_orange.svg");
+      }
+      #gcp .description ul {
+        list-style-image: url("../images/check_blue.svg");
       }
       /* Reverse check icon for RTL languages */
       :host(:dir(rtl)) #digital-ocean .description ul {
@@ -202,9 +198,7 @@ export class OutlineIntroStep extends LitElement {
       }
       :host(:dir(rtl)) #gcp .description ul {
         list-style-image: url("../images/check_blue_rtl.svg");
-      }
-    `
-    ];
+      }`];
   }
 
   render() {
@@ -261,13 +255,17 @@ export class OutlineIntroStep extends LitElement {
   
           <div id="gcp" class="card" @tap="${this.setUpGcpTapped}">
             <div class="card-header">
-              ${gcpCardHeaderText}
+              <div class="tag">${this.localize('setup-advanced')}</div>
               <img src="images/gcp-logo.svg">
             </div>
             <div class="card-title">Google Cloud Platform</div>
             <div class="card-body">
               <div class="description">
-                ${gcpCardDescription}
+                <ul>
+                  <li>${this.localize('setup-step-by-step')}</li>
+                  <li>${this.localize('setup-firewall-instructions')}</li>
+                  <li>${this.localize('setup-simple-commands')}</li>
+                </ul>
               </div>
             </div>
             <div class="card-footer">
@@ -325,27 +323,18 @@ export class OutlineIntroStep extends LitElement {
   }
 
   private connectToDigitalOceanTapped(): void {
-    this.dispatchEvent(this.makePublicEvent(OutlineIntroStep.EVENT_DIGITALOCEAN_CARD_TAPPED));
+    this.dispatchEvent(makePublicEvent(OutlineIntroStep.EVENT_DIGITALOCEAN_CARD_TAPPED));
   }
 
   private setUpAwsTapped() {
-    this.dispatchEvent(this.makePublicEvent(OutlineIntroStep.EVENT_AWS_CARD_TAPPED));
+    this.dispatchEvent(makePublicEvent(OutlineIntroStep.EVENT_AWS_CARD_TAPPED));
   }
 
   private setUpGcpTapped() {
-    this.dispatchEvent(this.makePublicEvent(OutlineIntroStep.EVENT_GCP_CARD_TAPPED));
+    this.dispatchEvent(makePublicEvent(OutlineIntroStep.EVENT_GCP_CARD_TAPPED));
   }
 
   private setUpGenericCloudProviderTapped() {
-    this.dispatchEvent(
-        this.makePublicEvent(OutlineIntroStep.EVENT_GENERIC_CLOUD_PROVIDER_CARD_TAPPED));
-  }
-
-  private makePublicEvent(name: string) {
-    const params = {
-      bubbles: true,
-      composed: true,
-    };
-    return new CustomEvent(name, params);
+    this.dispatchEvent(makePublicEvent(OutlineIntroStep.EVENT_GENERIC_CLOUD_PROVIDER_CARD_TAPPED));
   }
 }

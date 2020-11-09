@@ -12,15 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import '@polymer/polymer/polymer-legacy.js';
+
+import '../digitalocean_app/create_server_app';
+import '../digitalocean_app/connect_account_app';
 import '../ui_components/outline-about-dialog';
-import '../digitalocean_app/oauth-step';
 import '../ui_components/outline-feedback-dialog';
+import '../ui_components/outline-notification-manager';
+import '../ui_components/outline-region-picker-step';
 import '../ui_components/outline-share-dialog';
 import '../ui_components/outline-sort-span';
+import '../ui_components/outline-step-view';
 import '../ui_components/outline-survey-dialog';
 
 import IntlMessageFormat from 'intl-messageformat';
 import {css, customElement, html, LitElement, property} from 'lit-element';
+import {EventEmitter} from "eventemitter3";
+import {LocalStorageRepository} from "../../infrastructure/repository";
+import {DigitalOceanConnectAccountApp} from "../digitalocean_app/connect_account_app";
+import {sleep} from "../../infrastructure/sleep";
+import {OutlineNotificationManager} from "../ui_components/outline-notification-manager";
+import {ShadowboxSettings} from "../shadowbox_server";
+import {
+  ACCOUNT_MANAGER_KEY_COMPARATOR,
+  ACCOUNT_MANAGER_KEY_EXTRACTOR,
+  AccountManager,
+  PersistedAccount
+} from "../../model/account_manager";
+import {AccountId} from "../../model/account";
 
 async function makeLocalize(language: string) {
   let messages: {[key: string]: string};
@@ -50,6 +69,10 @@ async function makeLocalize(language: string) {
 export class TestApp extends LitElement {
   @property({type: String}) dir = 'ltr';
   @property({type: Function}) localize: Function;
+
+  private readonly accountManager: AccountManager;
+  private readonly shadowboxSettings: ShadowboxSettings;
+  private readonly domainEvents: EventEmitter;
   private language = '';
 
   static get styles() {
@@ -71,7 +94,18 @@ export class TestApp extends LitElement {
 
   constructor() {
     super();
-    console.log('Created');
+    const accountRepository = new LocalStorageRepository<PersistedAccount, AccountId>(
+        'gallery-accounts', localStorage, ACCOUNT_MANAGER_KEY_EXTRACTOR,
+        ACCOUNT_MANAGER_KEY_COMPARATOR);
+    this.accountManager = new AccountManager(accountRepository);
+    this.shadowboxSettings = {
+      containerImageId: 'quay.io/outline/shadowbox:nightly',
+      metricsUrl: null,
+      sentryApiUrl: null,
+      debug: true,
+    };
+    this.domainEvents = new EventEmitter();
+
     this.setLanguage('en');
   }
 
@@ -98,11 +132,6 @@ export class TestApp extends LitElement {
         <button @tap=${() => this.select('outline-about-dialog').open()}>Open Dialog</button>
         <outline-about-dialog .localize=${this.localize} dir=${
         this.dir} outline-version="1.2.3"></outline-about-dialog>
-      </div>
-      
-      <div class="widget">
-        <h2>outline-do-oauth-step</h2>
-        <outline-do-oauth-step .localize=${this.localize} dir=${this.dir}></outline-do-oauth-step>
       </div>
 
       <div class="widget">
@@ -137,10 +166,75 @@ export class TestApp extends LitElement {
                   .open('Survey title', 'https://getoutline.org')}>Open Dialog</button>
         <outline-survey-dialog .localize=${this.localize} dir=${this.dir}></outline-survey-dialog>
       </div>
+
+      <div class="widget">
+        <h2>digitalocean-connect-account-app</h2>
+        <button @tap=${this.onDigitalOceanConnectAccountAppStart}>Start</button>
+        <digitalocean-connect-account-app .localize=${this.localize} dir=${this.dir}></digitalocean-connect-account-app>
+      </div>
+
+      <div class="widget">
+        <h2>digitalocean-connect-account-app</h2>
+        <button @tap=${this.onDigitalOceanCreateServerAppStart}>Start</button>
+        <digitalocean-create-server-app .localize=${this.localize} dir=${this.dir}></digitalocean-create-server-app>
+      </div>
+         
+      <outline-notification-manager .localize=${this.localize} dir=${this.dir}></outline-notification-manager>
     `;
   }
 
-  get pageControls() {
+  private onDigitalOceanConnectAccountAppStart() {
+    const personalAccessToken = (this.select('#doPersonalAccessToken') as HTMLInputElement).value;
+    if (!personalAccessToken) {
+      const notificationManager = this.select('outline-notification-manager') as OutlineNotificationManager;
+      notificationManager.showToast('DigitalOcean personal access token is required.', 3000);
+      return;
+    }
+
+    // tslint:disable-next-line:no-any
+    (window as any).runDigitalOceanOauth = () => {
+      let isCancelled = false;
+      const rejectWrapper = {reject: (error: Error) => {}};
+      return {
+        result: new Promise(async (resolve, reject) => {
+          rejectWrapper.reject = reject;
+          await sleep(3000);
+          resolve(personalAccessToken);
+        }),
+        isCancelled: () => isCancelled,
+        cancel: () => {
+          isCancelled = true;
+          rejectWrapper.reject(new Error('Authentication cancelled'));
+        },
+      };
+    };
+
+    const connectAccountApp = this.select('digitalocean-connect-account-app') as DigitalOceanConnectAccountApp;
+    connectAccountApp.accountManager = this.accountManager;
+    connectAccountApp.domainEvents = this.domainEvents;
+    connectAccountApp.notificationManager = this.select('outline-notification-manager');
+    connectAccountApp.shadowboxSettings = this.shadowboxSettings;
+    connectAccountApp.start();
+  }
+
+  private async onDigitalOceanCreateServerAppStart() {
+    const personalAccessToken = (this.select('#doPersonalAccessToken') as HTMLInputElement).value;
+    if (!personalAccessToken) {
+      const notificationManager = this.select('outline-notification-manager') as OutlineNotificationManager;
+      notificationManager.showToast('DigitalOcean personal access token is required.', 3000);
+      return;
+    }
+
+    const connectAccountApp = this.select('digitalocean-connect-account-app') as DigitalOceanConnectAccountApp;
+    this.accountManager.initializeCloudProviders(connectAccountApp);
+    const account = await connectAccountApp.constructAccount(personalAccessToken as unknown as object);
+    console.log(account);
+    const createServerApp = this.select('digitalocean-create-server-app');
+    createServerApp.notificationManager = this.select('outline-notification-manager');
+    createServerApp.start(account);
+  }
+
+  private get pageControls() {
     return html`<p>
       <label for="language">Language:</label><input type="text" id="language" value="${this.language}">
       <button @tap=${() => this.setLanguage((this.shadowRoot.querySelector('#language') as HTMLInputElement).value)
@@ -152,6 +246,7 @@ export class TestApp extends LitElement {
         <option value="ltr" selected>LTR</option>
         <option value="rtl">RTL</option>
       </select>
-    </p>`;
+    </p>
+    <label for="language">DigitalOcean Personal Access Token:</label><input type="text" id="doPersonalAccessToken">`;
   }
 }

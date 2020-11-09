@@ -13,14 +13,16 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
+import '@polymer/polymer/polymer-legacy.js';
+import '@polymer/iron-pages/iron-pages.js';
+import '../ui_components/outline-step-view.js';
+
 import {css, customElement, html, LitElement, property} from 'lit-element';
 
-import {DigitalOceanAccount} from '../../model/digitalocean_account';
+import {DigitalOceanAccount, DigitalOceanLocation, DigitalOceanStatus} from '../../model/digitalocean_account';
 import {HttpError} from '../../cloud/digitalocean_api';
 import {makePublicEvent} from '../../infrastructure/dom_events';
 import {sleep} from '../../infrastructure/sleep';
-import {RegionId} from '../../model/server';
-import * as digitalocean_server from '../digitalocean_server';
 import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 import {Location, OutlineRegionPicker} from '../ui_components/outline-region-picker-step';
@@ -53,17 +55,17 @@ export class DigitalOceanCreateServerApp extends LitElement {
    * Note that even though the event contains the newly created server, the server
    * may still be in the process of initializing.
    *
-   * @event DigitalOceanCreateServerApp#server-created
+   * @event do-server-created
    * @property {ManagedServer} server - The newly created ManagedServer domain model.
    */
-  public static EVENT_SERVER_CREATED = 'server-created';
+  public static EVENT_SERVER_CREATED = 'do-server-created';
 
   /**
    * Event fired when the user cancels the create server flow.
    *
-   * @event DigitalOceanCreateServerApp#server-create-cancelled
+   * @event do-server-create-cancelled
    */
-  public static EVENT_SERVER_CREATE_CANCELLED = 'server-create-cancelled';
+  public static EVENT_SERVER_CREATE_CANCELLED = 'do-server-create-cancelled';
 
   @property({type: Function}) localize: Function;
   @property({type: String}) currentPage = 'loading';
@@ -169,7 +171,7 @@ export class DigitalOceanCreateServerApp extends LitElement {
   }
 
   /**
-   * Starts the DigitalOcean create server flow.
+   * Starts the DigitalOcean create server user flow.
    *
    * @param account The DigitalOcean account on which to create the Outline server.
    */
@@ -187,8 +189,8 @@ export class DigitalOceanCreateServerApp extends LitElement {
     let activatingAccount = false;
 
     while (true) {
-      const account = await this.account.getAccount();
-      if (account.status === 'active') {
+      const status = await this.account.getStatus();
+      if (status === DigitalOceanStatus.ACTIVE) {
         if (activatingAccount) {
           this.currentPage = 'accountActive';
           await sleep(1500);
@@ -196,7 +198,7 @@ export class DigitalOceanCreateServerApp extends LitElement {
         break;
       } else {
         activatingAccount = true;
-        if (!account.email_verified) {
+        if (status === DigitalOceanStatus.EMAIL_NOT_VERIFIED) {
           this.currentPage = 'verifyEmail';
         } else {
           this.currentPage = 'enterBilling';
@@ -210,11 +212,11 @@ export class DigitalOceanCreateServerApp extends LitElement {
     this.currentPage = 'regionPicker';
 
     try {
-      const regionMap = await this.account.getRegionMap();
-      const locations = Object.entries(regionMap).map(([cityId, regionIds]) => {
-        return this.createLocationModel(cityId, regionIds);
+      const locations = await this.account.listLocations();
+      const displayLocations = locations.map((entry: DigitalOceanLocation) => {
+        return this.createLocationModel(entry.regionId, entry.dataCenterIds);
       });
-      this.regionPicker.locations = locations;
+      this.regionPicker.locations = displayLocations;
     } catch (error) {
       if (error instanceof HttpError && error.getStatusCode() !== 401) {
         console.error(`Failed to get list of available regions: ${error}`);
@@ -247,24 +249,20 @@ export class DigitalOceanCreateServerApp extends LitElement {
   private onCancelTapped() {
     const customEvent = new CustomEvent(DigitalOceanCreateServerApp.EVENT_SERVER_CREATE_CANCELLED);
     this.dispatchEvent(customEvent);
+    this.reset();
   }
 
-  private createLocationModel(cityId: string, regionIds: string[]): Location {
+  private createLocationModel(locationId: string, dataCenterIds: string[]): Location {
     return {
-      id: regionIds.length > 0 ? regionIds[0] : null,
-      name: this.localize(`city-${cityId}`),
-      flag: FLAG_MAPPING[cityId] || '',
-      available: regionIds.length > 0,
+      id: dataCenterIds.length > 0 ? dataCenterIds[0] : null,
+      nameMessageId: `city-${locationId}`,
+      flagUri: FLAG_MAPPING[locationId] || '',
+      available: dataCenterIds.length > 0,
     };
   }
 
-  private makeLocalizedServerName(regionId: RegionId) {
-    const serverLocation = this.getLocalizedCityName(regionId);
+  private makeLocalizedServerName(locationId: string) {
+    const serverLocation = this.localize(`city-${locationId}`);
     return this.localize('server-name', 'serverLocation', serverLocation);
-  }
-
-  private getLocalizedCityName(regionId: RegionId) {
-    const cityId = digitalocean_server.GetCityId(regionId);
-    return this.localize(`city-${cityId}`);
   }
 }

@@ -171,9 +171,9 @@ Polymer({
       <div class="content">
         <!-- DO information -->
         <div class="setting card-section" hidden\$="[[!isServerManaged]]">
-          <img class="setting-icon digital-ocean-icon" src="images/do_white_logo.svg">
+          <img class="setting-icon digital-ocean-icon" src\$="images/{{_computeCloudProviderIcon(cloudProvider)}}">
           <div>
-            <h3>DigitalOcean</h3>
+            <h3>[[cloudProvider]]</h3>
             <paper-input readonly="" value="[[serverLocation]]" label="[[localize('settings-server-location')]]" hidden\$="[[!serverLocation]]" always-float-label="" maxlength="100"></paper-input>
             <paper-input readonly="" value="[[serverMonthlyCost]] USD" label="[[localize('settings-server-cost')]]" hidden\$="[[!serverMonthlyCost]]" always-float-label="" maxlength="100"></paper-input>
             <paper-input readonly="" value="[[serverMonthlyTransferLimit]]" label="[[localize('settings-transfer-limit')]]" hidden\$="[[!serverMonthlyTransferLimit]]" always-float-label="" maxlength="100"></paper-input>
@@ -260,6 +260,7 @@ Polymer({
     isServerManaged: Boolean,
     serverName: String,
     metricsEnabled: Boolean,
+    cloudProvider: String,
     // Initialize to null so we can use the hidden attribute, which does not work well with
     // undefined values.
     serverId: {type: String, value: null},
@@ -305,6 +306,16 @@ Polymer({
     // Fire signal if name has changed.
     if (newName !== this.initialName) {
       this.fire('ServerRenameRequested', {newName});
+    }
+  },
+
+  _computeCloudProviderIcon: function(cloudProvider) {
+    if (cloudProvider === 'Google Cloud Platform') {
+      return 'gcp-logo.svg';
+    } else if (cloudProvider === 'Amazon Lightsail') {
+      return 'aws-logo.svg';
+    } else {
+      return 'do_white_logo.svg';
     }
   },
 

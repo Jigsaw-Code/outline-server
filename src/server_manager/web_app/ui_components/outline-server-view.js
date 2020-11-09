@@ -37,7 +37,7 @@ import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
 
 
 import * as byte_size from 'byte-size';
-import {makePublicEvent} from '../../infrastructure/events';
+import {makePublicEvent} from '../../infrastructure/dom_events';
 
 byte_size.defaultOptions({
   units: 'metric',
@@ -548,7 +548,7 @@ export class ServerView extends DirMixin(PolymerElement) {
           </div>
         </div>
         <div name="settings">
-          <outline-server-settings id="serverSettings" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" access-key-data-limit="{{accessKeyDataLimit}}" is-access-key-data-limit-enabled="{{isAccessKeyDataLimitEnabled}}" supports-access-key-data-limit="[[supportsAccessKeyDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" localize="[[localize]]">
+          <outline-server-settings id="serverSettings" cloud-provider="[[cloudProvider]]" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" access-key-data-limit="{{accessKeyDataLimit}}" is-access-key-data-limit-enabled="{{isAccessKeyDataLimitEnabled}}" supports-access-key-data-limit="[[supportsAccessKeyDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" localize="[[localize]]">
           </outline-server-settings>
         </div>
       </iron-pages>
@@ -581,6 +581,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     static get properties() {
       return {
         serverId: String,
+        cloudProvider: String,
         serverName: String,
         serverHostname: String,
         serverVersion: String,
@@ -628,6 +629,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       super();
       this.serverId = '';
       this.serverName = '';
+      this.cloudProvider = '';
       this.serverHostname = '';
       this.serverVersion = '';
       this.isHostnameEditable = false;

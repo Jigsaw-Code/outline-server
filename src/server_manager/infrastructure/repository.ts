@@ -1,4 +1,4 @@
-// Copyright 2018 The Outline Authors
+// Copyright 2020 The Outline Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+export type KeyExtractor<Record, Key> = (r: Record) => Key;
+export type KeyComparator<Key> = (k1: Key, k2: Key) => boolean;
+
 export class LocalStorageRepository<Record, Key> {
   private readonly records: Record[] = [];  // TODO: Switch to map
   constructor(
       private storageKey: string, private storage: Storage,
-      private keyExtractor: (r: Record) => Key,
-      private keyComparator = (k1: Key, k2: Key) => k1 === k2) {
+      private keyExtractor: KeyExtractor<Record, Key>,
+      private keyComparator: KeyComparator<Key> = (k1: Key, k2: Key) => k1 === k2) {
     const serialized = storage.getItem(storageKey);
     if (serialized != null) {
       this.records = JSON.parse(serialized);

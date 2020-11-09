@@ -35,6 +35,13 @@ export interface ServerConfig {
   accessKeyDataLimit?: server.DataLimit;
 }
 
+export interface ShadowboxSettings {
+  containerImageId: string;
+  metricsUrl: string;
+  sentryApiUrl: string;
+  debug: boolean;
+}
+
 export class ShadowboxServer implements server.Server {
   private managementApiAddress: string;
   private serverConfig: ServerConfig;
@@ -144,12 +151,16 @@ export class ShadowboxServer implements server.Server {
     return new Promise<boolean>((fulfill, reject) => {
       // Query the API and expect a successful response to validate that the
       // service is up and running.
+      console.log('getting server config');
       this.getServerConfig().then(
           (serverConfig) => {
             this.serverConfig = serverConfig;
+            console.log(serverConfig);
             fulfill(true);
           },
           (e) => {
+            console.log('FAILED getting server config');
+            console.log(e);
             fulfill(false);
           });
       // Return not healthy if API doesn't complete within timeoutMs.
@@ -222,6 +233,7 @@ export class ShadowboxServer implements server.Server {
 
   // Makes a request to the management API.
   private apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
+    console.log(`management api request: ${path}`);
     try {
       let apiAddress = this.managementApiAddress;
       if (!apiAddress) {
@@ -233,6 +245,7 @@ export class ShadowboxServer implements server.Server {
         apiAddress += '/';
       }
       const url = apiAddress + path;
+      console.log(`management API URL: ${url}`);
       return fetch(url, options)
           .then(
               (response) => {
@@ -243,6 +256,7 @@ export class ShadowboxServer implements server.Server {
                 return response.text();
               },
               (error) => {
+                console.log(error);
                 throw new errors.ServerApiError(
                     `API request to ${path} failed due to network error`);
               })
