@@ -4082,9 +4082,9 @@ find-cache-dir@^2.1.0:
     pkg-dir "^3.0.0"
 
 find-my-way@^2.0.1:
-  version "2.2.3"
-  resolved "https://registry.yarnpkg.com/find-my-way/-/find-my-way-2.2.3.tgz#529f5969dbd1e6ebed674a7a1087c3430988e39e"
-  integrity sha512-C7dxfbX8pV1maLd31ygkBEOaD51Ls4dROuHjeSQZf1FeQinUzq3UA/kSPecLSDy9iAQufd8w1zgp7j64kyLdhw==
+  version "2.2.5"
+  resolved "https://registry.yarnpkg.com/find-my-way/-/find-my-way-2.2.5.tgz#86ce825266fa28cd962e538a45ec2aaa84c3d514"
+  integrity sha512-GjRZZlGcGmTh9t+6Xrj5K0YprpoAFCAiCPgmAH9Kb09O4oX6hYuckDfnDipYj+Q7B1GtYWSzDI5HEecNYscLQg==
   dependencies:
     fast-decode-uri-component "^1.0.0"
     safe-regex2 "^2.0.0"
