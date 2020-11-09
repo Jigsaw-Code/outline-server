@@ -28,6 +28,17 @@ interface OauthSession {
   cancel(): void;
 }
 
+interface Credentials {
+  refresh_token?: string|null;
+  expiry_date?: number|null;
+  access_token?: string|null;
+  token_type?: string|null;
+  id_token?: string|null;
+  scope?: string;
+}
+
 declare function runDigitalOceanOauth(): OauthSession;
+
+declare function runGcpOauth(): Promise<Credentials>;
 
 declare function bringToFront(): void;

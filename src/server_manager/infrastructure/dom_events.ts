@@ -1,4 +1,4 @@
-// Copyright 2018 The Outline Authors
+// Copyright 2020 The Outline Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export enum Id {
-  DigitalOcean = 'DigitalOcean',
+// Makes an CustomEvent that bubbles up beyond the shadow root.
+export function makePublicEvent(name: string, detail?: {}) {
+  const params = {
+    bubbles: true,
+    composed: true,
+    detail,
+  };
+  return new CustomEvent(name, params);
 }

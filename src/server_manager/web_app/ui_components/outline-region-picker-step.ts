@@ -32,6 +32,8 @@ export interface Location {
 
 @customElement('outline-region-picker-step')
 export class OutlineRegionPicker extends LitElement {
+  public static EVENT_REGION_SELECTED = 'region-selected';
+
   @property({type: Array}) locations: Location[] = [];
   @property({type: String}) selectedLocationId: string = null;
   @property({type: Boolean}) isServerBeingCreated = false;
@@ -110,8 +112,8 @@ export class OutlineRegionPicker extends LitElement {
       <span slot="step-title">${this.localize('region-title')}</span>
       <span slot="step-description">${this.localize('region-description')}</span>
       <span slot="step-action">
-        <paper-button id="createServerButton" @tap="${this._handleCreateServerTap}" ?disabled="${
-        !this._isCreateButtonEnabled(this.isServerBeingCreated, this.selectedLocationId)}">
+        <paper-button id="createServerButton" @tap="${this._handleCreateServerTap}" 
+            ?disabled="${this.isServerBeingCreated || this.selectedLocationId === null}">
           ${this.localize('region-setup')}
         </paper-button>
       </span>
@@ -142,23 +144,14 @@ export class OutlineRegionPicker extends LitElement {
     this.selectedLocationId = null;
   }
 
-  _isCreateButtonEnabled(isCreatingServer: boolean, selectedLocationId: string): boolean {
-    return !isCreatingServer && selectedLocationId != null;
-  }
-
   _locationSelected(event: Event): void {
     const inputEl = event.target as HTMLInputElement;
     this.selectedLocationId = inputEl.value;
   }
 
   _handleCreateServerTap(): void {
-    this.isServerBeingCreated = true;
-    const params = {
-      bubbles: true,
-      composed: true,
-      detail: {selectedRegionId: this.selectedLocationId}
-    };
-    const customEvent = new CustomEvent('RegionSelected', params);
+    const params = {detail: {regionId: this.selectedLocationId}};
+    const customEvent = new CustomEvent(OutlineRegionPicker.EVENT_REGION_SELECTED, params);
     this.dispatchEvent(customEvent);
   }
 }

@@ -1,5 +1,5 @@
 /*
-  Copyright 2018 The Outline Authors
+  Copyright 2020 The Outline Authors
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -18,11 +18,13 @@ import '@polymer/paper-toast/paper-toast.js';
 import '@polymer/paper-icon-button/paper-icon-button.js';
 
 import {PaperToastElement} from '@polymer/paper-toast/paper-toast';
-import {css, customElement, html, LitElement} from 'lit-element';
+import {css, customElement, html, LitElement, property} from 'lit-element';
 import {COMMON_STYLES} from './cloud-install-styles';
 
 @customElement('outline-notification-manager')
 export class OutlineNotificationManager extends LitElement {
+  @property({type: Function}) localize: Function;
+
   static get styles() {
     return [
       COMMON_STYLES, css`
@@ -51,21 +53,21 @@ export class OutlineNotificationManager extends LitElement {
         </paper-toast>`;
   }
 
-  showError(message: string) {
-    this.showToast(message, Infinity);
+  showError(messageId: string, ...params: string[]) {
+    this.showToast(this.localize(messageId, ...params), Infinity);
   }
 
-  showNotification(message: string, durationMs = 3000) {
-    this.showToast(message, durationMs);
+  showNotification(messageId: string, durationMs = 3000) {
+    this.showToast(this.localize(messageId), durationMs);
   }
 
-  private showToast(message: string, duration: number) {
+  private showToast(message: string, durationMs: number) {
     this.closeToast();
     // Defer in order to trigger the toast animation, otherwise the update happens in place.
     setTimeout(() => {
       this.getToast().show({
         text: message,
-        duration,
+        durationMs,
         noOverlap: true,
       });
     }, 0);

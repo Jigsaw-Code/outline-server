@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as cloud_povider from './cloud_provider';
 import {ManagedServer, RegionId, RegionMap} from './server';
+import {CloudProviderId} from "./cloud";
 
 export interface Data {
   id: string;
   displayName: string;
-  provider: cloud_povider.Id;
+  provider: CloudProviderId;
   credential: unknown;
 }
 
@@ -29,6 +29,7 @@ export interface AccountModelFactory<T extends Account> {
 // TODO: This is a clone of the ManagedServerRepository interface. We should try
 // to make this generic, or remove it if that's not possible.
 export interface Account {
+  getCloudProviderId(): CloudProviderId;
   getData(): Data;
   // Lists all existing Shadowboxes. If `fetchFromHost` is true, performs a network request to
   // retrieve the servers; otherwise resolves with a cached server list.

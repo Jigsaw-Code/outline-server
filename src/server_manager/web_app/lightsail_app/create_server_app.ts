@@ -15,62 +15,75 @@
 */
 import {css, customElement, html, LitElement, property} from 'lit-element';
 
-import {DigitalOceanAccount} from '../../model/digitalocean_account';
-import {HttpError} from '../../cloud/digitalocean_api';
+import {LightsailAccount} from '../../model/lightsail_account';
 import {makePublicEvent} from '../../infrastructure/dom_events';
-import {sleep} from '../../infrastructure/sleep';
-import {RegionId} from '../../model/server';
-import * as digitalocean_server from '../digitalocean_server';
 import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 import {Location, OutlineRegionPicker} from '../ui_components/outline-region-picker-step';
+import {HttpError} from "../../infrastructure/fetch";
 
-// DigitalOcean mapping of regions to flags
+// Amazon Lightsail mapping of locations to flags
 const FLAG_IMAGE_DIR = 'images/flags';
 const FLAG_MAPPING: {[cityId: string]: string} = {
-  ams: `${FLAG_IMAGE_DIR}/netherlands.png`,
-  sgp: `${FLAG_IMAGE_DIR}/singapore.png`,
-  blr: `${FLAG_IMAGE_DIR}/india.png`,
-  fra: `${FLAG_IMAGE_DIR}/germany.png`,
-  lon: `${FLAG_IMAGE_DIR}/uk.png`,
-  sfo: `${FLAG_IMAGE_DIR}/us.png`,
-  tor: `${FLAG_IMAGE_DIR}/canada.png`,
-  nyc: `${FLAG_IMAGE_DIR}/us.png`,
+  'us-east-1': `${FLAG_IMAGE_DIR}/us.png`,
+  'us-west-2': `${FLAG_IMAGE_DIR}/us.png`,
+  'ap-south-1': `${FLAG_IMAGE_DIR}/india.png`,
+  'ap-northeast-2': `${FLAG_IMAGE_DIR}/south_korea.png`,
+  'ap-southeast-1': `${FLAG_IMAGE_DIR}/singapore.png`,
+  'ap-southeast-2': `${FLAG_IMAGE_DIR}/australia.png`,
+  'ap-northeast-1': `${FLAG_IMAGE_DIR}/japan.png`,
+  'ca-central-1': `${FLAG_IMAGE_DIR}/canada.png`,
+  'eu-central-1': `${FLAG_IMAGE_DIR}/germany.png`,
+  'eu-west-1': `${FLAG_IMAGE_DIR}/ireland.png`,
+  'eu-west-2': `${FLAG_IMAGE_DIR}/england.png`,
+  'eu-west-3': `${FLAG_IMAGE_DIR}/france.png`,
 };
+
+const REGION_MAPPING = new Map<string, string>([
+  ["us-east-1", "US East (N. Virginia)"],
+  ["us-east-2", "US East (Ohio)"],
+  ["us-west-2", "US West (Oregon)"],
+  ["ap-south-1", "Asia Pacific (Mumbai)"],
+  ["ap-northeast-2", "Asia Pacific (Seoul)"],
+  ["ap-southeast-1", "Asia Pacific (Singapore)"],
+  ["ap-southeast-2", "Asia Pacific (Sydney)"],
+  ["ap-northeast-1", "Asia Pacific (Tokyo)"],
+  ["ca-central-1", "Canada (Central)"],
+  ["eu-central-1", "EU (Frankfurt)"],
+  ["eu-west-1", "EU (Ireland)"],
+  ["eu-west-2", "EU (London)"],
+  ["eu-west-3", "EU (Paris)"],
+]);
 
 /**
  * A web component that guides a user through the process of creating an Outline
- * server on DigitalOcean.
- *
- * Applications must call {@link start} to begin the server creation flow. The flow
- * is asynchronous and events will be fired on successful server creation or user
- * cancellation.
+ * server on Amazon Lightsail.
  */
-@customElement('digitalocean-create-server-app')
-export class DigitalOceanCreateServerApp extends LitElement {
+@customElement('lightsail-create-server-app')
+export class LightsailCreateServerApp extends LitElement {
   /**
-   * Event fired upon successful completion of the DigitalOcean create server flow.
+   * Event fired upon successful completion of the Amazon Lightsail create server flow.
    * Note that even though the event contains the newly created server, the server
    * may still be in the process of initializing.
    *
-   * @event DigitalOceanCreateServerApp#server-created
+   * @event lightsail-server-created
    * @property {ManagedServer} server - The newly created ManagedServer domain model.
    */
-  public static EVENT_SERVER_CREATED = 'server-created';
+  public static EVENT_SERVER_CREATED = 'lightsail-server-created';
 
   /**
    * Event fired when the user cancels the create server flow.
    *
-   * @event DigitalOceanCreateServerApp#server-create-cancelled
+   * @event lightsail-server-create-cancelled
    */
-  public static EVENT_SERVER_CREATE_CANCELLED = 'server-create-cancelled';
+  public static EVENT_SERVER_CREATE_CANCELLED = 'lightsail-server-create-cancelled';
 
   @property({type: Function}) localize: Function;
-  @property({type: String}) currentPage = 'loading';
   @property({type: Object}) notificationManager: OutlineNotificationManager;
 
+  private currentPage = 'loading';
   private regionPicker: OutlineRegionPicker;
-  private account: DigitalOceanAccount;
+  private account: LightsailAccount;
 
   static get styles() {
     return [
@@ -127,45 +140,10 @@ export class DigitalOceanCreateServerApp extends LitElement {
     return html`
       <iron-pages id="pages" attr-for-selected="id" .selected="${this.currentPage}">
         <outline-step-view id="loading"></outline-step-view>
-      
-        <outline-step-view id="verifyEmail">
-          <span slot="step-title">${this.localize('oauth-activate-account')}</span>
-          <span slot="step-description">${this.localize('oauth-verify')}</span>
-          <paper-card class="card">
-            <div class="container">
-              <img class="mirror" src="images/do_oauth_email.svg">
-              <p>${this.localize('oauth-verify-tag')}</p>
-            </div>
-            <paper-button @tap="${this.onCancelTapped}">${this.localize('cancel')}</paper-button>
-          </paper-card>
-        </outline-step-view>
-  
-        <outline-step-view id="enterBilling">
-          <span slot="step-title">${this.localize('oauth-activate-account')}</span>
-          <span slot="step-description">${this.localize('oauth-billing')}</span>
-          <paper-card class="card">
-            <div class="container">
-              <img class="mirror" src="images/do_oauth_billing.svg">
-              <p>${this.localize('oauth-billing-tag')}</p>
-            </div>
-            <paper-button @tap="${this.onCancelTapped}">${this.localize('cancel')}</paper-button>
-          </paper-card>
-        </outline-step-view>
-  
-        <outline-step-view id="accountActive">
-          <span slot="step-title">${this.localize('oauth-activate-account')}</span>
-          <span slot="step-description">${this.localize('oauth-account-active')}</span>
-          <paper-card class="card">
-            <div class="container">
-              <img class="mirror" src="images/do_oauth_done.svg">
-              <p>${this.localize('oauth-account-active-tag')}</p>
-            </div>
-          </paper-card>
-        </outline-step-view>
-        
+
         <outline-region-picker-step id="regionPicker" .localize=${this.localize}
             @region-selected="${this.onRegionSelected}"></outline-region-picker-step>
-    </iron-pages>`;
+      </iron-pages>`;
   }
 
   /**
@@ -173,37 +151,13 @@ export class DigitalOceanCreateServerApp extends LitElement {
    *
    * @param account The DigitalOcean account on which to create the Outline server.
    */
-  async start(account: DigitalOceanAccount): Promise<void> {
+  async start(account: LightsailAccount): Promise<void> {
     this.regionPicker =
         this.shadowRoot.querySelector('outline-region-picker-step') as OutlineRegionPicker;
     this.account = account;
 
     this.reset();
-    await this.validateAccount();
     await this.showRegionPicker();
-  }
-
-  private async validateAccount() {
-    let activatingAccount = false;
-
-    while (true) {
-      const account = await this.account.getAccount();
-      if (account.status === 'active') {
-        if (activatingAccount) {
-          this.currentPage = 'accountActive';
-          await sleep(1500);
-        }
-        break;
-      } else {
-        activatingAccount = true;
-        if (!account.email_verified) {
-          this.currentPage = 'verifyEmail';
-        } else {
-          this.currentPage = 'enterBilling';
-        }
-        await sleep(1000);
-      }
-    }
   }
 
   private async showRegionPicker(): Promise<void> {
@@ -232,10 +186,10 @@ export class DigitalOceanCreateServerApp extends LitElement {
     this.regionPicker.isServerBeingCreated = true;
 
     try {
-      const serverName = this.makeLocalizedServerName(event.detail.regionId);
+      const serverName = event.detail.regionId;
       const server = await this.account.createServer(event.detail.regionId, serverName);
       const serverCreatedEvent =
-          makePublicEvent(DigitalOceanCreateServerApp.EVENT_SERVER_CREATED, {server});
+          makePublicEvent(LightsailCreateServerApp.EVENT_SERVER_CREATED, {server});
       this.dispatchEvent(serverCreatedEvent);
     } catch (error) {
       this.notificationManager.showError('error-server-creation');
@@ -245,26 +199,16 @@ export class DigitalOceanCreateServerApp extends LitElement {
   }
 
   private onCancelTapped() {
-    const customEvent = new CustomEvent(DigitalOceanCreateServerApp.EVENT_SERVER_CREATE_CANCELLED);
+    const customEvent = new CustomEvent(LightsailCreateServerApp.EVENT_SERVER_CREATE_CANCELLED);
     this.dispatchEvent(customEvent);
   }
 
   private createLocationModel(cityId: string, regionIds: string[]): Location {
     return {
       id: regionIds.length > 0 ? regionIds[0] : null,
-      name: this.localize(`city-${cityId}`),
+      name: REGION_MAPPING.get(cityId) || cityId,
       flag: FLAG_MAPPING[cityId] || '',
       available: regionIds.length > 0,
     };
-  }
-
-  private makeLocalizedServerName(regionId: RegionId) {
-    const serverLocation = this.getLocalizedCityName(regionId);
-    return this.localize('server-name', 'serverLocation', serverLocation);
-  }
-
-  private getLocalizedCityName(regionId: RegionId) {
-    const cityId = digitalocean_server.GetCityId(regionId);
-    return this.localize(`city-${cityId}`);
   }
 }

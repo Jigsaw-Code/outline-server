@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {CloudProviderId} from "./cloud";
+
 export interface Server {
   // Get the server's name for display.
   getName(): string;
@@ -96,6 +98,7 @@ export interface ManagedServer extends Server {
   // Returns server host object.
   getHost(): ManagedServerHost;
   // Returns true when installation is complete.
+  getCloudProviderId(): CloudProviderId;  // TODO: Replace with account.
   isInstallCompleted(): boolean;
 }
 
@@ -172,4 +175,12 @@ export interface DataUsageByAccessKey {
 // NOTE: Must be kept in sync with the definition in src/shadowbox/access_key.ts.
 export interface DataLimit {
   readonly bytes: number;
+}
+
+export function isManagedServer(testServer: Server): testServer is ManagedServer {
+  return !!(testServer as ManagedServer).getHost;
+}
+
+export function isManualServer(testServer: Server): testServer is ManualServer {
+  return !!(testServer as ManualServer).forget;
 }

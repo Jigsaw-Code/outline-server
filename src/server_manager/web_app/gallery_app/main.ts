@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import '../ui_components/outline-about-dialog';
-import '../ui_components/outline-do-oauth-step';
+import '../digitalocean_app/oauth-step';
 import '../ui_components/outline-feedback-dialog';
 import '../ui_components/outline-share-dialog';
 import '../ui_components/outline-sort-span';

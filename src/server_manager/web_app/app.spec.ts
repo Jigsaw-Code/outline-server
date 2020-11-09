@@ -253,7 +253,7 @@ function createTestApp(
 enum AppRootScreen {
   NONE = 0,
   INTRO,
-  DIGITAL_OCEAN_CREATE_SERVER,
+  DIGITAL_OCEAN_CREATE_SERVER_APP,
   SERVER_VIEW,
   INSTALL_PROGRESS,
   DIALOG
@@ -277,12 +277,8 @@ class FakePolymerAppRoot extends AppRoot {
     this.setScreen(AppRootScreen.INTRO);
   }
 
-  getAndShowDigitalOceanCreateServer() {
-    this.setScreen(AppRootScreen.DIGITAL_OCEAN_CREATE_SERVER);
-    return {};
-  }
-
-  getDigitalOceanOauthFlow() {
+  getAndShowDigitalOceanCreateServerApp() {
+    this.setScreen(AppRootScreen.DIGITAL_OCEAN_CREATE_SERVER_APP);
     return {};
   }
 

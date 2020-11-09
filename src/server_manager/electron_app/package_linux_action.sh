@@ -14,11 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+source src/server_manager/scripts/fill_packaging_opts.sh $0 $@
+
 yarn do server_manager/electron_app/build
 
+readonly BUILD_DIR=build/server_manager/electron_app/static
+
 $ROOT_DIR/src/server_manager/node_modules/.bin/electron-builder \
-  --projectDir=build/server_manager/electron_app/static \
+  --projectDir="${BUILD_DIR}" \
   --config.asarUnpack=server_manager/web_app/images \
+  --config.generateUpdatesFilesForAllChannels=true \
   --publish=never \
   --config.publish.provider=generic \
   --config.publish.url=https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/ \
@@ -26,3 +31,5 @@ $ROOT_DIR/src/server_manager/node_modules/.bin/electron-builder \
   --config.linux.icon=icons/png \
   --config.linux.category=Network \
   --config.artifactName='Outline-Manager.${ext}'
+
+src/server_manager/scripts/finish_info_files.sh linux $STAGING_PERCENTAGE

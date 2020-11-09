@@ -13,20 +13,24 @@
 // limitations under the License.
 
 import * as server from '../model/server';
+import {CloudProviderId} from "../model/cloud";
 
 export interface DisplayServer {
   id: string;
   name: string;
+  cloudProviderId?: CloudProviderId;
   isManaged: boolean;
   isSynced?: boolean;
 }
 
 // Returns a `DisplayServer` corresponding to `server`.
-export async function makeDisplayServer(server: server.Server) {
+export async function makeDisplayServer(server: server.Server): Promise<DisplayServer> {
+  const cloudProviderId = (!!(server as server.ManagedServer).getHost) ? (server as server.ManagedServer).getCloudProviderId() : null;
   return {
     id: server.getManagementApiUrl(),
     name: await server.isHealthy().catch((e) => false) ? server.getName() :
                                                          server.getHostnameForAccessKeys(),
+    cloudProviderId,
     isManaged: !!(server as server.ManagedServer).getHost,
     isSynced: true
   };

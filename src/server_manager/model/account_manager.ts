@@ -15,17 +15,17 @@
 import {LocalStorageRepository} from '../infrastructure/repository';
 
 import {Account, AccountModelFactory, Data} from './account';
-import * as cloud_provider from './cloud_provider';
+import {CloudProviderId} from "./cloud";
 
 export class AccountManager {
   // TODO: Align generics
   // tslint:disable-next-line:no-any
-  private accountModelFactories: Map<cloud_provider.Id, AccountModelFactory<any>> = new Map();
+  private accountModelFactories: Map<CloudProviderId, AccountModelFactory<any>> = new Map();
 
   constructor(private accountRepository: LocalStorageRepository<Data, string>) {}
 
   // tslint:disable-next-line:no-any
-  register<T extends Account>(cloudProviderId: cloud_provider.Id, factory: AccountModelFactory<T>) {
+  register<T extends Account>(cloudProviderId: CloudProviderId, factory: AccountModelFactory<T>) {
     this.accountModelFactories.set(cloudProviderId, factory);
   }
 

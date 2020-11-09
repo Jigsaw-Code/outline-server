@@ -20,6 +20,7 @@ import {asciiToHex, hexToString} from '../infrastructure/hex_encoding';
 import * as server from '../model/server';
 
 import {ShadowboxServer} from './shadowbox_server';
+import {CloudProviderId} from "../model/cloud";
 
 // WARNING: these strings must be lowercase due to a DigitalOcean case
 // sensitivity bug.
@@ -77,6 +78,10 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
         .catch((e) => {
           console.error(`error installing server: ${e.message}`);
         });
+  }
+
+  getCloudProviderId(): CloudProviderId {
+    return CloudProviderId.DigitalOcean;
   }
 
   waitOnInstall(resetTimeout: boolean): Promise<void> {

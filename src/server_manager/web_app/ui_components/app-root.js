@@ -25,16 +25,21 @@ import '@polymer/paper-dialog/paper-dialog.js';
 import '@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
 import '@polymer/paper-listbox/paper-listbox.js';
 import '@polymer/paper-menu-button/paper-menu-button.js';
-import './account-list-app';
 import './cloud-install-styles.js';
 import './outline-about-dialog.js';
 import '../digitalocean_app/connect_account_app';
-import '../digitalocean_app/verify_account_app';
+import '../digitalocean_app/create_server_app';
+import '../gcp_app/connect_account_app';
+import '../gcp_app/create_server_app';
+import '../lightsail_app/connect_account_app';
+import '../lightsail_app/create_server_app';
+import '../outline_app/manage_server_app';
+import './cloud-install-styles.js';
+import './outline-about-dialog.js';
 import './outline-feedback-dialog.js';
 import './outline-survey-dialog.js';
-import './outline-intro-step.js';
+import './outline-intro-step';
 import './outline-language-picker.js';
-import '../digitalocean_app/create_server_app';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
 import './outline-notification-manager';
@@ -48,8 +53,6 @@ import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 import {PolymerElement} from '@polymer/polymer/polymer-element.js';
 
 import {DisplayServer} from '../display_server';
-
-import {ServerView} from './outline-server-view.js';
 
 const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
 
@@ -117,6 +120,33 @@ export class AppRoot extends mixinBehaviors
       }
       .servers-header > span {
         flex: 1;
+      }
+      .do-overflow-menu {
+        padding: 24px;
+        color: var(--dark-gray);
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+      }
+      .do-overflow-menu h4 {
+        margin-top: 0;
+        white-space: nowrap;
+      }
+      .do-overflow-menu .account-info {
+        display: flex;
+        align-items: center;
+        color: var(--faded-gray);
+      }
+      .do-overflow-menu .account-info img {
+        margin-right: 12px;
+        width: 24px;
+      }
+      .do-overflow-menu .sign-out-button {
+        margin-top: 24px;
+        align-self: flex-end;
+        font-weight: bold;
+        cursor: pointer;
+        text-transform: uppercase;
       }
       .servers-container {
         padding-right: 12px; /* In case the server name is wraps. */
@@ -301,15 +331,79 @@ export class AppRoot extends mixinBehaviors
 
           <!-- Servers section -->
           <div class="servers">
-            <!-- Connected accounts -->
-            <account-list-app id="accountListApp" localize="[[localize]]"></account-list-app>
+            <!-- DigitalOcean servers -->
+            <div class="servers-section" hidden\$="{{!isSignedInToDigitalOcean}}">
+              <div class="servers-header">
+                <span>[[localize('servers-digitalocean')]]</span>
+                <paper-menu-button horizontal-align="left" class="" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
+                  <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
+                  <div class="do-overflow-menu" slot="dropdown-content">
+                    <h4>Disconnect DigitalOcean account</h4>
+                    <div class="account-info"><img src="images/digital_ocean_logo.svg">{{adminEmail}}</div>
+                    <div class="sign-out-button" on-tap="signOutTapped">[[localize('digitalocean-disconnect')]]</div>
+                  </div>
+                </paper-menu-button>
+              </div>
+              <div class="servers-container">
+                <template is="dom-repeat" items="{{doServerList}}" as="server" sort="_sortServersByName">
+                  <div class\$="server {{_computeServerClasses(selectedServer, server)}}" data-server\$="[[server]]" on-tap="_showServer">
+                    <img class="server-icon" src\$="images/{{_computeServerImage(selectedServer, server)}}">
+                    <span>{{server.name}}</span>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <!-- GCP servers -->
+            <div class="servers-section" hidden\$="{{!isSignedInToGcp}}">
+              <div class="servers-header">
+                <span>GCP servers</span>
+                <paper-menu-button horizontal-align="left" class="" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
+                  <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
+                  <div class="do-overflow-menu" slot="dropdown-content">
+                    <h4>Disconnect GCP account</h4>
+                    <div class="account-info"><img src="images/gcp-logo.svg">{{gcpAccountName}}</div>
+                    <div class="sign-out-button" on-tap="signOutTapped">[[localize('digitalocean-disconnect')]]</div>
+                  </div>
+                </paper-menu-button>
+              </div>
+              <div class="servers-container">
+                <template is="dom-repeat" items="{{gcpServerList}}" as="server" sort="_sortServersByName">
+                  <div class\$="server {{_computeServerClasses(selectedServer, server)}}" data-server\$="[[server]]" on-tap="_showServer">
+                    <img class="server-icon" src\$="images/{{_computeServerImage(selectedServer, server)}}">
+                    <span>{{server.name}}</span>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <!-- GCP servers -->
+            <div class="servers-section" hidden\$="{{!isSignedInToLightsail}}">
+              <div class="servers-header">
+                <span>GCP servers</span>
+                <paper-menu-button horizontal-align="left" class="" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
+                  <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
+                  <div class="do-overflow-menu" slot="dropdown-content">
+                    <h4>Disconnect Amazon Lightsail account</h4>
+                    <div class="account-info"><img src="images/aws-logo.svg">{{lightsailAccountName}}</div>
+                    <div class="sign-out-button" on-tap="signOutTapped">[[localize('digitalocean-disconnect')]]</div>
+                  </div>
+                </paper-menu-button>
+              </div>
+              <div class="servers-container">
+                <template is="dom-repeat" items="{{lightsailServerList}}" as="server" sort="_sortServersByName">
+                  <div class\$="server {{_computeServerClasses(selectedServer, server)}}" data-server\$="[[server]]" on-tap="_showServer">
+                    <img class="server-icon" src\$="images/{{_computeServerImage(selectedServer, server)}}">
+                    <span>{{server.name}}</span>
+                  </div>
+                </template>
+              </div>
+            </div>
             <!-- Manual servers -->
             <div class="servers-section" hidden\$="{{!hasManualServers}}">
               <div class="servers-header">
                 <span>[[localize('servers-manual')]]</span>
               </div>
               <div class="servers-container">
-                <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
+                <template is="dom-repeat" items="{{manualServerList}}" as="server" sort="_sortServersByName">
                   <div class\$="server {{_computeServerClasses(selectedServer, server)}}" data-server\$="[[server]]" on-tap="_showServer">
                     <img class="server-icon" src\$="images/{{_computeServerImage(selectedServer, server)}}">
                     <span>{{server.name}}</span>
@@ -349,17 +443,16 @@ export class AppRoot extends mixinBehaviors
         <app-header-layout>
           <div class="app-container">
             <iron-pages attr-for-selected="id" selected="{{ currentPage }}">
-              <outline-intro-step id="intro" is-signed-in-to-digital-ocean="{{isSignedInToDigitalOcean}}" digital-ocean-email="{{adminEmail}}" localize="[[localize]]"></outline-intro-step>
+              <outline-intro-step id="intro" digital-ocean-email="{{adminEmail}}" localize="[[localize]]"></outline-intro-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
-              <digital-ocean-connect-account-app id="digitalOceanConnectAccountApp" localize="[[localize]]"></digital-ocean-connect-account-app>
-              <digital-ocean-verify-account-app id="digitalOceanVerifyAccountApp" localize="[[localize]]"></digital-ocean-verify-account-app>
-              <digital-ocean-create-server id="digitalOceanCreateServerApp" localize="[[localize]]"></digital-ocean-create-server>
+              <digitalocean-connect-account-app id="digitalOceanConnectAccountApp" localize="[[localize]]"></digitalocean-connect-account-app>
+              <digitalocean-create-server-app id="digitalOceanCreateServerApp" localize="[[localize]]"></digitalocean-create-server-app>
+              <gcp-connect-account-app id="gcpConnectAccountApp" localize="[[localize]]"></gcp-connect-account-app>
+              <gcp-create-server-app id="gcpCreateServerApp" localize="[[localize]]"></gcp-create-server-app>
+              <lightsail-connect-account-app id="lightsailConnectAccountApp" localize="[[localize]]"></lightsail-connect-account-app>
+              <lightsail-create-server-app id="lightsailCreateServerApp" localize="[[localize]]"></lightsail-create-server-app>
               <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
-              <div id="serverView">
-                <template is="dom-repeat" items="{{serverList}}" as="server">
-                  <outline-server-view id="serverView-{{_base64Encode(server.id)}}" localize="[[localize]]" hidden\$="{{!_isServerSelected(selectedServer, server)}}"></outline-server-view>
-                </template>
-              </div>
+              <manage-server-app id="manageServerApp" localize="[[localize]]" language="[[language]]"></manage-server-app>
             </iron-pages>
           </div>
         </app-header-layout>
@@ -372,12 +465,37 @@ export class AppRoot extends mixinBehaviors
             <paper-icon-button icon="menu" on-click="_toggleAppDrawer"></paper-icon-button>
           </div>
           <div class="servers">
-            <!-- Connected accounts-->
-            <account-list-sidebar-app id="accountListSidebarApp"></account-list-sidebar-app>
+            <!-- DigitalOcean servers -->
+            <div class="side-bar-section servers-section" hidden\$="{{!isSignedInToDigitalOcean}}">
+              <img class="provider-icon" src="images/do_white_logo.svg">
+              <template is="dom-repeat" items="{{doServerList}}" as="server" sort="_sortServersByName">
+                <div class\$="server {{_computeServerClasses(selectedServer, server)}}" data-server\$="[[server]]" on-tap="_showServer">
+                  <img class="server-icon" src\$="images/{{_computeServerImage(selectedServer, server)}}">
+                </div>
+              </template>
+            </div>
+            <!-- GCP servers -->
+            <div class="side-bar-section servers-section" hidden\$="{{!isSignedInToGcp}}">
+              <img class="provider-icon" src="images/gcp-logo.svg">
+              <template is="dom-repeat" items="{{gcpServerList}}" as="server" sort="_sortServersByName">
+                <div class\$="server {{_computeServerClasses(selectedServer, server)}}" data-server\$="[[server]]" on-tap="_showServer">
+                  <img class="server-icon" src\$="images/{{_computeServerImage(selectedServer, server)}}">
+                </div>
+              </template>
+            </div>
+            <!-- Lightsail servers -->
+            <div class="side-bar-section servers-section" hidden\$="{{!isSignedInToLightsail}}">
+              <img class="provider-icon" src="images/aws-logo.svg">
+              <template is="dom-repeat" items="{{gcpServerList}}" as="server" sort="_sortServersByName">
+                <div class\$="server {{_computeServerClasses(selectedServer, server)}}" data-server\$="[[server]]" on-tap="_showServer">
+                  <img class="server-icon" src\$="images/{{_computeServerImage(selectedServer, server)}}">
+                </div>
+              </template>
+            </div>
             <!-- Manual servers -->
             <div class="side-bar-section servers-section" hidden\$="{{!hasManualServers}}">
               <img class="provider-icon" src="images/cloud.svg">
-              <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
+              <template is="dom-repeat" items="{{manualServerList}}" as="server" sort="_sortServersByName">
                 <div class\$="server {{_computeServerClasses(selectedServer, server)}}" data-server\$="[[server]]" on-tap="_showServer">
                   <img class="server-icon" src\$="images/{{_computeServerImage(selectedServer, server)}}">
                 </div>
@@ -392,7 +510,7 @@ export class AppRoot extends mixinBehaviors
         </div>
       </app-drawer>
 
-      <outline-notifications id="notificationManager"></outline-notifications>
+      <outline-notification-manager id="notificationManager" localize="[[localize]]"></outline-notification-manager>
 
       <!-- Modal dialogs must be outside the app container; otherwise the backdrop covers them.  -->
       <outline-survey-dialog id="surveyDialog" localize="[[localize]]"></outline-survey-dialog>
@@ -434,11 +552,12 @@ export class AppRoot extends mixinBehaviors
       // An array of {id, name, dir} language objects.
       supportedLanguages: {type: Array, readonly: true},
       useKeyIfMissing: {type: Boolean},
-      serverList: {type: Array},
+      doServerList: {type: Array},
+      manualServerList: {type: Array},
       selectedServer: {type: Object},
       hasManualServers: {
         type: Boolean,
-        computed: '_computeHasManualServers(serverList.*)',
+        computed: '_computeHasManualServers(manualServerList)',
       },
       adminEmail: {type: String},
       isSignedInToDigitalOcean: {
@@ -461,6 +580,28 @@ export class AppRoot extends mixinBehaviors
         type: String,
         computed: '_computeSideBarMarginClass(shouldShowSideBar)',
       },
+      // GCP
+      gcpServerList: {type: Array},
+      gcpAccount: {type: Object},
+      gcpAccountName: {
+        type: String,
+        computed: '_computeGcpAccountName(gcpAccount)',
+      },
+      isSignedInToGcp: {
+        type: Boolean,
+        computed: '_computeIsSignedInToGcp(gcpAccount)',
+      },
+      // Lightsail
+      lightsailServerList: {type: Array},
+      lightsailAccount: {type: Object},
+      lightsailAccountName: {
+        type: String,
+        computed: '_computeLightsailAccountName(lightsailAccount)',
+      },
+      isSignedInToLightsail: {
+        type: Boolean,
+        computed: '_computeIsSignedInToLightsail(lightsailAccount)',
+      },
     };
   }
 
@@ -472,18 +613,30 @@ export class AppRoot extends mixinBehaviors
     this.supportedLanguages = [];
     this.useKeyIfMissing = true;
     /** @type {DisplayServer[]} */
-    this.serverList = [];
+    this.doServerList = [];
     this.adminEmail = '';
     this.outlineVersion = '';
     this.currentPage = 'intro';
     this.shouldShowSideBar = false;
+    this.gcpAccount = null;
+    this.gcpServerList = [];
+    this.lightsailAccount = null;
+    this.lightsailServerList = [];
+    this.manualServerList = [];
 
-    this.addEventListener('RegionSelected', this.handleRegionSelected);
-    this.addEventListener(
-        'SetUpGenericCloudProviderRequested', this.handleSetUpGenericCloudProviderRequested);
-    this.addEventListener('SetUpAwsRequested', this.handleSetUpAwsRequested);
-    this.addEventListener('SetUpGcpRequested', this.handleSetUpGcpRequested);
     this.addEventListener('ManualServerEntryCancelled', this.handleManualCancelled);
+  }
+
+  ready() {
+    super.ready();
+    const notificationManager = this.getNotificationManager();
+    this.$.digitalOceanConnectAccountApp.notificationManager = notificationManager;
+    this.$.digitalOceanCreateServerApp.notificationManager = notificationManager;
+    this.$.gcpConnectAccountApp.notificationManager = notificationManager;
+    this.$.gcpCreateServerApp.notificationManager = notificationManager;
+    this.$.lightsailConnectAccountApp.notificationManager = notificationManager;
+    this.$.lightsailCreateServerApp.notificationManager = notificationManager;
+    this.$.manageServerApp.notificationManager = notificationManager;
   }
 
   /**
@@ -508,37 +661,70 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
   }
 
-  initializeDigitalOceanConnectAccountApp(appSettings, accountRepository, notificationManager) {
+  initializeDigitalOceanConnectAccountApp(appSettings, accountRepository) {
     this.$.digitalOceanConnectAccountApp.appSettings = appSettings;
     this.$.digitalOceanConnectAccountApp.accountRepository = accountRepository;
-    this.$.digitalOceanConnectAccountApp.notificationManager = notificationManager;
     return this.$.digitalOceanConnectAccountApp;
   }
 
-  showDigitalOceanConnectAccountApp() {
+  initializeGcpConnectAccountApp(appSettings, accountRepository) {
+    this.$.gcpConnectAccountApp.appSettings = appSettings;
+    this.$.gcpConnectAccountApp.accountRepository = accountRepository;
+    return this.$.gcpConnectAccountApp;
+  }
+
+  initializeLightsailConnectAccountApp(appSettings, accountRepository) {
+    this.$.lightsailConnectAccountApp.appSettings = appSettings;
+    this.$.lightsailConnectAccountApp.accountRepository = accountRepository;
+    return this.$.lightsailConnectAccountApp;
+  }
+
+  /**
+   * @returns {DigitalOceanConnectAccountApp}
+   */
+  getAndShowDigitalOceanConnectAccountApp() {
     this.currentPage = 'digitalOceanConnectAccountApp';
+    return this.$.digitalOceanConnectAccountApp;
   }
 
-  initializeDigitalOceanVerifyAccountApp(notificationManager) {
-    this.$.digitalOceanVerifyAccountApp.notificationManager = notificationManager;
-    return this.$.digitalOceanVerifyAccountApp;
-  }
-
-  showDigitalOceanVerifyAccountApp() {
-    this.currentPage = 'digitalOceanVerifyAccountApp';
-  }
-
+  /**
+   * @returns {DigitalOceanCreateServerApp}
+   */
   getAndShowDigitalOceanCreateServerApp() {
     this.currentPage = 'digitalOceanCreateServerApp';
     return this.$.digitalOceanCreateServerApp;
   }
 
-  getAccountListApp() {
-    return this.$.accountListApp;
+  /**
+   * @returns {GcpConnectAccountApp}
+   */
+  getAndShowGcpConnectAccountApp() {
+    this.currentPage = 'gcpConnectAccountApp';
+    return this.$.gcpConnectAccountApp;
   }
 
-  getAccountListSidebarApp() {
-    return this.$.accountListSidebarApp;
+  /**
+   * @returns {GcpCreateServerApp}
+   */
+  getAndShowGcpCreateServerApp() {
+    this.currentPage = 'gcpCreateServerApp';
+    return this.$.gcpCreateServerApp;
+  }
+
+  /**
+   * @returns {LightsailConnectAccountApp}
+   */
+  getAndShowLightsailConnectAccountApp() {
+    this.currentPage = 'lightsailConnectAccountApp';
+    return this.$.lightsailOceanConnectAccountApp;
+  }
+
+  /**
+   * @returns {LightsailCreateServerApp}
+   */
+  getAndShowLightsailCreateServerApp() {
+    this.currentPage = 'lightsailCreateServerApp';
+    return this.$.lightsailCreateServerApp;
   }
 
   getManualServerEntry() {
@@ -556,40 +742,11 @@ export class AppRoot extends mixinBehaviors
     this.$.serverProgressStep.start();
   }
 
-  showServerView() {
-    this.$.serverProgressStep.stop();
-    this.currentPage = 'serverView';
-  }
-
-  /**
-   * Gets the ServerView for the server given by its id
-   * @param {string} displayServerId
-   * @returns {ServerView}
-   */
-  getServerView(displayServerId) {
-    if (!displayServerId) {
-      return null;
-    }
-    const selectedServerId = this._base64Encode(displayServerId);
-    return this.$.serverView.querySelector(`#serverView-${selectedServerId}`);
-  }
-
-  handleRegionSelected(/** @type {Event} */ e) {
-    this.fire('SetUpServerRequested', {
-      regionId: e.detail.selectedRegionId,
-    });
-  }
-
-  handleSetUpGenericCloudProviderRequested() {
-    this.handleManualServerSelected('generic');
-  }
-
-  handleSetUpAwsRequested() {
-    this.handleManualServerSelected('aws');
-  }
-
-  handleSetUpGcpRequested() {
-    this.handleManualServerSelected('gcp');
+  showManageServerApp(server, displayServer) {
+    this.currentPage = 'manageServerApp';
+    console.log(server);
+    console.log(displayServer);
+    this.$.manageServerApp.showServer(server, displayServer);
   }
 
   handleManualServerSelected(/** @type {'generic'|'aws'|'gcp'} */ cloudProvider) {
@@ -602,21 +759,11 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
   }
 
+  /**
+   * @returns {OutlineNotificationManager}
+   */
   getNotificationManager() {
     return this.$.notificationManager;
-  }
-
-  /**
-   *
-   */
-  showConnectivityDialog() {
-    const dialogTitle = this.localize('error-connectivity-title');
-    const dialogText = this.localize('error-connectivity');
-    return this
-        .showModalDialog(dialogTitle, dialogText, [this.localize('cancel'), this.localize('retry')])
-        .then(clickedButtonIndex => {
-          return clickedButtonIndex === 1;  // return true if user clicked retry
-        });
   }
 
   getConfirmation(title, text, confirmButtonText, continueFunc) {
@@ -643,12 +790,29 @@ export class AppRoot extends mixinBehaviors
           }
         });
   }
+
   _computeIsSignedInToDigitalOcean(adminEmail) {
     return Boolean(adminEmail);
   }
 
-  _computeHasManualServers(serverList) {
-    return this.serverList.filter(server => !server.isManaged).length > 0;
+  _computeGcpAccountName(gcpAccount) {
+    return gcpAccount ? gcpAccount.getEmail() : '';
+  }
+
+  _computeIsSignedInToGcp(gcpAccount) {
+    return Boolean(gcpAccount);
+  }
+
+  _computeLightsailAccountName(lightsailAccount) {
+    return lightsailAccount ? lightsailAccount.getEmail() : '';
+  }
+
+  _computeIsSignedInToLightsail(lightsailAccount) {
+    return Boolean(lightsailAccount);
+  }
+
+  _computeHasManualServers(manualServerList) {
+    return this.manualServerList.length > 0;
   }
 
   _userAcceptedTosChanged(userAcceptedTos) {
@@ -817,11 +981,8 @@ export class AppRoot extends mixinBehaviors
     this.maybeCloseDrawer();
   }
 
-  // Wrapper to encode a string in base64. This is necessary to set the server view IDs to
-  // the display server IDs, which are URLs, so they can be used with selector methods. The IDs
-  // are never decoded.
-  _base64Encode(s) {
-    return btoa(s).replace(/=/g, '');
+  signOutTapped() {
+    this.fire('SignOutRequested');
   }
 }
 customElements.define(AppRoot.is, AppRoot);

@@ -1,5 +1,5 @@
 /*
-  Copyright 2018 The Outline Authors
+  Copyright 2020 The Outline Authors
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -19,21 +19,36 @@ import '../ui_components/outline-step-view.js';
 
 import {css, customElement, html, LitElement, property} from 'lit-element';
 
+import {CloudProviderId} from '../../model/cloud';
 import {RestApiSession} from '../../cloud/digitalocean_api';
 import {makePublicEvent} from '../../infrastructure/events';
 import {LocalStorageRepository} from '../../infrastructure/repository';
 import {getSentryApiUrl} from '../../infrastructure/sentry';
 import * as account from '../../model/account';
-import {AccountModelFactory} from '../../model/account';
-import * as cloud_provider from '../../model/cloud_provider';
 import {DigitalOceanAccount} from '../../model/digitalocean_account';
 import {AppSettings} from '../app';
 import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 
-@customElement('digital-ocean-connect-account-app')
-export class DigitalOceanConnectAccountApp extends LitElement implements
-    AccountModelFactory<DigitalOceanAccount> {
+const LEGACY_DIGITALOCEAN_ACCOUNT_ID = '_LEGACY_DIGITALOCEAN_ACCOUNT_ID_';
+
+@customElement('digitalocean-connect-account-app')
+export class DigitalOceanConnectAccountApp extends LitElement {
+  /**
+   * Event fired upon successful completion of the DigitalOcean connect account flow.
+   *
+   * @event digitalocean-account-connected
+   * @property {DigitalOceanAccount} account - The newly connected DigitalOcean account domain model.
+   */
+  public static EVENT_ACCOUNT_CONNECTED = 'digitalocean-account-connected';
+
+  /**
+   * Event fired when the user cancels the DigitalOcean connect account flow.
+   *
+   * @event digitalocean-account-connect-cancelled
+   */
+  public static EVENT_ACCOUNT_CONNECT_CANCELLED = 'digitalocean-account-connect-cancelled';
+
   @property({type: Function}) localize: Function;
   @property({type: Object}) appSettings: AppSettings = null;
   @property({type: Object}) accountRepository: LocalStorageRepository<account.Data, string> = null;
@@ -116,7 +131,15 @@ export class DigitalOceanConnectAccountApp extends LitElement implements
     </outline-step-view>`;
   }
 
-  async start(): Promise<DigitalOceanAccount> {
+  async start(): Promise<void> {
+    const storedAccount = await this.loadAccount();
+    if (storedAccount) {
+      const serverCreatedEvent =
+          makePublicEvent(DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED, {account: storedAccount});
+      this.dispatchEvent(serverCreatedEvent);
+      return;
+    }
+
     this.session = runDigitalOceanOauth();
 
     let accessToken;
@@ -133,16 +156,24 @@ export class DigitalOceanConnectAccountApp extends LitElement implements
     }
 
     const data = await this.createAccountData(accessToken);
-    return this.createAccountModel(data);
+    const account = await this.createAccountModel(data);
+    const serverCreatedEvent =
+        makePublicEvent(DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED, {account});
+    this.dispatchEvent(serverCreatedEvent);
+  }
+
+  public async loadAccount(): Promise<DigitalOceanAccount|undefined> {
+    const data = this.accountRepository.get(LEGACY_DIGITALOCEAN_ACCOUNT_ID);
+    return data ? await this.createAccountModel(data) : undefined;
   }
 
   async createAccountModel(data: account.Data): Promise<DigitalOceanAccount> {
     const accessToken = data.credential as string;
     const sentryApiUrl = getSentryApiUrl(this.appSettings.sentryDsn);
     return new DigitalOceanAccount(
-        data, this.accountRepository, new RestApiSession(accessToken),
-        this.appSettings.shadowboxImage, this.appSettings.metricsUrl, sentryApiUrl,
-        this.appSettings.debugMode);
+        this.appSettings.domainEvents, data, this.accountRepository,
+        new RestApiSession(accessToken), this.appSettings.shadowboxImage,
+        this.appSettings.metricsUrl, sentryApiUrl, this.appSettings.debugMode);
   }
 
   private async createAccountData(accessToken: string) {
@@ -151,14 +182,14 @@ export class DigitalOceanConnectAccountApp extends LitElement implements
     return {
       id: getAccountResponse.uuid,
       displayName: getAccountResponse.email,
-      provider: cloud_provider.Id.DigitalOcean,
+      provider: CloudProviderId.DigitalOcean,
       credential: accessToken,
     };
   }
 
   private onCancel() {
     this.session.cancel();
-    const event = makePublicEvent('DigitalOceanConnectAccount#Cancelled');
+    const event = makePublicEvent(DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECT_CANCELLED);
     this.dispatchEvent(event);
   }
 }
