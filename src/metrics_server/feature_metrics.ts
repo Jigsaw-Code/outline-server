@@ -66,10 +66,22 @@ export function isValidFeatureMetricsReport(obj: any): obj is DailyFeatureMetric
     return false;
   }
 
-  // Validate individual feature records.
+  // Validate the server data limit feature
   if (typeof obj.dataLimit.enabled !== 'boolean') {
     return false;
   }
 
+  // Validate the per-key data limit feature
+  const perKeyType = typeof obj.dataLimit.perKeyLimitCount;
+  if (perKeyType !== 'undefined') {
+    if (perKeyType === 'number') {
+      if (obj.dataLimit.perKeyLimitCount < 0) { 
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+  
   return true;
 }
