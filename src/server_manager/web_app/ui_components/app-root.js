@@ -399,6 +399,7 @@ export class AppRoot extends mixinBehaviors
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
               <digitalocean-connect-account-app id="digitalOceanConnectAccountApp" localize="[[localize]]"></digitalocean-connect-account-app>
               <digitalocean-create-server-app id="digitalOceanCreateServerApp" localize="[[localize]]"></digitalocean-create-server-app>
+              <!-- TODO: Add outline-server-progress-step to manage-server-app -->
               <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
               <manage-server-app id="manageServerApp" localize="[[localize]]" language="[[language]]"></manage-server-app>
             </iron-pages>
@@ -535,8 +536,6 @@ export class AppRoot extends mixinBehaviors
   ready() {
     super.ready();
     const notificationManager = this.getNotificationManager();
-    this.$.digitalOceanConnectAccountApp.notificationManager = notificationManager;
-    this.$.digitalOceanCreateServerApp.notificationManager = notificationManager;
     this.$.manageServerApp.notificationManager = notificationManager;
   }
 
@@ -562,6 +561,9 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
   }
 
+  /**
+   * @returns {DigitalOceanConnectAccountApp}
+   */
   initializeDigitalOceanConnectAccountApp(
       /** @type {AccountManager} */ accountManager,
       domainEvents,
@@ -569,6 +571,7 @@ export class AppRoot extends mixinBehaviors
     const app = this.$.digitalOceanConnectAccountApp;
     app.accountManager = accountManager;
     app.domainEvents = domainEvents;
+    app.notificationManager = this.getNotificationManager();
     app.shadowboxSettings = shadowboxSettings;
     return app;
   }
@@ -585,8 +588,10 @@ export class AppRoot extends mixinBehaviors
    * @returns {DigitalOceanCreateServerApp}
    */
   getAndShowDigitalOceanCreateServerApp() {
+    const app = this.$.digitalOceanCreateServerApp;
+    app.notificationManager = this.getNotificationManager();
     this.currentPage = 'digitalOceanCreateServerApp';
-    return this.$.digitalOceanCreateServerApp;
+    return app;
   }
 
   getManualServerEntry() {
@@ -605,10 +610,10 @@ export class AppRoot extends mixinBehaviors
   }
 
   showManageServerApp(server, displayServer) {
+    const app = this.$.manageServerApp;
+    app.notificationManager = this.getNotificationManager();
+    app.showServer(server, displayServer);
     this.currentPage = 'manageServerApp';
-    console.log(server);
-    console.log(displayServer);
-    this.$.manageServerApp.showServer(server, displayServer);
   }
 
   handleManualServerSelected(/** @type {'generic'|'aws'|'gcp'} */ cloudProvider) {
@@ -628,16 +633,6 @@ export class AppRoot extends mixinBehaviors
     return this.$.notificationManager;
   }
 
-  getConfirmation(title, text, confirmButtonText, continueFunc) {
-    this.showModalDialog(title, text, [this.localize('cancel'), confirmButtonText])
-        .then(clickedButtonIndex => {
-          if (clickedButtonIndex === 1) {
-            // user clicked to confirm.
-            continueFunc();
-          }
-        });
-  }
-
   /**
    * @param {string} errorTitle
    * @param {string} errorText
@@ -655,22 +650,6 @@ export class AppRoot extends mixinBehaviors
 
   _computeIsSignedInToDigitalOcean(adminEmail) {
     return Boolean(adminEmail);
-  }
-
-  _computeGcpAccountName(gcpAccount) {
-    return gcpAccount ? gcpAccount.getEmail() : '';
-  }
-
-  _computeIsSignedInToGcp(gcpAccount) {
-    return Boolean(gcpAccount);
-  }
-
-  _computeLightsailAccountName(lightsailAccount) {
-    return lightsailAccount ? lightsailAccount.getEmail() : '';
-  }
-
-  _computeIsSignedInToLightsail(lightsailAccount) {
-    return Boolean(lightsailAccount);
   }
 
   _computeHasManualServers(manualServerList) {
@@ -723,7 +702,7 @@ export class AppRoot extends mixinBehaviors
     this.$.feedbackDialog.open(prepopulatedMessage, true);
   }
 
-  openShareDialog(accessKey, s3Url) {
+  openShareDialog(/** @type {string} */ accessKey, /** @type {string} */ s3Url) {
     this.$.shareDialog.open(accessKey, s3Url);
   }
 

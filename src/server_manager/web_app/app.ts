@@ -196,12 +196,12 @@ export class App {
 
     const manualServersPromise = this.manualServerRepository.listServers();
 
-    const managedServersPromise = Promise.resolve([]);
-    // const account = await this.digitalOceanConnectAccountApp.loadAccount();
-    // if (account) {
-    //   this.appRoot.adminEmail = await account.getEmail();
-    //   managedServersPromise = this.refreshDigitalOceanServers(account);
-    // }
+    const digitalOceanAccount = await this.accountManager.loadDigitalOceanAccount();
+    let managedServersPromise = Promise.resolve([]);
+    if (digitalOceanAccount) {
+      this.appRoot.adminEmail = await digitalOceanAccount.getDisplayName();
+      managedServersPromise = this.digitalOceanAccount.listServers();
+    }
 
     const [manualServers, managedServers] =
         await Promise.all([manualServersPromise, managedServersPromise]);

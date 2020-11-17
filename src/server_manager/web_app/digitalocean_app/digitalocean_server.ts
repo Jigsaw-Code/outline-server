@@ -17,10 +17,9 @@ import {EventEmitter} from 'eventemitter3';
 import * as errors from '../../infrastructure/errors';
 import * as server from '../../model/server';
 import {ManagedServerHost} from '../../model/server';
-import {DigitalOceanSession, DropletInfo} from './digitalocean_api';
 import {asciiToHex, hexToString} from '../../infrastructure/hex_encoding';
 import {ShadowboxServer} from '../shadowbox_server';
-import {CloudProviderId} from "../../model/cloud";
+import {CloudProviderId, DigitalOceanApi, DropletInfo} from "../../model/cloud";
 
 // WARNING: these strings must be lowercase due to a DigitalOcean case
 // sensitivity bug.
@@ -65,7 +64,7 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
   private eventQueue = new EventEmitter();
   private installState: InstallState = InstallState.UNKNOWN;
 
-  constructor(private digitalOcean: DigitalOceanSession, private dropletInfo: DropletInfo) {
+  constructor(private digitalOcean: DigitalOceanApi, private dropletInfo: DropletInfo) {
     // Consider passing a RestEndpoint object to the parent constructor,
     // to better encapsulate the management api address logic.
     super();
@@ -300,7 +299,7 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
 
 class DigitalOceanHost implements server.ManagedServerHost {
   constructor(
-      private readonly digitalOcean: DigitalOceanSession,
+      private readonly digitalOcean: DigitalOceanApi,
       private readonly dropletInfo: DropletInfo,
       private readonly deleteCallback: Function) {}
 

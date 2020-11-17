@@ -13,9 +13,9 @@
 // limitations under the License.
 import {LocalStorageRepository} from '../infrastructure/repository';
 
-import {Account, AccountId} from './account';
+import {Account, AccountId, DigitalOceanCredentials} from './account';
 import {CloudProviderId} from './cloud';
-import {DigitalOceanAccount, DigitalOceanCredentials} from '../web_app/digitalocean_app/digitalocean_account';
+import {DigitalOceanAccount} from '../web_app/digitalocean_app/digitalocean_account';
 import {DigitalOceanConnectAccountApp} from '../web_app/digitalocean_app/connect_account_app';
 
 export const ACCOUNT_MANAGER_KEY_EXTRACTOR = (entry: PersistedAccount) => entry.id;
@@ -28,15 +28,6 @@ export const LEGACY_DIGITALOCEAN_ACCOUNT_ID: AccountId = {
   cloudSpecificId: '_LEGACY_DIGITALOCEAN_ACCOUNT_ID_',
   cloudProviderId: CloudProviderId.DigitalOcean,
 };
-
-export interface PersistedAccount {
-  id: AccountId;
-  credentials: object;
-}
-
-export interface AccountFactory<T extends Account> {
-  constructAccount(persistedAccount: PersistedAccount): Promise<T>;
-}
 
 /**
  * A rich domain model that provides functionality to connect and manage cloud
@@ -110,4 +101,13 @@ export class AccountManager {
       credentials: account.getCredentials(),
     };
   }
+}
+
+export interface PersistedAccount {
+  id: AccountId;
+  credentials: object;
+}
+
+export interface AccountFactory<T extends Account> {
+  constructAccount(persistedAccount: PersistedAccount): Promise<T>;
 }

@@ -42,8 +42,8 @@ import {
 } from "../../model/account_manager";
 import {AccountId} from "../../model/account";
 import {OutlineManageServerApp} from "../outline_app/manage_server_app";
-import {Server} from "../../model/server";
-import {DisplayServer} from "../display_server";
+import {makeDisplayServer} from "../display_server";
+import {FakeDigitalOceanServer} from "./test_helpers";
 
 async function makeLocalize(language: string) {
   let messages: {[key: string]: string};
@@ -186,7 +186,7 @@ export class TestApp extends LitElement {
       <div class="widget">
         <h2>manage-server-app</h2>
         <button @tap=${this.onOutlineManageServerAppShow}>Show</button>
-        <manage-server-app .localize=${this.localize} dir=${this.dir}></manage-server-app>
+        <manage-server-app .localize=${this.localize} dir=${this.dir} language="en"></manage-server-app>
       </div>
          
       <outline-notification-manager .localize=${this.localize} dir=${this.dir}></outline-notification-manager>
@@ -245,9 +245,8 @@ export class TestApp extends LitElement {
   }
 
   private async onOutlineManageServerAppShow() {
-    const server: Server = null;
-    const displayServer: DisplayServer = null;
-
+    const server = new FakeDigitalOceanServer();
+    const displayServer = await makeDisplayServer(server);
     const manageServerApp = this.select('manage-server-app') as OutlineManageServerApp;
     manageServerApp.showServer(server, displayServer);
   }

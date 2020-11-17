@@ -16,7 +16,13 @@ import * as do_install_script from '../../install_scripts/do_install_script';
 
 import {DigitalOceanApiClient, HttpError, NetworkError} from './digitalocean_api';
 import {DigitalOceanServer} from './digitalocean_server';
-import {Account, AccountId} from '../../model/account';
+import {
+  Account,
+  AccountId,
+  DigitalOceanCredentials,
+  DigitalOceanLocation,
+  DigitalOceanStatus
+} from '../../model/account';
 import {EventEmitter} from "eventemitter3";
 import {CloudProviderId} from "../../model/cloud";
 import {ShadowboxSettings} from "../shadowbox_server";
@@ -25,25 +31,6 @@ import {ManagedServer} from "../../model/server";
 
 const SHADOWBOX_TAG = 'shadowbox';
 const MACHINE_SIZE = 's-1vcpu-1gb';
-
-export interface DigitalOceanLocation {
-  regionId: string;
-  dataCenterIds: string[];
-}
-
-// TODO: Update with new statuses (e.g. WARNING, LOCKED)
-export enum DigitalOceanStatus {
-  ACTIVE,
-  EMAIL_NOT_VERIFIED,
-  INVALID_BILLING,
-  UNKNOWN,
-}
-
-/**
- * DigitalOcean API account credentials (e.g. OAuth access token or Personal
- * Access Token).
- */
-export type DigitalOceanCredentials = string;
 
 // TODO: Cache account data so that we don't fetch on every request.
 export class DigitalOceanAccount implements Account {
@@ -144,8 +131,9 @@ export class DigitalOceanAccount implements Account {
     console.time('activeServer');
     console.time('servingServer');
     const watchtowerRefreshSeconds = this.shadowboxSettings.containerImageId ? 30 : undefined;
+    const accessToken = this.getCredentials() as unknown as string;
     const installCommand = this.getInstallScript(
-        this.apiClient.accessToken, name, this.shadowboxSettings.containerImageId,
+        accessToken, name, this.shadowboxSettings.containerImageId,
         watchtowerRefreshSeconds, this.shadowboxSettings.metricsUrl,
         this.shadowboxSettings.sentryApiUrl);
 

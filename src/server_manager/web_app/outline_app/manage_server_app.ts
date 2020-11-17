@@ -58,10 +58,9 @@ export class OutlineManageServerApp extends LitElement {
   private serverView: ServerView;
 
   render() {
-    const cloudProvider = isManagedServer(this.server) ? this.server.getHost().getCloudProviderId() : '';
     return html`
-      <outline-server-view id="serverView" .localize=${this.localize} .cloudProvider="${cloudProvider}"></outline-server-view>
-      <outline-modal-dialog id="modalDialog"></outline-modal-dialog>`;
+      <outline-server-view id="serverView" .localize=${this.localize}"></outline-server-view>
+      <outline-modal-dialog id="modalDialog" .localize=${this.localize}></outline-modal-dialog>`;
   }
 
   connectedCallback(): void {
@@ -115,6 +114,7 @@ export class OutlineManageServerApp extends LitElement {
     this.serverView.isServerReachable = true;
     this.serverView.serverId = server.getServerId();
     this.serverView.serverName = server.getName();
+    this.serverView.cloudProvider = isManagedServer(this.server) ? this.server.getHost().getCloudProviderId() : '';
     this.serverView.serverHostname = server.getHostnameForAccessKeys();
     this.serverView.serverManagementApiUrl = server.getManagementApiUrl();
     this.serverView.serverPortForNewAccessKeys = server.getPortForNewAccessKeys();

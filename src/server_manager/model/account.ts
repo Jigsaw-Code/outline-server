@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {CloudProviderId} from "./cloud";
-import {DigitalOceanLocation, DigitalOceanStatus} from "../web_app/digitalocean_app/digitalocean_account";
 import {DigitalOceanServer} from "../web_app/digitalocean_app/digitalocean_server";
 import {ManagedServer} from "./server";
 
@@ -70,4 +69,45 @@ export interface DigitalOceanAccount extends Account {
 
   /** Returns a list of Outline servers managed by the account. */
   listServers(fetchFromHost: boolean): Promise<ManagedServer[]>;
+}
+
+/**
+ * Represents a location where DigitalOcean has data centers in and that support
+ * the required resources to construct an Outline server (e.g. Droplets,
+ * Floating IPs).
+ */
+export interface DigitalOceanLocation {
+  /**
+   * The location identifier. For DigitalOcean, this represents the “region”
+   * (e.g. nyc) that the data centers are in.
+   */
+  regionId: string;
+
+  /** A list of data center IDs available in the location (e.g. nyc1, nyc2). */
+  dataCenterIds: string[];
+}
+
+/**
+ * DigitalOcean API account credentials (e.g. OAuth access token or Personal
+ * Access Token).
+ */
+export type DigitalOceanCredentials = string;
+
+// TODO: Update with new statuses (e.g. WARNING, LOCKED)
+/** Represents the status of the DigitalOcean account. */
+export enum DigitalOceanStatus {
+  /** Account is in good standing. */
+  ACTIVE,
+
+  /**
+   * Account was created with an unverified email address. Email verification
+   * is necessary for certain accounts (e.g. those registered via basic
+   * authentication).
+   */
+  EMAIL_NOT_VERIFIED,
+
+  /** Incorrect or incomplete billing account information. */
+  INVALID_BILLING,
+
+  UNKNOWN,
 }
