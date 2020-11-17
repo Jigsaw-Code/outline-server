@@ -16,7 +16,6 @@ import * as sentry from '@sentry/electron';
 import {EventEmitter} from 'eventemitter3';
 import * as errors from '../infrastructure/errors';
 import {Account} from '../model/account';
-import {AccountManager} from '../model/account_manager';
 import {CloudProviderId} from '../model/cloud';
 import {DigitalOceanAccount} from './digitalocean_app/digitalocean_account';
 import * as server from '../model/server';
@@ -32,6 +31,7 @@ import {OutlineNotificationManager} from './ui_components/outline-notification-m
 import {ServerView} from './ui_components/outline-server-view.js';
 import {ShadowboxSettings} from "./shadowbox_server";
 import {OutlineManageServerApp} from "./outline_app/manage_server_app";
+import {OutlineAccountManager} from "./account_manager";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -50,7 +50,7 @@ export class App {
       private shadowboxSettings: ShadowboxSettings,
       private manualServerRepository: server.ManualServerRepository,
       private displayServerRepository: DisplayServerRepository,
-      private accountManager: AccountManager) {
+      private accountManager: OutlineAccountManager) {
     this.notificationManager = this.appRoot.getNotificationManager();
     const digitalOceanConnectAccountApp =
         this.appRoot.initializeDigitalOceanConnectAccountApp(accountManager, domainEvents, shadowboxSettings);
@@ -200,7 +200,8 @@ export class App {
     let managedServersPromise = Promise.resolve([]);
     if (digitalOceanAccount) {
       this.appRoot.adminEmail = await digitalOceanAccount.getDisplayName();
-      managedServersPromise = this.digitalOceanAccount.listServers();
+      managedServersPromise = digitalOceanAccount.listServers();
+      this.digitalOceanAccount = digitalOceanAccount;
     }
 
     const [manualServers, managedServers] =

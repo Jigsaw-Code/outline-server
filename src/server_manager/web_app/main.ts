@@ -18,18 +18,14 @@ import {EventEmitter} from 'eventemitter3';
 import * as i18n from '../infrastructure/i18n';
 import {LocalStorageRepository} from '../infrastructure/repository';
 import {AccountId} from '../model/account';
-import {
-  ACCOUNT_MANAGER_KEY_COMPARATOR,
-  ACCOUNT_MANAGER_KEY_EXTRACTOR,
-  AccountManager,
-  PersistedAccount
-} from '../model/account_manager';
+import {PersistedAccount} from '../model/account_manager';
 
 import {App} from './app';
 import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
 import {getSentryApiUrl} from "../infrastructure/sentry";
+import {ACCOUNT_MANAGER_KEY_COMPARATOR, ACCOUNT_MANAGER_KEY_EXTRACTOR, OutlineAccountManager} from "./account_manager";
 
 type LanguageDef = {
   id: string,
@@ -128,7 +124,7 @@ document.addEventListener('WebComponentsReady', () => {
       ACCOUNT_MANAGER_KEY_COMPARATOR);
   new App(
       appRoot, version, new EventEmitter(), shadowboxSettings, new ManualServerRepository('manualServers'),
-      new DisplayServerRepository(), new AccountManager(accountRepository))
+      new DisplayServerRepository(), new OutlineAccountManager(accountRepository))
       .start();
 });
 

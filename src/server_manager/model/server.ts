@@ -15,81 +15,87 @@
 import {CloudProviderId} from "./cloud";
 
 export interface Server {
-  // Get the server's unique ID, used for metrics reporting.
+  /** Get the server's unique ID, used for metrics reporting. */
   getServerId(): string;
 
-  // Get the server's name for display.
+  /** Get the server's name for display. */
   getName(): string;
 
-  // Updates the server name.
+  /** Updates the server name. */
   setName(name: string): Promise<void>;
 
-  // Gets the version of the shadowbox binary the server is running
+  /** Gets the version of the shadowbox binary the server is running. */
   getVersion(): string;
 
-  // List the access keys for this server, including the admin.
+  /** List the access keys for this server, including the admin. */
   listAccessKeys(): Promise<AccessKey[]>;
 
-  // Returns stats for bytes transferred across all access keys of this server.
+  /** Returns stats for bytes transferred across all access keys of this server. */
   getDataUsage(): Promise<DataUsageByAccessKey>;
 
-  // Adds a new access key to this server.
+  /** Adds a new access key to this server. */
   addAccessKey(): Promise<AccessKey>;
 
-  // Renames the access key given by id.
+  /** Renames the access key given by id. */
   renameAccessKey(accessKeyId: AccessKeyId, name: string): Promise<void>;
 
-  // Removes the access key given by id.
+  /** Removes the access key given by id. */
   removeAccessKey(accessKeyId: AccessKeyId): Promise<void>;
 
-  // Returns the access key data transfer limit, or undefined if it has not been set.
+  /** Returns the access key data transfer limit, or undefined if it has not been set. */
   getAccessKeyDataLimit(): DataLimit|undefined;
 
-  // Sets a data transfer limit over a 30 day rolling window for all access keys.
+  /** Sets a data transfer limit over a 30 day rolling window for all access keys. */
   setAccessKeyDataLimit(limit: DataLimit): Promise<void>;
 
-  // Removes the access key data transfer limit.
+  /** Removes the access key data transfer limit. */
   removeAccessKeyDataLimit(): Promise<void>;
 
-  // Returns whether metrics are enabled.
+  /** Returns whether metrics are enabled. */
   getMetricsEnabled(): boolean;
 
-  // Updates whether metrics are enabled.
+  /** Updates whether metrics are enabled. */
   setMetricsEnabled(metricsEnabled: boolean): Promise<void>;
 
-  // Checks if the server is healthy.
+  /** Checks if the server is healthy. */
   isHealthy(): Promise<boolean>;
 
-  // Gets the date when this server was created.
+  /** Gets the date when this server was created. */
   getCreatedDate(): Date;
 
-  // Returns the server's domain name or IP address.
+  /** Returns the server's domain name or IP address. */
   getHostnameForAccessKeys(): string;
 
-  // Changes the hostname for shared access keys.
+  /** Changes the hostname for shared access keys. */
   setHostnameForAccessKeys(hostname: string): Promise<void>;
 
-  // Returns the server's management API URL.
+  /** Returns the server's management API URL. */
   getManagementApiUrl(): string;
 
-  // Returns the port number for new access keys.
-  // Returns undefined if the server doesn't have a port set.
+  /**
+   * Returns the port number for new access keys. Returns undefined if the
+   * server doesn't have a port set.
+   */
   getPortForNewAccessKeys(): number|undefined;
 
-  // Changes the port number for new access keys.
+  /** Changes the port number for new access keys. */
   setPortForNewAccessKeys(port: number): Promise<void>;
 }
 
-// Manual servers are servers which the user has independently setup to run
-// shadowbox, and can be on any cloud provider.
+/**
+ * Manual servers are servers which the user has independently setup to run
+ * shadowbox, and can be on any cloud provider.
+ */
 export interface ManualServer extends Server {
   getCertificateFingerprint(): string;
 
   forget(): void;
 }
 
-// Managed servers are servers created by the Outline Manager through our
-// "magic" user experience, e.g. DigitalOcean.
+/**
+ * Managed servers are servers created by the Outline Manager through our
+ * "magic" user experience, e.g. DigitalOcean.
+ */
 export interface ManagedServer extends Server {
   // Returns a promise that fulfills once installation is complete.
   // If resetTimeout is true, this will reset the server state and might

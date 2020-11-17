@@ -17,19 +17,17 @@ import '@polymer/polymer/polymer-legacy.js';
 import '@polymer/iron-pages/iron-pages.js';
 import '../ui_components/outline-step-view.js';
 
+import {EventEmitter} from 'eventemitter3';
 import {css, customElement, html, LitElement, property} from 'lit-element';
-import {DigitalOceanAccount} from './digitalocean_account';
+
+import {makePublicEvent} from '../../infrastructure/dom_events';
+import {AccountFactory, AccountManager, PersistedAccount} from '../../model/account_manager';
+import {ShadowboxSettings} from '../shadowbox_server';
 import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
-import {makePublicEvent} from "../../infrastructure/dom_events";
-import {ShadowboxSettings} from "../shadowbox_server";
-import {EventEmitter} from "eventemitter3";
-import {
-  AccountFactory,
-  AccountManager,
-  LEGACY_DIGITALOCEAN_ACCOUNT_ID,
-  PersistedAccount
-} from "../../model/account_manager";
+
+import {DigitalOceanAccount} from './digitalocean_account';
+import {LEGACY_DIGITALOCEAN_ACCOUNT_ID} from "../account_manager";
 
 @customElement('digitalocean-connect-account-app')
 export class DigitalOceanConnectAccountApp extends LitElement implements AccountFactory<DigitalOceanAccount> {
@@ -171,7 +169,10 @@ export class DigitalOceanConnectAccountApp extends LitElement implements Account
   }
 
   constructAccount(persistedAccount: PersistedAccount): Promise<DigitalOceanAccount> {
-    return Promise.resolve(new DigitalOceanAccount(LEGACY_DIGITALOCEAN_ACCOUNT_ID.cloudSpecificId, persistedAccount.credentials as unknown as string, this.domainEvents, this.accountManager, this.shadowboxSettings));
+    return Promise.resolve(new DigitalOceanAccount(
+        LEGACY_DIGITALOCEAN_ACCOUNT_ID.cloudSpecificId,
+        persistedAccount.credentials as unknown as string, this.domainEvents, this.accountManager,
+        this.shadowboxSettings));
   }
 
   private reset() {

@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import '@polymer/polymer/polymer-legacy.js';
-
 import '../digitalocean_app/create_server_app';
 import '../digitalocean_app/connect_account_app';
 import '../outline_app/manage_server_app';
@@ -26,25 +25,23 @@ import '../ui_components/outline-sort-span';
 import '../ui_components/outline-step-view';
 import '../ui_components/outline-survey-dialog';
 
+import {EventEmitter} from 'eventemitter3';
 import IntlMessageFormat from 'intl-messageformat';
 import {css, customElement, html, LitElement, property} from 'lit-element';
-import {EventEmitter} from "eventemitter3";
-import {LocalStorageRepository} from "../../infrastructure/repository";
-import {DigitalOceanConnectAccountApp} from "../digitalocean_app/connect_account_app";
-import {sleep} from "../../infrastructure/sleep";
-import {OutlineNotificationManager} from "../ui_components/outline-notification-manager";
-import {ShadowboxSettings} from "../shadowbox_server";
-import {
-  ACCOUNT_MANAGER_KEY_COMPARATOR,
-  ACCOUNT_MANAGER_KEY_EXTRACTOR,
-  AccountManager,
-  PersistedAccount
-} from "../../model/account_manager";
-import {AccountId} from "../../model/account";
-import {OutlineManageServerApp} from "../outline_app/manage_server_app";
-import {makeDisplayServer} from "../display_server";
-import {FakeDigitalOceanServer} from "./test_helpers";
-import {CloudProviderId} from "../../model/cloud";
+
+import {LocalStorageRepository} from '../../infrastructure/repository';
+import {sleep} from '../../infrastructure/sleep';
+import {AccountId} from '../../model/account';
+import {PersistedAccount} from '../../model/account_manager';
+import {CloudProviderId} from '../../model/cloud';
+import {DigitalOceanConnectAccountApp} from '../digitalocean_app/connect_account_app';
+import {makeDisplayServer} from '../display_server';
+import {OutlineManageServerApp} from '../outline_app/manage_server_app';
+import {ShadowboxSettings} from '../shadowbox_server';
+import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
+
+import {FakeDigitalOceanServer} from './test_helpers';
+import {ACCOUNT_MANAGER_KEY_COMPARATOR, ACCOUNT_MANAGER_KEY_EXTRACTOR, OutlineAccountManager} from "../account_manager";
 
 async function makeLocalize(language: string) {
   let messages: {[key: string]: string};
@@ -75,7 +72,7 @@ export class TestApp extends LitElement {
   @property({type: String}) dir = 'ltr';
   @property({type: Function}) localize: Function;
 
-  private readonly accountManager: AccountManager;
+  private readonly accountManager: OutlineAccountManager;
   private readonly shadowboxSettings: ShadowboxSettings;
   private readonly domainEvents: EventEmitter;
   private language = '';
@@ -102,7 +99,7 @@ export class TestApp extends LitElement {
     const accountRepository = new LocalStorageRepository<PersistedAccount, AccountId>(
         'gallery-accounts', localStorage, ACCOUNT_MANAGER_KEY_EXTRACTOR,
         ACCOUNT_MANAGER_KEY_COMPARATOR);
-    this.accountManager = new AccountManager(accountRepository);
+    this.accountManager = new OutlineAccountManager(accountRepository);
     this.shadowboxSettings = {
       containerImageId: 'quay.io/outline/shadowbox:nightly',
       metricsUrl: null,

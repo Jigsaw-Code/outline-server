@@ -24,12 +24,12 @@ export interface DigitalOceanApi {
   /** @see https://developers.digitalocean.com/documentation/v2/#get-user-information */
   getAccount(): Promise<Account>;
 
-  /** @see */
+  /** @see https://developers.digitalocean.com/documentation/v2/#create-a-new-droplet */
   createDroplet(
       displayName: string, region: string, publicKeyForSSH: string,
       dropletSpec: DigitalOceanDropletSpecification): Promise<{droplet: DropletInfo}>;
 
-  /** @see */
+  /** @see https://developers.digitalocean.com/documentation/v2/#delete-a-droplet */
   deleteDroplet(dropletId: number): Promise<void>;
 
   /** @see https://developers.digitalocean.com/documentation/v2/#regions */
@@ -38,13 +38,13 @@ export interface DigitalOceanApi {
   /** @see https://developers.digitalocean.com/documentation/v2/#retrieve-an-existing-droplet-by-id */
   getDroplet(dropletId: number): Promise<DropletInfo>;
 
-  /** @see */
+  /** Returns a list of tags associated with the droplet. */
   getDropletTags(dropletId: number): Promise<string[]>;
 
-  /** @see */
+  /** @see https://developers.digitalocean.com/documentation/v2/#listing-droplets-by-tag */
   getDropletsByTag(tag: string): Promise<DropletInfo[]>;
 
-  /** @see */
+  /** @see https://developers.digitalocean.com/documentation/v2/#list-all-droplets */
   getDroplets(): Promise<DropletInfo[]>;
 }
 

@@ -266,7 +266,6 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
   private getCertificateFingerprint(): string {
     const fingerprint = this.getTagValue(CERTIFICATE_FINGERPRINT_TAG);
     if (fingerprint) {
-      console.log(fingerprint);
       return btoa(fingerprint);
     } else {
       throw new Error('certificate fingerprint unavailable');
