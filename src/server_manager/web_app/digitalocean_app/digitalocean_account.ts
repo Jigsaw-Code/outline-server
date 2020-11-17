@@ -11,18 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import * as crypto from '../../infrastructure/crypto';
+import * as do_install_script from '../../install_scripts/do_install_script';
 
-import {DigitalOceanApiClient, HttpError, NetworkError} from '../cloud/digitalocean_api';
-import * as crypto from '../infrastructure/crypto';
-import * as do_install_script from '../install_scripts/do_install_script';
-import {DigitalOceanServer} from '../web_app/digitalocean_server';
-
-import * as account from './account';
-import {AccountId} from './account';
+import {DigitalOceanApiClient, HttpError, NetworkError} from './digitalocean_api';
+import {DigitalOceanServer} from './digitalocean_server';
+import {Account, AccountId} from '../../model/account';
 import {EventEmitter} from "eventemitter3";
-import {CloudProviderId} from "./cloud";
-import {ShadowboxSettings} from "../web_app/shadowbox_server";
-import {AccountManager} from "./account_manager";
+import {CloudProviderId} from "../../model/cloud";
+import {ShadowboxSettings} from "../shadowbox_server";
+import {AccountManager} from "../../model/account_manager";
+import {ManagedServer} from "../../model/server";
 
 const SHADOWBOX_TAG = 'shadowbox';
 const MACHINE_SIZE = 's-1vcpu-1gb';
@@ -47,7 +46,7 @@ export enum DigitalOceanStatus {
 export type DigitalOceanCredentials = string;
 
 // TODO: Cache account data so that we don't fetch on every request.
-export class DigitalOceanAccount implements account.Account {
+export class DigitalOceanAccount implements Account {
   /**
    * Event that signals an issue connecting to the DigitalOcean API. This
    * usually means an invalid authentication, CORS, or network issue.
@@ -101,9 +100,7 @@ export class DigitalOceanAccount implements account.Account {
     return response.email;
   }
 
-  /**
-   * An enum representing the status of the account.
-   */
+  /** {@see DigitalOceanAccount#getStatus} */
   async getStatus(): Promise<DigitalOceanStatus> {
     const response = await this.apiClient.getAccount();
     if (response.status === 'active') {
@@ -115,11 +112,7 @@ export class DigitalOceanAccount implements account.Account {
     }
   }
 
-  /**
-   * Returns a list of DigitalOceanLocation objects that support the
-   * required cloud resources to setup an Outline server (e.g. Droplets,
-   * Floating IPs).
-   */
+  /** {@see DigitalOceanAccount#getStatus} */
   async listLocations(): Promise<DigitalOceanLocation[]> {
     try {
       const regionInfos = await this.apiClient.getRegionInfo();
@@ -146,15 +139,8 @@ export class DigitalOceanAccount implements account.Account {
     }
   }
 
-  /**
-   * Creates an Outline server on DigitalOcean. The returned server will
-   * not be fully initialized until ${@link DigitalOceanServer#waitOnInstall}
-   * completes.
-   *
-   * @param name - The Outline server name.
-   * @param location - The DigitalOcean data center location.
-   */
-  async createServer(name: string, location: DigitalOceanLocation): Promise<DigitalOceanServer> {
+  /** {@see DigitalOceanAccount#createServer} */
+  async createServer(name: string, location: DigitalOceanLocation): Promise<ManagedServer> {
     console.time('activeServer');
     console.time('servingServer');
     const watchtowerRefreshSeconds = this.shadowboxSettings.containerImageId ? 30 : undefined;
@@ -189,8 +175,8 @@ export class DigitalOceanAccount implements account.Account {
     }
   }
 
-  /** Returns a list of Outline servers managed by the account. */
-  async listServers(fetchFromHost = true): Promise<DigitalOceanServer[]> {
+  /** {@see DigitalOceanAccount#listServers} */
+  async listServers(fetchFromHost = true): Promise<ManagedServer[]> {
     if (!fetchFromHost) {
       return Promise.resolve(this.servers);  // Return the in-memory servers.
     }
@@ -204,7 +190,7 @@ export class DigitalOceanAccount implements account.Account {
     }
   }
 
-  /** Disconnects the DigitalOcean account and revokes credentials. */
+  /** {@see Account#disconnect} */
   disconnect(): void {
     this.accountManager.remove(this.accountId);
   }

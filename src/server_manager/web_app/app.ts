@@ -18,7 +18,7 @@ import * as errors from '../infrastructure/errors';
 import {Account} from '../model/account';
 import {AccountManager} from '../model/account_manager';
 import {CloudProviderId} from '../model/cloud';
-import {DigitalOceanAccount} from '../model/digitalocean_account';
+import {DigitalOceanAccount} from './digitalocean_app/digitalocean_account';
 import * as server from '../model/server';
 import {isManagedServer} from '../model/server';
 
@@ -418,7 +418,7 @@ export class App {
       // Use the droplet ID until the API URL is available.
       id: this.serverBeingCreated.getHost().getId(),
       name: this.serverBeingCreated.getName(),
-      cloudProviderId: this.serverBeingCreated.getCloudProviderId(),
+      cloudProviderId: this.serverBeingCreated.getHost().getCloudProviderId(),
       isManaged: true
     };
   }

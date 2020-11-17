@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {CloudProviderId} from "./cloud";
+import {DigitalOceanLocation, DigitalOceanStatus} from "../web_app/digitalocean_app/digitalocean_account";
+import {DigitalOceanServer} from "../web_app/digitalocean_app/digitalocean_server";
+import {ManagedServer} from "./server";
 
 export class AccountId {
   /** The cloud provider specific account identifier. */
@@ -40,4 +43,31 @@ export interface Account {
 
   /** Disconnects the cloud provider account and revokes credentials. */
   disconnect(): void;
+}
+
+export interface DigitalOceanAccount extends Account {
+  registerAccountConnectionIssueListener(fn: () => void): void;
+
+  /** An enum representing the status of the account. */
+  getStatus(): Promise<DigitalOceanStatus>;
+
+  /**
+   * Returns a list of DigitalOceanLocation objects that support the
+   * required cloud resources to setup an Outline server (e.g. Droplets,
+   * Floating IPs).
+   */
+  listLocations(): Promise<DigitalOceanLocation[]>;
+
+  /**
+   * Creates an Outline server on DigitalOcean. The returned server will
+   * not be fully initialized until ${@link DigitalOceanServer#waitOnInstall}
+   * completes.
+   *
+   * @param name - The Outline server name.
+   * @param location - The DigitalOcean data center location.
+   */
+  createServer(name: string, location: DigitalOceanLocation): Promise<ManagedServer>;
+
+  /** Returns a list of Outline servers managed by the account. */
+  listServers(fetchFromHost: boolean): Promise<ManagedServer[]>;
 }

@@ -19,8 +19,8 @@ import '../ui_components/outline-step-view.js';
 
 import {css, customElement, html, LitElement, property} from 'lit-element';
 
-import {DigitalOceanAccount, DigitalOceanLocation, DigitalOceanStatus} from '../../model/digitalocean_account';
-import {HttpError} from '../../cloud/digitalocean_api';
+import {DigitalOceanAccount, DigitalOceanLocation, DigitalOceanStatus} from './digitalocean_account';
+import {HttpError} from './digitalocean_api';
 import {makePublicEvent} from '../../infrastructure/dom_events';
 import {sleep} from '../../infrastructure/sleep';
 import {COMMON_STYLES} from '../ui_components/cloud-install-styles';

@@ -15,6 +15,7 @@
 */
 import * as semver from 'semver';
 import '../ui_components/outline-server-view';
+import '../ui_components/outline-modal-dialog';
 
 import {customElement, html, LitElement, property} from "lit-element";
 import {AccessKey, DataAmount, DataLimit, isManagedServer, isManualServer, Server} from "../../model/server";
@@ -22,7 +23,7 @@ import {DisplayServer} from "../display_server";
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from '../ui_components/outline-server-view';
 import {OutlineNotificationManager} from "../ui_components/outline-notification-manager";
 import {ServerApiError} from "../../infrastructure/errors";
-import * as digitalocean_api from "../../cloud/digitalocean_api";
+import * as digitalocean_api from "../digitalocean_app/digitalocean_api";
 import {makePublicEvent} from "../../infrastructure/dom_events";
 import {OutlineModalDialog} from "../ui_components/outline-modal-dialog";
 
@@ -57,7 +58,7 @@ export class OutlineManageServerApp extends LitElement {
   private serverView: ServerView;
 
   render() {
-    const cloudProvider = isManagedServer(this.server) ? this.server.getCloudProviderId() : '';
+    const cloudProvider = isManagedServer(this.server) ? this.server.getHost().getCloudProviderId() : '';
     return html`
       <outline-server-view id="serverView" .localize=${this.localize} .cloudProvider="${cloudProvider}"></outline-server-view>
       <outline-modal-dialog id="modalDialog"></outline-modal-dialog>`;
@@ -101,7 +102,7 @@ export class OutlineManageServerApp extends LitElement {
    * @param server - The server domain model.
    * @param displayServer - The server display model.
    */
-  async showServer(server: Server, displayServer: DisplayServer) {
+  async showServer(server: Server, displayServer: DisplayServer): Promise<void> {
     this.server = server;
     this.displayServer = displayServer;
 
@@ -426,6 +427,7 @@ export class OutlineManageServerApp extends LitElement {
         this.displayServer = null;
       } catch (error) {
         // Don't show a toast on the login screen.
+        // TODO: Remove DigitalOcean dependency
         if (error instanceof digitalocean_api.HttpError && error.getStatusCode() !== 401) {
           console.error(`Failed destroy server: ${error}`);
           this.notificationManager.showError('error-server-destroy');

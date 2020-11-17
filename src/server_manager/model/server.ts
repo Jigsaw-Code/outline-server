@@ -15,14 +15,17 @@
 import {CloudProviderId} from "./cloud";
 
 export interface Server {
+  // Get the server's unique ID, used for metrics reporting.
+  getServerId(): string;
+
   // Get the server's name for display.
   getName(): string;
 
-  // Gets the version of the shadowbox binary the server is running
-  getVersion(): string;
-
   // Updates the server name.
   setName(name: string): Promise<void>;
+
+  // Gets the version of the shadowbox binary the server is running
+  getVersion(): string;
 
   // List the access keys for this server, including the admin.
   listAccessKeys(): Promise<AccessKey[]>;
@@ -39,11 +42,11 @@ export interface Server {
   // Removes the access key given by id.
   removeAccessKey(accessKeyId: AccessKeyId): Promise<void>;
 
-  // Sets a data transfer limit over a 30 day rolling window for all access keys.
-  setAccessKeyDataLimit(limit: DataLimit): Promise<void>;
-
   // Returns the access key data transfer limit, or undefined if it has not been set.
   getAccessKeyDataLimit(): DataLimit|undefined;
+
+  // Sets a data transfer limit over a 30 day rolling window for all access keys.
+  setAccessKeyDataLimit(limit: DataLimit): Promise<void>;
 
   // Removes the access key data transfer limit.
   removeAccessKeyDataLimit(): Promise<void>;
@@ -53,9 +56,6 @@ export interface Server {
 
   // Updates whether metrics are enabled.
   setMetricsEnabled(metricsEnabled: boolean): Promise<void>;
-
-  // Get the server's unique ID, used for metrics reporting.
-  getServerId(): string;
 
   // Checks if the server is healthy.
   isHealthy(): Promise<boolean>;
@@ -98,7 +98,6 @@ export interface ManagedServer extends Server {
   // Returns server host object.
   getHost(): ManagedServerHost;
   // Returns true when installation is complete.
-  getCloudProviderId(): CloudProviderId;  // TODO: Replace with account.
   isInstallCompleted(): boolean;
 }
 
@@ -106,6 +105,10 @@ export interface ManagedServer extends Server {
 export interface ManagedServerHost {
   // Returns the virtual host ID.
   getId(): string;
+  // Returns the cloud provider identifier.
+  getCloudProviderId(): CloudProviderId;
+  // Returns the location identifier
+  getLocationId(): string;
   // Returns the monthly outbound transfer limit.
   getMonthlyOutboundTransferLimit(): DataAmount;
   // Returns the monthly cost.

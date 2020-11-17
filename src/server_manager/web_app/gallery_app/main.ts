@@ -16,6 +16,7 @@ import '@polymer/polymer/polymer-legacy.js';
 
 import '../digitalocean_app/create_server_app';
 import '../digitalocean_app/connect_account_app';
+import '../outline_app/manage_server_app';
 import '../ui_components/outline-about-dialog';
 import '../ui_components/outline-feedback-dialog';
 import '../ui_components/outline-notification-manager';
@@ -40,6 +41,9 @@ import {
   PersistedAccount
 } from "../../model/account_manager";
 import {AccountId} from "../../model/account";
+import {OutlineManageServerApp} from "../outline_app/manage_server_app";
+import {Server} from "../../model/server";
+import {DisplayServer} from "../display_server";
 
 async function makeLocalize(language: string) {
   let messages: {[key: string]: string};
@@ -178,6 +182,12 @@ export class TestApp extends LitElement {
         <button @tap=${this.onDigitalOceanCreateServerAppStart}>Start</button>
         <digitalocean-create-server-app .localize=${this.localize} dir=${this.dir}></digitalocean-create-server-app>
       </div>
+      
+      <div class="widget">
+        <h2>manage-server-app</h2>
+        <button @tap=${this.onOutlineManageServerAppShow}>Show</button>
+        <manage-server-app .localize=${this.localize} dir=${this.dir}></manage-server-app>
+      </div>
          
       <outline-notification-manager .localize=${this.localize} dir=${this.dir}></outline-notification-manager>
     `;
@@ -232,6 +242,14 @@ export class TestApp extends LitElement {
     const createServerApp = this.select('digitalocean-create-server-app');
     createServerApp.notificationManager = this.select('outline-notification-manager');
     createServerApp.start(account);
+  }
+
+  private async onOutlineManageServerAppShow() {
+    const server: Server = null;
+    const displayServer: DisplayServer = null;
+
+    const manageServerApp = this.select('manage-server-app') as OutlineManageServerApp;
+    manageServerApp.showServer(server, displayServer);
   }
 
   private get pageControls() {

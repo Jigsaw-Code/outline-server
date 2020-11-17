@@ -15,7 +15,7 @@ import {LocalStorageRepository} from '../infrastructure/repository';
 
 import {Account, AccountId} from './account';
 import {CloudProviderId} from './cloud';
-import {DigitalOceanAccount, DigitalOceanCredentials} from './digitalocean_account';
+import {DigitalOceanAccount, DigitalOceanCredentials} from '../web_app/digitalocean_app/digitalocean_account';
 import {DigitalOceanConnectAccountApp} from '../web_app/digitalocean_app/connect_account_app';
 
 export const ACCOUNT_MANAGER_KEY_EXTRACTOR = (entry: PersistedAccount) => entry.id;
@@ -81,7 +81,7 @@ export class AccountManager {
   }
 
   // TODO: Don't expose this
-  public remove<T extends Account>(id: AccountId): void {
+  remove<T extends Account>(id: AccountId): void {
     this.storageRepository.remove(id);
   }
 

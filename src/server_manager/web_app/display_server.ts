@@ -25,7 +25,10 @@ export interface DisplayServer {
 
 // Returns a `DisplayServer` corresponding to `server`.
 export async function makeDisplayServer(server: server.Server): Promise<DisplayServer> {
-  const cloudProviderId = (!!(server as server.ManagedServer).getHost) ? (server as server.ManagedServer).getCloudProviderId() : null;
+  const cloudProviderId =
+      (!!(server as server.ManagedServer).getHost) ?
+          (server as server.ManagedServer).getHost().getCloudProviderId() :
+          null;
   return {
     id: server.getManagementApiUrl(),
     name: await server.isHealthy().catch((e) => false) ? server.getName() :

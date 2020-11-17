@@ -14,13 +14,13 @@
 
 import {EventEmitter} from 'eventemitter3';
 
-import {DigitalOceanSession, DropletInfo} from '../cloud/digitalocean_api';
-import * as errors from '../infrastructure/errors';
-import {asciiToHex, hexToString} from '../infrastructure/hex_encoding';
-import * as server from '../model/server';
-
-import {ShadowboxServer} from './shadowbox_server';
-import {CloudProviderId} from "../model/cloud";
+import * as errors from '../../infrastructure/errors';
+import * as server from '../../model/server';
+import {ManagedServerHost} from '../../model/server';
+import {DigitalOceanSession, DropletInfo} from './digitalocean_api';
+import {asciiToHex, hexToString} from '../../infrastructure/hex_encoding';
+import {ShadowboxServer} from '../shadowbox_server';
+import {CloudProviderId} from "../../model/cloud";
 
 // WARNING: these strings must be lowercase due to a DigitalOcean case
 // sensitivity bug.
@@ -78,14 +78,6 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
         .catch((e) => {
           console.error(`error installing server: ${e.message}`);
         });
-  }
-
-  getCloudProviderId(): CloudProviderId {
-    return CloudProviderId.DigitalOcean;
-  }
-
-  getLocationId(): string {
-    return '';
   }
 
   waitOnInstall(resetTimeout: boolean): Promise<void> {
@@ -282,7 +274,7 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
     }
   }
 
-  getHost(): DigitalOceanHost {
+  getHost(): ManagedServerHost {
     // Construct a new DigitalOceanHost object, to be sure it has the latest
     // session and droplet info.
     return new DigitalOceanHost(this.digitalOcean, this.dropletInfo, this.onDelete.bind(this));
@@ -314,6 +306,14 @@ class DigitalOceanHost implements server.ManagedServerHost {
 
   getId(): string {
     return `${this.dropletInfo.id}`;
+  }
+
+  getCloudProviderId(): CloudProviderId {
+    return CloudProviderId.DigitalOcean;
+  }
+
+  getLocationId(): string {
+    return this.dropletInfo.region.slug;
   }
 
   getMonthlyOutboundTransferLimit(): server.DataAmount {
