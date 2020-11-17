@@ -26,7 +26,7 @@ import {SharedMetricsPublisher} from './shared_metrics';
 
 interface ServerInfo {
   name: string;
-  accessKeyDataLimit?: DataLimit;
+  defaultDataLimit?: DataLimit;
 }
 
 const NEW_PORT = 12345;
@@ -66,9 +66,9 @@ describe('ShadowsocksManagerService', () => {
     });
     it('Returns persisted properties', (done) => {
       const repo = getAccessKeyRepository();
-      const accessKeyDataLimit = {bytes: 999};
+      const defaultDataLimit = {bytes: 999};
       const serverConfig =
-          new InMemoryConfig({name: 'Server', accessKeyDataLimit} as ServerConfigJson);
+          new InMemoryConfig({name: 'Server', accessKeyDataLimit: defaultDataLimit} as ServerConfigJson);
       const service = new ShadowsocksManagerServiceBuilder()
                           .serverConfig(serverConfig)
                           .accessKeys(repo)
@@ -78,7 +78,7 @@ describe('ShadowsocksManagerService', () => {
             send: (httpCode, data: ServerInfo) => {
               expect(httpCode).toEqual(200);
               expect(data.name).toEqual('Server');
-              expect(data.accessKeyDataLimit).toEqual(accessKeyDataLimit);
+              expect(data.defaultDataLimit).toEqual(defaultDataLimit);
               responseProcessed = true;
             }
           },
@@ -509,11 +509,11 @@ describe('ShadowsocksManagerService', () => {
     });
   });
 
-  describe('setAccessKeyDataLimit', () => {
+  describe('setDefaultDataLimit', () => {
     it('sets access key limit', async (done) => {
       const serverConfig = new InMemoryConfig({} as ServerConfigJson);
       const repo = getAccessKeyRepository();
-      spyOn(repo, 'setAccessKeyDataLimit');
+      spyOn(repo, 'setDefaultDataLimit');
       const service = new ShadowsocksManagerServiceBuilder()
                           .serverConfig(serverConfig)
                           .accessKeys(repo)
@@ -523,19 +523,19 @@ describe('ShadowsocksManagerService', () => {
         send: (httpCode, data) => {
           expect(httpCode).toEqual(204);
           expect(serverConfig.data().accessKeyDataLimit).toEqual(limit);
-          expect(repo.setAccessKeyDataLimit).toHaveBeenCalledWith(limit);
+          expect(repo.setDefaultDataLimit).toHaveBeenCalledWith(limit);
           service.getServer(
               {params: {}}, {
                 send: (httpCode, data: ServerInfo) => {
                   expect(httpCode).toEqual(200);
-                  expect(data.accessKeyDataLimit).toEqual(limit);
+                  expect(data.defaultDataLimit).toEqual(limit);
                   responseProcessed = true;  // required for afterEach to pass.
                 }
               },
               done);
         }
       };
-      service.setAccessKeyDataLimit({params: {limit}}, res, done);
+      service.setDefaultDataLimit({params: {limit}}, res, done);
     });
     it('returns 400 when limit is missing values', async (done) => {
       const repo = getAccessKeyRepository();
@@ -543,7 +543,7 @@ describe('ShadowsocksManagerService', () => {
       const accessKey = await repo.createNewAccessKey();
       const limit = {} as DataLimit;
       const res = {send: (httpCode, data) => {}};
-      service.setAccessKeyDataLimit({params: {limit}}, res, (error) => {
+      service.setDefaultDataLimit({params: {limit}}, res, (error) => {
         expect(error.statusCode).toEqual(400);
         responseProcessed = true;  // required for afterEach to pass.
         done();
@@ -555,7 +555,7 @@ describe('ShadowsocksManagerService', () => {
       const accessKey = await repo.createNewAccessKey();
       const limit = {bytes: -1};
       const res = {send: (httpCode, data) => {}};
-      service.setAccessKeyDataLimit({params: {limit}}, res, (error) => {
+      service.setDefaultDataLimit({params: {limit}}, res, (error) => {
         expect(error.statusCode).toEqual(400);
         responseProcessed = true;  // required for afterEach to pass.
         done();
@@ -563,12 +563,12 @@ describe('ShadowsocksManagerService', () => {
     });
     it('returns 500 when the repository throws an exception', async (done) => {
       const repo = getAccessKeyRepository();
-      spyOn(repo, 'setAccessKeyDataLimit').and.throwError('cannot write to disk');
+      spyOn(repo, 'setDefaultDataLimit').and.throwError('cannot write to disk');
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
       await repo.createNewAccessKey();
       const limit = {bytes: 10000};
       const res = {send: (httpCode, data) => {}};
-      service.setAccessKeyDataLimit({params: {limit}}, res, (error) => {
+      service.setDefaultDataLimit({params: {limit}}, res, (error) => {
         expect(error.statusCode).toEqual(500);
         responseProcessed = true;  // required for afterEach to pass.
         done();
@@ -576,34 +576,34 @@ describe('ShadowsocksManagerService', () => {
     });
   });
 
-  describe('removeAccessKeyDataLimit', () => {
+  describe('disableDataLimits', () => {
     it('clears access key limit', async (done) => {
       const limit = {bytes: 10000};
       const serverConfig = new InMemoryConfig({'accessKeyDataLimit': limit} as ServerConfigJson);
       const repo = getAccessKeyRepository();
-      spyOn(repo, 'removeAccessKeyDataLimit').and.callThrough();
+      spyOn(repo, 'disableDataLimits').and.callThrough();
       const service = new ShadowsocksManagerServiceBuilder()
                           .serverConfig(serverConfig)
                           .accessKeys(repo)
                           .build();
-      await repo.setAccessKeyDataLimit(limit);
+      await repo.setDefaultDataLimit(limit);
       const res = {
         send: (httpCode, data) => {
           expect(httpCode).toEqual(204);
           expect(serverConfig.data().accessKeyDataLimit).toBeUndefined();
-          expect(repo.removeAccessKeyDataLimit).toHaveBeenCalled();
+          expect(repo.disableDataLimits).toHaveBeenCalled();
           responseProcessed = true;  // required for afterEach to pass.
         }
       };
-      service.removeAccessKeyDataLimit({params: {}}, res, done);
+      service.disableDataLimits({params: {}}, res, done);
     });
     it('returns 500 when the repository throws an exception', async (done) => {
       const repo = getAccessKeyRepository();
-      spyOn(repo, 'removeAccessKeyDataLimit').and.throwError('cannot write to disk');
+      spyOn(repo, 'disableDataLimits').and.throwError('cannot write to disk');
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
       const accessKey = await repo.createNewAccessKey();
       const res = {send: (httpCode, data) => {}};
-      service.removeAccessKeyDataLimit({params: {id: accessKey.id}}, res, (error) => {
+      service.disableDataLimits({params: {id: accessKey.id}}, res, (error) => {
         expect(error.statusCode).toEqual(500);
         responseProcessed = true;  // required for afterEach to pass.
         done();

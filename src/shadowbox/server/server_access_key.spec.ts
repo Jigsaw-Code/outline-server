@@ -168,30 +168,30 @@ describe('ServerAccessKeyRepository', () => {
   it('can set access key data limit', async (done) => {
     const repo = new RepoBuilder().build();
     const limit = {bytes: 5000};
-    await expectNoAsyncThrow(repo.setAccessKeyDataLimit.bind(repo, limit));
+    await expectNoAsyncThrow(repo.setDefaultDataLimit.bind(repo, limit));
     expect(repo.dataLimit).toEqual(limit);
     done();
   });
 
-  it('setAccessKeyDataLimit fails with disallowed limit values', async (done) => {
+  it('setDefaultDataLimit fails with disallowed limit values', async (done) => {
     const repo = new RepoBuilder().build();
     const accessKey = await repo.createNewAccessKey();
     // Negative values
     const negativeBytesLimit = {bytes: -1000};
     await expectAsyncThrow(
-        repo.setAccessKeyDataLimit.bind(repo, negativeBytesLimit),
-        errors.InvalidAccessKeyDataLimit);
+        repo.setDefaultDataLimit.bind(repo, negativeBytesLimit),
+        errors.InvalidDefaultDataLimit);
     // Missing properties
     const missingDataLimit = {} as DataLimit;
     await expectAsyncThrow(
-        repo.setAccessKeyDataLimit.bind(repo, missingDataLimit), errors.InvalidAccessKeyDataLimit);
+        repo.setDefaultDataLimit.bind(repo, missingDataLimit), errors.InvalidDefaultDataLimit);
     // Undefined limit
     await expectAsyncThrow(
-        repo.setAccessKeyDataLimit.bind(repo, undefined), errors.InvalidAccessKeyDataLimit);
+        repo.setDefaultDataLimit.bind(repo, undefined), errors.InvalidDefaultDataLimit);
     done();
   });
 
-  it('setAccessKeyDataLimit updates keys limit status', async (done) => {
+  it('setDefaultDataLimit updates keys limit status', async (done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 200});
     const repo =
@@ -200,7 +200,7 @@ describe('ServerAccessKeyRepository', () => {
     const accessKey2 = await repo.createNewAccessKey();
     await repo.start(new ManualClock());
 
-    await repo.setAccessKeyDataLimit({bytes: 250});
+    await repo.setDefaultDataLimit({bytes: 250});
     expect(accessKey1.isOverDataLimit).toBeTruthy();
     expect(accessKey2.isOverDataLimit).toBeFalsy();
     // We determine which access keys have been enabled/disabled by accessing them from
@@ -211,7 +211,7 @@ describe('ServerAccessKeyRepository', () => {
     // The over-limit key should be re-enabled after increasing the data limit, while the other key
     // should be disabled after its data usage increased.
     prometheusClient.bytesTransferredById = {'0': 500, '1': 1000};
-    await repo.setAccessKeyDataLimit({bytes: 700});
+    await repo.setDefaultDataLimit({bytes: 700});
     expect(accessKey1.isOverDataLimit).toBeFalsy();
     expect(accessKey2.isOverDataLimit).toBeTruthy();
     serverAccessKeys = server.getAccessKeys();
@@ -222,20 +222,20 @@ describe('ServerAccessKeyRepository', () => {
 
   it('can remove access key limits', async (done) => {
     const limit = {bytes: 100};
-    const repo = new RepoBuilder().accessKeyDataLimit(limit).build();
+    const repo = new RepoBuilder().defaultDataLimit(limit).build();
     expect(repo.dataLimit).toEqual(limit);
-    await expectNoAsyncThrow(repo.removeAccessKeyDataLimit.bind(repo));
+    await expectNoAsyncThrow(repo.disableDataLimits.bind(repo));
     expect(repo.dataLimit).toBeUndefined();
     done();
   });
 
-  it('removeAccessKeyDataLimit restores over-limit access keys', async (done) => {
+  it('disableDataLimits restores over-limit access keys', async (done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 100});
     const repo = new RepoBuilder()
                      .prometheusClient(prometheusClient)
                      .shadowsocksServer(server)
-                     .accessKeyDataLimit({bytes: 200})
+                     .defaultDataLimit({bytes: 200})
                      .build();
 
     const accessKey1 = await repo.createNewAccessKey();
@@ -244,7 +244,7 @@ describe('ServerAccessKeyRepository', () => {
     expect(server.getAccessKeys().length).toEqual(1);
 
     // Remove the limit; expect the key to be under limit and enabled.
-    await expectNoAsyncThrow(repo.removeAccessKeyDataLimit.bind(repo));
+    await expectNoAsyncThrow(repo.disableDataLimits.bind(repo));
     expect(server.getAccessKeys().length).toEqual(2);
     expect(accessKey1.isOverDataLimit).toBeFalsy();
     expect(accessKey2.isOverDataLimit).toBeFalsy();
@@ -256,7 +256,7 @@ describe('ServerAccessKeyRepository', () => {
         new FakePrometheusClient({'0': 100, '1': 200, '2': 300, '3': 400, '4': 500});
     const limit = {bytes: 250};
     const repo =
-        new RepoBuilder().prometheusClient(prometheusClient).accessKeyDataLimit(limit).build();
+        new RepoBuilder().prometheusClient(prometheusClient).defaultDataLimit(limit).build();
     for (let i = 0; i < Object.keys(prometheusClient.bytesTransferredById).length; ++i) {
       await repo.createNewAccessKey();
     }
@@ -282,7 +282,7 @@ describe('ServerAccessKeyRepository', () => {
     const repo = new RepoBuilder()
                      .prometheusClient(prometheusClient)
                      .shadowsocksServer(server)
-                     .accessKeyDataLimit({bytes: 200})
+                     .defaultDataLimit({bytes: 200})
                      .build();
 
     const accessKey1 = await repo.createNewAccessKey();
@@ -361,7 +361,7 @@ describe('ServerAccessKeyRepository', () => {
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
     const accessKey3 = await repo.createNewAccessKey();
-    await repo.setAccessKeyDataLimit({bytes: 300});
+    await repo.setDefaultDataLimit({bytes: 300});
     const clock = new ManualClock();
     await repo.start(clock);
     await clock.runCallbacks();
@@ -429,7 +429,7 @@ class RepoBuilder {
   private keyConfig_ = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
   private shadowsocksServer_ = new FakeShadowsocksServer();
   private prometheusClient_ = new FakePrometheusClient({});
-  private accessKeyDataLimit_;
+  private defaultDataLimit_;
 
   public port(port: number): RepoBuilder {
     this.port_ = port;
@@ -447,14 +447,14 @@ class RepoBuilder {
     this.prometheusClient_ = prometheusClient;
     return this;
   }
-  public accessKeyDataLimit(limit: DataLimit): RepoBuilder {
-    this.accessKeyDataLimit_ = limit;
+  public defaultDataLimit(limit: DataLimit): RepoBuilder {
+    this.defaultDataLimit_ = limit;
     return this;
   }
 
   public build(): ServerAccessKeyRepository {
     return new ServerAccessKeyRepository(
         this.port_, 'hostname', this.keyConfig_, this.shadowsocksServer_, this.prometheusClient_,
-        this.accessKeyDataLimit_);
+        this.defaultDataLimit_);
   }
 }

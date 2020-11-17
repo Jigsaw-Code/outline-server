@@ -50,7 +50,7 @@ class ServerAccessKey implements AccessKey {
       readonly proxyParams: ProxyParams) {}
 }
 
-function isValidAccessKeyDataLimit(limit: DataLimit): boolean {
+function isValidDefaultDataLimit(limit: DataLimit): boolean {
   return limit && limit.bytes >= 0;
 }
 
@@ -93,7 +93,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       private portForNewAccessKeys: number, private proxyHostname: string,
       private keyConfig: JsonConfig<AccessKeyConfigJson>,
       private shadowsocksServer: ShadowsocksServer, private prometheusClient: PrometheusClient,
-      private accessKeyDataLimit?: DataLimit) {
+      private defaultDataLimit?: DataLimit) {
     if (this.keyConfig.data().accessKeys === undefined) {
       this.keyConfig.data().accessKeys = [];
     }
@@ -181,19 +181,19 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   get dataLimit(): DataLimit|undefined {
-    return this.accessKeyDataLimit;
+    return this.defaultDataLimit;
   }
 
-  setAccessKeyDataLimit(limit: DataLimit): Promise<void> {
-    if (!isValidAccessKeyDataLimit(limit)) {
-      throw new errors.InvalidAccessKeyDataLimit();
+  setDefaultDataLimit(limit: DataLimit): Promise<void> {
+    if (!isValidDefaultDataLimit(limit)) {
+      throw new errors.InvalidDefaultDataLimit();
     }
-    this.accessKeyDataLimit = limit;
+    this.defaultDataLimit = limit;
     return this.enforceAccessKeyDataLimits();
   }
 
-  removeAccessKeyDataLimit(): Promise<void> {
-    delete this.accessKeyDataLimit;
+  disableDataLimits(): Promise<void> {
+    delete this.defaultDataLimit;
     return this.enforceAccessKeyDataLimits();
   }
 
@@ -213,7 +213,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       const usageBytes = bytesTransferredById[accessKey.id] || 0;
       const wasOverDataLimit = accessKey.isOverDataLimit;
       accessKey.isOverDataLimit =
-          this.accessKeyDataLimit ? usageBytes > this.accessKeyDataLimit.bytes : false;
+          this.defaultDataLimit ? usageBytes > this.defaultDataLimit.bytes : false;
       limitStatusChanged = accessKey.isOverDataLimit !== wasOverDataLimit || limitStatusChanged;
     }
     if (limitStatusChanged) {
