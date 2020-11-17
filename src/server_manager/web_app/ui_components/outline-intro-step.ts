@@ -217,18 +217,6 @@ export class OutlineIntroStep extends LitElement {
       </ul>`;
     }
 
-    let gcpCardHeaderText;
-    let gcpCardDescription;
-    if (this.gcpAccountName) {
-      gcpCardHeaderText = html`<div class="email">${this.gcpAccountName}</div>`;
-      gcpCardDescription = html`<p>${this.localize('setup-do-create')}</p>`;
-    } else {
-      gcpCardHeaderText = html`<div class="tag">${this.localize('setup-recommended')}</div>`;
-      gcpCardDescription = html`<ul>
-        <li>${this.localize('setup-do-easiest')}</li>
-      </ul>`;
-    }
-
     return html`
       <outline-step-view>
         <span slot="step-title">${this.localize('setup-title')}</span>

@@ -310,13 +310,7 @@ Polymer({
   },
 
   _computeCloudProviderIcon: function(cloudProvider) {
-    if (cloudProvider === 'Google Cloud Platform') {
-      return 'gcp-logo.svg';
-    } else if (cloudProvider === 'Amazon Lightsail') {
-      return 'aws-logo.svg';
-    } else {
-      return 'do_white_logo.svg';
-    }
+    return cloudProvider === 'DigitalOcean' ? 'do_white_logo.svg' : '';
   },
 
   _metricsEnabledChanged: function() {
