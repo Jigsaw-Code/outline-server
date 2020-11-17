@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /** Makes an CustomEvent that bubbles up beyond the shadow root. */
-export function makePublicEvent(name: string, detail?: {}) {
+export function makePublicEvent(name: string, detail?: {}): CustomEvent {
   const params = {
     bubbles: true,
     composed: true,

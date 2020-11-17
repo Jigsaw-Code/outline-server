@@ -23,7 +23,7 @@ export class OutlineModalDialog extends LitElement {
   @property({type: Function}) localize: Function;
   @property({type: String}) titleMessageId: string;
   @property({type: String}) textMessageId: string;
-  @property({type: Array}) buttonMessageIds: string[];
+  @property({type: Array}) buttonMessageIds: string[] = [];
 
   private fulfill: (value?: number | PromiseLike<number>) => void;
   private reject: (value?: number | PromiseLike<number>) => void;

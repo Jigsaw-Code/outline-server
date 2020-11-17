@@ -24,7 +24,12 @@ import {OutlineNotificationManager} from '../ui_components/outline-notification-
 import {makePublicEvent} from "../../infrastructure/dom_events";
 import {ShadowboxSettings} from "../shadowbox_server";
 import {EventEmitter} from "eventemitter3";
-import {AccountFactory, AccountManager, LEGACY_DIGITALOCEAN_ACCOUNT_ID} from "../../model/account_manager";
+import {
+  AccountFactory,
+  AccountManager,
+  LEGACY_DIGITALOCEAN_ACCOUNT_ID,
+  PersistedAccount
+} from "../../model/account_manager";
 
 @customElement('digitalocean-connect-account-app')
 export class DigitalOceanConnectAccountApp extends LitElement implements AccountFactory<DigitalOceanAccount> {
@@ -144,7 +149,6 @@ export class DigitalOceanConnectAccountApp extends LitElement implements Account
 
     this.currentPage = 'connectAccount';
     this.session = runDigitalOceanOauth();
-    console.log(this.session);
 
     let accessToken;
     try {
@@ -159,15 +163,15 @@ export class DigitalOceanConnectAccountApp extends LitElement implements Account
       }
     }
 
-    const account = this.accountManager.connectDigitalOceanAccount(accessToken);
+    const account = await this.accountManager.connectDigitalOceanAccount(accessToken);
     const serverCreatedEvent =
         makePublicEvent(DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED, {account});
     this.dispatchEvent(serverCreatedEvent);
     this.currentPage = 'loading';
   }
 
-  constructAccount(credentials: object): Promise<DigitalOceanAccount> {
-    return new Promise(() => new DigitalOceanAccount(LEGACY_DIGITALOCEAN_ACCOUNT_ID.cloudSpecificId, credentials as unknown as string, this.domainEvents, this.accountManager, this.shadowboxSettings));
+  constructAccount(persistedAccount: PersistedAccount): Promise<DigitalOceanAccount> {
+    return Promise.resolve(new DigitalOceanAccount(LEGACY_DIGITALOCEAN_ACCOUNT_ID.cloudSpecificId, persistedAccount.credentials as unknown as string, this.domainEvents, this.accountManager, this.shadowboxSettings));
   }
 
   private reset() {

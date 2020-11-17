@@ -37,7 +37,7 @@ import './outline-survey-dialog.js';
 import './outline-intro-step';
 import './outline-language-picker.js';
 import './outline-manual-server-entry.js';
-import './outline-modal-dialog.js';
+import './outline-modal-dialog';
 import './outline-notification-manager';
 import './outline-region-picker-step';
 import './outline-server-progress-step.js';
@@ -447,7 +447,7 @@ export class AppRoot extends mixinBehaviors
       <outline-survey-dialog id="surveyDialog" localize="[[localize]]"></outline-survey-dialog>
       <outline-feedback-dialog id="feedbackDialog" localize="[[localize]]"></outline-feedback-dialog>
       <outline-about-dialog id="aboutDialog" outline-version="[[outlineVersion]]" localize="[[localize]]"></outline-about-dialog>
-      <outline-modal-dialog id="modalDialog"></outline-modal-dialog>
+      <outline-modal-dialog id="modalDialog" localize="[[localize]]"></outline-modal-dialog>
       <outline-share-dialog id="shareDialog" localize="[[localize]]"></outline-share-dialog>
       <outline-metrics-option-dialog id="metricsDialog" localize="[[localize]]"></outline-metrics-option-dialog>
 

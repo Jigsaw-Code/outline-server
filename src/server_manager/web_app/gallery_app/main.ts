@@ -44,6 +44,7 @@ import {AccountId} from "../../model/account";
 import {OutlineManageServerApp} from "../outline_app/manage_server_app";
 import {makeDisplayServer} from "../display_server";
 import {FakeDigitalOceanServer} from "./test_helpers";
+import {CloudProviderId} from "../../model/cloud";
 
 async function makeLocalize(language: string) {
   let messages: {[key: string]: string};
@@ -237,8 +238,14 @@ export class TestApp extends LitElement {
 
     const connectAccountApp = this.select('digitalocean-connect-account-app') as DigitalOceanConnectAccountApp;
     this.accountManager.initializeCloudProviders(connectAccountApp);
-    const account = await connectAccountApp.constructAccount(personalAccessToken as unknown as object);
-    console.log(account);
+    const persistedAccount: PersistedAccount = {
+      id: {
+        cloudSpecificId: '1234',
+        cloudProviderId: CloudProviderId.DigitalOcean,
+      },
+      credentials: personalAccessToken as unknown as object,
+    };
+    const account = await connectAccountApp.constructAccount(persistedAccount);
     const createServerApp = this.select('digitalocean-create-server-app');
     createServerApp.notificationManager = this.select('outline-notification-manager');
     createServerApp.start(account);

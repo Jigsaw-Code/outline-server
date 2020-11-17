@@ -15,6 +15,7 @@
 export type KeyExtractor<Record, Key> = (r: Record) => Key;
 export type KeyComparator<Key> = (k1: Key, k2: Key) => boolean;
 
+/** A local storage backed container class of keyed records. */
 export class LocalStorageRepository<Record, Key> {
   private readonly records: Record[] = [];  // TODO: Switch to map
   constructor(
@@ -27,6 +28,12 @@ export class LocalStorageRepository<Record, Key> {
     }
   }
 
+  /**
+   * Sets the record. If a record at that key does not exist, one will be
+   * created. Otherwise, the existing record is updated.
+   *
+   * @param record - The record to be set.
+   */
   set(record: Record): void {
     const key = this.keyExtractor(record);
     this.remove(key);
@@ -34,6 +41,11 @@ export class LocalStorageRepository<Record, Key> {
     this.save();
   }
 
+  /**
+   * Removes the record associated with the given key.
+   *
+   * @param key - The key of the record to remove.
+   */
   remove(key: Key): void {
     const index = this.records.findIndex((record) => {
       const recordKey = this.keyExtractor(record);
@@ -45,6 +57,12 @@ export class LocalStorageRepository<Record, Key> {
     this.save();
   }
 
+  /**
+   * Retrieves the record at a given key. If no record at the given key exists,
+   * undefined will be returned.
+   *
+   * @param key - The key of the record to retrieve.
+   */
   get(key: Key): Record|undefined {
     return this.records.find((record) => {
       const recordKey = this.keyExtractor(record);
@@ -52,6 +70,7 @@ export class LocalStorageRepository<Record, Key> {
     });
   }
 
+  /** Returns a list of all records in the repository. */
   list(): Record[] {
     return Array.from(this.records.values());
   }
