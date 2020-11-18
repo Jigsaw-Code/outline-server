@@ -187,16 +187,16 @@ export class OutlineIntroStep extends LitElement {
         list-style-image: url("../images/check_blue.svg");
       }
       /* Reverse check icon for RTL languages */
-      :host(:dir(rtl)) #digital-ocean .description ul {
+      :host([dir=rtl]) #digital-ocean .description ul {
         list-style-image: url("../images/check_white_rtl.svg");
       }
-      :host(:dir(rtl)) #manual-server .description ul {
+      :host([dir=rtl]) #manual-server .description ul {
         list-style-image: url("../images/check_green_rtl.svg");
       }
-      :host(:dir(rtl)) #aws .description ul {
+      :host([dir=rtl]) #aws .description ul {
         list-style-image: url("../images/check_orange_rtl.svg");
       }
-      :host(:dir(rtl)) #gcp .description ul {
+      :host([dir=rtl]) #gcp .description ul {
         list-style-image: url("../images/check_blue_rtl.svg");
       }
     `
@@ -204,6 +204,21 @@ export class OutlineIntroStep extends LitElement {
   }
 
   render() {
+    let cardHeaderText;
+    let cardDescription;
+    if (this.digitalOceanEmail) {
+      cardHeaderText = html`<div class="email">${this.digitalOceanEmail}</div>`;
+      cardDescription = html`<p>${this.localize('setup-do-create')}</p>`;
+    } else {
+      cardHeaderText = html`<div class="tag">${this.localize('setup-recommended')}</div>`;
+      cardDescription = html`<ul>
+        <li>${this.localize('setup-do-easiest')}</li>
+        <li>${this.localize('setup-do-cost')}</li>
+        <li>${this.localize('setup-do-data')}</li>
+        <li>${this.localize('setup-do-cancel')}</li>
+      </ul>`;
+    }
+
     return html`
       <outline-step-view>
         <span slot="step-title">${this.localize('setup-title')}</span>
@@ -212,32 +227,19 @@ export class OutlineIntroStep extends LitElement {
         <div class="container">
           <div id="digital-ocean" class="card" @tap="${this.connectToDigitalOceanTapped}">
             <div class="card-header">
-              ${
-        this.digitalOceanEmail ? html`<div class="email">${this.digitalOceanEmail}</div>` :
-                                 html`<div class="tag">${this.localize('setup-recommended')}</div>`}
+              ${cardHeaderText}
               <img src="images/do_white_logo.svg">
             </div>
             <div class="card-title">DigitalOcean</div>
             <div class="card-body">
               <div class="description">
-                ${
-        this.digitalOceanEmail ? html`
-                    <p>
-                      ${this.localize('setup-do-create')}
-                    </p>` :
-                                 html`
-                    <ul>
-                      <li>${this.localize('setup-do-easiest')}</li>
-                      <li>${this.localize('setup-do-cost')}</li>
-                      <li>${this.localize('setup-do-data')}</li>
-                      <li>${this.localize('setup-do-cancel')}</li>
-                    </ul>`}
+                ${cardDescription}
               </div>
             </div>
             <div class="card-footer">
-              <paper-button class="primary">${
-        this.digitalOceanEmail ? this.localize('setup-create') :
-                                 this.localize('setup-action')}</paper-button>
+              <paper-button class="primary">
+                ${this.digitalOceanEmail ? this.localize('setup-create') : this.localize('setup-action')}
+              </paper-button>
             </div>
           </div>
   
@@ -257,8 +259,9 @@ export class OutlineIntroStep extends LitElement {
               </div>
             </div>
             <div class="card-footer">
-              <paper-button @tap="${this.setUpGcpTapped}" class="primary">${
-        this.localize('setup-action')}</paper-button>
+              <paper-button @tap="${this.setUpGcpTapped}" class="primary">
+                ${this.localize('setup-action')}
+              </paper-button>
             </div>
           </div>
   
@@ -278,8 +281,9 @@ export class OutlineIntroStep extends LitElement {
               </div>
             </div>
             <div class="card-footer">
-              <paper-button @tap="${this.setUpAwsTapped}" class="primary">${
-        this.localize('setup-action')}</paper-button>
+              <paper-button @tap="${this.setUpAwsTapped}" class="primary">
+                ${this.localize('setup-action')}
+              </paper-button>
             </div>
           </div>
   
@@ -298,8 +302,9 @@ export class OutlineIntroStep extends LitElement {
               </div>
             </div>
             <div class="card-footer">
-              <paper-button @tap="${this.setUpGenericCloudProviderTapped}">${
-        this.localize('setup-action')}</paper-button>
+              <paper-button @tap="${this.setUpGenericCloudProviderTapped}">
+                ${this.localize('setup-action')}
+              </paper-button>
             </div>
           </div>
         </div>

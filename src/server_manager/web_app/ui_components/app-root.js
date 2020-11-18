@@ -406,10 +406,10 @@ export class AppRoot extends mixinBehaviors
         <app-header-layout>
           <div class="app-container">
             <iron-pages attr-for-selected="id" selected="{{ currentPage }}">
-              <outline-intro-step id="intro" digital-ocean-email="{{adminEmail}}" localize="[[localize]]"></outline-intro-step>
+              <outline-intro-step id="intro" digital-ocean-email="{{adminEmail}}" dir="[[dir]]" localize="[[localize]]"></outline-intro-step>
               <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
-              <outline-region-picker-step id="regionPicker" localize="[[localize]]"></outline-region-picker-step>
+              <outline-region-picker-step id="regionPicker" dir="[[dir]]" localize="[[localize]]"></outline-region-picker-step>
               <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
               <div id="serverView">
                 <template is="dom-repeat" items="{{serverList}}" as="server">
@@ -494,6 +494,7 @@ export class AppRoot extends mixinBehaviors
     return {
       // Properties language and useKeyIfMissing are used by Polymer.AppLocalizeBehavior.
       language: {type: String, readonly: true},
+      dir: {type: String, readonly: true},
       // An array of {id, name, dir} language objects.
       supportedLanguages: {type: Array, readonly: true},
       useKeyIfMissing: {type: Boolean},
@@ -532,6 +533,7 @@ export class AppRoot extends mixinBehaviors
     /** @type {DisplayServer} */
     this.selectedServer = undefined;
     this.language = '';
+    this.dir = '';
     this.supportedLanguages = [];
     this.useKeyIfMissing = true;
     /** @type {DisplayServer[]} */
@@ -559,6 +561,7 @@ export class AppRoot extends mixinBehaviors
     this.$.sideBar.align = alignDir;
 
     this.language = language;
+    this.dir = alignDir;
   }
 
   showIntro() {
