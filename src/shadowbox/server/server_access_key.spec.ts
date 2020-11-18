@@ -173,7 +173,7 @@ describe('ServerAccessKeyRepository', () => {
     const limit = {bytes: 5000};
     await expectNoAsyncThrow(repo.setAccessKeyDataLimit.bind(repo, key.id, {bytes: 5000}));
     expect(key.dataLimit).toEqual(limit);
-    expect(config.mostRecentWrite.accessKeys[0].dataLimit?.bytes).toEqual(limit.bytes);
+    expect(config.mostRecentWrite.accessKeys[0].dataLimit).toEqual(limit);
     done();
   });
   

@@ -536,11 +536,11 @@ describe('ShadowsocksManagerService', () => {
       });
     });
 
-    it('rejects an empty request', async (done) => {
+    it('rejects non-numeric limits', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
       const keyId = (await repo.createNewAccessKey()).id;
-      const limit = {} as DataLimit;
+      const limit = {bytes: "1"};
       service.setAccessKeyDataLimit({params: {id: keyId, limit}}, {send: () => {}}, (error) => {
         expect(error.statusCode).toEqual(400);
         responseProcessed = true;
@@ -548,11 +548,11 @@ describe('ShadowsocksManagerService', () => {
       });
     });
 
-    it('rejects negative numbers', async (done) => {
+    it('rejects an empty request', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
       const keyId = (await repo.createNewAccessKey()).id;
-      const limit: DataLimit = {bytes: -1};
+      const limit = {} as DataLimit;
       service.setAccessKeyDataLimit({params: {id: keyId, limit}}, {send: () => {}}, (error) => {
         expect(error.statusCode).toEqual(400);
         responseProcessed = true;

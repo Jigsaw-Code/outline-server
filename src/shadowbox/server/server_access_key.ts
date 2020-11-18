@@ -68,18 +68,15 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyJson): AccessKe
 }
 
 function accessKeySerializedJson(accessKey: AccessKey): AccessKeyJson {
-  const json: AccessKeyJson = {
+  return {
     id: accessKey.id,
     metricsId: accessKey.metricsId,
     name: accessKey.name,
     password: accessKey.proxyParams.password,
     port: accessKey.proxyParams.portNumber,
-    encryptionMethod: accessKey.proxyParams.encryptionMethod
+    encryptionMethod: accessKey.proxyParams.encryptionMethod,
+    dataLimit: accessKey.dataLimit
   };
-  if (accessKey.dataLimit) {
-    json.dataLimit = accessKey.dataLimit;
-  }
-  return json;
 }
 
 // AccessKeyRepository that keeps its state in a config file and uses ShadowsocksServer

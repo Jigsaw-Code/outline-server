@@ -29,7 +29,7 @@ import {SharedMetricsPublisher} from './shared_metrics';
 
 // Creates a AccessKey response.
 function accessKeyResponseJson(accessKey: AccessKey) {
-  const json: Record<string, string|number|DataLimit> = {
+  return {
     // The unique identifier of this access key.
     id: accessKey.id,
     // Admin-controlled, editable name for this access key.
@@ -44,12 +44,9 @@ function accessKeyResponseJson(accessKey: AccessKey) {
       method: accessKey.proxyParams.encryptionMethod,
       password: accessKey.proxyParams.password,
       outline: 1,
+      dataLimit: accessKey.dataLimit
     }))
   };
-  if(accessKey.dataLimit) {
-    json.dataLimit = accessKey.dataLimit;
-  }
-  return json;
 }
 
 // Type to reflect that we receive untyped JSON request parameters.
@@ -324,7 +321,7 @@ export class ShadowsocksManagerService {
       const accessKeyId = validateAccessKeyId(req.params.id);
       const limit = validateDataLimit(req.params.limit);
       await this.accessKeys.setAccessKeyDataLimit(accessKeyId, limit);
-      res.send(204);
+      res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch(error) {
       logging.error(error);
@@ -337,10 +334,10 @@ export class ShadowsocksManagerService {
 
   public async removeAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      logging.debug(`setAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
+      logging.debug(`removeAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
       const accessKeyId = validateAccessKeyId(req.params.id);
       await this.accessKeys.removeAccessKeyDataLimit(accessKeyId);
-      res.send(204);
+      res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch(error) {
       logging.error(error);

@@ -134,15 +134,21 @@ describe('OutlineSharedMetricsPublisher', () => {
         {serverId: 'server-id', accessKeyDataLimit: {bytes: 123}});
     let keyId = 0;
     const makeKeyJson = (dataLimit?: DataLimit) => {
-      return {id: (keyId++).toString(), metricsId: "id", name: "name", password: "pass", 
-              port: 12345, dataLimit};
-    }
+      return {
+        id: (keyId++).toString(),
+        metricsId: "id",
+        name: "name",
+        password: "pass",
+        port: 12345,
+        dataLimit,
+      };
+    };
     const keyConfig = new InMemoryConfig<AccessKeyConfigJson>({
       accessKeys: [
         makeKeyJson({bytes: 2}),
         makeKeyJson()
       ]
-    })
+    });
     const metricsCollector = new FakeMetricsCollector();
     const publisher = new OutlineSharedMetricsPublisher(
         clock, serverConfig, keyConfig, new ManualUsageMetrics(), (id: AccessKeyId) => '', metricsCollector);

@@ -183,12 +183,11 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
         return;
       }
       try {
-        logging.info("!!!! FEATURE METRICS");
         await this.reportFeatureMetrics();
       } catch (err) {
         logging.error(`Failed to report feature metrics: ${err}`);
       }
-    }, 10000);
+    }, MS_PER_DAY);
   }
 
   startSharing() {
@@ -244,10 +243,9 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       timestampUtcMs: this.clock.now(),
       dataLimit: {
         enabled: !!this.serverConfig.data().accessKeyDataLimit,
-        perKeyLimitCount: keys ? keys.reduce((count, next) => count + (next.dataLimit ? 1 : 0), 0) : 0
+        perKeyLimitCount: keys?.reduce((count, next) => count + (next.dataLimit ? 1 : 0), 0) || 0
       }
     };
-    logging.info(`!!! feature report: ${JSON.stringify(featureMetricsReport)}`);
     await this.metricsCollector.collectFeatureMetrics(featureMetricsReport);
   }
 }
