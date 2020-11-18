@@ -187,16 +187,16 @@ export class OutlineIntroStep extends LitElement {
         list-style-image: url("../images/check_blue.svg");
       }
       /* Reverse check icon for RTL languages */
-      :host(:dir(rtl)) #digital-ocean .description ul {
+      :host([dir=rtl]) #digital-ocean .description ul {
         list-style-image: url("../images/check_white_rtl.svg");
       }
-      :host(:dir(rtl)) #manual-server .description ul {
+      :host([dir=rtl]) #manual-server .description ul {
         list-style-image: url("../images/check_green_rtl.svg");
       }
-      :host(:dir(rtl)) #aws .description ul {
+      :host([dir=rtl]) #aws .description ul {
         list-style-image: url("../images/check_orange_rtl.svg");
       }
-      :host(:dir(rtl)) #gcp .description ul {
+      :host([dir=rtl]) #gcp .description ul {
         list-style-image: url("../images/check_blue_rtl.svg");
       }
     `
