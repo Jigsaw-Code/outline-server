@@ -16,7 +16,7 @@
 
 import {EventEmitter} from 'eventemitter3';
 
-import {LocalStorageRepository} from '../../infrastructure/repository';
+import {KeyValueStorage} from '../../infrastructure/key_value_storage';
 import {Account, DigitalOceanCredentials} from '../../model/account';
 import {Cloud, CloudProviderId} from '../../model/cloud';
 import {ShadowboxSettings} from '../shadowbox_server';
@@ -29,14 +29,14 @@ export const LEGACY_DIGITALOCEAN_ACCOUNT_ID = '_LEGACY_DIGITALOCEAN_ACCOUNT_ID_'
 export class DigitalOceanCloud implements Cloud {
   constructor(
       private domainEvents: EventEmitter, private shadowboxSettings: ShadowboxSettings,
-      private storageRepository: LocalStorageRepository<PersistedAccount, string>) {}
+      private storageRepository: KeyValueStorage<PersistedAccount, string>) {}
 
   getId(): CloudProviderId {
     return CloudProviderId.DigitalOcean;
   }
 
   getName(): string {
-    return '';
+    return 'DigitalOcean';
   }
 
   listAccounts(): Account[] {

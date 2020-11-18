@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {InMemoryStorage} from './memory_storage';
-import {LocalStorageRepository} from './repository';
+import {KeyValueStorage} from './key_value_storage';
 
 const STORAGE_KEY = 'test';
 
@@ -26,7 +26,7 @@ describe('LocalStorageRepository', () => {
   it('set saves record when record does not exist', () => {
     const storage = new InMemoryStorage();
     const repository =
-        new LocalStorageRepository(STORAGE_KEY, storage, (record: Record) => record.id);
+        new KeyValueStorage(STORAGE_KEY, storage, (record: Record) => record.id);
     const record = {id: 'one', data: '1000'};
     repository.set(record);
 
@@ -37,7 +37,7 @@ describe('LocalStorageRepository', () => {
   it('set overwrites record when record exists', () => {
     const storage = new InMemoryStorage();
     const repository =
-        new LocalStorageRepository(STORAGE_KEY, storage, (record: Record) => record.id);
+        new KeyValueStorage(STORAGE_KEY, storage, (record: Record) => record.id);
     const record = {id: 'one', data: '1000'};
     const recordUpdated = {id: 'one', data: '1001'};
     repository.set(record);
@@ -50,7 +50,7 @@ describe('LocalStorageRepository', () => {
   it('remove deletes record when record exists', () => {
     const storage = new InMemoryStorage();
     const repository =
-        new LocalStorageRepository(STORAGE_KEY, storage, (record: Record) => record.id);
+        new KeyValueStorage(STORAGE_KEY, storage, (record: Record) => record.id);
     const record = {id: 'one', data: '1000'};
     repository.set(record);
     repository.remove('one');
@@ -62,7 +62,7 @@ describe('LocalStorageRepository', () => {
   it('remove does nothing when record does not exists', () => {
     const storage = new InMemoryStorage();
     const repository =
-        new LocalStorageRepository(STORAGE_KEY, storage, (record: Record) => record.id);
+        new KeyValueStorage(STORAGE_KEY, storage, (record: Record) => record.id);
     repository.remove('one');
 
     const actual = storage.getItem(STORAGE_KEY);
@@ -72,7 +72,7 @@ describe('LocalStorageRepository', () => {
   it('get returns record when record exists', () => {
     const storage = new InMemoryStorage();
     const repository =
-        new LocalStorageRepository(STORAGE_KEY, storage, (record: Record) => record.id);
+        new KeyValueStorage(STORAGE_KEY, storage, (record: Record) => record.id);
     const record = {id: 'one', data: '1000'};
     repository.set(record);
 
@@ -83,13 +83,13 @@ describe('LocalStorageRepository', () => {
   it('get returns undefined when record does not exist', () => {
     const storage = new InMemoryStorage();
     const repository =
-        new LocalStorageRepository(STORAGE_KEY, storage, (record: Record) => record.id);
+        new KeyValueStorage(STORAGE_KEY, storage, (record: Record) => record.id);
     expect(undefined).toEqual(repository.get('one'));
   });
   it('list returns empty list when empty', () => {
     const storage = new InMemoryStorage();
     const repository =
-        new LocalStorageRepository(STORAGE_KEY, storage, (record: Record) => record.id);
+        new KeyValueStorage(STORAGE_KEY, storage, (record: Record) => record.id);
     expect([]).toEqual(repository.list());
   });
 });

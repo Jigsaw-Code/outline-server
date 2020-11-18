@@ -16,7 +16,7 @@ export type KeyExtractor<Record, Key> = (r: Record) => Key;
 export type KeyComparator<Key> = (k1: Key, k2: Key) => boolean;
 
 /** A local storage backed container class of keyed records. */
-export class LocalStorageRepository<Record, Key> {
+export class KeyValueStorage<Record, Key> {
   private readonly records: Record[] = [];  // TODO: Switch to map
   constructor(
       private storageKey: string, private storage: Storage,

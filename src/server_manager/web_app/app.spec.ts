@@ -33,7 +33,7 @@ import {
   AccountManager,
   PersistedAccount
 } from "../model/account_manager";
-import {LocalStorageRepository} from "../infrastructure/repository";
+import {KeyValueStorage} from "../infrastructure/key_value_storage";
 
 // Define functions from preload.ts.
 
@@ -54,7 +54,7 @@ function createTestApp(
     sentryApiUrl: null,
     debug: true,
   };
-  const storageRepository = new LocalStorageRepository<PersistedAccount, AccountId>(
+  const storageRepository = new KeyValueStorage<PersistedAccount, AccountId>(
       'accounts', new InMemoryStorage(), ACCOUNT_MANAGER_KEY_EXTRACTOR,
       ACCOUNT_MANAGER_KEY_COMPARATOR);
   return new App(

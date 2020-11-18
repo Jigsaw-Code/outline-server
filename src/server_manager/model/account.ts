@@ -25,6 +25,9 @@ export class AccountId {
 }
 
 export interface Account {
+  // TODO: Refactor AccountId into an opaque cloud specific identifier. Optionally,
+  //  we can add support to identify the cloud provider via an Account domain model.
+  // TODO: getCloudProviderId(): CloudProviderId;
   /**
    * The Account identifier that encapsulates the cloud provider (e.g.
    * DigitalOcean, GCP) and cloud specific account identifier.
@@ -37,10 +40,6 @@ export interface Account {
    * provider.
    */
   getDisplayName(): Promise<string>;
-
-  // TODO:
-  /** The cloud provider API credentials. */
-  getCredentials(): object;
 
   /** Disconnects the cloud provider account and revokes credentials. */
   disconnect(): void;
@@ -65,9 +64,9 @@ export interface DigitalOceanAccount extends Account {
    * completes.
    *
    * @param name - The Outline server name.
-   * @param location - The DigitalOcean data center location.
+   * @param dataCenterId - The DigitalOcean data center location.
    */
-  createServer(name: string, location: DigitalOceanLocation): Promise<ManagedServer>;
+  createServer(name: string, dataCenterId: string): Promise<ManagedServer>;
 
   /** Returns a list of Outline servers managed by the account. */
   listServers(fetchFromHost: boolean): Promise<ManagedServer[]>;

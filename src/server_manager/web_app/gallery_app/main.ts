@@ -29,7 +29,7 @@ import {EventEmitter} from 'eventemitter3';
 import IntlMessageFormat from 'intl-messageformat';
 import {css, customElement, html, LitElement, property} from 'lit-element';
 
-import {LocalStorageRepository} from '../../infrastructure/repository';
+import {KeyValueStorage} from '../../infrastructure/key_value_storage';
 import {sleep} from '../../infrastructure/sleep';
 import {AccountId} from '../../model/account';
 import {PersistedAccount} from '../../model/account_manager';

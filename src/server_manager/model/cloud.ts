@@ -16,7 +16,7 @@
 
 import {EventEmitter} from 'eventemitter3';
 
-import {LocalStorageRepository} from '../infrastructure/repository';
+import {KeyValueStorage} from '../infrastructure/key_value_storage';
 import {DigitalOceanCloud, PersistedAccount} from '../web_app/digitalocean_app/digitalocean_cloud';
 import {ShadowboxSettings} from '../web_app/shadowbox_server';
 
@@ -28,10 +28,10 @@ export class SupportedClouds {
   constructor(
       private readonly domainEvents: EventEmitter,
       private readonly shadowboxSettings: ShadowboxSettings) {
-    const digitalOceanStorageRepository = new LocalStorageRepository<PersistedAccount, string>(
+    const digitalOceanStorage = new KeyValueStorage<PersistedAccount, string>(
         'accounts/digitalocean', localStorage, (entry: PersistedAccount) => entry.id);
     const digitalOceanCloud =
-        new DigitalOceanCloud(domainEvents, shadowboxSettings, digitalOceanStorageRepository);
+        new DigitalOceanCloud(domainEvents, shadowboxSettings, digitalOceanStorage);
     this.clouds.push(digitalOceanCloud);
   }
 

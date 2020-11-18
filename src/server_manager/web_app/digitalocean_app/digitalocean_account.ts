@@ -65,15 +65,6 @@ export class DigitalOceanAccount implements Account {
   }
 
   /**
-   * The DigitalOcean API credentials. Valid credential types include:
-   * - OAuth access token
-   * - Personal access token
-   */
-  getCredentials(): object {
-    return this.credentials as unknown as object;
-  }
-
-  /**
    * The human readable account name (email address) to be displayed
    * to the user.
    */
@@ -122,13 +113,12 @@ export class DigitalOceanAccount implements Account {
   }
 
   /** {@see DigitalOceanAccount#createServer} */
-  async createServer(name: string, location: DigitalOceanLocation): Promise<ManagedServer> {
+  async createServer(name: string, dataCenterId: string): Promise<ManagedServer> {
     console.time('activeServer');
     console.time('servingServer');
     const watchtowerRefreshSeconds = this.shadowboxSettings.containerImageId ? 30 : undefined;
-    const accessToken = this.getCredentials() as unknown as string;
     const installCommand = this.getInstallScript(
-        accessToken, name, this.shadowboxSettings.containerImageId,
+        this.credentials, name, this.shadowboxSettings.containerImageId,
         watchtowerRefreshSeconds, this.shadowboxSettings.metricsUrl,
         this.shadowboxSettings.sentryApiUrl);
 
@@ -149,7 +139,7 @@ export class DigitalOceanAccount implements Account {
 
     try {
       const droplet =
-          await this.apiClient.createDroplet(name, location.dataCenterIds[0], keyPair.public, dropletSpec);
+          await this.apiClient.createDroplet(name, dataCenterId, keyPair.public, dropletSpec);
       const server = new DigitalOceanServer(this.apiClient, droplet.droplet);
       this.servers.push(server);
       return server;
