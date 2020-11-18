@@ -14,11 +14,13 @@
   limitations under the License.
 */
 
-import {Account} from "./account";
-import {DigitalOceanCloud, PersistedAccount} from "../web_app/digitalocean_app/digitalocean_cloud";
-import {EventEmitter} from "eventemitter3";
-import {ShadowboxSettings} from "../web_app/shadowbox_server";
-import {LocalStorageRepository} from "../infrastructure/repository";
+import {EventEmitter} from 'eventemitter3';
+
+import {LocalStorageRepository} from '../infrastructure/repository';
+import {DigitalOceanCloud, PersistedAccount} from '../web_app/digitalocean_app/digitalocean_cloud';
+import {ShadowboxSettings} from '../web_app/shadowbox_server';
+
+import {Account} from './account';
 
 export class SupportedClouds {
   private readonly clouds: Cloud[] = [];
@@ -28,7 +30,8 @@ export class SupportedClouds {
       private readonly shadowboxSettings: ShadowboxSettings) {
     const digitalOceanStorageRepository = new LocalStorageRepository<PersistedAccount, string>(
         'accounts/digitalocean', localStorage, (entry: PersistedAccount) => entry.id);
-    const digitalOceanCloud = new DigitalOceanCloud(domainEvents, shadowboxSettings, digitalOceanStorageRepository);
+    const digitalOceanCloud =
+        new DigitalOceanCloud(domainEvents, shadowboxSettings, digitalOceanStorageRepository);
     this.clouds.push(digitalOceanCloud);
   }
 

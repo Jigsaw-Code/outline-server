@@ -14,13 +14,13 @@
 
 import {EventEmitter} from 'eventemitter3';
 
+import {DigitalOceanApi, DropletInfo} from '../../infrastructure/digitalocean_api';
 import * as errors from '../../infrastructure/errors';
+import {asciiToHex, hexToString} from '../../infrastructure/hex_encoding';
+import {CloudProviderId} from '../../model/cloud';
 import * as server from '../../model/server';
 import {ManagedServerHost} from '../../model/server';
-import {asciiToHex, hexToString} from '../../infrastructure/hex_encoding';
 import {ShadowboxServer} from '../shadowbox_server';
-import {CloudProviderId} from "../../model/cloud";
-import {DigitalOceanApi, DropletInfo} from "../../infrastructure/digitalocean_api";
 
 // WARNING: these strings must be lowercase due to a DigitalOcean case
 // sensitivity bug.

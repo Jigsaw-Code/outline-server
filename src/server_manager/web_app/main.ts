@@ -18,11 +18,12 @@ import {EventEmitter} from 'eventemitter3';
 
 import * as i18n from '../infrastructure/i18n';
 import {getSentryApiUrl} from '../infrastructure/sentry';
+import {SupportedClouds} from '../model/cloud';
+
 import {App} from './app';
 import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
-import {SupportedClouds} from "../model/cloud";
 
 type LanguageDef = {
   id: string,
@@ -117,8 +118,7 @@ document.addEventListener('WebComponentsReady', () => {
   appRoot.setLanguage(language.string(), languageDirection);
 
   new App(
-      appRoot, version, new ManualServerRepository('manualServers'),
-      new DisplayServerRepository(),
+      appRoot, version, new ManualServerRepository('manualServers'), new DisplayServerRepository(),
       new SupportedClouds(new EventEmitter(), shadowboxSettings))
       .start();
 });

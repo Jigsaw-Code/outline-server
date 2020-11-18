@@ -59,8 +59,7 @@ export class App {
         OutlineIntroStep.EVENT_DIGITALOCEAN_CARD_TAPPED,
         (event: CustomEvent) => digitalOceanConnectAccountApp.start());
     appRoot.addEventListener(
-        DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED,
-        async (event: CustomEvent) => {
+        DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED, async (event: CustomEvent) => {
           const account = event.detail.account as DigitalOceanAccount;
           this.appRoot.adminEmail = await account.getDisplayName();
           this.onServersRefreshed(false, account);
@@ -194,9 +193,11 @@ export class App {
     const manualServersPromise = this.manualServerRepository.listServers();
     let managedServersPromise = Promise.resolve([]);
 
-    const digitalOceanAccounts = await this.supportedClouds.get(CloudProviderId.DigitalOcean).listAccounts();
+    const digitalOceanAccounts =
+        await this.supportedClouds.get(CloudProviderId.DigitalOcean).listAccounts();
     if (digitalOceanAccounts.length > 0) {
-      this.digitalOceanAccount = digitalOceanAccounts[0] as DigitalOceanAccount; // TODO: Remove the DigitalOceanAccount cast.
+      this.digitalOceanAccount = digitalOceanAccounts[0] as
+          DigitalOceanAccount;  // TODO: Remove the DigitalOceanAccount cast.
       this.appRoot.adminEmail = await this.digitalOceanAccount.getDisplayName();
       managedServersPromise = this.digitalOceanAccount.listServers();
     }

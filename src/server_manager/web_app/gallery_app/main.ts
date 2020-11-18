@@ -223,14 +223,15 @@ export class TestApp extends LitElement {
   }
 
   private async onDigitalOceanCreateServerAppStart() {
-    // const personalAccessToken = (this.select('#doPersonalAccessToken') as HTMLInputElement).value;
-    // if (!personalAccessToken) {
-    //   const notificationManager = this.select('outline-notification-manager') as OutlineNotificationManager;
-    //   notificationManager.showToast('DigitalOcean personal access token is required.', 3000);
-    //   return;
+    // const personalAccessToken = (this.select('#doPersonalAccessToken') as
+    // HTMLInputElement).value; if (!personalAccessToken) {
+    //   const notificationManager = this.select('outline-notification-manager') as
+    //   OutlineNotificationManager; notificationManager.showToast('DigitalOcean personal access
+    //   token is required.', 3000); return;
     // }
     //
-    // const connectAccountApp = this.select('digitalocean-connect-account-app') as DigitalOceanConnectAccountApp;
+    // const connectAccountApp = this.select('digitalocean-connect-account-app') as
+    // DigitalOceanConnectAccountApp;
     // this.accountManager.initializeCloudProviders(connectAccountApp);
     // const persistedAccount: PersistedAccount = {
     //   id: {

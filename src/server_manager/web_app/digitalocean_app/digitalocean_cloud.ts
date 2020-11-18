@@ -14,41 +14,41 @@
   limitations under the License.
 */
 
-import {Account, DigitalOceanCredentials} from "../../model/account";
-import {Cloud, CloudProviderId} from "../../model/cloud";
-import {LocalStorageRepository} from "../../infrastructure/repository";
-import {EventEmitter} from "eventemitter3";
-import {ShadowboxSettings} from "../shadowbox_server";
-import {DigitalOceanAccount} from "./digitalocean_account";
+import {EventEmitter} from 'eventemitter3';
+
+import {LocalStorageRepository} from '../../infrastructure/repository';
+import {Account, DigitalOceanCredentials} from '../../model/account';
+import {Cloud, CloudProviderId} from '../../model/cloud';
+import {ShadowboxSettings} from '../shadowbox_server';
+
+import {DigitalOceanAccount} from './digitalocean_account';
 
 // TODO: Add migration from lastDOToken
 export const LEGACY_DIGITALOCEAN_ACCOUNT_ID = '_LEGACY_DIGITALOCEAN_ACCOUNT_ID_';
 
 export class DigitalOceanCloud implements Cloud {
   constructor(
-      private domainEvents: EventEmitter,
-      private shadowboxSettings: ShadowboxSettings,
-      private storageRepository: LocalStorageRepository<PersistedAccount, string>) {
-  }
+      private domainEvents: EventEmitter, private shadowboxSettings: ShadowboxSettings,
+      private storageRepository: LocalStorageRepository<PersistedAccount, string>) {}
 
   getId(): CloudProviderId {
     return CloudProviderId.DigitalOcean;
   }
 
   getName(): string {
-    return "";
+    return '';
   }
 
   listAccounts(): Account[] {
     const persistedAccount = this.storageRepository.get(LEGACY_DIGITALOCEAN_ACCOUNT_ID);
     return persistedAccount ?
-        [this.connectAccount(LEGACY_DIGITALOCEAN_ACCOUNT_ID, persistedAccount.credentials)] : [];
+        [this.connectAccount(LEGACY_DIGITALOCEAN_ACCOUNT_ID, persistedAccount.credentials)] :
+        [];
   }
 
   connectAccount(id: string, credentials: DigitalOceanCredentials): DigitalOceanAccount {
     const account = new DigitalOceanAccount(
-        id, credentials, this.domainEvents,
-        () => this.storageRepository.remove(id),
+        id, credentials, this.domainEvents, () => this.storageRepository.remove(id),
         this.shadowboxSettings);
     this.storageRepository.set({id, credentials});
     return account;

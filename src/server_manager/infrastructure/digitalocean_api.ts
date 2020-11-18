@@ -28,7 +28,9 @@ export interface DigitalOceanApi {
   /** @see https://developers.digitalocean.com/documentation/v2/#regions */
   getRegionInfo(): Promise<RegionInfo[]>;
 
-  /** @see https://developers.digitalocean.com/documentation/v2/#retrieve-an-existing-droplet-by-id */
+  /**
+   * @see https://developers.digitalocean.com/documentation/v2/#retrieve-an-existing-droplet-by-id
+   */
   getDroplet(dropletId: number): Promise<DropletInfo>;
 
   /** Returns a list of tags associated with the droplet. */
@@ -49,42 +51,15 @@ export interface DigitalOceanDropletSpecification {
 }
 
 export type DropletInfo = Readonly<{
-  id: number;
-  status: 'new' | 'active';
-  tags: string[];
-  region: {
-    readonly slug: string;
-  };
-  size: Readonly<{
-    transfer: number;
-    price_monthly: number;
-  }>;
-  networks: Readonly<{
-    v4: ReadonlyArray<
-        Readonly<{
-          type: string;
-          ip_address: string;}
-            >>;
-  }>;
+  id: number; status: 'new' | 'active'; tags: string[]; region: {readonly slug: string;};
+  size: Readonly<{transfer: number; price_monthly: number;}>;
+  networks: Readonly<{v4: ReadonlyArray<Readonly<{type: string; ip_address: string;}>>;}>;
 }>;
 
-export type Account = Readonly<{
-  email: string;
-  uuid: string;
-  email_verified: boolean;
-  status: string;
-}>;
+export type Account =
+    Readonly<{email: string; uuid: string; email_verified: boolean; status: string;}>;
 
-export type RegionInfo = Readonly<{
-  slug: string;
-  name: string;
-  sizes: string[];
-  available: boolean;
-  features: string[];
-}>;
+export type RegionInfo = Readonly<
+    {slug: string; name: string; sizes: string[]; available: boolean; features: string[];}>;
 
-export type DigitalOceanError = Readonly<{
-  id: string;
-  message: string;
-  request_id?: string;
-}>;
+export type DigitalOceanError = Readonly<{id: string; message: string; request_id?: string;}>;

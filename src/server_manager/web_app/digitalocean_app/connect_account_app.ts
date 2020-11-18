@@ -24,7 +24,7 @@ import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 
 import {DigitalOceanAccount} from './digitalocean_account';
-import {DigitalOceanCloud, LEGACY_DIGITALOCEAN_ACCOUNT_ID} from "./digitalocean_cloud";
+import {DigitalOceanCloud, LEGACY_DIGITALOCEAN_ACCOUNT_ID} from './digitalocean_cloud';
 
 @customElement('digitalocean-connect-account-app')
 export class DigitalOceanConnectAccountApp extends LitElement {
@@ -134,8 +134,8 @@ export class DigitalOceanConnectAccountApp extends LitElement {
     this.reset();
     const storedAccounts = await this.cloud.listAccounts();
     if (storedAccounts.length > 0) {
-      const serverCreatedEvent =
-          makePublicEvent(DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED, {account: storedAccounts[0]});
+      const serverCreatedEvent = makePublicEvent(
+          DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED, {account: storedAccounts[0]});
       this.dispatchEvent(serverCreatedEvent);
       return;
     }

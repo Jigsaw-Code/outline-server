@@ -50,8 +50,7 @@ export class DigitalOceanAccount implements Account {
   constructor(
       private readonly cloudSpecificId: string,
       private readonly credentials: DigitalOceanCredentials,
-      private readonly domainEvents: EventEmitter,
-      private readonly accountDisconnectFn: () => void,
+      private readonly domainEvents: EventEmitter, private readonly accountDisconnectFn: () => void,
       private readonly shadowboxSettings: ShadowboxSettings) {
     this.accountId = {
       cloudSpecificId,

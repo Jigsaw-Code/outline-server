@@ -12,13 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-  Account,
-  DigitalOceanApi,
-  DigitalOceanDropletSpecification, DigitalOceanError,
-  DropletInfo,
-  RegionInfo
-} from "../../infrastructure/digitalocean_api";
+import {Account, DigitalOceanApi, DigitalOceanDropletSpecification, DigitalOceanError, DropletInfo, RegionInfo} from '../../infrastructure/digitalocean_api';
 
 export class HttpError extends Error {
   constructor(private statusCode: number, message?: string) {

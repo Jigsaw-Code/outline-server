@@ -11,19 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import * as server from "../../model/server";
-import {AccessKey, DataUsageByAccessKey, ManagedServer, ManagedServerHost} from "../../model/server";
-import {AccountId, DigitalOceanAccount, DigitalOceanLocation, DigitalOceanStatus} from "../../model/account";
-import {DisplayServerRepository} from "../display_server";
-import {InMemoryStorage} from "../../infrastructure/memory_storage";
-import {
-  Account,
-  DigitalOceanApi,
-  DigitalOceanDropletSpecification,
-  DropletInfo,
-  RegionInfo
-} from "../../infrastructure/digitalocean_api";
-import {CloudProviderId} from "../../model/cloud";
+import {Account, DigitalOceanApi, DigitalOceanDropletSpecification, DropletInfo, RegionInfo} from '../../infrastructure/digitalocean_api';
+import {InMemoryStorage} from '../../infrastructure/memory_storage';
+import {AccountId, DigitalOceanAccount, DigitalOceanLocation, DigitalOceanStatus} from '../../model/account';
+import {CloudProviderId} from '../../model/cloud';
+import * as server from '../../model/server';
+import {AccessKey, DataUsageByAccessKey, ManagedServer, ManagedServerHost} from '../../model/server';
+import {DisplayServerRepository} from '../display_server';
 
 class FakeServer implements server.Server {
   private readonly id: string;
