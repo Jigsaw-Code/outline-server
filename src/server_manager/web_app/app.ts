@@ -13,25 +13,22 @@
 // limitations under the License.
 
 import * as sentry from '@sentry/electron';
-import {EventEmitter} from 'eventemitter3';
+
 import * as errors from '../infrastructure/errors';
 import {Account} from '../model/account';
-import {CloudProviderId} from '../model/cloud';
-import {DigitalOceanAccount} from './digitalocean_app/digitalocean_account';
+import {CloudProviderId, SupportedClouds} from '../model/cloud';
 import * as server from '../model/server';
 import {isManagedServer} from '../model/server';
-
 import {DigitalOceanConnectAccountApp} from './digitalocean_app/connect_account_app';
 import {DigitalOceanCreateServerApp} from './digitalocean_app/create_server_app';
+import {DigitalOceanAccount} from './digitalocean_app/digitalocean_account';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
+import {OutlineManageServerApp} from './outline_app/manage_server_app';
 import {AppRoot} from './ui_components/app-root.js';
 import {OutlineIntroStep} from './ui_components/outline-intro-step';
 import {OutlineNotificationManager} from './ui_components/outline-notification-manager';
 import {ServerView} from './ui_components/outline-server-view.js';
-import {ShadowboxSettings} from "./shadowbox_server";
-import {OutlineManageServerApp} from "./outline_app/manage_server_app";
-import {OutlineAccountManager} from "./account_manager";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -39,31 +36,31 @@ const UNUSED_DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
 
 export class App {
   private digitalOceanAccount: DigitalOceanAccount;
-
   private selectedServer: server.Server;
   private serverBeingCreated: server.ManagedServer;
   private notificationManager: OutlineNotificationManager;
 
   constructor(
       private appRoot: AppRoot, private readonly version: string,
-      private domainEvents: EventEmitter,
-      private shadowboxSettings: ShadowboxSettings,
       private manualServerRepository: server.ManualServerRepository,
       private displayServerRepository: DisplayServerRepository,
-      private accountManager: OutlineAccountManager) {
+      private supportedClouds: SupportedClouds) {
     this.notificationManager = this.appRoot.getNotificationManager();
+
+    const digitalOceanCloud = this.supportedClouds.listClouds().find(
+        (cloud) => cloud.getId() === CloudProviderId.DigitalOcean);
     const digitalOceanConnectAccountApp =
-        this.appRoot.initializeDigitalOceanConnectAccountApp(accountManager, domainEvents, shadowboxSettings);
-    this.accountManager.initializeCloudProviders(digitalOceanConnectAccountApp);
+        this.appRoot.initializeDigitalOceanConnectAccountApp(digitalOceanCloud);
 
     appRoot.setAttribute('outline-version', this.version);
 
     // DigitalOcean event listeners
     appRoot.addEventListener(
         OutlineIntroStep.EVENT_DIGITALOCEAN_CARD_TAPPED,
-        (event: CustomEvent) => this.appRoot.getAndShowDigitalOceanConnectAccountApp().start());
+        (event: CustomEvent) => digitalOceanConnectAccountApp.start());
     appRoot.addEventListener(
-        DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED, async (event: CustomEvent) => {
+        DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED,
+        async (event: CustomEvent) => {
           const account = event.detail.account as DigitalOceanAccount;
           this.appRoot.adminEmail = await account.getDisplayName();
           this.onServersRefreshed(false, account);
@@ -195,13 +192,13 @@ export class App {
     await this.syncDisplayServersToUi();
 
     const manualServersPromise = this.manualServerRepository.listServers();
-
-    const digitalOceanAccount = await this.accountManager.loadDigitalOceanAccount();
     let managedServersPromise = Promise.resolve([]);
-    if (digitalOceanAccount) {
-      this.appRoot.adminEmail = await digitalOceanAccount.getDisplayName();
-      managedServersPromise = digitalOceanAccount.listServers();
-      this.digitalOceanAccount = digitalOceanAccount;
+
+    const digitalOceanAccounts = await this.supportedClouds.get(CloudProviderId.DigitalOcean).listAccounts();
+    if (digitalOceanAccounts.length > 0) {
+      this.digitalOceanAccount = digitalOceanAccounts[0] as DigitalOceanAccount; // TODO: Remove the DigitalOceanAccount cast.
+      this.appRoot.adminEmail = await this.digitalOceanAccount.getDisplayName();
+      managedServersPromise = this.digitalOceanAccount.listServers();
     }
 
     const [manualServers, managedServers] =
@@ -396,9 +393,10 @@ export class App {
   }
 
   private syncServerCreationToUi(server: server.ManagedServer) {
-    this.syncServerToDisplay(server);
+    console.log(server);
 
     this.serverBeingCreated = server;
+    this.syncServerToDisplay(server);
     this.syncDisplayServersToUi();
     // Show creation progress for new servers only after we have a ManagedServer object,
     // otherwise the cancel action will not be available.

@@ -33,7 +33,7 @@ import {LocalStorageRepository} from '../../infrastructure/repository';
 import {sleep} from '../../infrastructure/sleep';
 import {AccountId} from '../../model/account';
 import {PersistedAccount} from '../../model/account_manager';
-import {CloudProviderId} from '../../model/cloud';
+import {CloudProviderId, SupportedClouds} from '../../model/cloud';
 import {DigitalOceanConnectAccountApp} from '../digitalocean_app/connect_account_app';
 import {makeDisplayServer} from '../display_server';
 import {OutlineManageServerApp} from '../outline_app/manage_server_app';
@@ -41,7 +41,6 @@ import {ShadowboxSettings} from '../shadowbox_server';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 
 import {FakeDigitalOceanServer} from './test_helpers';
-import {ACCOUNT_MANAGER_KEY_COMPARATOR, ACCOUNT_MANAGER_KEY_EXTRACTOR, OutlineAccountManager} from "../account_manager";
 
 async function makeLocalize(language: string) {
   let messages: {[key: string]: string};
@@ -72,7 +71,7 @@ export class TestApp extends LitElement {
   @property({type: String}) dir = 'ltr';
   @property({type: Function}) localize: Function;
 
-  private readonly accountManager: OutlineAccountManager;
+  private readonly supportedClouds: SupportedClouds;
   private readonly shadowboxSettings: ShadowboxSettings;
   private readonly domainEvents: EventEmitter;
   private language = '';
@@ -96,10 +95,10 @@ export class TestApp extends LitElement {
 
   constructor() {
     super();
-    const accountRepository = new LocalStorageRepository<PersistedAccount, AccountId>(
-        'gallery-accounts', localStorage, ACCOUNT_MANAGER_KEY_EXTRACTOR,
-        ACCOUNT_MANAGER_KEY_COMPARATOR);
-    this.accountManager = new OutlineAccountManager(accountRepository);
+    // const accountRepository = new LocalStorageRepository<PersistedAccount, AccountId>(
+    //     'gallery-accounts', localStorage, ACCOUNT_MANAGER_KEY_EXTRACTOR,
+    //     ACCOUNT_MANAGER_KEY_COMPARATOR);
+    // this.accountManager = new OutlineAccountManager(accountRepository);
     this.shadowboxSettings = {
       containerImageId: 'quay.io/outline/shadowbox:nightly',
       metricsUrl: null,
@@ -218,34 +217,32 @@ export class TestApp extends LitElement {
     };
 
     const connectAccountApp = this.select('digitalocean-connect-account-app') as DigitalOceanConnectAccountApp;
-    connectAccountApp.accountManager = this.accountManager;
-    connectAccountApp.domainEvents = this.domainEvents;
+    connectAccountApp.cloud = null;
     connectAccountApp.notificationManager = this.select('outline-notification-manager');
-    connectAccountApp.shadowboxSettings = this.shadowboxSettings;
     connectAccountApp.start();
   }
 
   private async onDigitalOceanCreateServerAppStart() {
-    const personalAccessToken = (this.select('#doPersonalAccessToken') as HTMLInputElement).value;
-    if (!personalAccessToken) {
-      const notificationManager = this.select('outline-notification-manager') as OutlineNotificationManager;
-      notificationManager.showToast('DigitalOcean personal access token is required.', 3000);
-      return;
-    }
-
-    const connectAccountApp = this.select('digitalocean-connect-account-app') as DigitalOceanConnectAccountApp;
-    this.accountManager.initializeCloudProviders(connectAccountApp);
-    const persistedAccount: PersistedAccount = {
-      id: {
-        cloudSpecificId: '1234',
-        cloudProviderId: CloudProviderId.DigitalOcean,
-      },
-      credentials: personalAccessToken as unknown as object,
-    };
-    const account = await connectAccountApp.constructAccount(persistedAccount);
-    const createServerApp = this.select('digitalocean-create-server-app');
-    createServerApp.notificationManager = this.select('outline-notification-manager');
-    createServerApp.start(account);
+    // const personalAccessToken = (this.select('#doPersonalAccessToken') as HTMLInputElement).value;
+    // if (!personalAccessToken) {
+    //   const notificationManager = this.select('outline-notification-manager') as OutlineNotificationManager;
+    //   notificationManager.showToast('DigitalOcean personal access token is required.', 3000);
+    //   return;
+    // }
+    //
+    // const connectAccountApp = this.select('digitalocean-connect-account-app') as DigitalOceanConnectAccountApp;
+    // this.accountManager.initializeCloudProviders(connectAccountApp);
+    // const persistedAccount: PersistedAccount = {
+    //   id: {
+    //     cloudSpecificId: '1234',
+    //     cloudProviderId: CloudProviderId.DigitalOcean,
+    //   },
+    //   credentials: personalAccessToken as unknown as object,
+    // };
+    // const account = await connectAccountApp.constructAccount(persistedAccount);
+    // const createServerApp = this.select('digitalocean-create-server-app');
+    // createServerApp.notificationManager = this.select('outline-notification-manager');
+    // createServerApp.start(account);
   }
 
   private async onOutlineManageServerAppShow() {

@@ -14,84 +14,40 @@
   limitations under the License.
 */
 
+import {Account} from "./account";
+import {DigitalOceanCloud, PersistedAccount} from "../web_app/digitalocean_app/digitalocean_cloud";
+import {EventEmitter} from "eventemitter3";
+import {ShadowboxSettings} from "../web_app/shadowbox_server";
+import {LocalStorageRepository} from "../infrastructure/repository";
+
+export class SupportedClouds {
+  private readonly clouds: Cloud[] = [];
+
+  constructor(
+      private readonly domainEvents: EventEmitter,
+      private readonly shadowboxSettings: ShadowboxSettings) {
+    const digitalOceanStorageRepository = new LocalStorageRepository<PersistedAccount, string>(
+        'accounts/digitalocean', localStorage, (entry: PersistedAccount) => entry.id);
+    const digitalOceanCloud = new DigitalOceanCloud(domainEvents, shadowboxSettings, digitalOceanStorageRepository);
+    this.clouds.push(digitalOceanCloud);
+  }
+
+  get(id: CloudProviderId): Cloud {
+    return this.clouds.find((cloud) => cloud.getId() === id);
+  }
+
+  listClouds(): Cloud[] {
+    return this.clouds;
+  }
+}
+
+export interface Cloud {
+  getId(): CloudProviderId;
+  getName(): string;
+  listAccounts(): Account[];
+}
+
 /** Enumeration of supported cloud providers. */
 export enum CloudProviderId {
   DigitalOcean = 'DigitalOcean',
 }
-
-/** DigitalOcean REST API wrapper */
-export interface DigitalOceanApi {
-  /** @see https://developers.digitalocean.com/documentation/v2/#get-user-information */
-  getAccount(): Promise<Account>;
-
-  /** @see https://developers.digitalocean.com/documentation/v2/#create-a-new-droplet */
-  createDroplet(
-      displayName: string, region: string, publicKeyForSSH: string,
-      dropletSpec: DigitalOceanDropletSpecification): Promise<{droplet: DropletInfo}>;
-
-  /** @see https://developers.digitalocean.com/documentation/v2/#delete-a-droplet */
-  deleteDroplet(dropletId: number): Promise<void>;
-
-  /** @see https://developers.digitalocean.com/documentation/v2/#regions */
-  getRegionInfo(): Promise<RegionInfo[]>;
-
-  /** @see https://developers.digitalocean.com/documentation/v2/#retrieve-an-existing-droplet-by-id */
-  getDroplet(dropletId: number): Promise<DropletInfo>;
-
-  /** Returns a list of tags associated with the droplet. */
-  getDropletTags(dropletId: number): Promise<string[]>;
-
-  /** @see https://developers.digitalocean.com/documentation/v2/#listing-droplets-by-tag */
-  getDropletsByTag(tag: string): Promise<DropletInfo[]>;
-
-  /** @see https://developers.digitalocean.com/documentation/v2/#list-all-droplets */
-  getDroplets(): Promise<DropletInfo[]>;
-}
-
-export interface DigitalOceanDropletSpecification {
-  installCommand: string;
-  size: string;
-  image: string;
-  tags: string[];
-}
-
-export type DropletInfo = Readonly<{
-  id: number;
-  status: 'new' | 'active';
-  tags: string[];
-  region: {
-    readonly slug: string;
-  };
-  size: Readonly<{
-    transfer: number;
-    price_monthly: number;
-  }>;
-  networks: Readonly<{
-    v4: ReadonlyArray<
-        Readonly<{
-          type: string;
-          ip_address: string;}
-            >>;
-  }>;
-}>;
-
-export type Account = Readonly<{
-  email: string;
-  uuid: string;
-  email_verified: boolean;
-  status: string;
-}>;
-
-export type RegionInfo = Readonly<{
-  slug: string;
-  name: string;
-  sizes: string[];
-  available: boolean;
-  features: string[];
-}>;
-
-export type DigitalOceanError = Readonly<{
-  id: string;
-  message: string;
-  request_id?: string;
-}>;

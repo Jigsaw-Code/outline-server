@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import {CloudProviderId} from "./cloud";
 import {DigitalOceanServer} from "../web_app/digitalocean_app/digitalocean_server";
 import {ManagedServer} from "./server";
@@ -37,6 +38,7 @@ export interface Account {
    */
   getDisplayName(): Promise<string>;
 
+  // TODO:
   /** The cloud provider API credentials. */
   getCredentials(): object;
 

@@ -13,17 +13,17 @@
 // limitations under the License.
 import * as server from "../../model/server";
 import {AccessKey, DataUsageByAccessKey, ManagedServer, ManagedServerHost} from "../../model/server";
+import {AccountId, DigitalOceanAccount, DigitalOceanLocation, DigitalOceanStatus} from "../../model/account";
+import {DisplayServerRepository} from "../display_server";
+import {InMemoryStorage} from "../../infrastructure/memory_storage";
 import {
   Account,
-  CloudProviderId,
   DigitalOceanApi,
   DigitalOceanDropletSpecification,
   DropletInfo,
   RegionInfo
-} from "../../model/cloud";
-import {AccountId, DigitalOceanAccount, DigitalOceanLocation, DigitalOceanStatus} from "../../model/account";
-import {DisplayServerRepository} from "../display_server";
-import {InMemoryStorage} from "../../infrastructure/memory_storage";
+} from "../../infrastructure/digitalocean_api";
+import {CloudProviderId} from "../../model/cloud";
 
 class FakeServer implements server.Server {
   private readonly id: string;

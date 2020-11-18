@@ -236,7 +236,10 @@ export class DigitalOceanCreateServerApp extends LitElement {
 
     try {
       const serverName = this.makeLocalizedServerName(event.detail.regionId);
-      const server = await this.account.createServer(event.detail.regionId, serverName);
+      const server = await this.account.createServer(serverName, event.detail.regionId);
+      console.log(server);
+
+
       const serverCreatedEvent =
           makePublicEvent(DigitalOceanCreateServerApp.EVENT_SERVER_CREATED, {server});
       this.dispatchEvent(serverCreatedEvent);

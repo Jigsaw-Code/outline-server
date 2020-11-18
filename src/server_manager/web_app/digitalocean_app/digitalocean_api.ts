@@ -15,11 +15,10 @@
 import {
   Account,
   DigitalOceanApi,
-  DigitalOceanDropletSpecification,
-  DigitalOceanError,
+  DigitalOceanDropletSpecification, DigitalOceanError,
   DropletInfo,
   RegionInfo
-} from "../../model/cloud";
+} from "../../infrastructure/digitalocean_api";
 
 export class HttpError extends Error {
   constructor(private statusCode: number, message?: string) {

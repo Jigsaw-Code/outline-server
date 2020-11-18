@@ -15,17 +15,14 @@
 import './ui_components/app-root.js';
 
 import {EventEmitter} from 'eventemitter3';
-import * as i18n from '../infrastructure/i18n';
-import {LocalStorageRepository} from '../infrastructure/repository';
-import {AccountId} from '../model/account';
-import {PersistedAccount} from '../model/account_manager';
 
+import * as i18n from '../infrastructure/i18n';
+import {getSentryApiUrl} from '../infrastructure/sentry';
 import {App} from './app';
 import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
-import {getSentryApiUrl} from "../infrastructure/sentry";
-import {ACCOUNT_MANAGER_KEY_COMPARATOR, ACCOUNT_MANAGER_KEY_EXTRACTOR, OutlineAccountManager} from "./account_manager";
+import {SupportedClouds} from "../model/cloud";
 
 type LanguageDef = {
   id: string,
@@ -119,12 +116,10 @@ document.addEventListener('WebComponentsReady', () => {
   appRoot.supportedLanguages = sortLanguageDefsByName(filteredLanguageDefs);
   appRoot.setLanguage(language.string(), languageDirection);
 
-  const accountRepository = new LocalStorageRepository<PersistedAccount, AccountId>(
-      'accounts/v1', localStorage, ACCOUNT_MANAGER_KEY_EXTRACTOR,
-      ACCOUNT_MANAGER_KEY_COMPARATOR);
   new App(
-      appRoot, version, new EventEmitter(), shadowboxSettings, new ManualServerRepository('manualServers'),
-      new DisplayServerRepository(), new OutlineAccountManager(accountRepository))
+      appRoot, version, new ManualServerRepository('manualServers'),
+      new DisplayServerRepository(),
+      new SupportedClouds(new EventEmitter(), shadowboxSettings))
       .start();
 });
 

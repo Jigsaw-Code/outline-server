@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import * as crypto from '../../infrastructure/crypto';
 import * as do_install_script from '../../install_scripts/do_install_script';
 
@@ -26,7 +27,6 @@ import {
 import {EventEmitter} from "eventemitter3";
 import {CloudProviderId} from "../../model/cloud";
 import {ShadowboxSettings} from "../shadowbox_server";
-import {AccountManager} from "../../model/account_manager";
 import {ManagedServer} from "../../model/server";
 
 const SHADOWBOX_TAG = 'shadowbox';
@@ -51,17 +51,13 @@ export class DigitalOceanAccount implements Account {
       private readonly cloudSpecificId: string,
       private readonly credentials: DigitalOceanCredentials,
       private readonly domainEvents: EventEmitter,
-      private readonly accountManager: AccountManager,
+      private readonly accountDisconnectFn: () => void,
       private readonly shadowboxSettings: ShadowboxSettings) {
     this.accountId = {
       cloudSpecificId,
       cloudProviderId: CloudProviderId.DigitalOcean
     };
     this.apiClient = new DigitalOceanApiClient(credentials);
-  }
-
-  registerAccountConnectionIssueListener(fn: () => void) {
-    this.domainEvents.on(DigitalOceanAccount.EVENT_ACCOUNT_CONNECTIVITY_ISSUE, fn);
   }
 
   /** The Account identifier that encapsulates the DigitalOcean account. */
@@ -180,7 +176,7 @@ export class DigitalOceanAccount implements Account {
 
   /** {@see Account#disconnect} */
   disconnect(): void {
-    this.accountManager.remove(this.accountId);
+    this.accountDisconnectFn();
   }
 
   // cloudFunctions needs to define cloud::public_ip and cloud::add_tag.
@@ -210,6 +206,7 @@ export class DigitalOceanAccount implements Account {
   }
 
   private processError(error: Error) {
+    console.log(error);
     if (error instanceof HttpError) {
       if (error.getStatusCode() === 401) {
         this.domainEvents.emit(DigitalOceanAccount.EVENT_ACCOUNT_CONNECTIVITY_ISSUE);

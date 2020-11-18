@@ -63,6 +63,8 @@ export class OutlineManageServerApp extends LitElement {
       <outline-modal-dialog id="modalDialog" .localize=${this.localize}></outline-modal-dialog>`;
   }
 
+  // TODO: Make sure listeners are only added once (or cleaned up).
+
   connectedCallback(): void {
     super.connectedCallback();
     this.shadowRoot.addEventListener(

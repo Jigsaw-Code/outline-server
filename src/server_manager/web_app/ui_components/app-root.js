@@ -565,23 +565,11 @@ export class AppRoot extends mixinBehaviors
    * @returns {DigitalOceanConnectAccountApp}
    */
   initializeDigitalOceanConnectAccountApp(
-      /** @type {AccountManager} */ accountManager,
-      domainEvents,
-      /** @type {ShadowboxSettings} */ shadowboxSettings) {
+      /** @type {DigitalOceanCloud} */ digitalOceanCloud) {
     const app = this.$.digitalOceanConnectAccountApp;
-    app.accountManager = accountManager;
-    app.domainEvents = domainEvents;
+    app.cloud = digitalOceanCloud;
     app.notificationManager = this.getNotificationManager();
-    app.shadowboxSettings = shadowboxSettings;
     return app;
-  }
-
-  /**
-   * @returns {DigitalOceanConnectAccountApp}
-   */
-  getAndShowDigitalOceanConnectAccountApp() {
-    this.currentPage = 'digitalOceanConnectAccountApp';
-    return this.$.digitalOceanConnectAccountApp;
   }
 
   /**

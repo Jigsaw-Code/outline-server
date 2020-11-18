@@ -13,24 +13,21 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
+
 import '@polymer/polymer/polymer-legacy.js';
 import '@polymer/iron-pages/iron-pages.js';
 import '../ui_components/outline-step-view.js';
-
-import {EventEmitter} from 'eventemitter3';
 import {css, customElement, html, LitElement, property} from 'lit-element';
 
 import {makePublicEvent} from '../../infrastructure/dom_events';
-import {AccountFactory, AccountManager, PersistedAccount} from '../../model/account_manager';
-import {ShadowboxSettings} from '../shadowbox_server';
 import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 
 import {DigitalOceanAccount} from './digitalocean_account';
-import {LEGACY_DIGITALOCEAN_ACCOUNT_ID} from "../account_manager";
+import {DigitalOceanCloud, LEGACY_DIGITALOCEAN_ACCOUNT_ID} from "./digitalocean_cloud";
 
 @customElement('digitalocean-connect-account-app')
-export class DigitalOceanConnectAccountApp extends LitElement implements AccountFactory<DigitalOceanAccount> {
+export class DigitalOceanConnectAccountApp extends LitElement {
   /**
    * Event fired upon successful completion of the DigitalOcean connect account flow.
    *
@@ -48,10 +45,8 @@ export class DigitalOceanConnectAccountApp extends LitElement implements Account
 
   @property({type: Function}) localize: Function;
   @property({type: String}) currentPage = 'loading';
-  @property({type: Object}) accountManager: AccountManager = null;
-  @property({type: Object}) domainEvents: EventEmitter = null;
+  @property({type: Object}) cloud: DigitalOceanCloud = null;
   @property({type: Object}) notificationManager: OutlineNotificationManager = null;
-  @property({type: Object}) shadowboxSettings: ShadowboxSettings = null;
 
   private session: OauthSession;
 
@@ -137,10 +132,10 @@ export class DigitalOceanConnectAccountApp extends LitElement implements Account
   /** Starts the connect account user flow. */
   async start(): Promise<void> {
     this.reset();
-    const storedAccount = await this.accountManager.loadDigitalOceanAccount();
-    if (storedAccount) {
+    const storedAccounts = await this.cloud.listAccounts();
+    if (storedAccounts.length > 0) {
       const serverCreatedEvent =
-          makePublicEvent(DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED, {account: storedAccount});
+          makePublicEvent(DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED, {account: storedAccounts[0]});
       this.dispatchEvent(serverCreatedEvent);
       return;
     }
@@ -161,18 +156,11 @@ export class DigitalOceanConnectAccountApp extends LitElement implements Account
       }
     }
 
-    const account = await this.accountManager.connectDigitalOceanAccount(accessToken);
+    const account = await this.cloud.connectAccount(LEGACY_DIGITALOCEAN_ACCOUNT_ID, accessToken);
     const serverCreatedEvent =
         makePublicEvent(DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED, {account});
     this.dispatchEvent(serverCreatedEvent);
     this.currentPage = 'loading';
-  }
-
-  constructAccount(persistedAccount: PersistedAccount): Promise<DigitalOceanAccount> {
-    return Promise.resolve(new DigitalOceanAccount(
-        LEGACY_DIGITALOCEAN_ACCOUNT_ID.cloudSpecificId,
-        persistedAccount.credentials as unknown as string, this.domainEvents, this.accountManager,
-        this.shadowboxSettings));
   }
 
   private reset() {
