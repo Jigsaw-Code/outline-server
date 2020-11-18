@@ -189,7 +189,7 @@ function cleanup() {
     || fail "Couldn't get a key to test custom data limits")
 
   # Verify that we can create custom data limits
-  client_curl --insecure -X PUT -H 'Content-Type: application/json' -d "{'id': ${ACCESS_KEY_ID}, 'limit': {'bytes': 1000}}" \
+  client_curl --insecure -X PUT -H 'Content-Type: application/json' -d "{'limit': {'bytes': 1000}}" \
       ${SB_API_URL}/access-keys/${ACCESS_KEY_ID}/data-limit \
     || fail "Couldn't create custom data limit"
   client_curl --insecure ${SB_API_URL}/server \

@@ -20,6 +20,7 @@ import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {AccessKeyId, AccessKeyMetricsId} from '../model/access_key';
 import {version} from '../package.json';
+import {AccessKeyConfigJson} from './server_access_key';
 
 import {ServerConfigJson} from './server_config';
 
@@ -64,6 +65,7 @@ export interface DailyFeatureMetricsReportJson {
 // Field renames will break backwards-compatibility.
 export interface DailyDataLimitMetricsReportJson {
   enabled: boolean;
+  perKeyLimitCount?: number;
 }
 
 export interface SharedMetricsPublisher {
@@ -156,6 +158,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
   // metricsUrl: where to post the metrics
   constructor(
       private clock: Clock, private serverConfig: JsonConfig<ServerConfigJson>,
+      private keyConfig: JsonConfig<AccessKeyConfigJson>,
       usageMetrics: UsageMetrics,
       private toMetricsId: (accessKeyId: AccessKeyId) => AccessKeyMetricsId,
       private metricsCollector: MetricsCollectorClient) {
@@ -180,11 +183,12 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
         return;
       }
       try {
+        logging.info("!!!! FEATURE METRICS");
         await this.reportFeatureMetrics();
       } catch (err) {
         logging.error(`Failed to report feature metrics: ${err}`);
       }
-    }, MS_PER_DAY);
+    }, 10000);
   }
 
   startSharing() {
@@ -233,12 +237,17 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
   }
 
   private async reportFeatureMetrics(): Promise<void> {
+    const keys = this.keyConfig.data().accessKeys;
     const featureMetricsReport = {
       serverId: this.serverConfig.data().serverId,
       serverVersion: version,
       timestampUtcMs: this.clock.now(),
-      dataLimit: {enabled: !!this.serverConfig.data().accessKeyDataLimit},
+      dataLimit: {
+        enabled: !!this.serverConfig.data().accessKeyDataLimit,
+        perKeyLimitCount: keys ? keys.reduce((count, next) => count + (next.dataLimit ? 1 : 0), 0) : 0
+      }
     };
+    logging.info(`!!! feature report: ${JSON.stringify(featureMetricsReport)}`);
     await this.metricsCollector.collectFeatureMetrics(featureMetricsReport);
   }
 }
