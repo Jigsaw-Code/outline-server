@@ -38,13 +38,13 @@ export interface Server {
   removeAccessKey(accessKeyId: AccessKeyId): Promise<void>;
 
   // Sets a data transfer limit over a 30 day rolling window for all access keys.
-  setAccessKeyDataLimit(limit: DataLimit): Promise<void>;
+  setDefaultDataLimit(limit: DataLimit): Promise<void>;
 
-  // Returns the access key data transfer limit, or undefined if it has not been set.
-  getAccessKeyDataLimit(): DataLimit|undefined;
+  // Returns the server default access key data transfer limit, or undefined if it has not been set.
+  getDefaultDataLimit(): DataLimit|undefined;
 
-  // Removes the access key data transfer limit.
-  removeAccessKeyDataLimit(): Promise<void>;
+  // Removes the server default access key data transfer limit.
+  removeDefaultDataLimit(): Promise<void>;
 
   // Returns whether metrics are enabled.
   getMetricsEnabled(): boolean;
