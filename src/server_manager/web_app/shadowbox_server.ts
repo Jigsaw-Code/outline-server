@@ -32,7 +32,9 @@ export interface ServerConfig {
   portForNewAccessKeys: number;
   hostnameForAccessKeys: string;
   version: string;
-  defaultDataLimit?: server.DataLimit;
+  // This is the server default data limit.  We use this instead of defaultDataLimit for API//
+  // backwards compatibility.
+  accessKeyDataLimit?: server.DataLimit;
 }
 
 export class ShadowboxServer implements server.Server {
@@ -73,17 +75,17 @@ export class ShadowboxServer implements server.Server {
       body: JSON.stringify({limit})
     };
     await this.apiRequest<void>(this.getDefaultDataLimitPath(), requestOptions);
-    this.serverConfig.defaultDataLimit = limit;
+    this.serverConfig.accessKeyDataLimit = limit;
   }
 
   async removeDefaultDataLimit(): Promise<void> {
     console.info(`Removing server default data limit`);
     await this.apiRequest<void>(this.getDefaultDataLimitPath(), {method: 'DELETE'});
-    delete this.serverConfig.defaultDataLimit;
+    delete this.serverConfig.accessKeyDataLimit;
   }
 
   getDefaultDataLimit(): server.DataLimit|undefined {
-    return this.serverConfig.defaultDataLimit;
+    return this.serverConfig.accessKeyDataLimit;
   }
 
   private getDefaultDataLimitPath(): string {
