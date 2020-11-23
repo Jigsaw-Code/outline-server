@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { access } from 'fs';
 import * as randomstring from 'randomstring';
 import * as uuidv4 from 'uuid/v4';
 
@@ -26,7 +27,7 @@ import {ShadowsocksServer} from '../model/shadowsocks_server';
 import {PrometheusManagerMetrics} from './manager_metrics';
 
 // The format as json of access keys in the config file.
-interface AccessKeyJson {
+export interface AccessKeyJson {
   id: AccessKeyId;
   metricsId: AccessKeyId;
   name: string;
@@ -67,7 +68,7 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyJson): AccessKe
       accessKeyJson.id, accessKeyJson.name, accessKeyJson.metricsId, proxyParams);
 }
 
-function accessKeySerializedJson(accessKey: AccessKey): AccessKeyJson {
+function accessKeyToPersistedJson(accessKey: AccessKey): AccessKeyJson {
   return {
     id: accessKey.id,
     metricsId: accessKey.metricsId,
@@ -219,7 +220,8 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     for (const accessKey of this.accessKeys) {
       const usageBytes = bytesTransferredById[accessKey.id] || 0;
       const wasOverDataLimit = accessKey.isOverDataLimit;
-      accessKey.isOverDataLimit = usageBytes > (accessKey.dataLimit || this.defaultDataLimit)?.bytes || false;
+      const limitBytes = (accessKey.dataLimit || this.defaultDataLimit)?.bytes;
+      accessKey.isOverDataLimit = usageBytes > limitBytes || false;
       limitStatusChanged = accessKey.isOverDataLimit !== wasOverDataLimit || limitStatusChanged;
     }
     if (limitStatusChanged) {
@@ -244,7 +246,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private saveAccessKeys() {
-    this.keyConfig.data().accessKeys = this.accessKeys.map(key => accessKeySerializedJson(key));
+    this.keyConfig.data().accessKeys = this.accessKeys.map(key => accessKeyToPersistedJson(key));
     this.keyConfig.write();
   }
 

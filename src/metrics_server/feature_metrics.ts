@@ -72,16 +72,12 @@ export function isValidFeatureMetricsReport(obj: any): obj is DailyFeatureMetric
   }
 
   // Validate the per-key data limit feature
-  const perKeyType = typeof obj.dataLimit.perKeyLimitCount;
-  if (perKeyType !== 'undefined') {
-    if (perKeyType === 'number') {
-      if (obj.dataLimit.perKeyLimitCount < 0) { 
-        return false;
-      }
-    } else {
-      return false;
-    }
+  const perKeyLimitCount = obj.dataLimit.perKeyLimitCount;
+  if(perKeyLimitCount === undefined) {
+    return true;
   }
-  
-  return true;
+  if (typeof perKeyLimitCount === 'number') {
+    return obj.dataLimit.perKeyLimitCount >= 0;
+  }
+  return false;
 }

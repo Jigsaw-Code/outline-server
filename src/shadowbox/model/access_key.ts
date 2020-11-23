@@ -68,7 +68,7 @@ export interface AccessKeyRepository {
   // Removes the access key data transfer limit.
   removeDefaultDataLimit(): Promise<void>;
   // Sets access key `id` to use the given custom data limit.
-  setAccessKeyDataLimit(id: AccessKeyId, limit: DataLimit);
+  setAccessKeyDataLimit(id: AccessKeyId, limit: DataLimit): Promise<void>;
   // Removes the custom data limit from access key `id`.
-  removeAccessKeyDataLimit(id: AccessKeyId);
+  removeAccessKeyDataLimit(id: AccessKeyId): Promise<void>;
 }

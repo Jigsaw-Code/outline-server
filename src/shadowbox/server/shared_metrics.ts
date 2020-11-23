@@ -20,7 +20,7 @@ import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {AccessKeyId, AccessKeyMetricsId} from '../model/access_key';
 import {version} from '../package.json';
-import {AccessKeyConfigJson} from './server_access_key';
+import {AccessKeyConfigJson, AccessKeyJson} from './server_access_key';
 
 import {ServerConfigJson} from './server_config';
 
@@ -153,6 +153,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
   private reportStartTimestampMs: number;
 
   // serverConfig: where the enabled/disable setting is persisted
+  // keyConfig: where access keys are persisted
   // usageMetrics: where we get the metrics from
   // toMetricsId: maps Access key ids to metric ids
   // metricsUrl: where to post the metrics
@@ -243,11 +244,21 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       timestampUtcMs: this.clock.now(),
       dataLimit: {
         enabled: !!this.serverConfig.data().accessKeyDataLimit,
-        perKeyLimitCount: keys?.reduce((count, next) => count + (next.dataLimit ? 1 : 0), 0) || 0
+        perKeyLimitCount: countPerKeyDataLimits(keys)
       }
     };
     await this.metricsCollector.collectFeatureMetrics(featureMetricsReport);
   }
+}
+
+function countPerKeyDataLimits(keys?: AccessKeyJson[]): number {
+  if (!keys) {
+    return 0;
+  }
+  const perKeyLimitCounter = (count: number, next: AccessKeyJson) => {
+    return count + (next.dataLimit ? 1 : 0);
+  };
+  return keys.reduce(perKeyLimitCounter, 0);
 }
 
 function hasSanctionedCountry(countries: string[]) {
