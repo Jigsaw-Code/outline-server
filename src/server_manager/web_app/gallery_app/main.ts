@@ -22,6 +22,7 @@ import '../ui_components/outline-key-settings';
 
 import IntlMessageFormat from 'intl-messageformat';
 import {css, customElement, html, LitElement, property} from 'lit-element';
+import {OutlineKeySettings} from '../ui_components/outline-key-settings';
 
 async function makeLocalize(language: string) {
   let messages: {[key: string]: string};
@@ -94,9 +95,18 @@ export class TestApp extends LitElement {
       <h1>Outline Manager Components Gallery</h1>
       ${this.pageControls}
 
-      <div class="widget">
+      <div class="widget" id="key-settings-widget" @SaveKeySettingsRequested=${
+        (e: {detail: {keySettings: OutlineKeySettings}}) => console.log(e)}>
         <h2>outline-key-settings</h2>
-        <button @tap=${() => this.select('outline-key-settings').open()}>Open Dialog</button>
+        <button @tap=${() => this.select('outline-key-settings').open(
+          {
+            id: '1', 
+            name: 'Key Name'
+          }, 
+          {
+            unit: 'MB',
+            value: 50
+          })}>Open Dialog</button>
         <outline-key-settings dir=${this.dir}></outline-key-settings>
       </div>
       
