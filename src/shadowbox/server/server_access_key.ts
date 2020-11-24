@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { access } from 'fs';
 import * as randomstring from 'randomstring';
 import * as uuidv4 from 'uuid/v4';
 
@@ -221,7 +220,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       const usageBytes = bytesTransferredById[accessKey.id] || 0;
       const wasOverDataLimit = accessKey.isOverDataLimit;
       const limitBytes = (accessKey.dataLimit || this.defaultDataLimit)?.bytes;
-      accessKey.isOverDataLimit = usageBytes > limitBytes || false;
+      accessKey.isOverDataLimit = usageBytes > limitBytes;
       limitStatusChanged = accessKey.isOverDataLimit !== wasOverDataLimit || limitStatusChanged;
     }
     if (limitStatusChanged) {

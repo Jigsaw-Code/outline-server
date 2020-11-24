@@ -17,7 +17,7 @@ import * as net from 'net';
 import {ManualClock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
 import {InMemoryConfig} from '../infrastructure/json_config';
-import {AccessKeyRepository, DataLimit} from '../model/access_key';
+import {AccessKeyRepository, DataLimit, AccessKey} from '../model/access_key';
 import * as errors from '../model/errors';
 
 import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
@@ -355,6 +355,27 @@ describe('ServerAccessKeyRepository', () => {
       expect(key.isOverDataLimit)
           .toEqual(prometheusClient.bytesTransferredById[key.id] > limit.bytes);
     }
+    done();
+  });
+
+  it('enforceAccessKeyDataLimits respects both default and per-key limits', async (done) => {
+    const prometheusClient = new FakePrometheusClient({'0': 200, '1': 300});
+    const repo =
+        new RepoBuilder().prometheusClient(prometheusClient).defaultDataLimit({bytes: 500}).build();
+    const perKeyLimited = await repo.createNewAccessKey();
+    const defaultLimited = await repo.createNewAccessKey();
+    await repo.setAccessKeyDataLimit(perKeyLimited.id, {bytes: 100});
+    
+    await repo.enforceAccessKeyDataLimits();
+    expect(perKeyLimited.isOverDataLimit).toBeTruthy();
+    expect(defaultLimited.isOverDataLimit).toBeFalsy();
+
+    prometheusClient.bytesTransferredById[perKeyLimited.id] = 50;
+    prometheusClient.bytesTransferredById[defaultLimited.id] = 600;
+    await repo.enforceAccessKeyDataLimits();
+    expect(perKeyLimited.isOverDataLimit).toBeFalsy();
+    expect(defaultLimited.isOverDataLimit).toBeTruthy();
+
     done();
   });
 
