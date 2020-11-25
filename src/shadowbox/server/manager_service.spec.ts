@@ -32,7 +32,7 @@ interface ServerInfo {
 const NEW_PORT = 12345;
 const OLD_PORT = 54321;
 const EXPECTED_ACCESS_KEY_PROPERTIES =
-    ['id', 'name', 'password', 'port', 'method', 'accessUrl'].sort();
+    ['id', 'name', 'password', 'port', 'method', 'accessUrl', 'dataLimit'].sort();
 
 describe('ShadowsocksManagerService', () => {
   // After processing the response callback, we should set
