@@ -189,19 +189,19 @@ function cleanup() {
     || fail "Couldn't get a key to test custom data limits")
 
   # Verify that we can create custom data limits
-  client_curl --insecure -X PUT -H 'Content-Type: application/json' -d "{'limit': {'bytes': 1000}}" \
+  client_curl --insecure -X PUT -H 'Content-Type: application/json' -d '{"limit": {"bytes": 1000}}' \
       ${SB_API_URL}/access-keys/${ACCESS_KEY_ID}/data-limit \
     || fail "Couldn't create custom data limit"
-  client_curl --insecure ${SB_API_URL}/server \
-    | docker exec -i $UTIL_CONTAINER jq -e ".[] | select(.id == ${ACCESS_KEY_ID}) | select(.dataLimit)" \
-    || echo 'Custom data limit not set'
+  client_curl --insecure ${SB_API_URL}/access-keys \
+    | docker exec -i $UTIL_CONTAINER jq -e ".accessKeys[] | select(.id == \"${ACCESS_KEY_ID}\") | .dataLimit.bytes" \
+    || fail 'Custom data limit not set'
  
  # Verify that we can remove custom data limits
   client_curl --insecure -X DELETE ${SB_API_URL}/access-keys/${ACCESS_KEY_ID}/data-limit \
     || fail "Couldn't remove custom data limit"
-  ! client_curl --insecure ${SB_API_URL}/server \
-    | docker exec -i $UTIL_CONTAINER jq -e ".[] | select(.id == ${ACCESS_KEY_ID}) | select(.dataLimit)" \
-    || echo 'Custom data limit not removed'
+  ! client_curl --insecure ${SB_API_URL}/access-keys \
+    | docker exec -i $UTIL_CONTAINER jq -e ".accessKeys[] | select(.id == \"${ACCESS_KEY_ID}\") | .dataLimit.bytes" \
+    || fail 'Custom data limit not removed'
   
   # Verify no errors occurred.
   readonly SHADOWBOX_LOG=$OUTPUT_DIR/shadowbox-log.txt

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { access } from 'fs';
 import * as ipRegex from 'ip-regex';
 import * as restify from 'restify';
 import * as restifyErrors from 'restify-errors';
@@ -38,13 +39,13 @@ function accessKeyToJsonResponse(accessKey: AccessKey) {
     password: accessKey.proxyParams.password,
     port: accessKey.proxyParams.portNumber,
     method: accessKey.proxyParams.encryptionMethod,
+    dataLimit: accessKey.dataLimit,
     accessUrl: SIP002_URI.stringify(makeConfig({
       host: accessKey.proxyParams.hostname,
       port: accessKey.proxyParams.portNumber,
       method: accessKey.proxyParams.encryptionMethod,
       password: accessKey.proxyParams.password,
-      outline: 1,
-      dataLimit: accessKey.dataLimit
+      outline: 1
     }))
   };
 }
