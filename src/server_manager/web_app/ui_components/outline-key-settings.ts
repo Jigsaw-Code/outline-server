@@ -24,21 +24,23 @@ import '@polymer/paper-listbox/paper-listbox';
 import './cloud-install-styles.js';
 
 import {PaperDialogElement} from '@polymer/paper-dialog/paper-dialog';
+import {PaperInputElement} from '@polymer/paper-input/paper-input';
+import {PaperListboxElement} from '@polymer/paper-listbox/paper-listbox';
 import {css, customElement, html, internalProperty, LitElement, property} from 'lit-element';
 
-import * as server from '../../model/server';
-import {DisplayDataAmount} from '../ui_components/outline-server-view';
+import {DisplayAccessKey, DisplayDataAmount} from '../ui_components/outline-server-view';
 
 /*
   This component is a floating window representing settings specific to individual access keys.
+  Its state is dynamically set when it's opened using the open() method instead of with any in-HTML
+  attributes.
 */
 @customElement('outline-key-settings')
 export class OutlineKeySettings extends LitElement {
-  @property({type: String}) keyId: server.AccessKeyId = null;
-  @property({type: String}) keyName: string = null;
-  @property({type: Object}) serverDefaultLimit: DisplayDataAmount = null;
-  @property({type: Object}) customLimit: DisplayDataAmount = null;
-  @property({type: Boolean}) showCustomDataLimitDialog = false;
+  @internalProperty() serverDefaultLimit: DisplayDataAmount = null;
+  @internalProperty() showCustomDataLimitDialog = false;
+
+  public key: DisplayAccessKey = null;
 
   static get styles() {
     return [
@@ -50,19 +52,19 @@ export class OutlineKeySettings extends LitElement {
         }
 
         /* for now until I make an icon */
-        #key-icon {
+        #keyIcon {
           filter: invert(1);
           /* Split the padding evenly between the icon and the section to be bidirectional. */
           padding: 0 12px;
         }
 
-        #header-section {
+        #headerSection {
           display: flex;
           flex-direction: row;
           padding: 0 12px;
         }
 
-        #header-section h3 {
+        #headerSection h3 {
           font-size: 18px;
           color: rgba(0, 0, 0, 0.87);
           line-height: 24px;
@@ -77,7 +79,7 @@ export class OutlineKeySettings extends LitElement {
           font-weight: 500;
         }
 
-        #data-limits-menu {
+        #dataLimitsMenu {
           display: flex;
           flex-flow: row nowrap;
         }
@@ -103,31 +105,31 @@ export class OutlineKeySettings extends LitElement {
             display: none;
           }
         }
-        #data-limit-input {
+        #dataLimitInput {
           --paper-input-container-label-focus: {
             color: rgb(123, 123, 123);
           }
         }
       </style>
       <paper-dialog id="container">
-        <div id="header-section">
+        <div id="headerSection">
           <!-- TODO how to get this to work in both the gallery and ui components? -->
-          <img id="key-icon" src="../../images/key-avatar.svg" />
-          <h3 class="settings-section-title">Key Settings - ${this.keyName}</h3>
+          <img id="keyIcon" src="../../images/key-avatar.svg" />
+          <h3 class="settings-section-title">Key Settings - ${this.key?.name}</h3>
         </div>
         <div class="settings-section settings-content">
           <div class="settings-section-title">Data Limits</div>
-          <paper-checkbox ?checked="${this.showCustomDataLimitDialog}" @tap=${
+          <paper-checkbox ?checked=${this.showCustomDataLimitDialog} @tap=${
         this.setCustomLimitTapped}>
             Set a custom data limit
           </paper-checkbox>
-          <div id="data-limits-menu" ?hidden="${!this.showCustomDataLimitDialog}">
-            <paper-input id="data-limit-input" label="Data Limit" always-float-label type="number" size="5">
-              ${this.customLimit?.value || this.serverDefaultLimit?.value || ''}
+          <div id="dataLimitsMenu" ?hidden=${!this.showCustomDataLimitDialog}>
+            <paper-input id="dataLimitInput" label="Data Limit" always-float-label allowed-pattern="[0-9]+">
+              ${this.activeDataLimit()?.value || ''}
             </paper-input>
-            <paper-dropdown-menu id="units-dropdown" no-animations noink>
-              <paper-listbox slot="dropdown-content" attr-for-selected="name" selected="${
-        this.customLimit?.unit || this.serverDefaultLimit?.unit || 'GB'}">
+            <paper-dropdown-menu no-animations noink>
+              <paper-listbox id="dataLimitUnits" slot="dropdown-content" attr-for-selected="name" selected="${
+        this.activeDataLimit()?.unit || 'GB'}">
                 <paper-item name="GB">GB</paper-item>
                 <paper-item name="MB">MB</paper-item>
               </paper-listbox>
@@ -141,6 +143,21 @@ export class OutlineKeySettings extends LitElement {
         </div>
       </paper-dialog>
     `;
+  }
+
+  private _dataLimitValue() {
+    return Number((this.shadowRoot.querySelector('#dataLimitInput') as PaperInputElement).value);
+  }
+
+  private _dataLimitType() {
+    return (this.shadowRoot.querySelector('#dataLimitUnits') as PaperListboxElement).selected as
+        'GB' |
+        'MB';
+  }
+
+  private activeDataLimit() {
+    // Returns the limit which currently is enforced on this key, or undefined if there is none.
+    return this.key?.dataLimit || this.serverDefaultLimit;
   }
 
   private setCustomLimitTapped() {
@@ -157,13 +174,24 @@ export class OutlineKeySettings extends LitElement {
     this.dispatchEvent(event);
   }
 
-  public open(accessKey: server.AccessKey, serverDefaultLimit: DisplayDataAmount) {
-    this.keyId = accessKey.id;
-    this.keyName = accessKey.name;
+  // TODOBEFOREPUSH only send a request if the limit changed
+  public dataLimitChanged() {
+    // const dataLimitIsSet = this.showCustomDataLimitDialog;
+    // // if the key has a limit XOR whether a data limit is set
+    // if(!!this.key.dataLimit !== dataLimitIsSet) {
+    //   return true;
+    // }
+    // // if the amount on the input doesn't match key.limit
+    return true;
+  }
+
+  public dataLimitAmount(): DisplayDataAmount {
+    return {unit: this._dataLimitType(), value: this._dataLimitValue()};
+  }
+
+  public open(accessKey: DisplayAccessKey, serverDefaultLimit: DisplayDataAmount) {
+    this.key = accessKey;
     this.serverDefaultLimit = serverDefaultLimit;
-    const limitBytes = accessKey.dataLimit?.bytes;
-    const useGb = limitBytes >= 10 ** 9;
-    this.customLimit = {unit: useGb ? 'GB' : 'MB', value: limitBytes / 10 ** (useGb ? 9 : 6)};
     this.showCustomDataLimitDialog = !!accessKey.dataLimit;
     (this.shadowRoot.querySelector('#container') as PaperDialogElement).open();
   }

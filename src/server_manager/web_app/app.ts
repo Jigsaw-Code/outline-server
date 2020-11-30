@@ -26,6 +26,7 @@ import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
+import {OutlineKeySettings} from './ui_components/outline-key-settings.js';
 import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
 
@@ -61,7 +62,6 @@ function dataLimitToDisplayDataAmount(limit: server.DataLimit): DisplayDataAmoun
   }
   return {value: Math.floor(bytes / (10 ** 6)), unit: 'MB'};
 }
-
 function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.DataLimit|null {
   if (!dataAmount) {
     return null;
@@ -178,6 +178,10 @@ export class App {
       this.removeAccessKey(event.detail.accessKeyId);
     });
 
+    appRoot.addEventListener('OpenKeySettingsDialogRequested', (event: CustomEvent) => {
+      appRoot.openKeySettingsDialog(event.detail.accessKey, event.detail.defaultDataLimit);
+    });
+
     appRoot.addEventListener('RenameAccessKeyRequested', (event: CustomEvent) => {
       this.renameAccessKey(event.detail.accessKeyId, event.detail.newName, event.detail.entry);
     });
@@ -188,6 +192,10 @@ export class App {
 
     appRoot.addEventListener('RemoveDefaultDataLimitRequested', (event: CustomEvent) => {
       this.removeDefaultDataLimit();
+    });
+
+    appRoot.addEventListener('SaveKeySettingsRequested', (event: CustomEvent) => {
+      this.saveKeySettings(event.detail.keySettings);
     });
 
     appRoot.addEventListener('ChangePortForNewAccessKeysRequested', (event: CustomEvent) => {
@@ -944,6 +952,7 @@ export class App {
 
       // Update all the displayed access keys, even if usage didn't change, in case the data limit
       // did.
+      // TODOBEFOREPUSH make relative traffic relative to key's data limit if it exists
       for (const accessKey of serverView.accessKeyRows) {
         const accessKeyId = accessKey.id;
         const transferredBytes = stats.bytesTransferredByUserId[accessKeyId] || 0;
@@ -997,7 +1006,8 @@ export class App {
       name: remoteAccessKey.name,
       accessUrl: remoteAccessKey.accessUrl,
       transferredBytes: 0,
-      relativeTraffic: 0
+      relativeTraffic: 0,
+      dataLimit: dataLimitToDisplayDataAmount(remoteAccessKey.dataLimit)
     };
   }
 
@@ -1062,6 +1072,25 @@ export class App {
       console.error(`Failed to remove server default data limit: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-remove-data-limit'));
       serverView.isDefaultDataLimitEnabled = true;
+    }
+  }
+
+  private async saveKeySettings(settings: OutlineKeySettings) {
+    this.appRoot.showNotification(this.appRoot.localize('saving'));
+    const serverView = this.appRoot.getServerView(this.appRoot.selectedServer.id);
+    try {
+      if (settings.dataLimitChanged()) {
+        const dataLimit = settings.dataLimitAmount();
+        await this.selectedServer.setAccessKeyDataLimit(
+            settings.key.id, displayDataAmountToDataLimit(dataLimit));
+        this.refreshTransferStats(this.selectedServer, serverView);
+        settings.key.dataLimit = dataLimit;
+      }
+      settings.close();
+      this.appRoot.showNotification(this.appRoot.localize('saved'));
+    } catch (error) {
+      // TODOBEFOREPUSH error handling
+      console.error(`!!!!! ${error}`);
     }
   }
 

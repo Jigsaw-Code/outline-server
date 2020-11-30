@@ -97,6 +97,16 @@ export class ShadowboxServer implements server.Server {
     return 'experimental/access-key-data-limit';
   }
 
+  async setAccessKeyDataLimit(keyId: server.AccessKeyId, limit: server.DataLimit): Promise<void> {
+    console.info(`Setting data limit of ${limit.bytes} bytes for access key ${keyId}`);
+    const requestOptions = {
+      method: 'PUT',
+      headers: new Headers({'Content-Type': 'application/json'}),
+      body: JSON.stringify({limit})
+    };
+    await this.apiRequest<void>(`access-keys/${keyId}/data-limit`, requestOptions);
+  }
+
   getDataUsage(): Promise<server.DataUsageByAccessKey> {
     return this.apiRequest<server.DataUsageByAccessKey>('metrics/transfer');
   }

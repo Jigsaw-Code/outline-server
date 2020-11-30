@@ -464,6 +464,8 @@ export class AppRoot extends mixinBehaviors
       <outline-modal-dialog id="modalDialog"></outline-modal-dialog>
       <outline-share-dialog id="shareDialog" localize="[[localize]]"></outline-share-dialog>
       <outline-metrics-option-dialog id="metricsDialog" localize="[[localize]]"></outline-metrics-option-dialog>
+      <!-- TODOBEFOREPUSH add localization -->
+      <outline-key-settings id="keySettingsDialog"></outline-key-settings>
 
       <paper-dialog id="getConnectedDialog" modal="">
         <!-- iframe gets inserted here once we are given the invite URL. -->
@@ -784,6 +786,10 @@ export class AppRoot extends mixinBehaviors
 
   openShareDialog(accessKey, s3Url) {
     this.$.shareDialog.open(accessKey, s3Url);
+  }
+
+  openKeySettingsDialog(accessKey, defaultDataLimit) {
+    this.$.keySettingsDialog.open(accessKey, defaultDataLimit);
   }
 
   openGetConnectedDialog(/** @type {string} */ inviteUrl) {

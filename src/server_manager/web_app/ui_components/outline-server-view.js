@@ -28,6 +28,7 @@ import '@polymer/paper-tooltip/paper-tooltip.js';
 import './cloud-install-styles.js';
 import './outline-iconset.js';
 import './outline-help-bubble.js';
+import './outline-key-settings';
 import './outline-metrics-option-dialog.js';
 import './outline-server-settings.js';
 import './outline-share-dialog.js';
@@ -74,6 +75,7 @@ function compare(a, b) {
  * @prop {string} accessUrl
  * @prop {number} transferredBytes
  * @prop {number} relativeTraffic
+ * @prop {DisplayDataAmount=} dataLimit
  */
 
 /**
@@ -536,6 +538,11 @@ export class ServerView extends DirMixin(PolymerElement) {
                           <paper-item on-tap="_handleRenameAccessKeyPressed">
                             <iron-icon icon="icons:create"></iron-icon>[[localize('server-access-key-rename')]]
                           </paper-item>
+                          <paper-item on-tap="_handleShowKeySettingsPressed">
+                          <!-- TODOBEFOREPUSH localization -->
+                          <!-- TODOBEFOREPUSH hide if the server version is too low -->
+                            <iron-icon icon="icons:settings"></iron-icon>Key Settings
+                          </paper-item>
                           <paper-item on-tap="_handleRemoveAccessKeyPressed">
                             <iron-icon icon="icons:delete"></iron-icon>[[localize('remove')]]
                           </paper-item>
@@ -754,6 +761,15 @@ export class ServerView extends DirMixin(PolymerElement) {
         },
       },
     }));
+  }
+
+  _handleShowKeySettingsPressed(event) {
+    const accessKey = event.model.item;
+    const defaultDataLimit = this.defaultDataLimit;
+    console.log('keysettings item:');
+    console.log(JSON.stringify(accessKey));
+    this.dispatchEvent(
+        makePublicEvent('OpenKeySettingsDialogRequested', {accessKey, defaultDataLimit}));
   }
 
   _handleRenameAccessKeyPressed(event) {
