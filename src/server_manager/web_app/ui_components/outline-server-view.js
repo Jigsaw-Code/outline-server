@@ -28,7 +28,6 @@ import '@polymer/paper-tooltip/paper-tooltip.js';
 import './cloud-install-styles.js';
 import './outline-iconset.js';
 import './outline-help-bubble.js';
-import './outline-key-settings';
 import './outline-metrics-option-dialog.js';
 import './outline-server-settings.js';
 import './outline-share-dialog.js';
@@ -766,8 +765,6 @@ export class ServerView extends DirMixin(PolymerElement) {
   _handleShowKeySettingsPressed(event) {
     const accessKey = event.model.item;
     const defaultDataLimit = this.defaultDataLimit;
-    console.log('keysettings item:');
-    console.log(JSON.stringify(accessKey));
     this.dispatchEvent(
         makePublicEvent('OpenKeySettingsDialogRequested', {accessKey, defaultDataLimit}));
   }
