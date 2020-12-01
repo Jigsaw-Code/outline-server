@@ -38,8 +38,6 @@ FROM ${NODE_IMAGE}
 
 # Save metadata on the software versions we are using.
 LABEL shadowbox.node_version=12.16.3
-# Keep in sync with version in third_party/outline-ss-server
-LABEL shadowbox.outline-ss-server_version=1.1.4
 
 ARG GITHUB_RELEASE
 LABEL shadowbox.github.release="${GITHUB_RELEASE}"
@@ -62,8 +60,8 @@ WORKDIR /opt/outline-server
 # The shadowbox build directory has the following structure:
 #   - app/          (bundled node app)
 #   - bin/          (binary dependencies)
-#   - cmd.sh        (docker entry script)
 #   - package.json  (shadowbox package.json)
 COPY --from=build /build/shadowbox/ .
 
-CMD ./cmd.sh
+COPY src/shadowbox/docker/cmd.sh /
+CMD /cmd.sh

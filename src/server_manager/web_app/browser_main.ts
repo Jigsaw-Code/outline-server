@@ -13,8 +13,8 @@
 // limitations under the License.
 
 // tslint:disable-next-line:no-any
-(window as any).whitelistCertificate = (fingerprint: string) => {
-  console.log(`Requested whitelisting of certificate with fingerprint ${fingerprint}`);
+(window as any).trustCertificate = (fingerprint: string) => {
+  console.log(`Requested to trust certificate with fingerprint ${fingerprint}`);
 };
 
 // tslint:disable-next-line:no-any

@@ -110,7 +110,7 @@ describe('DisplayServerRepository', () => {
 
     // Instantiate a new repository to validate that servers have been persisted to storage.
     repository = new DisplayServerRepository(storage);
-    expect(objectContaining(displayServer)).toEqual(repository.findServer(displayServer.id));
+    expect(repository.findServer(displayServer.id)).toEqual(objectContaining(displayServer));
   });
 
   it('persists the last displayed server ID', () => {

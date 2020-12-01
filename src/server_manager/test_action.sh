@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 #
 # Copyright 2018 The Outline Authors
 #
@@ -14,5 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-yarn do server_manager/electron_app/test
+readonly TEST_DIR="${BUILD_DIR}/js/server_manager/"
+rm -rf $TEST_DIR
+
+# Use commonjs modules, jasmine runs in node.
+tsc -p $ROOT_DIR/src/server_manager --outDir $TEST_DIR --module commonjs
+jasmine --config=$ROOT_DIR/jasmine.json
+
 yarn do server_manager/web_app/test
+
+rm -rf $TEST_DIR

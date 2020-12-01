@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as semver from 'semver';
+
 import * as errors from '../infrastructure/errors';
 import * as server from '../model/server';
 
@@ -63,28 +65,34 @@ export class ShadowboxServer implements server.Server {
     return this.apiRequest<void>('access-keys/' + accessKeyId, {method: 'DELETE'});
   }
 
-  setAccessKeyDataLimit(limit: server.DataLimit): Promise<void> {
+  async setAccessKeyDataLimit(limit: server.DataLimit): Promise<void> {
     console.info(`Setting access key data limit: ${JSON.stringify(limit)}`);
     const requestOptions = {
       method: 'PUT',
       headers: new Headers({'Content-Type': 'application/json'}),
       body: JSON.stringify({limit})
     };
-    return this.apiRequest<void>('experimental/access-key-data-limit', requestOptions).then(() => {
-      this.serverConfig.accessKeyDataLimit = limit;
-    });
+    await this.apiRequest<void>(this.getAccessKeyDataLimitPath(), requestOptions);
+    this.serverConfig.accessKeyDataLimit = limit;
   }
 
-  removeAccessKeyDataLimit(): Promise<void> {
+  async removeAccessKeyDataLimit(): Promise<void> {
     console.info(`Removing access key data limit`);
-    return this.apiRequest<void>('experimental/access-key-data-limit', {method: 'DELETE'})
-        .then(() => {
-          delete this.serverConfig.accessKeyDataLimit;
-        });
+    await this.apiRequest<void>(this.getAccessKeyDataLimitPath(), {method: 'DELETE'});
+    delete this.serverConfig.accessKeyDataLimit;
   }
 
   getAccessKeyDataLimit(): server.DataLimit|undefined {
     return this.serverConfig.accessKeyDataLimit;
+  }
+
+  private getAccessKeyDataLimitPath(): string {
+    const version = this.getVersion();
+    if (semver.gte(version, '1.4.0')) {
+      // Data limits became a permanent feature in shadowbox v1.4.0.
+      return 'server/access-key-data-limit';
+    }
+    return 'experimental/access-key-data-limit';
   }
 
   getDataUsage(): Promise<server.DataUsageByAccessKey> {

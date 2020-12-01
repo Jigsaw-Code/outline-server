@@ -19,7 +19,6 @@ import {autoUpdater} from 'electron-updater';
 import * as path from 'path';
 import {URL, URLSearchParams} from 'url';
 
-import {LoadingWindow} from './loading_window';
 import * as menu from './menu';
 
 const app = electron.app;
@@ -79,9 +78,6 @@ function createMainWindow() {
   const webAppUrl = getWebAppUrl();
   win.loadURL(webAppUrl);
 
-  const loadingWindow = new LoadingWindow(win, 'outline://web_app/loading.html');
-  const LOADING_WINDOW_DELAY_MS = 3000;
-
   const handleNavigation = (event: Event, url: string) => {
     try {
       const parsed: URL = new URL(url);
@@ -99,10 +95,10 @@ function createMainWindow() {
   win.webContents.on('will-navigate', (event: Event, url: string) => {
     handleNavigation(event, url);
   });
-  win.webContents.on('new-window', handleNavigation.bind(this));
+  win.webContents.on('new-window', (event: Event, url: string) => {
+    handleNavigation(event, url);
+  });
   win.webContents.on('did-finish-load', () => {
-    loadingWindow.hide();
-
     // Wait until now to check for updates now so that the UI won't miss the event.
     if (!debugMode) {
       autoUpdater.checkForUpdates();
@@ -222,9 +218,9 @@ function main() {
     }
   });
 
-  // Handle cert whitelisting requests from the renderer process.
+  // Handle request to trust the certificate from the renderer process.
   const trustedFingerprints = new Set<string>();
-  ipcMain.on('whitelist-certificate', (event: IpcEvent, fingerprint: string) => {
+  ipcMain.on('trust-certificate', (event: IpcEvent, fingerprint: string) => {
     trustedFingerprints.add(`sha256/${fingerprint}`);
     event.returnValue = true;
   });

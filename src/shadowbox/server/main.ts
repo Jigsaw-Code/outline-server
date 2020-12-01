@@ -144,8 +144,8 @@ async function main() {
     shadowsocksServer.enableCountryMetrics(MMDB_LOCATION);
   }
 
-  // Add rollout at 0%, so we can override in the config.
-  const isReplayProtectionEnabled = createRolloutTracker(serverConfig).isRolloutEnabled('replay-protection', 1);
+  const isReplayProtectionEnabled =
+      createRolloutTracker(serverConfig).isRolloutEnabled('replay-protection', 100);
   logging.info(`Replay protection enabled: ${isReplayProtectionEnabled}`);
   if (isReplayProtectionEnabled) {
     shadowsocksServer.enableReplayProtection();
@@ -157,9 +157,9 @@ async function main() {
   const prometheusEndpoint = `http://${prometheusLocation}`;
   const prometheusBinary = getBinaryFilename('prometheus');
   const prometheusArgs = [
-    '--config.file', prometheusConfigFilename, '--storage.tsdb.retention.time', '31d',
-    '--storage.tsdb.path', prometheusTsdbFilename, '--web.listen-address', prometheusLocation,
-    '--log.level', verbose ? 'debug' : 'info'
+    '--config.file', prometheusConfigFilename, '--web.enable-admin-api',
+    '--storage.tsdb.retention.time', '31d', '--storage.tsdb.path', prometheusTsdbFilename,
+    '--web.listen-address', prometheusLocation, '--log.level', verbose ? 'debug' : 'info'
   ];
   await startPrometheus(
       prometheusBinary, prometheusConfigFilename, prometheusConfigJson, prometheusArgs,

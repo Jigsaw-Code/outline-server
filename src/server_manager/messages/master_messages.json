@@ -126,14 +126,8 @@
     "description": "This string appears as a title in a section to configure access key data transfer limits."
   },
   "data_limits_description": {
-    "message": "Set a 30 day trailing data transfer limit for access keys on this server. Available at least until $DATE$.",
-    "description": "This string appears as an explanation to the access key data transfer limits feature.",
-    "placeholders": {
-      "DATE": {
-        "content": "{date}",
-        "example": "December 9, 2019"
-      }
-    }
+    "message": "Set a 30 day trailing data transfer limit for access keys on this server.",
+    "description": "This string appears as an explanation to the access key data transfer limits feature."
   },
   "data_limits_dialog_text": {
     "message": "Go to the Settings tab to set a data transfer limit for access keys on this server.",
@@ -142,6 +136,18 @@
   "data_limits_dialog_title": {
     "message": "Avoid data overages",
     "description": "This string appears as a title in a dialog to advertise the data limits feature."
+  },
+  "data_limits_disclaimer": {
+    "message": "Since you are currently reporting metrics, use of the data limits feature will be included. Please see the $START_OF_LINK$data collection policy$END_OF_LINK$ for more details.",
+    "description": "This string provides a data collection disclaimer to opting into the data limits features.",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
   },
   "data_limits_usage": {
     "message": "$USED$ of $TOTAL$ used",

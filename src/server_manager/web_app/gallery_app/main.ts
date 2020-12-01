@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import IntlMessageFormat from 'intl-messageformat';
-
 import '../ui_components/outline-about-dialog';
 import '../ui_components/outline-do-oauth-step';
 import '../ui_components/outline-feedback-dialog';
 import '../ui_components/outline-share-dialog';
+import '../ui_components/outline-sort-span';
 import '../ui_components/outline-survey-dialog';
 
+import IntlMessageFormat from 'intl-messageformat';
 import {css, customElement, html, LitElement, property} from 'lit-element';
 
 async function makeLocalize(language: string) {
@@ -96,7 +96,8 @@ export class TestApp extends LitElement {
       <div class="widget">
         <h2>outline-about-dialog</h2>
         <button @tap=${() => this.select('outline-about-dialog').open()}>Open Dialog</button>
-        <outline-about-dialog .localize=${this.localize} dir=${this.dir} outline-version="1.2.3"></outline-about-dialog>
+        <outline-about-dialog .localize=${this.localize} dir=${
+        this.dir} outline-version="1.2.3"></outline-about-dialog>
       </div>
       
       <div class="widget">
@@ -106,22 +107,34 @@ export class TestApp extends LitElement {
 
       <div class="widget">
         <h2>outline-feedback-dialog</h2>
-        <button @tap=${() => this.select('outline-feedback-dialog').open('Pre-populated message', false)
-        }>Open Dialog</button>
-        <outline-feedback-dialog .localize=${this.localize} dir=${this.dir}></outline-feedback-dialog>
+        <button @tap=${
+        () => this.select('outline-feedback-dialog')
+                  .open('Pre-populated message', false)}>Open Dialog</button>
+        <outline-feedback-dialog .localize=${this.localize} dir=${
+        this.dir}></outline-feedback-dialog>
       </div>
 
       <div class="widget">
         <h2>outline-share-dialog</h2>
-        <button @tap=${() => this.select('outline-share-dialog').open('<ACCESS_KEY>', '<INVITE_URL>')
-        }>Open Dialog</button>
+        <button @tap=${
+        () => this.select('outline-share-dialog')
+                  .open('<ACCESS_KEY>', '<INVITE_URL>')}>Open Dialog</button>
         <outline-share-dialog .localize=${this.localize} dir=${this.dir}></outline-share-dialog>
+      </div>
+      
+      <div class="widget">
+        <h2>outline-sort-icon</h2>
+        <outline-sort-span dir=${this.dir} direction=1 @tap=${() => {
+      const el = this.select('outline-sort-span');
+      el.direction *= -1;
+    }}>Column Header</outline-sort-span>
       </div>
 
       <div class="widget">
         <h2>outline-survey-dialog</h2>
-        <button @tap=${() => this.select('outline-survey-dialog').open('Survey title', 'https://getoutline.org')
-        }>Open Dialog</button>
+        <button @tap=${
+        () => this.select('outline-survey-dialog')
+                  .open('Survey title', 'https://getoutline.org')}>Open Dialog</button>
         <outline-survey-dialog .localize=${this.localize} dir=${this.dir}></outline-survey-dialog>
       </div>
     `;
