@@ -98,16 +98,11 @@ export class TestApp extends LitElement {
       <div class="widget" id="key-settings-widget" @SaveKeySettingsRequested=${
         (e: {detail: {keySettings: OutlineKeySettings}}) => console.log(e)}>
         <h2>outline-key-settings</h2>
-        <button @tap=${() => this.select('outline-key-settings').open(
-          {
-            id: '1', 
-            name: 'Key Name'
-          }, 
-          {
-            unit: 'MB',
-            value: 50
-          })}>Open Dialog</button>
-        <outline-key-settings dir=${this.dir}></outline-key-settings>
+        <button @tap=${() => this.select('outline-key-settings').open({id: '1', name: 'Key Name'}, {
+      unit: 'MB',
+      value: 50
+    })}>Open Dialog</button>
+        <outline-key-settings .localize=${this.localize} dir=${this.dir}></outline-key-settings>
       </div>
       
       <div class="widget">

@@ -25,7 +25,7 @@ import '@polymer/paper-listbox/paper-listbox';
 import {PaperDialogElement} from '@polymer/paper-dialog/paper-dialog';
 import {PaperInputElement} from '@polymer/paper-input/paper-input';
 import {PaperListboxElement} from '@polymer/paper-listbox/paper-listbox';
-import {css, customElement, html, internalProperty, LitElement} from 'lit-element';
+import {css, customElement, html, internalProperty, LitElement, property} from 'lit-element';
 
 import {DisplayAccessKey, DisplayDataAmount} from '../ui_components/outline-server-view';
 
@@ -40,6 +40,7 @@ import {COMMON_STYLES} from './cloud-install-styles';
 export class OutlineKeySettings extends LitElement {
   @internalProperty() serverDefaultLimit: DisplayDataAmount = null;
   @internalProperty() showCustomDataLimitDialog = false;
+  @property({type: Function}) localize: Function;
 
   public key: DisplayAccessKey = null;
 
@@ -111,9 +112,12 @@ export class OutlineKeySettings extends LitElement {
   }
 
   render() {
-    // Custom element mixins aren't supported in style()
+    // this.key will always be defined once the dialog is open, but before it's opened we get an
+    // error if we don't account for the undefined key
+    const keyName = this.key?.name || this.key?.placeholderName;
     return html`
       <style>
+        /* Custom element mixins with brackets don't work in style() */
         #dataLimitUnits {
           --paper-input-container-underline: {
             display: none;
@@ -132,18 +136,20 @@ export class OutlineKeySettings extends LitElement {
         <div id="headerSection">
           <!-- TODO how to get this to work in both the gallery and ui components? -->
           <img id="keyIcon" src="../../images/key-avatar.svg" />
-          <h3 class="settings-section-title">Key Settings - ${this.key?.name}</h3>
+          <h3 class="settings-section-title">${
+        this.localize('key-settings-title', 'keyName', keyName)}</h3>
         </div>
         <div class="settings-section">
-          <div class="settings-section-title">Data limits:</div>
+          <div class="settings-section-title">${
+        this.localize('key-settings-data-limits-title')}</div>
           <paper-checkbox ?checked=${this.showCustomDataLimitDialog} @tap=${
         this.setCustomLimitTapped}>
-            Set a custom data limit
+            ${this.localize('key-settings-set-custom')}
           </paper-checkbox>
           <div id="dataLimitsMenu" ?hidden=${!this.showCustomDataLimitDialog}>
             <paper-input
               id="dataLimitInput"
-              label="Data Limit"
+              label=${this.localize('key-settings-data-limit-label')}
               always-float-label
               allowed-pattern="[0-9]+"
               value=${this.activeDataLimit()?.value || ''}
