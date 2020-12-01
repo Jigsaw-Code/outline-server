@@ -21,14 +21,15 @@ import '@polymer/paper-dropdown-menu/paper-dropdown-menu';
 import '@polymer/paper-input/paper-input';
 import '@polymer/paper-item/paper-item';
 import '@polymer/paper-listbox/paper-listbox';
-import './cloud-install-styles.js';
 
 import {PaperDialogElement} from '@polymer/paper-dialog/paper-dialog';
 import {PaperInputElement} from '@polymer/paper-input/paper-input';
 import {PaperListboxElement} from '@polymer/paper-listbox/paper-listbox';
-import {css, customElement, html, internalProperty, LitElement, property} from 'lit-element';
+import {css, customElement, html, internalProperty, LitElement} from 'lit-element';
 
 import {DisplayAccessKey, DisplayDataAmount} from '../ui_components/outline-server-view';
+
+import {COMMON_STYLES} from './cloud-install-styles';
 
 /*
   This component is a floating window representing settings specific to individual access keys.
@@ -44,6 +45,7 @@ export class OutlineKeySettings extends LitElement {
 
   static get styles() {
     return [
+      COMMON_STYLES,
       css`
         #container {
           width: 100%;
@@ -73,10 +75,13 @@ export class OutlineKeySettings extends LitElement {
         .settings-section {
           flex: 1;
           padding: 0 78px;
+          margin-top: 10px;
+          margin-bottom: 10px;
         }
 
         .settings-section-title {
           font-weight: 500;
+          margin-bottom: 10px;
         }
 
         #dataLimitsMenu {
@@ -84,9 +89,22 @@ export class OutlineKeySettings extends LitElement {
           flex-flow: row nowrap;
         }
 
-        #units-dropdown {
+        #dataLimitUnits {
           width: 50px;
           padding: 0 10px;
+        }
+
+        paper-checkbox {
+          /* We want the ink to be the color we're going to, not coming from */
+          --paper-checkbox-checked-color: var(--primary-green);
+          --paper-checkbox-checked-ink-color: var(--dark-gray);
+          --paper-checkbox-unchecked-color: var(--dark-gray);
+          --paper-checkbox-unchecked-ink-color: var(--primary-green);
+        }
+
+        paper-listbox paper-item:hover {
+          cursor: pointer;
+          background-color: #eee;
         }
       `,
     ];
@@ -95,9 +113,8 @@ export class OutlineKeySettings extends LitElement {
   render() {
     // Custom element mixins aren't supported in style()
     return html`
-      <style include="cloud-install-styles"></style>
       <style>
-        #units-dropdown {
+        #dataLimitUnits {
           --paper-input-container-underline: {
             display: none;
           }
@@ -105,7 +122,7 @@ export class OutlineKeySettings extends LitElement {
             display: none;
           }
         }
-        #dataLimitInput {
+        paper-input {
           --paper-input-container-label-focus: {
             color: rgb(123, 123, 123);
           }
@@ -117,26 +134,34 @@ export class OutlineKeySettings extends LitElement {
           <img id="keyIcon" src="../../images/key-avatar.svg" />
           <h3 class="settings-section-title">Key Settings - ${this.key?.name}</h3>
         </div>
-        <div class="settings-section settings-content">
-          <div class="settings-section-title">Data Limits</div>
+        <div class="settings-section">
+          <div class="settings-section-title">Data limits:</div>
           <paper-checkbox ?checked=${this.showCustomDataLimitDialog} @tap=${
         this.setCustomLimitTapped}>
             Set a custom data limit
           </paper-checkbox>
           <div id="dataLimitsMenu" ?hidden=${!this.showCustomDataLimitDialog}>
-            <paper-input id="dataLimitInput" label="Data Limit" always-float-label allowed-pattern="[0-9]+">
-              ${this.activeDataLimit()?.value || ''}
+            <paper-input
+              id="dataLimitInput"
+              label="Data Limit"
+              always-float-label
+              allowed-pattern="[0-9]+"
+              value=${this.activeDataLimit()?.value || ''}
+              size="7"
+            >
             </paper-input>
-            <paper-dropdown-menu no-animations noink>
-              <paper-listbox id="dataLimitUnits" slot="dropdown-content" attr-for-selected="name" selected="${
-        this.activeDataLimit()?.unit || 'GB'}">
+            <paper-dropdown-menu id="dataLimitUnits" no-animations noink>
+              <paper-listbox
+                slot="dropdown-content"
+                attr-for-selected="name"
+                selected="${this.activeDataLimit()?.unit || 'GB'}"
+              >
                 <paper-item name="GB">GB</paper-item>
                 <paper-item name="MB">MB</paper-item>
               </paper-listbox>
             </paper-dropdown-menu>
           </div>
         </div>
-        <div>3</div>
         <div id="buttons-container">
           <paper-button @tap=${this.saveKeySettings}>Save</paper-button>
           <paper-button @tap=${this.close}>Cancel</paper-button>
@@ -160,8 +185,12 @@ export class OutlineKeySettings extends LitElement {
     return this.key?.dataLimit || this.serverDefaultLimit;
   }
 
-  private setCustomLimitTapped() {
+  private async setCustomLimitTapped() {
     this.showCustomDataLimitDialog = !this.showCustomDataLimitDialog;
+    if (this.showCustomDataLimitDialog) {
+      await this.updateComplete;
+      (this.shadowRoot.querySelector('#dataLimitInput') as HTMLElement).focus();
+    }
   }
 
   private saveKeySettings() {
@@ -169,7 +198,7 @@ export class OutlineKeySettings extends LitElement {
       detail: {keySettings: this},
       // Required for the event to bubble past a shadow DOM boundary
       bubbles: true,
-      composed: true
+      composed: true,
     });
     this.dispatchEvent(event);
   }
