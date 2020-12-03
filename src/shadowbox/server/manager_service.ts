@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { access } from 'fs';
 import * as ipRegex from 'ip-regex';
 import * as restify from 'restify';
 import * as restifyErrors from 'restify-errors';
