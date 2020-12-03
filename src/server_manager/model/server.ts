@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {CloudProviderId} from "./cloud";
+
 export interface Server {
   // Get the server's name for display.
   getName(): string;
@@ -101,16 +103,18 @@ export interface ManagedServer extends Server {
 
 // The managed machine where the Outline Server is running.
 export interface ManagedServerHost {
+  // Returns the virtual host ID.
+  getId(): string;
+  // Returns the cloud provider identifier.
+  getCloudProviderId(): CloudProviderId;
+  // Returns the location identifier
+  getLocationId(): string;
   // Returns the monthly outbound transfer limit.
   getMonthlyOutboundTransferLimit(): DataAmount;
   // Returns the monthly cost.
   getMonthlyCost(): MonetaryCost;
-  // Returns the server region.
-  getRegionId(): RegionId;
   // Deletes the server - cannot be undone.
   delete(): Promise<void>;
-  // Returns the virtual host ID.
-  getHostId(): string;
 }
 
 export class DataAmount { terabytes: number; }

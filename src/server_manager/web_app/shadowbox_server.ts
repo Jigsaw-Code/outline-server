@@ -17,6 +17,14 @@ import * as semver from 'semver';
 import * as errors from '../infrastructure/errors';
 import * as server from '../model/server';
 
+/** Shadowbox server configuration parameters */
+export interface ShadowboxSettings {
+  containerImageId: string;
+  metricsUrl: string;
+  sentryApiUrl: string;
+  debug: boolean;
+}
+
 // Interfaces used by metrics REST APIs.
 interface MetricsEnabled {
   metricsEnabled: boolean;

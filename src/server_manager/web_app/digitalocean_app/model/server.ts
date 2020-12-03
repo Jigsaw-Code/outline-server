@@ -1,4 +1,4 @@
-// Copyright 2018 The Outline Authors
+// Copyright 2020 The Outline Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,20 +14,17 @@
 
 import {EventEmitter} from 'eventemitter3';
 
-import {DigitalOceanSession, DropletInfo} from '../cloud/digitalocean_api';
-import * as crypto from '../infrastructure/crypto';
-import * as errors from '../infrastructure/errors';
-import {asciiToHex, hexToString} from '../infrastructure/hex_encoding';
-import * as do_install_script from '../install_scripts/do_install_script';
-import * as server from '../model/server';
-
-import {ShadowboxServer} from './shadowbox_server';
+import {DigitalOceanApi, DropletInfo} from '../../../infrastructure/digitalocean_api';
+import * as errors from '../../../infrastructure/errors';
+import {asciiToHex, hexToString} from '../../../infrastructure/hex_encoding';
+import {CloudProviderId} from '../../../model/cloud';
+import * as server from '../../../model/server';
+import {ManagedServerHost} from '../../../model/server';
+import {ShadowboxServer} from '../../shadowbox_server';
 
 // WARNING: these strings must be lowercase due to a DigitalOcean case
 // sensitivity bug.
 
-// Tag used to mark Shadowbox Droplets.
-const SHADOWBOX_TAG = 'shadowbox';
 // Prefix used in key-value tags.
 const KEY_VALUE_TAG = 'kv';
 
@@ -52,7 +49,7 @@ function makeKeyValueTag(key: string, value: string) {
   return [KEY_VALUE_TAG, key, asciiToHex(value)].join(':');
 }
 
-// Possible install states for DigitaloceanServer.
+// Possible install states for DigitalOceanServer.
 enum InstallState {
   // Unknown state - server may still be installing.
   UNKNOWN = 0,
@@ -64,11 +61,11 @@ enum InstallState {
   DELETED
 }
 
-class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer {
+export class DigitalOceanServer extends ShadowboxServer implements server.ManagedServer {
   private eventQueue = new EventEmitter();
   private installState: InstallState = InstallState.UNKNOWN;
 
-  constructor(private digitalOcean: DigitalOceanSession, private dropletInfo: DropletInfo) {
+  constructor(private digitalOcean: DigitalOceanApi, private dropletInfo: DropletInfo) {
     // Consider passing a RestEndpoint object to the parent constructor,
     // to better encapsulate the management api address logic.
     super();
@@ -275,7 +272,7 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
     }
   }
 
-  getHost(): DigitalOceanHost {
+  getHost(): ManagedServerHost {
     // Construct a new DigitalOceanHost object, to be sure it has the latest
     // session and droplet info.
     return new DigitalOceanHost(this.digitalOcean, this.dropletInfo, this.onDelete.bind(this));
@@ -301,8 +298,21 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
 
 class DigitalOceanHost implements server.ManagedServerHost {
   constructor(
-      private digitalOcean: DigitalOceanSession, private dropletInfo: DropletInfo,
-      private deleteCallback: Function) {}
+      private readonly digitalOcean: DigitalOceanApi,
+      private readonly dropletInfo: DropletInfo,
+      private readonly deleteCallback: Function) {}
+
+  getId(): string {
+    return `${this.dropletInfo.id}`;
+  }
+
+  getCloudProviderId(): CloudProviderId {
+    return CloudProviderId.DigitalOcean;
+  }
+
+  getLocationId(): string {
+    return this.dropletInfo.region.slug;
+  }
 
   getMonthlyOutboundTransferLimit(): server.DataAmount {
     // Details on the bandwidth limits can be found at
@@ -314,129 +324,13 @@ class DigitalOceanHost implements server.ManagedServerHost {
     return {usd: this.dropletInfo.size.price_monthly};
   }
 
-  getRegionId(): server.RegionId {
-    return this.dropletInfo.region.slug;
-  }
-
   delete(): Promise<void> {
     return this.digitalOcean.deleteDroplet(this.dropletInfo.id).then(() => {
       this.deleteCallback();
     });
   }
-
-  getHostId(): string {
-    return `${this.dropletInfo.id}`;
-  }
 }
 
 function startsWithCaseInsensitive(text: string, prefix: string) {
   return text.slice(0, prefix.length).toLowerCase() === prefix.toLowerCase();
-}
-
-export function GetCityId(slug: server.RegionId): string {
-  return slug.substr(0, 3).toLowerCase();
-}
-
-const MACHINE_SIZE = 's-1vcpu-1gb';
-
-export class DigitaloceanServerRepository implements server.ManagedServerRepository {
-  private servers: DigitaloceanServer[] = [];
-
-  constructor(
-      private digitalOcean: DigitalOceanSession, private image: string, private metricsUrl: string,
-      private sentryApiUrl: string|undefined, private debugMode: boolean) {}
-
-  // Return a map of regions that are available and support our target machine size.
-  getRegionMap(): Promise<Readonly<server.RegionMap>> {
-    return this.digitalOcean.getRegionInfo().then((regions) => {
-      const ret: server.RegionMap = {};
-      regions.forEach((region) => {
-        const cityId = GetCityId(region.slug);
-        if (!(cityId in ret)) {
-          ret[cityId] = [];
-        }
-        if (region.available && region.sizes.indexOf(MACHINE_SIZE) !== -1) {
-          ret[cityId].push(region.slug);
-        }
-      });
-      return ret;
-    });
-  }
-
-  // Creates a server and returning it when it becomes active.
-  createServer(region: server.RegionId, name: string): Promise<server.ManagedServer> {
-    console.time('activeServer');
-    console.time('servingServer');
-    const onceKeyPair = crypto.generateKeyPair();
-    const watchtowerRefreshSeconds = this.image ? 30 : undefined;
-    const installCommand = getInstallScript(
-        this.digitalOcean.accessToken, name, this.image, watchtowerRefreshSeconds, this.metricsUrl,
-        this.sentryApiUrl);
-
-    const dropletSpec = {
-      installCommand,
-      size: MACHINE_SIZE,
-      image: 'docker-18-04',
-      tags: [SHADOWBOX_TAG],
-    };
-    return onceKeyPair
-        .then((keyPair) => {
-          if (this.debugMode) {
-            // Strip carriage returns, which produce weird blank lines when pasted into a terminal.
-            console.debug(
-                `private key for SSH access to new droplet:\n${
-                    keyPair.private.replace(/\r/g, '')}\n\n` +
-                'Use "ssh -i keyfile root@[ip_address]" to connect to the machine');
-          }
-          return this.digitalOcean.createDroplet(name, region, keyPair.public, dropletSpec);
-        })
-        .then((response) => {
-          return this.createDigitalOceanServer(this.digitalOcean, response.droplet);
-        });
-  }
-
-  listServers(fetchFromHost = true): Promise<server.ManagedServer[]> {
-    if (!fetchFromHost) {
-      return Promise.resolve(this.servers);  // Return the in-memory servers.
-    }
-    return this.digitalOcean.getDropletsByTag(SHADOWBOX_TAG).then((droplets) => {
-      this.servers = [];
-      return droplets.map((droplet) => {
-        return this.createDigitalOceanServer(this.digitalOcean, droplet);
-      });
-    });
-  }
-
-  // Creates a DigitaloceanServer object and adds it to the in-memory server list.
-  private createDigitalOceanServer(digitalOcean: DigitalOceanSession, dropletInfo: DropletInfo) {
-    const server = new DigitaloceanServer(digitalOcean, dropletInfo);
-    this.servers.push(server);
-    return server;
-  }
-}
-
-function sanitizeDigitaloceanToken(input: string): string {
-  const sanitizedInput = input.trim();
-  const pattern = /^[A-Za-z0-9_\/-]+$/;
-  if (!pattern.test(sanitizedInput)) {
-    throw new Error('Invalid DigitalOcean Token');
-  }
-  return sanitizedInput;
-}
-
-// cloudFunctions needs to define cloud::public_ip and cloud::add_tag.
-function getInstallScript(
-    accessToken: string, name: string, image?: string, watchtowerRefreshSeconds?: number,
-    metricsUrl?: string, sentryApiUrl?: string): string {
-  const sanitizedAccessToken = sanitizeDigitaloceanToken(accessToken);
-  // TODO: consider shell escaping these variables.
-  return '#!/bin/bash -eu\n' +
-      `export DO_ACCESS_TOKEN=${sanitizedAccessToken}\n` +
-      (image ? `export SB_IMAGE=${image}\n` : '') +
-      (watchtowerRefreshSeconds ?
-           `export WATCHTOWER_REFRESH_SECONDS=${watchtowerRefreshSeconds}\n` :
-           '') +
-      (sentryApiUrl ? `export SENTRY_API_URL="${sentryApiUrl}"\n` : '') +
-      (metricsUrl ? `export SB_METRICS_URL=${metricsUrl}\n` : '') +
-      `export SB_DEFAULT_SERVER_NAME="${name}"\n` + do_install_script.SCRIPT;
 }

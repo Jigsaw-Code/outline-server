@@ -14,16 +14,16 @@
 
 import './ui_components/app-root.js';
 
-import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as i18n from '../infrastructure/i18n';
-import {getSentryApiUrl} from '../infrastructure/sentry';
 
 import {App} from './app';
-import {DigitalOceanTokenManager} from './digitalocean_oauth';
-import * as digitalocean_server from './digitalocean_server';
 import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
+import {CloudProviderId, SupportedClouds} from "../model/cloud";
+import {getSentryApiUrl} from "../infrastructure/sentry";
+import {EventEmitter} from "eventemitter3";
+import {DigitalOceanCloud, LEGACY_DIGITALOCEAN_ACCOUNT_ID} from "./digitalocean_app/model/cloud";
 
 type LanguageDef = {
   id: string,
@@ -97,17 +97,15 @@ function sortLanguageDefsByName(languageDefs: LanguageDef[]) {
 document.addEventListener('WebComponentsReady', () => {
   // Parse URL query params.
   const params = new URL(document.URL).searchParams;
-  const debugMode = params.get('outlineDebugMode') === 'true';
-  const metricsUrl = params.get('metricsUrl');
-  const shadowboxImage = params.get('image');
   const version = params.get('version');
-  const sentryDsn = params.get('sentryDsn');
-
-  // Set DigitalOcean server repository parameters.
-  const digitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) => {
-    return new digitalocean_server.DigitaloceanServerRepository(
-        session, shadowboxImage, metricsUrl, getSentryApiUrl(sentryDsn), debugMode);
+  const shadowboxSettings = {
+    containerImageId: params.get('image'),
+    metricsUrl: params.get('metricsUrl'),
+    sentryApiUrl: getSentryApiUrl(params.get('sentryDsn')),
+    debug: params.get('outlineDebugMode') === 'true',
   };
+  const supportedClouds = new SupportedClouds(new EventEmitter(), shadowboxSettings);
+  migrateExistingDigitalOceanAccount(supportedClouds);
 
   // Create and start the app.
   const language = getLanguageToUse();
@@ -120,10 +118,21 @@ document.addEventListener('WebComponentsReady', () => {
   const filteredLanguageDefs = Object.values(SUPPORTED_LANGUAGES);
   appRoot.supportedLanguages = sortLanguageDefsByName(filteredLanguageDefs);
   appRoot.setLanguage(language.string(), languageDirection);
+  appRoot.supportedClouds = supportedClouds;
   new App(
-      appRoot, version, digitalocean_api.createDigitalOceanSession,
-      digitalOceanServerRepositoryFactory, new ManualServerRepository('manualServers'),
-      new DisplayServerRepository(), new DigitalOceanTokenManager())
+      appRoot, version, supportedClouds,
+      new ManualServerRepository('manualServers'),
+      new DisplayServerRepository())
       .start();
 });
 
+function migrateExistingDigitalOceanAccount(supportedClouds: SupportedClouds) {
+  const legacyDigitalOceanTokenKey = 'LastDOToken';
+  const digitalOceanToken = localStorage.getItem(legacyDigitalOceanTokenKey);
+  if (digitalOceanToken) {
+    console.log('Migrating existing connected DigitalOcean account.');
+    const digitalOceanCloud = supportedClouds.get(CloudProviderId.DigitalOcean) as DigitalOceanCloud;
+    digitalOceanCloud.connectAccount(LEGACY_DIGITALOCEAN_ACCOUNT_ID, digitalOceanToken);
+    localStorage.removeItem(legacyDigitalOceanTokenKey);
+  }
+}

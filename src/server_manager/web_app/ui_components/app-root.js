@@ -26,6 +26,7 @@ import '@polymer/paper-dialog/paper-dialog.js';
 import '@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
 import '@polymer/paper-listbox/paper-listbox.js';
 import '@polymer/paper-menu-button/paper-menu-button.js';
+import '../digitalocean_app/ui/connect_account_app';
 import './cloud-install-styles.js';
 import './outline-about-dialog.js';
 import './outline-do-oauth-step.js';
@@ -35,6 +36,7 @@ import './outline-intro-step.js';
 import './outline-language-picker.js';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
+import './outline-notification-manager';
 import './outline-region-picker-step';
 import './outline-server-progress-step.js';
 import './outline-tos-view.js';
@@ -47,6 +49,7 @@ import {PolymerElement} from '@polymer/polymer/polymer-element.js';
 import {DisplayServer} from '../display_server';
 
 import {ServerView} from './outline-server-view.js';
+import {CloudProviderId} from "../../model/cloud";
 
 const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
 
@@ -407,7 +410,7 @@ export class AppRoot extends mixinBehaviors
           <div class="app-container">
             <iron-pages attr-for-selected="id" selected="{{ currentPage }}">
               <outline-intro-step id="intro" is-signed-in-to-digital-ocean="{{isSignedInToDigitalOcean}}" digital-ocean-email="{{adminEmail}}" localize="[[localize]]"></outline-intro-step>
-              <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
+              <digitalocean-connect-account-app id="digitalOceanConnectAccountApp" localize="[[localize]]"></digitalocean-connect-account-app>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
               <outline-region-picker-step id="regionPicker" localize="[[localize]]"></outline-region-picker-step>
               <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
@@ -455,7 +458,7 @@ export class AppRoot extends mixinBehaviors
         </div>
       </app-drawer>
 
-      <paper-toast id="toast"><paper-icon-button icon="icons:close" on-tap="closeError"></paper-icon-button></paper-toast>
+      <outline-notification-manager id="notificationManager" localize="[[localize]]"></outline-notification-manager>
 
       <!-- Modal dialogs must be outside the app container; otherwise the backdrop covers them.  -->
       <outline-survey-dialog id="surveyDialog" localize="[[localize]]"></outline-survey-dialog>
@@ -524,6 +527,7 @@ export class AppRoot extends mixinBehaviors
         type: String,
         computed: '_computeSideBarMarginClass(shouldShowSideBar)',
       },
+      supportedClouds: {type: Object},
     };
   }
 
@@ -540,6 +544,8 @@ export class AppRoot extends mixinBehaviors
     this.outlineVersion = '';
     this.currentPage = 'intro';
     this.shouldShowSideBar = false;
+    /** @type SupportedClouds} */
+    this.supportedClouds = null;
 
     this.addEventListener('RegionSelected', this.handleRegionSelected);
     this.addEventListener(
@@ -571,21 +577,22 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
   }
 
-  getDigitalOceanOauthFlow(onCancel) {
-    const oauthFlow = this.$.digitalOceanOauth;
-    oauthFlow.onCancel = onCancel;
-    return oauthFlow;
+  /**
+   * @returns {DigitalOceanConnectAccountApp}
+   */
+  getAndShowDigitalOceanConnectAccountApp() {
+    const app = this.$.digitalOceanConnectAccountApp;
+    app.cloud = this.supportedClouds.get(CloudProviderId.DigitalOcean);
+    app.notificationManager = this.getNotificationManager();
+    this.currentPage = 'digitalOceanConnectAccountApp';
+    return app;
   }
 
-  showDigitalOceanOauthFlow() {
-    this.currentPage = 'digitalOceanOauth';
-  }
-
-  getAndShowDigitalOceanOauthFlow(onCancel) {
-    this.currentPage = 'digitalOceanOauth';
-    const oauthFlow = this.getDigitalOceanOauthFlow(onCancel);
-    oauthFlow.showConnectAccount();
-    return oauthFlow;
+  /**
+   * @returns {OutlineNotificationManager}
+   */
+  getNotificationManager() {
+    return this.$.notificationManager;
   }
 
   getAndShowRegionPicker() {
@@ -653,33 +660,6 @@ export class AppRoot extends mixinBehaviors
 
   handleManualCancelled() {
     this.currentPage = 'intro';
-  }
-
-  showError(/** @type {string} */ errorMsg) {
-    this.showToast(errorMsg, Infinity);
-  }
-
-  showNotification(/** @type {string} */ message, durationMs = 3000) {
-    this.showToast(message, durationMs);
-  }
-
-  /**
-   * Show a toast with a message
-   * @param {string} message
-   * @param {number} duration in seconds
-   */
-  showToast(message, duration) {
-    const toast = this.$.toast;
-    toast.close();
-    // Defer in order to trigger the toast animation, otherwise the
-    // update happens in place.
-    setTimeout(() => {
-      toast.show({
-        text: message,
-        duration: duration,
-        noOverlap: true,
-      });
-    }, 0);
   }
 
   closeError() {
