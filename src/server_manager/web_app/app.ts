@@ -37,6 +37,7 @@ const UNUSED_DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
 const CHANGE_KEYS_PORT_VERSION = '1.0.0';
 const DATA_LIMITS_VERSION = '1.1.0';
 const CHANGE_HOSTNAME_VERSION = '1.2.0';
+const KEY_SETTINGS_VERSION = '1.6.0';
 const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
 
 // DigitalOcean mapping of regions to flags
@@ -849,6 +850,7 @@ export class App {
 
     // Show view and initialize fields from selectedServer.
     const view = this.appRoot.getServerView(selectedDisplayServer.id);
+    const version = selectedServer.getVersion();
     view.isServerReachable = true;
     view.serverId = selectedServer.getServerId();
     view.serverName = selectedServer.getName();
@@ -856,17 +858,17 @@ export class App {
     view.serverManagementApiUrl = selectedServer.getManagementApiUrl();
     view.serverPortForNewAccessKeys = selectedServer.getPortForNewAccessKeys();
     view.serverCreationDate = localizeDate(selectedServer.getCreatedDate(), this.appRoot.language);
-    view.serverVersion = selectedServer.getVersion();
+    view.serverVersion = version;
     view.defaultDataLimit = dataLimitToDisplayDataAmount(selectedServer.getDefaultDataLimit());
     view.isDefaultDataLimitEnabled = !!view.defaultDataLimit;
     view.showFeatureMetricsDisclaimer = selectedServer.getMetricsEnabled() &&
         !selectedServer.getDefaultDataLimit() && !hasSeenFeatureMetricsNotification();
 
-    const version = this.selectedServer.getVersion();
     if (version) {
       view.isAccessKeyPortEditable = semver.gte(version, CHANGE_KEYS_PORT_VERSION);
       view.supportsDefaultDataLimit = semver.gte(version, DATA_LIMITS_VERSION);
       view.isHostnameEditable = semver.gte(version, CHANGE_HOSTNAME_VERSION);
+      view.hasKeySettingsDialog = semver.gte(version, KEY_SETTINGS_VERSION);
     }
 
     if (isManagedServer(selectedServer)) {

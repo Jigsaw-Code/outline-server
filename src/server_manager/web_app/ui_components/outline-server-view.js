@@ -488,6 +488,7 @@ export class ServerView extends DirMixin(PolymerElement) {
               <span class="flex-1 header-row-spacer"></span>
             </div>
             <!-- admin row -->
+            <!-- TODOBEFOREPUSH add key settings icon -->
             <div class="access-key-row" id="managerRow">
               <span class="access-key-container">
                 <img class="manager-access-key-icon access-key-icon" src="images/manager-key-avatar.svg">
@@ -537,7 +538,7 @@ export class ServerView extends DirMixin(PolymerElement) {
                           <paper-item on-tap="_handleRenameAccessKeyPressed">
                             <iron-icon icon="icons:create"></iron-icon>[[localize('server-access-key-rename')]]
                           </paper-item>
-                          <paper-item on-tap="_handleShowKeySettingsPressed">
+                          <paper-item hidden\$="[[!hasKeySettingsDialog]]" on-tap="_handleShowKeySettingsPressed">
                           <!-- TODOBEFOREPUSH hide if the server version is too low -->
                             <iron-icon icon="icons:settings"></iron-icon>Key Settings
                           </paper-item>
@@ -653,6 +654,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       /** @type {DisplayDataAmount} */
       this.defaultDataLimit = null;
       this.isDefaultDataLimitEnabled = false;
+      this.hasKeySettingsDialog = false;
       /** Whether the server supports default data limits. */
       this.supportsDefaultDataLimit = false;
       this.showFeatureMetricsDisclaimer = false;
