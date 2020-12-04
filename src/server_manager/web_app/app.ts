@@ -944,20 +944,20 @@ export class App {
       }
       serverView.setServerTransferredData(totalBytes);
 
-      const defaultDataLimit = selectedServer.getDefaultDataLimit();
-      if (defaultDataLimit) {
-        // Make access key data usage relative to the data limit.
-        totalBytes = defaultDataLimit.bytes;
-      }
-
       // Update all the displayed access keys, even if usage didn't change, in case the data limit
       // did.
-      // TODOBEFOREPUSH make relative traffic relative to key's data limit if it exists
+      const defaultDataLimit = selectedServer.getDefaultDataLimit();
       for (const accessKey of serverView.accessKeyRows) {
+        const activeDataLimit =
+            displayDataAmountToDataLimit(accessKey.dataLimit) || defaultDataLimit;
+        if (activeDataLimit) {
+          // Make access key data usage relative to the data limit.
+          totalBytes = activeDataLimit.bytes;
+        }
         const accessKeyId = accessKey.id;
         const transferredBytes = stats.bytesTransferredByUserId[accessKeyId] || 0;
         let relativeTraffic =
-            totalBytes ? 100 * transferredBytes / totalBytes : (defaultDataLimit ? 100 : 0);
+            totalBytes ? 100 * transferredBytes / totalBytes : (activeDataLimit ? 100 : 0);
         if (relativeTraffic > 100) {
           // Can happen when a data limit is set on an access key that already exceeds it.
           relativeTraffic = 100;

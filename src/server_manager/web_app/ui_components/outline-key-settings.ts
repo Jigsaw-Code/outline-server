@@ -23,6 +23,7 @@ import '@polymer/paper-item/paper-item';
 import '@polymer/paper-listbox/paper-listbox';
 
 import {PaperDialogElement} from '@polymer/paper-dialog/paper-dialog';
+import {PaperDropdownMenuElement} from '@polymer/paper-dropdown-menu/paper-dropdown-menu';
 import {PaperInputElement} from '@polymer/paper-input/paper-input';
 import {PaperListboxElement} from '@polymer/paper-listbox/paper-listbox';
 import {css, customElement, html, internalProperty, LitElement, property} from 'lit-element';
@@ -181,8 +182,8 @@ export class OutlineKeySettings extends LitElement {
   }
 
   private _dataLimitType() {
-    return (this.shadowRoot.querySelector('#dataLimitUnits') as PaperListboxElement).selected as
-        'GB' |
+    return (this.shadowRoot.querySelector('#dataLimitUnits') as PaperDropdownMenuElement)
+               .selectedItemLabel as 'GB' |
         'MB';
   }
 

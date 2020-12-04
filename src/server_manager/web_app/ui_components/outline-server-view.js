@@ -498,8 +498,8 @@ export class ServerView extends DirMixin(PolymerElement) {
               </span>
               <span class="measurement-container">
                 <span class="measurement">[[_formatBytesTransferred(myConnection.transferredBytes, "...")]]</span>
-                <paper-progress value="[[myConnection.relativeTraffic]]" class\$="[[_computePaperProgressClass(isDefaultDataLimitEnabled)]]"></paper-progress>
-                <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!isDefaultDataLimitEnabled]]">
+                <paper-progress value="[[myConnection.relativeTraffic]]" class\$="[[_computePaperProgressClass(myConnection)]]"></paper-progress>
+                <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!_activeDataLimitForKey(myConnection)]]">
                   [[_getDataLimitsUsageString(myConnection)]]
                 </paper-tooltip>
               </span>
@@ -521,8 +521,8 @@ export class ServerView extends DirMixin(PolymerElement) {
                   </span>
                   <span class="measurement-container">
                     <span class="measurement">[[_formatBytesTransferred(item.transferredBytes, "...")]]</span>
-                    <paper-progress value="[[item.relativeTraffic]]" class\$="[[_computePaperProgressClass(isDefaultDataLimitEnabled)]]"></paper-progress>
-                    <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!isDefaultDataLimitEnabled]]">
+                    <paper-progress value="[[item.relativeTraffic]]" class\$="[[_computePaperProgressClass(item)]]"></paper-progress>
+                    <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!_activeDataLimitForKey(item)]]">
                       [[_getDataLimitsUsageString(item)]]
                     </paper-tooltip>
                   </span>
@@ -538,7 +538,6 @@ export class ServerView extends DirMixin(PolymerElement) {
                             <iron-icon icon="icons:create"></iron-icon>[[localize('server-access-key-rename')]]
                           </paper-item>
                           <paper-item on-tap="_handleShowKeySettingsPressed">
-                          <!-- TODOBEFOREPUSH localization -->
                           <!-- TODOBEFOREPUSH hide if the server version is too low -->
                             <iron-icon icon="icons:settings"></iron-icon>Key Settings
                           </paper-item>
@@ -978,16 +977,29 @@ export class ServerView extends DirMixin(PolymerElement) {
     this.dispatchEvent(makePublicEvent('ForgetServerRequested'));
   }
 
-  _computePaperProgressClass(isDefaultDataLimitEnabled) {
-    return isDefaultDataLimitEnabled ? 'data-limits' : '';
+  _activeDataLimitForKey(accessKey) {
+    if (!accessKey) {
+      // We're in app startup
+      return null;
+    }
+    return accessKey.dataLimit || (this.isDefaultDataLimitEnabled ? this.defaultDataLimit : null);
+  }
+
+  _computePaperProgressClass(accessKey) {
+    return this._activeDataLimitForKey(accessKey) ? 'data-limits' : '';
   }
 
   _getDataLimitsUsageString(accessKey) {
-    if (!this.defaultDataLimit) {
+    if (!accessKey) {
+      // We're in app startup
+      return '';
+    }
+    const activeDataLimit = this._activeDataLimitForKey(accessKey);
+    if (!activeDataLimit) {
       return '';
     }
     const used = this._formatBytesTransferred(accessKey.transferredBytes, '0');
-    const total = this.defaultDataLimit.value + ' ' + this.defaultDataLimit.unit;
+    const total = activeDataLimit.value + ' ' + activeDataLimit.unit;
     return this.localize('data-limits-usage', 'used', used, 'total', total);
   }
 }
