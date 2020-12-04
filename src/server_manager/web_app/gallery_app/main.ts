@@ -23,16 +23,17 @@ import '../ui_components/outline-share-dialog';
 import '../ui_components/outline-sort-span';
 import '../ui_components/outline-survey-dialog';
 
+import {EventEmitter} from 'eventemitter3';
 import IntlMessageFormat from 'intl-messageformat';
 import {css, customElement, html, LitElement, property} from 'lit-element';
-import {DigitalOceanCloud, PersistedAccount} from "../digitalocean_app/model/cloud";
-import {EventEmitter} from "eventemitter3";
-import {KeyValueStorage} from "../../infrastructure/key_value_storage";
-import {DigitalOceanConnectAccountApp} from "../digitalocean_app/ui/connect_account_app";
-import {OutlineNotificationManager} from "../ui_components/outline-notification-manager";
-import {sleep} from "../../infrastructure/sleep";
-import {DigitalOceanAccount} from "../digitalocean_app/model/account";
-import {FAKE_SHADOWBOX_SETTINGS} from "../../model/test_helpers";
+
+import {KeyValueStorage} from '../../infrastructure/key_value_storage';
+import {sleep} from '../../infrastructure/sleep';
+import {FAKE_SHADOWBOX_SETTINGS, mockDigitalOceanOauth} from '../../model/test_helpers';
+import {DigitalOceanAccount} from '../digitalocean_app/model/account';
+import {DigitalOceanCloud, PersistedAccount} from '../digitalocean_app/model/cloud';
+import {DigitalOceanConnectAccountApp} from '../digitalocean_app/ui/connect_account_app';
+import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
 
 async function makeLocalize(language: string) {
   let messages: {[key: string]: string};
@@ -89,8 +90,10 @@ export class TestApp extends LitElement {
     super();
     this.setLanguage('en');
 
-    const digitalOceanStorage = new KeyValueStorage<PersistedAccount, string>('gallery/accounts/digitalocean', localStorage, (entry: PersistedAccount) => entry.id);
-    this.digitalOceanCloud = new DigitalOceanCloud(this.domainEvents, FAKE_SHADOWBOX_SETTINGS, digitalOceanStorage);
+    const digitalOceanStorage = new KeyValueStorage<PersistedAccount, string>(
+        'gallery/accounts/digitalocean', localStorage, (entry: PersistedAccount) => entry.id);
+    this.digitalOceanCloud =
+        new DigitalOceanCloud(this.domainEvents, FAKE_SHADOWBOX_SETTINGS, digitalOceanStorage);
     this.digitalOceanAccount = this.digitalOceanCloud.listAccounts()[0] as DigitalOceanAccount;
   }
 
@@ -157,23 +160,31 @@ export class TestApp extends LitElement {
         <button @tap=${this.onDigitalOceanConnectAccountAppStart}>Start</button>
         <digitalocean-connect-account-app .localize=${this.localize} dir=${this.dir} 
           @digitalocean-account-connected="${this.onDigitalOceanAccountConnected}"
-          @digitalocean-account-connect-cancelled="${this.onDigitalOceanAccountConnectCancelled}"></digitalocean-connect-account-app>
+          @digitalocean-account-connect-cancelled="${
+        this.onDigitalOceanAccountConnectCancelled}"></digitalocean-connect-account-app>
       </div>
 
       <div class="widget">
         <h2>digitalocean-connect-account-app</h2>
         <button @tap=${this.onDigitalOceanCreateServerAppStart}>Start</button>
-        <digitalocean-create-server-app .localize=${this.localize} dir=${this.dir}></digitalocean-create-server-app>
+        <digitalocean-create-server-app .localize=${this.localize} dir=${
+        this.dir}></digitalocean-create-server-app>
       </div>
       
-      <outline-notification-manager .localize=${this.localize} dir=${this.dir}></outline-notification-manager>
+      <outline-notification-manager .localize=${this.localize} dir=${
+        this.dir}></outline-notification-manager>
     `;
   }
 
   private get pageControls() {
-    const digitalOceanAccountConnectionStatus = this.digitalOceanAccount ? 'Connected' : 'Disconnected';
-    const digitalOceanAccountDisconnectButton = this.digitalOceanAccount ? html`<button @tap=${this.disconnectDigitalOceanAccount}>Disconnect</button>` : '';
-    const digitalOceanAccountPersonalAccessToken = !this.digitalOceanAccount ? html`<label for="doPersonalAccessToken">DigitalOcean Personal Access Token:</label><input type="text" id="doPersonalAccessToken">` : '';
+    const digitalOceanAccountConnectionStatus =
+        this.digitalOceanAccount ? 'Connected' : 'Disconnected';
+    const digitalOceanAccountDisconnectButton = this.digitalOceanAccount ?
+        html`<button @tap=${this.disconnectDigitalOceanAccount}>Disconnect</button>` :
+        '';
+    const digitalOceanAccountPersonalAccessToken = !this.digitalOceanAccount ?
+        html`<label for="doPersonalAccessToken">DigitalOcean Personal Access Token:</label><input type="text" id="doPersonalAccessToken">` :
+        '';
     const digitalOceanAccountControls = html`
     <p>
       <div>
@@ -188,13 +199,16 @@ export class TestApp extends LitElement {
 
     return html`
     <p>
-      <label for="language">Language:</label><input type="text" id="language" value="${this.language}">
-      <button @tap=${() => this.setLanguage((this.shadowRoot.querySelector('#language') as HTMLInputElement).value)
-      }>Set Language</button>
+      <label for="language">Language:</label><input type="text" id="language" value="${
+        this.language}">
+      <button @tap=${
+        () => this.setLanguage((this.shadowRoot.querySelector('#language') as HTMLInputElement)
+                                   .value)}>Set Language</button>
     </p>
     <p>
-      <label for="dir-select" @change=${(e: Event) => this.dir = (e.target as HTMLSelectElement).value
-      }>Direction: <select id="dir-select">
+      <label for="dir-select" @change=${
+        (e: Event) => this.dir =
+            (e.target as HTMLSelectElement).value}>Direction: <select id="dir-select">
         <option value="ltr" selected>LTR</option>
         <option value="rtl">RTL</option>
       </select>
@@ -207,9 +221,10 @@ export class TestApp extends LitElement {
     // electron process to process the authorization response. We mock this out
     // for the gallery app.
     const personalAccessToken = this.parseDigitalOceanPersonalAccessToken();
-    this.mockDigitalOceanOauth(personalAccessToken);
+    mockDigitalOceanOauth(personalAccessToken);
 
-    const connectAccountApp = this.select('digitalocean-connect-account-app') as DigitalOceanConnectAccountApp;
+    const connectAccountApp =
+        this.select('digitalocean-connect-account-app') as DigitalOceanConnectAccountApp;
     connectAccountApp.cloud = this.digitalOceanCloud;
     connectAccountApp.notificationManager = this.getNotificationManager();
     connectAccountApp.start();
@@ -234,32 +249,13 @@ export class TestApp extends LitElement {
   private parseDigitalOceanPersonalAccessToken(): string {
     const result = (this.select('#doPersonalAccessToken') as HTMLInputElement).value;
     if (!result) {
-      const notificationManager = this.select('outline-notification-manager') as OutlineNotificationManager;
+      const notificationManager =
+          this.select('outline-notification-manager') as OutlineNotificationManager;
       const message = 'DigitalOcean personal access token is required.';
       notificationManager.showToast(message, 3000);
       throw new Error(message);
     }
     return result;
-  }
-
-  private mockDigitalOceanOauth(personalAccessToken: string): void {
-    // tslint:disable-next-line:no-any
-    (window as any).runDigitalOceanOauth = () => {
-      let isCancelled = false;
-      const rejectWrapper = {reject: (error: Error) => {}};
-      return {
-        result: new Promise(async (resolve, reject) => {
-          rejectWrapper.reject = reject;
-          await sleep(3000);
-          resolve(personalAccessToken);
-        }),
-        isCancelled: () => isCancelled,
-        cancel: () => {
-          isCancelled = true;
-          rejectWrapper.reject(new Error('Authentication cancelled'));
-        },
-      };
-    };
   }
 
   private disconnectDigitalOceanAccount(): void {

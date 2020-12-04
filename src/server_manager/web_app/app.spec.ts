@@ -12,22 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {EventEmitter} from 'eventemitter3';
+
 import {InMemoryStorage} from '../infrastructure/memory_storage';
 import {sleep} from '../infrastructure/sleep';
+import {CloudProviderId, SupportedClouds} from '../model/cloud';
 import * as server from '../model/server';
+import {FAKE_SHADOWBOX_SETTINGS, FakeDigitalOceanAccount, FakeDisplayServerRepository, FakeManualServerRepository} from '../model/test_helpers';
 
 import {App} from './app';
+import {DigitalOceanCloud} from './digitalocean_app/model/cloud';
 import {DisplayServerRepository, makeDisplayServer} from './display_server';
 import {AppRoot} from './ui_components/app-root.js';
-import {CloudProviderId, SupportedClouds} from "../model/cloud";
-import {EventEmitter} from "eventemitter3";
-import {
-  FAKE_SHADOWBOX_SETTINGS,
-  FakeDigitalOceanAccount,
-  FakeDisplayServerRepository,
-  FakeManualServerRepository
-} from "../model/test_helpers";
-import {DigitalOceanCloud} from "./digitalocean_app/model/cloud";
 
 const TOKEN_WITH_NO_SERVERS = 'no-server-token';
 const TOKEN_WITH_ONE_SERVER = 'one-server-token';
@@ -79,9 +75,11 @@ describe('App', () => {
   xit('initially shows and stores server display metadata', async (done) => {
     // Create fake servers and simulate their metadata being cached before creating the app.
 
-    // const digitalOceanStorage = new KeyValueStorage<PersistedAccount, string>('testing/accounts/digitalocean', localStorage, (entry: PersistedAccount) => entry.id);
-    // const digitalOceanCloud = new DigitalOceanCloud(new EventEmitter(), FAKE_SHADOWBOX_SETTINGS, digitalOceanStorage);
-    // const digitalOceanAccount = digitalOceanCloud.connectAccount('testing', 'credentials');
+    // const digitalOceanStorage = new KeyValueStorage<PersistedAccount,
+    // string>('testing/accounts/digitalocean', localStorage, (entry: PersistedAccount) =>
+    // entry.id); const digitalOceanCloud = new DigitalOceanCloud(new EventEmitter(),
+    // FAKE_SHADOWBOX_SETTINGS, digitalOceanStorage); const digitalOceanAccount =
+    // digitalOceanCloud.connectAccount('testing', 'credentials');
     const digitalOceanAccount = new FakeDigitalOceanAccount();
     const managedServer = await digitalOceanAccount.createServer('', '');
     const managedDisplayServer = await makeDisplayServer(managedServer);
@@ -187,22 +185,22 @@ describe('App', () => {
   });
 
   xit('shows progress screen when starting with DigitalOcean servers still being created',
-     async () => {
-       // const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
-       // const tokenManager = new InMemoryDigitalOceanTokenManager();
-       // tokenManager.token = TOKEN_WITH_NO_SERVERS;
-       // const managedSeverRepository = new FakeManagedServerRepository();
-       // // Manually create the server since the DO repository server factory function is synchronous.
-       // await managedSeverRepository.createUninstalledServer();
-       // const app = createTestApp(appRoot, tokenManager, null, null, managedSeverRepository);
-       // await app.start();
-       // expect(appRoot.currentPage).toEqual('serverProgressStep');
-     });
+      async () => {
+          // const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
+          // const tokenManager = new InMemoryDigitalOceanTokenManager();
+          // tokenManager.token = TOKEN_WITH_NO_SERVERS;
+          // const managedSeverRepository = new FakeManagedServerRepository();
+          // // Manually create the server since the DO repository server factory function is
+          // synchronous.
+          // await managedSeverRepository.createUninstalledServer();
+          // const app = createTestApp(appRoot, tokenManager, null, null, managedSeverRepository);
+          // await app.start();
+          // expect(appRoot.currentPage).toEqual('serverProgressStep');
+      });
 });
 
 function createTestApp(
-    appRoot: AppRoot,
-    manualServerRepo?: server.ManualServerRepository,
+    appRoot: AppRoot, manualServerRepo?: server.ManualServerRepository,
     displayServerRepository?: FakeDisplayServerRepository) {
   if (!manualServerRepo) {
     manualServerRepo = new FakeManualServerRepository();
@@ -210,7 +208,8 @@ function createTestApp(
   if (!displayServerRepository) {
     displayServerRepository = new FakeDisplayServerRepository();
   }
-  const supportedClouds = new SupportedClouds(new EventEmitter(), FAKE_SHADOWBOX_SETTINGS, 'testing/accounts/digitalocean');
+  const supportedClouds = new SupportedClouds(
+      new EventEmitter(), FAKE_SHADOWBOX_SETTINGS, 'testing/accounts/digitalocean');
   const digitalOceanCloud = supportedClouds.get(CloudProviderId.DigitalOcean) as DigitalOceanCloud;
   digitalOceanCloud.connectAccount('testing', 'credentials');
   return new App(appRoot, '0.0.1', supportedClouds, manualServerRepo, displayServerRepository);

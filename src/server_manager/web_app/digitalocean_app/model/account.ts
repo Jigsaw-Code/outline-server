@@ -12,23 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {EventEmitter} from 'eventemitter3';
+
 import * as crypto from '../../../infrastructure/crypto';
 import * as do_install_script from '../../../install_scripts/do_install_script';
-
-import {DigitalOceanApiClient, HttpError, NetworkError} from '../infrastructure/api';
-import {DigitalOceanServer} from './server';
-import {
-  Account,
-  AccountId,
-  DigitalOceanCredentials,
-  DigitalOceanLocation,
-  DigitalOceanStatus
-} from '../../../model/account';
 import * as account from '../../../model/account';
-import {EventEmitter} from "eventemitter3";
-import {CloudProviderId} from "../../../model/cloud";
-import {ShadowboxSettings} from "../../shadowbox_server";
-import {ManagedServer} from "../../../model/server";
+import {Account, AccountId, DigitalOceanCredentials, DigitalOceanLocation, DigitalOceanStatus} from '../../../model/account';
+import {CloudProviderId} from '../../../model/cloud';
+import {ManagedServer} from '../../../model/server';
+import {ShadowboxSettings} from '../../shadowbox_server';
+import {DigitalOceanApiClient, HttpError, NetworkError} from '../infrastructure/api';
+
+import {DigitalOceanServer} from './server';
 
 const SHADOWBOX_TAG = 'shadowbox';
 const MACHINE_SIZE = 's-1vcpu-1gb';

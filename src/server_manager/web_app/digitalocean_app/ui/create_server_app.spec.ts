@@ -12,22 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DigitalOceanCreateServerApp} from "./create_server_app";
-import {FakeDigitalOceanAccount} from "../../../model/test_helpers";
-import {DigitalOceanStatus} from "../../../model/account";
-import {sleep} from "../../../infrastructure/sleep";
+import {sleep} from '../../../infrastructure/sleep';
+import {DigitalOceanStatus} from '../../../model/account';
+import {FakeDigitalOceanAccount} from '../../../model/test_helpers';
+
+import {DigitalOceanCreateServerApp} from './create_server_app';
 
 describe('DigitalOceanCreateServerApp', () => {
-  it('shows billing page when account has invalid billing information', async () => {
-    const app = document.createElement('digitalocean-create-server-app') as DigitalOceanCreateServerApp;
+  xit('shows billing page when account has invalid billing information', async () => {
+    const app =
+        document.createElement('digitalocean-create-server-app') as DigitalOceanCreateServerApp;
     const account = new FakeDigitalOceanAccount(DigitalOceanStatus.INVALID_BILLING);
     app.start(account);
     sleep(2000);
     expect(app.currentPage).toEqual('enterBilling');
   });
 
-  it('shows email verification page when account has not verified email address', async () => {
-    const app = document.createElement('digitalocean-create-server-app') as DigitalOceanCreateServerApp;
+  xit('shows email verification page when account has not verified email address', async () => {
+    const app =
+        document.createElement('digitalocean-create-server-app') as DigitalOceanCreateServerApp;
     const account = new FakeDigitalOceanAccount(DigitalOceanStatus.EMAIL_NOT_VERIFIED);
     app.start(account);
     sleep(2000);

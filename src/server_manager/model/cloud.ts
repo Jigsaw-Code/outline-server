@@ -31,7 +31,8 @@ export class SupportedClouds {
       private digitalOceanAccountsStorageKey = 'accounts/digitalocean') {
     const digitalOceanStorage = new KeyValueStorage<PersistedAccount, string>(
         digitalOceanAccountsStorageKey, localStorage, (entry: PersistedAccount) => entry.id);
-    const digitalOceanCloud = new DigitalOceanCloud(domainEvents, shadowboxSettings, digitalOceanStorage);
+    const digitalOceanCloud =
+        new DigitalOceanCloud(domainEvents, shadowboxSettings, digitalOceanStorage);
     this.clouds.push(digitalOceanCloud);
   }
 

@@ -30,7 +30,7 @@ import '../digitalocean_app/ui/connect_account_app';
 import '../digitalocean_app/ui/create_server_app';
 import './cloud-install-styles.js';
 import './outline-about-dialog.js';
-import './outline-do-oauth-step.js';   // TODO:
+import './outline-do-oauth-step.js'; // TODO:
 import './outline-feedback-dialog.js';
 import './outline-survey-dialog.js';
 import './outline-intro-step.js';
@@ -47,10 +47,10 @@ import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 import {PolymerElement} from '@polymer/polymer/polymer-element.js';
 
+import {CloudProviderId} from '../../model/cloud';
 import {DisplayServer} from '../display_server';
 
 import {ServerView} from './outline-server-view.js';
-import {CloudProviderId} from "../../model/cloud";
 
 const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
 

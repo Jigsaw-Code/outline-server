@@ -20,13 +20,13 @@ import '../../ui_components/outline-step-view.js';
 
 import {css, customElement, html, LitElement, property} from 'lit-element';
 
-import {HttpError} from '../infrastructure/api';
 import {makePublicEvent} from '../../../infrastructure/dom_events';
 import {sleep} from '../../../infrastructure/sleep';
+import {DigitalOceanAccount, DigitalOceanLocation, DigitalOceanStatus} from '../../../model/account';
 import {COMMON_STYLES} from '../../ui_components/cloud-install-styles';
 import {OutlineNotificationManager} from '../../ui_components/outline-notification-manager';
 import {Location, OutlineRegionPicker} from '../../ui_components/outline-region-picker-step';
-import {DigitalOceanAccount, DigitalOceanLocation, DigitalOceanStatus} from "../../../model/account";
+import {HttpError} from '../infrastructure/api';
 
 // DigitalOcean mapping of regions to flags
 const FLAG_IMAGE_DIR = 'images/flags';

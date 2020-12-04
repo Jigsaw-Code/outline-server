@@ -16,18 +16,18 @@ import * as sentry from '@sentry/electron';
 import * as semver from 'semver';
 
 import * as errors from '../infrastructure/errors';
+import {CloudProviderId, SupportedClouds} from '../model/cloud';
 import * as server from '../model/server';
 
+import {HttpError} from './digitalocean_app/infrastructure/api';
+import {DigitalOceanAccount, GetCityId} from './digitalocean_app/model/account';
+import {DigitalOceanConnectAccountApp} from './digitalocean_app/ui/connect_account_app';
+import {DigitalOceanCreateServerApp} from './digitalocean_app/ui/create_server_app';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
+import {OutlineNotificationManager} from './ui_components/outline-notification-manager';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
-import {HttpError} from "./digitalocean_app/infrastructure/api";
-import {CloudProviderId, SupportedClouds} from "../model/cloud";
-import {DigitalOceanAccount, GetCityId} from "./digitalocean_app/model/account";
-import {DigitalOceanConnectAccountApp} from "./digitalocean_app/ui/connect_account_app";
-import {OutlineNotificationManager} from "./ui_components/outline-notification-manager";
-import {DigitalOceanCreateServerApp} from "./digitalocean_app/ui/create_server_app";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -147,15 +147,13 @@ export class App {
     appRoot.setAttribute('outline-version', this.version);
     this.notificationManager = this.appRoot.getNotificationManager();
 
-    appRoot.addEventListener(
-        'ConnectToDigitalOcean',
-        (event: CustomEvent) => {
-          if (this.digitalOceanAccount) {
-            this.showCreateServer();
-          } else {
-            this.appRoot.startDigitalOceanConnectAccountApp();
-          }
-        });
+    appRoot.addEventListener('ConnectToDigitalOcean', (event: CustomEvent) => {
+      if (this.digitalOceanAccount) {
+        this.showCreateServer();
+      } else {
+        this.appRoot.startDigitalOceanConnectAccountApp();
+      }
+    });
     appRoot.addEventListener(
         DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED,
         async (event: CustomEvent) => {

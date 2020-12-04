@@ -12,27 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {AccountId, DigitalOceanAccount, DigitalOceanLocation, DigitalOceanStatus} from "./account";
-import {
-  AccessKey,
-  AccessKeyId,
-  DataLimit,
-  DataUsageByAccessKey, ManagedServer, ManagedServerHost,
-  ManualServer,
-  ManualServerConfig, ManualServerRepository,
-  Server
-} from "./server";
-import {
-  Account,
-  DigitalOceanApi,
-  DigitalOceanDropletSpecification,
-  DropletInfo,
-  RegionInfo
-} from "../infrastructure/digitalocean_api";
-import {CloudProviderId} from "./cloud";
-import {DisplayServerRepository} from "../web_app/display_server";
-import {InMemoryStorage} from "../infrastructure/memory_storage";
-import {ShadowboxSettings} from "../web_app/shadowbox_server";
+import {Account, DigitalOceanApi, DigitalOceanDropletSpecification, DropletInfo, RegionInfo} from '../infrastructure/digitalocean_api';
+import {InMemoryStorage} from '../infrastructure/memory_storage';
+import {DisplayServerRepository} from '../web_app/display_server';
+import {ShadowboxSettings} from '../web_app/shadowbox_server';
+
+import {AccountId, DigitalOceanAccount, DigitalOceanLocation, DigitalOceanStatus} from './account';
+import {CloudProviderId} from './cloud';
+import {AccessKey, AccessKeyId, DataLimit, DataUsageByAccessKey, ManagedServer, ManagedServerHost, ManualServer, ManualServerConfig, ManualServerRepository, Server} from './server';
+import {sleep} from "../infrastructure/sleep";
 
 export const FAKE_SHADOWBOX_SETTINGS: ShadowboxSettings = {
   containerImageId: 'quay.io/outline/shadowbox:nightly',
@@ -158,12 +146,8 @@ class FakeDigitalOceanApiClient implements DigitalOceanApi {
 
   // Return fake account data.
   getAccount(): Promise<Account> {
-    return Promise.resolve({
-      email: 'fake@email.com',
-      uuid: 'fake',
-      email_verified: true,
-      status: 'active'
-    });
+    return Promise.resolve(
+        {email: 'fake@email.com', uuid: 'fake', email_verified: true, status: 'active'});
   }
 
   // Other methods do not yet need implementations for tests to pass.
@@ -187,7 +171,7 @@ class FakeDigitalOceanApiClient implements DigitalOceanApi {
   }
 
   getDropletTags(dropletId: number): Promise<string[]> {
-    return   Promise.reject(new Error('getDropletTags not implemented'));
+    return Promise.reject(new Error('getDropletTags not implemented'));
   }
 
   // Return an empty list of droplets by default.
@@ -291,4 +275,24 @@ export class FakeDisplayServerRepository extends DisplayServerRepository {
   constructor() {
     super(new InMemoryStorage());
   }
+}
+
+export function mockDigitalOceanOauth(personalAccessToken: string, delay = 3000): void {
+  // tslint:disable-next-line:no-any
+  (window as any).runDigitalOceanOauth = () => {
+    let isCancelled = false;
+    const rejectWrapper = {reject: (error: Error) => {}};
+    return {
+      result: new Promise(async (resolve, reject) => {
+        rejectWrapper.reject = reject;
+        await sleep(delay);
+        resolve(personalAccessToken);
+      }),
+      isCancelled: () => isCancelled,
+      cancel: () => {
+        isCancelled = true;
+        rejectWrapper.reject(new Error('Authentication cancelled'));
+      },
+    };
+  };
 }
