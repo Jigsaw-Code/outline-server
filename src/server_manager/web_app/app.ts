@@ -28,7 +28,7 @@ import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
 import {OutlineKeySettings} from './ui_components/outline-key-settings.js';
 import {Location} from './ui_components/outline-region-picker-step';
-import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
+import {DisplayAccessKey, DisplayDataAmount, MY_CONNECTION_USER_ID, ServerView} from './ui_components/outline-server-view.js';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -1002,14 +1002,17 @@ export class App {
   // Converts the access key from the remote service format to the
   // format used by outline-server-view.
   private convertToUiAccessKey(remoteAccessKey: server.AccessKey): DisplayAccessKey {
+    const name = remoteAccessKey.id === MY_CONNECTION_USER_ID ?
+        this.appRoot.localize('server-my-access-key') :
+        remoteAccessKey.name;
     return {
       id: remoteAccessKey.id,
       placeholderName: `${this.appRoot.localize('key', 'keyId', remoteAccessKey.id)}`,
-      name: remoteAccessKey.name,
+      name,
       accessUrl: remoteAccessKey.accessUrl,
       transferredBytes: 0,
       relativeTraffic: 0,
-      dataLimit: dataLimitToDisplayDataAmount(remoteAccessKey.dataLimit)
+      dataLimit: dataLimitToDisplayDataAmount(remoteAccessKey.dataLimit),
     };
   }
 

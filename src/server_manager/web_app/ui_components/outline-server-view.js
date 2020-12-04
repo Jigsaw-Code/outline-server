@@ -45,7 +45,7 @@ byte_size.defaultOptions({
   },
 });
 
-const MY_CONNECTION_USER_ID = '0';
+export const MY_CONNECTION_USER_ID = '0';
 
 // Makes an CustomEvent that bubbles up beyond the shadow root.
 function makePublicEvent(eventName, detail) {
@@ -488,7 +488,6 @@ export class ServerView extends DirMixin(PolymerElement) {
               <span class="flex-1 header-row-spacer"></span>
             </div>
             <!-- admin row -->
-            <!-- TODOBEFOREPUSH add key settings icon -->
             <div class="access-key-row" id="managerRow">
               <span class="access-key-container">
                 <img class="manager-access-key-icon access-key-icon" src="images/manager-key-avatar.svg">
@@ -508,7 +507,9 @@ export class ServerView extends DirMixin(PolymerElement) {
                 <span class="flex-1">
                   <paper-icon-button icon="outline-iconset:devices" class="connect-button" on-tap="_handleConnectPressed"></paper-icon-button>
                 </span>
-                <span class="overflow-menu flex-1"></span>
+                <span class="flex-1">
+                  <paper-icon-button icon="icons:settings" hidden\$="[[!hasKeySettingsDialog]]" on-tap="_handleShowKeySettingsPressed"></paper-icon-button>
+                </span>
               </span>
             </div>
             <div id="accessKeysContainer">
@@ -539,7 +540,6 @@ export class ServerView extends DirMixin(PolymerElement) {
                             <iron-icon icon="icons:create"></iron-icon>[[localize('server-access-key-rename')]]
                           </paper-item>
                           <paper-item hidden\$="[[!hasKeySettingsDialog]]" on-tap="_handleShowKeySettingsPressed">
-                          <!-- TODOBEFOREPUSH hide if the server version is too low -->
                             <iron-icon icon="icons:settings"></iron-icon>Key Settings
                           </paper-item>
                           <paper-item on-tap="_handleRemoveAccessKeyPressed">
@@ -764,7 +764,9 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   _handleShowKeySettingsPressed(event) {
-    const accessKey = event.model.item;
+    console.log(`${JSON.stringify(event)}`);
+    // TODO(cohenjon) change to optional chaining when we upgrade to Electron > >= 8
+    const accessKey = (event.model && event.model.item) || this.myConnection;
     const defaultDataLimit = this.defaultDataLimit;
     this.dispatchEvent(
         makePublicEvent('OpenKeySettingsDialogRequested', {accessKey, defaultDataLimit}));
