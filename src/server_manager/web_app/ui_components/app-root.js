@@ -27,9 +27,10 @@ import '@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
 import '@polymer/paper-listbox/paper-listbox.js';
 import '@polymer/paper-menu-button/paper-menu-button.js';
 import '../digitalocean_app/ui/connect_account_app';
+import '../digitalocean_app/ui/create_server_app';
 import './cloud-install-styles.js';
 import './outline-about-dialog.js';
-import './outline-do-oauth-step.js';
+import './outline-do-oauth-step.js';   // TODO:
 import './outline-feedback-dialog.js';
 import './outline-survey-dialog.js';
 import './outline-intro-step.js';
@@ -411,8 +412,8 @@ export class AppRoot extends mixinBehaviors
             <iron-pages attr-for-selected="id" selected="{{ currentPage }}">
               <outline-intro-step id="intro" is-signed-in-to-digital-ocean="{{isSignedInToDigitalOcean}}" digital-ocean-email="{{adminEmail}}" localize="[[localize]]"></outline-intro-step>
               <digitalocean-connect-account-app id="digitalOceanConnectAccountApp" localize="[[localize]]"></digitalocean-connect-account-app>
+              <digitalocean-create-server-app id="digitalOceanCreateServerApp" localize="[[localize]]"></digitalocean-create-server-app>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
-              <outline-region-picker-step id="regionPicker" localize="[[localize]]"></outline-region-picker-step>
               <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
               <div id="serverView">
                 <template is="dom-repeat" items="{{serverList}}" as="server">
@@ -578,14 +579,24 @@ export class AppRoot extends mixinBehaviors
   }
 
   /**
-   * @returns {DigitalOceanConnectAccountApp}
+   *
    */
-  getAndShowDigitalOceanConnectAccountApp() {
+  startDigitalOceanConnectAccountApp() {
     const app = this.$.digitalOceanConnectAccountApp;
     app.cloud = this.supportedClouds.get(CloudProviderId.DigitalOcean);
     app.notificationManager = this.getNotificationManager();
     this.currentPage = 'digitalOceanConnectAccountApp';
-    return app;
+    app.start();
+  }
+
+  /**
+   * @param {DigitalOceanAccount} account
+   */
+  startDigitalOceanCreateServerApp(account) {
+    const app = this.$.digitalOceanCreateServerApp;
+    app.notificationManager = this.getNotificationManager();
+    this.currentPage = 'digitalOceanCreateServerApp';
+    app.start(account);
   }
 
   /**

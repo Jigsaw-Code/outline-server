@@ -24,6 +24,7 @@ import {
   DigitalOceanLocation,
   DigitalOceanStatus
 } from '../../../model/account';
+import * as account from '../../../model/account';
 import {EventEmitter} from "eventemitter3";
 import {CloudProviderId} from "../../../model/cloud";
 import {ShadowboxSettings} from "../../shadowbox_server";
@@ -33,7 +34,7 @@ const SHADOWBOX_TAG = 'shadowbox';
 const MACHINE_SIZE = 's-1vcpu-1gb';
 
 // TODO: Cache account data so that we don't fetch on every request.
-export class DigitalOceanAccount implements Account {
+export class DigitalOceanAccount implements account.DigitalOceanAccount {
   /**
    * Event that signals an issue connecting to the DigitalOcean API. This
    * usually means an invalid authentication, CORS, or network issue.

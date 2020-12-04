@@ -13,29 +13,32 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
+
 import '@polymer/paper-button/paper-button';
 import '@polymer/paper-progress/paper-progress';
 import '@polymer/iron-icon/iron-icon';
 import '@polymer/iron-icons/iron-icons';
 import './outline-step-view';
 
-import {css, customElement, html, LitElement, property, unsafeCSS} from 'lit-element';
+import {css, customElement, html, LitElement, property} from 'lit-element';
 
 import {COMMON_STYLES} from './cloud-install-styles';
 
 export interface Location {
   id: string;
-  name: string;
-  flag: string;
+  nameMessageId: string;
+  flagUri: string;
   available: boolean;
 }
 
 @customElement('outline-region-picker-step')
 export class OutlineRegionPicker extends LitElement {
+  public static EVENT_REGION_SELECTED = 'region-selected';
+
   @property({type: Array}) locations: Location[] = [];
   @property({type: String}) selectedLocationId: string = null;
   @property({type: Boolean}) isServerBeingCreated = false;
-  @property({type: Function}) localize: Function;
+  @property({type: Function}) localize: Function = null;
 
   static get styles() {
     return [COMMON_STYLES, css`
@@ -110,24 +113,29 @@ export class OutlineRegionPicker extends LitElement {
       <span slot="step-title">${this.localize('region-title')}</span>
       <span slot="step-description">${this.localize('region-description')}</span>
       <span slot="step-action">
-        <paper-button id="createServerButton" @tap="${this._handleCreateServerTap}" ?disabled="${!this._isCreateButtonEnabled(this.isServerBeingCreated, this.selectedLocationId)}">
+        <paper-button @tap="${this._handleCreateServerTap}" 
+            ?disabled="${this.isServerBeingCreated || this.selectedLocationId === null}">
           ${this.localize('region-setup')}
         </paper-button>
       </span>
       <div class="card-content" id="cityContainer">
-        ${this.locations.map(item => {
+        ${
+        this.locations.map(item => {
           return html`
           <input type="radio" id="card-${item.id}" name="city" value="${item.id}" ?disabled="${!item.available}" .checked="${this.selectedLocationId === item.id}" @change="${this._locationSelected}">
           <label for="card-${item.id}" class="city-button">
             <div class="card-header">
               ${this.selectedLocationId === item.id ? html`<iron-icon icon="check-circle"></iron-icon>` : ''}
             </div>
-            <img class="flag" src="${item.flag}">
-            <div class="city-name">${item.name}</div>
+            <img class="flag" src="${item.flagUri}">
+            <div class="city-name">${this.localize(item.nameMessageId)}</div>
           </label>`;
         })}
       </div>
-      ${this.isServerBeingCreated ? html`<paper-progress indeterminate="" class="slow"></paper-progress>` : ''}
+      ${
+        this.isServerBeingCreated ?
+            html`<paper-progress indeterminate="" class="slow"></paper-progress>` :
+            ''}
     </outline-step-view>
     `;
   }
@@ -137,23 +145,14 @@ export class OutlineRegionPicker extends LitElement {
     this.selectedLocationId = null;
   }
 
-  _isCreateButtonEnabled(isCreatingServer: boolean, selectedLocationId: string): boolean {
-    return !isCreatingServer && selectedLocationId != null;
-  }
-
   _locationSelected(event: Event): void {
     const inputEl = event.target as HTMLInputElement;
     this.selectedLocationId = inputEl.value;
   }
 
   _handleCreateServerTap(): void {
-    this.isServerBeingCreated = true;
-    const params = {
-      bubbles: true,
-      composed: true,
-      detail: {selectedRegionId: this.selectedLocationId}
-    };
-    const customEvent = new CustomEvent('RegionSelected', params);
+    const params = {detail: {regionId: this.selectedLocationId}};
+    const customEvent = new CustomEvent(OutlineRegionPicker.EVENT_REGION_SELECTED, params);
     this.dispatchEvent(customEvent);
   }
 }

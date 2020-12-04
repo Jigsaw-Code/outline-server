@@ -111,7 +111,7 @@ export class DigitalOceanConnectAccountApp extends LitElement {
   render() {
     return html`
       <iron-pages id="pages" attr-for-selected="id" .selected="${this.currentPage}">
-        <outline-step-view id="loading">asfdasfdsf</outline-step-view>
+        <outline-step-view id="loading"></outline-step-view>
         <outline-step-view id="connectAccount">
           <span slot="step-title">${this.localize('oauth-connect-title')}</span>
           <span slot="step-description">${this.localize('oauth-connect-description')}</span>
@@ -146,6 +146,7 @@ export class DigitalOceanConnectAccountApp extends LitElement {
     } catch (error) {
       if (this.session.isCancelled()) {
         this.onCancel();
+        return;
       } else {
         console.error(`DigitalOcean authentication failed: ${error}`);
         this.notificationManager.showError(this.localize('error-do-auth'));

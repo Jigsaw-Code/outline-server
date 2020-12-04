@@ -21,13 +21,13 @@ import * as server from '../model/server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
-import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
 import {HttpError} from "./digitalocean_app/infrastructure/api";
 import {CloudProviderId, SupportedClouds} from "../model/cloud";
 import {DigitalOceanAccount, GetCityId} from "./digitalocean_app/model/account";
 import {DigitalOceanConnectAccountApp} from "./digitalocean_app/ui/connect_account_app";
 import {OutlineNotificationManager} from "./ui_components/outline-notification-manager";
+import {DigitalOceanCreateServerApp} from "./digitalocean_app/ui/create_server_app";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -150,7 +150,11 @@ export class App {
     appRoot.addEventListener(
         'ConnectToDigitalOcean',
         (event: CustomEvent) => {
-          this.appRoot.getAndShowDigitalOceanConnectAccountApp().start();
+          if (this.digitalOceanAccount) {
+            this.showCreateServer();
+          } else {
+            this.appRoot.startDigitalOceanConnectAccountApp();
+          }
         });
     appRoot.addEventListener(
         DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED,
@@ -169,10 +173,10 @@ export class App {
         });
     appRoot.addEventListener(
         DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECT_CANCELLED,
-        (event: CustomEvent) => {
-          this.digitalOceanAccount = null;
-          this.clearCredentialsAndShowIntro();
-        });
+        (event: CustomEvent) => this.clearCredentialsAndShowIntro());
+    appRoot.addEventListener(
+        DigitalOceanCreateServerApp.EVENT_SERVER_CREATED,
+        (event: CustomEvent) => this.syncServerCreationToUi(event.detail.server));
 
     appRoot.addEventListener('SignOutRequested', (event: CustomEvent) => {
       this.clearCredentialsAndShowIntro();
@@ -598,6 +602,7 @@ export class App {
 
   // Clears the credentials and returns to the intro screen.
   private clearCredentialsAndShowIntro() {
+    this.digitalOceanAccount = null;
     const account = this.supportedClouds.get(CloudProviderId.DigitalOcean).listAccounts()[0];
     if (account) {
       account.disconnect();
@@ -623,22 +628,7 @@ export class App {
 
   // Opens the screen to create a server.
   private showCreateServer() {
-    const regionPicker = this.appRoot.getAndShowRegionPicker();
-    // The region picker initially shows all options as disabled. Options are enabled by this code,
-    // after checking which regions are available.
-    this.digitalOceanRetry(() => {
-          return this.digitalOceanAccount.listLocations();
-        })
-        .then(
-            (locations) => {
-              regionPicker.locations = locations.map((location) => {
-                return this.createLocationModel(location.regionId, location.dataCenterIds);
-              });
-            },
-            (e) => {
-              console.error(`Failed to get list of available regions: ${e}`);
-              this.notificationManager.showError(this.appRoot.localize('error-do-regions'));
-            });
+    this.appRoot.startDigitalOceanCreateServerApp(this.digitalOceanAccount);
   }
 
   private showServerCreationProgress() {
@@ -1148,14 +1138,5 @@ export class App {
     this.appRoot.setLanguage(languageCode, languageDir);
     document.documentElement.setAttribute('dir', languageDir);
     window.localStorage.setItem('overrideLanguage', languageCode);
-  }
-
-  private createLocationModel(cityId: string, regionIds: string[]): Location {
-    return {
-      id: regionIds.length > 0 ? regionIds[0] : null,
-      name: this.appRoot.localize(`city-${cityId}`),
-      flag: DIGITALOCEAN_FLAG_MAPPING[cityId] || '',
-      available: regionIds.length > 0,
-    };
   }
 }

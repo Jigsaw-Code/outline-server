@@ -45,7 +45,6 @@ export interface Account {
 }
 
 export interface DigitalOceanAccount extends Account {
-  registerAccountConnectionIssueListener(fn: () => void): void;
 
   /** An enum representing the status of the account. */
   getStatus(): Promise<DigitalOceanStatus>;

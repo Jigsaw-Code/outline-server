@@ -27,11 +27,11 @@ export class SupportedClouds {
 
   constructor(
       private readonly domainEvents: EventEmitter,
-      private readonly shadowboxSettings: ShadowboxSettings) {
+      private readonly shadowboxSettings: ShadowboxSettings,
+      private digitalOceanAccountsStorageKey = 'accounts/digitalocean') {
     const digitalOceanStorage = new KeyValueStorage<PersistedAccount, string>(
-        'accounts/digitalocean', localStorage, (entry: PersistedAccount) => entry.id);
-    const digitalOceanCloud =
-        new DigitalOceanCloud(domainEvents, shadowboxSettings, digitalOceanStorage);
+        digitalOceanAccountsStorageKey, localStorage, (entry: PersistedAccount) => entry.id);
+    const digitalOceanCloud = new DigitalOceanCloud(domainEvents, shadowboxSettings, digitalOceanStorage);
     this.clouds.push(digitalOceanCloud);
   }
 
