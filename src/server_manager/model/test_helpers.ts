@@ -39,6 +39,7 @@ import {
   ManualServerRepository,
   Server
 } from './server';
+import IntlMessageFormat from "intl-messageformat";
 
 export const FAKE_SHADOWBOX_SETTINGS: ShadowboxSettings = {
   containerImageId: 'quay.io/outline/shadowbox:nightly',
@@ -299,22 +300,54 @@ export class FakeDisplayServerRepository extends DisplayServerRepository {
   }
 }
 
-export function mockDigitalOceanOauth(personalAccessToken: string, delay = 3000): void {
+export function mockDigitalOceanOauth(personalAccessToken: string, cancelled = false, delay = 3000): void {
   // tslint:disable-next-line:no-any
   (window as any).runDigitalOceanOauth = () => {
     let isCancelled = false;
     const rejectWrapper = {reject: (error: Error) => {}};
-    return {
+    const cancel = () => {
+      isCancelled = true;
+      rejectWrapper.reject(new Error('Authentication cancelled'));
+    };
+
+    const session = {
       result: new Promise(async (resolve, reject) => {
         rejectWrapper.reject = reject;
+        if (cancelled) {
+          cancel();
+        }
         await sleep(delay);
         resolve(personalAccessToken);
       }),
       isCancelled: () => isCancelled,
-      cancel: () => {
-        isCancelled = true;
-        rejectWrapper.reject(new Error('Authentication cancelled'));
-      },
+      cancel,
     };
+    return session;
+  };
+}
+
+export type Localize = (msgId: string, ...args: string[]) => string;
+
+export async function makeLocalize(language: string): Promise<Localize> {
+  let messages: {[key: string]: string};
+  try {
+    messages = await (await fetch(`./messages/${language}.json`)).json();
+  } catch (e) {
+    window.alert(`Could not load messages for language "${language}"`);
+  }
+  return (msgId: string, ...args: string[]): string => {
+    // tslint:disable-next-line:no-any
+    const params = {} as {[key: string]: any};
+    for (let i = 0; i < args.length; i += 2) {
+      params[args[i]] = args[i + 1];
+    }
+    if (!messages) {
+      // Fallback that shows message id and params.
+      return `${msgId}(${JSON.stringify(params, null, " ")})`;
+    }
+    // Ideally we would pre-parse and cache the IntlMessageFormat objects,
+    // but it's ok here because it's a test app.
+    const formatter = new IntlMessageFormat(messages[msgId], language);
+    return formatter.format(params) as string;
   };
 }

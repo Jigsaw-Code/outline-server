@@ -14,26 +14,40 @@
 
 import {sleep} from '../../../infrastructure/sleep';
 import {DigitalOceanStatus} from '../../../model/account';
-import {FakeDigitalOceanAccount} from '../../../model/test_helpers';
-
+import {FakeDigitalOceanAccount, makeLocalize} from '../../../model/test_helpers';
 import {DigitalOceanCreateServerApp} from './create_server_app';
+import {DigitalOceanConnectAccountApp} from "./connect_account_app";
+
+beforeAll(async () => {
+  const loadDigitalOceanCreateServerApp = new DigitalOceanCreateServerApp();
+
+  document.body.innerHTML = '<digitalocean-create-server-app id="digitalOceanCreateServerApp" language="en"></digitalocean-create-server-app>';
+  const app = document.getElementById('digitalOceanCreateServerApp') as unknown as DigitalOceanConnectAccountApp;
+  app.localize = await makeLocalize('en');
+});
 
 describe('DigitalOceanCreateServerApp', () => {
-  xit('shows billing page when account has invalid billing information', async () => {
-    const app =
-        document.createElement('digitalocean-create-server-app') as DigitalOceanCreateServerApp;
+  it('shows billing page when account has invalid billing information', async () => {
+    const app = document.getElementById('digitalOceanCreateServerApp') as unknown as DigitalOceanCreateServerApp;
     const account = new FakeDigitalOceanAccount(DigitalOceanStatus.INVALID_BILLING);
     app.start(account);
-    sleep(2000);
+    await sleep(200);
     expect(app.currentPage).toEqual('enterBilling');
   });
 
-  xit('shows email verification page when account has not verified email address', async () => {
-    const app =
-        document.createElement('digitalocean-create-server-app') as DigitalOceanCreateServerApp;
+  it('shows email verification page when account has not verified email address', async () => {
+    const app = document.getElementById('digitalOceanCreateServerApp') as unknown as DigitalOceanCreateServerApp;
     const account = new FakeDigitalOceanAccount(DigitalOceanStatus.EMAIL_NOT_VERIFIED);
     app.start(account);
-    sleep(2000);
+    await sleep(200);
     expect(app.currentPage).toEqual('verifyEmail');
+  });
+
+  it('shows region picker page when account is active', async () => {
+    const app = document.getElementById('digitalOceanCreateServerApp') as unknown as DigitalOceanCreateServerApp;
+    const account = new FakeDigitalOceanAccount(DigitalOceanStatus.ACTIVE);
+    app.start(account);
+    await sleep(200);
+    expect(app.currentPage).toEqual('regionPicker');
   });
 });

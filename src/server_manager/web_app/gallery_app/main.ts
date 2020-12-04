@@ -24,40 +24,14 @@ import '../ui_components/outline-sort-span';
 import '../ui_components/outline-survey-dialog';
 
 import {EventEmitter} from 'eventemitter3';
-import IntlMessageFormat from 'intl-messageformat';
 import {css, customElement, html, LitElement, property} from 'lit-element';
 
 import {KeyValueStorage} from '../../infrastructure/key_value_storage';
-import {sleep} from '../../infrastructure/sleep';
-import {FAKE_SHADOWBOX_SETTINGS, mockDigitalOceanOauth} from '../../model/test_helpers';
+import {FAKE_SHADOWBOX_SETTINGS, makeLocalize, mockDigitalOceanOauth} from '../../model/test_helpers';
 import {DigitalOceanAccount} from '../digitalocean_app/model/account';
 import {DigitalOceanCloud, PersistedAccount} from '../digitalocean_app/model/cloud';
 import {DigitalOceanConnectAccountApp} from '../digitalocean_app/ui/connect_account_app';
 import {OutlineNotificationManager} from '../ui_components/outline-notification-manager';
-
-async function makeLocalize(language: string) {
-  let messages: {[key: string]: string};
-  try {
-    messages = await (await fetch(`./messages/${language}.json`)).json();
-  } catch (e) {
-    window.alert(`Could not load messages for language "${language}"`);
-  }
-  return (msgId: string, ...args: string[]): string => {
-    // tslint:disable-next-line:no-any
-    const params = {} as {[key: string]: any};
-    for (let i = 0; i < args.length; i += 2) {
-      params[args[i]] = args[i + 1];
-    }
-    if (!messages) {
-      // Fallback that shows message id and params.
-      return `${msgId}(${JSON.stringify(params, null, " ")})`;
-    }
-    // Ideally we would pre-parse and cache the IntlMessageFormat objects,
-    // but it's ok here because it's a test app.
-    const formatter = new IntlMessageFormat(messages[msgId], language);
-    return formatter.format(params) as string;
-  };
-}
 
 @customElement('outline-test-app')
 export class TestApp extends LitElement {
