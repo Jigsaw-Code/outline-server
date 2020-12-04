@@ -12,31 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {sleep} from "../../../infrastructure/sleep";
-import {KeyValueStorage} from "../../../infrastructure/key_value_storage";
-import {DigitalOceanCloud, PersistedAccount} from "../model/cloud";
-import {FAKE_SHADOWBOX_SETTINGS, mockDigitalOceanOauth} from "../../../model/test_helpers";
-import {EventEmitter} from "eventemitter3";
+import {EventEmitter} from 'eventemitter3';
 
-import {DigitalOceanConnectAccountApp} from "./connect_account_app";
+import {KeyValueStorage} from '../../../infrastructure/key_value_storage';
+import {sleep} from '../../../infrastructure/sleep';
+import {FAKE_SHADOWBOX_SETTINGS, mockDigitalOceanOauth} from '../../../model/test_helpers';
+import {DigitalOceanCloud, PersistedAccount} from '../model/cloud';
+
+import {DigitalOceanConnectAccountApp} from './connect_account_app';
 
 describe('DigitalOceanConnectAccountApp', () => {
-  xit('fires account connected event on successful OAuth flow',
-     async () => {
-       const digitalOceanStorage = new KeyValueStorage<PersistedAccount, string>(
-           'testing/accounts/digitalocean', localStorage, (entry: PersistedAccount) => entry.id);
-       const digitalOceanCloud = new DigitalOceanCloud(new EventEmitter(), FAKE_SHADOWBOX_SETTINGS, digitalOceanStorage);
-       mockDigitalOceanOauth('fake-personal-access-token');
+  xit('fires account connected event on successful OAuth flow', async () => {
+    const digitalOceanStorage = new KeyValueStorage<PersistedAccount, string>(
+        'testing/accounts/digitalocean', localStorage, (entry: PersistedAccount) => entry.id);
+    const digitalOceanCloud =
+        new DigitalOceanCloud(new EventEmitter(), FAKE_SHADOWBOX_SETTINGS, digitalOceanStorage);
+    mockDigitalOceanOauth('fake-personal-access-token');
 
-       let onAccountConnectedCalled = false;
-       document.addEventListener(DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED, () => {
-         onAccountConnectedCalled = true;
-       });
+    let onAccountConnectedCalled = false;
+    document.addEventListener(DigitalOceanConnectAccountApp.EVENT_ACCOUNT_CONNECTED, () => {
+      onAccountConnectedCalled = true;
+    });
 
-       const app = document.createElement('digitalocean-connect-account-app') as DigitalOceanConnectAccountApp;
-       app.cloud = digitalOceanCloud;
-       await app.start();
-       sleep(2000);
-       expect(onAccountConnectedCalled).toEqual(true);
-     });
+    const app =
+        document.createElement('digitalocean-connect-account-app') as DigitalOceanConnectAccountApp;
+    app.cloud = digitalOceanCloud;
+    await app.start();
+    sleep(2000);
+    expect(onAccountConnectedCalled).toEqual(true);
+  });
 });

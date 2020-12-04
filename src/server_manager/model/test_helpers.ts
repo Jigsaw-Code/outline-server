@@ -12,15 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Account, DigitalOceanApi, DigitalOceanDropletSpecification, DropletInfo, RegionInfo} from '../infrastructure/digitalocean_api';
+import {
+  Account,
+  DigitalOceanApi,
+  DigitalOceanDropletSpecification,
+  DropletInfo,
+  RegionInfo
+} from '../infrastructure/digitalocean_api';
 import {InMemoryStorage} from '../infrastructure/memory_storage';
+import {sleep} from '../infrastructure/sleep';
 import {DisplayServerRepository} from '../web_app/display_server';
 import {ShadowboxSettings} from '../web_app/shadowbox_server';
+import * as randomstring from 'randomstring';
 
-import {AccountId, DigitalOceanAccount, DigitalOceanLocation, DigitalOceanStatus} from './account';
+import {DigitalOceanAccount, DigitalOceanLocation, DigitalOceanStatus} from './account';
 import {CloudProviderId} from './cloud';
-import {AccessKey, AccessKeyId, DataLimit, DataUsageByAccessKey, ManagedServer, ManagedServerHost, ManualServer, ManualServerConfig, ManualServerRepository, Server} from './server';
-import {sleep} from "../infrastructure/sleep";
+import {
+  AccessKey,
+  AccessKeyId,
+  DataLimit,
+  DataUsageByAccessKey,
+  ManagedServer,
+  ManagedServerHost,
+  ManualServer,
+  ManualServerConfig,
+  ManualServerRepository,
+  Server
+} from './server';
 
 export const FAKE_SHADOWBOX_SETTINGS: ShadowboxSettings = {
   containerImageId: 'quay.io/outline/shadowbox:nightly',
@@ -212,15 +230,19 @@ export class FakeDigitalOceanServer extends FakeServer implements ManagedServer 
 }
 
 export class FakeDigitalOceanAccount implements DigitalOceanAccount {
+  private readonly id: string;
   private servers: ManagedServer[] = [];
 
-  constructor(private status = DigitalOceanStatus.ACTIVE) {}
+  constructor(private status = DigitalOceanStatus.ACTIVE) {
+    this.id = randomstring.generate(12);
+  }
 
-  getId(): AccountId {
-    return {
-      cloudSpecificId: '',
-      cloudProviderId: CloudProviderId.DigitalOcean,
-    };
+  getId(): string {
+    return this.id;
+  }
+
+  getCloudProviderId(): CloudProviderId {
+    return CloudProviderId.DigitalOcean;
   }
 
   getDisplayName(): Promise<string> {

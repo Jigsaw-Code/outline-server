@@ -17,7 +17,7 @@ import {EventEmitter} from 'eventemitter3';
 import * as crypto from '../../../infrastructure/crypto';
 import * as do_install_script from '../../../install_scripts/do_install_script';
 import * as account from '../../../model/account';
-import {Account, AccountId, DigitalOceanCredentials, DigitalOceanLocation, DigitalOceanStatus} from '../../../model/account';
+import {Account, DigitalOceanCredentials, DigitalOceanLocation, DigitalOceanStatus} from '../../../model/account';
 import {CloudProviderId} from '../../../model/cloud';
 import {ManagedServer} from '../../../model/server';
 import {ShadowboxSettings} from '../../shadowbox_server';
@@ -39,7 +39,6 @@ export class DigitalOceanAccount implements account.DigitalOceanAccount {
    */
   public static EVENT_ACCOUNT_CONNECTIVITY_ISSUE = 'account-connectivity-issue';
 
-  private readonly accountId: AccountId;
   private readonly apiClient: DigitalOceanApiClient;
   private servers: DigitalOceanServer[] = [];
 
@@ -48,16 +47,17 @@ export class DigitalOceanAccount implements account.DigitalOceanAccount {
       private readonly credentials: DigitalOceanCredentials,
       private readonly domainEvents: EventEmitter, private readonly accountDisconnectFn: () => void,
       private readonly shadowboxSettings: ShadowboxSettings) {
-    this.accountId = {
-      cloudSpecificId,
-      cloudProviderId: CloudProviderId.DigitalOcean
-    };
     this.apiClient = new DigitalOceanApiClient(credentials);
   }
 
-  /** The Account identifier that encapsulates the DigitalOcean account. */
-  getId(): AccountId {
-    return this.accountId;
+  /** {@see Account#getId} */
+  getId(): string {
+    return this.cloudSpecificId;
+  }
+
+  /** {@see Account#getCloudProviderId} */
+  getCloudProviderId(): CloudProviderId {
+    return CloudProviderId.DigitalOcean;
   }
 
   /**

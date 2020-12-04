@@ -122,13 +122,13 @@ export class OutlineRegionPicker extends LitElement {
         ${this.locations.map(item => {
       return html`
           <input type="radio" id="card-${item.id}" name="city" value="${item.id}" ?disabled="${
-          !item.available}" .checked="${this.selectedLocationId === item.id}" @change="${
+      !item.available}" .checked="${this.selectedLocationId === item.id}" @change="${
           this._locationSelected}">
           <label for="card-${item.id}" class="city-button">
             <div class="card-header">
               ${
-          this.selectedLocationId === item.id ? html`<iron-icon icon="check-circle"></iron-icon>` :
-                                                ''}
+          this.selectedLocationId ===
+          item.id ? html`<iron-icon icon="check-circle"></iron-icon>` : ''}
             </div>
             <img class="flag" src="${item.flagUri}">
             <div class="city-name">${this.localize(item.nameMessageId)}</div>

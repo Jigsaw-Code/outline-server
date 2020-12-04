@@ -227,7 +227,6 @@ export class DigitalOceanCreateServerApp extends LitElement {
   }
 
   private reset() {
-    console.log('reset');
     this.currentPage = 'loading';
     this.regionPicker.reset();
   }
@@ -238,8 +237,6 @@ export class DigitalOceanCreateServerApp extends LitElement {
     try {
       const serverName = this.makeLocalizedServerName(event.detail.regionId);
       const server = await this.account.createServer(serverName, event.detail.regionId);
-      console.log(server);
-
 
       const serverCreatedEvent =
           makePublicEvent(DigitalOceanCreateServerApp.EVENT_SERVER_CREATED, {server});

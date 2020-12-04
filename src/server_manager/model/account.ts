@@ -15,23 +15,12 @@
 import {CloudProviderId} from "./cloud";
 import {Server, ManagedServer} from "./server";
 
-export class AccountId {
-  /** The cloud provider specific account identifier. */
-  cloudSpecificId: string;
-
-  /** The cloud provider enum. */
-  cloudProviderId: CloudProviderId;
-}
-
 export interface Account {
-  // TODO: Refactor AccountId into an opaque cloud specific identifier. Optionally,
-  //  we can add support to identify the cloud provider via an Account domain model.
-  // TODO: getCloudProviderId(): CloudProviderId;
-  /**
-   * The Account identifier that encapsulates the cloud provider (e.g.
-   * DigitalOcean, GCP) and cloud specific account identifier.
-   */
-  getId(): AccountId;
+  /** The cloud provider account identifier. */
+  getId(): string;
+
+  /** The cloud provider identifier. */
+  getCloudProviderId(): CloudProviderId;
 
   /**
    * The human readable account name to be displayed to the user. Ideally this
