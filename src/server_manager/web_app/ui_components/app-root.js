@@ -32,7 +32,7 @@ import './outline-do-oauth-step.js';
 import './outline-feedback-dialog.js';
 import './outline-survey-dialog.js';
 import './outline-intro-step.js';
-import './outline-key-settings';
+import './outline-per-key-data-limit-dialog';
 import './outline-language-picker.js';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
@@ -465,7 +465,7 @@ export class AppRoot extends mixinBehaviors
       <outline-modal-dialog id="modalDialog"></outline-modal-dialog>
       <outline-share-dialog id="shareDialog" localize="[[localize]]"></outline-share-dialog>
       <outline-metrics-option-dialog id="metricsDialog" localize="[[localize]]"></outline-metrics-option-dialog>
-      <outline-key-settings id="keySettingsDialog" localize="[[localize]]"></outline-key-settings>
+      <outline-per-key-data-limit-dialog id="perKeyDataLimitDialog" localize="[[localize]]"></outline-per-key-data-limit-dialog>
 
       <paper-dialog id="getConnectedDialog" modal="">
         <!-- iframe gets inserted here once we are given the invite URL. -->
@@ -788,8 +788,8 @@ export class AppRoot extends mixinBehaviors
     this.$.shareDialog.open(accessKey, s3Url);
   }
 
-  openKeySettingsDialog(accessKey, defaultDataLimit) {
-    this.$.keySettingsDialog.open(accessKey, defaultDataLimit);
+  openPerKeyDataLimitDialog(accessKey, defaultDataLimit) {
+    this.$.perKeyDataLimitDialog.open(accessKey, defaultDataLimit);
   }
 
   openGetConnectedDialog(/** @type {string} */ inviteUrl) {

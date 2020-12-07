@@ -18,11 +18,11 @@ import '../ui_components/outline-feedback-dialog';
 import '../ui_components/outline-share-dialog';
 import '../ui_components/outline-sort-span';
 import '../ui_components/outline-survey-dialog';
-import '../ui_components/outline-key-settings';
+import '../ui_components/outline-per-key-data-limit-dialog';
 
 import IntlMessageFormat from 'intl-messageformat';
 import {css, customElement, html, LitElement, property} from 'lit-element';
-import {OutlineKeySettings} from '../ui_components/outline-key-settings';
+import {OutlinePerKeyDataLimitDialog} from '../ui_components/outline-per-key-data-limit-dialog';
 
 async function makeLocalize(language: string) {
   let messages: {[key: string]: string};
@@ -95,14 +95,16 @@ export class TestApp extends LitElement {
       <h1>Outline Manager Components Gallery</h1>
       ${this.pageControls}
 
-      <div class="widget" id="key-settings-widget" @SaveKeySettingsRequested=${
-        (e: {detail: {keySettings: OutlineKeySettings}}) => console.log(e)}>
-        <h2>outline-key-settings</h2>
-        <button @tap=${() => this.select('outline-key-settings').open({id: '1', name: 'Key Name'}, {
-      unit: 'MB',
-      value: 50
-    })}>Open Dialog</button>
-        <outline-key-settings .localize=${this.localize} dir=${this.dir}></outline-key-settings>
+      <div class="widget" id="key-settings-widget" @SavePerKeyDataLimitRequested=${
+        (e: {detail: {keySettings: OutlinePerKeyDataLimitDialog}}) => console.log(e)}>
+        <h2>outline-per-key-data-limit-dialog</h2>
+        <button @tap=${
+        () => this.select('outline-per-key-data-limit-dialog').open({id: '1', name: 'Key Name'}, {
+          unit: 'MB',
+          value: 50
+        })}>Open Dialog</button>
+        <outline-per-key-data-limit-dialog .localize=${this.localize} dir=${
+        this.dir}></outline-per-key-data-limit-dialog>
       </div>
       
       <div class="widget">

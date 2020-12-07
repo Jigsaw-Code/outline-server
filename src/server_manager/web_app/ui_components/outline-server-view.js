@@ -508,7 +508,7 @@ export class ServerView extends DirMixin(PolymerElement) {
                   <paper-icon-button icon="outline-iconset:devices" class="connect-button" on-tap="_handleConnectPressed"></paper-icon-button>
                 </span>
                 <span class="flex-1">
-                  <paper-icon-button icon="icons:settings" hidden\$="[[!hasKeySettingsDialog]]" on-tap="_handleShowKeySettingsPressed"></paper-icon-button>
+                  <paper-icon-button icon="icons:settings" hidden\$="[[!hasKeySettingsDialog]]" on-tap="_handleShowPerKeyDataLimitDialogPressed"></paper-icon-button>
                 </span>
               </span>
             </div>
@@ -539,7 +539,7 @@ export class ServerView extends DirMixin(PolymerElement) {
                           <paper-item on-tap="_handleRenameAccessKeyPressed">
                             <iron-icon icon="icons:create"></iron-icon>[[localize('server-access-key-rename')]]
                           </paper-item>
-                          <paper-item hidden\$="[[!hasKeySettingsDialog]]" on-tap="_handleShowKeySettingsPressed">
+                          <paper-item hidden\$="[[!hasKeySettingsDialog]]" on-tap="_handleShowPerKeyDataLimitDialogPressed">
                             <iron-icon icon="icons:settings"></iron-icon>Key Settings
                           </paper-item>
                           <paper-item on-tap="_handleRemoveAccessKeyPressed">
@@ -763,13 +763,12 @@ export class ServerView extends DirMixin(PolymerElement) {
     }));
   }
 
-  _handleShowKeySettingsPressed(event) {
-    console.log(`${JSON.stringify(event)}`);
+  _handleShowPerKeyDataLimitDialogPressed(event) {
     // TODO(cohenjon) change to optional chaining when we upgrade to Electron > >= 8
     const accessKey = (event.model && event.model.item) || this.myConnection;
     const defaultDataLimit = this.defaultDataLimit;
     this.dispatchEvent(
-        makePublicEvent('OpenKeySettingsDialogRequested', {accessKey, defaultDataLimit}));
+        makePublicEvent('OpenPerKeyDataLimitDialogRequested', {accessKey, defaultDataLimit}));
   }
 
   _handleRenameAccessKeyPressed(event) {

@@ -25,20 +25,18 @@ import '@polymer/paper-listbox/paper-listbox';
 import {PaperDialogElement} from '@polymer/paper-dialog/paper-dialog';
 import {PaperDropdownMenuElement} from '@polymer/paper-dropdown-menu/paper-dropdown-menu';
 import {PaperInputElement} from '@polymer/paper-input/paper-input';
-import {PaperListboxElement} from '@polymer/paper-listbox/paper-listbox';
 import {css, customElement, html, internalProperty, LitElement, property} from 'lit-element';
 
-import {DisplayAccessKey, DisplayDataAmount} from '../ui_components/outline-server-view';
-
 import {COMMON_STYLES} from './cloud-install-styles';
+import {DisplayAccessKey, DisplayDataAmount} from './outline-server-view';
 
 /*
   This component is a floating window representing settings specific to individual access keys.
   Its state is dynamically set when it's opened using the open() method instead of with any in-HTML
   attributes.
 */
-@customElement('outline-key-settings')
-export class OutlineKeySettings extends LitElement {
+@customElement('outline-per-key-data-limit-dialog')
+export class OutlinePerKeyDataLimitDialog extends LitElement {
   @internalProperty() serverDefaultLimit: DisplayDataAmount = null;
   @internalProperty() showCustomDataLimitDialog = false;
   @property({type: Function}) localize: Function;
@@ -55,7 +53,6 @@ export class OutlineKeySettings extends LitElement {
           flex-flow: column nowrap;
         }
 
-        /* for now until I make an icon */
         #keyIcon {
           filter: invert(1);
           /* Split the padding evenly between the icon and the section to be bidirectional. */
@@ -70,6 +67,7 @@ export class OutlineKeySettings extends LitElement {
 
         #headerSection h3 {
           font-size: 18px;
+          font-weight: 500;
           color: rgba(0, 0, 0, 0.87);
           line-height: 24px;
         }
@@ -78,12 +76,24 @@ export class OutlineKeySettings extends LitElement {
           flex: 1;
           padding: 0 78px;
           margin-top: 10px;
-          margin-bottom: 10px;
         }
 
-        .settings-section-title {
-          font-weight: 500;
-          margin-bottom: 10px;
+        #buttonsContainer {
+          margin-top: 10px;
+          display: flex;
+          flex-direction:  row-reverse;
+        }
+
+        paper-button {
+          display: flex;
+          height: 36px;
+          width: 30px;
+          text-align: center;
+        }
+
+        #save {
+          background-color: var(--primary-green);
+          color: #fff;
         }
 
         #dataLimitsMenu {
@@ -106,7 +116,8 @@ export class OutlineKeySettings extends LitElement {
 
         paper-listbox paper-item:hover {
           cursor: pointer;
-          background-color: #eee;
+          background-color: var(--background-contrast-color);
+          color: #fff;
         }
       `,
     ];
@@ -135,14 +146,10 @@ export class OutlineKeySettings extends LitElement {
       </style>
       <paper-dialog id="container">
         <div id="headerSection">
-          <!-- TODO how to get this to work in both the gallery and ui components? -->
           <img id="keyIcon" src="../../images/key-avatar.svg" />
-          <h3 class="settings-section-title">${
-        this.localize('key-settings-title', 'keyName', keyName)}</h3>
+          <h3>${this.localize('key-settings-title', 'keyName', keyName)}</h3>
         </div>
         <div class="settings-section">
-          <div class="settings-section-title">${
-        this.localize('key-settings-data-limits-title')}</div>
           <paper-checkbox ?checked=${this.showCustomDataLimitDialog} @tap=${
         this.setCustomLimitTapped}>
             ${this.localize('key-settings-set-custom')}
@@ -157,7 +164,7 @@ export class OutlineKeySettings extends LitElement {
               size="7"
             >
             </paper-input>
-            <paper-dropdown-menu id="dataLimitUnits" no-animations noink>
+            <paper-dropdown-menu id="dataLimitUnits" noink>
               <paper-listbox
                 slot="dropdown-content"
                 attr-for-selected="name"
@@ -169,8 +176,9 @@ export class OutlineKeySettings extends LitElement {
             </paper-dropdown-menu>
           </div>
         </div>
-        <div id="buttons-container">
-          <paper-button @tap=${this.saveKeySettings}>Save</paper-button>
+        <div id="buttonsContainer">
+          <!-- TODOBEFOREPUSH localize button text -->
+          <paper-button id="save" @tap=${this.saveKeySettings}>Save</paper-button>
           <paper-button @tap=${this.close}>Cancel</paper-button>
         </div>
       </paper-dialog>
@@ -201,8 +209,8 @@ export class OutlineKeySettings extends LitElement {
   }
 
   private saveKeySettings() {
-    const event = new CustomEvent('SaveKeySettingsRequested', {
-      detail: {keySettings: this},
+    const event = new CustomEvent('SavePerKeyDataLimitRequested', {
+      detail: {ui: this},
       // Required for the event to bubble past a shadow DOM boundary
       bubbles: true,
       composed: true,

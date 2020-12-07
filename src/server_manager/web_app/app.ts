@@ -26,7 +26,7 @@ import * as digitalocean_server from './digitalocean_server';
 import {DisplayServer, DisplayServerRepository, makeDisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
-import {OutlineKeySettings} from './ui_components/outline-key-settings.js';
+import {OutlinePerKeyDataLimitDialog} from './ui_components/outline-per-key-data-limit-dialog.js';
 import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, DisplayDataAmount, MY_CONNECTION_USER_ID, ServerView} from './ui_components/outline-server-view.js';
 
@@ -179,8 +179,8 @@ export class App {
       this.removeAccessKey(event.detail.accessKeyId);
     });
 
-    appRoot.addEventListener('OpenKeySettingsDialogRequested', (event: CustomEvent) => {
-      appRoot.openKeySettingsDialog(event.detail.accessKey, event.detail.defaultDataLimit);
+    appRoot.addEventListener('OpenPerKeyDataLimitDialogRequested', (event: CustomEvent) => {
+      appRoot.openPerKeyDataLimitDialog(event.detail.accessKey, event.detail.defaultDataLimit);
     });
 
     appRoot.addEventListener('RenameAccessKeyRequested', (event: CustomEvent) => {
@@ -195,8 +195,8 @@ export class App {
       this.removeDefaultDataLimit();
     });
 
-    appRoot.addEventListener('SaveKeySettingsRequested', (event: CustomEvent) => {
-      this.saveKeySettings(event.detail.keySettings);
+    appRoot.addEventListener('SavePerKeyDataLimitRequested', (event: CustomEvent) => {
+      this.savePerKeyDataLimit(event.detail.ui);
     });
 
     appRoot.addEventListener('ChangePortForNewAccessKeysRequested', (event: CustomEvent) => {
@@ -1080,18 +1080,18 @@ export class App {
     }
   }
 
-  private async saveKeySettings(settings: OutlineKeySettings) {
+  private async savePerKeyDataLimit(ui: OutlinePerKeyDataLimitDialog) {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
     const serverView = this.appRoot.getServerView(this.appRoot.selectedServer.id);
     try {
-      if (settings.dataLimitChanged()) {
-        const dataLimit = settings.dataLimitAmount();
+      if (ui.dataLimitChanged()) {
+        const dataLimit = ui.dataLimitAmount();
         await this.selectedServer.setAccessKeyDataLimit(
-            settings.key.id, displayDataAmountToDataLimit(dataLimit));
+            ui.key.id, displayDataAmountToDataLimit(dataLimit));
         this.refreshTransferStats(this.selectedServer, serverView);
-        settings.key.dataLimit = dataLimit;
+        ui.key.dataLimit = dataLimit;
       }
-      settings.close();
+      ui.close();
       this.appRoot.showNotification(this.appRoot.localize('saved'));
     } catch (error) {
       // TODOBEFOREPUSH error handling
