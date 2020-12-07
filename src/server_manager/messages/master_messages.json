@@ -525,28 +525,6 @@
       }
     }
   },
-  "key_settings_data_limit_label": {
-    "message": "Data Limit",
-    "Description": "This string appears in the key settings dialog as the label to the input where a user can set a data limit for an access key."
-  },
-  "key_settings_data_limits_title": {
-    "message": "Data limits:",
-    "description": "This string is the title of the section in the key settings dialog where you can assign a data limit to an access key."
-  },
-  "key_settings_set_custom": {
-    "message": "Set a custom data limit",
-    "description": "This string appears next to a checkbox in the key settings dialog which, when selected, shows the input to add a data limit to an access key"
-  },
-  "key_settings_title": {
-    "message": "Key Settings - $KEY_NAME$",
-    "description": "This string appears as the title of the key settings dialog.",
-    "placeholders": {
-      "KEY_NAME": {
-        "content": "{keyName}",
-        "Example": "Key 1"
-      }
-    }
-  },
   "manual_server_assign_firewall": {
     "message": "Assign firewall rule",
     "description": "This string appears in the server setup view as a sub-header of a section that provides instructions to configure the server's firewall."
@@ -724,6 +702,24 @@
   "okay": {
     "message": "OK",
     "description": "This string appears across the application as a button. It lets the user acknowledge displayed information. Clicking dismisses the enclosing UI element."
+  },
+  "per_key_data_limit_dialog_label": {
+    "message": "Data Limit",
+    "Description": "This string appears in the per-key data limit dialog as the label to the input where a user can set a data limit for an access key."
+  },
+  "per_key_data_limit_dialog_set_custom": {
+    "message": "Set a custom data limit",
+    "description": "This string appears next to a checkbox in the per-key data limit dialog which, when selected, shows the input to add a data limit to an access key"
+  },
+  "per_key_data_limit_dialog_title": {
+    "message": "Data Limit - $KEY_NAME$",
+    "description": "This string appears as the title of the per-key data limit dialog.",
+    "placeholders": {
+      "KEY_NAME": {
+        "content": "{keyName}",
+        "Example": "Key 1"
+      }
+    }
   },
   "region_description": {
     "message": "This is where your internet experience will come from.",

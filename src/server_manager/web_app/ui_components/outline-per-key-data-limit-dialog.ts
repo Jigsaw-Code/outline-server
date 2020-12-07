@@ -147,17 +147,17 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
       <paper-dialog id="container">
         <div id="headerSection">
           <img id="keyIcon" src="../../images/key-avatar.svg" />
-          <h3>${this.localize('key-settings-title', 'keyName', keyName)}</h3>
+          <h3>${this.localize('per-key-data-limit-dialog-title', 'keyName', keyName)}</h3>
         </div>
         <div class="settings-section">
           <paper-checkbox ?checked=${this.showCustomDataLimitDialog} @tap=${
         this.setCustomLimitTapped}>
-            ${this.localize('key-settings-set-custom')}
+            ${this.localize('per-key-data-limit-dialog-set-custom')}
           </paper-checkbox>
           <div id="dataLimitsMenu" ?hidden=${!this.showCustomDataLimitDialog}>
             <paper-input
               id="dataLimitInput"
-              label=${this.localize('key-settings-data-limit-label')}
+              label=${this.localize('per-key-data-limit-dialog-label')}
               always-float-label
               allowed-pattern="[0-9]+"
               value=${this.activeDataLimit()?.value || ''}
@@ -177,9 +177,9 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
           </div>
         </div>
         <div id="buttonsContainer">
-          <!-- TODOBEFOREPUSH localize button text -->
-          <paper-button id="save" @tap=${this.saveKeySettings}>Save</paper-button>
-          <paper-button @tap=${this.close}>Cancel</paper-button>
+          <paper-button id="save" @tap=${this.saveKeySettings}>${
+        this.localize('save')}</paper-button>
+          <paper-button @tap=${this.close}>${this.localize('cancel')}</paper-button>
         </div>
       </paper-dialog>
     `;
