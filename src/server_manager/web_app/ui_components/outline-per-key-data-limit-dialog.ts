@@ -72,22 +72,21 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
           line-height: 24px;
         }
 
-        .settings-section {
+        #menuSection {
           flex: 1;
           padding: 0 78px;
           margin-top: 10px;
         }
 
-        #buttonsContainer {
+        #buttonsSection {
           margin-top: 10px;
           display: flex;
-          flex-direction:  row-reverse;
+          flex-direction: row-reverse;
         }
 
         paper-button {
           display: flex;
           height: 36px;
-          width: 30px;
           text-align: center;
         }
 
@@ -96,12 +95,12 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
           color: #fff;
         }
 
-        #dataLimitsMenu {
+        #menu {
           display: flex;
           flex-flow: row nowrap;
         }
 
-        #dataLimitUnits {
+        #unitsDropdown {
           width: 50px;
           padding: 0 10px;
         }
@@ -130,7 +129,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     return html`
       <style>
         /* Custom element mixins with brackets don't work in style() */
-        #dataLimitUnits {
+        #unitsDropdown {
           --paper-input-container-underline: {
             display: none;
           }
@@ -138,7 +137,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
             display: none;
           }
         }
-        paper-input {
+        #dataLimitInput {
           --paper-input-container-label-focus: {
             color: rgb(123, 123, 123);
           }
@@ -149,12 +148,12 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
           <img id="keyIcon" src="../../images/key-avatar.svg" />
           <h3>${this.localize('per-key-data-limit-dialog-title', 'keyName', keyName)}</h3>
         </div>
-        <div class="settings-section">
+        <div id="menuSection">
           <paper-checkbox ?checked=${this.showCustomDataLimitDialog} @tap=${
         this.setCustomLimitTapped}>
             ${this.localize('per-key-data-limit-dialog-set-custom')}
           </paper-checkbox>
-          <div id="dataLimitsMenu" ?hidden=${!this.showCustomDataLimitDialog}>
+          <div id="menu" ?hidden=${!this.showCustomDataLimitDialog}>
             <paper-input
               id="dataLimitInput"
               label=${this.localize('per-key-data-limit-dialog-label')}
@@ -164,7 +163,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
               size="7"
             >
             </paper-input>
-            <paper-dropdown-menu id="dataLimitUnits" noink>
+            <paper-dropdown-menu id="unitsDropdown" noink>
               <paper-listbox
                 slot="dropdown-content"
                 attr-for-selected="name"
@@ -176,7 +175,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
             </paper-dropdown-menu>
           </div>
         </div>
-        <div id="buttonsContainer">
+        <div id="buttonsSection">
           <paper-button id="save" @tap=${this.saveKeySettings}>${
         this.localize('save')}</paper-button>
           <paper-button @tap=${this.close}>${this.localize('cancel')}</paper-button>
@@ -185,17 +184,20 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     `;
   }
 
+  private _queryAs<T extends HTMLElement>(selector: string): T {
+    return this.shadowRoot.querySelector(selector) as T;
+  }
+
   private _dataLimitValue() {
-    return Number((this.shadowRoot.querySelector('#dataLimitInput') as PaperInputElement).value);
+    return Number(this._queryAs<PaperInputElement>('#dataLimitInput').value);
   }
 
   private _dataLimitType() {
-    return (this.shadowRoot.querySelector('#dataLimitUnits') as PaperDropdownMenuElement)
-               .selectedItemLabel as 'GB' |
+    return this._queryAs<PaperDropdownMenuElement>('#unitsDropdown').selectedItemLabel as 'GB' |
         'MB';
   }
 
-  private activeDataLimit() {
+  private activeDataLimit(): DisplayDataAmount|undefined {
     // Returns the limit which currently is enforced on this key, or undefined if there is none.
     return this.key?.dataLimit || this.serverDefaultLimit;
   }
@@ -204,7 +206,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     this.showCustomDataLimitDialog = !this.showCustomDataLimitDialog;
     if (this.showCustomDataLimitDialog) {
       await this.updateComplete;
-      (this.shadowRoot.querySelector('#dataLimitInput') as HTMLElement).focus();
+      this._queryAs<HTMLElement>('#dataLimitInput').focus();
     }
   }
 
@@ -237,10 +239,10 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     this.key = accessKey;
     this.serverDefaultLimit = serverDefaultLimit;
     this.showCustomDataLimitDialog = !!accessKey.dataLimit;
-    (this.shadowRoot.querySelector('#container') as PaperDialogElement).open();
+    this._queryAs<PaperDialogElement>('#container').open();
   }
 
   public close() {
-    (this.shadowRoot.querySelector('#container') as PaperDialogElement).close();
+    this._queryAs<PaperDialogElement>('#container').close();
   }
 }
