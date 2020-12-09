@@ -22,7 +22,7 @@ export interface DisplayServer {
 }
 
 // Returns a `DisplayServer` corresponding to `server`.
-export async function makeDisplayServer(server: server.Server) {
+export async function makeDisplayServer(server: server.Server): Promise<DisplayServer> {
   return {
     id: server.getManagementApiUrl(),
     name: await server.isHealthy().catch((e) => false) ? server.getName() :

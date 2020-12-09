@@ -352,7 +352,7 @@ export class AppRoot extends mixinBehaviors
                 </paper-menu-button>
               </div>
               <div class="servers-container">
-                <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
+                <template is="dom-repeat" items="{{managedServerList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
                   <div class\$="server {{_computeServerClasses(selectedServer, server)}}" data-server\$="[[server]]" on-tap="_showServer">
                     <img class="server-icon" src\$="images/{{_computeServerImage(selectedServer, server)}}">
                     <span>{{server.name}}</span>
@@ -361,12 +361,12 @@ export class AppRoot extends mixinBehaviors
               </div>
             </div>
             <!-- Manual servers -->
-            <div class="servers-section" hidden\$="{{!hasManualServers}}">
+            <div class="servers-section" hidden\$="{{manualServerList.length === 0}}">
               <div class="servers-header">
                 <span>[[localize('servers-manual')]]</span>
               </div>
               <div class="servers-container">
-                <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
+                <template is="dom-repeat" items="{{manualServerList}}" as="server" sort="_sortServersByName">
                   <div class\$="server {{_computeServerClasses(selectedServer, server)}}" data-server\$="[[server]]" on-tap="_showServer">
                     <img class="server-icon" src\$="images/{{_computeServerImage(selectedServer, server)}}">
                     <span>{{server.name}}</span>
@@ -412,7 +412,10 @@ export class AppRoot extends mixinBehaviors
               <outline-region-picker-step id="regionPicker" localize="[[localize]]"></outline-region-picker-step>
               <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
               <div id="serverView">
-                <template is="dom-repeat" items="{{serverList}}" as="server">
+                <template is="dom-repeat" items="{{managedServerList}}" as="server">
+                  <outline-server-view id="serverView-{{_base64Encode(server.id)}}" localize="[[localize]]" hidden\$="{{!_isServerSelected(selectedServer, server)}}"></outline-server-view>
+                </template>
+                <template is="dom-repeat" items="{{manualServerList}}" as="server">
                   <outline-server-view id="serverView-{{_base64Encode(server.id)}}" localize="[[localize]]" hidden\$="{{!_isServerSelected(selectedServer, server)}}"></outline-server-view>
                 </template>
               </div>
@@ -431,16 +434,16 @@ export class AppRoot extends mixinBehaviors
             <!-- DigitalOcean servers -->
             <div class="side-bar-section servers-section" hidden\$="{{!isSignedInToDigitalOcean}}">
               <img class="provider-icon" src="images/do_white_logo.svg">
-              <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
+              <template is="dom-repeat" items="{{managedServerList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
                 <div class\$="server {{_computeServerClasses(selectedServer, server)}}" data-server\$="[[server]]" on-tap="_showServer">
                   <img class="server-icon" src\$="images/{{_computeServerImage(selectedServer, server)}}">
                 </div>
               </template>
             </div>
             <!-- Manual servers -->
-            <div class="side-bar-section servers-section" hidden\$="{{!hasManualServers}}">
+            <div class="side-bar-section servers-section" hidden\$="{{manualServerList.length === 0}}">
               <img class="provider-icon" src="images/cloud.svg">
-              <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
+              <template is="dom-repeat" items="{{manualServerList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
                 <div class\$="server {{_computeServerClasses(selectedServer, server)}}" data-server\$="[[server]]" on-tap="_showServer">
                   <img class="server-icon" src\$="images/{{_computeServerImage(selectedServer, server)}}">
                 </div>
@@ -497,13 +500,10 @@ export class AppRoot extends mixinBehaviors
       // An array of {id, name, dir} language objects.
       supportedLanguages: {type: Array, readonly: true},
       useKeyIfMissing: {type: Boolean},
-      serverList: {type: Array},
+      manualServerList: {type: Array},
       selectedServer: {type: Object},
-      hasManualServers: {
-        type: Boolean,
-        computed: '_computeHasManualServers(serverList.*)',
-      },
       adminEmail: {type: String},
+      managedServerList: {type: Array},
       isSignedInToDigitalOcean: {
         type: Boolean,
         computed: '_computeIsSignedInToDigitalOcean(adminEmail)',
@@ -531,15 +531,21 @@ export class AppRoot extends mixinBehaviors
     super();
     /** @type {DisplayServer} */
     this.selectedServer = undefined;
+    /** @type {DisplayServer[]} */
+    this.manualServerList = [];
+
     this.language = '';
     this.supportedLanguages = [];
     this.useKeyIfMissing = true;
-    /** @type {DisplayServer[]} */
-    this.serverList = [];
-    this.adminEmail = '';
     this.outlineVersion = '';
     this.currentPage = 'intro';
     this.shouldShowSideBar = false;
+
+    // TODO: Replace adminEmail and serverList with DisplayAccount
+    // TODO: Remove/refactor _computeIsSignedInToDigitalOcean
+    this.adminEmail = '';
+    /** @type {DisplayServer[]} */
+    this.managedServerList = [];
 
     this.addEventListener('RegionSelected', this.handleRegionSelected);
     this.addEventListener(
@@ -726,10 +732,6 @@ export class AppRoot extends mixinBehaviors
   }
   _computeIsSignedInToDigitalOcean(adminEmail) {
     return Boolean(adminEmail);
-  }
-
-  _computeHasManualServers(serverList) {
-    return this.serverList.filter(server => !server.isManaged).length > 0;
   }
 
   _userAcceptedTosChanged(userAcceptedTos) {
