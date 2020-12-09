@@ -199,6 +199,10 @@ export class App {
       this.savePerKeyDataLimit(event.detail.ui);
     });
 
+    appRoot.addEventListener('RemovePerKeyDataLimitRequested', (event: CustomEvent) => {
+      this.removePerKeyDataLimit(event.detail.ui);
+    });
+
     appRoot.addEventListener('ChangePortForNewAccessKeysRequested', (event: CustomEvent) => {
       this.setPortForNewAccessKeys(event.detail.validatedInput, event.detail.ui);
     });
@@ -1096,6 +1100,23 @@ export class App {
       console.error(`Failed to set data limit for access key ${ui.keyId()}: ${error}`);
       ui.reset();
       this.appRoot.showError(this.appRoot.localize('error-set-per-key-limit'));
+    }
+  }
+
+  private async removePerKeyDataLimit(ui: OutlinePerKeyDataLimitDialog) {
+    this.appRoot.showNotification(this.appRoot.localize('saving'));
+    const serverView = this.appRoot.getServerView(this.appRoot.selectedServer.id);
+    try {
+      if (ui.dataLimitChanged()) {
+        await this.selectedServer.removeAccessKeyDataLimit(ui.keyId());
+        this.refreshTransferStats(this.selectedServer, serverView);
+      }
+      ui.saveAndClose();
+      this.appRoot.showNotification(this.appRoot.localize('saved'));
+    } catch (error) {
+      console.error(`Failed to remove data limit from access key ${ui.keyId()}: ${error}`);
+      ui.reset();
+      this.appRoot.showError(this.appRoot.localize('error-remove-per-key-limit'));
     }
   }
 

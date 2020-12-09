@@ -52,7 +52,7 @@
   "error-network": "A network error occurred.",
   "error-not-saved": "Not Saved",
   "error-remove-data-limit": "Could not disable default data limit",
-  "error-remove-per-key-limit": "Could not set data limit for this access key",
+  "error-remove-per-key-limit": "Could not remove data limit from this access key",
   "error-server-creation": "There was an error creating your Outline server.",
   "error-server-destroy": "Failed to destroy server",
   "error-server-removed": "{serverName} no longer present in your DigitalOcean account.",

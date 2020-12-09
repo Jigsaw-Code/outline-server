@@ -388,6 +388,12 @@ class FakeServer implements server.Server {
   setPortForNewAccessKeys(): Promise<void> {
     return Promise.reject(new Error('FakeServer.setPortForNewAccessKeys not implemented'));
   }
+  setAccessKeyDataLimit(accessKeyId: string, limit: server.DataLimit): Promise<void> {
+    return Promise.reject(new Error('FakeServer.setAccessKeyDataLimit not implemented'));
+  }
+  removeAccessKeyDataLimit(accessKeyId: string): Promise<void> {
+    return Promise.reject(new Error('FakeServer.removeAccessKeyDataLimit not implemented'));
+  }
   setDefaultDataLimit(limit: server.DataLimit): Promise<void> {
     return Promise.reject(new Error('FakeServer.setDefaultDataLimit not implemented'));
   }

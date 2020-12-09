@@ -316,7 +316,7 @@
     "description": "This string appears in an error notification toast. It is shown on failure to set the data transfer limit on a particular access key."
   },
   "error_remove_per_key_limit": {
-    "message": "Could not set data limit for this access key",
+    "message": "Could not remove data limit from this access key",
     "description": "This string appears in an error notification toast. It is shown on failure to remove the data transfer limit on a particular access key."
   },
   "experiments": {

@@ -25,11 +25,11 @@ import '@polymer/paper-listbox/paper-listbox';
 import {PaperDialogElement} from '@polymer/paper-dialog/paper-dialog';
 import {PaperDropdownMenuElement} from '@polymer/paper-dropdown-menu/paper-dropdown-menu';
 import {PaperInputElement} from '@polymer/paper-input/paper-input';
+import {PaperListboxElement} from '@polymer/paper-listbox/paper-listbox';
 import {css, customElement, html, internalProperty, LitElement, property} from 'lit-element';
 
 import {COMMON_STYLES} from './cloud-install-styles';
 import {DisplayAccessKey, DisplayDataAmount} from './outline-server-view';
-import { PaperListboxElement } from '@polymer/paper-listbox/paper-listbox';
 
 /*
   This component is a floating window representing settings specific to individual access keys.
@@ -194,20 +194,20 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     `;
   }
 
-  
+
   private _queryAs<T extends HTMLElement>(selector: string): T {
     return this.shadowRoot.querySelector(selector) as T;
   }
-  
+
   private _dataLimitValue() {
     return Number(this._queryAs<PaperInputElement>('#dataLimitInput').value);
   }
-  
+
   private _dataLimitType() {
     return this._queryAs<PaperDropdownMenuElement>('#unitsDropdown').selectedItemLabel as 'GB' |
-    'MB';
+        'MB';
   }
-  
+
   private _initialUnit() {
     return this._activeDataLimit()?.unit || 'GB';
   }

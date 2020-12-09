@@ -107,6 +107,11 @@ export class ShadowboxServer implements server.Server {
     await this.apiRequest<void>(`access-keys/${keyId}/data-limit`, requestOptions);
   }
 
+  async removeAccessKeyDataLimit(keyId: server.AccessKeyId): Promise<void> {
+    console.info(`Removing data limit from access key ${keyId}`);
+    await this.apiRequest<void>(`access-keys/${keyId}/data-limit`, {method: 'DELETE'});
+  }
+
   getDataUsage(): Promise<server.DataUsageByAccessKey> {
     return this.apiRequest<server.DataUsageByAccessKey>('metrics/transfer');
   }
