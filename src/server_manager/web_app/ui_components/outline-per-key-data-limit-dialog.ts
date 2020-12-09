@@ -29,6 +29,7 @@ import {css, customElement, html, internalProperty, LitElement, property} from '
 
 import {COMMON_STYLES} from './cloud-install-styles';
 import {DisplayAccessKey, DisplayDataAmount} from './outline-server-view';
+import { PaperListboxElement } from '@polymer/paper-listbox/paper-listbox';
 
 /*
   This component is a floating window representing settings specific to individual access keys.
@@ -45,7 +46,6 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   @internalProperty() serverDefaultLimit: DisplayDataAmount = null;
   @internalProperty() showCustomDataLimitDialog = false;
   @property({type: Function}) localize: Function;
-
 
   static get styles() {
     return [
@@ -168,15 +168,16 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
               label=${this.localize('per-key-data-limit-dialog-label')}
               always-float-label
               allowed-pattern="[0-9]+"
-              value=${this._activeDataLimit()?.value || ''}
+              value=${this._initialValue()}
               size="7"
             >
             </paper-input>
             <paper-dropdown-menu id="unitsDropdown" noink>
               <paper-listbox
+                id="unitsListbox"
                 slot="dropdown-content"
                 attr-for-selected="name"
-                selected="${this._activeDataLimit()?.unit || 'GB'}"
+                selected="${this._initialUnit()}"
               >
                 <paper-item name="GB">GB</paper-item>
                 <paper-item name="MB">MB</paper-item>
@@ -193,17 +194,26 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     `;
   }
 
+  
   private _queryAs<T extends HTMLElement>(selector: string): T {
     return this.shadowRoot.querySelector(selector) as T;
   }
-
+  
   private _dataLimitValue() {
     return Number(this._queryAs<PaperInputElement>('#dataLimitInput').value);
   }
-
+  
   private _dataLimitType() {
     return this._queryAs<PaperDropdownMenuElement>('#unitsDropdown').selectedItemLabel as 'GB' |
-        'MB';
+    'MB';
+  }
+  
+  private _initialUnit() {
+    return this._activeDataLimit()?.unit || 'GB';
+  }
+
+  private _initialValue() {
+    return this._activeDataLimit()?.value.toString() || '';
   }
 
   private _activeDataLimit(): DisplayDataAmount|undefined {
@@ -274,6 +284,13 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   public saveAndClose() {
     this.key.dataLimit = this.inputDataLimit();
     this.close();
+  }
+
+  public reset() {
+    this.showCustomDataLimitDialog = !!this.key?.dataLimit;
+    // Manually reset the value to clear user input
+    this._queryAs<PaperInputElement>('#dataLimitInput').value = this._initialValue();
+    this._queryAs<PaperListboxElement>('#unitsListbox').select(this._initialUnit());
   }
 
   private close() {

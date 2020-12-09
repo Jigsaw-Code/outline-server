@@ -1093,8 +1093,9 @@ export class App {
       ui.saveAndClose();
       this.appRoot.showNotification(this.appRoot.localize('saved'));
     } catch (error) {
-      // TODOBEFOREPUSH error handling
-      console.error(`!!!!! ${error}`);
+      console.error(`Failed to set data limit for access key ${ui.keyId()}: ${error}`);
+      ui.reset();
+      this.appRoot.showError(this.appRoot.localize('error-set-per-key-limit'));
     }
   }
 
