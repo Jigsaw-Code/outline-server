@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {KeyValueStorage} from "../infrastructure/key_value_storage";
-import {CloudProviderId} from "../model/cloud";
-import {ManagedServerRepository} from "../model/server";
-import {DigitalOceanServerRepositoryFactory, DigitalOceanSessionFactory} from "./app";
+import {KeyValueStorage} from '../infrastructure/key_value_storage';
+import {CloudProviderId} from '../model/cloud';
+import {ManagedServerRepository} from '../model/server';
+import {DigitalOceanServerRepositoryFactory, DigitalOceanSessionFactory} from './app';
 
 // TODO: Make generic once we introduce the Account model.
 export interface AccountPersistence {
@@ -34,20 +34,16 @@ export class AccountRepository {
   constructor(
       private accountRepository: KeyValueStorage<PersistedAccount, string>,
       private storageKey: string) {
-    this.accountModelFactories.set(CloudProviderId.DigitalOcean, );
+    this.accountModelFactories.set(
+        CloudProviderId.DigitalOcean,
+    );
   }
 
-  getDigitalOceanAccount(): ManagedServerRepository {
+  getDigitalOceanAccount(): ManagedServerRepository {}
 
-  }
+  setDigitalOceanAccount(account: ManagedServerRepository): Promise<void> {}
 
-  setDigitalOceanAccount(account: ManagedServerRepository): Promise<void> {
-
-  }
-
-  list(): Promise<ManagedServerRepository> {
-
-  }
+  list(): Promise<ManagedServerRepository> {}
 }
 
 interface DigitalOceanAccount {
@@ -58,10 +54,7 @@ interface DigitalOceanAccount {
 class DigitalOceanAccountPersistence implements AccountPersistence {
   constructor(
       private createDigitalOceanSession: DigitalOceanSessionFactory,
-      private createDigitalOceanServerRepository: DigitalOceanServerRepositoryFactory
-  ) {
-
-  }
+      private createDigitalOceanServerRepository: DigitalOceanServerRepositoryFactory) {}
 
   load(account: object): Promise<ManagedServerRepository> {
     const digitalOceanAccount = account as DigitalOceanAccount;

@@ -20,6 +20,7 @@ import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
+import {ManagedServer} from '../model/server';
 
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
@@ -28,7 +29,6 @@ import {parseManualServerConfig} from './management_urls';
 import {AppRoot} from './ui_components/app-root.js';
 import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
-import {ManagedServer} from "../model/server";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -134,7 +134,8 @@ function localizeDate(date: Date, language: string): string {
   return date.toLocaleString(language, {year: 'numeric', month: 'long', day: 'numeric'});
 }
 
-export type DigitalOceanSessionFactory = (accessToken: string) => digitalocean_api.DigitalOceanSession;
+export type DigitalOceanSessionFactory = (accessToken: string) =>
+    digitalocean_api.DigitalOceanSession;
 export type DigitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) =>
     server.ManagedServerRepository;
 
@@ -293,7 +294,8 @@ export class App {
     appRoot.addEventListener('ShowServerRequested', async (event: CustomEvent) => {
       // TODO: Maybe fold this logic into handleShowServerRequested
       const manualServers = await this.manualServerRepository.listServers();
-      const manualServer = manualServers.find((server) => server.getManagementApiUrl() === event.detail.displayServerId);
+      const manualServer = manualServers.find(
+          (server) => server.getManagementApiUrl() === event.detail.displayServerId);
       if (manualServer) {
         // TODO: Add display server cache for manual servers because we should
         //  show the servers in the sidebar even if they're not reachable.
@@ -324,7 +326,8 @@ export class App {
 
   private async loadDigitalOceanServers(): Promise<void> {
     const accessToken = this.digitalOceanTokenManager.getStoredToken();
-    const managedServers = !!accessToken ? await this.enterDigitalOceanMode(accessToken).catch(e => []) : [];
+    const managedServers =
+        !!accessToken ? await this.enterDigitalOceanMode(accessToken).catch(e => []) : [];
     const installedManagedServers = managedServers.filter(server => server.isInstallCompleted());
     const serverBeingCreated = managedServers.find(server => !server.isInstallCompleted());
     if (!!serverBeingCreated) {
@@ -400,8 +403,9 @@ export class App {
       }
       this.appRoot.managedServerList = displayServers;
 
-      // const managedDisplayServers = displayServers.filter((displayServer) => displayServer.isManaged);
-      // const manualDisplayServers = displayServers.filter((displayServer) => !displayServer.isManaged);
+      // const managedDisplayServers = displayServers.filter((displayServer) =>
+      // displayServer.isManaged); const manualDisplayServers =
+      // displayServers.filter((displayServer) => !displayServer.isManaged);
       // this.appRoot.managedServerList = managedDisplayServers;
       // this.appRoot.manualServerList = manualDisplayServers;
     });
@@ -582,7 +586,8 @@ export class App {
     });
   }
 
-  private async showServerIfHealthy(server: server.Server, displayServer: DisplayServer): Promise<void> {
+  private async showServerIfHealthy(server: server.Server, displayServer: DisplayServer):
+      Promise<void> {
     const isHealthy = await server.isHealthy();
     if (isHealthy) {
       // Sync the server display in case it was previously unreachable.
@@ -608,12 +613,11 @@ export class App {
       // app.
       let serverExistsPromise = Promise.resolve(true);
       if (serverView.isServerManaged && !!this.digitalOceanRepository) {
-        serverExistsPromise =
-            this.digitalOceanRepository.listServers().then((managedServers) => {
-              return this.getServerFromRepository(displayServer).then((server) => {
-                return !!server;
-              });
-            });
+        serverExistsPromise = this.digitalOceanRepository.listServers().then((managedServers) => {
+          return this.getServerFromRepository(displayServer).then((server) => {
+            return !!server;
+          });
+        });
       }
       serverExistsPromise.then((serverExists: boolean) => {
         if (serverExists) {
