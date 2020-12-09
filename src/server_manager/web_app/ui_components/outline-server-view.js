@@ -239,7 +239,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       }
       .measurement-container {
         display: flex;
-        flex: 3;
+        flex: 4;
         align-items: center;
       }
       .measurement-container paper-progress {
@@ -262,12 +262,16 @@ export class ServerView extends DirMixin(PolymerElement) {
       }
       .measurement {
         /* Space the usage bars evenly */
-        min-width: 9ch;
+        width: 19ch;
         /* We don't want numbers separated from their units */
         white-space: nowrap;
         font-size: 14px;
         color: var(--medium-gray);
         line-height: 24px;
+      }
+      .measurement > span {
+        /* This fixes RTL rendering for data limits */
+        display: inline-block;
       }
       .access-key-container {
         display: flex;
@@ -497,7 +501,15 @@ export class ServerView extends DirMixin(PolymerElement) {
                 </div>
               </span>
               <span class="measurement-container">
-                <span class="measurement">[[_formatBytesTransferred(myConnection.transferredBytes, "...")]]</span>
+                <span class="measurement">
+                  <span>
+                    [[_formatBytesTransferred(myConnection.transferredBytes, "0 MB")]]
+                  </span>
+                    [[_dataLimitSeparator(myConnection)]]
+                  <span>
+                    [[_formatDataLimitForKey(myConnection)]]
+                    </span>
+                  </span>
                 <paper-progress value="[[myConnection.relativeTraffic]]" class\$="[[_computePaperProgressClass(myConnection)]]"></paper-progress>
                 <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!_activeDataLimitForKey(myConnection)]]">
                   [[_getDataLimitsUsageString(myConnection)]]
@@ -522,7 +534,15 @@ export class ServerView extends DirMixin(PolymerElement) {
                     <input type="text" class="access-key-name" id\$="access-key-[[item.id]]" placeholder="{{item.placeholderName}}" value="[[item.name]]" on-blur="_handleNameInputBlur" on-keydown="_handleNameInputKeyDown">
                   </span>
                   <span class="measurement-container">
-                    <span class="measurement">[[_formatBytesTransferred(item.transferredBytes, "...")]]</span>
+                    <span class="measurement">
+                      <span>
+                      [[_formatBytesTransferred(item.transferredBytes, "0 MB")]]
+                      </span>
+                      [[_dataLimitSeparator(item)]]
+                      <span>
+                      [[_formatDataLimitForKey(item)]]
+                      </span>
+                    </span>
                     <paper-progress value="[[item.relativeTraffic]]" class\$="[[_computePaperProgressClass(item)]]"></paper-progress>
                     <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!_activeDataLimitForKey(item)]]">
                       [[_getDataLimitsUsageString(item)]]
@@ -815,6 +835,18 @@ export class ServerView extends DirMixin(PolymerElement) {
       }
     }
   }
+  
+  _dataLimitSeparator(key) {
+    return this._activeDataLimitForKey(key) ? ' / ' : '';
+  }
+
+  _formatDataLimitForKey(key) {
+    return this._formatDisplayDataLimit(this._activeDataLimitForKey(key))
+  }
+
+  _formatDisplayDataLimit(limit) {
+    return limit ? `${limit.value} ${limit.unit}` : '';
+  }
 
   _formatBytesTransferred(numBytes, emptyValue = '') {
     if (!numBytes) {
@@ -997,12 +1029,10 @@ export class ServerView extends DirMixin(PolymerElement) {
       // We're in app startup
       return '';
     }
+    // TODOBEFOREPUSH we shouldn't need this
     const activeDataLimit = this._activeDataLimitForKey(accessKey);
-    if (!activeDataLimit) {
-      return '';
-    }
     const used = this._formatBytesTransferred(accessKey.transferredBytes, '0');
-    const total = activeDataLimit.value + ' ' + activeDataLimit.unit;
+    const total = this._formatDisplayDataLimit(activeDataLimit);
     return this.localize('data-limits-usage', 'used', used, 'total', total);
   }
 }
