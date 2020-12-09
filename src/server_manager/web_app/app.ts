@@ -1085,13 +1085,12 @@ export class App {
     const serverView = this.appRoot.getServerView(this.appRoot.selectedServer.id);
     try {
       if (ui.dataLimitChanged()) {
-        const dataLimit = ui.dataLimitAmount();
+        const dataLimit = ui.inputDataLimit();
         await this.selectedServer.setAccessKeyDataLimit(
-            ui.key.id, displayDataAmountToDataLimit(dataLimit));
+            ui.keyId(), displayDataAmountToDataLimit(dataLimit));
         this.refreshTransferStats(this.selectedServer, serverView);
-        ui.key.dataLimit = dataLimit;
       }
-      ui.close();
+      ui.saveAndClose();
       this.appRoot.showNotification(this.appRoot.localize('saved'));
     } catch (error) {
       // TODOBEFOREPUSH error handling

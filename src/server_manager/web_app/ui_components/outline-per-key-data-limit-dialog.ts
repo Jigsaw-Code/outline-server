@@ -34,14 +34,18 @@ import {DisplayAccessKey, DisplayDataAmount} from './outline-server-view';
   This component is a floating window representing settings specific to individual access keys.
   Its state is dynamically set when it's opened using the open() method instead of with any in-HTML
   attributes.
+
+  This element maintains an invariant that the ui key data limit is never saved until it is
+  saved on the server.  This means we can use the state of the key to keep track of the initial
+  state of the element.
 */
 @customElement('outline-per-key-data-limit-dialog')
 export class OutlinePerKeyDataLimitDialog extends LitElement {
+  @internalProperty() key: DisplayAccessKey = null;
   @internalProperty() serverDefaultLimit: DisplayDataAmount = null;
   @internalProperty() showCustomDataLimitDialog = false;
   @property({type: Function}) localize: Function;
 
-  public key: DisplayAccessKey = null;
 
   static get styles() {
     return [
@@ -93,6 +97,11 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
         #save {
           background-color: var(--primary-green);
           color: #fff;
+        }
+
+        #save[disabled] {
+          color: var(--dark-gray);
+          background-color: rgba(0, 0, 0, 0.13);
         }
 
         #menu {
@@ -150,7 +159,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
         </div>
         <div id="menuSection">
           <paper-checkbox ?checked=${this.showCustomDataLimitDialog} @tap=${
-        this.setCustomLimitTapped}>
+        this._setCustomLimitTapped}>
             ${this.localize('per-key-data-limit-dialog-set-custom')}
           </paper-checkbox>
           <div id="menu" ?hidden=${!this.showCustomDataLimitDialog}>
@@ -159,7 +168,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
               label=${this.localize('per-key-data-limit-dialog-label')}
               always-float-label
               allowed-pattern="[0-9]+"
-              value=${this.activeDataLimit()?.value || ''}
+              value=${this._activeDataLimit()?.value || ''}
               size="7"
             >
             </paper-input>
@@ -167,7 +176,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
               <paper-listbox
                 slot="dropdown-content"
                 attr-for-selected="name"
-                selected="${this.activeDataLimit()?.unit || 'GB'}"
+                selected="${this._activeDataLimit()?.unit || 'GB'}"
               >
                 <paper-item name="GB">GB</paper-item>
                 <paper-item name="MB">MB</paper-item>
@@ -176,7 +185,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
           </div>
         </div>
         <div id="buttonsSection">
-          <paper-button id="save" @tap=${this.saveKeySettings}>${
+          <paper-button id="save" @tap=${this._sendSaveEvent}>${
         this.localize('save')}</paper-button>
           <paper-button @tap=${this.close}>${this.localize('cancel')}</paper-button>
         </div>
@@ -197,12 +206,12 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
         'MB';
   }
 
-  private activeDataLimit(): DisplayDataAmount|undefined {
+  private _activeDataLimit(): DisplayDataAmount|undefined {
     // Returns the limit which currently is enforced on this key, or undefined if there is none.
     return this.key?.dataLimit || this.serverDefaultLimit;
   }
 
-  private async setCustomLimitTapped() {
+  private async _setCustomLimitTapped() {
     this.showCustomDataLimitDialog = !this.showCustomDataLimitDialog;
     if (this.showCustomDataLimitDialog) {
       await this.updateComplete;
@@ -210,29 +219,49 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     }
   }
 
-  private saveKeySettings() {
-    const event = new CustomEvent('SavePerKeyDataLimitRequested', {
+  private _sendSaveEvent() {
+    const change = this._dataLimitChange();
+    const eventName = `${change === Change.REMOVED ? 'Remove' : 'Save'}PerKeyDataLimitRequested`;
+
+    this.dispatchEvent(new CustomEvent(eventName, {
       detail: {ui: this},
       // Required for the event to bubble past a shadow DOM boundary
       bubbles: true,
       composed: true,
-    });
-    this.dispatchEvent(event);
+    }));
   }
 
-  // TODOBEFOREPUSH only send a request if the limit changed
+  private _dataLimitChange(): Change {
+    const keyLimit = this.key?.dataLimit;
+    if (this.showCustomDataLimitDialog) {
+      if (!keyLimit) {
+        return Change.SET;
+      }
+      const inputLimit = this.inputDataLimit();
+      if (inputLimit.value !== keyLimit.value || inputLimit.unit !== keyLimit.unit) {
+        return Change.SET;
+      }
+      return Change.UNCHANGED;
+    }
+    // If we unchecked, then the key will have an active data limit.
+    if (keyLimit) {
+      return Change.REMOVED;
+    }
+    return Change.UNCHANGED;
+  }
+
   public dataLimitChanged() {
-    // const dataLimitIsSet = this.showCustomDataLimitDialog;
-    // // if the key has a limit XOR whether a data limit is set
-    // if(!!this.key.dataLimit !== dataLimitIsSet) {
-    //   return true;
-    // }
-    // // if the amount on the input doesn't match key.limit
-    return true;
+    return this._dataLimitChange() !== Change.UNCHANGED;
   }
 
-  public dataLimitAmount(): DisplayDataAmount {
-    return {unit: this._dataLimitType(), value: this._dataLimitValue()};
+  public inputDataLimit(): DisplayDataAmount {
+    return this.showCustomDataLimitDialog ?
+        {unit: this._dataLimitType(), value: this._dataLimitValue()} :
+        null;
+  }
+
+  public keyId() {
+    return this.key.id;
   }
 
   public open(accessKey: DisplayAccessKey, serverDefaultLimit: DisplayDataAmount) {
@@ -242,7 +271,18 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     this._queryAs<PaperDialogElement>('#container').open();
   }
 
-  public close() {
+  public saveAndClose() {
+    this.key.dataLimit = this.inputDataLimit();
+    this.close();
+  }
+
+  private close() {
     this._queryAs<PaperDialogElement>('#container').close();
   }
+}
+
+enum Change {
+  SET,
+  REMOVED,
+  UNCHANGED,
 }

@@ -48,6 +48,15 @@ async function makeLocalize(language: string) {
   };
 }
 
+interface APIError {
+  // tslint:disable-next-line:no-any
+  detail: any;
+}
+
+function logEvent(e: APIError) {
+  console.log(e);
+}
+
 @customElement('outline-test-app')
 export class TestApp extends LitElement {
   @property({type: String}) dir = 'ltr';
@@ -82,7 +91,7 @@ export class TestApp extends LitElement {
       return;
     }
     this.localize = await makeLocalize(newLanguage);
-    this.language = newLanguage;    
+    this.language = newLanguage;
   }
 
   // tslint:disable-next-line:no-any
@@ -90,30 +99,45 @@ export class TestApp extends LitElement {
     return this.shadowRoot.querySelector(querySelector);
   }
 
+  private logAndSavePerKeyDataLimit(e: APIError) {
+    logEvent(e);
+    this.select('outline-per-key-data-limit-dialog').saveAndClose();
+  }
+
+  private outlineKey = {id: '1', name: 'Key Name'};
   render() {
     return html`
       <h1>Outline Manager Components Gallery</h1>
       ${this.pageControls}
 
-      <div class="widget" id="key-settings-widget" @SavePerKeyDataLimitRequested=${
-        (e: {detail: {keySettings: OutlinePerKeyDataLimitDialog}}) => console.log(e)}>
+      <div
+        class="widget"
+        id="key-settings-widget"
+        @SavePerKeyDataLimitRequested=${this.logAndSavePerKeyDataLimit}
+        @RemovePerKeyDataLimitRequested=${this.logAndSavePerKeyDataLimit}
+      >
         <h2>outline-per-key-data-limit-dialog</h2>
-        <button @tap=${
-        () => this.select('outline-per-key-data-limit-dialog').open({id: '1', name: 'Key Name'}, {
-          unit: 'MB',
-          value: 50
-        })}>Open Dialog</button>
-        <outline-per-key-data-limit-dialog .localize=${this.localize} dir=${
-        this.dir}></outline-per-key-data-limit-dialog>
+        <button
+          @tap=${() => this.select('outline-per-key-data-limit-dialog').open(this.outlineKey, {
+      unit: 'MB',
+      value: 50,
+    })}
+        >
+          Open Dialog
+        </button>
+        <outline-per-key-data-limit-dialog
+          .localize=${this.localize}
+          dir=${this.dir}
+        ></outline-per-key-data-limit-dialog>
       </div>
-      
+
       <div class="widget">
         <h2>outline-about-dialog</h2>
         <button @tap=${() => this.select('outline-about-dialog').open()}>Open Dialog</button>
         <outline-about-dialog .localize=${this.localize} dir=${
         this.dir} outline-version="1.2.3"></outline-about-dialog>
       </div>
-      
+
       <div class="widget">
         <h2>outline-do-oauth-step</h2>
         <outline-do-oauth-step .localize=${this.localize} dir=${this.dir}></outline-do-oauth-step>
