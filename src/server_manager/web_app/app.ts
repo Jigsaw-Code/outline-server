@@ -943,24 +943,23 @@ export class App {
   private async refreshTransferStats(selectedServer: server.Server, serverView: ServerView) {
     try {
       const stats = await selectedServer.getDataUsage();
-      let totalBytes = 0;
+      let serverTransferredBytes = 0;
       // tslint:disable-next-line:forin
       for (const accessKeyId in stats.bytesTransferredByUserId) {
-        totalBytes += stats.bytesTransferredByUserId[accessKeyId];
+        serverTransferredBytes += stats.bytesTransferredByUserId[accessKeyId];
       }
-      serverView.setServerTransferredData(totalBytes);
+      serverView.setServerTransferredData(serverTransferredBytes);
 
       // Update all the displayed access keys, even if usage didn't change, in case the data limit
       // did.
       const defaultDataLimit = selectedServer.getDefaultDataLimit();
-      for (const accessKey of serverView.accessKeyRows) {
+      for (let accessKey of serverView.accessKeyRows) {
+        accessKey = this.maybeAdminKey(accessKey, serverView);
+        const accessKeyId = accessKey.id;
         const activeDataLimit =
             displayDataAmountToDataLimit(accessKey.dataLimit) || defaultDataLimit;
-        if (activeDataLimit) {
-          // Make access key data usage relative to the data limit.
-          totalBytes = activeDataLimit.bytes;
-        }
-        const accessKeyId = accessKey.id;
+        const totalBytes = activeDataLimit?.bytes || serverTransferredBytes;
+
         const transferredBytes = stats.bytesTransferredByUserId[accessKeyId] || 0;
         let relativeTraffic =
             totalBytes ? 100 * transferredBytes / totalBytes : (activeDataLimit ? 100 : 0);
@@ -1084,6 +1083,14 @@ export class App {
     }
   }
 
+  private maybeAdminKey(key: DisplayAccessKey, view: ServerView) {
+    return key.id === MY_CONNECTION_USER_ID ? view.myConnection : key;
+  }
+
+  private findModifiedKey(id: server.AccessKeyId, view: ServerView) {
+    return this.maybeAdminKey(view.accessKeyRows.find(key => key.id === id), view);
+  }
+
   private async savePerKeyDataLimit(ui: OutlinePerKeyDataLimitDialog) {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
     const serverView = this.appRoot.getServerView(this.appRoot.selectedServer.id);
@@ -1092,9 +1099,11 @@ export class App {
         const dataLimit = ui.inputDataLimit();
         await this.selectedServer.setAccessKeyDataLimit(
             ui.keyId(), displayDataAmountToDataLimit(dataLimit));
-        this.refreshTransferStats(this.selectedServer, serverView);
+        const displayKey = this.findModifiedKey(ui.keyId(), serverView);
+        displayKey.dataLimit = dataLimit;
       }
-      ui.saveAndClose();
+      ui.close();
+      this.refreshTransferStats(this.selectedServer, serverView);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
     } catch (error) {
       console.error(`Failed to set data limit for access key ${ui.keyId()}: ${error}`);
@@ -1109,9 +1118,11 @@ export class App {
     try {
       if (ui.dataLimitChanged()) {
         await this.selectedServer.removeAccessKeyDataLimit(ui.keyId());
-        this.refreshTransferStats(this.selectedServer, serverView);
+        const displayKey = this.findModifiedKey(ui.keyId(), serverView);
+        delete displayKey.dataLimit;
       }
-      ui.saveAndClose();
+      ui.close();
+      this.refreshTransferStats(this.selectedServer, serverView);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
     } catch (error) {
       console.error(`Failed to remove data limit from access key ${ui.keyId()}: ${error}`);

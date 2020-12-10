@@ -688,7 +688,12 @@ export class ServerView extends DirMixin(PolymerElement) {
       /**
        *  myConnection has the same fields as each item in accessKeyRows.  It may
        *  be unset in some old versions of Outline that allowed deleting this row
-       *  @type {DisplayAccessKey}
+       *
+       * TODO(cohenjon) Refactor out special casing for myConnection.  It exists as a separate
+       * item in the view even though it's also in accessKeyRows.  We can have the special casing
+       * be in display only, so we can just use accessKeyRows[0] and not have extra logic when it's
+       * not needed.
+       * @type {DisplayAccessKey}
        */
       this.myConnection = null;
       this.totalInboundBytes = 0;
@@ -835,7 +840,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       }
     }
   }
-  
+
   _dataLimitSeparator(key) {
     return this._activeDataLimitForKey(key) ? ' / ' : '';
   }

@@ -281,11 +281,6 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     this._queryAs<PaperDialogElement>('#container').open();
   }
 
-  public saveAndClose() {
-    this.key.dataLimit = this.inputDataLimit();
-    this.close();
-  }
-
   public reset() {
     this.showCustomDataLimitDialog = !!this.key?.dataLimit;
     // Manually reset the value to clear user input
@@ -293,7 +288,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     this._queryAs<PaperListboxElement>('#unitsListbox').select(this._initialUnit());
   }
 
-  private close() {
+  public close() {
     this._queryAs<PaperDialogElement>('#container').close();
   }
 }
