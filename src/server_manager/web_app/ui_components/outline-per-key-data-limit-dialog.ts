@@ -165,7 +165,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
           <div id="menu" ?hidden=${!this.showCustomDataLimitDialog}>
             <paper-input
               id="dataLimitInput"
-              label=${this.localize('per-key-data-limit-dialog-label')}
+              label=${this.localize('data-limit')}
               always-float-label
               allowed-pattern="[0-9]+"
               value=${this._initialValue()}

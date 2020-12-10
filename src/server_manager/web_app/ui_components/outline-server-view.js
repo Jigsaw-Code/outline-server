@@ -520,7 +520,7 @@ export class ServerView extends DirMixin(PolymerElement) {
                   <paper-icon-button icon="outline-iconset:devices" class="connect-button" on-tap="_handleConnectPressed"></paper-icon-button>
                 </span>
                 <span class="flex-1">
-                  <paper-icon-button icon="icons:settings" hidden\$="[[!hasKeySettingsDialog]]" on-tap="_handleShowPerKeyDataLimitDialogPressed"></paper-icon-button>
+                  <paper-icon-button icon="icons:settings" hidden\$="[[!hasPerKeyDataLimitDialog]]" on-tap="_handleShowPerKeyDataLimitDialogPressed"></paper-icon-button>
                 </span>
               </span>
             </div>
@@ -559,8 +559,8 @@ export class ServerView extends DirMixin(PolymerElement) {
                           <paper-item on-tap="_handleRenameAccessKeyPressed">
                             <iron-icon icon="icons:create"></iron-icon>[[localize('server-access-key-rename')]]
                           </paper-item>
-                          <paper-item hidden\$="[[!hasKeySettingsDialog]]" on-tap="_handleShowPerKeyDataLimitDialogPressed">
-                            <iron-icon icon="icons:settings"></iron-icon>Key Settings
+                          <paper-item hidden\$="[[!hasPerKeyDataLimitDialog]]" on-tap="_handleShowPerKeyDataLimitDialogPressed">
+                            <iron-icon icon="icons:settings"></iron-icon>[[localize('data-limit')]]
                           </paper-item>
                           <paper-item on-tap="_handleRemoveAccessKeyPressed">
                             <iron-icon icon="icons:delete"></iron-icon>[[localize('remove')]]
@@ -674,7 +674,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       /** @type {DisplayDataAmount} */
       this.defaultDataLimit = null;
       this.isDefaultDataLimitEnabled = false;
-      this.hasKeySettingsDialog = false;
+      this.hasPerKeyDataLimitDialog = false;
       /** Whether the server supports default data limits. */
       this.supportsDefaultDataLimit = false;
       this.showFeatureMetricsDisclaimer = false;

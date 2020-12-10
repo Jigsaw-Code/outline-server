@@ -121,6 +121,10 @@
     "message": "Remove Server?",
     "description": "This string appears in a dialog that requests user confirmation for removing a server from the application. 'Remove' in this context does not imply server deletion."
   },
+  "data_limit": {
+    "message": "Data Limit",
+    "Description": "This string appears in various places related to the data transfer limit for a single access key."
+  },
   "data_limits": {
     "message": "Data limits",
     "description": "This string appears as a title in a section to configure access key data transfer limits."
@@ -710,10 +714,6 @@
   "okay": {
     "message": "OK",
     "description": "This string appears across the application as a button. It lets the user acknowledge displayed information. Clicking dismisses the enclosing UI element."
-  },
-  "per_key_data_limit_dialog_label": {
-    "message": "Data Limit",
-    "Description": "This string appears in the per-key data limit dialog as the label to the input where a user can set a data limit for an access key."
   },
   "per_key_data_limit_dialog_set_custom": {
     "message": "Set a custom data limit",

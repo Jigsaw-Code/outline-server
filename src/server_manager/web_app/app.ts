@@ -872,7 +872,7 @@ export class App {
       view.isAccessKeyPortEditable = semver.gte(version, CHANGE_KEYS_PORT_VERSION);
       view.supportsDefaultDataLimit = semver.gte(version, DATA_LIMITS_VERSION);
       view.isHostnameEditable = semver.gte(version, CHANGE_HOSTNAME_VERSION);
-      view.hasKeySettingsDialog = semver.gte(version, KEY_SETTINGS_VERSION);
+      view.hasPerKeyDataLimitDialog = semver.gte(version, KEY_SETTINGS_VERSION);
     }
 
     if (isManagedServer(selectedServer)) {
