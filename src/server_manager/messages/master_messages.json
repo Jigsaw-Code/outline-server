@@ -615,6 +615,10 @@
     "message": "About",
     "description": "This string appears in an application drawer as a navigation link. Clicking it opens a dialog with information about Outline."
   },
+  "none": {
+    "message": "None",
+    "description": "This string appears alongside each access key in the data transfer stats section if it is under no data limit.  Example: 450 MB / None"
+  },
   "nav_data_collection": {
     "message": "Data collection",
     "description": "This string appears in an application drawer as a navigation link. Clicking it opens Outline's data collection policy in the browser."

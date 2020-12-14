@@ -1316,10 +1316,27 @@ export class App {
     });
   }
 
+  private renderDirectionalDataLimitStrings() {
+    // Hack to get Polymer to re-render the data transfer ratio strings correctly when language
+    // direction is changed.
+    const view = this.appRoot.getServerView(this.appRoot.selectedServer.id);
+    for (const key of view.accessKeyRows) {
+      view.updateAccessKeyRow(key.id, {transferredBytes: key.transferredBytes});
+    }
+  }
+
   private setAppLanguage(languageCode: string, languageDir: string) {
+    const oldDir = document.documentElement.getAttribute('dir');
     this.appRoot.setLanguage(languageCode, languageDir);
     document.documentElement.setAttribute('dir', languageDir);
     window.localStorage.setItem('overrideLanguage', languageCode);
+    if (oldDir !== languageDir) {
+      // Wait for all translations to be loaded.  Otherwise some computed properties will return
+      // undefined.
+      this.appRoot.addEventListener(
+          'app-localize-resources-loaded', () => this.renderDirectionalDataLimitStrings(),
+          {once: true});
+    }
   }
 
   private createLocationModel(cityId: string, regionIds: string[]): Location {

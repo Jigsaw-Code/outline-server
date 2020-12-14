@@ -269,10 +269,6 @@ export class ServerView extends DirMixin(PolymerElement) {
         color: var(--medium-gray);
         line-height: 24px;
       }
-      .measurement > span {
-        /* This fixes RTL rendering for data limits */
-        display: inline-block;
-      }
       .access-key-container {
         display: flex;
         flex: 4;
@@ -502,13 +498,9 @@ export class ServerView extends DirMixin(PolymerElement) {
               </span>
               <span class="measurement-container">
                 <span class="measurement">
-                  <span>
-                    [[_formatBytesTransferred(myConnection.transferredBytes, "0 MB")]]
-                  </span>
+                    [[_formatBytesTransferred(myConnection.transferredBytes, "...")]]
                     [[_dataLimitSeparator(myConnection)]]
-                  <span>
                     [[_formatDataLimitForKey(myConnection)]]
-                    </span>
                   </span>
                 <paper-progress value="[[myConnection.relativeTraffic]]" class\$="[[_computePaperProgressClass(myConnection)]]"></paper-progress>
                 <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!_activeDataLimitForKey(myConnection)]]">
@@ -535,13 +527,9 @@ export class ServerView extends DirMixin(PolymerElement) {
                   </span>
                   <span class="measurement-container">
                     <span class="measurement">
-                      <span>
-                      [[_formatBytesTransferred(item.transferredBytes, "0 MB")]]
-                      </span>
+                      [[_formatBytesTransferred(item.transferredBytes, "...")]]
                       [[_dataLimitSeparator(item)]]
-                      <span>
                       [[_formatDataLimitForKey(item)]]
-                      </span>
                     </span>
                     <paper-progress value="[[item.relativeTraffic]]" class\$="[[_computePaperProgressClass(item)]]"></paper-progress>
                     <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!_activeDataLimitForKey(item)]]">
@@ -842,7 +830,9 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   _dataLimitSeparator(key) {
-    return this._activeDataLimitForKey(key) ? ' / ' : '';
+    // Insert a Right-To-Left marker for correct rendering.  See
+    // https://en.wikipedia.org/wiki/Bidirectional_text.
+    return document.dir === 'rtl' ? ' \u200F/ ' : ' / ';
   }
 
   _formatDataLimitForKey(key) {
@@ -850,7 +840,7 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   _formatDisplayDataLimit(limit) {
-    return limit ? `${limit.value} ${limit.unit}` : '';
+    return limit ? `${limit.value} ${limit.unit}` : this.localize('none');
   }
 
   _formatBytesTransferred(numBytes, emptyValue = '') {
