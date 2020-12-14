@@ -32,6 +32,10 @@ Polymer({
         margin-top: 20px;
       }
 
+      #jigsaw-logo {
+        max-width: 25%;
+      }
+
       #version {
         font-weight: bold;
       }
@@ -69,7 +73,7 @@ Polymer({
       </p>
       <p>
         <a href="https://jigsaw.google.com/">
-          <img src="images/jigsaw-logo.svg">
+          <img id="jigsaw-logo" src="images/jigsaw-logo.svg">
         </a>
       </p>
       <div class="buttons">

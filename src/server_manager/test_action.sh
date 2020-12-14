@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 #
 # Copyright 2018 The Outline Authors
 #
@@ -20,5 +20,7 @@ rm -rf $TEST_DIR
 # Use commonjs modules, jasmine runs in node.
 tsc -p $ROOT_DIR/src/server_manager --outDir $TEST_DIR --module commonjs
 jasmine --config=$ROOT_DIR/jasmine.json
+
+yarn do server_manager/web_app/test
 
 rm -rf $TEST_DIR
