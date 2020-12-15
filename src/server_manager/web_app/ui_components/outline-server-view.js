@@ -498,9 +498,9 @@ export class ServerView extends DirMixin(PolymerElement) {
               </span>
               <span class="measurement-container">
                 <span class="measurement">
-                    [[_formatBytesTransferred(myConnection.transferredBytes, "...")]]
-                    [[_dataLimitSeparator(myConnection)]]
-                    [[_formatDataLimitForKey(myConnection)]]
+                    <bdi>[[_formatBytesTransferred(myConnection.transferredBytes, "...")]]</bdi>
+                    /
+                    <bdi>[[_formatDataLimitForKey(myConnection)]]</bdi>
                   </span>
                 <paper-progress value="[[myConnection.relativeTraffic]]" class\$="[[_computePaperProgressClass(myConnection)]]"></paper-progress>
                 <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!_activeDataLimitForKey(myConnection)]]">
@@ -527,9 +527,9 @@ export class ServerView extends DirMixin(PolymerElement) {
                   </span>
                   <span class="measurement-container">
                     <span class="measurement">
-                      [[_formatBytesTransferred(item.transferredBytes, "...")]]
-                      [[_dataLimitSeparator(item)]]
-                      [[_formatDataLimitForKey(item)]]
+                      <bdi>[[_formatBytesTransferred(item.transferredBytes, "...")]]</bdi>
+                      /
+                      <bdi>[[_formatDataLimitForKey(item)]]</bdi>
                     </span>
                     <paper-progress value="[[item.relativeTraffic]]" class\$="[[_computePaperProgressClass(item)]]"></paper-progress>
                     <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!_activeDataLimitForKey(item)]]">
@@ -827,12 +827,6 @@ export class ServerView extends DirMixin(PolymerElement) {
         return;
       }
     }
-  }
-
-  _dataLimitSeparator(key) {
-    // Insert a Right-To-Left marker for correct rendering.  See
-    // https://en.wikipedia.org/wiki/Bidirectional_text.
-    return document.dir === 'rtl' ? ' \u200F/ ' : ' / ';
   }
 
   _formatDataLimitForKey(key) {
