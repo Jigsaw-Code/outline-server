@@ -35,8 +35,8 @@ import './outline-sort-span.js';
 import {html, PolymerElement} from '@polymer/polymer';
 import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
 
-
 import * as byte_size from 'byte-size';
+import * as i18n from '../i18n_formatting';
 
 byte_size.defaultOptions({
   units: 'metric',
@@ -261,7 +261,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       }
       .measurement {
         /* Space the usage bars evenly */
-        min-width: 9ch;
+        min-width: 11ch;
         /* We don't want numbers separated from their units */
         white-space: nowrap;
         font-size: 14px;
@@ -457,7 +457,7 @@ export class ServerView extends DirMixin(PolymerElement) {
               </div>
               <div class="stats">
                 <h3>[[managedServerUtilzationPercentage]]</h3>
-                <p>/[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]</p>
+                <p>/[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]</p>
               </div>
               <p>[[localize('server-data-used')]]</p>
             </div>
@@ -496,7 +496,7 @@ export class ServerView extends DirMixin(PolymerElement) {
                 </div>
               </span>
               <span class="measurement-container">
-                <span class="measurement">[[_formatBytesTransferred(myConnection.transferredBytes, "...")]]</span>
+                <span class="measurement">[[_formatBytesTransferred(myConnection.transferredBytes, language, "...")]]</span>
                 <paper-progress value="[[myConnection.relativeTraffic]]" class\$="[[_computePaperProgressClass(isAccessKeyDataLimitEnabled)]]"></paper-progress>
                 <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!isAccessKeyDataLimitEnabled]]">
                   [[_getDataLimitsUsageString(myConnection)]]
@@ -519,7 +519,7 @@ export class ServerView extends DirMixin(PolymerElement) {
                     <input type="text" class="access-key-name" id\$="access-key-[[item.id]]" placeholder="{{item.placeholderName}}" value="[[item.name]]" on-blur="_handleNameInputBlur" on-keydown="_handleNameInputKeyDown">
                   </span>
                   <span class="measurement-container">
-                    <span class="measurement">[[_formatBytesTransferred(item.transferredBytes, "...")]]</span>
+                    <span class="measurement">[[_formatBytesTransferred(item.transferredBytes, language, "...")]]</span>
                     <paper-progress value="[[item.relativeTraffic]]" class\$="[[_computePaperProgressClass(isAccessKeyDataLimitEnabled)]]"></paper-progress>
                     <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!isAccessKeyDataLimitEnabled]]">
                       [[_getDataLimitsUsageString(item)]]
@@ -556,7 +556,7 @@ export class ServerView extends DirMixin(PolymerElement) {
           </div>
         </div>
         <div name="settings">
-          <outline-server-settings id="serverSettings" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" access-key-data-limit="{{accessKeyDataLimit}}" is-access-key-data-limit-enabled="{{isAccessKeyDataLimitEnabled}}" supports-access-key-data-limit="[[supportsAccessKeyDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" localize="[[localize]]">
+          <outline-server-settings id="serverSettings" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" access-key-data-limit="{{accessKeyDataLimit}}" is-access-key-data-limit-enabled="{{isAccessKeyDataLimitEnabled}}" supports-access-key-data-limit="[[supportsAccessKeyDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[_formatMonthlyCost(monthlyCost)]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" language="[[language]]" localize="[[localize]]">
           </outline-server-settings>
         </div>
       </iron-pages>
@@ -685,7 +685,7 @@ export class ServerView extends DirMixin(PolymerElement) {
        * @type {-1|1}
        */
       this.accessKeySortDirection = 1;
-      this.language = 'en';
+      this.language = '';
       /** @type {(msgId: string, ...params: string[]) => string} */
       this.localize = null;
     }
@@ -803,11 +803,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     }
   }
 
-  _makeUnitFormatter(unit) {
-    return new Intl.NumberFormat(this.language, {style: 'unit', unit});
-  }
-
-  _byteAmount(amount, numDecimals) {
+  _makeReadableDataAmount(amount, numDecimals) {
     const readable = byte_size(amount, {precision: numDecimals});
     return {
       amount: readable.value,
@@ -825,7 +821,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     return 0;
   }
 
-  _formatBytesTransferred(numBytes, emptyValue = '') {
+  _formatBytesTransferred(numBytes, language, emptyValue = '') {
     if (!numBytes) {
       // numBytes may not be set for manual servers, or may be 0 for
       // unused access keys.
@@ -833,27 +829,35 @@ export class ServerView extends DirMixin(PolymerElement) {
     }
 
     // Show 0 decimals for < 1MB, 1 decimal for >= 1MB, 2 decimals for >= 1GB.
-    const amount = this._byteAmount(numBytes, this._getFormatPrecision(numBytes));
-    return this._makeUnitFormatter(amount.unit).format(amount.amount);
+    const data = this._makeReadableDataAmount(numBytes, this._getFormatPrecision(numBytes));
+    return i18n.makeUnitFormatter(data.unit, language).format(data.amount);
   }
 
   _getFormattedTransferredUnit(numBytes, emptyValue = '') {
     if (!numBytes) {
       return emptyValue;
     }
-    const amount = this._byteAmount(numBytes, 0);
-    const formatter = this._makeUnitFormatter(amount.unit);
-    return formatter.formatToParts(amount.amount).find((part => part.type === 'unit')).value;
+    const data = this._makeReadableDataAmount(numBytes, 0);
+    return i18n.formattedUnit(data.unit, this.language);
   }
 
   _getFormattedTransferredValue(numBytes, emptyValue = '') {
     if (!numBytes) {
       return emptyValue;
     }
-    const amount = this._byteAmount(numBytes, this._getFormatPrecision(numBytes));
-    const parts = this._makeUnitFormatter(amount.unit).formatToParts(amount.amount);
+    const data = this._makeReadableDataAmount(numBytes, this._getFormatPrecision(numBytes));
+    const parts = i18n.makeUnitFormatter(data.unit).formatToParts(data.amount);
     // Assumes that the last two parts are a space and the unit
     return parts.slice(0, -2).map(part => part.value).join('');
+  }
+
+  _formatMonthlyCost(monthlyCost) {
+    if (!monthlyCost) {
+      return '';
+    }
+    return new Intl
+        .NumberFormat(this.language, {style: 'currency', currency: 'USD', currencyDisplay: 'code'})
+        .format(monthlyCost);
   }
 
   _computeManagedServerUtilzationPercentage(numBytes, monthlyLimitBytes) {
@@ -989,7 +993,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     if (!this.accessKeyDataLimit) {
       return '';
     }
-    const used = this._formatBytesTransferred(accessKey.transferredBytes, '0');
+    const used = this._formatBytesTransferred(accessKey.transferredBytes, this.language, '0');
     const total = this.accessKeyDataLimit.value + ' ' + this.accessKeyDataLimit.unit;
     return this.localize('data-limits-usage', 'used', used, 'total', total);
   }

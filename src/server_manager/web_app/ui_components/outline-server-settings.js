@@ -26,6 +26,8 @@ import './outline-validated-input.js';
 import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 
+import {formattedUnit} from '../i18n_formatting';
+
 Polymer({
   _template: html`
     <style include="cloud-install-styles"></style>
@@ -138,7 +140,7 @@ Polymer({
       .data-limits-input paper-dropdown-menu {
         border: none;
         --paper-input-container: {
-          width: 64px;
+          width: 72px;
         }
       }
       paper-listbox paper-item {
@@ -175,7 +177,7 @@ Polymer({
           <div>
             <h3>DigitalOcean</h3>
             <paper-input readonly="" value="[[serverLocation]]" label="[[localize('settings-server-location')]]" hidden\$="[[!serverLocation]]" always-float-label="" maxlength="100"></paper-input>
-            <paper-input readonly="" value="[[serverMonthlyCost]] USD" label="[[localize('settings-server-cost')]]" hidden\$="[[!serverMonthlyCost]]" always-float-label="" maxlength="100"></paper-input>
+            <paper-input readonly="" value="[[serverMonthlyCost]]" label="[[localize('settings-server-cost')]]" hidden\$="[[!serverMonthlyCost]]" always-float-label="" maxlength="100"></paper-input>
             <paper-input readonly="" value="[[serverMonthlyTransferLimit]]" label="[[localize('settings-transfer-limit')]]" hidden\$="[[!serverMonthlyTransferLimit]]" always-float-label="" maxlength="100"></paper-input>
           </div>
         </div>
@@ -220,8 +222,8 @@ Polymer({
               <paper-input id="accessKeyDataLimitInput" value="[[accessKeyDataLimit.value]]" label="Data limit per key" always-float-label="" allowed-pattern="[0-9]+" required="" auto-validate="" maxlength="9" on-keydown="_handleAccessKeyDataLimitInputKeyDown" on-blur="_requestSetAccessKeyDataLimit"></paper-input>
               <paper-dropdown-menu no-label-float="">
                 <paper-listbox id="accessKeyDataLimitUnits" slot="dropdown-content" selected="[[accessKeyDataLimit.unit]]" attr-for-selected="name" on-selected-changed="_requestSetAccessKeyDataLimit">
-                  <paper-item name="MB">MB</paper-item>
-                  <paper-item name="GB">GB</paper-item>
+                  <paper-item name="MB">[[_getInternationalizedUnit('megabyte', language)]]</paper-item>
+                  <paper-item name="GB">[[_getInternationalizedUnit('gigabyte', language)]]</paper-item>
                 </paper-listbox>
               </paper-dropdown-menu>
             </div>
@@ -278,6 +280,7 @@ Polymer({
     serverLocation: {type: String, value: null},
     serverMonthlyCost: {type: String, value: null},
     serverMonthlyTransferLimit: {type: String, value: null},
+    language: {type: String, value: null},
     localize: {type: Function, readonly: true},
     shouldShowExperiments: {type: Boolean, value: false},
   },
@@ -356,5 +359,9 @@ Polymer({
     const port = Number(value);
     const valid = !Number.isNaN(port) && port >= 1 && port <= 65535 && Number.isInteger(port);
     return valid ? '' : this.localize('error-keys-port-bad-input');
+  },
+
+  _getInternationalizedUnit(unit, language) {
+    return formattedUnit(unit, language);
   }
 });

@@ -413,7 +413,7 @@ export class AppRoot extends mixinBehaviors
               <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
               <div id="serverView">
                 <template is="dom-repeat" items="{{serverList}}" as="server">
-                  <outline-server-view id="serverView-{{_base64Encode(server.id)}}" localize="[[localize]]" hidden\$="{{!_isServerSelected(selectedServer, server)}}"></outline-server-view>
+                  <outline-server-view id="serverView-{{_base64Encode(server.id)}}" language="[[language]]" localize="[[localize]]" hidden\$="{{!_isServerSelected(selectedServer, server)}}"></outline-server-view>
                 </template>
               </div>
             </iron-pages>
@@ -555,6 +555,7 @@ export class AppRoot extends mixinBehaviors
    * @param {string} direction
    */
   setLanguage(language, direction) {
+    console.log(`setLanguage(${language}, ${direction})`);
     const messagesUrl = `./messages/${language}.json`;
     this.loadResources(messagesUrl, language);
 
@@ -563,10 +564,6 @@ export class AppRoot extends mixinBehaviors
     this.$.sideBar.align = alignDir;
 
     this.language = language;
-
-    if(this.selectedServer) {
-      this.getServerView(this.selectedServer.id).language = language;
-    }
   }
 
   showIntro() {

@@ -1255,6 +1255,9 @@ export class App {
     this.appRoot.setLanguage(languageCode, languageDir);
     document.documentElement.setAttribute('dir', languageDir);
     window.localStorage.setItem('overrideLanguage', languageCode);
+    this.appRoot.addEventListener(
+        'app-localize-resources-loaded', () => this.syncAndShowServer(this.selectedServer),
+        {once: true});
   }
 
   private createLocationModel(cityId: string, regionIds: string[]): Location {
