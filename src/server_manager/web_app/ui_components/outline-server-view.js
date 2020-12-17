@@ -620,6 +620,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         },
         accessKeySortBy: {type: String},
         accessKeySortDirection: {type: Number},
+        language: {type: String},
         localize: {type: Function, readonly: true},
       };
     }
@@ -684,6 +685,7 @@ export class ServerView extends DirMixin(PolymerElement) {
        * @type {-1|1}
        */
       this.accessKeySortDirection = 1;
+      this.language = 'en';
       /** @type {(msgId: string, ...params: string[]) => string} */
       this.localize = null;
     }
@@ -801,6 +803,28 @@ export class ServerView extends DirMixin(PolymerElement) {
     }
   }
 
+  _makeUnitFormatter(unit) {
+    return new Intl.NumberFormat(this.language, {style: 'unit', unit});
+  }
+
+  _byteAmount(amount, numDecimals) {
+    const readable = byte_size(amount, {precision: numDecimals});
+    return {
+      amount: readable.value,
+      // Make the unit singular
+      unit: readable.long.slice(0, -1)
+    }
+  }
+
+  _getFormatPrecision(numBytes) {
+    if (numBytes >= 10 ** 9) {
+      return 2;
+    } else if (numBytes >= 10 ** 6) {
+      return 1;
+    }
+    return 0;
+  }
+
   _formatBytesTransferred(numBytes, emptyValue = '') {
     if (!numBytes) {
       // numBytes may not be set for manual servers, or may be 0 for
@@ -809,35 +833,27 @@ export class ServerView extends DirMixin(PolymerElement) {
     }
 
     // Show 0 decimals for < 1MB, 1 decimal for >= 1MB, 2 decimals for >= 1GB.
-    let numDecimals = 0;
-    if (numBytes >= 10 ** 9) {
-      numDecimals = 2;
-    } else if (numBytes >= 10 ** 6) {
-      numDecimals = 1;
-    }
-
-    return byte_size(numBytes, {precision: numDecimals}).toString();
+    const amount = this._byteAmount(numBytes, this._getFormatPrecision(numBytes));
+    return this._makeUnitFormatter(amount.unit).format(amount.amount);
   }
 
   _getFormattedTransferredUnit(numBytes, emptyValue = '') {
-    const formattedTransfer = this._formatBytesTransferred(numBytes);
-    if (!formattedTransfer) {
+    if (!numBytes) {
       return emptyValue;
     }
-    const units = formattedTransfer.match(/[a-zA-Z%]+/g);
-    if (!units || units.length < 0) {
-      return emptyValue;
-    }
-    return units.pop();
+    const amount = this._byteAmount(numBytes, 0);
+    const formatter = this._makeUnitFormatter(amount.unit);
+    return formatter.formatToParts(amount.amount).find((part => part.type === 'unit')).value;
   }
 
   _getFormattedTransferredValue(numBytes, emptyValue = '') {
-    const formattedTransfer = this._formatBytesTransferred(numBytes);
-    if (!formattedTransfer) {
+    if (!numBytes) {
       return emptyValue;
     }
-    const value = parseFloat(formattedTransfer);
-    return !!value ? value : emptyValue;
+    const amount = this._byteAmount(numBytes, this._getFormatPrecision(numBytes));
+    const parts = this._makeUnitFormatter(amount.unit).formatToParts(amount.amount);
+    // Assumes that the last two parts are a space and the unit
+    return parts.slice(0, -2).map(part => part.value).join('');
   }
 
   _computeManagedServerUtilzationPercentage(numBytes, monthlyLimitBytes) {

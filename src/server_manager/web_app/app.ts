@@ -853,6 +853,7 @@ export class App {
     view.isAccessKeyDataLimitEnabled = !!view.accessKeyDataLimit;
     view.showFeatureMetricsDisclaimer = selectedServer.getMetricsEnabled() &&
         !selectedServer.getAccessKeyDataLimit() && !hasSeenFeatureMetricsNotification();
+    view.language = this.appRoot.language;
 
     const version = this.selectedServer.getVersion();
     if (version) {

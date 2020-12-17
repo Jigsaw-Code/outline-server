@@ -563,6 +563,10 @@ export class AppRoot extends mixinBehaviors
     this.$.sideBar.align = alignDir;
 
     this.language = language;
+
+    if(this.selectedServer) {
+      this.getServerView(this.selectedServer.id).language = language;
+    }
   }
 
   showIntro() {
