@@ -555,7 +555,6 @@ export class AppRoot extends mixinBehaviors
    * @param {string} direction
    */
   setLanguage(language, direction) {
-    console.log(`setLanguage(${language}, ${direction})`);
     const messagesUrl = `./messages/${language}.json`;
     this.loadResources(messagesUrl, language);
 
