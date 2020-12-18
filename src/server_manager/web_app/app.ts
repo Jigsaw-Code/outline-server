@@ -17,6 +17,7 @@ import {EventEmitter} from 'eventemitter3';
 import * as semver from 'semver';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
+import {formatBytes} from '../infrastructure/data_formatting';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
@@ -292,6 +293,9 @@ export class App {
     appRoot.addEventListener('ShowServerRequested', (event: CustomEvent) => {
       this.handleShowServerRequested(event.detail.displayServerId);
     });
+
+    this.appRoot.addEventListener(
+        'app-localize-resources-loaded', () => this.syncAndShowServer(this.selectedServer));
 
     onUpdateDownloaded(this.displayAppUpdateNotification.bind(this));
   }
@@ -853,7 +857,6 @@ export class App {
     view.isAccessKeyDataLimitEnabled = !!view.accessKeyDataLimit;
     view.showFeatureMetricsDisclaimer = selectedServer.getMetricsEnabled() &&
         !selectedServer.getAccessKeyDataLimit() && !hasSeenFeatureMetricsNotification();
-    view.language = this.appRoot.language;
 
     const version = this.selectedServer.getVersion();
     if (version) {
@@ -1255,9 +1258,6 @@ export class App {
     this.appRoot.setLanguage(languageCode, languageDir);
     document.documentElement.setAttribute('dir', languageDir);
     window.localStorage.setItem('overrideLanguage', languageCode);
-    this.appRoot.addEventListener(
-        'app-localize-resources-loaded', () => this.syncAndShowServer(this.selectedServer),
-        {once: true});
   }
 
   private createLocationModel(cityId: string, regionIds: string[]): Location {

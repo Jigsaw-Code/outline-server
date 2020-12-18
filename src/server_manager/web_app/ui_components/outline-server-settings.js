@@ -26,7 +26,7 @@ import './outline-validated-input.js';
 import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 
-import {formattedUnit} from '../i18n_formatting';
+import {getFormattedDataAmountParts} from '../../infrastructure/data_formatting';
 
 Polymer({
   _template: html`
@@ -222,8 +222,8 @@ Polymer({
               <paper-input id="accessKeyDataLimitInput" value="[[accessKeyDataLimit.value]]" label="Data limit per key" always-float-label="" allowed-pattern="[0-9]+" required="" auto-validate="" maxlength="9" on-keydown="_handleAccessKeyDataLimitInputKeyDown" on-blur="_requestSetAccessKeyDataLimit"></paper-input>
               <paper-dropdown-menu no-label-float="">
                 <paper-listbox id="accessKeyDataLimitUnits" slot="dropdown-content" selected="[[accessKeyDataLimit.unit]]" attr-for-selected="name" on-selected-changed="_requestSetAccessKeyDataLimit">
-                  <paper-item name="MB">[[_getInternationalizedUnit('megabyte', language)]]</paper-item>
-                  <paper-item name="GB">[[_getInternationalizedUnit('gigabyte', language)]]</paper-item>
+                  <paper-item name="MB">[[_getInternationalizedUnit(1000000, language)]]</paper-item>
+                  <paper-item name="GB">[[_getInternationalizedUnit(1000000000, language)]]</paper-item>
                 </paper-listbox>
               </paper-dropdown-menu>
             </div>
@@ -361,7 +361,7 @@ Polymer({
     return valid ? '' : this.localize('error-keys-port-bad-input');
   },
 
-  _getInternationalizedUnit(unit, language) {
-    return formattedUnit(unit, language);
+  _getInternationalizedUnit(bytesAmount, language) {
+    return getFormattedDataAmountParts(bytesAmount, language).unit;
   }
 });

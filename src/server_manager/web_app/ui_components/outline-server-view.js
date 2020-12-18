@@ -35,15 +35,7 @@ import './outline-sort-span.js';
 import {html, PolymerElement} from '@polymer/polymer';
 import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
 
-import * as byte_size from 'byte-size';
-import * as i18n from '../i18n_formatting';
-
-byte_size.defaultOptions({
-  units: 'metric',
-  toStringFn: function() {
-    return `${this.value} ${this.unit}`;
-  },
-});
+import * as i18n from '../../infrastructure/data_formatting';
 
 const MY_CONNECTION_USER_ID = '0';
 
@@ -446,8 +438,8 @@ export class ServerView extends DirMixin(PolymerElement) {
             <div class="stats-card transfer-stats card-section">
               <iron-icon icon="icons:swap-horiz"></iron-icon>
               <div class="stats">
-                <h3>[[_getFormattedTransferredValue(totalInboundBytes, '0')]]</h3>
-                <p>[[_getFormattedTransferredUnit(totalInboundBytes, 'B')]]</p>
+                <h3>[[inboundByesValue]]</h3>
+                <p>[[inboundByesUnit]]</p>
               </div>
               <p>[[localize('server-data-transfer')]]</p>
             </div>
@@ -607,6 +599,8 @@ export class ServerView extends DirMixin(PolymerElement) {
         retryDisplayingServer: Function,
         myConnection: Object,
         totalInboundBytes: Number,
+        inboundBytesValue: String,
+        inboundByesUnit: String,
         accessKeyRows: {type: Array},
         hasNonAdminAccessKeys: Boolean,
         metricsEnabled: Boolean,
@@ -666,6 +660,8 @@ export class ServerView extends DirMixin(PolymerElement) {
        */
       this.myConnection = null;
       this.totalInboundBytes = 0;
+      this.inboundByesUnit = 'B';
+      this.inboundByesValue = '0';
       /** @type {DisplayAccessKey[]} */
       this.accessKeyRows = [];
       this.hasNonAdminAccessKeys = false;
@@ -785,6 +781,9 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   setServerTransferredData(totalBytes) {
+    const formatted = i18n.getFormattedDataAmountParts(totalBytes, this.language);
+    this.inboundByesUnit = formatted.unit;
+    this.inboundByesValue = formatted.value;
     this.totalInboundBytes = totalBytes;
   }
 
@@ -803,52 +802,13 @@ export class ServerView extends DirMixin(PolymerElement) {
     }
   }
 
-  _makeReadableDataAmount(amount, numDecimals) {
-    const readable = byte_size(amount, {precision: numDecimals});
-    return {
-      amount: readable.value,
-      // Make the unit singular
-      unit: readable.long.slice(0, -1)
-    }
-  }
-
-  _getFormatPrecision(numBytes) {
-    if (numBytes >= 10 ** 9) {
-      return 2;
-    } else if (numBytes >= 10 ** 6) {
-      return 1;
-    }
-    return 0;
-  }
-
   _formatBytesTransferred(numBytes, language, emptyValue = '') {
     if (!numBytes) {
       // numBytes may not be set for manual servers, or may be 0 for
       // unused access keys.
       return emptyValue;
     }
-
-    // Show 0 decimals for < 1MB, 1 decimal for >= 1MB, 2 decimals for >= 1GB.
-    const data = this._makeReadableDataAmount(numBytes, this._getFormatPrecision(numBytes));
-    return i18n.makeUnitFormatter(data.unit, language).format(data.amount);
-  }
-
-  _getFormattedTransferredUnit(numBytes, emptyValue = '') {
-    if (!numBytes) {
-      return emptyValue;
-    }
-    const data = this._makeReadableDataAmount(numBytes, 0);
-    return i18n.formattedUnit(data.unit, this.language);
-  }
-
-  _getFormattedTransferredValue(numBytes, emptyValue = '') {
-    if (!numBytes) {
-      return emptyValue;
-    }
-    const data = this._makeReadableDataAmount(numBytes, this._getFormatPrecision(numBytes));
-    const parts = i18n.makeUnitFormatter(data.unit).formatToParts(data.amount);
-    // Assumes that the last two parts are a space and the unit
-    return parts.slice(0, -2).map(part => part.value).join('');
+    return i18n.formatBytes(numBytes, language);
   }
 
   _formatMonthlyCost(monthlyCost) {
