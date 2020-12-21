@@ -26,7 +26,7 @@ import {ShadowsocksServer} from '../model/shadowsocks_server';
 import {PrometheusManagerMetrics} from './manager_metrics';
 
 // The format as json of access keys in the config file.
-export interface AccessKeyJson {
+interface AccessKeyStorageJson {
   id: AccessKeyId;
   metricsId: AccessKeyId;
   name: string;
@@ -38,7 +38,7 @@ export interface AccessKeyJson {
 
 // The configuration file format as json.
 export interface AccessKeyConfigJson {
-  accessKeys?: AccessKeyJson[];
+  accessKeys?: AccessKeyStorageJson[];
   // Next AccessKeyId to use.
   nextId?: number;
 }
@@ -56,7 +56,7 @@ function generatePassword(): string {
   return randomstring.generate(12);
 }
 
-function makeAccessKey(hostname: string, accessKeyJson: AccessKeyJson): AccessKey {
+function makeAccessKey(hostname: string, accessKeyJson: AccessKeyStorageJson): AccessKey {
   const proxyParams = {
     hostname,
     portNumber: accessKeyJson.port,
@@ -67,7 +67,7 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyJson): AccessKe
       accessKeyJson.id, accessKeyJson.name, accessKeyJson.metricsId, proxyParams);
 }
 
-function accessKeyToPersistedJson(accessKey: AccessKey): AccessKeyJson {
+function accessKeyToStorageJson(accessKey: AccessKey): AccessKeyStorageJson {
   return {
     id: accessKey.id,
     metricsId: accessKey.metricsId,
@@ -248,7 +248,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private saveAccessKeys() {
-    this.keyConfig.data().accessKeys = this.accessKeys.map(key => accessKeyToPersistedJson(key));
+    this.keyConfig.data().accessKeys = this.accessKeys.map(key => accessKeyToStorageJson(key));
     this.keyConfig.write();
   }
 
