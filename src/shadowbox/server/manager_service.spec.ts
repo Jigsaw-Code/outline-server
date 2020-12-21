@@ -578,7 +578,8 @@ describe('ShadowsocksManagerService', () => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
       const key = await repo.createNewAccessKey();
-      key.dataLimit = {bytes: 1000};
+      repo.setAccessKeyDataLimit(key.id, {bytes: 1000});
+      await repo.enforceAccessKeyDataLimits();
       const res = {send: (httpCode) => {
         expect(httpCode).toEqual(204);
         expect(key.dataLimit).toBeFalsy();
@@ -802,7 +803,7 @@ function fakeSharedMetricsReporter(): SharedMetricsPublisher {
   };
 }
 
-function getAccessKeyRepository(): AccessKeyRepository {
+function getAccessKeyRepository(): ServerAccessKeyRepository {
   return new ServerAccessKeyRepository(
       OLD_PORT, 'hostname', new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}),
       new FakeShadowsocksServer(), new FakePrometheusClient({}));

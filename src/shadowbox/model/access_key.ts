@@ -45,7 +45,7 @@ export interface AccessKey {
   // Whether the access key has exceeded the data transfer limit.
   readonly isOverDataLimit: boolean;
   // The key's current data limit.  If it exists, it overrides the server default data limit.
-  dataLimit?: DataLimit;
+  readonly dataLimit?: DataLimit;
 }
 
 export interface AccessKeyRepository {
