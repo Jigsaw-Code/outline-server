@@ -28,7 +28,7 @@ import {ServerConfigJson} from './server_config';
 import {SharedMetricsPublisher} from './shared_metrics';
 
 // Creates a AccessKey response.
-function accessKeyToJsonResponse(accessKey: AccessKey) {
+function accessKeyToApiJson(accessKey: AccessKey) {
   return {
     // The unique identifier of this access key.
     id: accessKey.id,
@@ -217,7 +217,7 @@ export class ShadowsocksManagerService {
     logging.debug(`listAccessKeys request ${JSON.stringify(req.params)}`);
     const response = {accessKeys: []};
     for (const accessKey of this.accessKeys.listAccessKeys()) {
-      response.accessKeys.push(accessKeyToJsonResponse(accessKey));
+      response.accessKeys.push(accessKeyToApiJson(accessKey));
     }
     logging.debug(`listAccessKeys response ${JSON.stringify(response)}`);
     res.send(HttpSuccess.OK, response);
@@ -229,7 +229,7 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
       this.accessKeys.createNewAccessKey().then((accessKey) => {
-        const accessKeyJson = accessKeyToJsonResponse(accessKey);
+        const accessKeyJson = accessKeyToApiJson(accessKey);
         res.send(201, accessKeyJson);
         logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);
         return next();
