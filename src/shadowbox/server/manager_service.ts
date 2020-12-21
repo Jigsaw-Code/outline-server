@@ -320,7 +320,9 @@ export class ShadowsocksManagerService {
       logging.debug(`setAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
       const accessKeyId = validateAccessKeyId(req.params.id);
       const limit = validateDataLimit(req.params.limit);
-      await this.accessKeys.setAccessKeyDataLimit(accessKeyId, limit);
+      // Enforcement is done asynchronously in the proxy server.  This is transparent to the manager
+      // so this doesn't introduce any race conditions between the server and UI.
+      this.accessKeys.setAccessKeyDataLimit(accessKeyId, limit);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch(error) {
@@ -336,7 +338,9 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`removeAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
       const accessKeyId = validateAccessKeyId(req.params.id);
-      await this.accessKeys.removeAccessKeyDataLimit(accessKeyId);
+      // Enforcement is done asynchronously in the proxy server.  This is transparent to the manager
+      // so this doesn't introduce any race conditions between the server and UI.
+      this.accessKeys.removeAccessKeyDataLimit(accessKeyId);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch(error) {
@@ -352,6 +356,8 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`setDefaultDataLimit request ${JSON.stringify(req.params)}`);
       const limit = validateDataLimit(req.params.limit);
+      // Enforcement is done asynchronously in the proxy server.  This is transparent to the manager
+      // so this doesn't introduce any race conditions between the server and UI.
       this.accessKeys.setDefaultDataLimit(limit);
       this.serverConfig.data().accessKeyDataLimit = limit;
       this.serverConfig.write();
@@ -369,7 +375,9 @@ export class ShadowsocksManagerService {
   public async removeDefaultDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`removeDefaultDataLimit request ${JSON.stringify(req.params)}`);
-      await this.accessKeys.removeDefaultDataLimit();
+      // Enforcement is done asynchronously in the proxy server.  This is transparent to the manager
+      // so this doesn't introduce any race conditions between the server and UI.
+      this.accessKeys.removeDefaultDataLimit();
       delete this.serverConfig.data().accessKeyDataLimit;
       this.serverConfig.write();
       res.send(HttpSuccess.NO_CONTENT);

@@ -182,26 +182,26 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     return this.defaultDataLimit;
   }
 
-  setAccessKeyDataLimit(id: AccessKeyId, limit: DataLimit): Promise<void> {
+  setAccessKeyDataLimit(id: AccessKeyId, limit: DataLimit): void {
     this.getAccessKey(id).dataLimit = limit;
     this.saveAccessKeys();
-    return this.enforceAccessKeyDataLimits();
+    this.enforceAccessKeyDataLimits();
   }
 
-  removeAccessKeyDataLimit(id: AccessKeyId): Promise<void> {
+  removeAccessKeyDataLimit(id: AccessKeyId): void {
     delete this.getAccessKey(id).dataLimit;
     this.saveAccessKeys();
-    return this.enforceAccessKeyDataLimits();
+    this.enforceAccessKeyDataLimits();
   }
 
-  setDefaultDataLimit(limit: DataLimit): Promise<void> {
+  setDefaultDataLimit(limit: DataLimit): void {
     this.defaultDataLimit = limit;
-    return this.enforceAccessKeyDataLimits();
+    this.enforceAccessKeyDataLimits();
   }
 
-  removeDefaultDataLimit(): Promise<void> {
+  removeDefaultDataLimit(): void {
     delete this.defaultDataLimit;
-    return this.enforceAccessKeyDataLimits();
+    this.enforceAccessKeyDataLimits();
   }
 
   getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined {
