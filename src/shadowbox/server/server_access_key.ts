@@ -91,7 +91,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       private portForNewAccessKeys: number, private proxyHostname: string,
       private keyConfig: JsonConfig<AccessKeyConfigJson>,
       private shadowsocksServer: ShadowsocksServer, private prometheusClient: PrometheusClient,
-      private defaultDataLimit?: DataLimit) {
+      private _defaultDataLimit?: DataLimit) {
     if (this.keyConfig.data().accessKeys === undefined) {
       this.keyConfig.data().accessKeys = [];
     }
@@ -178,9 +178,6 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.saveAccessKeys();
   }
 
-  get dataLimit(): DataLimit|undefined {
-    return this.defaultDataLimit;
-  }
 
   setAccessKeyDataLimit(id: AccessKeyId, limit: DataLimit): void {
     this.getAccessKey(id).dataLimit = limit;
@@ -194,13 +191,17 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.enforceAccessKeyDataLimits();
   }
 
+  get defaultDataLimit(): DataLimit|undefined {
+    return this._defaultDataLimit;
+  }
+
   setDefaultDataLimit(limit: DataLimit): void {
-    this.defaultDataLimit = limit;
+    this._defaultDataLimit = limit;
     this.enforceAccessKeyDataLimits();
   }
 
   removeDefaultDataLimit(): void {
-    delete this.defaultDataLimit;
+    delete this._defaultDataLimit;
     this.enforceAccessKeyDataLimits();
   }
 
@@ -219,7 +220,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     for (const accessKey of this.accessKeys) {
       const usageBytes = bytesTransferredById[accessKey.id] || 0;
       const wasOverDataLimit = accessKey.isOverDataLimit;
-      let limitBytes = (accessKey.dataLimit || this.defaultDataLimit)?.bytes;
+      let limitBytes = (accessKey.dataLimit || this._defaultDataLimit)?.bytes;
       if (limitBytes === undefined) {
         limitBytes = Number.POSITIVE_INFINITY;
       }

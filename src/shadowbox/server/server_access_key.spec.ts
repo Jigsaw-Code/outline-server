@@ -284,7 +284,7 @@ describe('ServerAccessKeyRepository', () => {
     const repo = new RepoBuilder().build();
     const limit = {bytes: 5000};
     await expectNoAsyncThrow(repo.setDefaultDataLimit.bind(repo, limit));
-    expect(repo.dataLimit).toEqual(limit);
+    expect(repo.defaultDataLimit).toEqual(limit);
     done();
   });
 
@@ -324,9 +324,9 @@ describe('ServerAccessKeyRepository', () => {
   it('can remove the default data limit', async (done) => {
     const limit = {bytes: 100};
     const repo = new RepoBuilder().defaultDataLimit(limit).build();
-    expect(repo.dataLimit).toEqual(limit);
+    expect(repo.defaultDataLimit).toEqual(limit);
     await expectNoAsyncThrow(repo.removeDefaultDataLimit.bind(repo));
-    expect(repo.dataLimit).toBeUndefined();
+    expect(repo.defaultDataLimit).toBeUndefined();
     done();
   });
 
