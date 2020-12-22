@@ -541,8 +541,6 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
     this.shouldShowSideBar = false;
 
-    // TODO: Replace adminEmail and serverList with DisplayAccount
-    // TODO: Remove/refactor _computeIsSignedInToDigitalOcean
     this.adminEmail = '';
     /** @type {DisplayServer[]} */
     this.managedServerList = [];

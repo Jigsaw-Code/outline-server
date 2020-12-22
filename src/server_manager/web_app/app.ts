@@ -401,12 +401,6 @@ export class App {
         displayServers.push(displayServerBeingCreated);
       }
       this.appRoot.managedServerList = displayServers;
-
-      // const managedDisplayServers = displayServers.filter((displayServer) =>
-      // displayServer.isManaged); const manualDisplayServers =
-      // displayServers.filter((displayServer) => !displayServer.isManaged);
-      // this.appRoot.managedServerList = managedDisplayServers;
-      // this.appRoot.manualServerList = manualDisplayServers;
     });
   }
 
