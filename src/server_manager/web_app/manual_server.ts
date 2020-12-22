@@ -19,9 +19,7 @@ import {ShadowboxServer} from './shadowbox_server';
 
 class ManualServer extends ShadowboxServer implements server.ManualServer {
   constructor(
-      private name: string,
-      private apiUrl: string,
-      private certSha256: string,
+      private name: string, private apiUrl: string, private certSha256: string,
       private forgetCallback: Function) {
     super();
     this.setManagementApiUrl(this.apiUrl);
@@ -103,13 +101,14 @@ export class ManualServerRepository implements server.ManualServerRepository {
   }
 
   private async storeServers() {
-    const persistences: PersistedManualServer[] = await Promise.all(this.servers.map(async (server) => {
-      return {
-        name: server.getName(),
-        apiUrl: server.getManagementApiUrl(),
-        certSha256: server.getCertificateFingerprint()
-      };
-    }));
+    const persistences: PersistedManualServer[] =
+        await Promise.all(this.servers.map(async (server) => {
+          return {
+            name: server.getName(),
+            apiUrl: server.getManagementApiUrl(),
+            certSha256: server.getCertificateFingerprint()
+          };
+        }));
     localStorage.setItem(this.storageKey, JSON.stringify(persistences));
   }
 
