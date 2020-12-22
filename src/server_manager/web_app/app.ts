@@ -709,7 +709,7 @@ export class App {
             if (managedServers.length > 0) {
               this.syncServersToDisplay(managedServers).then(() => {
                 // Show the first server in the list since the user just signed in to DO.
-                const displayServer = this.appRoot.serverList.find(
+                const displayServer = this.appRoot.managedServerList.find(
                     (displayServer: DisplayServer) => displayServer.isManaged);
                 this.showServerFromRepository(displayServer);
               });
