@@ -20,7 +20,7 @@ import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
-import {ManagedServer} from '../model/server';
+import {ManualServerRepository} from '../model/server';
 
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
@@ -148,7 +148,7 @@ export class App {
       private appRoot: AppRoot, private readonly version: string,
       private createDigitalOceanSession: DigitalOceanSessionFactory,
       private createDigitalOceanServerRepository: DigitalOceanServerRepositoryFactory,
-      private manualServerRepository: server.ManualServerRepository,
+      private manualServerRepository: ManualServerRepository,
       private displayServerRepository: DisplayServerRepository,
       private digitalOceanTokenManager: TokenManager) {
     appRoot.setAttribute('outline-version', this.version);
@@ -166,10 +166,6 @@ export class App {
 
     appRoot.addEventListener('DeleteServerRequested', (event: CustomEvent) => {
       this.deleteSelectedServer();
-    });
-
-    appRoot.addEventListener('ForgetServerRequested', (event: CustomEvent) => {
-      this.forgetSelectedServer();
     });
 
     appRoot.addEventListener('AddAccessKeyRequested', (event: CustomEvent) => {
@@ -200,6 +196,36 @@ export class App {
       this.setHostnameForAccessKeys(event.detail.validatedInput, event.detail.ui);
     });
 
+    appRoot.addEventListener('ManualServerEntered', async (event: CustomEvent) => {
+      const userInput = event.detail.userInput;
+      const manualServerEntryEl = appRoot.getManualServerEntry();
+
+      try {
+        await this.createManualServer(userInput);
+        // Clear fields on outline-manual-server-entry (e.g. dismiss the connecting popup).
+        manualServerEntryEl.clear();
+        this.loadManualServers();
+      } catch (e) {
+        // Remove the progress indicator.
+        manualServerEntryEl.showConnection = false;
+        // Display either error dialog or feedback depending on error type.
+        if (e instanceof errors.UnreachableServerError) {
+          const errorTitle = appRoot.localize('error-server-unreachable-title');
+          const errorMessage = appRoot.localize('error-server-unreachable');
+          this.appRoot.showManualServerError(errorTitle, errorMessage);
+        } else {
+          // TODO(alalama): with UI validation, this code path never gets executed. Remove?
+          let errorMessage = '';
+          if (e.message) {
+            errorMessage += `${e.message}\n`;
+          }
+          if (userInput) {
+            errorMessage += userInput;
+          }
+          appRoot.openManualInstallFeedback(errorMessage);
+        }
+      }
+    });
     // The UI wants us to validate a server management URL.
     // "Reply" by setting a field on the relevant template.
     appRoot.addEventListener('ManualServerEdited', (event: CustomEvent) => {
@@ -212,35 +238,8 @@ export class App {
       const manualServerEntryEl = appRoot.getManualServerEntry();
       manualServerEntryEl.enableDoneButton = isValid;
     });
-
-    appRoot.addEventListener('ManualServerEntered', (event: CustomEvent) => {
-      const userInput = event.detail.userInput;
-      const manualServerEntryEl = appRoot.getManualServerEntry();
-      this.createManualServer(userInput)
-          .then(() => {
-            // Clear fields on outline-manual-server-entry (e.g. dismiss the connecting popup).
-            manualServerEntryEl.clear();
-          })
-          .catch((e: Error) => {
-            // Remove the progress indicator.
-            manualServerEntryEl.showConnection = false;
-            // Display either error dialog or feedback depending on error type.
-            if (e instanceof errors.UnreachableServerError) {
-              const errorTitle = appRoot.localize('error-server-unreachable-title');
-              const errorMessage = appRoot.localize('error-server-unreachable');
-              this.appRoot.showManualServerError(errorTitle, errorMessage);
-            } else {
-              // TODO(alalama): with UI validation, this code path never gets executed. Remove?
-              let errorMessage = '';
-              if (e.message) {
-                errorMessage += `${e.message}\n`;
-              }
-              if (userInput) {
-                errorMessage += userInput;
-              }
-              appRoot.openManualInstallFeedback(errorMessage);
-            }
-          });
+    appRoot.addEventListener('ForgetServerRequested', (event: CustomEvent) => {
+      this.forgetSelectedServer();
     });
 
     appRoot.addEventListener('EnableMetricsRequested', (event: CustomEvent) => {
@@ -429,9 +428,6 @@ export class App {
         server = managedServers.find(
             (managedServer) => managedServer.getManagementApiUrl() === apiManagementUrl);
       }
-    } else {
-      server =
-          this.manualServerRepository.findServer({'apiUrl': apiManagementUrl, 'certSha256': ''});
     }
     return server;
   }
@@ -1131,7 +1127,7 @@ export class App {
 
   // Returns promise which fulfills when the server is created successfully,
   // or rejects with an error message that can be displayed to the user.
-  public createManualServer(userInput: string): Promise<void> {
+  public async createManualServer(userInput: string): Promise<void> {
     let serverConfig: server.ManualServerConfig;
     try {
       serverConfig = parseManualServerConfig(userInput);
@@ -1142,27 +1138,20 @@ export class App {
       return Promise.reject(new Error(msg));
     }
 
-    // Don't let `ManualServerRepository.addServer` throw to avoid redundant error handling if we
-    // are adding an existing server. Query the repository instead to treat the UI accordingly.
-    const storedServer = this.manualServerRepository.findServer(serverConfig);
-    if (!!storedServer) {
-      return this.syncServerToDisplay(storedServer).then((displayServer) => {
-        this.appRoot.showNotification(this.appRoot.localize('notification-server-exists'), 5000);
-        this.showServerIfHealthy(storedServer, displayServer);
-      });
+    let manualServer = this.manualServerRepository.findServer(serverConfig);
+    if (!manualServer) {
+      manualServer = await this.manualServerRepository.addServer(serverConfig);
     }
-    return this.manualServerRepository.addServer(serverConfig).then((manualServer) => {
-      return manualServer.isHealthy().then((isHealthy) => {
-        if (isHealthy) {
-          return this.syncAndShowServer(manualServer);
-        } else {
-          // Remove inaccessible manual server from local storage if it was just created.
-          manualServer.forget();
-          console.error('Manual server installed but unreachable.');
-          return Promise.reject(new errors.UnreachableServerError());
-        }
-      });
-    });
+    if (await manualServer.isHealthy()) {
+      await this.loadManualServers();
+      const displayServer = await makeDisplayServer(manualServer);
+      return this.showServer(manualServer, displayServer);
+    } else {
+      // Remove inaccessible manual server from local storage if it was just created.
+      manualServer.forget();
+      console.error('Manual server installed but unreachable.');
+      return Promise.reject(new errors.UnreachableServerError());
+    }
   }
 
   private removeAccessKey(accessKeyId: string) {
@@ -1224,9 +1213,9 @@ export class App {
     const confirmationButton = this.appRoot.localize('remove');
     this.appRoot.getConfirmation(confirmationTitle, confirmationText, confirmationButton, () => {
       serverToForget.forget();
-      this.removeServerFromDisplay(this.appRoot.selectedServer);
       this.appRoot.selectedServer = null;
       this.selectedServer = null;
+      this.loadManualServers();
       this.showIntro();
       this.appRoot.showNotification(this.appRoot.localize('notification-server-removed'));
     });

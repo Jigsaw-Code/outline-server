@@ -122,7 +122,8 @@ document.addEventListener('WebComponentsReady', () => {
   appRoot.setLanguage(language.string(), languageDirection);
   new App(
       appRoot, version, digitalocean_api.createDigitalOceanSession,
-      digitalOceanServerRepositoryFactory, new ManualServerRepository('manualServers'),
+      digitalOceanServerRepositoryFactory,
+      new ManualServerRepository('manualServers'),
       new DisplayServerRepository(), new DigitalOceanTokenManager())
       .start();
 });

@@ -19,14 +19,17 @@ import {ShadowboxServer} from './shadowbox_server';
 
 class ManualServer extends ShadowboxServer implements server.ManualServer {
   constructor(
-      private manualServerConfig: server.ManualServerConfig, private forgetCallback: Function) {
+      private name: string,
+      private apiUrl: string,
+      private certSha256: string,
+      private forgetCallback: Function) {
     super();
-    this.setManagementApiUrl(manualServerConfig.apiUrl);
+    this.setManagementApiUrl(this.apiUrl);
     // manualServerConfig.certSha256 is expected to be in hex format (install script).
     // Electron requires that this be decoded from hex (to unprintable binary),
     // then encoded as base64.
     try {
-      trustCertificate(btoa(hexToString(manualServerConfig.certSha256)));
+      trustCertificate(btoa(hexToString(this.certSha256)));
     } catch (e) {
       // Error trusting certificate, may be due to bad user input.
       console.error('Error trusting certificate');
@@ -34,12 +37,18 @@ class ManualServer extends ShadowboxServer implements server.ManualServer {
   }
 
   getCertificateFingerprint() {
-    return this.manualServerConfig.certSha256;
+    return this.certSha256;
   }
 
   forget(): void {
-    this.forgetCallback();
+    this.forgetCallback(this);
   }
+}
+
+interface PersistedManualServer {
+  name: string;
+  apiUrl: string;
+  certSha256: string;
 }
 
 export class ManualServerRepository implements server.ManualServerRepository {
@@ -55,10 +64,18 @@ export class ManualServerRepository implements server.ManualServerRepository {
       console.debug('server already added');
       return Promise.resolve(existingServer);
     }
-    const server = this.createServer(config);
+
+    const server = this.createServer('', config.apiUrl, config.certSha256);
     this.servers.push(server);
     this.storeServers();
     return Promise.resolve(server);
+  }
+
+  removeServer(config: server.ManualServerConfig): void {
+    this.servers = this.servers.filter((server) => {
+      return config.apiUrl !== server.getManagementApiUrl();
+    });
+    this.storeServers();
   }
 
   listServers(): Promise<server.ManualServer[]> {
@@ -75,8 +92,9 @@ export class ManualServerRepository implements server.ManualServerRepository {
     if (serversJson) {
       try {
         const serverConfigs = JSON.parse(serversJson);
-        this.servers = serverConfigs.map((config: server.ManualServerConfig) => {
-          return this.createServer(config);
+        this.servers = serverConfigs.map((persistedServer: PersistedManualServer) => {
+          return this.createServer(
+              persistedServer.name, persistedServer.apiUrl, persistedServer.certSha256);
         });
       } catch (e) {
         console.error('Error creating manual servers from localStorage');
@@ -84,22 +102,23 @@ export class ManualServerRepository implements server.ManualServerRepository {
     }
   }
 
-  private storeServers() {
-    const serverConfigs: server.ManualServerConfig[] = this.servers.map((server) => {
-      return {apiUrl: server.getManagementApiUrl(), certSha256: server.getCertificateFingerprint()};
-    });
-    localStorage.setItem(this.storageKey, JSON.stringify(serverConfigs));
+  private async storeServers() {
+    const persistences: PersistedManualServer[] = await Promise.all(this.servers.map(async (server) => {
+      return {
+        name: server.getName(),
+        apiUrl: server.getManagementApiUrl(),
+        certSha256: server.getCertificateFingerprint()
+      };
+    }));
+    localStorage.setItem(this.storageKey, JSON.stringify(persistences));
   }
 
-  private createServer(config: server.ManualServerConfig) {
-    const server = new ManualServer(config, () => {
-      this.forgetServer(server);
-    });
-    return server;
+  private createServer(name: string, apiUrl: string, certSha256: string) {
+    return new ManualServer(name, apiUrl, certSha256, this.forgetServer.bind(this));
   }
 
-  private forgetServer(serverToForget: server.ManualServer): void {
-    const apiUrl = serverToForget.getManagementApiUrl();
+  private forgetServer(server: server.ManualServer): void {
+    const apiUrl = server.getManagementApiUrl();
     this.servers = this.servers.filter((server) => {
       return apiUrl !== server.getManagementApiUrl();
     });

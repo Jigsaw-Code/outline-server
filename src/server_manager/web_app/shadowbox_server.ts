@@ -100,7 +100,7 @@ export class ShadowboxServer implements server.Server {
   }
 
   getName(): string {
-    return this.serverConfig.name;
+    return this.serverConfig?.name;
   }
 
   setName(name: string): Promise<void> {
