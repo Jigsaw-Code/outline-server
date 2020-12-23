@@ -459,7 +459,7 @@ export class App {
   private showServerFromRepository(displayServer: DisplayServer) {
     this.getServerFromRepository(displayServer).then((server) => {
       if (!!server) {
-        this.showServerIfHealthy(server, displayServer);
+        this.showServer(server, displayServer);
       }
     });
   }
@@ -474,7 +474,7 @@ export class App {
     }
     const server = await this.getServerFromRepository(displayServer);
     if (!!server) {
-      this.showServerIfHealthy(server, displayServer);
+      this.showServer(server, displayServer);
     } else if (!!this.serverBeingCreated) {
       this.showServerCreationProgress();
     } else {
@@ -563,50 +563,50 @@ export class App {
     });
   }
 
-  private showServerIfHealthy(server: server.Server, displayServer: DisplayServer) {
-    server.isHealthy().then((isHealthy) => {
-      if (isHealthy) {
-        // Sync the server display in case it was previously unreachable.
-        this.syncServerToDisplay(server).then(() => {
-          this.showServer(server, displayServer);
-        });
-      } else {
-        // Display the unreachable server state within the server view.
-        const serverView = this.appRoot.getServerView(displayServer.id) as ServerView;
-        serverView.isServerReachable = false;
-        serverView.isServerManaged = isManagedServer(server);
-        serverView.serverName = displayServer.name;  // Don't get the name from the remote server.
-        serverView.retryDisplayingServer = () => {
-          // Refresh the server list if the server is managed, it may have been deleted outside the
-          // app.
-          let serverExistsPromise = Promise.resolve(true);
-          if (serverView.isServerManaged && !!this.digitalOceanRepository) {
-            serverExistsPromise =
-                this.digitalOceanRepository.listServers().then((managedServers) => {
-                  return this.getServerFromRepository(displayServer).then((server) => {
-                    return !!server;
-                  });
-                });
-          }
-          serverExistsPromise.then((serverExists: boolean) => {
-            if (serverExists) {
-              this.showServerIfHealthy(server, displayServer);
-            } else {
-              // Server has been deleted outside the app.
-              this.appRoot.showError(
-                  this.appRoot.localize('error-server-removed', 'serverName', displayServer.name));
-              this.removeServerFromDisplay(displayServer);
-              this.selectedServer = null;
-              this.appRoot.selectedServer = null;
-              this.showIntro();
-            }
+  private async showServer(server: server.Server, displayServer: DisplayServer): Promise<void> {
+    if (await server.isHealthy()) {
+      // Sync the server display in case it was previously unreachable.
+      await this.syncServerToDisplay(server);
+      await this.showServerManagement(server, displayServer);
+    } else {
+      this.showServerUnreachable(server, displayServer);
+    }
+  }
+
+  private showServerUnreachable(server: server.Server, displayServer: DisplayServer) {
+    // Display the unreachable server state within the server view.
+    const serverView = this.appRoot.getServerView(displayServer.id) as ServerView;
+    serverView.isServerReachable = false;
+    serverView.isServerManaged = isManagedServer(server);
+    serverView.serverName = displayServer.name;  // Don't get the name from the remote server.
+    serverView.retryDisplayingServer = () => {
+      // Refresh the server list if the server is managed, it may have been deleted outside the
+      // app.
+      let serverExistsPromise = Promise.resolve(true);
+      if (serverView.isServerManaged && !!this.digitalOceanRepository) {
+        serverExistsPromise = this.digitalOceanRepository.listServers().then((managedServers) => {
+          return this.getServerFromRepository(displayServer).then((server) => {
+            return !!server;
           });
-        };
-        this.selectedServer = server;
-        this.appRoot.selectedServer = displayServer;
-        this.appRoot.showServerView();
+        });
       }
-    });
+      serverExistsPromise.then((serverExists: boolean) => {
+        if (serverExists) {
+          this.showServer(server, displayServer);
+        } else {
+          // Server has been deleted outside the app.
+          this.appRoot.showError(
+              this.appRoot.localize('error-server-removed', 'serverName', displayServer.name));
+          this.removeServerFromDisplay(displayServer);
+          this.selectedServer = null;
+          this.appRoot.selectedServer = null;
+          this.showIntro();
+        }
+      });
+    };
+    this.selectedServer = server;
+    this.appRoot.selectedServer = displayServer;
+    this.appRoot.showServerView();
   }
 
   // Intended to add a "retry or re-authenticate?" prompt to DigitalOcean
@@ -827,11 +827,12 @@ export class App {
   private async syncAndShowServer(server: server.Server, timeoutMs = 250) {
     const displayServer = await this.syncServerToDisplay(server);
     await this.syncDisplayServersToUi();
-    this.showServer(server, displayServer);
+    this.showServerManagement(server, displayServer);
   }
 
   // Show the server management screen. Assumes the server is healthy.
-  private async showServer(selectedServer: server.Server, selectedDisplayServer: DisplayServer) {
+  private async showServerManagement(
+      selectedServer: server.Server, selectedDisplayServer: DisplayServer) {
     this.selectedServer = selectedServer;
     this.appRoot.selectedServer = selectedDisplayServer;
     this.displayServerRepository.storeLastDisplayedServerId(selectedDisplayServer.id);
@@ -1119,7 +1120,7 @@ export class App {
     if (!!storedServer) {
       return this.syncServerToDisplay(storedServer).then((displayServer) => {
         this.appRoot.showNotification(this.appRoot.localize('notification-server-exists'), 5000);
-        this.showServerIfHealthy(storedServer, displayServer);
+        this.showServer(storedServer, displayServer);
       });
     }
     return this.manualServerRepository.addServer(serverConfig).then((manualServer) => {
