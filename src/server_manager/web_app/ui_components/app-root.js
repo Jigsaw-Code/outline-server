@@ -738,7 +738,6 @@ export class AppRoot extends mixinBehaviors
   }
 
   _computeHasManualServers(managedServerList) {
-    console.log(managedServerList.length);
     return managedServerList && managedServerList.length > 0;
   }
 
