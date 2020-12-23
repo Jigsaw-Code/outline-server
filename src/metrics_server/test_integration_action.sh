@@ -41,6 +41,7 @@ USER_ID2=$(uuidgen)
 # BYTES_TRANSFERRED2 < BYTES_TRANSFERRED1 so we can order the records before comparing them.
 BYTES_TRANSFERRED1=$((2 + RANDOM % 100))
 BYTES_TRANSFERRED2=$(($BYTES_TRANSFERRED1 - 1))
+PER_KEY_LIMIT_COUNT=$((RANDOM))
 
 echo "Using tmp directory $TMPDIR"
 
@@ -67,7 +68,8 @@ cat << EOF > $FEATURES_REQUEST
   "serverVersion": "$SERVER_VERSION",
   "timestampUtcMs": $TIMESTAMP,
   "dataLimit": {
-    "enabled": false
+    "enabled": false,
+    "perKeyLimitCount": $PER_KEY_LIMIT_COUNT
   }
 }
 EOF
@@ -78,7 +80,7 @@ cat << EOF > $CONNECTIONS_EXPECTED_RESPONSE
 [{"bytesTransferred":"$BYTES_TRANSFERRED1","countries":["US","NL"],"serverId":"$SERVER_ID","userId":"$USER_ID1"},{"bytesTransferred":"$BYTES_TRANSFERRED2","countries":["UK"],"serverId":"$SERVER_ID","userId":"$USER_ID2"}]
 EOF
 cat << EOF > $FEATURES_EXPECTED_RESPONSE
-[{"dataLimit":{"enabled":"false"},"serverId":"$SERVER_ID","serverVersion":"$SERVER_VERSION"}]
+[{"dataLimit":{"enabled":"false","perKeyLimitCount":"$PER_KEY_LIMIT_COUNT"},"serverId":"$SERVER_ID","serverVersion":"$SERVER_VERSION"}]
 EOF
 
 echo "Connections request:"

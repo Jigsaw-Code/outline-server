@@ -53,12 +53,16 @@ function wait_for_resource() {
   until curl --silent --insecure $URL > /dev/null; do sleep 1; done
 }
 
+function util_jq() {
+  docker exec -i $UTIL_CONTAINER jq "$@"
+}
+
 # Takes the JSON from a /access-keys POST request and returns the appropriate
 # ss-local arguments to connect to that user/instance.
 function ss_arguments_for_user() {
-  declare -r SS_INSTANCE_CIPHER=$(echo $1 | docker exec -i $UTIL_CONTAINER jq -r .method)
-  declare -r SS_INSTANCE_PASSWORD=$(echo $1 | docker exec -i $UTIL_CONTAINER jq -r .password)
-  declare -r SS_INSTANCE_PORT=$(echo $1 | docker exec -i $UTIL_CONTAINER jq .port)
+  declare -r SS_INSTANCE_CIPHER=$(echo $1 | util_jq -r .method)
+  declare -r SS_INSTANCE_PASSWORD=$(echo $1 | util_jq -r .password)
+  declare -r SS_INSTANCE_PORT=$(echo $1 | util_jq .port)
   echo -cipher "$SS_INSTANCE_CIPHER" -password "$SS_INSTANCE_PASSWORD" -c "shadowbox:$SS_INSTANCE_PORT"
 }
 
@@ -136,44 +140,89 @@ function cleanup() {
     sleep 0.1
   done
 
-  # Verify the server blocks requests to hosts on private addresses.
-  # Exit code 52 is "Empty server response".
-  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $TARGET_IP &> /dev/null \
-    && fail "Target host in a private network accessible through shadowbox" || (($? == 52))
+  function test_networking() {
+    # Verify the server blocks requests to hosts on private addresses.
+    # Exit code 52 is "Empty server response".
+    client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $TARGET_IP &> /dev/null \
+      && fail "Target host in a private network accessible through shadowbox" || (($? == 52))
 
-  # Verify we can retrieve the internet target URL.
-  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $INTERNET_TARGET_URL \
-    || fail "Could not fetch $INTERNET_TARGET_URL through shadowbox."
+    # Verify we can retrieve the internet target URL.
+    client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $INTERNET_TARGET_URL \
+      || fail "Could not fetch $INTERNET_TARGET_URL through shadowbox."
 
-  # Verify we can't access the URL anymore after the key is deleted
-  client_curl --insecure -X DELETE ${SB_API_URL}/access-keys/0 > /dev/null
-  # Exit code 56 is "Connection reset by peer".
-  client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $INTERNET_TARGET_URL &> /dev/null \
-    && fail "Deleted access key is still active" || (($? == 56))
+    # Verify we can't access the URL anymore after the key is deleted
+    client_curl --insecure -X DELETE ${SB_API_URL}/access-keys/0 > /dev/null
+    # Exit code 56 is "Connection reset by peer".
+    client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $INTERNET_TARGET_URL &> /dev/null \
+      && fail "Deleted access key is still active" || (($? == 56))
+  }
 
-  # Verify that we can change the port for new access keys
-  client_curl --insecure -X PUT -H "Content-Type: application/json" -d '{"port": 12345}' ${SB_API_URL}/server/port-for-new-access-keys \
-    || fail "Couldn't change the port for new access keys"
+  function test_port_for_new_keys() {
+    # Verify that we can change the port for new access keys
+    client_curl --insecure -X PUT -H "Content-Type: application/json" -d '{"port": 12345}' ${SB_API_URL}/server/port-for-new-access-keys \
+      || fail "Couldn't change the port for new access keys"
 
-  ACCESS_KEY_JSON=$(client_curl --insecure -X POST ${SB_API_URL}/access-keys \
-    || fail "Couldn't get a new access key after changing port")
+    ACCESS_KEY_JSON=$(client_curl --insecure -X POST ${SB_API_URL}/access-keys \
+      || fail "Couldn't get a new access key after changing port")
+    
+    if [[ "${ACCESS_KEY_JSON}" != *'"port":12345'* ]]; then
+      fail "Port for new access keys wasn't changed.  Newly created access key: ${ACCESS_KEY_JSON}"
+    fi
+  }
+
+  function test_hostname_for_new_keys() { 
+    # Verify that we can change the hostname for new access keys
+    NEW_HOSTNAME="newhostname"
+    client_curl --insecure -X PUT -H 'Content-Type: application/json' -d '{"hostname": "'${NEW_HOSTNAME}'"}' ${SB_API_URL}/server/hostname-for-access-keys \
+      || fail "Couldn't change hostname for new access keys"
+
+    ACCESS_KEY_JSON=$(client_curl --insecure -X POST ${SB_API_URL}/access-keys \
+      || fail "Couldn't get a new access key after changing hostname")
+    
+    if [[ "${ACCESS_KEY_JSON}" != *"@${NEW_HOSTNAME}:"* ]]; then
+      fail "Hostname for new access keys wasn't changed.  Newly created access key: ${ACCESS_KEY_JSON}"
+    fi
+  }
+
+  function test_default_data_limit() {
+    # Verify that we can create default data limits
+    client_curl --insecure -X PUT -H 'Content-Type: application/json' -d '{"limit": {"bytes": 1000}}' \
+        ${SB_API_URL}/server/access-key-data-limit \
+      || fail "Couldn't create default data limit"
+    client_curl --insecure ${SB_API_URL}/server | grep -q 'accessKeyDataLimit' || fail 'Default data limit not set'
+   
+   # Verify that we can remove default data limits
+    client_curl --insecure -X DELETE ${SB_API_URL}/server/access-key-data-limit \
+      || fail "Couldn't remove default data limit"
+    client_curl --insecure ${SB_API_URL}/server | grep -vq 'accessKeyDataLimit' || fail 'Default data limit not removed'
+  }
+
+  function test_per_key_data_limits() {
+    # Verify that we can create per-key data limits
+    ACCESS_KEY_ID=$(client_curl --insecure -X POST ${SB_API_URL}/access-keys | util_jq -re .id \
+      || fail "Couldn't get a key to test custom data limits")
+
+    client_curl --insecure -X PUT -H 'Content-Type: application/json' -d '{"limit": {"bytes": 1000}}' \
+        ${SB_API_URL}/access-keys/${ACCESS_KEY_ID}/data-limit \
+      || fail "Couldn't create per-key data limit"
+    client_curl --insecure ${SB_API_URL}/access-keys \
+      | util_jq -e ".accessKeys[] | select(.id == \"${ACCESS_KEY_ID}\") | .dataLimit.bytes" \
+      || fail 'Per-key data limit not set'
+   
+    # Verify that we can remove per-key data limits
+    client_curl --insecure -X DELETE ${SB_API_URL}/access-keys/${ACCESS_KEY_ID}/data-limit \
+      || fail "Couldn't remove per-key data limit"
+    ! client_curl --insecure ${SB_API_URL}/access-keys \
+      | util_jq -e ".accessKeys[] | select(.id == \"${ACCESS_KEY_ID}\") | .dataLimit.bytes" \
+      || fail 'Per-key data limit not removed'
+  }
   
-  if [[ "${ACCESS_KEY_JSON}" != *'"port":12345'* ]]; then
-    fail "Port for new access keys wasn't changed.  Newly created access key: ${ACCESS_KEY_JSON}"
-  fi
+  test_networking
+  test_port_for_new_keys 
+  test_hostname_for_new_keys
+  test_default_data_limit
+  test_per_key_data_limits
 
-  # Verify that we can change the hostname for new access keys
-  NEW_HOSTNAME="newhostname"
-  client_curl --insecure -X PUT -H 'Content-Type: application/json' -d '{"hostname": "'${NEW_HOSTNAME}'"}' ${SB_API_URL}/server/hostname-for-access-keys \
-    || fail "Couldn't change hostname for new access keys"
-
-  ACCESS_KEY_JSON=$(client_curl --insecure -X POST ${SB_API_URL}/access-keys \
-    || fail "Couldn't get a new access key after changing hostname")
-  
-  if [[ "${ACCESS_KEY_JSON}" != *"@${NEW_HOSTNAME}:"* ]]; then
-    fail "Hostname for new access keys wasn't changed.  Newly created access key: ${ACCESS_KEY_JSON}"
-  fi
-  
   # Verify no errors occurred.
   readonly SHADOWBOX_LOG=$OUTPUT_DIR/shadowbox-log.txt
   if docker logs $SHADOWBOX_CONTAINER 2>&1 | tee $SHADOWBOX_LOG | egrep -q "^E|level=error|ERROR:"; then

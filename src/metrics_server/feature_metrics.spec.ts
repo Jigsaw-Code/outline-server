@@ -54,6 +54,24 @@ describe('isValidFeatureMetricsReport', () => {
     };
     expect(isValidFeatureMetricsReport(report)).toBeTruthy();
   });
+  it('returns true for valid report with per-key data limit count', () => {
+    const report = {
+      serverId: 'id',
+      serverVersion: '0.0.0',
+      timestampUtcMs: 123456,
+      dataLimit: {enabled: true, perKeyLimitCount: 1}
+    };
+    expect(isValidFeatureMetricsReport(report)).toBeTruthy();
+  });
+  it('returns false for report with negative per-key data limit count', () => {
+    const report = {
+      serverId: 'id',
+      serverVersion: '0.0.0',
+      timestampUtcMs: 123456,
+      dataLimit: {enabled: true, perKeyLimitCount: -1}
+    };
+    expect(isValidFeatureMetricsReport(report)).toBeFalsy();
+  });
   it('returns false for missing report', () => {
     expect(isValidFeatureMetricsReport(undefined)).toBeFalsy();
   });

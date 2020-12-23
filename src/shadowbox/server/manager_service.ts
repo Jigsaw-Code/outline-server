@@ -28,7 +28,7 @@ import {ServerConfigJson} from './server_config';
 import {SharedMetricsPublisher} from './shared_metrics';
 
 // Creates a AccessKey response.
-function accessKeyToJson(accessKey: AccessKey) {
+function accessKeyToApiJson(accessKey: AccessKey) {
   return {
     // The unique identifier of this access key.
     id: accessKey.id,
@@ -38,12 +38,13 @@ function accessKeyToJson(accessKey: AccessKey) {
     password: accessKey.proxyParams.password,
     port: accessKey.proxyParams.portNumber,
     method: accessKey.proxyParams.encryptionMethod,
+    dataLimit: accessKey.dataLimit,
     accessUrl: SIP002_URI.stringify(makeConfig({
       host: accessKey.proxyParams.hostname,
       port: accessKey.proxyParams.portNumber,
       method: accessKey.proxyParams.encryptionMethod,
       password: accessKey.proxyParams.password,
-      outline: 1,
+      outline: 1
     }))
   };
 }
@@ -78,9 +79,9 @@ export function bindService(
   apiServer.put(`${apiPrefix}/name`, service.renameServer.bind(service));
   apiServer.get(`${apiPrefix}/server`, service.getServer.bind(service));
   apiServer.put(
-      `${apiPrefix}/server/access-key-data-limit`, service.setAccessKeyDataLimit.bind(service));
+      `${apiPrefix}/server/access-key-data-limit`, service.setDefaultDataLimit.bind(service));
   apiServer.del(
-      `${apiPrefix}/server/access-key-data-limit`, service.removeAccessKeyDataLimit.bind(service));
+      `${apiPrefix}/server/access-key-data-limit`, service.removeDefaultDataLimit.bind(service));
   apiServer.put(
       `${apiPrefix}/server/hostname-for-access-keys`,
       service.setHostnameForAccessKeys.bind(service));
@@ -93,6 +94,8 @@ export function bindService(
 
   apiServer.del(`${apiPrefix}/access-keys/:id`, service.removeAccessKey.bind(service));
   apiServer.put(`${apiPrefix}/access-keys/:id/name`, service.renameAccessKey.bind(service));
+  apiServer.put(`${apiPrefix}/access-keys/:id/data-limit`, service.setAccessKeyDataLimit.bind(service));
+  apiServer.del(`${apiPrefix}/access-keys/:id/data-limit`, service.removeAccessKeyDataLimit.bind(service));
 
   apiServer.get(`${apiPrefix}/metrics/transfer`, service.getDataUsage.bind(service));
   apiServer.get(`${apiPrefix}/metrics/enabled`, service.getShareMetrics.bind(service));
@@ -123,6 +126,19 @@ function validateAccessKeyId(accessKeyId: unknown): string {
         {statusCode: 400}, 'Parameter `id` must be of type string');
   }
   return accessKeyId;
+}
+
+function validateDataLimit(limit: unknown): DataLimit {
+  if (!limit) {
+    throw new restifyErrors.MissingParameterError(
+        {statusCode: 400}, 'Missing `limit` parameter');
+  }
+  const bytes = (limit as DataLimit).bytes;
+  if (!(Number.isInteger(bytes) && bytes >= 0)) {
+    throw new restifyErrors.InvalidArgumentError(
+        {statusCode: 400}, '`limit.bytes` must be an non-negative integer');
+  }
+  return limit as DataLimit;
 }
 
 // The ShadowsocksManagerService manages the access keys that can use the server
@@ -201,7 +217,7 @@ export class ShadowsocksManagerService {
     logging.debug(`listAccessKeys request ${JSON.stringify(req.params)}`);
     const response = {accessKeys: []};
     for (const accessKey of this.accessKeys.listAccessKeys()) {
-      response.accessKeys.push(accessKeyToJson(accessKey));
+      response.accessKeys.push(accessKeyToApiJson(accessKey));
     }
     logging.debug(`listAccessKeys response ${JSON.stringify(response)}`);
     res.send(HttpSuccess.OK, response);
@@ -213,7 +229,7 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
       this.accessKeys.createNewAccessKey().then((accessKey) => {
-        const accessKeyJson = accessKeyToJson(accessKey);
+        const accessKeyJson = accessKeyToApiJson(accessKey);
         res.send(201, accessKeyJson);
         logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);
         return next();
@@ -302,32 +318,66 @@ export class ShadowsocksManagerService {
   public async setAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`setAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
-      const limit = req.params.limit as DataLimit;
-      if (!limit) {
-        return next(new restifyErrors.MissingParameterError(
-            {statusCode: 400}, 'Missing `limit` parameter'));
-      } else if (!Number.isInteger(limit.bytes)) {
-        return next(new restifyErrors.InvalidArgumentError(
-            {statusCode: 400}, '`limit` must be an integer'));
-      }
-      this.accessKeys.setAccessKeyDataLimit(limit);
-      this.serverConfig.data().accessKeyDataLimit = limit;
-      this.serverConfig.write();
+      const accessKeyId = validateAccessKeyId(req.params.id);
+      const limit = validateDataLimit(req.params.limit);
+      // Enforcement is done asynchronously in the proxy server.  This is transparent to the manager
+      // so this doesn't introduce any race conditions between the server and UI.
+      this.accessKeys.setAccessKeyDataLimit(accessKeyId, limit);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
-    } catch (error) {
+    } catch(error) {
       logging.error(error);
-      if (error instanceof errors.InvalidAccessKeyDataLimit) {
-        return next(new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message));
+      if (error instanceof errors.AccessKeyNotFound) {
+        return next(new restifyErrors.NotFoundError(error.message));
       }
-      return next(new restifyErrors.InternalServerError());
+      return next(error);
     }
   }
 
   public async removeAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`removeAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
-      await this.accessKeys.removeAccessKeyDataLimit();
+      const accessKeyId = validateAccessKeyId(req.params.id);
+      // Enforcement is done asynchronously in the proxy server.  This is transparent to the manager
+      // so this doesn't introduce any race conditions between the server and UI.
+      this.accessKeys.removeAccessKeyDataLimit(accessKeyId);
+      res.send(HttpSuccess.NO_CONTENT);
+      return next();
+    } catch(error) {
+      logging.error(error);
+      if (error instanceof errors.AccessKeyNotFound) {
+        return next(new restifyErrors.NotFoundError(error.message));
+      }
+      return next(error);
+    }
+  }
+
+  public async setDefaultDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
+    try {
+      logging.debug(`setDefaultDataLimit request ${JSON.stringify(req.params)}`);
+      const limit = validateDataLimit(req.params.limit);
+      // Enforcement is done asynchronously in the proxy server.  This is transparent to the manager
+      // so this doesn't introduce any race conditions between the server and UI.
+      this.accessKeys.setDefaultDataLimit(limit);
+      this.serverConfig.data().accessKeyDataLimit = limit;
+      this.serverConfig.write();
+      res.send(HttpSuccess.NO_CONTENT);
+      return next();
+    } catch (error) {
+      logging.error(error);
+      if (error instanceof restifyErrors.InvalidArgumentError || error instanceof restifyErrors.MissingParameterError) {
+        return next(error);
+      }
+      return next(new restifyErrors.InternalServerError());
+    }
+  }
+
+  public async removeDefaultDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
+    try {
+      logging.debug(`removeDefaultDataLimit request ${JSON.stringify(req.params)}`);
+      // Enforcement is done asynchronously in the proxy server.  This is transparent to the manager
+      // so this doesn't introduce any race conditions between the server and UI.
+      this.accessKeys.removeDefaultDataLimit();
       delete this.serverConfig.data().accessKeyDataLimit;
       this.serverConfig.write();
       res.send(HttpSuccess.NO_CONTENT);

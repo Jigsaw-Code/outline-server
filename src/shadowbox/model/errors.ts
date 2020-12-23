@@ -38,9 +38,3 @@ export class AccessKeyNotFound extends OutlineError {
     super(`Access key "${accessKeyId}" not found`);
   }
 }
-
-export class InvalidAccessKeyDataLimit extends OutlineError {
-  constructor() {
-    super('Must provide a limit with a non-negative integer value for "bytes"');
-  }
-}

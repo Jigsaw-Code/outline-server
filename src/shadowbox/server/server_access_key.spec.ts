@@ -17,7 +17,7 @@ import * as net from 'net';
 import {ManualClock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
 import {InMemoryConfig} from '../infrastructure/json_config';
-import {AccessKeyRepository, DataLimit} from '../model/access_key';
+import {AccessKey, AccessKeyId, AccessKeyRepository, DataLimit} from '../model/access_key';
 import * as errors from '../model/errors';
 
 import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
@@ -164,34 +164,131 @@ describe('ServerAccessKeyRepository', () => {
       done();
     });
   });
+  
+  it('setAccessKeyDataLimit can set a custom data limit', async(done) => {
+    const server = new FakeShadowsocksServer();
+    const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
+    const repo = new RepoBuilder().shadowsocksServer(server).keyConfig(config).build();
+    const key = await repo.createNewAccessKey();
+    const limit = {bytes: 5000};
+    await expectNoAsyncThrow(repo.setAccessKeyDataLimit.bind(repo, key.id, {bytes: 5000}));
+    expect(key.dataLimit).toEqual(limit);
+    expect(config.mostRecentWrite.accessKeys[0].dataLimit).toEqual(limit);
+    done();
+  });
 
-  it('can set access key data limit', async (done) => {
+  async function setKeyLimitAndEnforce(
+      repo: ServerAccessKeyRepository, id: AccessKeyId, limit: DataLimit) {
+    repo.setAccessKeyDataLimit(id, limit);
+    // We enforce asynchronously, in setAccessKeyDataLimit, so explicitly call it here to make sure
+    // enforcement is done before we make assertions.
+    return repo.enforceAccessKeyDataLimits();
+  }
+
+  it('setAccessKeyDataLimit can change a key\'s limit status', async(done) => {
+    const server = new FakeShadowsocksServer();
+    const prometheusClient = new FakePrometheusClient({'0': 500});
+    const repo = 
+      new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
+    await repo.start(new ManualClock());
+    const key = await repo.createNewAccessKey();
+    await setKeyLimitAndEnforce(repo, key.id, {bytes: 0});
+
+    expect(key.isOverDataLimit).toBeTruthy();
+    let serverKeys = server.getAccessKeys();
+    expect(serverKeys.length).toEqual(0);
+
+    await setKeyLimitAndEnforce(repo, key.id, {bytes: 1000});
+
+    expect(key.isOverDataLimit).toBeFalsy();
+    serverKeys = server.getAccessKeys();
+    expect(serverKeys.length).toEqual(1);
+    expect(serverKeys[0].id).toEqual(key.id);
+    done();
+  });
+  
+  it('setAccessKeyDataLimit overrides default data limit', async(done) => {
+    const server = new FakeShadowsocksServer();
+    const prometheusClient = new FakePrometheusClient({'0': 750, '1': 1250});
+    const repo = 
+      new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();  
+    await repo.start(new ManualClock());
+    const lowerLimitThanDefault = await repo.createNewAccessKey();
+    const higherLimitThanDefault = await repo.createNewAccessKey();
+    await repo.setDefaultDataLimit({bytes: 1000});
+
+    expect(lowerLimitThanDefault.isOverDataLimit).toBeFalsy();
+    await setKeyLimitAndEnforce(repo, lowerLimitThanDefault.id, {bytes: 500});
+    expect(lowerLimitThanDefault.isOverDataLimit).toBeTruthy();
+
+    expect(higherLimitThanDefault.isOverDataLimit).toBeTruthy();
+    await setKeyLimitAndEnforce(repo, higherLimitThanDefault.id, {bytes: 1500});
+    expect(higherLimitThanDefault.isOverDataLimit).toBeFalsy();
+    done();
+  });
+
+  async function removeKeyLimitAndEnforce(repo: ServerAccessKeyRepository, id: AccessKeyId) {
+    repo.removeAccessKeyDataLimit(id);
+    // We enforce asynchronously, in setAccessKeyDataLimit, so explicitly call it here to make sure
+    // enforcement is done before we make assertions.
+    return repo.enforceAccessKeyDataLimits();
+  }
+
+  it('removeAccessKeyDataLimit can remove a custom data limit', async(done) => {
+    const server = new FakeShadowsocksServer();
+    const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
+    const repo = new RepoBuilder().shadowsocksServer(server).keyConfig(config).build();
+    const key = await repo.createNewAccessKey();
+    await setKeyLimitAndEnforce(repo, key.id, {bytes: 1});
+    await expectNoAsyncThrow(repo.removeAccessKeyDataLimit.bind(repo, key.id));
+    expect(key.dataLimit).toBeFalsy();
+    expect(config.mostRecentWrite.accessKeys[0].dataLimit).not.toBeDefined();
+    done();
+  });
+  
+  it('removeAccessKeyDataLimit restores a key to the default data limit', async(done) => {
+    const server = new FakeShadowsocksServer();
+    const prometheusClient = new FakePrometheusClient({'0': 500});
+    const repo = 
+      new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
+    const key = await repo.createNewAccessKey();
+    await repo.start(new ManualClock());
+    await repo.setDefaultDataLimit({bytes: 0});
+    await setKeyLimitAndEnforce(repo, key.id, {bytes: 1000});
+    expect(key.isOverDataLimit).toBeFalsy();
+
+    await removeKeyLimitAndEnforce(repo, key.id);
+    expect(key.isOverDataLimit).toBeTruthy();
+    done();
+  });
+  
+  it('removeAccessKeyDataLimit can restore an over-limit access key', async(done) => {
+    const server = new FakeShadowsocksServer();
+    const prometheusClient = new FakePrometheusClient({'0': 500});
+    const repo = 
+      new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
+    const key = await repo.createNewAccessKey();
+    await repo.start(new ManualClock());
+
+    await setKeyLimitAndEnforce(repo, key.id, {bytes: 0});
+    expect(key.isOverDataLimit).toBeTruthy();
+    expect(server.getAccessKeys().length).toEqual(0);
+
+    await removeKeyLimitAndEnforce(repo, key.id);
+    expect(key.isOverDataLimit).toBeFalsy();
+    expect(server.getAccessKeys().length).toEqual(1);
+    done();
+  });
+  
+  it('can set default data limit', async (done) => {
     const repo = new RepoBuilder().build();
     const limit = {bytes: 5000};
-    await expectNoAsyncThrow(repo.setAccessKeyDataLimit.bind(repo, limit));
-    expect(repo.dataLimit).toEqual(limit);
+    await expectNoAsyncThrow(repo.setDefaultDataLimit.bind(repo, limit));
+    expect(repo.defaultDataLimit).toEqual(limit);
     done();
   });
 
-  it('setAccessKeyDataLimit fails with disallowed limit values', async (done) => {
-    const repo = new RepoBuilder().build();
-    const accessKey = await repo.createNewAccessKey();
-    // Negative values
-    const negativeBytesLimit = {bytes: -1000};
-    await expectAsyncThrow(
-        repo.setAccessKeyDataLimit.bind(repo, negativeBytesLimit),
-        errors.InvalidAccessKeyDataLimit);
-    // Missing properties
-    const missingDataLimit = {} as DataLimit;
-    await expectAsyncThrow(
-        repo.setAccessKeyDataLimit.bind(repo, missingDataLimit), errors.InvalidAccessKeyDataLimit);
-    // Undefined limit
-    await expectAsyncThrow(
-        repo.setAccessKeyDataLimit.bind(repo, undefined), errors.InvalidAccessKeyDataLimit);
-    done();
-  });
-
-  it('setAccessKeyDataLimit updates keys limit status', async (done) => {
+  it('setDefaultDataLimit updates keys limit status', async (done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 200});
     const repo =
@@ -200,7 +297,10 @@ describe('ServerAccessKeyRepository', () => {
     const accessKey2 = await repo.createNewAccessKey();
     await repo.start(new ManualClock());
 
-    await repo.setAccessKeyDataLimit({bytes: 250});
+    repo.setDefaultDataLimit({bytes: 250});
+    // We enforce asynchronously, in setAccessKeyDataLimit, so explicitly call it here to make sure
+    // enforcement is done before we make assertions.
+    await repo.enforceAccessKeyDataLimits();
     expect(accessKey1.isOverDataLimit).toBeTruthy();
     expect(accessKey2.isOverDataLimit).toBeFalsy();
     // We determine which access keys have been enabled/disabled by accessing them from
@@ -211,7 +311,8 @@ describe('ServerAccessKeyRepository', () => {
     // The over-limit key should be re-enabled after increasing the data limit, while the other key
     // should be disabled after its data usage increased.
     prometheusClient.bytesTransferredById = {'0': 500, '1': 1000};
-    await repo.setAccessKeyDataLimit({bytes: 700});
+    repo.setDefaultDataLimit({bytes: 700});
+    await repo.enforceAccessKeyDataLimits();
     expect(accessKey1.isOverDataLimit).toBeFalsy();
     expect(accessKey2.isOverDataLimit).toBeTruthy();
     serverAccessKeys = server.getAccessKeys();
@@ -220,22 +321,22 @@ describe('ServerAccessKeyRepository', () => {
     done();
   });
 
-  it('can remove access key limits', async (done) => {
+  it('can remove the default data limit', async (done) => {
     const limit = {bytes: 100};
-    const repo = new RepoBuilder().accessKeyDataLimit(limit).build();
-    expect(repo.dataLimit).toEqual(limit);
-    await expectNoAsyncThrow(repo.removeAccessKeyDataLimit.bind(repo));
-    expect(repo.dataLimit).toBeUndefined();
+    const repo = new RepoBuilder().defaultDataLimit(limit).build();
+    expect(repo.defaultDataLimit).toEqual(limit);
+    await expectNoAsyncThrow(repo.removeDefaultDataLimit.bind(repo));
+    expect(repo.defaultDataLimit).toBeUndefined();
     done();
   });
 
-  it('removeAccessKeyDataLimit restores over-limit access keys', async (done) => {
+  it('removeDefaultDataLimit restores over-limit access keys', async (done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 100});
     const repo = new RepoBuilder()
                      .prometheusClient(prometheusClient)
                      .shadowsocksServer(server)
-                     .accessKeyDataLimit({bytes: 200})
+                     .defaultDataLimit({bytes: 200})
                      .build();
 
     const accessKey1 = await repo.createNewAccessKey();
@@ -244,7 +345,10 @@ describe('ServerAccessKeyRepository', () => {
     expect(server.getAccessKeys().length).toEqual(1);
 
     // Remove the limit; expect the key to be under limit and enabled.
-    await expectNoAsyncThrow(repo.removeAccessKeyDataLimit.bind(repo));
+    expectNoAsyncThrow(repo.removeDefaultDataLimit.bind(repo));
+    // We enforce asynchronously, in setAccessKeyDataLimit, so explicitly call it here to make sure
+    // enforcement is done before we make assertions.
+    await repo.enforceAccessKeyDataLimits();
     expect(server.getAccessKeys().length).toEqual(2);
     expect(accessKey1.isOverDataLimit).toBeFalsy();
     expect(accessKey2.isOverDataLimit).toBeFalsy();
@@ -256,7 +360,7 @@ describe('ServerAccessKeyRepository', () => {
         new FakePrometheusClient({'0': 100, '1': 200, '2': 300, '3': 400, '4': 500});
     const limit = {bytes: 250};
     const repo =
-        new RepoBuilder().prometheusClient(prometheusClient).accessKeyDataLimit(limit).build();
+        new RepoBuilder().prometheusClient(prometheusClient).defaultDataLimit(limit).build();
     for (let i = 0; i < Object.keys(prometheusClient.bytesTransferredById).length; ++i) {
       await repo.createNewAccessKey();
     }
@@ -276,13 +380,34 @@ describe('ServerAccessKeyRepository', () => {
     done();
   });
 
+  it('enforceAccessKeyDataLimits respects both default and per-key limits', async (done) => {
+    const prometheusClient = new FakePrometheusClient({'0': 200, '1': 300});
+    const repo =
+        new RepoBuilder().prometheusClient(prometheusClient).defaultDataLimit({bytes: 500}).build();
+    const perKeyLimited = await repo.createNewAccessKey();
+    const defaultLimited = await repo.createNewAccessKey();
+    await setKeyLimitAndEnforce(repo, perKeyLimited.id, {bytes: 100});
+
+    await repo.enforceAccessKeyDataLimits();
+    expect(perKeyLimited.isOverDataLimit).toBeTruthy();
+    expect(defaultLimited.isOverDataLimit).toBeFalsy();
+
+    prometheusClient.bytesTransferredById[perKeyLimited.id] = 50;
+    prometheusClient.bytesTransferredById[defaultLimited.id] = 600;
+    await repo.enforceAccessKeyDataLimits();
+    expect(perKeyLimited.isOverDataLimit).toBeFalsy();
+    expect(defaultLimited.isOverDataLimit).toBeTruthy();
+
+    done();
+  });
+
   it('enforceAccessKeyDataLimits enables and disables keys', async (done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 100});
     const repo = new RepoBuilder()
                      .prometheusClient(prometheusClient)
                      .shadowsocksServer(server)
-                     .accessKeyDataLimit({bytes: 200})
+                     .defaultDataLimit({bytes: 200})
                      .build();
 
     const accessKey1 = await repo.createNewAccessKey();
@@ -361,7 +486,7 @@ describe('ServerAccessKeyRepository', () => {
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
     const accessKey3 = await repo.createNewAccessKey();
-    await repo.setAccessKeyDataLimit({bytes: 300});
+    await repo.setDefaultDataLimit({bytes: 300});
     const clock = new ManualClock();
     await repo.start(clock);
     await clock.runCallbacks();
@@ -429,7 +554,7 @@ class RepoBuilder {
   private keyConfig_ = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
   private shadowsocksServer_ = new FakeShadowsocksServer();
   private prometheusClient_ = new FakePrometheusClient({});
-  private accessKeyDataLimit_;
+  private defaultDataLimit_;
 
   public port(port: number): RepoBuilder {
     this.port_ = port;
@@ -447,14 +572,14 @@ class RepoBuilder {
     this.prometheusClient_ = prometheusClient;
     return this;
   }
-  public accessKeyDataLimit(limit: DataLimit): RepoBuilder {
-    this.accessKeyDataLimit_ = limit;
+  public defaultDataLimit(limit: DataLimit): RepoBuilder {
+    this.defaultDataLimit_ = limit;
     return this;
   }
 
   public build(): ServerAccessKeyRepository {
     return new ServerAccessKeyRepository(
         this.port_, 'hostname', this.keyConfig_, this.shadowsocksServer_, this.prometheusClient_,
-        this.accessKeyDataLimit_);
+        this.defaultDataLimit_);
   }
 }
