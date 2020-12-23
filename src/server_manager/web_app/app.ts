@@ -307,19 +307,17 @@ export class App {
         this.enterDigitalOceanMode(accessToken).catch(e => [] as server.ManagedServer[]) :
         Promise.resolve([]);
 
-    return Promise.all([manualServersPromise, managedServersPromise])
-        .then(([manualServers, managedServers]) => {
-          const installedManagedServers =
-              managedServers.filter(server => server.isInstallCompleted());
-          const serverBeingCreated = managedServers.find(server => !server.isInstallCompleted());
-          if (!!serverBeingCreated) {
-            this.syncServerCreationToUi(serverBeingCreated);
-          }
-          return this.syncServersToDisplay(manualServers.concat(installedManagedServers));
-        })
-        .then(() => {
-          this.maybeShowLastDisplayedServer();
-        });
+    const managedServers = await managedServersPromise;
+    const serverBeingCreated = managedServers.find(server => !server.isInstallCompleted());
+    if (!!serverBeingCreated) {
+      this.syncServerCreationToUi(serverBeingCreated);
+    }
+
+    const installedManagedServers = managedServers.filter(server => server.isInstallCompleted());
+    const manualServers = await manualServersPromise;
+    await this.syncServersToDisplay(manualServers.concat(installedManagedServers));
+
+    this.maybeShowLastDisplayedServer();
   }
 
   private async syncServersToDisplay(servers: server.Server[]) {
@@ -383,12 +381,11 @@ export class App {
   // Updates the UI with the stored display servers and server creation in progress, if any.
   private async syncDisplayServersToUi() {
     const displayServerBeingCreated = this.getDisplayServerBeingCreated();
-    await this.displayServerRepository.listServers().then((displayServers) => {
-      if (!!displayServerBeingCreated) {
-        displayServers.push(displayServerBeingCreated);
-      }
-      this.appRoot.serverList = displayServers;
-    });
+    const displayServers = await this.displayServerRepository.listServers();
+    if (!!displayServerBeingCreated) {
+      displayServers.push(displayServerBeingCreated);
+    }
+    this.appRoot.serverList = displayServers;
   }
 
   // Removes `displayServer` from the UI.
