@@ -317,7 +317,7 @@ export class App {
     const manualServers = await manualServersPromise;
     await this.syncServersToDisplay(manualServers.concat(installedManagedServers));
 
-    this.maybeShowLastDisplayedServer();
+    await this.maybeShowLastDisplayedServer();
   }
 
   private async syncServersToDisplay(servers: server.Server[]) {
@@ -439,7 +439,7 @@ export class App {
   }
 
   // Shows the last server displayed, if there is one in local storage and it still exists.
-  private maybeShowLastDisplayedServer() {
+  private async maybeShowLastDisplayedServer() {
     if (!!this.serverBeingCreated) {
       // The server being created should be shown regardless of the last user selection.
       this.displayServerRepository.removeLastDisplayedServerId();
@@ -453,15 +453,14 @@ export class App {
     if (!lastDisplayedServer) {
       return console.debug('Last displayed server ID not found in display sever repository');
     }
-    this.showServerFromRepository(lastDisplayedServer);
+    await this.showServerFromRepository(lastDisplayedServer);
   }
 
-  private showServerFromRepository(displayServer: DisplayServer) {
-    this.getServerFromRepository(displayServer).then((server) => {
-      if (!!server) {
-        this.showServer(server, displayServer);
-      }
-    });
+  private async showServerFromRepository(displayServer: DisplayServer) {
+    const server = await this.getServerFromRepository(displayServer);
+    if (!!server) {
+      await this.showServer(server, displayServer);
+    }
   }
 
   private async handleShowServerRequested(displayServerId: string) {
@@ -579,30 +578,25 @@ export class App {
     serverView.isServerReachable = false;
     serverView.isServerManaged = isManagedServer(server);
     serverView.serverName = displayServer.name;  // Don't get the name from the remote server.
-    serverView.retryDisplayingServer = () => {
+    serverView.retryDisplayingServer = async () => {
       // Refresh the server list if the server is managed, it may have been deleted outside the
       // app.
-      let serverExistsPromise = Promise.resolve(true);
+      let serverExists = true;
       if (serverView.isServerManaged && !!this.digitalOceanRepository) {
-        serverExistsPromise = this.digitalOceanRepository.listServers().then((managedServers) => {
-          return this.getServerFromRepository(displayServer).then((server) => {
-            return !!server;
-          });
-        });
+        await this.digitalOceanRepository.listServers();
+        serverExists = !!(await this.getServerFromRepository(displayServer));
       }
-      serverExistsPromise.then((serverExists: boolean) => {
-        if (serverExists) {
-          this.showServer(server, displayServer);
-        } else {
-          // Server has been deleted outside the app.
-          this.appRoot.showError(
-              this.appRoot.localize('error-server-removed', 'serverName', displayServer.name));
-          this.removeServerFromDisplay(displayServer);
-          this.selectedServer = null;
-          this.appRoot.selectedServer = null;
-          this.showIntro();
-        }
-      });
+      if (serverExists) {
+        await this.showServer(server, displayServer);
+      } else {
+        // Server has been deleted outside the app.
+        this.appRoot.showError(
+            this.appRoot.localize('error-server-removed', 'serverName', displayServer.name));
+        this.removeServerFromDisplay(displayServer);
+        this.selectedServer = null;
+        this.appRoot.selectedServer = null;
+        this.showIntro();
+      }
     };
     this.selectedServer = server;
     this.appRoot.selectedServer = displayServer;
@@ -649,58 +643,54 @@ export class App {
     this.appRoot.showNotification(this.appRoot.localize('notification-app-update'), 60000);
   }
 
-  private connectToDigitalOcean() {
-    const accessToken = this.digitalOceanTokenManager.getStoredToken();
+  private async connectToDigitalOcean() {
+    let accessToken = this.digitalOceanTokenManager.getStoredToken();
     if (accessToken) {
-      this.enterDigitalOceanMode(accessToken).then((managedServers) => {
-        if (!!this.serverBeingCreated) {
-          // Disallow creating multiple servers simultaneously.
-          this.showServerCreationProgress();
-          return;
-        }
-        this.syncServersToDisplay(managedServers);
-        this.showCreateServer();
-      });
+      const managedServers = await this.enterDigitalOceanMode(accessToken);
+      if (!!this.serverBeingCreated) {
+        // Disallow creating multiple servers simultaneously.
+        this.showServerCreationProgress();
+        return;
+      }
+      this.syncServersToDisplay(managedServers);
+      this.showCreateServer();
       return;
     }
+
     const session = runDigitalOceanOauth();
     const handleOauthFlowCanceled = () => {
       session.cancel();
       this.clearCredentialsAndShowIntro();
     };
     this.appRoot.getAndShowDigitalOceanOauthFlow(handleOauthFlowCanceled);
-
-    session.result
-        .then((accessToken) => {
-          // Save accessToken to storage. DigitalOcean tokens
-          // expire after 30 days, unless they are manually revoked by the user.
-          // After 30 days the user will have to sign into DigitalOcean again.
-          // Note we cannot yet use DigitalOcean refresh tokens, as they require
-          // a client_secret to be stored on a server and not visible to end users
-          // in client-side JS.  More details at:
-          // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
-          this.digitalOceanTokenManager.writeTokenToStorage(accessToken);
-          this.enterDigitalOceanMode(accessToken).then((managedServers) => {
-            if (managedServers.length > 0) {
-              this.syncServersToDisplay(managedServers).then(() => {
-                // Show the first server in the list since the user just signed in to DO.
-                const displayServer = this.appRoot.serverList.find(
-                    (displayServer: DisplayServer) => displayServer.isManaged);
-                this.showServerFromRepository(displayServer);
-              });
-            } else {
-              this.showCreateServer();
-            }
-          });
-        })
-        .catch((error) => {
-          if (!session.isCancelled()) {
-            this.clearCredentialsAndShowIntro();
-            bringToFront();
-            console.error(`DigitalOcean authentication failed: ${error}`);
-            this.appRoot.showError(this.appRoot.localize('error-do-auth'));
-          }
-        });
+    try {
+      accessToken = await session.result;
+      // Save accessToken to storage. DigitalOcean tokens
+      // expire after 30 days, unless they are manually revoked by the user.
+      // After 30 days the user will have to sign into DigitalOcean again.
+      // Note we cannot yet use DigitalOcean refresh tokens, as they require
+      // a client_secret to be stored on a server and not visible to end users
+      // in client-side JS.  More details at:
+      // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
+      this.digitalOceanTokenManager.writeTokenToStorage(accessToken);
+      const managedServers = await this.enterDigitalOceanMode(accessToken);
+      if (managedServers.length > 0) {
+        await this.syncServersToDisplay(managedServers);
+        // Show the first server in the list since the user just signed in to DO.
+        const displayServer =
+            this.appRoot.serverList.find((displayServer: DisplayServer) => displayServer.isManaged);
+        this.showServerFromRepository(displayServer);
+      } else {
+        this.showCreateServer();
+      }
+    } catch (error) {
+      if (!session.isCancelled()) {
+        this.clearCredentialsAndShowIntro();
+        bringToFront();
+        console.error(`DigitalOcean authentication failed: ${error}`);
+        this.appRoot.showError(this.appRoot.localize('error-do-auth'));
+      }
+    }
   }
 
   // Clears the credentials and returns to the intro screen.
