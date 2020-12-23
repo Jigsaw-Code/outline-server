@@ -22,12 +22,12 @@ class ManualServer extends ShadowboxServer implements server.ManualServer {
       private name: string, private apiUrl: string, private certSha256: string,
       private forgetCallback: Function) {
     super();
-    this.setManagementApiUrl(this.apiUrl);
+    this.setManagementApiUrl(apiUrl);
     // manualServerConfig.certSha256 is expected to be in hex format (install script).
     // Electron requires that this be decoded from hex (to unprintable binary),
     // then encoded as base64.
     try {
-      trustCertificate(btoa(hexToString(this.certSha256)));
+      trustCertificate(btoa(hexToString(certSha256)));
     } catch (e) {
       // Error trusting certificate, may be due to bad user input.
       console.error('Error trusting certificate');
