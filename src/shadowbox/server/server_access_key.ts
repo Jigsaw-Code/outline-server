@@ -218,9 +218,9 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
         (await metrics.getOutboundByteTransfer({hours: 30 * 24})).bytesTransferredByUserId;
     let limitStatusChanged = false;
     for (const accessKey of this.accessKeys) {
-      const usageBytes = bytesTransferredById[accessKey.id] || 0;
+      const usageBytes = bytesTransferredById[accessKey.id] ?? 0;
       const wasOverDataLimit = accessKey.isOverDataLimit;
-      let limitBytes = (accessKey.dataLimit || this._defaultDataLimit)?.bytes;
+      let limitBytes = (accessKey.dataLimit ?? this._defaultDataLimit)?.bytes;
       if (limitBytes === undefined) {
         limitBytes = Number.POSITIVE_INFINITY;
       }
