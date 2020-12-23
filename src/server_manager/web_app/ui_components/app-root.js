@@ -361,7 +361,7 @@ export class AppRoot extends mixinBehaviors
               </div>
             </div>
             <!-- Manual servers -->
-            <div class="servers-section" hidden\$="{{manualServerList.length === 0}}">
+            <div class="servers-section" hidden\$="{{!hasManualServers}}">
               <div class="servers-header">
                 <span>[[localize('servers-manual')]]</span>
               </div>
@@ -441,7 +441,7 @@ export class AppRoot extends mixinBehaviors
               </template>
             </div>
             <!-- Manual servers -->
-            <div class="side-bar-section servers-section" hidden\$="{{manualServerList.length === 0}}">
+            <div class="side-bar-section servers-section" hidden\$="{{!hasManualServers}}">
               <img class="provider-icon" src="images/cloud.svg">
               <template is="dom-repeat" items="{{manualServerList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
                 <div class\$="server {{_computeServerClasses(selectedServer, server)}}" data-server\$="[[server]]" on-tap="_showServer">
@@ -500,10 +500,14 @@ export class AppRoot extends mixinBehaviors
       // An array of {id, name, dir} language objects.
       supportedLanguages: {type: Array, readonly: true},
       useKeyIfMissing: {type: Boolean},
-      manualServerList: {type: Array},
       selectedServer: {type: Object},
       adminEmail: {type: String},
       managedServerList: {type: Array},
+      manualServerList: {type: Array},
+      hasManualServers: {
+        type: Boolean,
+        computed: '_computeHasManualServers(manualServerList)',
+      },
       isSignedInToDigitalOcean: {
         type: Boolean,
         computed: '_computeIsSignedInToDigitalOcean(adminEmail)',
@@ -728,8 +732,14 @@ export class AppRoot extends mixinBehaviors
           }
         });
   }
+
   _computeIsSignedInToDigitalOcean(adminEmail) {
     return Boolean(adminEmail);
+  }
+
+  _computeHasManualServers(managedServerList) {
+    console.log(managedServerList.length);
+    return managedServerList && managedServerList.length > 0;
   }
 
   _userAcceptedTosChanged(userAcceptedTos) {

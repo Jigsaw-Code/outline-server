@@ -156,7 +156,6 @@ export interface ManualServerRepository {
   listServers(): Promise<ManualServer[]>;
   // Adds a manual server using the config (e.g. user input).
   addServer(config: ManualServerConfig): Promise<ManualServer>;
-  removeServer(config: ManualServerConfig): void;
   // Retrieves a server with `config`.
   findServer(config: ManualServerConfig): ManualServer|undefined;
 }

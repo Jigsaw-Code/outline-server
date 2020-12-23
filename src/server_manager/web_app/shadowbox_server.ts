@@ -178,7 +178,10 @@ export class ShadowboxServer implements server.Server {
 
   getHostnameForAccessKeys(): string {
     try {
-      return this.serverConfig.hostnameForAccessKeys || new URL(this.managementApiAddress).hostname;
+      if (this.serverConfig) {
+        return this.serverConfig?.hostnameForAccessKeys;
+      }
+      return new URL(this.managementApiAddress).hostname;
     } catch (e) {
       return '';
     }

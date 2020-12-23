@@ -63,17 +63,11 @@ export class ManualServerRepository implements server.ManualServerRepository {
       return Promise.resolve(existingServer);
     }
 
-    const server = this.createServer('', config.apiUrl, config.certSha256);
+    const hostname = new URL(config.apiUrl).hostname;
+    const server = this.createServer(hostname, config.apiUrl, config.certSha256);
     this.servers.push(server);
     this.storeServers();
     return Promise.resolve(server);
-  }
-
-  removeServer(config: server.ManualServerConfig): void {
-    this.servers = this.servers.filter((server) => {
-      return config.apiUrl !== server.getManagementApiUrl();
-    });
-    this.storeServers();
   }
 
   listServers(): Promise<server.ManualServer[]> {
