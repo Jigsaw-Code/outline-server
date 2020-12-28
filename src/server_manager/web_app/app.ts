@@ -13,9 +13,9 @@
 // limitations under the License.
 
 // TODO:
+// - Fix server creation never getting completed
 // - show server briefly showing "unreachable"
 // - Add and test account validation to showDoCreateServer
-// - Fix server creation never getting completed
 // - Handle expire account token
 // - cleanup enterDigitalOceanMode
 // - Rename DisplayServer to ServerListEntry
@@ -915,7 +915,7 @@ export class App {
     view.showFeatureMetricsDisclaimer = server.getMetricsEnabled() &&
         !server.getAccessKeyDataLimit() && !hasSeenFeatureMetricsNotification();
 
-    const version = this.selectedServer.getVersion();
+    const version = server.getVersion();
     if (version) {
       view.isAccessKeyPortEditable = semver.gte(version, CHANGE_KEYS_PORT_VERSION);
       view.supportsAccessKeyDataLimit = semver.gte(version, DATA_LIMITS_VERSION);
