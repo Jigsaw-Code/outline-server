@@ -20,6 +20,7 @@ import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {AccessKeyId, AccessKeyMetricsId} from '../model/access_key';
 import {version} from '../package.json';
+import {AccessKeyConfigJson} from './server_access_key';
 
 import {ServerConfigJson} from './server_config';
 
@@ -64,6 +65,7 @@ export interface DailyFeatureMetricsReportJson {
 // Field renames will break backwards-compatibility.
 export interface DailyDataLimitMetricsReportJson {
   enabled: boolean;
+  perKeyLimitCount?: number;
 }
 
 export interface SharedMetricsPublisher {
@@ -151,11 +153,13 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
   private reportStartTimestampMs: number;
 
   // serverConfig: where the enabled/disable setting is persisted
+  // keyConfig: where access keys are persisted
   // usageMetrics: where we get the metrics from
   // toMetricsId: maps Access key ids to metric ids
   // metricsUrl: where to post the metrics
   constructor(
       private clock: Clock, private serverConfig: JsonConfig<ServerConfigJson>,
+      private keyConfig: JsonConfig<AccessKeyConfigJson>,
       usageMetrics: UsageMetrics,
       private toMetricsId: (accessKeyId: AccessKeyId) => AccessKeyMetricsId,
       private metricsCollector: MetricsCollectorClient) {
@@ -233,11 +237,15 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
   }
 
   private async reportFeatureMetrics(): Promise<void> {
+    const keys = this.keyConfig.data().accessKeys;
     const featureMetricsReport = {
       serverId: this.serverConfig.data().serverId,
       serverVersion: version,
       timestampUtcMs: this.clock.now(),
-      dataLimit: {enabled: !!this.serverConfig.data().accessKeyDataLimit},
+      dataLimit: {
+        enabled: !!this.serverConfig.data().accessKeyDataLimit,
+        perKeyLimitCount: keys.filter(key => !!key.dataLimit).length
+      }
     };
     await this.metricsCollector.collectFeatureMetrics(featureMetricsReport);
   }

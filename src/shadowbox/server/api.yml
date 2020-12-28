@@ -204,6 +204,52 @@ paths:
           description: Access key renamed successfully
         '404':
           description: Access key inexistent
+  /access-keys/{id}/data-limit:
+    put:
+      description: Sets a data limit for the given access key
+      tags:
+        - Access Key
+        - Limit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the access key
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DataLimit"
+            examples:
+              '0':
+                value: "{limit: {bytes: 10000}}"
+      responses:
+        '204':
+          description: Access key limit set successfully
+        '400':
+          description: Invalid data limit
+        '404':
+          description: Access key inexistent
+    delete:
+      description: Removes the data limit on the given access key.
+      tags:
+        - Access Key
+        - Limit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the access key
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Access key limit deleted successfully.
+        '404':
+          description: Access key inexistent
   /metrics/transfer:
     get:
       description: Returns the data transferred per access key

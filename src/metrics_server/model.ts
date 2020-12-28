@@ -36,4 +36,5 @@ export interface DailyFeatureMetricsReport {
 
 export interface DailyDataLimitMetricsReport {
   enabled: boolean;
+  perKeyLimitCount?: number;
 }
