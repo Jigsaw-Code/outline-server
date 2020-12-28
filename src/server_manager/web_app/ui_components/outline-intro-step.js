@@ -279,7 +279,11 @@ Polymer({
   },
 
   connectToDigitalOceanTapped: function() {
-    this.fire('ConnectToDigitalOcean');
+    if (this.isSignedInToDigitalOcean) {
+      this.fire('StartDigitalOceanCreateServerRequested');
+    } else {
+      this.fire('StartDigitalOceanConnectAccountRequested');
+    }
   },
 
   setUpGenericCloudProviderTapped: function() {
