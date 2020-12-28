@@ -16,8 +16,9 @@
 // - show server briefly showing "unreachable"
 // - Add and test account validation to showDoCreateServer
 // - Fix server creation never getting completed
-// - Test connect/disconnect account
 // - Handle expire account token
+// - cleanup enterDigitalOceanMode
+// - Rename DisplayServer to ServerListEntry
 
 import * as sentry from '@sentry/electron';
 import {EventEmitter} from 'eventemitter3';
@@ -371,6 +372,15 @@ export class App {
   }
 
   private makeDisplayServer(server: server.Server): DisplayServer {
+    return {
+      id: localId(server),
+      name: this.makeDisplayName(server),
+      isManaged: isManagedServer(server),
+      isSynced: !!server.getName(),
+    };
+  }
+
+  private makeDisplayName(server: server.Server): string {
     let name = server.getName() ?? server.getHostnameForAccessKeys();
     if (!name) {
       if (isManagedServer(server)) {
@@ -379,12 +389,7 @@ export class App {
             this.makeLocalizedServerName((server as server.ManagedServer).getHost().getRegionId());
       }
     }
-    return {
-      id: localId(server),
-      name,
-      isManaged: isManagedServer(server),
-      isSynced: !!server.getName(),
-    };
+    return name;
   }
 
   private addServer(server: server.Server): void {
@@ -408,8 +413,8 @@ export class App {
   private removeServer(serverId: string): void {
     this.idServer.delete(serverId);
     this.appRoot.serverList = this.appRoot.serverList.filter((ds) => ds.id !== serverId);
-    if (this.appRoot.selectedServer.id === serverId) {
-      this.appRoot.selectedServer = null;
+    if (this.appRoot.selectedServerId === serverId) {
+      this.appRoot.selectedServerId = '';
       this.selectedServer = null;
     }
   }
@@ -771,10 +776,10 @@ export class App {
 
     // Reset UI
     this.appRoot.adminEmail = '';
-    if (!!this.appRoot.selectedServer && this.appRoot.selectedServer.isManaged) {
-      this.appRoot.selectedServer = null;
+    if (!!this.selectedServer && isManagedServer(this.selectedServer)) {
+      this.selectedServer = null;
       this.showIntro();
-    } else if (!this.appRoot.selectedServer) {
+    } else if (!this.selectedServer) {
       this.showIntro();
     }
   }
@@ -873,10 +878,10 @@ export class App {
   }
 
   private async showServer(server: server.Server): Promise<void> {
+    const serverId = localId(server);
     this.selectedServer = server;
-    const displayServer = this.makeDisplayServer(server);
-    this.appRoot.selectedServer = displayServer;
-    localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, localId(server));
+    this.appRoot.selectedServerId = serverId;
+    localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, serverId);
 
     if (await server.isHealthy()) {
       // Sync the server display in case it was previously unreachable.
@@ -886,11 +891,11 @@ export class App {
     if (isManagedServer(server)) {
       const managedServer = server as server.ManagedServer;
       if (!managedServer.isInstallCompleted()) {
-        this.appRoot.showProgress(displayServer.name, true);
+        this.appRoot.showProgress(this.makeDisplayName(server), true);
         return;
       }
     }
-    this.showServerUnreachable(server, displayServer);
+    this.showServerUnreachable(server);
   }
 
   // Show the server management screen. Assumes the server is healthy.
@@ -958,12 +963,13 @@ export class App {
   //   this.waitForManagedServerCreation();
   // }
 
-  private showServerUnreachable(server: server.Server, displayServer: DisplayServer) {
+  private showServerUnreachable(server: server.Server) {
     // Display the unreachable server state within the server view.
-    const serverView = this.appRoot.getServerView(displayServer.id) as ServerView;
+    const serverView = this.appRoot.getServerView(localId(server)) as ServerView;
     serverView.isServerReachable = false;
     serverView.isServerManaged = isManagedServer(server);
-    serverView.serverName = displayServer.name;  // Don't get the name from the remote server.
+    serverView.serverName =
+        this.makeDisplayName(server);  // Don't get the name from the remote server.
     serverView.retryDisplayingServer = async () => {
       this.showServer(server);
       // // Refresh the server list if the server is managed, it may have been deleted outside the
@@ -985,8 +991,6 @@ export class App {
       //   this.showIntro();
       // }
     };
-    this.selectedServer = server;
-    this.appRoot.selectedServer = displayServer;
     this.appRoot.showServerView();
   }
 
@@ -1099,7 +1103,7 @@ export class App {
     this.selectedServer.addAccessKey()
         .then((serverAccessKey: server.AccessKey) => {
           const uiAccessKey = this.convertToUiAccessKey(serverAccessKey);
-          this.appRoot.getServerView(this.appRoot.selectedServer.id).addAccessKey(uiAccessKey);
+          this.appRoot.getServerView(this.appRoot.selectedServerId).addAccessKey(uiAccessKey);
           this.appRoot.showNotification(this.appRoot.localize('notification-key-added'));
         })
         .catch((error) => {
@@ -1128,7 +1132,7 @@ export class App {
     if (previousLimit && limit.bytes === previousLimit.bytes) {
       return;
     }
-    const serverView = this.appRoot.getServerView(this.appRoot.selectedServer.id);
+    const serverView = this.appRoot.getServerView(this.appRoot.selectedServerId);
     try {
       await this.selectedServer.setAccessKeyDataLimit(limit);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
@@ -1147,7 +1151,7 @@ export class App {
   }
 
   private async removeAccessKeyDataLimit() {
-    const serverView = this.appRoot.getServerView(this.appRoot.selectedServer.id);
+    const serverView = this.appRoot.getServerView(this.appRoot.selectedServerId);
     try {
       await this.selectedServer.removeAccessKeyDataLimit();
       this.appRoot.showNotification(this.appRoot.localize('saved'));
@@ -1234,7 +1238,7 @@ export class App {
   private removeAccessKey(accessKeyId: string) {
     this.selectedServer.removeAccessKey(accessKeyId)
         .then(() => {
-          this.appRoot.getServerView(this.appRoot.selectedServer.id).removeAccessKey(accessKeyId);
+          this.appRoot.getServerView(this.appRoot.selectedServerId).removeAccessKey(accessKeyId);
           this.appRoot.showNotification(this.appRoot.localize('notification-key-removed'));
         })
         .catch((error) => {
@@ -1293,7 +1297,7 @@ export class App {
     this.appRoot.getConfirmation(confirmationTitle, confirmationText, confirmationButton, () => {
       serverToForget.forget();
       this.removeServer(serverId);
-      this.appRoot.selectedServer = null;
+      this.appRoot.selectedServerId = '';
       this.selectedServer = null;
       this.showIntro();
       this.appRoot.showNotification(this.appRoot.localize('notification-server-removed'));
@@ -1301,7 +1305,7 @@ export class App {
   }
 
   private async setMetricsEnabled(metricsEnabled: boolean) {
-    const serverView = this.appRoot.getServerView(this.appRoot.selectedServer.id);
+    const serverView = this.appRoot.getServerView(this.appRoot.selectedServerId);
     try {
       await this.selectedServer.setMetricsEnabled(metricsEnabled);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
@@ -1316,7 +1320,7 @@ export class App {
 
   private async renameServer(newName: string) {
     const serverToRename = this.selectedServer;
-    const serverId = this.appRoot.selectedServer.id;
+    const serverId = this.appRoot.selectedServerId;
     const view = this.appRoot.getServerView(serverId);
     try {
       await serverToRename.setName(newName);
@@ -1340,7 +1344,7 @@ export class App {
     }
     serverToCancel.getHost().delete().then(() => {
       this.removeServer(localId(serverToCancel));
-      this.appRoot.selectedServer = null;
+      this.appRoot.selectedServerId = '';
       this.showDigitalOceanCreateServer();
     });
   }
