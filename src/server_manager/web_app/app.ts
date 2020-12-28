@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // TODO:
-// - Fix server creation never getting completed
+// - Add server creation cancellation.
 // - show server briefly showing "unreachable"
 // - Add and test account validation to showDoCreateServer
 // - Handle expire account token
@@ -640,25 +640,23 @@ export class App {
 
   // Returns a promise which fulfills once the DigitalOcean droplet is created.
   // Shadowbox may not be fully installed once this promise is fulfilled.
-  public async createDigitalOceanServer(regionId: server.RegionId) {
-    const serverName = this.makeLocalizedServerName(regionId);
-    return this
-        .digitalOceanRetry(() => {
-          return this.digitalOceanRepository.createServer(regionId, serverName);
-        })
-        .then(async (server) => {
-          this.addServer(server);
-          this.showServer(server);
-          // TODO: Needs to poll as in waitForManagedServerCreation.
-          await server.waitOnInstall(false);
-          this.updateServer(server);
-        })
-        .catch((e) => {
-          // Sanity check - this error is not expected to occur, as waitForManagedServerCreation
-          // has it's own error handling.
-          console.error('error from waitForManagedServerCreation');
-          return Promise.reject(e);
-        });
+  public async createDigitalOceanServer(regionId: server.RegionId): Promise<void> {
+    try {
+      const serverName = this.makeLocalizedServerName(regionId);
+      const server = await this.digitalOceanRetry(() => {
+        return this.digitalOceanRepository.createServer(regionId, serverName);
+      });
+      this.addServer(server);
+      this.showServer(server);
+
+      // TODO: handle install cancellation.
+
+      await server.waitOnInstall();
+      this.updateServer(server);
+      this.showServer(server);
+    } catch (error) {
+      console.error('Error from createDigitalOceanServer', error);
+    }
   }
 
   // private waitForManagedServerCreation(server: server.ManagedServer, tryAgain = false): void {

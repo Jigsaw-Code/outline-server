@@ -74,7 +74,8 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
     super();
     console.info('DigitalOceanServer created');
     this.eventQueue.once('server-active', () => console.timeEnd('activeServer'));
-    this.waitOnInstall(true)
+    this.pollInstallState();
+    this.waitOnInstall()
         .then(() => {
           this.setInstallCompleted();
         })
@@ -83,12 +84,7 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
         });
   }
 
-  waitOnInstall(resetTimeout: boolean): Promise<void> {
-    if (resetTimeout) {
-      this.installState = InstallState.UNKNOWN;
-      this.refreshInstallState();
-    }
-
+  waitOnInstall(): Promise<void> {
     return new Promise((fulfill, reject) => {
       // Poll this.installState for changes.  This can poll quickly as it
       // will not make any network requests.
@@ -126,7 +122,7 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
 
   // Sets this.installState, will keep polling until this.installState can
   // be set to something other than UNKNOWN.
-  private refreshInstallState(): void {
+  private pollInstallState(): void {
     const TIMEOUT_MS = 5 * 60 * 1000;
     const startTimestamp = Date.now();
 

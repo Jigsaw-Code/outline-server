@@ -361,7 +361,7 @@ class FakeManagedServer extends FakeServer implements server.ManagedServer {
   constructor(private isInstalled = true) {
     super();
   }
-  waitOnInstall(resetTimeout: boolean) {
+  waitOnInstall() {
     // Return a promise which does not yet fulfill, to simulate long
     // shadowbox install time.
     return new Promise<void>((fulfill, reject) => {});
