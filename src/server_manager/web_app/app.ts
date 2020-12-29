@@ -14,13 +14,11 @@
 
 // TODO:
 // - Add server creation cancellation.
-// - Separate showServer from selectServer, so we don't recreate the view.
-// - show server briefly showing "unreachable"
 // - Add and test account validation to showDoCreateServer
 // - Handle expire account token
 // - cleanup enterDigitalOceanMode
 // - Rename DisplayServer to ServerListEntry
-// - Merge server loading into server view
+// - Merge server loading screen into server view
 
 import * as sentry from '@sentry/electron';
 import {EventEmitter} from 'eventemitter3';
@@ -393,23 +391,25 @@ export class App {
     return name;
   }
 
-  private addServer(server: server.Server): void {
+  private async addServer(server: server.Server): Promise<void> {
     const serverId = localId(server);
     this.idServer.set(serverId, server);
     const displayServer = this.makeDisplayServer(server);
     console.log('Loading  DisplayServer', displayServer);
     this.appRoot.serverList = this.appRoot.serverList.concat([displayServer]);
-    // TODO: initialize ServerView.
-    // Update name and loading status asynchronously.
-    setTimeout(async () => {
-      if (await server.isHealthy()) {
-        this.updateServer(server);
-        console.log('Loaded ', server, 'getName(): ', server.getName());
-      } else {
-        // TODO: mark server on list as unhealthy.
-        console.log('Failed to load ', server);
-      }
-    }, 0);
+
+    // Wait for server config to load, then update the server view and list.
+    if (isManagedServer(server) && !server.isInstallCompleted()) {
+      // TODO: Handle cancellation.
+      await (server as server.ManagedServer).waitOnInstall();
+    }
+    this.updateServerView(server);
+    if (this.selectedServer === server) {
+      // Make sure we switch to the server view in case it was in the loading view.
+      this.appRoot.showServerView();
+    }
+    this.appRoot.serverList = this.appRoot.serverList.map(
+        (ds) => ds.id === serverId ? this.makeDisplayServer(server) : ds);
   }
 
   private removeServer(serverId: string): void {
@@ -421,7 +421,7 @@ export class App {
     }
   }
 
-  private updateServer(server: server.Server): void {
+  private updateServerEntry(server: server.Server): void {
     const serverId = localId(server);
     this.appRoot.serverList = this.appRoot.serverList.map(
         (ds) => ds.id === serverId ? this.makeDisplayServer(server) : ds);
@@ -706,30 +706,26 @@ export class App {
     this.appRoot.selectedServerId = serverId;
     localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, serverId);
 
-    if (await server.isHealthy()) {
-      // Sync the server display in case it was previously unreachable.
-      await this.showServerManagement(server);
-      return;
-    }
     if (isManagedServer(server)) {
-      const managedServer = server as server.ManagedServer;
-      if (!managedServer.isInstallCompleted()) {
+      if (!(server as server.ManagedServer).isInstallCompleted()) {
         this.appRoot.showProgress(this.makeDisplayName(server), true);
-        // Update the view once the server completes installation.
-        setTimeout(async () => {
-          await server.waitOnInstall();
-          this.updateServer(server);
-          // TODO: Don't force selection. Only update.
-          this.showServer(server);
-        }, 0);
         return;
       }
     }
-    this.showServerUnreachable(server);
+    await this.updateServerView(server);
+    this.appRoot.showServerView();
+  }
+
+  private async updateServerView(server: server.Server): Promise<void> {
+    if (await server.isHealthy()) {
+      this.setServerManagementView(server);
+    } else {
+      this.setServerUnreachableView(server);
+    }
   }
 
   // Show the server management screen. Assumes the server is healthy.
-  private async showServerManagement(server: server.Server) {
+  private setServerManagementView(server: server.Server) {
     // Show view and initialize fields from selectedServer.
     const view = this.appRoot.getServerView(localId(server));
     view.isServerReachable = true;
@@ -764,30 +760,31 @@ export class App {
     }
 
     view.metricsEnabled = server.getMetricsEnabled();
-    this.appRoot.showServerView();
-    this.showMetricsOptInWhenNeeded(server, view);
 
-    // Load "My Connection" and other access keys.
-    try {
-      const serverAccessKeys = await server.listAccessKeys();
-      view.accessKeyRows = serverAccessKeys.map(this.convertToUiAccessKey.bind(this));
-      if (!view.accessKeyDataLimit) {
-        view.accessKeyDataLimit = dataLimitToDisplayDataAmount(
-            await computeDefaultAccessKeyDataLimit(server, serverAccessKeys));
+    // Asynchronously load "My Connection" and other access keys in order to no block showing the
+    // server.
+    setTimeout(async () => {
+      this.showMetricsOptInWhenNeeded(server, view);
+      try {
+        const serverAccessKeys = await server.listAccessKeys();
+        view.accessKeyRows = serverAccessKeys.map(this.convertToUiAccessKey.bind(this));
+        if (!view.accessKeyDataLimit) {
+          view.accessKeyDataLimit = dataLimitToDisplayDataAmount(
+              await computeDefaultAccessKeyDataLimit(server, serverAccessKeys));
+        }
+        // Show help bubbles once the page has rendered.
+        setTimeout(() => {
+          showHelpBubblesOnce(view);
+        }, 250);
+      } catch (error) {
+        console.error(`Failed to load access keys: ${error}`);
+        this.appRoot.showError(this.appRoot.localize('error-keys-get'));
       }
-      // Show help bubbles once the page has rendered.
-      setTimeout(() => {
-        showHelpBubblesOnce(view);
-      }, 250);
-    } catch (error) {
-      console.error(`Failed to load access keys: ${error}`);
-      this.appRoot.showError(this.appRoot.localize('error-keys-get'));
-    }
-
-    this.showTransferStats(server, view);
+      this.showTransferStats(server, view);
+    }, 0);
   }
 
-  private showServerUnreachable(server: server.Server): void {
+  private setServerUnreachableView(server: server.Server): void {
     // Display the unreachable server state within the server view.
     const serverView = this.appRoot.getServerView(localId(server)) as ServerView;
     serverView.isServerReachable = false;
@@ -795,8 +792,7 @@ export class App {
     serverView.serverName =
         this.makeDisplayName(server);  // Don't get the name from the remote server.
     serverView.retryDisplayingServer = async () => {
-      // TODO: Don't select, only update
-      this.showServer(server);
+      this.updateServerView(server);
       // TODO: reload DO list?
 
       // // Refresh the server list if the server is managed, it may have been deleted outside the
@@ -818,7 +814,6 @@ export class App {
       //   this.showIntro();
       // }
     };
-    this.appRoot.showServerView();
   }
 
   private showMetricsOptInWhenNeeded(selectedServer: server.Server, serverView: ServerView) {
@@ -1152,7 +1147,7 @@ export class App {
     try {
       await serverToRename.setName(newName);
       view.serverName = newName;
-      this.updateServer(serverToRename);
+      this.updateServerEntry(serverToRename);
     } catch (error) {
       console.error(`Failed to rename server: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-server-rename'));
