@@ -14,11 +14,13 @@
 
 // TODO:
 // - Add server creation cancellation.
+// - Separate showServer from selectServer, so we don't recreate the view.
 // - show server briefly showing "unreachable"
 // - Add and test account validation to showDoCreateServer
 // - Handle expire account token
 // - cleanup enterDigitalOceanMode
 // - Rename DisplayServer to ServerListEntry
+// - Merge server loading into server view
 
 import * as sentry from '@sentry/electron';
 import {EventEmitter} from 'eventemitter3';
@@ -397,6 +399,7 @@ export class App {
     const displayServer = this.makeDisplayServer(server);
     console.log('Loading  DisplayServer', displayServer);
     this.appRoot.serverList = this.appRoot.serverList.concat([displayServer]);
+    // TODO: initialize ServerView.
     // Update name and loading status asynchronously.
     setTimeout(async () => {
       if (await server.isHealthy()) {
@@ -593,14 +596,6 @@ export class App {
       }
     }
   }
-  // private async startDigitalOceanCreateServer() {
-  //   const accessToken = this.digitalOceanTokenManager.getStoredToken();
-  //   if (!accessToken) {
-  //     console.error('DigitalOcean accessToken not found');
-  //     return;
-  //   }
-  //   this.showCreateServer();
-  // }
 
   // Clears the credentials and returns to the intro screen.
   private disconnectDigitalOceanAccount() {
@@ -646,16 +641,12 @@ export class App {
       const server = await this.digitalOceanRetry(() => {
         return this.digitalOceanRepository.createServer(regionId, serverName);
       });
+      // TODO: Add cancel logic
       this.addServer(server);
-      this.showServer(server);
-
-      // TODO: handle install cancellation.
-
-      await server.waitOnInstall();
-      this.updateServer(server);
       this.showServer(server);
     } catch (error) {
       console.error('Error from createDigitalOceanServer', error);
+      // TODO: Add error notification
     }
   }
 
@@ -724,6 +715,13 @@ export class App {
       const managedServer = server as server.ManagedServer;
       if (!managedServer.isInstallCompleted()) {
         this.appRoot.showProgress(this.makeDisplayName(server), true);
+        // Update the view once the server completes installation.
+        setTimeout(async () => {
+          await server.waitOnInstall();
+          this.updateServer(server);
+          // TODO: Don't force selection. Only update.
+          this.showServer(server);
+        }, 0);
         return;
       }
     }
@@ -797,6 +795,7 @@ export class App {
     serverView.serverName =
         this.makeDisplayName(server);  // Don't get the name from the remote server.
     serverView.retryDisplayingServer = async () => {
+      // TODO: Don't select, only update
       this.showServer(server);
       // TODO: reload DO list?
 
