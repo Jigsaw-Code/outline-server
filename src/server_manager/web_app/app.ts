@@ -568,11 +568,12 @@ export class App {
       await this.syncServerToDisplay(server);
       await this.showServerManagement(server, displayServer);
     } else {
-      this.showServerUnreachable(server, displayServer);
+      await this.showServerUnreachable(server, displayServer);
     }
   }
 
-  private showServerUnreachable(server: server.Server, displayServer: DisplayServer) {
+  private async showServerUnreachable(server: server.Server, displayServer: DisplayServer):
+      Promise<void> {
     // Display the unreachable server state within the server view.
     const serverView = this.appRoot.getServerView(displayServer.id) as ServerView;
     serverView.isServerReachable = false;
