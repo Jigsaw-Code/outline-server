@@ -789,7 +789,7 @@ export class App {
     this.showTransferStats(server, view);
   }
 
-  private showServerUnreachable(server: server.Server) {
+  private showServerUnreachable(server: server.Server): void {
     // Display the unreachable server state within the server view.
     const serverView = this.appRoot.getServerView(localId(server)) as ServerView;
     serverView.isServerReachable = false;
