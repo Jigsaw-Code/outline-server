@@ -44,11 +44,18 @@ import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 import {PolymerElement} from '@polymer/polymer/polymer-element.js';
 
-import {DisplayServer} from '../display_server';
-
 import {ServerView} from './outline-server-view.js';
 
 const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
+
+/**
+ * An access key to be displayed
+ * @typedef {Object} ServerListEntry
+ * @prop {string} id
+ * @prop {string} name
+ * @prop {boolean} isManaged
+ * @prop {boolean} isSynced
+ */
 
 export class AppRoot extends mixinBehaviors
 ([AppLocalizeBehavior], PolymerElement) {
@@ -534,7 +541,7 @@ export class AppRoot extends mixinBehaviors
     this.language = '';
     this.supportedLanguages = [];
     this.useKeyIfMissing = true;
-    /** @type {DisplayServer[]} */
+    /** @type {ServerListEntry[]} */
     this.serverList = [];
     this.adminEmail = '';
     this.outlineVersion = '';

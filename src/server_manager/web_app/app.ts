@@ -16,7 +16,6 @@
 // - Add and test account validation to showDoCreateServer
 // - Handle expire account token
 // - cleanup enterDigitalOceanMode
-// - Rename DisplayServer to ServerListEntry
 // - Merge server loading screen into server view
 
 import * as sentry from '@sentry/electron';
@@ -30,9 +29,8 @@ import * as server from '../model/server';
 
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
-import {DisplayServer} from './display_server';
 import {parseManualServerConfig} from './management_urls';
-import {AppRoot} from './ui_components/app-root.js';
+import {AppRoot, ServerListEntry} from './ui_components/app-root.js';
 import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
 
@@ -372,7 +370,7 @@ export class App {
     }
   }
 
-  private makeDisplayServer(server: server.Server): DisplayServer {
+  private makeServerListEntry(server: server.Server): ServerListEntry {
     return {
       id: localId(server),
       name: this.makeDisplayName(server),
@@ -397,8 +395,8 @@ export class App {
     console.log('Loading server', server);
     const serverId = localId(server);
     this.idServer.set(serverId, server);
-    const displayServer = this.makeDisplayServer(server);
-    this.appRoot.serverList = this.appRoot.serverList.concat([displayServer]);
+    const serverEntry = this.makeServerListEntry(server);
+    this.appRoot.serverList = this.appRoot.serverList.concat([serverEntry]);
 
     // Wait for server config to load, then update the server view and list.
     if (isManagedServer(server) && !server.isInstallCompleted()) {
@@ -418,7 +416,7 @@ export class App {
       this.appRoot.showServerView();
     }
     this.appRoot.serverList = this.appRoot.serverList.map(
-        (ds) => ds.id === serverId ? this.makeDisplayServer(server) : ds);
+        (ds) => ds.id === serverId ? this.makeServerListEntry(server) : ds);
   }
 
   private removeServer(serverId: string): void {
@@ -434,7 +432,7 @@ export class App {
   private updateServerEntry(server: server.Server): void {
     const serverId = localId(server);
     this.appRoot.serverList = this.appRoot.serverList.map(
-        (ds) => ds.id === serverId ? this.makeDisplayServer(server) : ds);
+        (ds) => ds.id === serverId ? this.makeServerListEntry(server) : ds);
   }
 
   private getServerById(serverId: string): server.Server {
