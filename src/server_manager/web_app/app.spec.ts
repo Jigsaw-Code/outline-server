@@ -97,41 +97,6 @@ describe('App', () => {
     done();
   });
 
-  // it('initially shows stored server display metadata', async (done) => {
-  //   // Create fake servers without caching their display metadata.
-  //   const tokenManager = new InMemoryDigitalOceanTokenManager();
-  //   tokenManager.token = TOKEN_WITH_NO_SERVERS;
-  //   const managedServerRepo = new FakeManagedServerRepository();
-  //   const managedServer = await managedServerRepo.createServer();
-  //   managedServer.apiUrl = 'fake-managed-server-api-url';
-  //   const managedDisplayServer = await makeDisplayServer(managedServer);
-  //   const manualServerRepo = new FakeManualServerRepository();
-  //   const manualServer1 = await manualServerRepo.addServer(
-  //       {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-1'});
-  //   const manualServer2 = await manualServerRepo.addServer(
-  //       {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
-  //   const manualDisplayServer1 = await makeDisplayServer(manualServer1);
-  //   const manualDisplayServer2 = await makeDisplayServer(manualServer2);
-  //   const store = new Map([[
-  //     DisplayServerRepository.SERVERS_STORAGE_KEY,
-  //     JSON.stringify([manualDisplayServer1, manualDisplayServer2, managedDisplayServer])
-  //   ]]);
-  //   const displayServerRepo = new DisplayServerRepository(new InMemoryStorage(store));
-  //   const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
-  //   const app = createTestApp(
-  //       appRoot, tokenManager, manualServerRepo, displayServerRepo, managedServerRepo);
-
-  //   await app.start();
-  //   const managedServers = await managedServerRepo.listServers();
-  //   const manualServers = await manualServerRepo.listServers();
-  //   const serverList = appRoot.serverList;
-  //   expect(serverList.length).toEqual(manualServers.length + managedServers.length);
-  //   expect(serverList).toContain(manualDisplayServer1);
-  //   expect(serverList).toContain(manualDisplayServer2);
-  //   expect(serverList).toContain(managedDisplayServer);
-  //   done();
-  // });
-
   it('initially shows the last selected server', async () => {
     const tokenManager = new InMemoryDigitalOceanTokenManager();
     tokenManager.token = TOKEN_WITH_ONE_SERVER;
