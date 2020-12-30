@@ -359,9 +359,11 @@ export class App {
       }
       return servers;
     } catch (error) {
-      // TODO: show error to user, handle expired token.
+      // TODO(fortuna): Handle expired token.
+      this.appRoot.showError(this.appRoot.localize('error-do-account-info'));
       console.error('Failed to load DigitalOcean Account:', error);
     }
+    return [];
   }
 
   private async loadManualServers() {
@@ -409,7 +411,8 @@ export class App {
             // User clicked "Cancel" on the loading screen.
             return;
           }
-          console.log(error);
+          console.log('Server creation failed', error);
+          this.appRoot.showError(this.appRoot.localize('error-server-creation'));
         }
       }
       await this.updateServerView(server);
@@ -450,7 +453,6 @@ export class App {
       console.error('DigitalOcean accessToken not found');
       return;
     }
-
 
     const doSession = this.createDigitalOceanSession(accessToken);
     const authEvents = new EventEmitter();
@@ -606,7 +608,7 @@ export class App {
 
   // Opens the screen to create a server.
   private showDigitalOceanCreateServer() {
-    // TODO: Should validate account here.
+    // TODO(fortuna): Should validate account here.
     this.enterDigitalOceanMode();
 
     const regionPicker = this.appRoot.getAndShowRegionPicker();
@@ -640,7 +642,7 @@ export class App {
       await this.showServer(server);
     } catch (error) {
       console.error('Error from createDigitalOceanServer', error);
-      // TODO: Add error notification
+      this.appRoot.showError(this.appRoot.localize('error-server-creation'));
     }
   }
 
