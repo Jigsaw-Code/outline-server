@@ -13,7 +13,6 @@
 // limitations under the License.
 
 // TODO:
-// - Add server creation cancellation.
 // - Add and test account validation to showDoCreateServer
 // - Handle expire account token
 // - cleanup enterDigitalOceanMode
@@ -339,7 +338,10 @@ export class App {
     // Show last displayed server, if any.
     const serverIdToSelect = localStorage.getItem(LAST_DISPLAYED_SERVER_STORAGE_KEY);
     if (serverIdToSelect) {
-      this.showServer(this.getServerById(serverIdToSelect));
+      const serverToShow = this.getServerById(serverIdToSelect);
+      if (serverToShow) {
+        this.showServer(serverToShow);
+      }
     }
   }
 
@@ -392,18 +394,25 @@ export class App {
   }
 
   private async addServer(server: server.Server): Promise<void> {
+    console.log('Loading server', server);
     const serverId = localId(server);
     this.idServer.set(serverId, server);
     const displayServer = this.makeDisplayServer(server);
-    console.log('Loading  DisplayServer', displayServer);
     this.appRoot.serverList = this.appRoot.serverList.concat([displayServer]);
 
     // Wait for server config to load, then update the server view and list.
     if (isManagedServer(server) && !server.isInstallCompleted()) {
-      // TODO: Handle cancellation.
-      await (server as server.ManagedServer).waitOnInstall();
+      try {
+        await (server as server.ManagedServer).waitOnInstall();
+      } catch (error) {
+        if (error instanceof errors.DeletedServerError) {
+          // User clicked "Cancel" on the loading screen.
+          return;
+        }
+        console.log(error);
+      }
     }
-    this.updateServerView(server);
+    await this.updateServerView(server);
     if (this.selectedServer === server) {
       // Make sure we switch to the server view in case it was in the loading view.
       this.appRoot.showServerView();
@@ -418,6 +427,7 @@ export class App {
     if (this.appRoot.selectedServerId === serverId) {
       this.appRoot.selectedServerId = '';
       this.selectedServer = null;
+      localStorage.removeItem(LAST_DISPLAYED_SERVER_STORAGE_KEY);
     }
   }
 
@@ -430,22 +440,6 @@ export class App {
   private getServerById(serverId: string): server.Server {
     return this.idServer.get(serverId);
   }
-
-  // private getDisplayServerBeingCreated(): DisplayServer {
-  //   if (!this.serverBeingCreated) {
-  //     return null;
-  //   }
-  //   // Set name to the default server name for this region. Because the server
-  //   // is still being created, the getName REST API will not yet be available.
-  //   const regionId = this.serverBeingCreated.getHost().getRegionId();
-  //   const serverName = this.makeLocalizedServerName(regionId);
-  //   return {
-  //     // Use the droplet ID until the API URL is available.
-  //     id: this.serverBeingCreated.getHost().getHostId(),
-  //     name: serverName,
-  //     isManaged: true
-  //   };
-  // }
 
   // Signs in to DigitalOcean through the OAuthFlow. Creates a `ManagedServerRepository` and
   // resolves with the servers present in the account.
@@ -650,46 +644,6 @@ export class App {
     }
   }
 
-  // private waitForManagedServerCreation(server: server.ManagedServer, tryAgain = false): void {
-  //   server.waitOnInstall(tryAgain)
-  //       .then(() => {
-  //         // Update name on the server list.
-  //         this.updateServer(server);
-  //       })
-  //       .catch((e) => {
-  //         console.log(e);
-  //         if (e instanceof errors.DeletedServerError) {
-  //           return;
-  //         }
-  //         let errorMessage = server.isInstallCompleted() ?
-  //             this.appRoot.localize('error-server-unreachable-title') :
-  //             this.appRoot.localize('error-server-creation');
-  //         errorMessage += ` ${this.appRoot.localize('digitalocean-unreachable')}`;
-  //         this.appRoot
-  //             .showModalDialog(
-  //                 null,  // Don't display any title.
-  //                 errorMessage,
-  //                 [this.appRoot.localize('server-destroy'), this.appRoot.localize('retry')])
-  //             .then((clickedButtonIndex: number) => {
-  //               if (clickedButtonIndex === 0) {  // user clicked 'Delete this server'
-  //                 console.info('Deleting unreachable server');
-  //                 server.getHost().delete().then(() => {
-  //                   this.showCreateServer();
-  //                 });
-  //               } else if (clickedButtonIndex === 1) {  // user clicked 'Try again'.
-  //                 console.info('Retrying unreachable server');
-  //                 this.waitForManagedServerCreation(server, true);
-  //               }
-  //             });
-  //       });
-  // }
-  //
-  // private showServerCreationProgress(server: server.ManagedServer, displayServer:
-  // DisplayServer) {
-  //   this.appRoot.showProgress(server.getName(), true);
-  //   this.waitForManagedServerCreation();
-  // }
-
   private getLocalizedCityName(regionId: server.RegionId) {
     const cityId = digitalocean_server.GetCityId(regionId);
     return this.appRoot.localize(`city-${cityId}`);
@@ -792,27 +746,7 @@ export class App {
     serverView.serverName =
         this.makeDisplayName(server);  // Don't get the name from the remote server.
     serverView.retryDisplayingServer = async () => {
-      this.updateServerView(server);
-      // TODO: reload DO list?
-
-      // // Refresh the server list if the server is managed, it may have been deleted outside the
-      // // app.
-      // let serverExists = true;
-      // if (serverView.isServerManaged && !!this.digitalOceanRepository) {
-      //   await this.digitalOceanRepository.listServers();
-      //   serverExists = !!(await this.getServerFromRepository(displayServer));
-      // }
-      // if (serverExists) {
-      //   await this.showServer(server);
-      // } else {
-      //   // Server has been deleted outside the app.
-      //   this.appRoot.showError(
-      //       this.appRoot.localize('error-server-removed', 'serverName', displayServer.name));
-      //   this.removeServerFromDisplayList(server);
-      //   this.selectedServer = null;
-      //   this.appRoot.selectedServer = null;
-      //   this.showIntro();
-      // }
+      await this.updateServerView(server);
     };
   }
 
@@ -1166,7 +1100,6 @@ export class App {
     }
     serverToCancel.getHost().delete().then(() => {
       this.removeServer(localId(serverToCancel));
-      this.appRoot.selectedServerId = '';
       this.showDigitalOceanCreateServer();
     });
   }
