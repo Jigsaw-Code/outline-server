@@ -68,35 +68,34 @@ describe('App', () => {
     expect(appRoot.currentPage).toEqual('serverView');
   });
 
-  // it('initially shows and stores server display metadata', async (done) => {
-  //   // Create fake servers and simulate their metadata being cached before creating the app.
-  //   const tokenManager = new InMemoryDigitalOceanTokenManager();
-  //   tokenManager.token = TOKEN_WITH_NO_SERVERS;
-  //   const managedServerRepo = new FakeManagedServerRepository();
-  //   const managedServer = await managedServerRepo.createServer();
-  //   managedServer.apiUrl = 'fake-managed-server-api-url';
-  //   const manualServerRepo = new FakeManualServerRepository();
-  //   const manualServer1 = await manualServerRepo.addServer(
-  //       {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-1'});
-  //   const manualServer2 = await manualServerRepo.addServer(
-  //       {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
+  it('initially shows servers', async (done) => {
+    // Create fake servers and simulate their metadata being cached before creating the app.
+    const tokenManager = new InMemoryDigitalOceanTokenManager();
+    tokenManager.token = TOKEN_WITH_NO_SERVERS;
+    const managedServerRepo = new FakeManagedServerRepository();
+    const managedServer = await managedServerRepo.createServer();
+    managedServer.apiUrl = 'fake-managed-server-api-url';
+    const manualServerRepo = new FakeManualServerRepository();
+    const manualServer1 = await manualServerRepo.addServer(
+        {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-1'});
+    const manualServer2 = await manualServerRepo.addServer(
+        {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
 
-  //   const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
-  //   const app = createTestApp(
-  //       appRoot, tokenManager, manualServerRepo, managedServerRepo);
+    const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
+    const app = createTestApp(appRoot, tokenManager, manualServerRepo, managedServerRepo);
 
-  //   await app.start();
-  //   // Validate that server metadata is shown.
-  //   const managedServers = await managedServerRepo.listServers();
-  //   const manualServers = await manualServerRepo.listServers();
-  //   const serverList = appRoot.serverList;
-  //   expect(serverList.length).toEqual(manualServers.length + managedServers.length);
-  //   expect(serverList).toContain(manualDisplayServer1);
-  //   expect(serverList).toContain(manualDisplayServer2);
-  //   expect(serverList).toContain(managedDisplayServer);
+    await app.start();
+    // Validate that server metadata is shown.
+    const managedServers = await managedServerRepo.listServers();
+    const manualServers = await manualServerRepo.listServers();
+    const serverList = appRoot.serverList;
+    expect(serverList.length).toEqual(manualServers.length + managedServers.length);
+    expect(serverList).toContain(jasmine.objectContaining({id: 'fake-manual-server-api-url-1'}));
+    expect(serverList).toContain(jasmine.objectContaining({id: 'fake-manual-server-api-url-2'}));
+    expect(serverList).toContain(jasmine.objectContaining({id: 'fake-host-id'}));
 
-  //   done();
-  // });
+    done();
+  });
 
   // it('initially shows stored server display metadata', async (done) => {
   //   // Create fake servers without caching their display metadata.
@@ -133,32 +132,22 @@ describe('App', () => {
   //   done();
   // });
 
-  // it('initially shows the last selected server', async () => {
-  //   const tokenManager = new InMemoryDigitalOceanTokenManager();
-  //   tokenManager.token = TOKEN_WITH_ONE_SERVER;
+  it('initially shows the last selected server', async () => {
+    const tokenManager = new InMemoryDigitalOceanTokenManager();
+    tokenManager.token = TOKEN_WITH_ONE_SERVER;
 
-  //   const LAST_DISPLAYED_SERVER_ID = 'fake-manual-server-api-url-1';
-  //   const manualServerRepo = new FakeManualServerRepository();
-  //   const lastDisplayedServer =
-  //       await manualServerRepo.addServer({certSha256: 'cert', apiUrl: LAST_DISPLAYED_SERVER_ID});
-  //   const manualServer = await manualServerRepo.addServer(
-  //       {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
-  //   const manualDisplayServer1 = await makeDisplayServer(lastDisplayedServer);
-  //   const manualDisplayServer2 = await makeDisplayServer(manualServer);
-  //   const store = new Map([[
-  //     DisplayServerRepository.SERVERS_STORAGE_KEY,
-  //     JSON.stringify([manualDisplayServer1, manualDisplayServer2])
-  //   ]]);
-  //   const displayServerRepo = new DisplayServerRepository(new InMemoryStorage(store));
-  //   displayServerRepo.storeLastDisplayedServerId(LAST_DISPLAYED_SERVER_ID);
-
-  //   const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
-  //   const app = createTestApp(appRoot, tokenManager, manualServerRepo, displayServerRepo);
-  //   await app.start();
-  //   await sleep(2000);  // TODO: refactor test to remove
-  //   expect(appRoot.currentPage).toEqual('serverView');
-  //   expect(appRoot.selectedServer.id).toEqual(lastDisplayedServer.getManagementApiUrl());
-  // });
+    const LAST_DISPLAYED_SERVER_ID = 'fake-manual-server-api-url-1';
+    const manualServerRepo = new FakeManualServerRepository();
+    const lastDisplayedServer =
+        await manualServerRepo.addServer({certSha256: 'cert', apiUrl: LAST_DISPLAYED_SERVER_ID});
+    await manualServerRepo.addServer({certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
+    localStorage.setItem('lastDisplayedServer', LAST_DISPLAYED_SERVER_ID);
+    const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
+    const app = createTestApp(appRoot, tokenManager, manualServerRepo);
+    await app.start();
+    expect(appRoot.currentPage).toEqual('serverView');
+    expect(appRoot.selectedServerId).toEqual(lastDisplayedServer.getManagementApiUrl());
+  });
 
   it('shows progress screen once DigitalOcean droplets are created', async () => {
     // Start the app with a fake DigitalOcean token.
@@ -180,8 +169,9 @@ describe('App', () => {
        // Manually create the server since the DO repository server factory function is synchronous.
        const server = await managedSeverRepository.createServer();
        const app = createTestApp(appRoot, tokenManager, null, managedSeverRepository);
-       await app.start();
+       // Sets last diplayed server.
        await app.showServer(server);
+       await app.start();
        expect(appRoot.currentPage).toEqual('serverProgressStep');
      });
 });

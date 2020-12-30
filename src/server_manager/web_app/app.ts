@@ -338,7 +338,7 @@ export class App {
     if (serverIdToSelect) {
       const serverToShow = this.getServerById(serverIdToSelect);
       if (serverToShow) {
-        this.showServer(serverToShow);
+        await this.showServer(serverToShow);
       }
     }
   }
