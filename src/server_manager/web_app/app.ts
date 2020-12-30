@@ -637,7 +637,7 @@ export class App {
         return this.digitalOceanRepository.createServer(regionId, serverName);
       });
       this.addServer(server);
-      this.showServer(server);
+      await this.showServer(server);
     } catch (error) {
       console.error('Error from createDigitalOceanServer', error);
       // TODO: Add error notification
@@ -654,7 +654,7 @@ export class App {
     return this.appRoot.localize('server-name', 'serverLocation', serverLocation);
   }
 
-  private async showServer(server: server.Server): Promise<void> {
+  public async showServer(server: server.Server): Promise<void> {
     const serverId = localId(server);
     this.selectedServer = server;
     this.appRoot.selectedServerId = serverId;
@@ -959,7 +959,7 @@ export class App {
 
   // Returns promise which fulfills when the server is created successfully,
   // or rejects with an error message that can be displayed to the user.
-  public createManualServer(userInput: string): Promise<void> {
+  public async createManualServer(userInput: string): Promise<void> {
     let serverConfig: server.ManualServerConfig;
     try {
       serverConfig = parseManualServerConfig(userInput);
@@ -967,7 +967,7 @@ export class App {
       // This shouldn't happen because the UI validates the URL before enabling the DONE button.
       const msg = `could not parse server config: ${e.message}`;
       console.error(msg);
-      return Promise.reject(new Error(msg));
+      throw new Error(msg);
     }
 
     // Don't let `ManualServerRepository.addServer` throw to avoid redundant error handling if we
@@ -975,20 +975,19 @@ export class App {
     const storedServer = this.manualServerRepository.findServer(serverConfig);
     if (!!storedServer) {
       this.appRoot.showNotification(this.appRoot.localize('notification-server-exists'), 5000);
-      return this.showServer(storedServer);
+      await this.showServer(storedServer);
+      return;
     }
-    return this.manualServerRepository.addServer(serverConfig).then((manualServer) => {
-      return manualServer.isHealthy().then((isHealthy) => {
-        if (isHealthy) {
-          return this.showServer(manualServer);
-        } else {
-          // Remove inaccessible manual server from local storage if it was just created.
-          manualServer.forget();
-          console.error('Manual server installed but unreachable.');
-          return Promise.reject(new errors.UnreachableServerError());
-        }
-      });
-    });
+    const manualServer = await this.manualServerRepository.addServer(serverConfig);
+    if (await manualServer.isHealthy()) {
+      this.addServer(manualServer);
+      await this.showServer(manualServer);
+    } else {
+      // Remove inaccessible manual server from local storage if it was just created.
+      manualServer.forget();
+      console.error('Manual server installed but unreachable.');
+      throw new errors.UnreachableServerError();
+    }
   }
 
   private removeAccessKey(accessKeyId: string) {

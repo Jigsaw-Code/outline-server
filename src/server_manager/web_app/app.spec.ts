@@ -178,9 +178,10 @@ describe('App', () => {
        tokenManager.token = TOKEN_WITH_NO_SERVERS;
        const managedSeverRepository = new FakeManagedServerRepository();
        // Manually create the server since the DO repository server factory function is synchronous.
-       await managedSeverRepository.createUninstalledServer();
+       const server = await managedSeverRepository.createServer();
        const app = createTestApp(appRoot, tokenManager, null, managedSeverRepository);
        await app.start();
+       await app.showServer(server);
        expect(appRoot.currentPage).toEqual('serverProgressStep');
      });
 });
@@ -389,12 +390,6 @@ class FakeManagedServerRepository implements server.ManagedServerRepository {
     return Promise.resolve({'fake': ['fake1', 'fake2']});
   }
   createServer() {
-    const newServer = new FakeManagedServer();
-    this.servers.push(newServer);
-    return Promise.resolve(newServer);
-  }
-
-  createUninstalledServer() {
     const newServer = new FakeManagedServer(false);
     this.servers.push(newServer);
     return Promise.resolve(newServer);
