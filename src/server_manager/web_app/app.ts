@@ -391,32 +391,35 @@ export class App {
     return name;
   }
 
-  private async addServer(server: server.Server): Promise<void> {
+  private addServer(server: server.Server): void {
     console.log('Loading server', server);
     const serverId = localId(server);
     this.idServer.set(serverId, server);
     const serverEntry = this.makeServerListEntry(server);
     this.appRoot.serverList = this.appRoot.serverList.concat([serverEntry]);
 
-    // Wait for server config to load, then update the server view and list.
-    if (isManagedServer(server) && !server.isInstallCompleted()) {
-      try {
-        await (server as server.ManagedServer).waitOnInstall();
-      } catch (error) {
-        if (error instanceof errors.DeletedServerError) {
-          // User clicked "Cancel" on the loading screen.
-          return;
+    // Once the server is added to the list, do the rest asynchronously.
+    setTimeout(async () => {
+      // Wait for server config to load, then update the server view and list.
+      if (isManagedServer(server) && !server.isInstallCompleted()) {
+        try {
+          await (server as server.ManagedServer).waitOnInstall();
+        } catch (error) {
+          if (error instanceof errors.DeletedServerError) {
+            // User clicked "Cancel" on the loading screen.
+            return;
+          }
+          console.log(error);
         }
-        console.log(error);
       }
-    }
-    await this.updateServerView(server);
-    if (this.selectedServer === server) {
-      // Make sure we switch to the server view in case it was in the loading view.
-      this.appRoot.showServerView();
-    }
-    this.appRoot.serverList = this.appRoot.serverList.map(
-        (ds) => ds.id === serverId ? this.makeServerListEntry(server) : ds);
+      await this.updateServerView(server);
+      if (this.selectedServer === server) {
+        // Make sure we switch to the server view in case it was in the loading view.
+        this.appRoot.showServerView();
+      }
+      this.appRoot.serverList = this.appRoot.serverList.map(
+          (ds) => ds.id === serverId ? this.makeServerListEntry(server) : ds);
+    }, 0);
   }
 
   private removeServer(serverId: string): void {
@@ -633,7 +636,6 @@ export class App {
       const server = await this.digitalOceanRetry(() => {
         return this.digitalOceanRepository.createServer(regionId, serverName);
       });
-      // TODO: Add cancel logic
       this.addServer(server);
       this.showServer(server);
     } catch (error) {
