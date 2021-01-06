@@ -280,9 +280,9 @@ Polymer({
 
   connectToDigitalOceanTapped: function() {
     if (this.isSignedInToDigitalOcean) {
-      this.fire('StartDigitalOceanCreateServerRequested');
+      this.fire('CreateDigitalOceanServerRequested');
     } else {
-      this.fire('StartDigitalOceanConnectAccountRequested');
+      this.fire('ConnectDigitalOceanAccountRequested');
     }
   },
 
