@@ -311,6 +311,7 @@ export class App {
       if (server) {
         await this.showServer(server);
       } else {
+        // This should never happen if we are managine the list correctly.
         console.error(
             `Could not find server for display server ID ${event.detail.displayServerId}`);
       }
