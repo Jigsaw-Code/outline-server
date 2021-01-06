@@ -12,12 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// TODO:
-// - Add and test account validation to showDoCreateServer
-// - Handle expire account token
-// - cleanup enterDigitalOceanMode
-// - Merge server loading screen into server view
-
 import * as sentry from '@sentry/electron';
 import * as semver from 'semver';
 
