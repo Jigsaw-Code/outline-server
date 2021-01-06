@@ -74,7 +74,7 @@ function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.Dat
   return {bytes: dataAmount.value};
 }
 
-function localId(server: server.Server): string {
+function localServerId(server: server.Server): string {
   if (isManagedServer(server)) {
     return (server as server.ManagedServer).getHost().getHostId();
   } else {
@@ -148,7 +148,7 @@ type DigitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOce
 export class App {
   private digitalOceanRepository: server.ManagedServerRepository;
   private selectedServer: server.Server;
-  private idServer = new Map<string, server.Server>();
+  private idServerMap = new Map<string, server.Server>();
 
   constructor(
       private appRoot: AppRoot, private readonly version: string,
@@ -380,7 +380,7 @@ export class App {
 
   private makeServerListEntry(server: server.Server): ServerListEntry {
     return {
-      id: localId(server),
+      id: localServerId(server),
       name: this.makeDisplayName(server),
       isManaged: isManagedServer(server),
       isSynced: !!server.getName(),
@@ -401,8 +401,8 @@ export class App {
 
   private addServer(server: server.Server): void {
     console.log('Loading server', server);
-    const serverId = localId(server);
-    this.idServer.set(serverId, server);
+    const serverId = localServerId(server);
+    this.idServerMap.set(serverId, server);
     const serverEntry = this.makeServerListEntry(server);
     this.appRoot.serverList = this.appRoot.serverList.concat([serverEntry]);
 
@@ -432,7 +432,7 @@ export class App {
   }
 
   private removeServer(serverId: string): void {
-    this.idServer.delete(serverId);
+    this.idServerMap.delete(serverId);
     this.appRoot.serverList = this.appRoot.serverList.filter((ds) => ds.id !== serverId);
     if (this.appRoot.selectedServerId === serverId) {
       this.appRoot.selectedServerId = '';
@@ -442,13 +442,13 @@ export class App {
   }
 
   private updateServerEntry(server: server.Server): void {
-    const serverId = localId(server);
+    const serverId = localServerId(server);
     this.appRoot.serverList = this.appRoot.serverList.map(
         (ds) => ds.id === serverId ? this.makeServerListEntry(server) : ds);
   }
 
   private getServerById(serverId: string): server.Server {
-    return this.idServer.get(serverId);
+    return this.idServerMap.get(serverId);
   }
 
   // Returns a promise that resolves when the account is active.
@@ -651,7 +651,7 @@ export class App {
   }
 
   public async showServer(server: server.Server): Promise<void> {
-    const serverId = localId(server);
+    const serverId = localServerId(server);
     this.selectedServer = server;
     this.appRoot.selectedServerId = serverId;
     localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, serverId);
@@ -677,7 +677,7 @@ export class App {
   // Show the server management screen. Assumes the server is healthy.
   private setServerManagementView(server: server.Server) {
     // Show view and initialize fields from selectedServer.
-    const view = this.appRoot.getServerView(localId(server));
+    const view = this.appRoot.getServerView(localServerId(server));
     view.isServerReachable = true;
     view.serverId = server.getServerId();
     view.serverName = server.getName();
@@ -736,7 +736,7 @@ export class App {
 
   private setServerUnreachableView(server: server.Server): void {
     // Display the unreachable server state within the server view.
-    const serverView = this.appRoot.getServerView(localId(server)) as ServerView;
+    const serverView = this.appRoot.getServerView(localServerId(server)) as ServerView;
     serverView.isServerReachable = false;
     serverView.isServerManaged = isManagedServer(server);
     serverView.serverName =
@@ -1000,7 +1000,7 @@ export class App {
 
   private deleteSelectedServer() {
     const serverToDelete = this.selectedServer;
-    const serverId = localId(serverToDelete);
+    const serverId = localServerId(serverToDelete);
     if (!isManagedServer(serverToDelete)) {
       const msg = 'cannot delete non-ManagedServer';
       console.error(msg);
@@ -1035,7 +1035,7 @@ export class App {
 
   private forgetSelectedServer() {
     const serverToForget = this.selectedServer;
-    const serverId = localId(serverToForget);
+    const serverId = localServerId(serverToForget);
     if (!isManualServer(serverToForget)) {
       const msg = 'cannot forget non-ManualServer';
       console.error(msg);
@@ -1094,7 +1094,7 @@ export class App {
       throw new Error(msg);
     }
     serverToCancel.getHost().delete().then(() => {
-      this.removeServer(localId(serverToCancel));
+      this.removeServer(localServerId(serverToCancel));
       this.showIntro();
     });
   }
