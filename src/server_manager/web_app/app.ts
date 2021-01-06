@@ -594,7 +594,7 @@ export class App {
   }
 
   // Opens the screen to create a server.
-  private async showDigitalOceanCreateServer(accessToken: string) {
+  private async showDigitalOceanCreateServer(accessToken: string): Promise<void> {
     try {
       await this.ensureActiveDigitalOceanAccount(accessToken);
     } catch (error) {
@@ -641,12 +641,12 @@ export class App {
     }
   }
 
-  private getLocalizedCityName(regionId: server.RegionId) {
+  private getLocalizedCityName(regionId: server.RegionId): string {
     const cityId = digitalocean_server.GetCityId(regionId);
     return this.appRoot.localize(`city-${cityId}`);
   }
 
-  private makeLocalizedServerName(regionId: server.RegionId) {
+  private makeLocalizedServerName(regionId: server.RegionId): string {
     const serverLocation = this.getLocalizedCityName(regionId);
     return this.appRoot.localize('server-name', 'serverLocation', serverLocation);
   }
@@ -676,7 +676,7 @@ export class App {
   }
 
   // Show the server management screen. Assumes the server is healthy.
-  private setServerManagementView(server: server.Server) {
+  private setServerManagementView(server: server.Server): void {
     // Show view and initialize fields from selectedServer.
     const view = this.appRoot.getServerView(localServerId(server));
     view.isServerReachable = true;
