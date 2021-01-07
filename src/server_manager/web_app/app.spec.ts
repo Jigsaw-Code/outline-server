@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
-import {InMemoryStorage} from '../infrastructure/memory_storage';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
 
@@ -68,7 +67,7 @@ describe('App', () => {
     expect(appRoot.currentPage).toEqual('serverView');
   });
 
-  it('initially shows servers', async (done) => {
+  it('initially shows servers', async () => {
     // Create fake servers and simulate their metadata being cached before creating the app.
     const tokenManager = new InMemoryDigitalOceanTokenManager();
     tokenManager.token = TOKEN_WITH_NO_SERVERS;
@@ -87,14 +86,14 @@ describe('App', () => {
     await app.start();
     // Validate that server metadata is shown.
     const managedServers = await managedServerRepo.listServers();
+    expect(managedServers.length).toEqual(1);
     const manualServers = await manualServerRepo.listServers();
+    expect(manualServers.length).toEqual(2);
     const serverList = appRoot.serverList;
     expect(serverList.length).toEqual(manualServers.length + managedServers.length);
     expect(serverList).toContain(jasmine.objectContaining({id: 'fake-manual-server-api-url-1'}));
     expect(serverList).toContain(jasmine.objectContaining({id: 'fake-manual-server-api-url-2'}));
     expect(serverList).toContain(jasmine.objectContaining({id: 'fake-host-id'}));
-
-    done();
   });
 
   it('initially shows the last selected server', async () => {
