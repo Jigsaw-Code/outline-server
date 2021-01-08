@@ -422,13 +422,12 @@ export class App {
           this.appRoot.showError(this.appRoot.localize('error-server-creation'));
         }
       }
+      this.updateServerEntry(server);
       await this.updateServerView(server);
       if (this.selectedServer === server) {
         // Make sure we switch to the server view in case it was in the loading view.
         this.appRoot.showServerView();
       }
-      this.appRoot.serverList = this.appRoot.serverList.map(
-          (ds) => ds.id === serverId ? this.makeServerListEntry(server) : ds);
     }, 0);
   }
 
