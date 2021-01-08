@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import './ui_components/app-root.js';
+
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
@@ -31,11 +33,7 @@ const TOKEN_WITH_ONE_SERVER = 'one-server-token';
 (global as any).bringToFront = () => {};
 
 // Inject app-root element into DOM once before the test suite runs.
-beforeAll(async () => {
-  // It seems like AppRoot class is not fully loaded/initialized until the
-  // constructor, so we invoke it directly.
-  const loadAppRoot = new AppRoot();
-
+beforeAll(() => {
   document.body.innerHTML = "<app-root id='appRoot' language='en'></app-root>";
 });
 
@@ -81,6 +79,7 @@ describe('App', () => {
         {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
 
     const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
+    expect(appRoot.serverList.length).toEqual(0);
     const app = createTestApp(appRoot, tokenManager, manualServerRepo, managedServerRepo);
 
     await app.start();
