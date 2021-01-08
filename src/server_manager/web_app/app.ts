@@ -422,12 +422,14 @@ export class App {
           this.appRoot.showError(this.appRoot.localize('error-server-creation'));
         }
       }
-      this.updateServerEntry(server);
       await this.updateServerView(server);
       if (this.selectedServer === server) {
         // Make sure we switch to the server view in case it was in the loading view.
         this.appRoot.showServerView();
       }
+      // This has to run after updateServerView because it depends on the isHealthy() call.
+      // TODO(fortuna): Better handle state changes.
+      this.updateServerEntry(server);
     }, 0);
   }
 
