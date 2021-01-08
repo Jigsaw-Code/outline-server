@@ -21,7 +21,6 @@ import {getSentryApiUrl} from '../infrastructure/sentry';
 import {App} from './app';
 import {DigitalOceanTokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
-import {DisplayServerRepository} from './display_server';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
 
@@ -123,7 +122,7 @@ document.addEventListener('WebComponentsReady', () => {
   new App(
       appRoot, version, digitalocean_api.createDigitalOceanSession,
       digitalOceanServerRepositoryFactory, new ManualServerRepository('manualServers'),
-      new DisplayServerRepository(), new DigitalOceanTokenManager())
+      new DigitalOceanTokenManager())
       .start();
 });
 

@@ -90,9 +90,7 @@ export interface ManualServer extends Server {
 // "magic" user experience, e.g. DigitalOcean.
 export interface ManagedServer extends Server {
   // Returns a promise that fulfills once installation is complete.
-  // If resetTimeout is true, this will reset the server state and might
-  // wait until the timeout occurs to reconnect to the server.
-  waitOnInstall(resetTimeout: boolean): Promise<void>;
+  waitOnInstall(): Promise<void>;
   // Returns server host object.
   getHost(): ManagedServerHost;
   // Returns true when installation is complete.
