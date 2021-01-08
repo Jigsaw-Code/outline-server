@@ -33,7 +33,7 @@ const TOKEN_WITH_ONE_SERVER = 'one-server-token';
 (global as any).bringToFront = () => {};
 
 // Inject app-root element into DOM once before the test suite runs.
-beforeAll(() => {
+beforeEach(() => {
   document.body.innerHTML = "<app-root id='appRoot' language='en'></app-root>";
 });
 
