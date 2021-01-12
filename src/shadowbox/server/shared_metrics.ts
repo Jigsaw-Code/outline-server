@@ -153,6 +153,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
   private reportStartTimestampMs: number;
 
   // serverConfig: where the enabled/disable setting is persisted
+  // keyConfig: where access keys are persisted
   // usageMetrics: where we get the metrics from
   // toMetricsId: maps Access key ids to metric ids
   // metricsUrl: where to post the metrics
@@ -243,7 +244,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       timestampUtcMs: this.clock.now(),
       dataLimit: {
         enabled: !!this.serverConfig.data().accessKeyDataLimit,
-        perKeyLimitCount: keys?.reduce((count, next) => count + (next.dataLimit ? 1 : 0), 0) || 0
+        perKeyLimitCount: keys.filter(key => !!key.dataLimit).length
       }
     };
     await this.metricsCollector.collectFeatureMetrics(featureMetricsReport);

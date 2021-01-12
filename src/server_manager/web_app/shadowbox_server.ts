@@ -117,7 +117,7 @@ export class ShadowboxServer implements server.Server {
   }
 
   getName(): string {
-    return this.serverConfig.name;
+    return this.serverConfig?.name;
   }
 
   setName(name: string): Promise<void> {
@@ -195,7 +195,8 @@ export class ShadowboxServer implements server.Server {
 
   getHostnameForAccessKeys(): string {
     try {
-      return this.serverConfig.hostnameForAccessKeys || new URL(this.managementApiAddress).hostname;
+      return this.serverConfig?.hostnameForAccessKeys ??
+          new URL(this.managementApiAddress).hostname;
     } catch (e) {
       return '';
     }
@@ -224,9 +225,9 @@ export class ShadowboxServer implements server.Server {
     });
   }
 
-  private getServerConfig(): Promise<ServerConfig> {
+  private async getServerConfig(): Promise<ServerConfig> {
     console.info('Retrieving server configuration');
-    return this.apiRequest<ServerConfig>('server');
+    return await this.apiRequest<ServerConfig>('server');
   }
 
   protected setManagementApiUrl(apiAddress: string): void {

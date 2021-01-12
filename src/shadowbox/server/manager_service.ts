@@ -28,7 +28,7 @@ import {ServerConfigJson} from './server_config';
 import {SharedMetricsPublisher} from './shared_metrics';
 
 // Creates a AccessKey response.
-function accessKeyResponseJson(accessKey: AccessKey) {
+function accessKeyToApiJson(accessKey: AccessKey) {
   return {
     // The unique identifier of this access key.
     id: accessKey.id,
@@ -38,6 +38,7 @@ function accessKeyResponseJson(accessKey: AccessKey) {
     password: accessKey.proxyParams.password,
     port: accessKey.proxyParams.portNumber,
     method: accessKey.proxyParams.encryptionMethod,
+    dataLimit: accessKey.dataLimit,
     accessUrl: SIP002_URI.stringify(makeConfig({
       host: accessKey.proxyParams.hostname,
       port: accessKey.proxyParams.portNumber,
@@ -217,7 +218,7 @@ export class ShadowsocksManagerService {
     logging.debug(`listAccessKeys request ${JSON.stringify(req.params)}`);
     const response = {accessKeys: []};
     for (const accessKey of this.accessKeys.listAccessKeys()) {
-      response.accessKeys.push(accessKeyResponseJson(accessKey));
+      response.accessKeys.push(accessKeyToApiJson(accessKey));
     }
     logging.debug(`listAccessKeys response ${JSON.stringify(response)}`);
     res.send(HttpSuccess.OK, response);
@@ -229,7 +230,7 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
       this.accessKeys.createNewAccessKey().then((accessKey) => {
-        const accessKeyJson = accessKeyResponseJson(accessKey);
+        const accessKeyJson = accessKeyToApiJson(accessKey);
         res.send(201, accessKeyJson);
         logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);
         return next();
@@ -320,7 +321,9 @@ export class ShadowsocksManagerService {
       logging.debug(`setAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
       const accessKeyId = validateAccessKeyId(req.params.id);
       const limit = validateDataLimit(req.params.limit);
-      await this.accessKeys.setAccessKeyDataLimit(accessKeyId, limit);
+      // Enforcement is done asynchronously in the proxy server.  This is transparent to the manager
+      // so this doesn't introduce any race conditions between the server and UI.
+      this.accessKeys.setAccessKeyDataLimit(accessKeyId, limit);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch(error) {
@@ -336,7 +339,9 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`removeAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
       const accessKeyId = validateAccessKeyId(req.params.id);
-      await this.accessKeys.removeAccessKeyDataLimit(accessKeyId);
+      // Enforcement is done asynchronously in the proxy server.  This is transparent to the manager
+      // so this doesn't introduce any race conditions between the server and UI.
+      this.accessKeys.removeAccessKeyDataLimit(accessKeyId);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch(error) {
@@ -352,6 +357,8 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`setDefaultDataLimit request ${JSON.stringify(req.params)}`);
       const limit = validateDataLimit(req.params.limit);
+      // Enforcement is done asynchronously in the proxy server.  This is transparent to the manager
+      // so this doesn't introduce any race conditions between the server and UI.
       this.accessKeys.setDefaultDataLimit(limit);
       this.serverConfig.data().accessKeyDataLimit = limit;
       this.serverConfig.write();
@@ -369,7 +376,9 @@ export class ShadowsocksManagerService {
   public async removeDefaultDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`removeDefaultDataLimit request ${JSON.stringify(req.params)}`);
-      await this.accessKeys.removeDefaultDataLimit();
+      // Enforcement is done asynchronously in the proxy server.  This is transparent to the manager
+      // so this doesn't introduce any race conditions between the server and UI.
+      this.accessKeys.removeDefaultDataLimit();
       delete this.serverConfig.data().accessKeyDataLimit;
       this.serverConfig.write();
       res.send(HttpSuccess.NO_CONTENT);

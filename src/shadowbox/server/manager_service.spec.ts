@@ -32,7 +32,7 @@ interface ServerInfo {
 const NEW_PORT = 12345;
 const OLD_PORT = 54321;
 const EXPECTED_ACCESS_KEY_PROPERTIES =
-    ['id', 'name', 'password', 'port', 'method', 'accessUrl'].sort();
+    ['id', 'name', 'password', 'port', 'method', 'accessUrl', 'dataLimit'].sort();
 
 describe('ShadowsocksManagerService', () => {
   // After processing the response callback, we should set
@@ -578,7 +578,8 @@ describe('ShadowsocksManagerService', () => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
       const key = await repo.createNewAccessKey();
-      key.dataLimit = {bytes: 1000};
+      repo.setAccessKeyDataLimit(key.id, {bytes: 1000});
+      await repo.enforceAccessKeyDataLimits();
       const res = {send: (httpCode) => {
         expect(httpCode).toEqual(204);
         expect(key.dataLimit).toBeFalsy();
@@ -802,7 +803,7 @@ function fakeSharedMetricsReporter(): SharedMetricsPublisher {
   };
 }
 
-function getAccessKeyRepository(): AccessKeyRepository {
+function getAccessKeyRepository(): ServerAccessKeyRepository {
   return new ServerAccessKeyRepository(
       OLD_PORT, 'hostname', new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}),
       new FakeShadowsocksServer(), new FakePrometheusClient({}));

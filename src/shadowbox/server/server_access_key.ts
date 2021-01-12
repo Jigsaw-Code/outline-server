@@ -26,7 +26,7 @@ import {ShadowsocksServer} from '../model/shadowsocks_server';
 import {PrometheusManagerMetrics} from './manager_metrics';
 
 // The format as json of access keys in the config file.
-interface AccessKeyJson {
+interface AccessKeyStorageJson {
   id: AccessKeyId;
   metricsId: AccessKeyId;
   name: string;
@@ -38,7 +38,7 @@ interface AccessKeyJson {
 
 // The configuration file format as json.
 export interface AccessKeyConfigJson {
-  accessKeys?: AccessKeyJson[];
+  accessKeys?: AccessKeyStorageJson[];
   // Next AccessKeyId to use.
   nextId?: number;
 }
@@ -56,7 +56,7 @@ function generatePassword(): string {
   return randomstring.generate(12);
 }
 
-function makeAccessKey(hostname: string, accessKeyJson: AccessKeyJson): AccessKey {
+function makeAccessKey(hostname: string, accessKeyJson: AccessKeyStorageJson): AccessKey {
   const proxyParams = {
     hostname,
     portNumber: accessKeyJson.port,
@@ -67,7 +67,7 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyJson): AccessKe
       accessKeyJson.id, accessKeyJson.name, accessKeyJson.metricsId, proxyParams);
 }
 
-function accessKeySerializedJson(accessKey: AccessKey): AccessKeyJson {
+function accessKeyToStorageJson(accessKey: AccessKey): AccessKeyStorageJson {
   return {
     id: accessKey.id,
     metricsId: accessKey.metricsId,
@@ -91,7 +91,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       private portForNewAccessKeys: number, private proxyHostname: string,
       private keyConfig: JsonConfig<AccessKeyConfigJson>,
       private shadowsocksServer: ShadowsocksServer, private prometheusClient: PrometheusClient,
-      private defaultDataLimit?: DataLimit) {
+      private _defaultDataLimit?: DataLimit) {
     if (this.keyConfig.data().accessKeys === undefined) {
       this.keyConfig.data().accessKeys = [];
     }
@@ -178,30 +178,30 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.saveAccessKeys();
   }
 
-  get dataLimit(): DataLimit|undefined {
-    return this.defaultDataLimit;
-  }
-
-  setAccessKeyDataLimit(id: AccessKeyId, limit: DataLimit): Promise<void> {
+  setAccessKeyDataLimit(id: AccessKeyId, limit: DataLimit): void {
     this.getAccessKey(id).dataLimit = limit;
     this.saveAccessKeys();
-    return this.enforceAccessKeyDataLimits();
+    this.enforceAccessKeyDataLimits();
   }
 
-  removeAccessKeyDataLimit(id: AccessKeyId): Promise<void> {
+  removeAccessKeyDataLimit(id: AccessKeyId): void {
     delete this.getAccessKey(id).dataLimit;
     this.saveAccessKeys();
-    return this.enforceAccessKeyDataLimits();
+    this.enforceAccessKeyDataLimits();
   }
 
-  setDefaultDataLimit(limit: DataLimit): Promise<void> {
-    this.defaultDataLimit = limit;
-    return this.enforceAccessKeyDataLimits();
+  get defaultDataLimit(): DataLimit|undefined {
+    return this._defaultDataLimit;
   }
 
-  removeDefaultDataLimit(): Promise<void> {
-    delete this.defaultDataLimit;
-    return this.enforceAccessKeyDataLimits();
+  setDefaultDataLimit(limit: DataLimit): void {
+    this._defaultDataLimit = limit;
+    this.enforceAccessKeyDataLimits();
+  }
+
+  removeDefaultDataLimit(): void {
+    delete this._defaultDataLimit;
+    this.enforceAccessKeyDataLimits();
   }
 
   getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined {
@@ -217,9 +217,13 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
         (await metrics.getOutboundByteTransfer({hours: 30 * 24})).bytesTransferredByUserId;
     let limitStatusChanged = false;
     for (const accessKey of this.accessKeys) {
-      const usageBytes = bytesTransferredById[accessKey.id] || 0;
+      const usageBytes = bytesTransferredById[accessKey.id] ?? 0;
       const wasOverDataLimit = accessKey.isOverDataLimit;
-      accessKey.isOverDataLimit = usageBytes > (accessKey.dataLimit || this.defaultDataLimit)?.bytes || false;
+      let limitBytes = (accessKey.dataLimit ?? this._defaultDataLimit)?.bytes;
+      if (limitBytes === undefined) {
+        limitBytes = Number.POSITIVE_INFINITY;
+      }
+      accessKey.isOverDataLimit = usageBytes > limitBytes;
       limitStatusChanged = accessKey.isOverDataLimit !== wasOverDataLimit || limitStatusChanged;
     }
     if (limitStatusChanged) {
@@ -244,7 +248,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private saveAccessKeys() {
-    this.keyConfig.data().accessKeys = this.accessKeys.map(key => accessKeySerializedJson(key));
+    this.keyConfig.data().accessKeys = this.accessKeys.map(key => accessKeyToStorageJson(key));
     this.keyConfig.write();
   }
 
