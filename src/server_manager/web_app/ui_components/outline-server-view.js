@@ -630,7 +630,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         accessKeySortBy: {type: String},
         accessKeySortDirection: {type: Number},
         localize: {type: Function, readonly: true},
-        currentPage: {type: String},
+        currentPage: {type: String, readonly: true},
         selectedTab: {type: String},
       };
     }
@@ -696,8 +696,15 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.accessKeySortDirection = 1;
       /** @type {(msgId: string, ...params: string[]) => string} */
       this.localize = null;
-      this.currentPage = 'unreachableView';
+      this.currentPage = '';
       this.selectedTab = 'connections';
+    }
+
+    selectPage(page) {
+      if (page !== 'progressView') {
+        this.$.progressView.stop();
+      }
+      this.currentPage = page;
     }
 
     /**

@@ -662,11 +662,11 @@ export class App {
   }
 
   private async updateServerView(server: server.Server): Promise<void> {
-    if (isManagedServer(server)) {
-      if (!(server as server.ManagedServer).isInstallCompleted()) {
-        const view = this.appRoot.getServerView(localServerId(server));
-        view.currentPage = 'progressView';
-      }
+    if (isManagedServer(server) &&
+        !(server as server.ManagedServer).isInstallCompleted()) {
+      await sleep(1000); // TODO: Wait for view to be initialized.
+      const view = this.appRoot.getServerView(localServerId(server));
+      view.selectPage('progressView');
     } else if (await server.isHealthy()) {
       this.setServerManagementView(server);
     } else {
@@ -678,8 +678,7 @@ export class App {
   private setServerManagementView(server: server.Server): void {
     // Show view and initialize fields from selectedServer.
     const view = this.appRoot.getServerView(localServerId(server));
-    view.currentPage = 'managementView';
-    // view.isServerReachable = true;
+    view.selectPage('managementView');
     view.serverId = server.getServerId();
     view.serverName = server.getName();
     view.serverHostname = server.getHostnameForAccessKeys();
@@ -738,8 +737,7 @@ export class App {
   private setServerUnreachableView(server: server.Server): void {
     // Display the unreachable server state within the server view.
     const serverView = this.appRoot.getServerView(localServerId(server)) as ServerView;
-    serverView.currentPage = 'unreachableView';
-    // serverView.isServerReachable = false;
+    serverView.selectPage('unreachableView');
     serverView.isServerManaged = isManagedServer(server);
     serverView.serverName =
         this.makeDisplayName(server);  // Don't get the name from the remote server.
