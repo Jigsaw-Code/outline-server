@@ -74,7 +74,7 @@ function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.Dat
   return {bytes: dataAmount.value};
 }
 
-function localServerId(server: server.Server): string {
+export function localServerId(server: server.Server): string {
   if (isManagedServer(server)) {
     return (server as server.ManagedServer).getHost().getHostId();
   } else {
@@ -653,12 +653,15 @@ export class App {
   }
 
   public async showServer(server: server.Server): Promise<void> {
-    const serverId = localServerId(server);
     this.selectedServer = server;
-    this.appRoot.selectedServerId = serverId;
-    localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, serverId);
+    this.appRoot.selectedServerId = localServerId(server);
+    this.setLastDisplayedServer(server);
     await this.updateServerView(server);
     this.appRoot.showServerView();
+  }
+
+  setLastDisplayedServer(server: server.Server) {
+    localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, localServerId(server));
   }
 
   private async updateServerView(server: server.Server): Promise<void> {
