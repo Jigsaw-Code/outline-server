@@ -36,7 +36,7 @@ import './outline-language-picker.js';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
 import './outline-region-picker-step';
-import './outline-server-progress-step.js';
+// import './outline-server-progress-step.js';
 import './outline-tos-view.js';
 
 import {AppLocalizeBehavior} from '@polymer/app-localize-behavior/app-localize-behavior.js';
@@ -417,7 +417,7 @@ export class AppRoot extends mixinBehaviors
               <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
               <outline-region-picker-step id="regionPicker" localize="[[localize]]"></outline-region-picker-step>
-              <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
+<!--              <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>-->
               <div id="serverView">
                 <template is="dom-repeat" items="{{serverList}}" as="server">
                   <outline-server-view id="serverView-{{_base64Encode(server.id)}}" localize="[[localize]]" hidden\$="{{!_isServerSelected(selectedServerId, server)}}"></outline-server-view>
@@ -605,19 +605,19 @@ export class AppRoot extends mixinBehaviors
     return this.$.manualEntry;
   }
 
-  /**
-   * @param {string} serverName
-   * @param {boolean} showCancelButton
-   */
-  showProgress(serverName, showCancelButton) {
-    this.currentPage = 'serverProgressStep';
-    this.$.serverProgressStep.serverName = serverName;
-    this.$.serverProgressStep.showCancelButton = showCancelButton;
-    this.$.serverProgressStep.start();
-  }
+  // /**
+  //  * @param {string} serverName
+  //  * @param {boolean} showCancelButton
+  //  */
+  // showProgress(serverName, showCancelButton) {
+  //   this.currentPage = 'serverProgressStep';
+  //   this.$.serverProgressStep.serverName = serverName;
+  //   this.$.serverProgressStep.showCancelButton = showCancelButton;
+  //   this.$.serverProgressStep.start();
+  // }
 
   showServerView() {
-    this.$.serverProgressStep.stop();
+    // this.$.serverProgressStep.stop();
     this.currentPage = 'serverView';
   }
 

@@ -29,6 +29,7 @@ import './cloud-install-styles.js';
 import './outline-iconset.js';
 import './outline-help-bubble.js';
 import './outline-metrics-option-dialog.js';
+import './outline-server-progress-step.js';
 import './outline-server-settings.js';
 import './outline-share-dialog.js';
 import './outline-sort-span.js';
@@ -400,164 +401,173 @@ export class ServerView extends DirMixin(PolymerElement) {
     </style>
 
     <div class="container">
-      <div class="server-header">
-        <div class="server-name">
-          <h3>[[serverName]]</h3>
-          <paper-menu-button horizontal-align="right" class="overflow-menu flex-1" hidden\$="{{!isServerReachable}}" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
-            <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
-            <paper-listbox slot="dropdown-content">
-              <paper-item hidden\$="[[!isServerManaged]]" on-tap="destroyServer">
-                <iron-icon icon="icons:remove-circle-outline"></iron-icon>[[localize('server-destroy')]]
-              </paper-item>
-              <paper-item hidden\$="[[isServerManaged]]" on-tap="removeServer">
-                <iron-icon icon="icons:remove-circle-outline"></iron-icon>[[localize('server-remove')]]
-              </paper-item>
-            </paper-listbox>
-          </paper-menu-button>
-        </div>
-        <div class="server-location" hidden\$="{{!isServerReachable}}">[[serverLocation]]</div>
-      </div>
-      <div class="tabs-container" hidden\$="{{!isServerReachable}}">
-        <div class="tabs-spacer"></div>
-        <paper-tabs selected="{{selectedTab}}" attr-for-selected="name" noink="">
-          <paper-tab name="connections">[[localize('server-connections')]]</paper-tab>
-          <paper-tab name="settings" id="settingsTab">[[localize('server-settings')]]</paper-tab>
-        </paper-tabs>
-      </div>
-
-      <!-- Unreachable server display -->
-      <div class="card-section unreachable-server" hidden\$="{{isServerReachable}}">
-        <img class="server-img" src="images/server-unreachable.png">
-        <h3>[[localize('server-unreachable')]]</h3>
-        <p></p>
-        <div>[[localize('server-unreachable-description')]]</div>
-        <span hidden\$="{{isServerManaged}}">[[localize('server-unreachable-managed-description')]]</span>
-        <span hidden\$="{{!isServerManaged}}">[[localize('server-unreachable-manual-description')]]</span>
-        <div class="button-container">
-          <paper-button on-tap="removeServer" hidden\$="{{isServerManaged}}">[[localize('server-remove')]]</paper-button>
-          <paper-button on-tap="destroyServer" hidden\$="{{!isServerManaged}}">[[localize('server-destroy')]]</paper-button>
-          <paper-button on-tap="retryDisplayingServer" class="try-again-btn">[[localize('retry')]]</paper-button>
-        </div>
-      </div>
-
-      <iron-pages selected="{{selectedTab}}" attr-for-selected="name" hidden\$="{{!isServerReachable}}">
-        <div name="connections">
-          <div class="stats-container">
-            <div class="stats-card transfer-stats card-section">
-              <iron-icon icon="icons:swap-horiz"></iron-icon>
-              <div class="stats">
-                <h3>[[_getFormattedTransferredValue(totalInboundBytes, '0')]]</h3>
-                <p>[[_getFormattedTransferredUnit(totalInboundBytes, 'B')]]</p>
-              </div>
-              <p>[[localize('server-data-transfer')]]</p>
-            </div>
-            <div hidden\$="[[!isServerManaged]]" class="stats-card card-section">
-              <div>
-                <img class="digital-ocean-icon" src="images/do_white_logo.svg">
-              </div>
-              <div class="stats">
-                <h3>[[managedServerUtilzationPercentage]]</h3>
-                <p>/[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]</p>
-              </div>
-              <p>[[localize('server-data-used')]]</p>
-            </div>
-            <div class="stats-card card-section">
-              <iron-icon icon="outline-iconset:key"></iron-icon>
-              <div class="stats">
-                <h3>[[accessKeyRows.length]]</h3>
-                <p>[[localize('server-keys')]]</p>
-              </div>
-              <p>[[localize('server-access')]]</p>
+      <iron-pages id="pages" attr-for-selected="id" selected="{{currentPage}}">
+        <outline-server-progress-step id="progressView" localize="[[localize]]"></outline-server-progress-step>
+        <div id="unreachableView">
+          <div class="server-header">
+            <div class="server-name">
+              <h3>[[serverName]]</h3>
             </div>
           </div>
-
-          <div class="access-key-list card-section">
-            <!-- header row -->
-            <div class="access-key-row header-row">
-              <outline-sort-span class="access-key-container"
-                  direction="[[_computeColumnDirection('name', accessKeySortBy, accessKeySortDirection)]]"
-                  on-tap="_setSortByOrToggleDirection" data-sort-by="name">
-                [[localize('server-access-keys')]]
-              </outline-sort-span>
-              <outline-sort-span class="measurement-container"
-                  direction="[[_computeColumnDirection('usage', accessKeySortBy, accessKeySortDirection)]]"
-                  on-tap="_setSortByOrToggleDirection" data-sort-by="usage">
-                [[localize('server-usage')]]
-              </outline-sort-span>
-              <span class="flex-1 header-row-spacer"></span>
+          <div class="card-section unreachable-server"">
+            <img class="server-img" src="images/server-unreachable.png">
+            <h3>[[localize('server-unreachable')]]</h3>
+            <p></p>
+            <div>[[localize('server-unreachable-description')]]</div>
+            <span hidden\$="{{isServerManaged}}">[[localize('server-unreachable-managed-description')]]</span>
+            <span hidden\$="{{!isServerManaged}}">[[localize('server-unreachable-manual-description')]]</span>
+            <div class="button-container">
+              <paper-button on-tap="removeServer" hidden\$="{{isServerManaged}}">[[localize('server-remove')]]</paper-button>
+              <paper-button on-tap="destroyServer" hidden\$="{{!isServerManaged}}">[[localize('server-destroy')]]</paper-button>
+              <paper-button on-tap="retryDisplayingServer" class="try-again-btn">[[localize('retry')]]</paper-button>
             </div>
-            <!-- admin row -->
-            <div class="access-key-row" id="managerRow">
-              <span class="access-key-container">
-                <img class="manager-access-key-icon access-key-icon" src="images/manager-key-avatar.svg">
-                <div class="access-key-name">
-                  <div>[[localize('server-my-access-key')]]</div>
-                  <div id="manager-access-key-description">[[localize('server-connect-devices')]]</div>
+          </div>
+        </div>
+        <div id="managementView">
+          <div class="server-header">
+            <div class="server-name">
+              <h3>[[serverName]]</h3>
+              <paper-menu-button horizontal-align="right" class="overflow-menu flex-1" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
+                <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
+                <paper-listbox slot="dropdown-content">
+                  <paper-item hidden\$="[[!isServerManaged]]" on-tap="destroyServer">
+                    <iron-icon icon="icons:remove-circle-outline"></iron-icon>[[localize('server-destroy')]]
+                  </paper-item>
+                  <paper-item hidden\$="[[isServerManaged]]" on-tap="removeServer">
+                    <iron-icon icon="icons:remove-circle-outline"></iron-icon>[[localize('server-remove')]]
+                  </paper-item>
+                </paper-listbox>
+              </paper-menu-button>
+            </div>
+            <div class="server-location">[[serverLocation]]</div>
+          </div>
+          <div class="tabs-container">
+            <div class="tabs-spacer"></div>
+            <paper-tabs selected="{{selectedTab}}" attr-for-selected="name" noink="">
+              <paper-tab name="connections">[[localize('server-connections')]]</paper-tab>
+              <paper-tab name="settings" id="settingsTab">[[localize('server-settings')]]</paper-tab>
+            </paper-tabs>
+          </div> 
+          <iron-pages selected="{{selectedTab}}" attr-for-selected="name">
+            <div name="connections">
+              <div class="stats-container">
+                <div class="stats-card transfer-stats card-section">
+                  <iron-icon icon="icons:swap-horiz"></iron-icon>
+                  <div class="stats">
+                    <h3>[[_getFormattedTransferredValue(totalInboundBytes, '0')]]</h3>
+                    <p>[[_getFormattedTransferredUnit(totalInboundBytes, 'B')]]</p>
+                  </div>
+                  <p>[[localize('server-data-transfer')]]</p>
                 </div>
-              </span>
-              <span class="measurement-container">
-                <span class="measurement">[[_formatBytesTransferred(myConnection.transferredBytes, "...")]]</span>
-                <paper-progress value="[[myConnection.relativeTraffic]]" class\$="[[_computePaperProgressClass(isAccessKeyDataLimitEnabled)]]"></paper-progress>
-                <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!isAccessKeyDataLimitEnabled]]">
-                  [[_getDataLimitsUsageString(myConnection)]]
-                </paper-tooltip>
-              </span>
-              <span class="actions">
-                <span class="flex-1">
-                  <paper-icon-button icon="outline-iconset:devices" class="connect-button" on-tap="_handleConnectPressed"></paper-icon-button>
-                </span>
-                <span class="overflow-menu flex-1"></span>
-              </span>
-            </div>
-            <div id="accessKeysContainer">
-              <!-- rows for each access key -->
-              <template is="dom-repeat" items="{{accessKeyRows}}" filter="isRegularConnection" sort="{{_sortAccessKeys(accessKeySortBy, accessKeySortDirection)}}" observe="name transferredBytes">
-                <!-- TODO(alalama): why is observe not responding to rename? -->
-                <div class="access-key-row">
+                <div hidden\$="[[!isServerManaged]]" class="stats-card card-section">
+                  <div>
+                    <img class="digital-ocean-icon" src="images/do_white_logo.svg">
+                  </div>
+                  <div class="stats">
+                    <h3>[[managedServerUtilzationPercentage]]</h3>
+                    <p>/[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]</p>
+                  </div>
+                  <p>[[localize('server-data-used')]]</p>
+                </div>
+                <div class="stats-card card-section">
+                  <iron-icon icon="outline-iconset:key"></iron-icon>
+                  <div class="stats">
+                    <h3>[[accessKeyRows.length]]</h3>
+                    <p>[[localize('server-keys')]]</p>
+                  </div>
+                  <p>[[localize('server-access')]]</p>
+                </div>
+              </div>
+    
+              <div class="access-key-list card-section">
+                <!-- header row -->
+                <div class="access-key-row header-row">
+                  <outline-sort-span class="access-key-container"
+                      direction="[[_computeColumnDirection('name', accessKeySortBy, accessKeySortDirection)]]"
+                      on-tap="_setSortByOrToggleDirection" data-sort-by="name">
+                    [[localize('server-access-keys')]]
+                  </outline-sort-span>
+                  <outline-sort-span class="measurement-container"
+                      direction="[[_computeColumnDirection('usage', accessKeySortBy, accessKeySortDirection)]]"
+                      on-tap="_setSortByOrToggleDirection" data-sort-by="usage">
+                    [[localize('server-usage')]]
+                  </outline-sort-span>
+                  <span class="flex-1 header-row-spacer"></span>
+                </div>
+                <!-- admin row -->
+                <div class="access-key-row" id="managerRow">
                   <span class="access-key-container">
-                    <img class="access-key-icon" src="images/key-avatar.svg">
-                    <input type="text" class="access-key-name" id\$="access-key-[[item.id]]" placeholder="{{item.placeholderName}}" value="[[item.name]]" on-blur="_handleNameInputBlur" on-keydown="_handleNameInputKeyDown">
+                    <img class="manager-access-key-icon access-key-icon" src="images/manager-key-avatar.svg">
+                    <div class="access-key-name">
+                      <div>[[localize('server-my-access-key')]]</div>
+                      <div id="manager-access-key-description">[[localize('server-connect-devices')]]</div>
+                    </div>
                   </span>
                   <span class="measurement-container">
-                    <span class="measurement">[[_formatBytesTransferred(item.transferredBytes, "...")]]</span>
-                    <paper-progress value="[[item.relativeTraffic]]" class\$="[[_computePaperProgressClass(isAccessKeyDataLimitEnabled)]]"></paper-progress>
+                    <span class="measurement">[[_formatBytesTransferred(myConnection.transferredBytes, "...")]]</span>
+                    <paper-progress value="[[myConnection.relativeTraffic]]" class\$="[[_computePaperProgressClass(isAccessKeyDataLimitEnabled)]]"></paper-progress>
                     <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!isAccessKeyDataLimitEnabled]]">
-                      [[_getDataLimitsUsageString(item)]]
+                      [[_getDataLimitsUsageString(myConnection)]]
                     </paper-tooltip>
                   </span>
                   <span class="actions">
                     <span class="flex-1">
-                      <paper-icon-button icon="outline-iconset:share" class="share-button" on-tap="_handleShareCodePressed"></paper-icon-button>
+                      <paper-icon-button icon="outline-iconset:devices" class="connect-button" on-tap="_handleConnectPressed"></paper-icon-button>
                     </span>
-                    <span class="flex-1">
-                      <paper-menu-button horizontal-align="right" class="overflow-menu" close-on-activate="" no-animations="" no-overlap="" dynamic-align="">
-                        <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
-                        <paper-listbox slot="dropdown-content">
-                          <paper-item on-tap="_handleRenameAccessKeyPressed">
-                            <iron-icon icon="icons:create"></iron-icon>[[localize('server-access-key-rename')]]
-                          </paper-item>
-                          <paper-item on-tap="_handleRemoveAccessKeyPressed">
-                            <iron-icon icon="icons:delete"></iron-icon>[[localize('remove')]]
-                          </paper-item>
-                        </paper-listbox>
-                      </paper-menu-button>
-                    </span>
+                    <span class="overflow-menu flex-1"></span>
                   </span>
                 </div>
-              </template>
+                <div id="accessKeysContainer">
+                  <!-- rows for each access key -->
+                  <template is="dom-repeat" items="{{accessKeyRows}}" filter="isRegularConnection" sort="{{_sortAccessKeys(accessKeySortBy, accessKeySortDirection)}}" observe="name transferredBytes">
+                    <!-- TODO(alalama): why is observe not responding to rename? -->
+                    <div class="access-key-row">
+                      <span class="access-key-container">
+                        <img class="access-key-icon" src="images/key-avatar.svg">
+                        <input type="text" class="access-key-name" id\$="access-key-[[item.id]]" placeholder="{{item.placeholderName}}" value="[[item.name]]" on-blur="_handleNameInputBlur" on-keydown="_handleNameInputKeyDown">
+                      </span>
+                      <span class="measurement-container">
+                        <span class="measurement">[[_formatBytesTransferred(item.transferredBytes, "...")]]</span>
+                        <paper-progress value="[[item.relativeTraffic]]" class\$="[[_computePaperProgressClass(isAccessKeyDataLimitEnabled)]]"></paper-progress>
+                        <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!isAccessKeyDataLimitEnabled]]">
+                          [[_getDataLimitsUsageString(item)]]
+                        </paper-tooltip>
+                      </span>
+                      <span class="actions">
+                        <span class="flex-1">
+                          <paper-icon-button icon="outline-iconset:share" class="share-button" on-tap="_handleShareCodePressed"></paper-icon-button>
+                        </span>
+                        <span class="flex-1">
+                          <paper-menu-button horizontal-align="right" class="overflow-menu" close-on-activate="" no-animations="" no-overlap="" dynamic-align="">
+                            <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
+                            <paper-listbox slot="dropdown-content">
+                              <paper-item on-tap="_handleRenameAccessKeyPressed">
+                                <iron-icon icon="icons:create"></iron-icon>[[localize('server-access-key-rename')]]
+                              </paper-item>
+                              <paper-item on-tap="_handleRemoveAccessKeyPressed">
+                                <iron-icon icon="icons:delete"></iron-icon>[[localize('remove')]]
+                              </paper-item>
+                            </paper-listbox>
+                          </paper-menu-button>
+                        </span>
+                      </span>
+                    </div>
+                  </template>
+                </div>
+                <!-- add key button -->
+                <div class="access-key-row" id="addAccessKeyRow">
+                  <span class="access-key-container">
+                    <paper-icon-button icon="icons:add" on-tap="_handleAddAccessKeyPressed" id="addAccessKeyButton" class="access-key-icon"></paper-icon-button>
+                    <div class="add-new-key" on-tap="_handleAddAccessKeyPressed">[[localize('server-access-key-new')]]</div>
+                  </span>
+                </div>
+              </div>
             </div>
-            <!-- add key button -->
-            <div class="access-key-row" id="addAccessKeyRow">
-              <span class="access-key-container">
-                <paper-icon-button icon="icons:add" on-tap="_handleAddAccessKeyPressed" id="addAccessKeyButton" class="access-key-icon"></paper-icon-button>
-                <div class="add-new-key" on-tap="_handleAddAccessKeyPressed">[[localize('server-access-key-new')]]</div>
-              </span>
+            <div name="settings">
+              <outline-server-settings id="serverSettings" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" access-key-data-limit="{{accessKeyDataLimit}}" is-access-key-data-limit-enabled="{{isAccessKeyDataLimitEnabled}}" supports-access-key-data-limit="[[supportsAccessKeyDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" localize="[[localize]]">
+              </outline-server-settings>
             </div>
-          </div>
-        </div>
-        <div name="settings">
-          <outline-server-settings id="serverSettings" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" access-key-data-limit="{{accessKeyDataLimit}}" is-access-key-data-limit-enabled="{{isAccessKeyDataLimitEnabled}}" supports-access-key-data-limit="[[supportsAccessKeyDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" localize="[[localize]]">
-          </outline-server-settings>
+          </iron-pages>
         </div>
       </iron-pages>
     </div>
@@ -612,7 +622,6 @@ export class ServerView extends DirMixin(PolymerElement) {
         metricsEnabled: Boolean,
         monthlyOutboundTransferBytes: {type: Number},
         monthlyCost: {type: Number},
-        selectedTab: {type: String},
         managedServerUtilzationPercentage: {
           type: Number,
           computed:
@@ -621,6 +630,8 @@ export class ServerView extends DirMixin(PolymerElement) {
         accessKeySortBy: {type: String},
         accessKeySortDirection: {type: Number},
         localize: {type: Function, readonly: true},
+        currentPage: {type: String},
+        selectedTab: {type: String},
       };
     }
 
@@ -677,7 +688,6 @@ export class ServerView extends DirMixin(PolymerElement) {
       //   https://www.polymer-project.org/1.0/docs/devguide/data-binding.html
       this.monthlyOutboundTransferBytes = 0;
       this.monthlyCost = 0;
-      this.selectedTab = 'connections';
       this.accessKeySortBy = 'name';
       /**
        * The direction to sort: 1 == ascending, -1 == descending
@@ -686,6 +696,8 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.accessKeySortDirection = 1;
       /** @type {(msgId: string, ...params: string[]) => string} */
       this.localize = null;
+      this.currentPage = 'unreachableView';
+      this.selectedTab = 'connections';
     }
 
     /**

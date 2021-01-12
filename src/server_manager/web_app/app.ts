@@ -657,19 +657,17 @@ export class App {
     this.selectedServer = server;
     this.appRoot.selectedServerId = serverId;
     localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, serverId);
-
-    if (isManagedServer(server)) {
-      if (!(server as server.ManagedServer).isInstallCompleted()) {
-        this.appRoot.showProgress(this.makeDisplayName(server), true);
-        return;
-      }
-    }
     await this.updateServerView(server);
     this.appRoot.showServerView();
   }
 
   private async updateServerView(server: server.Server): Promise<void> {
-    if (await server.isHealthy()) {
+    if (isManagedServer(server)) {
+      if (!(server as server.ManagedServer).isInstallCompleted()) {
+        const view = this.appRoot.getServerView(localServerId(server));
+        view.currentPage = 'progressView';
+      }
+    } else if (await server.isHealthy()) {
       this.setServerManagementView(server);
     } else {
       this.setServerUnreachableView(server);
@@ -680,7 +678,8 @@ export class App {
   private setServerManagementView(server: server.Server): void {
     // Show view and initialize fields from selectedServer.
     const view = this.appRoot.getServerView(localServerId(server));
-    view.isServerReachable = true;
+    view.currentPage = 'managementView';
+    // view.isServerReachable = true;
     view.serverId = server.getServerId();
     view.serverName = server.getName();
     view.serverHostname = server.getHostnameForAccessKeys();
@@ -739,7 +738,8 @@ export class App {
   private setServerUnreachableView(server: server.Server): void {
     // Display the unreachable server state within the server view.
     const serverView = this.appRoot.getServerView(localServerId(server)) as ServerView;
-    serverView.isServerReachable = false;
+    serverView.currentPage = 'unreachableView';
+    // serverView.isServerReachable = false;
     serverView.isServerManaged = isManagedServer(server);
     serverView.serverName =
         this.makeDisplayName(server);  // Don't get the name from the remote server.
