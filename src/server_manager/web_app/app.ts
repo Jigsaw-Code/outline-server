@@ -662,9 +662,8 @@ export class App {
   }
 
   private async updateServerView(server: server.Server): Promise<void> {
-    if (isManagedServer(server) &&
-        !(server as server.ManagedServer).isInstallCompleted()) {
-      await sleep(1000); // TODO: Wait for view to be initialized.
+    if (isManagedServer(server) && !(server as server.ManagedServer).isInstallCompleted()) {
+      await sleep(1000);  // TODO: Wait for view to be initialized.
       const view = this.appRoot.getServerView(localServerId(server));
       view.selectPage('progressView');
     } else if (await server.isHealthy()) {
