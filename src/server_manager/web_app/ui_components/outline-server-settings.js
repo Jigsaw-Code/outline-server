@@ -26,7 +26,7 @@ import './outline-validated-input.js';
 import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 
-import {getFormattedDataAmountParts} from '../../infrastructure/data_formatting';
+import {getFormattedDataAmountParts} from '../data_formatting';
 
 Polymer({
   _template: html`

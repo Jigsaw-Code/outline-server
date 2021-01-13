@@ -35,7 +35,7 @@ import './outline-sort-span.js';
 import {html, PolymerElement} from '@polymer/polymer';
 import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
 
-import * as i18n from '../../infrastructure/data_formatting';
+import * as i18n from '../data_formatting';
 
 const MY_CONNECTION_USER_ID = '0';
 
