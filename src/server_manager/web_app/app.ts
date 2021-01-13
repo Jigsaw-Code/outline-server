@@ -35,8 +35,8 @@ const CHANGE_KEYS_PORT_VERSION = '1.0.0';
 const DATA_LIMITS_VERSION = '1.1.0';
 const CHANGE_HOSTNAME_VERSION = '1.2.0';
 const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
-const LAST_DISPLAYED_SERVER_STORAGE_KEY = 'lastDisplayedServer';
 const CANCELLED_ERROR = new Error('Cancelled');
+export const LAST_DISPLAYED_SERVER_STORAGE_KEY = 'lastDisplayedServer';
 
 // DigitalOcean mapping of regions to flags
 const FLAG_IMAGE_DIR = 'images/flags';
@@ -362,7 +362,7 @@ export class App {
       }
       const servers = await this.digitalOceanRepository.listServers();
       for (const server of servers) {
-        this.addServer(server);
+        await this.addServer(server);
       }
       return servers;
     } catch (error) {
@@ -375,7 +375,7 @@ export class App {
 
   private async loadManualServers() {
     for (const server of await this.manualServerRepository.listServers()) {
-      this.addServer(server);
+      await this.addServer(server);
     }
   }
 
@@ -400,12 +400,13 @@ export class App {
     return name;
   }
 
-  private addServer(server: server.Server): void {
+  private async addServer(server: server.Server): Promise<void> {
     console.log('Loading server', server);
     const serverId = localServerId(server);
     this.idServerMap.set(serverId, server);
     const serverEntry = this.makeServerListEntry(server);
     this.appRoot.serverList = this.appRoot.serverList.concat([serverEntry]);
+    await this.appRoot.notifyPath('serverList');
 
     // Once the server is added to the list, do the rest asynchronously.
     setTimeout(async () => {
@@ -423,10 +424,6 @@ export class App {
         }
       }
       await this.updateServerView(server);
-      if (this.selectedServer === server) {
-        // Make sure we switch to the server view in case it was in the loading view.
-        this.appRoot.showServerView();
-      }
       // This has to run after updateServerView because it depends on the isHealthy() call.
       // TODO(fortuna): Better handle state changes.
       this.updateServerEntry(server);
@@ -634,7 +631,7 @@ export class App {
       const server = await this.digitalOceanRetry(() => {
         return this.digitalOceanRepository.createServer(regionId, serverName);
       });
-      this.addServer(server);
+      await this.addServer(server);
       await this.showServer(server);
     } catch (error) {
       console.error('Error from createDigitalOceanServer', error);
@@ -653,22 +650,17 @@ export class App {
   }
 
   public async showServer(server: server.Server): Promise<void> {
+    const serverId = localServerId(server);
     this.selectedServer = server;
-    this.appRoot.selectedServerId = localServerId(server);
-    this.setLastDisplayedServer(server);
+    this.appRoot.selectedServerId = serverId;
+    localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, serverId);
     await this.updateServerView(server);
     this.appRoot.showServerView();
   }
 
-  setLastDisplayedServer(server: server.Server) {
-    localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, localServerId(server));
-  }
-
   private async updateServerView(server: server.Server): Promise<void> {
     if (isManagedServer(server) && !(server as server.ManagedServer).isInstallCompleted()) {
-      await sleep(1000);  // TODO: Wait for view to be initialized.
-      const view = this.appRoot.getServerView(localServerId(server));
-      view.selectPage('progressView');
+      this.setServerProgressView(server);
     } else if (await server.isHealthy()) {
       this.setServerManagementView(server);
     } else {
@@ -680,7 +672,7 @@ export class App {
   private setServerManagementView(server: server.Server): void {
     // Show view and initialize fields from selectedServer.
     const view = this.appRoot.getServerView(localServerId(server));
-    view.selectPage('managementView');
+    view.selectedPage = 'managementView';
     view.serverId = server.getServerId();
     view.serverName = server.getName();
     view.serverHostname = server.getHostnameForAccessKeys();
@@ -739,13 +731,19 @@ export class App {
   private setServerUnreachableView(server: server.Server): void {
     // Display the unreachable server state within the server view.
     const serverView = this.appRoot.getServerView(localServerId(server)) as ServerView;
-    serverView.selectPage('unreachableView');
+    serverView.selectedPage = 'unreachableView';
     serverView.isServerManaged = isManagedServer(server);
     serverView.serverName =
         this.makeDisplayName(server);  // Don't get the name from the remote server.
     serverView.retryDisplayingServer = async () => {
       await this.updateServerView(server);
     };
+  }
+
+  private setServerProgressView(server: server.Server): void {
+    const view = this.appRoot.getServerView(localServerId(server));
+    view.serverName = this.makeDisplayName(server);
+    view.selectedPage = 'progressView';
   }
 
   private showMetricsOptInWhenNeeded(selectedServer: server.Server, serverView: ServerView) {
@@ -978,7 +976,7 @@ export class App {
     }
     const manualServer = await this.manualServerRepository.addServer(serverConfig);
     if (await manualServer.isHealthy()) {
-      this.addServer(manualServer);
+      await this.addServer(manualServer);
       await this.showServer(manualServer);
     } else {
       // Remove inaccessible manual server from local storage if it was just created.

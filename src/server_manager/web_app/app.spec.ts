@@ -18,7 +18,7 @@ import * as digitalocean_api from '../cloud/digitalocean_api';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
 
-import {App, localServerId} from './app';
+import {App, LAST_DISPLAYED_SERVER_STORAGE_KEY, localServerId} from './app';
 import {TokenManager} from './digitalocean_oauth';
 import {AppRoot} from './ui_components/app-root.js';
 
@@ -121,7 +121,7 @@ describe('App', () => {
     await app.start();
     await app.createDigitalOceanServer('fakeRegion');
     expect(appRoot.currentPage).toEqual('serverView');
-    expect(appRoot.getServerView(appRoot.selectedServerId).currentPage).toEqual('progressView');
+    expect(appRoot.getServerView(appRoot.selectedServerId).selectedPage).toEqual('progressView');
   });
 
   it('shows progress screen when starting with DigitalOcean servers still being created',
@@ -133,10 +133,11 @@ describe('App', () => {
        // Manually create the server since the DO repository server factory function is synchronous.
        const server = await managedSeverRepository.createServer();
        const app = createTestApp(appRoot, tokenManager, null, managedSeverRepository);
-       app.setLastDisplayedServer(server);
+       // Sets last displayed server.
+       localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, localServerId(server));
        await app.start();
        expect(appRoot.currentPage).toEqual('serverView');
-       expect(appRoot.getServerView(appRoot.selectedServerId).currentPage).toEqual('progressView');
+       expect(appRoot.getServerView(appRoot.selectedServerId).selectedPage).toEqual('progressView');
      });
 });
 
