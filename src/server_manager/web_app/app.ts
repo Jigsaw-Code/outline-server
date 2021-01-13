@@ -400,13 +400,12 @@ export class App {
     return name;
   }
 
-  private async addServer(server: server.Server): Promise<void> {
+  private addServer(server: server.Server): void {
     console.log('Loading server', server);
     const serverId = localServerId(server);
     this.idServerMap.set(serverId, server);
     const serverEntry = this.makeServerListEntry(server);
     this.appRoot.serverList = this.appRoot.serverList.concat([serverEntry]);
-    await this.appRoot.notifyPath('serverList');
 
     // Once the server is added to the list, do the rest asynchronously.
     setTimeout(async () => {

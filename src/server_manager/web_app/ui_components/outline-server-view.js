@@ -91,8 +91,11 @@ export class ServerView extends DirMixin(PolymerElement) {
       .container {
         display: flex;
         flex-direction: column;
-        padding: 24px;
         color: var(--light-gray);
+      }
+      #managementView,
+      #unreachableView {
+        padding: 24px;
       }
       .tabs-container {
         display: flex;
@@ -428,8 +431,8 @@ export class ServerView extends DirMixin(PolymerElement) {
     `;
     }
 
-  static get unreachableViewTemplate() {
-    return html`
+    static get unreachableViewTemplate() {
+      return html`
       <div class="server-header">
         <div class="server-name">
           <h3>[[serverName]]</h3>
@@ -448,10 +451,10 @@ export class ServerView extends DirMixin(PolymerElement) {
           <paper-button on-tap="retryDisplayingServer" class="try-again-btn">[[localize('retry')]]</paper-button>
         </div>
       </div>`;
-  }
+    }
 
-  static get managementViewTemplate() {
-    return html`
+    static get managementViewTemplate() {
+      return html`
       <div class="server-header">
         <div class="server-name">
           <h3>[[serverName]]</h3>
@@ -596,9 +599,9 @@ export class ServerView extends DirMixin(PolymerElement) {
           </outline-server-settings>
         </div>
       </iron-pages>`;
-  }
+    }
 
-  static get is() {
+    static get is() {
       return 'outline-server-view';
     }
 
