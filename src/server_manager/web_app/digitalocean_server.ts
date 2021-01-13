@@ -74,21 +74,10 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
     super();
     console.info('DigitalOceanServer created');
     this.eventQueue.once('server-active', () => console.timeEnd('activeServer'));
-    this.waitOnInstall(true)
-        .then(() => {
-          this.setInstallCompleted();
-        })
-        .catch((e) => {
-          console.error(`error installing server: ${e.message}`);
-        });
+    this.pollInstallState();
   }
 
-  waitOnInstall(resetTimeout: boolean): Promise<void> {
-    if (resetTimeout) {
-      this.installState = InstallState.UNKNOWN;
-      this.refreshInstallState();
-    }
-
+  waitOnInstall(): Promise<void> {
     return new Promise((fulfill, reject) => {
       // Poll this.installState for changes.  This can poll quickly as it
       // will not make any network requests.
@@ -97,24 +86,10 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
           // installState not known, wait until next retry.
           return;
         }
-
         // State is now known, so we can stop checking.
         clearInterval(intervalId);
         if (this.installState === InstallState.SUCCESS) {
-          // Verify that the server is healthy (e.g. server config can be
-          // retrieved) before fulfilling.
-          this.isHealthy().then((isHealthy) => {
-            if (isHealthy) {
-              fulfill();
-            } else {
-              // Server has been installed (Api Url and Certificate have been)
-              // set, but is not healthy.  This could occur if the server
-              // is behind a firewall.
-              console.error(
-                  'digitalocean_server: Server is unreachable, possibly due to firewall.');
-              reject(new errors.UnreachableServerError());
-            }
-          });
+          fulfill();
         } else if (this.installState === InstallState.ERROR) {
           reject(new errors.ServerInstallFailedError());
         } else if (this.installState === InstallState.DELETED) {
@@ -126,7 +101,7 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
 
   // Sets this.installState, will keep polling until this.installState can
   // be set to something other than UNKNOWN.
-  private refreshInstallState(): void {
+  private pollInstallState(): void {
     const TIMEOUT_MS = 5 * 60 * 1000;
     const startTimestamp = Date.now();
 
@@ -139,15 +114,15 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
       }
       if (this.getTagValue(INSTALL_ERROR_TAG)) {
         console.error(`error tag: ${this.getTagValue(INSTALL_ERROR_TAG)}`);
-        this.installState = InstallState.ERROR;
+        this.setInstallState(InstallState.ERROR);
       } else if (Date.now() - startTimestamp >= TIMEOUT_MS) {
         console.error('hit timeout while waiting for installation');
-        this.installState = InstallState.ERROR;
+        this.setInstallState(InstallState.ERROR);
       } else if (this.setApiUrlAndCertificate()) {
         // API Url and Certificate have been set, so we have successfully
         // installed the server and can now make API calls.
         console.info('digitalocean_server: Successfully found API and cert tags');
-        this.installState = InstallState.SUCCESS;
+        this.setInstallState(InstallState.SUCCESS);
       }
     };
 
@@ -160,25 +135,43 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
 
     // Periodically refresh the droplet info then try to update the install
     // state again.
-    const intervalId = setInterval(() => {
+    const intervalId = setInterval(async () => {
       // Check if install state is already known, so we don't make an unnecessary
       // request to fetch droplet info.
       if (this.installState !== InstallState.UNKNOWN) {
         clearInterval(intervalId);
         return;
       }
-      this.refreshDropletInfo().then(() => {
-        updateInstallState();
-        // Immediately clear the interval if the installState is known to prevent
-        // race conditions due to setInterval firing async.
-        if (this.installState !== InstallState.UNKNOWN) {
-          clearInterval(intervalId);
-          return;
-        }
-      });
+      try {
+        await this.refreshDropletInfo();
+      } catch (error) {
+        console.log('Failed to get droplet info', error);
+        this.setInstallState(InstallState.ERROR);
+        clearInterval(intervalId);
+        return;
+      }
+      updateInstallState();
+      // Immediately clear the interval if the installState is known to prevent
+      // race conditions due to setInterval firing async.
+      if (this.installState !== InstallState.UNKNOWN) {
+        clearInterval(intervalId);
+        return;
+      }
       // Note, if there is an error refreshing the droplet, we should just
       // try again, as there may be an intermittent network issue.
     }, 3000);
+  }
+
+  private setInstallState(installState: InstallState) {
+    if (this.installState !== InstallState.UNKNOWN) {
+      // Cannot change the install state once set.
+      return;
+    }
+    if (installState === InstallState.UNKNOWN) {
+      return;
+    }
+    this.installState = installState;
+    this.setInstallCompleted();
   }
 
   // Returns true on success, else false.
@@ -199,17 +192,15 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
   }
 
   // Refreshes the state from DigitalOcean API.
-  private refreshDropletInfo(): Promise<void> {
-    return this.digitalOcean.getDroplet(this.dropletInfo.id).then((newDropletInfo: DropletInfo) => {
-      const oldDropletInfo = this.dropletInfo;
-      this.dropletInfo = newDropletInfo;
-
-      if (newDropletInfo.status !== oldDropletInfo.status) {
-        if (newDropletInfo.status === 'active') {
-          this.eventQueue.emit('server-active');
-        }
+  private async refreshDropletInfo(): Promise<void> {
+    const newDropletInfo = await this.digitalOcean.getDroplet(this.dropletInfo.id);
+    const oldDropletInfo = this.dropletInfo;
+    this.dropletInfo = newDropletInfo;
+    if (newDropletInfo.status !== oldDropletInfo.status) {
+      if (newDropletInfo.status === 'active') {
+        this.eventQueue.emit('server-active');
       }
-    });
+    }
   }
 
   // Gets the value for the given key, stored in the DigitalOcean tags.
@@ -283,7 +274,7 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
 
   // Callback to be invoked once server is deleted.
   private onDelete() {
-    this.installState = InstallState.DELETED;
+    this.setInstallState(InstallState.DELETED);
   }
 
   private getInstallCompletedStorageKey() {
