@@ -616,6 +616,8 @@ export class AppRoot extends mixinBehaviors
     if (!displayServerId) {
       return null;
     }
+    // Render to ensure that the server view has been added to the DOM.
+    this.$.serverView.querySelector('dom-repeat').render();
     const selectedServerId = this._base64Encode(displayServerId);
     return this.$.serverView.querySelector(`#serverView-${selectedServerId}`);
   }

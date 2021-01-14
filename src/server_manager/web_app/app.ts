@@ -362,7 +362,7 @@ export class App {
       }
       const servers = await this.digitalOceanRepository.listServers();
       for (const server of servers) {
-        await this.addServer(server);
+        this.addServer(server);
       }
       return servers;
     } catch (error) {
@@ -375,7 +375,7 @@ export class App {
 
   private async loadManualServers() {
     for (const server of await this.manualServerRepository.listServers()) {
-      await this.addServer(server);
+      this.addServer(server);
     }
   }
 
@@ -631,7 +631,7 @@ export class App {
       const server = await this.digitalOceanRetry(() => {
         return this.digitalOceanRepository.createServer(regionId, serverName);
       });
-      await this.addServer(server);
+      this.addServer(server);
       await this.showServer(server);
     } catch (error) {
       console.error('Error from createDigitalOceanServer', error);
@@ -976,7 +976,7 @@ export class App {
     }
     const manualServer = await this.manualServerRepository.addServer(serverConfig);
     if (await manualServer.isHealthy()) {
-      await this.addServer(manualServer);
+      this.addServer(manualServer);
       await this.showServer(manualServer);
     } else {
       // Remove inaccessible manual server from local storage if it was just created.
