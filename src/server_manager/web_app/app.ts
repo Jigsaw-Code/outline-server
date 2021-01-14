@@ -411,6 +411,7 @@ export class App {
     setTimeout(async () => {
       // Wait for server config to load, then update the server view and list.
       if (isManagedServer(server) && !server.isInstallCompleted()) {
+        await this.updateServerView(server);
         try {
           await (server as server.ManagedServer).waitOnInstall();
         } catch (error) {
@@ -422,7 +423,6 @@ export class App {
           this.appRoot.showError(this.appRoot.localize('error-server-creation'));
         }
       }
-      await this.updateServerView(server);
       // This has to run after updateServerView because it depends on the isHealthy() call.
       // TODO(fortuna): Better handle state changes.
       this.updateServerEntry(server);
