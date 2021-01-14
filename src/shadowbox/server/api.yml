@@ -79,6 +79,35 @@ paths:
           description: The requested port wasn't an integer from 1 through 65535, or the request had no port parameter.
         '409':
           description: The requested port was already in use by another service.
+          
+  /server/access-key-data-limit:
+    put:
+      description: Sets a data transfer limit for all access keys
+      tags:
+        - Access Key
+        - Limit
+      requestBody:
+        required: true
+        content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataLimit"
+              examples:
+                '0':
+                  value: "{limit: {bytes: 10000}}"
+      responses:
+        '204':
+          description: Access key data limit set successfully
+        '400':
+          description: Invalid data limit
+    delete:
+      description: Removes the access key data limit, lifting data transfer restrictions on all access keys.
+      tags:
+        - Access Key
+        - Limit
+      responses:
+        '204':
+          description: Access key limit deleted successfully.
 
   /name:
     put:
@@ -311,7 +340,8 @@ paths:
           description: Invalid request
   /experimental/access-key-data-limit:
     put:
-      description: Sets a data transfer limit for all access keys
+      deprecated: true
+      description: (Deprecated) Sets a data transfer limit for all access keys
       tags:
         - Access Key
         - Limit
@@ -330,14 +360,15 @@ paths:
         '400':
           description: Invalid data limit
     delete:
-      description: Removes the access key data limit, lifting data transfer restrictions on all access keys.
+      deprecated: true
+      description: (Deprecated) Removes the access key data limit, lifting data transfer restrictions on all access keys.
       tags:
         - Access Key
         - Limit
       responses:
         '204':
           description: Access key limit deleted successfully.
-
+ 
 components:
   schemas:
     Server:
