@@ -190,7 +190,7 @@ Polymer({
             <outline-validated-input editable="[[isHostnameEditable]]" visible="[[serverHostname]]" label="[[localize('settings-server-hostname')]]" max-length="253" value="[[serverHostname]]" event="ChangeHostnameForAccessKeysRequested" localize="[[localize]]"></outline-validated-input>
             <paper-input readonly="" value="[[serverManagementApiUrl]]" label="[[localize('settings-server-api-url')]]" hidden\$="[[!serverManagementApiUrl]]" always-float-label="" maxlength="100"></paper-input>
             <paper-input readonly="" value="[[serverCreationDate]]" label="[[localize('settings-server-creation')]]" hidden\$="[[!serverCreationDate]]" always-float-label="" maxlength="100"></paper-input>
-            <paper-input readonly="" value="[[serverId]]" label="[[localize('settings-server-id')]]" hidden\$="[[!serverId]]" always-float-label="" maxlength="100"></paper-input>
+            <paper-input readonly="" value="[[metricsId]]" label="[[localize('settings-server-id')]]" hidden\$="[[!metricsId]]" always-float-label="" maxlength="100"></paper-input>
             <paper-input readonly="" value="[[serverVersion]]" label="[[localize('settings-server-version')]]" hidden\$="[[!serverVersion]]" always-float-label="" maxlength="100"></paper-input>
           </div>
         </div>
@@ -257,12 +257,13 @@ Polymer({
   is: 'outline-server-settings',
 
   properties: {
+    serverId: {type: String, value: null},
     isServerManaged: Boolean,
     serverName: String,
     metricsEnabled: Boolean,
     // Initialize to null so we can use the hidden attribute, which does not work well with
     // undefined values.
-    serverId: {type: String, value: null},
+    metricsId: {type: String, value: null},
     serverHostname: {type: String, value: null},
     serverManagementApiUrl: {type: String, value: null},
     serverPortForNewAccessKeys: {type: Number, value: null},
@@ -304,7 +305,7 @@ Polymer({
     }
     // Fire signal if name has changed.
     if (newName !== this.initialName) {
-      this.fire('ServerRenameRequested', {newName});
+      this.fire('ServerRenameRequested', {serverId: this.serverId, newName});
     }
   },
 
@@ -326,7 +327,7 @@ Polymer({
     if (isDataLimitEnabled) {
       this._requestSetAccessKeyDataLimit();
     } else {
-      this.fire('RemoveAccessKeyDataLimitRequested');
+      this.fire('RemoveAccessKeyDataLimitRequested', {serverId: this.serverId});
     }
   },
 
@@ -345,7 +346,7 @@ Polymer({
     }
     const value = Number(this.$.accessKeyDataLimitInput.value);
     const unit = this.$.accessKeyDataLimitUnits.selected;
-    this.fire('SetAccessKeyDataLimitRequested', {limit: {value, unit}});
+    this.fire('SetAccessKeyDataLimitRequested', {serverId: this.serverId, limit: {value, unit}});
   },
 
   _computeDataLimitsEnabledName: function(isAccessKeyDataLimitEnabled) {

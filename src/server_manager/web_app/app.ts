@@ -74,14 +74,6 @@ function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.Dat
   return {bytes: dataAmount.value};
 }
 
-export function localServerId(server: server.Server): string {
-  if (isManagedServer(server)) {
-    return (server as server.ManagedServer).getHost().getHostId();
-  } else {
-    return server.getManagementApiUrl();
-  }
-}
-
 // Compute the suggested data limit based on the server's transfer capacity and number of access
 // keys.
 async function computeDefaultAccessKeyDataLimit(
@@ -147,7 +139,6 @@ type DigitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOce
 
 export class App {
   private digitalOceanRepository: server.ManagedServerRepository;
-  private selectedServer: server.Server;
   private idServerMap = new Map<string, server.Server>();
 
   constructor(
@@ -180,39 +171,41 @@ export class App {
     });
 
     appRoot.addEventListener('DeleteServerRequested', (event: CustomEvent) => {
-      this.deleteSelectedServer();
+      this.deleteSelectedServer(event.detail.serverId);
     });
 
     appRoot.addEventListener('ForgetServerRequested', (event: CustomEvent) => {
-      this.forgetSelectedServer();
+      this.forgetSelectedServer(event.detail.serverId);
     });
 
     appRoot.addEventListener('AddAccessKeyRequested', (event: CustomEvent) => {
-      this.addAccessKey();
+      this.addAccessKey(event.detail.serverId);
     });
 
     appRoot.addEventListener('RemoveAccessKeyRequested', (event: CustomEvent) => {
-      this.removeAccessKey(event.detail.accessKeyId);
+      this.removeAccessKey(event.detail.serverId, event.detail.accessKeyId);
     });
 
     appRoot.addEventListener('RenameAccessKeyRequested', (event: CustomEvent) => {
-      this.renameAccessKey(event.detail.accessKeyId, event.detail.newName, event.detail.entry);
+      this.renameAccessKey(event.detail.serverId, event.detail.accessKeyId, event.detail.newName, event.detail.entry);
     });
 
     appRoot.addEventListener('SetAccessKeyDataLimitRequested', (event: CustomEvent) => {
-      this.setAccessKeyDataLimit(displayDataAmountToDataLimit(event.detail.limit));
+      this.setAccessKeyDataLimit(event.detail.serverId, displayDataAmountToDataLimit(event.detail.limit));
     });
 
     appRoot.addEventListener('RemoveAccessKeyDataLimitRequested', (event: CustomEvent) => {
-      this.removeAccessKeyDataLimit();
+      this.removeAccessKeyDataLimit(event.detail.serverId);
     });
 
     appRoot.addEventListener('ChangePortForNewAccessKeysRequested', (event: CustomEvent) => {
-      this.setPortForNewAccessKeys(event.detail.validatedInput, event.detail.ui);
+      // TODO(serverIdPr): Pass serverId in event
+      this.setPortForNewAccessKeys(this.appRoot.selectedServerId, event.detail.validatedInput, event.detail.ui);
     });
 
     appRoot.addEventListener('ChangeHostnameForAccessKeysRequested', (event: CustomEvent) => {
-      this.setHostnameForAccessKeys(event.detail.validatedInput, event.detail.ui);
+      // TODO(serverIdPr): Pass serverId in event
+      this.setHostnameForAccessKeys(this.appRoot.selectedServerId, event.detail.validatedInput, event.detail.ui);
     });
 
     // The UI wants us to validate a server management URL.
@@ -259,11 +252,13 @@ export class App {
     });
 
     appRoot.addEventListener('EnableMetricsRequested', (event: CustomEvent) => {
-      this.setMetricsEnabled(true);
+      // TODO(serverIdPr): Pass serverId in event
+      this.setMetricsEnabled(this.appRoot.selectedServerId, true);
     });
 
     appRoot.addEventListener('DisableMetricsRequested', (event: CustomEvent) => {
-      this.setMetricsEnabled(false);
+      // TODO(serverIdPr): Pass serverId in event
+      this.setMetricsEnabled(this.appRoot.selectedServerId, false);
     });
 
     appRoot.addEventListener('SubmitFeedback', (event: CustomEvent) => {
@@ -286,11 +281,11 @@ export class App {
     });
 
     appRoot.addEventListener('ServerRenameRequested', (event: CustomEvent) => {
-      this.renameServer(event.detail.newName);
+      this.renameServer(event.detail.serverId, event.detail.newName);
     });
 
     appRoot.addEventListener('CancelServerCreationRequested', (event: CustomEvent) => {
-      this.cancelServerCreation(this.selectedServer);
+      this.cancelServerCreation(event.detail.serverId);
     });
 
     appRoot.addEventListener('OpenImageRequested', (event: CustomEvent) => {
@@ -307,11 +302,11 @@ export class App {
     });
 
     appRoot.addEventListener('ShowServerRequested', async (event: CustomEvent) => {
-      const server = this.getServerById(event.detail.displayServerId);
+      const server = this.getServerById(event.detail.serverId);
       if (server) {
         await this.showServer(server);
       } else {
-        // This should never happen if we are managine the list correctly.
+        // This should never happen if we are managing the list correctly.
         console.error(
             `Could not find server for display server ID ${event.detail.displayServerId}`);
       }
@@ -381,7 +376,7 @@ export class App {
 
   private makeServerListEntry(server: server.Server): ServerListEntry {
     return {
-      id: localServerId(server),
+      id: server.getId(),
       name: this.makeDisplayName(server),
       isManaged: isManagedServer(server),
       isSynced: !!server.getName(),
@@ -402,8 +397,7 @@ export class App {
 
   private addServer(server: server.Server): void {
     console.log('Loading server', server);
-    const serverId = localServerId(server);
-    this.idServerMap.set(serverId, server);
+    this.idServerMap.set(server.getId(), server);
     const serverEntry = this.makeServerListEntry(server);
     this.appRoot.serverList = this.appRoot.serverList.concat([serverEntry]);
 
@@ -435,15 +429,13 @@ export class App {
     this.appRoot.serverList = this.appRoot.serverList.filter((ds) => ds.id !== serverId);
     if (this.appRoot.selectedServerId === serverId) {
       this.appRoot.selectedServerId = '';
-      this.selectedServer = null;
       localStorage.removeItem(LAST_DISPLAYED_SERVER_STORAGE_KEY);
     }
   }
 
   private updateServerEntry(server: server.Server): void {
-    const serverId = localServerId(server);
     this.appRoot.serverList = this.appRoot.serverList.map(
-        (ds) => ds.id === serverId ? this.makeServerListEntry(server) : ds);
+        (ds) => ds.id === server.getId() ? this.makeServerListEntry(server) : ds);
   }
 
   private getServerById(serverId: string): server.Server {
@@ -650,8 +642,7 @@ export class App {
   }
 
   public async showServer(server: server.Server): Promise<void> {
-    const serverId = localServerId(server);
-    this.selectedServer = server;
+    const serverId = server.getId();
     this.appRoot.selectedServerId = serverId;
     localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, serverId);
     await this.updateServerView(server);
@@ -671,9 +662,9 @@ export class App {
   // Show the server management screen. Assumes the server is healthy.
   private setServerManagementView(server: server.Server): void {
     // Show view and initialize fields from selectedServer.
-    const view = this.appRoot.getServerView(localServerId(server));
+    const view = this.appRoot.getServerView(server.getId());
     view.selectedPage = 'managementView';
-    view.serverId = server.getServerId();
+    view.serverId = server.getId();
     view.serverName = server.getName();
     view.serverHostname = server.getHostnameForAccessKeys();
     view.serverManagementApiUrl = server.getManagementApiUrl();
@@ -703,6 +694,7 @@ export class App {
       view.isServerManaged = false;
     }
 
+    view.metricsId = server.getMetricsId();
     view.metricsEnabled = server.getMetricsEnabled();
 
     // Asynchronously load "My Connection" and other access keys in order to no block showing the
@@ -730,7 +722,7 @@ export class App {
 
   private setServerUnreachableView(server: server.Server): void {
     // Display the unreachable server state within the server view.
-    const serverView = this.appRoot.getServerView(localServerId(server)) as ServerView;
+    const serverView = this.appRoot.getServerView(server.getId()) as ServerView;
     serverView.selectedPage = 'unreachableView';
     serverView.isServerManaged = isManagedServer(server);
     serverView.serverName =
@@ -741,7 +733,7 @@ export class App {
   }
 
   private setServerProgressView(server: server.Server): void {
-    const view = this.appRoot.getServerView(localServerId(server));
+    const view = this.appRoot.getServerView(server.getId());
     view.serverName = this.makeDisplayName(server);
     view.selectedPage = 'progressView';
   }
@@ -750,12 +742,12 @@ export class App {
     const showMetricsOptInOnce = () => {
       // Sanity check to make sure the running server is still displayed, i.e.
       // it hasn't been deleted.
-      if (this.selectedServer !== selectedServer) {
+      if (this.appRoot.selectedServerId !== selectedServer.getId()) {
         return;
       }
       // Show the metrics opt in prompt if the server has not already opted in,
       // and if they haven't seen the prompt yet according to localStorage.
-      const storageKey = selectedServer.getServerId() + '-prompted-for-metrics';
+      const storageKey = selectedServer.getMetricsId() + '-prompted-for-metrics';
       if (!selectedServer.getMetricsEnabled() && !localStorage.getItem(storageKey)) {
         this.appRoot.showMetricsDialogForNewServer();
         localStorage.setItem(storageKey, 'true');
@@ -822,7 +814,7 @@ export class App {
     // Get transfer stats once per minute for as long as server is selected.
     const statsRefreshRateMs = 60 * 1000;
     const intervalId = setInterval(() => {
-      if (this.selectedServer !== selectedServer) {
+      if (this.appRoot.selectedServerId !== selectedServer.getId()) {
         // Server is no longer running, stop interval
         clearInterval(intervalId);
         return;
@@ -851,11 +843,12 @@ export class App {
     };
   }
 
-  private addAccessKey() {
-    this.selectedServer.addAccessKey()
+  private addAccessKey(serverId: string) {
+    const server = this.getServerById(serverId);
+    server.addAccessKey()
         .then((serverAccessKey: server.AccessKey) => {
           const uiAccessKey = this.convertToUiAccessKey(serverAccessKey);
-          this.appRoot.getServerView(this.appRoot.selectedServerId).addAccessKey(uiAccessKey);
+          this.appRoot.getServerView(serverId).addAccessKey(uiAccessKey);
           this.appRoot.showNotification(this.appRoot.localize('notification-key-added'));
         })
         .catch((error) => {
@@ -864,8 +857,9 @@ export class App {
         });
   }
 
-  private renameAccessKey(accessKeyId: string, newName: string, entry: polymer.Base) {
-    this.selectedServer.renameAccessKey(accessKeyId, newName)
+  private renameAccessKey(serverId: string, accessKeyId: string, newName: string, entry: polymer.Base) {
+    const server = this.getServerById(serverId);
+    server.renameAccessKey(accessKeyId, newName)
         .then(() => {
           entry.commitName();
         })
@@ -876,20 +870,21 @@ export class App {
         });
   }
 
-  private async setAccessKeyDataLimit(limit: server.DataLimit) {
+  private async setAccessKeyDataLimit(serverId: string, limit: server.DataLimit) {
     if (!limit) {
       return;
     }
-    const previousLimit = this.selectedServer.getAccessKeyDataLimit();
+    const server = this.getServerById(serverId);
+    const previousLimit = server.getAccessKeyDataLimit();
     if (previousLimit && limit.bytes === previousLimit.bytes) {
       return;
     }
     const serverView = this.appRoot.getServerView(this.appRoot.selectedServerId);
     try {
-      await this.selectedServer.setAccessKeyDataLimit(limit);
+      await server.setAccessKeyDataLimit(limit);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
       serverView.accessKeyDataLimit = dataLimitToDisplayDataAmount(limit);
-      this.refreshTransferStats(this.selectedServer, serverView);
+      this.refreshTransferStats(server, serverView);
       // Don't display the feature collection disclaimer anymore.
       serverView.showFeatureMetricsDisclaimer = false;
       window.localStorage.setItem('dataLimits-feature-collection-notification', 'true');
@@ -897,17 +892,18 @@ export class App {
       console.error(`Failed to set access key data limit: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-set-data-limit'));
       serverView.accessKeyDataLimit = dataLimitToDisplayDataAmount(
-          previousLimit || await computeDefaultAccessKeyDataLimit(this.selectedServer));
+          previousLimit || await computeDefaultAccessKeyDataLimit(server));
       serverView.isAccessKeyDataLimitEnabled = !!previousLimit;
     }
   }
 
-  private async removeAccessKeyDataLimit() {
-    const serverView = this.appRoot.getServerView(this.appRoot.selectedServerId);
+  private async removeAccessKeyDataLimit(serverId: string) {
+    const server = this.getServerById(serverId);
+    const serverView = this.appRoot.getServerView(serverId);
     try {
-      await this.selectedServer.removeAccessKeyDataLimit();
+      await server.removeAccessKeyDataLimit();
       this.appRoot.showNotification(this.appRoot.localize('saved'));
-      this.refreshTransferStats(this.selectedServer, serverView);
+      this.refreshTransferStats(server, serverView);
     } catch (error) {
       console.error(`Failed to remove access key data limit: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-remove-data-limit'));
@@ -915,10 +911,11 @@ export class App {
     }
   }
 
-  private async setHostnameForAccessKeys(hostname: string, serverSettings: polymer.Base) {
+  private async setHostnameForAccessKeys(serverId: string, hostname: string, serverSettings: polymer.Base) {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
     try {
-      await this.selectedServer.setHostnameForAccessKeys(hostname);
+      const server = this.getServerById(serverId);
+      await server.setHostnameForAccessKeys(hostname);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
       serverSettings.enterSavedState();
     } catch (error) {
@@ -932,10 +929,11 @@ export class App {
     }
   }
 
-  private async setPortForNewAccessKeys(port: number, serverSettings: polymer.Base) {
+  private async setPortForNewAccessKeys(serverId: string, port: number, serverSettings: polymer.Base) {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
     try {
-      await this.selectedServer.setPortForNewAccessKeys(port);
+      const server = this.getServerById(serverId);
+      await server.setPortForNewAccessKeys(port);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
       serverSettings.enterSavedState();
     } catch (error) {
@@ -986,10 +984,11 @@ export class App {
     }
   }
 
-  private removeAccessKey(accessKeyId: string) {
-    this.selectedServer.removeAccessKey(accessKeyId)
+  private removeAccessKey(serverId: string, accessKeyId: string) {
+    const server = this.getServerById(serverId);
+    server.removeAccessKey(accessKeyId)
         .then(() => {
-          this.appRoot.getServerView(this.appRoot.selectedServerId).removeAccessKey(accessKeyId);
+          this.appRoot.getServerView(serverId).removeAccessKey(accessKeyId);
           this.appRoot.showNotification(this.appRoot.localize('notification-key-removed'));
         })
         .catch((error) => {
@@ -998,9 +997,8 @@ export class App {
         });
   }
 
-  private deleteSelectedServer() {
-    const serverToDelete = this.selectedServer;
-    const serverId = localServerId(serverToDelete);
+  private deleteSelectedServer(serverId: string) {
+    const serverToDelete = this.getServerById(serverId);
     if (!isManagedServer(serverToDelete)) {
       const msg = 'cannot delete non-ManagedServer';
       console.error(msg);
@@ -1018,7 +1016,6 @@ export class App {
               () => {
                 this.removeServer(serverId);
                 this.appRoot.selectedServer = null;
-                this.selectedServer = null;
                 this.showIntro();
                 this.appRoot.showNotification(
                     this.appRoot.localize('notification-server-destroyed'));
@@ -1033,9 +1030,8 @@ export class App {
     });
   }
 
-  private forgetSelectedServer() {
-    const serverToForget = this.selectedServer;
-    const serverId = localServerId(serverToForget);
+  private forgetSelectedServer(serverId: string) {
+    const serverToForget = this.getServerById(serverId);
     if (!isManualServer(serverToForget)) {
       const msg = 'cannot forget non-ManualServer';
       console.error(msg);
@@ -1049,16 +1045,16 @@ export class App {
       serverToForget.forget();
       this.removeServer(serverId);
       this.appRoot.selectedServerId = '';
-      this.selectedServer = null;
       this.showIntro();
       this.appRoot.showNotification(this.appRoot.localize('notification-server-removed'));
     });
   }
 
-  private async setMetricsEnabled(metricsEnabled: boolean) {
-    const serverView = this.appRoot.getServerView(this.appRoot.selectedServerId);
+  private async setMetricsEnabled(serverId: string, metricsEnabled: boolean) {
+    const server = this.getServerById(serverId);
+    const serverView = this.appRoot.getServerView(serverId);
     try {
-      await this.selectedServer.setMetricsEnabled(metricsEnabled);
+      await server.setMetricsEnabled(metricsEnabled);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
       // Change metricsEnabled property on polymer element to update display.
       serverView.metricsEnabled = metricsEnabled;
@@ -1069,9 +1065,9 @@ export class App {
     }
   }
 
-  private async renameServer(newName: string) {
-    const serverToRename = this.selectedServer;
-    const serverId = this.appRoot.selectedServerId;
+  private async renameServer(serverId: string, newName: string) {
+    const serverToRename = this.getServerById(serverId);
+    const originalName = serverToRename.getName();
     const view = this.appRoot.getServerView(serverId);
     try {
       await serverToRename.setName(newName);
@@ -1080,21 +1076,21 @@ export class App {
     } catch (error) {
       console.error(`Failed to rename server: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-server-rename'));
-      const oldName = this.selectedServer.getName();
-      view.serverName = oldName;
+      view.serverName = originalName;
       // tslint:disable-next-line:no-any
-      (view.$.serverSettings as any).serverName = oldName;
+      (view.$.serverSettings as any).serverName = originalName;
     }
   }
 
-  private cancelServerCreation(serverToCancel: server.Server): void {
+  private cancelServerCreation(serverId: string): void {
+    const serverToCancel = this.getServerById(serverId);
     if (!isManagedServer(serverToCancel)) {
       const msg = 'cannot cancel non-ManagedServer';
       console.error(msg);
       throw new Error(msg);
     }
     serverToCancel.getHost().delete().then(() => {
-      this.removeServer(localServerId(serverToCancel));
+      this.removeServer(serverId);
       this.showIntro();
     });
   }

@@ -405,7 +405,7 @@ export class ServerView extends DirMixin(PolymerElement) {
 
     <div class="container">
       <iron-pages id="pages" attr-for-selected="id" selected="[[selectedPage]]" on-selected-changed="_selectedPageChanged">
-        <outline-server-progress-step id="progressView" server-name="[[serverName]]" localize="[[localize]]"></outline-server-progress-step>
+        <outline-server-progress-step id="progressView" server-id="serverId" server-name="[[serverName]]" localize="[[localize]]"></outline-server-progress-step>
         <div id="unreachableView">${this.unreachableViewTemplate}</div>
         <div id="managementView">${this.managementViewTemplate}</div>
       </iron-pages>
@@ -595,7 +595,7 @@ export class ServerView extends DirMixin(PolymerElement) {
           </div>
         </div>
         <div name="settings">
-          <outline-server-settings id="serverSettings" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" access-key-data-limit="{{accessKeyDataLimit}}" is-access-key-data-limit-enabled="{{isAccessKeyDataLimitEnabled}}" supports-access-key-data-limit="[[supportsAccessKeyDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" localize="[[localize]]">
+          <outline-server-settings id="serverSettings" server-id="[[serverId]]" metrics-id="[[metricsId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" access-key-data-limit="{{accessKeyDataLimit}}" is-access-key-data-limit-enabled="{{isAccessKeyDataLimitEnabled}}" supports-access-key-data-limit="[[supportsAccessKeyDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" localize="[[localize]]">
           </outline-server-settings>
         </div>
       </iron-pages>`;
@@ -628,6 +628,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         totalInboundBytes: Number,
         accessKeyRows: {type: Array},
         hasNonAdminAccessKeys: Boolean,
+        metricsId: String,
         metricsEnabled: Boolean,
         monthlyOutboundTransferBytes: {type: Number},
         monthlyCost: {type: Number},
@@ -687,6 +688,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       /** @type {DisplayAccessKey[]} */
       this.accessKeyRows = [];
       this.hasNonAdminAccessKeys = false;
+      this.metricsId = '';
       this.metricsEnabled = false;
       // Initialize monthlyOutboundTransferBytes and monthlyCost to 0, so they can
       // be bound to hidden attributes.  Initializing to undefined does not
@@ -779,7 +781,7 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   _handleAddAccessKeyPressed() {
-    this.dispatchEvent(makePublicEvent('AddAccessKeyRequested'));
+    this.dispatchEvent(makePublicEvent('AddAccessKeyRequested', {serverId: this.serverId}));
     this.$.addAccessKeyHelpBubble.hide();
   }
 
@@ -803,6 +805,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     }
     input.disabled = true;
     this.dispatchEvent(makePublicEvent('RenameAccessKeyRequested', {
+      serverId: this.serverId,
       accessKeyId: accessKey.id,
       newName: displayName,
       entry: {
@@ -847,7 +850,7 @@ export class ServerView extends DirMixin(PolymerElement) {
 
   _handleRemoveAccessKeyPressed(e) {
     const accessKey = e.model.item;
-    this.dispatchEvent(makePublicEvent('RemoveAccessKeyRequested', {accessKeyId: accessKey.id}));
+    this.dispatchEvent(makePublicEvent('RemoveAccessKeyRequested', {serverId: this.serverId, accessKeyId: accessKey.id}));
   }
 
   _formatBytesTransferred(numBytes, emptyValue = '') {
@@ -987,11 +990,11 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   destroyServer() {
-    this.dispatchEvent(makePublicEvent('DeleteServerRequested'));
+    this.dispatchEvent(makePublicEvent('DeleteServerRequested', {serverId: this.serverId}));
   }
 
   removeServer() {
-    this.dispatchEvent(makePublicEvent('ForgetServerRequested'));
+    this.dispatchEvent(makePublicEvent('ForgetServerRequested', {serverId: this.serverId}));
   }
 
   _computePaperProgressClass(isAccessKeyDataLimitEnabled) {

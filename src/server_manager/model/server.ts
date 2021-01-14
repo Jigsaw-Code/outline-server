@@ -13,6 +13,9 @@
 // limitations under the License.
 
 export interface Server {
+  // Get the server ID.
+  getId(): string;
+
   // Get the server's name for display.
   getName(): string;
 
@@ -52,8 +55,8 @@ export interface Server {
   // Updates whether metrics are enabled.
   setMetricsEnabled(metricsEnabled: boolean): Promise<void>;
 
-  // Get the server's unique ID, used for metrics reporting.
-  getServerId(): string;
+  // Get metrics reporting ID.
+  getMetricsId(): string;
 
   // Checks if the server is healthy.
   isHealthy(): Promise<boolean>;

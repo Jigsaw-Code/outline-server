@@ -35,11 +35,13 @@ export interface ServerConfig {
   accessKeyDataLimit?: server.DataLimit;
 }
 
-export class ShadowboxServer implements server.Server {
+export abstract class ShadowboxServer implements server.Server {
   private managementApiAddress: string;
   private serverConfig: ServerConfig;
 
-  constructor() {}
+  protected constructor() {}
+
+  abstract getId(): string;
 
   listAccessKeys(): Promise<server.AccessKey[]> {
     console.info('Listing access keys');
@@ -136,7 +138,7 @@ export class ShadowboxServer implements server.Server {
     });
   }
 
-  getServerId(): string {
+  getMetricsId(): string {
     return this.serverConfig.serverId;
   }
 

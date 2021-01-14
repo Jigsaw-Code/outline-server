@@ -418,7 +418,7 @@ export class AppRoot extends mixinBehaviors
               <outline-region-picker-step id="regionPicker" localize="[[localize]]"></outline-region-picker-step>
               <div id="serverView">
                 <template is="dom-repeat" items="{{serverList}}" as="server">
-                  <outline-server-view id="serverView-{{_base64Encode(server.id)}}" localize="[[localize]]" hidden\$="{{!_isServerSelected(selectedServerId, server)}}"></outline-server-view>
+                  <outline-server-view id="serverView-{{_base64Encode(server.id)}}" server-id="[[server.id]]" localize="[[localize]]" hidden\$="{{!_isServerSelected(selectedServerId, server)}}"></outline-server-view>
                 </template>
               </div>
             </iron-pages>
@@ -891,7 +891,7 @@ export class AppRoot extends mixinBehaviors
 
   _showServer(event) {
     const server = event.model.server;
-    this.fire('ShowServerRequested', {displayServerId: server.id});
+    this.fire('ShowServerRequested', {serverId: server.id});
     this.maybeCloseDrawer();
   }
 

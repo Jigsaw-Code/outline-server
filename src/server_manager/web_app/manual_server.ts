@@ -33,6 +33,10 @@ class ManualServer extends ShadowboxServer implements server.ManualServer {
     }
   }
 
+  getId(): string {
+    return this.getManagementApiUrl();
+  }
+
   getCertificateFingerprint() {
     return this.manualServerConfig.certSha256;
   }

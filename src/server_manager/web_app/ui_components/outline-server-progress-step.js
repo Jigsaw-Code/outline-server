@@ -80,6 +80,7 @@ Polymer({
   is: 'outline-server-progress-step',
 
   properties: {
+    serverId: String,
     serverName: String,
     showCancelButton: Boolean,
     updateIntervalId: Number,
@@ -116,6 +117,6 @@ Polymer({
   },
 
   handleCancelTapped: function() {
-    this.fire('CancelServerCreationRequested');
+    this.fire('CancelServerCreationRequested', {serverId: this.serverId});
   }
 });

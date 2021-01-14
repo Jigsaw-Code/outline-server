@@ -77,6 +77,10 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
     this.pollInstallState();
   }
 
+  getId(): string {
+    return this.getHost().getHostId();
+  }
+
   waitOnInstall(): Promise<void> {
     return new Promise((fulfill, reject) => {
       // Poll this.installState for changes.  This can poll quickly as it
