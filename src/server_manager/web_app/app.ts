@@ -187,11 +187,14 @@ export class App {
     });
 
     appRoot.addEventListener('RenameAccessKeyRequested', (event: CustomEvent) => {
-      this.renameAccessKey(event.detail.serverId, event.detail.accessKeyId, event.detail.newName, event.detail.entry);
+      this.renameAccessKey(
+          event.detail.serverId, event.detail.accessKeyId, event.detail.newName,
+          event.detail.entry);
     });
 
     appRoot.addEventListener('SetAccessKeyDataLimitRequested', (event: CustomEvent) => {
-      this.setAccessKeyDataLimit(event.detail.serverId, displayDataAmountToDataLimit(event.detail.limit));
+      this.setAccessKeyDataLimit(
+          event.detail.serverId, displayDataAmountToDataLimit(event.detail.limit));
     });
 
     appRoot.addEventListener('RemoveAccessKeyDataLimitRequested', (event: CustomEvent) => {
@@ -200,12 +203,14 @@ export class App {
 
     appRoot.addEventListener('ChangePortForNewAccessKeysRequested', (event: CustomEvent) => {
       // TODO(serverIdPr): Pass serverId in event
-      this.setPortForNewAccessKeys(this.appRoot.selectedServerId, event.detail.validatedInput, event.detail.ui);
+      this.setPortForNewAccessKeys(
+          this.appRoot.selectedServerId, event.detail.validatedInput, event.detail.ui);
     });
 
     appRoot.addEventListener('ChangeHostnameForAccessKeysRequested', (event: CustomEvent) => {
       // TODO(serverIdPr): Pass serverId in event
-      this.setHostnameForAccessKeys(this.appRoot.selectedServerId, event.detail.validatedInput, event.detail.ui);
+      this.setHostnameForAccessKeys(
+          this.appRoot.selectedServerId, event.detail.validatedInput, event.detail.ui);
     });
 
     // The UI wants us to validate a server management URL.
@@ -857,7 +862,8 @@ export class App {
         });
   }
 
-  private renameAccessKey(serverId: string, accessKeyId: string, newName: string, entry: polymer.Base) {
+  private renameAccessKey(
+      serverId: string, accessKeyId: string, newName: string, entry: polymer.Base) {
     const server = this.getServerById(serverId);
     server.renameAccessKey(accessKeyId, newName)
         .then(() => {
@@ -911,7 +917,8 @@ export class App {
     }
   }
 
-  private async setHostnameForAccessKeys(serverId: string, hostname: string, serverSettings: polymer.Base) {
+  private async setHostnameForAccessKeys(
+      serverId: string, hostname: string, serverSettings: polymer.Base) {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
     try {
       const server = this.getServerById(serverId);
@@ -929,7 +936,8 @@ export class App {
     }
   }
 
-  private async setPortForNewAccessKeys(serverId: string, port: number, serverSettings: polymer.Base) {
+  private async setPortForNewAccessKeys(
+      serverId: string, port: number, serverSettings: polymer.Base) {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
     try {
       const server = this.getServerById(serverId);

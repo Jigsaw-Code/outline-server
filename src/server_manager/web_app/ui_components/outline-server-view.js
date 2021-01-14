@@ -850,7 +850,8 @@ export class ServerView extends DirMixin(PolymerElement) {
 
   _handleRemoveAccessKeyPressed(e) {
     const accessKey = e.model.item;
-    this.dispatchEvent(makePublicEvent('RemoveAccessKeyRequested', {serverId: this.serverId, accessKeyId: accessKey.id}));
+    this.dispatchEvent(makePublicEvent(
+        'RemoveAccessKeyRequested', {serverId: this.serverId, accessKeyId: accessKey.id}));
   }
 
   _formatBytesTransferred(numBytes, emptyValue = '') {

@@ -18,7 +18,7 @@ import * as digitalocean_api from '../cloud/digitalocean_api';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
 
-import {App, LAST_DISPLAYED_SERVER_STORAGE_KEY, localServerId} from './app';
+import {App, LAST_DISPLAYED_SERVER_STORAGE_KEY} from './app';
 import {TokenManager} from './digitalocean_oauth';
 import {AppRoot} from './ui_components/app-root.js';
 
@@ -134,7 +134,7 @@ describe('App', () => {
        const server = await managedSeverRepository.createServer();
        const app = createTestApp(appRoot, tokenManager, null, managedSeverRepository);
        // Sets last displayed server.
-       localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, localServerId(server));
+       localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, server.getId());
        await app.start();
        expect(appRoot.currentPage).toEqual('serverView');
        expect(appRoot.getServerView(appRoot.selectedServerId).selectedPage).toEqual('progressView');
@@ -165,7 +165,7 @@ function createTestApp(
       manualServerRepo, digitalOceanTokenManager);
 }
 
-class FakeServer implements server.Server {
+abstract class FakeServer implements server.Server {
   private name = 'serverName';
   private metricsEnabled = false;
   private id: string;
@@ -173,6 +173,7 @@ class FakeServer implements server.Server {
   constructor() {
     this.id = Math.random().toString();
   }
+  abstract getId(): string;
   getName() {
     return this.name;
   }
@@ -193,7 +194,7 @@ class FakeServer implements server.Server {
     this.metricsEnabled = metricsEnabled;
     return Promise.resolve();
   }
-  getServerId() {
+  getMetricsId() {
     return this.id;
   }
   isHealthy() {
@@ -243,6 +244,9 @@ class FakeServer implements server.Server {
 class FakeManualServer extends FakeServer implements server.ManualServer {
   constructor(public manualServerConfig: server.ManualServerConfig) {
     super();
+  }
+  getId() {
+    return this.getManagementApiUrl();
   }
   getManagementApiUrl() {
     return this.manualServerConfig.apiUrl;
@@ -316,6 +320,9 @@ class FakeDigitalOceanSession implements digitalocean_api.DigitalOceanSession {
 class FakeManagedServer extends FakeServer implements server.ManagedServer {
   constructor(private isInstalled = true) {
     super();
+  }
+  getId() {
+    return this.getHost().getHostId();
   }
   waitOnInstall() {
     // Return a promise which does not yet fulfill, to simulate long
