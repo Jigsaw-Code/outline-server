@@ -186,8 +186,8 @@ Polymer({
             <!-- TODO: consider making this an outline-validated-input -->
             <paper-input id="serverNameInput" class="server-name" value="{{serverName}}" label="[[localize('settings-server-name')]]" always-float-label="" maxlength="100" on-keydown="_handleNameInputKeyDown" on-blur="_handleNameInputBlur"></paper-input>
             <p class="detail">[[localize('settings-server-rename')]]</p>
-            <outline-validated-input editable="[[isAccessKeyPortEditable]]" visible="[[serverPortForNewAccessKeys]]" label="[[localize('settings-access-key-port')]]" allowed-pattern="[0-9]{1,5}" max-length="5" value="[[serverPortForNewAccessKeys]]" client-side-validator="[[_validatePort]]" event="ChangePortForNewAccessKeysRequested" localize="[[localize]]"></outline-validated-input>
-            <outline-validated-input editable="[[isHostnameEditable]]" visible="[[serverHostname]]" label="[[localize('settings-server-hostname')]]" max-length="253" value="[[serverHostname]]" event="ChangeHostnameForAccessKeysRequested" localize="[[localize]]"></outline-validated-input>
+            <outline-validated-input editable="[[isAccessKeyPortEditable]]" visible="[[serverPortForNewAccessKeys]]" label="[[localize('settings-access-key-port')]]" allowed-pattern="[0-9]{1,5}" max-length="5" value="[[serverPortForNewAccessKeys]]" client-side-validator="[[_validatePort]]" event="AccessKeyPortSaveRequested" localize="[[localize]]"></outline-validated-input>
+            <outline-validated-input editable="[[isHostnameEditable]]" visible="[[serverHostname]]" label="[[localize('settings-server-hostname')]]" max-length="253" value="[[serverHostname]]" event="AccessKeyHostnameSaveRequested" localize="[[localize]]"></outline-validated-input>
             <paper-input readonly="" value="[[serverManagementApiUrl]]" label="[[localize('settings-server-api-url')]]" hidden\$="[[!serverManagementApiUrl]]" always-float-label="" maxlength="100"></paper-input>
             <paper-input readonly="" value="[[serverCreationDate]]" label="[[localize('settings-server-creation')]]" hidden\$="[[!serverCreationDate]]" always-float-label="" maxlength="100"></paper-input>
             <paper-input readonly="" value="[[metricsId]]" label="[[localize('settings-server-id')]]" hidden\$="[[!metricsId]]" always-float-label="" maxlength="100"></paper-input>
@@ -283,9 +283,30 @@ Polymer({
     shouldShowExperiments: {type: Boolean, value: false},
   },
 
+  ready: function() {
+    this.addEventListener('AccessKeyPortSaveRequested', this._handleAccessKeyPortSaveRequested);
+    this.addEventListener('AccessKeyHostnameSaveRequested', this._handleAccessKeyHostnameSaveRequested);
+  },
+
   setServerName: function(name) {
     this.initialName = name;
     this.name = name;
+  },
+
+  _handleAccessKeyPortSaveRequested: function(event) {
+    this.fire('ChangePortForNewAccessKeysRequested', {
+      serverId: this.serverId,
+      validatedInput: event.detail.validatedInput,
+      ui: event.detail.ui,
+    });
+  },
+
+  _handleAccessKeyHostnameSaveRequested: function(event) {
+    this.fire('ChangeHostnameForAccessKeysRequested', {
+      serverId: this.serverId,
+      validatedInput: event.detail.validatedInput,
+      ui: event.detail.ui,
+    });
   },
 
   _handleNameInputKeyDown: function(event) {

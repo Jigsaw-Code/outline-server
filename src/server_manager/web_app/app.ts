@@ -202,15 +202,13 @@ export class App {
     });
 
     appRoot.addEventListener('ChangePortForNewAccessKeysRequested', (event: CustomEvent) => {
-      // TODO(serverIdPr): Pass serverId in event
       this.setPortForNewAccessKeys(
-          this.appRoot.selectedServerId, event.detail.validatedInput, event.detail.ui);
+          event.detail.serverId, event.detail.validatedInput, event.detail.ui);
     });
 
     appRoot.addEventListener('ChangeHostnameForAccessKeysRequested', (event: CustomEvent) => {
-      // TODO(serverIdPr): Pass serverId in event
       this.setHostnameForAccessKeys(
-          this.appRoot.selectedServerId, event.detail.validatedInput, event.detail.ui);
+          event.detail.serverId, event.detail.validatedInput, event.detail.ui);
     });
 
     // The UI wants us to validate a server management URL.
