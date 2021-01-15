@@ -306,10 +306,10 @@ export class App {
       this.appRoot.openGetConnectedDialog(this.getS3InviteUrl(event.detail.accessKey, true));
     });
 
-    appRoot.addEventListener('ShowServerRequested', async (event: CustomEvent) => {
+    appRoot.addEventListener('ShowServerRequested', (event: CustomEvent) => {
       const server = this.getServerById(event.detail.displayServerId);
       if (server) {
-        await this.showServer(server);
+        this.showServer(server);
       } else {
         // This should never happen if we are managine the list correctly.
         console.error(
@@ -343,7 +343,7 @@ export class App {
     if (serverIdToSelect) {
       const serverToShow = this.getServerById(serverIdToSelect);
       if (serverToShow) {
-        await this.showServer(serverToShow);
+        this.showServer(serverToShow);
       }
     }
   }
@@ -407,11 +407,14 @@ export class App {
     const serverEntry = this.makeServerListEntry(server);
     this.appRoot.serverList = this.appRoot.serverList.concat([serverEntry]);
 
+    if (isManagedServer(server) && !server.isInstallCompleted()) {
+      this.setServerProgressView(server);
+    }
+
     // Once the server is added to the list, do the rest asynchronously.
     setTimeout(async () => {
       // Wait for server config to load, then update the server view and list.
       if (isManagedServer(server) && !server.isInstallCompleted()) {
-        await this.updateServerView(server);
         try {
           await (server as server.ManagedServer).waitOnInstall();
         } catch (error) {
@@ -573,7 +576,7 @@ export class App {
     }
     const doServers = await this.loadDigitalOceanServers(accessToken);
     if (doServers.length > 0) {
-      await this.showServer(doServers[0]);
+      this.showServer(doServers[0]);
     } else {
       await this.showDigitalOceanCreateServer(accessToken);
     }
@@ -632,7 +635,7 @@ export class App {
         return this.digitalOceanRepository.createServer(regionId, serverName);
       });
       this.addServer(server);
-      await this.showServer(server);
+      this.showServer(server);
     } catch (error) {
       console.error('Error from createDigitalOceanServer', error);
       this.appRoot.showError(this.appRoot.localize('error-server-creation'));
@@ -649,19 +652,16 @@ export class App {
     return this.appRoot.localize('server-name', 'serverLocation', serverLocation);
   }
 
-  public async showServer(server: server.Server): Promise<void> {
+  public showServer(server: server.Server): void {
     const serverId = localServerId(server);
     this.selectedServer = server;
     this.appRoot.selectedServerId = serverId;
     localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, serverId);
-    await this.updateServerView(server);
     this.appRoot.showServerView();
   }
 
   private async updateServerView(server: server.Server): Promise<void> {
-    if (isManagedServer(server) && !(server as server.ManagedServer).isInstallCompleted()) {
-      this.setServerProgressView(server);
-    } else if (await server.isHealthy()) {
+    if (await server.isHealthy()) {
       this.setServerManagementView(server);
     } else {
       this.setServerUnreachableView(server);
@@ -971,13 +971,13 @@ export class App {
     const storedServer = this.manualServerRepository.findServer(serverConfig);
     if (!!storedServer) {
       this.appRoot.showNotification(this.appRoot.localize('notification-server-exists'), 5000);
-      await this.showServer(storedServer);
+      this.showServer(storedServer);
       return;
     }
     const manualServer = await this.manualServerRepository.addServer(serverConfig);
     if (await manualServer.isHealthy()) {
       this.addServer(manualServer);
-      await this.showServer(manualServer);
+      this.showServer(manualServer);
     } else {
       // Remove inaccessible manual server from local storage if it was just created.
       manualServer.forget();
