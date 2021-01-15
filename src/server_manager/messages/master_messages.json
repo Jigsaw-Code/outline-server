@@ -121,6 +121,10 @@
     "message": "Remove Server?",
     "description": "This string appears in a dialog that requests user confirmation for removing a server from the application. 'Remove' in this context does not imply server deletion."
   },
+  "data_limit_per_key": {
+    "message": "Data limit per key",
+    "description": "This string appears as a label to an input to set the default access key data limit for a server."
+  }, 
   "data_limits": {
     "message": "Data limits",
     "description": "This string appears as a title in a section to configure access key data transfer limits."

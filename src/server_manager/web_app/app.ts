@@ -76,7 +76,7 @@ function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.Dat
 
 export function localServerId(server: server.Server): string {
   if (isManagedServer(server)) {
-    return (server as server.ManagedServer).getHost().getHostId();
+    return server.getHost().getHostId();
   } else {
     return server.getManagementApiUrl();
   }
@@ -393,8 +393,7 @@ export class App {
     if (!name) {
       if (isManagedServer(server)) {
         // Newly created servers will not have a name.
-        name =
-            this.makeLocalizedServerName((server as server.ManagedServer).getHost().getRegionId());
+        name = this.makeLocalizedServerName(server.getHost().getRegionId());
       }
     }
     return name;
@@ -416,7 +415,7 @@ export class App {
       // Wait for server config to load, then update the server view and list.
       if (isManagedServer(server) && !server.isInstallCompleted()) {
         try {
-          await (server as server.ManagedServer).waitOnInstall();
+          await server.waitOnInstall();
         } catch (error) {
           if (error instanceof errors.DeletedServerError) {
             // User clicked "Cancel" on the loading screen.
