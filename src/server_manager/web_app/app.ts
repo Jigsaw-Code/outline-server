@@ -35,8 +35,8 @@ const CHANGE_KEYS_PORT_VERSION = '1.0.0';
 const DATA_LIMITS_VERSION = '1.1.0';
 const CHANGE_HOSTNAME_VERSION = '1.2.0';
 const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
-const LAST_DISPLAYED_SERVER_STORAGE_KEY = 'lastDisplayedServer';
 const CANCELLED_ERROR = new Error('Cancelled');
+export const LAST_DISPLAYED_SERVER_STORAGE_KEY = 'lastDisplayedServer';
 
 // DigitalOcean mapping of regions to flags
 const FLAG_IMAGE_DIR = 'images/flags';
@@ -74,7 +74,7 @@ function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.Dat
   return {bytes: dataAmount.value};
 }
 
-function localServerId(server: server.Server): string {
+export function localServerId(server: server.Server): string {
   if (isManagedServer(server)) {
     return server.getHost().getHostId();
   } else {
@@ -306,10 +306,10 @@ export class App {
       this.appRoot.openGetConnectedDialog(this.getS3InviteUrl(event.detail.accessKey, true));
     });
 
-    appRoot.addEventListener('ShowServerRequested', async (event: CustomEvent) => {
+    appRoot.addEventListener('ShowServerRequested', (event: CustomEvent) => {
       const server = this.getServerById(event.detail.displayServerId);
       if (server) {
-        await this.showServer(server);
+        this.showServer(server);
       } else {
         // This should never happen if we are managine the list correctly.
         console.error(
@@ -343,7 +343,7 @@ export class App {
     if (serverIdToSelect) {
       const serverToShow = this.getServerById(serverIdToSelect);
       if (serverToShow) {
-        await this.showServer(serverToShow);
+        this.showServer(serverToShow);
       }
     }
   }
@@ -406,6 +406,10 @@ export class App {
     const serverEntry = this.makeServerListEntry(server);
     this.appRoot.serverList = this.appRoot.serverList.concat([serverEntry]);
 
+    if (isManagedServer(server) && !server.isInstallCompleted()) {
+      this.setServerProgressView(server);
+    }
+
     // Once the server is added to the list, do the rest asynchronously.
     setTimeout(async () => {
       // Wait for server config to load, then update the server view and list.
@@ -422,10 +426,6 @@ export class App {
         }
       }
       await this.updateServerView(server);
-      if (this.selectedServer === server) {
-        // Make sure we switch to the server view in case it was in the loading view.
-        this.appRoot.showServerView();
-      }
       // This has to run after updateServerView because it depends on the isHealthy() call.
       // TODO(fortuna): Better handle state changes.
       this.updateServerEntry(server);
@@ -575,7 +575,7 @@ export class App {
     }
     const doServers = await this.loadDigitalOceanServers(accessToken);
     if (doServers.length > 0) {
-      await this.showServer(doServers[0]);
+      this.showServer(doServers[0]);
     } else {
       await this.showDigitalOceanCreateServer(accessToken);
     }
@@ -634,7 +634,7 @@ export class App {
         return this.digitalOceanRepository.createServer(regionId, serverName);
       });
       this.addServer(server);
-      await this.showServer(server);
+      this.showServer(server);
     } catch (error) {
       console.error('Error from createDigitalOceanServer', error);
       this.appRoot.showError(this.appRoot.localize('error-server-creation'));
@@ -651,19 +651,11 @@ export class App {
     return this.appRoot.localize('server-name', 'serverLocation', serverLocation);
   }
 
-  public async showServer(server: server.Server): Promise<void> {
+  public showServer(server: server.Server): void {
     const serverId = localServerId(server);
     this.selectedServer = server;
     this.appRoot.selectedServerId = serverId;
     localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, serverId);
-
-    if (isManagedServer(server)) {
-      if (!server.isInstallCompleted()) {
-        this.appRoot.showProgress(this.makeDisplayName(server), true);
-        return;
-      }
-    }
-    await this.updateServerView(server);
     this.appRoot.showServerView();
   }
 
@@ -679,7 +671,7 @@ export class App {
   private setServerManagementView(server: server.Server): void {
     // Show view and initialize fields from selectedServer.
     const view = this.appRoot.getServerView(localServerId(server));
-    view.isServerReachable = true;
+    view.selectedPage = 'managementView';
     view.serverId = server.getServerId();
     view.serverName = server.getName();
     view.serverHostname = server.getHostnameForAccessKeys();
@@ -738,13 +730,19 @@ export class App {
   private setServerUnreachableView(server: server.Server): void {
     // Display the unreachable server state within the server view.
     const serverView = this.appRoot.getServerView(localServerId(server)) as ServerView;
-    serverView.isServerReachable = false;
+    serverView.selectedPage = 'unreachableView';
     serverView.isServerManaged = isManagedServer(server);
     serverView.serverName =
         this.makeDisplayName(server);  // Don't get the name from the remote server.
     serverView.retryDisplayingServer = async () => {
       await this.updateServerView(server);
     };
+  }
+
+  private setServerProgressView(server: server.Server): void {
+    const view = this.appRoot.getServerView(localServerId(server));
+    view.serverName = this.makeDisplayName(server);
+    view.selectedPage = 'progressView';
   }
 
   private showMetricsOptInWhenNeeded(selectedServer: server.Server, serverView: ServerView) {
@@ -972,13 +970,13 @@ export class App {
     const storedServer = this.manualServerRepository.findServer(serverConfig);
     if (!!storedServer) {
       this.appRoot.showNotification(this.appRoot.localize('notification-server-exists'), 5000);
-      await this.showServer(storedServer);
+      this.showServer(storedServer);
       return;
     }
     const manualServer = await this.manualServerRepository.addServer(serverConfig);
     if (await manualServer.isHealthy()) {
       this.addServer(manualServer);
-      await this.showServer(manualServer);
+      this.showServer(manualServer);
     } else {
       // Remove inaccessible manual server from local storage if it was just created.
       manualServer.forget();

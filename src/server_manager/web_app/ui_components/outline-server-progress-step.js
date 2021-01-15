@@ -86,7 +86,7 @@ Polymer({
     localize: Function,
   },
 
-  start: function() {
+  startAnimation: function() {
     if (this.updateIntervalId) {
       this.stop();
     }
@@ -107,7 +107,7 @@ Polymer({
     }, updateInterval * 1000);
   },
 
-  stop: function() {
+  stopAnimation: function() {
     if (!this.updateIntervalId) {
       return;
     }
