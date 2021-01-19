@@ -49,9 +49,7 @@ export abstract class ShadowboxServer implements server.Server {
 
   abstract getId(): string;
 
-  abstract start(): void;
-
-  protected setStatus(status: ServerStatus) {
+  protected setStatus(status: ServerStatus): void {
     if (this.status !== status) {
       this.status = status;
       this.domainEvents.emit(ShadowboxServer.EVENT_STATUS_CHANGED, this.getId(), this.status);
@@ -157,26 +155,31 @@ export abstract class ShadowboxServer implements server.Server {
     return this.serverConfig.serverId;
   }
 
-  protected isHealthy(timeoutMs = 30000): void {
-    let resolved = false;
-    // Query the API and expect a successful response to validate that the
-    // service is up and running.
-    this.getServerConfig().then(
-        (serverConfig) => {
-          this.serverConfig = serverConfig;
-          this.setStatus(ServerStatus.HEALTHY);
-          resolved = true;
-        },
-        (e) => {
+  refreshServerStatus(timeoutMs = 30000): Promise<ServerStatus> {
+    return new Promise<ServerStatus>((fulfill, reject) => {
+      let fulfilled = false;
+      // Query the API and expect a successful response to validate that the
+      // service is up and running.
+      this.getServerConfig().then(
+          (serverConfig) => {
+            this.serverConfig = serverConfig;
+            this.setStatus(ServerStatus.HEALTHY);
+            fulfill(ServerStatus.HEALTHY);
+            fulfilled = true;
+          },
+          (e) => {
+            this.setStatus(ServerStatus.UNREACHABLE);
+            fulfill(ServerStatus.UNREACHABLE);
+            fulfilled = true;
+          });
+      // Return not healthy if API doesn't complete within timeoutMs.
+      setTimeout(() => {
+        if (!fulfilled) {
           this.setStatus(ServerStatus.UNREACHABLE);
-          resolved = true;
-        });
-    // Return not healthy if API doesn't complete within timeoutMs.
-    setTimeout(() => {
-      if (!resolved) {
-        this.setStatus(ServerStatus.UNREACHABLE);
-      }
-    }, timeoutMs);
+          fulfill(ServerStatus.UNREACHABLE);
+        }
+      }, timeoutMs);
+    });
   }
 
   getCreatedDate(): Date {

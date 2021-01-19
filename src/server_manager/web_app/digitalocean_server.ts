@@ -16,7 +16,6 @@ import {EventEmitter} from 'eventemitter3';
 
 import {DigitalOceanSession, DropletInfo} from '../cloud/digitalocean_api';
 import * as crypto from '../infrastructure/crypto';
-import * as errors from '../infrastructure/errors';
 import {asciiToHex, hexToString} from '../infrastructure/hex_encoding';
 import * as do_install_script from '../install_scripts/do_install_script';
 import * as server from '../model/server';
@@ -66,6 +65,8 @@ enum InstallState {
 }
 
 export class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer {
+  public static EVENT_INSTALL_STATE_CHANGED = 'server-install-state-changed';
+
   private eventQueue = new EventEmitter();
   private installState: InstallState = InstallState.UNKNOWN;
 
@@ -77,48 +78,31 @@ export class DigitaloceanServer extends ShadowboxServer implements server.Manage
     super(domainEvents);
     console.info('DigitalOceanServer created');
     this.eventQueue.once('server-active', () => console.timeEnd('activeServer'));
-    this.pollInstallState();
-  }
 
-  start(): void {
-    if (!this.isInstallCompleted()) {
-      try {
-        this.install();
-      } catch (error) {
-        console.log('Server creation failed', error);
-        // TODO: Do we need to add server ID to remove it from the server cache?
-        this.domainEvents.emit(DigitaloceanServer.EVENT_STATUS_CHANGED, error);
-      }
-    } else {
-      this.isHealthy();
-    }
+    this.domainEvents.on(
+        DigitaloceanServer.EVENT_INSTALL_STATE_CHANGED,
+        (installState) => {
+          switch (installState) {
+            case InstallState.SUCCESS:
+              this.refreshServerStatus();
+              break;
+            case InstallState.ERROR:
+              this.setStatus(ServerStatus.INSTALL_FAILED);
+              break;
+            case InstallState.DELETED:
+              break;
+            default:
+          }
+        });
+    this.pollInstallState();
   }
 
   getId(): string {
     return this.getHost().getHostId();
   }
 
-  install(): void {
-    this.setStatus(ServerStatus.INSTALLING);
-    // Poll this.installState for changes.  This can poll quickly as it
-    // will not make any network requests.
-    const intervalId = setInterval(() => {
-      if (this.installState === InstallState.UNKNOWN) {
-        // installState not known, wait until next retry.
-        return;
-      }
-      // State is now known, so we can stop checking.
-      clearInterval(intervalId);
-      if (this.installState === InstallState.SUCCESS) {
-        this.isHealthy();
-      } else if (this.installState === InstallState.ERROR) {
-        this.setStatus(ServerStatus.INSTALL_FAILED);
-      }
-    }, 100);
-  }
-
-  // Sets this.installState, will keep polling until this.installState can
-  // be set to something other than UNKNOWN.
+  // Polls the cloud provider to determine the install state (and sets the
+  // management API URL and certificate).
   private pollInstallState(): void {
     const TIMEOUT_MS = 5 * 60 * 1000;
     const startTimestamp = Date.now();
@@ -181,15 +165,12 @@ export class DigitaloceanServer extends ShadowboxServer implements server.Manage
   }
 
   private setInstallState(installState: InstallState) {
-    if (this.installState !== InstallState.UNKNOWN) {
-      // Cannot change the install state once set.
-      return;
-    }
-    if (installState === InstallState.UNKNOWN) {
+    if (this.installState !== InstallState.UNKNOWN || installState === InstallState.UNKNOWN) {
       return;
     }
     this.installState = installState;
     this.setInstallCompleted();
+    this.domainEvents.emit(DigitaloceanServer.EVENT_INSTALL_STATE_CHANGED, installState);
   }
 
   // Returns true on success, else false.
@@ -301,10 +282,6 @@ export class DigitaloceanServer extends ShadowboxServer implements server.Manage
 
   private setInstallCompleted() {
     localStorage.setItem(this.getInstallCompletedStorageKey(), 'true');
-  }
-
-  private isInstallCompleted(): boolean {
-    return localStorage.getItem(this.getInstallCompletedStorageKey()) === 'true';
   }
 }
 

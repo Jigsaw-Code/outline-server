@@ -13,7 +13,7 @@
 // limitations under the License.
 
 export enum ServerStatus {
-  LOADING,
+  UNKNOWN,
   INSTALLING,
   INSTALL_FAILED,
   HEALTHY,
@@ -24,13 +24,13 @@ export interface Server {
   // Get the server's name for display.
   getName(): string;
 
-  start(): void;
-
   // Get the server ID.
   getId(): string;
 
   // Gets the version of the shadowbox binary the server is running
   getVersion(): string;
+
+  refreshServerStatus(): Promise<ServerStatus>;
 
   // Updates the server name.
   setName(name: string): Promise<void>;

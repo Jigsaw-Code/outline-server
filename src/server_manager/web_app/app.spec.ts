@@ -331,9 +331,6 @@ class FakeManagedServer extends FakeServer implements server.ManagedServer {
       getHostId: () => 'fake-host-id',
     };
   }
-  isInstallCompleted() {
-    return this.isInstalled;
-  }
 }
 
 class FakeManagedServerRepository implements server.ManagedServerRepository {

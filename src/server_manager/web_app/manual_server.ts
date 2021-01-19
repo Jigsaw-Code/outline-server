@@ -37,10 +37,6 @@ class ManualServer extends ShadowboxServer implements server.ManualServer {
     }
   }
 
-  start(): void {
-    this.isHealthy();
-  }
-
   getId(): string {
     return this.getManagementApiUrl();
   }

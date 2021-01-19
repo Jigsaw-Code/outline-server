@@ -318,9 +318,6 @@ export class App {
           console.log(ShadowboxServer.EVENT_STATUS_CHANGED, serverId, serverStatus);
           const server = this.getServerById(serverId);
           switch (serverStatus) {
-            case ServerStatus.LOADING:
-              this.setServerLoadingView(server);
-              break;
             case ServerStatus.INSTALLING:
               this.setServerProgressView(server);
               break;
@@ -426,7 +423,7 @@ export class App {
     this.idServerMap.set(serverId, server);
     const serverEntry = this.makeServerListEntry(server);
     this.appRoot.serverList = this.appRoot.serverList.concat([serverEntry]);
-    server.start();
+    server.refreshServerStatus();
   }
 
   private removeServer(serverId: string): void {
@@ -649,7 +646,7 @@ export class App {
 
   public showServer(server: server.Server): void {
     const serverId = server.getId();
-    server.start();
+    server.refreshServerStatus();
     this.selectedServer = server;
     this.appRoot.selectedServerId = serverId;
     localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, serverId);
@@ -722,7 +719,7 @@ export class App {
     view.selectedPage = 'unreachableView';
     view.isServerManaged = isManagedServer(server);
     view.serverName = this.makeDisplayName(server);  // Don't get the name from the remote server.
-    view.retryDisplayingServer = () => server.start();
+    view.retryDisplayingServer = () => server.refreshServerStatus();
   }
 
   private setServerLoadingView(server: server.Server): void {
@@ -965,15 +962,15 @@ export class App {
       return;
     }
     const manualServer = await this.manualServerRepository.addServer(serverConfig);
-    // if (await manualServer.isHealthy()) {
-    this.addServer(manualServer);
-    this.showServer(manualServer);
-    // } else {
-    //   // Remove inaccessible manual server from local storage if it was just created.
-    //   manualServer.forget();
-    //   console.error('Manual server installed but unreachable.');
-    //   throw new errors.UnreachableServerError();
-    // }
+    if (await manualServer.refreshServerStatus() === ServerStatus.HEALTHY) {
+      this.addServer(manualServer);
+      this.showServer(manualServer);
+    } else {
+      // Remove inaccessible manual server from local storage if it was just created.
+      manualServer.forget();
+      console.error('Manual server installed but unreachable.');
+      throw new errors.UnreachableServerError();
+    }
   }
 
   private removeAccessKey(accessKeyId: string) {
