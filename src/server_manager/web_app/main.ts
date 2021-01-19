@@ -14,6 +14,8 @@
 
 import './ui_components/app-root.js';
 
+import {EventEmitter} from 'eventemitter3';
+
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as i18n from '../infrastructure/i18n';
 import {getSentryApiUrl} from '../infrastructure/sentry';
@@ -23,7 +25,6 @@ import {DigitalOceanTokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
-import {EventEmitter} from 'eventemitter3';
 
 type LanguageDef = {
   id: string,
@@ -125,8 +126,8 @@ document.addEventListener('WebComponentsReady', () => {
   new App(
       appRoot, version, digitalocean_api.createDigitalOceanSession,
       digitalOceanServerRepositoryFactory,
-      new ManualServerRepository('manualServers', domainEvents),
-      new DigitalOceanTokenManager(), domainEvents)
+      new ManualServerRepository('manualServers', domainEvents), new DigitalOceanTokenManager(),
+      domainEvents)
       .start();
 });
 

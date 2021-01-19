@@ -70,8 +70,8 @@ export class DigitaloceanServer extends ShadowboxServer implements server.Manage
   private installState: InstallState = InstallState.UNKNOWN;
 
   constructor(
-      private digitalOcean: DigitalOceanSession,
-      private dropletInfo: DropletInfo, domainEvents: EventEmitter) {
+      private digitalOcean: DigitalOceanSession, private dropletInfo: DropletInfo,
+      domainEvents: EventEmitter) {
     // Consider passing a RestEndpoint object to the parent constructor,
     // to better encapsulate the management api address logic.
     super(domainEvents);
@@ -352,9 +352,9 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
   private servers: DigitaloceanServer[] = [];
 
   constructor(
-      private digitalOcean: DigitalOceanSession, private image: string,
-      private metricsUrl: string, private sentryApiUrl: string|undefined,
-      private debugMode: boolean, private domainEvents: EventEmitter) {}
+      private digitalOcean: DigitalOceanSession, private image: string, private metricsUrl: string,
+      private sentryApiUrl: string|undefined, private debugMode: boolean,
+      private domainEvents: EventEmitter) {}
 
   // Return a map of regions that are available and support our target machine size.
   getRegionMap(): Promise<Readonly<server.RegionMap>> {

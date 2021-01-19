@@ -13,23 +13,23 @@
 // limitations under the License.
 
 import * as sentry from '@sentry/electron';
-import * as semver from 'semver';
 import {EventEmitter} from 'eventemitter3';
+import * as semver from 'semver';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
+import {ServerStatus} from '../model/server';
 
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
+import {DigitaloceanServer} from './digitalocean_server';
 import {parseManualServerConfig} from './management_urls';
+import {ShadowboxServer} from './shadowbox_server';
 import {AppRoot, ServerListEntry} from './ui_components/app-root.js';
 import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
-import {ServerStatus} from "../model/server";
-import {DigitaloceanServer} from "./digitalocean_server";
-import {ShadowboxServer} from "./shadowbox_server";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -151,8 +151,7 @@ export class App {
       private createDigitalOceanSession: DigitalOceanSessionFactory,
       private createDigitalOceanServerRepository: DigitalOceanServerRepositoryFactory,
       private manualServerRepository: server.ManualServerRepository,
-      private digitalOceanTokenManager: TokenManager,
-      private domainEvents: EventEmitter) {
+      private digitalOceanTokenManager: TokenManager, private domainEvents: EventEmitter) {
     appRoot.setAttribute('outline-version', this.version);
 
     appRoot.addEventListener('ConnectDigitalOceanAccountRequested', (event: CustomEvent) => {
@@ -315,8 +314,7 @@ export class App {
     });
 
     this.domainEvents.on(
-        DigitaloceanServer.EVENT_STATUS_CHANGED,
-        async (serverId, serverStatus) => {
+        DigitaloceanServer.EVENT_STATUS_CHANGED, async (serverId, serverStatus) => {
           console.log(ShadowboxServer.EVENT_STATUS_CHANGED, serverId, serverStatus);
           const server = this.getServerById(serverId);
           switch (serverStatus) {
@@ -338,7 +336,7 @@ export class App {
             default:
           }
           this.updateServerEntry(server);
-    });
+        });
 
     onUpdateDownloaded(this.displayAppUpdateNotification.bind(this));
   }
@@ -723,8 +721,7 @@ export class App {
     const view = this.appRoot.getServerView(server.getId());
     view.selectedPage = 'unreachableView';
     view.isServerManaged = isManagedServer(server);
-    view.serverName =
-        this.makeDisplayName(server);  // Don't get the name from the remote server.
+    view.serverName = this.makeDisplayName(server);  // Don't get the name from the remote server.
     view.retryDisplayingServer = () => server.start();
   }
 
@@ -969,8 +966,8 @@ export class App {
     }
     const manualServer = await this.manualServerRepository.addServer(serverConfig);
     // if (await manualServer.isHealthy()) {
-      this.addServer(manualServer);
-      this.showServer(manualServer);
+    this.addServer(manualServer);
+    this.showServer(manualServer);
     // } else {
     //   // Remove inaccessible manual server from local storage if it was just created.
     //   manualServer.forget();

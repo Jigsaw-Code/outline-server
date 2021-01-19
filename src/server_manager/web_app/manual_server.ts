@@ -14,14 +14,15 @@
 
 import {EventEmitter} from 'eventemitter3';
 
-import * as server from '../model/server';
 import {hexToString} from '../infrastructure/hex_encoding';
+import * as server from '../model/server';
+
 import {ShadowboxServer} from './shadowbox_server';
 
 class ManualServer extends ShadowboxServer implements server.ManualServer {
   constructor(
       private manualServerConfig: server.ManualServerConfig,
-      private forgetCallback: Function, // TODO: This should no longer be necessary
+      private forgetCallback: Function,  // TODO: This should no longer be necessary
       domainEvents: EventEmitter) {
     super(domainEvents);
     this.setManagementApiUrl(manualServerConfig.apiUrl);
