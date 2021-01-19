@@ -24,6 +24,10 @@ if (Intl.NumberFormat.supportedLocalesOf(['en', 'fr', 'fa', 'es', 'ru']).length 
       expect(english.unit).toEqual('B');
       expect(english.value).toEqual('0');
 
+      const spanish = i18n.getFormattedDataAmountParts(2, 'es');
+      expect(spanish.unit).toEqual('B');
+      expect(spanish.value).toEqual('2');
+
       const french = i18n.getFormattedDataAmountParts(1.5 * 10 ** 9, 'fr');
       expect(french.unit).toEqual('Go');
       expect(french.value).toEqual('1,5');

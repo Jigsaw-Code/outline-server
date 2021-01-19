@@ -438,8 +438,8 @@ export class ServerView extends DirMixin(PolymerElement) {
             <div class="stats-card transfer-stats card-section">
               <iron-icon icon="icons:swap-horiz"></iron-icon>
               <div class="stats">
-                <h3>[[inboundByesValue]]</h3>
-                <p>[[inboundByesUnit]]</p>
+                <h3>[[inboundBytesValue]]</h3>
+                <p>[[inboundBytesUnit]]</p>
               </div>
               <p>[[localize('server-data-transfer')]]</p>
             </div>
@@ -600,7 +600,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         myConnection: Object,
         totalInboundBytes: Number,
         inboundBytesValue: String,
-        inboundByesUnit: String,
+        inboundBytesUnit: String,
         accessKeyRows: {type: Array},
         hasNonAdminAccessKeys: Boolean,
         metricsEnabled: Boolean,
@@ -660,8 +660,8 @@ export class ServerView extends DirMixin(PolymerElement) {
        */
       this.myConnection = null;
       this.totalInboundBytes = 0;
-      this.inboundByesUnit = 'B';
-      this.inboundByesValue = '0';
+      this.inboundBytesUnit = 'B';
+      this.inboundBytesValue = '0';
       /** @type {DisplayAccessKey[]} */
       this.accessKeyRows = [];
       this.hasNonAdminAccessKeys = false;
@@ -782,8 +782,8 @@ export class ServerView extends DirMixin(PolymerElement) {
 
   setServerTransferredData(totalBytes) {
     const formatted = i18n.getFormattedDataAmountParts(totalBytes, this.language);
-    this.inboundByesUnit = formatted.unit;
-    this.inboundByesValue = formatted.value;
+    this.inboundBytesUnit = formatted.unit;
+    this.inboundBytesValue = formatted.value;
     this.totalInboundBytes = totalBytes;
   }
 

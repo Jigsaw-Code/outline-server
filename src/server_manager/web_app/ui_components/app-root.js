@@ -561,15 +561,29 @@ export class AppRoot extends mixinBehaviors
    * @param {string} language
    * @param {string} direction
    */
-  setLanguage(language, direction) {
+  async setLanguage(language, direction) {
+    const out = new Promise((resolve, reject) => {
+      let successHandler, failureHandler;
+      successHandler = () => {
+        this.removeEventListener('app-localize-resources-error', failureHandler);
+        const alignDir = direction === 'ltr' ? 'left' : 'right';
+        this.$.appDrawer.align = alignDir;
+        this.$.sideBar.align = alignDir;
+        this.language = language;
+        resolve();
+      };
+      failureHandler = (err) => {
+        this.removeEventListener('app-localize-resources-loaded', successHandler);
+        reject(err);
+      };
+      this.addEventListener('app-localize-resources-loaded', successHandler, {once: true});
+      this.addEventListener('app-localize-resources-error', failureHandler, {once: true});
+    });
+
     const messagesUrl = `./messages/${language}.json`;
     this.loadResources(messagesUrl, language);
 
-    const alignDir = direction === 'ltr' ? 'left' : 'right';
-    this.$.appDrawer.align = alignDir;
-    this.$.sideBar.align = alignDir;
-
-    this.language = language;
+    return out;
   }
 
   showIntro() {

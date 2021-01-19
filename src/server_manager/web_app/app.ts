@@ -1101,10 +1101,16 @@ export class App {
     });
   }
 
-  private setAppLanguage(languageCode: string, languageDir: string) {
-    this.appRoot.setLanguage(languageCode, languageDir);
-    document.documentElement.setAttribute('dir', languageDir);
-    window.localStorage.setItem('overrideLanguage', languageCode);
+  private async setAppLanguage(languageCode: string, languageDir: string) {
+    try {
+      await this.appRoot.setLanguage(languageCode, languageDir);
+      document.documentElement.setAttribute('dir', languageDir);
+      window.localStorage.setItem('overrideLanguage', languageCode);
+      await this.updateServerView(this.selectedServer);
+      this.appRoot.showServerView();
+    } catch (error) {
+      this.appRoot.showError(this.appRoot.localize('error-unexpected'));
+    }
   }
 
   private createLocationModel(cityId: string, regionIds: string[]): Location {

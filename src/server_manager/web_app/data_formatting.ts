@@ -44,6 +44,7 @@ function makeUnitFormatter(language: string, params: FormatParams) {
   const options: Intl.NumberFormatOptions = {
     style: 'unit',
     unit: params.unit,
+    unitDisplay: 'short',
     maximumFractionDigits: params.decimalPlaces
   };
   const out = new Intl.NumberFormat(language, options);
@@ -54,10 +55,13 @@ export function getFormattedDataAmountParts(amount: number, language: string) {
   const params = getDataFormattingParams(amount);
   const parts = makeUnitFormatter(language, params).formatToParts(params.value);
   const isUnit = (part: Intl.NumberFormatPart) => (part as {type: string}).type === 'unit';
-  const unit = parts.find(isUnit).value;
+  const unitText = parts.find(isUnit).value;
   return {
     value: parts.filter((part) => !isUnit(part)).map(part => part.value).join('').trim(),
-    unit: unit === 'byte' ? 'B' : unit
+    // Special case for "byte", since we'd rather be consistent with "KB", etc.  "byte" is
+    // presumably used due to the example in the Unicode standard,
+    // http://unicode.org/reports/tr35/tr35-general.html#Example_Units
+    unit: unitText === 'byte' ? 'B' : unitText
   };
 }
 
