@@ -704,8 +704,8 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.accessKeySortDirection = 1;
       /** @type {(msgId: string, ...params: string[]) => string} */
       this.localize = null;
-      /** @type {'progressView'|'unreachableView'|'managementView'} */
-      this.selectedPage = 'managementView';
+      /** @type {'loadingView'|'progressView'|'unreachableView'|'managementView'} */
+      this.selectedPage = 'loadingView';
       this.selectedTab = 'connections';
     }
 

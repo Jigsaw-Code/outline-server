@@ -23,6 +23,7 @@ import {DigitalOceanTokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
+import {EventEmitter} from 'eventemitter3';
 
 type LanguageDef = {
   id: string,
@@ -102,10 +103,12 @@ document.addEventListener('WebComponentsReady', () => {
   const version = params.get('version');
   const sentryDsn = params.get('sentryDsn');
 
+  const domainEvents = new EventEmitter();
+
   // Set DigitalOcean server repository parameters.
   const digitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) => {
     return new digitalocean_server.DigitaloceanServerRepository(
-        session, shadowboxImage, metricsUrl, getSentryApiUrl(sentryDsn), debugMode);
+        session, shadowboxImage, metricsUrl, getSentryApiUrl(sentryDsn), debugMode, domainEvents);
   };
 
   // Create and start the app.
@@ -121,8 +124,9 @@ document.addEventListener('WebComponentsReady', () => {
   appRoot.setLanguage(language.string(), languageDirection);
   new App(
       appRoot, version, digitalocean_api.createDigitalOceanSession,
-      digitalOceanServerRepositoryFactory, new ManualServerRepository('manualServers'),
-      new DigitalOceanTokenManager())
+      digitalOceanServerRepositoryFactory,
+      new ManualServerRepository('manualServers', domainEvents),
+      new DigitalOceanTokenManager(), domainEvents)
       .start();
 });
 

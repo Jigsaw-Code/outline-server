@@ -13,9 +13,11 @@
 // limitations under the License.
 
 import * as semver from 'semver';
+import {EventEmitter} from 'eventemitter3';
 
 import * as errors from '../infrastructure/errors';
 import * as server from '../model/server';
+import {ServerStatus} from '../model/server';
 
 // Interfaces used by metrics REST APIs.
 interface MetricsEnabled {
@@ -35,11 +37,26 @@ export interface ServerConfig {
   accessKeyDataLimit?: server.DataLimit;
 }
 
-export class ShadowboxServer implements server.Server {
+export abstract class ShadowboxServer implements server.Server {
+  // TODO: This should probably be defined as part of the Server contact.
+  public static EVENT_STATUS_CHANGED = 'server-status-changed';
+
+  protected status: ServerStatus;
   private managementApiAddress: string;
   private serverConfig: ServerConfig;
 
-  constructor() {}
+  constructor(protected domainEvents: EventEmitter) {}
+
+  abstract getId(): string;
+
+  abstract start(): void;
+
+  protected setStatus(status: ServerStatus) {
+    if (this.status !== status) {
+      this.status = status;
+      this.domainEvents.emit(ShadowboxServer.EVENT_STATUS_CHANGED, this.getId(), this.status);
+    }
+  }
 
   listAccessKeys(): Promise<server.AccessKey[]> {
     console.info('Listing access keys');
@@ -140,23 +157,26 @@ export class ShadowboxServer implements server.Server {
     return this.serverConfig.serverId;
   }
 
-  isHealthy(timeoutMs = 30000): Promise<boolean> {
-    return new Promise<boolean>((fulfill, reject) => {
-      // Query the API and expect a successful response to validate that the
-      // service is up and running.
-      this.getServerConfig().then(
-          (serverConfig) => {
-            this.serverConfig = serverConfig;
-            fulfill(true);
-          },
-          (e) => {
-            fulfill(false);
-          });
-      // Return not healthy if API doesn't complete within timeoutMs.
-      setTimeout(() => {
-        fulfill(false);
-      }, timeoutMs);
-    });
+  protected isHealthy(timeoutMs = 30000): void {
+    let resolved = false;
+    // Query the API and expect a successful response to validate that the
+    // service is up and running.
+    this.getServerConfig().then(
+        (serverConfig) => {
+          this.serverConfig = serverConfig;
+          this.setStatus(ServerStatus.HEALTHY);
+          resolved = true;
+        },
+        (e) => {
+          this.setStatus(ServerStatus.UNREACHABLE);
+          resolved = true;
+        });
+    // Return not healthy if API doesn't complete within timeoutMs.
+    setTimeout(() => {
+      if (!resolved) {
+        this.setStatus(ServerStatus.UNREACHABLE);
+      }
+    }, timeoutMs);
   }
 
   getCreatedDate(): Date {

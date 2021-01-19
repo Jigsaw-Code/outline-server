@@ -12,9 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+export enum ServerStatus {
+  LOADING,
+  INSTALLING,
+  INSTALL_FAILED,
+  HEALTHY,
+  UNREACHABLE,
+}
+
 export interface Server {
   // Get the server's name for display.
   getName(): string;
+
+  start(): void;
+
+  // Get the server ID.
+  getId(): string;
 
   // Gets the version of the shadowbox binary the server is running
   getVersion(): string;
@@ -55,9 +68,6 @@ export interface Server {
   // Get the server's unique ID, used for metrics reporting.
   getServerId(): string;
 
-  // Checks if the server is healthy.
-  isHealthy(): Promise<boolean>;
-
   // Gets the date when this server was created.
   getCreatedDate(): Date;
 
@@ -89,12 +99,8 @@ export interface ManualServer extends Server {
 // Managed servers are servers created by the Outline Manager through our
 // "magic" user experience, e.g. DigitalOcean.
 export interface ManagedServer extends Server {
-  // Returns a promise that fulfills once installation is complete.
-  waitOnInstall(): Promise<void>;
   // Returns server host object.
   getHost(): ManagedServerHost;
-  // Returns true when installation is complete.
-  isInstallCompleted(): boolean;
 }
 
 // The managed machine where the Outline Server is running.

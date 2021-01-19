@@ -14,6 +14,7 @@
 
 import * as sentry from '@sentry/electron';
 import * as semver from 'semver';
+import {EventEmitter} from 'eventemitter3';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
@@ -26,6 +27,9 @@ import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root.js';
 import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
+import {ServerStatus} from "../model/server";
+import {DigitaloceanServer} from "./digitalocean_server";
+import {ShadowboxServer} from "./shadowbox_server";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -72,14 +76,6 @@ function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.Dat
     return {bytes: dataAmount.value * (10 ** 6)};
   }
   return {bytes: dataAmount.value};
-}
-
-export function localServerId(server: server.Server): string {
-  if (isManagedServer(server)) {
-    return server.getHost().getHostId();
-  } else {
-    return server.getManagementApiUrl();
-  }
 }
 
 // Compute the suggested data limit based on the server's transfer capacity and number of access
@@ -155,7 +151,8 @@ export class App {
       private createDigitalOceanSession: DigitalOceanSessionFactory,
       private createDigitalOceanServerRepository: DigitalOceanServerRepositoryFactory,
       private manualServerRepository: server.ManualServerRepository,
-      private digitalOceanTokenManager: TokenManager) {
+      private digitalOceanTokenManager: TokenManager,
+      private domainEvents: EventEmitter) {
     appRoot.setAttribute('outline-version', this.version);
 
     appRoot.addEventListener('ConnectDigitalOceanAccountRequested', (event: CustomEvent) => {
@@ -317,6 +314,32 @@ export class App {
       }
     });
 
+    this.domainEvents.on(
+        DigitaloceanServer.EVENT_STATUS_CHANGED,
+        async (serverId, serverStatus) => {
+          console.log(ShadowboxServer.EVENT_STATUS_CHANGED, serverId, serverStatus);
+          const server = this.getServerById(serverId);
+          switch (serverStatus) {
+            case ServerStatus.LOADING:
+              this.setServerLoadingView(server);
+              break;
+            case ServerStatus.INSTALLING:
+              this.setServerProgressView(server);
+              break;
+            case ServerStatus.INSTALL_FAILED:
+              this.appRoot.showError(this.appRoot.localize('error-server-creation'));
+              break;
+            case ServerStatus.HEALTHY:
+              this.setServerManagementView(server);
+              break;
+            case ServerStatus.UNREACHABLE:
+              this.setServerUnreachableView(server);
+              break;
+            default:
+          }
+          this.updateServerEntry(server);
+    });
+
     onUpdateDownloaded(this.displayAppUpdateNotification.bind(this));
   }
 
@@ -381,7 +404,7 @@ export class App {
 
   private makeServerListEntry(server: server.Server): ServerListEntry {
     return {
-      id: localServerId(server),
+      id: server.getId(),
       name: this.makeDisplayName(server),
       isManaged: isManagedServer(server),
       isSynced: !!server.getName(),
@@ -400,36 +423,12 @@ export class App {
   }
 
   private addServer(server: server.Server): void {
-    console.log('Loading server', server);
-    const serverId = localServerId(server);
+    console.log('Loading server', server.getId(), server);
+    const serverId = server.getId();
     this.idServerMap.set(serverId, server);
     const serverEntry = this.makeServerListEntry(server);
     this.appRoot.serverList = this.appRoot.serverList.concat([serverEntry]);
-
-    if (isManagedServer(server) && !server.isInstallCompleted()) {
-      this.setServerProgressView(server);
-    }
-
-    // Once the server is added to the list, do the rest asynchronously.
-    setTimeout(async () => {
-      // Wait for server config to load, then update the server view and list.
-      if (isManagedServer(server) && !server.isInstallCompleted()) {
-        try {
-          await server.waitOnInstall();
-        } catch (error) {
-          if (error instanceof errors.DeletedServerError) {
-            // User clicked "Cancel" on the loading screen.
-            return;
-          }
-          console.log('Server creation failed', error);
-          this.appRoot.showError(this.appRoot.localize('error-server-creation'));
-        }
-      }
-      await this.updateServerView(server);
-      // This has to run after updateServerView because it depends on the isHealthy() call.
-      // TODO(fortuna): Better handle state changes.
-      this.updateServerEntry(server);
-    }, 0);
+    server.start();
   }
 
   private removeServer(serverId: string): void {
@@ -443,9 +442,8 @@ export class App {
   }
 
   private updateServerEntry(server: server.Server): void {
-    const serverId = localServerId(server);
     this.appRoot.serverList = this.appRoot.serverList.map(
-        (ds) => ds.id === serverId ? this.makeServerListEntry(server) : ds);
+        (ds) => ds.id === server.getId() ? this.makeServerListEntry(server) : ds);
   }
 
   private getServerById(serverId: string): server.Server {
@@ -652,25 +650,18 @@ export class App {
   }
 
   public showServer(server: server.Server): void {
-    const serverId = localServerId(server);
+    const serverId = server.getId();
+    server.start();
     this.selectedServer = server;
     this.appRoot.selectedServerId = serverId;
     localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, serverId);
     this.appRoot.showServerView();
   }
 
-  private async updateServerView(server: server.Server): Promise<void> {
-    if (await server.isHealthy()) {
-      this.setServerManagementView(server);
-    } else {
-      this.setServerUnreachableView(server);
-    }
-  }
-
   // Show the server management screen. Assumes the server is healthy.
   private setServerManagementView(server: server.Server): void {
     // Show view and initialize fields from selectedServer.
-    const view = this.appRoot.getServerView(localServerId(server));
+    const view = this.appRoot.getServerView(server.getId());
     view.selectedPage = 'managementView';
     view.serverId = server.getServerId();
     view.serverName = server.getName();
@@ -729,18 +720,21 @@ export class App {
 
   private setServerUnreachableView(server: server.Server): void {
     // Display the unreachable server state within the server view.
-    const serverView = this.appRoot.getServerView(localServerId(server)) as ServerView;
-    serverView.selectedPage = 'unreachableView';
-    serverView.isServerManaged = isManagedServer(server);
-    serverView.serverName =
+    const view = this.appRoot.getServerView(server.getId());
+    view.selectedPage = 'unreachableView';
+    view.isServerManaged = isManagedServer(server);
+    view.serverName =
         this.makeDisplayName(server);  // Don't get the name from the remote server.
-    serverView.retryDisplayingServer = async () => {
-      await this.updateServerView(server);
-    };
+    view.retryDisplayingServer = () => server.start();
+  }
+
+  private setServerLoadingView(server: server.Server): void {
+    const view = this.appRoot.getServerView(server.getId());
+    view.selectedPage = 'loadingView';
   }
 
   private setServerProgressView(server: server.Server): void {
-    const view = this.appRoot.getServerView(localServerId(server));
+    const view = this.appRoot.getServerView(server.getId());
     view.serverName = this.makeDisplayName(server);
     view.selectedPage = 'progressView';
   }
@@ -974,15 +968,15 @@ export class App {
       return;
     }
     const manualServer = await this.manualServerRepository.addServer(serverConfig);
-    if (await manualServer.isHealthy()) {
+    // if (await manualServer.isHealthy()) {
       this.addServer(manualServer);
       this.showServer(manualServer);
-    } else {
-      // Remove inaccessible manual server from local storage if it was just created.
-      manualServer.forget();
-      console.error('Manual server installed but unreachable.');
-      throw new errors.UnreachableServerError();
-    }
+    // } else {
+    //   // Remove inaccessible manual server from local storage if it was just created.
+    //   manualServer.forget();
+    //   console.error('Manual server installed but unreachable.');
+    //   throw new errors.UnreachableServerError();
+    // }
   }
 
   private removeAccessKey(accessKeyId: string) {
@@ -999,7 +993,7 @@ export class App {
 
   private deleteSelectedServer() {
     const serverToDelete = this.selectedServer;
-    const serverId = localServerId(serverToDelete);
+    const serverId = serverToDelete.getId();
     if (!isManagedServer(serverToDelete)) {
       const msg = 'cannot delete non-ManagedServer';
       console.error(msg);
@@ -1034,7 +1028,7 @@ export class App {
 
   private forgetSelectedServer() {
     const serverToForget = this.selectedServer;
-    const serverId = localServerId(serverToForget);
+    const serverId = serverToForget.getId();
     if (!isManualServer(serverToForget)) {
       const msg = 'cannot forget non-ManualServer';
       console.error(msg);
@@ -1093,7 +1087,7 @@ export class App {
       throw new Error(msg);
     }
     serverToCancel.getHost().delete().then(() => {
-      this.removeServer(localServerId(serverToCancel));
+      this.removeServer(serverToCancel.getId());
       this.showIntro();
     });
   }

@@ -12,15 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {hexToString} from '../infrastructure/hex_encoding';
-import * as server from '../model/server';
+import {EventEmitter} from 'eventemitter3';
 
+import * as server from '../model/server';
+import {hexToString} from '../infrastructure/hex_encoding';
 import {ShadowboxServer} from './shadowbox_server';
 
 class ManualServer extends ShadowboxServer implements server.ManualServer {
   constructor(
-      private manualServerConfig: server.ManualServerConfig, private forgetCallback: Function) {
-    super();
+      private manualServerConfig: server.ManualServerConfig,
+      private forgetCallback: Function, // TODO: This should no longer be necessary
+      domainEvents: EventEmitter) {
+    super(domainEvents);
     this.setManagementApiUrl(manualServerConfig.apiUrl);
     // manualServerConfig.certSha256 is expected to be in hex format (install script).
     // Electron requires that this be decoded from hex (to unprintable binary),
@@ -31,6 +34,14 @@ class ManualServer extends ShadowboxServer implements server.ManualServer {
       // Error trusting certificate, may be due to bad user input.
       console.error('Error trusting certificate');
     }
+  }
+
+  start(): void {
+    this.isHealthy();
+  }
+
+  getId(): string {
+    return this.getManagementApiUrl();
   }
 
   getCertificateFingerprint() {
@@ -45,7 +56,7 @@ class ManualServer extends ShadowboxServer implements server.ManualServer {
 export class ManualServerRepository implements server.ManualServerRepository {
   private servers: server.ManualServer[] = [];
 
-  constructor(private storageKey: string) {
+  constructor(private storageKey: string, private domainEvents: EventEmitter) {
     this.loadServers();
   }
 
@@ -94,7 +105,7 @@ export class ManualServerRepository implements server.ManualServerRepository {
   private createServer(config: server.ManualServerConfig) {
     const server = new ManualServer(config, () => {
       this.forgetServer(server);
-    });
+    }, this.domainEvents);
     return server;
   }
 

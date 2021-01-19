@@ -20,6 +20,7 @@ import * as errors from '../infrastructure/errors';
 import {asciiToHex, hexToString} from '../infrastructure/hex_encoding';
 import * as do_install_script from '../install_scripts/do_install_script';
 import * as server from '../model/server';
+import {ServerStatus} from '../model/server';
 
 import {ShadowboxServer} from './shadowbox_server';
 
@@ -64,39 +65,56 @@ enum InstallState {
   DELETED
 }
 
-class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer {
+export class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer {
   private eventQueue = new EventEmitter();
   private installState: InstallState = InstallState.UNKNOWN;
 
-  constructor(private digitalOcean: DigitalOceanSession, private dropletInfo: DropletInfo) {
+  constructor(
+      private digitalOcean: DigitalOceanSession,
+      private dropletInfo: DropletInfo, domainEvents: EventEmitter) {
     // Consider passing a RestEndpoint object to the parent constructor,
     // to better encapsulate the management api address logic.
-    super();
+    super(domainEvents);
     console.info('DigitalOceanServer created');
     this.eventQueue.once('server-active', () => console.timeEnd('activeServer'));
     this.pollInstallState();
   }
 
-  waitOnInstall(): Promise<void> {
-    return new Promise((fulfill, reject) => {
-      // Poll this.installState for changes.  This can poll quickly as it
-      // will not make any network requests.
-      const intervalId = setInterval(() => {
-        if (this.installState === InstallState.UNKNOWN) {
-          // installState not known, wait until next retry.
-          return;
-        }
-        // State is now known, so we can stop checking.
-        clearInterval(intervalId);
-        if (this.installState === InstallState.SUCCESS) {
-          fulfill();
-        } else if (this.installState === InstallState.ERROR) {
-          reject(new errors.ServerInstallFailedError());
-        } else if (this.installState === InstallState.DELETED) {
-          reject(new errors.DeletedServerError());
-        }
-      }, 100);
-    });
+  start(): void {
+    if (!this.isInstallCompleted()) {
+      try {
+        this.install();
+      } catch (error) {
+        console.log('Server creation failed', error);
+        // TODO: Do we need to add server ID to remove it from the server cache?
+        this.domainEvents.emit(DigitaloceanServer.EVENT_STATUS_CHANGED, error);
+      }
+    } else {
+      this.isHealthy();
+    }
+  }
+
+  getId(): string {
+    return this.getHost().getHostId();
+  }
+
+  install(): void {
+    this.setStatus(ServerStatus.INSTALLING);
+    // Poll this.installState for changes.  This can poll quickly as it
+    // will not make any network requests.
+    const intervalId = setInterval(() => {
+      if (this.installState === InstallState.UNKNOWN) {
+        // installState not known, wait until next retry.
+        return;
+      }
+      // State is now known, so we can stop checking.
+      clearInterval(intervalId);
+      if (this.installState === InstallState.SUCCESS) {
+        this.isHealthy();
+      } else if (this.installState === InstallState.ERROR) {
+        this.setStatus(ServerStatus.INSTALL_FAILED);
+      }
+    }, 100);
   }
 
   // Sets this.installState, will keep polling until this.installState can
@@ -285,7 +303,7 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
     localStorage.setItem(this.getInstallCompletedStorageKey(), 'true');
   }
 
-  public isInstallCompleted(): boolean {
+  private isInstallCompleted(): boolean {
     return localStorage.getItem(this.getInstallCompletedStorageKey()) === 'true';
   }
 }
@@ -334,8 +352,9 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
   private servers: DigitaloceanServer[] = [];
 
   constructor(
-      private digitalOcean: DigitalOceanSession, private image: string, private metricsUrl: string,
-      private sentryApiUrl: string|undefined, private debugMode: boolean) {}
+      private digitalOcean: DigitalOceanSession, private image: string,
+      private metricsUrl: string, private sentryApiUrl: string|undefined,
+      private debugMode: boolean, private domainEvents: EventEmitter) {}
 
   // Return a map of regions that are available and support our target machine size.
   getRegionMap(): Promise<Readonly<server.RegionMap>> {
@@ -400,7 +419,7 @@ export class DigitaloceanServerRepository implements server.ManagedServerReposit
 
   // Creates a DigitaloceanServer object and adds it to the in-memory server list.
   private createDigitalOceanServer(digitalOcean: DigitalOceanSession, dropletInfo: DropletInfo) {
-    const server = new DigitaloceanServer(digitalOcean, dropletInfo);
+    const server = new DigitaloceanServer(digitalOcean, dropletInfo, this.domainEvents);
     this.servers.push(server);
     return server;
   }
