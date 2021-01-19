@@ -35,6 +35,7 @@ The metrics server supports two URL paths:
         timestampUtcMs: number,
         dataLimit: {
             enabled: boolean
+            perKeyLimitCount: number
         }
     }
     ```

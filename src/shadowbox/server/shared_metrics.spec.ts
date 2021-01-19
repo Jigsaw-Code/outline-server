@@ -14,8 +14,9 @@
 
 import {ManualClock} from '../infrastructure/clock';
 import {InMemoryConfig} from '../infrastructure/json_config';
-import {AccessKeyId} from '../model/access_key';
+import {AccessKeyId, DataLimit} from '../model/access_key';
 import {version} from '../package.json';
+import {AccessKeyConfigJson} from './server_access_key';
 
 import {ServerConfigJson} from './server_config';
 import {DailyFeatureMetricsReportJson, HourlyServerMetricsReportJson, KeyUsage, MetricsCollectorClient, OutlineSharedMetricsPublisher, UsageMetrics} from './shared_metrics';
@@ -26,7 +27,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       const serverConfig = new InMemoryConfig<ServerConfigJson>({});
 
       const publisher =
-          new OutlineSharedMetricsPublisher(new ManualClock(), serverConfig, null, null, null);
+          new OutlineSharedMetricsPublisher(new ManualClock(), serverConfig, null, null, null, null);
       expect(publisher.isSharingEnabled()).toBeFalsy();
 
       publisher.startSharing();
@@ -40,7 +41,7 @@ describe('OutlineSharedMetricsPublisher', () => {
     it('Reads from config', () => {
       const serverConfig = new InMemoryConfig<ServerConfigJson>({metricsEnabled: true});
       const publisher =
-          new OutlineSharedMetricsPublisher(new ManualClock(), serverConfig, null, null, null);
+          new OutlineSharedMetricsPublisher(new ManualClock(), serverConfig, null, null, null, null);
       expect(publisher.isSharingEnabled()).toBeTruthy();
     });
   });
@@ -53,7 +54,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       const toMetricsId = (id: AccessKeyId) => `M(${id})`;
       const metricsCollector = new FakeMetricsCollector();
       const publisher = new OutlineSharedMetricsPublisher(
-          clock, serverConfig, usageMetrics, toMetricsId, metricsCollector);
+          clock, serverConfig, null, usageMetrics, toMetricsId, metricsCollector);
 
       publisher.startSharing();
       usageMetrics.usage = [
@@ -103,7 +104,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       const toMetricsId = (id: AccessKeyId) => `M(${id})`;
       const metricsCollector = new FakeMetricsCollector();
       const publisher = new OutlineSharedMetricsPublisher(
-          clock, serverConfig, usageMetrics, toMetricsId, metricsCollector);
+          clock, serverConfig, null, usageMetrics, toMetricsId, metricsCollector);
 
       publisher.startSharing();
       usageMetrics.usage = [
@@ -131,9 +132,26 @@ describe('OutlineSharedMetricsPublisher', () => {
     let timestamp = clock.nowMs;
     const serverConfig = new InMemoryConfig<ServerConfigJson>(
         {serverId: 'server-id', accessKeyDataLimit: {bytes: 123}});
+    let keyId = 0;
+    const makeKeyJson = (dataLimit?: DataLimit) => {
+      return {
+        id: (keyId++).toString(),
+        metricsId: "id",
+        name: "name",
+        password: "pass",
+        port: 12345,
+        dataLimit,
+      };
+    };
+    const keyConfig = new InMemoryConfig<AccessKeyConfigJson>({
+      accessKeys: [
+        makeKeyJson({bytes: 2}),
+        makeKeyJson()
+      ]
+    });
     const metricsCollector = new FakeMetricsCollector();
     const publisher = new OutlineSharedMetricsPublisher(
-        clock, serverConfig, new ManualUsageMetrics(), (id: AccessKeyId) => '', metricsCollector);
+        clock, serverConfig, keyConfig, new ManualUsageMetrics(), (id: AccessKeyId) => '', metricsCollector);
 
     publisher.startSharing();
     await clock.runCallbacks();
@@ -141,7 +159,10 @@ describe('OutlineSharedMetricsPublisher', () => {
       serverId: 'server-id',
       serverVersion: version,
       timestampUtcMs: timestamp,
-      dataLimit: {enabled: true}
+      dataLimit: {
+        enabled: true,
+        perKeyLimitCount: 1
+      }
     });
     clock.nowMs += 24 * 60 * 60 * 1000;
     timestamp = clock.nowMs;
@@ -152,8 +173,16 @@ describe('OutlineSharedMetricsPublisher', () => {
       serverId: 'server-id',
       serverVersion: version,
       timestampUtcMs: timestamp,
-      dataLimit: {enabled: false}
+      dataLimit: {
+        enabled: false,
+        perKeyLimitCount: 1
+      }
     });
+
+    clock.nowMs += 24 * 60 * 60 * 1000;
+    delete keyConfig.data().accessKeys[0].dataLimit;
+    await clock.runCallbacks();
+    expect(metricsCollector.collectedFeatureMetricsReport.dataLimit.perKeyLimitCount).toEqual(0);
   });
   it('does not report metrics when sharing is disabled', async () => {
     const clock = new ManualClock();
@@ -163,7 +192,7 @@ describe('OutlineSharedMetricsPublisher', () => {
     spyOn(metricsCollector, 'collectServerUsageMetrics').and.callThrough();
     spyOn(metricsCollector, 'collectFeatureMetrics').and.callThrough();
     const publisher = new OutlineSharedMetricsPublisher(
-        clock, serverConfig, new ManualUsageMetrics(), (id: AccessKeyId) => '', metricsCollector);
+        clock, serverConfig, new InMemoryConfig<AccessKeyConfigJson>({}), new ManualUsageMetrics(), (id: AccessKeyId) => '', metricsCollector);
 
     await clock.runCallbacks();
     expect(metricsCollector.collectServerUsageMetrics).not.toHaveBeenCalled();
