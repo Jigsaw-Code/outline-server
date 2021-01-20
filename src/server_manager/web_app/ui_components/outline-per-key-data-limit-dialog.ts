@@ -57,8 +57,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
           flex-flow: column nowrap;
         }
 
-        #keyIcon {
-          filter: invert(1);
+        #dataLimitIcon {
           /* Split the padding evenly between the icon and the section to be bidirectional. */
           padding: 0 12px;
         }
@@ -154,7 +153,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
       </style>
       <paper-dialog id="container">
         <div id="headerSection">
-          <img id="keyIcon" src="../../images/key-avatar.svg" />
+          <iron-icon id="dataLimitIcon" icon="icons:perm-data-setting"></iron-icon>
           <h3>${this.localize('per-key-data-limit-dialog-title', 'keyName', keyName)}</h3>
         </div>
         <div id="menuSection">
