@@ -71,7 +71,7 @@ class DigitaloceanServer extends ShadowboxServer implements server.ManagedServer
   constructor(private digitalOcean: DigitalOceanSession, private dropletInfo: DropletInfo) {
     // Consider passing a RestEndpoint object to the parent constructor,
     // to better encapsulate the management api address logic.
-    super();
+    super(String(dropletInfo.id));
     console.info('DigitalOceanServer created');
     this.eventQueue.once('server-active', () => console.timeEnd('activeServer'));
     this.pollInstallState();

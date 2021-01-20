@@ -23,9 +23,9 @@ import * as server from '../model/server';
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {parseManualServerConfig} from './management_urls';
-import {AppRoot, ServerListEntry} from './ui_components/app-root.js';
+import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {Location} from './ui_components/outline-region-picker-step';
-import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view.js';
+import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -72,14 +72,6 @@ function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.Dat
     return {bytes: dataAmount.value * (10 ** 6)};
   }
   return {bytes: dataAmount.value};
-}
-
-export function localServerId(server: server.Server): string {
-  if (isManagedServer(server)) {
-    return server.getHost().getHostId();
-  } else {
-    return server.getManagementApiUrl();
-  }
 }
 
 // Compute the suggested data limit based on the server's transfer capacity and number of access
@@ -381,7 +373,7 @@ export class App {
 
   private makeServerListEntry(server: server.Server): ServerListEntry {
     return {
-      id: localServerId(server),
+      id: server.getId(),
       name: this.makeDisplayName(server),
       isManaged: isManagedServer(server),
       isSynced: !!server.getName(),
@@ -401,8 +393,7 @@ export class App {
 
   private addServer(server: server.Server): void {
     console.log('Loading server', server);
-    const serverId = localServerId(server);
-    this.idServerMap.set(serverId, server);
+    this.idServerMap.set(server.getId(), server);
     const serverEntry = this.makeServerListEntry(server);
     this.appRoot.serverList = this.appRoot.serverList.concat([serverEntry]);
 
@@ -443,9 +434,8 @@ export class App {
   }
 
   private updateServerEntry(server: server.Server): void {
-    const serverId = localServerId(server);
     this.appRoot.serverList = this.appRoot.serverList.map(
-        (ds) => ds.id === serverId ? this.makeServerListEntry(server) : ds);
+        (ds) => ds.id === server.getId() ? this.makeServerListEntry(server) : ds);
   }
 
   private getServerById(serverId: string): server.Server {
@@ -652,10 +642,9 @@ export class App {
   }
 
   public showServer(server: server.Server): void {
-    const serverId = localServerId(server);
     this.selectedServer = server;
-    this.appRoot.selectedServerId = serverId;
-    localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, serverId);
+    this.appRoot.selectedServerId = server.getId();
+    localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, server.getId());
     this.appRoot.showServerView();
   }
 
@@ -670,9 +659,9 @@ export class App {
   // Show the server management screen. Assumes the server is healthy.
   private setServerManagementView(server: server.Server): void {
     // Show view and initialize fields from selectedServer.
-    const view = this.appRoot.getServerView(localServerId(server));
+    const view = this.appRoot.getServerView(server.getId());
     view.selectedPage = 'managementView';
-    view.serverId = server.getServerId();
+    view.serverId = server.getMetricsId();
     view.serverName = server.getName();
     view.serverHostname = server.getHostnameForAccessKeys();
     view.serverManagementApiUrl = server.getManagementApiUrl();
@@ -729,7 +718,7 @@ export class App {
 
   private setServerUnreachableView(server: server.Server): void {
     // Display the unreachable server state within the server view.
-    const serverView = this.appRoot.getServerView(localServerId(server)) as ServerView;
+    const serverView = this.appRoot.getServerView(server.getId());
     serverView.selectedPage = 'unreachableView';
     serverView.isServerManaged = isManagedServer(server);
     serverView.serverName =
@@ -740,7 +729,7 @@ export class App {
   }
 
   private setServerProgressView(server: server.Server): void {
-    const view = this.appRoot.getServerView(localServerId(server));
+    const view = this.appRoot.getServerView(server.getId());
     view.serverName = this.makeDisplayName(server);
     view.selectedPage = 'progressView';
   }
@@ -754,7 +743,7 @@ export class App {
       }
       // Show the metrics opt in prompt if the server has not already opted in,
       // and if they haven't seen the prompt yet according to localStorage.
-      const storageKey = selectedServer.getServerId() + '-prompted-for-metrics';
+      const storageKey = selectedServer.getMetricsId() + '-prompted-for-metrics';
       if (!selectedServer.getMetricsEnabled() && !localStorage.getItem(storageKey)) {
         this.appRoot.showMetricsDialogForNewServer();
         localStorage.setItem(storageKey, 'true');
@@ -999,7 +988,7 @@ export class App {
 
   private deleteSelectedServer() {
     const serverToDelete = this.selectedServer;
-    const serverId = localServerId(serverToDelete);
+    const serverId = serverToDelete.getId();
     if (!isManagedServer(serverToDelete)) {
       const msg = 'cannot delete non-ManagedServer';
       console.error(msg);
@@ -1034,7 +1023,7 @@ export class App {
 
   private forgetSelectedServer() {
     const serverToForget = this.selectedServer;
-    const serverId = localServerId(serverToForget);
+    const serverId = serverToForget.getId();
     if (!isManualServer(serverToForget)) {
       const msg = 'cannot forget non-ManualServer';
       console.error(msg);
@@ -1093,7 +1082,7 @@ export class App {
       throw new Error(msg);
     }
     serverToCancel.getHost().delete().then(() => {
-      this.removeServer(localServerId(serverToCancel));
+      this.removeServer(serverToCancel.getId());
       this.showIntro();
     });
   }

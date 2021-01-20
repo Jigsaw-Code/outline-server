@@ -20,7 +20,7 @@ import {ShadowboxServer} from './shadowbox_server';
 class ManualServer extends ShadowboxServer implements server.ManualServer {
   constructor(
       private manualServerConfig: server.ManualServerConfig, private forgetCallback: Function) {
-    super();
+    super(manualServerConfig.apiUrl);
     this.setManagementApiUrl(manualServerConfig.apiUrl);
     // manualServerConfig.certSha256 is expected to be in hex format (install script).
     // Electron requires that this be decoded from hex (to unprintable binary),
