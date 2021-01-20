@@ -193,7 +193,7 @@ class FakeServer implements server.Server {
     return Promise.resolve();
   }
   getMetricsId() {
-    return this.id;
+    return this.metricsId;
   }
   isHealthy() {
     return Promise.resolve(true);
