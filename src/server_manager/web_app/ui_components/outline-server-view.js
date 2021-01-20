@@ -438,8 +438,8 @@ export class ServerView extends DirMixin(PolymerElement) {
             <div class="stats-card transfer-stats card-section">
               <iron-icon icon="icons:swap-horiz"></iron-icon>
               <div class="stats">
-                <h3>[[inboundBytesValue]]</h3>
-                <p>[[inboundBytesUnit]]</p>
+                <h3>[[_getInboundBytesValue(totalInboundBytes, language)]]</h3>
+                <p>[[_getInboundBytesUnit(totalInboundBytes, language)]]</p>
               </div>
               <p>[[localize('server-data-transfer')]]</p>
             </div>
@@ -588,7 +588,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         serverManagementApiUrl: String,
         serverPortForNewAccessKeys: Number,
         isAccessKeyPortEditable: {type: Boolean},
-        serverCreationDate: String,
+        serverCreationDate: {type: Object, value: null},  // type: Date
         serverLocation: String,
         accessKeyDataLimit: {type: Object},
         isAccessKeyDataLimitEnabled: {type: Boolean},
@@ -599,8 +599,6 @@ export class ServerView extends DirMixin(PolymerElement) {
         retryDisplayingServer: Function,
         myConnection: Object,
         totalInboundBytes: Number,
-        inboundBytesValue: String,
-        inboundBytesUnit: String,
         accessKeyRows: {type: Array},
         hasNonAdminAccessKeys: Boolean,
         metricsEnabled: Boolean,
@@ -638,7 +636,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       /** @type {number} */
       this.serverPortForNewAccessKeys = null;
       this.isAccessKeyPortEditable = false;
-      this.serverCreationDate = '';
+      this.serverCreationDate = null;
       this.serverLocation = '';
       /** @type {DisplayDataAmount} */
       this.accessKeyDataLimit = null;
@@ -660,8 +658,6 @@ export class ServerView extends DirMixin(PolymerElement) {
        */
       this.myConnection = null;
       this.totalInboundBytes = 0;
-      this.inboundBytesUnit = 'B';
-      this.inboundBytesValue = '0';
       /** @type {DisplayAccessKey[]} */
       this.accessKeyRows = [];
       this.hasNonAdminAccessKeys = false;
@@ -780,11 +776,20 @@ export class ServerView extends DirMixin(PolymerElement) {
     this.dispatchEvent(makePublicEvent('RemoveAccessKeyRequested', {accessKeyId: accessKey.id}));
   }
 
-  setServerTransferredData(totalBytes) {
-    const formatted = i18n.getFormattedDataAmountParts(totalBytes, this.language);
-    this.inboundBytesUnit = formatted.unit;
-    this.inboundBytesValue = formatted.value;
-    this.totalInboundBytes = totalBytes;
+  _getInboundBytesUnit(totalBytes, language) {
+    // This happens during app startup before we set the language
+    if (!language) {
+      return '';
+    }
+    return i18n.getFormattedDataAmountParts(totalBytes, language).unit;
+  }
+
+  _getInboundBytesValue(totalBytes, language) {
+    // This happens during app startup before we set the language
+    if (!language) {
+      return '';
+    }
+    return i18n.getFormattedDataAmountParts(totalBytes, language).value;
   }
 
   updateAccessKeyRow(accessKeyId, fields) {

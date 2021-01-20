@@ -686,7 +686,7 @@ export class App {
     view.serverHostname = server.getHostnameForAccessKeys();
     view.serverManagementApiUrl = server.getManagementApiUrl();
     view.serverPortForNewAccessKeys = server.getPortForNewAccessKeys();
-    view.serverCreationDate = localizeDate(server.getCreatedDate(), this.appRoot.language);
+    view.serverCreationDate = server.getCreatedDate();
     view.serverVersion = server.getVersion();
     view.accessKeyDataLimit = dataLimitToDisplayDataAmount(server.getAccessKeyDataLimit());
     view.isAccessKeyDataLimitEnabled = !!view.accessKeyDataLimit;
@@ -786,7 +786,7 @@ export class App {
       for (const accessKeyId in stats.bytesTransferredByUserId) {
         totalBytes += stats.bytesTransferredByUserId[accessKeyId];
       }
-      serverView.setServerTransferredData(totalBytes);
+      serverView.totalInboundBytes = totalBytes;
 
       const accessKeyDataLimit = selectedServer.getAccessKeyDataLimit();
       if (accessKeyDataLimit) {
@@ -1106,7 +1106,6 @@ export class App {
       await this.appRoot.setLanguage(languageCode, languageDir);
       document.documentElement.setAttribute('dir', languageDir);
       window.localStorage.setItem('overrideLanguage', languageCode);
-      await this.updateServerView(this.selectedServer);
       this.appRoot.showServerView();
     } catch (error) {
       this.appRoot.showError(this.appRoot.localize('error-unexpected'));
