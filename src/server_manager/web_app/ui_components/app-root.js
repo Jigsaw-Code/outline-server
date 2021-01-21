@@ -563,6 +563,11 @@ export class AppRoot extends mixinBehaviors
    */
   async setLanguage(language, direction) {
     const out = new Promise((resolve, reject) => {
+      // loadResources uses events and continuation instead of Promises.  In order to make this
+      // function easier to use, we wrap the language-changing logic in event handlers which
+      // resolve or reject the Promise.  Note that they need to clean up whichever event handler
+      // didn't fire so we don't leak it, which could cause future language changes to not work
+      // properly.
       let successHandler, failureHandler;
       successHandler = () => {
         this.removeEventListener('app-localize-resources-error', failureHandler);

@@ -20,19 +20,23 @@ import * as i18n from './data_formatting';
 if (Intl.NumberFormat.supportedLocalesOf(['en', 'fr', 'fa', 'es', 'ru']).length === 5) {
   describe('getFormattedDataAmountParts', () => {
     it('extracts the unit string and value separately', () => {
-      const english = i18n.getFormattedDataAmountParts(0, 'en');
+      const english = i18n.formatBytesParts(0, 'en');
       expect(english.unit).toEqual('B');
       expect(english.value).toEqual('0');
 
-      const spanish = i18n.getFormattedDataAmountParts(2, 'es');
+      const spanish = i18n.formatBytesParts(2, 'es');
       expect(spanish.unit).toEqual('B');
       expect(spanish.value).toEqual('2');
 
-      const french = i18n.getFormattedDataAmountParts(1.5 * 10 ** 9, 'fr');
+      const russian = i18n.formatBytesParts(3000, 'ru');
+      expect(russian.unit).toEqual('кБ');
+      expect(russian.value).toEqual('3');
+
+      const french = i18n.formatBytesParts(1.5 * 10 ** 9, 'fr');
       expect(french.unit).toEqual('Go');
       expect(french.value).toEqual('1,5');
 
-      const farsi = i18n.getFormattedDataAmountParts(133.5 * 10 ** 6, 'fa');
+      const farsi = i18n.formatBytesParts(133.5 * 10 ** 6, 'fa');
       expect(farsi.unit).toEqual('مگابایت');
       expect(farsi.value).toEqual('۱۳۳٫۵');
     });

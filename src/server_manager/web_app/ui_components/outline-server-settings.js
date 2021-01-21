@@ -26,7 +26,7 @@ import './outline-validated-input.js';
 import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 
-import {getFormattedDataAmountParts} from '../data_formatting';
+import {formatBytesParts} from '../data_formatting';
 
 Polymer({
   _template: html`
@@ -276,11 +276,11 @@ Polymer({
         {type: Boolean, value: false},  // Whether the server supports data limits.
     showFeatureMetricsDisclaimer: {type: Boolean, value: false},
     isHostnameEditable: {type: Boolean, value: true},
-    serverCreationDate: {type: Object, value: null},  // type: Date
+    serverCreationDate: {type: Object, value: null},
     serverLocation: {type: String, value: null},
     serverMonthlyCost: {type: String, value: null},
     serverMonthlyTransferLimit: {type: String, value: null},
-    language: {type: String, value: null},
+    language: {type: String, value: 'en'},
     localize: {type: Function, readonly: true},
     shouldShowExperiments: {type: Boolean, value: false},
   },
@@ -362,15 +362,15 @@ Polymer({
   },
 
   _getInternationalizedUnit(bytesAmount, language) {
-    // This happens during app startup before we set the language
-    if (!language) {
-      return '';
-    }
-    return getFormattedDataAmountParts(bytesAmount, language).unit;
+    return formatBytesParts(bytesAmount, language).unit;
   },
 
   _getTranslatedDate(language, date) {
-    if (!language || !date) {
+    // We can't use a default Date object -- it still shows up as null, I'm not sure the lifetime
+    // properties when you pass an object into Polymer.
+    // TODO(cohenjon) when this can migrate to Lit or Polymer, use a default Date at the Unix epoch
+    // in the constructor so we don't need this check.
+    if (!date) {
       return '';
     }
     return date.toLocaleString(language, {year: 'numeric', month: 'long', day: 'numeric'});

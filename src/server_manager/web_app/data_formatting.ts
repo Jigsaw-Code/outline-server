@@ -47,12 +47,15 @@ function makeUnitFormatter(language: string, params: FormatParams) {
     unitDisplay: 'short',
     maximumFractionDigits: params.decimalPlaces
   };
-  const out = new Intl.NumberFormat(language, options);
-  return out;
+  return new Intl.NumberFormat(language, options);
 }
 
-export function getFormattedDataAmountParts(amount: number, language: string) {
-  const params = getDataFormattingParams(amount);
+/**
+ * Returns a localized amount of bytes as a separate value and unit.  This is useful for styling
+ *  the unit and the value differently, or if you need them in separate nodes in the layout.
+ */
+export function formatBytesParts(numBytes: number, language: string) {
+  const params = getDataFormattingParams(numBytes);
   const parts = makeUnitFormatter(language, params).formatToParts(params.value);
   const isUnit = (part: Intl.NumberFormatPart) => (part as {type: string}).type === 'unit';
   const unitText = parts.find(isUnit).value;
@@ -65,6 +68,7 @@ export function getFormattedDataAmountParts(amount: number, language: string) {
   };
 }
 
+/** Returns a string representation of a number of bytes, translated into the given language */
 export function formatBytes(numBytes: number, language: string) {
   const params = getDataFormattingParams(numBytes);
   return makeUnitFormatter(language, params).format(params.value);

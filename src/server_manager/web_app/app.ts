@@ -1106,7 +1106,6 @@ export class App {
       await this.appRoot.setLanguage(languageCode, languageDir);
       document.documentElement.setAttribute('dir', languageDir);
       window.localStorage.setItem('overrideLanguage', languageCode);
-      this.appRoot.showServerView();
     } catch (error) {
       this.appRoot.showError(this.appRoot.localize('error-unexpected'));
     }

@@ -588,7 +588,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         serverManagementApiUrl: String,
         serverPortForNewAccessKeys: Number,
         isAccessKeyPortEditable: {type: Boolean},
-        serverCreationDate: {type: Object, value: null},  // type: Date
+        serverCreationDate: {type: Object, value: null},
         serverLocation: String,
         accessKeyDataLimit: {type: Object},
         isAccessKeyDataLimitEnabled: {type: Boolean},
@@ -636,6 +636,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       /** @type {number} */
       this.serverPortForNewAccessKeys = null;
       this.isAccessKeyPortEditable = false;
+      /** @type {Date} */
       this.serverCreationDate = null;
       this.serverLocation = '';
       /** @type {DisplayDataAmount} */
@@ -781,7 +782,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     if (!language) {
       return '';
     }
-    return i18n.getFormattedDataAmountParts(totalBytes, language).unit;
+    return i18n.formatBytesParts(totalBytes, language).unit;
   }
 
   _getInboundBytesValue(totalBytes, language) {
@@ -789,7 +790,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     if (!language) {
       return '';
     }
-    return i18n.getFormattedDataAmountParts(totalBytes, language).value;
+    return i18n.formatBytesParts(totalBytes, language).value;
   }
 
   updateAccessKeyRow(accessKeyId, fields) {
