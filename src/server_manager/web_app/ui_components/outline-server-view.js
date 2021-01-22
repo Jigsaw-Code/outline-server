@@ -438,8 +438,8 @@ export class ServerView extends DirMixin(PolymerElement) {
             <div class="stats-card transfer-stats card-section">
               <iron-icon icon="icons:swap-horiz"></iron-icon>
               <div class="stats">
-                <h3>[[_getInboundBytesValue(totalInboundBytes, language)]]</h3>
-                <p>[[_getInboundBytesUnit(totalInboundBytes, language)]]</p>
+                <h3>[[_formatInboundBytesValue(totalInboundBytes, language)]]</h3>
+                <p>[[_formatInboundBytesUnit(totalInboundBytes, language)]]</p>
               </div>
               <p>[[localize('server-data-transfer')]]</p>
             </div>
@@ -776,7 +776,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     this.dispatchEvent(makePublicEvent('RemoveAccessKeyRequested', {accessKeyId: accessKey.id}));
   }
 
-  _getInboundBytesUnit(totalBytes, language) {
+  _formatInboundBytesUnit(totalBytes, language) {
     // This happens during app startup before we set the language
     if (!language) {
       return '';
@@ -784,7 +784,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     return i18n.formatBytesParts(totalBytes, language).unit;
   }
 
-  _getInboundBytesValue(totalBytes, language) {
+  _formatInboundBytesValue(totalBytes, language) {
     // This happens during app startup before we set the language
     if (!language) {
       return '';

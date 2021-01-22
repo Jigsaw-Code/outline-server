@@ -191,7 +191,7 @@ Polymer({
             <outline-validated-input editable="[[isAccessKeyPortEditable]]" visible="[[serverPortForNewAccessKeys]]" label="[[localize('settings-access-key-port')]]" allowed-pattern="[0-9]{1,5}" max-length="5" value="[[serverPortForNewAccessKeys]]" client-side-validator="[[_validatePort]]" event="ChangePortForNewAccessKeysRequested" localize="[[localize]]"></outline-validated-input>
             <outline-validated-input editable="[[isHostnameEditable]]" visible="[[serverHostname]]" label="[[localize('settings-server-hostname')]]" max-length="253" value="[[serverHostname]]" event="ChangeHostnameForAccessKeysRequested" localize="[[localize]]"></outline-validated-input>
             <paper-input readonly="" value="[[serverManagementApiUrl]]" label="[[localize('settings-server-api-url')]]" hidden\$="[[!serverManagementApiUrl]]" always-float-label="" maxlength="100"></paper-input>
-            <paper-input readonly="" value="[[_getTranslatedDate(language, serverCreationDate)]]" label="[[localize('settings-server-creation')]]" hidden\$="[[!_getTranslatedDate(language, serverCreationDate)]]" always-float-label="" maxlength="100"></paper-input>
+            <paper-input readonly="" value="[[_formatDate(language, serverCreationDate)]]" label="[[localize('settings-server-creation')]]" hidden\$="[[!_formatDate(language, serverCreationDate)]]" always-float-label="" maxlength="100"></paper-input>
             <paper-input readonly="" value="[[serverId]]" label="[[localize('settings-server-id')]]" hidden\$="[[!serverId]]" always-float-label="" maxlength="100"></paper-input>
             <paper-input readonly="" value="[[serverVersion]]" label="[[localize('settings-server-version')]]" hidden\$="[[!serverVersion]]" always-float-label="" maxlength="100"></paper-input>
           </div>
@@ -365,7 +365,7 @@ Polymer({
     return formatBytesParts(bytesAmount, language).unit;
   },
 
-  _getTranslatedDate(language, date) {
+  _formatDate(language, date) {
     return date.toLocaleString(language, {year: 'numeric', month: 'long', day: 'numeric'});
   }
 });
