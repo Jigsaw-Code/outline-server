@@ -706,7 +706,7 @@ export class App {
       view.monthlyCost = host.getMonthlyCost().usd;
       view.monthlyOutboundTransferBytes =
           host.getMonthlyOutboundTransferLimit().terabytes * (10 ** 12);
-      view.serverLocation = this.getLocalizedCityName(host.getRegionId());
+      view.serverLocationId = digitalocean_server.GetCityId(host.getRegionId());
     } else {
       view.isServerManaged = false;
     }

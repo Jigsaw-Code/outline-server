@@ -557,29 +557,26 @@ export class AppRoot extends mixinBehaviors
   }
 
   /**
-   * Sets the language and direction for the application
-   * @param {string} language
-   * @param {string} direction
+   * Loads a new translation file and returns a Promise which resolves when the file is loaded or
+   *  rejects when there was an error loading translations.
+   *
+   *  @param {string} language The language code to load translations for, eg 'en'
    */
-  async setLanguage(language, direction) {
-    const out = new Promise((resolve, reject) => {
+  async loadLanguageResources(language) {
+    const localizeResourcesResponder = new Promise((resolve, reject) => {
       // loadResources uses events and continuation instead of Promises.  In order to make this
       // function easier to use, we wrap the language-changing logic in event handlers which
       // resolve or reject the Promise.  Note that they need to clean up whichever event handler
       // didn't fire so we don't leak it, which could cause future language changes to not work
-      // properly.
+      // properly by triggering old event listeners.
       let successHandler, failureHandler;
       successHandler = () => {
         this.removeEventListener('app-localize-resources-error', failureHandler);
-        const alignDir = direction === 'ltr' ? 'left' : 'right';
-        this.$.appDrawer.align = alignDir;
-        this.$.sideBar.align = alignDir;
-        this.language = language;
         resolve();
       };
-      failureHandler = (err) => {
+      failureHandler = (event) => {
         this.removeEventListener('app-localize-resources-loaded', successHandler);
-        reject(err);
+        reject(new Error(`Failed to load resources for language ${language}`));
       };
       this.addEventListener('app-localize-resources-loaded', successHandler, {once: true});
       this.addEventListener('app-localize-resources-error', failureHandler, {once: true});
@@ -587,8 +584,21 @@ export class AppRoot extends mixinBehaviors
 
     const messagesUrl = `./messages/${language}.json`;
     this.loadResources(messagesUrl, language);
+    return localizeResourcesResponder;
+  }
 
-    return out;
+  /**
+   * Sets the language and direction for the application
+   * @param {string} language The ISO language code for the new language, eg 'en'
+   * @param {string} direction The direction of the language, either 'rtl' or 'ltr'
+   */
+  async setLanguage(language, direction) {
+    await this.loadLanguageResources(language);
+
+    const alignDir = direction === 'ltr' ? 'left' : 'right';
+    this.$.appDrawer.align = alignDir;
+    this.$.sideBar.align = alignDir;
+    this.language = language;
   }
 
   showIntro() {

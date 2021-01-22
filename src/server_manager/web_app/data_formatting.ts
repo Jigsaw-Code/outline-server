@@ -14,7 +14,12 @@
   limitations under the License.
 */
 
+// import '@formatjs/intl-numberformat/polyfill'
+
 // Utility functions for internationalizing numbers and units
+
+// WARNING!  This assumes an ES2020 target as this will always run on browser code in
+// electron's built-in Chromium.  This code shouldn't be used by anything running in Node.
 
 const TERABYTE = 10 ** 12;
 const GIGABYTE = 10 ** 9;
@@ -40,27 +45,38 @@ function getDataFormattingParams(numBytes: number): FormatParams {
   return {value: numBytes, unit: 'byte', decimalPlaces: 0};
 }
 
-function makeUnitFormatter(language: string, params: FormatParams) {
-  const options: Intl.NumberFormatOptions = {
+function makeDataAmountFormatter(language: string, params: FormatParams) {
+  // We need to cast through `unknown` since `tsc` mistakenly omits the 'unit' field in
+  // `NumberFormatOptions`.
+  const options = {
     style: 'unit',
     unit: params.unit,
     unitDisplay: 'short',
     maximumFractionDigits: params.decimalPlaces
-  };
+  } as unknown as Intl.NumberFormatOptions;
   return new Intl.NumberFormat(language, options);
 }
 
 /**
  * Returns a localized amount of bytes as a separate value and unit.  This is useful for styling
- *  the unit and the value differently, or if you need them in separate nodes in the layout.
+ * the unit and the value differently, or if you need them in separate nodes in the layout.
+ *
+ * @param {Number} numBytes An amount of data to format.
+ * @param {string} language The ISO language code for the lanugage to translate to, eg 'en'.
+ * @returns {Object} with a .value field for the numeric part of the formatting and a .unit for the
+ *   unit part.
  */
 export function formatBytesParts(numBytes: number, language: string) {
   const params = getDataFormattingParams(numBytes);
-  const parts = makeUnitFormatter(language, params).formatToParts(params.value);
+  const parts = makeDataAmountFormatter(language, params).formatToParts(params.value);
+  // Cast away the type since `tsc` mistakenly omits the possibility for a 'unit' part
   const isUnit = (part: Intl.NumberFormatPart) => (part as {type: string}).type === 'unit';
   const unitText = parts.find(isUnit).value;
   return {
-    value: parts.filter((part) => !isUnit(part)).map(part => part.value).join('').trim(),
+    value: parts.filter((part: Intl.NumberFormatPart) => !isUnit(part))
+               .map((part: Intl.NumberFormatPart) => part.value)
+               .join('')
+               .trim(),
     // Special case for "byte", since we'd rather be consistent with "KB", etc.  "byte" is
     // presumably used due to the example in the Unicode standard,
     // http://unicode.org/reports/tr35/tr35-general.html#Example_Units
@@ -68,8 +84,14 @@ export function formatBytesParts(numBytes: number, language: string) {
   };
 }
 
-/** Returns a string representation of a number of bytes, translated into the given language */
-export function formatBytes(numBytes: number, language: string) {
+/**
+ * Returns a string representation of a number of bytes, translated into the given language
+ *
+ * @param {Number} numBytes An amount of data to format.
+ * @param {string} language The ISO language code for the lanugage to translate to, eg 'en'.
+ * @returns {string} The formatted data amount.
+ */
+export function formatBytes(numBytes: number, language: string): string {
   const params = getDataFormattingParams(numBytes);
-  return makeUnitFormatter(language, params).format(params.value);
+  return makeDataAmountFormatter(language, params).format(params.value);
 }

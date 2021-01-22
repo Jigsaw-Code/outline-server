@@ -276,7 +276,7 @@ Polymer({
         {type: Boolean, value: false},  // Whether the server supports data limits.
     showFeatureMetricsDisclaimer: {type: Boolean, value: false},
     isHostnameEditable: {type: Boolean, value: true},
-    serverCreationDate: {type: Object, value: null},
+    serverCreationDate: {type: Date, value: '1970-01-01T00:00:00.000Z'},
     serverLocation: {type: String, value: null},
     serverMonthlyCost: {type: String, value: null},
     serverMonthlyTransferLimit: {type: String, value: null},
@@ -366,13 +366,6 @@ Polymer({
   },
 
   _getTranslatedDate(language, date) {
-    // We can't use a default Date object -- it still shows up as null, I'm not sure the lifetime
-    // properties when you pass an object into Polymer.
-    // TODO(cohenjon) when this can migrate to Lit or Polymer, use a default Date at the Unix epoch
-    // in the constructor so we don't need this check.
-    if (!date) {
-      return '';
-    }
     return date.toLocaleString(language, {year: 'numeric', month: 'long', day: 'numeric'});
   }
 });

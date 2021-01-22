@@ -21,7 +21,7 @@ const baseConfig = makeConfig({
 const test_patterns = [
   '**/*.spec.ts',
   // We need to test data_formatting in a browser context
-  '../web_app/data_formatting.spec.ts'
+  './data_formatting.spec.ts'
 ];
 
 let preprocessors = {};

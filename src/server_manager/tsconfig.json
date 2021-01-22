@@ -10,10 +10,5 @@
     // FIXME: these tests fail with a runtime error because app.ts depends on
     // polymer, which targets the browser and uses ES6 imports.
     "web_app/app.spec.ts"
-  ],
-  "compilerOptions": {
-    // Each language level here adds additional features on top of the last -- see
-    // https://www.typescriptlang.org/tsconfig#lib for details.
-    "lib": ["DOM", "ES5", "ES2015", "ES2020"],
-  }
+  ]
 }

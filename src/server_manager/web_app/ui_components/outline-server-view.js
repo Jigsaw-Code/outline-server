@@ -407,7 +407,7 @@ export class ServerView extends DirMixin(PolymerElement) {
             </paper-listbox>
           </paper-menu-button>
         </div>
-        <div class="server-location" hidden\$="{{!isServerReachable}}">[[serverLocation]]</div>
+        <div class="server-location" hidden\$="{{!isServerReachable}}">[[_formatLocation(serverLocationId, language)]]</div>
       </div>
       <div class="tabs-container" hidden\$="{{!isServerReachable}}">
         <div class="tabs-spacer"></div>
@@ -548,7 +548,7 @@ export class ServerView extends DirMixin(PolymerElement) {
           </div>
         </div>
         <div name="settings">
-          <outline-server-settings id="serverSettings" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" access-key-data-limit="{{accessKeyDataLimit}}" is-access-key-data-limit-enabled="{{isAccessKeyDataLimitEnabled}}" supports-access-key-data-limit="[[supportsAccessKeyDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[_formatMonthlyCost(monthlyCost)]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" language="[[language]]" localize="[[localize]]">
+          <outline-server-settings id="serverSettings" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" access-key-data-limit="{{accessKeyDataLimit}}" is-access-key-data-limit-enabled="{{isAccessKeyDataLimitEnabled}}" supports-access-key-data-limit="[[supportsAccessKeyDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[_formatMonthlyCost(monthlyCost, language)]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]" is-server-managed="[[isServerManaged]]" server-location="[[_formatLocation(serverLocationId, language)]]" metrics-enabled="[[metricsEnabled]]" language="[[language]]" localize="[[localize]]">
           </outline-server-settings>
         </div>
       </iron-pages>
@@ -588,8 +588,8 @@ export class ServerView extends DirMixin(PolymerElement) {
         serverManagementApiUrl: String,
         serverPortForNewAccessKeys: Number,
         isAccessKeyPortEditable: {type: Boolean},
-        serverCreationDate: {type: Object, value: null},
-        serverLocation: String,
+        serverCreationDate: {type: Date},
+        serverLocationId: String,
         accessKeyDataLimit: {type: Object},
         isAccessKeyDataLimitEnabled: {type: Boolean},
         supportsAccessKeyDataLimit: {type: Boolean},
@@ -636,9 +636,8 @@ export class ServerView extends DirMixin(PolymerElement) {
       /** @type {number} */
       this.serverPortForNewAccessKeys = null;
       this.isAccessKeyPortEditable = false;
-      /** @type {Date} */
-      this.serverCreationDate = null;
-      this.serverLocation = '';
+      this.serverCreationDate = new Date(0);
+      this.serverLocationId = '';
       /** @type {DisplayDataAmount} */
       this.accessKeyDataLimit = null;
       this.isAccessKeyDataLimitEnabled = false;
@@ -678,7 +677,7 @@ export class ServerView extends DirMixin(PolymerElement) {
        * @type {-1|1}
        */
       this.accessKeySortDirection = 1;
-      this.language = '';
+      this.language = 'en';
       /** @type {(msgId: string, ...params: string[]) => string} */
       this.localize = null;
     }
@@ -817,12 +816,12 @@ export class ServerView extends DirMixin(PolymerElement) {
     return i18n.formatBytes(numBytes, language);
   }
 
-  _formatMonthlyCost(monthlyCost) {
+  _formatMonthlyCost(monthlyCost, language) {
     if (!monthlyCost) {
       return '';
     }
     return new Intl
-        .NumberFormat(this.language, {style: 'currency', currency: 'USD', currencyDisplay: 'code'})
+        .NumberFormat(language, {style: 'currency', currency: 'USD', currencyDisplay: 'code'})
         .format(monthlyCost);
   }
 
@@ -962,6 +961,14 @@ export class ServerView extends DirMixin(PolymerElement) {
     const used = this._formatBytesTransferred(accessKey.transferredBytes, this.language, '0');
     const total = this.accessKeyDataLimit.value + ' ' + this.accessKeyDataLimit.unit;
     return this.localize('data-limits-usage', 'used', used, 'total', total);
+  }
+
+  // Takes language so that the server location is recalculated on app language change.
+  _formatLocation(serverLocationId, UNUSED_language) {
+    if (!serverLocationId) {
+      return '';
+    }
+    return this.localize(`city-${serverLocationId}`);
   }
 }
 
