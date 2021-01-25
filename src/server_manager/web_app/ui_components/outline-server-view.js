@@ -1018,7 +1018,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       // We're in app startup
       return '';
     }
-    // TODOBEFOREPUSH we shouldn't need this
+
     const activeDataLimit = this._activeDataLimitForKey(accessKey);
     const used = this._formatBytesTransferred(accessKey.transferredBytes, '0');
     const total = this._formatDisplayDataLimit(activeDataLimit);
