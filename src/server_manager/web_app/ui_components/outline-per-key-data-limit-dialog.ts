@@ -32,20 +32,30 @@ import {css, customElement, html, internalProperty, LitElement, property} from '
 import {COMMON_STYLES} from './cloud-install-styles';
 import {DisplayAccessKey, DisplayDataAmount} from './outline-server-view';
 
-/*
-  This component is a floating window representing settings specific to individual access keys.
-  Its state is dynamically set when it's opened using the open() method instead of with any in-HTML
-  attributes.
-
-  This element maintains an invariant that the ui key data limit is never saved until it is
-  saved on the server.  This means we can use the state of the key to keep track of the initial
-  state of the element.
-*/
+/**
+ * A floating window representing settings specific to individual access keys. Its state is
+ * dynamically set when opened using the open() method instead of with any in-HTML attributes.
+ *
+ * This element relies on conceptual separation of the data limit as input by the user, the data
+ * limit of the UI key, and the actual data limit as saved on the server.  App controls the UI data
+ * limit and the request to the server, and the display key in the element is never itself changed.
+ */
 @customElement('outline-per-key-data-limit-dialog')
 export class OutlinePerKeyDataLimitDialog extends LitElement {
+  /** @member key The UI access key representing the key we're working on. */
   @internalProperty() key: DisplayAccessKey = null;
+  /** @member key The default data limit of the server we're working on, or null */
   @internalProperty() serverDefaultLimit: DisplayDataAmount = null;
+  /**
+   * @member showMenu Whether the menu for inputting the data limit should be shown. Controlled by
+   * the checkbox.
+   */
   @internalProperty() showMenu = false;
+  /**
+   * @member enableSave Whether the save button is enabled.  Controlled by the validator on the
+   * input.
+   */
+  @internalProperty() enableSave = false;
   @property({type: Function}) localize: Function;
 
   static get styles() {
@@ -188,7 +198,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
           </div>
         </div>
         <div id="buttonsSection">
-          <paper-button id="save" @tap=${this._sendSaveEvent}>${
+          <paper-button id="save" ?disabled=${!this.enableSave} @tap=${this._sendSaveEvent}>${
         this.localize('save')}</paper-button>
           <paper-button @tap=${this.close}>${this.localize('cancel')}</paper-button>
         </div>
@@ -235,7 +245,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   }
 
   private _setSaveButtonDisabledState() {
-    this._queryAs<PaperButtonElement>('#save').disabled = this._input.invalid;
+    this.enableSave = !this._input.invalid;
   }
 
   private _sendSaveEvent() {
