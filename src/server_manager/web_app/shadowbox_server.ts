@@ -39,7 +39,7 @@ export class ShadowboxServer implements server.Server {
   private managementApiAddress: string;
   private serverConfig: ServerConfig;
 
-  constructor(protected id: string) {}
+  constructor(private id: string) {}
 
   getId(): string {
     return this.id;
