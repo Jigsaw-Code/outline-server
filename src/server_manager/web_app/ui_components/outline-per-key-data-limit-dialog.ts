@@ -22,6 +22,7 @@ import '@polymer/paper-input/paper-input';
 import '@polymer/paper-item/paper-item';
 import '@polymer/paper-listbox/paper-listbox';
 
+import {PaperButtonElement} from '@polymer/paper-button/paper-button';
 import {PaperDialogElement} from '@polymer/paper-dialog/paper-dialog';
 import {PaperDropdownMenuElement} from '@polymer/paper-dropdown-menu/paper-dropdown-menu';
 import {PaperInputElement} from '@polymer/paper-input/paper-input';
@@ -44,7 +45,7 @@ import {DisplayAccessKey, DisplayDataAmount} from './outline-server-view';
 export class OutlinePerKeyDataLimitDialog extends LitElement {
   @internalProperty() key: DisplayAccessKey = null;
   @internalProperty() serverDefaultLimit: DisplayDataAmount = null;
-  @internalProperty() showCustomDataLimitDialog = false;
+  @internalProperty() showMenu = false;
   @property({type: Function}) localize: Function;
 
   static get styles() {
@@ -157,18 +158,20 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
           <h3>${this.localize('per-key-data-limit-dialog-title', 'keyName', keyName)}</h3>
         </div>
         <div id="menuSection">
-          <paper-checkbox ?checked=${this.showCustomDataLimitDialog} @tap=${
-        this._setCustomLimitTapped}>
+          <paper-checkbox ?checked=${this.showMenu} @tap=${this._setCustomLimitTapped}>
             ${this.localize('per-key-data-limit-dialog-set-custom')}
           </paper-checkbox>
-          <div id="menu" ?hidden=${!this.showCustomDataLimitDialog}>
+          <div id="menu" ?hidden=${!this.showMenu}>
             <paper-input
               id="dataLimitInput"
               label=${this.localize('data-limit')}
               always-float-label
-              allowed-pattern="[0-9]+"
+              allowed-pattern="[0-9\\.]"
+              pattern="[0-9]+(\\.[0-9]*)?"
+              auto-validate
               value=${this._initialValue()}
               size="7"
+              @keyup=${this._setSaveButtonDisabledState}
             >
             </paper-input>
             <paper-dropdown-menu id="unitsDropdown" noink>
@@ -193,13 +196,16 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     `;
   }
 
-
   private _queryAs<T extends HTMLElement>(selector: string): T {
     return this.shadowRoot.querySelector(selector) as T;
   }
 
+  private get _input(): PaperInputElement {
+    return this._queryAs<PaperInputElement>('#dataLimitInput');
+  }
+
   private _dataLimitValue() {
-    return Number(this._queryAs<PaperInputElement>('#dataLimitInput').value);
+    return Number(this._input.value);
   }
 
   private _dataLimitType() {
@@ -221,11 +227,15 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   }
 
   private async _setCustomLimitTapped() {
-    this.showCustomDataLimitDialog = !this.showCustomDataLimitDialog;
-    if (this.showCustomDataLimitDialog) {
+    this.showMenu = !this.showMenu;
+    if (this.showMenu) {
       await this.updateComplete;
-      this._queryAs<HTMLElement>('#dataLimitInput').focus();
+      this._input.focus();
     }
+  }
+
+  private _setSaveButtonDisabledState() {
+    this._queryAs<PaperButtonElement>('#save').disabled = this._input.invalid;
   }
 
   private _sendSaveEvent() {
@@ -240,9 +250,12 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     }));
   }
 
+  /**
+   * Calculates what type of change, or none at all, the user made.
+   */
   private _dataLimitChange(): Change {
     const keyLimit = this.key?.dataLimit;
-    if (this.showCustomDataLimitDialog) {
+    if (this.showMenu) {
       if (!keyLimit) {
         return Change.SET;
       }
@@ -259,41 +272,60 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     return Change.UNCHANGED;
   }
 
+  /**
+   * Returns true if the data limit was changed by the user.
+   */
   public dataLimitChanged() {
     return this._dataLimitChange() !== Change.UNCHANGED;
   }
 
+  /**
+   * The current data limit as input by the user, but not necessarily as saved.
+   */
   public inputDataLimit(): DisplayDataAmount {
-    return this.showCustomDataLimitDialog ?
-        {unit: this._dataLimitType(), value: this._dataLimitValue()} :
-        null;
+    return this.showMenu ? {unit: this._dataLimitType(), value: this._dataLimitValue()} : null;
   }
 
+  /**
+   * The ID of the key being worked on.  Useful for making API requests for the given key.
+   */
   public keyId() {
     return this.key.id;
   }
 
+  /**
+   * Opens the dialog to display data limit information about the given key
+   *
+   * @param accessKey - The access key row from outline-server-view representing the key to work on
+   * @param serverDefaultLimit - The default data limit for the server, or null if there is none
+   */
   public open(accessKey: DisplayAccessKey, serverDefaultLimit: DisplayDataAmount) {
     this.key = accessKey;
     this.serverDefaultLimit = serverDefaultLimit;
-    this.showCustomDataLimitDialog = !!accessKey.dataLimit;
+    this.showMenu = !!accessKey.dataLimit;
     this._queryAs<PaperDialogElement>('#container').open();
   }
 
+  /**
+   * Sets the input state of the dialog back to what it was when it was first opened.
+   */
   public reset() {
-    this.showCustomDataLimitDialog = !!this.key?.dataLimit;
+    this.showMenu = !!this.key?.dataLimit;
     // Manually reset the value to clear user input
-    this._queryAs<PaperInputElement>('#dataLimitInput').value = this._initialValue();
+    this._input.value = this._initialValue();
     this._queryAs<PaperListboxElement>('#unitsListbox').select(this._initialUnit());
   }
 
+  /**
+   * Closes the dialog.
+   */
   public close() {
     this._queryAs<PaperDialogElement>('#container').close();
   }
 }
 
 enum Change {
-  SET,
-  REMOVED,
-  UNCHANGED,
+  SET,        // A data limit was added
+  REMOVED,    // The data limit for the key was removed
+  UNCHANGED,  // No functional change happened.
 }

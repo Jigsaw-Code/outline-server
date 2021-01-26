@@ -1172,7 +1172,11 @@ export class App {
   private renderLocalizedDataLimitStrings() {
     // Hack to get Polymer to re-render the data transfer ratio strings when the language is
     // changed. This can't be called until the translation messages are successfully loaded.
+    // TODO once the Intl change is in put this code in the resource load handler
     const view = this.appRoot.getServerView(this.appRoot.selectedServerId);
+    if (!view) {
+      return;
+    }
     for (const key of view.accessKeyRows) {
       view.updateAccessKeyRow(key.id, {transferredBytes: key.transferredBytes});
     }
