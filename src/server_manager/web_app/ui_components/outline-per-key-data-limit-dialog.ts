@@ -325,7 +325,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
 }
 
 enum Change {
-  SET,        // A data limit was added
+  SET,        // A data limit was added or the existing data limit changed
   REMOVED,    // The data limit for the key was removed
   UNCHANGED,  // No functional change happened.
 }
