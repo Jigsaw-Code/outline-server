@@ -15,12 +15,11 @@
 import './ui_components/app-root.js';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
-import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
 
-import {App, LAST_DISPLAYED_SERVER_STORAGE_KEY, localServerId} from './app';
+import {App, LAST_DISPLAYED_SERVER_STORAGE_KEY} from './app';
 import {TokenManager} from './digitalocean_oauth';
-import {AppRoot} from './ui_components/app-root.js';
+import {AppRoot} from './ui_components/app-root';
 
 const TOKEN_WITH_NO_SERVERS = 'no-server-token';
 const TOKEN_WITH_ONE_SERVER = 'one-server-token';
@@ -61,7 +60,6 @@ describe('App', () => {
     await app.start();
     expect(appRoot.currentPage).toEqual('intro');
     await app.createManualServer(JSON.stringify({certSha256: 'cert', apiUrl: 'url'}));
-    await sleep(2000);  // TODO: refactor test to remove
     expect(appRoot.currentPage).toEqual('serverView');
   });
 
@@ -70,13 +68,11 @@ describe('App', () => {
     const tokenManager = new InMemoryDigitalOceanTokenManager();
     tokenManager.token = TOKEN_WITH_NO_SERVERS;
     const managedServerRepo = new FakeManagedServerRepository();
-    const managedServer = await managedServerRepo.createServer();
+    const managedServer = await managedServerRepo.createServer('fake-managed-server-id');
     managedServer.apiUrl = 'fake-managed-server-api-url';
     const manualServerRepo = new FakeManualServerRepository();
-    const manualServer1 = await manualServerRepo.addServer(
-        {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-1'});
-    const manualServer2 = await manualServerRepo.addServer(
-        {certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
+    await manualServerRepo.addServer({certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-1'});
+    await manualServerRepo.addServer({certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
 
     const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
     expect(appRoot.serverList.length).toEqual(0);
@@ -92,7 +88,7 @@ describe('App', () => {
     expect(serverList.length).toEqual(manualServers.length + managedServers.length);
     expect(serverList).toContain(jasmine.objectContaining({id: 'fake-manual-server-api-url-1'}));
     expect(serverList).toContain(jasmine.objectContaining({id: 'fake-manual-server-api-url-2'}));
-    expect(serverList).toContain(jasmine.objectContaining({id: 'fake-host-id'}));
+    expect(serverList).toContain(jasmine.objectContaining({id: 'fake-managed-server-id'}));
   });
 
   it('initially shows the last selected server', async () => {
@@ -134,7 +130,7 @@ describe('App', () => {
        const server = await managedSeverRepository.createServer();
        const app = createTestApp(appRoot, tokenManager, null, managedSeverRepository);
        // Sets last displayed server.
-       localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, localServerId(server));
+       localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, server.getId());
        await app.start();
        expect(appRoot.currentPage).toEqual('serverView');
        expect(appRoot.getServerView(appRoot.selectedServerId).selectedPage).toEqual('progressView');
@@ -167,11 +163,14 @@ function createTestApp(
 
 class FakeServer implements server.Server {
   private name = 'serverName';
+  private metricsId: string;
   private metricsEnabled = false;
-  private id: string;
   apiUrl: string;
-  constructor() {
-    this.id = Math.random().toString();
+  constructor(protected id: string) {
+    this.metricsId = Math.random().toString();
+  }
+  getId() {
+    return this.id;
   }
   getName() {
     return this.name;
@@ -193,8 +192,8 @@ class FakeServer implements server.Server {
     this.metricsEnabled = metricsEnabled;
     return Promise.resolve();
   }
-  getServerId() {
-    return this.id;
+  getMetricsId() {
+    return this.metricsId;
   }
   isHealthy() {
     return Promise.resolve(true);
@@ -242,7 +241,7 @@ class FakeServer implements server.Server {
 
 class FakeManualServer extends FakeServer implements server.ManualServer {
   constructor(public manualServerConfig: server.ManualServerConfig) {
-    super();
+    super(manualServerConfig.apiUrl);
   }
   getManagementApiUrl() {
     return this.manualServerConfig.apiUrl;
@@ -314,8 +313,8 @@ class FakeDigitalOceanSession implements digitalocean_api.DigitalOceanSession {
 }
 
 class FakeManagedServer extends FakeServer implements server.ManagedServer {
-  constructor(private isInstalled = true) {
-    super();
+  constructor(id: string, private isInstalled = true) {
+    super(id);
   }
   waitOnInstall() {
     // Return a promise which does not yet fulfill, to simulate long
@@ -344,8 +343,8 @@ class FakeManagedServerRepository implements server.ManagedServerRepository {
   getRegionMap() {
     return Promise.resolve({'fake': ['fake1', 'fake2']});
   }
-  createServer() {
-    const newServer = new FakeManagedServer(false);
+  createServer(id = Math.random().toString()) {
+    const newServer = new FakeManagedServer(id, false);
     this.servers.push(newServer);
     return Promise.resolve(newServer);
   }
