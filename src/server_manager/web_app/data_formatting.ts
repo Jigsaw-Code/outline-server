@@ -26,6 +26,7 @@ const GIGABYTE = 10 ** 9;
 const MEGABYTE = 10 ** 6;
 const KILOBYTE = 10 ** 3;
 
+const inWebApp = typeof window !== 'undefined' && typeof window.document !== 'undefined';
 interface FormatParams {
   value: number;
   unit: 'terabyte'|'gigabyte'|'megabyte'|'kilobyte'|'byte';
@@ -57,16 +58,22 @@ function makeDataAmountFormatter(language: string, params: FormatParams) {
   return new Intl.NumberFormat(language, options);
 }
 
+interface DataAmountParts {
+  value: string;
+  unit: string;
+}
+
 /**
  * Returns a localized amount of bytes as a separate value and unit.  This is useful for styling
  * the unit and the value differently, or if you need them in separate nodes in the layout.
  *
- * @param {Number} numBytes An amount of data to format.
+ * @param {number} numBytes An amount of data to format.
  * @param {string} language The ISO language code for the lanugage to translate to, eg 'en'.
- * @returns {Object} with a .value field for the numeric part of the formatting and a .unit for the
- *   unit part.
  */
-export function formatBytesParts(numBytes: number, language: string) {
+export function formatBytesParts(numBytes: number, language: string): DataAmountParts {
+  if (!inWebApp) {
+    throw new Error('formatBytesParts only works in web app code. Node usage isn\'t supported.');
+  }
   const params = getDataFormattingParams(numBytes);
   const parts = makeDataAmountFormatter(language, params).formatToParts(params.value);
   // Cast away the type since `tsc` mistakenly omits the possibility for a 'unit' part
@@ -92,6 +99,9 @@ export function formatBytesParts(numBytes: number, language: string) {
  * @returns {string} The formatted data amount.
  */
 export function formatBytes(numBytes: number, language: string): string {
+  if (!inWebApp) {
+    throw new Error('formatBytes only works in web app code. Node usage isn\'t supported.');
+  }
   const params = getDataFormattingParams(numBytes);
   return makeDataAmountFormatter(language, params).format(params.value);
 }

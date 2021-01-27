@@ -16,14 +16,17 @@
 
 import * as i18n from './data_formatting';
 
-// Jasmine with Node only supports 'en'
-if (Intl.NumberFormat.supportedLocalesOf(['en', 'fr', 'fa', 'es', 'ru']).length === 5) {
-  describe('getFormattedDataAmountParts', () => {
+describe('formatBytesParts', () => {
+  if (process?.versions?.node) {
+    it('doesn\'t run on Node', () => {
+      expect(() => i18n.formatBytesParts(0, 'en')).toThrow();
+    });
+  } else {
     it('extracts the unit string and value separately', () => {
       const english = i18n.formatBytesParts(0, 'en');
       expect(english.unit).toEqual('B');
       expect(english.value).toEqual('0');
-
+      
       const spanish = i18n.formatBytesParts(2, 'es');
       expect(spanish.unit).toEqual('B');
       expect(spanish.value).toEqual('2');
@@ -40,9 +43,15 @@ if (Intl.NumberFormat.supportedLocalesOf(['en', 'fr', 'fa', 'es', 'ru']).length 
       expect(farsi.unit).toEqual('مگابایت');
       expect(farsi.value).toEqual('۱۳۳٫۵');
     });
-  });
+  }
+});
 
-  describe('formatBytes', () => {
+describe('formatBytes', () => {
+  if (process?.versions?.node) {
+    it('doesn\'t run on Node', () => {
+      expect(() => i18n.formatBytes(0, 'en')).toThrow();
+    });
+  } else {
     it('Formats data amounts', () => {
       expect(i18n.formatBytes(10 * 10 ** 9, 'en')).toEqual('10 GB');
       expect(i18n.formatBytes(1.5 * 10 ** 6, 'es')).toEqual('1,5 MB');
@@ -52,5 +61,5 @@ if (Intl.NumberFormat.supportedLocalesOf(['en', 'fr', 'fa', 'es', 'ru']).length 
     it('Omits trailing zero decimal digits', () => {
       expect(i18n.formatBytes(10 ** 12, 'en')).toEqual('1 TB');
     });
-  });
-}
+  }
+});
