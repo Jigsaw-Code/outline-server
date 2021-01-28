@@ -54,15 +54,26 @@
     "request": "^2.87.0",
     "web-animations-js": "^2.3.1"
   },
-  "comments": [
-    "@types/node can't have a major version update due to typing changes in node 13.  Electron depends on ^12 and we get 13, which breaks us",
-    "Pin electron version (i.e. 7.0.1, not ~7.0.0) as a workaround for issue https://github.com/electron-userland/electron-builder/issues/4157",
-    "The `resolutions` was created by polymer-modulizer. We should check if we still need them."
-  ],
+  "comments": {
+    "config": {
+      "PUPPETEER_CHROMIUM_REVISION": [
+        "The Chromium revision number used by Karma.  This should always be the revision number of",
+        "the bundled Chromium in our version of Electron.  Whenever upgrading Electron, run the", 
+        "server_manager tests.  You'll get a failure that looks like <Expected '812852' to equal '693954>.",
+        "Set PUPPETEER_CHROMIUM_REVISION to the first of those numbers to get the correct revision",
+        "and `yarn run clean && yarn` to re-install puppeteer, causing it to download the new",
+        "Chromium version."
+      ]
+    }
+  },
+  "config": {
+    "PUPPETEER_CHROMIUM_REVISION": "693954"
+  },
   "devDependencies": {
     "@types/node": "~12.0.0",
     "@types/node-forge": "^0.6.9",
     "@types/polymer": "^1.2.9",
+    "@types/puppeteer": "^5.4.2",
     "@types/request": "^2.47.1",
     "@types/semver": "^5.5.0",
     "copy-webpack-plugin": "^5.1.1",
@@ -71,6 +82,7 @@
     "electron-builder": "~22.4.0",
     "electron-icon-maker": "^0.0.4",
     "electron-notarize": "^0.2.1",
+    "electron-to-chromium": "^1.3.648",
     "gulp": "^4.0.0",
     "gulp-posthtml": "^3.0.4",
     "gulp-replace": "^1.0.0",
@@ -85,6 +97,7 @@
     "posthtml-postcss": "^0.2.6",
     "prettier": "1.19.1",
     "pretty-quick": "2.0.1",
+    "puppeteer": "^5.5.0",
     "style-loader": "^1.2.1",
     "ts-loader": "^7.0.1",
     "webpack": "^4.43.0",

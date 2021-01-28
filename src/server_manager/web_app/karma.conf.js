@@ -13,6 +13,7 @@
 // limitations under the License.
 
 const {makeConfig} = require('../base.webpack.js');
+process.env.CHROMIUM_BIN = require('puppeteer').executablePath();
 
 const baseConfig = makeConfig({
   defaultMode: 'development'
@@ -30,7 +31,7 @@ module.exports = function(config) {
     reporters: ['progress'],
     colors: true,
     logLevel: config.LOG_INFO,
-    browsers: ['ChromeHeadless'],
+    browsers: ['ChromiumHeadless'],
     singleRun: true,
     concurrency: Infinity,
     webpack: {
