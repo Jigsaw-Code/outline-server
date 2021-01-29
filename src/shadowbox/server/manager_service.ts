@@ -44,8 +44,7 @@ function accessKeyToApiJson(accessKey: AccessKey) {
       port: accessKey.proxyParams.portNumber,
       method: accessKey.proxyParams.encryptionMethod,
       password: accessKey.proxyParams.password,
-      outline: 1,
-      dataLimit: accessKey.dataLimit
+      outline: 1
     }))
   };
 }

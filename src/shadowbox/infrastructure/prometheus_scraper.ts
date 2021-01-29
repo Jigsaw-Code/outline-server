@@ -80,7 +80,7 @@ async function writePrometheusConfigToDisk(configFilename: string, configJson: {
   await mkdirp.sync(path.dirname(configFilename));
   const ymlTxt = jsyaml.safeDump(configJson, {'sortKeys': true});
   // Write the file asynchronously to prevent blocking the node thread.
-  await new Promise((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     fs.writeFile(configFilename, ymlTxt, 'utf-8', (err) => {
       if (err) {
         reject(err);
