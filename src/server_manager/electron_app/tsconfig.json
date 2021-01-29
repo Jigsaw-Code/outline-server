@@ -8,8 +8,7 @@
     "lib": [
       "dom",
       "es2016"
-    ],
-    "resolveJsonModule": true
+    ]
   },
   "include": [
     "*.ts",

@@ -17,7 +17,7 @@ import {electronToChromium} from 'electron-to-chromium';
 import {version as electronVersion} from 'electron/package.json';
 import fetch from 'node-fetch';
 
-import {config} from '../package.json';
+import {config} from './package.json';
 
 describe('Karma', () => {
   it('uses the correct Chromium version', async (done) => {
