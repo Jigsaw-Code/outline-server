@@ -125,6 +125,10 @@
     "message": "Data Limit",
     "Description": "This string appears in various places related to the data transfer limit for a single access key."
   },
+  "data_limit_per_key": {
+    "message": "Data limit per key",
+    "description": "This string appears as a label to an input to set the default access key data limit for a server."
+  }, 
   "data_limits": {
     "message": "Data limits",
     "description": "This string appears as a title in a section to configure access key data transfer limits."

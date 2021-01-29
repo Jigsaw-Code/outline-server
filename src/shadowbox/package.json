@@ -13,7 +13,7 @@
     "ShadowsocksConfig": "Jigsaw-Code/outline-shadowsocksconfig#^v0.0.9",
     "ip-regex": "^4.1.0",
     "js-yaml": "^3.12.0",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "prom-client": "^11.1.3",
     "randomstring": "^1.1.5",
     "restify": "^8.5.1",
