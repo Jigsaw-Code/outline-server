@@ -8,5 +8,6 @@
     "sourceMap": true,
     "experimentalDecorators":true,
     "allowJs": true,
+    "resolveJsonModule": true,
   }
 }
