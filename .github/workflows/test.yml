@@ -4,7 +4,7 @@ on: push
 
 jobs:
   manager:
-    name: Build and Test Manager
+    name: Build and Test
     
     runs-on: ${{ matrix.os }}
     strategy:
@@ -49,51 +49,19 @@ jobs:
           yarn do server_manager/web_app/build
           yarn do server_manager/test
 
-  linux_only:
-    name: Build and Test Shadowbox, Metrics Server, and Sentry Webhook
-
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v1
-
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v1
-        with:
-          node-version: 12
-
-      - name: Show Environment Info
-        run: yarn -v
-
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-
-      - name: Check yarn cache
-        uses: actions/cache@v2
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-      
-      - name: Install dependencies
-        run: yarn --prefer-offline
-
-      - name: Lint
-        run: yarn lint
-      
       - name: Shadowbox
+        if: runner.os == 'Linux'
         run: |
           yarn do shadowbox/server/build
           yarn do shadowbox/test
           yarn do shadowbox/integration_test/run
       
       - name: Metrics Server
+        if: runner.os == 'Linux'
         run: |
           yarn do metrics_server/build
           yarn do metrics_server/test
       
       - name:  Sentry Webhook
+        if: runner.os == 'Linux'
         run: yarn do sentry_webhook/build
