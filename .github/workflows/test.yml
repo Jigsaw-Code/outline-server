@@ -5,11 +5,12 @@ on: push
 jobs:
   manager:
     name: Build and Test Manager
+    
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
-    runs-on: {{ matrix.os }}
     
     # Ideally we would run all the build steps in parallel.  We may be able to drastically reduce
     # job startup overhead by caching the master branch and running 'git pull' as opposed to a full
@@ -21,7 +22,7 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: 12
 
       - name: Show Environment Info
         run: yarn -v
@@ -35,8 +36,7 @@ jobs:
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+          restore-keys: ${{ runner.os }}-yarn-
       
       - name: Install dependencies
         run: yarn --prefer-offline
@@ -78,7 +78,7 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: 12
 
       - name: Show Environment Info
         run: yarn -v
