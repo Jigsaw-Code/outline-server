@@ -25,8 +25,6 @@ before_install:
 stages:
   - name: "Server Daily Release"
     if: type = cron
-  - name: Test
-    if: type != cron
   - name: "Deploy Server"
     if: tag =~ ^server-
   - name: "Manager Release"
@@ -39,37 +37,6 @@ jobs:
       script:
         - RELEASE_NAME=server-$(date -I)
         - curl --data '{"tag_name":"'$RELEASE_NAME'","name":"'$RELEASE_NAME'","prerelease":true}' https://api.github.com/repos/Jigsaw-Code/outline-server/releases?access_token=$CI_USER_TOKEN
-
-    # Ideally, we would split this stage in some way, e.g. by component or by
-    # build/test commands, to make it clearer in the Travis UI exactly which
-    # command failed. However, since each stage incurs a significantly start-up
-    # cost, we combine test and build commands for all components into one fast
-    # stage.
-    - stage: Test
-      name: Unit Tests
-      script:
-        - yarn lint
-        - yarn do metrics_server/build
-        - yarn do metrics_server/test
-        - yarn do sentry_webhook/build
-        - yarn do shadowbox/server/build
-        - yarn do shadowbox/test
-        - yarn do server_manager/electron_app/build
-        - yarn do server_manager/web_app/build
-        - yarn do server_manager/test
-
-    - stage: Test
-      name: Server Integration Test
-      sudo: required
-      services: docker
-      script:
-        # https://docs.travis-ci.com/user/docker/
-        - |
-          sudo rm -f /usr/local/bin/docker-compose
-          curl -L https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m) > docker-compose
-          chmod +x docker-compose
-          sudo mv docker-compose /usr/local/bin
-        - yarn do shadowbox/docker/build && cd src/shadowbox/integration_test && ./test.sh
 
     - stage: "Deploy Server"
       name: Server Docker Image
