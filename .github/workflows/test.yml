@@ -3,9 +3,13 @@ name: Build and Test
 on: push
 
 jobs:
-  build-and-test:
-    name: Build and Test
-    runs-on: ubuntu-latest
+  manager:
+    name: Build and Test Manager
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    runs-on: {{ matrix.os }}
     
     # Ideally we would run all the build steps in parallel.  We may be able to drastically reduce
     # job startup overhead by caching the master branch and running 'git pull' as opposed to a full
@@ -50,6 +54,58 @@ jobs:
           yarn do server_manager/electron_app/build
           yarn do server_manager/web_app/build
           yarn do server_manager/test
+      
+      - name: Metrics Server
+        run: |
+          yarn do metrics_server/build
+          yarn do metrics_server/test
+      
+      - name:  Sentry Webhook
+        run: yarn do sentry_webhook/build
+
+  linux_only:
+    name: Build and Test Shadowbox, Metrics Server, and Sentry Webhook
+
+    runs-on: ubuntu-latest
+    
+    # Ideally we would run all the build steps in parallel.  We may be able to drastically reduce
+    # job startup overhead by caching the master branch and running 'git pull' as opposed to a full
+    # clone on every CI run.
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v1
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 10
+
+      - name: Show Environment Info
+        run: yarn -v
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - name: Check yarn cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      
+      - name: Install dependencies
+        run: yarn --prefer-offline
+
+      - name: Lint
+        run: yarn lint
+      
+      - name: Shadowbox
+        run: |
+          yarn do shadowbox/server/build
+          yarn do shadowbox/test
+          yarn do shadowbox/integration_test/run
       
       - name: Metrics Server
         run: |
