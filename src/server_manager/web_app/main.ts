@@ -115,6 +115,7 @@ document.addEventListener('WebComponentsReady', () => {
   // NOTE: this cast is safe and allows us to leverage Polymer typings since we haven't migrated to
   // Polymer 3, which adds typescript support.
   const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
+  appRoot.language = language.string();
 
   const filteredLanguageDefs = Object.values(SUPPORTED_LANGUAGES);
   appRoot.supportedLanguages = sortLanguageDefsByName(filteredLanguageDefs);
