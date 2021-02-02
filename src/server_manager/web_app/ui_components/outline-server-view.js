@@ -29,6 +29,7 @@ import './cloud-install-styles.js';
 import './outline-iconset.js';
 import './outline-help-bubble.js';
 import './outline-metrics-option-dialog.js';
+import './outline-server-progress-step.js';
 import './outline-server-settings.js';
 import './outline-share-dialog.js';
 import './outline-sort-span.js';
@@ -82,8 +83,11 @@ export class ServerView extends DirMixin(PolymerElement) {
       .container {
         display: flex;
         flex-direction: column;
-        padding: 24px;
         color: var(--light-gray);
+      }
+      #managementView,
+      #unreachableView {
+        padding: 24px;
       }
       .tabs-container {
         display: flex;
@@ -392,33 +396,41 @@ export class ServerView extends DirMixin(PolymerElement) {
     </style>
 
     <div class="container">
+      <iron-pages id="pages" attr-for-selected="id" selected="[[selectedPage]]" on-selected-changed="_selectedPageChanged">
+        <outline-server-progress-step id="progressView" server-name="[[serverName]]" localize="[[localize]]"></outline-server-progress-step>
+        <div id="unreachableView">${this.unreachableViewTemplate}</div>
+        <div id="managementView">${this.managementViewTemplate}</div>
+      </iron-pages>
+    </div>
+
+    <outline-help-bubble id="getConnectedHelpBubble" vertical-align="bottom" horizontal-align="right">
+      <img src="images/connect-tip-2x.png">
+      <h3>[[localize('server-help-connection-title')]]</h3>
+      <p>[[localize('server-help-connection-description')]]</p>
+      <paper-button on-tap="_closeGetConnectedHelpBubble">[[localize('server-help-connection-ok')]]</paper-button>
+    </outline-help-bubble>
+    <outline-help-bubble id="addAccessKeyHelpBubble" vertical-align="bottom" horizontal-align="left">
+      <img src="images/key-tip-2x.png">
+      <h3>[[localize('server-help-access-key-title')]]</h3>
+      <p>[[localize('server-help-access-key-description')]]</p>
+      <paper-button on-tap="_closeAddAccessKeyHelpBubble">[[localize('server-help-access-key-next')]]</paper-button>
+    </outline-help-bubble>
+    <outline-help-bubble id="dataLimitsHelpBubble" vertical-align="top" horizontal-align="right">
+      <h3>[[localize('data-limits-dialog-title')]]</h3>
+      <p>[[localize('data-limits-dialog-text')]]</p>
+      <paper-button on-tap="_closeDataLimitsHelpBubble">[[localize('ok')]]</paper-button>
+    </outline-help-bubble>
+    `;
+  }
+
+  static get unreachableViewTemplate() {
+    return html`
       <div class="server-header">
         <div class="server-name">
           <h3>[[serverName]]</h3>
-          <paper-menu-button horizontal-align="right" class="overflow-menu flex-1" hidden\$="{{!isServerReachable}}" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
-            <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
-            <paper-listbox slot="dropdown-content">
-              <paper-item hidden\$="[[!isServerManaged]]" on-tap="destroyServer">
-                <iron-icon icon="icons:remove-circle-outline"></iron-icon>[[localize('server-destroy')]]
-              </paper-item>
-              <paper-item hidden\$="[[isServerManaged]]" on-tap="removeServer">
-                <iron-icon icon="icons:remove-circle-outline"></iron-icon>[[localize('server-remove')]]
-              </paper-item>
-            </paper-listbox>
-          </paper-menu-button>
         </div>
-        <div class="server-location" hidden\$="{{!isServerReachable}}">[[_formatLocation(serverLocationId, language)]]</div>
       </div>
-      <div class="tabs-container" hidden\$="{{!isServerReachable}}">
-        <div class="tabs-spacer"></div>
-        <paper-tabs selected="{{selectedTab}}" attr-for-selected="name" noink="">
-          <paper-tab name="connections">[[localize('server-connections')]]</paper-tab>
-          <paper-tab name="settings" id="settingsTab">[[localize('server-settings')]]</paper-tab>
-        </paper-tabs>
-      </div>
-
-      <!-- Unreachable server display -->
-      <div class="card-section unreachable-server" hidden\$="{{isServerReachable}}">
+      <div class="card-section unreachable-server"">
         <img class="server-img" src="images/server-unreachable.png">
         <h3>[[localize('server-unreachable')]]</h3>
         <p></p>
@@ -430,9 +442,36 @@ export class ServerView extends DirMixin(PolymerElement) {
           <paper-button on-tap="destroyServer" hidden\$="{{!isServerManaged}}">[[localize('server-destroy')]]</paper-button>
           <paper-button on-tap="retryDisplayingServer" class="try-again-btn">[[localize('retry')]]</paper-button>
         </div>
-      </div>
+      </div>`;
+  }
 
-      <iron-pages selected="{{selectedTab}}" attr-for-selected="name" hidden\$="{{!isServerReachable}}">
+  static get managementViewTemplate() {
+    return html`
+      <div class="server-header">
+        <div class="server-name">
+          <h3>[[serverName]]</h3>
+          <paper-menu-button horizontal-align="right" class="overflow-menu flex-1" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
+            <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
+            <paper-listbox slot="dropdown-content">
+              <paper-item hidden\$="[[!isServerManaged]]" on-tap="destroyServer">
+                <iron-icon icon="icons:remove-circle-outline"></iron-icon>[[localize('server-destroy')]]
+              </paper-item>
+              <paper-item hidden\$="[[isServerManaged]]" on-tap="removeServer">
+                <iron-icon icon="icons:remove-circle-outline"></iron-icon>[[localize('server-remove')]]
+              </paper-item>
+            </paper-listbox>
+          </paper-menu-button>
+        </div>
+        <div class="server-location">[[_formatLocation(serverLocationId, language)]]</div>
+      </div>
+      <div class="tabs-container">
+        <div class="tabs-spacer"></div>
+        <paper-tabs selected="{{selectedTab}}" attr-for-selected="name" noink="">
+          <paper-tab name="connections">[[localize('server-connections')]]</paper-tab>
+          <paper-tab name="settings" id="settingsTab">[[localize('server-settings')]]</paper-tab>
+        </paper-tabs>
+      </div> 
+      <iron-pages selected="[[selectedTab]]" attr-for-selected="name" on-selected-changed="_selectedTabChanged">
         <div name="connections">
           <div class="stats-container">
             <div class="stats-card transfer-stats card-section">
@@ -551,28 +590,8 @@ export class ServerView extends DirMixin(PolymerElement) {
           <outline-server-settings id="serverSettings" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" access-key-data-limit="{{accessKeyDataLimit}}" is-access-key-data-limit-enabled="{{isAccessKeyDataLimitEnabled}}" supports-access-key-data-limit="[[supportsAccessKeyDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[_formatMonthlyCost(monthlyCost, language)]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]" is-server-managed="[[isServerManaged]]" server-location="[[_formatLocation(serverLocationId, language)]]" metrics-enabled="[[metricsEnabled]]" language="[[language]]" localize="[[localize]]">
           </outline-server-settings>
         </div>
-      </iron-pages>
-    </div>
-
-    <outline-help-bubble id="getConnectedHelpBubble" vertical-align="bottom" horizontal-align="right">
-      <img src="images/connect-tip-2x.png">
-      <h3>[[localize('server-help-connection-title')]]</h3>
-      <p>[[localize('server-help-connection-description')]]</p>
-      <paper-button on-tap="closeGetConnectedHelpBubble">[[localize('server-help-connection-ok')]]</paper-button>
-    </outline-help-bubble>
-    <outline-help-bubble id="addAccessKeyHelpBubble" vertical-align="bottom" horizontal-align="left">
-      <img src="images/key-tip-2x.png">
-      <h3>[[localize('server-help-access-key-title')]]</h3>
-      <p>[[localize('server-help-access-key-description')]]</p>
-      <paper-button on-tap="closeAddAccessKeyHelpBubble">[[localize('server-help-access-key-next')]]</paper-button>
-    </outline-help-bubble>
-    <outline-help-bubble id="dataLimitsHelpBubble" vertical-align="top" horizontal-align="right">
-      <h3>[[localize('data-limits-dialog-title')]]</h3>
-      <p>[[localize('data-limits-dialog-text')]]</p>
-      <paper-button on-tap="closeDataLimitsHelpBubble">[[localize('ok')]]</paper-button>
-    </outline-help-bubble>
-    `;
-    }
+      </iron-pages>`;
+  }
 
     static get is() {
       return 'outline-server-view';
@@ -604,7 +623,6 @@ export class ServerView extends DirMixin(PolymerElement) {
         metricsEnabled: Boolean,
         monthlyOutboundTransferBytes: {type: Number},
         monthlyCost: {type: Number},
-        selectedTab: {type: String},
         managedServerUtilzationPercentage: {
           type: Number,
           computed:
@@ -614,6 +632,8 @@ export class ServerView extends DirMixin(PolymerElement) {
         accessKeySortDirection: {type: Number},
         language: {type: String},
         localize: {type: Function, readonly: true},
+        selectedPage: {type: String},
+        selectedTab: {type: String},
       };
     }
 
@@ -621,7 +641,6 @@ export class ServerView extends DirMixin(PolymerElement) {
       return [
         '_accessKeysAddedOrRemoved(accessKeyRows.splices)',
         '_myConnectionChanged(myConnection)',
-        '_selectedTabChanged(selectedTab)',
       ];
     }
 
@@ -670,7 +689,6 @@ export class ServerView extends DirMixin(PolymerElement) {
       //   https://www.polymer-project.org/1.0/docs/devguide/data-binding.html
       this.monthlyOutboundTransferBytes = 0;
       this.monthlyCost = 0;
-      this.selectedTab = 'connections';
       this.accessKeySortBy = 'name';
       /**
        * The direction to sort: 1 == ascending, -1 == descending
@@ -680,6 +698,9 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.language = 'en';
       /** @type {(msgId: string, ...params: string[]) => string} */
       this.localize = null;
+      /** @type {'progressView'|'unreachableView'|'managementView'} */
+      this.selectedPage = 'managementView';
+      this.selectedTab = 'connections';
     }
 
     /**
@@ -702,6 +723,53 @@ export class ServerView extends DirMixin(PolymerElement) {
         return;
       }
     }
+  }
+
+  setServerTransferredData(totalBytes) {
+    this.totalInboundBytes = totalBytes;
+  }
+
+  updateAccessKeyRow(accessKeyId, fields) {
+    let newAccessKeyRow;
+    if (accessKeyId === MY_CONNECTION_USER_ID) {
+      newAccessKeyRow = Object.assign({}, this.get('myConnection'), fields);
+      this.set('myConnection', newAccessKeyRow);
+    }
+    for (let ui in this.accessKeyRows) {
+      if (this.accessKeyRows[ui].id === accessKeyId) {
+        newAccessKeyRow = Object.assign({}, this.get(['accessKeyRows', ui]), fields);
+        this.set(['accessKeyRows', ui], newAccessKeyRow);
+        return;
+      }
+    }
+  }
+
+  // Help bubbles should be shown after this outline-server-view
+  // is on the screen (e.g. selected in iron-pages). If help bubbles
+  // are initialized before this point, setPosition will not work and
+  // they will appear in the top left of the view.
+  showGetConnectedHelpBubble() {
+    return this._showHelpBubble('getConnectedHelpBubble', 'managerRow');
+  }
+
+  showAddAccessKeyHelpBubble() {
+    return this._showHelpBubble('addAccessKeyHelpBubble', 'addAccessKeyRow', 'down', 'left');
+  }
+
+  showDataLimitsHelpBubble() {
+    return this._showHelpBubble('dataLimitsHelpBubble', 'settingsTab', 'up', 'right');
+  }
+
+  _closeAddAccessKeyHelpBubble() {
+    this.$.addAccessKeyHelpBubble.hide();
+  }
+
+  _closeGetConnectedHelpBubble() {
+    this.$.getConnectedHelpBubble.hide();
+  }
+
+  _closeDataLimitsHelpBubble() {
+    this.$.dataLimitsHelpBubble.hide();
   }
 
   _handleAddAccessKeyPressed() {
@@ -855,41 +923,21 @@ export class ServerView extends DirMixin(PolymerElement) {
     }
   }
 
-  _selectedTabChanged(selectedTab) {
-    if (this.selectedTab === 'settings') {
-      this.closeAddAccessKeyHelpBubble();
-      this.closeGetConnectedHelpBubble();
-      this.closeDataLimitsHelpBubble();
-      this.$.serverSettings.setServerName(this.serverName);
+  _selectedPageChanged() {
+    if (this.selectedPage === 'progressView') {
+      this.$.progressView.startAnimation();
+    } else {
+      this.$.progressView.stopAnimation();
     }
   }
 
-  // Help bubbles should be shown after this outline-server-view
-  // is on the screen (e.g. selected in iron-pages). If help bubbles
-  // are initialized before this point, setPosition will not work and
-  // they will appear in the top left of the view.
-  showGetConnectedHelpBubble() {
-    return this._showHelpBubble('getConnectedHelpBubble', 'managerRow');
-  }
-
-  showAddAccessKeyHelpBubble() {
-    return this._showHelpBubble('addAccessKeyHelpBubble', 'addAccessKeyRow', 'down', 'left');
-  }
-
-  showDataLimitsHelpBubble() {
-    return this._showHelpBubble('dataLimitsHelpBubble', 'settingsTab', 'up', 'right');
-  }
-
-  closeAddAccessKeyHelpBubble() {
-    this.$.addAccessKeyHelpBubble.hide();
-  }
-
-  closeGetConnectedHelpBubble() {
-    this.$.getConnectedHelpBubble.hide();
-  }
-
-  closeDataLimitsHelpBubble() {
-    this.$.dataLimitsHelpBubble.hide();
+  _selectedTabChanged() {
+    if (this.selectedTab === 'settings') {
+      this._closeAddAccessKeyHelpBubble();
+      this._closeGetConnectedHelpBubble();
+      this._closeDataLimitsHelpBubble();
+      this.$.serverSettings.setServerName(this.serverName);
+    }
   }
 
   _showHelpBubble(

@@ -39,7 +39,11 @@ export class ShadowboxServer implements server.Server {
   private managementApiAddress: string;
   private serverConfig: ServerConfig;
 
-  constructor() {}
+  constructor(private id: string) {}
+
+  getId(): string {
+    return this.id;
+  }
 
   listAccessKeys(): Promise<server.AccessKey[]> {
     console.info('Listing access keys');
@@ -136,7 +140,7 @@ export class ShadowboxServer implements server.Server {
     });
   }
 
-  getServerId(): string {
+  getMetricsId(): string {
     return this.serverConfig.serverId;
   }
 
