@@ -2,10 +2,6 @@ name: Build and Test
 
 on: push
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
   manager:
     name: Build and Test Manager
@@ -13,7 +9,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        # TODO run on Windows as well
+        os: [ubuntu-latest, macos-latest]
       # Don't cancel jobs on other platforms if one fails
       fail-fast: false
       
