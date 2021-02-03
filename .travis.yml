@@ -38,6 +38,21 @@ jobs:
         - RELEASE_NAME=server-$(date -I)
         - curl --data '{"tag_name":"'$RELEASE_NAME'","name":"'$RELEASE_NAME'","prerelease":true}' https://api.github.com/repos/Jigsaw-Code/outline-server/releases?access_token=$CI_USER_TOKEN
 
+    - stage: "Deploy Server"	
+      name: Server Testing	
+      sudo: required	
+      services: docker	
+      script:	
+        # https://docs.travis-ci.com/user/docker/	
+        - |	
+          sudo rm -f /usr/local/bin/docker-compose	
+          curl -L https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m) > docker-compose	
+          chmod +x docker-compose	
+          sudo mv docker-compose /usr/local/bin	
+        - yarn do shadowbox/test
+        - yarn do shadowbox/docker/build && cd src/shadowbox/integration_test && ./test.sh
+    
+    
     - stage: "Deploy Server"
       name: Server Docker Image
       sudo: required
