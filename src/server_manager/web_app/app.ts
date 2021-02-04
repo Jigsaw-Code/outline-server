@@ -20,6 +20,7 @@ import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
 
+import {formatBytes} from './data_formatting';
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {parseManualServerConfig} from './management_urls';
@@ -666,7 +667,7 @@ export class App {
     view.serverHostname = server.getHostnameForAccessKeys();
     view.serverManagementApiUrl = server.getManagementApiUrl();
     view.serverPortForNewAccessKeys = server.getPortForNewAccessKeys();
-    view.serverCreationDate = localizeDate(server.getCreatedDate(), this.appRoot.language);
+    view.serverCreationDate = server.getCreatedDate();
     view.serverVersion = server.getVersion();
     view.accessKeyDataLimit = dataLimitToDisplayDataAmount(server.getAccessKeyDataLimit());
     view.isAccessKeyDataLimitEnabled = !!view.accessKeyDataLimit;
@@ -686,7 +687,7 @@ export class App {
       view.monthlyCost = host.getMonthlyCost().usd;
       view.monthlyOutboundTransferBytes =
           host.getMonthlyOutboundTransferLimit().terabytes * (10 ** 12);
-      view.serverLocation = this.getLocalizedCityName(host.getRegionId());
+      view.serverLocationId = digitalocean_server.GetCityId(host.getRegionId());
     } else {
       view.isServerManaged = false;
     }
@@ -772,7 +773,7 @@ export class App {
       for (const accessKeyId in stats.bytesTransferredByUserId) {
         totalBytes += stats.bytesTransferredByUserId[accessKeyId];
       }
-      serverView.setServerTransferredData(totalBytes);
+      serverView.totalInboundBytes = totalBytes;
 
       const accessKeyDataLimit = selectedServer.getAccessKeyDataLimit();
       if (accessKeyDataLimit) {
@@ -1087,10 +1088,14 @@ export class App {
     });
   }
 
-  private setAppLanguage(languageCode: string, languageDir: string) {
-    this.appRoot.setLanguage(languageCode, languageDir);
-    document.documentElement.setAttribute('dir', languageDir);
-    window.localStorage.setItem('overrideLanguage', languageCode);
+  private async setAppLanguage(languageCode: string, languageDir: string) {
+    try {
+      await this.appRoot.setLanguage(languageCode, languageDir);
+      document.documentElement.setAttribute('dir', languageDir);
+      window.localStorage.setItem('overrideLanguage', languageCode);
+    } catch (error) {
+      this.appRoot.showError(this.appRoot.localize('error-unexpected'));
+    }
   }
 
   private createLocationModel(cityId: string, regionIds: string[]): Location {

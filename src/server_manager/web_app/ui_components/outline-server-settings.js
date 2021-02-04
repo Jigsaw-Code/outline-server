@@ -26,6 +26,8 @@ import './outline-validated-input.js';
 import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 
+import {formatBytesParts} from '../data_formatting';
+
 Polymer({
   _template: html`
     <style include="cloud-install-styles"></style>
@@ -138,7 +140,7 @@ Polymer({
       .data-limits-input paper-dropdown-menu {
         border: none;
         --paper-input-container: {
-          width: 64px;
+          width: 72px;
         }
       }
       paper-listbox paper-item {
@@ -175,7 +177,7 @@ Polymer({
           <div>
             <h3>DigitalOcean</h3>
             <paper-input readonly="" value="[[serverLocation]]" label="[[localize('settings-server-location')]]" hidden\$="[[!serverLocation]]" always-float-label="" maxlength="100"></paper-input>
-            <paper-input readonly="" value="[[serverMonthlyCost]] USD" label="[[localize('settings-server-cost')]]" hidden\$="[[!serverMonthlyCost]]" always-float-label="" maxlength="100"></paper-input>
+            <paper-input readonly="" value="[[serverMonthlyCost]]" label="[[localize('settings-server-cost')]]" hidden\$="[[!serverMonthlyCost]]" always-float-label="" maxlength="100"></paper-input>
             <paper-input readonly="" value="[[serverMonthlyTransferLimit]]" label="[[localize('settings-transfer-limit')]]" hidden\$="[[!serverMonthlyTransferLimit]]" always-float-label="" maxlength="100"></paper-input>
           </div>
         </div>
@@ -189,7 +191,7 @@ Polymer({
             <outline-validated-input editable="[[isAccessKeyPortEditable]]" visible="[[serverPortForNewAccessKeys]]" label="[[localize('settings-access-key-port')]]" allowed-pattern="[0-9]{1,5}" max-length="5" value="[[serverPortForNewAccessKeys]]" client-side-validator="[[_validatePort]]" event="ChangePortForNewAccessKeysRequested" localize="[[localize]]"></outline-validated-input>
             <outline-validated-input editable="[[isHostnameEditable]]" visible="[[serverHostname]]" label="[[localize('settings-server-hostname')]]" max-length="253" value="[[serverHostname]]" event="ChangeHostnameForAccessKeysRequested" localize="[[localize]]"></outline-validated-input>
             <paper-input readonly="" value="[[serverManagementApiUrl]]" label="[[localize('settings-server-api-url')]]" hidden\$="[[!serverManagementApiUrl]]" always-float-label="" maxlength="100"></paper-input>
-            <paper-input readonly="" value="[[serverCreationDate]]" label="[[localize('settings-server-creation')]]" hidden\$="[[!serverCreationDate]]" always-float-label="" maxlength="100"></paper-input>
+            <paper-input readonly="" value="[[_formatDate(language, serverCreationDate)]]" label="[[localize('settings-server-creation')]]" hidden\$="[[!_formatDate(language, serverCreationDate)]]" always-float-label="" maxlength="100"></paper-input>
             <paper-input readonly="" value="[[serverId]]" label="[[localize('settings-server-id')]]" hidden\$="[[!serverId]]" always-float-label="" maxlength="100"></paper-input>
             <paper-input readonly="" value="[[serverVersion]]" label="[[localize('settings-server-version')]]" hidden\$="[[!serverVersion]]" always-float-label="" maxlength="100"></paper-input>
           </div>
@@ -220,8 +222,8 @@ Polymer({
               <paper-input id="accessKeyDataLimitInput" value="[[accessKeyDataLimit.value]]" label="[[localize('data-limit-per-key')]]" always-float-label="" allowed-pattern="[0-9]+" required="" auto-validate="" maxlength="9" on-keydown="_handleAccessKeyDataLimitInputKeyDown" on-blur="_requestSetAccessKeyDataLimit"></paper-input>
               <paper-dropdown-menu no-label-float="">
                 <paper-listbox id="accessKeyDataLimitUnits" slot="dropdown-content" selected="[[accessKeyDataLimit.unit]]" attr-for-selected="name" on-selected-changed="_requestSetAccessKeyDataLimit">
-                  <paper-item name="MB">MB</paper-item>
-                  <paper-item name="GB">GB</paper-item>
+                  <paper-item name="MB">[[_getInternationalizedUnit(1000000, language)]]</paper-item>
+                  <paper-item name="GB">[[_getInternationalizedUnit(1000000000, language)]]</paper-item>
                 </paper-listbox>
               </paper-dropdown-menu>
             </div>
@@ -274,10 +276,11 @@ Polymer({
         {type: Boolean, value: false},  // Whether the server supports data limits.
     showFeatureMetricsDisclaimer: {type: Boolean, value: false},
     isHostnameEditable: {type: Boolean, value: true},
-    serverCreationDate: {type: String, value: null},
+    serverCreationDate: {type: Date, value: '1970-01-01T00:00:00.000Z'},
     serverLocation: {type: String, value: null},
     serverMonthlyCost: {type: String, value: null},
     serverMonthlyTransferLimit: {type: String, value: null},
+    language: {type: String, value: 'en'},
     localize: {type: Function, readonly: true},
     shouldShowExperiments: {type: Boolean, value: false},
   },
@@ -356,5 +359,13 @@ Polymer({
     const port = Number(value);
     const valid = !Number.isNaN(port) && port >= 1 && port <= 65535 && Number.isInteger(port);
     return valid ? '' : this.localize('error-keys-port-bad-input');
+  },
+
+  _getInternationalizedUnit(bytesAmount, language) {
+    return formatBytesParts(bytesAmount, language).unit;
+  },
+
+  _formatDate(language, date) {
+    return date.toLocaleString(language, {year: 'numeric', month: 'long', day: 'numeric'});
   }
 });

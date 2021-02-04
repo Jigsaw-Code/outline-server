@@ -19,15 +19,22 @@ const baseConfig = makeConfig({
   defaultMode: 'development'
 });
 
+const test_patterns = [
+  '**/*.spec.ts',
+  // We need to test data_formatting in a browser context
+  './data_formatting.spec.ts'
+];
+
+let preprocessors = {};
+for (const pattern of test_patterns) {
+  preprocessors[pattern] = ['webpack'];
+}
+
 module.exports = function(config) {
   config.set({
     frameworks: ['jasmine'],
-    files: [
-      '**/*.spec.ts',
-    ],
-    preprocessors: {
-      '**/*.spec.ts': ['webpack'],
-    },
+    files: test_patterns,
+    preprocessors,
     reporters: ['progress'],
     colors: true,
     logLevel: config.LOG_INFO,
