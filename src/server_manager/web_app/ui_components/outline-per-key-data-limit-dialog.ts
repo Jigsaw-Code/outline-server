@@ -44,7 +44,7 @@ import {DisplayAccessKey, DisplayDataAmount} from './outline-server-view';
 export class OutlinePerKeyDataLimitDialog extends LitElement {
   /** @member key The UI access key representing the key we're working on. */
   @internalProperty() key: DisplayAccessKey = null;
-  /** @member key The default data limit of the server we're working on, or null */
+  /** @member serverDefaultLimit The default data limit of the server we're working on, or null */
   @internalProperty() serverDefaultLimit: DisplayDataAmount = null;
   /**
    * @member showMenu Whether the menu for inputting the data limit should be shown. Controlled by
@@ -313,6 +313,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     this.key = accessKey;
     this.serverDefaultLimit = serverDefaultLimit;
     this.showMenu = !!accessKey.dataLimit;
+    this._setSaveButtonDisabledState();
     this._queryAs<PaperDialogElement>('#container').open();
   }
 
