@@ -26,18 +26,18 @@ describe('formatBytesParts', () => {
       const english = i18n.formatBytesParts(0, 'en');
       expect(english.unit).toEqual('B');
       expect(english.value).toEqual('0');
-      
-      const spanish = i18n.formatBytesParts(2, 'es');
-      expect(spanish.unit).toEqual('B');
-      expect(spanish.value).toEqual('2');
+
+      const korean = i18n.formatBytesParts(2, 'kr');
+      expect(korean.unit).toEqual('B');
+      expect(korean.value).toEqual('2');
 
       const russian = i18n.formatBytesParts(3000, 'ru');
       expect(russian.unit).toEqual('кБ');
       expect(russian.value).toEqual('3');
 
-      const french = i18n.formatBytesParts(1.5 * 10 ** 9, 'fr');
-      expect(french.unit).toEqual('Go');
-      expect(french.value).toEqual('1,5');
+      const simplifiedChinese = i18n.formatBytesParts(1.5 * 10 ** 9, 'zh-CN');
+      expect(simplifiedChinese.unit).toEqual('吉字节');
+      expect(simplifiedChinese.value).toEqual('1.5');
 
       const farsi = i18n.formatBytesParts(133.5 * 10 ** 6, 'fa');
       expect(farsi.unit).toEqual('مگابایت');
@@ -53,9 +53,11 @@ describe('formatBytes', () => {
     });
   } else {
     it('Formats data amounts', () => {
-      expect(i18n.formatBytes(10 * 10 ** 9, 'en')).toEqual('10 GB');
-      expect(i18n.formatBytes(1.5 * 10 ** 6, 'es')).toEqual('1,5 MB');
-      expect(i18n.formatBytes(2.35 * 10 ** 12, 'ru')).toEqual('2,35 ТБ');
+      expect(i18n.formatBytes(2.1, 'zh-TW')).toEqual('2 byte');
+      expect(i18n.formatBytes(7.8 * 10 ** 3, 'ar')).toEqual('8 كيلوبايت');
+      expect(i18n.formatBytes(1.5 * 10 ** 6, 'tr')).toEqual('1,5 MB');
+      expect(i18n.formatBytes(10 * 10 ** 9, 'jp')).toEqual('10 GB');
+      expect(i18n.formatBytes(2.35 * 10 ** 12, 'pr')).toEqual('2.35 TB');
     });
 
     it('Omits trailing zero decimal digits', () => {
