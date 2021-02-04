@@ -9,8 +9,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # TODO run on Windows as well
-        os: [ubuntu-latest, macos-latest]
+        # This matches the Ubuntu version used in our Travis releases
+        os: [ubuntu-16.04]
       # Don't cancel jobs on other platforms if one fails
       fail-fast: false
       
