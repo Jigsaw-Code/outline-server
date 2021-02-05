@@ -17,6 +17,12 @@ import * as semver from 'semver';
 import * as errors from '../infrastructure/errors';
 import * as server from '../model/server';
 
+interface AccessKeyJson {
+  id: string;
+  name: string;
+  accessUrl: string;
+}
+
 interface ServerConfigJson {
   name: string;
   metricsEnabled: boolean;
@@ -41,6 +47,11 @@ interface DataUsageByAccessKeyJson {
   bytesTransferredByUserId: {[accessKeyId: string]: number};
 }
 
+// Converts the access key JSON from the API to its model.
+function makeAccessKeyModel(apiAccessKey: AccessKeyJson): server.AccessKey {
+  return apiAccessKey as server.AccessKey;
+}
+
 export class ShadowboxServer implements server.Server {
   private managementApiAddress: string;
   private serverConfig: ServerConfigJson;
@@ -53,14 +64,15 @@ export class ShadowboxServer implements server.Server {
 
   listAccessKeys(): Promise<server.AccessKey[]> {
     console.info('Listing access keys');
-    return this.apiRequest<{accessKeys: server.AccessKey[]}>('access-keys').then((response) => {
-      return response.accessKeys;
+    return this.apiRequest<{accessKeys: AccessKeyJson[]}>('access-keys').then((response) => {
+      return response.accessKeys.map(makeAccessKeyModel);
     });
   }
 
-  addAccessKey(): Promise<server.AccessKey> {
+  async addAccessKey(): Promise<server.AccessKey> {
     console.info('Adding access key');
-    return this.apiRequest<server.AccessKey>('access-keys', {method: 'POST'});
+    return makeAccessKeyModel(
+        await this.apiRequest<AccessKeyJson>('access-keys', {method: 'POST'}));
   }
 
   renameAccessKey(accessKeyId: server.AccessKeyId, name: string): Promise<void> {
