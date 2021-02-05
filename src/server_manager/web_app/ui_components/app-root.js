@@ -36,7 +36,6 @@ import './outline-language-picker.js';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
 import './outline-region-picker-step';
-import './outline-server-progress-step.js';
 import './outline-tos-view.js';
 
 import {AppLocalizeBehavior} from '@polymer/app-localize-behavior/app-localize-behavior.js';
@@ -417,10 +416,9 @@ export class AppRoot extends mixinBehaviors
               <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
               <outline-region-picker-step id="regionPicker" localize="[[localize]]"></outline-region-picker-step>
-              <outline-server-progress-step id="serverProgressStep" localize="[[localize]]"></outline-server-progress-step>
               <div id="serverView">
                 <template is="dom-repeat" items="{{serverList}}" as="server">
-                  <outline-server-view id="serverView-{{_base64Encode(server.id)}}" localize="[[localize]]" hidden\$="{{!_isServerSelected(selectedServerId, server)}}"></outline-server-view>
+                  <outline-server-view id="serverView-{{_base64Encode(server.id)}}" language="[[language]]" localize="[[localize]]" hidden\$="{{!_isServerSelected(selectedServerId, server)}}"></outline-server-view>
                 </template>
               </div>
             </iron-pages>
@@ -557,18 +555,47 @@ export class AppRoot extends mixinBehaviors
   }
 
   /**
-   * Sets the language and direction for the application
-   * @param {string} language
-   * @param {string} direction
+   * Loads a new translation file and returns a Promise which resolves when the file is loaded or
+   *  rejects when there was an error loading translations.
+   *
+   *  @param {string} language The language code to load translations for, eg 'en'
    */
-  setLanguage(language, direction) {
+  async loadLanguageResources(language) {
+    const localizeResourcesResponder = new Promise((resolve, reject) => {
+      // loadResources uses events and continuation instead of Promises.  In order to make this
+      // function easier to use, we wrap the language-changing logic in event handlers which
+      // resolve or reject the Promise.  Note that they need to clean up whichever event handler
+      // didn't fire so we don't leak it, which could cause future language changes to not work
+      // properly by triggering old event listeners.
+      let successHandler, failureHandler;
+      successHandler = () => {
+        this.removeEventListener('app-localize-resources-error', failureHandler);
+        resolve();
+      };
+      failureHandler = (event) => {
+        this.removeEventListener('app-localize-resources-loaded', successHandler);
+        reject(new Error(`Failed to load resources for language ${language}`));
+      };
+      this.addEventListener('app-localize-resources-loaded', successHandler, {once: true});
+      this.addEventListener('app-localize-resources-error', failureHandler, {once: true});
+    });
+
     const messagesUrl = `./messages/${language}.json`;
     this.loadResources(messagesUrl, language);
+    return localizeResourcesResponder;
+  }
+
+  /**
+   * Sets the language and direction for the application
+   * @param {string} language The ISO language code for the new language, eg 'en'
+   * @param {string} direction The direction of the language, either 'rtl' or 'ltr'
+   */
+  async setLanguage(language, direction) {
+    await this.loadLanguageResources(language);
 
     const alignDir = direction === 'ltr' ? 'left' : 'right';
     this.$.appDrawer.align = alignDir;
     this.$.sideBar.align = alignDir;
-
     this.language = language;
   }
 
@@ -605,19 +632,7 @@ export class AppRoot extends mixinBehaviors
     return this.$.manualEntry;
   }
 
-  /**
-   * @param {string} serverName
-   * @param {boolean} showCancelButton
-   */
-  showProgress(serverName, showCancelButton) {
-    this.currentPage = 'serverProgressStep';
-    this.$.serverProgressStep.serverName = serverName;
-    this.$.serverProgressStep.showCancelButton = showCancelButton;
-    this.$.serverProgressStep.start();
-  }
-
   showServerView() {
-    this.$.serverProgressStep.stop();
     this.currentPage = 'serverView';
   }
 
@@ -630,6 +645,8 @@ export class AppRoot extends mixinBehaviors
     if (!displayServerId) {
       return null;
     }
+    // Render to ensure that the server view has been added to the DOM.
+    this.$.serverView.querySelector('dom-repeat').render();
     const selectedServerId = this._base64Encode(displayServerId);
     return this.$.serverView.querySelector(`#serverView-${selectedServerId}`);
   }

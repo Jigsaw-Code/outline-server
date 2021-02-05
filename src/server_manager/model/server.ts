@@ -13,7 +13,10 @@
 // limitations under the License.
 
 export interface Server {
-  // Get the server's name for display.
+  // Gets the server ID.
+  getId(): string;
+
+  // Gets the server's name for display.
   getName(): string;
 
   // Gets the version of the shadowbox binary the server is running
@@ -22,7 +25,7 @@ export interface Server {
   // Updates the server name.
   setName(name: string): Promise<void>;
 
-  // List the access keys for this server, including the admin.
+  // Lists the access keys for this server, including the admin.
   listAccessKeys(): Promise<AccessKey[]>;
 
   // Returns stats for bytes transferred across all access keys of this server.
@@ -52,8 +55,8 @@ export interface Server {
   // Updates whether metrics are enabled.
   setMetricsEnabled(metricsEnabled: boolean): Promise<void>;
 
-  // Get the server's unique ID, used for metrics reporting.
-  getServerId(): string;
+  // Gets the ID used for metrics reporting.
+  getMetricsId(): string;
 
   // Checks if the server is healthy.
   isHealthy(): Promise<boolean>;

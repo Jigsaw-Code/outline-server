@@ -21,6 +21,7 @@
   "confirmation-server-destroy-title": "Destroy Server?",
   "confirmation-server-remove": "This action removes your server from the Outline Manager, but does not block proxy access to users. You will still need to manually delete the Outline server from your host machine.",
   "confirmation-server-remove-title": "Remove Server?",
+  "data-limit-per-key": "Data limit per key",
   "data-limits": "Data limits",
   "data-limits-description": "Set a 30 day trailing data transfer limit for access keys on this server.",
   "data-limits-dialog-text": "Go to the Settings tab to set a data transfer limit for access keys on this server.",

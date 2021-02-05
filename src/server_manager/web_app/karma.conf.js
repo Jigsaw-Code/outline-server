@@ -13,24 +13,32 @@
 // limitations under the License.
 
 const {makeConfig} = require('../base.webpack.js');
+process.env.CHROMIUM_BIN = require('puppeteer').executablePath();
 
 const baseConfig = makeConfig({
   defaultMode: 'development'
 });
 
+const test_patterns = [
+  '**/*.spec.ts',
+  // We need to test data_formatting in a browser context
+  './data_formatting.spec.ts'
+];
+
+let preprocessors = {};
+for (const pattern of test_patterns) {
+  preprocessors[pattern] = ['webpack'];
+}
+
 module.exports = function(config) {
   config.set({
     frameworks: ['jasmine'],
-    files: [
-      '**/*.spec.ts',
-    ],
-    preprocessors: {
-      '**/*.spec.ts': ['webpack'],
-    },
+    files: test_patterns,
+    preprocessors,
     reporters: ['progress'],
     colors: true,
     logLevel: config.LOG_INFO,
-    browsers: ['ChromeHeadless'],
+    browsers: ['ChromiumHeadless'],
     singleRun: true,
     concurrency: Infinity,
     webpack: {
