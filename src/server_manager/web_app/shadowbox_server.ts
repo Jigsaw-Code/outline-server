@@ -17,13 +17,6 @@ import * as semver from 'semver';
 import * as errors from '../infrastructure/errors';
 import * as server from '../model/server';
 
-// Interfaces used by metrics REST APIs.
-interface MetricsEnabled {
-  metricsEnabled: boolean;
-}
-export interface ServerName {
-  name: string;
-}
 interface ServerConfigJson {
   name: string;
   metricsEnabled: boolean;
