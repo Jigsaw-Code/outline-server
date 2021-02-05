@@ -35,9 +35,11 @@ jobs:
   include:
     - stage: "Server Daily Release"
       script:
-        - RELEASE_NAME=server-$(date -I)
-        - curl --data '{"tag_name":"'$RELEASE_NAME'","name":"'$RELEASE_NAME'","prerelease":true}' https://api.github.com/repos/Jigsaw-Code/outline-server/releases?access_token=$CI_USER_TOKEN
-
+        - CREATE_RELEASE_URL=https://api.github.com/repos/Jigsaw-Code/outline-server/releases?access_token=$CI_USER_TOKEN
+        - SERVER_RELEASE_NAME=server-$(date -I)
+        - curl --data '{"tag_name":"'$SERVER_RELEASE_NAME'","name":"'$SERVER_RELEASE_NAME'","prerelease":true}' $CREATE_RELEASE_URL
+        - MANAGER_RELEASE_NAME=v$(date -I)
+        - curl --data '{"tag_name":"'$MANAGER_RELEASE_NAME'","name":"'$MANAGER_RELEASE_NAME'","prerelease":true}' $CREATE_RELEASE_URL
     - stage: "Deploy Server"	
       name: Server Testing	
       sudo: required	
