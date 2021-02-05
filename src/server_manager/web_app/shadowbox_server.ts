@@ -48,8 +48,6 @@ interface DataUsageByAccessKeyJson {
   bytesTransferredByUserId: {[accessKeyId: string]: number};
 }
 
-export type DataUsageByAccessKey = Map<server.AccessKeyId, number>;
-
 export class ShadowboxServer implements server.Server {
   private managementApiAddress: string;
   private serverConfig: ServerConfigJson;
