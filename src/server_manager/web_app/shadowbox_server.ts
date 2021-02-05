@@ -24,7 +24,7 @@ interface MetricsEnabled {
 export interface ServerName {
   name: string;
 }
-export interface ServerConfig {
+interface ServerConfigJson {
   name: string;
   metricsEnabled: boolean;
   serverId: string;
@@ -35,9 +35,24 @@ export interface ServerConfig {
   accessKeyDataLimit?: server.DataLimit;
 }
 
+// Byte transfer stats for the past 30 days, including both inbound and outbound.
+// TODO: this is copied at src/shadowbox/model/metrics.ts.  Both copies should
+// be kept in sync, until we can find a way to share code between the web_app
+// and shadowbox.
+interface DataUsageByAccessKeyJson {
+  // The accessKeyId should be of type AccessKeyId, however that results in the tsc
+  // error TS1023: An index signature parameter type must be 'string' or 'number'.
+  // See https://github.com/Microsoft/TypeScript/issues/2491
+  // TODO: this still says "UserId", changing to "AccessKeyId" will require
+  // a change on the shadowbox server.
+  bytesTransferredByUserId: {[accessKeyId: string]: number};
+}
+
+export type DataUsageByAccessKey = Map<server.AccessKeyId, number>;
+
 export class ShadowboxServer implements server.Server {
   private managementApiAddress: string;
-  private serverConfig: ServerConfig;
+  private serverConfig: ServerConfigJson;
 
   constructor(private id: string) {}
 
@@ -99,8 +114,13 @@ export class ShadowboxServer implements server.Server {
     return 'experimental/access-key-data-limit';
   }
 
-  getDataUsage(): Promise<server.DataUsageByAccessKey> {
-    return this.apiRequest<server.DataUsageByAccessKey>('metrics/transfer');
+  async getDataUsage(): Promise<server.BytesByAccessKey> {
+    const jsonResponse = await this.apiRequest<DataUsageByAccessKeyJson>('metrics/transfer');
+    const usageMap = new Map<server.AccessKeyId, number>();
+    for (const [accessKeyId, bytes] of Object.entries(jsonResponse.bytesTransferredByUserId)) {
+      usageMap.set(accessKeyId, bytes ?? 0);
+    }
+    return usageMap;
   }
 
   getName(): string {
@@ -212,9 +232,9 @@ export class ShadowboxServer implements server.Server {
     });
   }
 
-  private async getServerConfig(): Promise<ServerConfig> {
+  private async getServerConfig(): Promise<ServerConfigJson> {
     console.info('Retrieving server configuration');
-    return await this.apiRequest<ServerConfig>('server');
+    return await this.apiRequest<ServerConfigJson>('server');
   }
 
   protected setManagementApiUrl(apiAddress: string): void {
