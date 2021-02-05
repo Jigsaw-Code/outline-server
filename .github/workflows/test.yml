@@ -53,7 +53,7 @@ jobs:
         run: |
           yarn do shadowbox/server/build
           yarn do shadowbox/test
-          yarn do shadowbox/integration_test/run
+          DOCKER_CONTENT_TRUST=0 yarn do shadowbox/integration_test/run
       
       - name: Metrics Server
         if: runner.os == 'Linux'
