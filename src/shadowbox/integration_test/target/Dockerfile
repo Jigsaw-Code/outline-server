@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/distroless/python3
+FROM gcr.io/distroless/python3@sha256:58087520b3c929fe77e1ef3fc95062dbe80bbda265e0e7966c4997c71a9636ea
 COPY index.html .
 ENTRYPOINT ["python", "-m", "http.server", "80"]
