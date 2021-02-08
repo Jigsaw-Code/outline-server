@@ -14,15 +14,12 @@
 
 import './ui_components/app-root.js';
 
-import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as i18n from '../infrastructure/i18n';
-import {getSentryApiUrl} from '../infrastructure/sentry';
 
 import {App} from './app';
-import {DigitalOceanTokenManager} from './digitalocean_oauth';
-import * as digitalocean_server from './digitalocean_server';
 import {ManualServerRepository} from './manual_server';
-import {AppRoot} from './ui_components/app-root.js';
+import {AppRoot} from './ui_components/app-root';
+import {DigitalOceanCloud} from "./digitalocean_cloud";
 
 type LanguageDef = {
   id: string,
@@ -75,6 +72,23 @@ const SUPPORTED_LANGUAGES: {[key: string]: LanguageDef} = {
   'zh-TW': {id: 'zh-TW', name: '繁體中文‬‬‪‬', dir: 'ltr'},
 };
 
+const LEGACY_DIGITALOCEAN_TOKEN_KEY = 'LastDOToken';
+const LEGACY_DIGITALOCEAN_MIGRATION_KEY = 'LastDOToken-migration';
+
+/**
+ * Migrates an existing DigitalOcean access token from TokenManager to
+ * {@link DigitalOceanCloud}.
+ */
+function migrateDigitalOceanToken(digitalOceanCloud: DigitalOceanCloud) {
+  if (!localStorage.getItem(LEGACY_DIGITALOCEAN_MIGRATION_KEY)) {
+    const accessToken = localStorage.getItem(LEGACY_DIGITALOCEAN_TOKEN_KEY);
+    if (accessToken) {
+      digitalOceanCloud.connectAccount(accessToken);
+    }
+    localStorage.setItem(LEGACY_DIGITALOCEAN_MIGRATION_KEY, 'true');
+  }
+}
+
 function getLanguageToUse(): i18n.LanguageCode {
   const supportedLanguages = i18n.languageList(Object.keys(SUPPORTED_LANGUAGES));
   const preferredLanguages = i18n.getBrowserLanguages();
@@ -97,15 +111,12 @@ document.addEventListener('WebComponentsReady', () => {
   // Parse URL query params.
   const params = new URL(document.URL).searchParams;
   const debugMode = params.get('outlineDebugMode') === 'true';
-  const metricsUrl = params.get('metricsUrl');
-  const shadowboxImage = params.get('image');
   const version = params.get('version');
-  const sentryDsn = params.get('sentryDsn');
 
-  // Set DigitalOcean server repository parameters.
-  const digitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) => {
-    return new digitalocean_server.DigitaloceanServerRepository(
-        session, shadowboxImage, metricsUrl, getSentryApiUrl(sentryDsn), debugMode);
+  const shadowboxSettings = {
+    imageId: params.get('image'),
+    metricsUrl: params.get('metricsUrl'),
+    sentryApiUrl: params.get('sentryDsn'),
   };
 
   // Create and start the app.
@@ -120,10 +131,10 @@ document.addEventListener('WebComponentsReady', () => {
   const filteredLanguageDefs = Object.values(SUPPORTED_LANGUAGES);
   appRoot.supportedLanguages = sortLanguageDefsByName(filteredLanguageDefs);
   appRoot.setLanguage(language.string(), languageDirection);
-  new App(
-      appRoot, version, digitalocean_api.createDigitalOceanSession,
-      digitalOceanServerRepositoryFactory, new ManualServerRepository('manualServers'),
-      new DigitalOceanTokenManager())
-      .start();
+
+  const digitalOceanCloud = new DigitalOceanCloud(localStorage, shadowboxSettings, debugMode);
+  migrateDigitalOceanToken(digitalOceanCloud);
+
+  new App(appRoot, version, new ManualServerRepository('manualServers'), digitalOceanCloud).start();
 });
 

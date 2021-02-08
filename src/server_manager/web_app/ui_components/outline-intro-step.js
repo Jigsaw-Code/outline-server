@@ -181,27 +181,27 @@ Polymer({
       <div class="container">
         <div id="digital-ocean" class="card" on-tap="connectToDigitalOceanTapped">
           <div class="card-header">
-            <div class="tag" hidden\$="{{isSignedInToDigitalOcean}}">[[localize('setup-recommended')]]</div>
-            <div class="email" hidden\$="{{!isSignedInToDigitalOcean}}">{{digitalOceanEmail}}</div>
+            <div class="tag" hidden\$="{{digitalOceanAccount}}">[[localize('setup-recommended')]]</div>
+            <div class="email" hidden\$="{{!digitalOceanAccount}}">{{digitalOceanAccount.name}}</div>
             <img src="images/do_white_logo.svg">
           </div>
           <div class="card-title">DigitalOcean</div>
           <div class="card-body">
             <div class="description">
-              <ul hidden\$="{{isSignedInToDigitalOcean}}">
+              <ul hidden\$="{{digitalOceanAccount}}">
                 <li>[[localize('setup-do-easiest')]]</li>
                 <li>[[localize('setup-do-cost')]]</li>
                 <li>[[localize('setup-do-data')]]</li>
                 <li>[[localize('setup-do-cancel')]]</li>
               </ul>
-              <p hidden\$="{{!isSignedInToDigitalOcean}}">
+              <p hidden\$="{{!digitalOceanAccount}}">
                 [[localize('setup-do-create')]]
               </p>
             </div>
           </div>
           <div class="card-footer">
-            <paper-button class="primary" hidden\$="{{isSignedInToDigitalOcean}}">[[localize('setup-action')]]</paper-button>
-            <paper-button class="primary" hidden\$="{{!isSignedInToDigitalOcean}}">[[localize('setup-create')]]</paper-button>
+            <paper-button class="primary" hidden\$="{{digitalOceanAccount}}">[[localize('setup-action')]]</paper-button>
+            <paper-button class="primary" hidden\$="{{!digitalOceanAccount}}">[[localize('setup-create')]]</paper-button>
           </div>
         </div>
 
@@ -270,8 +270,7 @@ Polymer({
   is: 'outline-intro-step',
 
   properties: {
-    isSignedInToDigitalOcean: Boolean,
-    digitalOceanEmail: String,
+    digitalOceanAccount: Object,
     localize: {
       type: Function,
       readonly: true,
@@ -279,8 +278,8 @@ Polymer({
   },
 
   connectToDigitalOceanTapped: function() {
-    if (this.isSignedInToDigitalOcean) {
-      this.fire('CreateDigitalOceanServerRequested');
+    if (this.digitalOceanAccount) {
+      this.fire('CreateDigitalOceanServerRequested', { accountId: this.digitalOceanAccount.id });
     } else {
       this.fire('ConnectDigitalOceanAccountRequested');
     }

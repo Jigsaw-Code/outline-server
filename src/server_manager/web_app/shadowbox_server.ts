@@ -35,6 +35,12 @@ export interface ServerConfig {
   accessKeyDataLimit?: server.DataLimit;
 }
 
+export interface ShadowboxSettings {
+  imageId: string;
+  metricsUrl: string;
+  sentryApiUrl: string;
+}
+
 export class ShadowboxServer implements server.Server {
   private managementApiAddress: string;
   private serverConfig: ServerConfig;

@@ -50,6 +50,7 @@ export type Account = Readonly < {
   email: string;
   uuid: string;
   email_verified: boolean;
+  // This value is one of "active", "warning" or "locked".
   status: string;
 }
 > ;
