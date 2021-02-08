@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Account} from "./account";
+import {Account} from './account';
 
 export interface Cloud {
   listAccounts(): Account[];

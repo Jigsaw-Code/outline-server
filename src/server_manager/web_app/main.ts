@@ -17,9 +17,9 @@ import './ui_components/app-root.js';
 import * as i18n from '../infrastructure/i18n';
 
 import {App} from './app';
+import {DigitalOceanCloud} from './digitalocean_cloud';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root';
-import {DigitalOceanCloud} from "./digitalocean_cloud";
 
 type LanguageDef = {
   id: string,

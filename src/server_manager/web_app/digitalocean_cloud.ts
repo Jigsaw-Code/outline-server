@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DigitalOceanAccount} from "./digitalocean_account";
-import {createDigitalOceanSession} from "../cloud/digitalocean_api";
-import {ShadowboxSettings} from "./shadowbox_server";
-import {Cloud} from "../model/cloud";
+import {createDigitalOceanSession} from '../cloud/digitalocean_api';
+import {Cloud} from '../model/cloud';
+
+import {DigitalOceanAccount} from './digitalocean_account';
+import {ShadowboxSettings} from './shadowbox_server';
 
 export class DigitalOceanCloud implements Cloud {
   private static readonly ACCOUNT_STORAGE_KEY = 'DigitalOceanAccounts';
@@ -42,7 +43,8 @@ export class DigitalOceanCloud implements Cloud {
 
   private createDigitalOceanAccount(accessToken: string): DigitalOceanAccount {
     const doApiClient = createDigitalOceanSession(accessToken);
-    return new DigitalOceanAccount(doApiClient, this.shadowboxSettings, this.debugMode, () => this.deleteAccount(accessToken));
+    return new DigitalOceanAccount(
+        doApiClient, this.shadowboxSettings, this.debugMode, () => this.deleteAccount(accessToken));
   }
 
   private deleteAccount(accessToken: string): void {

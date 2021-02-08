@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {DigitalOceanSession} from '../cloud/digitalocean_api';
+import * as crypto from '../infrastructure/crypto';
+import * as do_install_script from '../install_scripts/do_install_script';
 import {Account} from '../model/account';
-import {ManagedServer} from "../model/server";
-import * as crypto from "../infrastructure/crypto";
-import * as do_install_script from "../install_scripts/do_install_script";
-import {DigitalOceanSession} from "../cloud/digitalocean_api";
-import {DigitaloceanServer, GetCityId} from "./digitalocean_server";
-import {ShadowboxSettings} from "./shadowbox_server";
+import {ManagedServer} from '../model/server';
+
+import {DigitaloceanServer, GetCityId} from './digitalocean_server';
+import {ShadowboxSettings} from './shadowbox_server';
 
 export type RegionId = string;
 export type Location = {
-  id: string;
-  regions: RegionId[];
+  id: string; regions: RegionId[];
 };
 
 export enum Status {
@@ -37,10 +37,8 @@ export class DigitalOceanAccount implements Account {
   private static readonly SHADOWBOX_TAG = 'shadowbox';
 
   constructor(
-      private apiClient: DigitalOceanSession,
-      private shadowboxSettings: ShadowboxSettings,
-      private debugMode: boolean,
-      private disconnectFn: () => void) { }
+      private apiClient: DigitalOceanSession, private shadowboxSettings: ShadowboxSettings,
+      private debugMode: boolean, private disconnectFn: () => void) {}
 
   async getId(): Promise<string> {
     // TODO: Memoize
@@ -68,7 +66,7 @@ export class DigitalOceanAccount implements Account {
     regions.forEach((region) => {
       const cityId = GetCityId(region.slug);
       if (!regionMap.has(cityId)) {
-        const location = { id: cityId, regions: [] as string[] };
+        const location = {id: cityId, regions: [] as string[]};
         regionMap.set(cityId, location);
       }
       regionMap.get(cityId).regions.push(region.slug);
@@ -79,7 +77,8 @@ export class DigitalOceanAccount implements Account {
   async createServer(name: string, regionId: RegionId): Promise<ManagedServer> {
     console.time('activeServer');
     console.time('servingServer');
-    const installCommand = DigitalOceanAccount.getInstallScript(this.apiClient.accessToken, this.shadowboxSettings);
+    const installCommand =
+        DigitalOceanAccount.getInstallScript(this.apiClient.accessToken, this.shadowboxSettings);
     const dropletSpec = {
       installCommand,
       size: DigitalOceanAccount.MACHINE_SIZE,
@@ -95,7 +94,8 @@ export class DigitalOceanAccount implements Account {
           `private key for SSH access to new droplet:\n${trimmedKey}\n\n` +
           'Use "ssh -i keyfile root@[ip_address]" to connect to the machine');
     }
-    const response = await this.apiClient.createDroplet(name, regionId, keyPair.public, dropletSpec);
+    const response =
+        await this.apiClient.createDroplet(name, regionId, keyPair.public, dropletSpec);
     return new DigitaloceanServer(this.apiClient, response.droplet);
   }
 
@@ -111,16 +111,22 @@ export class DigitalOceanAccount implements Account {
   }
 
   // cloudFunctions needs to define cloud::public_ip and cloud::add_tag.
-  private static getInstallScript(accessToken: string, shadowboxSettings: ShadowboxSettings): string {
+  private static getInstallScript(accessToken: string, shadowboxSettings: ShadowboxSettings):
+      string {
     const watchtowerRefreshSeconds = shadowboxSettings.imageId ? 30 : undefined;
     const sanitizedAccessToken = this.sanitizeToken(accessToken);
     // TODO: consider shell escaping these variables.
     return '#!/bin/bash -eu\n' +
         `export DO_ACCESS_TOKEN=${sanitizedAccessToken}\n` +
         (shadowboxSettings.imageId ? `export SB_IMAGE=${shadowboxSettings.imageId}\n` : '') +
-        (watchtowerRefreshSeconds ? `export WATCHTOWER_REFRESH_SECONDS=${watchtowerRefreshSeconds}\n` : '') +
-        (shadowboxSettings.sentryApiUrl ? `export SENTRY_API_URL="${shadowboxSettings.sentryApiUrl}"\n` : '') +
-        (shadowboxSettings.metricsUrl ? `export SB_METRICS_URL=${shadowboxSettings.metricsUrl}\n` : '') +
+        (watchtowerRefreshSeconds ?
+             `export WATCHTOWER_REFRESH_SECONDS=${watchtowerRefreshSeconds}\n` :
+             '') +
+        (shadowboxSettings.sentryApiUrl ?
+             `export SENTRY_API_URL="${shadowboxSettings.sentryApiUrl}"\n` :
+             '') +
+        (shadowboxSettings.metricsUrl ? `export SB_METRICS_URL=${shadowboxSettings.metricsUrl}\n` :
+                                        '') +
         `export SB_DEFAULT_SERVER_NAME="${name}"\n` + do_install_script.SCRIPT;
   }
 

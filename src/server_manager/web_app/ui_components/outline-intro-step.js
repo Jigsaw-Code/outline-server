@@ -279,7 +279,7 @@ Polymer({
 
   connectToDigitalOceanTapped: function() {
     if (this.digitalOceanAccount) {
-      this.fire('CreateDigitalOceanServerRequested', { accountId: this.digitalOceanAccount.id });
+      this.fire('CreateDigitalOceanServerRequested', {accountId: this.digitalOceanAccount.id});
     } else {
       this.fire('ConnectDigitalOceanAccountRequested');
     }

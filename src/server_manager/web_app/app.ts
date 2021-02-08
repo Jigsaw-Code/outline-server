@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as sentry from '@sentry/electron';
+import {EventEmitter} from 'eventemitter3';
 import * as semver from 'semver';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
@@ -20,14 +21,13 @@ import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
 
+import {DigitalOceanAccount, Location as DigitaloceanLocation, Status} from './digitalocean_account';
+import {DigitalOceanCloud} from './digitalocean_cloud';
 import * as digitalocean_server from './digitalocean_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view';
-import {DigitalOceanAccount, Location as DigitaloceanLocation, Status} from "./digitalocean_account";
-import {EventEmitter} from "eventemitter3";
-import {DigitalOceanCloud} from "./digitalocean_cloud";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -136,8 +136,7 @@ export class App {
   private idServerMap = new Map<string, server.Server>();
 
   constructor(
-      private appRoot: AppRoot,
-      private readonly version: string,
+      private appRoot: AppRoot, private readonly version: string,
       private manualServerRepository: server.ManualServerRepository,
       private digitalOceanCloud: DigitalOceanCloud) {
     appRoot.setAttribute('outline-version', this.version);
@@ -147,7 +146,8 @@ export class App {
       this.handleConnectDigitalOceanAccountRequest();
     });
     appRoot.addEventListener('CreateDigitalOceanServerRequested', async (event: CustomEvent) => {
-      const account = await this.digitalOceanCloud.listAccounts().find(async (account) => await account.getId() === event.detail.accountId);
+      const account = await this.digitalOceanCloud.listAccounts().find(
+          async (account) => await account.getId() === event.detail.accountId);
       if (account) {
         this.showDigitalOceanCreateServer(account);
       } else {
@@ -156,14 +156,16 @@ export class App {
       }
     });
     appRoot.addEventListener('SignOutRequested', async (event: CustomEvent) => {
-      const account = this.digitalOceanCloud.listAccounts().find(async (account) => account.getId() === event.detail.accountId);
+      const account = this.digitalOceanCloud.listAccounts().find(
+          async (account) => account.getId() === event.detail.accountId);
       this.disconnectDigitalOceanAccount(account);
       this.showIntro();
     });
 
     // Server event listeners
     appRoot.addEventListener('SetUpServerRequested', (event: CustomEvent) => {
-      const account = this.digitalOceanCloud.listAccounts().find((account) => account.getId() === event.detail.accountId);
+      const account = this.digitalOceanCloud.listAccounts().find(
+          (account) => account.getId() === event.detail.accountId);
       this.createDigitalOceanServer(account, event.detail.regionId);
     });
     appRoot.addEventListener('CancelServerCreationRequested', (event: CustomEvent) => {
@@ -249,8 +251,8 @@ export class App {
     });
     appRoot.addEventListener('SubmitFeedback', (event: CustomEvent) => {
       this.submitFeedback(
-          event.detail.userFeedback, event.detail.userEmail,
-          event.detail.feedbackCategory, event.detail.cloudProvider);
+          event.detail.userFeedback, event.detail.userEmail, event.detail.feedbackCategory,
+          event.detail.cloudProvider);
     });
 
     onUpdateDownloaded(this.displayAppUpdateNotification.bind(this));
@@ -271,7 +273,8 @@ export class App {
     // Load server list.
     // TODO: Fetch manual and managed servers in parallel.
     await this.loadManualServers();
-    await Promise.all(this.digitalOceanCloud.listAccounts().map((account) => this.loadDigitalOceanServers(account)));
+    await Promise.all(this.digitalOceanCloud.listAccounts().map(
+        (account) => this.loadDigitalOceanServers(account)));
 
     // Show last displayed server, if any.
     const serverIdToSelect = localStorage.getItem(LAST_DISPLAYED_SERVER_STORAGE_KEY);
@@ -283,7 +286,8 @@ export class App {
     }
   }
 
-  private async loadDigitalOceanServers(account: DigitalOceanAccount): Promise<server.ManagedServer[]> {
+  private async loadDigitalOceanServers(account: DigitalOceanAccount):
+      Promise<server.ManagedServer[]> {
     try {
       this.appRoot.digitalOceanAccount = {
         id: await account.getId(),
@@ -396,7 +400,7 @@ export class App {
     };
     const oauthUi = this.appRoot.getDigitalOceanOauthFlow(signOutAction);
     while (true) {
-      const status = await this.digitalOceanRetry(account,async () => {
+      const status = await this.digitalOceanRetry(account, async () => {
         if (cancelled) {
           throw CANCELLED_ERROR;
         }
@@ -443,7 +447,8 @@ export class App {
   //       return the UI to its exact prior state. Fortunately, the most likely
   //       time to discover an invalid access token is when the application
   //       starts.
-  private digitalOceanRetry = <T>(account: DigitalOceanAccount, f: () => Promise<T>): Promise<T> => {
+  private digitalOceanRetry = <T>(
+      account: DigitalOceanAccount, f: () => Promise<T>): Promise<T> => {
     return f().catch((e) => {
       if (!(e instanceof digitalocean_api.XhrError)) {
         return Promise.reject(e);
@@ -545,7 +550,8 @@ export class App {
 
   // Returns a promise which fulfills once the DigitalOcean droplet is created.
   // Shadowbox may not be fully installed once this promise is fulfilled.
-  public async createDigitalOceanServer(account: DigitalOceanAccount, regionId: server.RegionId): Promise<void> {
+  public async createDigitalOceanServer(account: DigitalOceanAccount, regionId: server.RegionId):
+      Promise<void> {
     try {
       const serverName = this.makeLocalizedServerName(regionId);
       const server = await this.digitalOceanRetry(account, () => {
@@ -905,30 +911,30 @@ export class App {
   private connectManualServer(userInput: string) {
     const manualServerEntryEl = this.appRoot.getManualServerEntry();
     this.createManualServer(userInput)
-    .then(() => {
-      // Clear fields on outline-manual-server-entry (e.g. dismiss the connecting popup).
-      manualServerEntryEl.clear();
-    })
-    .catch((e: Error) => {
-      // Remove the progress indicator.
-      manualServerEntryEl.showConnection = false;
-      // Display either error dialog or feedback depending on error type.
-      if (e instanceof errors.UnreachableServerError) {
-        const errorTitle = this.appRoot.localize('error-server-unreachable-title');
-        const errorMessage = this.appRoot.localize('error-server-unreachable');
-        this.appRoot.showManualServerError(errorTitle, errorMessage);
-      } else {
-        // TODO(alalama): with UI validation, this code path never gets executed. Remove?
-        let errorMessage = '';
-        if (e.message) {
-          errorMessage += `${e.message}\n`;
-        }
-        if (userInput) {
-          errorMessage += userInput;
-        }
-        this.appRoot.openManualInstallFeedback(errorMessage);
-      }
-    });
+        .then(() => {
+          // Clear fields on outline-manual-server-entry (e.g. dismiss the connecting popup).
+          manualServerEntryEl.clear();
+        })
+        .catch((e: Error) => {
+          // Remove the progress indicator.
+          manualServerEntryEl.showConnection = false;
+          // Display either error dialog or feedback depending on error type.
+          if (e instanceof errors.UnreachableServerError) {
+            const errorTitle = this.appRoot.localize('error-server-unreachable-title');
+            const errorMessage = this.appRoot.localize('error-server-unreachable');
+            this.appRoot.showManualServerError(errorTitle, errorMessage);
+          } else {
+            // TODO(alalama): with UI validation, this code path never gets executed. Remove?
+            let errorMessage = '';
+            if (e.message) {
+              errorMessage += `${e.message}\n`;
+            }
+            if (userInput) {
+              errorMessage += userInput;
+            }
+            this.appRoot.openManualInstallFeedback(errorMessage);
+          }
+        });
   }
 
   private removeAccessKey(accessKeyId: string) {
@@ -955,22 +961,23 @@ export class App {
     const confirmationTitle = this.appRoot.localize('confirmation-server-destroy-title');
     const confirmationText = this.appRoot.localize('confirmation-server-destroy');
     const confirmationButton = this.appRoot.localize('destroy');
-    this.appRoot.getConfirmation(confirmationTitle, confirmationText, confirmationButton, async () => {
-      try {
-        return serverToDelete.getHost().delete();
-        this.removeServer(serverId);
-        this.appRoot.selectedServer = null;
-        this.selectedServer = null;
-        this.showIntro();
-        this.appRoot.showNotification(this.appRoot.localize('notification-server-destroyed'));
-      } catch (e) {
-        // Don't show a toast on the login screen.
-        if (!(e instanceof digitalocean_api.XhrError)) {
-          console.error(`Failed destroy server: ${e}`);
-          this.appRoot.showError(this.appRoot.localize('error-server-destroy'));
-        }
-      }
-    });
+    this.appRoot.getConfirmation(
+        confirmationTitle, confirmationText, confirmationButton, async () => {
+          try {
+            return serverToDelete.getHost().delete();
+            this.removeServer(serverId);
+            this.appRoot.selectedServer = null;
+            this.selectedServer = null;
+            this.showIntro();
+            this.appRoot.showNotification(this.appRoot.localize('notification-server-destroyed'));
+          } catch (e) {
+            // Don't show a toast on the login screen.
+            if (!(e instanceof digitalocean_api.XhrError)) {
+              console.error(`Failed destroy server: ${e}`);
+              this.appRoot.showError(this.appRoot.localize('error-server-destroy'));
+            }
+          }
+        });
   }
 
   private forgetSelectedServer() {
@@ -1051,11 +1058,7 @@ export class App {
 
   private submitFeedback(feedback: string, email: string, category: string, cloudProvider: string) {
     try {
-      sentry.captureEvent({
-        message: feedback,
-        user: {email},
-        tags: {category, cloudProvider}
-      });
+      sentry.captureEvent({message: feedback, user: {email}, tags: {category, cloudProvider}});
       this.appRoot.showNotification(this.appRoot.localize('notification-feedback-thanks'));
     } catch (e) {
       console.error(`Failed to submit feedback: ${e}`);

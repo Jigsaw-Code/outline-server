@@ -46,14 +46,11 @@ export type DropletInfo = Readonly < {
 
 // Reference:
 // https://developers.digitalocean.com/documentation/v2/#get-user-information
-export type Account = Readonly < {
-  email: string;
-  uuid: string;
-  email_verified: boolean;
+export type Account = Readonly<{
+  email: string; uuid: string; email_verified: boolean;
   // This value is one of "active", "warning" or "locked".
   status: string;
-}
-> ;
+}>;
 
 // Reference:
 // https://developers.digitalocean.com/documentation/v2/#regions
