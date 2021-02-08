@@ -48,6 +48,17 @@ EOF
 
 readonly SENTRY_LOG_FILE=${SENTRY_LOG_FILE:-}
 
+FULL_LOG=`mktemp -t outline_logXXX`
+function log_command() {
+  ${1+$@} 2>&1 > >(tee -a $FULL_LOG)
+  return # Propagate return code
+}
+
+function log_command_silent() {
+  log_command "$@" > /dev/null
+  return # Propagate return code
+}
+
 function log_error() {
   local -r ERROR_TEXT="\033[0;31m"  # red
   local -r NO_COLOR="\033[0m"
@@ -80,6 +91,20 @@ function run_step() {
   fi
 }
 
+function run_interactive() {
+  local -r msg=$1
+  shift 1
+  run_step "$msg" log_command "$@"
+  return
+}
+
+function run_silent() {
+  local -r msg=$1
+  shift 1
+  run_step "$msg" log_command_silent "$@"
+  return
+}
+
 function confirm() {
   echo -n "$1"
   local RESPONSE
@@ -99,6 +124,7 @@ function log_for_sentry() {
   if [[ -n "$SENTRY_LOG_FILE" ]]; then
     echo [$(date "+%Y-%m-%d@%H:%M:%S")] "install_server.sh" "$@" >>$SENTRY_LOG_FILE
   fi
+  echo $@ >> $FULL_LOG
 }
 
 # Check to see if docker is installed.
@@ -111,7 +137,7 @@ function verify_docker_installed() {
   if ! confirm "> Would you like to install Docker? This will run 'curl -sS https://get.docker.com/ | sh'. [Y/n] "; then
     exit 0
   fi
-  if ! run_step "Installing Docker" install_docker; then
+  if ! run_silent "Installing Docker" install_docker; then
     log_error "Docker installation failed, please visit https://docs.docker.com/install for instructions."
     exit 1
   fi
@@ -131,12 +157,11 @@ function verify_docker_running() {
 }
 
 function install_docker() {
-  curl -sS https://get.docker.com/ | sh > /dev/null 2>&1
+  curl -sS https://get.docker.com/ | sh
 }
 
 function start_docker() {
-  systemctl start docker.service > /dev/null 2>&1
-  systemctl enable docker.service > /dev/null 2>&1
+  systemctl start docker.service && systemctl enable docker.service
 }
 
 function docker_container_exists() {
@@ -152,7 +177,7 @@ function remove_watchtower_container() {
 }
 
 function remove_docker_container() {
-  docker rm -f $1 > /dev/null
+  docker rm -f $1
 }
 
 function handle_docker_container_conflict() {
@@ -183,8 +208,12 @@ function finish {
   EXIT_CODE=$?
   if [[ $EXIT_CODE -ne 0 ]]
   then
+    echo ""
+    echo "Full log:"
+    cat $FULL_LOG
     log_error "\nSorry! Something went wrong. If you can't figure this out, please copy and paste all this output into the Outline Manager screen, and send it to us, to see if we can help you."
   fi
+  rm $FULL_LOG
 }
 
 function get_random_port {
@@ -227,7 +256,7 @@ function generate_certificate() {
     -subj "/CN=${PUBLIC_HOSTNAME}"
     -keyout "${SB_PRIVATE_KEY_FILE}" -out "${SB_CERTIFICATE_FILE}"
   )
-  openssl req "${openssl_req_flags[@]}" >/dev/null 2>&1
+  openssl req "${openssl_req_flags[@]}"
 }
 
 function generate_certificate_fingerprint() {
@@ -318,7 +347,7 @@ function wait_shadowbox() {
 }
 
 function create_first_user() {
-  curl --insecure -X POST -s "${LOCAL_API_URL}/access-keys" >/dev/null
+  curl --insecure -X POST -s "${LOCAL_API_URL}/access-keys"
 }
 
 function output_config() {
@@ -361,8 +390,8 @@ install_shadowbox() {
   # Make sure we don't leak readable files to other users.
   umask 0007
 
-  run_step "Verifying that Docker is installed" verify_docker_installed
-  run_step "Verifying that Docker daemon is running" verify_docker_running
+  run_interactive "Verifying that Docker is installed" verify_docker_installed
+  run_silent "Verifying that Docker daemon is running" verify_docker_running
 
   log_for_sentry "Creating Outline directory"
   export SHADOWBOX_DIR="${SHADOWBOX_DIR:-/opt/outline}"
@@ -395,28 +424,28 @@ install_shadowbox() {
   [[ -f $ACCESS_CONFIG ]] && cp $ACCESS_CONFIG $ACCESS_CONFIG.bak && > $ACCESS_CONFIG
 
   # Make a directory for persistent state
-  run_step "Creating persistent state dir" create_persisted_state_dir
-  run_step "Generating secret key" generate_secret_key
-  run_step "Generating TLS certificate" generate_certificate
-  run_step "Generating SHA-256 certificate fingerprint" generate_certificate_fingerprint
-  run_step "Writing config" write_config
+  run_silent "Creating persistent state dir" create_persisted_state_dir
+  run_silent "Generating secret key" generate_secret_key
+  run_silent "Generating TLS certificate" generate_certificate
+  run_silent "Generating SHA-256 certificate fingerprint" generate_certificate_fingerprint
+  run_silent "Writing config" write_config
 
   # TODO(dborkan): if the script fails after docker run, it will continue to fail
   # as the names shadowbox and watchtower will already be in use.  Consider
   # deleting the container in the case of failure (e.g. using a trap, or
   # deleting existing containers on each run).
-  run_step "Starting Shadowbox" start_shadowbox
+  run_interactive "Starting Shadowbox" start_shadowbox
   # TODO(fortuna): Don't wait for Shadowbox to run this.
-  run_step "Starting Watchtower" start_watchtower
+  run_interactive "Starting Watchtower" start_watchtower
 
   readonly PUBLIC_API_URL="https://${PUBLIC_HOSTNAME}:${API_PORT}/${SB_API_PREFIX}"
   readonly LOCAL_API_URL="https://localhost:${API_PORT}/${SB_API_PREFIX}"
-  run_step "Waiting for Outline server to be healthy" wait_shadowbox
-  run_step "Creating first user" create_first_user
-  run_step "Adding API URL to config" add_api_url_to_config
+  run_silent "Waiting for Outline server to be healthy" wait_shadowbox
+  run_silent "Creating first user" create_first_user
+  run_silent "Adding API URL to config" add_api_url_to_config
 
   FIREWALL_STATUS=""
-  run_step "Checking host firewall" check_firewall
+  run_silent "Checking host firewall" check_firewall
 
   # Echos the value of the specified field from ACCESS_CONFIG.
   # e.g. if ACCESS_CONFIG contains the line "certSha256:1234",
