@@ -100,7 +100,7 @@ function cleanup() {
   SB_API_URL=https://shadowbox/${SB_API_PREFIX}
   export TMP_STATE_DIR=$(mktemp -d)
   echo '{"hostname": "shadowbox"}' > ${TMP_STATE_DIR}/shadowbox_server_config.json
-  docker-compose --verbose --project-name=integrationtest up --build -d
+  docker-compose --project-name=integrationtest up --build -d
 
   # Wait for target to come up.
   wait_for_resource localhost:10080
