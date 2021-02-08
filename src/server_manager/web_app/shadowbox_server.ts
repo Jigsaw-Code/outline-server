@@ -17,14 +17,13 @@ import * as semver from 'semver';
 import * as errors from '../infrastructure/errors';
 import * as server from '../model/server';
 
-// Interfaces used by metrics REST APIs.
-interface MetricsEnabled {
-  metricsEnabled: boolean;
-}
-export interface ServerName {
+interface AccessKeyJson {
+  id: string;
   name: string;
+  accessUrl: string;
 }
-export interface ServerConfig {
+
+interface ServerConfigJson {
   name: string;
   metricsEnabled: boolean;
   serverId: string;
@@ -35,9 +34,27 @@ export interface ServerConfig {
   accessKeyDataLimit?: server.DataLimit;
 }
 
+// Byte transfer stats for the past 30 days, including both inbound and outbound.
+// TODO: this is copied at src/shadowbox/model/metrics.ts.  Both copies should
+// be kept in sync, until we can find a way to share code between the web_app
+// and shadowbox.
+interface DataUsageByAccessKeyJson {
+  // The accessKeyId should be of type AccessKeyId, however that results in the tsc
+  // error TS1023: An index signature parameter type must be 'string' or 'number'.
+  // See https://github.com/Microsoft/TypeScript/issues/2491
+  // TODO: this still says "UserId", changing to "AccessKeyId" will require
+  // a change on the shadowbox server.
+  bytesTransferredByUserId: {[accessKeyId: string]: number};
+}
+
+// Converts the access key JSON from the API to its model.
+function makeAccessKeyModel(apiAccessKey: AccessKeyJson): server.AccessKey {
+  return apiAccessKey as server.AccessKey;
+}
+
 export class ShadowboxServer implements server.Server {
   private managementApiAddress: string;
-  private serverConfig: ServerConfig;
+  private serverConfig: ServerConfigJson;
 
   constructor(private id: string) {}
 
@@ -47,14 +64,15 @@ export class ShadowboxServer implements server.Server {
 
   listAccessKeys(): Promise<server.AccessKey[]> {
     console.info('Listing access keys');
-    return this.apiRequest<{accessKeys: server.AccessKey[]}>('access-keys').then((response) => {
-      return response.accessKeys;
+    return this.apiRequest<{accessKeys: AccessKeyJson[]}>('access-keys').then((response) => {
+      return response.accessKeys.map(makeAccessKeyModel);
     });
   }
 
-  addAccessKey(): Promise<server.AccessKey> {
+  async addAccessKey(): Promise<server.AccessKey> {
     console.info('Adding access key');
-    return this.apiRequest<server.AccessKey>('access-keys', {method: 'POST'});
+    return makeAccessKeyModel(
+        await this.apiRequest<AccessKeyJson>('access-keys', {method: 'POST'}));
   }
 
   renameAccessKey(accessKeyId: server.AccessKeyId, name: string): Promise<void> {
@@ -99,8 +117,13 @@ export class ShadowboxServer implements server.Server {
     return 'experimental/access-key-data-limit';
   }
 
-  getDataUsage(): Promise<server.DataUsageByAccessKey> {
-    return this.apiRequest<server.DataUsageByAccessKey>('metrics/transfer');
+  async getDataUsage(): Promise<server.BytesByAccessKey> {
+    const jsonResponse = await this.apiRequest<DataUsageByAccessKeyJson>('metrics/transfer');
+    const usageMap = new Map<server.AccessKeyId, number>();
+    for (const [accessKeyId, bytes] of Object.entries(jsonResponse.bytesTransferredByUserId)) {
+      usageMap.set(accessKeyId, bytes ?? 0);
+    }
+    return usageMap;
   }
 
   getName(): string {
@@ -212,9 +235,9 @@ export class ShadowboxServer implements server.Server {
     });
   }
 
-  private async getServerConfig(): Promise<ServerConfig> {
+  private async getServerConfig(): Promise<ServerConfigJson> {
     console.info('Retrieving server configuration');
-    return await this.apiRequest<ServerConfig>('server');
+    return await this.apiRequest<ServerConfigJson>('server');
   }
 
   protected setManagementApiUrl(apiAddress: string): void {

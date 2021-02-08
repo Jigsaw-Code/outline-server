@@ -202,7 +202,7 @@ class FakeServer implements server.Server {
     return new Date();
   }
   getDataUsage() {
-    return Promise.resolve({bytesTransferredByUserId: {}});
+    return Promise.resolve(new Map<server.AccessKeyId, number>());
   }
   addAccessKey() {
     return Promise.reject(new Error('FakeServer.addAccessKey not implemented'));

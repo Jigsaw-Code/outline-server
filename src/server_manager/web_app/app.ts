@@ -767,11 +767,10 @@ export class App {
 
   private async refreshTransferStats(selectedServer: server.Server, serverView: ServerView) {
     try {
-      const stats = await selectedServer.getDataUsage();
+      const usageMap = await selectedServer.getDataUsage();
       let totalBytes = 0;
-      // tslint:disable-next-line:forin
-      for (const accessKeyId in stats.bytesTransferredByUserId) {
-        totalBytes += stats.bytesTransferredByUserId[accessKeyId];
+      for (const accessKeyBytes of usageMap.values()) {
+        totalBytes += accessKeyBytes;
       }
       serverView.totalInboundBytes = totalBytes;
 
@@ -785,7 +784,7 @@ export class App {
       // did.
       for (const accessKey of serverView.accessKeyRows) {
         const accessKeyId = accessKey.id;
-        const transferredBytes = stats.bytesTransferredByUserId[accessKeyId] || 0;
+        const transferredBytes = usageMap.get(accessKeyId) ?? 0;
         let relativeTraffic =
             totalBytes ? 100 * transferredBytes / totalBytes : (accessKeyDataLimit ? 100 : 0);
         if (relativeTraffic > 100) {

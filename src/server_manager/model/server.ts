@@ -29,7 +29,7 @@ export interface Server {
   listAccessKeys(): Promise<AccessKey[]>;
 
   // Returns stats for bytes transferred across all access keys of this server.
-  getDataUsage(): Promise<DataUsageByAccessKey>;
+  getDataUsage(): Promise<BytesByAccessKey>;
 
   // Adds a new access key to this server.
   addAccessKey(): Promise<AccessKey>;
@@ -169,18 +169,7 @@ export interface AccessKey {
   accessUrl: string;
 }
 
-// Byte transfer stats for the past 30 days, including both inbound and outbound.
-// TODO: this is copied at src/shadowbox/model/metrics.ts.  Both copies should
-// be kept in sync, until we can find a way to share code between the web_app
-// and shadowbox.
-export interface DataUsageByAccessKey {
-  // The accessKeyId should be of type AccessKeyId, however that results in the tsc
-  // error TS1023: An index signature parameter type must be 'string' or 'number'.
-  // See https://github.com/Microsoft/TypeScript/issues/2491
-  // TODO: this still says "UserId", changing to "AccessKeyId" will require
-  // a change on the shadowbox server.
-  bytesTransferredByUserId: {[accessKeyId: string]: number};
-}
+export type BytesByAccessKey = Map<AccessKeyId, number>;
 
 // Data transfer allowance, measured in bytes.
 // NOTE: Must be kept in sync with the definition in src/shadowbox/access_key.ts.
