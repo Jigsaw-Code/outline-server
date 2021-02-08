@@ -9,8 +9,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # TODO run on Windows as well
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-16.04]
       # Don't cancel jobs on other platforms if one fails
       fail-fast: false
       
