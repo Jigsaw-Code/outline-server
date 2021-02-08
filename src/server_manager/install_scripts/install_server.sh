@@ -402,11 +402,15 @@ install_shadowbox() {
   readonly SB_IMAGE=${SB_IMAGE:-quay.io/outline/shadowbox:stable}
 
   log_for_sentry "Setting PUBLIC_HOSTNAME"
-  # TODO(fortuna): Make sure this is IPv4
   PUBLIC_HOSTNAME=${FLAGS_HOSTNAME:-${SB_PUBLIC_IP:-$(curl -4s https://ipinfo.io/ip)}}
 
   if [[ -z $PUBLIC_HOSTNAME ]]; then
     local readonly MSG="Failed to determine the server's IP address."
+    log_error "$MSG"
+    log_for_sentry "$MSG"
+    exit 1
+  elif ! getent ahosts $PUBLIC_HOSTNAME > /dev/null; then
+    local readonly MSG="Invalid IP or domain name: \"$PUBLIC_HOSTNAME\""
     log_error "$MSG"
     log_for_sentry "$MSG"
     exit 1
