@@ -80,7 +80,6 @@ function cleanup() {
   status=$?
   if ((DEBUG != 1)); then
     docker-compose --project-name=integrationtest down
-    rm -rf ${TMP_STATE_DIR} || echo "Failed to cleanup files at ${TMP_STATE_DIR}"
   fi
   return $status
 }
