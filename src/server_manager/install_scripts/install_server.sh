@@ -50,8 +50,8 @@ readonly SENTRY_LOG_FILE=${SENTRY_LOG_FILE:-}
 
 FULL_LOG=$(mktemp -t outline_logXXX)
 function log_command() {
-  # Capture STDOUT and STDERR to FULL_LOG, and print STDERR.
-  "$@" >> $FULL_LOG 2>(tee -a $FULL_LOG)
+  # Capture STDOUT and STDERR to FULL_LOG, and forward STDERR.
+  "$@" >> $FULL_LOG 2> >(tee -a $FULL_LOG >&2)
 }
 
 function log_error() {
@@ -74,12 +74,14 @@ function log_start_step() {
   echo -n " "
 }
 
+# Print $1 as the step name and runs the remainder as a command.
+# Forwards STDERR and logs STDERR and STDOUT.
 function run_step() {
   local -r msg=$1
-  log_start_step $msg
+  log_start_step $msg >&2
   shift 1
   if log_command "$@"; then
-    echo "OK"
+    echo "OK" >&2
   else
     # Propagates the error code
     return
@@ -87,7 +89,7 @@ function run_step() {
 }
 
 function confirm() {
-  echo -n "$1"
+  echo -n "> $1" >&2
   local RESPONSE
   read RESPONSE
   RESPONSE=$(echo "$RESPONSE" | tr '[A-Z]' '[a-z]')
@@ -114,15 +116,14 @@ function verify_docker_installed() {
     return 0
   fi
   log_error "NOT INSTALLED"
-  echo -n
-  if ! confirm "> Would you like to install Docker? This will run 'curl -sS https://get.docker.com/ | sh'. [Y/n] "; then
+  if ! confirm "Would you like to install Docker? This will run 'curl -sS https://get.docker.com/ | sh'. [Y/n] "; then
     exit 0
   fi
   if ! run_step "Installing Docker" install_docker; then
     log_error "Docker installation failed, please visit https://docs.docker.com/install for instructions."
     exit 1
   fi
-  echo -n "> Verifying Docker installation................ "
+  log_start_step "Verifying Docker installation" >&2
   command_exists docker
 }
 
@@ -138,11 +139,11 @@ function verify_docker_running() {
 }
 
 function install_docker() {
-  curl -sS https://get.docker.com/ | sh
+  curl -sS https://get.docker.com/ | sh 2>&1
 }
 
 function start_docker() {
-  systemctl start docker.service && systemctl enable docker.service
+  systemctl enable --now docker.service 2>&1
 }
 
 function docker_container_exists() {
@@ -164,7 +165,7 @@ function remove_docker_container() {
 function handle_docker_container_conflict() {
   local readonly CONTAINER_NAME=$1
   local readonly EXIT_ON_NEGATIVE_USER_RESPONSE=$2
-  local PROMPT="> The container name \"$CONTAINER_NAME\" is already in use by another container. This may happen when running this script multiple times."
+  local PROMPT="The container name \"$CONTAINER_NAME\" is already in use by another container. This may happen when running this script multiple times."
   if $EXIT_ON_NEGATIVE_USER_RESPONSE; then
     PROMPT="$PROMPT We will attempt to remove the existing container and restart it. Would you like to proceed? [Y/n] "
   else
@@ -177,7 +178,7 @@ function handle_docker_container_conflict() {
     return 0
   fi
   if run_step "Removing $CONTAINER_NAME container" remove_"$CONTAINER_NAME"_container ; then
-    echo -n "> Restarting $CONTAINER_NAME ........................ "
+    log_start_step "Restarting $CONTAINER_NAME" >&2
     start_"$CONTAINER_NAME"
     return $?
   fi
@@ -328,7 +329,7 @@ function wait_shadowbox() {
 }
 
 function create_first_user() {
-  curl --insecure -X POST -s "${LOCAL_API_URL}/access-keys"
+  curl --insecure -X POST -s "${LOCAL_API_URL}/access-keys" 2>&1
 }
 
 function output_config() {
