@@ -85,14 +85,14 @@ EOF
 
 echo "Connections request:"
 cat $CONNECTIONS_REQUEST
-curl -X POST -H "Content-Type: application/json" -d @$CONNECTIONS_REQUEST $METRICS_URL/connections && echo
+curl -X POST -H "Content-Type: application/json" -d @$CONNECTIONS_REQUEST $METRICS_URL/$CONNECTIONS_PATH && echo
 sleep 5
 bq --project_id $BIGQUERY_PROJECT --format json query --nouse_legacy_sql 'SELECT serverId, userId, bytesTransferred, countries FROM `'"$BIGQUERY_DATASET.$CONNECTIONS_TABLE"'` WHERE serverId = "'"$SERVER_ID"'" ORDER BY bytesTransferred DESC LIMIT 2' > $CONNECTIONS_RESPONSE
 diff $CONNECTIONS_RESPONSE $CONNECTIONS_EXPECTED_RESPONSE
 
 echo "Features request:"
 cat $FEATURES_REQUEST
-curl -X POST -H "Content-Type: application/json" -d @$FEATURES_REQUEST $METRICS_URL/features && echo
+curl -X POST -H "Content-Type: application/json" -d @$FEATURES_REQUEST $METRICS_URL/$FEATURES_PATH && echo
 sleep 5
 bq --project_id $BIGQUERY_PROJECT --format json query --nouse_legacy_sql 'SELECT serverId, serverVersion, dataLimit FROM `'"$BIGQUERY_DATASET.$FEATURES_TABLE"'` WHERE serverId = "'"$SERVER_ID"'" ORDER BY timestamp DESC LIMIT 1' > $FEATURES_RESPONSE
 diff $FEATURES_RESPONSE $FEATURES_EXPECTED_RESPONSE
