@@ -25,9 +25,7 @@ before_install:
 stages:
   - name: "Server Daily Release"
     if: type = cron
-  - name: Test
-    if: type != cron
-  - name: "deploy"
+  - name: "Deploy Server"
     if: tag =~ ^server-
   - name: "Manager Release"
     if: tag =~ ^v[0-9]
@@ -37,41 +35,27 @@ jobs:
   include:
     - stage: "Server Daily Release"
       script:
-        - RELEASE_NAME=server-$(date -I)
-        - curl --data '{"tag_name":"'$RELEASE_NAME'","name":"'$RELEASE_NAME'","prerelease":true}' https://api.github.com/repos/Jigsaw-Code/outline-server/releases?access_token=$CI_USER_TOKEN
-
-    # Ideally, we would split this stage in some way, e.g. by component or by
-    # build/test commands, to make it clearer in the Travis UI exactly which
-    # command failed. However, since each stage incurs a significantly start-up
-    # cost, we combine test and build commands for all components into one fast
-    # stage.
-    - stage: Test
-      name: Unit Tests
-      script:
-        - yarn lint
-        - yarn do metrics_server/build
-        - yarn do metrics_server/test
-        - yarn do sentry_webhook/build
-        - yarn do shadowbox/server/build
+        - CREATE_RELEASE_URL=https://api.github.com/repos/Jigsaw-Code/outline-server/releases?access_token=$CI_USER_TOKEN
+        - SERVER_RELEASE_NAME=server-$(date -I)
+        - curl --data '{"tag_name":"'$SERVER_RELEASE_NAME'","name":"'$SERVER_RELEASE_NAME'","prerelease":true}' $CREATE_RELEASE_URL
+        - MANAGER_RELEASE_NAME=v$(date -I)
+        - curl --data '{"tag_name":"'$MANAGER_RELEASE_NAME'","name":"'$MANAGER_RELEASE_NAME'","prerelease":true}' $CREATE_RELEASE_URL
+    - stage: "Deploy Server"	
+      name: Server Testing	
+      sudo: required	
+      services: docker	
+      script:	
+        # https://docs.travis-ci.com/user/docker/	
+        - |	
+          sudo rm -f /usr/local/bin/docker-compose	
+          curl -L https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m) > docker-compose	
+          chmod +x docker-compose	
+          sudo mv docker-compose /usr/local/bin	
         - yarn do shadowbox/test
-        - yarn do server_manager/electron_app/build
-        - yarn do server_manager/web_app/build
-        - yarn do server_manager/test
-
-    - stage: Test
-      name: Server Integration Test
-      sudo: required
-      services: docker
-      script:
-        # https://docs.travis-ci.com/user/docker/
-        - |
-          sudo rm -f /usr/local/bin/docker-compose
-          curl -L https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m) > docker-compose
-          chmod +x docker-compose
-          sudo mv docker-compose /usr/local/bin
         - yarn do shadowbox/docker/build && cd src/shadowbox/integration_test && ./test.sh
-
-    - stage: deploy
+    
+    
+    - stage: "Deploy Server"
       name: Server Docker Image
       sudo: required
       services: docker
@@ -83,16 +67,8 @@ jobs:
         - docker tag outline/shadowbox quay.io/outline/shadowbox:daily
         - docker push quay.io/outline/shadowbox:daily
 
-    - stage: deploy
-      name: Manager Linux
-      addons:
-        apt:
-          packages:
-          - rpm
-      script: yarn do server_manager/electron_app/package_linux
-
     # https://www.electron.build/multi-platform-build
-    - stage: deploy
+    - stage: "Manager Release"
       name: Manager Windows
       sudo: required
       services: docker
@@ -105,11 +81,6 @@ jobs:
             -v ~/.cache/electron-builder:/root/.cache/electron-builder
             electronuserland/builder:wine
             /bin/bash -c "yarn do server_manager/electron_app/package_only_windows" || travis_terminate $?
-
-    - stage: deploy
-      name: Manager macOS
-      os: osx
-      script: yarn do server_manager/electron_app/package_macos
 
     # Note that because we cannot currently sign Windows binaries on Travis,
     # these must be manually built and uploaded to the releases page.
