@@ -48,10 +48,25 @@ EOF
 
 readonly SENTRY_LOG_FILE=${SENTRY_LOG_FILE:-}
 
+# I/O conventions for this script:
+# - Ordinary status messages are printed to STDOUT
+# - STDERR is only used in the event of a fatal error
+# - Detailed logs are recorded to this FULL_LOG, which is preserved if an error occurred.
+# - The most recent error is stored in LAST_ERROR, which is never preserved.
+readonly FULL_LOG=$(mktemp -t outline_logXXX)
+readonly LAST_ERROR=$(mktemp -t outline_last_errorXXX)
+
+function log_command() {
+  # Direct STDOUT and STDERR to FULL_LOG, and forward STDOUT.
+  # The most recent STDERR output will also be stored in LAST_ERROR.
+  "$@" > >(tee -a "${FULL_LOG}") 2> >(tee -a "${FULL_LOG}" > "${LAST_ERROR}")
+}
+
 function log_error() {
   local -r ERROR_TEXT="\033[0;31m"  # red
   local -r NO_COLOR="\033[0m"
-  >&2 printf "${ERROR_TEXT}${1}${NO_COLOR}\n"
+  printf "${ERROR_TEXT}${1}${NO_COLOR}\n"
+  echo "${1}" >> ${FULL_LOG}
 }
 
 # Pretty prints text to stdout, and also writes to sentry log file if set.
@@ -68,11 +83,14 @@ function log_start_step() {
   echo -n " "
 }
 
+# Prints $1 as the step name and runs the remainder as a command.
+# STDOUT will be forwarded.  STDERR will be logged silently, and
+# revealed only in the event of a fatal error.
 function run_step() {
   local -r msg=$1
   log_start_step $msg
   shift 1
-  if "$@"; then
+  if log_command "$@"; then
     echo "OK"
   else
     # Propagates the error code
@@ -81,7 +99,7 @@ function run_step() {
 }
 
 function confirm() {
-  echo -n "$1"
+  echo -n "> $1 [Y/n] "
   local RESPONSE
   read RESPONSE
   RESPONSE=$(echo "$RESPONSE" | tr '[A-Z]' '[a-z]')
@@ -99,6 +117,7 @@ function log_for_sentry() {
   if [[ -n "$SENTRY_LOG_FILE" ]]; then
     echo [$(date "+%Y-%m-%d@%H:%M:%S")] "install_server.sh" "$@" >>$SENTRY_LOG_FILE
   fi
+  echo "$@" >> "${FULL_LOG}"
 }
 
 # Check to see if docker is installed.
@@ -107,15 +126,14 @@ function verify_docker_installed() {
     return 0
   fi
   log_error "NOT INSTALLED"
-  echo -n
-  if ! confirm "> Would you like to install Docker? This will run 'curl -sS https://get.docker.com/ | sh'. [Y/n] "; then
+  if ! confirm "Would you like to install Docker? This will run 'curl -sS https://get.docker.com/ | sh'."; then
     exit 0
   fi
   if ! run_step "Installing Docker" install_docker; then
     log_error "Docker installation failed, please visit https://docs.docker.com/install for instructions."
     exit 1
   fi
-  echo -n "> Verifying Docker installation................ "
+  log_start_step "Verifying Docker installation"
   command_exists docker
 }
 
@@ -131,12 +149,11 @@ function verify_docker_running() {
 }
 
 function install_docker() {
-  curl -sS https://get.docker.com/ | sh > /dev/null 2>&1
+  curl -sS https://get.docker.com/ | sh >&2
 }
 
 function start_docker() {
-  systemctl start docker.service > /dev/null 2>&1
-  systemctl enable docker.service > /dev/null 2>&1
+  systemctl enable --now docker.service >&2
 }
 
 function docker_container_exists() {
@@ -152,17 +169,17 @@ function remove_watchtower_container() {
 }
 
 function remove_docker_container() {
-  docker rm -f $1 > /dev/null
+  docker rm -f $1 >&2
 }
 
 function handle_docker_container_conflict() {
   local readonly CONTAINER_NAME=$1
   local readonly EXIT_ON_NEGATIVE_USER_RESPONSE=$2
-  local PROMPT="> The container name \"$CONTAINER_NAME\" is already in use by another container. This may happen when running this script multiple times."
+  local PROMPT="The container name \"$CONTAINER_NAME\" is already in use by another container. This may happen when running this script multiple times."
   if $EXIT_ON_NEGATIVE_USER_RESPONSE; then
-    PROMPT="$PROMPT We will attempt to remove the existing container and restart it. Would you like to proceed? [Y/n] "
+    PROMPT="$PROMPT We will attempt to remove the existing container and restart it. Would you like to proceed?"
   else
-    PROMPT="$PROMPT Would you like to replace this container? If you answer no, we will proceed with the remainder of the installation. [Y/n] "
+    PROMPT="$PROMPT Would you like to replace this container? If you answer no, we will proceed with the remainder of the installation."
   fi
   if ! confirm "$PROMPT"; then
     if $EXIT_ON_NEGATIVE_USER_RESPONSE; then
@@ -171,7 +188,7 @@ function handle_docker_container_conflict() {
     return 0
   fi
   if run_step "Removing $CONTAINER_NAME container" remove_"$CONTAINER_NAME"_container ; then
-    echo -n "> Restarting $CONTAINER_NAME ........................ "
+    log_start_step "Restarting $CONTAINER_NAME"
     start_"$CONTAINER_NAME"
     return $?
   fi
@@ -183,8 +200,15 @@ function finish {
   EXIT_CODE=$?
   if [[ $EXIT_CODE -ne 0 ]]
   then
-    log_error "\nSorry! Something went wrong. If you can't figure this out, please copy and paste all this output into the Outline Manager screen, and send it to us, to see if we can help you."
+    if [[ -s $LAST_ERROR ]]; then
+      log_error "\nLast error: $(< "${LAST_ERROR}")" >&2
+    fi
+    log_error "\nSorry! Something went wrong. If you can't figure this out, please copy and paste all this output into the Outline Manager screen, and send it to us, to see if we can help you." >&2
+    log_error "Full log: ${FULL_LOG}" >&2
+  else
+    rm "${FULL_LOG}"
   fi
+  rm "${LAST_ERROR}"
 }
 
 function get_random_port {
@@ -219,7 +243,7 @@ function generate_secret_key() {
 
 function generate_certificate() {
   # Generate self-signed cert and store it in the persistent state directory.
-  readonly CERTIFICATE_NAME="${STATE_DIR}/shadowbox-selfsigned"
+  local readonly CERTIFICATE_NAME="${STATE_DIR}/shadowbox-selfsigned"
   readonly SB_CERTIFICATE_FILE="${CERTIFICATE_NAME}.crt"
   readonly SB_PRIVATE_KEY_FILE="${CERTIFICATE_NAME}.key"
   declare -a openssl_req_flags=(
@@ -227,16 +251,16 @@ function generate_certificate() {
     -subj "/CN=${PUBLIC_HOSTNAME}"
     -keyout "${SB_PRIVATE_KEY_FILE}" -out "${SB_CERTIFICATE_FILE}"
   )
-  openssl req "${openssl_req_flags[@]}" >/dev/null 2>&1
+  openssl req "${openssl_req_flags[@]}" >&2
 }
 
 function generate_certificate_fingerprint() {
   # Add a tag with the SHA-256 fingerprint of the certificate.
   # (Electron uses SHA-256 fingerprints: https://github.com/electron/electron/blob/9624bc140353b3771bd07c55371f6db65fd1b67e/atom/common/native_mate_converters/net_converter.cc#L60)
   # Example format: "SHA256 Fingerprint=BD:DB:C9:A4:39:5C:B3:4E:6E:CF:18:43:61:9F:07:A2:09:07:37:35:63:67"
-  CERT_OPENSSL_FINGERPRINT=$(openssl x509 -in "${SB_CERTIFICATE_FILE}" -noout -sha256 -fingerprint)
+  local readonly CERT_OPENSSL_FINGERPRINT=$(openssl x509 -in "${SB_CERTIFICATE_FILE}" -noout -sha256 -fingerprint)
   # Example format: "BDDBC9A4395CB34E6ECF1843619F07A2090737356367"
-  CERT_HEX_FINGERPRINT=$(echo ${CERT_OPENSSL_FINGERPRINT#*=} | tr --delete :)
+  local readonly CERT_HEX_FINGERPRINT=$(echo ${CERT_OPENSSL_FINGERPRINT#*=} | tr --delete :)
   output_config "certSha256:$CERT_HEX_FINGERPRINT"
 }
 
@@ -318,7 +342,7 @@ function wait_shadowbox() {
 }
 
 function create_first_user() {
-  curl --insecure -X POST -s "${LOCAL_API_URL}/access-keys" >/dev/null
+  curl --insecure -X POST -s "${LOCAL_API_URL}/access-keys" >&2
 }
 
 function output_config() {
@@ -462,7 +486,7 @@ function parse_flags() {
         FLAGS_API_PORT=${1}
         shift
         if ! is_valid_port $FLAGS_API_PORT; then
-          log_error "Invalid value for $flag: $FLAGS_API_PORT"
+          log_error "Invalid value for $flag: $FLAGS_API_PORT" >&2
           exit 1
         fi
         ;;
@@ -470,7 +494,7 @@ function parse_flags() {
         FLAGS_KEYS_PORT=$1
         shift
         if ! is_valid_port $FLAGS_KEYS_PORT; then
-          log_error "Invalid value for $flag: $FLAGS_KEYS_PORT"
+          log_error "Invalid value for $flag: $FLAGS_KEYS_PORT" >&2
           exit 1
         fi
         ;;
@@ -478,14 +502,14 @@ function parse_flags() {
         break
         ;;
       *) # This should not happen
-        log_error "Unsupported flag $flag"
-        display_usage
+        log_error "Unsupported flag $flag" >&2
+        display_usage >&2
         exit 1
         ;;
     esac
   done
   if [[ $FLAGS_API_PORT != 0 && $FLAGS_API_PORT == $FLAGS_KEYS_PORT ]]; then
-    log_error "--api-port must be different from --keys-port"
+    log_error "--api-port must be different from --keys-port" >&2
     exit 1
   fi
   return 0
