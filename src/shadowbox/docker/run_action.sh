@@ -48,11 +48,11 @@ declare -a docker_bindings=(
 readonly IMAGE="${SB_IMAGE:-outline/shadowbox}"
 echo "Running image ${IMAGE}"
 
-NET_BINDINGS="--network=host"
+declare -a NET_BINDINGS=("--network=host")
 if [[ `uname` == "Darwin" ]]; then
   # Docker does not support the --network=host option on macOS. Instead, publish the management API
   # and access key ports to the host.
-  NET_BINDINGS="-p $SB_API_PORT:$SB_API_PORT -p $ACCESS_KEY_PORT:$ACCESS_KEY_PORT -p $ACCESS_KEY_PORT:$ACCESS_KEY_PORT/udp"
+  NET_BINDINGS=(-p "${SB_API_PORT}:${SB_API_PORT}" -p "${ACCESS_KEY_PORT}:${ACCESS_KEY_PORT}" -p "${ACCESS_KEY_PORT}:${ACCESS_KEY_PORT}/udp")
 fi;
 
-docker run --rm -it $NET_BINDINGS --name shadowbox "${docker_bindings[@]}" ${IMAGE}
+docker run --rm -it "${NET_BINDINGS[@]}" --name shadowbox "${docker_bindings[@]}" "${IMAGE}"
