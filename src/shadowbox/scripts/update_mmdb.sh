@@ -8,21 +8,22 @@
 # Note that this runs on BusyBox sh, which lacks bash features.
 
 TMPDIR="$(mktemp -d)"
-FILENAME="ip-country.mmdb"
+readonly TMPDIR
+readonly FILENAME="ip-country.mmdb"
 
 # We need to make sure that we grab an existing database at install-time
 for monthdelta in $(seq 10); do
-    newdate=$(date --date="-$monthdelta months" +%Y-%m)
+    newdate="$(date --date="-${monthdelta} months" +%Y-%m)"
     ADDRESS="https://download.db-ip.com/free/dbip-country-lite-${newdate}.mmdb.gz"
-    curl --fail --silent "${ADDRESS}" -o "$TMPDIR/$FILENAME.gz" > /dev/null && break  
-    if [ $monthdelta -eq 10 ]; then
+    curl --fail --silent "${ADDRESS}" -o "${TMPDIR}/${FILENAME}.gz" > /dev/null && break  
+    if [ "${monthdelta}" -eq '10' ]; then
         # A weird exit code on purpose -- we should catch this long before it triggers
         exit 2
     fi
 done
 
-gunzip "$TMPDIR/$FILENAME.gz"
-LIBDIR="/var/lib/libmaxminddb"
-mkdir -p $LIBDIR
-mv -f "$TMPDIR/$FILENAME" $LIBDIR
-rmdir $TMPDIR
+gunzip "${TMPDIR}/${FILENAME}.gz"
+readonly LIBDIR="/var/lib/libmaxminddb"
+mkdir -p "${LIBDIR}"
+mv -f "${TMPDIR}/${FILENAME}" "${LIBDIR}"
+rmdir "${TMPDIR}"

@@ -17,11 +17,11 @@
 # Writes a dotenv file for CI environment variables.
 
 # Fail if any release variables are undefined.
-if [[ -z ${SENTRY_DSN:-} ]]; then
+if [[ -z "${SENTRY_DSN:-}" ]]; then
   echo "SENTRY_DSN is undefined."
   exit 1
 fi
 
-cat <<EOM > $BUILD_DIR/server_manager/electron_app/static/.env
+cat <<EOM > "${BUILD_DIR}/server_manager/electron_app/static/.env"
 SENTRY_DSN=${SENTRY_DSN}
 EOM

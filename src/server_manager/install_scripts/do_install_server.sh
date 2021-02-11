@@ -33,27 +33,28 @@ set -euo pipefail
 sed -i 's/PasswordAuthentication no/# PasswordAuthentication no  # Commented out by the Outline installer/' /etc/ssh/sshd_config
 
 export SHADOWBOX_DIR="${SHADOWBOX_DIR:-${HOME:-/root}/shadowbox}"
-mkdir -p $SHADOWBOX_DIR
+mkdir -p "${SHADOWBOX_DIR}"
 
 # Save output for debugging
-exec &> $SHADOWBOX_DIR/install-shadowbox-output
+exec &> "${SHADOWBOX_DIR}/install-shadowbox-output"
 
 # Initialize sentry log file.
-export SENTRY_LOG_FILE="$SHADOWBOX_DIR/sentry-log-file.txt"
-true > $SENTRY_LOG_FILE
+export SENTRY_LOG_FILE="${SHADOWBOX_DIR}/sentry-log-file.txt"
+true > "${SENTRY_LOG_FILE}"
 function log_for_sentry() {
-  echo [$(date "+%Y-%m-%d@%H:%M:%S")] "do_install_server.sh" "$@" >>$SENTRY_LOG_FILE
+  echo "[$(date "+%Y-%m-%d@%H:%M:%S")]" "do_install_server.sh" "$@" >> "${SENTRY_LOG_FILE}"
 }
 function post_sentry_report() {
-  if [[ -n "$SENTRY_API_URL" ]]; then
+  if [[ -n "${SENTRY_API_URL}" ]]; then
     # Get JSON formatted string.  This command replaces newlines with literal '\n'
     # but otherwise assumes that there are no other characters to escape for JSON.
     # If we need better escaping, we can install the jq command line tool.
-    readonly SENTRY_PAYLOAD_BYTE_LIMIT=8000
-    SENTRY_PAYLOAD="{\"message\": \"Install error:\n$(awk '{printf "%s\\n", $0}' < "${SENTRY_LOG_FILE}" | tail --bytes $SENTRY_PAYLOAD_BYTE_LIMIT)\"}"
+    local -ir SENTRY_PAYLOAD_BYTE_LIMIT=8000
+    local SENTRY_PAYLOAD
+    SENTRY_PAYLOAD="{\"message\": \"Install error:\n$(awk '{printf "%s\\n", $0}' < "${SENTRY_LOG_FILE}" | tail --bytes "${SENTRY_PAYLOAD_BYTE_LIMIT}")\"}"
     # See Sentry documentation at:
     # https://media.readthedocs.org/pdf/sentry/7.1.0/sentry.pdf
-    curl "$SENTRY_API_URL" -H "Origin: shadowbox" --data-binary "$SENTRY_PAYLOAD"
+    curl "${SENTRY_API_URL}" -H "Origin: shadowbox" --data-binary "${SENTRY_PAYLOAD}"
   fi
 }
 
@@ -72,18 +73,19 @@ fi
 readonly DO_METADATA_URL="http://169.254.169.254/metadata/v1"
 
 function cloud::public_ip() {
-  curl ${DO_METADATA_URL}/interfaces/public/0/ipv4/address
+  curl "${DO_METADATA_URL}/interfaces/public/0/ipv4/address"
 }
 
 # Applies a tag to this droplet.
 function cloud::add_tag() {
-  local tag="$1"
-  declare -ar base_flags=(-X POST -H 'Content-Type: application/json' \
-                          -H "Authorization: Bearer ${DO_ACCESS_TOKEN}")
-  local TAGS_URL='https://api.digitalocean.com/v2/tags'
+  local -r tag="$1"
+  local -ar base_flags=(-X POST -H 'Content-Type: application/json' \
+                        -H "Authorization: Bearer ${DO_ACCESS_TOKEN}")
+  local -r TAGS_URL='https://api.digitalocean.com/v2/tags'
   # Create the tag
   curl "${base_flags[@]}" -d "{\"name\":\"${tag}\"}" "${TAGS_URL}"
-  local droplet_id="$(curl ${DO_METADATA_URL}/id)"
+  local droplet_id
+  droplet_id="$(curl "${DO_METADATA_URL}/id")"
   printf -v droplet_obj '
 {
   "resources": [{
@@ -101,15 +103,17 @@ function cloud::add_tag() {
 # tags may only contain letters, numbers, : - and _, and (2) there is
 # currently a bug that makes tags case-insensitive, so we can't use base64.
 function cloud::add_kv_tag() {
-  local key="$1"
-  local value="$(xxd -p -c 255)"
+  local -r key="$1"
+  local value
+  value="$(xxd -p -c 255)"
   cloud::add_tag "kv:${key}:${value}"
 }
 
 # Adds a key-value tag where the value is already hex-encoded.
 function cloud::add_encoded_kv_tag() {
-  local key="$1"
-  read value
+  local -r key="$1"
+  local value
+  read -r value
   cloud::add_tag "kv:${key}:${value}"
 }
 
@@ -123,10 +127,10 @@ ufw disable
 # Recent DigitalOcean Ubuntu droplets have unattended-upgrades configured from
 # the outset but we want to enable automatic rebooting so that critical updates
 # are applied without the Outline user's intervention.
-readonly UNATTENDED_UPGRADES_CONFIG=/etc/apt/apt.conf.d/50unattended-upgrades
-if [ -f $UNATTENDED_UPGRADES_CONFIG ]; then
+readonly UNATTENDED_UPGRADES_CONFIG='/etc/apt/apt.conf.d/50unattended-upgrades'
+if [[ -f "${UNATTENDED_UPGRADES_CONFIG}" ]]; then
   log_for_sentry "Configuring auto-updates"
-  cat >> $UNATTENDED_UPGRADES_CONFIG << EOF
+  cat >> "${UNATTENDED_UPGRADES_CONFIG}" << EOF
 
 // Enabled by Outline manager installer.
 Unattended-Upgrade::Automatic-Reboot "true";
@@ -145,18 +149,19 @@ EOF
 sysctl -p
 
 log_for_sentry "Getting SB_PUBLIC_IP"
-export SB_PUBLIC_IP=$(cloud::public_ip)
+SB_PUBLIC_IP="$(cloud::public_ip)"
+export SB_PUBLIC_IP
 
 log_for_sentry "Initializing ACCESS_CONFIG"
-export ACCESS_CONFIG="$SHADOWBOX_DIR/access.txt"
-true > $ACCESS_CONFIG
+export ACCESS_CONFIG="${SHADOWBOX_DIR}/access.txt"
+true > "${ACCESS_CONFIG}"
 
 # Set trap which publishes an error tag and sentry report only if there is an error.
 function finish {
-  INSTALL_SERVER_EXIT_CODE=$?
-  log_for_sentry "In EXIT trap, exit code $INSTALL_SERVER_EXIT_CODE"
-  if ! ( grep --quiet apiUrl $ACCESS_CONFIG && grep --quiet certSha256 $ACCESS_CONFIG ); then
-    echo "INSTALL_SCRIPT_FAILED: $INSTALL_SERVER_EXIT_CODE" | cloud::add_kv_tag "install-error"
+  local -ir INSTALL_SERVER_EXIT_CODE=$?
+  log_for_sentry "In EXIT trap, exit code ${INSTALL_SERVER_EXIT_CODE}"
+  if ! ( grep --quiet apiUrl "${ACCESS_CONFIG}" && grep --quiet certSha256 "${ACCESS_CONFIG}" ); then
+    echo "INSTALL_SCRIPT_FAILED: ${INSTALL_SERVER_EXIT_CODE}" | cloud::add_kv_tag "install-error"
     # Post error report to sentry.
     post_sentry_report
   fi
@@ -166,27 +171,27 @@ trap finish EXIT
 # Run install script asynchronously, so tags can be written as soon as they are ready.
 log_for_sentry "Running install_server.sh"
 ./install_server.sh&
-install_pid=$!
+declare -ir install_pid=$!
 
 # Save tags for access information.
 log_for_sentry "Reading tags from ACCESS_CONFIG"
-tail -f $ACCESS_CONFIG --pid=$install_pid | while IFS=: read key value; do
-  case "$key" in
+tail -f "${ACCESS_CONFIG}" "--pid=${install_pid}" | while IFS=: read -r key value; do
+  case "${key}" in
     certSha256)
       # Bypass encoding
       log_for_sentry "Writing certSha256 tag"
-      echo $value | cloud::add_encoded_kv_tag "$key"
+      echo "${value}" | cloud::add_encoded_kv_tag "${key}"
       ;;
     apiUrl)
       log_for_sentry "Writing apiUrl tag"
-      echo -n $value | cloud::add_kv_tag "$key"
+      echo -n "${value}" | cloud::add_kv_tag "${key}"
       ;;
   esac
 done
 
 # Wait for install script to finish, so that if there is any error in install_server.sh,
 # the finish trap in this file will be able to access its error code.
-wait $install_pid
+wait "${install_pid}"
 
 # Install the DigitalOcean Agent, for improved monitoring:
 # https://www.digitalocean.com/docs/monitoring/quickstart/#enable-the-digitalocean-agent-on-existing-droplets

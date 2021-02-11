@@ -45,8 +45,8 @@ function usage () {
 
 STAGING_PERCENTAGE=100
 while getopts s:? opt; do
-  case $opt in
-    s) STAGING_PERCENTAGE=$OPTARG ;;
+  case ${opt} in
+    s) STAGING_PERCENTAGE=${OPTARG} ;;
     *) usage ;;
   esac
 done

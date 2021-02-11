@@ -3,6 +3,30 @@ name: Build and Test
 on: push
 
 jobs:
+  # There's no need for shellcheck to run in a separate job, but the
+  # main "manager" job uses ubuntu-16.04, and only ubuntu-20.04+ has
+  # a recent enough version of shellcheck.  TODO: Merge these jobs.
+  shellcheck:
+    name: shellcheck
+    runs-on: "ubuntu-20.04"
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v1
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+
+      - name: Show Environment Info
+        run: |
+          yarn -v
+          shellcheck -V
+
+      - name: Lint
+        run: yarn shellcheck
+
   manager:
     name: Build and Test
     
@@ -24,7 +48,9 @@ jobs:
           node-version: 12
 
       - name: Show Environment Info
-        run: yarn -v
+        run: |
+          yarn -v
+          shellcheck -V
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
