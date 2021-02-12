@@ -22,7 +22,11 @@
 # Note that you MUST use "source" in order to run the script in the same process as the calling
 # script, allowing fill_packaging_opts.sh to fill variables for the caller.
 
-readonly YARN_COMMAND="yarn do $(echo "${1}" | sed 's:.*\(src/server_manager/electron_app/.*\)_action.sh:\1:')"
+# Input: "/absolute/path/src/server_manager/electron_app/something_action.sh"
+# Output: "yarn do server_manager/electron_app/something"
+readonly ELECTRON_PATH='server_manager/electron_app/'
+readonly RELATIVE="${1#*/src/${ELECTRON_PATH}}"
+readonly YARN_COMMAND="yarn do ${ELECTRON_PATH}${RELATIVE%_action.sh}"
 shift
 
 function usage () {

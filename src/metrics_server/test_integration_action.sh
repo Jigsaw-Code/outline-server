@@ -22,8 +22,6 @@ CONNECTIONS_TABLE=connections_v1
 FEATURES_TABLE=feature_metrics
 
 METRICS_URL=https://dev.metrics.getoutline.org
-CONNECTIONS_PATH=connections
-FEATURES_PATH=features
 
 TMPDIR="$(mktemp -d)"
 CONNECTIONS_REQUEST="$TMPDIR/connections.json"

@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 # Copyright 2018 The Outline Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,11 +36,11 @@ export SHADOWBOX_DIR="${SHADOWBOX_DIR:-${HOME:-/root}/shadowbox}"
 mkdir -p $SHADOWBOX_DIR
 
 # Save output for debugging
-exec 2>&1 >$SHADOWBOX_DIR/install-shadowbox-output
+exec >$SHADOWBOX_DIR/install-shadowbox-output 2>&1
 
 # Initialize sentry log file.
 export SENTRY_LOG_FILE="$SHADOWBOX_DIR/sentry-log-file.txt"
-> $SENTRY_LOG_FILE
+true > $SENTRY_LOG_FILE
 function log_for_sentry() {
   echo [$(date "+%Y-%m-%d@%H:%M:%S")] "do_install_server.sh" "$@" >>$SENTRY_LOG_FILE
 }
@@ -147,13 +149,13 @@ export SB_PUBLIC_IP=$(cloud::public_ip)
 
 log_for_sentry "Initializing ACCESS_CONFIG"
 export ACCESS_CONFIG="$SHADOWBOX_DIR/access.txt"
-> $ACCESS_CONFIG
+true > $ACCESS_CONFIG
 
 # Set trap which publishes an error tag and sentry report only if there is an error.
 function finish {
   INSTALL_SERVER_EXIT_CODE=$?
   log_for_sentry "In EXIT trap, exit code $INSTALL_SERVER_EXIT_CODE"
-  if [[ -z $(grep apiUrl $ACCESS_CONFIG) ]] || [[ -z $(grep certSha256 $ACCESS_CONFIG) ]]; then
+  if ! ( grep --quiet apiUrl $ACCESS_CONFIG && grep --quiet certSha256 $ACCESS_CONFIG ); then
     echo "INSTALL_SCRIPT_FAILED: $INSTALL_SERVER_EXIT_CODE" | cloud::add_kv_tag "install-error"
     # Post error report to sentry.
     post_sentry_report

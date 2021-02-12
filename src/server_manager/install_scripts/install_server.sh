@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 # Copyright 2018 The Outline Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -65,18 +67,18 @@ function log_command() {
 function log_error() {
   local -r ERROR_TEXT="\033[0;31m"  # red
   local -r NO_COLOR="\033[0m"
-  printf "${ERROR_TEXT}${1}${NO_COLOR}\n"
+  echo -e "${ERROR_TEXT}$1${NO_COLOR}"
   echo "${1}" >> ${FULL_LOG}
 }
 
 # Pretty prints text to stdout, and also writes to sentry log file if set.
 function log_start_step() {
   log_for_sentry "$@"
-  str="> $@"
+  str="> $*"
   lineLength=47
   echo -n "$str"
-  numDots=$(expr $lineLength - ${#str} - 1)
-  if [[ $numDots > 0 ]]; then
+  numDots=$(( lineLength - ${#str} - 1 ))
+  if (( numDots > 0 )); then
     echo -n " "
     for i in $(seq 1 "$numDots"); do echo -n .; done
   fi
@@ -102,7 +104,7 @@ function confirm() {
   echo -n "> $1 [Y/n] "
   local RESPONSE
   read RESPONSE
-  RESPONSE=$(echo "$RESPONSE" | tr '[A-Z]' '[a-z]')
+  RESPONSE=$(echo "$RESPONSE" | tr '[:upper:]' '[:lower:]')
   if [[ -z "$RESPONSE" ]] || [[ "$RESPONSE" = "y" ]] || [[ "$RESPONSE" = "yes" ]]; then
     return 0
   fi
@@ -180,7 +182,7 @@ function handle_docker_container_conflict() {
   local readonly CONTAINER_NAME=$1
   local readonly EXIT_ON_NEGATIVE_USER_RESPONSE=$2
   local PROMPT="The container name \"$CONTAINER_NAME\" is already in use by another container. This may happen when running this script multiple times."
-  if $EXIT_ON_NEGATIVE_USER_RESPONSE; then
+  if [[ "${EXIT_ON_NEGATIVE_USER_RESPONSE}" == 'true' ]]; then
     PROMPT="$PROMPT We will attempt to remove the existing container and restart it. Would you like to proceed?"
   else
     PROMPT="$PROMPT Would you like to replace this container? If you answer no, we will proceed with the remainder of the installation."
@@ -225,8 +227,8 @@ function get_random_port {
 
 function create_persisted_state_dir() {
   readonly STATE_DIR="$SHADOWBOX_DIR/persisted-state"
-  mkdir -p --mode=770 "${STATE_DIR}"
-  chmod g+s "${STATE_DIR}"
+  mkdir -p "${STATE_DIR}"
+  chmod ug+rwx,g+s,o-rwx "${STATE_DIR}"
 }
 
 # Generate a secret key for access to the Management API and store it in a tag.
@@ -394,8 +396,8 @@ install_shadowbox() {
 
   log_for_sentry "Creating Outline directory"
   export SHADOWBOX_DIR="${SHADOWBOX_DIR:-/opt/outline}"
-  mkdir -p --mode=770 $SHADOWBOX_DIR
-  chmod u+s $SHADOWBOX_DIR
+  mkdir -p $SHADOWBOX_DIR
+  chmod u+s,ug+rwx,o-rwx $SHADOWBOX_DIR
 
   log_for_sentry "Setting API port"
   API_PORT="${FLAGS_API_PORT}"
@@ -416,11 +418,13 @@ install_shadowbox() {
     exit 1
   fi
 
-  # If $ACCESS_CONFIG already exists, copy it to backup then clear it.
-  # Note we can't do "mv" here as do_install_server.sh may already be tailing
-  # this file.
+  # If $ACCESS_CONFIG is already populated, make a backup before clearing it.
   log_for_sentry "Initializing ACCESS_CONFIG"
-  [[ -f $ACCESS_CONFIG ]] && cp $ACCESS_CONFIG $ACCESS_CONFIG.bak && > $ACCESS_CONFIG
+  if [[ -s $ACCESS_CONFIG ]]; then
+    # Note we can't do "mv" here as do_install_server.sh may already be tailing
+    # this file.
+    cp $ACCESS_CONFIG $ACCESS_CONFIG.bak && true > $ACCESS_CONFIG
+  fi
 
   # Make a directory for persistent state
   run_step "Creating persistent state dir" create_persisted_state_dir

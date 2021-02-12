@@ -23,7 +23,7 @@ rm -rf $OUT_DIR
 mkdir -p $OUT_DIR
 
 pushd $ROOT_DIR/src/server_manager/install_scripts > /dev/null
-tar --create --gzip -f $OUT_DIR/scripts.tgz *.sh
+tar --create --gzip -f $OUT_DIR/scripts.tgz ./*.sh
 
 # Node.js on Cygwin doesn't like absolute Unix-style paths.
 # So, we use a relative path as input.
