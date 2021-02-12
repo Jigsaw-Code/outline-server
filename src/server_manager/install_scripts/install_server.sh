@@ -126,7 +126,7 @@ function verify_docker_installed() {
     return 0
   fi
   log_error "NOT INSTALLED"
-  if ! confirm "Would you like to install Docker? This will run 'curl -sS https://get.docker.com/ | sh'."; then
+  if ! confirm "Would you like to install Docker? This will run 'curl https://get.docker.com/ | sh'."; then
     exit 0
   fi
   if ! run_step "Installing Docker" install_docker; then
@@ -148,8 +148,12 @@ function verify_docker_running() {
   fi
 }
 
+function fetch() {
+  curl --silent --show-error --fail "$@"
+}
+
 function install_docker() {
-  curl -sS https://get.docker.com/ | sh >&2
+  (fetch https://get.docker.com/ | sh) >&2
 }
 
 function start_docker() {
@@ -338,11 +342,11 @@ function start_watchtower() {
 function wait_shadowbox() {
   # We use insecure connection because our threat model doesn't include localhost port
   # interception and our certificate doesn't have localhost as a subject alternative name
-  until curl --insecure -s "${LOCAL_API_URL}/access-keys" >/dev/null; do sleep 1; done
+  until fetch --insecure "${LOCAL_API_URL}/access-keys" >/dev/null; do sleep 1; done
 }
 
 function create_first_user() {
-  curl --insecure -X POST -s "${LOCAL_API_URL}/access-keys" >&2
+  fetch --insecure --request POST "${LOCAL_API_URL}/access-keys" >&2
 }
 
 function output_config() {
@@ -355,13 +359,13 @@ function add_api_url_to_config() {
 
 function check_firewall() {
   # TODO(cohenjon) This is incorrect if access keys are using more than one port.
-  local readonly ACCESS_KEY_PORT=$(curl --insecure -s ${LOCAL_API_URL}/access-keys |
+  local readonly ACCESS_KEY_PORT=$(fetch --insecure ${LOCAL_API_URL}/access-keys |
       docker exec -i shadowbox node -e '
           const fs = require("fs");
           const accessKeys = JSON.parse(fs.readFileSync(0, {encoding: "utf-8"}));
           console.log(accessKeys["accessKeys"][0]["port"]);
       ')
-  if ! curl --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" -s "${PUBLIC_API_URL}/access-keys" >/dev/null; then
+  if ! fetch --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" "${PUBLIC_API_URL}/access-keys" >/dev/null; then
      log_error "BLOCKED"
      FIREWALL_STATUS="\
 You won’t be able to access it externally, despite your server being correctly
@@ -403,10 +407,10 @@ install_shadowbox() {
 
   log_for_sentry "Setting PUBLIC_HOSTNAME"
   # TODO(fortuna): Make sure this is IPv4
-  PUBLIC_HOSTNAME=${FLAGS_HOSTNAME:-${SB_PUBLIC_IP:-$(curl -4s https://ipinfo.io/ip)}}
+  PUBLIC_HOSTNAME=${FLAGS_HOSTNAME:-${SB_PUBLIC_IP:-$(fetch --ipv4 https://ipinfo.io/ip)}}
 
   if [[ -z $PUBLIC_HOSTNAME ]]; then
-    local readonly MSG="Failed to determine the server's IP address."
+    local readonly MSG="Failed to determine the server's IP address.  Try using --hostname <server IP>."
     log_error "$MSG"
     log_for_sentry "$MSG"
     exit 1
