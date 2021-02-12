@@ -155,7 +155,7 @@ true > $ACCESS_CONFIG
 function finish {
   INSTALL_SERVER_EXIT_CODE=$?
   log_for_sentry "In EXIT trap, exit code $INSTALL_SERVER_EXIT_CODE"
-  if ! ( grep -q apiUrl $ACCESS_CONFIG && grep -q certSha256 $ACCESS_CONFIG ); then
+  if ! ( grep --quiet apiUrl $ACCESS_CONFIG && grep --quiet certSha256 $ACCESS_CONFIG ); then
     echo "INSTALL_SCRIPT_FAILED: $INSTALL_SERVER_EXIT_CODE" | cloud::add_kv_tag "install-error"
     # Post error report to sentry.
     post_sentry_report
