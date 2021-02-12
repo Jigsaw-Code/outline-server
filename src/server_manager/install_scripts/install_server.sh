@@ -104,7 +104,7 @@ function confirm() {
   echo -n "> $1 [Y/n] "
   local RESPONSE
   read RESPONSE
-  RESPONSE=$(echo "$RESPONSE" | tr '[:upper:]' '[:lower:]')
+  RESPONSE="${RESPONSE,,}" # Convert to lowercase
   if [[ -z "$RESPONSE" ]] || [[ "$RESPONSE" = "y" ]] || [[ "$RESPONSE" = "yes" ]]; then
     return 0
   fi
