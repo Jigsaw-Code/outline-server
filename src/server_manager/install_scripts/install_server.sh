@@ -104,11 +104,8 @@ function confirm() {
   echo -n "> $1 [Y/n] "
   local RESPONSE
   read RESPONSE
-  RESPONSE=$(echo "$RESPONSE" | tr '[:upper:]' '[:lower:]')
-  if [[ -z "$RESPONSE" ]] || [[ "$RESPONSE" = "y" ]] || [[ "$RESPONSE" = "yes" ]]; then
-    return 0
-  fi
-  return 1
+  RESPONSE=$(echo "$RESPONSE" | tr '[:upper:]' '[:lower:]') || return
+  [[ -z "$RESPONSE" || "$RESPONSE" == "y" || "$RESPONSE" == "yes" ]]
 }
 
 function command_exists {
@@ -147,7 +144,9 @@ function verify_docker_running() {
     return 0
   elif [[ $STDERR_OUTPUT = *"Is the docker daemon running"* ]]; then
     start_docker
+    return
   fi
+  return "${RET}"
 }
 
 function fetch() {
@@ -264,9 +263,11 @@ function generate_certificate_fingerprint() {
   # Add a tag with the SHA-256 fingerprint of the certificate.
   # (Electron uses SHA-256 fingerprints: https://github.com/electron/electron/blob/9624bc140353b3771bd07c55371f6db65fd1b67e/atom/common/native_mate_converters/net_converter.cc#L60)
   # Example format: "SHA256 Fingerprint=BD:DB:C9:A4:39:5C:B3:4E:6E:CF:18:43:61:9F:07:A2:09:07:37:35:63:67"
-  local readonly CERT_OPENSSL_FINGERPRINT=$(openssl x509 -in "${SB_CERTIFICATE_FILE}" -noout -sha256 -fingerprint)
+  local CERT_OPENSSL_FINGERPRINT
+  CERT_OPENSSL_FINGERPRINT=$(openssl x509 -in "${SB_CERTIFICATE_FILE}" -noout -sha256 -fingerprint) || return
   # Example format: "BDDBC9A4395CB34E6ECF1843619F07A2090737356367"
-  local readonly CERT_HEX_FINGERPRINT=$(echo ${CERT_OPENSSL_FINGERPRINT#*=} | tr --delete :)
+  local CERT_HEX_FINGERPRINT
+  CERT_HEX_FINGERPRINT=$(echo ${CERT_OPENSSL_FINGERPRINT#*=} | tr --delete :) || return
   output_config "certSha256:$CERT_HEX_FINGERPRINT"
 }
 
@@ -303,14 +304,11 @@ function start_shadowbox() {
   )
   # By itself, local messes up the return code.
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(docker run -d "${docker_shadowbox_flags[@]}" ${SB_IMAGE} 2>&1 >/dev/null)
-  local readonly RET=$?
-  if [[ $RET -eq 0 ]]; then
-    return 0
-  fi
+  STDERR_OUTPUT=$(docker run -d "${docker_shadowbox_flags[@]}" ${SB_IMAGE} 2>&1 >/dev/null) && return
   log_error "FAILED"
   if docker_container_exists shadowbox; then
     handle_docker_container_conflict shadowbox true
+    return
   else
     log_error "$STDERR_OUTPUT"
     return 1
@@ -326,14 +324,11 @@ function start_watchtower() {
   docker_watchtower_flags+=(-v /var/run/docker.sock:/var/run/docker.sock)
   # By itself, local messes up the return code.
   local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(docker run -d "${docker_watchtower_flags[@]}" containrrr/watchtower --cleanup --label-enable --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS 2>&1 >/dev/null)
-  local readonly RET=$?
-  if [[ $RET -eq 0 ]]; then
-    return 0
-  fi
+  STDERR_OUTPUT=$(docker run -d "${docker_watchtower_flags[@]}" containrrr/watchtower --cleanup --label-enable --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS 2>&1 >/dev/null) && return
   log_error "FAILED"
   if docker_container_exists watchtower; then
     handle_docker_container_conflict watchtower false
+    return
   else
     log_error "$STDERR_OUTPUT"
     return 1
@@ -361,12 +356,13 @@ function add_api_url_to_config() {
 
 function check_firewall() {
   # TODO(cohenjon) This is incorrect if access keys are using more than one port.
-  local readonly ACCESS_KEY_PORT=$(fetch --insecure ${LOCAL_API_URL}/access-keys |
+  local -i ACCESS_KEY_PORT
+  ACCESS_KEY_PORT=$(fetch --insecure ${LOCAL_API_URL}/access-keys |
       docker exec -i shadowbox node -e '
           const fs = require("fs");
           const accessKeys = JSON.parse(fs.readFileSync(0, {encoding: "utf-8"}));
           console.log(accessKeys["accessKeys"][0]["port"]);
-      ')
+      ') || return
   if ! fetch --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" "${PUBLIC_API_URL}/access-keys" >/dev/null; then
      log_error "BLOCKED"
      FIREWALL_STATUS="\
