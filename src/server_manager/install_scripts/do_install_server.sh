@@ -36,7 +36,7 @@ export SHADOWBOX_DIR="${SHADOWBOX_DIR:-${HOME:-/root}/shadowbox}"
 mkdir -p $SHADOWBOX_DIR
 
 # Save output for debugging
-exec >$SHADOWBOX_DIR/install-shadowbox-output 2>&1
+exec &> $SHADOWBOX_DIR/install-shadowbox-output
 
 # Initialize sentry log file.
 export SENTRY_LOG_FILE="$SHADOWBOX_DIR/sentry-log-file.txt"
@@ -50,7 +50,7 @@ function post_sentry_report() {
     # but otherwise assumes that there are no other characters to escape for JSON.
     # If we need better escaping, we can install the jq command line tool.
     readonly SENTRY_PAYLOAD_BYTE_LIMIT=8000
-    SENTRY_PAYLOAD="{\"message\": \"Install error:\n$(cat $SENTRY_LOG_FILE | awk '{printf "%s\\n", $0}' | tail --bytes $SENTRY_PAYLOAD_BYTE_LIMIT)\"}"
+    SENTRY_PAYLOAD="{\"message\": \"Install error:\n$(awk '{printf "%s\\n", $0}' < "${SENTRY_LOG_FILE}" | tail --bytes $SENTRY_PAYLOAD_BYTE_LIMIT)\"}"
     # See Sentry documentation at:
     # https://media.readthedocs.org/pdf/sentry/7.1.0/sentry.pdf
     curl "$SENTRY_API_URL" -H "Origin: shadowbox" --data-binary "$SENTRY_PAYLOAD"
@@ -78,8 +78,8 @@ function cloud::public_ip() {
 # Applies a tag to this droplet.
 function cloud::add_tag() {
   local tag="$1"
-  declare -a base_flags=(-X POST -H 'Content-Type: application/json')
-  base_flags+=(-H "Authorization: Bearer ${DO_ACCESS_TOKEN}")
+  declare -ar base_flags=(-X POST -H 'Content-Type: application/json' \
+                          -H "Authorization: Bearer ${DO_ACCESS_TOKEN}")
   local TAGS_URL='https://api.digitalocean.com/v2/tags'
   # Create the tag
   curl "${base_flags[@]}" -d "{\"name\":\"${tag}\"}" "${TAGS_URL}"

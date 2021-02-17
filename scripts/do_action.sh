@@ -33,8 +33,8 @@ function do_action() {
   local action=$1
   echo -e "${OLD_INDENT}$STYLE_BOLD_WHITE[Running $action]$STYLE_RESET"
   shift
-  local status=0
-  $ROOT_DIR/src/${action}_action.sh "$@" || status=$?
+  $ROOT_DIR/src/${action}_action.sh "$@"
+  local -ir status=$?
   if ((status == 0)); then
     echo -e "${OLD_INDENT}$STYLE_BOLD_WHITE[Done $action]$STYLE_RESET"
   else

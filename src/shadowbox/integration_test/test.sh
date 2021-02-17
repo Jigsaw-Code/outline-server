@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 #
 # Copyright 2018 The Outline Authors
 #
@@ -109,12 +109,12 @@ function cleanup() {
 
   # Verify that the client cannot access or even resolve the target
   # Exit code 28 for "Connection timed out".
-  docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 5 $TARGET_IP > /dev/null && \
-    fail "Client should not have access to target IP" || (($? == 28))
+  (docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 5 $TARGET_IP > /dev/null && \
+    fail "Client should not have access to target IP") || (($? == 28))
 
   # Exit code 6 for "Could not resolve host".
-  docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 5 http://target > /dev/null && \
-    fail "Client should not have access to target host" || (($? == 6))
+  (docker exec $CLIENT_CONTAINER curl --silent --connect-timeout 5 http://target > /dev/null && \
+    fail "Client should not have access to target host") || (($? == 6))
 
   # Wait for shadowbox to come up.
   wait_for_resource https://localhost:20443/access-keys
@@ -125,7 +125,8 @@ function cleanup() {
   # TODO(bemasc): Verify that the server is using the right certificate
   declare -r NEW_USER_JSON=$(client_curl --insecure -X POST ${SB_API_URL}/access-keys)
   [[ ${NEW_USER_JSON} == '{"id":"0"'* ]] || fail "Fail to create user"
-  declare -r SS_USER_ARGUMENTS=$(ss_arguments_for_user $NEW_USER_JSON)
+  read -r -a SS_USER_ARGUMENTS < <(ss_arguments_for_user "${NEW_USER_JSON}")
+  readonly SS_USER_ARGUMENTS
 
   # Verify that we handle deletions well
   client_curl --insecure -X POST ${SB_API_URL}/access-keys > /dev/null
@@ -134,7 +135,7 @@ function cleanup() {
   # Start Shadowsocks client and wait for it to be ready
   declare -r LOCAL_SOCKS_PORT=5555
   docker exec -d $CLIENT_CONTAINER \
-    /go/bin/go-shadowsocks2 $SS_USER_ARGUMENTS -socks localhost:$LOCAL_SOCKS_PORT -verbose \
+    /go/bin/go-shadowsocks2 "${SS_USER_ARGUMENTS[@]}" -socks localhost:$LOCAL_SOCKS_PORT -verbose \
     || fail "Could not start shadowsocks client"
   while ! docker exec $CLIENT_CONTAINER nc -z localhost $LOCAL_SOCKS_PORT; do
     sleep 0.1
@@ -143,8 +144,8 @@ function cleanup() {
   function test_networking() {
     # Verify the server blocks requests to hosts on private addresses.
     # Exit code 52 is "Empty server response".
-    client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $TARGET_IP &> /dev/null \
-      && fail "Target host in a private network accessible through shadowbox" || (($? == 52))
+    (client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $TARGET_IP &> /dev/null \
+      && fail "Target host in a private network accessible through shadowbox") || (($? == 52))
 
     # Verify we can retrieve the internet target URL.
     client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $INTERNET_TARGET_URL \
@@ -153,8 +154,8 @@ function cleanup() {
     # Verify we can't access the URL anymore after the key is deleted
     client_curl --insecure -X DELETE ${SB_API_URL}/access-keys/0 > /dev/null
     # Exit code 56 is "Connection reset by peer".
-    client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $INTERNET_TARGET_URL &> /dev/null \
-      && fail "Deleted access key is still active" || (($? == 56))
+    (client_curl -x socks5h://localhost:$LOCAL_SOCKS_PORT $INTERNET_TARGET_URL &> /dev/null \
+      && fail "Deleted access key is still active") || (($? == 56))
   }
 
   function test_port_for_new_keys() {
@@ -225,7 +226,7 @@ function cleanup() {
 
   # Verify no errors occurred.
   readonly SHADOWBOX_LOG=$OUTPUT_DIR/shadowbox-log.txt
-  if docker logs $SHADOWBOX_CONTAINER 2>&1 | tee $SHADOWBOX_LOG | egrep -q "^E|level=error|ERROR:"; then
+  if docker logs $SHADOWBOX_CONTAINER 2>&1 | tee $SHADOWBOX_LOG | grep -Eq "^E|level=error|ERROR:"; then
     cat $SHADOWBOX_LOG
     fail "Found errors in Shadowbox logs (see above, also saved to $SHADOWBOX_LOG)"
   fi

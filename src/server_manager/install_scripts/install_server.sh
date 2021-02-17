@@ -80,7 +80,7 @@ function log_start_step() {
   numDots=$(( lineLength - ${#str} - 1 ))
   if (( numDots > 0 )); then
     echo -n " "
-    for i in $(seq 1 "$numDots"); do echo -n .; done
+    for _ in $(seq 1 "$numDots"); do echo -n .; done
   fi
   echo -n " "
 }
@@ -109,7 +109,7 @@ function confirm() {
 }
 
 function command_exists {
-  command -v "$@" > /dev/null 2>&1
+  command -v "$@" &> /dev/null
 }
 
 function log_for_sentry() {
@@ -162,7 +162,7 @@ function start_docker() {
 }
 
 function docker_container_exists() {
-  docker ps | grep $1 >/dev/null 2>&1
+  docker ps | grep --quiet $1
 }
 
 function remove_shadowbox_container() {
@@ -291,8 +291,8 @@ function start_shadowbox() {
   # TODO(fortuna): Write API_PORT to config file,
   # rather than pass in the environment.
   declare -a docker_shadowbox_flags=(
-    --name shadowbox --restart=always --net=host
-    --label=com.centurylinklabs.watchtower.enable=true
+    --name shadowbox --restart always --net host
+    --label 'com.centurylinklabs.watchtower.enable=true'
     -v "${STATE_DIR}:${STATE_DIR}"
     -e "SB_STATE_DIR=${STATE_DIR}"
     -e "SB_API_PORT=${API_PORT}"
@@ -320,8 +320,8 @@ function start_watchtower() {
   # Set watchtower to refresh every 30 seconds if a custom SB_IMAGE is used (for
   # testing).  Otherwise refresh every hour.
   local WATCHTOWER_REFRESH_SECONDS="${WATCHTOWER_REFRESH_SECONDS:-3600}"
-  declare -a docker_watchtower_flags=(--name watchtower --restart=always)
-  docker_watchtower_flags+=(-v /var/run/docker.sock:/var/run/docker.sock)
+  declare -ar docker_watchtower_flags=(--name watchtower --restart always \
+      -v /var/run/docker.sock:/var/run/docker.sock)
   # By itself, local messes up the return code.
   local readonly STDERR_OUTPUT
   STDERR_OUTPUT=$(docker run -d "${docker_watchtower_flags[@]}" containrrr/watchtower --cleanup --label-enable --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS 2>&1 >/dev/null) && return
@@ -474,8 +474,8 @@ function is_valid_port() {
 }
 
 function parse_flags() {
+  local params
   params=$(getopt --longoptions hostname:,api-port:,keys-port: -n $0 -- $0 "$@")
-  [[ $? == 0 ]] || exit 1
   eval set -- $params
 
   while [[ "$#" > 0 ]]; do
