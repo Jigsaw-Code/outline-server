@@ -16,8 +16,9 @@
   "scripts": {
     "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts",
     "do": "bash ./scripts/do_action.sh",
-    "lint": "tslint 'src/**/*.ts' -e '**/node_modules/**'",
-    "shellcheck": "find src scripts -name *.sh -exec shellcheck {} +"
+    "lint": "yarn shellcheck && yarn tslint",
+    "shellcheck": "find src scripts -name *.sh -exec shellcheck {} +",
+    "tslint": "tslint 'src/**/*.ts' -e '**/node_modules/**'"
   },
   "workspaces": [
     "src/*"

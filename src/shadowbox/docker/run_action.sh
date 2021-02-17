@@ -30,7 +30,7 @@ declare -ir SB_API_PORT=${SB_API_PORT:-8081}
 
 [[ -d "${HOST_STATE_DIR}" ]] || mkdir -p "${HOST_STATE_DIR}"
 [[ -e "${STATE_CONFIG}" ]] || echo "{\"hostname\":\"127.0.0.1\", \"portForNewAccessKeys\": ${ACCESS_KEY_PORT}}" > "${STATE_CONFIG}"
-# shellcheck source=src/shadowbox/scripts/make_test_certificate.sh
+# shellcheck source=../scripts/make_test_certificate.sh
 source "${ROOT_DIR}/src/shadowbox/scripts/make_test_certificate.sh" "${RUN_DIR}"
 
 # TODO: mount a folder rather than individual files.

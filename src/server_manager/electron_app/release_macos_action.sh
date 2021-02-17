@@ -29,7 +29,6 @@ yarn 'do' server_manager/electron_app/write_production_environment
 readonly BUILD_DIR=build/server_manager/electron_app/static
 
 # Produces dmg and zip images. The latter is required for auto-update.
-# shellcheck disable=SC2016 # For ${ext} in ''.
 "${ROOT_DIR}/src/server_manager/node_modules/.bin/electron-builder" \
   --projectDir="${BUILD_DIR}" \
   --config.asarUnpack=server_manager/web_app/images \
@@ -39,6 +38,6 @@ readonly BUILD_DIR=build/server_manager/electron_app/static
   --config.publish.url=https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/ \
   --mac default \
   --config.mac.icon=icons/mac/icon.icns \
-  --config.artifactName='Outline-Manager.${ext}'
+  --config.artifactName="Outline-Manager.\${ext}"
 
 src/server_manager/scripts/finish_info_files.sh mac "${STAGING_PERCENTAGE}"
