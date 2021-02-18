@@ -36,15 +36,7 @@ import './outline-sort-span.js';
 import {html, PolymerElement} from '@polymer/polymer';
 import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
 
-
-import * as byte_size from 'byte-size';
-
-byte_size.defaultOptions({
-  units: 'metric',
-  toStringFn: function() {
-    return `${this.value} ${this.unit}`;
-  },
-});
+import * as i18n from '../data_formatting';
 
 export const MY_CONNECTION_USER_ID = '0';
 
@@ -430,10 +422,10 @@ export class ServerView extends DirMixin(PolymerElement) {
       <paper-button on-tap="_closeDataLimitsHelpBubble">[[localize('ok')]]</paper-button>
     </outline-help-bubble>
     `;
-    }
+  }
 
-    static get unreachableViewTemplate() {
-      return html`
+  static get unreachableViewTemplate() {
+    return html`
       <div class="server-header">
         <div class="server-name">
           <h3>[[serverName]]</h3>
@@ -452,10 +444,10 @@ export class ServerView extends DirMixin(PolymerElement) {
           <paper-button on-tap="retryDisplayingServer" class="try-again-btn">[[localize('retry')]]</paper-button>
         </div>
       </div>`;
-    }
+  }
 
-    static get managementViewTemplate() {
-      return html`
+  static get managementViewTemplate() {
+    return html`
       <div class="server-header">
         <div class="server-name">
           <h3>[[serverName]]</h3>
@@ -471,7 +463,7 @@ export class ServerView extends DirMixin(PolymerElement) {
             </paper-listbox>
           </paper-menu-button>
         </div>
-        <div class="server-location">[[serverLocation]]</div>
+        <div class="server-location">[[_formatLocation(serverLocationId, language)]]</div>
       </div>
       <div class="tabs-container">
         <div class="tabs-spacer"></div>
@@ -486,8 +478,8 @@ export class ServerView extends DirMixin(PolymerElement) {
             <div class="stats-card transfer-stats card-section">
               <iron-icon icon="icons:swap-horiz"></iron-icon>
               <div class="stats">
-                <h3>[[_getFormattedTransferredValue(totalInboundBytes, '0')]]</h3>
-                <p>[[_getFormattedTransferredUnit(totalInboundBytes, 'B')]]</p>
+                <h3>[[_formatInboundBytesValue(totalInboundBytes, language)]]</h3>
+                <p>[[_formatInboundBytesUnit(totalInboundBytes, language)]]</p>
               </div>
               <p>[[localize('server-data-transfer')]]</p>
             </div>
@@ -497,7 +489,7 @@ export class ServerView extends DirMixin(PolymerElement) {
               </div>
               <div class="stats">
                 <h3>[[managedServerUtilzationPercentage]]</h3>
-                <p>/[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]</p>
+                <p>/[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]</p>
               </div>
               <p>[[localize('server-data-used')]]</p>
             </div>
@@ -537,7 +529,7 @@ export class ServerView extends DirMixin(PolymerElement) {
               </span>
               <span class="measurement-container">
                 <span class="measurement">
-                    <bdi>[[_formatBytesTransferred(myConnection.transferredBytes, "...")]]</bdi>
+                    <bdi>[[_formatBytesTransferred(myConnection.transferredBytes, language, "...")]]</bdi>
                     /
                     <bdi>[[_formatDataLimitForKey(myConnection)]]</bdi>
                   </span>
@@ -566,7 +558,7 @@ export class ServerView extends DirMixin(PolymerElement) {
                   </span>
                   <span class="measurement-container">
                     <span class="measurement">
-                      <bdi>[[_formatBytesTransferred(item.transferredBytes, "...")]]</bdi>
+                      <bdi>[[_formatBytesTransferred(item.transferredBytes, language, "...")]]</bdi>
                       /
                       <bdi>[[_formatDataLimitForKey(item)]]</bdi>
                     </span>
@@ -609,11 +601,11 @@ export class ServerView extends DirMixin(PolymerElement) {
           </div>
         </div>
         <div name="settings">
-          <outline-server-settings id="serverSettings" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" default-data-limit="{{defaultDataLimit}}" is-default-data-limit-enabled="{{isDefaultDataLimitEnabled}}" supports-default-data-limit="[[supportsDefaultDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" localize="[[localize]]">
+          <outline-server-settings id="serverSettings" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" default-data-limit="{{defaultDataLimit}}" is-default-data-limit-enabled="{{isDefaultDataLimitEnabled}}" supports-default-data-limit="[[supportsDefaultDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" language="[[language]]" localize="[[localize]]">
           </outline-server-settings>
         </div>
       </iron-pages>`;
-    }
+  }
 
     static get is() {
       return 'outline-server-view';
@@ -629,7 +621,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         serverManagementApiUrl: String,
         serverPortForNewAccessKeys: Number,
         isAccessKeyPortEditable: {type: Boolean},
-        serverCreationDate: String,
+        serverCreationDate: {type: Date},
         serverLocation: String,
         defaultDataLimit: {type: Object},
         isDefaultDataLimitEnabled: {type: Boolean},
@@ -652,6 +644,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         },
         accessKeySortBy: {type: String},
         accessKeySortDirection: {type: Number},
+        language: {type: String},
         localize: {type: Function, readonly: true},
         selectedPage: {type: String},
         selectedTab: {type: String},
@@ -676,8 +669,8 @@ export class ServerView extends DirMixin(PolymerElement) {
       /** @type {number} */
       this.serverPortForNewAccessKeys = null;
       this.isAccessKeyPortEditable = false;
-      this.serverCreationDate = '';
-      this.serverLocation = '';
+      this.serverCreationDate = new Date(0);
+      this.serverLocationId = '';
       /** @type {DisplayDataAmount} */
       this.defaultDataLimit = null;
       this.isDefaultDataLimitEnabled = false;
@@ -722,6 +715,7 @@ export class ServerView extends DirMixin(PolymerElement) {
        * @type {-1|1}
        */
       this.accessKeySortDirection = 1;
+      this.language = 'en';
       /** @type {(msgId: string, ...params: string[]) => string} */
       this.localize = null;
       /** @type {'progressView'|'unreachableView'|'managementView'} */
@@ -749,10 +743,6 @@ export class ServerView extends DirMixin(PolymerElement) {
         return;
       }
     }
-  }
-
-  setServerTransferredData(totalBytes) {
-    this.totalInboundBytes = totalBytes;
   }
 
   updateAccessKeyRow(accessKeyId, fields) {
@@ -878,8 +868,28 @@ export class ServerView extends DirMixin(PolymerElement) {
     this.dispatchEvent(makePublicEvent('RemoveAccessKeyRequested', {accessKeyId: accessKey.id}));
   }
 
-  setServerTransferredData(totalBytes) {
-    this.totalInboundBytes = totalBytes;
+  _formatDataLimitForKey(key) {
+    return this._formatDisplayDataLimit(this._activeDataLimitForKey(key))
+  }
+
+  _formatDisplayDataLimit(limit) {
+    return limit ? `${limit.value} ${limit.unit}` : this.localize('none');
+  }
+
+  _formatInboundBytesUnit(totalBytes, language) {
+    // This happens during app startup before we set the language
+    if (!language) {
+      return '';
+    }
+    return i18n.formatBytesParts(totalBytes, language).unit;
+  }
+
+  _formatInboundBytesValue(totalBytes, language) {
+    // This happens during app startup before we set the language
+    if (!language) {
+      return '';
+    }
+    return i18n.formatBytesParts(totalBytes, language).value;
   }
 
   updateAccessKeyRow(accessKeyId, fields) {
@@ -897,51 +907,22 @@ export class ServerView extends DirMixin(PolymerElement) {
     }
   }
 
-  _formatDataLimitForKey(key) {
-    return this._formatDisplayDataLimit(this._activeDataLimitForKey(key))
-  }
-
-  _formatDisplayDataLimit(limit) {
-    return limit ? `${limit.value} ${limit.unit}` : this.localize('none');
-  }
-
-  _formatBytesTransferred(numBytes, emptyValue = '') {
+  _formatBytesTransferred(numBytes, language, emptyValue = '') {
     if (!numBytes) {
       // numBytes may not be set for manual servers, or may be 0 for
       // unused access keys.
       return emptyValue;
     }
-
-    // Show 0 decimals for < 1MB, 1 decimal for >= 1MB, 2 decimals for >= 1GB.
-    let numDecimals = 0;
-    if (numBytes >= 10 ** 9) {
-      numDecimals = 2;
-    } else if (numBytes >= 10 ** 6) {
-      numDecimals = 1;
-    }
-
-    return byte_size(numBytes, {precision: numDecimals}).toString();
+    return i18n.formatBytes(numBytes, language);
   }
 
-  _getFormattedTransferredUnit(numBytes, emptyValue = '') {
-    const formattedTransfer = this._formatBytesTransferred(numBytes);
-    if (!formattedTransfer) {
-      return emptyValue;
+  _formatMonthlyCost(monthlyCost, language) {
+    if (!monthlyCost) {
+      return '';
     }
-    const units = formattedTransfer.match(/[a-zA-Z%]+/g);
-    if (!units || units.length < 0) {
-      return emptyValue;
-    }
-    return units.pop();
-  }
-
-  _getFormattedTransferredValue(numBytes, emptyValue = '') {
-    const formattedTransfer = this._formatBytesTransferred(numBytes);
-    if (!formattedTransfer) {
-      return emptyValue;
-    }
-    const value = parseFloat(formattedTransfer);
-    return !!value ? value : emptyValue;
+    return new Intl
+        .NumberFormat(language, {style: 'currency', currency: 'USD', currencyDisplay: 'code'})
+        .format(monthlyCost);
   }
 
   _computeManagedServerUtilzationPercentage(numBytes, monthlyLimitBytes) {
@@ -1068,9 +1049,17 @@ export class ServerView extends DirMixin(PolymerElement) {
     }
 
     const activeDataLimit = this._activeDataLimitForKey(accessKey);
-    const used = this._formatBytesTransferred(accessKey.transferredBytes, '0');
+    const used = this._formatBytesTransferred(accessKey.transferredBytes, this.language, '0');
     const total = this._formatDisplayDataLimit(activeDataLimit);
     return this.localize('data-limits-usage', 'used', used, 'total', total);
+  }
+
+  // Takes language so that the server location is recalculated on app language change.
+  _formatLocation(serverLocationId, UNUSED_language) {
+    if (!serverLocationId) {
+      return '';
+    }
+    return this.localize(`city-${serverLocationId}`);
   }
 }
 

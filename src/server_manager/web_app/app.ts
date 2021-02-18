@@ -20,13 +20,14 @@ import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
 
+import {formatBytes} from './data_formatting';
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {OutlinePerKeyDataLimitDialog} from './ui_components/outline-per-key-data-limit-dialog.js';
 import {Location} from './ui_components/outline-region-picker-step';
-import {DisplayAccessKey, DisplayDataAmount, ServerView, MY_CONNECTION_USER_ID} from './ui_components/outline-server-view';
+import {DisplayAccessKey, DisplayDataAmount, MY_CONNECTION_USER_ID, ServerView} from './ui_components/outline-server-view';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -683,7 +684,7 @@ export class App {
     view.serverHostname = server.getHostnameForAccessKeys();
     view.serverManagementApiUrl = server.getManagementApiUrl();
     view.serverPortForNewAccessKeys = server.getPortForNewAccessKeys();
-    view.serverCreationDate = localizeDate(server.getCreatedDate(), this.appRoot.language);
+    view.serverCreationDate = server.getCreatedDate();
     view.serverVersion = version;
     view.defaultDataLimit = dataLimitToDisplayDataAmount(server.getDefaultDataLimit());
     view.isDefaultDataLimitEnabled = !!view.defaultDataLimit;
@@ -703,7 +704,7 @@ export class App {
       view.monthlyCost = host.getMonthlyCost().usd;
       view.monthlyOutboundTransferBytes =
           host.getMonthlyOutboundTransferLimit().terabytes * (10 ** 12);
-      view.serverLocation = this.getLocalizedCityName(host.getRegionId());
+      view.serverLocationId = digitalocean_server.GetCityId(host.getRegionId());
     } else {
       view.isServerManaged = false;
     }
@@ -783,13 +784,12 @@ export class App {
 
   private async refreshTransferStats(selectedServer: server.Server, serverView: ServerView) {
     try {
-      const stats = await selectedServer.getDataUsage();
-      let serverTransferredBytes = 0;
-      // tslint:disable-next-line:forin
-      for (const accessKeyId in stats.bytesTransferredByUserId) {
-        serverTransferredBytes += stats.bytesTransferredByUserId[accessKeyId];
+      const usageMap = await selectedServer.getDataUsage();
+      let totalInboundBytes = 0;
+      for (const accessKeyBytes of usageMap.values()) {
+        totalInboundBytes += accessKeyBytes;
       }
-      serverView.setServerTransferredData(serverTransferredBytes);
+      serverView.totalInboundBytes = totalInboundBytes;
 
       // Update all the displayed access keys, even if usage didn't change, in case the data limit
       // did.
@@ -799,9 +799,9 @@ export class App {
         const accessKeyId = accessKey.id;
         const activeDataLimit =
             displayDataAmountToDataLimit(accessKey.dataLimit) || defaultDataLimit;
-        const totalBytes = activeDataLimit?.bytes || serverTransferredBytes;
+        const totalBytes = activeDataLimit?.bytes || totalInboundBytes;
 
-        const transferredBytes = stats.bytesTransferredByUserId[accessKeyId] || 0;
+        const transferredBytes = usageMap.get(accessKeyId) ?? 0;
         let relativeTraffic =
             totalBytes ? 100 * transferredBytes / totalBytes : (activeDataLimit ? 100 : 0);
         if (relativeTraffic > 100) {
@@ -1169,10 +1169,14 @@ export class App {
     }
   }
 
-  private setAppLanguage(languageCode: string, languageDir: string) {
-    this.appRoot.setLanguage(languageCode, languageDir);
-    document.documentElement.setAttribute('dir', languageDir);
-    window.localStorage.setItem('overrideLanguage', languageCode);
+  private async setAppLanguage(languageCode: string, languageDir: string) {
+    try {
+      await this.appRoot.setLanguage(languageCode, languageDir);
+      document.documentElement.setAttribute('dir', languageDir);
+      window.localStorage.setItem('overrideLanguage', languageCode);
+    } catch (error) {
+      this.appRoot.showError(this.appRoot.localize('error-unexpected'));
+    }
   }
 
   private createLocationModel(cityId: string, regionIds: string[]): Location {

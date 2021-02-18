@@ -19,8 +19,6 @@
 readonly OUT_DIR=$BUILD_DIR/server_manager/electron_app
 rm -rf $OUT_DIR
 
-readonly NODE_MODULES_BIN_DIR=$ROOT_DIR/src/server_manager/node_modules/.bin
-
 # Build the Web App.
 do_action server_manager/web_app/build
 
@@ -30,7 +28,6 @@ do_action server_manager/web_app/build
 tsc -p src/server_manager/electron_app/tsconfig.json --outDir build/server_manager/electron_app/js
 
 # Assemble everything together.
-readonly MODULE_DIR=$(dirname $0)
 readonly STATIC_DIR=$OUT_DIR/static
 mkdir -p $STATIC_DIR
 mkdir -p $STATIC_DIR/server_manager
