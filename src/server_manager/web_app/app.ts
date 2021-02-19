@@ -17,16 +17,16 @@ import * as semver from 'semver';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
-import * as server from '../model/server';
 import {sleep} from '../infrastructure/sleep';
+import * as server from '../model/server';
 
-import {CloudAccounts} from './digitalocean_oauth';
+import {DigitalOceanAccount, Status} from './digitalocean_account';
+import {CloudAccounts} from './cloud_accounts';
 import * as digitalocean_server from './digitalocean_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view';
-import {DigitalOceanAccount, Status} from "./digitalocean_account";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -331,7 +331,8 @@ export class App {
     }
   }
 
-  private async loadDigitalOceanServers(digitalOceanAccount: DigitalOceanAccount): Promise<server.ManagedServer[]> {
+  private async loadDigitalOceanServers(digitalOceanAccount: DigitalOceanAccount):
+      Promise<server.ManagedServer[]> {
     if (!digitalOceanAccount) {
       return [];
     }
@@ -434,7 +435,8 @@ export class App {
 
   // Returns a promise that resolves when the account is active.
   // Throws CANCELLED_ERROR on cancellation, and the error on failure.
-  private async ensureActiveDigitalOceanAccount(digitalOceanAccount: DigitalOceanAccount): Promise<void> {
+  private async ensureActiveDigitalOceanAccount(digitalOceanAccount: DigitalOceanAccount):
+      Promise<void> {
     let cancelled = false;
     let activatingAccount = false;
 
@@ -572,7 +574,8 @@ export class App {
   }
 
   // Opens the screen to create a server.
-  private async showDigitalOceanCreateServer(digitalOceanAccount: DigitalOceanAccount): Promise<void> {
+  private async showDigitalOceanCreateServer(digitalOceanAccount: DigitalOceanAccount):
+      Promise<void> {
     try {
       await this.ensureActiveDigitalOceanAccount(digitalOceanAccount);
     } catch (error) {

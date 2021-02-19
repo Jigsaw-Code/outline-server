@@ -1,4 +1,4 @@
-// Copyright 2018 The Outline Authors
+// Copyright 2020 The Outline Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DigitalOceanAccount} from "./digitalocean_account";
-import {DigitalOceanSession} from "../cloud/digitalocean_api";
+import {DigitalOceanSession} from '../cloud/digitalocean_api';
+import {DigitalOceanAccount} from './digitalocean_account';
 
 type DigitalOceanSessionFactory = (accessToken: string) => DigitalOceanSession;
 type DigitalOceanAccountFactory = (session: DigitalOceanSession) => DigitalOceanAccount;
@@ -26,8 +26,7 @@ export class CloudAccounts {
 
   constructor(
       private digitalOceanSessionFactory: DigitalOceanSessionFactory,
-      private digitalOceanAccountFactory: DigitalOceanAccountFactory) {
-  }
+      private digitalOceanAccountFactory: DigitalOceanAccountFactory) {}
 
   connectDigitalOceanAccount(token: string): DigitalOceanAccount {
     this.writeTokenToStorage(token);

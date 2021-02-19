@@ -18,10 +18,10 @@ import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as i18n from '../infrastructure/i18n';
 
 import {App} from './app';
-import {CloudAccounts} from './digitalocean_oauth';
+import {DigitalOceanAccount} from './digitalocean_account';
+import {CloudAccounts} from './cloud_accounts';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
-import {DigitalOceanAccount} from "./digitalocean_account";
 
 type LanguageDef = {
   id: string,
@@ -110,7 +110,8 @@ document.addEventListener('WebComponentsReady', () => {
   const digitalOceanAccountFactory = (session: digitalocean_api.DigitalOceanSession) => {
     return new DigitalOceanAccount(session, shadowboxSettings, debugMode);
   };
-  const cloudAccounts = new CloudAccounts(digitalocean_api.createDigitalOceanSession, digitalOceanAccountFactory);
+  const cloudAccounts =
+      new CloudAccounts(digitalocean_api.createDigitalOceanSession, digitalOceanAccountFactory);
 
   // Create and start the app.
   const language = getLanguageToUse();

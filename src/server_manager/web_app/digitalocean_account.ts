@@ -40,8 +40,7 @@ export class DigitalOceanAccount implements Account {
   private servers: DigitalOceanServer[] = [];
 
   constructor(
-      private digitalOcean: DigitalOceanSession,
-      private shadowboxSettings: ShadowboxSettings,
+      private digitalOcean: DigitalOceanSession, private shadowboxSettings: ShadowboxSettings,
       private debugMode: boolean) {}
 
   async getName(): Promise<string> {
@@ -81,7 +80,8 @@ export class DigitalOceanAccount implements Account {
     console.time('activeServer');
     console.time('servingServer');
     const onceKeyPair = crypto.generateKeyPair();
-    const installCommand = getInstallScript(this.digitalOcean.accessToken, name, this.shadowboxSettings);
+    const installCommand =
+        getInstallScript(this.digitalOcean.accessToken, name, this.shadowboxSettings);
 
     const dropletSpec = {
       installCommand,
@@ -143,9 +143,12 @@ function getInstallScript(
       `export DO_ACCESS_TOKEN=${sanitizedAccessToken}\n` +
       (shadowboxSettings.imageId ? `export SB_IMAGE=${shadowboxSettings.imageId}\n` : '') +
       (shadowboxSettings.watchtowerRefreshSeconds ?
-          `export WATCHTOWER_REFRESH_SECONDS=${shadowboxSettings.watchtowerRefreshSeconds}\n` :
-          '') +
-      (shadowboxSettings.sentryApiUrl ? `export SENTRY_API_URL="${shadowboxSettings.sentryApiUrl}"\n` : '') +
-      (shadowboxSettings.metricsUrl ? `export SB_METRICS_URL=${shadowboxSettings.metricsUrl}\n` : '') +
+           `export WATCHTOWER_REFRESH_SECONDS=${shadowboxSettings.watchtowerRefreshSeconds}\n` :
+           '') +
+      (shadowboxSettings.sentryApiUrl ?
+           `export SENTRY_API_URL="${shadowboxSettings.sentryApiUrl}"\n` :
+           '') +
+      (shadowboxSettings.metricsUrl ? `export SB_METRICS_URL=${shadowboxSettings.metricsUrl}\n` :
+                                      '') +
       `export SB_DEFAULT_SERVER_NAME="${name}"\n` + do_install_script.SCRIPT;
 }
