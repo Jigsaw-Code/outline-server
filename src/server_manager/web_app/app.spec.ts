@@ -133,9 +133,14 @@ describe('App', () => {
 });
 
 function makeCloudAccountsWithDoAccount(fakeAccount: FakeDigitalOceanAccount) {
-  const fakeDigitalOceanAccountFactory = (token: string) => fakeAccount;
+  const fakeDigitalOceanAccountFactory = (id: string, name: string, token: string) => fakeAccount;
   const cloudAccounts = new CloudAccounts(fakeDigitalOceanAccountFactory, new InMemoryStorage());
-  cloudAccounts.connectDigitalOceanAccount('fake-access-token');
+  const oauthResult = {
+    uuid: Math.random().toString(),
+    email: Math.random().toString(),
+    accessToken: 'fake-access-token',
+  };
+  cloudAccounts.connectDigitalOceanAccount(oauthResult);
   return cloudAccounts;
 }
 
@@ -288,8 +293,11 @@ class FakeManagedServer extends FakeServer implements server.ManagedServer {
 
 class FakeDigitalOceanAccount implements digitalocean.Account {
   private servers: server.ManagedServer[] = [];
-  async getName(): Promise<string> {
-    return 'name';
+  getId() {
+    return 'fake-id';
+  }
+  getName(): string {
+    return 'fake-name';
   }
   async getStatus(): Promise<digitalocean.Status> {
     return digitalocean.Status.ACTIVE;
