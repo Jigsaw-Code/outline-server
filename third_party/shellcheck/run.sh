@@ -15,14 +15,13 @@
 # limitations under the License.
 
 readonly VERSION='v0.7.1'
-readonly DOWNLOAD='download'
 
 # The relative location of this script.
-dir="$(dirname "$0")/${DOWNLOAD}"
-readonly dir
+DOWNLOAD_DIR="$(dirname "$0")/download"
+readonly DOWNLOAD_DIR
 
 declare file="shellcheck-${VERSION}" # Name of the file to download
-declare cmd="${dir}/shellcheck-${VERSION}" # Path to the executable
+declare cmd="${DOWNLOAD_DIR}/shellcheck-${VERSION}" # Path to the executable
 case "$(uname -s)" in
   Linux) file+='.linux.x86_64.tar.xz'; cmd+='/shellcheck';;
   Darwin) file+='.darwin.x86_64.tar.xz'; cmd+='/shellcheck';;
@@ -31,12 +30,12 @@ esac
 readonly file cmd
 
 if [[ ! -s "${cmd}" ]]; then
-  mkdir -p "${dir}"
+  mkdir -p "${DOWNLOAD_DIR}"
 
   readonly url="https://github.com/koalaman/shellcheck/releases/download/${VERSION}/${file}"
-  curl --location --fail --output "${dir}/${file}" "${url}"
+  curl --location --fail --output "${DOWNLOAD_DIR}/${file}" "${url}"
 
-  pushd "${dir}"
+  pushd "${DOWNLOAD_DIR}"
   sha256sum --check --ignore-missing ../hashes.sha256
   if [[ "${file}" == *'.tar.xz' ]]; then
     tar xf "${file}"
