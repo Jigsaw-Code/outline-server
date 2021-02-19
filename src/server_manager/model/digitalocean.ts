@@ -22,7 +22,7 @@ export type RegionMap = {
 export enum Status {
   ACTIVE,
   EMAIL_UNVERIFIED,
-  INVALID_BILLING_INFORMATION,
+  MISSING_BILLING_INFORMATION,
 }
 
 export interface Account {

@@ -49,7 +49,7 @@ export class DigitalOceanAccount implements digitalocean.Account {
     if (!account.email_verified) {
       return digitalocean.Status.EMAIL_UNVERIFIED;
     }
-    return digitalocean.Status.INVALID_BILLING_INFORMATION;
+    return digitalocean.Status.MISSING_BILLING_INFORMATION;
   }
 
   // Return a map of regions that are available and support our target machine size.

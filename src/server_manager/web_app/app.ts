@@ -467,7 +467,7 @@ export class App {
       }
       this.appRoot.showDigitalOceanOauthFlow();
       activatingAccount = true;
-      if (status === digitalocean.Status.INVALID_BILLING_INFORMATION) {
+      if (status === digitalocean.Status.MISSING_BILLING_INFORMATION) {
         oauthUi.showBilling();
       } else {
         oauthUi.showEmailVerification();
