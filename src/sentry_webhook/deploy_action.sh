@@ -17,4 +17,4 @@
 yarn do sentry_webhook/build
 
 cp src/sentry_webhook/package.json build/sentry_webhook/
-gcloud --project=uproxysite functions deploy postSentryEventToSalesforce --trigger-http --source=build/sentry_webhook --entry-point=postSentryEventToSalesforce
+gcloud --project=uproxysite functions deploy postSentryEventToSalesforce --runtime=nodejs12 --trigger-http --source=build/sentry_webhook --entry-point=postSentryEventToSalesforce
