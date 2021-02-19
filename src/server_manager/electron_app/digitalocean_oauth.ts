@@ -146,7 +146,7 @@ export function runOauth(): OauthSession {
   });
 
   const rejectWrapper = {reject: (error: Error) => {}};
-  const result = new Promise<string>((resolve, reject) => {
+  const result = new Promise<DigitalOceanOAuthResult>((resolve, reject) => {
     rejectWrapper.reject = reject;
     // This is the POST endpoint that receives the access token and redirects to either DigitalOcean
     // for the user to complete their account creation, or to a page that closes the window.
@@ -174,7 +174,12 @@ export function runOauth(): OauthSession {
               } else {
                 response.redirect('https://cloud.digitalocean.com');
               }
-              resolve(accessToken);
+              const oauthResult = {
+                uuid: account.uuid,
+                email: account.email,
+                accessToken,
+              };
+              resolve(oauthResult);
             })
             .catch(reject);
       } else {

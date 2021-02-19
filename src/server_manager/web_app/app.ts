@@ -516,7 +516,7 @@ export class App {
 
   // Runs the oauth flow and returns the API access token.
   // Throws CANCELLED_ERROR on cancellation, or the error in case of failure.
-  private async runDigitalOceanOauthFlow(): Promise<string> {
+  private async runDigitalOceanOauthFlow(): Promise<DigitalOceanOAuthResult> {
     const oauth = runDigitalOceanOauth();
     const handleOauthFlowCancelled = () => {
       oauth.cancel();
@@ -542,8 +542,8 @@ export class App {
   private async handleConnectDigitalOceanAccountRequest(): Promise<void> {
     let digitalOceanAccount: digitalocean.Account;
     try {
-      const accessToken = await this.runDigitalOceanOauthFlow();
-      digitalOceanAccount = this.cloudAccounts.connectDigitalOceanAccount(accessToken);
+      const digitalOceanOAuthResult = await this.runDigitalOceanOauthFlow();
+      digitalOceanAccount = this.cloudAccounts.connectDigitalOceanAccount(digitalOceanOAuthResult);
     } catch (error) {
       this.disconnectDigitalOceanAccount();
       this.showIntro();

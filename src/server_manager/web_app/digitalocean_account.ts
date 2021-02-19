@@ -34,11 +34,18 @@ export class DigitalOceanAccount implements digitalocean.Account {
   private servers: DigitalOceanServer[] = [];
 
   constructor(
-      private digitalOcean: DigitalOceanSession, private shadowboxSettings: ShadowboxSettings,
+      private id: string,
+      private name: string,
+      private digitalOcean: DigitalOceanSession,
+      private shadowboxSettings: ShadowboxSettings,
       private debugMode: boolean) {}
 
-  async getName(): Promise<string> {
-    return (await this.digitalOcean.getAccount())?.email;
+  getId(): string {
+    return this.id;
+  }
+
+  getName(): string {
+    return this.name;
   }
 
   async getStatus(): Promise<digitalocean.Status> {
@@ -113,10 +120,15 @@ export class DigitalOceanAccount implements digitalocean.Account {
 
   // Creates a DigitalOceanServer object and adds it to the in-memory server list.
   private createDigitalOceanServer(digitalOcean: DigitalOceanSession, dropletInfo: DropletInfo) {
-    const server = new DigitalOceanServer(digitalOcean, dropletInfo);
+    const serverId = makeUniqueServerId(this.getId(), String(dropletInfo.id));
+    const server = new DigitalOceanServer(serverId, this.getId(), digitalOcean, dropletInfo);
     this.servers.push(server);
     return server;
   }
+}
+
+function makeUniqueServerId(accountId: string, serverId: string): string {
+  return `${accountId}#${serverId}`;
 }
 
 function sanitizeDigitalOceanToken(input: string): string {

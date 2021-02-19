@@ -14,17 +14,34 @@
 
 import {Account} from '../model/digitalocean';
 
-type DigitalOceanAccountFactory = (accessToken: string) => Account;
+type DigitalOceanAccountFactory =
+    (id: string, name: string, accessToken: string) => Account;
+
+type PersistedDigitalOceanAccount = {
+  id: string,
+  name: string,
+  credential: string,
+};
+
+enum CloudId {
+  DigitalOcean,
+}
 
 export class CloudAccounts {
+  // TODO: We need to migrate this if we decide to use the same key.
   private readonly DIGITALOCEAN_TOKEN_STORAGE_KEY = 'LastDOToken';
 
   constructor(
       private digitalOceanAccountFactory: DigitalOceanAccountFactory,
       private storage = localStorage) {}
 
-  connectDigitalOceanAccount(token: string): Account {
-    this.writeTokenToStorage(token);
+  connectDigitalOceanAccount(oauthResult: DigitalOceanOAuthResult): Account {
+    const persistedAccount = {
+      id: oauthResult.uuid,
+      name: oauthResult.email,
+      credential: oauthResult.accessToken,
+    };
+    this.writeDigitalOceanAccount(persistedAccount);
     return this.getDigitalOceanAccount();
   }
 
@@ -33,18 +50,29 @@ export class CloudAccounts {
   }
 
   getDigitalOceanAccount(): Account {
-    const token = this.getTokenFromStorage();
-    if (token) {
-      return this.digitalOceanAccountFactory(token);
+    const persistedAccount = this.readDigitalOceanAccount();
+    if (persistedAccount) {
+      const accountId = this.makeUniqueAccountId(persistedAccount.id, CloudId.DigitalOcean);
+      return this.digitalOceanAccountFactory(
+          accountId, persistedAccount.name, persistedAccount.credential);
     }
     return null;
   }
 
-  private writeTokenToStorage(token: string): void {
-    this.storage.setItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY, token);
+  private writeDigitalOceanAccount(persistedAccount: PersistedDigitalOceanAccount): void {
+    this.storage.setItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY, JSON.stringify(persistedAccount));
   }
 
-  private getTokenFromStorage(): string {
-    return this.storage.getItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
+  private readDigitalOceanAccount(): PersistedDigitalOceanAccount {
+    let result = null;
+    const data = this.storage.getItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
+    if (data) {
+      result = JSON.parse(data);
+    }
+    return result;
+  }
+
+  private makeUniqueAccountId(cloudSpecificAccountId: string, cloudId: CloudId): string {
+    return `${cloudId}#${cloudSpecificAccountId}`;
   }
 }

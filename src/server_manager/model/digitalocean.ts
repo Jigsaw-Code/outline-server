@@ -26,8 +26,10 @@ export enum Status {
 }
 
 export interface Account {
+  // A globally unique account ID.
+  getId(): string;
   // Returns the email address associated with the account.
-  getName(): Promise<string>;
+  getName(): string;
   // Returns the status of the account.
   getStatus(): Promise<Status>;
   // Lists all existing Shadowboxes. If `fetchFromHost` is true, performs a network request to
