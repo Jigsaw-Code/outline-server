@@ -22,8 +22,6 @@ import {AppRoot} from './ui_components/app-root';
 import {CloudAccounts} from "./cloud_accounts";
 import {InMemoryStorage} from "../infrastructure/memory_storage";
 
-const FAKE_ACCESS_TOKEN = 'fake-access-token';
-
 // Define functions from preload.ts.
 // tslint:disable-next-line:no-any
 (global as any).onUpdateDownloaded = () => {};
@@ -111,8 +109,7 @@ describe('App', () => {
   it('shows progress screen once DigitalOcean droplets are created', async () => {
     // Start the app with a fake DigitalOcean token.
     const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
-    const cloudAccounts = createCloudAccounts();
-    cloudAccounts.connectDigitalOceanAccount(FAKE_ACCESS_TOKEN);
+    const cloudAccounts = createCloudAccounts(new FakeDigitalOceanAccount());
     const app = createTestApp(appRoot, cloudAccounts);
     await app.start();
     await app.createDigitalOceanServer('fakeRegion');
@@ -140,7 +137,7 @@ function createCloudAccounts(fakeAccount?: FakeDigitalOceanAccount) {
   const cloudAccounts = new CloudAccounts(fakeDigitalOceanAccountFactory, new InMemoryStorage());
 
   if (fakeAccount) {
-    cloudAccounts.connectDigitalOceanAccount(FAKE_ACCESS_TOKEN);
+    cloudAccounts.connectDigitalOceanAccount('fake-access-token');
   }
   return cloudAccounts;
 }
