@@ -12,21 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DigitalOceanSession} from '../cloud/digitalocean_api';
-import {DigitalOceanAccount} from './digitalocean_account';
+import {DigitalOceanAccount} from "../model/digitalocean";
 
-type DigitalOceanSessionFactory = (accessToken: string) => DigitalOceanSession;
-type DigitalOceanAccountFactory = (session: DigitalOceanSession) => DigitalOceanAccount;
+type DigitalOceanAccountFactory = (accessToken: string) => DigitalOceanAccount;
 
-// TODO: this class combines URL manipulation with persistence logic.
-// Consider moving the URL manipulation logic to a separate class, so we
-// can pass in other implementations when the global "window" is not present.
 export class CloudAccounts {
   private readonly DIGITALOCEAN_TOKEN_STORAGE_KEY = 'LastDOToken';
 
   constructor(
-      private digitalOceanSessionFactory: DigitalOceanSessionFactory,
-      private digitalOceanAccountFactory: DigitalOceanAccountFactory) {}
+      private digitalOceanAccountFactory: DigitalOceanAccountFactory,
+      private storage = localStorage) {}
 
   connectDigitalOceanAccount(token: string): DigitalOceanAccount {
     this.writeTokenToStorage(token);
@@ -34,23 +29,22 @@ export class CloudAccounts {
   }
 
   disconnectDigitalOceanAccount(): void {
-    localStorage.removeItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
+    this.storage.removeItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
   }
 
   getDigitalOceanAccount(): DigitalOceanAccount {
     const token = this.getTokenFromStorage();
     if (token) {
-      const digitalOceanSession = this.digitalOceanSessionFactory(token);
-      return this.digitalOceanAccountFactory(digitalOceanSession);
+      return this.digitalOceanAccountFactory(token);
     }
     return null;
   }
 
   private writeTokenToStorage(token: string): void {
-    localStorage.setItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY, token);
+    this.storage.setItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY, token);
   }
 
   private getTokenFromStorage(): string {
-    return localStorage.getItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
+    return this.storage.getItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
   }
 }

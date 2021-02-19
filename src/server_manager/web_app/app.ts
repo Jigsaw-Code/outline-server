@@ -19,9 +19,9 @@ import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
+import * as digitalocean from '../model/digitalocean';
 
 import {CloudAccounts} from './cloud_accounts';
-import {DigitalOceanAccount, Status} from './digitalocean_account';
 import * as digitalocean_server from './digitalocean_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
@@ -131,7 +131,7 @@ function isManualServer(testServer: server.Server): testServer is server.ManualS
 }
 
 export class App {
-  private digitalOceanAccount: DigitalOceanAccount;
+  private digitalOceanAccount: digitalocean.DigitalOceanAccount;
   private selectedServer: server.Server;
   private idServerMap = new Map<string, server.Server>();
 
@@ -315,6 +315,8 @@ export class App {
   async start(): Promise<void> {
     this.showIntro();
 
+    console.log('CloudAccounts', this.cloudAccounts.getDigitalOceanAccount());
+
     // Load server list. Fetch manual and managed servers in parallel.
     await Promise.all([
       this.loadDigitalOceanServers(this.cloudAccounts.getDigitalOceanAccount()),
@@ -331,7 +333,7 @@ export class App {
     }
   }
 
-  private async loadDigitalOceanServers(digitalOceanAccount: DigitalOceanAccount):
+  private async loadDigitalOceanServers(digitalOceanAccount: digitalocean.DigitalOceanAccount):
       Promise<server.ManagedServer[]> {
     if (!digitalOceanAccount) {
       return [];
@@ -340,7 +342,7 @@ export class App {
       this.digitalOceanAccount = digitalOceanAccount;
       this.appRoot.adminEmail = await this.digitalOceanAccount.getName();
       const status = await this.digitalOceanAccount.getStatus();
-      if (status !== Status.ACTIVE) {
+      if (status !== digitalocean.Status.ACTIVE) {
         return;
       }
       const servers = await this.digitalOceanAccount.listServers();
@@ -435,7 +437,7 @@ export class App {
 
   // Returns a promise that resolves when the account is active.
   // Throws CANCELLED_ERROR on cancellation, and the error on failure.
-  private async ensureActiveDigitalOceanAccount(digitalOceanAccount: DigitalOceanAccount):
+  private async ensureActiveDigitalOceanAccount(digitalOceanAccount: digitalocean.DigitalOceanAccount):
       Promise<void> {
     let cancelled = false;
     let activatingAccount = false;
@@ -453,7 +455,7 @@ export class App {
         }
         return await digitalOceanAccount.getStatus();
       });
-      if (status === Status.ACTIVE) {
+      if (status === digitalocean.Status.ACTIVE) {
         bringToFront();
         if (activatingAccount) {
           // Show the 'account active' screen for a few seconds if the account was activated
@@ -465,7 +467,7 @@ export class App {
       }
       this.appRoot.showDigitalOceanOauthFlow();
       activatingAccount = true;
-      if (status === Status.INVALID_BILLING_INFORMATION) {
+      if (status === digitalocean.Status.INVALID_BILLING_INFORMATION) {
         oauthUi.showBilling();
       } else {
         oauthUi.showEmailVerification();
@@ -514,22 +516,20 @@ export class App {
 
   // Runs the oauth flow and returns the API access token.
   // Throws CANCELLED_ERROR on cancellation, or the error in case of failure.
-  private async runDigitalOceanOauthFlow(): Promise<DigitalOceanAccount> {
+  private async runDigitalOceanOauthFlow(): Promise<string> {
     const oauth = runDigitalOceanOauth();
     const handleOauthFlowCancelled = () => {
       oauth.cancel();
     };
     this.appRoot.getAndShowDigitalOceanOauthFlow(handleOauthFlowCancelled);
     try {
-      const accessToken = await oauth.result;
-      // Save accessToken to storage. DigitalOcean tokens
-      // expire after 30 days, unless they are manually revoked by the user.
-      // After 30 days the user will have to sign into DigitalOcean again.
-      // Note we cannot yet use DigitalOcean refresh tokens, as they require
-      // a client_secret to be stored on a server and not visible to end users
-      // in client-side JS.  More details at:
+      // DigitalOcean tokens expire after 30 days, unless they are manually
+      // revoked by the user. After 30 days the user will have to sign into
+      // DigitalOcean again. Note we cannot yet use DigitalOcean refresh
+      // tokens, as they require a client_secret to be stored on a server and
+      // not visible to end users in client-side JS. More details at:
       // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
-      return this.cloudAccounts.connectDigitalOceanAccount(accessToken);
+      return await oauth.result;
     } catch (error) {
       if (oauth.isCancelled()) {
         throw CANCELLED_ERROR;
@@ -540,9 +540,10 @@ export class App {
   }
 
   private async handleConnectDigitalOceanAccountRequest(): Promise<void> {
-    let digitalOceanAccount: DigitalOceanAccount;
+    let digitalOceanAccount: digitalocean.DigitalOceanAccount;
     try {
-      digitalOceanAccount = await this.runDigitalOceanOauthFlow();
+      const accessToken = await this.runDigitalOceanOauthFlow();
+      digitalOceanAccount = this.cloudAccounts.connectDigitalOceanAccount(accessToken);
     } catch (error) {
       this.disconnectDigitalOceanAccount();
       this.showIntro();
@@ -574,7 +575,7 @@ export class App {
   }
 
   // Opens the screen to create a server.
-  private async showDigitalOceanCreateServer(digitalOceanAccount: DigitalOceanAccount):
+  private async showDigitalOceanCreateServer(digitalOceanAccount: digitalocean.DigitalOceanAccount):
       Promise<void> {
     try {
       await this.ensureActiveDigitalOceanAccount(digitalOceanAccount);

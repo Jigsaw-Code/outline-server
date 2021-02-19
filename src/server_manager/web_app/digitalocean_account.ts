@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Account, RegionMap} from "../model/account";
 import {DigitalOceanSession, DropletInfo} from "../cloud/digitalocean_api";
 import {DigitalOceanServer, GetCityId} from "./digitalocean_server";
 import * as server from "../model/server";
 import * as crypto from "../infrastructure/crypto";
+import * as digitalocean from "../model/digitalocean";
 import * as do_install_script from "../install_scripts/do_install_script";
 
 // Tag used to mark Shadowbox Droplets.
@@ -30,13 +30,7 @@ export interface ShadowboxSettings {
   watchtowerRefreshSeconds?: number;
 }
 
-export enum Status {
-  ACTIVE,
-  EMAIL_UNVERIFIED,
-  INVALID_BILLING_INFORMATION,
-}
-
-export class DigitalOceanAccount implements Account {
+export class DigitalOceanAccount implements digitalocean.DigitalOceanAccount {
   private servers: DigitalOceanServer[] = [];
 
   constructor(
@@ -47,21 +41,21 @@ export class DigitalOceanAccount implements Account {
     return (await this.digitalOcean.getAccount())?.email;
   }
 
-  async getStatus(): Promise<Status> {
+  async getStatus(): Promise<digitalocean.Status> {
     const account = await this.digitalOcean.getAccount();
     if (account.status === 'active') {
-      return Status.ACTIVE;
+      return digitalocean.Status.ACTIVE;
     }
     if (!account.email_verified) {
-      return Status.EMAIL_UNVERIFIED;
+      return digitalocean.Status.EMAIL_UNVERIFIED;
     }
-    return Status.INVALID_BILLING_INFORMATION;
+    return digitalocean.Status.INVALID_BILLING_INFORMATION;
   }
 
   // Return a map of regions that are available and support our target machine size.
-  getRegionMap(): Promise<Readonly<RegionMap>> {
+  getRegionMap(): Promise<Readonly<digitalocean.RegionMap>> {
     return this.digitalOcean.getRegionInfo().then((regions) => {
-      const ret: RegionMap = {};
+      const ret: digitalocean.RegionMap = {};
       regions.forEach((region) => {
         const cityId = GetCityId(region.slug);
         if (!(cityId in ret)) {

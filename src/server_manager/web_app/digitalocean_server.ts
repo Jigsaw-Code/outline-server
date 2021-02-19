@@ -15,12 +15,9 @@
 import {EventEmitter} from 'eventemitter3';
 
 import {DigitalOceanSession, DropletInfo} from '../cloud/digitalocean_api';
-import * as crypto from '../infrastructure/crypto';
 import * as errors from '../infrastructure/errors';
 import {asciiToHex, hexToString} from '../infrastructure/hex_encoding';
-import * as do_install_script from '../install_scripts/do_install_script';
 import * as server from '../model/server';
-import {Account} from '../model/account';
 
 import {ShadowboxServer} from './shadowbox_server';
 
