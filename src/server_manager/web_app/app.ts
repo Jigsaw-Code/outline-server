@@ -135,7 +135,7 @@ function localizeDate(date: Date, language: string): string {
 }
 
 type DigitalOceanSessionFactory = (accessToken: string) => digitalocean_api.DigitalOceanSession;
-type DigitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) => Account;
+type DigitalOceanAccountFactory = (session: digitalocean_api.DigitalOceanSession) => Account;
 
 export class App {
   private digitalOceanAccount: Account;
@@ -145,7 +145,7 @@ export class App {
   constructor(
       private appRoot: AppRoot, private readonly version: string,
       private createDigitalOceanSession: DigitalOceanSessionFactory,
-      private createDigitalOceanServerRepository: DigitalOceanServerRepositoryFactory,
+      private createDigitalOceanAccount: DigitalOceanAccountFactory,
       private manualServerRepository: server.ManualServerRepository,
       private digitalOceanTokenManager: TokenManager) {
     appRoot.setAttribute('outline-version', this.version);
@@ -348,7 +348,7 @@ export class App {
       const doSession = this.createDigitalOceanSession(accessToken);
       const doAccount = await doSession.getAccount();
       this.appRoot.adminEmail = doAccount.email;
-      this.digitalOceanAccount = this.createDigitalOceanServerRepository(doSession);
+      this.digitalOceanAccount = this.createDigitalOceanAccount(doSession);
       if (doAccount.status !== 'active') {
         return;
       }

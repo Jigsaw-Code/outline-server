@@ -102,8 +102,8 @@ document.addEventListener('WebComponentsReady', () => {
   const version = params.get('version');
   const sentryDsn = params.get('sentryDsn');
 
-  // Set DigitalOcean server repository parameters.
-  const digitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) => {
+  // Set DigitalOceanAccount parameters.
+  const digitalOceanAccountFactory = (session: digitalocean_api.DigitalOceanSession) => {
     return new DigitalOceanAccount(
         session, shadowboxImage, metricsUrl, getSentryApiUrl(sentryDsn), debugMode);
   };
@@ -122,7 +122,7 @@ document.addEventListener('WebComponentsReady', () => {
   appRoot.setLanguage(language.string(), languageDirection);
   new App(
       appRoot, version, digitalocean_api.createDigitalOceanSession,
-      digitalOceanServerRepositoryFactory, new ManualServerRepository('manualServers'),
+      digitalOceanAccountFactory, new ManualServerRepository('manualServers'),
       new DigitalOceanTokenManager())
       .start();
 });
