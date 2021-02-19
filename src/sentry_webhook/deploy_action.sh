@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-yarn do sentry_webhook/build
+yarn 'do' sentry_webhook/build
 
 cp src/sentry_webhook/package.json build/sentry_webhook/
 gcloud --project=uproxysite functions deploy postSentryEventToSalesforce --runtime=nodejs12 --trigger-http --source=build/sentry_webhook --entry-point=postSentryEventToSalesforce

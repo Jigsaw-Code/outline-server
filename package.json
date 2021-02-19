@@ -14,9 +14,11 @@
     "node": "^12"
   },
   "scripts": {
-    "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts",
+    "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts third_party/shellcheck/download/",
     "do": "bash ./scripts/do_action.sh",
-    "lint": "tslint 'src/**/*.ts' -e '**/node_modules/**'"
+    "lint": "yarn shellcheck && yarn tslint",
+    "shellcheck": "bash ./scripts/shellcheck.sh",
+    "tslint": "tslint 'src/**/*.ts' -e '**/node_modules/**' -e '**/bower_components/**'"
   },
   "workspaces": [
     "src/*"

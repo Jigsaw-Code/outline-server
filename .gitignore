@@ -6,3 +6,4 @@ node_modules/
 yarn-error.log
 .vscode/
 .idea/
+third_party/shellcheck/download/

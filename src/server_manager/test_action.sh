@@ -15,14 +15,14 @@
 # limitations under the License.
 
 readonly TEST_DIR="${BUILD_DIR}/js/server_manager/"
-rm -rf $TEST_DIR
+rm -rf "${TEST_DIR}"
 
-yarn do server_manager/web_app/build_install_script
+yarn 'do' server_manager/web_app/build_install_script
 
 # Use commonjs modules, jasmine runs in node.
-tsc -p $ROOT_DIR/src/server_manager --outDir $TEST_DIR --module commonjs
-jasmine --config=$ROOT_DIR/jasmine.json
+tsc -p "${ROOT_DIR}/src/server_manager" --outDir "${TEST_DIR}" --module commonjs
+jasmine --config="${ROOT_DIR}/jasmine.json"
 
-yarn do server_manager/web_app/test
+yarn 'do' server_manager/web_app/test
 
-rm -rf $TEST_DIR
+rm -rf "${TEST_DIR}"

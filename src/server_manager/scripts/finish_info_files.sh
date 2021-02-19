@@ -15,19 +15,19 @@
 # limitations under the License.
 
 PLATFORM="-$1"
-if [[ "${PLATFORM}" = "-win" ]]; then
+if [[ "${PLATFORM}" == "-win" ]]; then
   PLATFORM=""
 fi
-readonly STAGING_PERCENTAGE="${2}"
-readonly BUILD_DIR=build/server_manager/electron_app/static
+readonly STAGING_PERCENTAGE="$2"
+readonly BUILD_DIR='build/server_manager/electron_app/static'
 
 INFO_FILE_CHANNEL=$(src/server_manager/scripts/get_manager_release_channel.sh)
-echo "stagingPercentage: $STAGING_PERCENTAGE" >> "${BUILD_DIR}"/dist/"${INFO_FILE_CHANNEL}${PLATFORM}".yml
+echo "stagingPercentage: ${STAGING_PERCENTAGE}" >> "${BUILD_DIR}/dist/${INFO_FILE_CHANNEL}${PLATFORM}.yml"
 
 # If we cut a staged mainline release, beta testers will take the update as well.
-if [[ "${INFO_FILE_CHANNEL}" = "latest" ]]; then
-  echo "stagingPercentage: $STAGING_PERCENTAGE" >> "${BUILD_DIR}"/dist/beta"${PLATFORM}".yml
+if [[ "${INFO_FILE_CHANNEL}" == "latest" ]]; then
+  echo "stagingPercentage: ${STAGING_PERCENTAGE}" >> "${BUILD_DIR}/dist/beta${PLATFORM}.yml"
 fi
 
 # We don't support alpha releases
-rm -f "${BUILD_DIR}"/dist/alpha"${PLATFORM}".yml
+rm -f "${BUILD_DIR}/dist/alpha${PLATFORM}.yml"
