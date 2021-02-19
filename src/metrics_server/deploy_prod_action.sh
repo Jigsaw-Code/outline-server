@@ -14,15 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-SRC_DIR="src/metrics_server"
-BUILD_DIR="build/metrics_server"
+readonly SRC_DIR="src/metrics_server"
+readonly BUILD_DIR="build/metrics_server"
 
-rm -rf $BUILD_DIR
+rm -rf "${BUILD_DIR}"
 
-yarn do metrics_server/build
+yarn 'do' metrics_server/build
 
-cp $SRC_DIR/app_prod.yaml $BUILD_DIR/app.yaml
-cp $SRC_DIR/config_prod.json $BUILD_DIR/config.json
-cp $SRC_DIR/package.json $BUILD_DIR/
+cp "${SRC_DIR}/app_prod.yaml" "${BUILD_DIR}/app.yaml"
+cp "${SRC_DIR}/config_prod.json" "${BUILD_DIR}/config.json"
+cp "${SRC_DIR}/package.json" "${BUILD_DIR}/"
 
-gcloud app deploy $SRC_DIR/dispatch.yaml $BUILD_DIR --project uproxysite --verbosity info --no-promote --no-stop-previous-version
+gcloud app deploy "${SRC_DIR}/dispatch.yaml" "${BUILD_DIR}" --project uproxysite --verbosity info --no-promote --no-stop-previous-version

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-export DOCKER_CONTENT_TRUST=${DOCKER_CONTENT_TRUST:-1}
+export DOCKER_CONTENT_TRUST="${DOCKER_CONTENT_TRUST:-1}"
 # Enable Docker BuildKit (https://docs.docker.com/develop/develop-images/build_enhancements)
 export DOCKER_BUILDKIT=1
 
@@ -27,4 +27,4 @@ readonly NODE_IMAGE="node@sha256:12b2154fb459fa5f42c54771524609db041e7ef3465935d
 # Travis fails to pull the base image when using BuildKit. Seems to be related to:
 # https://github.com/moby/buildkit/issues/606 and https://github.com/moby/buildkit/issues/1397
 docker pull "${NODE_IMAGE}"
-docker build --force-rm --build-arg NODE_IMAGE="${NODE_IMAGE}" --build-arg GITHUB_RELEASE="${TRAVIS_TAG:-none}" -t ${SB_IMAGE:-outline/shadowbox} $ROOT_DIR -f src/shadowbox/docker/Dockerfile
+docker build --force-rm --build-arg NODE_IMAGE="${NODE_IMAGE}" --build-arg GITHUB_RELEASE="${TRAVIS_TAG:-none}" -t "${SB_IMAGE:-outline/shadowbox}" "${ROOT_DIR}" -f src/shadowbox/docker/Dockerfile

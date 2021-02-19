@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 #
-# Copyright 2020 The Outline Authors
+# Copyright 2021 The Outline Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,14 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Writes a dotenv file for CI environment variables.
+# This script intended to run at the repository root.
 
-# Fail if any release variables are undefined.
-if [[ -z "${SENTRY_DSN:-}" ]]; then
-  echo "SENTRY_DSN is undefined."
-  exit 1
-fi
+readonly WRAPPER='third_party/shellcheck/run.sh'
+declare -ar START=(src scripts "${WRAPPER}")
+readonly EXCLUDE='*/bower_components'
 
-cat <<EOM > "${BUILD_DIR}/server_manager/electron_app/static/.env"
-SENTRY_DSN=${SENTRY_DSN}
-EOM
+# From the specified starting points, prune excluded paths or
+# run shellcheck over all files ending in .sh.
+find "${START[@]}" -path "${EXCLUDE}" -prune -o -name '*.sh' -exec "${WRAPPER}" {} +

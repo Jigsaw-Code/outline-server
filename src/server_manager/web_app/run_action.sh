@@ -16,7 +16,7 @@
 
 set -eu
 
-rm -rf $BUILD_DIR/server_manager/web_app
+rm -rf "${BUILD_DIR}/server_manager/web_app"
 
 do_action server_manager/web_app/build_install_script
 

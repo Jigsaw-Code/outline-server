@@ -55,8 +55,9 @@ readonly SENTRY_LOG_FILE=${SENTRY_LOG_FILE:-}
 # - STDERR is only used in the event of a fatal error
 # - Detailed logs are recorded to this FULL_LOG, which is preserved if an error occurred.
 # - The most recent error is stored in LAST_ERROR, which is never preserved.
-readonly FULL_LOG=$(mktemp -t outline_logXXX)
-readonly LAST_ERROR=$(mktemp -t outline_last_errorXXX)
+FULL_LOG="$(mktemp -t outline_logXXX)"
+LAST_ERROR="$(mktemp -t outline_last_errorXXX)"
+readonly FULL_LOG LAST_ERROR
 
 function log_command() {
   # Direct STDOUT and STDERR to FULL_LOG, and forward STDOUT.
@@ -68,19 +69,19 @@ function log_error() {
   local -r ERROR_TEXT="\033[0;31m"  # red
   local -r NO_COLOR="\033[0m"
   echo -e "${ERROR_TEXT}$1${NO_COLOR}"
-  echo "${1}" >> ${FULL_LOG}
+  echo "$1" >> "${FULL_LOG}"
 }
 
 # Pretty prints text to stdout, and also writes to sentry log file if set.
 function log_start_step() {
   log_for_sentry "$@"
-  str="> $*"
-  lineLength=47
-  echo -n "$str"
-  numDots=$(( lineLength - ${#str} - 1 ))
+  local -r str="> $*"
+  local -ir lineLength=47
+  echo -n "${str}"
+  local -ir numDots=$(( lineLength - ${#str} - 1 ))
   if (( numDots > 0 )); then
     echo -n " "
-    for _ in $(seq 1 "$numDots"); do echo -n .; done
+    for _ in $(seq 1 "${numDots}"); do echo -n .; done
   fi
   echo -n " "
 }
@@ -89,8 +90,8 @@ function log_start_step() {
 # STDOUT will be forwarded.  STDERR will be logged silently, and
 # revealed only in the event of a fatal error.
 function run_step() {
-  local -r msg=$1
-  log_start_step $msg
+  local -r msg="$1"
+  log_start_step "${msg}"
   shift 1
   if log_command "$@"; then
     echo "OK"
@@ -103,9 +104,9 @@ function run_step() {
 function confirm() {
   echo -n "> $1 [Y/n] "
   local RESPONSE
-  read RESPONSE
-  RESPONSE=$(echo "$RESPONSE" | tr '[:upper:]' '[:lower:]') || return
-  [[ -z "$RESPONSE" || "$RESPONSE" == "y" || "$RESPONSE" == "yes" ]]
+  read -r RESPONSE
+  RESPONSE=$(echo "${RESPONSE}" | tr '[:upper:]' '[:lower:]') || return
+  [[ -z "${RESPONSE}" || "${RESPONSE}" == "y" || "${RESPONSE}" == "yes" ]]
 }
 
 function command_exists {
@@ -113,8 +114,8 @@ function command_exists {
 }
 
 function log_for_sentry() {
-  if [[ -n "$SENTRY_LOG_FILE" ]]; then
-    echo [$(date "+%Y-%m-%d@%H:%M:%S")] "install_server.sh" "$@" >>$SENTRY_LOG_FILE
+  if [[ -n "${SENTRY_LOG_FILE}" ]]; then
+    echo "[$(date "+%Y-%m-%d@%H:%M:%S")] install_server.sh" "$@" >> "${SENTRY_LOG_FILE}"
   fi
   echo "$@" >> "${FULL_LOG}"
 }
@@ -137,12 +138,12 @@ function verify_docker_installed() {
 }
 
 function verify_docker_running() {
-  local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(docker info 2>&1 >/dev/null)
-  local readonly RET=$?
-  if [[ $RET -eq 0 ]]; then
+  local STDERR_OUTPUT
+  STDERR_OUTPUT="$(docker info 2>&1 >/dev/null)"
+  local -ir RET=$?
+  if (( RET == 0 )); then
     return 0
-  elif [[ $STDERR_OUTPUT = *"Is the docker daemon running"* ]]; then
+  elif [[ "${STDERR_OUTPUT}" == *"Is the docker daemon running"* ]]; then
     start_docker
     return
   fi
@@ -162,7 +163,7 @@ function start_docker() {
 }
 
 function docker_container_exists() {
-  docker ps | grep --quiet $1
+  docker ps | grep --quiet "$1"
 }
 
 function remove_shadowbox_container() {
@@ -174,27 +175,27 @@ function remove_watchtower_container() {
 }
 
 function remove_docker_container() {
-  docker rm -f $1 >&2
+  docker rm -f "$1" >&2
 }
 
 function handle_docker_container_conflict() {
-  local readonly CONTAINER_NAME=$1
-  local readonly EXIT_ON_NEGATIVE_USER_RESPONSE=$2
-  local PROMPT="The container name \"$CONTAINER_NAME\" is already in use by another container. This may happen when running this script multiple times."
+  local -r CONTAINER_NAME="$1"
+  local -r EXIT_ON_NEGATIVE_USER_RESPONSE="$2"
+  local PROMPT="The container name \"${CONTAINER_NAME}\" is already in use by another container. This may happen when running this script multiple times."
   if [[ "${EXIT_ON_NEGATIVE_USER_RESPONSE}" == 'true' ]]; then
-    PROMPT="$PROMPT We will attempt to remove the existing container and restart it. Would you like to proceed?"
+    PROMPT="${PROMPT} We will attempt to remove the existing container and restart it. Would you like to proceed?"
   else
-    PROMPT="$PROMPT Would you like to replace this container? If you answer no, we will proceed with the remainder of the installation."
+    PROMPT="${PROMPT} Would you like to replace this container? If you answer no, we will proceed with the remainder of the installation."
   fi
-  if ! confirm "$PROMPT"; then
-    if $EXIT_ON_NEGATIVE_USER_RESPONSE; then
+  if ! confirm "${PROMPT}"; then
+    if ${EXIT_ON_NEGATIVE_USER_RESPONSE}; then
       exit 0
     fi
     return 0
   fi
-  if run_step "Removing $CONTAINER_NAME container" remove_"$CONTAINER_NAME"_container ; then
-    log_start_step "Restarting $CONTAINER_NAME"
-    start_"$CONTAINER_NAME"
+  if run_step "Removing ${CONTAINER_NAME} container" "remove_${CONTAINER_NAME}_container" ; then
+    log_start_step "Restarting ${CONTAINER_NAME}"
+    "start_${CONTAINER_NAME}"
     return $?
   fi
   return 1
@@ -202,10 +203,9 @@ function handle_docker_container_conflict() {
 
 # Set trap which publishes error tag only if there is an error.
 function finish {
-  EXIT_CODE=$?
-  if [[ $EXIT_CODE -ne 0 ]]
-  then
-    if [[ -s $LAST_ERROR ]]; then
+  local -ir EXIT_CODE=$?
+  if (( EXIT_CODE != 0 )); then
+    if [[ -s "${LAST_ERROR}" ]]; then
       log_error "\nLast error: $(< "${LAST_ERROR}")" >&2
     fi
     log_error "\nSorry! Something went wrong. If you can't figure this out, please copy and paste all this output into the Outline Manager screen, and send it to us, to see if we can help you." >&2
@@ -217,15 +217,15 @@ function finish {
 }
 
 function get_random_port {
-  local num=0  # Init to an invalid value, to prevent "unbound variable" errors.
+  local -i num=0  # Init to an invalid value, to prevent "unbound variable" errors.
   until (( 1024 <= num && num < 65536)); do
-    num=$(( $RANDOM + ($RANDOM % 2) * 32768 ));
+    num=$(( RANDOM + (RANDOM % 2) * 32768 ));
   done;
-  echo $num;
+  echo "${num}";
 }
 
 function create_persisted_state_dir() {
-  readonly STATE_DIR="$SHADOWBOX_DIR/persisted-state"
+  readonly STATE_DIR="${SHADOWBOX_DIR}/persisted-state"
   mkdir -p "${STATE_DIR}"
   chmod ug+rwx,g+s,o-rwx "${STATE_DIR}"
 }
@@ -238,17 +238,19 @@ function safe_base64() {
   # TODO: this gives the following errors on Mac:
   #   base64: invalid option -- w
   #   tr: illegal option -- -
-  local url_safe="$(base64 -w 0 - | tr '/+' '_-')"
+  local url_safe
+  url_safe="$(base64 -w 0 - | tr '/+' '_-')"
   echo -n "${url_safe%%=*}"  # Strip trailing = chars
 }
 
 function generate_secret_key() {
-  readonly SB_API_PREFIX=$(head -c 16 /dev/urandom | safe_base64)
+  SB_API_PREFIX="$(head -c 16 /dev/urandom | safe_base64)"
+  readonly SB_API_PREFIX
 }
 
 function generate_certificate() {
   # Generate self-signed cert and store it in the persistent state directory.
-  local readonly CERTIFICATE_NAME="${STATE_DIR}/shadowbox-selfsigned"
+  local -r CERTIFICATE_NAME="${STATE_DIR}/shadowbox-selfsigned"
   readonly SB_CERTIFICATE_FILE="${CERTIFICATE_NAME}.crt"
   readonly SB_PRIVATE_KEY_FILE="${CERTIFICATE_NAME}.key"
   declare -a openssl_req_flags=(
@@ -264,11 +266,11 @@ function generate_certificate_fingerprint() {
   # (Electron uses SHA-256 fingerprints: https://github.com/electron/electron/blob/9624bc140353b3771bd07c55371f6db65fd1b67e/atom/common/native_mate_converters/net_converter.cc#L60)
   # Example format: "SHA256 Fingerprint=BD:DB:C9:A4:39:5C:B3:4E:6E:CF:18:43:61:9F:07:A2:09:07:37:35:63:67"
   local CERT_OPENSSL_FINGERPRINT
-  CERT_OPENSSL_FINGERPRINT=$(openssl x509 -in "${SB_CERTIFICATE_FILE}" -noout -sha256 -fingerprint) || return
+  CERT_OPENSSL_FINGERPRINT="$(openssl x509 -in "${SB_CERTIFICATE_FILE}" -noout -sha256 -fingerprint)" || return
   # Example format: "BDDBC9A4395CB34E6ECF1843619F07A2090737356367"
   local CERT_HEX_FINGERPRINT
-  CERT_HEX_FINGERPRINT=$(echo ${CERT_OPENSSL_FINGERPRINT#*=} | tr --delete :) || return
-  output_config "certSha256:$CERT_HEX_FINGERPRINT"
+  CERT_HEX_FINGERPRINT="$(echo "${CERT_OPENSSL_FINGERPRINT#*=}" | tr --delete :)" || return
+  output_config "certSha256:${CERT_HEX_FINGERPRINT}"
 }
 
 function join() {
@@ -278,19 +280,19 @@ function join() {
 }
 
 function write_config() {
-  declare -a config=()
-  if [[ $FLAGS_KEYS_PORT != 0 ]]; then
-    config+=("\"portForNewAccessKeys\": $FLAGS_KEYS_PORT")
+  local -a config=()
+  if (( FLAGS_KEYS_PORT != 0 )); then
+    config+=("\"portForNewAccessKeys\": ${FLAGS_KEYS_PORT}")
   fi
   # printf is needed to escape the hostname.
-  config+=("$(printf '"hostname": "%q"' ${PUBLIC_HOSTNAME})")
-  echo "{"$(join , "${config[@]}")"}" > $STATE_DIR/shadowbox_server_config.json
+  config+=("$(printf '"hostname": "%q"' "${PUBLIC_HOSTNAME}")")
+  echo "{$(join , "${config[@]}")}" > "${STATE_DIR}/shadowbox_server_config.json"
 }
 
 function start_shadowbox() {
   # TODO(fortuna): Write API_PORT to config file,
   # rather than pass in the environment.
-  declare -a docker_shadowbox_flags=(
+  local -ar docker_shadowbox_flags=(
     --name shadowbox --restart always --net host
     --label 'com.centurylinklabs.watchtower.enable=true'
     -v "${STATE_DIR}:${STATE_DIR}"
@@ -303,14 +305,15 @@ function start_shadowbox() {
     -e "SB_DEFAULT_SERVER_NAME=${SB_DEFAULT_SERVER_NAME:-}"
   )
   # By itself, local messes up the return code.
-  local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(docker run -d "${docker_shadowbox_flags[@]}" ${SB_IMAGE} 2>&1 >/dev/null) && return
+  local STDERR_OUTPUT
+  STDERR_OUTPUT="$(docker run -d "${docker_shadowbox_flags[@]}" "${SB_IMAGE}" 2>&1 >/dev/null)" && return
+  readonly STDERR_OUTPUT
   log_error "FAILED"
   if docker_container_exists shadowbox; then
     handle_docker_container_conflict shadowbox true
     return
   else
-    log_error "$STDERR_OUTPUT"
+    log_error "${STDERR_OUTPUT}"
     return 1
   fi
 }
@@ -319,18 +322,19 @@ function start_watchtower() {
   # Start watchtower to automatically fetch docker image updates.
   # Set watchtower to refresh every 30 seconds if a custom SB_IMAGE is used (for
   # testing).  Otherwise refresh every hour.
-  local WATCHTOWER_REFRESH_SECONDS="${WATCHTOWER_REFRESH_SECONDS:-3600}"
-  declare -ar docker_watchtower_flags=(--name watchtower --restart always \
+  local -ir WATCHTOWER_REFRESH_SECONDS="${WATCHTOWER_REFRESH_SECONDS:-3600}"
+  local -ar docker_watchtower_flags=(--name watchtower --restart always \
       -v /var/run/docker.sock:/var/run/docker.sock)
   # By itself, local messes up the return code.
-  local readonly STDERR_OUTPUT
-  STDERR_OUTPUT=$(docker run -d "${docker_watchtower_flags[@]}" containrrr/watchtower --cleanup --label-enable --tlsverify --interval $WATCHTOWER_REFRESH_SECONDS 2>&1 >/dev/null) && return
+  local STDERR_OUTPUT
+  STDERR_OUTPUT="$(docker run -d "${docker_watchtower_flags[@]}" containrrr/watchtower --cleanup --label-enable --tlsverify --interval "${WATCHTOWER_REFRESH_SECONDS}" 2>&1 >/dev/null)" && return
+  readonly STDERR_OUTPUT
   log_error "FAILED"
   if docker_container_exists watchtower; then
     handle_docker_container_conflict watchtower false
     return
   else
-    log_error "$STDERR_OUTPUT"
+    log_error "${STDERR_OUTPUT}"
     return 1
   fi
 }
@@ -347,7 +351,7 @@ function create_first_user() {
 }
 
 function output_config() {
-  echo "$@" >> $ACCESS_CONFIG
+  echo "$@" >> "${ACCESS_CONFIG}"
 }
 
 function add_api_url_to_config() {
@@ -357,12 +361,13 @@ function add_api_url_to_config() {
 function check_firewall() {
   # TODO(cohenjon) This is incorrect if access keys are using more than one port.
   local -i ACCESS_KEY_PORT
-  ACCESS_KEY_PORT=$(fetch --insecure ${LOCAL_API_URL}/access-keys |
+  ACCESS_KEY_PORT=$(fetch --insecure "${LOCAL_API_URL}/access-keys" |
       docker exec -i shadowbox node -e '
           const fs = require("fs");
           const accessKeys = JSON.parse(fs.readFileSync(0, {encoding: "utf-8"}));
           console.log(accessKeys["accessKeys"][0]["port"]);
       ') || return
+  readonly ACCESS_KEY_PORT
   if ! fetch --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" "${PUBLIC_API_URL}/access-keys" >/dev/null; then
      log_error "BLOCKED"
      FIREWALL_STATUS="\
@@ -375,7 +380,7 @@ If you have connection problems, it may be that your router or cloud provider
 blocks inbound connections, even though your machine seems to allow them."
   fi
   FIREWALL_STATUS="\
-$FIREWALL_STATUS
+${FIREWALL_STATUS}
 
 Make sure to open the following ports on your firewall, router or cloud provider:
 - Management port ${API_PORT}, for TCP
@@ -392,34 +397,36 @@ install_shadowbox() {
 
   log_for_sentry "Creating Outline directory"
   export SHADOWBOX_DIR="${SHADOWBOX_DIR:-/opt/outline}"
-  mkdir -p $SHADOWBOX_DIR
-  chmod u+s,ug+rwx,o-rwx $SHADOWBOX_DIR
+  mkdir -p "${SHADOWBOX_DIR}"
+  chmod u+s,ug+rwx,o-rwx "${SHADOWBOX_DIR}"
 
   log_for_sentry "Setting API port"
   API_PORT="${FLAGS_API_PORT}"
-  if [[ $API_PORT == 0 ]]; then
+  if (( API_PORT == 0 )); then
     API_PORT=${SB_API_PORT:-$(get_random_port)}
   fi
-  readonly ACCESS_CONFIG=${ACCESS_CONFIG:-$SHADOWBOX_DIR/access.txt}
-  readonly SB_IMAGE=${SB_IMAGE:-quay.io/outline/shadowbox:stable}
+  readonly API_PORT
+  readonly ACCESS_CONFIG="${ACCESS_CONFIG:-${SHADOWBOX_DIR}/access.txt}"
+  readonly SB_IMAGE="${SB_IMAGE:-quay.io/outline/shadowbox:stable}"
 
   log_for_sentry "Setting PUBLIC_HOSTNAME"
   # TODO(fortuna): Make sure this is IPv4
-  PUBLIC_HOSTNAME=${FLAGS_HOSTNAME:-${SB_PUBLIC_IP:-$(fetch --ipv4 https://ipinfo.io/ip)}}
+  PUBLIC_HOSTNAME="${FLAGS_HOSTNAME:-${SB_PUBLIC_IP:-$(fetch --ipv4 https://ipinfo.io/ip)}}"
+  readonly PUBLIC_HOSTNAME
 
-  if [[ -z $PUBLIC_HOSTNAME ]]; then
-    local readonly MSG="Failed to determine the server's IP address.  Try using --hostname <server IP>."
-    log_error "$MSG"
-    log_for_sentry "$MSG"
+  if [[ -z "${PUBLIC_HOSTNAME}" ]]; then
+    local -r MSG="Failed to determine the server's IP address.  Try using --hostname <server IP>."
+    log_error "${MSG}"
+    log_for_sentry "${MSG}"
     exit 1
   fi
 
   # If $ACCESS_CONFIG is already populated, make a backup before clearing it.
   log_for_sentry "Initializing ACCESS_CONFIG"
-  if [[ -s $ACCESS_CONFIG ]]; then
+  if [[ -s "${ACCESS_CONFIG}" ]]; then
     # Note we can't do "mv" here as do_install_server.sh may already be tailing
     # this file.
-    cp $ACCESS_CONFIG $ACCESS_CONFIG.bak && true > $ACCESS_CONFIG
+    cp "${ACCESS_CONFIG}" "${ACCESS_CONFIG}.bak" && true > "${ACCESS_CONFIG}"
   fi
 
   # Make a directory for persistent state
@@ -450,7 +457,7 @@ install_shadowbox() {
   # e.g. if ACCESS_CONFIG contains the line "certSha256:1234",
   # calling $(get_field_value certSha256) will echo 1234.
   function get_field_value {
-    grep "$1" $ACCESS_CONFIG | sed "s/$1://"
+    grep "$1" "${ACCESS_CONFIG}" | sed "s/$1://"
   }
 
   # Output JSON.  This relies on apiUrl and certSha256 (hex characters) requiring
@@ -475,30 +482,30 @@ function is_valid_port() {
 
 function parse_flags() {
   local params
-  params=$(getopt --longoptions hostname:,api-port:,keys-port: -n $0 -- $0 "$@")
-  eval set -- $params
+  params="$(getopt --longoptions hostname:,api-port:,keys-port: -n "$0" -- "$0" "$@")"
+  eval set -- "${params}"
 
-  while [[ "$#" > 0 ]]; do
-    local flag=$1
+  while (( $# > 0 )); do
+    local flag="$1"
     shift
-    case "$flag" in
+    case "${flag}" in
       --hostname)
-        FLAGS_HOSTNAME=${1}
+        FLAGS_HOSTNAME="$1"
         shift
         ;;
       --api-port)
-        FLAGS_API_PORT=${1}
+        FLAGS_API_PORT=$1
         shift
-        if ! is_valid_port $FLAGS_API_PORT; then
-          log_error "Invalid value for $flag: $FLAGS_API_PORT" >&2
+        if ! is_valid_port "${FLAGS_API_PORT}"; then
+          log_error "Invalid value for ${flag}: ${FLAGS_API_PORT}" >&2
           exit 1
         fi
         ;;
       --keys-port)
         FLAGS_KEYS_PORT=$1
         shift
-        if ! is_valid_port $FLAGS_KEYS_PORT; then
-          log_error "Invalid value for $flag: $FLAGS_KEYS_PORT" >&2
+        if ! is_valid_port "${FLAGS_KEYS_PORT}"; then
+          log_error "Invalid value for ${flag}: ${FLAGS_KEYS_PORT}" >&2
           exit 1
         fi
         ;;
@@ -506,13 +513,13 @@ function parse_flags() {
         break
         ;;
       *) # This should not happen
-        log_error "Unsupported flag $flag" >&2
+        log_error "Unsupported flag ${flag}" >&2
         display_usage >&2
         exit 1
         ;;
     esac
   done
-  if [[ $FLAGS_API_PORT != 0 && $FLAGS_API_PORT == $FLAGS_KEYS_PORT ]]; then
+  if (( FLAGS_API_PORT != 0 && FLAGS_API_PORT == FLAGS_KEYS_PORT )); then
     log_error "--api-port must be different from --keys-port" >&2
     exit 1
   fi

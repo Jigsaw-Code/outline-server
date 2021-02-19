@@ -15,9 +15,9 @@
 # limitations under the License.
 
 readonly TEST_DIR="${BUILD_DIR}/js/shadowbox/"
-rm -rf $TEST_DIR
+rm -rf "${TEST_DIR}"
 
-tsc -p $ROOT_DIR/src/shadowbox --outDir $TEST_DIR
-jasmine --config=$ROOT_DIR/jasmine.json
+tsc -p "${ROOT_DIR}/src/shadowbox" --outDir "${TEST_DIR}"
+jasmine --config="${ROOT_DIR}/jasmine.json"
 
-rm -rf $TEST_DIR
+rm -rf "${TEST_DIR}"

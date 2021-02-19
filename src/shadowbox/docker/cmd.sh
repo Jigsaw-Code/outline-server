@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-export SB_PUBLIC_IP=${SB_PUBLIC_IP:-$(curl https://ipinfo.io/ip)}
-export SB_METRICS_URL=${SB_METRICS_URL:-https://prod.metrics.getoutline.org}
+export SB_PUBLIC_IP="${SB_PUBLIC_IP:-$(curl https://ipinfo.io/ip)}"
+export SB_METRICS_URL="${SB_METRICS_URL:-https://prod.metrics.getoutline.org}"
 
 # Make sure we don't leak readable files to other users.
 umask 0007
@@ -36,6 +36,7 @@ umask 0007
 # non-exhaustive testing indicates a performance cliff for Outline after values
 # around 270k; to stay well below of this cliff we've semi-handwaved-ly settled
 # upon a limit of 32k files.
+# shellcheck disable=SC2039 # ulimit -n is in bash and busybox but not POSIX
 ulimit -n 32768
 
 # Start cron, which is used to check for updates to the IP-to-country database
