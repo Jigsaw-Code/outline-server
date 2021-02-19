@@ -17,7 +17,7 @@
     "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts third_party/shellcheck/download/",
     "do": "bash ./scripts/do_action.sh",
     "lint": "yarn shellcheck && yarn tslint",
-    "shellcheck": "find src scripts third_party/shellcheck -name *.sh -exec third_party/shellcheck/run.sh {} +",
+    "shellcheck": "bash ./scripts/shellcheck.sh",
     "tslint": "tslint 'src/**/*.ts' -e '**/node_modules/**'"
   },
   "workspaces": [
