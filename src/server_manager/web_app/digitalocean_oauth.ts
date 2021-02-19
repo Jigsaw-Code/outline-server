@@ -12,41 +12,43 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export interface TokenManager {
-  // Returns the Oauth token, or null if unavailable.
-  getStoredToken(): string;
-  // Writes the token to storage.
-  writeTokenToStorage(token: string): void;
-  // Removes the token from storage.
-  removeTokenFromStorage(): void;
-}
+import {DigitalOceanAccount} from "./digitalocean_account";
+import {DigitalOceanSession} from "../cloud/digitalocean_api";
+
+type DigitalOceanSessionFactory = (accessToken: string) => DigitalOceanSession;
+type DigitalOceanAccountFactory = (session: DigitalOceanSession) => DigitalOceanAccount;
 
 // TODO: this class combines URL manipulation with persistence logic.
 // Consider moving the URL manipulation logic to a separate class, so we
 // can pass in other implementations when the global "window" is not present.
-export class DigitalOceanTokenManager implements TokenManager {
+export class CloudAccounts {
   private readonly DIGITALOCEAN_TOKEN_STORAGE_KEY = 'LastDOToken';
 
-  // Searches the current URL (post-OAuth) and local storage for a DigitalOcean
-  // access token. The token is not checked for validity as this would require
-  // an extra roundtrip to DigitalOcean.
-  getStoredToken(): string {
-    const tokenFromStorage = this.getTokenFromStorage();
-    if (tokenFromStorage) {
-      console.info('found access token in local storage');
-      return tokenFromStorage;
-    }
+  constructor(
+      private digitalOceanSessionFactory: DigitalOceanSessionFactory,
+      private digitalOceanAccountFactory: DigitalOceanAccountFactory) {
+  }
 
-    // Not an error as user may not yet have authenticated.
+  connectDigitalOceanAccount(token: string): DigitalOceanAccount {
+    this.writeTokenToStorage(token);
+    return this.getDigitalOceanAccount();
+  }
+
+  disconnectDigitalOceanAccount(): void {
+    localStorage.removeItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
+  }
+
+  getDigitalOceanAccount(): DigitalOceanAccount {
+    const token = this.getTokenFromStorage();
+    if (token) {
+      const digitalOceanSession = this.digitalOceanSessionFactory(token);
+      return this.digitalOceanAccountFactory(digitalOceanSession);
+    }
     return null;
   }
 
-  writeTokenToStorage(token: string): void {
+  private writeTokenToStorage(token: string): void {
     localStorage.setItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY, token);
-  }
-
-  removeTokenFromStorage(): void {
-    localStorage.removeItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
   }
 
   private getTokenFromStorage(): string {

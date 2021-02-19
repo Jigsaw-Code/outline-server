@@ -23,12 +23,41 @@ import * as do_install_script from "../install_scripts/do_install_script";
 const SHADOWBOX_TAG = 'shadowbox';
 const MACHINE_SIZE = 's-1vcpu-1gb';
 
+export interface ShadowboxSettings {
+  imageId: string;
+  metricsUrl: string;
+  sentryApiUrl?: string;
+  watchtowerRefreshSeconds?: number;
+}
+
+export enum Status {
+  ACTIVE,
+  EMAIL_UNVERIFIED,
+  INVALID_BILLING_INFORMATION,
+}
+
 export class DigitalOceanAccount implements Account {
   private servers: DigitalOceanServer[] = [];
 
   constructor(
-      private digitalOcean: DigitalOceanSession, private image: string, private metricsUrl: string,
-      private sentryApiUrl: string|undefined, private debugMode: boolean) {}
+      private digitalOcean: DigitalOceanSession,
+      private shadowboxSettings: ShadowboxSettings,
+      private debugMode: boolean) {}
+
+  async getName(): Promise<string> {
+    return (await this.digitalOcean.getAccount())?.email;
+  }
+
+  async getStatus(): Promise<Status> {
+    const account = await this.digitalOcean.getAccount();
+    if (account.status === 'active') {
+      return Status.ACTIVE;
+    }
+    if (!account.email_verified) {
+      return Status.EMAIL_UNVERIFIED;
+    }
+    return Status.INVALID_BILLING_INFORMATION;
+  }
 
   // Return a map of regions that are available and support our target machine size.
   getRegionMap(): Promise<Readonly<RegionMap>> {
@@ -52,10 +81,7 @@ export class DigitalOceanAccount implements Account {
     console.time('activeServer');
     console.time('servingServer');
     const onceKeyPair = crypto.generateKeyPair();
-    const watchtowerRefreshSeconds = this.image ? 30 : undefined;
-    const installCommand = getInstallScript(
-        this.digitalOcean.accessToken, name, this.image, watchtowerRefreshSeconds, this.metricsUrl,
-        this.sentryApiUrl);
+    const installCommand = getInstallScript(this.digitalOcean.accessToken, name, this.shadowboxSettings);
 
     const dropletSpec = {
       installCommand,
@@ -110,17 +136,16 @@ function sanitizeDigitalOceanToken(input: string): string {
 
 // cloudFunctions needs to define cloud::public_ip and cloud::add_tag.
 function getInstallScript(
-    accessToken: string, name: string, image?: string, watchtowerRefreshSeconds?: number,
-    metricsUrl?: string, sentryApiUrl?: string): string {
+    accessToken: string, name: string, shadowboxSettings: ShadowboxSettings): string {
   const sanitizedAccessToken = sanitizeDigitalOceanToken(accessToken);
   // TODO: consider shell escaping these variables.
   return '#!/bin/bash -eu\n' +
       `export DO_ACCESS_TOKEN=${sanitizedAccessToken}\n` +
-      (image ? `export SB_IMAGE=${image}\n` : '') +
-      (watchtowerRefreshSeconds ?
-          `export WATCHTOWER_REFRESH_SECONDS=${watchtowerRefreshSeconds}\n` :
+      (shadowboxSettings.imageId ? `export SB_IMAGE=${shadowboxSettings.imageId}\n` : '') +
+      (shadowboxSettings.watchtowerRefreshSeconds ?
+          `export WATCHTOWER_REFRESH_SECONDS=${shadowboxSettings.watchtowerRefreshSeconds}\n` :
           '') +
-      (sentryApiUrl ? `export SENTRY_API_URL="${sentryApiUrl}"\n` : '') +
-      (metricsUrl ? `export SB_METRICS_URL=${metricsUrl}\n` : '') +
+      (shadowboxSettings.sentryApiUrl ? `export SENTRY_API_URL="${shadowboxSettings.sentryApiUrl}"\n` : '') +
+      (shadowboxSettings.metricsUrl ? `export SB_METRICS_URL=${shadowboxSettings.metricsUrl}\n` : '') +
       `export SB_DEFAULT_SERVER_NAME="${name}"\n` + do_install_script.SCRIPT;
 }

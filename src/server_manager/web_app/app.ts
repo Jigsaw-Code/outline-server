@@ -19,14 +19,14 @@ import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import * as server from '../model/server';
 import {sleep} from '../infrastructure/sleep';
-import {Account} from '../model/account';
 
-import {TokenManager} from './digitalocean_oauth';
+import {CloudAccounts} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view';
+import {DigitalOceanAccount, Status} from "./digitalocean_account";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -130,33 +130,24 @@ function isManualServer(testServer: server.Server): testServer is server.ManualS
   return !!(testServer as server.ManualServer).forget;
 }
 
-function localizeDate(date: Date, language: string): string {
-  return date.toLocaleString(language, {year: 'numeric', month: 'long', day: 'numeric'});
-}
-
-type DigitalOceanSessionFactory = (accessToken: string) => digitalocean_api.DigitalOceanSession;
-type DigitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) => Account;
-
 export class App {
-  private digitalOceanAccount: Account;
+  private digitalOceanAccount: DigitalOceanAccount;
   private selectedServer: server.Server;
   private idServerMap = new Map<string, server.Server>();
 
   constructor(
       private appRoot: AppRoot, private readonly version: string,
-      private createDigitalOceanSession: DigitalOceanSessionFactory,
-      private createDigitalOceanServerRepository: DigitalOceanServerRepositoryFactory,
       private manualServerRepository: server.ManualServerRepository,
-      private digitalOceanTokenManager: TokenManager) {
+      private cloudAccounts: CloudAccounts) {
     appRoot.setAttribute('outline-version', this.version);
 
     appRoot.addEventListener('ConnectDigitalOceanAccountRequested', (event: CustomEvent) => {
       this.handleConnectDigitalOceanAccountRequest();
     });
     appRoot.addEventListener('CreateDigitalOceanServerRequested', (event: CustomEvent) => {
-      const accessToken = this.digitalOceanTokenManager?.getStoredToken();
-      if (accessToken) {
-        this.showDigitalOceanCreateServer(accessToken);
+      const digitalOceanAccount = this.cloudAccounts.getDigitalOceanAccount();
+      if (digitalOceanAccount) {
+        this.showDigitalOceanCreateServer(digitalOceanAccount);
       } else {
         console.error('Access token not found for server creation');
         this.handleConnectDigitalOceanAccountRequest();
@@ -326,7 +317,7 @@ export class App {
 
     // Load server list. Fetch manual and managed servers in parallel.
     await Promise.all([
-      this.loadDigitalOceanServers(this.digitalOceanTokenManager?.getStoredToken()),
+      this.loadDigitalOceanServers(this.cloudAccounts.getDigitalOceanAccount()),
       this.loadManualServers()
     ]);
 
@@ -340,16 +331,15 @@ export class App {
     }
   }
 
-  private async loadDigitalOceanServers(accessToken: string): Promise<server.ManagedServer[]> {
-    if (!accessToken) {
+  private async loadDigitalOceanServers(digitalOceanAccount: DigitalOceanAccount): Promise<server.ManagedServer[]> {
+    if (!digitalOceanAccount) {
       return [];
     }
     try {
-      const doSession = this.createDigitalOceanSession(accessToken);
-      const doAccount = await doSession.getAccount();
-      this.appRoot.adminEmail = doAccount.email;
-      this.digitalOceanAccount = this.createDigitalOceanServerRepository(doSession);
-      if (doAccount.status !== 'active') {
+      this.digitalOceanAccount = digitalOceanAccount;
+      this.appRoot.adminEmail = await this.digitalOceanAccount.getName();
+      const status = await this.digitalOceanAccount.getStatus();
+      if (status !== Status.ACTIVE) {
         return;
       }
       const servers = await this.digitalOceanAccount.listServers();
@@ -444,8 +434,7 @@ export class App {
 
   // Returns a promise that resolves when the account is active.
   // Throws CANCELLED_ERROR on cancellation, and the error on failure.
-  private async ensureActiveDigitalOceanAccount(accessToken: string): Promise<void> {
-    const doSession = this.createDigitalOceanSession(accessToken);
+  private async ensureActiveDigitalOceanAccount(digitalOceanAccount: DigitalOceanAccount): Promise<void> {
     let cancelled = false;
     let activatingAccount = false;
 
@@ -456,13 +445,13 @@ export class App {
     };
     const oauthUi = this.appRoot.getDigitalOceanOauthFlow(signOutAction);
     while (true) {
-      const account = await this.digitalOceanRetry(async () => {
+      const status = await this.digitalOceanRetry(async () => {
         if (cancelled) {
           throw CANCELLED_ERROR;
         }
-        return await doSession.getAccount();
+        return await digitalOceanAccount.getStatus();
       });
-      if (account.status === 'active') {
+      if (status === Status.ACTIVE) {
         bringToFront();
         if (activatingAccount) {
           // Show the 'account active' screen for a few seconds if the account was activated
@@ -474,7 +463,7 @@ export class App {
       }
       this.appRoot.showDigitalOceanOauthFlow();
       activatingAccount = true;
-      if (account.email_verified) {
+      if (status === Status.INVALID_BILLING_INFORMATION) {
         oauthUi.showBilling();
       } else {
         oauthUi.showEmailVerification();
@@ -523,7 +512,7 @@ export class App {
 
   // Runs the oauth flow and returns the API access token.
   // Throws CANCELLED_ERROR on cancellation, or the error in case of failure.
-  private async runDigitalOceanOauthFlow(): Promise<string> {
+  private async runDigitalOceanOauthFlow(): Promise<DigitalOceanAccount> {
     const oauth = runDigitalOceanOauth();
     const handleOauthFlowCancelled = () => {
       oauth.cancel();
@@ -538,8 +527,7 @@ export class App {
       // a client_secret to be stored on a server and not visible to end users
       // in client-side JS.  More details at:
       // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
-      this.digitalOceanTokenManager.writeTokenToStorage(accessToken);
-      return accessToken;
+      return this.cloudAccounts.connectDigitalOceanAccount(accessToken);
     } catch (error) {
       if (oauth.isCancelled()) {
         throw CANCELLED_ERROR;
@@ -550,9 +538,9 @@ export class App {
   }
 
   private async handleConnectDigitalOceanAccountRequest(): Promise<void> {
-    let accessToken: string;
+    let digitalOceanAccount: DigitalOceanAccount;
     try {
-      accessToken = await this.runDigitalOceanOauthFlow();
+      digitalOceanAccount = await this.runDigitalOceanOauthFlow();
     } catch (error) {
       this.disconnectDigitalOceanAccount();
       this.showIntro();
@@ -563,17 +551,17 @@ export class App {
       }
       return;
     }
-    const doServers = await this.loadDigitalOceanServers(accessToken);
+    const doServers = await this.loadDigitalOceanServers(digitalOceanAccount);
     if (doServers.length > 0) {
       this.showServer(doServers[0]);
     } else {
-      await this.showDigitalOceanCreateServer(accessToken);
+      await this.showDigitalOceanCreateServer(digitalOceanAccount);
     }
   }
 
   // Clears the credentials and returns to the intro screen.
   private disconnectDigitalOceanAccount(): void {
-    this.digitalOceanTokenManager.removeTokenFromStorage();
+    this.cloudAccounts.disconnectDigitalOceanAccount();
     this.digitalOceanAccount = null;
     for (const serverEntry of this.appRoot.serverList) {
       if (serverEntry.isManaged) {
@@ -584,9 +572,9 @@ export class App {
   }
 
   // Opens the screen to create a server.
-  private async showDigitalOceanCreateServer(accessToken: string): Promise<void> {
+  private async showDigitalOceanCreateServer(digitalOceanAccount: DigitalOceanAccount): Promise<void> {
     try {
-      await this.ensureActiveDigitalOceanAccount(accessToken);
+      await this.ensureActiveDigitalOceanAccount(digitalOceanAccount);
     } catch (error) {
       if (this.appRoot.currentPage === 'digitalOceanOauth') {
         this.showIntro();
