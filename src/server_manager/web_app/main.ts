@@ -20,9 +20,9 @@ import {getSentryApiUrl} from '../infrastructure/sentry';
 
 import {App} from './app';
 import {DigitalOceanTokenManager} from './digitalocean_oauth';
-import * as digitalocean_server from './digitalocean_server';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
+import {DigitalOceanAccount} from "./digitalocean_account";
 
 type LanguageDef = {
   id: string,
@@ -104,7 +104,7 @@ document.addEventListener('WebComponentsReady', () => {
 
   // Set DigitalOcean server repository parameters.
   const digitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) => {
-    return new digitalocean_server.DigitaloceanServerRepository(
+    return new DigitalOceanAccount(
         session, shadowboxImage, metricsUrl, getSentryApiUrl(sentryDsn), debugMode);
   };
 

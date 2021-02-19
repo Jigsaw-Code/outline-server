@@ -16,6 +16,7 @@ import './ui_components/app-root.js';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as server from '../model/server';
+import {Account} from "../model/account";
 
 import {App, LAST_DISPLAYED_SERVER_STORAGE_KEY} from './app';
 import {TokenManager} from './digitalocean_oauth';
@@ -67,7 +68,7 @@ describe('App', () => {
     // Create fake servers and simulate their metadata being cached before creating the app.
     const tokenManager = new InMemoryDigitalOceanTokenManager();
     tokenManager.token = TOKEN_WITH_NO_SERVERS;
-    const managedServerRepo = new FakeManagedServerRepository();
+    const managedServerRepo = new FakeAccount();
     const managedServer = await managedServerRepo.createServer('fake-managed-server-id');
     managedServer.apiUrl = 'fake-managed-server-api-url';
     const manualServerRepo = new FakeManualServerRepository();
@@ -125,7 +126,7 @@ describe('App', () => {
        const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
        const tokenManager = new InMemoryDigitalOceanTokenManager();
        tokenManager.token = TOKEN_WITH_NO_SERVERS;
-       const managedSeverRepository = new FakeManagedServerRepository();
+       const managedSeverRepository = new FakeAccount();
        // Manually create the server since the DO repository server factory function is synchronous.
        const server = await managedSeverRepository.createServer();
        const app = createTestApp(appRoot, tokenManager, null, managedSeverRepository);
@@ -140,14 +141,14 @@ describe('App', () => {
 function createTestApp(
     appRoot: AppRoot, digitalOceanTokenManager: InMemoryDigitalOceanTokenManager,
     manualServerRepo?: server.ManualServerRepository,
-    managedServerRepository?: FakeManagedServerRepository) {
+    managedServerRepository?: FakeAccount) {
   const VERSION = '0.0.1';
   const fakeDigitalOceanSessionFactory = (accessToken: string) => {
     return new FakeDigitalOceanSession(accessToken);
   };
   const fakeDigitalOceanServerRepositoryFactory =
       (session: digitalocean_api.DigitalOceanSession) => {
-        const repo = managedServerRepository || new FakeManagedServerRepository();
+        const repo = managedServerRepository || new FakeAccount();
         if (session.accessToken === TOKEN_WITH_ONE_SERVER) {
           repo.createServer();  // OK to ignore promise as the fake implementation is synchronous.
         }
@@ -335,7 +336,7 @@ class FakeManagedServer extends FakeServer implements server.ManagedServer {
   }
 }
 
-class FakeManagedServerRepository implements server.ManagedServerRepository {
+class FakeAccount implements Account {
   private servers: server.ManagedServer[] = [];
   listServers() {
     return Promise.resolve(this.servers);

@@ -17,10 +17,10 @@ import * as semver from 'semver';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
-import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
+import {sleep} from '../infrastructure/sleep';
+import {Account} from '../model/account';
 
-import {formatBytes} from './data_formatting';
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {parseManualServerConfig} from './management_urls';
@@ -135,11 +135,10 @@ function localizeDate(date: Date, language: string): string {
 }
 
 type DigitalOceanSessionFactory = (accessToken: string) => digitalocean_api.DigitalOceanSession;
-type DigitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) =>
-    server.ManagedServerRepository;
+type DigitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) => Account;
 
 export class App {
-  private digitalOceanRepository: server.ManagedServerRepository;
+  private digitalOceanAccount: Account;
   private selectedServer: server.Server;
   private idServerMap = new Map<string, server.Server>();
 
@@ -349,11 +348,11 @@ export class App {
       const doSession = this.createDigitalOceanSession(accessToken);
       const doAccount = await doSession.getAccount();
       this.appRoot.adminEmail = doAccount.email;
-      this.digitalOceanRepository = this.createDigitalOceanServerRepository(doSession);
+      this.digitalOceanAccount = this.createDigitalOceanServerRepository(doSession);
       if (doAccount.status !== 'active') {
         return;
       }
-      const servers = await this.digitalOceanRepository.listServers();
+      const servers = await this.digitalOceanAccount.listServers();
       for (const server of servers) {
         this.addServer(server);
       }
@@ -575,7 +574,7 @@ export class App {
   // Clears the credentials and returns to the intro screen.
   private disconnectDigitalOceanAccount(): void {
     this.digitalOceanTokenManager.removeTokenFromStorage();
-    this.digitalOceanRepository = null;
+    this.digitalOceanAccount = null;
     for (const serverEntry of this.appRoot.serverList) {
       if (serverEntry.isManaged) {
         this.removeServer(serverEntry.id);
@@ -604,7 +603,7 @@ export class App {
     try {
       const regionPicker = this.appRoot.getAndShowRegionPicker();
       const map = await this.digitalOceanRetry(() => {
-        return this.digitalOceanRepository.getRegionMap();
+        return this.digitalOceanAccount.getRegionMap();
       });
       const locations = Object.entries(map).map(([cityId, regionIds]) => {
         return this.createLocationModel(cityId, regionIds);
@@ -622,7 +621,7 @@ export class App {
     try {
       const serverName = this.makeLocalizedServerName(regionId);
       const server = await this.digitalOceanRetry(() => {
-        return this.digitalOceanRepository.createServer(regionId, serverName);
+        return this.digitalOceanAccount.createServer(regionId, serverName);
       });
       this.addServer(server);
       this.showServer(server);
