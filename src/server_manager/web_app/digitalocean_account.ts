@@ -30,7 +30,7 @@ export interface ShadowboxSettings {
   watchtowerRefreshSeconds?: number;
 }
 
-export class DigitalOceanAccount implements digitalocean.DigitalOceanAccount {
+export class DigitalOceanAccount implements digitalocean.Account {
   private servers: DigitalOceanServer[] = [];
 
   constructor(

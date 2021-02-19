@@ -131,7 +131,7 @@ function isManualServer(testServer: server.Server): testServer is server.ManualS
 }
 
 export class App {
-  private digitalOceanAccount: digitalocean.DigitalOceanAccount;
+  private digitalOceanAccount: digitalocean.Account;
   private selectedServer: server.Server;
   private idServerMap = new Map<string, server.Server>();
 
@@ -333,7 +333,7 @@ export class App {
     }
   }
 
-  private async loadDigitalOceanServers(digitalOceanAccount: digitalocean.DigitalOceanAccount):
+  private async loadDigitalOceanServers(digitalOceanAccount: digitalocean.Account):
       Promise<server.ManagedServer[]> {
     if (!digitalOceanAccount) {
       return [];
@@ -437,7 +437,7 @@ export class App {
 
   // Returns a promise that resolves when the account is active.
   // Throws CANCELLED_ERROR on cancellation, and the error on failure.
-  private async ensureActiveDigitalOceanAccount(digitalOceanAccount: digitalocean.DigitalOceanAccount):
+  private async ensureActiveDigitalOceanAccount(digitalOceanAccount: digitalocean.Account):
       Promise<void> {
     let cancelled = false;
     let activatingAccount = false;
@@ -540,7 +540,7 @@ export class App {
   }
 
   private async handleConnectDigitalOceanAccountRequest(): Promise<void> {
-    let digitalOceanAccount: digitalocean.DigitalOceanAccount;
+    let digitalOceanAccount: digitalocean.Account;
     try {
       const accessToken = await this.runDigitalOceanOauthFlow();
       digitalOceanAccount = this.cloudAccounts.connectDigitalOceanAccount(accessToken);
@@ -575,7 +575,7 @@ export class App {
   }
 
   // Opens the screen to create a server.
-  private async showDigitalOceanCreateServer(digitalOceanAccount: digitalocean.DigitalOceanAccount):
+  private async showDigitalOceanCreateServer(digitalOceanAccount: digitalocean.Account):
       Promise<void> {
     try {
       await this.ensureActiveDigitalOceanAccount(digitalOceanAccount);

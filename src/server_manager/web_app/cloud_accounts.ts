@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DigitalOceanAccount} from "../model/digitalocean";
+import {Account} from "../model/digitalocean";
 
-type DigitalOceanAccountFactory = (accessToken: string) => DigitalOceanAccount;
+type DigitalOceanAccountFactory = (accessToken: string) => Account;
 
 export class CloudAccounts {
   private readonly DIGITALOCEAN_TOKEN_STORAGE_KEY = 'LastDOToken';
@@ -23,7 +23,7 @@ export class CloudAccounts {
       private digitalOceanAccountFactory: DigitalOceanAccountFactory,
       private storage = localStorage) {}
 
-  connectDigitalOceanAccount(token: string): DigitalOceanAccount {
+  connectDigitalOceanAccount(token: string): Account {
     this.writeTokenToStorage(token);
     return this.getDigitalOceanAccount();
   }
@@ -32,7 +32,7 @@ export class CloudAccounts {
     this.storage.removeItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
   }
 
-  getDigitalOceanAccount(): DigitalOceanAccount {
+  getDigitalOceanAccount(): Account {
     const token = this.getTokenFromStorage();
     if (token) {
       return this.digitalOceanAccountFactory(token);

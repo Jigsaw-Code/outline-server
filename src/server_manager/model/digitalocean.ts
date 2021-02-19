@@ -25,7 +25,7 @@ export enum Status {
   INVALID_BILLING_INFORMATION,
 }
 
-export interface DigitalOceanAccount {
+export interface Account {
   // Returns the email address associated with the account.
   getName(): Promise<string>;
   // Returns the status of the account.

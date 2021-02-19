@@ -289,7 +289,7 @@ class FakeManagedServer extends FakeServer implements server.ManagedServer {
   }
 }
 
-class FakeDigitalOceanAccount implements digitalocean.DigitalOceanAccount {
+class FakeDigitalOceanAccount implements digitalocean.Account {
   private servers: server.ManagedServer[] = [];
   async getName(): Promise<string> {
     return 'name';
