@@ -20,8 +20,8 @@ import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
 
-import {DigitalOceanAccount, Status} from './digitalocean_account';
 import {CloudAccounts} from './cloud_accounts';
+import {DigitalOceanAccount, Status} from './digitalocean_account';
 import * as digitalocean_server from './digitalocean_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';

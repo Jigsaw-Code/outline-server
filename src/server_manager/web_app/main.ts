@@ -18,8 +18,8 @@ import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as i18n from '../infrastructure/i18n';
 
 import {App} from './app';
-import {DigitalOceanAccount} from './digitalocean_account';
 import {CloudAccounts} from './cloud_accounts';
+import {DigitalOceanAccount} from './digitalocean_account';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
 
