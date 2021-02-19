@@ -14,18 +14,15 @@
 
 import './ui_components/app-root.js';
 
-import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as server from '../model/server';
+import * as digitalocean from "../model/digitalocean";
 
 import {App, LAST_DISPLAYED_SERVER_STORAGE_KEY} from './app';
-import {TokenManager} from './digitalocean_oauth';
 import {AppRoot} from './ui_components/app-root';
-
-const TOKEN_WITH_NO_SERVERS = 'no-server-token';
-const TOKEN_WITH_ONE_SERVER = 'one-server-token';
+import {CloudAccounts} from "./cloud_accounts";
+import {InMemoryStorage} from "../infrastructure/memory_storage";
 
 // Define functions from preload.ts.
-
 // tslint:disable-next-line:no-any
 (global as any).onUpdateDownloaded = () => {};
 // tslint:disable-next-line:no-any
@@ -39,7 +36,7 @@ beforeEach(() => {
 describe('App', () => {
   it('shows intro when starting with no manual servers or DigitalOcean token', async () => {
     const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
-    const app = createTestApp(appRoot, new InMemoryDigitalOceanTokenManager());
+    const app = createTestApp(appRoot);
     await app.start();
     expect(appRoot.currentPage).toEqual('intro');
   });
@@ -47,7 +44,7 @@ describe('App', () => {
   it('will not create a manual server with invalid input', async () => {
     // Create a new app with no existing servers or DigitalOcean token.
     const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
-    const app = createTestApp(appRoot, new InMemoryDigitalOceanTokenManager());
+    const app = createTestApp(appRoot);
     await app.start();
     expect(appRoot.currentPage).toEqual('intro');
     await expectAsync(app.createManualServer('bad input')).toBeRejectedWithError();
@@ -56,7 +53,7 @@ describe('App', () => {
   it('creates a manual server with valid input', async () => {
     // Create a new app with no existing servers or DigitalOcean token.
     const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
-    const app = createTestApp(appRoot, new InMemoryDigitalOceanTokenManager());
+    const app = createTestApp(appRoot);
     await app.start();
     expect(appRoot.currentPage).toEqual('intro');
     await app.createManualServer(JSON.stringify({certSha256: 'cert', apiUrl: 'url'}));
@@ -65,26 +62,30 @@ describe('App', () => {
 
   it('initially shows servers', async () => {
     // Create fake servers and simulate their metadata being cached before creating the app.
-    const tokenManager = new InMemoryDigitalOceanTokenManager();
-    tokenManager.token = TOKEN_WITH_NO_SERVERS;
-    const managedServerRepo = new FakeManagedServerRepository();
-    const managedServer = await managedServerRepo.createServer('fake-managed-server-id');
-    managedServer.apiUrl = 'fake-managed-server-api-url';
+    const fakeAccount = new FakeDigitalOceanAccount();
+    await fakeAccount.createServer('fake-managed-server-id');
+    const cloudAccounts = makeCloudAccountsWithDoAccount(fakeAccount);
+
     const manualServerRepo = new FakeManualServerRepository();
     await manualServerRepo.addServer({certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-1'});
     await manualServerRepo.addServer({certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
 
     const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
     expect(appRoot.serverList.length).toEqual(0);
-    const app = createTestApp(appRoot, tokenManager, manualServerRepo, managedServerRepo);
+    const app = createTestApp(appRoot, cloudAccounts, manualServerRepo);
 
     await app.start();
     // Validate that server metadata is shown.
-    const managedServers = await managedServerRepo.listServers();
+    const managedServers = await fakeAccount.listServers();
     expect(managedServers.length).toEqual(1);
     const manualServers = await manualServerRepo.listServers();
     expect(manualServers.length).toEqual(2);
+    appRoot.getServerView('');
     const serverList = appRoot.serverList;
+
+    console.log(`managedServers.length: ${managedServers.length}`);
+    console.log(`manualServers.length: ${manualServers.length}`);
+
     expect(serverList.length).toEqual(manualServers.length + managedServers.length);
     expect(serverList).toContain(jasmine.objectContaining({id: 'fake-manual-server-api-url-1'}));
     expect(serverList).toContain(jasmine.objectContaining({id: 'fake-manual-server-api-url-2'}));
@@ -92,9 +93,6 @@ describe('App', () => {
   });
 
   it('initially shows the last selected server', async () => {
-    const tokenManager = new InMemoryDigitalOceanTokenManager();
-    tokenManager.token = TOKEN_WITH_ONE_SERVER;
-
     const LAST_DISPLAYED_SERVER_ID = 'fake-manual-server-api-url-1';
     const manualServerRepo = new FakeManualServerRepository();
     const lastDisplayedServer =
@@ -102,7 +100,7 @@ describe('App', () => {
     await manualServerRepo.addServer({certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
     localStorage.setItem('lastDisplayedServer', LAST_DISPLAYED_SERVER_ID);
     const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
-    const app = createTestApp(appRoot, tokenManager, manualServerRepo);
+    const app = createTestApp(appRoot, null, manualServerRepo);
     await app.start();
     expect(appRoot.currentPage).toEqual('serverView');
     expect(appRoot.selectedServerId).toEqual(lastDisplayedServer.getManagementApiUrl());
@@ -111,9 +109,8 @@ describe('App', () => {
   it('shows progress screen once DigitalOcean droplets are created', async () => {
     // Start the app with a fake DigitalOcean token.
     const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
-    const tokenManager = new InMemoryDigitalOceanTokenManager();
-    tokenManager.token = TOKEN_WITH_NO_SERVERS;
-    const app = createTestApp(appRoot, tokenManager);
+    const cloudAccounts = makeCloudAccountsWithDoAccount(new FakeDigitalOceanAccount());
+    const app = createTestApp(appRoot, cloudAccounts);
     await app.start();
     await app.createDigitalOceanServer('fakeRegion');
     expect(appRoot.currentPage).toEqual('serverView');
@@ -123,12 +120,10 @@ describe('App', () => {
   it('shows progress screen when starting with DigitalOcean servers still being created',
      async () => {
        const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
-       const tokenManager = new InMemoryDigitalOceanTokenManager();
-       tokenManager.token = TOKEN_WITH_NO_SERVERS;
-       const managedSeverRepository = new FakeManagedServerRepository();
-       // Manually create the server since the DO repository server factory function is synchronous.
-       const server = await managedSeverRepository.createServer();
-       const app = createTestApp(appRoot, tokenManager, null, managedSeverRepository);
+       const fakeAccount = new FakeDigitalOceanAccount();
+       const server = await fakeAccount.createServer(Math.random().toString());
+       const cloudAccounts = makeCloudAccountsWithDoAccount(fakeAccount);
+       const app = createTestApp(appRoot, cloudAccounts, null);
        // Sets last displayed server.
        localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, server.getId());
        await app.start();
@@ -137,28 +132,24 @@ describe('App', () => {
      });
 });
 
+function makeCloudAccountsWithDoAccount(fakeAccount: FakeDigitalOceanAccount) {
+  const fakeDigitalOceanAccountFactory = (token: string) => fakeAccount;
+  const cloudAccounts = new CloudAccounts(fakeDigitalOceanAccountFactory, new InMemoryStorage());
+  cloudAccounts.connectDigitalOceanAccount('fake-access-token');
+  return cloudAccounts;
+}
+
 function createTestApp(
-    appRoot: AppRoot, digitalOceanTokenManager: InMemoryDigitalOceanTokenManager,
-    manualServerRepo?: server.ManualServerRepository,
-    managedServerRepository?: FakeManagedServerRepository) {
+    appRoot: AppRoot, cloudAccounts?: CloudAccounts,
+    manualServerRepo?: server.ManualServerRepository) {
   const VERSION = '0.0.1';
-  const fakeDigitalOceanSessionFactory = (accessToken: string) => {
-    return new FakeDigitalOceanSession(accessToken);
-  };
-  const fakeDigitalOceanServerRepositoryFactory =
-      (session: digitalocean_api.DigitalOceanSession) => {
-        const repo = managedServerRepository || new FakeManagedServerRepository();
-        if (session.accessToken === TOKEN_WITH_ONE_SERVER) {
-          repo.createServer();  // OK to ignore promise as the fake implementation is synchronous.
-        }
-        return repo;
-      };
+  if (!cloudAccounts) {
+    cloudAccounts = new CloudAccounts((token: string) => new FakeDigitalOceanAccount(), new InMemoryStorage());
+  }
   if (!manualServerRepo) {
     manualServerRepo = new FakeManualServerRepository();
   }
-  return new App(
-      appRoot, VERSION, fakeDigitalOceanSessionFactory, fakeDigitalOceanServerRepositoryFactory,
-      manualServerRepo, digitalOceanTokenManager);
+  return new App(appRoot, VERSION, manualServerRepo, cloudAccounts);
 }
 
 class FakeServer implements server.Server {
@@ -272,46 +263,6 @@ class FakeManualServerRepository implements server.ManualServerRepository {
   }
 }
 
-class InMemoryDigitalOceanTokenManager implements TokenManager {
-  public token: string;
-  getStoredToken(): string {
-    return this.token;
-  }
-  removeTokenFromStorage() {
-    this.token = null;
-  }
-  writeTokenToStorage(token: string) {
-    this.token = token;
-  }
-}
-
-class FakeDigitalOceanSession implements digitalocean_api.DigitalOceanSession {
-  constructor(public accessToken: string) {}
-
-  // Return fake account data.
-  getAccount() {
-    return Promise.resolve(
-        {email: 'fake@email.com', uuid: 'fake', email_verified: true, status: 'active'});
-  }
-
-  // Return an empty list of droplets by default.
-  getDropletsByTag = (tag: string) => Promise.resolve([]);
-
-  // Return an empty list of regions by default.
-  getRegionInfo = () => Promise.resolve([]);
-
-  // Other methods do not yet need implementations for tests to pass.
-  createDroplet =
-      (displayName: string, region: string, publicKeyForSSH: string,
-       dropletSpec: digitalocean_api.DigitalOceanDropletSpecification) =>
-          Promise.reject(new Error('createDroplet not implemented'));
-  deleteDroplet = (dropletId: number) => Promise.reject(new Error('deleteDroplet not implemented'));
-  getDroplet = (dropletId: number) => Promise.reject(new Error('getDroplet not implemented'));
-  getDropletTags = (dropletId: number) =>
-      Promise.reject(new Error('getDropletTags not implemented'));
-  getDroplets = () => Promise.reject(new Error('getDroplets not implemented'));
-}
-
 class FakeManagedServer extends FakeServer implements server.ManagedServer {
   constructor(id: string, private isInstalled = true) {
     super(id);
@@ -335,8 +286,14 @@ class FakeManagedServer extends FakeServer implements server.ManagedServer {
   }
 }
 
-class FakeManagedServerRepository implements server.ManagedServerRepository {
+class FakeDigitalOceanAccount implements digitalocean.Account {
   private servers: server.ManagedServer[] = [];
+  async getName(): Promise<string> {
+    return 'name';
+  }
+  async getStatus(): Promise<digitalocean.Status> {
+    return digitalocean.Status.ACTIVE;
+  }
   listServers() {
     return Promise.resolve(this.servers);
   }
