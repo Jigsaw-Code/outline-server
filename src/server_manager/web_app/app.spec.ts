@@ -68,8 +68,8 @@ describe('App', () => {
     // Create fake servers and simulate their metadata being cached before creating the app.
     const tokenManager = new InMemoryDigitalOceanTokenManager();
     tokenManager.token = TOKEN_WITH_NO_SERVERS;
-    const managedServerRepo = new FakeAccount();
-    const managedServer = await managedServerRepo.createServer('fake-managed-server-id');
+    const fakeAccount = new FakeAccount();
+    const managedServer = await fakeAccount.createServer('fake-managed-server-id');
     managedServer.apiUrl = 'fake-managed-server-api-url';
     const manualServerRepo = new FakeManualServerRepository();
     await manualServerRepo.addServer({certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-1'});
@@ -77,11 +77,11 @@ describe('App', () => {
 
     const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
     expect(appRoot.serverList.length).toEqual(0);
-    const app = createTestApp(appRoot, tokenManager, manualServerRepo, managedServerRepo);
+    const app = createTestApp(appRoot, tokenManager, manualServerRepo, fakeAccount);
 
     await app.start();
     // Validate that server metadata is shown.
-    const managedServers = await managedServerRepo.listServers();
+    const managedServers = await fakeAccount.listServers();
     expect(managedServers.length).toEqual(1);
     const manualServers = await manualServerRepo.listServers();
     expect(manualServers.length).toEqual(2);
@@ -141,14 +141,14 @@ describe('App', () => {
 function createTestApp(
     appRoot: AppRoot, digitalOceanTokenManager: InMemoryDigitalOceanTokenManager,
     manualServerRepo?: server.ManualServerRepository,
-    managedServerRepository?: FakeAccount) {
+    fakeAccount?: FakeAccount) {
   const VERSION = '0.0.1';
   const fakeDigitalOceanSessionFactory = (accessToken: string) => {
     return new FakeDigitalOceanSession(accessToken);
   };
   const fakeDigitalOceanServerRepositoryFactory =
       (session: digitalocean_api.DigitalOceanSession) => {
-        const repo = managedServerRepository || new FakeAccount();
+        const repo = fakeAccount || new FakeAccount();
         if (session.accessToken === TOKEN_WITH_ONE_SERVER) {
           repo.createServer();  // OK to ignore promise as the fake implementation is synchronous.
         }
