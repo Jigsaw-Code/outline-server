@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 # Copyright 2018 The Outline Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,11 +36,11 @@ export SHADOWBOX_DIR="${SHADOWBOX_DIR:-${HOME:-/root}/shadowbox}"
 mkdir -p $SHADOWBOX_DIR
 
 # Save output for debugging
-exec 2>&1 >$SHADOWBOX_DIR/install-shadowbox-output
+exec &> $SHADOWBOX_DIR/install-shadowbox-output
 
 # Initialize sentry log file.
 export SENTRY_LOG_FILE="$SHADOWBOX_DIR/sentry-log-file.txt"
-> $SENTRY_LOG_FILE
+true > $SENTRY_LOG_FILE
 function log_for_sentry() {
   echo [$(date "+%Y-%m-%d@%H:%M:%S")] "do_install_server.sh" "$@" >>$SENTRY_LOG_FILE
 }
@@ -48,7 +50,7 @@ function post_sentry_report() {
     # but otherwise assumes that there are no other characters to escape for JSON.
     # If we need better escaping, we can install the jq command line tool.
     readonly SENTRY_PAYLOAD_BYTE_LIMIT=8000
-    SENTRY_PAYLOAD="{\"message\": \"Install error:\n$(cat $SENTRY_LOG_FILE | awk '{printf "%s\\n", $0}' | tail --bytes $SENTRY_PAYLOAD_BYTE_LIMIT)\"}"
+    SENTRY_PAYLOAD="{\"message\": \"Install error:\n$(awk '{printf "%s\\n", $0}' < "${SENTRY_LOG_FILE}" | tail --bytes $SENTRY_PAYLOAD_BYTE_LIMIT)\"}"
     # See Sentry documentation at:
     # https://media.readthedocs.org/pdf/sentry/7.1.0/sentry.pdf
     curl "$SENTRY_API_URL" -H "Origin: shadowbox" --data-binary "$SENTRY_PAYLOAD"
@@ -76,8 +78,8 @@ function cloud::public_ip() {
 # Applies a tag to this droplet.
 function cloud::add_tag() {
   local tag="$1"
-  declare -a base_flags=(-X POST -H 'Content-Type: application/json')
-  base_flags+=(-H "Authorization: Bearer ${DO_ACCESS_TOKEN}")
+  declare -ar base_flags=(-X POST -H 'Content-Type: application/json' \
+                          -H "Authorization: Bearer ${DO_ACCESS_TOKEN}")
   local TAGS_URL='https://api.digitalocean.com/v2/tags'
   # Create the tag
   curl "${base_flags[@]}" -d "{\"name\":\"${tag}\"}" "${TAGS_URL}"
@@ -147,13 +149,13 @@ export SB_PUBLIC_IP=$(cloud::public_ip)
 
 log_for_sentry "Initializing ACCESS_CONFIG"
 export ACCESS_CONFIG="$SHADOWBOX_DIR/access.txt"
-> $ACCESS_CONFIG
+true > $ACCESS_CONFIG
 
 # Set trap which publishes an error tag and sentry report only if there is an error.
 function finish {
   INSTALL_SERVER_EXIT_CODE=$?
   log_for_sentry "In EXIT trap, exit code $INSTALL_SERVER_EXIT_CODE"
-  if [[ -z $(grep apiUrl $ACCESS_CONFIG) ]] || [[ -z $(grep certSha256 $ACCESS_CONFIG) ]]; then
+  if ! ( grep --quiet apiUrl $ACCESS_CONFIG && grep --quiet certSha256 $ACCESS_CONFIG ); then
     echo "INSTALL_SCRIPT_FAILED: $INSTALL_SERVER_EXIT_CODE" | cloud::add_kv_tag "install-error"
     # Post error report to sentry.
     post_sentry_report

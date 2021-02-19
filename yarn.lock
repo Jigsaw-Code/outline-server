@@ -1239,11 +1239,11 @@
   resolved "https://registry.yarnpkg.com/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
-ShadowsocksConfig@Jigsaw-Code/outline-shadowsocksconfig#^v0.0.9:
-  version "0.0.8"
-  resolved "https://codeload.github.com/Jigsaw-Code/outline-shadowsocksconfig/tar.gz/e9e18dcdcc0fe76724dd5f0550e6e216b5b5114a"
+ShadowsocksConfig@Jigsaw-Code/outline-shadowsocksconfig#^v0.1.2:
+  version "0.1.2"
+  resolved "https://codeload.github.com/Jigsaw-Code/outline-shadowsocksconfig/tar.gz/e491bd06e98b1b9f3c4745e8eb66c503c490745d"
   dependencies:
-    base-64 "^0.1.0"
+    js-base64 "^3.5.2"
     punycode "^1.4.1"
 
 abort-controller@^2.0.2:
@@ -1729,11 +1729,6 @@ balanced-match@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.0.tgz#89b4d199ab2bee49de164ea02b89ce462d71b767"
   integrity sha1-ibTRmasr7kneFk6gK4nORi1xt2c=
-
-base-64@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/base-64/-/base-64-0.1.0.tgz#780a99c84e7d600260361511c4877613bf24f6bb"
-  integrity sha1-eAqZyE59YAJgNhURxId2E78k9rs=
 
 base64-arraybuffer@0.1.4:
   version "0.1.4"
@@ -6061,6 +6056,11 @@ jpeg-js@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/jpeg-js/-/jpeg-js-0.2.0.tgz#53e448ec9d263e683266467e9442d2c5a2ef5482"
   integrity sha1-U+RI7J0mPmgyZkZ+lELSxaLvVII=
+
+js-base64@^3.5.2:
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/js-base64/-/js-base64-3.6.0.tgz#773e1de628f4f298d65a7e9842c50244751f5756"
+  integrity sha512-wVdUBYQeY2gY73RIlPrysvpYx+2vheGo8Y1SNQv/BzHToWpAZzJU7Z6uheKMAe+GLSBig5/Ps2nxg/8tRB73xg==
 
 js-tokens@^4.0.0:
   version "4.0.0"
