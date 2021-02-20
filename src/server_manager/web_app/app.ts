@@ -315,8 +315,6 @@ export class App {
   async start(): Promise<void> {
     this.showIntro();
 
-    console.log('CloudAccounts', this.cloudAccounts.getDigitalOceanAccount());
-
     // Load server list. Fetch manual and managed servers in parallel.
     await Promise.all([
       this.loadDigitalOceanServers(this.cloudAccounts.getDigitalOceanAccount()),
