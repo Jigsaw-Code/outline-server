@@ -18,7 +18,7 @@
     "do": "bash ./scripts/do_action.sh",
     "lint": "yarn shellcheck && yarn tslint",
     "shellcheck": "bash ./scripts/shellcheck.sh",
-    "tslint": "tslint 'src/**/*.ts' -e '**/node_modules/**' -e '**/bower_components/**'"
+    "tslint": "tslint 'src/**/*.ts' -e '**/node_modules/**'"
   },
   "workspaces": [
     "src/*"
