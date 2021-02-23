@@ -62,8 +62,7 @@ export class CloudAccounts {
     const accountJson = this.getAccount(CloudId.DigitalOcean);
     if (accountJson) {
       const digitalOceanAccountJson: DigitalOceanAccountJson = JSON.parse(JSON.stringify(accountJson.account));
-      const accountId = this.makeUniqueAccountId(digitalOceanAccountJson.uuid, CloudId.DigitalOcean);
-      return this.digitalOceanAccountFactory(accountId, digitalOceanAccountJson.email, digitalOceanAccountJson.accessToken);
+      return this.digitalOceanAccountFactory(digitalOceanAccountJson.uuid, digitalOceanAccountJson.email, digitalOceanAccountJson.accessToken);
     }
     return null;
   }
@@ -100,9 +99,5 @@ export class CloudAccounts {
 
   private saveAccountsToStorage(): void {
     this.storage.setItem(this.ACCOUNTS_STORAGE_KEY, JSON.stringify(this.accounts));
-  }
-
-  private makeUniqueAccountId(cloudSpecificAccountId: string, cloudId: CloudId): string {
-    return `${cloudId}#${cloudSpecificAccountId}`;
   }
 }

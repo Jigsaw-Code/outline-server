@@ -92,8 +92,6 @@ export interface ManualServer extends Server {
 // Managed servers are servers created by the Outline Manager through our
 // "magic" user experience, e.g. DigitalOcean.
 export interface ManagedServer extends Server {
-  // Returns the unique cloud account ID.
-  getAccountId(): string;
   // Returns a promise that fulfills once installation is complete.
   waitOnInstall(): Promise<void>;
   // Returns server host object.

@@ -60,19 +60,13 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
   private eventQueue = new EventEmitter();
   private installState: InstallState = InstallState.UNKNOWN;
 
-  constructor(
-      id: string, private readonly accountId: string,
-      private digitalOcean: DigitalOceanSession, private dropletInfo: DropletInfo) {
+  constructor(private digitalOcean: DigitalOceanSession, private dropletInfo: DropletInfo) {
     // Consider passing a RestEndpoint object to the parent constructor,
     // to better encapsulate the management api address logic.
-    super(id);
+    super(String(dropletInfo.id));
     console.info('DigitalOceanServer created');
     this.eventQueue.once('server-active', () => console.timeEnd('activeServer'));
     this.pollInstallState();
-  }
-
-  getAccountId() {
-    return this.accountId;
   }
 
   waitOnInstall(): Promise<void> {
