@@ -43,6 +43,8 @@ import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 import {PolymerElement} from '@polymer/polymer/polymer-element.js';
 
+// TODO: Move this to model?
+import {CloudId} from "../cloud_accounts";
 import {ServerView} from './outline-server-view.js';
 
 const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
@@ -51,9 +53,17 @@ const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
  * An access key to be displayed
  * @typedef {Object} ServerListEntry
  * @prop {string} id
+ * @prop {string|null} accountId
  * @prop {string} name
- * @prop {boolean} isManaged
  * @prop {boolean} isSynced
+ */
+
+/**
+ * A cloud account to be displayed
+ * @typedef {Object} AccountListEntry
+ * @prop {string} id
+ * @prop {CloudId} cloudId
+ * @prop {string} name
  */
 
 export class AppRoot extends mixinBehaviors
@@ -344,28 +354,9 @@ export class AppRoot extends mixinBehaviors
 
           <!-- Servers section -->
           <div class="servers">
-            <!-- DigitalOcean servers -->
-            <div class="servers-section" hidden\$="{{!isSignedInToDigitalOcean}}">
-              <div class="servers-header">
-                <span>[[localize('servers-digitalocean')]]</span>
-                <paper-menu-button horizontal-align="left" class="" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
-                  <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
-                  <div class="do-overflow-menu" slot="dropdown-content">
-                    <h4>[[localize('digitalocean-disconnect-account')]]</h4>
-                    <div class="account-info"><img src="images/digital_ocean_logo.svg">{{adminEmail}}</div>
-                    <div class="sign-out-button" on-tap="signOutTapped">[[localize('digitalocean-disconnect')]]</div>
-                  </div>
-                </paper-menu-button>
-              </div>
-              <div class="servers-container">
-                <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
-                  <div class\$="server {{_computeServerClasses(selectedServerId, server)}}" data-server\$="[[server]]" on-tap="_showServer">
-                    <img class="server-icon" src\$="images/{{_computeServerImage(selectedServerId, server)}}">
-                    <span>{{server.name}}</span>
-                  </div>
-                </template>
-              </div>
-            </div>
+            <template is="dom-repeat" items="{{accountList}}" as="account">
+              ${this.accountSidebarExpandedTemplate}
+            </template>
             <!-- Manual servers -->
             <div class="servers-section" hidden\$="{{!hasManualServers}}">
               <div class="servers-header">
@@ -412,7 +403,7 @@ export class AppRoot extends mixinBehaviors
         <app-header-layout>
           <div class="app-container">
             <iron-pages attr-for-selected="id" selected="{{ currentPage }}">
-              <outline-intro-step id="intro" is-signed-in-to-digital-ocean="{{isSignedInToDigitalOcean}}" digital-ocean-email="{{adminEmail}}" localize="[[localize]]"></outline-intro-step>
+              <outline-intro-step id="intro" is-signed-in-to-digital-ocean="{{digitalOceanAccount}}" digital-ocean-email="{{digitalOceanAccount.name}}" localize="[[localize]]"></outline-intro-step>
               <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
               <outline-region-picker-step id="regionPicker" localize="[[localize]]"></outline-region-picker-step>
@@ -433,15 +424,9 @@ export class AppRoot extends mixinBehaviors
             <paper-icon-button icon="menu" on-click="_toggleAppDrawer"></paper-icon-button>
           </div>
           <div class="servers">
-            <!-- DigitalOcean servers -->
-            <div class="side-bar-section servers-section" hidden\$="{{!isSignedInToDigitalOcean}}">
-              <img class="provider-icon" src="images/do_white_logo.svg">
-              <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
-                <div class\$="server {{_computeServerClasses(selectedServerId, server)}}" data-server\$="[[server]]" on-tap="_showServer">
-                  <img class="server-icon" src\$="images/{{_computeServerImage(selectedServerId, server)}}">
-                </div>
-              </template>
-            </div>
+            <template is="dom-repeat" items="{{accountList}}" as="account">
+              ${this.accountSidebarTemplate}
+            </template>
             <!-- Manual servers -->
             <div class="side-bar-section servers-section" hidden\$="{{!hasManualServers}}">
               <img class="provider-icon" src="images/cloud.svg">
@@ -491,6 +476,45 @@ export class AppRoot extends mixinBehaviors
 `;
   }
 
+  static get accountSidebarTemplate() {
+    return html`
+      <div class="side-bar-section servers-section">
+        <img class="provider-icon" src="images/do_white_logo.svg">
+        <template is="dom-repeat" items="{{serverList}}" as="server" filter="{{_isServerForAccount(account.id)}}" sort="_sortServersByName">
+          <div class\$="server {{_computeServerClasses(selectedServerId, server)}}" data-server\$="[[server]]" on-tap="_showServer">
+            <img class="server-icon" src\$="images/{{_computeServerImage(selectedServerId, server)}}">
+          </div>
+        </template>
+      </div>
+    `;
+  }
+
+  static get accountSidebarExpandedTemplate() {
+    return html`
+      <div class="servers-section">
+        <div class="servers-header">
+          <span>[[localize('servers-digitalocean')]]</span>
+          <paper-menu-button horizontal-align="left" class="" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
+            <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
+            <div class="do-overflow-menu" slot="dropdown-content">
+              <h4>[[localize('digitalocean-disconnect-account')]]</h4>
+              <div class="account-info"><img src="images/digital_ocean_logo.svg">{{account.name}}</div>
+              <div class="sign-out-button" on-tap="signOutTapped">[[localize('digitalocean-disconnect')]]</div>
+            </div>
+          </paper-menu-button>
+        </div>
+        <div class="servers-container">
+          <template is="dom-repeat" items="{{serverList}}" as="server" filter="{{_isServerForAccount(account.id)}}" sort="_sortServersByName">
+            <div class\$="server {{_computeServerClasses(selectedServerId, server)}}" data-server\$="[[server]]" on-tap="_showServer">
+              <img class="server-icon" src\$="images/{{_computeServerImage(selectedServerId, server)}}">
+              <span>{{server.name}}</span>
+            </div>
+          </template>
+        </div>
+      </div>
+    `;
+  }
+
   static get is() {
     return 'app-root';
   }
@@ -502,16 +526,16 @@ export class AppRoot extends mixinBehaviors
       // An array of {id, name, dir} language objects.
       supportedLanguages: {type: Array, readonly: true},
       useKeyIfMissing: {type: Boolean},
+      accountList: {type: Array},
       serverList: {type: Array},
       selectedServerId: {type: String},
       hasManualServers: {
         type: Boolean,
         computed: '_computeHasManualServers(serverList.*)',
       },
-      adminEmail: {type: String},
-      isSignedInToDigitalOcean: {
-        type: Boolean,
-        computed: '_computeIsSignedInToDigitalOcean(adminEmail)',
+      digitalOceanAccount: {
+        type: Object,
+        computed: '_computeDigitalOceanAccount(accountList.*)',
       },
       outlineVersion: String,
       userAcceptedTos: {
@@ -539,9 +563,11 @@ export class AppRoot extends mixinBehaviors
     this.language = '';
     this.supportedLanguages = [];
     this.useKeyIfMissing = true;
+    /** @type {AccountListEntry[]} */
+    this.accountList = [];
     /** @type {ServerListEntry[]} */
     this.serverList = [];
-    this.adminEmail = '';
+    this.digitalOceanAccount = null;
     this.outlineVersion = '';
     this.currentPage = 'intro';
     this.shouldShowSideBar = false;
@@ -719,19 +745,19 @@ export class AppRoot extends mixinBehaviors
     const dialogTitle = this.localize('error-connectivity-title');
     const dialogText = this.localize('error-connectivity');
     this.showModalDialog(dialogTitle, dialogText, [this.localize('digitalocean-disconnect'), this.localize('retry')])
-        .then(clickedButtonIndex => {
-          cb(clickedButtonIndex === 1);  // pass true if user clicked retry
-        });
+    .then(clickedButtonIndex => {
+      cb(clickedButtonIndex === 1);  // pass true if user clicked retry
+    });
   }
 
   getConfirmation(title, text, confirmButtonText, continueFunc) {
     this.showModalDialog(title, text, [this.localize('cancel'), confirmButtonText])
-        .then(clickedButtonIndex => {
-          if (clickedButtonIndex === 1) {
-            // user clicked to confirm.
-            continueFunc();
-          }
-        });
+    .then(clickedButtonIndex => {
+      if (clickedButtonIndex === 1) {
+        // user clicked to confirm.
+        continueFunc();
+      }
+    });
   }
 
   /**
@@ -740,20 +766,21 @@ export class AppRoot extends mixinBehaviors
    */
   showManualServerError(errorTitle, errorText) {
     this.showModalDialog(errorTitle, errorText, [this.localize('cancel'), this.localize('retry')])
-        .then(clickedButtonIndex => {
-          if (clickedButtonIndex == 1) {
-            this.$.manualEntry.retryTapped();
-          } else {
-            this.$.manualEntry.cancelTapped();
-          }
-        });
-  }
-  _computeIsSignedInToDigitalOcean(adminEmail) {
-    return Boolean(adminEmail);
+    .then(clickedButtonIndex => {
+      if (clickedButtonIndex == 1) {
+        this.$.manualEntry.retryTapped();
+      } else {
+        this.$.manualEntry.cancelTapped();
+      }
+    });
   }
 
   _computeHasManualServers(serverList) {
     return this.serverList.filter(server => !server.isManaged).length > 0;
+  }
+
+  _computeDigitalOceanAccount(accountList) {
+    return this.accountList.find(account => account.cloudId === CloudId.DigitalOcean);
   }
 
   _userAcceptedTosChanged(userAcceptedTos) {
@@ -879,12 +906,13 @@ export class AppRoot extends mixinBehaviors
     return shouldShowSideBar ? 'side-bar-margin' : '';
   }
 
-  _isServerManaged(server) {
-    return server.isManaged;
+  _isServerForAccount(accountId) {
+    return function(server) {
+      return accountId === server.accountId;
+    };
   }
-
   _isServerManual(server) {
-    return !server.isManaged;
+    return !server.accountId;
   }
 
   _sortServersByName(a, b) {

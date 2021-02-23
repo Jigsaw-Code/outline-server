@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import {ManagedServer, RegionId} from "./server";
+import {CloudId} from "../web_app/cloud_accounts";
 
 // Keys are cityIds like "nyc".  Values are regions like ["nyc1", "nyc3"].
 export type RegionMap = {
@@ -28,6 +29,8 @@ export enum Status {
 export interface Account {
   // A globally unique account ID.
   getId(): string;
+  // Return the account cloud ID.
+  getCloudId(): CloudId;
   // Returns the email address associated with the account.
   getName(): string;
   // Returns the status of the account.

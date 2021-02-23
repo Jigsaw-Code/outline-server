@@ -270,8 +270,14 @@ Polymer({
   is: 'outline-intro-step',
 
   properties: {
-    isSignedInToDigitalOcean: Boolean,
-    digitalOceanEmail: String,
+    isSignedInToDigitalOcean: {
+      type: Boolean,
+      value: false,
+    },
+    digitalOceanEmail: {
+      type: String,
+      value: null,
+    },
     localize: {
       type: Function,
       readonly: true,

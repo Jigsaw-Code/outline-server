@@ -24,7 +24,7 @@ import * as digitalocean from '../model/digitalocean';
 import {CloudAccounts} from './cloud_accounts';
 import * as digitalocean_server from './digitalocean_server';
 import {parseManualServerConfig} from './management_urls';
-import {AppRoot, ServerListEntry} from './ui_components/app-root';
+import {AppRoot, AccountListEntry, ServerListEntry} from './ui_components/app-root';
 import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, DisplayDataAmount, ServerView} from './ui_components/outline-server-view';
 
@@ -134,6 +134,7 @@ export class App {
   private digitalOceanAccount: digitalocean.Account;
   private selectedServer: server.Server;
   private idServerMap = new Map<string, server.Server>();
+  private serverIdAccountMap = new Map<string, digitalocean.Account>();
 
   constructor(
       private appRoot: AppRoot, private readonly version: string,
@@ -315,8 +316,6 @@ export class App {
   async start(): Promise<void> {
     this.showIntro();
 
-    console.log('CloudAccounts', this.cloudAccounts.getDigitalOceanAccount());
-
     // Load server list. Fetch manual and managed servers in parallel.
     await Promise.all([
       this.loadDigitalOceanServers(this.cloudAccounts.getDigitalOceanAccount()),
@@ -340,13 +339,14 @@ export class App {
     }
     try {
       this.digitalOceanAccount = digitalOceanAccount;
-      this.appRoot.adminEmail = await this.digitalOceanAccount.getName();
+      this.appRoot.accountList = [this.makeAccountListEntry(digitalOceanAccount)];
       const status = await this.digitalOceanAccount.getStatus();
       if (status !== digitalocean.Status.ACTIVE) {
         return;
       }
       const servers = await this.digitalOceanAccount.listServers();
       for (const server of servers) {
+        this.serverIdAccountMap.set(server.getId(), digitalOceanAccount);
         this.addServer(server);
       }
       return servers;
@@ -364,13 +364,26 @@ export class App {
     }
   }
 
+  private makeAccountListEntry(account: digitalocean.Account): AccountListEntry {
+    return {
+      id: this.makeGloballyUniqueAccountId(account),
+      cloudId: account.getCloudId(),
+      name: account.getName(),
+    };
+  }
+
   private makeServerListEntry(server: server.Server): ServerListEntry {
+    const account = this.serverIdAccountMap.get(server.getId());
     return {
       id: server.getId(),
+      accountId: account ? this.makeGloballyUniqueAccountId(account) : null,
       name: this.makeDisplayName(server),
-      isManaged: isManagedServer(server),
       isSynced: !!server.getName(),
     };
+  }
+
+  private makeGloballyUniqueAccountId(account: digitalocean.Account): string {
+    return `${account.getCloudId()}#${account.getId()}`;
   }
 
   private makeDisplayName(server: server.Server): string {
@@ -564,14 +577,13 @@ export class App {
 
   // Clears the credentials and returns to the intro screen.
   private disconnectDigitalOceanAccount(): void {
+    const accountId = this.makeGloballyUniqueAccountId(this.digitalOceanAccount);
+    const entries = this.appRoot.serverList.filter(entry => entry.accountId === accountId);
+    entries.forEach(entry => this.removeServer(entry.id));
+
     this.cloudAccounts.disconnectDigitalOceanAccount();
+    this.appRoot.accountList = [];
     this.digitalOceanAccount = null;
-    for (const serverEntry of this.appRoot.serverList) {
-      if (serverEntry.isManaged) {
-        this.removeServer(serverEntry.id);
-      }
-    }
-    this.appRoot.adminEmail = '';
   }
 
   // Opens the screen to create a server.

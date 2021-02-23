@@ -18,6 +18,7 @@ import * as server from "../model/server";
 import * as crypto from "../infrastructure/crypto";
 import * as digitalocean from "../model/digitalocean";
 import * as do_install_script from "../install_scripts/do_install_script";
+import {CloudId} from "./cloud_accounts";
 
 // Tag used to mark Shadowbox Droplets.
 const SHADOWBOX_TAG = 'shadowbox';
@@ -34,14 +35,18 @@ export class DigitalOceanAccount implements digitalocean.Account {
   private servers: DigitalOceanServer[] = [];
 
   constructor(
-      private id: string,
+      private uuid: string,
       private name: string,
       private digitalOcean: DigitalOceanSession,
       private shadowboxSettings: ShadowboxSettings,
       private debugMode: boolean) {}
 
   getId(): string {
-    return this.id;
+    return this.uuid;
+  }
+
+  getCloudId(): CloudId {
+    return CloudId.DigitalOcean;
   }
 
   getName(): string {
@@ -120,15 +125,10 @@ export class DigitalOceanAccount implements digitalocean.Account {
 
   // Creates a DigitalOceanServer object and adds it to the in-memory server list.
   private createDigitalOceanServer(digitalOcean: DigitalOceanSession, dropletInfo: DropletInfo) {
-    const serverId = makeUniqueServerId(this.getId(), String(dropletInfo.id));
-    const server = new DigitalOceanServer(serverId, this.getId(), digitalOcean, dropletInfo);
+    const server = new DigitalOceanServer(digitalOcean, dropletInfo);
     this.servers.push(server);
     return server;
   }
-}
-
-function makeUniqueServerId(accountId: string, serverId: string): string {
-  return `${accountId}#${serverId}`;
 }
 
 function sanitizeDigitalOceanToken(input: string): string {
