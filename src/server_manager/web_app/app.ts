@@ -315,8 +315,6 @@ export class App {
   async start(): Promise<void> {
     this.showIntro();
 
-    console.log('CloudAccounts', this.cloudAccounts.getDigitalOceanAccount());
-
     // Load server list. Fetch manual and managed servers in parallel.
     await Promise.all([
       this.loadDigitalOceanServers(this.cloudAccounts.getDigitalOceanAccount()),
@@ -514,7 +512,7 @@ export class App {
     });
   };
 
-  // Runs the oauth flow and returns the API access token.
+  // Runs the oauth flow and returns a DigitalOceanOAuthResult.
   // Throws CANCELLED_ERROR on cancellation, or the error in case of failure.
   private async runDigitalOceanOauthFlow(): Promise<DigitalOceanOAuthResult> {
     const oauth = runDigitalOceanOauth();

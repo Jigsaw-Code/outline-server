@@ -14,62 +14,92 @@
 
 import {Account} from '../model/digitalocean';
 
-type DigitalOceanAccountFactory =
-    (id: string, name: string, accessToken: string) => Account;
-
-type PersistedDigitalOceanAccount = {
-  id: string,
-  name: string,
-  credential: string,
-};
-
 enum CloudId {
-  DigitalOcean,
+  DigitalOcean= 'digitalocean',
 }
 
+type DigitalOceanAccountFactory = (id: string, name: string, accessToken: string) => Account;
+
+type AccountJson = {
+  type: CloudId,
+  account: object,
+};
+
+type DigitalOceanAccountJson = {
+  uuid: string,
+  email: string,
+  accessToken: string,
+};
+
 export class CloudAccounts {
-  // TODO: We need to migrate this if we decide to use the same key.
-  private readonly DIGITALOCEAN_TOKEN_STORAGE_KEY = 'LastDOToken';
+  // // TODO: Support legacy DigitalOcean account
+  // private readonly DIGITALOCEAN_TOKEN_STORAGE_KEY = 'LastDOToken';
+  private readonly ACCOUNTS_STORAGE_KEY = 'accounts-storage';
+
+  private accounts: AccountJson[] = [];
 
   constructor(
       private digitalOceanAccountFactory: DigitalOceanAccountFactory,
-      private storage = localStorage) {}
+      private storage = localStorage) {
+    this.accounts = this.readAccountFromStorage();
+  }
 
   connectDigitalOceanAccount(oauthResult: DigitalOceanOAuthResult): Account {
-    const persistedAccount = {
-      id: oauthResult.uuid,
-      name: oauthResult.email,
-      credential: oauthResult.accessToken,
+    const digitalOceanAccountJson = {
+      uuid: oauthResult.uuid,
+      email: oauthResult.email,
+      accessToken: oauthResult.accessToken,
     };
-    this.writeDigitalOceanAccount(persistedAccount);
+    this.addAccount(CloudId.DigitalOcean, digitalOceanAccountJson);
     return this.getDigitalOceanAccount();
   }
 
   disconnectDigitalOceanAccount(): void {
-    this.storage.removeItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
+    this.removeAccount(CloudId.DigitalOcean);
   }
 
   getDigitalOceanAccount(): Account {
-    const persistedAccount = this.readDigitalOceanAccount();
-    if (persistedAccount) {
-      const accountId = this.makeUniqueAccountId(persistedAccount.id, CloudId.DigitalOcean);
-      return this.digitalOceanAccountFactory(
-          accountId, persistedAccount.name, persistedAccount.credential);
+    const accountJson = this.getAccount(CloudId.DigitalOcean);
+    if (accountJson) {
+      const digitalOceanAccountJson: DigitalOceanAccountJson = JSON.parse(JSON.stringify(accountJson.account));
+      const accountId = this.makeUniqueAccountId(digitalOceanAccountJson.uuid, CloudId.DigitalOcean);
+      return this.digitalOceanAccountFactory(accountId, digitalOceanAccountJson.email, digitalOceanAccountJson.accessToken);
     }
     return null;
   }
 
-  private writeDigitalOceanAccount(persistedAccount: PersistedDigitalOceanAccount): void {
-    this.storage.setItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY, JSON.stringify(persistedAccount));
+  private addAccount(cloudId: CloudId, cloudAccountJson: object): void {
+    const accountJson = {
+      type: cloudId,
+      account: cloudAccountJson,
+    };
+    this.accounts.push(accountJson);
+    this.saveAccountsToStorage();
   }
 
-  private readDigitalOceanAccount(): PersistedDigitalOceanAccount {
-    let result = null;
-    const data = this.storage.getItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
-    if (data) {
-      result = JSON.parse(data);
+  private removeAccount(cloudId: CloudId) {
+    const index = this.accounts.findIndex((account) => account.type === cloudId);
+    if (index > -1) {
+      this.accounts.splice(index, 1);
+    }
+    this.saveAccountsToStorage();
+  }
+
+  private getAccount(cloudId: CloudId): AccountJson {
+    return this.accounts.find(account => account.type === cloudId);
+  }
+
+  private readAccountFromStorage(): AccountJson[] {
+    let result = [];
+    const accountJsons = this.storage.getItem(this.ACCOUNTS_STORAGE_KEY);
+    if (accountJsons) {
+      result = JSON.parse(accountJsons);
     }
     return result;
+  }
+
+  private saveAccountsToStorage(): void {
+    this.storage.setItem(this.ACCOUNTS_STORAGE_KEY, JSON.stringify(this.accounts));
   }
 
   private makeUniqueAccountId(cloudSpecificAccountId: string, cloudId: CloudId): string {
