@@ -15,12 +15,12 @@
 import './ui_components/app-root.js';
 
 import * as server from '../model/server';
-import * as digitalocean from "../model/digitalocean";
+import * as digitalocean from '../model/digitalocean';
 
 import {App, LAST_DISPLAYED_SERVER_STORAGE_KEY} from './app';
 import {AppRoot} from './ui_components/app-root';
-import {CloudAccounts} from "./cloud_accounts";
-import {InMemoryStorage} from "../infrastructure/memory_storage";
+import {CloudAccounts} from './cloud_accounts';
+import {InMemoryStorage} from '../infrastructure/memory_storage';
 
 // Define functions from preload.ts.
 // tslint:disable-next-line:no-any
@@ -133,14 +133,9 @@ describe('App', () => {
 });
 
 function makeCloudAccountsWithDoAccount(fakeAccount: FakeDigitalOceanAccount) {
-  const fakeDigitalOceanAccountFactory = (id: string, name: string, token: string) => fakeAccount;
+  const fakeDigitalOceanAccountFactory = (token: string) => fakeAccount;
   const cloudAccounts = new CloudAccounts(fakeDigitalOceanAccountFactory, new InMemoryStorage());
-  const oauthResult = {
-    uuid: Math.random().toString(),
-    email: Math.random().toString(),
-    accessToken: 'fake-access-token',
-  };
-  cloudAccounts.connectDigitalOceanAccount(oauthResult);
+  cloudAccounts.connectDigitalOceanAccount('fake-access-token');
   return cloudAccounts;
 }
 
@@ -293,10 +288,7 @@ class FakeManagedServer extends FakeServer implements server.ManagedServer {
 
 class FakeDigitalOceanAccount implements digitalocean.Account {
   private servers: server.ManagedServer[] = [];
-  getId() {
-    return 'fake-id';
-  }
-  getName(): string {
+  async getName(): Promise<string> {
     return 'fake-name';
   }
   async getStatus(): Promise<digitalocean.Status> {
