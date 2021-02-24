@@ -107,11 +107,10 @@ document.addEventListener('WebComponentsReady', () => {
   };
 
   // Set DigitalOcean server repository parameters.
-  const digitalOceanAccountFactory =
-      (id: string, name: string, accessToken: string) => {
-        const session = new digitalocean_api.RestApiSession(accessToken);
-        return new DigitalOceanAccount(id, name, session, shadowboxSettings, debugMode);
-      };
+  const digitalOceanAccountFactory = (accessToken: string) => {
+    const session = new digitalocean_api.RestApiSession(accessToken);
+    return new DigitalOceanAccount(session, shadowboxSettings, debugMode);
+  };
   const cloudAccounts = new CloudAccounts(digitalOceanAccountFactory);
 
   // Create and start the app.

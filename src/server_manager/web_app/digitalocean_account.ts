@@ -34,18 +34,11 @@ export class DigitalOceanAccount implements digitalocean.Account {
   private servers: DigitalOceanServer[] = [];
 
   constructor(
-      private id: string,
-      private name: string,
-      private digitalOcean: DigitalOceanSession,
-      private shadowboxSettings: ShadowboxSettings,
+      private digitalOcean: DigitalOceanSession, private shadowboxSettings: ShadowboxSettings,
       private debugMode: boolean) {}
 
-  getId(): string {
-    return this.id;
-  }
-
-  getName(): string {
-    return this.name;
+  async getName(): Promise<string> {
+    return (await this.digitalOcean.getAccount())?.email;
   }
 
   async getStatus(): Promise<digitalocean.Status> {
@@ -144,12 +137,12 @@ function getInstallScript(
       `export DO_ACCESS_TOKEN=${sanitizedAccessToken}\n` +
       (shadowboxSettings.imageId ? `export SB_IMAGE=${shadowboxSettings.imageId}\n` : '') +
       (shadowboxSettings.watchtowerRefreshSeconds ?
-           `export WATCHTOWER_REFRESH_SECONDS=${shadowboxSettings.watchtowerRefreshSeconds}\n` :
-           '') +
+          `export WATCHTOWER_REFRESH_SECONDS=${shadowboxSettings.watchtowerRefreshSeconds}\n` :
+          '') +
       (shadowboxSettings.sentryApiUrl ?
-           `export SENTRY_API_URL="${shadowboxSettings.sentryApiUrl}"\n` :
-           '') +
+          `export SENTRY_API_URL="${shadowboxSettings.sentryApiUrl}"\n` :
+          '') +
       (shadowboxSettings.metricsUrl ? `export SB_METRICS_URL=${shadowboxSettings.metricsUrl}\n` :
-                                      '') +
+          '') +
       `export SB_DEFAULT_SERVER_NAME="${name}"\n` + do_install_script.SCRIPT;
 }

@@ -18,16 +18,10 @@ declare function trustCertificate(fingerprint: string): boolean;
 declare function openImage(basename: string): void;
 declare function onUpdateDownloaded(callback: () => void): void;
 
-type DigitalOceanOAuthResult = {
-  uuid: string,
-  email: string,
-  accessToken: string,
-};
-
 // TODO: Move this back to digitalocean_oauth.ts, where it really belongs.
 interface OauthSession {
   // Resolves with the OAuth token if authentication was successful, otherwise rejects.
-  result: Promise<DigitalOceanOAuthResult>;
+  result: Promise<string>;
   // Returns true iff the session has been cancelled.
   isCancelled(): boolean;
   // Cancels the session, causing the result promise to reject and isCancelled to return true.
