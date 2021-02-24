@@ -28,8 +28,8 @@ const REGISTERED_REDIRECTS: Array<{clientId: string, port: number}> = [
 
 function randomValueHex(len: number): string {
   return crypto.randomBytes(Math.ceil(len / 2))
-  .toString('hex')  // convert to hexadecimal format
-  .slice(0, len);   // return required number of characters
+      .toString('hex')  // convert to hexadecimal format
+      .slice(0, len);   // return required number of characters
 }
 
 interface ServerError extends Error {
@@ -167,15 +167,15 @@ export function runOauth(): OauthSession {
       const accessToken = params.get('access_token');
       if (accessToken) {
         getAccount(accessToken)
-        .then((account) => {
-          if (account.status === 'active') {
-            response.send(closeWindowHtml('Authentication successful'));
-          } else {
-            response.redirect('https://cloud.digitalocean.com');
-          }
-          resolve(accessToken);
-        })
-        .catch(reject);
+            .then((account) => {
+              if (account.status === 'active') {
+                response.send(closeWindowHtml('Authentication successful'));
+              } else {
+                response.redirect('https://cloud.digitalocean.com');
+              }
+              resolve(accessToken);
+            })
+            .catch(reject);
       } else {
         response.status(400).send(closeWindowHtml('Authentication failed'));
         reject(new Error('No access_token on OAuth response'));
@@ -186,24 +186,24 @@ export function runOauth(): OauthSession {
     // We registered the application 3 times with different ports, so we have fallbacks in case
     // the first port is in use.
     listenOnFirstPort(server, REGISTERED_REDIRECTS.map(e => e.port))
-    .then((index) => {
-      const {port, clientId} = REGISTERED_REDIRECTS[index];
-      const address = server.address() as AddressInfo;
-      console.log(`OAuth target listening on ${address.address}:${address.port}`);
+        .then((index) => {
+          const {port, clientId} = REGISTERED_REDIRECTS[index];
+          const address = server.address() as AddressInfo;
+          console.log(`OAuth target listening on ${address.address}:${address.port}`);
 
-      const oauthUrl = `https://cloud.digitalocean.com/v1/oauth/authorize?client_id=${
-          encodeURIComponent(
-              clientId)}&response_type=token&scope=read%20write&redirect_uri=http://localhost:${
-          encodeURIComponent(port.toString())}/&state=${encodeURIComponent(secret)}`;
-      console.log(`Opening OAuth URL ${oauthUrl}`);
-      electron.shell.openExternal(oauthUrl);
-    })
-    .catch((error) => {
-      if (error.code && error.code === 'EADDRINUSE') {
-        return reject(new Error('All OAuth ports are in use'));
-      }
-      reject(error);
-    });
+          const oauthUrl = `https://cloud.digitalocean.com/v1/oauth/authorize?client_id=${
+              encodeURIComponent(
+                  clientId)}&response_type=token&scope=read%20write&redirect_uri=http://localhost:${
+              encodeURIComponent(port.toString())}/&state=${encodeURIComponent(secret)}`;
+          console.log(`Opening OAuth URL ${oauthUrl}`);
+          electron.shell.openExternal(oauthUrl);
+        })
+        .catch((error) => {
+          if (error.code && error.code === 'EADDRINUSE') {
+            return reject(new Error('All OAuth ports are in use'));
+          }
+          reject(error);
+        });
   });
   return {
     result,
