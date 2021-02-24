@@ -14,13 +14,14 @@
 
 import './ui_components/app-root.js';
 
+import {InMemoryStorage} from '../infrastructure/memory_storage';
+import * as digitalocean from '../model/digitalocean';
 import * as server from '../model/server';
-import * as digitalocean from "../model/digitalocean";
 
 import {App, LAST_DISPLAYED_SERVER_STORAGE_KEY} from './app';
+import {CloudAccounts} from './cloud_accounts';
 import {AppRoot} from './ui_components/app-root';
-import {CloudAccounts} from "./cloud_accounts";
-import {InMemoryStorage} from "../infrastructure/memory_storage";
+
 
 // Define functions from preload.ts.
 // tslint:disable-next-line:no-any
@@ -289,7 +290,7 @@ class FakeManagedServer extends FakeServer implements server.ManagedServer {
 class FakeDigitalOceanAccount implements digitalocean.Account {
   private servers: server.ManagedServer[] = [];
   async getName(): Promise<string> {
-    return 'name';
+    return 'fake-name';
   }
   async getStatus(): Promise<digitalocean.Status> {
     return digitalocean.Status.ACTIVE;

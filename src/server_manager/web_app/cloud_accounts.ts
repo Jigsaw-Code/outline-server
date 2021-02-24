@@ -12,39 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Account} from '../model/digitalocean';
+import * as digitalocean from '../model/digitalocean';
 
-type DigitalOceanAccountFactory = (accessToken: string) => Account;
+type DigitalOceanAccountFactory = (accessToken: string) => digitalocean.Account;
 
 export class CloudAccounts {
   private readonly DIGITALOCEAN_TOKEN_STORAGE_KEY = 'LastDOToken';
 
   constructor(
       private digitalOceanAccountFactory: DigitalOceanAccountFactory,
-      private storage = localStorage) {}
+      private storage = localStorage) { }
 
-  connectDigitalOceanAccount(token: string): Account {
-    this.writeTokenToStorage(token);
-    return this.getDigitalOceanAccount();
+  connectDigitalOceanAccount(accessToken: string): digitalocean.Account {
+    this.storage.setItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY, accessToken);
+    return this.digitalOceanAccountFactory(accessToken);
   }
 
   disconnectDigitalOceanAccount(): void {
     this.storage.removeItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
   }
 
-  getDigitalOceanAccount(): Account {
-    const token = this.getTokenFromStorage();
-    if (token) {
-      return this.digitalOceanAccountFactory(token);
-    }
-    return null;
-  }
-
-  private writeTokenToStorage(token: string): void {
-    this.storage.setItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY, token);
-  }
-
-  private getTokenFromStorage(): string {
-    return this.storage.getItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
+  getDigitalOceanAccount(): digitalocean.Account {
+    const accessToken = this.storage.getItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
+    return accessToken ? this.digitalOceanAccountFactory(accessToken) : null;
   }
 }
