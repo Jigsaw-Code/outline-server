@@ -20,6 +20,17 @@ readonly VERSION='v0.7.1'
 DOWNLOAD_DIR="$(dirname "$0")/download"
 readonly DOWNLOAD_DIR
 
+# `sha256sum` is part of GNU coreutils but is not available in macOS.
+# macOS does have `shasum` (a Perl script designed to match the behavior
+# of `sha256sum`) in the default install.
+function sha256wrapper() {
+  if command -v sha256sum &> /dev/null; then
+    sha256sum "$@"
+  else
+    shasum -a 256 "$@"
+  fi
+}
+
 declare file="shellcheck-${VERSION}" # Name of the file to download
 declare cmd="${DOWNLOAD_DIR}/shellcheck-${VERSION}" # Path to the executable
 case "$(uname -s)" in
@@ -36,7 +47,7 @@ if [[ ! -s "${cmd}" ]]; then
   curl --location --fail --output "${DOWNLOAD_DIR}/${file}" "${url}"
 
   pushd "${DOWNLOAD_DIR}"
-  sha256sum --check --ignore-missing ../hashes.sha256
+  sha256wrapper --check --ignore-missing ../hashes.sha256
   if [[ "${file}" == *'.tar.xz' ]]; then
     tar xf "${file}"
   else
