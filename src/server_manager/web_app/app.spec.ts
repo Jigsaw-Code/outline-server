@@ -14,13 +14,14 @@
 
 import './ui_components/app-root.js';
 
-import * as server from '../model/server';
+import {InMemoryStorage} from '../infrastructure/memory_storage';
 import * as digitalocean from '../model/digitalocean';
+import * as server from '../model/server';
 
 import {App, LAST_DISPLAYED_SERVER_STORAGE_KEY} from './app';
-import {AppRoot} from './ui_components/app-root';
 import {CloudAccounts} from './cloud_accounts';
-import {InMemoryStorage} from '../infrastructure/memory_storage';
+import {AppRoot} from './ui_components/app-root';
+
 
 // Define functions from preload.ts.
 // tslint:disable-next-line:no-any
