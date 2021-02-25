@@ -913,10 +913,10 @@ export class ServerView extends DirMixin(PolymerElement) {
       newAccessKeyRow = Object.assign({}, this.get('myConnection'), fields);
       this.set('myConnection', newAccessKeyRow);
     }
-    for (let ui in this.accessKeyRows) {
-      if (this.accessKeyRows[ui].id === accessKeyId) {
-        newAccessKeyRow = Object.assign({}, this.get(['accessKeyRows', ui]), fields);
-        this.set(['accessKeyRows', ui], newAccessKeyRow);
+    for (let accessKeyRowIndex in this.accessKeyRows) {
+      if (this.accessKeyRows[accessKeyRowIndex].id === accessKeyId) {
+        newAccessKeyRow = Object.assign({}, this.get(['accessKeyRows', accessKeyRowIndex]), fields);
+        this.set(['accessKeyRows', accessKeyRowIndex], newAccessKeyRow);
         return;
       }
     }
