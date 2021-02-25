@@ -48,6 +48,11 @@ export interface Server {
   // Returns the server default access key data transfer limit, or undefined if it has not been set.
   getDefaultDataLimit(): DataLimit|undefined;
 
+  // Removes the server default data limit.  Per-key data limits are still enforced.  Traffic is
+  // tracked for if the limit is re-enabled.  Forces enforcement of all data limits, including
+  // per-key limits.
+  removeDefaultDataLimit(): Promise<void>;
+
   // Sets the custom data limit for a specific key. This limit overrides the server default limit
   // if it exists. Forces enforcement of the chosen key's data limit.
   setAccessKeyDataLimit(accessKeyId: AccessKeyId, limit: DataLimit): Promise<void>;
@@ -55,11 +60,6 @@ export interface Server {
   // Removes the custom data limit for a specific key.  The key is still bound by the server default
   // limit if it exists. Forces enforcement of the chosen key's data limit.
   removeAccessKeyDataLimit(accessKeyId: AccessKeyId): Promise<void>;
-
-  // Removes the server default data limit.  Per-key data limits are still enforced.  Traffic is
-  // tracked for if the limit is re-enabled.  Forces enforcement of all data limits, including
-  // per-key limits.
-  removeDefaultDataLimit(): Promise<void>;
 
   // Returns whether metrics are enabled.
   getMetricsEnabled(): boolean;
