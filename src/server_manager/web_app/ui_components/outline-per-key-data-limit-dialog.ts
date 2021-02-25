@@ -42,22 +42,6 @@ import {DisplayAccessKey, DisplayDataAmount} from './outline-server-view';
  */
 @customElement('outline-per-key-data-limit-dialog')
 export class OutlinePerKeyDataLimitDialog extends LitElement {
-  /** @member key The UI access key representing the key we're working on. */
-  @internalProperty() key: DisplayAccessKey = null;
-  /** @member serverDefaultLimit The default data limit of the server we're working on, or null */
-  @internalProperty() serverDefaultLimit: DisplayDataAmount = null;
-  /**
-   * @member showMenu Whether the menu for inputting the data limit should be shown. Controlled by
-   * the checkbox.
-   */
-  @internalProperty() showMenu = false;
-  /**
-   * @member enableSave Whether the save button is enabled.  Controlled by the validator on the
-   * input.
-   */
-  @internalProperty() enableSave = false;
-  @property({type: Function}) localize: Function;
-
   static get styles() {
     return [
       COMMON_STYLES,
@@ -140,6 +124,22 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
       `,
     ];
   }
+
+  /** @member key The UI access key representing the key we're working on. */
+  @internalProperty() key: DisplayAccessKey = null;
+  /** @member serverDefaultLimit The default data limit of the server we're working on, or null */
+  @internalProperty() serverDefaultLimit: DisplayDataAmount = null;
+  /**
+   * @member showMenu Whether the menu for inputting the data limit should be shown. Controlled by
+   * the checkbox.
+   */
+  @internalProperty() showMenu = false;
+  /**
+   * @member enableSave Whether the save button is enabled.  Controlled by the validator on the
+   * input.
+   */
+  @internalProperty() enableSave = false;
+  @property({type: Function}) localize: Function;
 
   render() {
     // this.key will always be defined once the dialog is open, but before it's opened we get an
@@ -253,7 +253,8 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     const eventName = `${change === Change.REMOVED ? 'Remove' : 'Save'}PerKeyDataLimitRequested`;
 
     this.dispatchEvent(new CustomEvent(eventName, {
-      detail: {ui: this},
+      // TODOBEFOREMERGE do we need this?  Does event.target work?
+      detail: {dialog: this},
       // Required for the event to bubble past a shadow DOM boundary
       bubbles: true,
       composed: true,

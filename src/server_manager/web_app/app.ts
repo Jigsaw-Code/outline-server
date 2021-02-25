@@ -202,11 +202,11 @@ export class App {
     });
 
     appRoot.addEventListener('SavePerKeyDataLimitRequested', (event: CustomEvent) => {
-      this.savePerKeyDataLimit(event.detail.ui);
+      this.savePerKeyDataLimit(event.detail.dialog);
     });
 
     appRoot.addEventListener('RemovePerKeyDataLimitRequested', (event: CustomEvent) => {
-      this.removePerKeyDataLimit(event.detail.ui);
+      this.removePerKeyDataLimit(event.detail.dialog);
     });
 
     appRoot.addEventListener('ChangePortForNewAccessKeysRequested', (event: CustomEvent) => {
@@ -775,6 +775,8 @@ export class App {
     }
   }
 
+  // TODO(JonathanDCohen) This function violates layering by reading from the UI instead of from the
+  // model.  This needs to be rewritten to rebuild the access key rows from the model.
   private async refreshTransferStats(selectedServer: server.Server, serverView: ServerView) {
     try {
       const usageMap = await selectedServer.getDataUsage();
@@ -787,16 +789,19 @@ export class App {
       // Update all the displayed access keys, even if usage didn't change, in case the data limit
       // did.
       const defaultDataLimit = selectedServer.getDefaultDataLimit();
-      for (let accessKey of serverView.accessKeyRows) {
-        accessKey = this.maybeAdminKey(accessKey, serverView);
-        const accessKeyId = accessKey.id;
+      for (let accessKeyRow of serverView.accessKeyRows) {
+        // Use the admin key, which is separate in the UI.  We don't display the first admin key
+        // row, which represents the same access key.
+        accessKeyRow =
+            accessKeyRow.id === MY_CONNECTION_USER_ID ? serverView.myConnection : accessKeyRow;
+        const accessKeyId = accessKeyRow.id;
         const activeDataLimit =
-            displayDataAmountToDataLimit(accessKey.dataLimit) || defaultDataLimit;
-        const totalBytes = activeDataLimit?.bytes || totalInboundBytes;
+            displayDataAmountToDataLimit(accessKeyRow.dataLimit) || defaultDataLimit;
+        const maxBytes = activeDataLimit?.bytes || totalInboundBytes;
 
         const transferredBytes = usageMap.get(accessKeyId) ?? 0;
         let relativeTraffic =
-            totalBytes ? 100 * transferredBytes / totalBytes : (activeDataLimit ? 100 : 0);
+            maxBytes ? 100 * transferredBytes / maxBytes : (activeDataLimit ? 100 : 0);
         if (relativeTraffic > 100) {
           // Can happen when a data limit is set on an access key that already exceeds it.
           relativeTraffic = 100;
@@ -917,50 +922,42 @@ export class App {
     }
   }
 
-  private maybeAdminKey(key: DisplayAccessKey, view: ServerView) {
-    return key.id === MY_CONNECTION_USER_ID ? view.myConnection : key;
-  }
-
-  private findModifiedKey(id: server.AccessKeyId, view: ServerView) {
-    return this.maybeAdminKey(view.accessKeyRows.find(key => key.id === id), view);
-  }
-
-  private async savePerKeyDataLimit(ui: OutlinePerKeyDataLimitDialog) {
+  private async savePerKeyDataLimit(dialog: OutlinePerKeyDataLimitDialog) {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
     const serverView = this.appRoot.getServerView(this.appRoot.selectedServerId);
     try {
-      if (ui.dataLimitChanged()) {
-        const dataLimit = ui.inputDataLimit();
+      if (dialog.dataLimitChanged()) {
+        const dataLimit = dialog.inputDataLimit();
         await this.selectedServer.setAccessKeyDataLimit(
-            ui.keyId(), displayDataAmountToDataLimit(dataLimit));
-        const displayKey = this.findModifiedKey(ui.keyId(), serverView);
+            dialog.keyId(), displayDataAmountToDataLimit(dataLimit));
+        const displayKey = serverView.findUiKey(dialog.keyId());
         displayKey.dataLimit = dataLimit;
       }
-      ui.close();
+      dialog.close();
       this.refreshTransferStats(this.selectedServer, serverView);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
     } catch (error) {
-      console.error(`Failed to set data limit for access key ${ui.keyId()}: ${error}`);
-      ui.reset();
+      console.error(`Failed to set data limit for access key ${dialog.keyId()}: ${error}`);
+      dialog.reset();
       this.appRoot.showError(this.appRoot.localize('error-set-per-key-limit'));
     }
   }
 
-  private async removePerKeyDataLimit(ui: OutlinePerKeyDataLimitDialog) {
+  private async removePerKeyDataLimit(dialog: OutlinePerKeyDataLimitDialog) {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
     const serverView = this.appRoot.getServerView(this.appRoot.selectedServerId);
     try {
-      if (ui.dataLimitChanged()) {
-        await this.selectedServer.removeAccessKeyDataLimit(ui.keyId());
-        const displayKey = this.findModifiedKey(ui.keyId(), serverView);
+      if (dialog.dataLimitChanged()) {
+        await this.selectedServer.removeAccessKeyDataLimit(dialog.keyId());
+        const displayKey = serverView.findUiKey(dialog.keyId());
         delete displayKey.dataLimit;
       }
-      ui.close();
+      dialog.close();
       this.refreshTransferStats(this.selectedServer, serverView);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
     } catch (error) {
-      console.error(`Failed to remove data limit from access key ${ui.keyId()}: ${error}`);
-      ui.reset();
+      console.error(`Failed to remove data limit from access key ${dialog.keyId()}: ${error}`);
+      dialog.reset();
       this.appRoot.showError(this.appRoot.localize('error-remove-per-key-limit'));
     }
   }

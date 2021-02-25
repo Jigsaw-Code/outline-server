@@ -790,6 +790,16 @@ export class ServerView extends DirMixin(PolymerElement) {
     return this._showHelpBubble('dataLimitsHelpBubble', 'settingsTab', 'up', 'right');
   }
 
+  /**
+   * Returns the UI access key with the given ID.
+   * @param {server.accessKeyId} id The id of the key to find
+   * @returns {DisplayAccessKey} The displayed UI key with the given id.
+   */
+  findUiKey(id) {
+    return id === MY_CONNECTION_USER_ID ? this.myConnection :
+                                          this.accessKeyRows.find(key => key.id === id);
+  }
+
   _closeAddAccessKeyHelpBubble() {
     this.$.addAccessKeyHelpBubble.hide();
   }
