@@ -27,7 +27,7 @@ import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {OutlinePerKeyDataLimitDialog} from './ui_components/outline-per-key-data-limit-dialog.js';
 import {Location} from './ui_components/outline-region-picker-step';
-import {DisplayAccessKey, DisplayDataAmount, MY_CONNECTION_USER_ID, ServerView} from './ui_components/outline-server-view';
+import {DisplayAccessKey, DisplayDataAmount, displayDataAmountToBytes, MY_CONNECTION_USER_ID, ServerView} from './ui_components/outline-server-view';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -68,12 +68,8 @@ function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.Dat
   if (!dataAmount) {
     return null;
   }
-  if (dataAmount.unit === 'GB') {
-    return {bytes: dataAmount.value * (10 ** 9)};
-  } else if (dataAmount.unit === 'MB') {
-    return {bytes: dataAmount.value * (10 ** 6)};
-  }
-  return {bytes: dataAmount.value};
+
+  return {bytes: displayDataAmountToBytes(dataAmount)};
 }
 
 // Compute the suggested data limit based on the server's transfer capacity and number of access
@@ -271,9 +267,6 @@ export class App {
     appRoot.addEventListener('DisableMetricsRequested', (event: CustomEvent) => {
       this.setMetricsEnabled(false);
     });
-
-    appRoot.addEventListener(
-        'app-localize-resources-loaded', () => this.renderLocalizedDataLimitStrings());
 
     appRoot.addEventListener('SubmitFeedback', (event: CustomEvent) => {
       const detail = event.detail;
@@ -1154,19 +1147,6 @@ export class App {
       this.removeServer(serverToCancel.getId());
       this.showIntro();
     });
-  }
-
-  private renderLocalizedDataLimitStrings() {
-    // Hack to get Polymer to re-render the data transfer ratio strings when the language is
-    // changed. This can't be called until the translation messages are successfully loaded.
-    // TODO once the Intl change is in put this code in the resource load handler
-    const view = this.appRoot.getServerView(this.appRoot.selectedServerId);
-    if (!view) {
-      return;
-    }
-    for (const key of view.accessKeyRows) {
-      view.updateAccessKeyRow(key.id, {transferredBytes: key.transferredBytes});
-    }
   }
 
   private async setAppLanguage(languageCode: string, languageDir: string) {

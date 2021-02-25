@@ -70,11 +70,25 @@ function compare(a, b) {
  * @prop {DisplayDataAmount=} dataLimit
  */
 
+// TODO(JonathanDCohen222) Remove use of this.  It represents a poor abstraction for unit
+// formatting.
 /**
  * @typedef {Object} DisplayDataAmount
  * @prop {'MB'|'GB'} unit
  * @prop {number} value
  */
+
+/**
+ * @param {DisplayDataAmount} dataAmount
+ * @returns {number} The number of bytes represented by dataAmount
+ */
+export function displayDataAmountToBytes(dataAmount) {
+  if (dataAmount.unit === 'GB') {
+    return dataAmount.value * (10 ** 9);
+  } else if (dataAmount.unit === 'MB') {
+    return dataAmount.value * (10 ** 6);
+  }
+}
 
 export class ServerView extends DirMixin(PolymerElement) {
   static get template() {
@@ -531,11 +545,11 @@ export class ServerView extends DirMixin(PolymerElement) {
                 <span class="measurement">
                     <bdi>[[_formatBytesTransferred(myConnection.transferredBytes, language, "...")]]</bdi>
                     /
-                    <bdi>[[_formatDataLimitForKey(myConnection)]]</bdi>
+                    <bdi>[[_formatDataLimitForKey(myConnection, language)]]</bdi>
                   </span>
                 <paper-progress value="[[myConnection.relativeTraffic]]" class\$="[[_computePaperProgressClass(myConnection)]]"></paper-progress>
                 <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!_activeDataLimitForKey(myConnection)]]">
-                  [[_getDataLimitsUsageString(myConnection)]]
+                  [[_getDataLimitsUsageString(myConnection, language)]]
                 </paper-tooltip>
               </span>
               <span class="actions">
@@ -560,11 +574,11 @@ export class ServerView extends DirMixin(PolymerElement) {
                     <span class="measurement">
                       <bdi>[[_formatBytesTransferred(item.transferredBytes, language, "...")]]</bdi>
                       /
-                      <bdi>[[_formatDataLimitForKey(item)]]</bdi>
+                      <bdi>[[_formatDataLimitForKey(item, language)]]</bdi>
                     </span>
                     <paper-progress value="[[item.relativeTraffic]]" class\$="[[_computePaperProgressClass(item)]]"></paper-progress>
                     <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!_activeDataLimitForKey(item)]]">
-                      [[_getDataLimitsUsageString(item)]]
+                      [[_getDataLimitsUsageString(item, language)]]
                     </paper-tooltip>
                   </span>
                   <span class="actions">
@@ -837,9 +851,9 @@ export class ServerView extends DirMixin(PolymerElement) {
   _handleShowPerKeyDataLimitDialogPressed(event) {
     // TODO(cohenjon) change to optional chaining when we upgrade to Electron > >= 8
     const accessKey = (event.model && event.model.item) || this.myConnection;
-    const defaultDataLimit = this.defaultDataLimit;
+    const defaultDataLimitBytes = this.defaultDataLimitBytes;
     this.dispatchEvent(
-        makePublicEvent('OpenPerKeyDataLimitDialogRequested', {accessKey, defaultDataLimit}));
+        makePublicEvent('OpenPerKeyDataLimitDialogRequested', {accessKey, defaultDataLimitBytes}));
   }
 
   _handleRenameAccessKeyPressed(event) {
@@ -868,12 +882,13 @@ export class ServerView extends DirMixin(PolymerElement) {
     this.dispatchEvent(makePublicEvent('RemoveAccessKeyRequested', {accessKeyId: accessKey.id}));
   }
 
-  _formatDataLimitForKey(key) {
-    return this._formatDisplayDataLimit(this._activeDataLimitForKey(key))
+  _formatDataLimitForKey(key, language) {
+    return this._formatDisplayDataLimit(this._activeDataLimitForKey(key), language)
   }
 
-  _formatDisplayDataLimit(limit) {
-    return limit ? `${limit.value} ${limit.unit}` : this.localize('none');
+  _formatDisplayDataLimit(limit, language) {
+    return limit ? i18n.formatBytes(displayDataAmountToBytes(limit), language) :
+                   this.localize('none');
   }
 
   _formatInboundBytesUnit(totalBytes, language) {
@@ -1042,7 +1057,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     return this._activeDataLimitForKey(accessKey) ? 'data-limits' : '';
   }
 
-  _getDataLimitsUsageString(accessKey) {
+  _getDataLimitsUsageString(accessKey, language) {
     if (!accessKey) {
       // We're in app startup
       return '';
@@ -1050,7 +1065,7 @@ export class ServerView extends DirMixin(PolymerElement) {
 
     const activeDataLimit = this._activeDataLimitForKey(accessKey);
     const used = this._formatBytesTransferred(accessKey.transferredBytes, this.language, '0');
-    const total = this._formatDisplayDataLimit(activeDataLimit);
+    const total = this._formatDisplayDataLimit(activeDataLimit, this.language);
     return this.localize('data-limits-usage', 'used', used, 'total', total);
   }
 
