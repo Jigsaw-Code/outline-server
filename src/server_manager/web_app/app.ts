@@ -836,8 +836,7 @@ export class App {
         encodeURIComponent(accessUrl)}`;
   }
 
-  // Converts the access key from the remote service format to the
-  // format used by outline-server-view.
+  // Converts the access key model to the format used by outline-server-view.
   private convertToUiAccessKey(remoteAccessKey: server.AccessKey): DisplayAccessKey {
     const name = remoteAccessKey.id === MY_CONNECTION_USER_ID ?
         this.appRoot.localize('server-my-access-key') :
