@@ -388,6 +388,21 @@ Make sure to open the following ports on your firewall, router or cloud provider
 "
 }
 
+function set_hostname() {
+  # These are URLs that return the client's apparent IP address.
+  # We have more than one to try in case one starts failing
+  # (e.g. https://github.com/Jigsaw-Code/outline-server/issues/776).
+  local -ar urls=(
+    'https://ipinfo.io/ip'
+    'https://domains.google.com/checkip'
+  )
+  for url in "${urls[@]}"; do
+    PUBLIC_HOSTNAME="$(fetch --ipv4 "${url}")" && return
+  done
+  echo "Failed to determine the server's IP address.  Try using --hostname <server IP>." >&2
+  return 1
+}
+
 install_shadowbox() {
   # Make sure we don't leak readable files to other users.
   umask 0007
@@ -409,17 +424,11 @@ install_shadowbox() {
   readonly ACCESS_CONFIG="${ACCESS_CONFIG:-${SHADOWBOX_DIR}/access.txt}"
   readonly SB_IMAGE="${SB_IMAGE:-quay.io/outline/shadowbox:stable}"
 
-  log_for_sentry "Setting PUBLIC_HOSTNAME"
-  # TODO(fortuna): Make sure this is IPv4
-  PUBLIC_HOSTNAME="${FLAGS_HOSTNAME:-${SB_PUBLIC_IP:-$(fetch --ipv4 https://ipinfo.io/ip)}}"
-  readonly PUBLIC_HOSTNAME
-
+  PUBLIC_HOSTNAME="${FLAGS_HOSTNAME:-${SB_PUBLIC_IP:-}}"
   if [[ -z "${PUBLIC_HOSTNAME}" ]]; then
-    local -r MSG="Failed to determine the server's IP address.  Try using --hostname <server IP>."
-    log_error "${MSG}"
-    log_for_sentry "${MSG}"
-    exit 1
+    run_step "Setting PUBLIC_HOSTNAME to external IP" set_hostname
   fi
+  readonly PUBLIC_HOSTNAME
 
   # If $ACCESS_CONFIG is already populated, make a backup before clearing it.
   log_for_sentry "Initializing ACCESS_CONFIG"
