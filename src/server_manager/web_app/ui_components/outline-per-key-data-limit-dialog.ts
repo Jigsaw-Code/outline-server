@@ -141,6 +141,8 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   @internalProperty() enableSave = false;
   @property({type: Function}) localize: Function;
 
+  private _serverId = '';
+
   render() {
     // this.key will always be defined once the dialog is open, but before it's opened we get an
     // error if we don't account for the undefined key
@@ -300,8 +302,15 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   /**
    * The ID of the key being worked on.  Useful for making API requests for the given key.
    */
-  public keyId() {
+  public keyId(): string {
     return this.key.id;
+  }
+
+  /**
+   * The ID of the server the current key belongs to.
+   */
+  public serverId(): string {
+    return this._serverId;
   }
 
   /**
@@ -309,9 +318,12 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    *
    * @param accessKey - The access key row from outline-server-view representing the key to work on
    * @param serverDefaultLimit - The default data limit for the server, or null if there is none
+   * @param serverId - The ID of the server the access key is a part of.
    */
-  public open(accessKey: DisplayAccessKey, serverDefaultLimit: DisplayDataAmount) {
+  public open(
+      accessKey: DisplayAccessKey, serverId: string, serverDefaultLimit: DisplayDataAmount) {
     this.key = accessKey;
+    this._serverId = serverId;
     this.serverDefaultLimit = serverDefaultLimit;
     this.showMenu = !!accessKey.dataLimit;
     this._setSaveButtonDisabledState();

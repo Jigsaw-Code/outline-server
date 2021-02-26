@@ -186,7 +186,8 @@ export class App {
     });
 
     appRoot.addEventListener('OpenPerKeyDataLimitDialogRequested', (event: CustomEvent) => {
-      appRoot.openPerKeyDataLimitDialog(event.detail.accessKey, event.detail.defaultDataLimit);
+      appRoot.openPerKeyDataLimitDialog(
+          event.detail.accessKey, event.detail.serverId, event.detail.defaultDataLimit);
     });
 
     appRoot.addEventListener('RenameAccessKeyRequested', (event: CustomEvent) => {
@@ -672,7 +673,8 @@ export class App {
     const view = this.appRoot.getServerView(server.getId());
     const version = server.getVersion();
     view.selectedPage = 'managementView';
-    view.serverId = server.getMetricsId();
+    view.serverId = server.getId();
+    view.metricsId = server.getMetricsId();
     view.serverName = server.getName();
     view.serverHostname = server.getHostnameForAccessKeys();
     view.serverManagementApiUrl = server.getManagementApiUrl();
@@ -923,20 +925,24 @@ export class App {
 
   private async savePerKeyDataLimit(dialog: OutlinePerKeyDataLimitDialog) {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
-    const serverView = this.appRoot.getServerView(this.appRoot.selectedServerId);
+    const server = this.idServerMap.get(dialog.serverId());
+    const serverView = this.appRoot.getServerView(server.getId());
+    const keyId = dialog.keyId();
     try {
       if (dialog.dataLimitChanged()) {
         const dataLimit = dialog.inputDataLimit();
-        await this.selectedServer.setAccessKeyDataLimit(
-            dialog.keyId(), displayDataAmountToDataLimit(dataLimit));
-        const displayKey = serverView.findUiKey(dialog.keyId());
+        await server.setAccessKeyDataLimit(keyId, displayDataAmountToDataLimit(dataLimit));
+        const displayKey = serverView.findUiKey(keyId);
+        // TODO(JonathanDCohen) Note here that we have to display the displayed data limit first
+        // becuase refreshTransferStats reads from the UI.  This could cause a UI bug if
+        // refreshTransferStats fails
         displayKey.dataLimit = dataLimit;
+        this.refreshTransferStats(server, serverView);
       }
       dialog.close();
-      this.refreshTransferStats(this.selectedServer, serverView);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
     } catch (error) {
-      console.error(`Failed to set data limit for access key ${dialog.keyId()}: ${error}`);
+      console.error(`Failed to set data limit for access key ${keyId}: ${error}`);
       dialog.reset();
       this.appRoot.showError(this.appRoot.localize('error-set-per-key-limit'));
     }
@@ -944,18 +950,23 @@ export class App {
 
   private async removePerKeyDataLimit(dialog: OutlinePerKeyDataLimitDialog) {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
-    const serverView = this.appRoot.getServerView(this.appRoot.selectedServerId);
+    const server = this.idServerMap.get(dialog.serverId());
+    const serverView = this.appRoot.getServerView(server.getId());
+    const keyId = dialog.keyId();
     try {
       if (dialog.dataLimitChanged()) {
-        await this.selectedServer.removeAccessKeyDataLimit(dialog.keyId());
-        const displayKey = serverView.findUiKey(dialog.keyId());
+        await server.removeAccessKeyDataLimit(keyId);
+        const displayKey = serverView.findUiKey(keyId);
+        // TODO(JonathanDCohen) Note here that we have to display the displayed data limit first
+        // becuase refreshTransferStats reads from the UI.  This could cause a UI bug if
+        // refreshTransferStats fails
         delete displayKey.dataLimit;
+        this.refreshTransferStats(server, serverView);
       }
       dialog.close();
-      this.refreshTransferStats(this.selectedServer, serverView);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
     } catch (error) {
-      console.error(`Failed to remove data limit from access key ${dialog.keyId()}: ${error}`);
+      console.error(`Failed to remove data limit from access key ${keyId}: ${error}`);
       dialog.reset();
       this.appRoot.showError(this.appRoot.localize('error-remove-per-key-limit'));
     }

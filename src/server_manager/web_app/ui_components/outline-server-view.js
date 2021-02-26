@@ -485,7 +485,7 @@ export class ServerView extends DirMixin(PolymerElement) {
           <paper-tab name="connections">[[localize('server-connections')]]</paper-tab>
           <paper-tab name="settings" id="settingsTab">[[localize('server-settings')]]</paper-tab>
         </paper-tabs>
-      </div> 
+      </div>
       <iron-pages selected="[[selectedTab]]" attr-for-selected="name" on-selected-changed="_selectedTabChanged">
         <div name="connections">
           <div class="stats-container">
@@ -615,7 +615,7 @@ export class ServerView extends DirMixin(PolymerElement) {
           </div>
         </div>
         <div name="settings">
-          <outline-server-settings id="serverSettings" server-id="[[serverId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" default-data-limit="{{defaultDataLimit}}" is-default-data-limit-enabled="{{isDefaultDataLimitEnabled}}" supports-default-data-limit="[[supportsDefaultDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" language="[[language]]" localize="[[localize]]">
+          <outline-server-settings id="serverSettings" metrics-id="[[metricsId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" default-data-limit="{{defaultDataLimit}}" is-default-data-limit-enabled="{{isDefaultDataLimitEnabled}}" supports-default-data-limit="[[supportsDefaultDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" language="[[language]]" localize="[[localize]]">
           </outline-server-settings>
         </div>
       </iron-pages>`;
@@ -627,6 +627,7 @@ export class ServerView extends DirMixin(PolymerElement) {
 
     static get properties() {
       return {
+        metricsId: String,
         serverId: String,
         serverName: String,
         serverHostname: String,
@@ -675,6 +676,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     constructor() {
       super();
       this.serverId = '';
+      this.metricsId = '';
       this.serverName = '';
       this.serverHostname = '';
       this.serverVersion = '';
@@ -861,9 +863,10 @@ export class ServerView extends DirMixin(PolymerElement) {
   _handleShowPerKeyDataLimitDialogPressed(event) {
     // TODO(cohenjon) change to optional chaining when we upgrade to Electron > >= 8
     const accessKey = (event.model && event.model.item) || this.myConnection;
-    const defaultDataLimitBytes = this.defaultDataLimitBytes;
-    this.dispatchEvent(
-        makePublicEvent('OpenPerKeyDataLimitDialogRequested', {accessKey, defaultDataLimitBytes}));
+    const defaultDataLimit = this.defaultDataLimit;
+    const serverId = this.serverId;
+    this.dispatchEvent(makePublicEvent(
+        'OpenPerKeyDataLimitDialogRequested', {accessKey, defaultDataLimit, serverId}));
   }
 
   _handleRenameAccessKeyPressed(event) {

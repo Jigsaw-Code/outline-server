@@ -405,7 +405,7 @@ export class AppRoot extends mixinBehaviors
                 <a href="https://www.google.com/policies/privacy/">[[localize('nav-privacy')]]</a>
                 <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">[[localize('nav-terms')]]</a>
                 <span on-tap="showLicensesTapped">[[localize('nav-licenses')]]</span>
-              </div>      
+              </div>
             </div>
           </paper-listbox>
         </app-drawer>
@@ -812,8 +812,8 @@ export class AppRoot extends mixinBehaviors
     this.$.shareDialog.open(accessKey, s3Url);
   }
 
-  openPerKeyDataLimitDialog(accessKey, defaultDataLimit) {
-    this.$.perKeyDataLimitDialog.open(accessKey, defaultDataLimit);
+  openPerKeyDataLimitDialog(accessKey, serverId, defaultDataLimitAmount) {
+    this.$.perKeyDataLimitDialog.open(accessKey, serverId, defaultDataLimitAmount);
   }
 
   openGetConnectedDialog(/** @type {string} */ inviteUrl) {
