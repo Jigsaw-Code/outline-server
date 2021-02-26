@@ -813,7 +813,9 @@ export class AppRoot extends mixinBehaviors
   }
 
   openPerKeyDataLimitDialog(accessKey, serverId, defaultDataLimitAmount) {
-    this.$.perKeyDataLimitDialog.open(accessKey, serverId, defaultDataLimitAmount);
+    const keyDisplayName = accessKey.name || accessKey.placeholderName;
+    this.$.perKeyDataLimitDialog.open(
+        keyDisplayName, accessKey.id, accessKey.dataLimit, serverId, defaultDataLimitAmount);
   }
 
   openGetConnectedDialog(/** @type {string} */ inviteUrl) {

@@ -30,7 +30,7 @@ import {PaperListboxElement} from '@polymer/paper-listbox/paper-listbox';
 import {css, customElement, html, internalProperty, LitElement, property} from 'lit-element';
 
 import {COMMON_STYLES} from './cloud-install-styles';
-import {DisplayAccessKey, DisplayDataAmount} from './outline-server-view';
+import {DisplayDataAmount} from './outline-server-view';
 
 /**
  * A floating window representing settings specific to individual access keys. Its state is
@@ -125,28 +125,31 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     ];
   }
 
-  /** @member key The UI access key representing the key we're working on. */
-  @internalProperty() key: DisplayAccessKey = null;
+  /**
+   * @member keyName The displayed name of the UI access key representing the key we're working on.
+   */
+  @internalProperty() _keyName = '';
+  /** @member keyId The id of the UI access key representing the key we're working on. */
+  @internalProperty() _keyId = '';
+  /** @member keyId The data limit, if it exists, on the access key we're working on. */
+  @internalProperty() _keyDataLimit: DisplayDataAmount = null;
   /** @member serverDefaultLimit The default data limit of the server we're working on, or null */
-  @internalProperty() serverDefaultLimit: DisplayDataAmount = null;
+  @internalProperty() _serverDefaultLimit: DisplayDataAmount = null;
   /**
    * @member showMenu Whether the menu for inputting the data limit should be shown. Controlled by
    * the checkbox.
    */
-  @internalProperty() showMenu = false;
+  @internalProperty() _showMenu = false;
   /**
    * @member enableSave Whether the save button is enabled.  Controlled by the validator on the
    * input.
    */
-  @internalProperty() enableSave = false;
+  @internalProperty() _enableSave = false;
   @property({type: Function}) localize: Function;
 
   private _serverId = '';
 
   render() {
-    // this.key will always be defined once the dialog is open, but before it's opened we get an
-    // error if we don't account for the undefined key
-    const keyName = this.key?.name || this.key?.placeholderName;
     return html`
       <style>
         /* Custom element mixins with brackets don't work in style() */
@@ -167,44 +170,50 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
       <paper-dialog id="container">
         <div id="headerSection">
           <iron-icon id="dataLimitIcon" icon="icons:perm-data-setting"></iron-icon>
-          <h3>${this.localize('per-key-data-limit-dialog-title', 'keyName', keyName)}</h3>
+          <h3>${this.localize('per-key-data-limit-dialog-title', 'keyName', this._keyName)}</h3>
         </div>
         <div id="menuSection">
-          <paper-checkbox ?checked=${this.showMenu} @tap=${this._setCustomLimitTapped}>
+          <paper-checkbox ?checked=${this._showMenu} @tap=${this._setCustomLimitTapped}>
             ${this.localize('per-key-data-limit-dialog-set-custom')}
           </paper-checkbox>
-          <div id="menu" ?hidden=${!this.showMenu}>
-            <paper-input
-              id="dataLimitInput"
-              label=${this.localize('data-limit')}
-              always-float-label
-              allowed-pattern="[0-9\\.]"
-              pattern="[0-9]+(\\.[0-9]*)?"
-              auto-validate
-              value=${this._initialValue()}
-              size="7"
-              @keyup=${this._setSaveButtonDisabledState}
-            >
-            </paper-input>
-            <paper-dropdown-menu id="unitsDropdown" noink>
-              <paper-listbox
-                id="unitsListbox"
-                slot="dropdown-content"
-                attr-for-selected="name"
-                selected="${this._initialUnit()}"
-              >
-                <paper-item name="GB">GB</paper-item>
-                <paper-item name="MB">MB</paper-item>
-              </paper-listbox>
-            </paper-dropdown-menu>
-          </div>
+          ${this._showMenu ? this.renderMenu() : ''}
         </div>
         <div id="buttonsSection">
-          <paper-button id="save" ?disabled=${!this.enableSave} @tap=${this._sendSaveEvent}>${
+          <paper-button id="save" ?disabled=${!this._enableSave} @tap=${this._sendSaveEvent}>${
         this.localize('save')}</paper-button>
           <paper-button @tap=${this.close}>${this.localize('cancel')}</paper-button>
         </div>
       </paper-dialog>
+    `;
+  }
+
+  private renderMenu() {
+    return html`
+      <div id="menu">
+        <paper-input
+          id="dataLimitInput"
+          label=${this.localize('data-limit')}
+          always-float-label
+          allowed-pattern="[0-9\\.]"
+          pattern="[0-9]+(\\.[0-9]*)?"
+          auto-validate
+          value=${this._initialValue()}
+          size="7"
+          @keyup=${this._setSaveButtonDisabledState}
+        >
+        </paper-input>
+        <paper-dropdown-menu id="unitsDropdown" noink>
+          <paper-listbox
+            id="unitsListbox"
+            slot="dropdown-content"
+            attr-for-selected="name"
+            selected="${this._initialUnit()}"
+          >
+            <paper-item name="GB">GB</paper-item>
+            <paper-item name="MB">MB</paper-item>
+          </paper-listbox>
+        </paper-dropdown-menu>
+      </div>
     `;
   }
 
@@ -235,19 +244,19 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
 
   private _activeDataLimit(): DisplayDataAmount|undefined {
     // Returns the limit which currently is enforced on this key, or undefined if there is none.
-    return this.key?.dataLimit || this.serverDefaultLimit;
+    return this._keyDataLimit || this._serverDefaultLimit;
   }
 
   private async _setCustomLimitTapped() {
-    this.showMenu = !this.showMenu;
-    if (this.showMenu) {
+    this._showMenu = !this._showMenu;
+    if (this._showMenu) {
       await this.updateComplete;
       this._input.focus();
     }
   }
 
   private _setSaveButtonDisabledState() {
-    this.enableSave = !this._input.invalid;
+    this._enableSave = !this._input.invalid;
   }
 
   private _sendSaveEvent() {
@@ -255,7 +264,8 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     const eventName = `${change === Change.REMOVED ? 'Remove' : 'Save'}PerKeyDataLimitRequested`;
 
     this.dispatchEvent(new CustomEvent(eventName, {
-      // TODOBEFOREMERGE do we need this?  Does event.target work?
+      // The target of this event is appRoot, not the dialog.  We send the full dialog element so
+      // that the app can control the dialog accordingly to user input.
       detail: {dialog: this},
       // Required for the event to bubble past a shadow DOM boundary
       bubbles: true,
@@ -267,19 +277,20 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    * Calculates what type of change, or none at all, the user made.
    */
   private _dataLimitChange(): Change {
-    const keyLimit = this.key?.dataLimit;
-    if (this.showMenu) {
-      if (!keyLimit) {
+    if (this._showMenu) {
+      if (!this._keyDataLimit) {
+        // The user must have clicked the checkbox and input a limit.
         return Change.SET;
       }
       const inputLimit = this.inputDataLimit();
-      if (inputLimit.value !== keyLimit.value || inputLimit.unit !== keyLimit.unit) {
+      if (inputLimit.value !== this._keyDataLimit.value ||
+          inputLimit.unit !== this._keyDataLimit.unit) {
         return Change.SET;
       }
       return Change.UNCHANGED;
     }
-    // If we unchecked, then the key will have an active data limit.
-    if (keyLimit) {
+    if (this._keyDataLimit) {
+      // The user must have unchecked the checkbox.
       return Change.REMOVED;
     }
     return Change.UNCHANGED;
@@ -296,14 +307,14 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    * The current data limit as input by the user, but not necessarily as saved.
    */
   public inputDataLimit(): DisplayDataAmount {
-    return this.showMenu ? {unit: this._dataLimitType(), value: this._dataLimitValue()} : null;
+    return this._showMenu ? {unit: this._dataLimitType(), value: this._dataLimitValue()} : null;
   }
 
   /**
    * The ID of the key being worked on.  Useful for making API requests for the given key.
    */
   public keyId(): string {
-    return this.key.id;
+    return this._keyId;
   }
 
   /**
@@ -316,16 +327,21 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   /**
    * Opens the dialog to display data limit information about the given key
    *
-   * @param accessKey - The access key row from outline-server-view representing the key to work on
-   * @param serverDefaultLimit - The default data limit for the server, or null if there is none
+   * @param keyName - The displayed name of the access key.
+   * @param keyId - The unique ID of the access key.
+   * @param keyDataLimit - The display data limit of the access key, or null.
    * @param serverId - The ID of the server the access key is a part of.
+   * @param serverDefaultLimit - The default data limit for the server, or null if there is none
    */
   public open(
-      accessKey: DisplayAccessKey, serverId: string, serverDefaultLimit: DisplayDataAmount) {
-    this.key = accessKey;
+      keyName: string, keyId: string, keyDataLimit: DisplayDataAmount, serverId: string,
+      serverDefaultLimit: DisplayDataAmount) {
+    this._keyName = keyName;
+    this._keyId = keyId;
+    this._keyDataLimit = keyDataLimit;
     this._serverId = serverId;
-    this.serverDefaultLimit = serverDefaultLimit;
-    this.showMenu = !!accessKey.dataLimit;
+    this._serverDefaultLimit = serverDefaultLimit;
+    this._showMenu = !!this._keyDataLimit;
     this._setSaveButtonDisabledState();
     this._queryAs<PaperDialogElement>('#container').open();
   }
@@ -334,7 +350,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    * Sets the input state of the dialog back to what it was when it was first opened.
    */
   public reset() {
-    this.showMenu = !!this.key?.dataLimit;
+    this._showMenu = !!this._keyDataLimit;
     // Manually reset the value to clear user input
     this._input.value = this._initialValue();
     this._queryAs<PaperListboxElement>('#unitsListbox').select(this._initialUnit());
