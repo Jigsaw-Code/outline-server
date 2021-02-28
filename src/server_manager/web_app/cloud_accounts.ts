@@ -13,11 +13,13 @@
 // limitations under the License.
 
 import * as digitalocean from '../model/digitalocean';
+import * as gcp from '../model/gcp';
 
 type DigitalOceanAccountFactory = (accessToken: string) => digitalocean.Account;
 
 export class CloudAccounts {
   private readonly DIGITALOCEAN_TOKEN_STORAGE_KEY = 'LastDOToken';
+  private readonly GCP_TOKEN_STORAGE_KEY = 'GcpToken';
 
   constructor(
       private digitalOceanAccountFactory: DigitalOceanAccountFactory,
@@ -28,12 +30,26 @@ export class CloudAccounts {
     return this.digitalOceanAccountFactory(accessToken);
   }
 
+  connectGcpAccount(refreshToken: string): gcp.Account {
+    this.storage.setItem(this.GCP_TOKEN_STORAGE_KEY, refreshToken);
+    return null;
+  }
+
   disconnectDigitalOceanAccount(): void {
     this.storage.removeItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
+  }
+
+  disconnectGcpAccount(): void {
+    this.storage.removeItem(this.GCP_TOKEN_STORAGE_KEY);
   }
 
   getDigitalOceanAccount(): digitalocean.Account {
     const accessToken = this.storage.getItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY);
     return accessToken ? this.digitalOceanAccountFactory(accessToken) : null;
+  }
+
+  getGcpAccount(): gcp.Account {
+    const accessToken = this.storage.getItem(this.GCP_TOKEN_STORAGE_KEY);
+    return null;
   }
 }
