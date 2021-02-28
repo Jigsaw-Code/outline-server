@@ -42,8 +42,6 @@ Then you need to install all the NPM package dependencies:
 yarn
 ```
 
-Note: If you are using root (not recommended on your dev machine, maybe in a container), you need to add `{ "allow_root": true }` to your `/root/.bowerrc` file.
-
 This project uses [Yarn workspaces](https://yarnpkg.com/blog/2017/08/02/introducing-workspaces/).
 
 

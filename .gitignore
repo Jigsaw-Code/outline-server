@@ -1,5 +1,4 @@
 .DS_Store
-**/bower_components
 /build
 node_modules/
 /src/server_manager/install_scripts/do_install_script.ts

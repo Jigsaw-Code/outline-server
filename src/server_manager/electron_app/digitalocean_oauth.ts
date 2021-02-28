@@ -18,7 +18,6 @@ import * as electron from 'electron';
 import * as express from 'express';
 import * as http from 'http';
 import {AddressInfo} from 'net';
-import * as path from 'path';
 import * as request from 'request';
 
 const REGISTERED_REDIRECTS: Array<{clientId: string, port: number}> = [

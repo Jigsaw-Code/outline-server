@@ -18,8 +18,7 @@
 
 readonly WRAPPER='third_party/shellcheck/run.sh'
 declare -ar START=(src scripts "${WRAPPER}")
-readonly EXCLUDE='*/bower_components'
 
-# From the specified starting points, prune excluded paths or
+# From the specified starting points,
 # run shellcheck over all files ending in .sh.
-find "${START[@]}" -path "${EXCLUDE}" -prune -o -name '*.sh' -exec "${WRAPPER}" {} +
+find "${START[@]}" -name '*.sh' -exec "${WRAPPER}" {} +

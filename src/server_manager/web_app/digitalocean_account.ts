@@ -137,12 +137,12 @@ function getInstallScript(
       `export DO_ACCESS_TOKEN=${sanitizedAccessToken}\n` +
       (shadowboxSettings.imageId ? `export SB_IMAGE=${shadowboxSettings.imageId}\n` : '') +
       (shadowboxSettings.watchtowerRefreshSeconds ?
-           `export WATCHTOWER_REFRESH_SECONDS=${shadowboxSettings.watchtowerRefreshSeconds}\n` :
-           '') +
+          `export WATCHTOWER_REFRESH_SECONDS=${shadowboxSettings.watchtowerRefreshSeconds}\n` :
+          '') +
       (shadowboxSettings.sentryApiUrl ?
-           `export SENTRY_API_URL="${shadowboxSettings.sentryApiUrl}"\n` :
-           '') +
+          `export SENTRY_API_URL="${shadowboxSettings.sentryApiUrl}"\n` :
+          '') +
       (shadowboxSettings.metricsUrl ? `export SB_METRICS_URL=${shadowboxSettings.metricsUrl}\n` :
-                                      '') +
+          '') +
       `export SB_DEFAULT_SERVER_NAME="${name}"\n` + do_install_script.SCRIPT;
 }
