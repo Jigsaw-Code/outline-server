@@ -901,7 +901,7 @@ export class ServerView extends DirMixin(PolymerElement) {
 
   _formatDisplayDataLimit(limit, language) {
     return limit ? i18n.formatBytes(displayDataAmountToBytes(limit), language) :
-                   this.localize('none');
+                   this.localize('no-data-limit');
   }
 
   _formatInboundBytesUnit(totalBytes, language) {
