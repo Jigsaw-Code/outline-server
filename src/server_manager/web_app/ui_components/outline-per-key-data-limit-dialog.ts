@@ -145,6 +145,10 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    * input.
    */
   @internalProperty() _enableSave = false;
+  /**
+   * @member _language The language used for i18n
+   */
+  @internalProperty() _language = 'en';
   @property({type: Function}) localize: Function;
 
   private _serverId = '';
@@ -335,13 +339,14 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    */
   public open(
       keyName: string, keyId: string, keyDataLimit: DisplayDataAmount, serverId: string,
-      serverDefaultLimit: DisplayDataAmount) {
+      serverDefaultLimit: DisplayDataAmount, language: string) {
     this._keyName = keyName;
     this._keyId = keyId;
     this._keyDataLimit = keyDataLimit;
     this._serverId = serverId;
     this._serverDefaultLimit = serverDefaultLimit;
     this._showMenu = !!this._keyDataLimit;
+    this._language = language;
     this._setSaveButtonDisabledState();
     this._queryAs<PaperDialogElement>('#container').open();
   }
