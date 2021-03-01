@@ -29,8 +29,9 @@ import {PaperInputElement} from '@polymer/paper-input/paper-input';
 import {PaperListboxElement} from '@polymer/paper-listbox/paper-listbox';
 import {css, customElement, html, internalProperty, LitElement, property} from 'lit-element';
 
+import * as i18n from '../data_formatting';
+
 import {COMMON_STYLES} from './cloud-install-styles';
-import {DisplayDataAmount} from './outline-server-view';
 
 /**
  * A floating window representing settings specific to individual access keys. Its state is
@@ -131,10 +132,14 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   @internalProperty() _keyName = '';
   /** @member _keyId The id of the UI access key representing the key we're working on. */
   @internalProperty() _keyId = '';
-  /** @member keyId The data limit, if it exists, on the access key we're working on. */
-  @internalProperty() _keyDataLimit: DisplayDataAmount = null;
-  /** @member serverDefaultLimit The default data limit of the server we're working on, or null */
-  @internalProperty() _serverDefaultLimit: DisplayDataAmount = null;
+  /**
+   * @member _keyDataLimitBytes The data limit, if it exists, on the access key we're working on.
+   */
+  @internalProperty() _keyDataLimitBytes: number = null;
+  /**
+   * @member serverDefaultLimitBytes The default data limit of the server we're working on, or null
+   */
+  @internalProperty() _serverDefaultLimitBytes: number = null;
   /**
    * @member _showMenu Whether the menu for inputting the data limit should be shown. Controlled by
    * the checkbox.
@@ -213,8 +218,8 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
             attr-for-selected="name"
             selected="${this._initialUnit()}"
           >
-            <paper-item name="GB">GB</paper-item>
-            <paper-item name="MB">MB</paper-item>
+            <paper-item name="GB">${this._getInternationalizedUnit(1000000000)}</paper-item>
+            <paper-item name="MB">${this._getInternationalizedUnit(1000000)}</paper-item>
           </paper-listbox>
         </paper-dropdown-menu>
       </div>
@@ -234,21 +239,24 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   }
 
   private _dataLimitType() {
-    return this._queryAs<PaperDropdownMenuElement>('#unitsDropdown').selectedItemLabel as 'GB' |
-        'MB';
+    return this._queryAs<PaperListboxElement>('#unitsListbox').selected as 'GB' | 'MB';
   }
 
-  private _initialUnit() {
-    return this._activeDataLimit()?.unit || 'GB';
+  private _getInternationalizedUnit(bytes: number) {
+    return i18n.formatBytesParts(bytes, this._language).unit;
+  }
+
+  private _initialUnit(): 'GB'|'MB' {
+    return bytesToSelection(this._activeDataLimit())?.unit || 'GB';
   }
 
   private _initialValue() {
-    return this._activeDataLimit()?.value.toString() || '';
+    return bytesToSelection(this._activeDataLimit())?.value.toString() || '';
   }
 
-  private _activeDataLimit(): DisplayDataAmount|undefined {
+  private _activeDataLimit(): number|undefined {
     // Returns the limit which currently is enforced on this key, or undefined if there is none.
-    return this._keyDataLimit || this._serverDefaultLimit;
+    return this._keyDataLimitBytes ?? this._serverDefaultLimitBytes;
   }
 
   private async _setCustomLimitTapped() {
@@ -282,18 +290,17 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    */
   private _dataLimitChange(): Change {
     if (this._showMenu) {
-      if (!this._keyDataLimit) {
+      if (this._keyDataLimitBytes === null) {
         // The user must have clicked the checkbox and input a limit.
         return Change.SET;
       }
-      const inputLimit = this.inputDataLimit();
-      if (inputLimit.value !== this._keyDataLimit.value ||
-          inputLimit.unit !== this._keyDataLimit.unit) {
+      const inputLimit = selectionToBytes(this.inputDataLimit());
+      if (inputLimit !== this._keyDataLimitBytes) {
         return Change.SET;
       }
       return Change.UNCHANGED;
     }
-    if (this._keyDataLimit) {
+    if (this._keyDataLimitBytes !== null) {
       // The user must have unchecked the checkbox.
       return Change.REMOVED;
     }
@@ -310,7 +317,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   /**
    * The current data limit as input by the user, but not necessarily as saved.
    */
-  public inputDataLimit(): DisplayDataAmount {
+  public inputDataLimit(): DataLimitSelection {
     return this._showMenu ? {unit: this._dataLimitType(), value: this._dataLimitValue()} : null;
   }
 
@@ -338,15 +345,15 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    * @param serverDefaultLimit - The default data limit for the server, or null if there is none
    */
   public open(
-      keyName: string, keyId: string, keyDataLimit: DisplayDataAmount, serverId: string,
-      serverDefaultLimit: DisplayDataAmount, language: string) {
+      keyName: string, keyId: string, keyLimitBytes: number, serverId: string,
+      defaultLimitBytes: number, language: string) {
     this._keyName = keyName;
     this._keyId = keyId;
-    this._keyDataLimit = keyDataLimit;
+    this._keyDataLimitBytes = keyLimitBytes;
     this._serverId = serverId;
-    this._serverDefaultLimit = serverDefaultLimit;
-    this._showMenu = !!this._keyDataLimit;
+    this._serverDefaultLimitBytes = defaultLimitBytes;
     this._language = language;
+    this.setInitialMenuState();
     this._setSaveButtonDisabledState();
     this._queryAs<PaperDialogElement>('#container').open();
   }
@@ -354,9 +361,11 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   /**
    * Sets the input state of the dialog back to what it was when it was first opened.
    */
-  public reset() {
-    this._showMenu = !!this._keyDataLimit;
-    this._queryAs<PaperListboxElement>('#unitsListbox').select(this._initialUnit());
+  public setInitialMenuState() {
+    this._showMenu = this._keyDataLimitBytes !== null;
+    if (this._showMenu) {
+      this._queryAs<PaperListboxElement>('#unitsListbox').select(this._initialUnit());
+    }
   }
 
   /**
@@ -371,4 +380,30 @@ enum Change {
   SET,        // A data limit was added or the existing data limit changed
   REMOVED,    // The data limit for the key was removed
   UNCHANGED,  // No functional change happened.
+}
+
+interface DataLimitSelection {
+  value: number;
+  unit: 'MB'|'GB';
+}
+
+function bytesToSelection(bytes: number): DataLimitSelection {
+  if (bytes === null) {
+    return null;
+  }
+  if (bytes >= 10 ** 9) {
+    return {value: Math.floor(bytes / (10 ** 9)), unit: 'GB'};
+  }
+  return {value: Math.floor(bytes / (10 ** 6)), unit: 'MB'};
+}
+
+function selectionToBytes(dataAmount: DataLimitSelection): number {
+  if (!dataAmount) {
+    return null;
+  }
+  if (dataAmount.unit === 'GB') {
+    return dataAmount.value * (10 ** 9);
+  } else if (dataAmount.unit === 'MB') {
+    return dataAmount.value * (10 ** 6);
+  }
 }

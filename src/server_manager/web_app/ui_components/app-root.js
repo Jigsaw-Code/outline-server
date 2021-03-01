@@ -44,7 +44,7 @@ import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 import {PolymerElement} from '@polymer/polymer/polymer-element.js';
 
-import {ServerView} from './outline-server-view.js';
+import {displayDataAmountToBytes, ServerView} from './outline-server-view.js';
 
 const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
 
@@ -815,8 +815,8 @@ export class AppRoot extends mixinBehaviors
   openPerKeyDataLimitDialog(accessKey, serverId, defaultDataLimitAmount) {
     const keyDisplayName = accessKey.name || accessKey.placeholderName;
     this.$.perKeyDataLimitDialog.open(
-        keyDisplayName, accessKey.id, accessKey.dataLimit, serverId, defaultDataLimitAmount,
-        this.language);
+        keyDisplayName, accessKey.id, displayDataAmountToBytes(accessKey.dataLimit), serverId,
+        displayDataAmountToBytes(defaultDataLimitAmount), this.language);
   }
 
   openGetConnectedDialog(/** @type {string} */ inviteUrl) {

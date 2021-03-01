@@ -83,11 +83,28 @@ function compare(a, b) {
  * @returns {number} The number of bytes represented by dataAmount
  */
 export function displayDataAmountToBytes(dataAmount) {
+  if (!dataAmount) {
+    return null;
+  }
   if (dataAmount.unit === 'GB') {
     return dataAmount.value * (10 ** 9);
   } else if (dataAmount.unit === 'MB') {
     return dataAmount.value * (10 ** 6);
   }
+}
+
+/**
+ * @param {number} bytes
+ * @returns {DisplayDataAmount} A DisplayDataAmount representing the number of bytes
+ */
+export function bytesToDisplayDataAmount(bytes) {
+  if (bytes === null || bytes === undefined) {
+    return null;
+  }
+  if (bytes >= 10 ** 9) {
+    return {value: Math.floor(bytes / (10 ** 9)), unit: 'GB'};
+  }
+  return {value: Math.floor(bytes / (10 ** 6)), unit: 'MB'};
 }
 
 export class ServerView extends DirMixin(PolymerElement) {

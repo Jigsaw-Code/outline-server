@@ -27,7 +27,7 @@ import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {OutlinePerKeyDataLimitDialog} from './ui_components/outline-per-key-data-limit-dialog.js';
 import {Location} from './ui_components/outline-region-picker-step';
-import {DisplayAccessKey, DisplayDataAmount, displayDataAmountToBytes, MY_CONNECTION_USER_ID, ServerView} from './ui_components/outline-server-view';
+import {bytesToDisplayDataAmount, DisplayAccessKey, DisplayDataAmount, displayDataAmountToBytes, MY_CONNECTION_USER_ID, ServerView} from './ui_components/outline-server-view';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -55,14 +55,7 @@ const DIGITALOCEAN_FLAG_MAPPING: {[cityId: string]: string} = {
 };
 
 function dataLimitToDisplayDataAmount(limit: server.DataLimit): DisplayDataAmount|null {
-  if (!limit) {
-    return null;
-  }
-  const bytes = limit.bytes;
-  if (bytes >= 10 ** 9) {
-    return {value: Math.floor(bytes / (10 ** 9)), unit: 'GB'};
-  }
-  return {value: Math.floor(bytes / (10 ** 6)), unit: 'MB'};
+  return bytesToDisplayDataAmount(limit?.bytes);
 }
 function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.DataLimit|null {
   if (!dataAmount) {
@@ -943,7 +936,7 @@ export class App {
       this.appRoot.showNotification(this.appRoot.localize('saved'));
     } catch (error) {
       console.error(`Failed to set data limit for access key ${keyId}: ${error}`);
-      dialog.reset();
+      dialog.setInitialMenuState();
       this.appRoot.showError(this.appRoot.localize('error-set-per-key-limit'));
     }
   }
@@ -967,7 +960,7 @@ export class App {
       this.appRoot.showNotification(this.appRoot.localize('saved'));
     } catch (error) {
       console.error(`Failed to remove data limit from access key ${keyId}: ${error}`);
-      dialog.reset();
+      dialog.setInitialMenuState();
       this.appRoot.showError(this.appRoot.localize('error-remove-per-key-limit'));
     }
   }
