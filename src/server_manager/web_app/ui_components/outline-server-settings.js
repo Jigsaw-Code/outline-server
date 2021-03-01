@@ -218,8 +218,8 @@ Polymer({
               <iron-icon icon="icons:error-outline"></iron-icon>
               <p inner-h-t-m-l="[[localize('data-limits-disclaimer', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
             </div>
-            <div class="data-limits-input" hidden\$="[[!isAccessKeyDataLimitEnabled]]">
-              <paper-input id="accessKeyDataLimitInput" value="[[accessKeyDataLimit.value]]" label="[[localize('data-limit-per-key')]]" always-float-label="" allowed-pattern="[0-9]+" required="" auto-validate="" maxlength="9" on-keydown="_handleAccessKeyDataLimitInputKeyDown" on-blur="_requestSetAccessKeyDataLimit"></paper-input>
+            <div class="data-limits-input" hidden\$="[[!isDefaultDataLimitEnabled]]">
+              <paper-input id="defaultDataLimitInput" value="[[defaultDataLimit.value]]" label="[[localize('data-limit-per-key')]]" always-float-label="" allowed-pattern="[0-9]+" required="" auto-validate="" maxlength="9" on-keydown="_handleDefaultDataLimitInputKeyDown" on-blur="_requestSetDefaultDataLimit"></paper-input>
               <paper-dropdown-menu no-label-float="">
                 <paper-listbox id="defaultDataLimitUnits" slot="dropdown-content" selected="[[defaultDataLimit.unit]]" attr-for-selected="name" on-selected-changed="_requestSetDefaultDataLimit">
                 <paper-item name="MB">[[_getInternationalizedUnit(1000000, language)]]</paper-item>
