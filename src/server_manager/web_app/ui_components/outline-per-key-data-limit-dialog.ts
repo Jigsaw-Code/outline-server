@@ -226,7 +226,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   }
 
   private _dataLimitValue() {
-    return Number(this._input.value);
+    return Number(this._input?.value) ?? 0;
   }
 
   private _dataLimitType() {
@@ -251,12 +251,12 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     this._showMenu = !this._showMenu;
     if (this._showMenu) {
       await this.updateComplete;
-      this._input.focus();
+      this._input?.focus();
     }
   }
 
   private _setSaveButtonDisabledState() {
-    this._enableSave = !this._input.invalid;
+    this._enableSave = !this._input?.invalid ?? false;
   }
 
   private _sendSaveEvent() {
@@ -351,8 +351,6 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    */
   public reset() {
     this._showMenu = !!this._keyDataLimit;
-    // Manually reset the value to clear user input
-    this._input.value = this._initialValue();
     this._queryAs<PaperListboxElement>('#unitsListbox').select(this._initialUnit());
   }
 
