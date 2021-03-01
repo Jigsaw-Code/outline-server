@@ -126,22 +126,22 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   }
 
   /**
-   * @member keyName The displayed name of the UI access key representing the key we're working on.
+   * @member _keyName The displayed name of the UI access key representing the key we're working on.
    */
   @internalProperty() _keyName = '';
-  /** @member keyId The id of the UI access key representing the key we're working on. */
+  /** @member _keyId The id of the UI access key representing the key we're working on. */
   @internalProperty() _keyId = '';
   /** @member keyId The data limit, if it exists, on the access key we're working on. */
   @internalProperty() _keyDataLimit: DisplayDataAmount = null;
   /** @member serverDefaultLimit The default data limit of the server we're working on, or null */
   @internalProperty() _serverDefaultLimit: DisplayDataAmount = null;
   /**
-   * @member showMenu Whether the menu for inputting the data limit should be shown. Controlled by
+   * @member _showMenu Whether the menu for inputting the data limit should be shown. Controlled by
    * the checkbox.
    */
   @internalProperty() _showMenu = false;
   /**
-   * @member enableSave Whether the save button is enabled.  Controlled by the validator on the
+   * @member _enableSave Whether the save button is enabled.  Controlled by the validator on the
    * input.
    */
   @internalProperty() _enableSave = false;
