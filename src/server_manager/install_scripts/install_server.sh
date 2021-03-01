@@ -359,7 +359,7 @@ function add_api_url_to_config() {
 }
 
 function check_firewall() {
-  # TODO(cohenjon) This is incorrect if access keys are using more than one port.
+  # TODO(JonathanDCohen) This is incorrect if access keys are using more than one port.
   local -i ACCESS_KEY_PORT
   ACCESS_KEY_PORT=$(fetch --insecure "${LOCAL_API_URL}/access-keys" |
       docker exec -i shadowbox node -e '
