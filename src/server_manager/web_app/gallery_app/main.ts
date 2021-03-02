@@ -14,6 +14,7 @@
 
 import '../ui_components/outline-about-dialog';
 import '../ui_components/outline-do-oauth-step';
+import '../ui_components/outline-gcp-oauth-step';
 import '../ui_components/outline-feedback-dialog';
 import '../ui_components/outline-share-dialog';
 import '../ui_components/outline-sort-span';
@@ -80,12 +81,16 @@ export class TestApp extends LitElement {
       return;
     }
     this.localize = await makeLocalize(newLanguage);
-    this.language = newLanguage;    
+    this.language = newLanguage;
   }
 
   // tslint:disable-next-line:no-any
   private select(querySelector: string): any {
     return this.shadowRoot.querySelector(querySelector);
+  }
+
+  private runGcpOAuth(): void {
+    window.open('/gcp/oauth');
   }
 
   render() {
@@ -103,6 +108,12 @@ export class TestApp extends LitElement {
       <div class="widget">
         <h2>outline-do-oauth-step</h2>
         <outline-do-oauth-step .localize=${this.localize} dir=${this.dir}></outline-do-oauth-step>
+      </div>
+      
+      <div class="widget">
+        <h2>outline-gcp-oauth-step</h2>
+        <button @tap=${() => this.runGcpOAuth()}>Connect</button>
+        <outline-gcp-oauth-step .localize=${this.localize} dir=${this.dir}></outline-gcp-oauth-step>
       </div>
 
       <div class="widget">

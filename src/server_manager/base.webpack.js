@@ -31,10 +31,7 @@ exports.makeConfig = (options) => {
     ],
     target: options.target,
     devtool: 'inline-source-map',
-    // Run the dev server with `yarn workspace outline-manager run webpack-dev-server --open`
-    devServer: {
-      overlay: true,
-    },
+    devServer: options.devServer,
     output: {path: OUTPUT_BASE, filename: 'main.js'},
     module: {
       rules: [

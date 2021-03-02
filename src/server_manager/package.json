@@ -46,6 +46,7 @@
     "electron-updater": "^4.1.2",
     "eventemitter3": "^2.0.3",
     "express": "^4.16.3",
+    "google-auth-library": "^7.0.2",
     "intl-messageformat": "^7",
     "jsonic": "^0.3.1",
     "lit-element": "^2.3.1",

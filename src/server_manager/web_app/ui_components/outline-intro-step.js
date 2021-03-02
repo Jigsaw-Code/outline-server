@@ -272,6 +272,10 @@ Polymer({
   properties: {
     isSignedInToDigitalOcean: Boolean,
     digitalOceanEmail: String,
+    gcpOauthEnabled: {
+      type: Boolean,
+      value: false,
+    },
     localize: {
       type: Function,
       readonly: true,
@@ -295,6 +299,10 @@ Polymer({
   },
 
   setUpGcpTapped: function() {
-    this.fire('SetUpGcpRequested');
+    if (this.gcpOauthEnabled) {
+      this.fire('ConnectGcpAccountRequested');
+    } else {
+      this.fire('SetUpGcpRequested');
+    }
   }
 });

@@ -146,12 +146,29 @@ export class App {
     });
     appRoot.addEventListener('CreateDigitalOceanServerRequested', (event: CustomEvent) => {
       const digitalOceanAccount = this.cloudAccounts.getDigitalOceanAccount();
+      console.log('digitalOceanAccount', digitalOceanAccount);
       if (digitalOceanAccount) {
         this.showDigitalOceanCreateServer(digitalOceanAccount);
       } else {
         console.error('Access token not found for server creation');
         this.handleConnectDigitalOceanAccountRequest();
       }
+    });
+    appRoot.addEventListener('ConnectGcpAccountRequested', async (event: CustomEvent) => {
+      const handleOauthFlowCancelled = () => {
+        oauth.cancel();
+        this.showIntro();
+      };
+      this.appRoot.getAndShowGcpOauthFlow(handleOauthFlowCancelled);
+      const oauth = runGcpOauth();
+
+      try {
+        const refreshToken = await oauth.result;
+        this.cloudAccounts.connectGcpAccount(refreshToken);
+      } catch (error) {
+        this.cloudAccounts.disconnectGcpAccount();
+      }
+      this.showIntro();
     });
     appRoot.addEventListener('SignOutRequested', (event: CustomEvent) => {
       this.disconnectDigitalOceanAccount();

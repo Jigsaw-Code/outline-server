@@ -126,7 +126,11 @@ function getWebAppUrl() {
   }
   if (debugMode) {
     queryParams.set('outlineDebugMode', 'true');
-    console.log(`Enabling Outline debug mode`);
+    console.log('Enabling Outline debug mode');
+  }
+  if (process.env.GCP_AUTH) {
+    queryParams.set('gcpOAuth', 'true');
+    console.log('Enabling GCP OAuth');
   }
 
   // Append arguments to URL if any.

@@ -22,6 +22,7 @@ import {CloudAccounts} from './cloud_accounts';
 import {DigitalOceanAccount} from './digitalocean_account';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
+import {GcpAccount} from "./gcp_account";
 
 type LanguageDef = {
   id: string,
@@ -111,7 +112,8 @@ document.addEventListener('WebComponentsReady', () => {
     const session = new digitalocean_api.RestApiSession(accessToken);
     return new DigitalOceanAccount(session, shadowboxSettings, debugMode);
   };
-  const cloudAccounts = new CloudAccounts(digitalOceanAccountFactory);
+  const gcpAccountFactory = (refreshToken: string) => new GcpAccount();
+  const cloudAccounts = new CloudAccounts(digitalOceanAccountFactory, gcpAccountFactory);
 
   // Create and start the app.
   const language = getLanguageToUse();
@@ -125,5 +127,6 @@ document.addEventListener('WebComponentsReady', () => {
   const filteredLanguageDefs = Object.values(SUPPORTED_LANGUAGES);
   appRoot.supportedLanguages = sortLanguageDefsByName(filteredLanguageDefs);
   appRoot.setLanguage(language.string(), languageDirection);
+  appRoot.gcpOAuthEnabled = params.get('gcpOAuth') === 'true';
   new App(appRoot, version, new ManualServerRepository('manualServers'), cloudAccounts).start();
 });
