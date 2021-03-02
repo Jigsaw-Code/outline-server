@@ -341,7 +341,7 @@ export class App {
       this.appRoot.adminEmail = await this.digitalOceanAccount.getName();
       const status = await this.digitalOceanAccount.getStatus();
       if (status !== digitalocean.Status.ACTIVE) {
-        return;
+        return [];
       }
       const servers = await this.digitalOceanAccount.listServers();
       for (const server of servers) {
@@ -518,6 +518,8 @@ export class App {
     const oauth = runDigitalOceanOauth();
     const handleOauthFlowCancelled = () => {
       oauth.cancel();
+      this.disconnectDigitalOceanAccount();
+      this.showIntro();
     };
     this.appRoot.getAndShowDigitalOceanOauthFlow(handleOauthFlowCancelled);
     try {
