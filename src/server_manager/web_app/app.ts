@@ -518,6 +518,8 @@ export class App {
     const oauth = runDigitalOceanOauth();
     const handleOauthFlowCancelled = () => {
       oauth.cancel();
+      this.disconnectDigitalOceanAccount();
+      this.showIntro();
     };
     this.appRoot.getAndShowDigitalOceanOauthFlow(handleOauthFlowCancelled);
     try {
