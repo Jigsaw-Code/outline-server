@@ -20,14 +20,14 @@ import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
 
-import {formatBytes} from './data_formatting';
+import {bytesToDisplayDataAmount, DisplayDataAmount, displayDataAmountToBytes,} from './data_formatting';
 import {TokenManager} from './digitalocean_oauth';
 import * as digitalocean_server from './digitalocean_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {OutlinePerKeyDataLimitDialog} from './ui_components/outline-per-key-data-limit-dialog.js';
 import {Location} from './ui_components/outline-region-picker-step';
-import {bytesToDisplayDataAmount, DisplayAccessKey, DisplayDataAmount, displayDataAmountToBytes, MY_CONNECTION_USER_ID, ServerView} from './ui_components/outline-server-view';
+import {DisplayAccessKey, MY_CONNECTION_USER_ID, ServerView} from './ui_components/outline-server-view';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/

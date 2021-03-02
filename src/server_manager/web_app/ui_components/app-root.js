@@ -44,7 +44,9 @@ import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 import {PolymerElement} from '@polymer/polymer/polymer-element.js';
 
-import {displayDataAmountToBytes, ServerView} from './outline-server-view.js';
+import {displayDataAmountToBytes} from '../data_formatting';
+
+import {ServerView} from './outline-server-view.js';
 
 const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
 

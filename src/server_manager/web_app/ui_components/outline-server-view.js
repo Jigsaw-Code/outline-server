@@ -36,7 +36,7 @@ import './outline-sort-span.js';
 import {html, PolymerElement} from '@polymer/polymer';
 import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
 
-import * as i18n from '../data_formatting';
+import * as formatting from '../data_formatting';
 
 export const MY_CONNECTION_USER_ID = '0';
 
@@ -69,43 +69,6 @@ function compare(a, b) {
  * @prop {number} relativeTraffic
  * @prop {DisplayDataAmount=} dataLimit
  */
-
-// TODO(JonathanDCohen222) Remove use of this.  It represents a poor abstraction for unit
-// formatting.
-/**
- * @typedef {Object} DisplayDataAmount
- * @prop {'MB'|'GB'} unit
- * @prop {number} value
- */
-
-/**
- * @param {DisplayDataAmount} dataAmount
- * @returns {number} The number of bytes represented by dataAmount
- */
-export function displayDataAmountToBytes(dataAmount) {
-  if (!dataAmount) {
-    return null;
-  }
-  if (dataAmount.unit === 'GB') {
-    return dataAmount.value * (10 ** 9);
-  } else if (dataAmount.unit === 'MB') {
-    return dataAmount.value * (10 ** 6);
-  }
-}
-
-/**
- * @param {number} bytes
- * @returns {DisplayDataAmount} A DisplayDataAmount representing the number of bytes
- */
-export function bytesToDisplayDataAmount(bytes) {
-  if (bytes === null || bytes === undefined) {
-    return null;
-  }
-  if (bytes >= 10 ** 9) {
-    return {value: Math.floor(bytes / (10 ** 9)), unit: 'GB'};
-  }
-  return {value: Math.floor(bytes / (10 ** 6)), unit: 'MB'};
-}
 
 export class ServerView extends DirMixin(PolymerElement) {
   static get template() {
@@ -917,7 +880,7 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   _formatDisplayDataLimit(limit, language) {
-    return limit ? i18n.formatBytes(displayDataAmountToBytes(limit), language) :
+    return limit ? formatting.formatBytes(formatting.displayDataAmountToBytes(limit), language) :
                    this.localize('no-data-limit');
   }
 
@@ -926,7 +889,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     if (!language) {
       return '';
     }
-    return i18n.formatBytesParts(totalBytes, language).unit;
+    return formatting.formatBytesParts(totalBytes, language).unit;
   }
 
   _formatInboundBytesValue(totalBytes, language) {
@@ -934,7 +897,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     if (!language) {
       return '';
     }
-    return i18n.formatBytesParts(totalBytes, language).value;
+    return formatting.formatBytesParts(totalBytes, language).value;
   }
 
   updateAccessKeyRow(accessKeyId, fields) {
@@ -958,7 +921,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       // unused access keys.
       return emptyValue;
     }
-    return i18n.formatBytes(numBytes, language);
+    return formatting.formatBytes(numBytes, language);
   }
 
   _formatMonthlyCost(monthlyCost, language) {

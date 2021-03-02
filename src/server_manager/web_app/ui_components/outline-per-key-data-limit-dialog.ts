@@ -22,14 +22,12 @@ import '@polymer/paper-input/paper-input';
 import '@polymer/paper-item/paper-item';
 import '@polymer/paper-listbox/paper-listbox';
 
-import {PaperButtonElement} from '@polymer/paper-button/paper-button';
 import {PaperDialogElement} from '@polymer/paper-dialog/paper-dialog';
-import {PaperDropdownMenuElement} from '@polymer/paper-dropdown-menu/paper-dropdown-menu';
 import {PaperInputElement} from '@polymer/paper-input/paper-input';
 import {PaperListboxElement} from '@polymer/paper-listbox/paper-listbox';
 import {css, customElement, html, internalProperty, LitElement, property} from 'lit-element';
 
-import * as i18n from '../data_formatting';
+import {bytesToDisplayDataAmount, DisplayDataAmount, displayDataAmountToBytes, formatBytesParts} from '../data_formatting';
 
 import {COMMON_STYLES} from './cloud-install-styles';
 
@@ -243,15 +241,15 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   }
 
   private _getInternationalizedUnit(bytes: number) {
-    return i18n.formatBytesParts(bytes, this._language).unit;
+    return formatBytesParts(bytes, this._language).unit;
   }
 
   private _initialUnit(): 'GB'|'MB' {
-    return bytesToSelection(this._activeDataLimit())?.unit || 'GB';
+    return bytesToDisplayDataAmount(this._activeDataLimit())?.unit || 'GB';
   }
 
   private _initialValue() {
-    return bytesToSelection(this._activeDataLimit())?.value.toString() || '';
+    return bytesToDisplayDataAmount(this._activeDataLimit())?.value.toString() || '';
   }
 
   private _activeDataLimit(): number|undefined {
@@ -294,7 +292,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
         // The user must have clicked the checkbox and input a limit.
         return Change.SET;
       }
-      const inputLimit = selectionToBytes(this.inputDataLimit());
+      const inputLimit = displayDataAmountToBytes(this.inputDataLimit());
       if (inputLimit !== this._keyDataLimitBytes) {
         return Change.SET;
       }
@@ -317,7 +315,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   /**
    * The current data limit as input by the user, but not necessarily as saved.
    */
-  public inputDataLimit(): DataLimitSelection {
+  public inputDataLimit(): DisplayDataAmount {
     return this._showMenu ? {unit: this._dataLimitType(), value: this._dataLimitValue()} : null;
   }
 
@@ -380,30 +378,4 @@ enum Change {
   SET,        // A data limit was added or the existing data limit changed
   REMOVED,    // The data limit for the key was removed
   UNCHANGED,  // No functional change happened.
-}
-
-interface DataLimitSelection {
-  value: number;
-  unit: 'MB'|'GB';
-}
-
-function bytesToSelection(bytes: number): DataLimitSelection {
-  if (bytes === null) {
-    return null;
-  }
-  if (bytes >= 10 ** 9) {
-    return {value: Math.floor(bytes / (10 ** 9)), unit: 'GB'};
-  }
-  return {value: Math.floor(bytes / (10 ** 6)), unit: 'MB'};
-}
-
-function selectionToBytes(dataAmount: DataLimitSelection): number {
-  if (!dataAmount) {
-    return null;
-  }
-  if (dataAmount.unit === 'GB') {
-    return dataAmount.value * (10 ** 9);
-  } else if (dataAmount.unit === 'MB') {
-    return dataAmount.value * (10 ** 6);
-  }
 }
