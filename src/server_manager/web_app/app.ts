@@ -679,6 +679,9 @@ export class App {
     view.showFeatureMetricsDisclaimer = server.getMetricsEnabled() &&
         !server.getDefaultDataLimit() && !hasSeenFeatureMetricsNotification();
 
+    // TODOBEFOREPUSH Actually compute this
+    view.baselineDataTransfer = 4;
+
     if (version) {
       view.isAccessKeyPortEditable = semver.gte(version, CHANGE_KEYS_PORT_VERSION);
       view.supportsDefaultDataLimit = semver.gte(version, DATA_LIMITS_VERSION);
@@ -801,7 +804,8 @@ export class App {
           // Can happen when a data limit is set on an access key that already exceeds it.
           relativeTraffic = 100;
         }
-        serverView.updateAccessKeyRow(accessKeyId, {transferredBytes, relativeTraffic});
+        // TODOBEFORESQUASH actually calculate these
+        serverView.updateAccessKeyRow(accessKeyId, {transferredBytes: 1, relevantBandwidth: 2});
       }
     } catch (e) {
       // Since failures are invisible to users we generally want exceptions here to bubble
@@ -847,7 +851,7 @@ export class App {
       name,
       accessUrl: remoteAccessKey.accessUrl,
       transferredBytes: 0,
-      relativeTraffic: 0,
+      relevantBandwidth: 2,
       dataLimit: dataLimitToDisplayDataAmount(remoteAccessKey.dataLimit),
     };
   }

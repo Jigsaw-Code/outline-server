@@ -40,6 +40,8 @@ import * as formatting from '../data_formatting';
 
 export const MY_CONNECTION_USER_ID = '0';
 
+const progressBarMaxWidthPx = 72;
+
 // Makes an CustomEvent that bubbles up beyond the shadow root.
 function makePublicEvent(eventName, detail) {
   const params = {bubbles: true, composed: true};
@@ -66,7 +68,7 @@ function compare(a, b) {
  * @prop {string} name
  * @prop {string} accessUrl
  * @prop {number} transferredBytes
- * @prop {number} relativeTraffic
+ * @prop {number} relevantBandwidth The active limit on the key, or its total data transfer.
  * @prop {DisplayDataAmount=} dataLimit
  */
 
@@ -233,7 +235,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         align-items: center;
       }
       .measurement-container paper-progress {
-        max-width: 72px;
+        max-width: ${progressBarMaxWidthPx}px;
         margin: 0 24px 0 12px;
         --paper-progress-height: 8px;
         --paper-progress-active-color: var(--primary-green);
@@ -527,7 +529,7 @@ export class ServerView extends DirMixin(PolymerElement) {
                     /
                     <bdi>[[_formatDataLimitForKey(myConnection, language)]]</bdi>
                   </span>
-                <paper-progress value="[[myConnection.relativeTraffic]]" class\$="[[_computePaperProgressClass(myConnection)]]"></paper-progress>
+                <paper-progress max="[[myConnection.relevantBandwidth]]" value="[[myConnection.transferredBytes]]" class\$="[[_computePaperProgressClass(myConnection)]]" style\$="[[_computeProgressWidthStyling(myConnection.relevantBandwidth, baselineDataTransfer)]]"></paper-progress>
                 <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!_activeDataLimitForKey(myConnection)]]">
                   [[_getDataLimitsUsageString(myConnection, language)]]
                 </paper-tooltip>
@@ -556,7 +558,7 @@ export class ServerView extends DirMixin(PolymerElement) {
                       /
                       <bdi>[[_formatDataLimitForKey(item, language)]]</bdi>
                     </span>
-                    <paper-progress value="[[item.relativeTraffic]]" class\$="[[_computePaperProgressClass(item)]]"></paper-progress>
+                    <paper-progress max="[[item.relevantBandwidth]]" value="[[item.transferredBytes]]" class\$="[[_computePaperProgressClass(item)]]" style\$="[[_computeProgressWidthStyling(item.relevantBandwidth, baselineDataTransfer)]]"></paper-progress>
                     <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!_activeDataLimitForKey(item)]]">
                       [[_getDataLimitsUsageString(item, language)]]
                     </paper-tooltip>
@@ -627,6 +629,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         retryDisplayingServer: Function,
         myConnection: Object,
         totalInboundBytes: Number,
+        baselineDataTransfer: Number,
         accessKeyRows: {type: Array},
         hasNonAdminAccessKeys: Boolean,
         metricsEnabled: Boolean,
@@ -693,6 +696,8 @@ export class ServerView extends DirMixin(PolymerElement) {
        */
       this.myConnection = null;
       this.totalInboundBytes = 0;
+      /** The number to which access key transfer amounts are compared for progress bar display */
+      this.baselineDataTransfer = Number.POSITIVE_INFINITY;
       /** @type {DisplayAccessKey[]} */
       this.accessKeyRows = [];
       this.hasNonAdminAccessKeys = false;
@@ -1048,6 +1053,14 @@ export class ServerView extends DirMixin(PolymerElement) {
 
   _computePaperProgressClass(accessKey) {
     return this._activeDataLimitForKey(accessKey) ? 'data-limits' : '';
+  }
+
+  _computeProgressWidthStyling(
+      /** @type {number} */ relevantBandwidth, /** @type {number} */ baselineDataTransfer) {
+    const width = Math.floor(progressBarMaxWidthPx * relevantBandwidth / baselineDataTransfer);
+    // It's important that there's no space in between width and "px" in order for Chrome to accept
+    // the inline style string.
+    return `width: ${width}px;`;
   }
 
   _getDataLimitsUsageString(accessKey, language) {
