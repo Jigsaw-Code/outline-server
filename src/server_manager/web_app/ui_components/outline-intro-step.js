@@ -20,7 +20,7 @@ import './cloud-install-styles.js';
 import './outline-step-view.js';
 
 import {html, PolymerElement} from '@polymer/polymer';
-import {makePublicEvent} from "../../infrastructure/dom_events";
+import {makePublicEvent} from '../../infrastructure/dom_events';
 
 export class OutlineIntroStep extends PolymerElement {
   static get template() {

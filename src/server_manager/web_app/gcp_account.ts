@@ -13,9 +13,14 @@
 // limitations under the License.
 
 import * as gcp from "../model/gcp";
+import {CloudId} from "../model/account";
 
 export class GcpAccount implements gcp.Account {
   async getName(): Promise<string> {
     return;
+  }
+
+  getCloudId(): CloudId {
+    return CloudId.GCP;
   }
 }

@@ -14,28 +14,14 @@
 
 import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
+import {Account, CloudId} from "../model/account";
 
 type DigitalOceanAccountFactory = (accessToken: string) => digitalocean.Account;
 type GcpAccountFactory = (refreshToken: string) => gcp.Account;
 
-// ** DO NOT CHANGE THE VALUE **
-// This identifier is persisted. Consider creating a new type like CloudAccountStorageKey below.
-enum CloudId {
-  DigitalOcean = 'digitalocean',
-  GCP = 'gcp',
-}
-
-// type CloudAccountStorageKey<C extends CloudId> =
-//   C extends CloudId.DigitalOcean ? 'digitalocean' :
-//   C extends CloudId.GCP ? 'gcp' : 'unknown';
-
-type CloudAccountJson<C extends CloudId> =
-    C extends CloudId.DigitalOcean ? DigitalOceanAccountJson :
-    C extends CloudId.GCP ? GcpAccountJson :
-    null;
-
 type AccountJson = {
-  [C in CloudId]?: CloudAccountJson<CloudId>
+  digitalocean?: DigitalOceanAccountJson,
+  gcp?: GcpAccountJson,
 };
 
 type DigitalOceanAccountJson = {
@@ -49,67 +35,69 @@ type GcpAccountJson = {
 export class CloudAccounts {
   private readonly ACCOUNTS_STORAGE_KEY = 'accounts-storage';
 
-  private readonly accounts: AccountJson[] = [];
+  private readonly accounts: Account[] = [];
 
   constructor(
       private digitalOceanAccountFactory: DigitalOceanAccountFactory,
       private gcpAccountFactory: GcpAccountFactory,
       private storage = localStorage) {
-    this.accounts = this.readAccountFromStorage();
+    const accountJsons = this.readAccountsFromStorage();
+    this.accounts = accountJsons.map((accountJson) => this.getAccount(accountJson));
   }
 
   connectDigitalOceanAccount(accessToken: string): digitalocean.Account {
-    this.addAccount(CloudId.DigitalOcean, { accessToken });
-    return this.getDigitalOceanAccount();
+    const accountJson = {
+      digitalocean: { accessToken }
+    };
+    this.addAndSaveAccountJson(accountJson);
+    const account = this.getAccount(accountJson) as digitalocean.Account;
+    this.accounts.push(account);
+    return account;
   }
 
   connectGcpAccount(refreshToken: string): gcp.Account {
-    this.addAccount(CloudId.GCP, { refreshToken });
-    return this.getGcpAccount();
+    const accountJson = {
+      gcp: { refreshToken }
+    };
+    this.addAndSaveAccountJson(accountJson);
+    const account = this.getAccount(accountJson) as gcp.Account;
+    this.accounts.push(account);
+    return account;
   }
 
   disconnectDigitalOceanAccount(): void {
-    this.removeAccount(CloudId.DigitalOcean);
-    this.writeAccountsToStorage();
+    // TODO:
   }
 
   disconnectGcpAccount(): void {
-    this.removeAccount(CloudId.GCP);
-    this.writeAccountsToStorage();
+    // TODO:
   }
 
   getDigitalOceanAccount(): digitalocean.Account {
-    const digitalOceanAccountJson = this.getAccountJson(CloudId.DigitalOcean) as DigitalOceanAccountJson;
-    return digitalOceanAccountJson ? this.digitalOceanAccountFactory(digitalOceanAccountJson.accessToken) : null;
+    return this.accounts.find((account) => account.getCloudId() === CloudId.DigitalOcean) as digitalocean.Account;
   }
 
   getGcpAccount(): gcp.Account {
-    const gcpAccountJson = this.getAccountJson(CloudId.GCP) as GcpAccountJson;
-    return gcpAccountJson ? this.gcpAccountFactory(gcpAccountJson.refreshToken) : null;
+    return this.accounts.find((account) => account.getCloudId() === CloudId.GCP) as gcp.Account;
   }
 
-  private addAccount(cloudId: CloudId, cloudAccountJson: CloudAccountJson<CloudId>): void {
-    const accountJson = {
-      [cloudId]: cloudAccountJson
-    };
-    this.accounts.push(accountJson);
-    this.writeAccountsToStorage();
+  private addAndSaveAccountJson(accountJson: AccountJson): void {
+    const accountJsons = this.readAccountsFromStorage();
+    accountJsons.push(accountJson);
+    this.writeAccountsToStorage(accountJsons);
   }
 
-  private removeAccount(cloudId: CloudId): void {
-    const index = this.accounts.findIndex((account) => account.hasOwnProperty(cloudId));
-    if (index > -1) {
-      this.accounts.splice(index, 1);
+  private getAccount(accountJson: AccountJson): Account {
+    if (accountJson.digitalocean) {
+      return this.digitalOceanAccountFactory(accountJson.digitalocean.accessToken);
+    } else if (accountJson.gcp) {
+      return this.gcpAccountFactory(accountJson.gcp.refreshToken);
+    } else {
+      return null;
     }
-    this.writeAccountsToStorage();
   }
 
-  private getAccountJson(cloudId: CloudId): CloudAccountJson<CloudId> {
-    const accountJson = this.accounts.find((account) => account.hasOwnProperty(cloudId));
-    return accountJson ? accountJson[cloudId] : null;
-  }
-
-  private readAccountFromStorage(): AccountJson[] {
+  private readAccountsFromStorage(): AccountJson[] {
     let result = [];
     const accountJsons = this.storage.getItem(this.ACCOUNTS_STORAGE_KEY);
     if (accountJsons) {
@@ -118,7 +106,7 @@ export class CloudAccounts {
     return result;
   }
 
-  private writeAccountsToStorage(): void {
-    this.storage.setItem(this.ACCOUNTS_STORAGE_KEY, JSON.stringify(this.accounts));
+  private writeAccountsToStorage(accountJsons: AccountJson[]): void {
+    this.storage.setItem(this.ACCOUNTS_STORAGE_KEY, JSON.stringify(accountJsons));
   }
 }

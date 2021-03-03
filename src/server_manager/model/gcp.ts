@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as account from "./account";
+import * as account from './account';
 
-export interface Account extends account.Account { }
+export interface Account extends account.Account {}

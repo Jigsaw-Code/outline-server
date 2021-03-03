@@ -16,7 +16,7 @@ import * as electron from 'electron';
 import * as express from 'express';
 import {Credentials, OAuth2Client} from 'google-auth-library';
 import * as http from "http";
-import {AddressInfo} from "net";
+import {AddressInfo} from 'net';
 
 const REDIRECT_PORT = 18535;
 const REDIRECT_PATH = '/gcp/oauth/callback';

@@ -12,7 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+export enum CloudId {
+  DigitalOcean = 'digitalocean',
+  GCP = 'gcp',
+}
+
 export interface Account {
   // Returns a user-friendly name associated with the account.
   getName(): Promise<string>;
+  // Returns an ID identifying the cloud provider.
+  getCloudId(): CloudId;
 }

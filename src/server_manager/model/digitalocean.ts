@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as account from "./account";
+import * as account from './account';
 import {ManagedServer, RegionId} from "./server";
 
 // Keys are cityIds like "nyc".  Values are regions like ["nyc1", "nyc3"].

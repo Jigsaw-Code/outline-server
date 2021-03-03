@@ -18,6 +18,7 @@ import * as server from "../model/server";
 import * as crypto from "../infrastructure/crypto";
 import * as digitalocean from "../model/digitalocean";
 import * as do_install_script from "../install_scripts/do_install_script";
+import {CloudId} from "../model/account";
 
 // Tag used to mark Shadowbox Droplets.
 const SHADOWBOX_TAG = 'shadowbox';
@@ -39,6 +40,10 @@ export class DigitalOceanAccount implements digitalocean.Account {
 
   async getName(): Promise<string> {
     return (await this.digitalOcean.getAccount())?.email;
+  }
+
+  getCloudId(): CloudId {
+    return CloudId.DigitalOcean;
   }
 
   async getStatus(): Promise<digitalocean.Status> {
