@@ -413,7 +413,7 @@ export class AppRoot extends mixinBehaviors
         <app-header-layout>
           <div class="app-container">
             <iron-pages attr-for-selected="id" selected="{{ currentPage }}">
-              <outline-intro-step id="intro" is-signed-in-to-digital-ocean="{{isSignedInToDigitalOcean}}" digital-ocean-email="{{adminEmail}}" gcp-oauth-enabled="{{gcpOAuthEnabled}}" localize="[[localize]]"></outline-intro-step>
+              <outline-intro-step id="intro" is-signed-in-to-digital-ocean="{{isSignedInToDigitalOcean}}" digital-ocean-email="{{adminEmail}}" gcp-account-name="{{gcpAccountName}}" localize="[[localize]]"></outline-intro-step>
               <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
               <outline-gcp-oauth-step id="gcpOauth" localize="[[localize]]"></outline-gcp-oauth-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
@@ -511,6 +511,7 @@ export class AppRoot extends mixinBehaviors
         computed: '_computeHasManualServers(serverList.*)',
       },
       adminEmail: {type: String},
+      gcpAccountName: String,
       isSignedInToDigitalOcean: {
         type: Boolean,
         computed: '_computeIsSignedInToDigitalOcean(adminEmail)',
@@ -531,7 +532,6 @@ export class AppRoot extends mixinBehaviors
         type: String,
         computed: '_computeSideBarMarginClass(shouldShowSideBar)',
       },
-      gcpOAuthEnabled: Boolean,
     };
   }
 
@@ -545,10 +545,10 @@ export class AppRoot extends mixinBehaviors
     /** @type {ServerListEntry[]} */
     this.serverList = [];
     this.adminEmail = '';
+    this.gcpAccountName = '';
     this.outlineVersion = '';
     this.currentPage = 'intro';
     this.shouldShowSideBar = false;
-    this.gcpOAuthEnabled = false;
 
     this.addEventListener('RegionSelected', this.handleRegionSelected);
     this.addEventListener(

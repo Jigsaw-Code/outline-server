@@ -14,4 +14,8 @@
 
 import * as gcp from "../model/gcp";
 
-export class GcpAccount implements gcp.Account { }
+export class GcpAccount implements gcp.Account {
+  async getName(): Promise<string> {
+    return;
+  }
+}

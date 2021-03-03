@@ -16,6 +16,7 @@ import * as electron from 'electron';
 import * as express from 'express';
 import {Credentials, OAuth2Client} from 'google-auth-library';
 import * as http from "http";
+import {AddressInfo} from "net";
 
 const REDIRECT_PORT = 18535;
 const REDIRECT_PATH = '/gcp/oauth/callback';
@@ -106,14 +107,15 @@ export function registerOAuthCallbackHandler(
 }
 
 export function runOauth(): OauthSession {
-  // Open browser to OAuth URL
-  const oAuthClient = createOAuthClient(REDIRECT_PORT);
-  const oAuthUrl = generateOAuthUrl(oAuthClient);
-  electron.shell.openExternal(oAuthUrl);
-
   // Start web server to handle OAuth callback
   const app = express();
-  const server = app.listen(REDIRECT_PORT);
+  const server = app.listen();
+  const port = (server.address() as AddressInfo).port;
+
+  // Open browser to OAuth URL
+  const oAuthClient = createOAuthClient(port);
+  const oAuthUrl = generateOAuthUrl(oAuthClient);
+  electron.shell.openExternal(oAuthUrl);
 
   const { promise: tokenPromise, promiseResolve, promiseReject } = customPromise<string>();
   registerOAuthCallbackHandler(app, server, oAuthClient, promiseResolve, promiseReject);
@@ -130,7 +132,6 @@ export function runOauth(): OauthSession {
       promiseReject(new Error('Authentication cancelled'));
     }
   };
-
 }
 
 function customPromise<T>() {

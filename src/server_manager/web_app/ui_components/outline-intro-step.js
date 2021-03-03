@@ -18,12 +18,13 @@ import '@polymer/polymer/polymer-legacy.js';
 import '@polymer/paper-button/paper-button.js';
 import './cloud-install-styles.js';
 import './outline-step-view.js';
-import './style.css';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 
-Polymer({
-  _template: html`
+import {html, PolymerElement} from '@polymer/polymer';
+import {makePublicEvent} from "../../infrastructure/dom_events";
+
+export class OutlineIntroStep extends PolymerElement {
+  static get template() {
+    return html`
     <style include="cloud-install-styles"></style>
     <style>
       :host {
@@ -179,7 +180,7 @@ Polymer({
       <span slot="step-description">[[localize('setup-description')]]</span>
 
       <div class="container">
-        <div id="digital-ocean" class="card" on-tap="connectToDigitalOceanTapped">
+        <div id="digital-ocean" class="card" on-tap="_connectToDigitalOceanTapped">
           <div class="card-header">
             <div class="tag" hidden\$="{{isSignedInToDigitalOcean}}">[[localize('setup-recommended')]]</div>
             <div class="email" hidden\$="{{!isSignedInToDigitalOcean}}">{{digitalOceanEmail}}</div>
@@ -205,27 +206,9 @@ Polymer({
           </div>
         </div>
 
-        <div id="gcp" class="card" on-tap="setUpGcpTapped">
-          <div class="card-header">
-            <div class="tag">[[localize('setup-advanced')]]</div>
-            <img src="images/gcp-logo.svg">
-          </div>
-          <div class="card-title">Google Cloud Platform</div>
-          <div class="card-body">
-            <div class="description">
-              <ul>
-                <li>[[localize('setup-step-by-step')]]</li>
-                <li>[[localize('setup-firewall-instructions')]]</li>
-                <li>[[localize('setup-simple-commands')]]</li>
-              </ul>
-            </div>
-          </div>
-          <div class="card-footer">
-            <paper-button on-tap="setUpGcpTapped" class="primary">[[localize('setup-action')]]</paper-button>
-          </div>
-        </div>
+        ${this.gcpCardTemplate}
 
-        <div id="aws" class="card" on-tap="setUpAwsTapped">
+        <div id="aws" class="card" on-tap="_setUpAwsTapped">
           <div class="card-header">
             <div class="tag">[[localize('setup-advanced')]]</div>
             <img src="images/aws-logo.svg">
@@ -241,11 +224,11 @@ Polymer({
             </div>
           </div>
           <div class="card-footer">
-            <paper-button on-tap="setUpAwsTapped" class="primary">[[localize('setup-action')]]</paper-button>
+            <paper-button on-tap="_setUpAwsTapped" class="primary">[[localize('setup-action')]]</paper-button>
           </div>
         </div>
 
-        <div id="manual-server" class="card" on-tap="setUpGenericCloudProviderTapped">
+        <div id="manual-server" class="card" on-tap="_setUpGenericCloudProviderTapped">
           <div class="card-header">
             <div class="tag">[[localize('setup-advanced')]]</div>
             <img src="images/cloud.svg">
@@ -260,49 +243,85 @@ Polymer({
             </div>
           </div>
           <div class="card-footer">
-            <paper-button on-tap="setUpGenericCloudProviderTapped">[[localize('setup-action')]]</paper-button>
+            <paper-button on-tap="_setUpGenericCloudProviderTapped">[[localize('setup-action')]]</paper-button>
           </div>
         </div>
       </div>
     </outline-step-view>
-`,
+    `;
+  }
 
-  is: 'outline-intro-step',
+  static get gcpCardTemplate() {
+    // TODO: Style GCP magic experience template.
+    return html`
+    <div id="gcp" class="card" on-tap="_setUpGcpTapped">
+      <div class="card-header">
+        <div class="tag">[[localize('setup-advanced')]]</div>
+        <img src="images/gcp-logo.svg">
+      </div>
+      <div class="card-title">Google Cloud Platform</div>
+      <div class="card-body">
+        <div class="description">
+          <ul>
+            <li>[[localize('setup-step-by-step')]]</li>
+            <li>[[localize('setup-firewall-instructions')]]</li>
+            <li>[[localize('setup-simple-commands')]]</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-footer">
+        <paper-button on-tap="_setUpGcpTapped" class="primary">[[localize('setup-action')]]</paper-button>
+      </div>
+    </div>
+    `;
+  }
 
-  properties: {
-    isSignedInToDigitalOcean: Boolean,
-    digitalOceanEmail: String,
-    gcpOauthEnabled: {
-      type: Boolean,
-      value: false,
-    },
-    localize: {
-      type: Function,
-      readonly: true,
-    },
-  },
+  static get is() {
+    return 'outline-intro-step';
+  }
 
-  connectToDigitalOceanTapped: function() {
+  static get properties() {
+    return {
+      isSignedInToDigitalOcean: Boolean,
+      digitalOceanEmail: String,
+      gcpAccountName: {
+        type: String,
+        value: null,
+      },
+      localize: {
+        type: Function,
+        readonly: true,
+      },
+    };
+  }
+
+  _connectToDigitalOceanTapped() {
     if (this.isSignedInToDigitalOcean) {
-      this.fire('CreateDigitalOceanServerRequested');
+      this.dispatchEvent(makePublicEvent('CreateDigitalOceanServerRequested'));
     } else {
-      this.fire('ConnectDigitalOceanAccountRequested');
-    }
-  },
-
-  setUpGenericCloudProviderTapped: function() {
-    this.fire('SetUpGenericCloudProviderRequested');
-  },
-
-  setUpAwsTapped: function() {
-    this.fire('SetUpAwsRequested');
-  },
-
-  setUpGcpTapped: function() {
-    if (this.gcpOauthEnabled) {
-      this.fire('ConnectGcpAccountRequested');
-    } else {
-      this.fire('SetUpGcpRequested');
+      this.dispatchEvent(makePublicEvent('ConnectDigitalOceanAccountRequested'));
     }
   }
-});
+
+  _setUpGenericCloudProviderTapped() {
+    this.dispatchEvent(makePublicEvent('SetUpGenericCloudProviderRequested'));
+  }
+
+  _setUpAwsTapped() {
+    this.dispatchEvent(makePublicEvent('SetUpAwsRequested'));
+  }
+
+  _setUpGcpTapped() {
+    if (outline.gcpAuthEnabled) {
+      if (this.gcpAccountName) {
+        this.dispatchEvent(makePublicEvent('CreateGcpServerRequested'));
+      } else {
+        this.dispatchEvent(makePublicEvent('ConnectGcpAccountRequested'));
+      }
+    } else {
+      this.dispatchEvent(makePublicEvent('SetUpGcpRequested'));
+    }
+  }
+}
+
+customElements.define(OutlineIntroStep.is, OutlineIntroStep);
