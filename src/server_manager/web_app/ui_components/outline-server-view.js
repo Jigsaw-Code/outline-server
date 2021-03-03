@@ -69,7 +69,7 @@ function compare(a, b) {
  * @prop {string} accessUrl
  * @prop {number} transferredBytes
  * @prop {number} relevantBandwidth The active limit on the key, or its total data transfer.
- * @prop {DisplayDataAmount=} dataLimit
+ * @prop {DisplayDataAmount=} dataLimit The data limit assigned to the key if it exists.
  */
 
 export class ServerView extends DirMixin(PolymerElement) {
@@ -235,7 +235,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         align-items: center;
       }
       .measurement-container paper-progress {
-        max-width: ${progressBarMaxWidthPx}px;
+        max-width: 72px;
         margin: 0 24px 0 12px;
         --paper-progress-height: 8px;
         --paper-progress-active-color: var(--primary-green);
@@ -752,10 +752,10 @@ export class ServerView extends DirMixin(PolymerElement) {
       newAccessKeyRow = Object.assign({}, this.get('myConnection'), fields);
       this.set('myConnection', newAccessKeyRow);
     }
-    for (let ui in this.accessKeyRows) {
-      if (this.accessKeyRows[ui].id === accessKeyId) {
-        newAccessKeyRow = Object.assign({}, this.get(['accessKeyRows', ui]), fields);
-        this.set(['accessKeyRows', ui], newAccessKeyRow);
+    for (let accessKeyRowIndex in this.accessKeyRows) {
+      if (this.accessKeyRows[accessKeyRowIndex].id === accessKeyId) {
+        newAccessKeyRow = Object.assign({}, this.get(['accessKeyRows', accessKeyRowIndex]), fields);
+        this.set(['accessKeyRows', accessKeyRowIndex], newAccessKeyRow);
         return;
       }
     }
@@ -903,21 +903,6 @@ export class ServerView extends DirMixin(PolymerElement) {
       return '';
     }
     return formatting.formatBytesParts(totalBytes, language).value;
-  }
-
-  updateAccessKeyRow(accessKeyId, fields) {
-    let newAccessKeyRow;
-    if (accessKeyId === MY_CONNECTION_USER_ID) {
-      newAccessKeyRow = Object.assign({}, this.get('myConnection'), fields);
-      this.set('myConnection', newAccessKeyRow);
-    }
-    for (let accessKeyRowIndex in this.accessKeyRows) {
-      if (this.accessKeyRows[accessKeyRowIndex].id === accessKeyId) {
-        newAccessKeyRow = Object.assign({}, this.get(['accessKeyRows', accessKeyRowIndex]), fields);
-        this.set(['accessKeyRows', accessKeyRowIndex], newAccessKeyRow);
-        return;
-      }
-    }
   }
 
   _formatBytesTransferred(numBytes, language, emptyValue = '') {

@@ -679,9 +679,6 @@ export class App {
     view.showFeatureMetricsDisclaimer = server.getMetricsEnabled() &&
         !server.getDefaultDataLimit() && !hasSeenFeatureMetricsNotification();
 
-    // TODOBEFOREPUSH Actually compute this
-    view.baselineDataTransfer = 4;
-
     if (version) {
       view.isAccessKeyPortEditable = semver.gte(version, CHANGE_KEYS_PORT_VERSION);
       view.supportsDefaultDataLimit = semver.gte(version, DATA_LIMITS_VERSION);
@@ -773,8 +770,6 @@ export class App {
     }
   }
 
-  // TODO(JonathanDCohen) This function violates layering by reading from the UI instead of from the
-  // model.  This needs to be rewritten to rebuild the access key rows from the model.
   private async refreshTransferStats(selectedServer: server.Server, serverView: ServerView) {
     try {
       const usageMap = await selectedServer.getDataUsage();
@@ -784,29 +779,25 @@ export class App {
       }
       serverView.totalInboundBytes = totalInboundBytes;
 
-      // Update all the displayed access keys, even if usage didn't change, in case the data limit
-      // did.
+      // Update all the displayed access keys, even if usage didn't change, in case data limits did.
       const defaultDataLimit = selectedServer.getDefaultDataLimit();
-      for (let accessKeyRow of serverView.accessKeyRows) {
-        // Use the admin key, which is separate in the UI.  We don't display the first admin key
-        // row, which represents the same access key.
-        accessKeyRow =
-            accessKeyRow.id === MY_CONNECTION_USER_ID ? serverView.myConnection : accessKeyRow;
-        const accessKeyId = accessKeyRow.id;
-        const activeDataLimit =
-            displayDataAmountToDataLimit(accessKeyRow.dataLimit) || defaultDataLimit;
-        const maxBytes = activeDataLimit?.bytes || totalInboundBytes;
-
-        const transferredBytes = usageMap.get(accessKeyId) ?? 0;
-        let relativeTraffic =
-            maxBytes ? 100 * transferredBytes / maxBytes : (activeDataLimit ? 100 : 0);
-        if (relativeTraffic > 100) {
-          // Can happen when a data limit is set on an access key that already exceeds it.
-          relativeTraffic = 100;
-        }
-        // TODOBEFORESQUASH actually calculate these
-        serverView.updateAccessKeyRow(accessKeyId, {transferredBytes: 1, relevantBandwidth: 2});
+      const keys = await selectedServer.listAccessKeys();
+      for (const key of keys) {
+        const transferredBytes = usageMap.get(key.id) ?? 0;
+        const activeLimit = key.dataLimit || defaultDataLimit;
+        const relevantBandwidth = activeLimit?.bytes ?? transferredBytes;
+        serverView.updateAccessKeyRow(key.id, {
+          transferredBytes,
+          relevantBandwidth,
+          dataLimit: dataLimitToDisplayDataAmount(activeLimit)
+        });
       }
+      const keyTransferMax = Math.max(0, ...usageMap.values());
+      // Use a default value for each entry, as any `undefined` will force Math.max to return NaN.
+      const dataLimitMax = Math.max(
+          ...keys.map((k: server.AccessKey) => k.dataLimit?.bytes || 0),
+          defaultDataLimit?.bytes || 0);
+      serverView.baselineDataTransfer = Math.max(keyTransferMax, dataLimitMax);
     } catch (e) {
       // Since failures are invisible to users we generally want exceptions here to bubble
       // up and trigger a Sentry report. The exception is network errors, about which we can't
@@ -929,11 +920,6 @@ export class App {
       if (dialog.dataLimitChanged()) {
         const dataLimit = dialog.inputDataLimit();
         await server.setAccessKeyDataLimit(keyId, displayDataAmountToDataLimit(dataLimit));
-        const displayKey = serverView.findUiKey(keyId);
-        // TODO(JonathanDCohen) Note here that we have to display the displayed data limit first
-        // becuase refreshTransferStats reads from the UI.  This could cause a UI bug if
-        // refreshTransferStats fails
-        displayKey.dataLimit = dataLimit;
         this.refreshTransferStats(server, serverView);
       }
       dialog.close();
@@ -953,11 +939,6 @@ export class App {
     try {
       if (dialog.dataLimitChanged()) {
         await server.removeAccessKeyDataLimit(keyId);
-        const displayKey = serverView.findUiKey(keyId);
-        // TODO(JonathanDCohen) Note here that we have to display the displayed data limit first
-        // becuase refreshTransferStats reads from the UI.  This could cause a UI bug if
-        // refreshTransferStats fails
-        delete displayKey.dataLimit;
         this.refreshTransferStats(server, serverView);
       }
       dialog.close();
