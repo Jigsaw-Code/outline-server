@@ -270,10 +270,7 @@ Polymer({
   is: 'outline-intro-step',
 
   properties: {
-    digitalOceanAccountName: {
-      type: String,
-      value: null,
-    },
+    digitalOceanAccountName: String,
     isDigitalOceanAccountConnected: {
       type: Boolean,
       computed: '_computeIsDigitalOceanAccountConnected(digitalOceanAccountName)',
