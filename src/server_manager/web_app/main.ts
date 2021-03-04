@@ -14,7 +14,6 @@
 
 import './ui_components/app-root.js';
 
-import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as i18n from '../infrastructure/i18n';
 
 import {App} from './app';
@@ -108,12 +107,11 @@ document.addEventListener('WebComponentsReady', () => {
   };
 
   // Set DigitalOcean server repository parameters.
-  const digitalOceanAccountFactory = (accessToken: string) => {
-    const session = new digitalocean_api.RestApiSession(accessToken);
-    return new DigitalOceanAccount(session, shadowboxSettings, debugMode);
-  };
-  const gcpAccountFactory = (refreshToken: string) => new GcpAccount();
+  const digitalOceanAccountFactory = (accessToken: string) =>
+    new DigitalOceanAccount(accessToken, shadowboxSettings, debugMode);
+  const gcpAccountFactory = (refreshToken: string) => new GcpAccount(refreshToken);
   const cloudAccounts = new CloudAccounts(digitalOceanAccountFactory, gcpAccountFactory);
+  cloudAccounts.load();
 
   // Create and start the app.
   const language = getLanguageToUse();

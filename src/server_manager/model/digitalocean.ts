@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as account from './account';
 import {ManagedServer, RegionId} from "./server";
 
 // Keys are cityIds like "nyc".  Values are regions like ["nyc1", "nyc3"].
@@ -26,7 +25,9 @@ export enum Status {
   MISSING_BILLING_INFORMATION,
 }
 
-export interface Account extends account.Account {
+export interface Account {
+  // Returns a user-friendly name (email address) associated with the account.
+  getName(): Promise<string>;
   // Returns the status of the account.
   getStatus(): Promise<Status>;
   // Lists all existing Shadowboxes. If `fetchFromHost` is true, performs a network request to

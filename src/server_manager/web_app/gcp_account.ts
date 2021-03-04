@@ -12,15 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as gcp from "../model/gcp";
-import {CloudId} from "../model/account";
+import * as gcp from '../model/gcp';
 
 export class GcpAccount implements gcp.Account {
+  constructor(private refreshToken: string) { }
+
   async getName(): Promise<string> {
-    return;
+    return 'placeholder';
   }
 
-  getCloudId(): CloudId {
-    return CloudId.GCP;
+  getRefreshToken(): string {
+    return this.refreshToken;
   }
 }

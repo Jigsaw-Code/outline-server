@@ -14,24 +14,15 @@
 
 import * as electron from 'electron';
 import * as express from 'express';
-import {Credentials, OAuth2Client} from 'google-auth-library';
-import * as http from "http";
+import {OAuth2Client} from 'google-auth-library';
 import {AddressInfo} from 'net';
 
-const REDIRECT_PORT = 18535;
 const REDIRECT_PATH = '/gcp/oauth/callback';
 
 const OAUTH_CONFIG = {
-  // To setup GCP OAuth login:
-  // * Create a GCP project for the application.
-  // * Enable the Compute Engine API.
-  // * Enable the Cloud Resource Manager API.
-  // * Add the scopes below to the consent screen.
-  // * Create OAuth 2.0 client ID (and secret).
-  // * Fill in the missing config values below.
+  // TODO: Create GCP project under firehook-products
   project_id: 'mpmcroy-server-provisioner',
   client_id: '276807089705-e6sk8e96a2kbuilgnehfaag75ab2aom3.apps.googleusercontent.com',
-  client_secret: null as string,
   scopes: [
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/cloud-platform',
@@ -40,11 +31,11 @@ const OAUTH_CONFIG = {
   ],
 };
 
-export function createOAuthClient(port = REDIRECT_PORT, path = REDIRECT_PATH): OAuth2Client {
+export function createOAuthClient(port: number, path: string): OAuth2Client {
   const redirectUrl = `http://localhost:${port}${path}`;
   return new OAuth2Client(
       OAUTH_CONFIG.client_id,
-      OAUTH_CONFIG.client_secret,
+      null,
       redirectUrl,
   );
 }
@@ -57,53 +48,14 @@ export function generateOAuthUrl(client: OAuth2Client): string {
 }
 
 export function responseHtml(messageHtml: string): string {
-  return `<html><script>window.close()</script><body>${messageHtml} You can close this window.</body></html>`;
+  return `<html><script>window.close()</script><body>${messageHtml}. You can close this window.</body></html>`;
 }
 
-export async function getUserId(credentials: Credentials): Promise<string> {
-  const loginTicket = await createOAuthClient().verifyIdToken({
-    idToken: credentials.id_token,
-  });
-  console.log(loginTicket);
-  return loginTicket.getUserId();
-}
-
-export async function refreshCredentials(credentials: Credentials): Promise<Credentials> {
-  const oauth2Client = createOAuthClient();
-  oauth2Client.setCredentials(credentials);
-  return (await oauth2Client.refreshAccessToken()).credentials;
-}
-
-export async function revokeCredentials(credentials: Credentials): Promise<void> {
-  const oauth2Client = createOAuthClient();
-  oauth2Client.setCredentials(credentials);
-  await oauth2Client.revokeCredentials();
-}
-
-export function registerOAuthCallbackHandler(
-    app: express.Application, server: http.Server, oAuthClient: OAuth2Client,
-    promiseResolve: (value: unknown) => void, promiseReject: (reason?: unknown) => void): void {
-  app.get(REDIRECT_PATH, async (request: express.Request, response: express.Response) => {
-    if (request.query.error) {
-      response.send(responseHtml('Authentication failed'));
-      promiseReject();
-    } else {
-      try {
-        const tokenResponse = await oAuthClient.getToken(request.query.code as string);
-        if (tokenResponse.res.status / 100 === 2) {
-          response.send(responseHtml('Authentication successful.'));
-          promiseResolve(tokenResponse.tokens.refresh_token!);
-        } else {
-          response.send(responseHtml('Authentication failed'));
-          promiseReject();
-        }
-      } catch (error) {
-        response.send(responseHtml('Authentication failed'));
-        promiseReject();
-      }
-    }
-    server.close();
-  });
+async function verifyGrantedScopes(oAuthClient: OAuth2Client, accessToken: string): Promise<boolean> {
+  const getTokenInfoResponse = await oAuthClient.getTokenInfo(accessToken);
+  return OAUTH_CONFIG.scopes.every(
+      (requiredScope) => getTokenInfoResponse.scopes.find(
+          (grantedScope: string) => grantedScope === requiredScope));
 }
 
 export function runOauth(): OauthSession {
@@ -113,33 +65,64 @@ export function runOauth(): OauthSession {
   const port = (server.address() as AddressInfo).port;
 
   // Open browser to OAuth URL
-  const oAuthClient = createOAuthClient(port);
+  const oAuthClient = createOAuthClient(port, REDIRECT_PATH);
   const oAuthUrl = generateOAuthUrl(oAuthClient);
   electron.shell.openExternal(oAuthUrl);
 
-  const { promise: tokenPromise, promiseResolve, promiseReject } = customPromise<string>();
-  registerOAuthCallbackHandler(app, server, oAuthClient, promiseResolve, promiseReject);
+  // Handle OAuth redirect callback
+  let isCancelled = false;
+  const rejectWrapper = {reject: (error: Error) => {}};
+  const tokenPromise = new Promise<string>((resolve, reject) => {
+    rejectWrapper.reject = reject;
+    app.get(REDIRECT_PATH, async (request: express.Request, response: express.Response) => {
+      if (request.query.error) {
+        if (request.query.error === 'access_denied') {
+          isCancelled = true;
+          response.send(responseHtml('Authentication cancelled'));
+          reject(new Error('Authentication cancelled'));
+        } else {
+          response.send(responseHtml('Authentication failed'));
+          reject(new Error(`Authentication failed with error: ${request.query.error}`));
+        }
+      } else {
+        try {
+          const getTokenResponse = await oAuthClient.getToken(request.query.code as string);
+          if (getTokenResponse.res.status / 100 === 2) {
+            const scopesValid = await verifyGrantedScopes(oAuthClient, getTokenResponse.tokens.access_token);
+            if (!scopesValid) {
+              console.error('Authentication failed with missing scope(s). Granted: ', getTokenResponse.tokens.scope);
+              response.send(responseHtml('Authentication failed with missing scope(s)'));
+              reject(new Error('Authentication failed with missing scope(s)'));
+            } else if (!getTokenResponse.tokens.refresh_token) {
+              response.send(responseHtml('Authentication failed'));
+              reject(new Error('Authentication failed: Missing refresh token'));
+            } else {
+              response.send(responseHtml('Authentication successful'));
+              resolve(getTokenResponse.tokens.refresh_token);
+            }
+          } else {
+            response.send(responseHtml('Authentication failed'));
+            reject(new Error(`Authentication failed with HTTP status code: ${getTokenResponse.res.status}`));
+          }
+        } catch (error) {
+          response.send(responseHtml('Authentication failed'));
+          reject(new Error(`Authentication failed with error: ${request.query.error}`));
+        }
+      }
+      server.close();
+    });
+  });
 
   return {
     result: tokenPromise,
     isCancelled() {
-      return false;
+      return isCancelled;
     },
     cancel() {
       console.log('Session cancelled');
-      // isCancelled = true;
+      isCancelled = true;
       server.close();
-      promiseReject(new Error('Authentication cancelled'));
+      rejectWrapper.reject(new Error('Authentication cancelled'));
     }
   };
-}
-
-function customPromise<T>() {
-  let promiseResolve: (value: unknown) => void = null;
-  let promiseReject: (reason?: unknown) => void = null;
-  const promise = new Promise<T>((resolve, reject) => {
-    promiseResolve = resolve;
-    promiseReject = reject;
-  });
-  return { promise, promiseResolve, promiseReject };
 }

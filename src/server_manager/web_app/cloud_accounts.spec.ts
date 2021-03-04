@@ -12,14 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export enum CloudId {
-  DigitalOcean = 'digitalocean',
-  GCP = 'gcp',
-}
+import {CloudAccounts} from "./cloud_accounts";
+import {InMemoryStorage} from "../infrastructure/memory_storage";
 
-export interface Account {
-  // Returns a user-friendly name associated with the account.
-  getName(): Promise<string>;
-  // Returns an ID identifying the cloud provider.
-  getCloudId(): CloudId;
-}
+describe('CloudAccounts', () => {
+  it('get account methods return null when no cloud accounts are connected', async () => {
+    const cloudAccounts = new CloudAccounts(null, null, new InMemoryStorage());
+    expect(cloudAccounts.getDigitalOceanAccount()).toBeNull();
+    expect(cloudAccounts.getGcpAccount()).toBeNull();
+  });
+
+  // TODO: Add tests for remaining methods in the public interface
+
+  // TODO: Add tests for LastDOToken migration
+});

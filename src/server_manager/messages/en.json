@@ -40,6 +40,7 @@
   "error-do-account-info": "Failed to get DigitalOcean account information",
   "error-do-auth": "Authentication with DigitalOcean failed",
   "error-do-regions": "Failed to get list of available regions",
+  "error-gcp-auth": "Authentication with Google Cloud Platform failed",
   "error-feedback": "Failed to submit feedback. Please try again.",
   "error-hostname-invalid": "Must be an IP address or valid hostname.",
   "error-key-add": "Failed to add key",
