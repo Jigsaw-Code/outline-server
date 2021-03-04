@@ -21,7 +21,7 @@ export class CloudAccounts {
 
   constructor(
       private digitalOceanAccountFactory: DigitalOceanAccountFactory,
-      private storage = localStorage) { }
+      private storage = localStorage) {}
 
   connectDigitalOceanAccount(accessToken: string): digitalocean.Account {
     this.storage.setItem(this.DIGITALOCEAN_TOKEN_STORAGE_KEY, accessToken);

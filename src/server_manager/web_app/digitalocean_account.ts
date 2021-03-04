@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DigitalOceanSession, DropletInfo} from "../cloud/digitalocean_api";
-import {DigitalOceanServer, GetCityId} from "./digitalocean_server";
-import * as server from "../model/server";
-import * as crypto from "../infrastructure/crypto";
-import * as digitalocean from "../model/digitalocean";
-import * as do_install_script from "../install_scripts/do_install_script";
+import {DigitalOceanSession, DropletInfo} from '../cloud/digitalocean_api';
+import * as crypto from '../infrastructure/crypto';
+import * as do_install_script from '../install_scripts/do_install_script';
+import * as digitalocean from '../model/digitalocean';
+import * as server from '../model/server';
+
+import {DigitalOceanServer, GetCityId} from './digitalocean_server';
 
 // Tag used to mark Shadowbox Droplets.
 const SHADOWBOX_TAG = 'shadowbox';
@@ -84,19 +85,19 @@ export class DigitalOceanAccount implements digitalocean.Account {
       tags: [SHADOWBOX_TAG],
     };
     return onceKeyPair
-    .then((keyPair) => {
-      if (this.debugMode) {
-        // Strip carriage returns, which produce weird blank lines when pasted into a terminal.
-        console.debug(
-            `private key for SSH access to new droplet:\n${
-                keyPair.private.replace(/\r/g, '')}\n\n` +
-            'Use "ssh -i keyfile root@[ip_address]" to connect to the machine');
-      }
-      return this.digitalOcean.createDroplet(name, region, keyPair.public, dropletSpec);
-    })
-    .then((response) => {
-      return this.createDigitalOceanServer(this.digitalOcean, response.droplet);
-    });
+        .then((keyPair) => {
+          if (this.debugMode) {
+            // Strip carriage returns, which produce weird blank lines when pasted into a terminal.
+            console.debug(
+                `private key for SSH access to new droplet:\n${
+                    keyPair.private.replace(/\r/g, '')}\n\n` +
+                'Use "ssh -i keyfile root@[ip_address]" to connect to the machine');
+          }
+          return this.digitalOcean.createDroplet(name, region, keyPair.public, dropletSpec);
+        })
+        .then((response) => {
+          return this.createDigitalOceanServer(this.digitalOcean, response.droplet);
+        });
   }
 
   listServers(fetchFromHost = true): Promise<server.ManagedServer[]> {
@@ -137,12 +138,12 @@ function getInstallScript(
       `export DO_ACCESS_TOKEN=${sanitizedAccessToken}\n` +
       (shadowboxSettings.imageId ? `export SB_IMAGE=${shadowboxSettings.imageId}\n` : '') +
       (shadowboxSettings.watchtowerRefreshSeconds ?
-          `export WATCHTOWER_REFRESH_SECONDS=${shadowboxSettings.watchtowerRefreshSeconds}\n` :
-          '') +
+           `export WATCHTOWER_REFRESH_SECONDS=${shadowboxSettings.watchtowerRefreshSeconds}\n` :
+           '') +
       (shadowboxSettings.sentryApiUrl ?
-          `export SENTRY_API_URL="${shadowboxSettings.sentryApiUrl}"\n` :
-          '') +
+           `export SENTRY_API_URL="${shadowboxSettings.sentryApiUrl}"\n` :
+           '') +
       (shadowboxSettings.metricsUrl ? `export SB_METRICS_URL=${shadowboxSettings.metricsUrl}\n` :
-          '') +
+                                      '') +
       `export SB_DEFAULT_SERVER_NAME="${name}"\n` + do_install_script.SCRIPT;
 }

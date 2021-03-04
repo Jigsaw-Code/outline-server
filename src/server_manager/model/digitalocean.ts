@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {ManagedServer, RegionId} from "./server";
+import {ManagedServer, RegionId} from './server';
 
 // Keys are cityIds like "nyc".  Values are regions like ["nyc1", "nyc3"].
 export type RegionMap = {

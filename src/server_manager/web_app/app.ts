@@ -18,11 +18,11 @@ import * as semver from 'semver';
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
-import * as server from '../model/server';
 import * as digitalocean from '../model/digitalocean';
+import * as server from '../model/server';
 
-import {bytesToDisplayDataAmount, DisplayDataAmount, displayDataAmountToBytes,} from './data_formatting';
 import {CloudAccounts} from './cloud_accounts';
+import {bytesToDisplayDataAmount, DisplayDataAmount, displayDataAmountToBytes,} from './data_formatting';
 import * as digitalocean_server from './digitalocean_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';

@@ -145,7 +145,8 @@ function createTestApp(
     manualServerRepo?: server.ManualServerRepository) {
   const VERSION = '0.0.1';
   if (!cloudAccounts) {
-    cloudAccounts = new CloudAccounts((token: string) => new FakeDigitalOceanAccount(), new InMemoryStorage());
+    cloudAccounts =
+        new CloudAccounts((token: string) => new FakeDigitalOceanAccount(), new InMemoryStorage());
   }
   if (!manualServerRepo) {
     manualServerRepo = new FakeManualServerRepository();
