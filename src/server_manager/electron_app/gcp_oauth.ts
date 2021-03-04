@@ -65,7 +65,7 @@ export function runOauth(): OauthSession {
       `http://localhost:${port}${REDIRECT_PATH}`,
   );
   const oAuthUrl = oAuthClient.generateAuthUrl({
-    access_type: "offline",
+    access_type: 'offline',
     scope: OAUTH_CONFIG.scopes,
   });
   electron.shell.openExternal(oAuthUrl);
