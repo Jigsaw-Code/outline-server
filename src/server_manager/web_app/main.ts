@@ -18,10 +18,10 @@ import * as i18n from '../infrastructure/i18n';
 
 import {App} from './app';
 import {CloudAccounts} from './cloud_accounts';
+import {DigitalOceanAccount} from './digitalocean_account';
+import {GcpAccount} from './gcp_account';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
-import {DigitalOceanAccount} from "./digitalocean_account";
-import {GcpAccount} from "./gcp_account";
 
 type LanguageDef = {
   id: string,
@@ -109,10 +109,13 @@ document.addEventListener('WebComponentsReady', () => {
   // Set DigitalOcean server repository parameters.
   const digitalOceanAccountFactory = (accessToken: string) =>
       new DigitalOceanAccount(accessToken, shadowboxSettings, debugMode);
-  const digitalOceanAccountCredentialsGetter = (account: DigitalOceanAccount) => account.getAccessToken();
+  const digitalOceanAccountCredentialsGetter = (account: DigitalOceanAccount) =>
+      account.getAccessToken();
   const gcpAccountFactory = (refreshToken: string) => new GcpAccount(refreshToken);
   const gcpAccountCredentialsGetter = (account: GcpAccount) => account.getRefreshToken();
-  const cloudAccounts = new CloudAccounts(digitalOceanAccountFactory, digitalOceanAccountCredentialsGetter, gcpAccountFactory, gcpAccountCredentialsGetter);
+  const cloudAccounts = new CloudAccounts(
+      digitalOceanAccountFactory, digitalOceanAccountCredentialsGetter, gcpAccountFactory,
+      gcpAccountCredentialsGetter);
   cloudAccounts.load();
 
   // Create and start the app.

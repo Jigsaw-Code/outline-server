@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as digitalocean from "../../model/digitalocean";
-import * as server from "../../model/server";
-import * as gcp from "../../model/gcp";
+import * as digitalocean from '../../model/digitalocean';
+import * as gcp from '../../model/gcp';
+import * as server from '../../model/server';
 
 export class FakeDigitalOceanAccount implements digitalocean.Account {
   private servers: server.ManagedServer[] = [];
 
-  constructor(private accessToken = 'fake-access-token') { }
+  constructor(private accessToken = 'fake-access-token') {}
 
   async getName(): Promise<string> {
     return 'fake-digitalocean-account-name';
@@ -44,7 +44,7 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
 }
 
 export class FakeGcpAccount implements gcp.Account {
-  constructor(private refreshToken = 'fake-access-token') { }
+  constructor(private refreshToken = 'fake-access-token') {}
 
   async getName(): Promise<string> {
     return 'fake-gcp-account-name';

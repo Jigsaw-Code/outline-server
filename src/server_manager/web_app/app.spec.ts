@@ -19,8 +19,9 @@ import * as server from '../model/server';
 
 import {App, LAST_DISPLAYED_SERVER_STORAGE_KEY} from './app';
 import {CloudAccounts} from './cloud_accounts';
+import {FakeDigitalOceanAccount, FakeGcpAccount, FakeManualServerRepository} from './testing/models';
 import {AppRoot} from './ui_components/app-root';
-import {FakeDigitalOceanAccount, FakeGcpAccount, FakeManualServerRepository} from "./testing/models";
+
 
 // Define functions from preload.ts.
 // tslint:disable-next-line:no-any
@@ -137,8 +138,7 @@ function makeCloudAccountsWithDoAccount(fakeAccount: FakeDigitalOceanAccount) {
       (accessToken: string) => fakeAccount,
       (account: FakeDigitalOceanAccount) => account.getAccessToken(),
       (refreshToken: string) => new FakeGcpAccount(),
-      (account: FakeGcpAccount) => account.getRefreshToken(),
-      new InMemoryStorage());
+      (account: FakeGcpAccount) => account.getRefreshToken(), new InMemoryStorage());
   cloudAccounts.connectDigitalOceanAccount('fake-access-token');
   return cloudAccounts;
 }
@@ -152,8 +152,7 @@ function createTestApp(
         (accessToken: string) => new FakeDigitalOceanAccount(),
         (account: FakeDigitalOceanAccount) => account.getAccessToken(),
         (refreshToken: string) => new FakeGcpAccount(),
-        (account: FakeGcpAccount) => account.getRefreshToken(),
-        new InMemoryStorage());
+        (account: FakeGcpAccount) => account.getRefreshToken(), new InMemoryStorage());
   }
   if (!manualServerRepo) {
     manualServerRepo = new FakeManualServerRepository();
