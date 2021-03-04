@@ -345,14 +345,14 @@ export class AppRoot extends mixinBehaviors
           <!-- Servers section -->
           <div class="servers">
             <!-- DigitalOcean servers -->
-            <div class="servers-section" hidden\$="{{!isSignedInToDigitalOcean}}">
+            <div class="servers-section" hidden\$="{{!isDigitalOceanAccountConnected}}">
               <div class="servers-header">
                 <span>[[localize('servers-digitalocean')]]</span>
                 <paper-menu-button horizontal-align="left" class="" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
                   <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
                   <div class="do-overflow-menu" slot="dropdown-content">
                     <h4>[[localize('digitalocean-disconnect-account')]]</h4>
-                    <div class="account-info"><img src="images/digital_ocean_logo.svg">{{adminEmail}}</div>
+                    <div class="account-info"><img src="images/digital_ocean_logo.svg">{{digitalOceanAccountName}}</div>
                     <div class="sign-out-button" on-tap="signOutTapped">[[localize('digitalocean-disconnect')]]</div>
                   </div>
                 </paper-menu-button>
@@ -412,7 +412,7 @@ export class AppRoot extends mixinBehaviors
         <app-header-layout>
           <div class="app-container">
             <iron-pages attr-for-selected="id" selected="{{ currentPage }}">
-              <outline-intro-step id="intro" is-signed-in-to-digital-ocean="{{isSignedInToDigitalOcean}}" digital-ocean-email="{{adminEmail}}" localize="[[localize]]"></outline-intro-step>
+              <outline-intro-step id="intro" digital-ocean-account-name="{{digitalOceanAccountName}}" localize="[[localize]]"></outline-intro-step>
               <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
               <outline-region-picker-step id="regionPicker" localize="[[localize]]"></outline-region-picker-step>
@@ -434,7 +434,7 @@ export class AppRoot extends mixinBehaviors
           </div>
           <div class="servers">
             <!-- DigitalOcean servers -->
-            <div class="side-bar-section servers-section" hidden\$="{{!isSignedInToDigitalOcean}}">
+            <div class="side-bar-section servers-section" hidden\$="{{!isDigitalOceanAccountConnected}}">
               <img class="provider-icon" src="images/do_white_logo.svg">
               <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
                 <div class\$="server {{_computeServerClasses(selectedServerId, server)}}" data-server\$="[[server]]" on-tap="_showServer">
@@ -508,10 +508,10 @@ export class AppRoot extends mixinBehaviors
         type: Boolean,
         computed: '_computeHasManualServers(serverList.*)',
       },
-      adminEmail: {type: String},
-      isSignedInToDigitalOcean: {
+      digitalOceanAccountName: {type: String},
+      isDigitalOceanAccountConnected: {
         type: Boolean,
-        computed: '_computeIsSignedInToDigitalOcean(adminEmail)',
+        computed: '_computeIsDigitalOceanAccountConnected(digitalOceanAccountName)',
       },
       outlineVersion: String,
       userAcceptedTos: {
@@ -541,7 +541,7 @@ export class AppRoot extends mixinBehaviors
     this.useKeyIfMissing = true;
     /** @type {ServerListEntry[]} */
     this.serverList = [];
-    this.adminEmail = '';
+    this.digitalOceanAccountName = '';
     this.outlineVersion = '';
     this.currentPage = 'intro';
     this.shouldShowSideBar = false;
@@ -748,8 +748,9 @@ export class AppRoot extends mixinBehaviors
           }
         });
   }
-  _computeIsSignedInToDigitalOcean(adminEmail) {
-    return Boolean(adminEmail);
+
+  _computeIsDigitalOceanAccountConnected(digitalOceanAccountName) {
+    return Boolean(digitalOceanAccountName);
   }
 
   _computeHasManualServers(serverList) {
