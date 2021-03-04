@@ -89,10 +89,6 @@ export class TestApp extends LitElement {
     return this.shadowRoot.querySelector(querySelector);
   }
 
-  private runGcpOAuth(): void {
-    window.open('/gcp/oauth');
-  }
-
   render() {
     return html`
       <h1>Outline Manager Components Gallery</h1>
@@ -112,7 +108,6 @@ export class TestApp extends LitElement {
       
       <div class="widget">
         <h2>outline-gcp-oauth-step</h2>
-        <button @tap=${() => this.runGcpOAuth()}>Connect</button>
         <outline-gcp-oauth-step .localize=${this.localize} dir=${this.dir}></outline-gcp-oauth-step>
       </div>
 
