@@ -848,10 +848,12 @@ export class ServerView extends DirMixin(PolymerElement) {
   _handleShowPerKeyDataLimitDialogPressed(event) {
     // TODO(cohenjon) change to optional chaining when we upgrade to Electron > >= 8
     const accessKey = (event.model && event.model.item) || this.myConnection;
+    const keyName = accessKey === this.myConnection ? this.localize('server-my-access-key') :
+                                                      accessKey.name || accessKey.placeholderName;
     const defaultDataLimit = this.defaultDataLimit;
     const serverId = this.serverId;
     this.dispatchEvent(makePublicEvent(
-        'OpenPerKeyDataLimitDialogRequested', {accessKey, defaultDataLimit, serverId}));
+        'OpenPerKeyDataLimitDialogRequested', {accessKey, keyName, defaultDataLimit, serverId}));
   }
 
   _handleRenameAccessKeyPressed(event) {

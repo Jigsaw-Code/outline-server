@@ -27,7 +27,7 @@ import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {OutlinePerKeyDataLimitDialog} from './ui_components/outline-per-key-data-limit-dialog.js';
 import {Location} from './ui_components/outline-region-picker-step';
-import {DisplayAccessKey, MY_CONNECTION_USER_ID, ServerView} from './ui_components/outline-server-view';
+import {DisplayAccessKey, ServerView} from './ui_components/outline-server-view';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -180,7 +180,8 @@ export class App {
 
     appRoot.addEventListener('OpenPerKeyDataLimitDialogRequested', (event: CustomEvent) => {
       appRoot.openPerKeyDataLimitDialog(
-          event.detail.accessKey, event.detail.serverId, event.detail.defaultDataLimit);
+          event.detail.accessKey, event.detail.keyName, event.detail.serverId,
+          event.detail.defaultDataLimit);
     });
 
     appRoot.addEventListener('RenameAccessKeyRequested', (event: CustomEvent) => {
@@ -833,13 +834,10 @@ export class App {
 
   // Converts the access key model to the format used by outline-server-view.
   private convertToUiAccessKey(remoteAccessKey: server.AccessKey): DisplayAccessKey {
-    const name = remoteAccessKey.id === MY_CONNECTION_USER_ID ?
-        this.appRoot.localize('server-my-access-key') :
-        remoteAccessKey.name;
     return {
       id: remoteAccessKey.id,
-      placeholderName: `${this.appRoot.localize('key', 'keyId', remoteAccessKey.id)}`,
-      name,
+      placeholderName: this.appRoot.localize('key', 'keyId', remoteAccessKey.id),
+      name: remoteAccessKey.name,
       accessUrl: remoteAccessKey.accessUrl,
       transferredBytes: 0,
       relevantBandwidth: 2,
