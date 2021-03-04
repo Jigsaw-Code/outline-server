@@ -17,8 +17,6 @@ import * as express from 'express';
 import {OAuth2Client} from 'google-auth-library';
 import {AddressInfo} from 'net';
 
-const REDIRECT_PATH = '/gcp/oauth/callback';
-
 const OAUTH_CONFIG = {
   // TODO: Create GCP project under firehook-products
   project_id: 'mpmcroy-server-provisioner',
@@ -30,28 +28,22 @@ const OAUTH_CONFIG = {
     'https://www.googleapis.com/auth/devstorage.full_control',
   ],
 };
+const REDIRECT_PATH = '/gcp/oauth/callback';
 
-export function createOAuthClient(port: number, path: string): OAuth2Client {
-  const redirectUrl = `http://localhost:${port}${path}`;
-  return new OAuth2Client(
-      OAUTH_CONFIG.client_id,
-      null,
-      redirectUrl,
-  );
-}
-
-export function generateOAuthUrl(client: OAuth2Client): string {
-  return client.generateAuthUrl({
-    access_type: "offline",
-    scope: OAUTH_CONFIG.scopes,
-  });
-}
-
-export function responseHtml(messageHtml: string): string {
+function responseHtml(messageHtml: string): string {
   return `<html><script>window.close()</script><body>${
       messageHtml}. You can close this window.</body></html>`;
 }
 
+/**
+ * Verifies that the access token has the required scopes.
+ *
+ * The access token may have missing scopes if the user denies access to any
+ * scopes in the OAuth flow.
+ *
+ * @param oAuthClient: The GCP OAuth 2.0 client.
+ * @param accessToken: The granted access token.
+ */
 async function verifyGrantedScopes(
     oAuthClient: OAuth2Client, accessToken: string): Promise<boolean> {
   const getTokenInfoResponse = await oAuthClient.getTokenInfo(accessToken);
@@ -67,8 +59,15 @@ export function runOauth(): OauthSession {
   const port = (server.address() as AddressInfo).port;
 
   // Open browser to OAuth URL
-  const oAuthClient = createOAuthClient(port, REDIRECT_PATH);
-  const oAuthUrl = generateOAuthUrl(oAuthClient);
+  const oAuthClient = new OAuth2Client(
+      OAUTH_CONFIG.client_id,
+      null,
+      `http://localhost:${port}${REDIRECT_PATH}`,
+  );
+  const oAuthUrl = oAuthClient.generateAuthUrl({
+    access_type: "offline",
+    scope: OAUTH_CONFIG.scopes,
+  });
   electron.shell.openExternal(oAuthUrl);
 
   // Handle OAuth redirect callback
