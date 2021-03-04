@@ -299,9 +299,6 @@ Polymer({
   },
 
   setUpGcpTapped: function() {
-    console.log(`this.gcpAccountName: ${this.gcpAccountName}`);
-    console.log('this.gcpAccountName', this.gcpAccountName);
-
     if (outline.gcpAuthEnabled) {
       if (this.gcpAccountName) {
         this.fire('CreateGcpServerRequested');

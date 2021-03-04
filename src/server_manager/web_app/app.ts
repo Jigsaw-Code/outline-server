@@ -148,7 +148,6 @@ export class App {
     });
     appRoot.addEventListener('CreateDigitalOceanServerRequested', (event: CustomEvent) => {
       const digitalOceanAccount = this.cloudAccounts.getDigitalOceanAccount();
-      console.log('digitalOceanAccount', digitalOceanAccount);
       if (digitalOceanAccount) {
         this.showDigitalOceanCreateServer(digitalOceanAccount);
       } else {
