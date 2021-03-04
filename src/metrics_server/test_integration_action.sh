@@ -16,81 +16,84 @@
 
 # Metrics server integration test. Posts metrics to the development environment and queries BigQuery
 # to ensure the rows have been inserted to the features and connections tables.
-BIGQUERY_PROJECT=uproxysite
-BIGQUERY_DATASET=uproxy_metrics_dev
-CONNECTIONS_TABLE=connections_v1
-FEATURES_TABLE=feature_metrics
+readonly BIGQUERY_PROJECT='uproxysite'
+readonly BIGQUERY_DATASET='uproxy_metrics_dev'
+readonly CONNECTIONS_TABLE='connections_v1'
+readonly FEATURES_TABLE='feature_metrics'
 
-METRICS_URL=https://dev.metrics.getoutline.org
+readonly METRICS_URL='https://dev.metrics.getoutline.org'
 
 TMPDIR="$(mktemp -d)"
-CONNECTIONS_REQUEST="$TMPDIR/connections.json"
-CONNECTIONS_RESPONSE="$TMPDIR/connections_res.json"
-CONNECTIONS_EXPECTED_RESPONSE="$TMPDIR/connections_expected_res.json"
-FEATURES_REQUEST="$TMPDIR/features_req.json"
-FEATURES_RESPONSE="$TMPDIR/features_res.json"
-FEATURES_EXPECTED_RESPONSE="$TMPDIR/features_expected_res.json"
+readonly TMPDIR
+readonly CONNECTIONS_REQUEST="${TMPDIR}/connections.json"
+readonly CONNECTIONS_RESPONSE="${TMPDIR}/connections_res.json"
+readonly CONNECTIONS_EXPECTED_RESPONSE="${TMPDIR}/connections_expected_res.json"
+readonly FEATURES_REQUEST="${TMPDIR}/features_req.json"
+readonly FEATURES_RESPONSE="${TMPDIR}/features_res.json"
+readonly FEATURES_EXPECTED_RESPONSE="${TMPDIR}/features_expected_res.json"
 
-TIMESTAMP=$(date +%s%3N)
-SERVER_ID=$(uuidgen)
-SERVER_VERSION=$(uuidgen)
-USER_ID1=$(uuidgen)
-USER_ID2=$(uuidgen)
+TIMESTAMP="$(date +%s%3N)"
+SERVER_ID="$(uuidgen)"
+SERVER_VERSION="$(uuidgen)"
+USER_ID1="$(uuidgen)"
+USER_ID2="$(uuidgen)"
+readonly TIMESTAMP SERVER_ID SERVER_VERSION USER_ID1 USER_ID2
 # BYTES_TRANSFERRED2 < BYTES_TRANSFERRED1 so we can order the records before comparing them.
 BYTES_TRANSFERRED1=$((2 + RANDOM % 100))
-BYTES_TRANSFERRED2=$(($BYTES_TRANSFERRED1 - 1))
+BYTES_TRANSFERRED2=$((BYTES_TRANSFERRED1 - 1))
 PER_KEY_LIMIT_COUNT=$((RANDOM))
+declare -ir BYTES_TRANSFERRED1 BYTES_TRANSFERRED2 PER_KEY_LIMIT_COUNT
 
-echo "Using tmp directory $TMPDIR"
+echo "Using tmp directory ${TMPDIR}"
 
 # Write the request data to temporary files.
-cat << EOF > $CONNECTIONS_REQUEST
+cat << EOF > "${CONNECTIONS_REQUEST}"
 {
-  "serverId": "$SERVER_ID",
-  "startUtcMs": $TIMESTAMP,
-  "endUtcMs": $(($TIMESTAMP+1)),
+  "serverId": "${SERVER_ID}",
+  "startUtcMs": ${TIMESTAMP},
+  "endUtcMs": $((TIMESTAMP+1)),
   "userReports": [{
-    "userId": "$USER_ID1",
-    "bytesTransferred": $BYTES_TRANSFERRED1,
+    "userId": "${USER_ID1}",
+    "bytesTransferred": ${BYTES_TRANSFERRED1},
     "countries": ["US", "NL"]
   }, {
-    "userId": "$USER_ID2",
-    "bytesTransferred": $BYTES_TRANSFERRED2,
+    "userId": "${USER_ID2}",
+    "bytesTransferred": ${BYTES_TRANSFERRED2},
     "countries": ["UK"]
   }]
 }
 EOF
-cat << EOF > $FEATURES_REQUEST
+cat << EOF > "${FEATURES_REQUEST}"
 {
-  "serverId": "$SERVER_ID",
-  "serverVersion": "$SERVER_VERSION",
-  "timestampUtcMs": $TIMESTAMP,
+  "serverId": "${SERVER_ID}",
+  "serverVersion": "${SERVER_VERSION}",
+  "timestampUtcMs": ${TIMESTAMP},
   "dataLimit": {
     "enabled": false,
-    "perKeyLimitCount": $PER_KEY_LIMIT_COUNT
+    "perKeyLimitCount": ${PER_KEY_LIMIT_COUNT}
   }
 }
 EOF
 
 # Write the expected responses to temporary files.
 # Ignore the ISO formatted timestamps to ease the comparison.
-cat << EOF > $CONNECTIONS_EXPECTED_RESPONSE
-[{"bytesTransferred":"$BYTES_TRANSFERRED1","countries":["US","NL"],"serverId":"$SERVER_ID","userId":"$USER_ID1"},{"bytesTransferred":"$BYTES_TRANSFERRED2","countries":["UK"],"serverId":"$SERVER_ID","userId":"$USER_ID2"}]
+cat << EOF > "${CONNECTIONS_EXPECTED_RESPONSE}"
+[{"bytesTransferred":"${BYTES_TRANSFERRED1}","countries":["US","NL"],"serverId":"${SERVER_ID}","userId":"${USER_ID1}"},{"bytesTransferred":"${BYTES_TRANSFERRED2}","countries":["UK"],"serverId":"${SERVER_ID}","userId":"${USER_ID2}"}]
 EOF
-cat << EOF > $FEATURES_EXPECTED_RESPONSE
-[{"dataLimit":{"enabled":"false","perKeyLimitCount":"$PER_KEY_LIMIT_COUNT"},"serverId":"$SERVER_ID","serverVersion":"$SERVER_VERSION"}]
+cat << EOF > "${FEATURES_EXPECTED_RESPONSE}"
+[{"dataLimit":{"enabled":"false","perKeyLimitCount":"${PER_KEY_LIMIT_COUNT}"},"serverId":"${SERVER_ID}","serverVersion":"${SERVER_VERSION}"}]
 EOF
 
 echo "Connections request:"
-cat $CONNECTIONS_REQUEST
-curl -X POST -H "Content-Type: application/json" -d @$CONNECTIONS_REQUEST $METRICS_URL/connections && echo
+cat "${CONNECTIONS_REQUEST}"
+curl -X POST -H "Content-Type: application/json" -d "@${CONNECTIONS_REQUEST}" "${METRICS_URL}/connections" && echo
 sleep 5
-bq --project_id $BIGQUERY_PROJECT --format json query --nouse_legacy_sql 'SELECT serverId, userId, bytesTransferred, countries FROM `'"$BIGQUERY_DATASET.$CONNECTIONS_TABLE"'` WHERE serverId = "'"$SERVER_ID"'" ORDER BY bytesTransferred DESC LIMIT 2' > $CONNECTIONS_RESPONSE
-diff $CONNECTIONS_RESPONSE $CONNECTIONS_EXPECTED_RESPONSE
+bq --project_id "${BIGQUERY_PROJECT}" --format json query --nouse_legacy_sql "SELECT serverId, userId, bytesTransferred, countries FROM \`${BIGQUERY_DATASET}.${CONNECTIONS_TABLE}\` WHERE serverId = \"${SERVER_ID}\" ORDER BY bytesTransferred DESC LIMIT 2" > "${CONNECTIONS_RESPONSE}"
+diff "${CONNECTIONS_RESPONSE}" "${CONNECTIONS_EXPECTED_RESPONSE}"
 
 echo "Features request:"
-cat $FEATURES_REQUEST
-curl -X POST -H "Content-Type: application/json" -d @$FEATURES_REQUEST $METRICS_URL/features && echo
+cat "${FEATURES_REQUEST}"
+curl -X POST -H "Content-Type: application/json" -d "@${FEATURES_REQUEST}" "${METRICS_URL}/features" && echo
 sleep 5
-bq --project_id $BIGQUERY_PROJECT --format json query --nouse_legacy_sql 'SELECT serverId, serverVersion, dataLimit FROM `'"$BIGQUERY_DATASET.$FEATURES_TABLE"'` WHERE serverId = "'"$SERVER_ID"'" ORDER BY timestamp DESC LIMIT 1' > $FEATURES_RESPONSE
-diff $FEATURES_RESPONSE $FEATURES_EXPECTED_RESPONSE
+bq --project_id "${BIGQUERY_PROJECT}" --format json query --nouse_legacy_sql "SELECT serverId, serverVersion, dataLimit FROM \`${BIGQUERY_DATASET}.${FEATURES_TABLE}\` WHERE serverId = \"${SERVER_ID}\" ORDER BY timestamp DESC LIMIT 1" > "${FEATURES_RESPONSE}"
+diff "${FEATURES_RESPONSE}" "${FEATURES_EXPECTED_RESPONSE}"

@@ -1,0 +1,10 @@
+# Configuration for `yarn shellcheck` and IDEs
+
+# Enable relative path references
+source-path=SCRIPTDIR
+
+# The style guide says "quote your variables"
+enable=quote-safe-variables
+
+# The style guide says 'prefer "${var}" over "$var"'
+enable=require-variable-braces

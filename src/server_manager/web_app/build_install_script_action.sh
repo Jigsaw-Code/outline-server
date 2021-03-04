@@ -16,18 +16,18 @@
 
 set -eu
 
-readonly OUT_DIR=$BUILD_DIR/server_manager/web_app/sh/
-rm -rf $OUT_DIR
+readonly OUT_DIR="${BUILD_DIR}/server_manager/web_app/sh/"
+rm -rf "${OUT_DIR}"
 
 # Create do_install_script.ts, which has a variable with the content of do_install_server.sh.
-mkdir -p $OUT_DIR
+mkdir -p "${OUT_DIR}"
 
-pushd $ROOT_DIR/src/server_manager/install_scripts > /dev/null
-tar --create --gzip -f $OUT_DIR/scripts.tgz ./*.sh
+pushd "${ROOT_DIR}/src/server_manager/install_scripts" > /dev/null
+tar --create --gzip -f "${OUT_DIR}/scripts.tgz" ./*.sh
 
 # Node.js on Cygwin doesn't like absolute Unix-style paths.
 # So, we use a relative path as input.
-cd $ROOT_DIR
+cd "${ROOT_DIR}"
 node src/server_manager/install_scripts/build_install_script_ts.node.js \
-    build/server_manager/web_app/sh/scripts.tgz > $ROOT_DIR/src/server_manager/install_scripts/do_install_script.ts
+    build/server_manager/web_app/sh/scripts.tgz > "${ROOT_DIR}/src/server_manager/install_scripts/do_install_script.ts"
 popd > /dev/null

@@ -21,27 +21,27 @@ set -eu
 #       them and making BUILD_DIR a relative path, viz. just "build".
 
 export ROOT_DIR=${ROOT_DIR:-$(git rev-parse --show-toplevel)}
-export BUILD_DIR=${BUILD_DIR:-$ROOT_DIR/build}
+export BUILD_DIR=${BUILD_DIR:-${ROOT_DIR}/build}
 export _DO_ACTION_INDENT=''
 
 function do_action() {
-  local OLD_INDENT=${_DO_ACTION_INDENT}
+  local -r OLD_INDENT="${_DO_ACTION_INDENT}"
   _DO_ACTION_INDENT="..${_DO_ACTION_INDENT}"
-  readonly STYLE_BOLD_WHITE='\033[1;37m'
-  readonly STYLE_BOLD_RED='\033[1;31m'
-  readonly STYLE_RESET='\033[0m'
-  local action=$1
-  echo -e "${OLD_INDENT}$STYLE_BOLD_WHITE[Running $action]$STYLE_RESET"
+  local -r STYLE_BOLD_WHITE='\033[1;37m'
+  local -r STYLE_BOLD_RED='\033[1;31m'
+  local -r STYLE_RESET='\033[0m'
+  local -r action="$1"
+  echo -e "${OLD_INDENT}${STYLE_BOLD_WHITE}[Running ${action}]${STYLE_RESET}"
   shift
-  local status=0
-  $ROOT_DIR/src/${action}_action.sh "$@" || status=$?
+  "${ROOT_DIR}/src/${action}_action.sh" "$@"
+  local -ir status=$?
   if ((status == 0)); then
-    echo -e "${OLD_INDENT}$STYLE_BOLD_WHITE[Done $action]$STYLE_RESET"
+    echo -e "${OLD_INDENT}${STYLE_BOLD_WHITE}[Done ${action}]${STYLE_RESET}"
   else
-    echo -e "${OLD_INDENT}$STYLE_BOLD_RED[Failed $action]$STYLE_RESET"
+    echo -e "${OLD_INDENT}${STYLE_BOLD_RED}[Failed ${action}]${STYLE_RESET}"
   fi
   _DO_ACTION_INDENT=${OLD_INDENT}
-  return $status
+  return "${status}"
 }
 export -f do_action
 

@@ -16,21 +16,23 @@
 
 do_action shadowbox/server/build
 
-readonly RUN_ID="${RUN_ID:-$(date +%Y-%m-%d-%H%M%S)}"
-readonly RUN_DIR="/tmp/outline/$RUN_ID"
-echo "Using directory $RUN_DIR"
+RUN_ID="${RUN_ID:-$(date +%Y-%m-%d-%H%M%S)}"
+readonly RUN_DIR="/tmp/outline/${RUN_ID}"
+echo "Using directory ${RUN_DIR}"
 
 export LOG_LEVEL="${LOG_LEVEL:-debug}"
-export SB_PUBLIC_IP="${SB_PUBLIC_IP:-$(curl https://ipinfo.io/ip)}"
+SB_PUBLIC_IP="${SB_PUBLIC_IP:-$(curl https://ipinfo.io/ip)}"
+export SB_PUBLIC_IP
 # WARNING: The SB_API_PREFIX should be kept secret!
-export SB_API_PREFIX=TestApiPrefix
-export SB_METRICS_URL=https://dev.metrics.getoutline.org
+export SB_API_PREFIX='TestApiPrefix'
+export SB_METRICS_URL='https://dev.metrics.getoutline.org'
 export SB_STATE_DIR="${RUN_DIR}/persisted-state"
-readonly STATE_CONFIG=${SB_STATE_DIR}/shadowbox_server_config.json
+readonly STATE_CONFIG="${SB_STATE_DIR}/shadowbox_server_config.json"
 
-[[ -d "${SB_STATE_DIR}" ]] || mkdir -p $SB_STATE_DIR
-[[ -e $STATE_CONFIG ]] || echo '{"hostname":"127.0.0.1"}' > $STATE_CONFIG
+[[ -d "${SB_STATE_DIR}" ]] || mkdir -p "${SB_STATE_DIR}"
+[[ -e "${STATE_CONFIG}" ]] || echo '{"hostname":"127.0.0.1"}' > "${STATE_CONFIG}"
 
-source $ROOT_DIR/src/shadowbox/scripts/make_test_certificate.sh $RUN_DIR
+# shellcheck source=../scripts/make_test_certificate.sh
+source "${ROOT_DIR}/src/shadowbox/scripts/make_test_certificate.sh" "${RUN_DIR}"
 
-node $BUILD_DIR/shadowbox/app/main.js
+node "${BUILD_DIR}/shadowbox/app/main.js"

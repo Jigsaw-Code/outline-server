@@ -16,11 +16,10 @@ import './ui_components/app-root.js';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as i18n from '../infrastructure/i18n';
-import {getSentryApiUrl} from '../infrastructure/sentry';
 
 import {App} from './app';
-import {DigitalOceanTokenManager} from './digitalocean_oauth';
-import * as digitalocean_server from './digitalocean_server';
+import {CloudAccounts} from './cloud_accounts';
+import {DigitalOceanAccount} from './digitalocean_account';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
 
@@ -97,16 +96,22 @@ document.addEventListener('WebComponentsReady', () => {
   // Parse URL query params.
   const params = new URL(document.URL).searchParams;
   const debugMode = params.get('outlineDebugMode') === 'true';
-  const metricsUrl = params.get('metricsUrl');
-  const shadowboxImage = params.get('image');
   const version = params.get('version');
-  const sentryDsn = params.get('sentryDsn');
+
+  const shadowboxImageId = params.get('image');
+  const shadowboxSettings = {
+    imageId: shadowboxImageId,
+    metricsUrl: params.get('metricsUrl'),
+    sentryApiUrl: params.get('sentryDsn'),
+    watchtowerRefreshSeconds: shadowboxImageId ? 30 : undefined,
+  };
 
   // Set DigitalOcean server repository parameters.
-  const digitalOceanServerRepositoryFactory = (session: digitalocean_api.DigitalOceanSession) => {
-    return new digitalocean_server.DigitaloceanServerRepository(
-        session, shadowboxImage, metricsUrl, getSentryApiUrl(sentryDsn), debugMode);
+  const digitalOceanAccountFactory = (accessToken: string) => {
+    const session = new digitalocean_api.RestApiSession(accessToken);
+    return new DigitalOceanAccount(session, shadowboxSettings, debugMode);
   };
+  const cloudAccounts = new CloudAccounts(digitalOceanAccountFactory);
 
   // Create and start the app.
   const language = getLanguageToUse();
@@ -120,10 +125,5 @@ document.addEventListener('WebComponentsReady', () => {
   const filteredLanguageDefs = Object.values(SUPPORTED_LANGUAGES);
   appRoot.supportedLanguages = sortLanguageDefsByName(filteredLanguageDefs);
   appRoot.setLanguage(language.string(), languageDirection);
-  new App(
-      appRoot, version, digitalocean_api.createDigitalOceanSession,
-      digitalOceanServerRepositoryFactory, new ManualServerRepository('manualServers'),
-      new DigitalOceanTokenManager())
-      .start();
+  new App(appRoot, version, new ManualServerRepository('manualServers'), cloudAccounts).start();
 });
-
