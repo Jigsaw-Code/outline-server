@@ -181,27 +181,27 @@ Polymer({
       <div class="container">
         <div id="digital-ocean" class="card" on-tap="connectToDigitalOceanTapped">
           <div class="card-header">
-            <div class="tag" hidden\$="{{isSignedInToDigitalOcean}}">[[localize('setup-recommended')]]</div>
-            <div class="email" hidden\$="{{!isSignedInToDigitalOcean}}">{{digitalOceanEmail}}</div>
+            <div class="tag" hidden\$="{{isDigitalOceanAccountConnected}}">[[localize('setup-recommended')]]</div>
+            <div class="email" hidden\$="{{!isDigitalOceanAccountConnected}}">{{digitalOceanAccountName}}</div>
             <img src="images/do_white_logo.svg">
           </div>
           <div class="card-title">DigitalOcean</div>
           <div class="card-body">
             <div class="description">
-              <ul hidden\$="{{isSignedInToDigitalOcean}}">
+              <ul hidden\$="{{isDigitalOceanAccountConnected}}">
                 <li>[[localize('setup-do-easiest')]]</li>
                 <li>[[localize('setup-do-cost')]]</li>
                 <li>[[localize('setup-do-data')]]</li>
                 <li>[[localize('setup-do-cancel')]]</li>
               </ul>
-              <p hidden\$="{{!isSignedInToDigitalOcean}}">
+              <p hidden\$="{{!isDigitalOceanAccountConnected}}">
                 [[localize('setup-do-create')]]
               </p>
             </div>
           </div>
           <div class="card-footer">
-            <paper-button class="primary" hidden\$="{{isSignedInToDigitalOcean}}">[[localize('setup-action')]]</paper-button>
-            <paper-button class="primary" hidden\$="{{!isSignedInToDigitalOcean}}">[[localize('setup-create')]]</paper-button>
+            <paper-button class="primary" hidden\$="{{isDigitalOceanAccountConnected}}">[[localize('setup-action')]]</paper-button>
+            <paper-button class="primary" hidden\$="{{!isDigitalOceanAccountConnected}}">[[localize('setup-create')]]</paper-button>
           </div>
         </div>
 
@@ -270,16 +270,23 @@ Polymer({
   is: 'outline-intro-step',
 
   properties: {
-    isSignedInToDigitalOcean: Boolean,
-    digitalOceanEmail: String,
+    digitalOceanAccountName: String,
+    isDigitalOceanAccountConnected: {
+      type: Boolean,
+      computed: '_computeIsDigitalOceanAccountConnected(digitalOceanAccountName)',
+    },
     localize: {
       type: Function,
       readonly: true,
     },
   },
 
+  _computeIsDigitalOceanAccountConnected(digitalOceanAccountName) {
+    return Boolean(digitalOceanAccountName);
+  },
+
   connectToDigitalOceanTapped: function() {
-    if (this.isSignedInToDigitalOcean) {
+    if (this.isDigitalOceanAccountConnected) {
       this.fire('CreateDigitalOceanServerRequested');
     } else {
       this.fire('ConnectDigitalOceanAccountRequested');

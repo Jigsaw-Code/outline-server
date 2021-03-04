@@ -338,7 +338,7 @@ export class App {
     }
     try {
       this.digitalOceanAccount = digitalOceanAccount;
-      this.appRoot.adminEmail = await this.digitalOceanAccount.getName();
+      this.appRoot.digitalOceanAccountName = await this.digitalOceanAccount.getName();
       const status = await this.digitalOceanAccount.getStatus();
       if (status !== digitalocean.Status.ACTIVE) {
         return [];
@@ -571,7 +571,7 @@ export class App {
         this.removeServer(serverEntry.id);
       }
     }
-    this.appRoot.adminEmail = '';
+    this.appRoot.digitalOceanAccountName = '';
   }
 
   // Opens the screen to create a server.
