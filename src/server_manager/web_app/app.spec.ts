@@ -15,13 +15,12 @@
 import './ui_components/app-root.js';
 
 import {InMemoryStorage} from '../infrastructure/memory_storage';
-import * as digitalocean from '../model/digitalocean';
 import * as server from '../model/server';
 
 import {App, LAST_DISPLAYED_SERVER_STORAGE_KEY} from './app';
 import {CloudAccounts} from './cloud_accounts';
 import {AppRoot} from './ui_components/app-root';
-
+import {FakeDigitalOceanAccount, FakeGcpAccount, FakeManualServerRepository} from "./testing/models";
 
 // Define functions from preload.ts.
 // tslint:disable-next-line:no-any
@@ -134,8 +133,12 @@ describe('App', () => {
 });
 
 function makeCloudAccountsWithDoAccount(fakeAccount: FakeDigitalOceanAccount) {
-  const fakeDigitalOceanAccountFactory = (token: string) => fakeAccount;
-  const cloudAccounts = new CloudAccounts(fakeDigitalOceanAccountFactory, new InMemoryStorage());
+  const cloudAccounts = new CloudAccounts(
+      (accessToken: string) => fakeAccount,
+      (account: FakeDigitalOceanAccount) => account.getAccessToken(),
+      (refreshToken: string) => new FakeGcpAccount(),
+      (account: FakeGcpAccount) => account.getRefreshToken(),
+      new InMemoryStorage());
   cloudAccounts.connectDigitalOceanAccount('fake-access-token');
   return cloudAccounts;
 }
@@ -145,165 +148,15 @@ function createTestApp(
     manualServerRepo?: server.ManualServerRepository) {
   const VERSION = '0.0.1';
   if (!cloudAccounts) {
-    cloudAccounts = new CloudAccounts((token: string) => new FakeDigitalOceanAccount(), new InMemoryStorage());
+    cloudAccounts = new CloudAccounts(
+        (accessToken: string) => new FakeDigitalOceanAccount(),
+        (account: FakeDigitalOceanAccount) => account.getAccessToken(),
+        (refreshToken: string) => new FakeGcpAccount(),
+        (account: FakeGcpAccount) => account.getRefreshToken(),
+        new InMemoryStorage());
   }
   if (!manualServerRepo) {
     manualServerRepo = new FakeManualServerRepository();
   }
   return new App(appRoot, VERSION, manualServerRepo, cloudAccounts);
-}
-
-class FakeServer implements server.Server {
-  private name = 'serverName';
-  private metricsId: string;
-  private metricsEnabled = false;
-  apiUrl: string;
-  constructor(protected id: string) {
-    this.metricsId = Math.random().toString();
-  }
-  getId() {
-    return this.id;
-  }
-  getName() {
-    return this.name;
-  }
-  setName(name: string) {
-    this.name = name;
-    return Promise.resolve();
-  }
-  getVersion() {
-    return '1.2.3';
-  }
-  listAccessKeys() {
-    return Promise.resolve([]);
-  }
-  getMetricsEnabled() {
-    return this.metricsEnabled;
-  }
-  setMetricsEnabled(metricsEnabled: boolean) {
-    this.metricsEnabled = metricsEnabled;
-    return Promise.resolve();
-  }
-  getMetricsId() {
-    return this.metricsId;
-  }
-  isHealthy() {
-    return Promise.resolve(true);
-  }
-  getCreatedDate() {
-    return new Date();
-  }
-  getDataUsage() {
-    return Promise.resolve(new Map<server.AccessKeyId, number>());
-  }
-  addAccessKey() {
-    return Promise.reject(new Error('FakeServer.addAccessKey not implemented'));
-  }
-  renameAccessKey(accessKeyId: server.AccessKeyId, name: string) {
-    return Promise.reject(new Error('FakeServer.renameAccessKey not implemented'));
-  }
-  removeAccessKey(accessKeyId: server.AccessKeyId) {
-    return Promise.reject(new Error('FakeServer.removeAccessKey not implemented'));
-  }
-  setHostnameForAccessKeys(hostname: string) {
-    return Promise.reject(new Error('FakeServer.setHostname not implemented'));
-  }
-  getHostnameForAccessKeys() {
-    return 'fake-server';
-  }
-  getManagementApiUrl() {
-    return this.apiUrl || Math.random().toString();
-  }
-  getPortForNewAccessKeys(): number|undefined {
-    return undefined;
-  }
-  setPortForNewAccessKeys(): Promise<void> {
-    return Promise.reject(new Error('FakeServer.setPortForNewAccessKeys not implemented'));
-  }
-  setAccessKeyDataLimit(limit: server.DataLimit): Promise<void> {
-    return Promise.reject(new Error('FakeServer.setAccessKeyDataLimit not implemented'));
-  }
-  removeAccessKeyDataLimit(): Promise<void> {
-    return Promise.resolve();
-  }
-  getAccessKeyDataLimit(): server.DataLimit|undefined {
-    return undefined;
-  }
-}
-
-class FakeManualServer extends FakeServer implements server.ManualServer {
-  constructor(public manualServerConfig: server.ManualServerConfig) {
-    super(manualServerConfig.apiUrl);
-  }
-  getManagementApiUrl() {
-    return this.manualServerConfig.apiUrl;
-  }
-  forget() {
-    return Promise.reject(new Error('FakeManualServer.forget not implemented'));
-  }
-  getCertificateFingerprint() {
-    return this.manualServerConfig.certSha256;
-  }
-}
-
-class FakeManualServerRepository implements server.ManualServerRepository {
-  private servers: server.ManualServer[] = [];
-
-  addServer(config: server.ManualServerConfig) {
-    const newServer = new FakeManualServer(config);
-    this.servers.push(newServer);
-    return Promise.resolve(newServer);
-  }
-
-  findServer(config: server.ManualServerConfig) {
-    return this.servers.find(server => server.getManagementApiUrl() === config.apiUrl);
-  }
-
-  listServers() {
-    return Promise.resolve(this.servers);
-  }
-}
-
-class FakeManagedServer extends FakeServer implements server.ManagedServer {
-  constructor(id: string, private isInstalled = true) {
-    super(id);
-  }
-  waitOnInstall() {
-    // Return a promise which does not yet fulfill, to simulate long
-    // shadowbox install time.
-    return new Promise<void>((fulfill, reject) => {});
-  }
-  getHost() {
-    return {
-      getMonthlyOutboundTransferLimit: () => ({terabytes: 1}),
-      getMonthlyCost: () => ({usd: 5}),
-      getRegionId: () => 'fake-region',
-      delete: () => Promise.resolve(),
-      getHostId: () => 'fake-host-id',
-    };
-  }
-  isInstallCompleted() {
-    return this.isInstalled;
-  }
-}
-
-class FakeDigitalOceanAccount implements digitalocean.Account {
-  private servers: server.ManagedServer[] = [];
-  async getName(): Promise<string> {
-    return 'fake-name';
-  }
-  async getStatus(): Promise<digitalocean.Status> {
-    return digitalocean.Status.ACTIVE;
-  }
-  listServers() {
-    return Promise.resolve(this.servers);
-  }
-  getRegionMap() {
-    return Promise.resolve({'fake': ['fake1', 'fake2']});
-  }
-  createServer(id = Math.random().toString()) {
-    const newServer = new FakeManagedServer(id, false);
-    this.servers.push(newServer);
-    return Promise.resolve(newServer);
-  }
 }

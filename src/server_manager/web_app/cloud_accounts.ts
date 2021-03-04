@@ -14,13 +14,11 @@
 
 import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
-import {DigitalOceanAccount} from './digitalocean_account';
-import {GcpAccount} from './gcp_account';
 
-type DigitalOceanAccountFactory = (accessToken: string) => DigitalOceanAccount;
-type GcpAccountFactory = (refreshToken: string) => GcpAccount;
+type DigitalOceanAccountFactory = (accessToken: string) => digitalocean.Account;
+type GcpAccountFactory = (refreshToken: string) => gcp.Account;
 
-type AccountJson = {
+export type AccountJson = {
   digitalocean?: DigitalOceanAccountJson,
   gcp?: GcpAccountJson,
 };
@@ -40,12 +38,15 @@ export class CloudAccounts {
   private readonly LEGACY_DIGITALOCEAN_STORAGE_KEY = 'LastDOToken';
   private readonly ACCOUNTS_STORAGE_KEY = 'accounts-storage';
 
-  private digitalOceanAccount: DigitalOceanAccount = null;
-  private gcpAccount: GcpAccount = null;
+  private digitalOceanAccount: digitalocean.Account = null;
+  private gcpAccount: gcp.Account = null;
 
   constructor(
       private digitalOceanAccountFactory: DigitalOceanAccountFactory,
-      private gcpAccountFactory: GcpAccountFactory, private storage = localStorage) {}
+      private digitalOceanAccountCredentialsGetter: ((account: digitalocean.Account) => string),
+      private gcpAccountFactory: GcpAccountFactory,
+      private gcpCredentialsGetter: ((account: gcp.Account) => string),
+      private storage = localStorage) {}
 
   /**
    * Loads the saved cloud accounts from disk.
@@ -140,7 +141,7 @@ export class CloudAccounts {
   private save(): void {
     const accountJsons: AccountJson[] = [];
     if (this.digitalOceanAccount) {
-      const accessToken = this.digitalOceanAccount.getAccessToken();
+      const accessToken = this.digitalOceanAccountCredentialsGetter(this.digitalOceanAccount);
       const accountJson = {digitalocean: {accessToken}};
       accountJsons.push(accountJson);
 
@@ -148,7 +149,8 @@ export class CloudAccounts {
       this.storage.setItem(this.LEGACY_DIGITALOCEAN_STORAGE_KEY, accessToken);
     }
     if (this.gcpAccount) {
-      const accountJson = {gcp: {refreshToken: this.gcpAccount.getRefreshToken()}};
+      const refreshToken = this.gcpCredentialsGetter(this.gcpAccount);
+      const accountJson = {gcp: {refreshToken}};
       accountJsons.push(accountJson);
     }
     this.storage.setItem(this.ACCOUNTS_STORAGE_KEY, JSON.stringify(accountJsons));

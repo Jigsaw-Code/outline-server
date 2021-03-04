@@ -14,16 +14,111 @@
 
 import {InMemoryStorage} from '../infrastructure/memory_storage';
 
-import {CloudAccounts} from './cloud_accounts';
+import {AccountJson, CloudAccounts} from './cloud_accounts';
+import {FakeDigitalOceanAccount, FakeGcpAccount} from "./testing/models";
+
+const FAKE_ACCOUNTS_JSON = [
+  {
+    digitalocean: {
+      accessToken: 'fake-access-token',
+    }
+  },
+  {
+    gcp: {
+      refreshToken: 'fake-refresh-token',
+    }
+  }
+];
 
 describe('CloudAccounts', () => {
-  it('get account methods return null when no cloud accounts are connected', async () => {
-    const cloudAccounts = new CloudAccounts(null, null, new InMemoryStorage());
+  it('get account methods return null when no cloud accounts are connected', () => {
+    const cloudAccounts = createCloudAccount();
+    cloudAccounts.load();
     expect(cloudAccounts.getDigitalOceanAccount()).toBeNull();
     expect(cloudAccounts.getGcpAccount()).toBeNull();
   });
 
-  // TODO: Add tests for remaining methods in the public interface
+  it('load connects account that exist in local storage', () => {
+    const storage = createInMemoryStorage(FAKE_ACCOUNTS_JSON);
+    const cloudAccounts = createCloudAccount(storage);
+    cloudAccounts.load();
+    expect(cloudAccounts.getDigitalOceanAccount()).not.toBeNull();
+    expect(cloudAccounts.getGcpAccount()).not.toBeNull();
+  });
 
-  // TODO: Add tests for LastDOToken migration
+  it('connects accounts when connect methods are invoked', () => {
+    const cloudAccounts = createCloudAccount();
+    cloudAccounts.load();
+
+    expect(cloudAccounts.getDigitalOceanAccount()).toBeNull();
+    cloudAccounts.connectDigitalOceanAccount('fake-access-token');
+    expect(cloudAccounts.getDigitalOceanAccount()).not.toBeNull();
+
+    expect(cloudAccounts.getGcpAccount()).toBeNull();
+    cloudAccounts.connectGcpAccount('fake-access-token');
+    expect(cloudAccounts.getGcpAccount()).not.toBeNull();
+  });
+
+  it('removes account when disconnect is invoked', () => {
+    const storage = createInMemoryStorage(FAKE_ACCOUNTS_JSON);
+    const cloudAccounts = createCloudAccount(storage);
+    cloudAccounts.load();
+
+    expect(cloudAccounts.getDigitalOceanAccount()).not.toBeNull();
+    cloudAccounts.disconnectDigitalOceanAccount();
+    expect(cloudAccounts.getDigitalOceanAccount()).toBeNull();
+
+    expect(cloudAccounts.getGcpAccount()).not.toBeNull();
+    cloudAccounts.disconnectGcpAccount();
+    expect(cloudAccounts.getGcpAccount()).toBeNull();
+  });
+
+  it('functional noop on calling disconnect when accounts are not connected', () => {
+    const cloudAccounts = createCloudAccount();
+    cloudAccounts.load();
+
+    expect(cloudAccounts.getDigitalOceanAccount()).toBeNull();
+    cloudAccounts.disconnectDigitalOceanAccount();
+    expect(cloudAccounts.getDigitalOceanAccount()).toBeNull();
+
+    expect(cloudAccounts.getGcpAccount()).toBeNull();
+    cloudAccounts.disconnectGcpAccount();
+    expect(cloudAccounts.getGcpAccount()).toBeNull();
+  });
+
+  it('migrates existing legacy DigitalOcean access token on load', () => {
+    const storage = new InMemoryStorage();
+    storage.setItem('LastDOToken', 'legacy-digitalocean-access-token');
+    const cloudAccounts = createCloudAccount(storage);
+    cloudAccounts.load();
+
+    expect(cloudAccounts.getDigitalOceanAccount()).not.toBeNull();
+  });
+
+  it('updates legacy DigitalOcean access token when account reconnected', () => {
+    const storage = new InMemoryStorage();
+    storage.setItem('LastDOToken', 'legacy-digitalocean-access-token');
+    const cloudAccounts = createCloudAccount(storage);
+    cloudAccounts.load();
+
+    expect(storage.getItem('LastDOToken')).toEqual('legacy-digitalocean-access-token');
+    cloudAccounts.connectDigitalOceanAccount('new-digitalocean-access-token');
+    expect(storage.getItem('LastDOToken')).toEqual('new-digitalocean-access-token');
+  });
 });
+
+function createInMemoryStorage(accountJsonArray: AccountJson[] = []): Storage {
+  const storage = new InMemoryStorage();
+  storage.setItem('accounts-storage', JSON.stringify(accountJsonArray));
+  return storage;
+}
+
+function createCloudAccount(storage = createInMemoryStorage()): CloudAccounts {
+  const digitalOceanAccountFactory = (accessToken: string) => new FakeDigitalOceanAccount(accessToken);
+  const digitalOceanAccountCredentialsGetter = (account: FakeDigitalOceanAccount) => account.getAccessToken();
+  const gcpAccountFactory = (refreshToken: string) => new FakeGcpAccount(refreshToken);
+  const gcpAccountCredentialsGetter = (account: FakeGcpAccount) => account.getRefreshToken();
+  return new CloudAccounts(
+      digitalOceanAccountFactory, digitalOceanAccountCredentialsGetter,
+      gcpAccountFactory, gcpAccountCredentialsGetter, storage);
+}
