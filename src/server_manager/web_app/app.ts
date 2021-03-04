@@ -18,9 +18,9 @@ import * as semver from 'semver';
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
-import * as server from '../model/server';
 import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
+import * as server from '../model/server';
 
 import {CloudAccounts} from './cloud_accounts';
 import * as digitalocean_server from './digitalocean_server';
@@ -156,9 +156,11 @@ export class App {
         this.handleConnectDigitalOceanAccountRequest();
       }
     });
-    appRoot.addEventListener('ConnectGcpAccountRequested',
+    appRoot.addEventListener(
+        'ConnectGcpAccountRequested',
         async (event: CustomEvent) => this.handleConnectGcpAccountRequest());
-    appRoot.addEventListener('CreateGcpServerRequested',
+    appRoot.addEventListener(
+        'CreateGcpServerRequested',
         async (event: CustomEvent) => console.log('Received CreateGcpServerRequested event'));
     appRoot.addEventListener('SignOutRequested', (event: CustomEvent) => {
       this.disconnectDigitalOceanAccount();

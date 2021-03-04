@@ -15,7 +15,7 @@
 import * as gcp from '../model/gcp';
 
 export class GcpAccount implements gcp.Account {
-  constructor(private refreshToken: string) { }
+  constructor(private refreshToken: string) {}
 
   async getName(): Promise<string> {
     return 'placeholder';

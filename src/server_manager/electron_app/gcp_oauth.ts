@@ -48,10 +48,12 @@ export function generateOAuthUrl(client: OAuth2Client): string {
 }
 
 export function responseHtml(messageHtml: string): string {
-  return `<html><script>window.close()</script><body>${messageHtml}. You can close this window.</body></html>`;
+  return `<html><script>window.close()</script><body>${
+      messageHtml}. You can close this window.</body></html>`;
 }
 
-async function verifyGrantedScopes(oAuthClient: OAuth2Client, accessToken: string): Promise<boolean> {
+async function verifyGrantedScopes(
+    oAuthClient: OAuth2Client, accessToken: string): Promise<boolean> {
   const getTokenInfoResponse = await oAuthClient.getTokenInfo(accessToken);
   return OAUTH_CONFIG.scopes.every(
       (requiredScope) => getTokenInfoResponse.scopes.find(
@@ -88,9 +90,12 @@ export function runOauth(): OauthSession {
         try {
           const getTokenResponse = await oAuthClient.getToken(request.query.code as string);
           if (getTokenResponse.res.status / 100 === 2) {
-            const scopesValid = await verifyGrantedScopes(oAuthClient, getTokenResponse.tokens.access_token);
+            const scopesValid =
+                await verifyGrantedScopes(oAuthClient, getTokenResponse.tokens.access_token);
             if (!scopesValid) {
-              console.error('Authentication failed with missing scope(s). Granted: ', getTokenResponse.tokens.scope);
+              console.error(
+                  'Authentication failed with missing scope(s). Granted: ',
+                  getTokenResponse.tokens.scope);
               response.send(responseHtml('Authentication failed with missing scope(s)'));
               reject(new Error('Authentication failed with missing scope(s)'));
             } else if (!getTokenResponse.tokens.refresh_token) {
@@ -102,7 +107,8 @@ export function runOauth(): OauthSession {
             }
           } else {
             response.send(responseHtml('Authentication failed'));
-            reject(new Error(`Authentication failed with HTTP status code: ${getTokenResponse.res.status}`));
+            reject(new Error(
+                `Authentication failed with HTTP status code: ${getTokenResponse.res.status}`));
           }
         } catch (error) {
           response.send(responseHtml('Authentication failed'));
