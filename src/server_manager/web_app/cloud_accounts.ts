@@ -14,6 +14,7 @@
 
 import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
+import * as cloud from '../model/cloud';
 
 type DigitalOceanAccountFactory = (accessToken: string) => digitalocean.Account;
 type GcpAccountFactory = (refreshToken: string) => gcp.Account;
@@ -34,7 +35,7 @@ type GcpAccountJson = {
 /**
  * Manages connected cloud provider accounts.
  */
-export class CloudAccounts {
+export class CloudAccounts implements cloud.CloudAccounts {
   private readonly LEGACY_DIGITALOCEAN_STORAGE_KEY = 'LastDOToken';
   private readonly ACCOUNTS_STORAGE_KEY = 'accounts-storage';
 
@@ -78,62 +79,38 @@ export class CloudAccounts {
     });
   }
 
-  /**
-   * Connects a DigitalOcean account.
-   *
-   * Only one DigitalOcean account can be connected at any given time.
-   * Subsequent calls to this method will overwrite any previously connected
-   * DigtialOcean account.
-   *
-   * @param accessToken: The DigitalOcean access token.
-   */
+  /** See {@link CloudAccounts#connectDigitalOceanAccount} */
   connectDigitalOceanAccount(accessToken: string): digitalocean.Account {
     this.digitalOceanAccount = this.digitalOceanAccountFactory(accessToken);
     this.save();
     return this.digitalOceanAccount;
   }
 
-  /**
-   * Connects a Google Cloud Platform account.
-   *
-   * Only one Google Cloud Platform account can be connected at any given time.
-   * Subsequent calls to this method will overwrite any previously connected
-   * Google Cloud Platform account.
-   *
-   * @param refreshToken: The GCP refresh token.
-   */
+  /** See {@link CloudAccounts#connectGcpAccount} */
   connectGcpAccount(refreshToken: string): gcp.Account {
     this.gcpAccount = this.gcpAccountFactory(refreshToken);
     this.save();
     return this.gcpAccount;
   }
 
-  /**
-   * Disconnects the DigitalOcean account.
-   */
+  /** See {@link CloudAccounts#disconnectDigitalOceanAccount} */
   disconnectDigitalOceanAccount(): void {
     this.digitalOceanAccount = null;
     this.save();
   }
 
-  /**
-   * Disconnects the Google Cloud Platform account.
-   */
+  /** See {@link CloudAccounts#disconnectGcpAccount} */
   disconnectGcpAccount(): void {
     this.gcpAccount = null;
     this.save();
   }
 
-  /**
-   * @returns the connected DigitalOcean account (or null if none exists).
-   */
+  /** See {@link CloudAccounts#getDigitalOceanAccount} */
   getDigitalOceanAccount(): digitalocean.Account {
     return this.digitalOceanAccount;
   }
 
-  /**
-   * @returns the connected Google Cloud Platform account (or null if none exists).
-   */
+  /** See {@link CloudAccounts#getGcpAccount} */
   getGcpAccount(): gcp.Account {
     return this.gcpAccount;
   }

@@ -14,6 +14,7 @@
 
 import * as digitalocean from '../../model/digitalocean';
 import * as gcp from '../../model/gcp';
+import * as cloud from '../../model/cloud';
 import * as server from '../../model/server';
 
 export class FakeDigitalOceanAccount implements digitalocean.Account {
@@ -185,5 +186,37 @@ export class FakeManagedServer extends FakeServer implements server.ManagedServe
   }
   isInstallCompleted() {
     return this.isInstalled;
+  }
+}
+
+export class FakeCloudAccounts implements cloud.CloudAccounts {
+  constructor(
+      private digitalOceanAccount: digitalocean.Account = null,
+      private gcpAccount: gcp.Account = null) {}
+
+  connectDigitalOceanAccount(accessToken: string): digitalocean.Account {
+    this.digitalOceanAccount = new FakeDigitalOceanAccount(accessToken);
+    return this.digitalOceanAccount;
+  }
+
+  connectGcpAccount(refreshToken: string): gcp.Account {
+    this.gcpAccount = new FakeGcpAccount(refreshToken);
+    return this.gcpAccount;
+  }
+
+  disconnectDigitalOceanAccount(): void {
+    this.digitalOceanAccount = null;
+  }
+
+  disconnectGcpAccount(): void {
+    this.gcpAccount = null;
+  }
+
+  getDigitalOceanAccount(): digitalocean.Account {
+    return this.digitalOceanAccount;
+  }
+
+  getGcpAccount(): gcp.Account {
+    return this.gcpAccount;
   }
 }

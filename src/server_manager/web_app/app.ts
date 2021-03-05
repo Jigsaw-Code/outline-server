@@ -15,15 +15,15 @@
 import * as sentry from '@sentry/electron';
 import * as semver from 'semver';
 
-import * as digitalocean_api from '../cloud/digitalocean_api';
-import * as errors from '../infrastructure/errors';
-import {sleep} from '../infrastructure/sleep';
+import * as cloud from '../model/cloud';
 import * as digitalocean from '../model/digitalocean';
+import * as digitalocean_api from '../cloud/digitalocean_api';
+import * as digitalocean_server from './digitalocean_server';
+import * as errors from '../infrastructure/errors';
 import * as gcp from '../model/gcp';
 import * as server from '../model/server';
 
-import {CloudAccounts} from './cloud_accounts';
-import * as digitalocean_server from './digitalocean_server';
+import {sleep} from '../infrastructure/sleep';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {Location} from './ui_components/outline-region-picker-step';
@@ -140,7 +140,7 @@ export class App {
   constructor(
       private appRoot: AppRoot, private readonly version: string,
       private manualServerRepository: server.ManualServerRepository,
-      private cloudAccounts: CloudAccounts) {
+      private cloudAccounts: cloud.CloudAccounts) {
     appRoot.setAttribute('outline-version', this.version);
 
     appRoot.addEventListener('ConnectDigitalOceanAccountRequested', (event: CustomEvent) => {

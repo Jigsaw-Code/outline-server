@@ -13,13 +13,11 @@
 // limitations under the License.
 
 import './ui_components/app-root.js';
-
-import {InMemoryStorage} from '../infrastructure/memory_storage';
 import * as server from '../model/server';
+import * as cloud from '../model/cloud';
 
 import {App, LAST_DISPLAYED_SERVER_STORAGE_KEY} from './app';
-import {CloudAccounts} from './cloud_accounts';
-import {FakeDigitalOceanAccount, FakeGcpAccount, FakeManualServerRepository} from './testing/models';
+import {FakeCloudAccounts, FakeDigitalOceanAccount, FakeManualServerRepository} from './testing/models';
 import {AppRoot} from './ui_components/app-root';
 
 
@@ -65,7 +63,7 @@ describe('App', () => {
     // Create fake servers and simulate their metadata being cached before creating the app.
     const fakeAccount = new FakeDigitalOceanAccount();
     await fakeAccount.createServer('fake-managed-server-id');
-    const cloudAccounts = makeCloudAccountsWithDoAccount(fakeAccount);
+    const cloudAccounts = new FakeCloudAccounts(fakeAccount);
 
     const manualServerRepo = new FakeManualServerRepository();
     await manualServerRepo.addServer({certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-1'});
@@ -110,7 +108,7 @@ describe('App', () => {
   it('shows progress screen once DigitalOcean droplets are created', async () => {
     // Start the app with a fake DigitalOcean token.
     const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
-    const cloudAccounts = makeCloudAccountsWithDoAccount(new FakeDigitalOceanAccount());
+    const cloudAccounts = new FakeCloudAccounts(new FakeDigitalOceanAccount());
     const app = createTestApp(appRoot, cloudAccounts);
     await app.start();
     await app.createDigitalOceanServer('fakeRegion');
@@ -123,7 +121,7 @@ describe('App', () => {
        const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
        const fakeAccount = new FakeDigitalOceanAccount();
        const server = await fakeAccount.createServer(Math.random().toString());
-       const cloudAccounts = makeCloudAccountsWithDoAccount(fakeAccount);
+       const cloudAccounts = new FakeCloudAccounts(fakeAccount);
        const app = createTestApp(appRoot, cloudAccounts, null);
        // Sets last displayed server.
        localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, server.getId());
@@ -133,26 +131,12 @@ describe('App', () => {
      });
 });
 
-function makeCloudAccountsWithDoAccount(fakeAccount: FakeDigitalOceanAccount) {
-  const cloudAccounts = new CloudAccounts(
-      (accessToken: string) => fakeAccount,
-      (account: FakeDigitalOceanAccount) => account.getAccessToken(),
-      (refreshToken: string) => new FakeGcpAccount(),
-      (account: FakeGcpAccount) => account.getRefreshToken(), new InMemoryStorage());
-  cloudAccounts.connectDigitalOceanAccount('fake-access-token');
-  return cloudAccounts;
-}
-
 function createTestApp(
-    appRoot: AppRoot, cloudAccounts?: CloudAccounts,
+    appRoot: AppRoot, cloudAccounts?: cloud.CloudAccounts,
     manualServerRepo?: server.ManualServerRepository) {
   const VERSION = '0.0.1';
   if (!cloudAccounts) {
-    cloudAccounts = new CloudAccounts(
-        (accessToken: string) => new FakeDigitalOceanAccount(),
-        (account: FakeDigitalOceanAccount) => account.getAccessToken(),
-        (refreshToken: string) => new FakeGcpAccount(),
-        (account: FakeGcpAccount) => account.getRefreshToken(), new InMemoryStorage());
+    cloudAccounts = new FakeCloudAccounts();
   }
   if (!manualServerRepo) {
     manualServerRepo = new FakeManualServerRepository();
