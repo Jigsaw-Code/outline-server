@@ -15,8 +15,6 @@
 import {InMemoryStorage} from '../infrastructure/memory_storage';
 
 import {AccountJson, CloudAccounts} from './cloud_accounts';
-import {DigitalOceanAccount} from "./digitalocean_account";
-import {GcpAccount} from "./gcp_account";
 
 const FAKE_ACCOUNTS_JSON = [
   {
@@ -115,8 +113,10 @@ function createInMemoryStorage(accountJsonArray: AccountJson[] = []): Storage {
 }
 
 function createCloudAccount(storage = createInMemoryStorage()): CloudAccounts {
-  const digitalOceanAccountFactory = (accessToken: string) =>
-      new DigitalOceanAccount(accessToken, null, true);
-  const gcpAccountFactory = (refreshToken: string) => new GcpAccount(refreshToken);
-  return new CloudAccounts(digitalOceanAccountFactory, gcpAccountFactory, storage);
+  const shadowboxSettings = {
+    imageId: 'fake-image-id',
+    metricsUrl: 'fake-metrics-url',
+    sentryApiUrl: 'fake-sentry-api',
+  };
+  return new CloudAccounts(shadowboxSettings, true, storage);
 }

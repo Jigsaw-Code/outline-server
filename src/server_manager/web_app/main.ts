@@ -18,8 +18,6 @@ import * as i18n from '../infrastructure/i18n';
 
 import {App} from './app';
 import {CloudAccounts} from './cloud_accounts';
-import {DigitalOceanAccount} from './digitalocean_account';
-import {GcpAccount} from './gcp_account';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
 
@@ -106,11 +104,7 @@ document.addEventListener('WebComponentsReady', () => {
     watchtowerRefreshSeconds: shadowboxImageId ? 30 : undefined,
   };
 
-  // Set DigitalOcean server repository parameters.
-  const digitalOceanAccountFactory = (accessToken: string) =>
-      new DigitalOceanAccount(accessToken, shadowboxSettings, debugMode);
-  const gcpAccountFactory = (refreshToken: string) => new GcpAccount(refreshToken);
-  const cloudAccounts = new CloudAccounts(digitalOceanAccountFactory, gcpAccountFactory);
+  const cloudAccounts = new CloudAccounts(shadowboxSettings, debugMode);
   cloudAccounts.load();
 
   // Create and start the app.

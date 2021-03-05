@@ -15,11 +15,8 @@
 import * as cloud from '../model/cloud';
 import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
-import {DigitalOceanAccount} from "./digitalocean_account";
-import {GcpAccount} from "./gcp_account";
-
-type DigitalOceanAccountFactory = (accessToken: string) => DigitalOceanAccount;
-type GcpAccountFactory = (refreshToken: string) => GcpAccount;
+import {DigitalOceanAccount, ShadowboxSettings} from './digitalocean_account';
+import {GcpAccount} from './gcp_account';
 
 export type AccountJson = {
   digitalocean?: DigitalOceanAccountJson,
@@ -45,8 +42,8 @@ export class CloudAccounts implements cloud.CloudAccounts {
   private gcpAccount: GcpAccount = null;
 
   constructor(
-      private digitalOceanAccountFactory: DigitalOceanAccountFactory,
-      private gcpAccountFactory: GcpAccountFactory,
+      private shadowboxSettings: ShadowboxSettings,
+      private isDebugMode: boolean,
       private storage = localStorage) {}
 
   /**
@@ -63,7 +60,7 @@ export class CloudAccounts implements cloud.CloudAccounts {
     if (!accountJsonsString) {
       const digitalOceanToken = this.storage.getItem(this.LEGACY_DIGITALOCEAN_STORAGE_KEY);
       if (digitalOceanToken) {
-        this.digitalOceanAccount = this.digitalOceanAccountFactory(digitalOceanToken);
+        this.digitalOceanAccount = this.createDigitalOceanAccount(digitalOceanToken);
       }
       this.save();
     }
@@ -72,23 +69,23 @@ export class CloudAccounts implements cloud.CloudAccounts {
     accountJsons.forEach((accountJson) => {
       if (accountJson.digitalocean) {
         this.digitalOceanAccount =
-            this.digitalOceanAccountFactory(accountJson.digitalocean.accessToken);
+            this.createDigitalOceanAccount(accountJson.digitalocean.accessToken);
       } else if (accountJson.gcp) {
-        this.gcpAccount = this.gcpAccountFactory(accountJson.gcp.refreshToken);
+        this.gcpAccount = this.createGcpAccount(accountJson.gcp.refreshToken);
       }
     });
   }
 
   /** See {@link CloudAccounts#connectDigitalOceanAccount} */
   connectDigitalOceanAccount(accessToken: string): digitalocean.Account {
-    this.digitalOceanAccount = this.digitalOceanAccountFactory(accessToken);
+    this.digitalOceanAccount = this.createDigitalOceanAccount(accessToken);
     this.save();
     return this.digitalOceanAccount;
   }
 
   /** See {@link CloudAccounts#connectGcpAccount} */
   connectGcpAccount(refreshToken: string): gcp.Account {
-    this.gcpAccount = this.gcpAccountFactory(refreshToken);
+    this.gcpAccount = this.createGcpAccount(refreshToken);
     this.save();
     return this.gcpAccount;
   }
@@ -113,6 +110,14 @@ export class CloudAccounts implements cloud.CloudAccounts {
   /** See {@link CloudAccounts#getGcpAccount} */
   getGcpAccount(): gcp.Account {
     return this.gcpAccount;
+  }
+
+  private createDigitalOceanAccount(accessToken: string): DigitalOceanAccount {
+    return new DigitalOceanAccount(accessToken, this.shadowboxSettings, this.isDebugMode);
+  }
+
+  private createGcpAccount(refreshToken: string): GcpAccount {
+    return new GcpAccount(refreshToken);
   }
 
   private save(): void {
