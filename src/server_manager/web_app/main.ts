@@ -109,13 +109,8 @@ document.addEventListener('WebComponentsReady', () => {
   // Set DigitalOcean server repository parameters.
   const digitalOceanAccountFactory = (accessToken: string) =>
       new DigitalOceanAccount(accessToken, shadowboxSettings, debugMode);
-  const digitalOceanAccountCredentialsGetter = (account: DigitalOceanAccount) =>
-      account.getAccessToken();
   const gcpAccountFactory = (refreshToken: string) => new GcpAccount(refreshToken);
-  const gcpAccountCredentialsGetter = (account: GcpAccount) => account.getRefreshToken();
-  const cloudAccounts = new CloudAccounts(
-      digitalOceanAccountFactory, digitalOceanAccountCredentialsGetter, gcpAccountFactory,
-      gcpAccountCredentialsGetter);
+  const cloudAccounts = new CloudAccounts(digitalOceanAccountFactory, gcpAccountFactory);
   cloudAccounts.load();
 
   // Create and start the app.

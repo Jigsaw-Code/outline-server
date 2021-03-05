@@ -15,7 +15,8 @@
 import {InMemoryStorage} from '../infrastructure/memory_storage';
 
 import {AccountJson, CloudAccounts} from './cloud_accounts';
-import {FakeDigitalOceanAccount, FakeGcpAccount} from './testing/models';
+import {DigitalOceanAccount} from "./digitalocean_account";
+import {GcpAccount} from "./gcp_account";
 
 const FAKE_ACCOUNTS_JSON = [
   {
@@ -115,12 +116,7 @@ function createInMemoryStorage(accountJsonArray: AccountJson[] = []): Storage {
 
 function createCloudAccount(storage = createInMemoryStorage()): CloudAccounts {
   const digitalOceanAccountFactory = (accessToken: string) =>
-      new FakeDigitalOceanAccount(accessToken);
-  const digitalOceanAccountCredentialsGetter = (account: FakeDigitalOceanAccount) =>
-      account.getAccessToken();
-  const gcpAccountFactory = (refreshToken: string) => new FakeGcpAccount(refreshToken);
-  const gcpAccountCredentialsGetter = (account: FakeGcpAccount) => account.getRefreshToken();
-  return new CloudAccounts(
-      digitalOceanAccountFactory, digitalOceanAccountCredentialsGetter, gcpAccountFactory,
-      gcpAccountCredentialsGetter, storage);
+      new DigitalOceanAccount(accessToken, null, true);
+  const gcpAccountFactory = (refreshToken: string) => new GcpAccount(refreshToken);
+  return new CloudAccounts(digitalOceanAccountFactory, gcpAccountFactory, storage);
 }

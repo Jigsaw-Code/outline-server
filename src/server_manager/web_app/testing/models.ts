@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as cloud from '../../model/cloud';
 import * as digitalocean from '../../model/digitalocean';
 import * as gcp from '../../model/gcp';
-import * as cloud from '../../model/cloud';
 import * as server from '../../model/server';
 
 export class FakeDigitalOceanAccount implements digitalocean.Account {

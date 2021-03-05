@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as cloud from '../model/cloud';
 import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
-import * as cloud from '../model/cloud';
+import {DigitalOceanAccount} from "./digitalocean_account";
+import {GcpAccount} from "./gcp_account";
 
-type DigitalOceanAccountFactory = (accessToken: string) => digitalocean.Account;
-type GcpAccountFactory = (refreshToken: string) => gcp.Account;
+type DigitalOceanAccountFactory = (accessToken: string) => DigitalOceanAccount;
+type GcpAccountFactory = (refreshToken: string) => GcpAccount;
 
 export type AccountJson = {
   digitalocean?: DigitalOceanAccountJson,
@@ -39,14 +41,12 @@ export class CloudAccounts implements cloud.CloudAccounts {
   private readonly LEGACY_DIGITALOCEAN_STORAGE_KEY = 'LastDOToken';
   private readonly ACCOUNTS_STORAGE_KEY = 'accounts-storage';
 
-  private digitalOceanAccount: digitalocean.Account = null;
-  private gcpAccount: gcp.Account = null;
+  private digitalOceanAccount: DigitalOceanAccount = null;
+  private gcpAccount: GcpAccount = null;
 
   constructor(
       private digitalOceanAccountFactory: DigitalOceanAccountFactory,
-      private digitalOceanAccountCredentialsGetter: ((account: digitalocean.Account) => string),
       private gcpAccountFactory: GcpAccountFactory,
-      private gcpCredentialsGetter: ((account: gcp.Account) => string),
       private storage = localStorage) {}
 
   /**
@@ -118,7 +118,7 @@ export class CloudAccounts implements cloud.CloudAccounts {
   private save(): void {
     const accountJsons: AccountJson[] = [];
     if (this.digitalOceanAccount) {
-      const accessToken = this.digitalOceanAccountCredentialsGetter(this.digitalOceanAccount);
+      const accessToken = this.digitalOceanAccount.getAccessToken();
       const accountJson = {digitalocean: {accessToken}};
       accountJsons.push(accountJson);
 
@@ -126,7 +126,7 @@ export class CloudAccounts implements cloud.CloudAccounts {
       this.storage.setItem(this.LEGACY_DIGITALOCEAN_STORAGE_KEY, accessToken);
     }
     if (this.gcpAccount) {
-      const refreshToken = this.gcpCredentialsGetter(this.gcpAccount);
+      const refreshToken = this.gcpAccount.getRefreshToken();
       const accountJson = {gcp: {refreshToken}};
       accountJsons.push(accountJson);
     }

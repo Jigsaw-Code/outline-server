@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as digitalocean from "./digitalocean";
-import * as gcp from "./gcp";
+import * as digitalocean from './digitalocean';
+import * as gcp from './gcp';
 
 export interface CloudAccounts {
   /**
