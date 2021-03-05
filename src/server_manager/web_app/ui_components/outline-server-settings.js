@@ -192,12 +192,12 @@ Polymer({
             <outline-validated-input editable="[[isHostnameEditable]]" visible="[[serverHostname]]" label="[[localize('settings-server-hostname')]]" max-length="253" value="[[serverHostname]]" event="ChangeHostnameForAccessKeysRequested" localize="[[localize]]"></outline-validated-input>
             <paper-input readonly="" value="[[serverManagementApiUrl]]" label="[[localize('settings-server-api-url')]]" hidden\$="[[!serverManagementApiUrl]]" always-float-label="" maxlength="100"></paper-input>
             <paper-input readonly="" value="[[_formatDate(language, serverCreationDate)]]" label="[[localize('settings-server-creation')]]" hidden\$="[[!_formatDate(language, serverCreationDate)]]" always-float-label="" maxlength="100"></paper-input>
-            <paper-input readonly="" value="[[serverId]]" label="[[localize('settings-server-id')]]" hidden\$="[[!serverId]]" always-float-label="" maxlength="100"></paper-input>
+            <paper-input readonly="" value="[[metricsId]]" label="[[localize('settings-server-id')]]" hidden\$="[[!metricsId]]" always-float-label="" maxlength="100"></paper-input>
             <paper-input readonly="" value="[[serverVersion]]" label="[[localize('settings-server-version')]]" hidden\$="[[!serverVersion]]" always-float-label="" maxlength="100"></paper-input>
           </div>
         </div>
         <!-- Data limits -->
-        <div class="setting card-section" hidden\$="[[!supportsAccessKeyDataLimit]]">
+        <div class="setting card-section" hidden\$="[[!supportsDefaultDataLimit]]">
           <iron-icon class="setting-icon" icon="icons:perm-data-setting"></iron-icon>
           <div id="data-limits-container">
             <div class="selection-container">
@@ -208,7 +208,7 @@ Polymer({
               <!-- NOTE: The dropdown is not automatically sized to the button's width:
                            https://github.com/PolymerElements/paper-dropdown-menu/issues/229 -->
               <paper-dropdown-menu no-label-float="" horizontal-align="left">
-                <paper-listbox slot="dropdown-content" selected="{{_computeDataLimitsEnabledName(isAccessKeyDataLimitEnabled)}}" attr-for-selected="name" on-selected-changed="_accessKeyDataLimitEnabledChanged">
+                <paper-listbox slot="dropdown-content" selected="{{_computeDataLimitsEnabledName(isDefaultDataLimitEnabled)}}" attr-for-selected="name" on-selected-changed="_defaultDataLimitEnabledChanged">
                   <paper-item name="enabled">[[localize('enabled')]]</paper-item>
                   <paper-item name="disabled">[[localize('disabled')]]</paper-item>
                 </paper-listbox>
@@ -218,12 +218,12 @@ Polymer({
               <iron-icon icon="icons:error-outline"></iron-icon>
               <p inner-h-t-m-l="[[localize('data-limits-disclaimer', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
             </div>
-            <div class="data-limits-input" hidden\$="[[!isAccessKeyDataLimitEnabled]]">
-              <paper-input id="accessKeyDataLimitInput" value="[[accessKeyDataLimit.value]]" label="[[localize('data-limit-per-key')]]" always-float-label="" allowed-pattern="[0-9]+" required="" auto-validate="" maxlength="9" on-keydown="_handleAccessKeyDataLimitInputKeyDown" on-blur="_requestSetAccessKeyDataLimit"></paper-input>
+            <div class="data-limits-input" hidden\$="[[!isDefaultDataLimitEnabled]]">
+              <paper-input id="defaultDataLimitInput" value="[[defaultDataLimit.value]]" label="[[localize('data-limit-per-key')]]" always-float-label="" allowed-pattern="[0-9]+" required="" auto-validate="" maxlength="9" on-keydown="_handleDefaultDataLimitInputKeyDown" on-blur="_requestSetDefaultDataLimit"></paper-input>
               <paper-dropdown-menu no-label-float="">
-                <paper-listbox id="accessKeyDataLimitUnits" slot="dropdown-content" selected="[[accessKeyDataLimit.unit]]" attr-for-selected="name" on-selected-changed="_requestSetAccessKeyDataLimit">
-                  <paper-item name="MB">[[_getInternationalizedUnit(1000000, language)]]</paper-item>
-                  <paper-item name="GB">[[_getInternationalizedUnit(1000000000, language)]]</paper-item>
+                <paper-listbox id="defaultDataLimitUnits" slot="dropdown-content" selected="[[defaultDataLimit.unit]]" attr-for-selected="name" on-selected-changed="_requestSetDefaultDataLimit">
+                <paper-item name="MB">[[_getInternationalizedUnit(1000000, language)]]</paper-item>
+                <paper-item name="GB">[[_getInternationalizedUnit(1000000000, language)]]</paper-item>
                 </paper-listbox>
               </paper-dropdown-menu>
             </div>
@@ -264,16 +264,16 @@ Polymer({
     metricsEnabled: Boolean,
     // Initialize to null so we can use the hidden attribute, which does not work well with
     // undefined values.
-    serverId: {type: String, value: null},
+    metricsId: {type: String, value: null},
     serverHostname: {type: String, value: null},
     serverManagementApiUrl: {type: String, value: null},
     serverPortForNewAccessKeys: {type: Number, value: null},
     serverVersion: {type: String, value: null},
     isAccessKeyPortEditable: {type: Boolean, value: false},
-    isAccessKeyDataLimitEnabled: {type: Boolean, notify: true},
-    accessKeyDataLimit: {type: Object, value: null},  // type: app.DisplayDataAmount
-    supportsAccessKeyDataLimit:
-        {type: Boolean, value: false},  // Whether the server supports data limits.
+    isDefaultDataLimitEnabled: {type: Boolean, notify: true},
+    defaultDataLimit: {type: Object, value: null},  // type: app.DisplayDataAmount
+    supportsDefaultDataLimit:
+        {type: Boolean, value: false},  // Whether the server supports default data limits.
     showFeatureMetricsDisclaimer: {type: Boolean, value: false},
     isHostnameEditable: {type: Boolean, value: true},
     serverCreationDate: {type: Date, value: '1970-01-01T00:00:00.000Z'},
@@ -317,42 +317,42 @@ Polymer({
     this.fire(metricsSignal);
   },
 
-  _accessKeyDataLimitEnabledChanged: function(e) {
-    const wasDataLimitEnabled = this.isAccessKeyDataLimitEnabled;
+  _defaultDataLimitEnabledChanged: function(e) {
+    const wasDataLimitEnabled = this.isDefaultDataLimitEnabled;
     const isDataLimitEnabled = e.detail.value === 'enabled';
     if (isDataLimitEnabled === undefined || wasDataLimitEnabled === undefined) {
       return;
     } else if (isDataLimitEnabled === wasDataLimitEnabled) {
       return;
     }
-    this.isAccessKeyDataLimitEnabled = isDataLimitEnabled;
+    this.isDefaultDataLimitEnabled = isDataLimitEnabled;
     if (isDataLimitEnabled) {
-      this._requestSetAccessKeyDataLimit();
+      this._requestSetDefaultDataLimit();
     } else {
-      this.fire('RemoveAccessKeyDataLimitRequested');
+      this.fire('RemoveDefaultDataLimitRequested');
     }
   },
 
-  _handleAccessKeyDataLimitInputKeyDown: function(event) {
+  _handleDefaultDataLimitInputKeyDown: function(event) {
     if (event.key === 'Escape') {
-      this.$.accessKeyDataLimitInput.value = this.accessKeyDataLimit.value;
-      this.$.accessKeyDataLimitInput.blur();
+      this.$.defaultDataLimitInput.value = this.defaultDataLimit.value;
+      this.$.defaultDataLimitInput.blur();
     } else if (event.key === 'Enter') {
-      this.$.accessKeyDataLimitInput.blur();
+      this.$.defaultDataLimitInput.blur();
     }
   },
 
-  _requestSetAccessKeyDataLimit: function() {
-    if (this.$.accessKeyDataLimitInput.invalid) {
+  _requestSetDefaultDataLimit: function() {
+    if (this.$.defaultDataLimitInput.invalid) {
       return;
     }
-    const value = Number(this.$.accessKeyDataLimitInput.value);
-    const unit = this.$.accessKeyDataLimitUnits.selected;
-    this.fire('SetAccessKeyDataLimitRequested', {limit: {value, unit}});
+    const value = Number(this.$.defaultDataLimitInput.value);
+    const unit = this.$.defaultDataLimitUnits.selected;
+    this.fire('SetDefaultDataLimitRequested', {limit: {value, unit}});
   },
 
-  _computeDataLimitsEnabledName: function(isAccessKeyDataLimitEnabled) {
-    return isAccessKeyDataLimitEnabled ? 'enabled' : 'disabled';
+  _computeDataLimitsEnabledName: function(isDefaultDataLimitEnabled) {
+    return isDefaultDataLimitEnabled ? 'enabled' : 'disabled';
   },
 
   _validatePort: function(value) {

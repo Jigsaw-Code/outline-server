@@ -18,6 +18,7 @@ import '../ui_components/outline-feedback-dialog';
 import '../ui_components/outline-share-dialog';
 import '../ui_components/outline-sort-span';
 import '../ui_components/outline-survey-dialog';
+import '../ui_components/outline-per-key-data-limit-dialog';
 
 import IntlMessageFormat from 'intl-messageformat';
 import {css, customElement, html, LitElement, property} from 'lit-element';
@@ -44,6 +45,15 @@ async function makeLocalize(language: string) {
     const formatter = new IntlMessageFormat(messages[msgId], language);
     return formatter.format(params) as string;
   };
+}
+
+interface APIError {
+  // tslint:disable-next-line:no-any
+  detail: any;
+}
+
+function logEvent(e: APIError) {
+  console.log(e);
 }
 
 @customElement('outline-test-app')
@@ -80,7 +90,7 @@ export class TestApp extends LitElement {
       return;
     }
     this.localize = await makeLocalize(newLanguage);
-    this.language = newLanguage;    
+    this.language = newLanguage;
   }
 
   // tslint:disable-next-line:no-any
@@ -88,18 +98,47 @@ export class TestApp extends LitElement {
     return this.shadowRoot.querySelector(querySelector);
   }
 
+  private logAndSavePerKeyDataLimit(e: APIError) {
+    logEvent(e);
+    this.select('outline-per-key-data-limit-dialog').close();
+  }
+
   render() {
     return html`
       <h1>Outline Manager Components Gallery</h1>
       ${this.pageControls}
-      
+
+      <div
+        class="widget"
+        id="key-settings-widget"
+        @SavePerKeyDataLimitRequested=${this.logAndSavePerKeyDataLimit}
+        @RemovePerKeyDataLimitRequested=${this.logAndSavePerKeyDataLimit}
+      >
+        <h2>outline-per-key-data-limit-dialog</h2>
+        <button
+          @tap=${
+        () => this.select('outline-per-key-data-limit-dialog')
+                  .open(
+                      'Key Name', 'keyId',
+                      /* keyLimitBytes */ null, 'serverId',
+                      /* defaultLimitBytes */ 123 * 10 ** 6,
+                      /* language */ 'en')}
+        >
+          Open Dialog
+        </button>
+        <outline-per-key-data-limit-dialog
+          .localize=${this.localize}
+          dir=${this.dir}
+        ></outline-per-key-data-limit-dialog>
+      </div>
+
       <div class="widget">
         <h2>outline-about-dialog</h2>
         <button @tap=${() => this.select('outline-about-dialog').open()}>Open Dialog</button>
         <outline-about-dialog .localize=${this.localize} dir=${
         this.dir} outline-version="1.2.3"></outline-about-dialog>
       </div>
-      
+
       <div class="widget">
         <h2>outline-do-oauth-step</h2>
         <outline-do-oauth-step .localize=${this.localize} dir=${this.dir}></outline-do-oauth-step>
@@ -121,7 +160,7 @@ export class TestApp extends LitElement {
                   .open('<ACCESS_KEY>', '<INVITE_URL>')}>Open Dialog</button>
         <outline-share-dialog .localize=${this.localize} dir=${this.dir}></outline-share-dialog>
       </div>
-      
+
       <div class="widget">
         <h2>outline-sort-icon</h2>
         <outline-sort-span dir=${this.dir} direction=1 @tap=${() => {

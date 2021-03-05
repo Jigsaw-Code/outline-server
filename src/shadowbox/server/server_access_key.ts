@@ -178,7 +178,6 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.saveAccessKeys();
   }
 
-
   setAccessKeyDataLimit(id: AccessKeyId, limit: DataLimit): void {
     this.getAccessKey(id).dataLimit = limit;
     this.saveAccessKeys();

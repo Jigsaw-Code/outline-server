@@ -105,3 +105,39 @@ export function formatBytes(numBytes: number, language: string): string {
   const params = getDataFormattingParams(numBytes);
   return makeDataAmountFormatter(language, params).format(params.value);
 }
+
+// TODO(JonathanDCohen222) Differentiate between this type, which is an input data limit, and
+// a more general DisplayDataAmount with a string-typed unit and value which respects i18n.
+export interface DisplayDataAmount {
+  unit: 'MB'|'GB';
+  value: number;
+}
+
+/**
+ * @param dataAmount
+ * @returns The number of bytes represented by dataAmount
+ */
+export function displayDataAmountToBytes(dataAmount: DisplayDataAmount): number {
+  if (!dataAmount) {
+    return null;
+  }
+  if (dataAmount.unit === 'GB') {
+    return dataAmount.value * (10 ** 9);
+  } else if (dataAmount.unit === 'MB') {
+    return dataAmount.value * (10 ** 6);
+  }
+}
+
+/**
+ * @param bytes
+ * @returns A DisplayDataAmount representing the number of bytes
+ */
+export function bytesToDisplayDataAmount(bytes: number): DisplayDataAmount {
+  if (bytes === null || bytes === undefined) {
+    return null;
+  }
+  if (bytes >= 10 ** 9) {
+    return {value: Math.floor(bytes / (10 ** 9)), unit: 'GB'};
+  }
+  return {value: Math.floor(bytes / (10 ** 6)), unit: 'MB'};
+}
