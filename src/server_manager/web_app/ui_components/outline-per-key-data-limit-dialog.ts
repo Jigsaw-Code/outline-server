@@ -133,11 +133,11 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   /**
    * @member _keyDataLimitBytes The data limit, if it exists, on the access key we're working on.
    */
-  @internalProperty() _keyDataLimitBytes: number = null;
+  @internalProperty() _keyDataLimitBytes: number = undefined;
   /**
    * @member serverDefaultLimitBytes The default data limit of the server we're working on, or null
    */
-  @internalProperty() _serverDefaultLimitBytes: number = null;
+  @internalProperty() _serverDefaultLimitBytes: number = undefined;
   /**
    * @member _showMenu Whether the menu for inputting the data limit should be shown. Controlled by
    * the checkbox.
@@ -288,7 +288,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    */
   private _dataLimitChange(): Change {
     if (this._showMenu) {
-      if (this._keyDataLimitBytes === null) {
+      if (this._keyDataLimitBytes === undefined) {
         // The user must have clicked the checkbox and input a limit.
         return Change.SET;
       }
@@ -298,7 +298,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
       }
       return Change.UNCHANGED;
     }
-    if (this._keyDataLimitBytes !== null) {
+    if (this._keyDataLimitBytes !== undefined) {
       // The user must have unchecked the checkbox.
       return Change.REMOVED;
     }
@@ -338,9 +338,10 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    *
    * @param keyName - The displayed name of the access key.
    * @param keyId - The unique ID of the access key.
-   * @param keyDataLimit - The display data limit of the access key, or null.
+   * @param keyDataLimit - The display data limit of the access key, or undefined.
    * @param serverId - The ID of the server the access key is a part of.
-   * @param serverDefaultLimit - The default data limit for the server, or null if there is none
+   * @param serverDefaultLimit - The default data limit for the server, or undefined if there is
+   *     none
    */
   public open(
       keyName: string, keyId: string, keyLimitBytes: number, serverId: string,
@@ -360,7 +361,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    * Sets the input state of the dialog back to what it was when it was first opened.
    */
   public setInitialMenuState() {
-    this._showMenu = this._keyDataLimitBytes !== null;
+    this._showMenu = this._keyDataLimitBytes !== undefined;
     this._queryAs<PaperListboxElement>('#unitsListbox')?.select(this._initialUnit());
   }
 

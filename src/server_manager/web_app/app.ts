@@ -667,8 +667,8 @@ export class App {
     view.serverPortForNewAccessKeys = server.getPortForNewAccessKeys();
     view.serverCreationDate = server.getCreatedDate();
     view.serverVersion = version;
-    view.defaultDataLimit = dataLimitToDisplayDataAmount(server.getDefaultDataLimit());
-    view.isDefaultDataLimitEnabled = !!view.defaultDataLimit;
+    view.defaultDataLimitBytes = server.getDefaultDataLimit()?.bytes;
+    view.isDefaultDataLimitEnabled = view.defaultDataLimitBytes !== undefined;
     view.showFeatureMetricsDisclaimer = server.getMetricsEnabled() &&
         !server.getDefaultDataLimit() && !hasSeenFeatureMetricsNotification();
 
@@ -699,9 +699,9 @@ export class App {
       try {
         const serverAccessKeys = await server.listAccessKeys();
         view.accessKeyRows = serverAccessKeys.map(this.convertToUiAccessKey.bind(this));
-        if (!view.defaultDataLimit) {
-          view.defaultDataLimit =
-              dataLimitToDisplayDataAmount(await computeDefaultDataLimit(server, serverAccessKeys));
+        if (view.defaultDataLimitBytes === undefined) {
+          view.defaultDataLimitBytes =
+              (await computeDefaultDataLimit(server, serverAccessKeys))?.bytes;
         }
         // Show help bubbles once the page has rendered.
         setTimeout(() => {
@@ -766,26 +766,23 @@ export class App {
   private async refreshTransferStats(selectedServer: server.Server, serverView: ServerView) {
     try {
       const usageMap = await selectedServer.getDataUsage();
+      const keyTransfers = usageMap.values();
       let totalInboundBytes = 0;
-      for (const accessKeyBytes of usageMap.values()) {
+      for (const accessKeyBytes of keyTransfers) {
         totalInboundBytes += accessKeyBytes;
       }
       serverView.totalInboundBytes = totalInboundBytes;
 
       // Update all the displayed access keys, even if usage didn't change, in case data limits did.
-      const defaultDataLimit = selectedServer.getDefaultDataLimit();
       const keys = await selectedServer.listAccessKeys();
       for (const key of keys) {
-        const transferredBytes = usageMap.get(key.id) ?? 0;
-        const activeLimit = key.dataLimit || defaultDataLimit;
-        const relevantBandwidth = activeLimit?.bytes ?? transferredBytes;
-        serverView.updateAccessKeyRow(key.id, {
-          transferredBytes,
-          relevantBandwidth,
-          dataLimit: dataLimitToDisplayDataAmount(key.dataLimit)
-        });
+        serverView.updateAccessKeyRow(
+            key.id,
+            {transferredBytes: usageMap.get(key.id) ?? 0, dataLimitBytes: key.dataLimit?.bytes});
       }
-      const keyTransferMax = Math.max(0, ...usageMap.values());
+      const keyTransferMax = Math.max(0, ...keyTransfers);
+      const defaultDataLimit =
+          serverView.isDefaultDataLimitEnabled ? selectedServer.getDefaultDataLimit() : undefined;
       // Use a default value for each entry, as any `undefined` will force Math.max to return NaN.
       const dataLimitMax = Math.max(
           ...keys.map((k: server.AccessKey) => k.dataLimit?.bytes || 0),
@@ -832,8 +829,7 @@ export class App {
       name: remoteAccessKey.name,
       accessUrl: remoteAccessKey.accessUrl,
       transferredBytes: 0,
-      relevantBandwidth: 2,
-      dataLimit: dataLimitToDisplayDataAmount(remoteAccessKey.dataLimit),
+      dataLimitBytes: remoteAccessKey.dataLimit?.bytes,
     };
   }
 
@@ -874,7 +870,8 @@ export class App {
     try {
       await this.selectedServer.setDefaultDataLimit(limit);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
-      serverView.defaultDataLimit = dataLimitToDisplayDataAmount(limit);
+      serverView.defaultDataLimitBytes = limit?.bytes;
+      serverView.isDefaultDataLimitEnabled = !!limit;
       this.refreshTransferStats(this.selectedServer, serverView);
       // Don't display the feature collection disclaimer anymore.
       serverView.showFeatureMetricsDisclaimer = false;
@@ -882,8 +879,8 @@ export class App {
     } catch (error) {
       console.error(`Failed to set server default data limit: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-set-data-limit'));
-      serverView.defaultDataLimit = dataLimitToDisplayDataAmount(
-          previousLimit || await computeDefaultDataLimit(this.selectedServer));
+      const defaultLimit = previousLimit || await computeDefaultDataLimit(this.selectedServer);
+      serverView.defaultDataLimitBytes = defaultLimit?.bytes;
       serverView.isDefaultDataLimitEnabled = !!previousLimit;
     }
   }

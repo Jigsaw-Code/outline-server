@@ -61,6 +61,15 @@ function compare(a, b) {
 }
 
 /**
+ * Allows using an optional number as a boolean value without 0 being falsey.
+ * @param {number=} x
+ * @returns {number=} True if x is neither null nor undefined
+ */
+function exists(x) {
+  return (x !== null && x !== undefined);
+}
+
+/**
  * An access key to be displayed
  * @typedef {Object} DisplayAccessKey
  * @prop {string} id
@@ -68,7 +77,7 @@ function compare(a, b) {
  * @prop {string} name
  * @prop {string} accessUrl
  * @prop {number} transferredBytes
- * @prop {number} relevantBandwidth The active limit on the key, or its total data transfer.
+ * @prop {number=} dataLimitBytes The data limit assigned to the key if it exists.
  * @prop {DisplayDataAmount=} dataLimit The data limit assigned to the key if it exists.
  */
 
@@ -529,7 +538,7 @@ export class ServerView extends DirMixin(PolymerElement) {
                     /
                     <bdi>[[_formatDataLimitForKey(myConnection, language)]]</bdi>
                   </span>
-                <paper-progress max="[[myConnection.relevantBandwidth]]" value="[[myConnection.transferredBytes]]" class\$="[[_computePaperProgressClass(myConnection)]]" style\$="[[_computeProgressWidthStyling(myConnection.relevantBandwidth, baselineDataTransfer)]]"></paper-progress>
+                <paper-progress max="[[_getRelevantTransferAmountForKey(myConnection)]]" value="[[myConnection.transferredBytes]]" class\$="[[_computePaperProgressClass(myConnection)]]" style\$="[[_computeProgressWidthStyling(myConnection, baselineDataTransfer)]]"></paper-progress>
                 <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!_activeDataLimitForKey(myConnection)]]">
                   [[_getDataLimitsUsageString(myConnection, language)]]
                 </paper-tooltip>
@@ -558,7 +567,7 @@ export class ServerView extends DirMixin(PolymerElement) {
                       /
                       <bdi>[[_formatDataLimitForKey(item, language)]]</bdi>
                     </span>
-                    <paper-progress max="[[item.relevantBandwidth]]" value="[[item.transferredBytes]]" class\$="[[_computePaperProgressClass(item)]]" style\$="[[_computeProgressWidthStyling(item.relevantBandwidth, baselineDataTransfer)]]"></paper-progress>
+                    <paper-progress max="[[_getRelevantTransferAmountForKey(item)]]" value="[[item.transferredBytes]]" class\$="[[_computePaperProgressClass(item)]]" style\$="[[_computeProgressWidthStyling(item, baselineDataTransfer)]]"></paper-progress>
                     <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!_activeDataLimitForKey(item)]]">
                       [[_getDataLimitsUsageString(item, language)]]
                     </paper-tooltip>
@@ -597,7 +606,7 @@ export class ServerView extends DirMixin(PolymerElement) {
           </div>
         </div>
         <div name="settings">
-          <outline-server-settings id="serverSettings" metrics-id="[[metricsId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" default-data-limit="{{defaultDataLimit}}" is-default-data-limit-enabled="{{isDefaultDataLimitEnabled}}" supports-default-data-limit="[[supportsDefaultDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" language="[[language]]" localize="[[localize]]">
+          <outline-server-settings id="serverSettings" metrics-id="[[metricsId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" default-data-limit="[[_computeDisplayDataLimit(defaultDataLimitBytes)]]" is-default-data-limit-enabled="{{isDefaultDataLimitEnabled}}" supports-default-data-limit="[[supportsDefaultDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" language="[[language]]" localize="[[localize]]">
           </outline-server-settings>
         </div>
       </iron-pages>`;
@@ -620,7 +629,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         isAccessKeyPortEditable: {type: Boolean},
         serverCreationDate: {type: Date},
         serverLocation: String,
-        defaultDataLimit: {type: Object},
+        defaultDataLimitBytes: Number,
         isDefaultDataLimitEnabled: {type: Boolean},
         supportsDefaultDataLimit: {type: Boolean},
         showFeatureMetricsDisclaimer: {type: Boolean},
@@ -670,8 +679,8 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.isAccessKeyPortEditable = false;
       this.serverCreationDate = new Date(0);
       this.serverLocationId = '';
-      /** @type {DisplayDataAmount} */
-      this.defaultDataLimit = null;
+      /** @type {number} */
+      this.defaultDataLimitBytes = null;
       this.isDefaultDataLimitEnabled = false;
       this.hasPerKeyDataLimitDialog = false;
       /** Whether the server supports default data limits. */
@@ -850,7 +859,8 @@ export class ServerView extends DirMixin(PolymerElement) {
     const accessKey = (event.model && event.model.item) || this.myConnection;
     const keyName = accessKey === this.myConnection ? this.localize('server-my-access-key') :
                                                       accessKey.name || accessKey.placeholderName;
-    const defaultDataLimit = this.defaultDataLimit;
+    const defaultDataLimit =
+        this.isDefaultDataLimitEnabled ? this.defaultDataLimitBytes : undefined;
     const serverId = this.serverId;
     this.dispatchEvent(makePublicEvent(
         'OpenPerKeyDataLimitDialogRequested', {accessKey, keyName, defaultDataLimit, serverId}));
@@ -886,9 +896,16 @@ export class ServerView extends DirMixin(PolymerElement) {
     return this._formatDisplayDataLimit(this._activeDataLimitForKey(key), language)
   }
 
+  _computeDisplayDataLimit(/** @param {number=} */ limit) {
+    return formatting.bytesToDisplayDataAmount(limit);
+  }
+
+  /**
+   * @param {number=} limit The data limit in bytes
+   * @param {string} language The 2-letter ISO language code to format for.
+   */
   _formatDisplayDataLimit(limit, language) {
-    return limit ? formatting.formatBytes(formatting.displayDataAmountToBytes(limit), language) :
-                   this.localize('no-data-limit');
+    return exists(limit) ? formatting.formatBytes(limit, language) : this.localize('no-data-limit');
   }
 
   _formatInboundBytesUnit(totalBytes, language) {
@@ -1030,27 +1047,46 @@ export class ServerView extends DirMixin(PolymerElement) {
     this.dispatchEvent(makePublicEvent('ForgetServerRequested'));
   }
 
+  /**
+   * @param {DisplayAccessKey=} accessKey
+   * @returns {number=}
+   */
   _activeDataLimitForKey(accessKey) {
     if (!accessKey) {
       // We're in app startup
       return null;
     }
-    return accessKey.dataLimit || (this.isDefaultDataLimitEnabled ? this.defaultDataLimit : null);
+
+    if (exists(accessKey.dataLimitBytes)) {
+      return accessKey.dataLimitBytes;
+    }
+
+    return this.isDefaultDataLimitEnabled ? this.defaultDataLimitBytes : null;
   }
 
   _computePaperProgressClass(accessKey) {
-    return this._activeDataLimitForKey(accessKey) ? 'data-limits' : '';
+    return exists(this._activeDataLimitForKey(accessKey)) ? 'data-limits' : '';
+  }
+
+  _getRelevantTransferAmountForKey(/** @type{DisplayAccessKey} */ accessKey) {
+    if (!accessKey) {
+      // We're in app startup
+      return null;
+    }
+    const activeLimit = this._activeDataLimitForKey(accessKey);
+    return exists(activeLimit) ? activeLimit : accessKey.transferredBytes;
   }
 
   _computeProgressWidthStyling(
-      /** @type {number} */ relevantBandwidth, /** @type {number} */ baselineDataTransfer) {
-    const width = Math.floor(progressBarMaxWidthPx * relevantBandwidth / baselineDataTransfer);
+      /** @type {DisplayAccessKey} */ accessKey, /** @type {number} */ baselineDataTransfer) {
+    const relativeTransfer = this._getRelevantTransferAmountForKey(accessKey);
+    const width = Math.floor(progressBarMaxWidthPx * relativeTransfer / baselineDataTransfer);
     // It's important that there's no space in between width and "px" in order for Chrome to accept
     // the inline style string.
     return `width: ${width}px;`;
   }
 
-  _getDataLimitsUsageString(accessKey, language) {
+  _getDataLimitsUsageString(accessKey, UNUSED_language) {
     if (!accessKey) {
       // We're in app startup
       return '';

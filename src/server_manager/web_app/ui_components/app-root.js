@@ -815,10 +815,13 @@ export class AppRoot extends mixinBehaviors
     this.$.shareDialog.open(accessKey, s3Url);
   }
 
-  openPerKeyDataLimitDialog(accessKey, keyName, serverId, defaultDataLimitAmount) {
+  /**
+   * @param accessKey The DisplayAccessKey for the dialog to work on
+   */
+  openPerKeyDataLimitDialog(accessKey, keyName, serverId, defaultDataLimitBytes) {
     this.$.perKeyDataLimitDialog.open(
-        keyName, accessKey.id, displayDataAmountToBytes(accessKey.dataLimit), serverId,
-        displayDataAmountToBytes(defaultDataLimitAmount), this.language);
+        keyName, accessKey.id, accessKey.dataLimitBytes, serverId, defaultDataLimitBytes,
+        this.language);
   }
 
   openGetConnectedDialog(/** @type {string} */ inviteUrl) {
