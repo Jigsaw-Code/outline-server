@@ -172,7 +172,7 @@ export class App {
     appRoot.addEventListener('OpenPerKeyDataLimitDialogRequested', (event: CustomEvent) => {
       appRoot.openPerKeyDataLimitDialog(
           event.detail.accessKey, event.detail.keyName, event.detail.serverId,
-          event.detail.defaultDataLimit);
+          event.detail.defaultDataLimitBytes);
     });
 
     appRoot.addEventListener('RenameAccessKeyRequested', (event: CustomEvent) => {

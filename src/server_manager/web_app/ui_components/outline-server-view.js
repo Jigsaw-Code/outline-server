@@ -859,11 +859,12 @@ export class ServerView extends DirMixin(PolymerElement) {
     const accessKey = (event.model && event.model.item) || this.myConnection;
     const keyName = accessKey === this.myConnection ? this.localize('server-my-access-key') :
                                                       accessKey.name || accessKey.placeholderName;
-    const defaultDataLimit =
+    const defaultDataLimitBytes =
         this.isDefaultDataLimitEnabled ? this.defaultDataLimitBytes : undefined;
     const serverId = this.serverId;
     this.dispatchEvent(makePublicEvent(
-        'OpenPerKeyDataLimitDialogRequested', {accessKey, keyName, defaultDataLimit, serverId}));
+        'OpenPerKeyDataLimitDialogRequested',
+        {accessKey, keyName, defaultDataLimitBytes, serverId}));
   }
 
   _handleRenameAccessKeyPressed(event) {
