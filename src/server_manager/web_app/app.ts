@@ -913,7 +913,6 @@ export class App {
       this.appRoot.showNotification(this.appRoot.localize('saved'));
     } catch (error) {
       console.error(`Failed to set data limit for access key ${keyId}: ${error}`);
-      dialog.setInitialMenuState();
       this.appRoot.showError(this.appRoot.localize('error-set-per-key-limit'));
     }
   }
@@ -932,7 +931,6 @@ export class App {
       this.appRoot.showNotification(this.appRoot.localize('saved'));
     } catch (error) {
       console.error(`Failed to remove data limit from access key ${keyId}: ${error}`);
-      dialog.setInitialMenuState();
       this.appRoot.showError(this.appRoot.localize('error-remove-per-key-limit'));
     }
   }
