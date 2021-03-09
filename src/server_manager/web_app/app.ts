@@ -766,7 +766,7 @@ export class App {
   private async refreshTransferStats(selectedServer: server.Server, serverView: ServerView) {
     try {
       const usageMap = await selectedServer.getDataUsage();
-      const keyTransfers = usageMap.values();
+      const keyTransfers = [...usageMap.values()];
       let totalInboundBytes = 0;
       for (const accessKeyBytes of keyTransfers) {
         totalInboundBytes += accessKeyBytes;
