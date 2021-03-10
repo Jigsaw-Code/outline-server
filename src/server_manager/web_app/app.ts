@@ -875,7 +875,7 @@ export class App {
       await this.selectedServer.setDefaultDataLimit(limit);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
       serverView.defaultDataLimitBytes = limit?.bytes;
-      serverView.isDefaultDataLimitEnabled = !!limit;
+      serverView.isDefaultDataLimitEnabled = true;
       this.refreshTransferStats(this.selectedServer, serverView);
       // Don't display the feature collection disclaimer anymore.
       serverView.showFeatureMetricsDisclaimer = false;
