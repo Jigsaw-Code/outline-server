@@ -774,19 +774,23 @@ export class App {
       serverView.totalInboundBytes = totalInboundBytes;
 
       // Update all the displayed access keys, even if usage didn't change, in case data limits did.
+      const largerOf = (a: number, b: number|undefined) => {
+        // This check assumes that a is always non-negative, otherwise it fails the b === 0 case.
+        if (!b) {
+          return a;
+        }
+        return a > b ? a : b;
+      };
+      let keyTransferMax = 0;
+      let dataLimitMax = largerOf(0, selectedServer.getDefaultDataLimit()?.bytes);
       const keys = await selectedServer.listAccessKeys();
       for (const key of keys) {
         serverView.updateAccessKeyRow(
             key.id,
             {transferredBytes: usageMap.get(key.id) ?? 0, dataLimitBytes: key.dataLimit?.bytes});
+        keyTransferMax = largerOf(keyTransferMax, usageMap.get(key.id));
+        dataLimitMax = largerOf(dataLimitMax, key.dataLimit?.bytes);
       }
-      const keyTransferMax = Math.max(0, ...keyTransfers);
-      const defaultDataLimit =
-          serverView.isDefaultDataLimitEnabled ? selectedServer.getDefaultDataLimit() : undefined;
-      // Use a default value for each entry, as any `undefined` will force Math.max to return NaN.
-      const dataLimitMax = Math.max(
-          ...keys.map((k: server.AccessKey) => k.dataLimit?.bytes || 0),
-          defaultDataLimit?.bytes || 0);
       serverView.baselineDataTransfer = Math.max(keyTransferMax, dataLimitMax);
     } catch (e) {
       // Since failures are invisible to users we generally want exceptions here to bubble
