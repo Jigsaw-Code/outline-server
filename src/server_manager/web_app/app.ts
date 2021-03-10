@@ -891,14 +891,16 @@ export class App {
 
   private async removeDefaultDataLimit() {
     const serverView = this.appRoot.getServerView(this.appRoot.selectedServerId);
+    const previousLimit = this.selectedServer.getDefaultDataLimit();
     try {
       await this.selectedServer.removeDefaultDataLimit();
+      serverView.isDefaultDataLimitEnabled = false;
       this.appRoot.showNotification(this.appRoot.localize('saved'));
       this.refreshTransferStats(this.selectedServer, serverView);
     } catch (error) {
       console.error(`Failed to remove server default data limit: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-remove-data-limit'));
-      serverView.isDefaultDataLimitEnabled = true;
+      serverView.isDefaultDataLimitEnabled = !!previousLimit;
     }
   }
 
