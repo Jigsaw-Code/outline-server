@@ -100,7 +100,7 @@ Even though Shadowsocks is a standard, it leaves a lot of room for choices on ho
 
 First of all, you **must use AEAD ciphers**. If you are using stream ciphers, you are doing it wrong. It's very easy to break your encryption and detect your server. Outline has banned all stream ciphers, since people copy old examples to set up their servers. In fact, Outline picks the cipher for you, since people don't know how to pick it. We also generate a long random secret for you, so you are not vulnerable to dictionary-based attacks.
 
-Second, you need **probing resistance**. Both shadowsocks-libev and Outline have added that. The research Detecting Probe-resistant showed that, in the past, an invalid byte would trigger different behaviors whether it was inserted in positions 49, 50 or 51 of the stream, which is very telling. That behavior is now gone, and the censor can no longer rely on that.
+Second, you need **probing resistance**. Both shadowsocks-libev and Outline have added that. The research [Detecting Probe-resistant Proxies](https://www.ndss-symposium.org/ndss-paper/detecting-probe-resistant-proxies/) showed that, in the past, an invalid byte would trigger different behaviors whether it was inserted in positions 49, 50 or 51 of the stream, which is very telling. That behavior is now gone, and the censor can no longer rely on that.
 
 Third, you need **protection against replayed data**. Both shadowsocks-libev and Outline have added such protection, which you may need to enable explicitly on ss-libev, but it's the default on Outline.
 
