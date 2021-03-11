@@ -129,13 +129,9 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    */
   @internalProperty() _keyName = '';
   /**
-   * @member _keyDataLimitBytes The data limit, if it exists, on the access key we're working on.
+   * @member _activeDataLimitBytes The data limit, if it exists, on the access key we're working on.
    */
-  @internalProperty() _keyDataLimitBytes: number = undefined;
-  /**
-   * @member serverDefaultLimitBytes The default data limit of the server we're working on, or null
-   */
-  @internalProperty() _serverDefaultLimitBytes: number = undefined;
+  @internalProperty() _activeDataLimitBytes: number = undefined;
   /**
    * @member _showDataLimit Whether the menu for inputting the data limit should be shown.
    * Controlled by the checkbox.
@@ -247,11 +243,11 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   }
 
   private _initialUnit(): 'GB'|'MB' {
-    return bytesToDisplayDataAmount(this._keyDataLimitBytes)?.unit || 'GB';
+    return bytesToDisplayDataAmount(this._activeDataLimitBytes)?.unit || 'GB';
   }
 
   private _initialValue() {
-    return bytesToDisplayDataAmount(this._keyDataLimitBytes)?.value.toString() || '';
+    return bytesToDisplayDataAmount(this._activeDataLimitBytes)?.value.toString() || '';
   }
 
   private async _setCustomLimitTapped() {
@@ -284,17 +280,17 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    */
   private _dataLimitChange(): Change {
     if (this._showDataLimit) {
-      if (this._keyDataLimitBytes === undefined) {
+      if (this._activeDataLimitBytes === undefined) {
         // The user must have clicked the checkbox and input a limit.
         return Change.SET;
       }
       const inputLimit = displayDataAmountToBytes(this.inputDataLimit());
-      if (inputLimit !== this._keyDataLimitBytes) {
+      if (inputLimit !== this._activeDataLimitBytes) {
         return Change.SET;
       }
       return Change.UNCHANGED;
     }
-    if (this._keyDataLimitBytes !== undefined) {
+    if (this._activeDataLimitBytes !== undefined) {
       // The user must have unchecked the checkbox.
       return Change.REMOVED;
     }
@@ -326,8 +322,8 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
       keyName: string, keyLimitBytes: number, onDataLimitSet: OnSetDataLimitHandler,
       onDataLimitRemoved: OnRemoveDataLimitHandler) {
     this._keyName = keyName;
-    this._keyDataLimitBytes = keyLimitBytes;
-    this._showDataLimit = this._keyDataLimitBytes !== undefined;
+    this._activeDataLimitBytes = keyLimitBytes;
+    this._showDataLimit = this._activeDataLimitBytes !== undefined;
     this._onDataLimitSet = onDataLimitSet;
     this._onDataLimitRemoved = onDataLimitRemoved;
 
