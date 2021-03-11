@@ -234,7 +234,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     return Number(this._input?.value) ?? 0;
   }
 
-  private _dataLimitType() {
+  private _dataLimitUnit(): 'GB'|'MB' {
     return this._queryAs<PaperListboxElement>('#unitsListbox').selected as 'GB' | 'MB';
   }
 
@@ -301,7 +301,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    * The current data limit as input by the user, but not necessarily as saved.
    */
   public inputDataLimit(): DisplayDataAmount {
-    return this._showDataLimit ? {unit: this._dataLimitType(), value: this._dataLimitValue()} :
+    return this._showDataLimit ? {unit: this._dataLimitUnit(), value: this._dataLimitValue()} :
                                  null;
   }
 
