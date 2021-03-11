@@ -24,6 +24,7 @@ import '@polymer/paper-checkbox/paper-checkbox';
 import {PaperCheckboxElement} from '@polymer/paper-checkbox/paper-checkbox';
 import IntlMessageFormat from 'intl-messageformat';
 import {css, customElement, html, LitElement, property} from 'lit-element';
+import {OutlinePerKeyDataLimitDialog} from '../ui_components/outline-per-key-data-limit-dialog';
 
 async function makeLocalize(language: string) {
   let messages: {[key: string]: string};
@@ -38,7 +39,7 @@ async function makeLocalize(language: string) {
     for (let i = 0; i < args.length; i += 2) {
       params[args[i]] = args[i + 1];
     }
-    if (!messages) {
+    if (!messages || !messages[msgId]) {
       // Fallback that shows message id and params.
       return `${msgId}(${JSON.stringify(params, null, " ")})`;
     }
@@ -125,12 +126,9 @@ export class TestApp extends LitElement {
         <h2>outline-per-key-data-limit-dialog</h2>
         <button
           @tap=${
-        () => this.select('outline-per-key-data-limit-dialog')
+        () => (this.select('outline-per-key-data-limit-dialog') as OutlinePerKeyDataLimitDialog)
                   .open(
-                      'Key Name',
-                      /* keyLimitBytes */ this.keyDataLimit,
-                      /* defaultLimitBytes */ 123 * 10 ** 6,
-                      /* language */ 'en', this.setKeyDataLimit.bind(this),
+                      'Key Name', this.keyDataLimit, 123 * 10 ** 6, this.setKeyDataLimit.bind(this),
                       this.removeKeyDataLimit.bind(this))}
         >
           Open Dialog
@@ -144,6 +142,7 @@ export class TestApp extends LitElement {
         >Save Successful</paper-checkbox>
         <outline-per-key-data-limit-dialog
           .localize=${this.localize}
+          .language=${this.language}
           dir=${this.dir}
         ></outline-per-key-data-limit-dialog>
       </div>

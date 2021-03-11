@@ -146,10 +146,11 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    * input.
    */
   @internalProperty() _enableSave = false;
+
   /**
-   * @member _language The language used for i18n
+   * @member language The ISO 3166-1 alpha-2 language code used for i18n.
    */
-  @internalProperty() _language = 'en';
+  @property({type: String}) language = '';
   @property({type: Function}) localize: Function;
 
   private _onDataLimitSet?: OnSetDataLimitHandler;
@@ -242,7 +243,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   }
 
   private _getInternationalizedUnit(bytes: number) {
-    return formatBytesParts(bytes, this._language).unit;
+    return formatBytesParts(bytes, this.language).unit;
   }
 
   private _initialUnit(): 'GB'|'MB' {
@@ -327,13 +328,12 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    *    not the data limit was removed successfully.  Must not throw or change the dialog's state.
    */
   public open(
-      keyName: string, keyLimitBytes: number, defaultLimitBytes: number, language: string,
+      keyName: string, keyLimitBytes: number, defaultLimitBytes: number,
       onDataLimitSet: OnSetDataLimitHandler, onDataLimitRemoved: OnRemoveDataLimitHandler) {
     this._keyName = keyName;
     this._keyDataLimitBytes = keyLimitBytes;
     this._showDataLimit = this._keyDataLimitBytes !== undefined;
     this._serverDefaultLimitBytes = defaultLimitBytes;
-    this._language = language;
     this._onDataLimitSet = onDataLimitSet;
     this._onDataLimitRemoved = onDataLimitRemoved;
 

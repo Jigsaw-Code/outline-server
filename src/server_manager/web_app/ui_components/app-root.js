@@ -472,7 +472,7 @@ export class AppRoot extends mixinBehaviors
       <outline-modal-dialog id="modalDialog"></outline-modal-dialog>
       <outline-share-dialog id="shareDialog" localize="[[localize]]"></outline-share-dialog>
       <outline-metrics-option-dialog id="metricsDialog" localize="[[localize]]"></outline-metrics-option-dialog>
-      <outline-per-key-data-limit-dialog id="perKeyDataLimitDialog" localize="[[localize]]"></outline-per-key-data-limit-dialog>
+      <outline-per-key-data-limit-dialog id="perKeyDataLimitDialog" language="[[language]]" localize="[[localize]]"></outline-per-key-data-limit-dialog>
 
       <paper-dialog id="getConnectedDialog" modal="">
         <!-- iframe gets inserted here once we are given the invite URL. -->
@@ -822,8 +822,7 @@ export class AppRoot extends mixinBehaviors
       keyDataLimitBytes, keyName, defaultDataLimitBytes, onDataLimitSet, onDataLimitRemoved) {
     // attach listeners here
     this.$.perKeyDataLimitDialog.open(
-        keyName, keyDataLimitBytes, defaultDataLimitBytes, this.language, onDataLimitSet,
-        onDataLimitRemoved);
+        keyName, keyDataLimitBytes, defaultDataLimitBytes, onDataLimitSet, onDataLimitRemoved);
   }
 
   openGetConnectedDialog(/** @type {string} */ inviteUrl) {
