@@ -763,22 +763,14 @@ export class App {
       serverView.totalInboundBytes = totalInboundBytes;
 
       // Update all the displayed access keys, even if usage didn't change, in case data limits did.
-      const largerOf = (a: number, b: number|undefined) => {
-        // This check assumes that a is always non-negative, otherwise it fails the b === 0 case.
-        if (!b) {
-          return a;
-        }
-        return a > b ? a : b;
-      };
       let keyTransferMax = 0;
-      let dataLimitMax = largerOf(0, selectedServer.getDefaultDataLimit()?.bytes);
-      const keys = await selectedServer.listAccessKeys();
-      for (const key of keys) {
+      let dataLimitMax = selectedServer.getDefaultDataLimit()?.bytes ?? 0;
+      for (const key of await selectedServer.listAccessKeys()) {
         serverView.updateAccessKeyRow(
             key.id,
             {transferredBytes: usageMap.get(key.id) ?? 0, dataLimitBytes: key.dataLimit?.bytes});
-        keyTransferMax = largerOf(keyTransferMax, usageMap.get(key.id));
-        dataLimitMax = largerOf(dataLimitMax, key.dataLimit?.bytes);
+        keyTransferMax = Math.max(keyTransferMax, usageMap.get(key.id) ?? 0);
+        dataLimitMax = Math.max(dataLimitMax, key.dataLimit?.bytes ?? 0);
       }
       serverView.baselineDataTransfer = Math.max(keyTransferMax, dataLimitMax);
     } catch (e) {
