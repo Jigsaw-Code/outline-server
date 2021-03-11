@@ -169,10 +169,20 @@ export class App {
       this.removeAccessKey(event.detail.accessKeyId);
     });
 
-    appRoot.addEventListener('OpenPerKeyDataLimitDialogRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('OpenPerKeyDataLimitDialogRequested', (event: CustomEvent<{
+                                                                     keyId: string,
+                                                                     keyDataLimitBytes: number,
+                                                                     keyName: string,
+                                                                     serverId: string,
+                                                                     defaultDataLimitBytes: number
+                                                                   }>) => {
+      const detail = event.detail;
+      const onDataLimitSet = this.savePerKeyDataLimit.bind(this, detail.serverId, detail.keyId);
+      const onDataLimitRemoved =
+          this.removePerKeyDataLimit.bind(this, detail.serverId, detail.keyId);
       appRoot.openPerKeyDataLimitDialog(
-          event.detail.accessKey, event.detail.keyName, event.detail.serverId,
-          event.detail.defaultDataLimitBytes);
+          detail.keyDataLimitBytes, detail.keyName, detail.defaultDataLimitBytes, onDataLimitSet,
+          onDataLimitRemoved);
     });
 
     appRoot.addEventListener('RenameAccessKeyRequested', (event: CustomEvent) => {
@@ -185,14 +195,6 @@ export class App {
 
     appRoot.addEventListener('RemoveDefaultDataLimitRequested', (event: CustomEvent) => {
       this.removeDefaultDataLimit();
-    });
-
-    appRoot.addEventListener('SavePerKeyDataLimitRequested', (event: CustomEvent) => {
-      this.savePerKeyDataLimit(event.detail.dialog);
-    });
-
-    appRoot.addEventListener('RemovePerKeyDataLimitRequested', (event: CustomEvent) => {
-      this.removePerKeyDataLimit(event.detail.dialog);
     });
 
     appRoot.addEventListener('ChangePortForNewAccessKeysRequested', (event: CustomEvent) => {
@@ -904,40 +906,36 @@ export class App {
     }
   }
 
-  private async savePerKeyDataLimit(dialog: OutlinePerKeyDataLimitDialog) {
+  private async savePerKeyDataLimit(serverId: string, keyId: string, dataLimitBytes: number):
+      Promise<boolean> {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
-    const server = this.idServerMap.get(dialog.serverId());
+    const server = this.idServerMap.get(serverId);
     const serverView = this.appRoot.getServerView(server.getId());
-    const keyId = dialog.keyId();
     try {
-      if (dialog.dataLimitChanged()) {
-        const dataLimit = dialog.inputDataLimit();
-        await server.setAccessKeyDataLimit(keyId, displayDataAmountToDataLimit(dataLimit));
-        this.refreshTransferStats(server, serverView);
-      }
-      dialog.close();
+      await server.setAccessKeyDataLimit(keyId, {bytes: dataLimitBytes});
+      this.refreshTransferStats(server, serverView);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
+      return true;
     } catch (error) {
       console.error(`Failed to set data limit for access key ${keyId}: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-set-per-key-limit'));
+      return false;
     }
   }
 
-  private async removePerKeyDataLimit(dialog: OutlinePerKeyDataLimitDialog) {
+  private async removePerKeyDataLimit(serverId: string, keyId: string): Promise<boolean> {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
-    const server = this.idServerMap.get(dialog.serverId());
+    const server = this.idServerMap.get(serverId);
     const serverView = this.appRoot.getServerView(server.getId());
-    const keyId = dialog.keyId();
     try {
-      if (dialog.dataLimitChanged()) {
-        await server.removeAccessKeyDataLimit(keyId);
-        this.refreshTransferStats(server, serverView);
-      }
-      dialog.close();
+      await server.removeAccessKeyDataLimit(keyId);
+      this.refreshTransferStats(server, serverView);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
+      return true;
     } catch (error) {
       console.error(`Failed to remove data limit from access key ${keyId}: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-remove-per-key-limit'));
+      return false;
     }
   }
 

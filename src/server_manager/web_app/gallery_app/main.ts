@@ -19,7 +19,9 @@ import '../ui_components/outline-share-dialog';
 import '../ui_components/outline-sort-span';
 import '../ui_components/outline-survey-dialog';
 import '../ui_components/outline-per-key-data-limit-dialog';
+import '@polymer/paper-checkbox/paper-checkbox';
 
+import {PaperCheckboxElement} from '@polymer/paper-checkbox/paper-checkbox';
 import IntlMessageFormat from 'intl-messageformat';
 import {css, customElement, html, LitElement, property} from 'lit-element';
 
@@ -47,19 +49,12 @@ async function makeLocalize(language: string) {
   };
 }
 
-interface APIError {
-  // tslint:disable-next-line:no-any
-  detail: any;
-}
-
-function logEvent(e: APIError) {
-  console.log(e);
-}
-
 @customElement('outline-test-app')
 export class TestApp extends LitElement {
   @property({type: String}) dir = 'ltr';
-  @property({type: Function}) localize: Function;
+  @property({type: Function}) localize: (...args: string[]) => string;
+  @property({type: Boolean}) savePerKeyDataLimitSuccessful = true;
+  @property({type: Number}) keyDataLimit: number|undefined;
   private language = '';
 
   static get styles() {
@@ -98,9 +93,24 @@ export class TestApp extends LitElement {
     return this.shadowRoot.querySelector(querySelector);
   }
 
-  private logAndSavePerKeyDataLimit(e: APIError) {
-    logEvent(e);
-    this.select('outline-per-key-data-limit-dialog').close();
+  private setKeyDataLimit(bytes: number) {
+    if ((this.select('#perKeyDataLimitSuccessCheckbox') as PaperCheckboxElement).checked) {
+      this.keyDataLimit = bytes;
+      console.log(`Per Key Data Limit set to ${bytes} bytes!`);
+      return true;
+    }
+    console.error('Per Key Data Limit failed to be set!');
+    return false;
+  }
+
+  private removeKeyDataLimit() {
+    if ((this.select('#perKeyDataLimitSuccessCheckbox') as PaperCheckboxElement).checked) {
+      this.keyDataLimit = undefined;
+      console.log('Per Key Data Limit Removed!');
+      return true;
+    }
+    console.error('Per Key Data Limit failed to be removed!');
+    return false;
   }
 
   render() {
@@ -111,21 +121,27 @@ export class TestApp extends LitElement {
       <div
         class="widget"
         id="key-settings-widget"
-        @SavePerKeyDataLimitRequested=${this.logAndSavePerKeyDataLimit}
-        @RemovePerKeyDataLimitRequested=${this.logAndSavePerKeyDataLimit}
       >
         <h2>outline-per-key-data-limit-dialog</h2>
         <button
           @tap=${
         () => this.select('outline-per-key-data-limit-dialog')
                   .open(
-                      'Key Name', 'keyId',
-                      /* keyLimitBytes */ null, 'serverId',
+                      'Key Name',
+                      /* keyLimitBytes */ this.keyDataLimit,
                       /* defaultLimitBytes */ 123 * 10 ** 6,
-                      /* language */ 'en')}
+                      /* language */ 'en', this.setKeyDataLimit.bind(this),
+                      this.removeKeyDataLimit.bind(this))}
         >
           Open Dialog
         </button>
+        <paper-checkbox
+           ?checked=${this.savePerKeyDataLimitSuccessful}
+           @tap=${() => {
+      this.savePerKeyDataLimitSuccessful = !this.savePerKeyDataLimitSuccessful;
+    }}
+           id="perKeyDataLimitSuccessCheckbox"
+        >Save Successful</paper-checkbox>
         <outline-per-key-data-limit-dialog
           .localize=${this.localize}
           dir=${this.dir}

@@ -818,10 +818,12 @@ export class AppRoot extends mixinBehaviors
   /**
    * @param accessKey The DisplayAccessKey for the dialog to work on
    */
-  openPerKeyDataLimitDialog(accessKey, keyName, serverId, defaultDataLimitBytes) {
+  openPerKeyDataLimitDialog(
+      keyDataLimitBytes, keyName, defaultDataLimitBytes, onDataLimitSet, onDataLimitRemoved) {
+    // attach listeners here
     this.$.perKeyDataLimitDialog.open(
-        keyName, accessKey.id, accessKey.dataLimitBytes, serverId, defaultDataLimitBytes,
-        this.language);
+        keyName, keyDataLimitBytes, defaultDataLimitBytes, this.language, onDataLimitSet,
+        onDataLimitRemoved);
   }
 
   openGetConnectedDialog(/** @type {string} */ inviteUrl) {

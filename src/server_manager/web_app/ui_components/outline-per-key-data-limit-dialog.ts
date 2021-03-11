@@ -128,8 +128,6 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    * @member _keyName The displayed name of the UI access key representing the key we're working on.
    */
   @internalProperty() _keyName = '';
-  /** @member _keyId The id of the UI access key representing the key we're working on. */
-  @internalProperty() _keyId = '';
   /**
    * @member _keyDataLimitBytes The data limit, if it exists, on the access key we're working on.
    */
@@ -154,7 +152,8 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   @internalProperty() _language = 'en';
   @property({type: Function}) localize: Function;
 
-  private _serverId = '';
+  private _onDataLimitSet?: OnSetDataLimitHandler;
+  private _onDataLimitRemoved?: OnRemoveDataLimitHandler;
 
   render() {
     return html`
@@ -174,7 +173,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
           }
         }
       </style>
-      <paper-dialog id="container">
+      <paper-dialog id="container" @opened-changed=${this._onDialogOpenedChanged}>
         <div id="headerSection">
           <iron-icon id="dataLimitIcon" icon="icons:perm-data-setting"></iron-icon>
           <h3>${this.localize('per-key-data-limit-dialog-title', 'keyName', this._keyName)}</h3>
@@ -186,7 +185,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
           ${this._showMenu ? this.renderMenu() : ''}
         </div>
         <div id="buttonsSection">
-          <paper-button id="save" ?disabled=${!this._enableSave} @tap=${this._sendSaveEvent}>${
+          <paper-button id="save" ?disabled=${!this._enableSave} @tap=${this._onSaveButtonTapped}>${
         this.localize('save')}</paper-button>
           <paper-button @tap=${this.close}>${this.localize('cancel')}</paper-button>
         </div>
@@ -197,6 +196,8 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   private renderMenu() {
     return html`
       <div id="menu">
+      <!-- This input doesn't work for languages which don't use decimal points or Arabic numerals
+           but it's difficult to accept internationalized inputs.  -->
         <paper-input
           id="dataLimitInput"
           label=${this.localize('data-limit')}
@@ -269,18 +270,17 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     this._enableSave = !this._input?.invalid ?? false;
   }
 
-  private _sendSaveEvent() {
+  private async _onSaveButtonTapped() {
     const change = this._dataLimitChange();
-    const eventName = `${change === Change.REMOVED ? 'Remove' : 'Save'}PerKeyDataLimitRequested`;
-
-    this.dispatchEvent(new CustomEvent(eventName, {
-      // The target of this event is appRoot, not the dialog.  We send the full dialog element so
-      // that the app can control the dialog accordingly to user input.
-      detail: {dialog: this},
-      // Required for the event to bubble past a shadow DOM boundary
-      bubbles: true,
-      composed: true,
-    }));
+    if (change === Change.UNCHANGED) {
+      return;
+    }
+    const result = change === Change.SET ?
+        await this._onDataLimitSet(displayDataAmountToBytes(this.inputDataLimit())) :
+        await this._onDataLimitRemoved();
+    if (result) {
+      this.close();
+    }
   }
 
   /**
@@ -306,13 +306,6 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   }
 
   /**
-   * Returns true if the data limit was changed by the user.
-   */
-  public dataLimitChanged() {
-    return this._dataLimitChange() !== Change.UNCHANGED;
-  }
-
-  /**
    * The current data limit as input by the user, but not necessarily as saved.
    */
   public inputDataLimit(): DisplayDataAmount {
@@ -320,49 +313,40 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   }
 
   /**
-   * The ID of the key being worked on.  Useful for making API requests for the given key.
-   */
-  public keyId(): string {
-    return this._keyId;
-  }
-
-  /**
-   * The ID of the server the current key belongs to.
-   */
-  public serverId(): string {
-    return this._serverId;
-  }
-
-  /**
-   * Opens the dialog to display data limit information about the given key
+   * Opens the dialog to display data limit information about the given key.
    *
    * @param keyName - The displayed name of the access key.
-   * @param keyId - The unique ID of the access key.
    * @param keyDataLimit - The display data limit of the access key, or undefined.
-   * @param serverId - The ID of the server the access key is a part of.
    * @param serverDefaultLimit - The default data limit for the server, or undefined if there is
-   *     none
+   *     none.
+   * @param language - The app's current language
+   * @param onDataLimitSet - Callback for when a data limit is imposed.  Must return whether or not
+   *    the data limit was set successfully.  Must not throw or change the dialog's state.
+   * @param onDataLimitRemoved - Callback for when a data limit is removed.  Must return whether or
+   *    not the data limit was removed successfully.  Must not throw or change the dialog's state.
    */
   public open(
-      keyName: string, keyId: string, keyLimitBytes: number, serverId: string,
-      defaultLimitBytes: number, language: string) {
+      keyName: string, keyLimitBytes: number, defaultLimitBytes: number, language: string,
+      onDataLimitSet: OnSetDataLimitHandler, onDataLimitRemoved: OnRemoveDataLimitHandler) {
     this._keyName = keyName;
-    this._keyId = keyId;
     this._keyDataLimitBytes = keyLimitBytes;
-    this._serverId = serverId;
+    this._showMenu = this._keyDataLimitBytes !== undefined;
     this._serverDefaultLimitBytes = defaultLimitBytes;
     this._language = language;
-    this.setInitialMenuState();
+    this._onDataLimitSet = onDataLimitSet;
+    this._onDataLimitRemoved = onDataLimitRemoved;
+
+    this._queryAs<PaperListboxElement>('#unitsListbox')?.select(this._initialUnit());
     this._setSaveButtonDisabledState();
     this._queryAs<PaperDialogElement>('#container').open();
   }
 
-  /**
-   * Sets the input state of the dialog back to what it was when it was first opened.
-   */
-  public setInitialMenuState() {
-    this._showMenu = this._keyDataLimitBytes !== undefined;
-    this._queryAs<PaperListboxElement>('#unitsListbox')?.select(this._initialUnit());
+  private _onDialogOpenedChanged(openedChanged: CustomEvent<{value: boolean}>) {
+    const dialogWasClosed = !openedChanged.detail.value;
+    if (dialogWasClosed) {
+      delete this._onDataLimitSet;
+      delete this._onDataLimitRemoved;
+    }
   }
 
   /**
@@ -378,3 +362,6 @@ enum Change {
   REMOVED,    // The data limit for the key was removed
   UNCHANGED,  // No functional change happened.
 }
+
+type OnSetDataLimitHandler = (dataLimitBytes: number) => Promise<boolean>;
+type OnRemoveDataLimitHandler = () => Promise<boolean>;
