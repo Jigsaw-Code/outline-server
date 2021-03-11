@@ -170,21 +170,7 @@ export class App {
     });
 
     appRoot.addEventListener(
-        'OpenPerKeyDataLimitDialogRequested', (event: CustomEvent<{
-                                                keyId: string,
-                                                keyDataLimitBytes: number | undefined,
-                                                keyName: string,
-                                                serverId: string,
-                                                defaultDataLimitBytes: number | undefined
-                                              }>) => {
-          const detail = event.detail;
-          const onDataLimitSet = this.savePerKeyDataLimit.bind(this, detail.serverId, detail.keyId);
-          const onDataLimitRemoved =
-              this.removePerKeyDataLimit.bind(this, detail.serverId, detail.keyId);
-          const activeDataLimitBytes = detail.keyDataLimitBytes ?? detail.defaultDataLimitBytes;
-          appRoot.openPerKeyDataLimitDialog(
-              detail.keyName, activeDataLimitBytes, onDataLimitSet, onDataLimitRemoved);
-        });
+        'OpenPerKeyDataLimitDialogRequested', this.openPerKeyDataLimitDialog.bind(this));
 
     appRoot.addEventListener('RenameAccessKeyRequested', (event: CustomEvent) => {
       this.renameAccessKey(event.detail.accessKeyId, event.detail.newName, event.detail.entry);
@@ -905,6 +891,21 @@ export class App {
       this.appRoot.showError(this.appRoot.localize('error-remove-data-limit'));
       serverView.isDefaultDataLimitEnabled = !!previousLimit;
     }
+  }
+
+  private openPerKeyDataLimitDialog(event: CustomEvent<{
+    keyId: string,
+    keyDataLimitBytes: number|undefined,
+    keyName: string,
+    serverId: string,
+    defaultDataLimitBytes: number|undefined
+  }>) {
+    const detail = event.detail;
+    const onDataLimitSet = this.savePerKeyDataLimit.bind(this, detail.serverId, detail.keyId);
+    const onDataLimitRemoved = this.removePerKeyDataLimit.bind(this, detail.serverId, detail.keyId);
+    const activeDataLimitBytes = detail.keyDataLimitBytes ?? detail.defaultDataLimitBytes;
+    this.appRoot.openPerKeyDataLimitDialog(
+        detail.keyName, activeDataLimitBytes, onDataLimitSet, onDataLimitRemoved);
   }
 
   private async savePerKeyDataLimit(serverId: string, keyId: string, dataLimitBytes: number):
