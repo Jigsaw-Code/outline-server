@@ -98,7 +98,7 @@ As shown in the research [How China Detects and Blocks Shadowsocks](https://gfw.
 
 Even though Shadowsocks is a standard, it leaves a lot of room for choices on how it's implemented and deployed.
 
-First of all, you **must use AEAD ciphers**. If you are using stream ciphers, you are doing it wrong. It's very easy to break your encryption and detect your server. Outline has banned all stream ciphers, since people copy old examples to set up their servers. In fact, Outline picks the cipher for you, since people don't know how to pick it. We also generate a long random secret for you, so you are not vulnerable to dictionary-based attacks.
+First of all, you **must use AEAD ciphers**. The old stream ciphers are easy to break and manipulate, exposing you to simple detection and decryption attacks. Outline has banned all stream ciphers, since people copy old examples to set up their servers. The Outline Manager goes further and picks the cipher for you, since users don't usually know how to choose a cipher, and it generates a long random secret, so you are not vulnerable to dictionary-based attacks.
 
 Second, you need **probing resistance**. Both shadowsocks-libev and Outline have added that. The research [Detecting Probe-resistant Proxies](https://www.ndss-symposium.org/ndss-paper/detecting-probe-resistant-proxies/) showed that, in the past, an invalid byte would trigger different behaviors whether it was inserted in positions 49, 50 or 51 of the stream, which is very telling. That behavior is now gone, and the censor can no longer rely on that.
 
@@ -106,6 +106,6 @@ Third, you need **protection against replayed data**. Both shadowsocks-libev and
 
 Fourth, Outline and clients using shadowsocks-libev now **merge the SOCKS address and the initial data** in the same initial encrypted frame, making the size of the first packet variable. Before the first packet only had the SOCKS address, with a fixed size, and that was a giveaway.
 
-The censors used to block Shadowsocks, but Shadowsocks has evolved, and for now it's ahead again in the cat and mouse game.
+The censors used to block Shadowsocks, but Shadowsocks has evolved, and as for 2021, it's ahead again in the cat and mouse game.
 
 Shadowsocks remains our protocol of choice because it's simple, well understood and very performant. Furthermore, it has an enthusiastic community of very smart people behind it.
