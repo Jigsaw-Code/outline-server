@@ -247,16 +247,11 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   }
 
   private _initialUnit(): 'GB'|'MB' {
-    return bytesToDisplayDataAmount(this._activeDataLimit())?.unit || 'GB';
+    return bytesToDisplayDataAmount(this._keyDataLimitBytes)?.unit || 'GB';
   }
 
   private _initialValue() {
-    return bytesToDisplayDataAmount(this._activeDataLimit())?.value.toString() || '';
-  }
-
-  private _activeDataLimit(): number|undefined {
-    // Returns the limit which currently is enforced on this key, or undefined if there is none.
-    return this._keyDataLimitBytes ?? this._serverDefaultLimitBytes;
+    return bytesToDisplayDataAmount(this._keyDataLimitBytes)?.value.toString() || '';
   }
 
   private async _setCustomLimitTapped() {
@@ -328,12 +323,11 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    *    not the data limit was removed successfully.  Must not throw or change the dialog's state.
    */
   public open(
-      keyName: string, keyLimitBytes: number, defaultLimitBytes: number,
-      onDataLimitSet: OnSetDataLimitHandler, onDataLimitRemoved: OnRemoveDataLimitHandler) {
+      keyName: string, keyLimitBytes: number, onDataLimitSet: OnSetDataLimitHandler,
+      onDataLimitRemoved: OnRemoveDataLimitHandler) {
     this._keyName = keyName;
     this._keyDataLimitBytes = keyLimitBytes;
     this._showDataLimit = this._keyDataLimitBytes !== undefined;
-    this._serverDefaultLimitBytes = defaultLimitBytes;
     this._onDataLimitSet = onDataLimitSet;
     this._onDataLimitRemoved = onDataLimitRemoved;
 

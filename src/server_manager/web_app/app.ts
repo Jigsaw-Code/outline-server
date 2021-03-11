@@ -169,21 +169,22 @@ export class App {
       this.removeAccessKey(event.detail.accessKeyId);
     });
 
-    appRoot.addEventListener('OpenPerKeyDataLimitDialogRequested', (event: CustomEvent<{
-                                                                     keyId: string,
-                                                                     keyDataLimitBytes: number,
-                                                                     keyName: string,
-                                                                     serverId: string,
-                                                                     defaultDataLimitBytes: number
-                                                                   }>) => {
-      const detail = event.detail;
-      const onDataLimitSet = this.savePerKeyDataLimit.bind(this, detail.serverId, detail.keyId);
-      const onDataLimitRemoved =
-          this.removePerKeyDataLimit.bind(this, detail.serverId, detail.keyId);
-      appRoot.openPerKeyDataLimitDialog(
-          detail.keyDataLimitBytes, detail.keyName, detail.defaultDataLimitBytes, onDataLimitSet,
-          onDataLimitRemoved);
-    });
+    appRoot.addEventListener(
+        'OpenPerKeyDataLimitDialogRequested', (event: CustomEvent<{
+                                                keyId: string,
+                                                keyDataLimitBytes: number | undefined,
+                                                keyName: string,
+                                                serverId: string,
+                                                defaultDataLimitBytes: number | undefined
+                                              }>) => {
+          const detail = event.detail;
+          const onDataLimitSet = this.savePerKeyDataLimit.bind(this, detail.serverId, detail.keyId);
+          const onDataLimitRemoved =
+              this.removePerKeyDataLimit.bind(this, detail.serverId, detail.keyId);
+          const activeDataLimitBytes = detail.keyDataLimitBytes ?? detail.defaultDataLimitBytes;
+          appRoot.openPerKeyDataLimitDialog(
+              detail.keyName, activeDataLimitBytes, onDataLimitSet, onDataLimitRemoved);
+        });
 
     appRoot.addEventListener('RenameAccessKeyRequested', (event: CustomEvent) => {
       this.renameAccessKey(event.detail.accessKeyId, event.detail.newName, event.detail.entry);

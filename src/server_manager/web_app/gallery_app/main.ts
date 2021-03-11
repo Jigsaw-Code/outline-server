@@ -128,7 +128,7 @@ export class TestApp extends LitElement {
           @tap=${
         () => (this.select('outline-per-key-data-limit-dialog') as OutlinePerKeyDataLimitDialog)
                   .open(
-                      'Key Name', this.keyDataLimit, 123 * 10 ** 6, this.setKeyDataLimit.bind(this),
+                      'Key Name', this.keyDataLimit, this.setKeyDataLimit.bind(this),
                       this.removeKeyDataLimit.bind(this))}
         >
           Open Dialog
