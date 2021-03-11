@@ -88,7 +88,7 @@ To clean up:
 yarn run clean
 ```
 
-## Shadowsocks Block Resistance
+## Shadowsocks Resistance Against Detection and Blocking
 
 Shadowsocks used to be blocked in some countries, and because Outline uses Shadowsocks, there has been skepticism about Outline working in those countries. In fact, people have tried Outline in the past and had their servers blocked.
 
