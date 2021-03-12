@@ -86,10 +86,12 @@ describe('CloudAccounts', () => {
   });
 });
 
-function createInMemoryStorage(digitalOceanAccessToken?: string, gcpRefreshToken?: string): Storage {
+function createInMemoryStorage(
+    digitalOceanAccessToken?: string, gcpRefreshToken?: string): Storage {
   const storage = new InMemoryStorage();
   if (digitalOceanAccessToken) {
-    storage.setItem('accounts.digitalocean', JSON.stringify({accessToken: digitalOceanAccessToken}));
+    storage.setItem(
+        'accounts.digitalocean', JSON.stringify({accessToken: digitalOceanAccessToken}));
   }
   if (gcpRefreshToken) {
     storage.setItem('accounts.gcp', JSON.stringify({refreshToken: gcpRefreshToken}));
