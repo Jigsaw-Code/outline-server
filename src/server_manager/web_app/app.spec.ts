@@ -14,7 +14,7 @@
 
 import './ui_components/app-root.js';
 
-import * as cloud from '../model/cloud';
+import * as accounts from '../model/accounts';
 import * as server from '../model/server';
 
 import {App, LAST_DISPLAYED_SERVER_STORAGE_KEY} from './app';
@@ -134,7 +134,7 @@ describe('App', () => {
 });
 
 function createTestApp(
-    appRoot: AppRoot, cloudAccounts?: cloud.CloudAccounts,
+    appRoot: AppRoot, cloudAccounts?: accounts.CloudAccounts,
     manualServerRepo?: server.ManualServerRepository) {
   const VERSION = '0.0.1';
   if (!cloudAccounts) {

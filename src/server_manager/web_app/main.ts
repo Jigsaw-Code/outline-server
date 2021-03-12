@@ -105,7 +105,6 @@ document.addEventListener('WebComponentsReady', () => {
   };
 
   const cloudAccounts = new CloudAccounts(shadowboxSettings, debugMode);
-  cloudAccounts.load();
 
   // Create and start the app.
   const language = getLanguageToUse();
@@ -119,6 +118,5 @@ document.addEventListener('WebComponentsReady', () => {
   const filteredLanguageDefs = Object.values(SUPPORTED_LANGUAGES);
   appRoot.supportedLanguages = sortLanguageDefsByName(filteredLanguageDefs);
   appRoot.setLanguage(language.string(), languageDirection);
-  appRoot.gcpOAuthEnabled = params.get('gcpOAuth') === 'true';
   new App(appRoot, version, new ManualServerRepository('manualServers'), cloudAccounts).start();
 });

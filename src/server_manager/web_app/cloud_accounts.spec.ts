@@ -32,7 +32,6 @@ const FAKE_ACCOUNTS_JSON = [
 describe('CloudAccounts', () => {
   it('get account methods return null when no cloud accounts are connected', () => {
     const cloudAccounts = createCloudAccount();
-    cloudAccounts.load();
     expect(cloudAccounts.getDigitalOceanAccount()).toBeNull();
     expect(cloudAccounts.getGcpAccount()).toBeNull();
   });
@@ -40,14 +39,12 @@ describe('CloudAccounts', () => {
   it('load connects account that exist in local storage', () => {
     const storage = createInMemoryStorage(FAKE_ACCOUNTS_JSON);
     const cloudAccounts = createCloudAccount(storage);
-    cloudAccounts.load();
     expect(cloudAccounts.getDigitalOceanAccount()).not.toBeNull();
     expect(cloudAccounts.getGcpAccount()).not.toBeNull();
   });
 
   it('connects accounts when connect methods are invoked', () => {
     const cloudAccounts = createCloudAccount();
-    cloudAccounts.load();
 
     expect(cloudAccounts.getDigitalOceanAccount()).toBeNull();
     cloudAccounts.connectDigitalOceanAccount('fake-access-token');
@@ -61,7 +58,6 @@ describe('CloudAccounts', () => {
   it('removes account when disconnect is invoked', () => {
     const storage = createInMemoryStorage(FAKE_ACCOUNTS_JSON);
     const cloudAccounts = createCloudAccount(storage);
-    cloudAccounts.load();
 
     expect(cloudAccounts.getDigitalOceanAccount()).not.toBeNull();
     cloudAccounts.disconnectDigitalOceanAccount();
@@ -74,7 +70,6 @@ describe('CloudAccounts', () => {
 
   it('functional noop on calling disconnect when accounts are not connected', () => {
     const cloudAccounts = createCloudAccount();
-    cloudAccounts.load();
 
     expect(cloudAccounts.getDigitalOceanAccount()).toBeNull();
     cloudAccounts.disconnectDigitalOceanAccount();
@@ -89,7 +84,6 @@ describe('CloudAccounts', () => {
     const storage = new InMemoryStorage();
     storage.setItem('LastDOToken', 'legacy-digitalocean-access-token');
     const cloudAccounts = createCloudAccount(storage);
-    cloudAccounts.load();
 
     expect(cloudAccounts.getDigitalOceanAccount()).not.toBeNull();
   });
@@ -98,7 +92,6 @@ describe('CloudAccounts', () => {
     const storage = new InMemoryStorage();
     storage.setItem('LastDOToken', 'legacy-digitalocean-access-token');
     const cloudAccounts = createCloudAccount(storage);
-    cloudAccounts.load();
 
     expect(storage.getItem('LastDOToken')).toEqual('legacy-digitalocean-access-token');
     cloudAccounts.connectDigitalOceanAccount('new-digitalocean-access-token');
@@ -108,7 +101,7 @@ describe('CloudAccounts', () => {
 
 function createInMemoryStorage(accountJsonArray: AccountJson[] = []): Storage {
   const storage = new InMemoryStorage();
-  storage.setItem('accounts-storage', JSON.stringify(accountJsonArray));
+  storage.setItem('accounts', JSON.stringify(accountJsonArray));
   return storage;
 }
 

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// TODO: This is just a stub atm and will need to define and implement the rest
+//  of the functionality.
 export interface Account {
   // Returns a user-friendly name associated with the account.
   getName(): Promise<string>;

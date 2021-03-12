@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as cloud from '../../model/cloud';
+import * as accounts from '../../model/accounts';
 import * as digitalocean from '../../model/digitalocean';
 import * as gcp from '../../model/gcp';
 import * as server from '../../model/server';
@@ -34,7 +34,7 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
   getRegionMap() {
     return Promise.resolve({'fake': ['fake1', 'fake2']});
   }
-  createServer(id = Math.random().toString()) {
+  createServer(id: string) {
     const newServer = new FakeManagedServer(id, false);
     this.servers.push(newServer);
     return Promise.resolve(newServer);
@@ -189,7 +189,7 @@ export class FakeManagedServer extends FakeServer implements server.ManagedServe
   }
 }
 
-export class FakeCloudAccounts implements cloud.CloudAccounts {
+export class FakeCloudAccounts implements accounts.CloudAccounts {
   constructor(
       private digitalOceanAccount: digitalocean.Account = null,
       private gcpAccount: gcp.Account = null) {}

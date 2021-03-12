@@ -24,8 +24,6 @@ const OAUTH_CONFIG = {
   scopes: [
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/cloud-platform',
-    'https://www.googleapis.com/auth/compute',
-    'https://www.googleapis.com/auth/devstorage.full_control',
   ],
 };
 const REDIRECT_PATH = '/gcp/oauth/callback';
@@ -47,9 +45,13 @@ function responseHtml(messageHtml: string): string {
 async function verifyGrantedScopes(
     oAuthClient: OAuth2Client, accessToken: string): Promise<boolean> {
   const getTokenInfoResponse = await oAuthClient.getTokenInfo(accessToken);
-  return OAUTH_CONFIG.scopes.every(
-      (requiredScope) => getTokenInfoResponse.scopes.find(
-          (grantedScope: string) => grantedScope === requiredScope));
+  for (const requiredScope of OAUTH_CONFIG.scopes) {
+    const matchedScope = getTokenInfoResponse.scopes.find((grantedScope) => grantedScope === requiredScope);
+    if (!matchedScope) {
+      return false;
+    }
+  }
+  return true;
 }
 
 export function runOauth(): OauthSession {

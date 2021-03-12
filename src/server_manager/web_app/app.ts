@@ -18,7 +18,7 @@ import * as semver from 'semver';
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
-import * as cloud from '../model/cloud';
+import * as accounts from '../model/accounts';
 import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
 import * as server from '../model/server';
@@ -140,7 +140,7 @@ export class App {
   constructor(
       private appRoot: AppRoot, private readonly version: string,
       private manualServerRepository: server.ManualServerRepository,
-      private cloudAccounts: cloud.CloudAccounts) {
+      private cloudAccounts: accounts.CloudAccounts) {
     appRoot.setAttribute('outline-version', this.version);
 
     appRoot.addEventListener('ConnectDigitalOceanAccountRequested', (event: CustomEvent) => {
