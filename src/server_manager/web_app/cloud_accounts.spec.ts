@@ -14,20 +14,7 @@
 
 import {InMemoryStorage} from '../infrastructure/memory_storage';
 
-import {AccountJson, CloudAccounts} from './cloud_accounts';
-
-const FAKE_ACCOUNTS_JSON = [
-  {
-    digitalocean: {
-      accessToken: 'fake-access-token',
-    }
-  },
-  {
-    gcp: {
-      refreshToken: 'fake-refresh-token',
-    }
-  }
-];
+import {CloudAccounts} from './cloud_accounts';
 
 describe('CloudAccounts', () => {
   it('get account methods return null when no cloud accounts are connected', () => {
@@ -37,7 +24,7 @@ describe('CloudAccounts', () => {
   });
 
   it('load connects account that exist in local storage', () => {
-    const storage = createInMemoryStorage(FAKE_ACCOUNTS_JSON);
+    const storage = createInMemoryStorage('fake-access-token', 'fake-refresh-token');
     const cloudAccounts = createCloudAccount(storage);
     expect(cloudAccounts.getDigitalOceanAccount()).not.toBeNull();
     expect(cloudAccounts.getGcpAccount()).not.toBeNull();
@@ -56,7 +43,7 @@ describe('CloudAccounts', () => {
   });
 
   it('removes account when disconnect is invoked', () => {
-    const storage = createInMemoryStorage(FAKE_ACCOUNTS_JSON);
+    const storage = createInMemoryStorage('fake-access-token', 'fake-refresh-token');
     const cloudAccounts = createCloudAccount(storage);
 
     expect(cloudAccounts.getDigitalOceanAccount()).not.toBeNull();
@@ -99,9 +86,14 @@ describe('CloudAccounts', () => {
   });
 });
 
-function createInMemoryStorage(accountJsonArray: AccountJson[] = []): Storage {
+function createInMemoryStorage(digitalOceanAccessToken?: string, gcpRefreshToken?: string): Storage {
   const storage = new InMemoryStorage();
-  storage.setItem('accounts', JSON.stringify(accountJsonArray));
+  if (digitalOceanAccessToken) {
+    storage.setItem('accounts.digitalocean', JSON.stringify({accessToken: digitalOceanAccessToken}));
+  }
+  if (gcpRefreshToken) {
+    storage.setItem('accounts.gcp', JSON.stringify({refreshToken: gcpRefreshToken}));
+  }
   return storage;
 }
 

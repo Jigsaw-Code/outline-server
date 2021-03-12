@@ -46,7 +46,8 @@ async function verifyGrantedScopes(
     oAuthClient: OAuth2Client, accessToken: string): Promise<boolean> {
   const getTokenInfoResponse = await oAuthClient.getTokenInfo(accessToken);
   for (const requiredScope of OAUTH_CONFIG.scopes) {
-    const matchedScope = getTokenInfoResponse.scopes.find((grantedScope) => grantedScope === requiredScope);
+    const matchedScope =
+        getTokenInfoResponse.scopes.find((grantedScope) => grantedScope === requiredScope);
     if (!matchedScope) {
       return false;
     }
