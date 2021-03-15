@@ -18,9 +18,13 @@ import '../ui_components/outline-feedback-dialog';
 import '../ui_components/outline-share-dialog';
 import '../ui_components/outline-sort-span';
 import '../ui_components/outline-survey-dialog';
+import '../ui_components/outline-per-key-data-limit-dialog';
+import '@polymer/paper-checkbox/paper-checkbox';
 
+import {PaperCheckboxElement} from '@polymer/paper-checkbox/paper-checkbox';
 import IntlMessageFormat from 'intl-messageformat';
 import {css, customElement, html, LitElement, property} from 'lit-element';
+import {OutlinePerKeyDataLimitDialog} from '../ui_components/outline-per-key-data-limit-dialog';
 
 async function makeLocalize(language: string) {
   let messages: {[key: string]: string};
@@ -35,7 +39,7 @@ async function makeLocalize(language: string) {
     for (let i = 0; i < args.length; i += 2) {
       params[args[i]] = args[i + 1];
     }
-    if (!messages) {
+    if (!messages || !messages[msgId]) {
       // Fallback that shows message id and params.
       return `${msgId}(${JSON.stringify(params, null, " ")})`;
     }
@@ -49,7 +53,9 @@ async function makeLocalize(language: string) {
 @customElement('outline-test-app')
 export class TestApp extends LitElement {
   @property({type: String}) dir = 'ltr';
-  @property({type: Function}) localize: Function;
+  @property({type: Function}) localize: (...args: string[]) => string;
+  @property({type: Boolean}) savePerKeyDataLimitSuccessful = true;
+  @property({type: Number}) keyDataLimit: number|undefined;
   private language = '';
 
   static get styles() {
@@ -80,7 +86,7 @@ export class TestApp extends LitElement {
       return;
     }
     this.localize = await makeLocalize(newLanguage);
-    this.language = newLanguage;    
+    this.language = newLanguage;
   }
 
   // tslint:disable-next-line:no-any
@@ -88,18 +94,66 @@ export class TestApp extends LitElement {
     return this.shadowRoot.querySelector(querySelector);
   }
 
+  private setKeyDataLimit(bytes: number) {
+    if ((this.select('#perKeyDataLimitSuccessCheckbox') as PaperCheckboxElement).checked) {
+      this.keyDataLimit = bytes;
+      console.log(`Per Key Data Limit set to ${bytes} bytes!`);
+      return true;
+    }
+    console.error('Per Key Data Limit failed to be set!');
+    return false;
+  }
+
+  private removeKeyDataLimit() {
+    if ((this.select('#perKeyDataLimitSuccessCheckbox') as PaperCheckboxElement).checked) {
+      this.keyDataLimit = undefined;
+      console.log('Per Key Data Limit Removed!');
+      return true;
+    }
+    console.error('Per Key Data Limit failed to be removed!');
+    return false;
+  }
+
   render() {
     return html`
       <h1>Outline Manager Components Gallery</h1>
       ${this.pageControls}
-      
+
+      <div
+        class="widget"
+        id="key-settings-widget"
+      >
+        <h2>outline-per-key-data-limit-dialog</h2>
+        <button
+          @tap=${
+        () => (this.select('outline-per-key-data-limit-dialog') as OutlinePerKeyDataLimitDialog)
+                  .open(
+                      'Key Name', this.keyDataLimit, this.setKeyDataLimit.bind(this),
+                      this.removeKeyDataLimit.bind(this))}
+        >
+          Open Dialog
+        </button>
+        <paper-checkbox
+           ?checked=${this.savePerKeyDataLimitSuccessful}
+           @tap=${() => {
+      this.savePerKeyDataLimitSuccessful = !this.savePerKeyDataLimitSuccessful;
+    }}
+           id="perKeyDataLimitSuccessCheckbox"
+        >Save Successful</paper-checkbox>
+        <outline-per-key-data-limit-dialog
+          .localize=${this.localize}
+          .language=${this.language}
+          dir=${this.dir}
+        ></outline-per-key-data-limit-dialog>
+      </div>
+
       <div class="widget">
         <h2>outline-about-dialog</h2>
         <button @tap=${() => this.select('outline-about-dialog').open()}>Open Dialog</button>
         <outline-about-dialog .localize=${this.localize} dir=${
         this.dir} outline-version="1.2.3"></outline-about-dialog>
       </div>
-      
+
       <div class="widget">
         <h2>outline-do-oauth-step</h2>
         <outline-do-oauth-step .localize=${this.localize} dir=${this.dir}></outline-do-oauth-step>
@@ -121,7 +175,7 @@ export class TestApp extends LitElement {
                   .open('<ACCESS_KEY>', '<INVITE_URL>')}>Open Dialog</button>
         <outline-share-dialog .localize=${this.localize} dir=${this.dir}></outline-share-dialog>
       </div>
-      
+
       <div class="widget">
         <h2>outline-sort-icon</h2>
         <outline-sort-span dir=${this.dir} direction=1 @tap=${() => {

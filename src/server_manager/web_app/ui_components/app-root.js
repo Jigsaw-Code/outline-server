@@ -32,6 +32,7 @@ import './outline-do-oauth-step.js';
 import './outline-feedback-dialog.js';
 import './outline-survey-dialog.js';
 import './outline-intro-step.js';
+import './outline-per-key-data-limit-dialog';
 import './outline-language-picker.js';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
@@ -42,6 +43,8 @@ import {AppLocalizeBehavior} from '@polymer/app-localize-behavior/app-localize-b
 import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 import {PolymerElement} from '@polymer/polymer/polymer-element.js';
+
+import {displayDataAmountToBytes} from '../data_formatting';
 
 import {ServerView} from './outline-server-view.js';
 
@@ -404,7 +407,7 @@ export class AppRoot extends mixinBehaviors
                 <a href="https://www.google.com/policies/privacy/">[[localize('nav-privacy')]]</a>
                 <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">[[localize('nav-terms')]]</a>
                 <span on-tap="showLicensesTapped">[[localize('nav-licenses')]]</span>
-              </div>      
+              </div>
             </div>
           </paper-listbox>
         </app-drawer>
@@ -469,6 +472,7 @@ export class AppRoot extends mixinBehaviors
       <outline-modal-dialog id="modalDialog"></outline-modal-dialog>
       <outline-share-dialog id="shareDialog" localize="[[localize]]"></outline-share-dialog>
       <outline-metrics-option-dialog id="metricsDialog" localize="[[localize]]"></outline-metrics-option-dialog>
+      <outline-per-key-data-limit-dialog id="perKeyDataLimitDialog" language="[[language]]" localize="[[localize]]"></outline-per-key-data-limit-dialog>
 
       <paper-dialog id="getConnectedDialog" modal="">
         <!-- iframe gets inserted here once we are given the invite URL. -->
@@ -809,6 +813,15 @@ export class AppRoot extends mixinBehaviors
 
   openShareDialog(accessKey, s3Url) {
     this.$.shareDialog.open(accessKey, s3Url);
+  }
+
+  /**
+   * @param accessKey The DisplayAccessKey for the dialog to work on
+   */
+  openPerKeyDataLimitDialog(keyName, activeDataLimitBytes, onDataLimitSet, onDataLimitRemoved) {
+    // attach listeners here
+    this.$.perKeyDataLimitDialog.open(
+        keyName, activeDataLimitBytes, onDataLimitSet, onDataLimitRemoved);
   }
 
   openGetConnectedDialog(/** @type {string} */ inviteUrl) {

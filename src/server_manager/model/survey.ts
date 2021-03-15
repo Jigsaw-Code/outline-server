@@ -13,8 +13,8 @@
 // limitations under the License.
 
 export interface Surveys {
-  // Displays a survey when the data limits feature is enabled.
+  // Displays a survey when a server default data limit is set.
   presentDataLimitsEnabledSurvey(): Promise<void>;
-  // Displays a survey when the data limits feature is disabled.
+  // Displays a survey when a server default data limit is removed.
   presentDataLimitsDisabledSurvey(): Promise<void>;
 }
