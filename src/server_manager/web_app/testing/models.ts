@@ -53,6 +53,18 @@ export class FakeGcpAccount implements gcp.Account {
   getRefreshToken(): string {
     return this.refreshToken;
   }
+
+  createServer(projectId: string, name: string, zoneId: string): Promise<server.ManagedServer> {
+    return undefined;
+  }
+
+  listLocations(projectId: string): Promise<Readonly<gcp.RegionMap>> {
+    return undefined;
+  }
+
+  listServers(projectId: string): Promise<server.ManagedServer[]> {
+    return undefined;
+  }
 }
 
 export class FakeServer implements server.Server {

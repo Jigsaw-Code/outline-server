@@ -23,11 +23,14 @@ rm -rf "${OUT_DIR}"
 mkdir -p "${OUT_DIR}"
 
 pushd "${ROOT_DIR}/src/server_manager/install_scripts" > /dev/null
-tar --create --gzip -f "${OUT_DIR}/scripts.tgz" ./*.sh
+tar --create --gzip -f "${OUT_DIR}/do_scripts.tgz" ./install_server.sh ./do_install_server.sh
+tar --create --gzip -f "${OUT_DIR}/gcp_scripts.tgz" ./install_server.sh ./gcp_install_server.sh
 
 # Node.js on Cygwin doesn't like absolute Unix-style paths.
 # So, we use a relative path as input.
 cd "${ROOT_DIR}"
-node src/server_manager/install_scripts/build_install_script_ts.node.js \
-    build/server_manager/web_app/sh/scripts.tgz > "${ROOT_DIR}/src/server_manager/install_scripts/do_install_script.ts"
+node src/server_manager/install_scripts/build_do_install_script_ts.node.js \
+    build/server_manager/web_app/sh/do_scripts.tgz > "${ROOT_DIR}/src/server_manager/install_scripts/do_install_script.ts"
+node src/server_manager/install_scripts/build_gcp_install_script_ts.node.js \
+    build/server_manager/web_app/sh/gcp_scripts.tgz > "${ROOT_DIR}/src/server_manager/install_scripts/gcp_install_script.ts"
 popd > /dev/null

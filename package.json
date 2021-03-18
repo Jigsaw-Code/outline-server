@@ -14,7 +14,7 @@
     "node": "^12"
   },
   "scripts": {
-    "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts third_party/shellcheck/download/",
+    "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts src/server_manager/install_scripts/gcp_install_script.ts third_party/shellcheck/download/",
     "do": "bash ./scripts/do_action.sh",
     "lint": "yarn shellcheck && yarn tslint",
     "shellcheck": "bash ./scripts/shellcheck.sh",
