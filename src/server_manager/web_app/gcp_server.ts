@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as gcp_api from '../cloud/gcp_api';
+import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import * as server from '../model/server';
 import {DataAmount, ManagedServerHost, MonetaryCost} from '../model/server';
 
 import {ShadowboxServer} from './shadowbox_server';
-import * as gcp_api from "../cloud/gcp_api";
-import * as errors from "../infrastructure/errors";
 
 enum InstallState {
   // Unknown state - server may still be installing.
@@ -38,7 +38,9 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   private installState: InstallState = InstallState.UNKNOWN;
 
   // TODO: Consider passing the refreshToken instead of the client.
-  constructor(private projectId: string, private instance: gcp_api.Instance, private apiClient: gcp_api.RestApiClient) {
+  constructor(
+      private projectId: string, private instance: gcp_api.Instance,
+      private apiClient: gcp_api.RestApiClient) {
     super(instance.id);
     this.gcpHost = new GcpHost(projectId, instance, apiClient);
   }
@@ -53,7 +55,8 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
 
   async waitOnInstall(): Promise<void> {
     while (this.installState === InstallState.UNKNOWN) {
-      const outlineGuestAttributes = await this.getOutlineGuestAttributes(this.projectId, this.instance.id, this.instance.zone);
+      const outlineGuestAttributes = await this.getOutlineGuestAttributes(
+          this.projectId, this.instance.id, this.instance.zone);
       if (outlineGuestAttributes.has('apiUrl') && outlineGuestAttributes.has('certSha256')) {
         const certSha256 = outlineGuestAttributes.get('certSha256');
         const apiUrl = outlineGuestAttributes.get('apiUrl');
@@ -71,9 +74,11 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     // TODO: Handle user clicking cancel and deleting server.
   }
 
-  private async getOutlineGuestAttributes(projectId: string, instanceId: string, zone: string): Promise<Map<string, string>> {
+  private async getOutlineGuestAttributes(projectId: string, instanceId: string, zone: string):
+      Promise<Map<string, string>> {
     const result = new Map<string, string>();
-    const guestAttributes = await this.apiClient.getGuestAttributes(projectId, instanceId, zone, 'outline');
+    const guestAttributes =
+        await this.apiClient.getGuestAttributes(projectId, instanceId, zone, 'outline');
     // console.log(`Guest attributes: ${JSON.stringify(guestAttributes)}`);
     const attributes = guestAttributes?.queryValue?.items;
     if (attributes) {
@@ -102,7 +107,9 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
 }
 
 class GcpHost implements server.ManagedServerHost {
-  constructor(private projectId: string, private instance: gcp_api.Instance, private apiClient: gcp_api.RestApiClient) {}
+  constructor(
+      private projectId: string, private instance: gcp_api.Instance,
+      private apiClient: gcp_api.RestApiClient) {}
 
   async delete(): Promise<void> {
     await this.apiClient.deleteInstance(this.projectId, this.instance.id, this.instance.zone);

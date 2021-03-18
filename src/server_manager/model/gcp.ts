@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {ManagedServer, RegionId} from "./server";
+import {ManagedServer, RegionId} from './server';
 
 // Keys are region IDs like "us-central1".
 // Values are zones like ["us-central1-a", "us-central1-b"].

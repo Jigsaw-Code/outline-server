@@ -12,59 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {HttpClient} from "../infrastructure/fetch";
+import {HttpClient} from '../infrastructure/fetch';
 
 /** @see https://cloud.google.com/compute/docs/reference/rest/v1/instances */
 export type Instance = Readonly<{
-  id: string;
-  creationTimestamp: string;
-  name: string;
-  description: string;
-  tags: {
-    items: string[];
-    fingerprint: string;
-  };
+  id: string; creationTimestamp: string; name: string; description: string;
+  tags: {items: string[]; fingerprint: string;};
   machineType: string;
   zone: string;
   networkInterfaces: Array<{
-    network: string;
-    subnetwork: string;
-    networkIP: string;
-    ipv6Address: string;
-    name: string;
+    network: string; subnetwork: string; networkIP: string; ipv6Address: string; name: string;
     accessConfigs: Array<{
-      type: string;
-      name: string;
-      natIP: string;
-      setPublicPtr: boolean;
-      publicPtrDomainName: string;
+      type: string; name: string; natIP: string; setPublicPtr: boolean; publicPtrDomainName: string;
       networkTier: string;
       kind: string;
     }>;
   }>;
 }>;
 
-/** @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/getGuestAttributes#response-body */
+/**
+ * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/getGuestAttributes#response-body
+ */
 type GuestAttributes = Readonly<{
-  variableKey: string;
-  variableValue: string;
-  queryPath: string;
-  queryValue: {
-    items: Array<{
-      namespace: string;
-      key: string;
-      value: string;
-    }>;
-  };
+  variableKey: string; variableValue: string; queryPath: string;
+  queryValue: {items: Array<{namespace: string; key: string; value: string;}>;};
 }>;
 
 /** @see https://cloud.google.com/compute/docs/reference/rest/v1/zones */
 type Zone = Readonly<{
-  id: string;
-  creationTimestamp: string;
-  name: string;
-  description: string;
-  status: "UP" | "DOWN";
+  id: string; creationTimestamp: string; name: string; description: string; status: 'UP' | 'DOWN';
   region: string;
 }>;
 
@@ -72,32 +48,18 @@ type Zone = Readonly<{
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/globalOperations
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations
  */
-type Operation = Readonly<{
-  id: string;
-  name: string;
-  targetId: string;
-  status: string;
-}>;
+type Operation = Readonly<{id: string; name: string; targetId: string; status: string;}>;
 
 /** @see https://cloud.google.com/resource-manager/reference/rest/v1/projects */
-export type Project = Readonly<{
-  projectNumber: string;
-  projectId: string;
-  lifecycleState: string;
-}>;
+export type Project = Readonly<{projectNumber: string; projectId: string; lifecycleState: string;}>;
 
 /** https://cloud.google.com/billing/docs/reference/rest/v1/billingAccounts */
-export type BillingAccount = Readonly<{
-  name: string;
-  open: boolean;
-  displayName: string;
-  masterBillingAccount: string;
-}>;
+export type BillingAccount =
+    Readonly<{name: string; open: boolean; displayName: string; masterBillingAccount: string;}>;
 
 /** https://cloud.google.com/billing/docs/reference/rest/v1/ProjectBillingInfo */
 export type ProjectBillingInfo = {
-  name: string;
-  projectId: string;
+  name: string; projectId: string;
   billingAccountName?: string;
   billingEnabled?: boolean;
 };
@@ -105,7 +67,8 @@ export type ProjectBillingInfo = {
 type ListInstancesResponse = Readonly<{items: Instance[]; nextPageToken: string}>;
 type ListZonesResponse = Readonly<{items: Zone[]; nextPageToken: string}>;
 type ListProjectsResponse = Readonly<{projects: Project[]; nextPageToken: string}>;
-type ListBillingAccountsResponse = Readonly<{billingAccounts: BillingAccount[]; nextPageToken: string}>;
+type ListBillingAccountsResponse =
+    Readonly<{billingAccounts: BillingAccount[]; nextPageToken: string}>;
 
 export class RestApiClient {
   private cloudBillingHttpClient: HttpClient;
@@ -113,13 +76,14 @@ export class RestApiClient {
   private computeHttpClient: HttpClient;
 
   constructor(private accessToken: string) {
-    this.cloudBillingHttpClient = new HttpClient("https://cloudbilling.googleapis.com/", {
+    this.cloudBillingHttpClient = new HttpClient('https://cloudbilling.googleapis.com/', {
       Authorization: `Bearer ${accessToken}`,
     });
-    this.cloudResourceManagerHttpClient = new HttpClient("https://cloudresourcemanager.googleapis.com/", {
-      Authorization: `Bearer ${accessToken}`,
-    });
-    this.computeHttpClient = new HttpClient("https://compute.googleapis.com/", {
+    this.cloudResourceManagerHttpClient =
+        new HttpClient('https://cloudresourcemanager.googleapis.com/', {
+          Authorization: `Bearer ${accessToken}`,
+        });
+    this.computeHttpClient = new HttpClient('https://compute.googleapis.com/', {
       Authorization: `Bearer ${accessToken}`,
     });
   }
@@ -135,7 +99,9 @@ export class RestApiClient {
    * @param zoneId - The zone in which to create the instance.
    * @param installScript - A script to run once the instance has launched.
    */
-  createInstance(projectId: string, name: string, zoneId: string, size: string, installScript: string): Promise<Operation> {
+  createInstance(
+      projectId: string, name: string, zoneId: string, size: string,
+      installScript: string): Promise<Operation> {
     const data = {
       name,
       machineType: `zones/${zoneId}/machineTypes/${size}`,
@@ -143,13 +109,13 @@ export class RestApiClient {
         {
           boot: true,
           initializeParams: {
-            sourceImage: "projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts",
+            sourceImage: 'projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts',
           },
         },
       ],
       networkInterfaces: [
         {
-          network: "global/networks/default",
+          network: 'global/networks/default',
           // Empty accessConfigs necessary to allocate ephemeral IP
           accessConfigs: [{}],
         },
@@ -157,14 +123,14 @@ export class RestApiClient {
       serviceAccounts: [
         {
           scopes: [
-            "https://www.googleapis.com/auth/userinfo.email",
-            "https://www.googleapis.com/auth/compute.readonly",
-            "https://www.googleapis.com/auth/devstorage.read_only",
+            'https://www.googleapis.com/auth/userinfo.email',
+            'https://www.googleapis.com/auth/compute.readonly',
+            'https://www.googleapis.com/auth/devstorage.read_only',
           ],
         },
       ],
       labels: {
-        // `${label}`: true,
+          // `${label}`: true,
       },
       tags: {
         items: [name],
@@ -172,11 +138,11 @@ export class RestApiClient {
       metadata: {
         items: [
           {
-            key: "enable-guest-attributes",
-            value: "TRUE",
+            key: 'enable-guest-attributes',
+            value: 'TRUE',
           },
           {
-            key: "user-data",
+            key: 'user-data',
             value: installScript,
           },
         ],
@@ -184,7 +150,7 @@ export class RestApiClient {
     };
     // TODO: Figure out how to do this in the object itself.
     // @ts-ignore
-    data.labels[label] = "true";
+    data.labels[label] = 'true';
     return this.computeHttpClient.post<Operation>(
         `compute/v1/projects/${projectId}/zones/${zoneId}/instances`,
         data,
@@ -250,7 +216,8 @@ export class RestApiClient {
    * @param regionId - The GCP region.
    * @param ipAddress - (optional) The ephemeral IP address to promote to static.
    */
-  createStaticIp(projectId: string, name: string, regionId: string, ipAddress?: string): Promise<Operation> {
+  createStaticIp(projectId: string, name: string, regionId: string, ipAddress?: string):
+      Promise<Operation> {
     const data = {
       name,
       ...(ipAddress && {address: ipAddress}),
@@ -271,7 +238,8 @@ export class RestApiClient {
    * @param regionId - The GCP region of the resource.
    */
   deleteStaticIp(projectId: string, addressId: string, regionId: string): Promise<Operation> {
-    return this.computeHttpClient.delete<Operation>(`compute/v1/projects/${projectId}/regions/${regionId}/addresses/${addressId}`);
+    return this.computeHttpClient.delete<Operation>(
+        `compute/v1/projects/${projectId}/regions/${regionId}/addresses/${addressId}`);
   }
 
   /**
@@ -285,12 +253,15 @@ export class RestApiClient {
    * @param zoneId - The zone in which the instance resides.
    * @param namespace - The namespace of the guest attributes.
    */
-  async getGuestAttributes(projectId: string, instanceId: string, zoneId: string, namespace: string): Promise<GuestAttributes | undefined> {
+  async getGuestAttributes(
+      projectId: string, instanceId: string, zoneId: string,
+      namespace: string): Promise<GuestAttributes|undefined> {
     try {
-      const optionalQueryPath = namespace ? `?queryPath=${namespace}%2F` : "";
+      const optionalQueryPath = namespace ? `?queryPath=${namespace}%2F` : '';
       // We must await the call to getGuestAttributes to properly catch any exceptions.
       return await this.computeHttpClient.get<GuestAttributes>(
-          `compute/v1/projects/${projectId}/zones/${zoneId}/instances/${instanceId}/getGuestAttributes${optionalQueryPath}`,
+          `compute/v1/projects/${projectId}/zones/${zoneId}/instances/${
+              instanceId}/getGuestAttributes${optionalQueryPath}`,
       );
     } catch (error) {
       // TODO: Distinguish between 404 not found and other errors.
@@ -309,17 +280,18 @@ export class RestApiClient {
   createFirewall(projectId: string, name: string): Promise<Operation> {
     const data = {
       name,
-      direction: "INGRESS",
+      direction: 'INGRESS',
       priority: 1000,
       targetTags: [name],
       allowed: [
         {
-          IPProtocol: "all",
+          IPProtocol: 'all',
         },
       ],
-      sourceRanges: ["0.0.0.0/0"],
+      sourceRanges: ['0.0.0.0/0'],
     };
-    return this.computeHttpClient.post<Operation>(`compute/v1/projects/${projectId}/global/firewalls`, data);
+    return this.computeHttpClient.post<Operation>(
+        `compute/v1/projects/${projectId}/global/firewalls`, data);
   }
 
   /**
@@ -332,8 +304,12 @@ export class RestApiClient {
    */
   // TODO: Pagination
   listZones(projectId: string, regionId?: string): Promise<ListZonesResponse> {
-    const filter = regionId ? `?filter=region%3D%22https%3A%2F%2Fwww.googleapis.com%2Fcompute%2Fv1%2Fprojects%2F${projectId}%2Fregions%2F${regionId}` : "";
-    return this.computeHttpClient.get<ListZonesResponse>(`compute/v1/projects/${projectId}/zones${filter}`);
+    const filter = regionId ?
+        `?filter=region%3D%22https%3A%2F%2Fwww.googleapis.com%2Fcompute%2Fv1%2Fprojects%2F${
+            projectId}%2Fregions%2F${regionId}` :
+        '';
+    return this.computeHttpClient.get<ListZonesResponse>(
+        `compute/v1/projects/${projectId}/zones${filter}`);
   }
 
   /**
@@ -354,10 +330,10 @@ export class RestApiClient {
       projectId,
       name,
       labels: {
-        outline: "true",
+        outline: 'true',
       },
     };
-    return this.cloudResourceManagerHttpClient.post<Operation>("v1/projects", data);
+    return this.cloudResourceManagerHttpClient.post<Operation>('v1/projects', data);
   }
 
   /**
@@ -366,7 +342,7 @@ export class RestApiClient {
    * @see https://cloud.google.com/resource-manager/reference/rest/v1/projects/list
    */
   listProjects(): Promise<ListProjectsResponse> {
-    const filter = "?filter=labels.outline%20%3D%20true";
+    const filter = '?filter=labels.outline%20%3D%20true';
     return this.cloudResourceManagerHttpClient.get<ListProjectsResponse>(`v1/projects${filter}`);
   }
 
@@ -378,7 +354,8 @@ export class RestApiClient {
    * @param projectId - The GCP project ID.
    */
   getProjectBillingInfo(projectId: string): Promise<ProjectBillingInfo> {
-    return this.cloudBillingHttpClient.get<ProjectBillingInfo>(`v1/projects/${projectId}/billingInfo`);
+    return this.cloudBillingHttpClient.get<ProjectBillingInfo>(
+        `v1/projects/${projectId}/billingInfo`);
   }
 
   /**
@@ -389,8 +366,10 @@ export class RestApiClient {
    * @param projectId - The GCP project ID.
    * @param projectBillingInfo - The billing info.
    */
-  updateProjectBillingInfo(projectId: string, projectBillingInfo: ProjectBillingInfo): Promise<ProjectBillingInfo> {
-    return this.cloudBillingHttpClient.put<ProjectBillingInfo>(`v1/projects/${projectId}/billingInfo`, projectBillingInfo);
+  updateProjectBillingInfo(projectId: string, projectBillingInfo: ProjectBillingInfo):
+      Promise<ProjectBillingInfo> {
+    return this.cloudBillingHttpClient.put<ProjectBillingInfo>(
+        `v1/projects/${projectId}/billingInfo`, projectBillingInfo);
   }
 
   /**

@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as gcp_api from '../cloud/gcp_api';
+import {SCRIPT} from '../install_scripts/gcp_install_script';
 import * as gcp from '../model/gcp';
-import * as gcp_api from "../cloud/gcp_api";
 import * as server from '../model/server';
-import {SCRIPT} from "../install_scripts/gcp_install_script";
-import {GcpServer} from "./gcp_server";
+
+import {GcpServer} from './gcp_server';
 
 /**
  * The Google Cloud Platform account model.
@@ -62,7 +63,8 @@ export class GcpAccount implements gcp.Account {
   }
 
   /** @see {@link Account#createServer}. */
-  async createServer(projectId: string, name: string, zoneId: string): Promise<server.ManagedServer> {
+  async createServer(projectId: string, name: string, zoneId: string):
+      Promise<server.ManagedServer> {
     const instance = await this.createInstance(projectId, name, zoneId);
     return new GcpServer(projectId, instance, this.apiClient);
   }
@@ -83,29 +85,29 @@ export class GcpAccount implements gcp.Account {
     return result;
   }
 
-  private async createInstance(projectId: string, name: string, zoneId: string): Promise<gcp_api.Instance> {
+  private async createInstance(projectId: string, name: string, zoneId: string):
+      Promise<gcp_api.Instance> {
     // Configure Outline firewall
-    const createFirewallOp = await this.apiClient.createFirewall(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
+    const createFirewallOp =
+        await this.apiClient.createFirewall(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
     await this.apiClient.gceGlobalWait(projectId, createFirewallOp.name);
 
     // Create VM instance
     const installScript = this.getInstallScript();
     const createInstanceOp = await this.apiClient.createInstance(
-        projectId,
-        name,
-        zoneId,
-        GcpAccount.MACHINE_SIZE,
-        installScript);
-    const createInstanceWait = await this.apiClient.gceZoneWait(projectId, zoneId, createInstanceOp.name);
+        projectId, name, zoneId, GcpAccount.MACHINE_SIZE, installScript);
+    const createInstanceWait =
+        await this.apiClient.gceZoneWait(projectId, zoneId, createInstanceOp.name);
     return await this.apiClient.getInstance(projectId, createInstanceWait.targetId, zoneId);
 
     // TODO: Promote ephemeral IP to static IP
     // const staticIpName = `${name}-ip`;
-    // const createStaticIpOp = await this.gcpRestApiClient.createStaticIp(staticIpName, regionId, instance.ip_address);
-    // await this.gcpRestApiClient.regionWait(regionId, createStaticIpOp.name);
+    // const createStaticIpOp = await this.gcpRestApiClient.createStaticIp(staticIpName, regionId,
+    // instance.ip_address); await this.gcpRestApiClient.regionWait(regionId,
+    // createStaticIpOp.name);
   }
 
   private getInstallScript(): string {
-    return "#!/bin/bash -eu\n" + SCRIPT;
+    return '#!/bin/bash -eu\n' + SCRIPT;
   }
 }
