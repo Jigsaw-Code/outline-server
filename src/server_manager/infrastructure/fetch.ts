@@ -98,8 +98,8 @@ export class HttpClient {
 
 export function encodeFormData(data: object): string {
   return Object.entries(data)
-  .map(entry => {
-    return encodeURIComponent(entry[0]) + '=' + encodeURIComponent(entry[1]);
-  })
-  .join('&');
+      .map(entry => {
+        return encodeURIComponent(entry[0]) + '=' + encodeURIComponent(entry[1]);
+      })
+      .join('&');
 }

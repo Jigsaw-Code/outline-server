@@ -58,11 +58,8 @@ export type BillingAccount =
     Readonly<{name: string; open: boolean; displayName: string; masterBillingAccount: string;}>;
 
 /** https://cloud.google.com/billing/docs/reference/rest/v1/ProjectBillingInfo */
-export type ProjectBillingInfo = Readonly<{
-  name: string; projectId: string;
-  billingAccountName?: string;
-  billingEnabled?: boolean;
-}>;
+export type ProjectBillingInfo = Readonly<
+    {name: string; projectId: string; billingAccountName?: string; billingEnabled?: boolean;}>;
 
 /**
  * @see https://accounts.google.com/.well-known/openid-configuration for
