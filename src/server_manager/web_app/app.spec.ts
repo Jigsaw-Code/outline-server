@@ -22,7 +22,6 @@ import {FakeCloudAccounts, FakeDigitalOceanAccount, FakeManualServerRepository} 
 import {AppRoot} from './ui_components/app-root';
 
 
-
 // Define functions from preload.ts.
 // tslint:disable-next-line:no-any
 (global as any).onUpdateDownloaded = () => {};
