@@ -60,6 +60,7 @@ const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
  * @prop {string} name
  * @prop {CloudProvider} cloudProvider
  */
+// TODO: Consider adding disconnect handler similar to what we do with the access key dialog
 
 /**
  * An access key to be displayed
