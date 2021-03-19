@@ -85,17 +85,15 @@ export class RestApiClient {
   private openIdConnectHttpClient: HttpClient;
 
   constructor(private accessToken: string) {
-    this.cloudBillingHttpClient = new HttpClient('https://cloudbilling.googleapis.com/', {
-      Authorization: `Bearer ${accessToken}`,
-    });
-    this.cloudResourceManagerHttpClient =
-        new HttpClient('https://cloudresourcemanager.googleapis.com/', {
-          Authorization: `Bearer ${accessToken}`,
-        });
-    this.computeHttpClient = new HttpClient('https://compute.googleapis.com/', {
-      Authorization: `Bearer ${accessToken}`,
-    });
-    this.openIdConnectHttpClient = new HttpClient('https://openidconnect.googleapis.com/v1/');
+    const headers = new Map<string, string>([
+      ['Content-type', 'application/json'],
+      ['Accept', 'application/json'],
+      ['Authorization', `Bearer ${accessToken}`],
+    ]);
+    this.cloudBillingHttpClient = new HttpClient('https://cloudbilling.googleapis.com/', headers);
+    this.cloudResourceManagerHttpClient = new HttpClient('https://cloudresourcemanager.googleapis.com/', headers);
+    this.computeHttpClient = new HttpClient('https://compute.googleapis.com/', headers);
+    this.openIdConnectHttpClient = new HttpClient('https://openidconnect.googleapis.com/v1/', headers);
   }
 
   /**
