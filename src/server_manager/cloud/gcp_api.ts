@@ -82,7 +82,6 @@ export class RestApiClient {
   private cloudBillingHttpClient: HttpClient;
   private cloudResourceManagerHttpClient: HttpClient;
   private computeHttpClient: HttpClient;
-  private openIdConnectHttpClient: HttpClient;
 
   constructor(private accessToken: string) {
     this.cloudBillingHttpClient = new HttpClient('https://cloudbilling.googleapis.com/', {
@@ -95,7 +94,6 @@ export class RestApiClient {
     this.computeHttpClient = new HttpClient('https://compute.googleapis.com/', {
       Authorization: `Bearer ${accessToken}`,
     });
-    this.openIdConnectHttpClient = new HttpClient('https://openidconnect.googleapis.com/v1/');
   }
 
   /**
@@ -420,20 +418,5 @@ export class RestApiClient {
         `compute/v1/projects/${projectId}/global/operations/${operationId}/wait`,
         {},
     );
-  }
-
-  /**
-   * Gets the OpenID Connect profile information.
-   *
-   * For a list of the supported Google OpenID claims
-   * @see https://accounts.google.com/.well-known/openid-configuration.
-   *
-   * The OpenID standard, including the "userinfo" response and core claims, is
-   * defined in the links below:
-   * @see https://openid.net/specs/openid-connect-core-1_0.html#UserInfoResponse
-   * @see https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
-   */
-  getUserInfo(): Promise<UserInfo> {
-    return this.openIdConnectHttpClient.get(`userinfo?access_token=${this.accessToken}`);
   }
 }

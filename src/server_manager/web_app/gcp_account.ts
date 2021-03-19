@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as gcp_api from '../cloud/gcp_api';
+import * as gcp_credentials from '../cloud/gcp_credentials_api';
 import {SCRIPT} from '../install_scripts/gcp_install_script';
 import * as gcp from '../model/gcp';
 import * as server from '../model/server';
@@ -36,7 +37,8 @@ export class GcpAccount implements gcp.Account {
 
   /** @see {@link Account#getName}. */
   async getName(): Promise<string> {
-    const userInfo = await this.apiClient.getUserInfo();
+    const hardcodedAccessToken = '';
+    const userInfo = await gcp_credentials.getUserInfo(hardcodedAccessToken);
     return userInfo.email ?? 'unknown';
   }
 

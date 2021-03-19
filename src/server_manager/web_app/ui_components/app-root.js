@@ -45,18 +45,28 @@ import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 import {PolymerElement} from '@polymer/polymer/polymer-element.js';
 
-import {displayDataAmountToBytes} from '../data_formatting';
-
 import {ServerView} from './outline-server-view.js';
 
 const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
+
+/**
+ * The supported cloud providers
+ * @typedef {'MANUAL' | 'DIGITALOCEAN' | 'GCP'} CloudProvider
+ **/
+
+/**
+ * A cloud account to be displayed
+ * @typedef {Object} AccountListEntry
+ * @prop {string} name
+ * @prop {CloudProvider} cloudProvider
+ */
 
 /**
  * An access key to be displayed
  * @typedef {Object} ServerListEntry
  * @prop {string} id
  * @prop {string} name
- * @prop {boolean} isManaged
+ * @prop {CloudProvider} cloudProvider
  * @prop {boolean} isSynced
  */
 
@@ -357,12 +367,34 @@ export class AppRoot extends mixinBehaviors
                   <div class="do-overflow-menu" slot="dropdown-content">
                     <h4>[[localize('digitalocean-disconnect-account')]]</h4>
                     <div class="account-info"><img src="images/digital_ocean_logo.svg">{{digitalOceanAccountName}}</div>
-                    <div class="sign-out-button" on-tap="signOutTapped">[[localize('digitalocean-disconnect')]]</div>
+                    <div class="sign-out-button" on-tap="_digitalOceanSignOutTapped">[[localize('digitalocean-disconnect')]]</div>
                   </div>
                 </paper-menu-button>
               </div>
               <div class="servers-container">
-                <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
+                <template is="dom-repeat" items="{{serverList}}" as="server" filter="{{_isServerForCloudProvider('DIGITALOCEAN')}}" sort="_sortServersByName">
+                  <div class\$="server {{_computeServerClasses(selectedServerId, server)}}" data-server\$="[[server]]" on-tap="_showServer">
+                    <img class="server-icon" src\$="images/{{_computeServerImage(selectedServerId, server)}}">
+                    <span>{{server.name}}</span>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <!-- GCP servers -->
+            <div class="servers-section" hidden\$="{{!isGcpAccountConnected}}">
+              <div class="servers-header">
+                <span>[[localize('servers-gcp')]]</span>
+                <paper-menu-button horizontal-align="left" class="" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
+                  <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
+                  <div class="do-overflow-menu" slot="dropdown-content">
+                    <h4>[[localize('gcp-disconnect-account')]]</h4>
+                    <div class="account-info"><img src="images/gcp-logo.svg">{{gcpAccountName}}</div>
+                    <div class="sign-out-button" on-tap="_gcpSignOutTapped">[[localize('gcp-disconnect')]]</div>
+                  </div>
+                </paper-menu-button>
+              </div>
+              <div class="servers-container">
+                <template is="dom-repeat" items="{{serverList}}" as="server" filter="{{_isServerForCloudProvider('GCP')}}" sort="_sortServersByName">
                   <div class\$="server {{_computeServerClasses(selectedServerId, server)}}" data-server\$="[[server]]" on-tap="_showServer">
                     <img class="server-icon" src\$="images/{{_computeServerImage(selectedServerId, server)}}">
                     <span>{{server.name}}</span>
@@ -376,7 +408,7 @@ export class AppRoot extends mixinBehaviors
                 <span>[[localize('servers-manual')]]</span>
               </div>
               <div class="servers-container">
-                <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
+                <template is="dom-repeat" items="{{serverList}}" as="server" filter="{{_isServerForCloudProvider('MANUAL')}}" sort="_sortServersByName">
                   <div class\$="server {{_computeServerClasses(selectedServerId, server)}}" data-server\$="[[server]]" on-tap="_showServer">
                     <img class="server-icon" src\$="images/{{_computeServerImage(selectedServerId, server)}}">
                     <span>{{server.name}}</span>
@@ -441,7 +473,16 @@ export class AppRoot extends mixinBehaviors
             <!-- DigitalOcean servers -->
             <div class="side-bar-section servers-section" hidden\$="{{!isDigitalOceanAccountConnected}}">
               <img class="provider-icon" src="images/do_white_logo.svg">
-              <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
+              <template is="dom-repeat" items="{{serverList}}" as="server" filter="{{_isServerForCloudProvider('DIGITALOCEAN')}}" sort="_sortServersByName">
+                <div class\$="server {{_computeServerClasses(selectedServerId, server)}}" data-server\$="[[server]]" on-tap="_showServer">
+                  <img class="server-icon" src\$="images/{{_computeServerImage(selectedServerId, server)}}">
+                </div>
+              </template>
+            </div>
+            <!-- GCP servers -->
+            <div class="side-bar-section servers-section" hidden\$="{{!isGcpAccountConnected}}">
+              <img class="provider-icon" src="images/gcp-logo.svg">
+              <template is="dom-repeat" items="{{serverList}}" as="server" filter="{{_isServerForCloudProvider('GCP')}}" sort="_sortServersByName">
                 <div class\$="server {{_computeServerClasses(selectedServerId, server)}}" data-server\$="[[server]]" on-tap="_showServer">
                   <img class="server-icon" src\$="images/{{_computeServerImage(selectedServerId, server)}}">
                 </div>
@@ -450,7 +491,7 @@ export class AppRoot extends mixinBehaviors
             <!-- Manual servers -->
             <div class="side-bar-section servers-section" hidden\$="{{!hasManualServers}}">
               <img class="provider-icon" src="images/cloud.svg">
-              <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
+              <template is="dom-repeat" items="{{serverList}}" as="server" filter="{{_isServerForCloudProvider('MANUAL')}}" sort="_sortServersByName">
                 <div class\$="server {{_computeServerClasses(selectedServerId, server)}}" data-server\$="[[server]]" on-tap="_showServer">
                   <img class="server-icon" src\$="images/{{_computeServerImage(selectedServerId, server)}}">
                 </div>
@@ -508,18 +549,29 @@ export class AppRoot extends mixinBehaviors
       // An array of {id, name, dir} language objects.
       supportedLanguages: {type: Array, readonly: true},
       useKeyIfMissing: {type: Boolean},
+      accountList: {type: Array},
       serverList: {type: Array},
       selectedServerId: {type: String},
       hasManualServers: {
         type: Boolean,
         computed: '_computeHasManualServers(serverList.*)',
       },
-      digitalOceanAccountName: {type: String},
+      digitalOceanAccountName: {
+        type: String,
+        computed: '_computeAccountName(accountList.*, "DIGITALOCEAN")',
+      },
       isDigitalOceanAccountConnected: {
         type: Boolean,
-        computed: '_computeIsDigitalOceanAccountConnected(digitalOceanAccountName)',
+        computed: '_computeIsAccountConnected(accountList.*, "DIGITALOCEAN")',
       },
-      gcpAccountName: String,
+      gcpAccountName: {
+        type: String,
+        computed: '_computeAccountName(accountList.*, "GCP")',
+      },
+      isGcpAccountConnected: {
+        type: Boolean,
+        computed: '_computeIsAccountConnected(accountList.*, "GCP")',
+      },
       outlineVersion: String,
       userAcceptedTos: {
         type: Boolean,
@@ -546,10 +598,10 @@ export class AppRoot extends mixinBehaviors
     this.language = '';
     this.supportedLanguages = [];
     this.useKeyIfMissing = true;
+    /** @type {AccountListEntry[]} */
+    this.accountList = [];
     /** @type {ServerListEntry[]} */
     this.serverList = [];
-    this.digitalOceanAccountName = '';
-    this.gcpAccountName = '';
     this.outlineVersion = '';
     this.currentPage = 'intro';
     this.shouldShowSideBar = false;
@@ -764,12 +816,17 @@ export class AppRoot extends mixinBehaviors
         });
   }
 
-  _computeIsDigitalOceanAccountConnected(digitalOceanAccountName) {
-    return Boolean(digitalOceanAccountName);
+  _computeAccountName(accountList, /** @type {CloudProvider} */ cloudProvider) {
+    const account = this.accountList.find(account => account.cloudProvider === cloudProvider);
+    return account !== undefined ? account.name : null;
+  }
+
+  _computeIsAccountConnected(accountList, /** @type {CloudProvider} */ cloudProvider) {
+    return this.accountList.find(account => account.cloudProvider === cloudProvider) !== undefined;
   }
 
   _computeHasManualServers(serverList) {
-    return this.serverList.filter(server => !server.isManaged).length > 0;
+    return this.serverList.filter(server => server.cloudProvider === 'MANUAL').length > 0;
   }
 
   _userAcceptedTosChanged(userAcceptedTos) {
@@ -814,8 +871,12 @@ export class AppRoot extends mixinBehaviors
     this.maybeCloseDrawer();
   }
 
-  signOutTapped() {
-    this.fire('SignOutRequested');
+  _digitalOceanSignOutTapped() {
+    this.fire('DigitalOceanSignOutRequested');
+  }
+
+  _gcpSignOutTapped() {
+    this.fire('GcpSignOutRequested');
   }
 
   openManualInstallFeedback(/** @type {string} */ prepopulatedMessage) {
@@ -904,12 +965,10 @@ export class AppRoot extends mixinBehaviors
     return shouldShowSideBar ? 'side-bar-margin' : '';
   }
 
-  _isServerManaged(server) {
-    return server.isManaged;
-  }
-
-  _isServerManual(server) {
-    return !server.isManaged;
+  _isServerForCloudProvider(/** @type {CloudProvider} */ cloudProvider) {
+    return function(server) {
+      return server.cloudProvider === cloudProvider;
+    };
   }
 
   _sortServersByName(a, b) {

@@ -14,6 +14,8 @@
 
 // TODO: Share the same OAuth config between electron app and renderer.
 // Keep this in sync with {@link gcp_oauth.ts#OAUTH_CONFIG}
+import {UserInfo} from './gcp_api';
+
 const GCP_OAUTH_CLIENT_ID =
     '946220775492-osi1dm2rhhpo4upm6qqfv9fiivv1qu6c.apps.googleusercontent.com';
 
@@ -56,4 +58,23 @@ async function revokeGcpToken(token: string): Promise<void> {
     'Content-Type': 'application/x-www-form-urlencoded',
   });
   await authClient.get<void>(`revoke?token=${token}`);
+}
+
+
+/**
+ * Gets the OpenID Connect profile information.
+ *
+ * For a list of the supported Google OpenID claims
+ * @see https://accounts.google.com/.well-known/openid-configuration.
+ *
+ * The OpenID standard, including the "userinfo" response and core claims, is
+ * defined in the links below:
+ * @see https://openid.net/specs/openid-connect-core-1_0.html#UserInfoResponse
+ * @see https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
+ *
+ * @param accessToken - An active access token with "email" scope
+ */
+export async function getUserInfo(accessToken: string): Promise<UserInfo> {
+  const openIdConnectClient = new HttpClient('https://openidconnect.googleapis.com/v1/');
+  return openIdConnectClient.get(`userinfo?access_token=${accessToken}`);
 }

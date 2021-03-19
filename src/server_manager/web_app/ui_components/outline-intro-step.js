@@ -207,7 +207,8 @@ Polymer({
 
         <div id="gcp" class="card" on-tap="setUpGcpTapped">
           <div class="card-header">
-            <div class="tag">[[localize('setup-advanced')]]</div>
+            <div class="tag" hidden\$="{{isGcpAccountConnected}}">[[localize('setup-advanced')]]</div>
+            <div class="email" hidden\$="{{!isGcpAccountConnected}}">{{digitalOceanAccountName}}</div>
             <img src="images/gcp-logo.svg">
           </div>
           <div class="card-title">Google Cloud Platform</div>
@@ -221,7 +222,8 @@ Polymer({
             </div>
           </div>
           <div class="card-footer">
-            <paper-button on-tap="setUpGcpTapped" class="primary">[[localize('setup-action')]]</paper-button>
+            <paper-button class="primary" hidden\$="{{isGcpAccountConnected}}">[[localize('setup-action')]]</paper-button>
+            <paper-button class="primary" hidden\$="{{!isGcpAccountConnected}}">[[localize('setup-create')]]</paper-button>
           </div>
         </div>
 
@@ -276,11 +278,15 @@ Polymer({
     },
     isDigitalOceanAccountConnected: {
       type: Boolean,
-      computed: '_computeIsDigitalOceanAccountConnected(digitalOceanAccountName)',
+      computed: '_computeIsAccountConnected(digitalOceanAccountName)',
     },
     gcpAccountName: {
       type: String,
       value: null,
+    },
+    isGcpAccountConnected: {
+      type: Boolean,
+      computed: '_computeIsAccountConnected(gcpAccountName)',
     },
     localize: {
       type: Function,
@@ -288,8 +294,8 @@ Polymer({
     },
   },
 
-  _computeIsDigitalOceanAccountConnected(digitalOceanAccountName) {
-    return Boolean(digitalOceanAccountName);
+  _computeIsAccountConnected(accountName) {
+    return Boolean(accountName);
   },
 
   connectToDigitalOceanTapped: function() {

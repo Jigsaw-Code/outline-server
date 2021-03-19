@@ -23,11 +23,10 @@ import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
 import * as server from '../model/server';
 
-import {bytesToDisplayDataAmount, DisplayDataAmount, displayDataAmountToBytes,} from './data_formatting';
+import {DisplayDataAmount, displayDataAmountToBytes,} from './data_formatting';
 import * as digitalocean_server from './digitalocean_server';
 import {parseManualServerConfig} from './management_urls';
-import {AppRoot, ServerListEntry} from './ui_components/app-root';
-import {OutlinePerKeyDataLimitDialog} from './ui_components/outline-per-key-data-limit-dialog.js';
+import {AccountListEntry, AppRoot, ServerListEntry} from './ui_components/app-root';
 import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, ServerView} from './ui_components/outline-server-view';
 
@@ -56,9 +55,6 @@ const DIGITALOCEAN_FLAG_MAPPING: {[cityId: string]: string} = {
   nyc: `${FLAG_IMAGE_DIR}/us.png`,
 };
 
-function dataLimitToDisplayDataAmount(limit: server.DataLimit): DisplayDataAmount|null {
-  return bytesToDisplayDataAmount(limit?.bytes);
-}
 function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.DataLimit|null {
   if (!dataAmount) {
     return null;
@@ -152,8 +148,12 @@ export class App {
     appRoot.addEventListener(
         'CreateGcpServerRequested',
         async (event: CustomEvent) => console.log('Received CreateGcpServerRequested event'));
-    appRoot.addEventListener('SignOutRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('DigitalOceanSignOutRequested', (event: CustomEvent) => {
       this.disconnectDigitalOceanAccount();
+      this.showIntro();
+    });
+    appRoot.addEventListener('GcpSignOutRequested', (event: CustomEvent) => {
+      this.disconnectGcpAccount();
       this.showIntro();
     });
 
@@ -317,10 +317,10 @@ export class App {
   async start(): Promise<void> {
     this.showIntro();
 
-    // Load server list. Fetch manual and managed servers in parallel.
+    // Load connected accounts and servers.
     await Promise.all([
-      this.loadDigitalOceanServers(this.cloudAccounts.getDigitalOceanAccount()),
-      this.loadManualServers()
+      this.loadDigitalOceanAccount(this.cloudAccounts.getDigitalOceanAccount()),
+      this.loadGcpAccount(this.cloudAccounts.getGcpAccount()), this.loadManualServers()
     ]);
 
     // Show last displayed server, if any.
@@ -333,14 +333,18 @@ export class App {
     }
   }
 
-  private async loadDigitalOceanServers(digitalOceanAccount: digitalocean.Account):
+  private async loadDigitalOceanAccount(digitalOceanAccount: digitalocean.Account):
       Promise<server.ManagedServer[]> {
     if (!digitalOceanAccount) {
       return [];
     }
     try {
       this.digitalOceanAccount = digitalOceanAccount;
-      this.appRoot.digitalOceanAccountName = await this.digitalOceanAccount.getName();
+      const accountListEntry: AccountListEntry = {
+        name: await this.digitalOceanAccount.getName(),
+        cloudProvider: 'DIGITALOCEAN',
+      };
+      this.appRoot.accountList = this.appRoot.accountList.concat([accountListEntry]);
       const status = await this.digitalOceanAccount.getStatus();
       if (status !== digitalocean.Status.ACTIVE) {
         return [];
@@ -358,6 +362,20 @@ export class App {
     return [];
   }
 
+  private async loadGcpAccount(gcpAccount: gcp.Account): Promise<server.ManagedServer[]> {
+    if (!gcpAccount) {
+      return [];
+    }
+
+    this.gcpAccount = gcpAccount;
+    const accountListEntry: AccountListEntry = {
+      name: await this.gcpAccount.getName(),
+      cloudProvider: 'GCP',
+    };
+    this.appRoot.accountList = this.appRoot.accountList.concat([accountListEntry]);
+    return [];
+  }
+
   private async loadManualServers() {
     for (const server of await this.manualServerRepository.listServers()) {
       this.addServer(server);
@@ -365,10 +383,13 @@ export class App {
   }
 
   private makeServerListEntry(server: server.Server): ServerListEntry {
+    // TODO: Set this to the appropriate cloud provider
+    const cloudProvider = isManualServer(server) ? 'MANUAL' : 'DIGITALOCEAN';
+
     return {
       id: server.getId(),
       name: this.makeDisplayName(server),
-      isManaged: isManagedServer(server),
+      cloudProvider,
       isSynced: !!server.getName(),
     };
   }
@@ -564,7 +585,7 @@ export class App {
   }
 
   private async handleConnectDigitalOceanAccountRequest(): Promise<void> {
-    let digitalOceanAccount: digitalocean.Account;
+    let digitalOceanAccount: digitalocean.Account = null;
     try {
       const accessToken = await this.runDigitalOceanOauthFlow();
       digitalOceanAccount = this.cloudAccounts.connectDigitalOceanAccount(accessToken);
@@ -578,18 +599,20 @@ export class App {
       }
       return;
     }
-    const doServers = await this.loadDigitalOceanServers(digitalOceanAccount);
+
+    const doServers = await this.loadDigitalOceanAccount(digitalOceanAccount);
     if (doServers.length > 0) {
       this.showServer(doServers[0]);
     } else {
-      await this.showDigitalOceanCreateServer(digitalOceanAccount);
+      await this.showDigitalOceanCreateServer(this.digitalOceanAccount);
     }
   }
 
   private async handleConnectGcpAccountRequest(): Promise<void> {
+    let gcpAccount: gcp.Account = null;
     try {
       const refreshToken = await this.runGcpOauthFlow();
-      this.gcpAccount = this.cloudAccounts.connectGcpAccount(refreshToken);
+      gcpAccount = this.cloudAccounts.connectGcpAccount(refreshToken);
     } catch (error) {
       this.disconnectGcpAccount();
       this.showIntro();
@@ -601,7 +624,7 @@ export class App {
       return;
     }
 
-    this.appRoot.gcpAccountName = await this.gcpAccount.getName();
+    await this.loadGcpAccount(gcpAccount);
     this.showIntro();
   }
 
@@ -610,18 +633,27 @@ export class App {
     this.cloudAccounts.disconnectDigitalOceanAccount();
     this.digitalOceanAccount = null;
     for (const serverEntry of this.appRoot.serverList) {
-      if (serverEntry.isManaged) {
+      if (serverEntry.cloudProvider === 'DIGITALOCEAN') {
         this.removeServer(serverEntry.id);
       }
     }
-    this.appRoot.digitalOceanAccountName = '';
+
+    this.appRoot.accountList =
+        this.appRoot.accountList.filter((account) => account.cloudProvider !== 'DIGITALOCEAN');
   }
 
   // Clears the GCP credentials and returns to the intro screen.
   private disconnectGcpAccount(): void {
     this.cloudAccounts.disconnectGcpAccount();
     this.gcpAccount = null;
-    this.appRoot.gcpAccountName = '';
+    for (const serverEntry of this.appRoot.serverList) {
+      if (serverEntry.cloudProvider === 'GCP') {
+        this.removeServer(serverEntry.id);
+      }
+    }
+
+    this.appRoot.accountList =
+        this.appRoot.accountList.filter((account) => account.cloudProvider !== 'GCP');
   }
 
   // Opens the screen to create a server.
