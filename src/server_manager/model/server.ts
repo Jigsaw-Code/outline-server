@@ -40,14 +40,26 @@ export interface Server {
   // Removes the access key given by id.
   removeAccessKey(accessKeyId: AccessKeyId): Promise<void>;
 
-  // Sets a data transfer limit over a 30 day rolling window for all access keys.
-  setAccessKeyDataLimit(limit: DataLimit): Promise<void>;
+  // Sets a default access key data transfer limit over a 30 day rolling window for all access keys.
+  // This limit is overridden by per-key data limits.  Forces enforcement of all data limits,
+  // including per-key data limits.
+  setDefaultDataLimit(limit: DataLimit): Promise<void>;
 
-  // Returns the access key data transfer limit, or undefined if it has not been set.
-  getAccessKeyDataLimit(): DataLimit|undefined;
+  // Returns the server default access key data transfer limit, or undefined if it has not been set.
+  getDefaultDataLimit(): DataLimit|undefined;
 
-  // Removes the access key data transfer limit.
-  removeAccessKeyDataLimit(): Promise<void>;
+  // Removes the server default data limit.  Per-key data limits are still enforced.  Traffic is
+  // tracked for if the limit is re-enabled.  Forces enforcement of all data limits, including
+  // per-key limits.
+  removeDefaultDataLimit(): Promise<void>;
+
+  // Sets the custom data limit for a specific key. This limit overrides the server default limit
+  // if it exists. Forces enforcement of the chosen key's data limit.
+  setAccessKeyDataLimit(accessKeyId: AccessKeyId, limit: DataLimit): Promise<void>;
+
+  // Removes the custom data limit for a specific key.  The key is still bound by the server default
+  // limit if it exists. Forces enforcement of the chosen key's data limit.
+  removeAccessKeyDataLimit(accessKeyId: AccessKeyId): Promise<void>;
 
   // Returns whether metrics are enabled.
   getMetricsEnabled(): boolean;
@@ -114,7 +126,9 @@ export interface ManagedServerHost {
   getHostId(): string;
 }
 
-export class DataAmount { terabytes: number; }
+export class DataAmount {
+  terabytes: number;
+}
 
 export class MonetaryCost {
   // Value in US dollars.
@@ -148,6 +162,7 @@ export interface AccessKey {
   id: AccessKeyId;
   name: string;
   accessUrl: string;
+  dataLimit?: DataLimit;
 }
 
 export type BytesByAccessKey = Map<AccessKeyId, number>;

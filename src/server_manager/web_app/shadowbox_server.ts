@@ -31,6 +31,8 @@ interface ServerConfigJson {
   portForNewAccessKeys: number;
   hostnameForAccessKeys: string;
   version: string;
+  // This is the server default data limit.  We use this instead of defaultDataLimit for API
+  // backwards compatibility.
   accessKeyDataLimit?: server.DataLimit;
 }
 
@@ -87,34 +89,49 @@ export class ShadowboxServer implements server.Server {
     return this.apiRequest<void>('access-keys/' + accessKeyId, {method: 'DELETE'});
   }
 
-  async setAccessKeyDataLimit(limit: server.DataLimit): Promise<void> {
-    console.info(`Setting access key data limit: ${JSON.stringify(limit)}`);
+  async setDefaultDataLimit(limit: server.DataLimit): Promise<void> {
+    console.info(`Setting server default data limit: ${JSON.stringify(limit)}`);
     const requestOptions = {
       method: 'PUT',
       headers: new Headers({'Content-Type': 'application/json'}),
       body: JSON.stringify({limit})
     };
-    await this.apiRequest<void>(this.getAccessKeyDataLimitPath(), requestOptions);
+    await this.apiRequest<void>(this.getDefaultDataLimitPath(), requestOptions);
     this.serverConfig.accessKeyDataLimit = limit;
   }
 
-  async removeAccessKeyDataLimit(): Promise<void> {
-    console.info(`Removing access key data limit`);
-    await this.apiRequest<void>(this.getAccessKeyDataLimitPath(), {method: 'DELETE'});
+  async removeDefaultDataLimit(): Promise<void> {
+    console.info(`Removing server default data limit`);
+    await this.apiRequest<void>(this.getDefaultDataLimitPath(), {method: 'DELETE'});
     delete this.serverConfig.accessKeyDataLimit;
   }
 
-  getAccessKeyDataLimit(): server.DataLimit|undefined {
+  getDefaultDataLimit(): server.DataLimit|undefined {
     return this.serverConfig.accessKeyDataLimit;
   }
 
-  private getAccessKeyDataLimitPath(): string {
+  private getDefaultDataLimitPath(): string {
     const version = this.getVersion();
     if (semver.gte(version, '1.4.0')) {
       // Data limits became a permanent feature in shadowbox v1.4.0.
       return 'server/access-key-data-limit';
     }
     return 'experimental/access-key-data-limit';
+  }
+
+  async setAccessKeyDataLimit(keyId: server.AccessKeyId, limit: server.DataLimit): Promise<void> {
+    console.info(`Setting data limit of ${limit.bytes} bytes for access key ${keyId}`);
+    const requestOptions = {
+      method: 'PUT',
+      headers: new Headers({'Content-Type': 'application/json'}),
+      body: JSON.stringify({limit})
+    };
+    await this.apiRequest<void>(`access-keys/${keyId}/data-limit`, requestOptions);
+  }
+
+  async removeAccessKeyDataLimit(keyId: server.AccessKeyId): Promise<void> {
+    console.info(`Removing data limit from access key ${keyId}`);
+    await this.apiRequest<void>(`access-keys/${keyId}/data-limit`, {method: 'DELETE'});
   }
 
   async getDataUsage(): Promise<server.BytesByAccessKey> {
