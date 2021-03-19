@@ -36,7 +36,8 @@ export class GcpAccount implements gcp.Account {
 
   /** @see {@link Account#getName}. */
   async getName(): Promise<string> {
-    return 'placeholder';
+    const userInfo = await this.apiClient.getUserInfo();
+    return userInfo.email ?? 'unknown';
   }
 
   /** Returns the refresh token. */
