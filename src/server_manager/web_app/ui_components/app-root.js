@@ -33,6 +33,7 @@ import './outline-gcp-oauth-step';
 import './outline-feedback-dialog.js';
 import './outline-survey-dialog.js';
 import './outline-intro-step.js';
+import './outline-per-key-data-limit-dialog';
 import './outline-language-picker.js';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
@@ -43,6 +44,8 @@ import {AppLocalizeBehavior} from '@polymer/app-localize-behavior/app-localize-b
 import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 import {PolymerElement} from '@polymer/polymer/polymer-element.js';
+
+import {displayDataAmountToBytes} from '../data_formatting';
 
 import {ServerView} from './outline-server-view.js';
 
@@ -346,14 +349,14 @@ export class AppRoot extends mixinBehaviors
           <!-- Servers section -->
           <div class="servers">
             <!-- DigitalOcean servers -->
-            <div class="servers-section" hidden\$="{{!isSignedInToDigitalOcean}}">
+            <div class="servers-section" hidden\$="{{!isDigitalOceanAccountConnected}}">
               <div class="servers-header">
                 <span>[[localize('servers-digitalocean')]]</span>
                 <paper-menu-button horizontal-align="left" class="" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
                   <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
                   <div class="do-overflow-menu" slot="dropdown-content">
                     <h4>[[localize('digitalocean-disconnect-account')]]</h4>
-                    <div class="account-info"><img src="images/digital_ocean_logo.svg">{{adminEmail}}</div>
+                    <div class="account-info"><img src="images/digital_ocean_logo.svg">{{digitalOceanAccountName}}</div>
                     <div class="sign-out-button" on-tap="signOutTapped">[[localize('digitalocean-disconnect')]]</div>
                   </div>
                 </paper-menu-button>
@@ -405,7 +408,7 @@ export class AppRoot extends mixinBehaviors
                 <a href="https://www.google.com/policies/privacy/">[[localize('nav-privacy')]]</a>
                 <a href="https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html">[[localize('nav-terms')]]</a>
                 <span on-tap="showLicensesTapped">[[localize('nav-licenses')]]</span>
-              </div>      
+              </div>
             </div>
           </paper-listbox>
         </app-drawer>
@@ -413,7 +416,7 @@ export class AppRoot extends mixinBehaviors
         <app-header-layout>
           <div class="app-container">
             <iron-pages attr-for-selected="id" selected="{{ currentPage }}">
-              <outline-intro-step id="intro" digital-ocean-email="{{adminEmail}}" gcp-account-name="{{gcpAccountName}}" localize="[[localize]]"></outline-intro-step>
+              <outline-intro-step id="intro" digital-ocean-account-name="{{digitalOceanAccountName}}" gcp-account-name="{{gcpAccountName}}" localize="[[localize]]"></outline-intro-step>
               <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
               <outline-gcp-oauth-step id="gcpOauth" localize="[[localize]]"></outline-gcp-oauth-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
@@ -436,7 +439,7 @@ export class AppRoot extends mixinBehaviors
           </div>
           <div class="servers">
             <!-- DigitalOcean servers -->
-            <div class="side-bar-section servers-section" hidden\$="{{!isSignedInToDigitalOcean}}">
+            <div class="side-bar-section servers-section" hidden\$="{{!isDigitalOceanAccountConnected}}">
               <img class="provider-icon" src="images/do_white_logo.svg">
               <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
                 <div class\$="server {{_computeServerClasses(selectedServerId, server)}}" data-server\$="[[server]]" on-tap="_showServer">
@@ -471,6 +474,7 @@ export class AppRoot extends mixinBehaviors
       <outline-modal-dialog id="modalDialog"></outline-modal-dialog>
       <outline-share-dialog id="shareDialog" localize="[[localize]]"></outline-share-dialog>
       <outline-metrics-option-dialog id="metricsDialog" localize="[[localize]]"></outline-metrics-option-dialog>
+      <outline-per-key-data-limit-dialog id="perKeyDataLimitDialog" language="[[language]]" localize="[[localize]]"></outline-per-key-data-limit-dialog>
 
       <paper-dialog id="getConnectedDialog" modal="">
         <!-- iframe gets inserted here once we are given the invite URL. -->
@@ -510,12 +514,12 @@ export class AppRoot extends mixinBehaviors
         type: Boolean,
         computed: '_computeHasManualServers(serverList.*)',
       },
-      adminEmail: {type: String},
-      gcpAccountName: String,
-      isSignedInToDigitalOcean: {
+      digitalOceanAccountName: {type: String},
+      isDigitalOceanAccountConnected: {
         type: Boolean,
-        computed: '_computeIsSignedInToDigitalOcean(adminEmail)',
+        computed: '_computeIsDigitalOceanAccountConnected(digitalOceanAccountName)',
       },
+      gcpAccountName: String,
       outlineVersion: String,
       userAcceptedTos: {
         type: Boolean,
@@ -544,7 +548,7 @@ export class AppRoot extends mixinBehaviors
     this.useKeyIfMissing = true;
     /** @type {ServerListEntry[]} */
     this.serverList = [];
-    this.adminEmail = '';
+    this.digitalOceanAccountName = '';
     this.gcpAccountName = '';
     this.outlineVersion = '';
     this.currentPage = 'intro';
@@ -759,8 +763,9 @@ export class AppRoot extends mixinBehaviors
           }
         });
   }
-  _computeIsSignedInToDigitalOcean(adminEmail) {
-    return Boolean(adminEmail);
+
+  _computeIsDigitalOceanAccountConnected(digitalOceanAccountName) {
+    return Boolean(digitalOceanAccountName);
   }
 
   _computeHasManualServers(serverList) {
@@ -819,6 +824,15 @@ export class AppRoot extends mixinBehaviors
 
   openShareDialog(accessKey, s3Url) {
     this.$.shareDialog.open(accessKey, s3Url);
+  }
+
+  /**
+   * @param accessKey The DisplayAccessKey for the dialog to work on
+   */
+  openPerKeyDataLimitDialog(keyName, activeDataLimitBytes, onDataLimitSet, onDataLimitRemoved) {
+    // attach listeners here
+    this.$.perKeyDataLimitDialog.open(
+        keyName, activeDataLimitBytes, onDataLimitSet, onDataLimitRemoved);
   }
 
   openGetConnectedDialog(/** @type {string} */ inviteUrl) {

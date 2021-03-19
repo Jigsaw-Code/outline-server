@@ -18,9 +18,8 @@ import {OAuth2Client} from 'google-auth-library';
 import {AddressInfo} from 'net';
 
 const OAUTH_CONFIG = {
-  // TODO: Create GCP project under firehook-products
-  project_id: 'mpmcroy-server-provisioner',
-  client_id: '276807089705-e6sk8e96a2kbuilgnehfaag75ab2aom3.apps.googleusercontent.com',
+  project_id: 'outline-manager-oauth',
+  client_id: '946220775492-osi1dm2rhhpo4upm6qqfv9fiivv1qu6c.apps.googleusercontent.com',
   scopes: [
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/compute',
