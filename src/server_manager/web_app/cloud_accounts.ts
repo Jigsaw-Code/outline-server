@@ -17,6 +17,7 @@ import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
 import {DigitalOceanAccount, ShadowboxSettings} from './digitalocean_account';
 import {GcpAccount} from './gcp_account';
+import {HttpClient} from "../infrastructure/fetch";
 
 type DigitalOceanAccountJson = {
   accessToken: string
@@ -100,6 +101,7 @@ export class CloudAccounts implements accounts.CloudAccounts {
     if (gcpAccountJsonString) {
       const gcpAccountJson: GcpAccountJson =
           JSON.parse(this.storage.getItem(this.GCP_ACCOUNT_STORAGE_KEY));
+      // TODO: Exchange refreshToken for accessToken
       this.gcpAccount = this.createGcpAccount(gcpAccountJson.refreshToken);
     }
   }
@@ -138,4 +140,26 @@ export class CloudAccounts implements accounts.CloudAccounts {
       this.storage.setItem(this.GCP_ACCOUNT_STORAGE_KEY, JSON.stringify(gcpAccountJson));
     }
   }
+
+  /**
+   * Refreshes a GCP access token.
+   *
+   * @see https://developers.google.com/identity/protocols/oauth2/native-app#offline
+   */
+  private async refreshGcpAccessToken(clientId: string, refreshToken: string): Promise<string> {
+    const oAuthClient = new HttpClient('https://oauth2.googleapis.com/', {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    });
+    const data = {
+      client_id: clientId,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token',
+    };
+    const response = await oAuthClient.post<RefreshTokenResponse>('token', );
+  }
 }
+
+type RefreshTokenResponse = Readonly<{
+  access_token: string;
+  expires_in: number,
+}>;

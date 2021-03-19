@@ -58,11 +58,11 @@ export type BillingAccount =
     Readonly<{name: string; open: boolean; displayName: string; masterBillingAccount: string;}>;
 
 /** https://cloud.google.com/billing/docs/reference/rest/v1/ProjectBillingInfo */
-export type ProjectBillingInfo = {
+export type ProjectBillingInfo = Readonly<{
   name: string; projectId: string;
   billingAccountName?: string;
   billingEnabled?: boolean;
-};
+}>;
 
 /**
  * @see https://accounts.google.com/.well-known/openid-configuration for
@@ -71,9 +71,9 @@ export type ProjectBillingInfo = {
  * Note: The supported claims are optional and not guaranteed to be in the
  * response.
  */
-export type UserInfo = {
+export type UserInfo = Readonly<{
   email: string,
-};
+}>;
 
 type ListInstancesResponse = Readonly<{items: Instance[]; nextPageToken: string}>;
 type ListZonesResponse = Readonly<{items: Zone[]; nextPageToken: string}>;
