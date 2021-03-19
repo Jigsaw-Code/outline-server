@@ -15,21 +15,21 @@
 import * as sentry from '@sentry/electron';
 import * as semver from 'semver';
 
+import * as digitalocean_api from '../cloud/digitalocean_api';
+import * as errors from '../infrastructure/errors';
+import {sleep} from '../infrastructure/sleep';
 import * as accounts from '../model/accounts';
 import * as digitalocean from '../model/digitalocean';
-import * as digitalocean_api from '../cloud/digitalocean_api';
-import * as digitalocean_server from './digitalocean_server';
-import * as errors from '../infrastructure/errors';
 import * as gcp from '../model/gcp';
 import * as server from '../model/server';
 
 import {bytesToDisplayDataAmount, DisplayDataAmount, displayDataAmountToBytes,} from './data_formatting';
+import * as digitalocean_server from './digitalocean_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {OutlinePerKeyDataLimitDialog} from './ui_components/outline-per-key-data-limit-dialog.js';
 import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, ServerView} from './ui_components/outline-server-view';
-import {sleep} from '../infrastructure/sleep';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
