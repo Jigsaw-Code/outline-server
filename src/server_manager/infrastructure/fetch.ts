@@ -69,30 +69,28 @@ export class HttpClient {
       data = JSON.stringify(data);
     }
 
-    return null;
+    const response = await fetch(url, {
+      method: method.toUpperCase(),
+      headers,
+      ...(data && {body: data}),
+    });
 
-    // const response = await fetch(url, {
-    //   method: method.toUpperCase(),
-    //   headers,
-    //   ...(data && {body: data}),
-    // });
-    //
-    // console.debug(`Status: ${response.statusText} (${response.status})`);
-    // if (!response.ok) {
-    //   console.debug(`Text: ${await response.text()}`);
-    //   throw new HttpError(response.status, response.statusText);
-    // }
-    //
-    // try {
-    //   let result = undefined;
-    //   if (response.status !== 204) {
-    //     result = await response.json();
-    //     console.debug(`Response: ${JSON.stringify(result)}`);
-    //   }
-    //   return result;
-    // } catch (e) {
-    //   throw new Error('Error parsing response body: ' + JSON.stringify(e));
-    // }
+    console.debug(`Status: ${response.statusText} (${response.status})`);
+    if (!response.ok) {
+      console.debug(`Text: ${await response.text()}`);
+      throw new HttpError(response.status, response.statusText);
+    }
+
+    try {
+      let result = undefined;
+      if (response.status !== 204) {
+        result = await response.json();
+        console.debug(`Response: ${JSON.stringify(result)}`);
+      }
+      return result;
+    } catch (e) {
+      throw new Error('Error parsing response body: ' + JSON.stringify(e));
+    }
   }
 }
 

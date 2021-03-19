@@ -14,7 +14,8 @@
 
 // TODO: Share the same OAuth config between electron app and renderer.
 // Keep this in sync with {@link gcp_oauth.ts#OAUTH_CONFIG}
-const GCP_OAUTH_CLIENT_ID = '946220775492-osi1dm2rhhpo4upm6qqfv9fiivv1qu6c.apps.googleusercontent.com';
+const GCP_OAUTH_CLIENT_ID =
+    '946220775492-osi1dm2rhhpo4upm6qqfv9fiivv1qu6c.apps.googleusercontent.com';
 
 type RefreshAccessTokenResponse = Readonly<{
   access_token: string; expires_in: number,
@@ -25,7 +26,7 @@ type RefreshAccessTokenResponse = Readonly<{
  *
  * @see https://developers.google.com/identity/protocols/oauth2/native-app#offline
  */
-import {encodeFormData, HttpClient} from "../infrastructure/fetch";
+import {encodeFormData, HttpClient} from '../infrastructure/fetch';
 
 export async function refreshGcpAccessToken(refreshToken: string): Promise<string> {
   const oAuthClient = new HttpClient('https://oauth2.googleapis.com/', {
