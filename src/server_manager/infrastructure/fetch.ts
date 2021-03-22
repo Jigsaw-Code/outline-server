@@ -54,8 +54,7 @@ export class HttpClient {
   }
 
   // tslint:disable-next-line:no-any
-  private async request<T>(path: string, method: string, data?: any):
-      Promise<T> {
+  private async request<T>(path: string, method: string, data?: any): Promise<T> {
     const url = `${this.baseUrl}${path}`;
     console.debug(`Request: ${url}`);
     console.debug(`Headers: ${JSON.stringify(this.headers)}`);

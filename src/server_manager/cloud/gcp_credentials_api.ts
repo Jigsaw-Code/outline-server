@@ -29,10 +29,8 @@ type RefreshAccessTokenResponse = Readonly<{
 import {encodeFormData, HttpClient} from '../infrastructure/fetch';
 
 export async function refreshGcpAccessToken(refreshToken: string): Promise<string> {
-  const headers = new Map<string, string>([
-    ['Host', 'oauth2.googleapis.com'],
-    ['Content-Type', 'application/x-www-form-urlencoded']
-  ]);
+  const headers = new Map<string, string>(
+      [['Host', 'oauth2.googleapis.com'], ['Content-Type', 'application/x-www-form-urlencoded']]);
   const oAuthClient = new HttpClient('https://oauth2.googleapis.com/', headers);
   const data = {
     client_id: GCP_OAUTH_CLIENT_ID,
@@ -52,10 +50,8 @@ export async function refreshGcpAccessToken(refreshToken: string): Promise<strin
  * @param token - A refresh token or access token
  */
 async function revokeGcpToken(token: string): Promise<void> {
-  const headers = new Map<string, string>([
-    ['Host', 'oauth2.googleapis.com'],
-    ['Content-Type', 'application/x-www-form-urlencoded']
-  ]);
+  const headers = new Map<string, string>(
+      [['Host', 'oauth2.googleapis.com'], ['Content-Type', 'application/x-www-form-urlencoded']]);
   const authClient = new HttpClient('https://oauth2.googleapis.com/', headers);
   await authClient.get<void>(`revoke?token=${token}`);
 }

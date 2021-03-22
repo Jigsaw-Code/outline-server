@@ -91,9 +91,11 @@ export class RestApiClient {
       ['Authorization', `Bearer ${accessToken}`],
     ]);
     this.cloudBillingHttpClient = new HttpClient('https://cloudbilling.googleapis.com/', headers);
-    this.cloudResourceManagerHttpClient = new HttpClient('https://cloudresourcemanager.googleapis.com/', headers);
+    this.cloudResourceManagerHttpClient =
+        new HttpClient('https://cloudresourcemanager.googleapis.com/', headers);
     this.computeHttpClient = new HttpClient('https://compute.googleapis.com/', headers);
-    this.openIdConnectHttpClient = new HttpClient('https://openidconnect.googleapis.com/v1/', headers);
+    this.openIdConnectHttpClient =
+        new HttpClient('https://openidconnect.googleapis.com/v1/', headers);
   }
 
   /**
