@@ -1,7 +1,7 @@
 {
   "name": "outline-manager",
   "productName": "Outline Manager",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "description": "Create and manage access to Outline servers",
   "homepage": "https://getoutline.org/",
   "author": {
@@ -57,7 +57,7 @@
     "config": {
       "PUPPETEER_CHROMIUM_REVISION": [
         "The Chromium revision number used by Karma.  This should always be the revision number of",
-        "the bundled Chromium in our version of Electron.  Whenever upgrading Electron, run the", 
+        "the bundled Chromium in our version of Electron.  Whenever upgrading Electron, run the",
         "server_manager tests.  You'll get a failure that looks like <Expected '812852' to equal '693954>.",
         "Set PUPPETEER_CHROMIUM_REVISION to the first of those numbers to get the correct revision",
         "and `yarn run clean && yarn` to re-install puppeteer, causing it to download the new",
