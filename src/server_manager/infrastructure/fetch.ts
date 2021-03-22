@@ -23,45 +23,41 @@ export class HttpError extends Error {
 }
 
 export class HttpClient {
-  static readonly DEFAULT_HEADERS = {
-    'Content-type': 'application/json',
-    Accept: 'application/json',
-  };
+  private readonly customHeaders = new Headers();
 
-  constructor(private readonly baseUrl: string, private headers: {} = HttpClient.DEFAULT_HEADERS) {
+  constructor(private readonly baseUrl: string, private headers?: Map<string, string>) {
     // Add trailing slash (if missing)
     this.baseUrl = baseUrl.replace(/\/?$/, '/');
+    headers.forEach((value, key) => {
+      this.customHeaders.append(key, value);
+    });
   }
 
-  // TODO: Consider adding a method to set the Authorization header
-
-  async get<T>(path: string, headers?: {}): Promise<T> {
-    return await this.request<T>(path, 'GET', undefined, headers);
+  setAuthorizationHeader(value: string): void {
+    this.customHeaders.set('Authorization', value);
   }
 
-  async post<T>(path: string, data?: {}, headers?: {}): Promise<T> {
-    return await this.request<T>(path, 'POST', data, headers);
+  async get<T>(path: string): Promise<T> {
+    return await this.request<T>(path, 'GET', undefined);
   }
 
-  async put<T>(path: string, data?: {}, headers?: {}): Promise<T> {
-    return await this.request<T>(path, 'PUT', data, headers);
+  async post<T>(path: string, data?: {}): Promise<T> {
+    return await this.request<T>(path, 'POST', data);
   }
 
-  async delete<T>(path: string, headers?: {}): Promise<T> {
-    return await this.request<T>(path, 'DELETE', undefined, headers);
+  async put<T>(path: string, data?: {}): Promise<T> {
+    return await this.request<T>(path, 'PUT', data);
+  }
+
+  async delete<T>(path: string): Promise<T> {
+    return await this.request<T>(path, 'DELETE', undefined);
   }
 
   // tslint:disable-next-line:no-any
-  private async request<T>(path: string, method: string, data?: any, customHeaders?: {}):
-      Promise<T> {
+  private async request<T>(path: string, method: string, data?: any): Promise<T> {
     const url = `${this.baseUrl}${path}`;
-    const headers = {
-      ...this.headers,
-      ...customHeaders,
-    };
-
     console.debug(`Request: ${url}`);
-    console.debug(`Headers: ${JSON.stringify(headers)}`);
+    console.debug(`Headers: ${JSON.stringify(this.headers)}`);
     console.debug(`Body: ${JSON.stringify(data)}`);
 
     // TODO: More robust handling of data types
@@ -71,7 +67,7 @@ export class HttpClient {
 
     const response = await fetch(url, {
       method: method.toUpperCase(),
-      headers,
+      headers: this.customHeaders,
       ...(data && {body: data}),
     });
 

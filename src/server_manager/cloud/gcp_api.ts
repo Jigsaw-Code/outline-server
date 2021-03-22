@@ -84,16 +84,15 @@ export class RestApiClient {
   private computeHttpClient: HttpClient;
 
   constructor(private accessToken: string) {
-    this.cloudBillingHttpClient = new HttpClient('https://cloudbilling.googleapis.com/', {
-      Authorization: `Bearer ${accessToken}`,
-    });
+    const headers = new Map<string, string>([
+      ['Content-type', 'application/json'],
+      ['Accept', 'application/json'],
+      ['Authorization', `Bearer ${accessToken}`],
+    ]);
+    this.cloudBillingHttpClient = new HttpClient('https://cloudbilling.googleapis.com/', headers);
     this.cloudResourceManagerHttpClient =
-        new HttpClient('https://cloudresourcemanager.googleapis.com/', {
-          Authorization: `Bearer ${accessToken}`,
-        });
-    this.computeHttpClient = new HttpClient('https://compute.googleapis.com/', {
-      Authorization: `Bearer ${accessToken}`,
-    });
+        new HttpClient('https://cloudresourcemanager.googleapis.com/', headers);
+    this.computeHttpClient = new HttpClient('https://compute.googleapis.com/', headers);
   }
 
   /**
