@@ -30,4 +30,6 @@ interface OauthSession {
 
 declare function runDigitalOceanOauth(): OauthSession;
 
+declare function runGcpOauth(): OauthSession;
+
 declare function bringToFront(): void;

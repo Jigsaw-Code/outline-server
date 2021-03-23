@@ -219,6 +219,10 @@
     "message": "Failed to get list of available regions",
     "description": "This string appears in an error notification toast. It is shown when there is an error retrieving the regions available for server deployment."
   },
+  "error_gcp_auth": {
+    "message": "Authentication with Google Cloud Platform failed",
+    "description": "This string appears in an error notification toast. It is shown when there is an error when logging in to the user's Google Cloud Platform account. Google Cloud Platform is a cloud server provider name and should not be translated."
+  },
   "error_feedback": {
     "message": "Failed to submit feedback. Please try again.",
     "description": "This string appears in an error notification toast. It is shown when there is an error submitting the user's feedback."

@@ -14,12 +14,10 @@
 
 import './ui_components/app-root.js';
 
-import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as i18n from '../infrastructure/i18n';
 
 import {App} from './app';
 import {CloudAccounts} from './cloud_accounts';
-import {DigitalOceanAccount} from './digitalocean_account';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
 
@@ -106,12 +104,7 @@ document.addEventListener('WebComponentsReady', () => {
     watchtowerRefreshSeconds: shadowboxImageId ? 30 : undefined,
   };
 
-  // Set DigitalOcean server repository parameters.
-  const digitalOceanAccountFactory = (accessToken: string) => {
-    const session = new digitalocean_api.RestApiSession(accessToken);
-    return new DigitalOceanAccount(session, shadowboxSettings, debugMode);
-  };
-  const cloudAccounts = new CloudAccounts(digitalOceanAccountFactory);
+  const cloudAccounts = new CloudAccounts(shadowboxSettings, debugMode);
 
   // Create and start the app.
   const language = getLanguageToUse();

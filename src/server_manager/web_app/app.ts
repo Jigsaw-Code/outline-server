@@ -18,10 +18,11 @@ import * as semver from 'semver';
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
+import * as accounts from '../model/accounts';
 import * as digitalocean from '../model/digitalocean';
+import * as gcp from '../model/gcp';
 import * as server from '../model/server';
 
-import {CloudAccounts} from './cloud_accounts';
 import {bytesToDisplayDataAmount, DisplayDataAmount, displayDataAmountToBytes,} from './data_formatting';
 import * as digitalocean_server from './digitalocean_server';
 import {parseManualServerConfig} from './management_urls';
@@ -123,13 +124,14 @@ function isManualServer(testServer: server.Server): testServer is server.ManualS
 
 export class App {
   private digitalOceanAccount: digitalocean.Account;
+  private gcpAccount: gcp.Account;
   private selectedServer: server.Server;
   private idServerMap = new Map<string, server.Server>();
 
   constructor(
       private appRoot: AppRoot, private readonly version: string,
       private manualServerRepository: server.ManualServerRepository,
-      private cloudAccounts: CloudAccounts) {
+      private cloudAccounts: accounts.CloudAccounts) {
     appRoot.setAttribute('outline-version', this.version);
 
     appRoot.addEventListener('ConnectDigitalOceanAccountRequested', (event: CustomEvent) => {
@@ -144,6 +146,12 @@ export class App {
         this.handleConnectDigitalOceanAccountRequest();
       }
     });
+    appRoot.addEventListener(
+        'ConnectGcpAccountRequested',
+        async (event: CustomEvent) => this.handleConnectGcpAccountRequest());
+    appRoot.addEventListener(
+        'CreateGcpServerRequested',
+        async (event: CustomEvent) => console.log('Received CreateGcpServerRequested event'));
     appRoot.addEventListener('SignOutRequested', (event: CustomEvent) => {
       this.disconnectDigitalOceanAccount();
       this.showIntro();
@@ -506,7 +514,7 @@ export class App {
     });
   };
 
-  // Runs the oauth flow and returns the API access token.
+  // Runs the DigitalOcean OAuth flow and returns the API access token.
   // Throws CANCELLED_ERROR on cancellation, or the error in case of failure.
   private async runDigitalOceanOauthFlow(): Promise<string> {
     const oauth = runDigitalOceanOauth();
@@ -523,6 +531,28 @@ export class App {
       // tokens, as they require a client_secret to be stored on a server and
       // not visible to end users in client-side JS. More details at:
       // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
+      return await oauth.result;
+    } catch (error) {
+      if (oauth.isCancelled()) {
+        throw CANCELLED_ERROR;
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  // Runs the GCP OAuth flow and returns the API refresh token (which can be
+  // exchanged for an access token).
+  // Throws CANCELLED_ERROR on cancellation, or the error in case of failure.
+  private async runGcpOauthFlow(): Promise<string> {
+    const oauth = runGcpOauth();
+    const handleOauthFlowCancelled = () => {
+      oauth.cancel();
+      this.disconnectGcpAccount();
+      this.showIntro();
+    };
+    this.appRoot.getAndShowGcpOauthFlow(handleOauthFlowCancelled);
+    try {
       return await oauth.result;
     } catch (error) {
       if (oauth.isCancelled()) {
@@ -556,7 +586,26 @@ export class App {
     }
   }
 
-  // Clears the credentials and returns to the intro screen.
+  private async handleConnectGcpAccountRequest(): Promise<void> {
+    try {
+      const refreshToken = await this.runGcpOauthFlow();
+      this.gcpAccount = this.cloudAccounts.connectGcpAccount(refreshToken);
+    } catch (error) {
+      this.disconnectGcpAccount();
+      this.showIntro();
+      bringToFront();
+      if (error !== CANCELLED_ERROR) {
+        console.error(`GCP authentication failed: ${error}`);
+        this.appRoot.showError(this.appRoot.localize('error-gcp-auth'));
+      }
+      return;
+    }
+
+    this.appRoot.gcpAccountName = await this.gcpAccount.getName();
+    this.showIntro();
+  }
+
+  // Clears the DigitalOcean credentials and returns to the intro screen.
   private disconnectDigitalOceanAccount(): void {
     this.cloudAccounts.disconnectDigitalOceanAccount();
     this.digitalOceanAccount = null;
@@ -566,6 +615,13 @@ export class App {
       }
     }
     this.appRoot.digitalOceanAccountName = '';
+  }
+
+  // Clears the GCP credentials and returns to the intro screen.
+  private disconnectGcpAccount(): void {
+    this.cloudAccounts.disconnectGcpAccount();
+    this.gcpAccount = null;
+    this.appRoot.gcpAccountName = '';
   }
 
   // Opens the screen to create a server.

@@ -29,6 +29,7 @@ import '@polymer/paper-menu-button/paper-menu-button.js';
 import './cloud-install-styles.js';
 import './outline-about-dialog.js';
 import './outline-do-oauth-step.js';
+import './outline-gcp-oauth-step';
 import './outline-feedback-dialog.js';
 import './outline-survey-dialog.js';
 import './outline-intro-step.js';
@@ -415,8 +416,9 @@ export class AppRoot extends mixinBehaviors
         <app-header-layout>
           <div class="app-container">
             <iron-pages attr-for-selected="id" selected="{{ currentPage }}">
-              <outline-intro-step id="intro" digital-ocean-account-name="{{digitalOceanAccountName}}" localize="[[localize]]"></outline-intro-step>
+              <outline-intro-step id="intro" digital-ocean-account-name="{{digitalOceanAccountName}}" gcp-account-name="{{gcpAccountName}}" localize="[[localize]]"></outline-intro-step>
               <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
+              <outline-gcp-oauth-step id="gcpOauth" localize="[[localize]]"></outline-gcp-oauth-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
               <outline-region-picker-step id="regionPicker" localize="[[localize]]"></outline-region-picker-step>
               <div id="serverView">
@@ -517,6 +519,7 @@ export class AppRoot extends mixinBehaviors
         type: Boolean,
         computed: '_computeIsDigitalOceanAccountConnected(digitalOceanAccountName)',
       },
+      gcpAccountName: String,
       outlineVersion: String,
       userAcceptedTos: {
         type: Boolean,
@@ -546,6 +549,7 @@ export class AppRoot extends mixinBehaviors
     /** @type {ServerListEntry[]} */
     this.serverList = [];
     this.digitalOceanAccountName = '';
+    this.gcpAccountName = '';
     this.outlineVersion = '';
     this.currentPage = 'intro';
     this.shouldShowSideBar = false;
@@ -623,6 +627,13 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'digitalOceanOauth';
     const oauthFlow = this.getDigitalOceanOauthFlow(onCancel);
     oauthFlow.showConnectAccount();
+    return oauthFlow;
+  }
+
+  getAndShowGcpOauthFlow(onCancel) {
+    this.currentPage = 'gcpOauth';
+    const oauthFlow = this.$.gcpOauth;
+    oauthFlow.onCancel = onCancel;
     return oauthFlow;
   }
 

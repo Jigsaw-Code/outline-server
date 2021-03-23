@@ -126,7 +126,7 @@ function getWebAppUrl() {
   }
   if (debugMode) {
     queryParams.set('outlineDebugMode', 'true');
-    console.log(`Enabling Outline debug mode`);
+    console.log('Enabling Outline debug mode');
   }
 
   // Append arguments to URL if any.
