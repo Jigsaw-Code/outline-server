@@ -54,7 +54,6 @@ jobs:
         - yarn do shadowbox/test
         - yarn do shadowbox/docker/build && cd src/shadowbox/integration_test && ./test.sh
 
-
     - stage: "Deploy Server"
       name: Server Docker Image
       sudo: required
