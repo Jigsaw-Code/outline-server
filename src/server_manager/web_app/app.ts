@@ -1091,7 +1091,7 @@ export class App {
           .then(
               () => {
                 this.removeServer(serverId);
-                this.appRoot.selectedServer = null;
+                this.appRoot.selectedServerId = '';
                 this.selectedServer = null;
                 this.showIntro();
                 this.appRoot.showNotification(
