@@ -347,7 +347,7 @@ export class App {
       }
       const servers = await this.digitalOceanAccount.listServers();
       for (const server of servers) {
-        this.addServer(server);
+        this.addServer(this.digitalOceanAccount.getId(), server);
       }
       return servers;
     } catch (error) {
@@ -360,15 +360,15 @@ export class App {
 
   private async loadManualServers() {
     for (const server of await this.manualServerRepository.listServers()) {
-      this.addServer(server);
+      this.addServer(null, server);
     }
   }
 
-  private makeServerListEntry(server: server.Server): ServerListEntry {
+  private makeServerListEntry(accountId: string, server: server.Server): ServerListEntry {
     return {
       id: server.getId(),
+      accountId,
       name: this.makeDisplayName(server),
-      isManaged: isManagedServer(server),
       isSynced: !!server.getName(),
     };
   }
@@ -384,10 +384,10 @@ export class App {
     return name;
   }
 
-  private addServer(server: server.Server): void {
+  private addServer(accountId: string, server: server.Server): void {
     console.log('Loading server', server);
     this.idServerMap.set(server.getId(), server);
-    const serverEntry = this.makeServerListEntry(server);
+    const serverEntry = this.makeServerListEntry(accountId, server);
     this.appRoot.serverList = this.appRoot.serverList.concat([serverEntry]);
 
     if (isManagedServer(server) && !server.isInstallCompleted()) {
@@ -428,7 +428,7 @@ export class App {
 
   private updateServerEntry(server: server.Server): void {
     this.appRoot.serverList = this.appRoot.serverList.map(
-        (ds) => ds.id === server.getId() ? this.makeServerListEntry(server) : ds);
+        (ds) => ds.id === server.getId() ? this.makeServerListEntry(ds.accountId, server) : ds);
   }
 
   private getServerById(serverId: string): server.Server {
@@ -607,10 +607,15 @@ export class App {
 
   // Clears the DigitalOcean credentials and returns to the intro screen.
   private disconnectDigitalOceanAccount(): void {
+    if (!this.digitalOceanAccount) {
+      // Not connected.
+      return;
+    }
+    const accountId = this.digitalOceanAccount.getId();
     this.cloudAccounts.disconnectDigitalOceanAccount();
     this.digitalOceanAccount = null;
     for (const serverEntry of this.appRoot.serverList) {
-      if (serverEntry.isManaged) {
+      if (serverEntry.accountId === accountId) {
         this.removeServer(serverEntry.id);
       }
     }
@@ -665,7 +670,7 @@ export class App {
       const server = await this.digitalOceanRetry(() => {
         return this.digitalOceanAccount.createServer(regionId, serverName);
       });
-      this.addServer(server);
+      this.addServer(this.digitalOceanAccount.getId(), server);
       this.showServer(server);
     } catch (error) {
       console.error('Error from createDigitalOceanServer', error);
@@ -1050,7 +1055,7 @@ export class App {
     }
     const manualServer = await this.manualServerRepository.addServer(serverConfig);
     if (await manualServer.isHealthy()) {
-      this.addServer(manualServer);
+      this.addServer(null, manualServer);
       this.showServer(manualServer);
     } else {
       // Remove inaccessible manual server from local storage if it was just created.

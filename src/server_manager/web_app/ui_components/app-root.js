@@ -55,8 +55,8 @@ const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
  * An access key to be displayed
  * @typedef {Object} ServerListEntry
  * @prop {string} id
+ * @prop {string|null} accountId
  * @prop {string} name
- * @prop {boolean} isManaged
  * @prop {boolean} isSynced
  */
 
@@ -769,7 +769,7 @@ export class AppRoot extends mixinBehaviors
   }
 
   _computeHasManualServers(serverList) {
-    return this.serverList.filter(server => !server.isManaged).length > 0;
+    return this.serverList.filter(server => !server.accountId).length > 0;
   }
 
   _userAcceptedTosChanged(userAcceptedTos) {
@@ -905,11 +905,11 @@ export class AppRoot extends mixinBehaviors
   }
 
   _isServerManaged(server) {
-    return server.isManaged;
+    return !!server.accountId;
   }
 
   _isServerManual(server) {
-    return !server.isManaged;
+    return !server.accountId;
   }
 
   _sortServersByName(a, b) {

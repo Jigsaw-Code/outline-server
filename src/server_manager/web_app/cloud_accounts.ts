@@ -119,7 +119,7 @@ export class CloudAccounts implements accounts.CloudAccounts {
   }
 
   private createDigitalOceanAccount(accessToken: string): DigitalOceanAccount {
-    return new DigitalOceanAccount(accessToken, this.shadowboxSettings, this.isDebugMode);
+    return new DigitalOceanAccount('do', accessToken, this.shadowboxSettings, this.isDebugMode);
   }
 
   private createGcpAccount(refreshToken: string): GcpAccount {
