@@ -16,6 +16,8 @@
 
 source src/server_manager/scripts/fill_packaging_opts.sh "$0" "$@"
 
+export BUILD_ENV='production'
+
 yarn 'do' server_manager/electron_app/build
 yarn 'do' server_manager/electron_app/write_production_environment
 
