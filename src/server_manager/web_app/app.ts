@@ -1074,7 +1074,6 @@ export class App {
 
   private deleteServer(serverId: string) {
     const serverToDelete = this.idServerMap.get(serverId);
-    console.error(serverToDelete);
     if (!isManagedServer(serverToDelete)) {
       const msg = 'cannot delete non-ManagedServer';
       console.error(msg);
