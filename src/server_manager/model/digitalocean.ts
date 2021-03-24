@@ -26,8 +26,6 @@ export enum Status {
 }
 
 export interface Account {
-  // Returns the Account's unique id.
-  getId(): string;
   // Returns a user-friendly name (email address) associated with the account.
   getName(): Promise<string>;
   // Returns the status of the account.

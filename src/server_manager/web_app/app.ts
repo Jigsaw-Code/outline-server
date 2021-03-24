@@ -126,7 +126,6 @@ export class App {
   private digitalOceanAccount: digitalocean.Account;
   private gcpAccount: gcp.Account;
   private selectedServer: server.Server;
-  private idServerMap = new Map<string, server.Server>();
 
   constructor(
       private appRoot: AppRoot, private readonly version: string,
@@ -292,13 +291,12 @@ export class App {
     });
 
     appRoot.addEventListener('ShowServerRequested', (event: CustomEvent) => {
-      const server = this.getServerById(event.detail.displayServerId);
+      const server = event.detail.server as server.Server;
       if (server) {
         this.showServer(server);
       } else {
         // This should never happen if we are managine the list correctly.
-        console.error(
-            `Could not find server for display server ID ${event.detail.displayServerId}`);
+        console.error(`ShowServerRequested did not pass a server`);
       }
     });
 
@@ -347,7 +345,7 @@ export class App {
       }
       const servers = await this.digitalOceanAccount.listServers();
       for (const server of servers) {
-        this.addServer(this.digitalOceanAccount.getId(), server);
+        this.addServer(this.digitalOceanAccount, server);
       }
       return servers;
     } catch (error) {
@@ -364,13 +362,8 @@ export class App {
     }
   }
 
-  private makeServerListEntry(accountId: string, server: server.Server): ServerListEntry {
-    return {
-      id: server.getId(),
-      accountId,
-      name: this.makeDisplayName(server),
-      isSynced: !!server.getName(),
-    };
+  private makeServerListEntry(account: unknown, server: server.Server): ServerListEntry {
+    return {name: this.makeDisplayName(server), isSynced: !!server.getName(), account, server};
   }
 
   private makeDisplayName(server: server.Server): string {
@@ -384,10 +377,9 @@ export class App {
     return name;
   }
 
-  private addServer(accountId: string, server: server.Server): void {
+  private addServer(account: digitalocean.Account, server: server.Server): void {
     console.log('Loading server', server);
-    this.idServerMap.set(server.getId(), server);
-    const serverEntry = this.makeServerListEntry(accountId, server);
+    const serverEntry = this.makeServerListEntry(account, server);
     this.appRoot.serverList = this.appRoot.serverList.concat([serverEntry]);
 
     if (isManagedServer(server) && !server.isInstallCompleted()) {
@@ -416,11 +408,10 @@ export class App {
     }, 0);
   }
 
-  private removeServer(serverId: string): void {
-    this.idServerMap.delete(serverId);
-    this.appRoot.serverList = this.appRoot.serverList.filter((ds) => ds.id !== serverId);
-    if (this.appRoot.selectedServerId === serverId) {
-      this.appRoot.selectedServerId = '';
+  private removeServer(server: server.Server): void {
+    this.appRoot.serverList = this.appRoot.serverList.filter((e) => e.server !== server);
+    if (this.appRoot.selectedServer === server) {
+      this.appRoot.selectedServer = null;
       this.selectedServer = null;
       localStorage.removeItem(LAST_DISPLAYED_SERVER_STORAGE_KEY);
     }
@@ -428,11 +419,7 @@ export class App {
 
   private updateServerEntry(server: server.Server): void {
     this.appRoot.serverList = this.appRoot.serverList.map(
-        (ds) => ds.id === server.getId() ? this.makeServerListEntry(ds.accountId, server) : ds);
-  }
-
-  private getServerById(serverId: string): server.Server {
-    return this.idServerMap.get(serverId);
+        (e) => e.server === server ? this.makeServerListEntry(e.account, server) : e);
   }
 
   // Returns a promise that resolves when the account is active.
@@ -611,12 +598,12 @@ export class App {
       // Not connected.
       return;
     }
-    const accountId = this.digitalOceanAccount.getId();
+    const account = this.digitalOceanAccount;
     this.cloudAccounts.disconnectDigitalOceanAccount();
     this.digitalOceanAccount = null;
     for (const serverEntry of this.appRoot.serverList) {
-      if (serverEntry.accountId === accountId) {
-        this.removeServer(serverEntry.id);
+      if (serverEntry.account === account) {
+        this.removeServer(serverEntry.server as server.Server);
       }
     }
     this.appRoot.digitalOceanAccountName = '';
@@ -670,7 +657,7 @@ export class App {
       const server = await this.digitalOceanRetry(() => {
         return this.digitalOceanAccount.createServer(regionId, serverName);
       });
-      this.addServer(this.digitalOceanAccount.getId(), server);
+      this.addServer(this.digitalOceanAccount, server);
       this.showServer(server);
     } catch (error) {
       console.error('Error from createDigitalOceanServer', error);
@@ -690,7 +677,7 @@ export class App {
 
   public showServer(server: server.Server): void {
     this.selectedServer = server;
-    this.appRoot.selectedServerId = server.getId();
+    this.appRoot.selectedServer = server;
     localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, server.getId());
     this.appRoot.showServerView();
   }
@@ -709,7 +696,7 @@ export class App {
     const view = this.appRoot.getServerView(server.getId());
     const version = server.getVersion();
     view.selectedPage = 'managementView';
-    view.serverId = server.getId();
+    view.server = server;
     view.metricsId = server.getMetricsId();
     view.serverName = server.getName();
     view.serverHostname = server.getHostnameForAccessKeys();
@@ -950,21 +937,20 @@ export class App {
     keyId: string,
     keyDataLimitBytes: number|undefined,
     keyName: string,
-    serverId: string,
+    server: server.Server,
     defaultDataLimitBytes: number|undefined
   }>) {
     const detail = event.detail;
-    const onDataLimitSet = this.savePerKeyDataLimit.bind(this, detail.serverId, detail.keyId);
-    const onDataLimitRemoved = this.removePerKeyDataLimit.bind(this, detail.serverId, detail.keyId);
+    const onDataLimitSet = this.savePerKeyDataLimit.bind(this, detail.server, detail.keyId);
+    const onDataLimitRemoved = this.removePerKeyDataLimit.bind(this, detail.server, detail.keyId);
     const activeDataLimitBytes = detail.keyDataLimitBytes ?? detail.defaultDataLimitBytes;
     this.appRoot.openPerKeyDataLimitDialog(
         detail.keyName, activeDataLimitBytes, onDataLimitSet, onDataLimitRemoved);
   }
 
-  private async savePerKeyDataLimit(serverId: string, keyId: string, dataLimitBytes: number):
+  private async savePerKeyDataLimit(server: server.Server, keyId: string, dataLimitBytes: number):
       Promise<boolean> {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
-    const server = this.idServerMap.get(serverId);
     const serverView = this.appRoot.getServerView(server.getId());
     try {
       await server.setAccessKeyDataLimit(keyId, {bytes: dataLimitBytes});
@@ -978,9 +964,8 @@ export class App {
     }
   }
 
-  private async removePerKeyDataLimit(serverId: string, keyId: string): Promise<boolean> {
+  private async removePerKeyDataLimit(server: server.Server, keyId: string): Promise<boolean> {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
-    const server = this.idServerMap.get(serverId);
     const serverView = this.appRoot.getServerView(server.getId());
     try {
       await server.removeAccessKeyDataLimit(keyId);
@@ -1079,7 +1064,6 @@ export class App {
 
   private deleteSelectedServer() {
     const serverToDelete = this.selectedServer;
-    const serverId = serverToDelete.getId();
     if (!isManagedServer(serverToDelete)) {
       const msg = 'cannot delete non-ManagedServer';
       console.error(msg);
@@ -1095,9 +1079,7 @@ export class App {
           })
           .then(
               () => {
-                this.removeServer(serverId);
-                this.appRoot.selectedServer = null;
-                this.selectedServer = null;
+                this.removeServer(serverToDelete);
                 this.showIntro();
                 this.appRoot.showNotification(
                     this.appRoot.localize('notification-server-destroyed'));
@@ -1114,7 +1096,6 @@ export class App {
 
   private forgetSelectedServer() {
     const serverToForget = this.selectedServer;
-    const serverId = serverToForget.getId();
     if (!isManualServer(serverToForget)) {
       const msg = 'cannot forget non-ManualServer';
       console.error(msg);
@@ -1126,9 +1107,7 @@ export class App {
     const confirmationButton = this.appRoot.localize('remove');
     this.appRoot.getConfirmation(confirmationTitle, confirmationText, confirmationButton, () => {
       serverToForget.forget();
-      this.removeServer(serverId);
-      this.appRoot.selectedServerId = '';
-      this.selectedServer = null;
+      this.removeServer(serverToForget);
       this.showIntro();
       this.appRoot.showNotification(this.appRoot.localize('notification-server-removed'));
     });
@@ -1173,7 +1152,7 @@ export class App {
       throw new Error(msg);
     }
     serverToCancel.getHost().delete().then(() => {
-      this.removeServer(serverToCancel.getId());
+      this.removeServer(serverToCancel);
       this.showIntro();
     });
   }

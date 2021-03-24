@@ -125,8 +125,7 @@ export class DigitalOceanAccount implements digitalocean.Account {
 
   // Creates a DigitalOceanServer object and adds it to the in-memory server list.
   private createDigitalOceanServer(digitalOcean: DigitalOceanSession, dropletInfo: DropletInfo) {
-    const server =
-        new DigitalOceanServer(`${this.id}:${dropletInfo.id}`, digitalOcean, dropletInfo);
+    const server = new DigitalOceanServer(digitalOcean, dropletInfo);
     this.servers.push(server);
     return server;
   }

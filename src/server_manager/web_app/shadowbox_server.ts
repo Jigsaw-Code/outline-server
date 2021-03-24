@@ -58,11 +58,7 @@ export class ShadowboxServer implements server.Server {
   private managementApiAddress: string;
   private serverConfig: ServerConfigJson;
 
-  constructor(private readonly id: string) {}
-
-  getId(): string {
-    return this.id;
-  }
+  constructor() {}
 
   listAccessKeys(): Promise<server.AccessKey[]> {
     console.info('Listing access keys');

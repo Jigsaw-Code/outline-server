@@ -619,7 +619,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     static get properties() {
       return {
         metricsId: String,
-        serverId: String,
+        server: Object,
         serverName: String,
         serverHostname: String,
         serverVersion: String,
@@ -667,7 +667,8 @@ export class ServerView extends DirMixin(PolymerElement) {
 
     constructor() {
       super();
-      this.serverId = '';
+      /** @type {unknown} */
+      this.server = null;
       this.metricsId = '';
       this.serverName = '';
       this.serverHostname = '';
@@ -863,10 +864,9 @@ export class ServerView extends DirMixin(PolymerElement) {
                                                       accessKey.name || accessKey.placeholderName;
     const defaultDataLimitBytes =
         this.isDefaultDataLimitEnabled ? this.defaultDataLimitBytes : undefined;
-    const serverId = this.serverId;
     this.dispatchEvent(makePublicEvent(
         'OpenPerKeyDataLimitDialogRequested',
-        {keyId, keyDataLimitBytes, keyName, serverId, defaultDataLimitBytes}));
+        {keyId, keyDataLimitBytes, keyName, server: this.server, defaultDataLimitBytes}));
   }
 
   _handleRenameAccessKeyPressed(event) {
