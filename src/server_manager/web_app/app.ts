@@ -1073,7 +1073,7 @@ export class App {
   }
 
   private deleteServer(serverId: string) {
-    const serverToDelete = this.idServerMap.get(serverId);
+    const serverToDelete = this.getServerById(serverId);
     if (!isManagedServer(serverToDelete)) {
       const msg = 'cannot delete non-ManagedServer';
       console.error(msg);
@@ -1118,8 +1118,6 @@ export class App {
     this.appRoot.getConfirmation(confirmationTitle, confirmationText, confirmationButton, () => {
       serverToForget.forget();
       this.removeServer(serverId);
-      this.appRoot.selectedServerId = '';
-      this.selectedServer = null;
       this.showIntro();
       this.appRoot.showNotification(this.appRoot.localize('notification-server-removed'));
     });
