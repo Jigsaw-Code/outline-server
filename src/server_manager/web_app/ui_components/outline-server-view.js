@@ -1043,11 +1043,11 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   destroyServer() {
-    this.dispatchEvent(makePublicEvent('DeleteServerRequested'));
+    this.dispatchEvent(makePublicEvent('DeleteServerRequested', {serverId: this.serverId}));
   }
 
   removeServer() {
-    this.dispatchEvent(makePublicEvent('ForgetServerRequested'));
+    this.dispatchEvent(makePublicEvent('ForgetServerRequested', {serverId: this.serverId}));
   }
 
   /**
