@@ -166,7 +166,7 @@ export class App {
     });
 
     appRoot.addEventListener('ForgetServerRequested', (event: CustomEvent) => {
-      this.forgetSelectedServer(event.detail.serverId);
+      this.forgetServer(event.detail.serverId);
     });
 
     appRoot.addEventListener('AddAccessKeyRequested', (event: CustomEvent) => {
@@ -1107,7 +1107,7 @@ export class App {
     });
   }
 
-  private forgetSelectedServer(serverId: string) {
+  private forgetServer(serverId: string) {
     const serverToForget = this.idServerMap.get(serverId);
     if (!isManualServer(serverToForget)) {
       const msg = 'cannot forget non-ManualServer';
