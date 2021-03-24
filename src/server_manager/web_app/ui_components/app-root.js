@@ -461,10 +461,10 @@ export class AppRoot extends mixinBehaviors
           </paper-menu-button>
         </div>
         <div class="servers-container">
-          <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
-            <div class\$="server {{_computeServerClasses(selectedServerId, server)}}" data-server\$="[[server]]" on-tap="_showServer">
-              <img class="server-icon" src\$="images/{{_computeServerImage(selectedServerId, server)}}">
-              <span>{{server.name}}</span>
+          <template is="dom-repeat" items="[[serverList]]" as="server" filter="_isServerManaged" sort="_sortServersByName">
+            <div class\$="server [[_computeServerClasses(selectedServerId, server)]]" data-server\$="[[server]]" on-tap="_showServer">
+              <img class="server-icon" src\$="images/[[_computeServerImage(selectedServerId, server)]]">
+              <span>[[server.name]]</span>
             </div>
           </template>
         </div>
@@ -478,7 +478,7 @@ export class AppRoot extends mixinBehaviors
           <template is="dom-repeat" items="[[serverList]]" as="server" filter="_isServerManual" sort="_sortServersByName">
             <div class\$="server [[_computeServerClasses(selectedServerId, server)]]" data-server\$="[[server]]" on-tap="_showServer">
               <img class="server-icon" src\$="images/[[_computeServerImage(selectedServerId, server)]]">
-              <span>{{server.name}}</span>
+              <span>[[server.name]]</span>
             </div>
           </template>
         </div>
