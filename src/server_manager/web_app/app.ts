@@ -1090,8 +1090,6 @@ export class App {
           .then(
               () => {
                 this.removeServer(serverId);
-                this.appRoot.selectedServerId = '';
-                this.selectedServer = null;
                 this.showIntro();
                 this.appRoot.showNotification(
                     this.appRoot.localize('notification-server-destroyed'));
@@ -1107,7 +1105,7 @@ export class App {
   }
 
   private forgetServer(serverId: string) {
-    const serverToForget = this.idServerMap.get(serverId);
+    const serverToForget = this.getServerById(serverId);
     if (!isManualServer(serverToForget)) {
       const msg = 'cannot forget non-ManualServer';
       console.error(msg);
