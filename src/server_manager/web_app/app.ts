@@ -162,11 +162,11 @@ export class App {
     });
 
     appRoot.addEventListener('DeleteServerRequested', (event: CustomEvent) => {
-      this.deleteSelectedServer();
+      this.deleteServer(event.detail.serverId);
     });
 
     appRoot.addEventListener('ForgetServerRequested', (event: CustomEvent) => {
-      this.forgetSelectedServer();
+      this.forgetServer(event.detail.serverId);
     });
 
     appRoot.addEventListener('AddAccessKeyRequested', (event: CustomEvent) => {
@@ -1072,9 +1072,8 @@ export class App {
         });
   }
 
-  private deleteSelectedServer() {
-    const serverToDelete = this.selectedServer;
-    const serverId = serverToDelete.getId();
+  private deleteServer(serverId: string) {
+    const serverToDelete = this.getServerById(serverId);
     if (!isManagedServer(serverToDelete)) {
       const msg = 'cannot delete non-ManagedServer';
       console.error(msg);
@@ -1091,8 +1090,6 @@ export class App {
           .then(
               () => {
                 this.removeServer(serverId);
-                this.appRoot.selectedServer = null;
-                this.selectedServer = null;
                 this.showIntro();
                 this.appRoot.showNotification(
                     this.appRoot.localize('notification-server-destroyed'));
@@ -1107,9 +1104,8 @@ export class App {
     });
   }
 
-  private forgetSelectedServer() {
-    const serverToForget = this.selectedServer;
-    const serverId = serverToForget.getId();
+  private forgetServer(serverId: string) {
+    const serverToForget = this.getServerById(serverId);
     if (!isManualServer(serverToForget)) {
       const msg = 'cannot forget non-ManualServer';
       console.error(msg);
@@ -1122,8 +1118,6 @@ export class App {
     this.appRoot.getConfirmation(confirmationTitle, confirmationText, confirmationButton, () => {
       serverToForget.forget();
       this.removeServer(serverId);
-      this.appRoot.selectedServerId = '';
-      this.selectedServer = null;
       this.showIntro();
       this.appRoot.showNotification(this.appRoot.localize('notification-server-removed'));
     });
