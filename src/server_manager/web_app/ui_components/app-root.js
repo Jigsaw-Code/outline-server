@@ -38,6 +38,7 @@ import './outline-language-picker.js';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
 import './outline-region-picker-step';
+import './outline-server-list';
 import './outline-tos-view.js';
 
 import {AppLocalizeBehavior} from '@polymer/app-localize-behavior/app-localize-behavior.js';
@@ -386,10 +387,7 @@ export class AppRoot extends mixinBehaviors
               <outline-gcp-oauth-step id="gcpOauth" localize="[[localize]]"></outline-gcp-oauth-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
               <outline-region-picker-step id="regionPicker" localize="[[localize]]"></outline-region-picker-step>
-              <div id="serverView">
-                <template is="dom-repeat" items="{{serverList}}" as="server">
-                  <outline-server-view id="serverView-{{_base64Encode(server.id)}}" language="[[language]]" localize="[[localize]]" hidden\$="{{!_isServerSelected(selectedServerId, server)}}"></outline-server-view>
-                </template>
+              <outline-server-list id="serverView" server-list="[[serverList]]" selected-server-id="[[selectedServerId]]" language="[[language]]" localize="[[localize]]"></outline-server-list>
               </div>
             </iron-pages>
           </div>
@@ -658,16 +656,10 @@ export class AppRoot extends mixinBehaviors
   /**
    * Gets the ServerView for the server given by its id
    * @param {string} displayServerId
-   * @returns {ServerView}
+   * @returns {Promise<ServerView>}
    */
-  getServerView(displayServerId) {
-    if (!displayServerId) {
-      return null;
-    }
-    // Render to ensure that the server view has been added to the DOM.
-    this.$.serverView.querySelector('dom-repeat').render();
-    const selectedServerId = this._base64Encode(displayServerId);
-    return this.$.serverView.querySelector(`#serverView-${selectedServerId}`);
+  async getServerView(displayServerId) {
+    return await this.shadowRoot.querySelector('#serverView').getServerView(displayServerId);
   }
 
   handleRegionSelected(/** @type {Event} */ e) {
@@ -949,13 +941,6 @@ export class AppRoot extends mixinBehaviors
     const server = event.model.server;
     this.fire('ShowServerRequested', {displayServerId: server.id});
     this.maybeCloseDrawer();
-  }
-
-  // Wrapper to encode a string in base64. This is necessary to set the server view IDs to
-  // the display server IDs, which are URLs, so they can be used with selector methods. The IDs
-  // are never decoded.
-  _base64Encode(s) {
-    return btoa(s).replace(/=/g, '');
   }
 }
 customElements.define(AppRoot.is, AppRoot);

@@ -699,9 +699,9 @@ export class App {
   }
 
   // Show the server management screen. Assumes the server is healthy.
-  private setServerManagementView(server: server.Server): void {
+  private async setServerManagementView(server: server.Server): Promise<void> {
     // Show view and initialize fields from selectedServer.
-    const view = this.appRoot.getServerView(server.getId());
+    const view = await this.appRoot.getServerView(server.getId());
     const version = server.getVersion();
     view.selectedPage = 'managementView';
     view.serverId = server.getId();
@@ -760,9 +760,9 @@ export class App {
     }, 0);
   }
 
-  private setServerUnreachableView(server: server.Server): void {
+  private async setServerUnreachableView(server: server.Server): Promise<void> {
     // Display the unreachable server state within the server view.
-    const serverView = this.appRoot.getServerView(server.getId());
+    const serverView = await this.appRoot.getServerView(server.getId());
     serverView.selectedPage = 'unreachableView';
     serverView.isServerManaged = isManagedServer(server);
     serverView.serverName =
@@ -772,8 +772,8 @@ export class App {
     };
   }
 
-  private setServerProgressView(server: server.Server): void {
-    const view = this.appRoot.getServerView(server.getId());
+  private async setServerProgressView(server: server.Server): Promise<void> {
+    const view = await this.appRoot.getServerView(server.getId());
     view.serverName = this.makeDisplayName(server);
     view.selectedPage = 'progressView';
   }
@@ -874,17 +874,18 @@ export class App {
     };
   }
 
-  private addAccessKey() {
-    this.selectedServer.addAccessKey()
-        .then((serverAccessKey: server.AccessKey) => {
-          const uiAccessKey = this.convertToUiAccessKey(serverAccessKey);
-          this.appRoot.getServerView(this.appRoot.selectedServerId).addAccessKey(uiAccessKey);
-          this.appRoot.showNotification(this.appRoot.localize('notification-key-added'));
-        })
-        .catch((error) => {
-          console.error(`Failed to add access key: ${error}`);
-          this.appRoot.showError(this.appRoot.localize('error-key-add'));
-        });
+  private async addAccessKey() {
+    const server = this.selectedServer;
+    try {
+      const serverAccessKey = await server.addAccessKey();
+      const uiAccessKey = this.convertToUiAccessKey(serverAccessKey);
+      const serverView = await this.appRoot.getServerView(server.getId());
+      serverView.addAccessKey(uiAccessKey);
+      this.appRoot.showNotification(this.appRoot.localize('notification-key-added'));
+    } catch (error) {
+      console.error(`Failed to add access key: ${error}`);
+      this.appRoot.showError(this.appRoot.localize('error-key-add'));
+    }
   }
 
   private renameAccessKey(accessKeyId: string, newName: string, entry: polymer.Base) {
@@ -907,7 +908,7 @@ export class App {
     if (previousLimit && limit.bytes === previousLimit.bytes) {
       return;
     }
-    const serverView = this.appRoot.getServerView(this.appRoot.selectedServerId);
+    const serverView = await this.appRoot.getServerView(this.appRoot.selectedServerId);
     try {
       await this.selectedServer.setDefaultDataLimit(limit);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
@@ -927,7 +928,7 @@ export class App {
   }
 
   private async removeDefaultDataLimit() {
-    const serverView = this.appRoot.getServerView(this.appRoot.selectedServerId);
+    const serverView = await this.appRoot.getServerView(this.appRoot.selectedServerId);
     const previousLimit = this.selectedServer.getDefaultDataLimit();
     try {
       await this.selectedServer.removeDefaultDataLimit();
@@ -960,7 +961,7 @@ export class App {
       Promise<boolean> {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
     const server = this.idServerMap.get(serverId);
-    const serverView = this.appRoot.getServerView(server.getId());
+    const serverView = await this.appRoot.getServerView(server.getId());
     try {
       await server.setAccessKeyDataLimit(keyId, {bytes: dataLimitBytes});
       this.refreshTransferStats(server, serverView);
@@ -976,7 +977,7 @@ export class App {
   private async removePerKeyDataLimit(serverId: string, keyId: string): Promise<boolean> {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
     const server = this.idServerMap.get(serverId);
-    const serverView = this.appRoot.getServerView(server.getId());
+    const serverView = await this.appRoot.getServerView(server.getId());
     try {
       await server.removeAccessKeyDataLimit(keyId);
       this.refreshTransferStats(server, serverView);
@@ -1060,16 +1061,16 @@ export class App {
     }
   }
 
-  private removeAccessKey(accessKeyId: string) {
-    this.selectedServer.removeAccessKey(accessKeyId)
-        .then(() => {
-          this.appRoot.getServerView(this.appRoot.selectedServerId).removeAccessKey(accessKeyId);
-          this.appRoot.showNotification(this.appRoot.localize('notification-key-removed'));
-        })
-        .catch((error) => {
-          console.error(`Failed to remove access key: ${error}`);
-          this.appRoot.showError(this.appRoot.localize('error-key-remove'));
-        });
+  private async removeAccessKey(accessKeyId: string) {
+    const server = this.selectedServer;
+    try {
+      await server.removeAccessKey(accessKeyId);
+      (await this.appRoot.getServerView(server.getId())).removeAccessKey(accessKeyId);
+      this.appRoot.showNotification(this.appRoot.localize('notification-key-removed'));
+    } catch (error) {
+      console.error(`Failed to remove access key: ${error}`);
+      this.appRoot.showError(this.appRoot.localize('error-key-remove'));
+    }
   }
 
   private deleteServer(serverId: string) {
@@ -1124,7 +1125,7 @@ export class App {
   }
 
   private async setMetricsEnabled(metricsEnabled: boolean) {
-    const serverView = this.appRoot.getServerView(this.appRoot.selectedServerId);
+    const serverView = await this.appRoot.getServerView(this.appRoot.selectedServerId);
     try {
       await this.selectedServer.setMetricsEnabled(metricsEnabled);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
@@ -1140,7 +1141,7 @@ export class App {
   private async renameServer(newName: string) {
     const serverToRename = this.selectedServer;
     const serverId = this.appRoot.selectedServerId;
-    const view = this.appRoot.getServerView(serverId);
+    const view = await this.appRoot.getServerView(serverId);
     try {
       await serverToRename.setName(newName);
       view.serverName = newName;
