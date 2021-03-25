@@ -874,18 +874,18 @@ export class App {
     };
   }
 
-  private addAccessKey() {
-    this.selectedServer.addAccessKey()
-        .then(async (serverAccessKey: server.AccessKey) => {
-          const uiAccessKey = this.convertToUiAccessKey(serverAccessKey);
-          (await this.appRoot.getServerView(this.appRoot.selectedServerId))
-              .addAccessKey(uiAccessKey);
-          this.appRoot.showNotification(this.appRoot.localize('notification-key-added'));
-        })
-        .catch((error) => {
-          console.error(`Failed to add access key: ${error}`);
-          this.appRoot.showError(this.appRoot.localize('error-key-add'));
-        });
+  private async addAccessKey() {
+    const server = this.selectedServer;
+    try {
+      const serverAccessKey = await server.addAccessKey();
+      const uiAccessKey = this.convertToUiAccessKey(serverAccessKey);
+      const serverView = await this.appRoot.getServerView(server.getId());
+      serverView.addAccessKey(uiAccessKey);
+      this.appRoot.showNotification(this.appRoot.localize('notification-key-added'));
+    } catch (error) {
+      console.error(`Failed to add access key: ${error}`);
+      this.appRoot.showError(this.appRoot.localize('error-key-add'));
+    }
   }
 
   private renameAccessKey(accessKeyId: string, newName: string, entry: polymer.Base) {
@@ -1061,17 +1061,16 @@ export class App {
     }
   }
 
-  private removeAccessKey(accessKeyId: string) {
-    this.selectedServer.removeAccessKey(accessKeyId)
-        .then(async () => {
-          (await this.appRoot.getServerView(this.appRoot.selectedServerId))
-              .removeAccessKey(accessKeyId);
-          this.appRoot.showNotification(this.appRoot.localize('notification-key-removed'));
-        })
-        .catch((error) => {
-          console.error(`Failed to remove access key: ${error}`);
-          this.appRoot.showError(this.appRoot.localize('error-key-remove'));
-        });
+  private async removeAccessKey(accessKeyId: string) {
+    const server = this.selectedServer;
+    try {
+      await server.removeAccessKey(accessKeyId);
+      (await this.appRoot.getServerView(server.getId())).removeAccessKey(accessKeyId);
+      this.appRoot.showNotification(this.appRoot.localize('notification-key-removed'));
+    } catch (error) {
+      console.error(`Failed to remove access key: ${error}`);
+      this.appRoot.showError(this.appRoot.localize('error-key-remove'));
+    }
   }
 
   private deleteServer(serverId: string) {
