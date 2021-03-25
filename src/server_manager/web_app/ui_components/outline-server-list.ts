@@ -50,7 +50,8 @@ export class OutlineServerList extends LitElement {
     }
     // We need to wait updates to be completed or the view may not yet be there.
     await this.updateComplete;
-    return this.shadowRoot.querySelector<ServerView>(`#${this.makeViewId(serverId)}`);
+    const selector = `#${this.makeViewId(serverId)}`;
+    return this.shadowRoot.querySelector<ServerView>(selector);
   }
 
   // Wrapper to encode a string in base64. This is necessary to set the server view IDs to
