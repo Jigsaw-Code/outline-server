@@ -22,6 +22,10 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
 
   constructor(private accessToken = 'fake-access-token') {}
 
+  getId(): string {
+    return 'account-id';
+  }
+
   async getName(): Promise<string> {
     return 'fake-digitalocean-account-name';
   }
