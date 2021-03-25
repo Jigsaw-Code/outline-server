@@ -493,7 +493,7 @@ export class ServerView extends DirMixin(PolymerElement) {
                 <img class="digital-ocean-icon" src="images/do_white_logo.svg">
               </div>
               <div class="stats">
-                <h3>[[managedServerUtilzationPercentage]]</h3>
+                <h3>[[_computeManagedServerUtilzationPercentage(totalInboundBytes, monthlyOutboundTransferBytes)]]</h3>
                 <p>/[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]</p>
               </div>
               <p>[[localize('server-data-used')]]</p>
@@ -623,38 +623,33 @@ export class ServerView extends DirMixin(PolymerElement) {
         serverName: String,
         serverHostname: String,
         serverVersion: String,
-        isHostnameEditable: {type: Boolean},
+        isHostnameEditable: Boolean,
         serverManagementApiUrl: String,
         serverPortForNewAccessKeys: Number,
-        isAccessKeyPortEditable: {type: Boolean},
-        serverCreationDate: {type: Date},
+        isAccessKeyPortEditable: Boolean,
+        serverCreationDate: Date,
         serverLocation: String,
         defaultDataLimitBytes: Number,
-        isDefaultDataLimitEnabled: {type: Boolean},
-        supportsDefaultDataLimit: {type: Boolean},
-        showFeatureMetricsDisclaimer: {type: Boolean},
+        isDefaultDataLimitEnabled: Boolean,
+        supportsDefaultDataLimit: Boolean,
+        showFeatureMetricsDisclaimer: Boolean,
         isServerManaged: Boolean,
         isServerReachable: Boolean,
         retryDisplayingServer: Function,
         myConnection: Object,
         totalInboundBytes: Number,
         baselineDataTransfer: Number,
-        accessKeyRows: {type: Array},
+        accessKeyRows: Array,
         hasNonAdminAccessKeys: Boolean,
         metricsEnabled: Boolean,
-        monthlyOutboundTransferBytes: {type: Number},
-        monthlyCost: {type: Number},
-        managedServerUtilzationPercentage: {
-          type: Number,
-          computed:
-              '_computeManagedServerUtilzationPercentage(totalInboundBytes, monthlyOutboundTransferBytes)',
-        },
-        accessKeySortBy: {type: String},
-        accessKeySortDirection: {type: Number},
-        language: {type: String},
-        localize: {type: Function, readonly: true},
-        selectedPage: {type: String},
-        selectedTab: {type: String},
+        monthlyOutboundTransferBytes: Number,
+        monthlyCost: Number,
+        accessKeySortBy: String,
+        accessKeySortDirection: Number,
+        language: String,
+        localize: Function,
+        selectedPage: String,
+        selectedTab: String,
       };
     }
 
