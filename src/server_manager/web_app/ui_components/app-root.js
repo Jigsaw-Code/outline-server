@@ -54,10 +54,10 @@ const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
 /**
  * An access key to be displayed
  * @typedef {Object} ServerListEntry
- * @prop {string} id
- * @prop {string|null} accountId
  * @prop {string} name
  * @prop {boolean} isSynced
+ * @prop {unknown} server
+ * @prop {unknown} account
  */
 
 export class AppRoot extends mixinBehaviors
@@ -388,7 +388,7 @@ export class AppRoot extends mixinBehaviors
               <outline-region-picker-step id="regionPicker" localize="[[localize]]"></outline-region-picker-step>
               <div id="serverView">
                 <template is="dom-repeat" items="{{serverList}}" as="server">
-                  <outline-server-view id="serverView-{{_base64Encode(server.id)}}" language="[[language]]" localize="[[localize]]" hidden\$="{{!_isServerSelected(selectedServerId, server)}}"></outline-server-view>
+                  <outline-server-view id="serverView-{{_base64Encode(server.id)}}" language="[[language]]" localize="[[localize]]" hidden\$="{{!_isServerSelected(selectedServer, server)}}"></outline-server-view>
                 </template>
               </div>
             </iron-pages>
@@ -462,8 +462,8 @@ export class AppRoot extends mixinBehaviors
         </div>
         <div class="servers-container">
           <template is="dom-repeat" items="[[serverList]]" as="server" filter="_isServerManaged" sort="_sortServersByName">
-            <div class\$="server [[_computeServerClasses(selectedServerId, server)]]" data-server\$="[[server]]" on-tap="_showServer">
-              <img class="server-icon" src\$="images/[[_computeServerImage(selectedServerId, server)]]">
+            <div class\$="server [[_computeServerClasses(selectedServer, server)]]" data-server\$="[[server]]" on-tap="_showServer">
+              <img class="server-icon" src\$="images/[[_computeServerImage(selectedServer, server)]]">
               <span>[[server.name]]</span>
             </div>
           </template>
@@ -476,8 +476,8 @@ export class AppRoot extends mixinBehaviors
         </div>
         <div class="servers-container">
           <template is="dom-repeat" items="[[serverList]]" as="server" filter="_isServerManual" sort="_sortServersByName">
-            <div class\$="server [[_computeServerClasses(selectedServerId, server)]]" data-server\$="[[server]]" on-tap="_showServer">
-              <img class="server-icon" src\$="images/[[_computeServerImage(selectedServerId, server)]]">
+            <div class\$="server [[_computeServerClasses(selectedServer, server)]]" data-server\$="[[server]]" on-tap="_showServer">
+              <img class="server-icon" src\$="images/[[_computeServerImage(selectedServer, server)]]">
               <span>[[server.name]]</span>
             </div>
           </template>
@@ -492,8 +492,8 @@ export class AppRoot extends mixinBehaviors
       <div class="side-bar-section servers-section" hidden\$="[[!digitalOceanAccountName]]">
         <img class="provider-icon" src="images/do_white_logo.svg">
         <template is="dom-repeat" items="[[serverList]]" as="server" filter="_isServerManaged" sort="_sortServersByName">
-          <div class\$="server [[_computeServerClasses(selectedServerId, server)]]" data-server\$="[[server]]" on-tap="_showServer">
-            <img class="server-icon" src\$="images/[[_computeServerImage(selectedServerId, server)]]">
+          <div class\$="server [[_computeServerClasses(selectedServer, server)]]" data-server\$="[[server]]" on-tap="_showServer">
+            <img class="server-icon" src\$="images/[[_computeServerImage(selectedServer, server)]]">
           </div>
         </template>
       </div>
@@ -501,8 +501,8 @@ export class AppRoot extends mixinBehaviors
       <div class="side-bar-section servers-section" hidden\$="[[!_hasManualServers(serverList)]]">
         <img class="provider-icon" src="images/cloud.svg">
         <template is="dom-repeat" items="[[serverList]]" as="server" filter="_isServerManual" sort="_sortServersByName">
-          <div class\$="server [[_computeServerClasses(selectedServerId, server)]]" data-server\$="[[server]]" on-tap="_showServer">
-            <img class="server-icon" src\$="images/[[_computeServerImage(selectedServerId, server)]]">
+          <div class\$="server [[_computeServerClasses(selectedServer, server)]]" data-server\$="[[server]]" on-tap="_showServer">
+            <img class="server-icon" src\$="images/[[_computeServerImage(selectedServer, server)]]">
           </div>
         </template>
       </div>
@@ -521,7 +521,7 @@ export class AppRoot extends mixinBehaviors
       supportedLanguages: {type: Array, readonly: true},
       useKeyIfMissing: {type: Boolean},
       serverList: {type: Array},
-      selectedServerId: {type: String},
+      selectedServer: {type: Object},
       digitalOceanAccountName: String,
       gcpAccountName: String,
       outlineVersion: String,
@@ -545,8 +545,8 @@ export class AppRoot extends mixinBehaviors
 
   constructor() {
     super();
-    /** @type {string} */
-    this.selectedServerId = '';
+    /** @type {unknown} */
+    this.selectedServer = null;
     this.language = '';
     this.supportedLanguages = [];
     this.useKeyIfMissing = true;
@@ -613,7 +613,7 @@ export class AppRoot extends mixinBehaviors
 
   showIntro() {
     this.maybeCloseDrawer();
-    this.selectedServerId = '';
+    this.selectedServer = null;
     this.currentPage = 'intro';
   }
 
@@ -769,7 +769,7 @@ export class AppRoot extends mixinBehaviors
   }
 
   _hasManualServers(serverList) {
-    return serverList.filter(server => !server.accountId).length > 0;
+    return serverList.filter(server => !server.account).length > 0;
   }
 
   _userAcceptedTosChanged(userAcceptedTos) {
@@ -905,11 +905,11 @@ export class AppRoot extends mixinBehaviors
   }
 
   _isServerManaged(server) {
-    return !!server.accountId;
+    return !!server.account;
   }
 
   _isServerManual(server) {
-    return !server.accountId;
+    return !server.account;
   }
 
   _sortServersByName(a, b) {
@@ -923,9 +923,9 @@ export class AppRoot extends mixinBehaviors
     return 0;
   }
 
-  _computeServerClasses(selectedServerId, server) {
+  _computeServerClasses(selectedServer, server) {
     let serverClasses = [];
-    if (this._isServerSelected(selectedServerId, server)) {
+    if (this._isServerSelected(selectedServer, server)) {
       serverClasses.push('selected');
     }
     if (!server.isSynced) {
@@ -934,20 +934,20 @@ export class AppRoot extends mixinBehaviors
     return serverClasses.join(' ');
   }
 
-  _computeServerImage(selectedServerId, server) {
-    if (this._isServerSelected(selectedServerId, server)) {
+  _computeServerImage(selectedServer, server) {
+    if (this._isServerSelected(selectedServer, server)) {
       return 'server-icon-selected.png';
     }
     return 'server-icon.png';
   }
 
-  _isServerSelected(selectedServerId, server) {
-    return !!selectedServerId && selectedServerId === server.id;
+  _isServerSelected(selectedServer, server) {
+    return !!selectedServer && selectedServer === server.id;
   }
 
   _showServer(event) {
-    const server = event.model.server;
-    this.fire('ShowServerRequested', {displayServerId: server.id});
+    const serverEntry = event.model.server;
+    this.fire('ShowServerRequested', {server: serverEntry.server});
     this.maybeCloseDrawer();
   }
 
