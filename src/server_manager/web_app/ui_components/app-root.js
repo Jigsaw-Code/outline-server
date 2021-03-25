@@ -474,6 +474,7 @@ export class AppRoot extends mixinBehaviors
           </template>
         </div>
       </div>
+      <!-- TODO(fortuna): Insert GCP servers here -->
       <!-- Manual servers -->
       <div class="servers-section" hidden\$="[[!_hasManualServers(serverList)]]">
         <div class="servers-header">
@@ -502,6 +503,7 @@ export class AppRoot extends mixinBehaviors
           </div>
         </template>
       </div>
+      <!-- TODO(fortuna): Insert GCP servers here -->
       <!-- Manual servers -->
       <div class="side-bar-section servers-section" hidden\$="[[!_hasManualServers(serverList)]]">
         <img class="provider-icon" src="images/cloud.svg">
