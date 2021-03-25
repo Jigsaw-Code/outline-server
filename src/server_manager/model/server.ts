@@ -13,7 +13,7 @@
 // limitations under the License.
 
 export interface Server {
-  // Gets the server ID.
+  // Gets a globally unique identifier for this Server.
   getId(): string;
 
   // Gets the server's name for display.
