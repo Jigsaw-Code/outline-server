@@ -161,11 +161,11 @@ export class App {
     });
 
     appRoot.addEventListener('DeleteServerRequested', (event: CustomEvent) => {
-      this.deleteSelectedServer();
+      this.deleteServer(event.detail.server);
     });
 
     appRoot.addEventListener('ForgetServerRequested', (event: CustomEvent) => {
-      this.forgetSelectedServer();
+      this.forgetServer(event.detail.server);
     });
 
     appRoot.addEventListener('AddAccessKeyRequested', (event: CustomEvent) => {
@@ -1062,8 +1062,7 @@ export class App {
         });
   }
 
-  private deleteSelectedServer() {
-    const serverToDelete = this.selectedServer;
+  private deleteServer(serverToDelete: server.Server) {
     if (!isManagedServer(serverToDelete)) {
       const msg = 'cannot delete non-ManagedServer';
       console.error(msg);
@@ -1094,8 +1093,7 @@ export class App {
     });
   }
 
-  private forgetSelectedServer() {
-    const serverToForget = this.selectedServer;
+  private forgetServer(serverToForget: server.Server) {
     if (!isManualServer(serverToForget)) {
       const msg = 'cannot forget non-ManualServer';
       console.error(msg);

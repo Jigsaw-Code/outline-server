@@ -40,21 +40,20 @@ jobs:
         - curl --data '{"tag_name":"'$SERVER_RELEASE_NAME'","name":"'$SERVER_RELEASE_NAME'","prerelease":true}' $CREATE_RELEASE_URL
         - MANAGER_RELEASE_NAME=v$(date -I)
         - curl --data '{"tag_name":"'$MANAGER_RELEASE_NAME'","name":"'$MANAGER_RELEASE_NAME'","prerelease":true}' $CREATE_RELEASE_URL
-    - stage: "Deploy Server"	
-      name: Server Testing	
-      sudo: required	
-      services: docker	
-      script:	
-        # https://docs.travis-ci.com/user/docker/	
-        - |	
-          sudo rm -f /usr/local/bin/docker-compose	
-          curl -L https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m) > docker-compose	
-          chmod +x docker-compose	
-          sudo mv docker-compose /usr/local/bin	
+    - stage: "Deploy Server"
+      name: Server Testing
+      sudo: required
+      services: docker
+      script:
+        # https://docs.travis-ci.com/user/docker/
+        - |
+          sudo rm -f /usr/local/bin/docker-compose
+          curl -L https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m) > docker-compose
+          chmod +x docker-compose
+          sudo mv docker-compose /usr/local/bin
         - yarn do shadowbox/test
         - yarn do shadowbox/docker/build && cd src/shadowbox/integration_test && ./test.sh
-    
-    
+
     - stage: "Deploy Server"
       name: Server Docker Image
       sudo: required
@@ -66,21 +65,6 @@ jobs:
         - docker push quay.io/outline/shadowbox:$TRAVIS_TAG
         - docker tag outline/shadowbox quay.io/outline/shadowbox:daily
         - docker push quay.io/outline/shadowbox:daily
-
-    # https://www.electron.build/multi-platform-build
-    - stage: "Manager Release"
-      name: Manager Windows
-      sudo: required
-      services: docker
-      script:
-        - yarn do server_manager/electron_app/build
-        - docker pull electronuserland/builder:wine
-        - docker run --rm
-            -v ${PWD}:/project
-            -v ~/.cache/electron:/root/.cache/electron
-            -v ~/.cache/electron-builder:/root/.cache/electron-builder
-            electronuserland/builder:wine
-            /bin/bash -c "yarn do server_manager/electron_app/package_only_windows" || travis_terminate $?
 
     # Note that because we cannot currently sign Windows binaries on Travis,
     # these must be manually built and uploaded to the releases page.
