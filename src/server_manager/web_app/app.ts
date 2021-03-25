@@ -340,7 +340,10 @@ export class App {
     }
     try {
       this.digitalOceanAccount = digitalOceanAccount;
-      this.appRoot.digitalOceanAccountName = await this.digitalOceanAccount.getName();
+      this.appRoot.digitalOceanAccount = {
+        id: this.digitalOceanAccount.getId(),
+        name: await this.digitalOceanAccount.getName()
+      };
       const status = await this.digitalOceanAccount.getStatus();
       if (status !== digitalocean.Status.ACTIVE) {
         return [];
@@ -619,7 +622,7 @@ export class App {
         this.removeServer(serverEntry.id);
       }
     }
-    this.appRoot.digitalOceanAccountName = '';
+    this.appRoot.digitalOceanAccount = null;
   }
 
   // Clears the GCP credentials and returns to the intro screen.
