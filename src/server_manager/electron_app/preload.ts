@@ -17,6 +17,7 @@ import {ipcRenderer} from 'electron';
 import {URL} from 'url';
 
 import * as digitalocean_oauth from './digitalocean_oauth';
+import * as gcp_oauth from './gcp_oauth';
 import {redactManagerUrl} from './util';
 
 // This file is run in the renderer process *before* nodeIntegration is disabled.
@@ -63,6 +64,9 @@ if (sentryDsn) {
 
 // tslint:disable-next-line:no-any
 (window as any).runDigitalOceanOauth = digitalocean_oauth.runOauth;
+
+// tslint:disable-next-line:no-any
+(window as any).runGcpOauth = gcp_oauth.runOauth;
 
 // tslint:disable-next-line:no-any
 (window as any).bringToFront = () => {

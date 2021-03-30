@@ -18,10 +18,11 @@ import * as semver from 'semver';
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
+import * as accounts from '../model/accounts';
 import * as digitalocean from '../model/digitalocean';
+import * as gcp from '../model/gcp';
 import * as server from '../model/server';
 
-import {CloudAccounts} from './cloud_accounts';
 import {bytesToDisplayDataAmount, DisplayDataAmount, displayDataAmountToBytes,} from './data_formatting';
 import * as digitalocean_server from './digitalocean_server';
 import {parseManualServerConfig} from './management_urls';
@@ -123,13 +124,14 @@ function isManualServer(testServer: server.Server): testServer is server.ManualS
 
 export class App {
   private digitalOceanAccount: digitalocean.Account;
+  private gcpAccount: gcp.Account;
   private selectedServer: server.Server;
   private idServerMap = new Map<string, server.Server>();
 
   constructor(
       private appRoot: AppRoot, private readonly version: string,
       private manualServerRepository: server.ManualServerRepository,
-      private cloudAccounts: CloudAccounts) {
+      private cloudAccounts: accounts.CloudAccounts) {
     appRoot.setAttribute('outline-version', this.version);
 
     appRoot.addEventListener('ConnectDigitalOceanAccountRequested', (event: CustomEvent) => {
@@ -144,6 +146,12 @@ export class App {
         this.handleConnectDigitalOceanAccountRequest();
       }
     });
+    appRoot.addEventListener(
+        'ConnectGcpAccountRequested',
+        async (event: CustomEvent) => this.handleConnectGcpAccountRequest());
+    appRoot.addEventListener(
+        'CreateGcpServerRequested',
+        async (event: CustomEvent) => console.log('Received CreateGcpServerRequested event'));
     appRoot.addEventListener('SignOutRequested', (event: CustomEvent) => {
       this.disconnectDigitalOceanAccount();
       this.showIntro();
@@ -154,11 +162,11 @@ export class App {
     });
 
     appRoot.addEventListener('DeleteServerRequested', (event: CustomEvent) => {
-      this.deleteSelectedServer();
+      this.deleteServer(event.detail.serverId);
     });
 
     appRoot.addEventListener('ForgetServerRequested', (event: CustomEvent) => {
-      this.forgetSelectedServer();
+      this.forgetServer(event.detail.serverId);
     });
 
     appRoot.addEventListener('AddAccessKeyRequested', (event: CustomEvent) => {
@@ -332,14 +340,17 @@ export class App {
     }
     try {
       this.digitalOceanAccount = digitalOceanAccount;
-      this.appRoot.digitalOceanAccountName = await this.digitalOceanAccount.getName();
+      this.appRoot.digitalOceanAccount = {
+        id: this.digitalOceanAccount.getId(),
+        name: await this.digitalOceanAccount.getName()
+      };
       const status = await this.digitalOceanAccount.getStatus();
       if (status !== digitalocean.Status.ACTIVE) {
         return [];
       }
       const servers = await this.digitalOceanAccount.listServers();
       for (const server of servers) {
-        this.addServer(server);
+        this.addServer(this.digitalOceanAccount.getId(), server);
       }
       return servers;
     } catch (error) {
@@ -352,15 +363,15 @@ export class App {
 
   private async loadManualServers() {
     for (const server of await this.manualServerRepository.listServers()) {
-      this.addServer(server);
+      this.addServer(null, server);
     }
   }
 
-  private makeServerListEntry(server: server.Server): ServerListEntry {
+  private makeServerListEntry(accountId: string, server: server.Server): ServerListEntry {
     return {
       id: server.getId(),
+      accountId,
       name: this.makeDisplayName(server),
-      isManaged: isManagedServer(server),
       isSynced: !!server.getName(),
     };
   }
@@ -376,10 +387,10 @@ export class App {
     return name;
   }
 
-  private addServer(server: server.Server): void {
+  private addServer(accountId: string, server: server.Server): void {
     console.log('Loading server', server);
     this.idServerMap.set(server.getId(), server);
-    const serverEntry = this.makeServerListEntry(server);
+    const serverEntry = this.makeServerListEntry(accountId, server);
     this.appRoot.serverList = this.appRoot.serverList.concat([serverEntry]);
 
     if (isManagedServer(server) && !server.isInstallCompleted()) {
@@ -420,7 +431,7 @@ export class App {
 
   private updateServerEntry(server: server.Server): void {
     this.appRoot.serverList = this.appRoot.serverList.map(
-        (ds) => ds.id === server.getId() ? this.makeServerListEntry(server) : ds);
+        (ds) => ds.id === server.getId() ? this.makeServerListEntry(ds.accountId, server) : ds);
   }
 
   private getServerById(serverId: string): server.Server {
@@ -506,7 +517,7 @@ export class App {
     });
   };
 
-  // Runs the oauth flow and returns the API access token.
+  // Runs the DigitalOcean OAuth flow and returns the API access token.
   // Throws CANCELLED_ERROR on cancellation, or the error in case of failure.
   private async runDigitalOceanOauthFlow(): Promise<string> {
     const oauth = runDigitalOceanOauth();
@@ -523,6 +534,28 @@ export class App {
       // tokens, as they require a client_secret to be stored on a server and
       // not visible to end users in client-side JS. More details at:
       // https://developers.digitalocean.com/documentation/oauth/#refresh-token-flow
+      return await oauth.result;
+    } catch (error) {
+      if (oauth.isCancelled()) {
+        throw CANCELLED_ERROR;
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  // Runs the GCP OAuth flow and returns the API refresh token (which can be
+  // exchanged for an access token).
+  // Throws CANCELLED_ERROR on cancellation, or the error in case of failure.
+  private async runGcpOauthFlow(): Promise<string> {
+    const oauth = runGcpOauth();
+    const handleOauthFlowCancelled = () => {
+      oauth.cancel();
+      this.disconnectGcpAccount();
+      this.showIntro();
+    };
+    this.appRoot.getAndShowGcpOauthFlow(handleOauthFlowCancelled);
+    try {
       return await oauth.result;
     } catch (error) {
       if (oauth.isCancelled()) {
@@ -556,16 +589,47 @@ export class App {
     }
   }
 
-  // Clears the credentials and returns to the intro screen.
+  private async handleConnectGcpAccountRequest(): Promise<void> {
+    try {
+      const refreshToken = await this.runGcpOauthFlow();
+      this.gcpAccount = this.cloudAccounts.connectGcpAccount(refreshToken);
+    } catch (error) {
+      this.disconnectGcpAccount();
+      this.showIntro();
+      bringToFront();
+      if (error !== CANCELLED_ERROR) {
+        console.error(`GCP authentication failed: ${error}`);
+        this.appRoot.showError(this.appRoot.localize('error-gcp-auth'));
+      }
+      return;
+    }
+
+    this.appRoot.gcpAccountName = await this.gcpAccount.getName();
+    this.showIntro();
+  }
+
+  // Clears the DigitalOcean credentials and returns to the intro screen.
   private disconnectDigitalOceanAccount(): void {
+    if (!this.digitalOceanAccount) {
+      // Not connected.
+      return;
+    }
+    const accountId = this.digitalOceanAccount.getId();
     this.cloudAccounts.disconnectDigitalOceanAccount();
     this.digitalOceanAccount = null;
     for (const serverEntry of this.appRoot.serverList) {
-      if (serverEntry.isManaged) {
+      if (serverEntry.accountId === accountId) {
         this.removeServer(serverEntry.id);
       }
     }
-    this.appRoot.digitalOceanAccountName = '';
+    this.appRoot.digitalOceanAccount = null;
+  }
+
+  // Clears the GCP credentials and returns to the intro screen.
+  private disconnectGcpAccount(): void {
+    this.cloudAccounts.disconnectGcpAccount();
+    this.gcpAccount = null;
+    this.appRoot.gcpAccountName = '';
   }
 
   // Opens the screen to create a server.
@@ -609,7 +673,7 @@ export class App {
       const server = await this.digitalOceanRetry(() => {
         return this.digitalOceanAccount.createServer(regionId, serverName);
       });
-      this.addServer(server);
+      this.addServer(this.digitalOceanAccount.getId(), server);
       this.showServer(server);
     } catch (error) {
       console.error('Error from createDigitalOceanServer', error);
@@ -643,9 +707,9 @@ export class App {
   }
 
   // Show the server management screen. Assumes the server is healthy.
-  private setServerManagementView(server: server.Server): void {
+  private async setServerManagementView(server: server.Server): Promise<void> {
     // Show view and initialize fields from selectedServer.
-    const view = this.appRoot.getServerView(server.getId());
+    const view = await this.appRoot.getServerView(server.getId());
     const version = server.getVersion();
     view.selectedPage = 'managementView';
     view.serverId = server.getId();
@@ -704,9 +768,9 @@ export class App {
     }, 0);
   }
 
-  private setServerUnreachableView(server: server.Server): void {
+  private async setServerUnreachableView(server: server.Server): Promise<void> {
     // Display the unreachable server state within the server view.
-    const serverView = this.appRoot.getServerView(server.getId());
+    const serverView = await this.appRoot.getServerView(server.getId());
     serverView.selectedPage = 'unreachableView';
     serverView.isServerManaged = isManagedServer(server);
     serverView.serverName =
@@ -716,8 +780,8 @@ export class App {
     };
   }
 
-  private setServerProgressView(server: server.Server): void {
-    const view = this.appRoot.getServerView(server.getId());
+  private async setServerProgressView(server: server.Server): Promise<void> {
+    const view = await this.appRoot.getServerView(server.getId());
     view.serverName = this.makeDisplayName(server);
     view.selectedPage = 'progressView';
   }
@@ -818,17 +882,18 @@ export class App {
     };
   }
 
-  private addAccessKey() {
-    this.selectedServer.addAccessKey()
-        .then((serverAccessKey: server.AccessKey) => {
-          const uiAccessKey = this.convertToUiAccessKey(serverAccessKey);
-          this.appRoot.getServerView(this.appRoot.selectedServerId).addAccessKey(uiAccessKey);
-          this.appRoot.showNotification(this.appRoot.localize('notification-key-added'));
-        })
-        .catch((error) => {
-          console.error(`Failed to add access key: ${error}`);
-          this.appRoot.showError(this.appRoot.localize('error-key-add'));
-        });
+  private async addAccessKey() {
+    const server = this.selectedServer;
+    try {
+      const serverAccessKey = await server.addAccessKey();
+      const uiAccessKey = this.convertToUiAccessKey(serverAccessKey);
+      const serverView = await this.appRoot.getServerView(server.getId());
+      serverView.addAccessKey(uiAccessKey);
+      this.appRoot.showNotification(this.appRoot.localize('notification-key-added'));
+    } catch (error) {
+      console.error(`Failed to add access key: ${error}`);
+      this.appRoot.showError(this.appRoot.localize('error-key-add'));
+    }
   }
 
   private renameAccessKey(accessKeyId: string, newName: string, entry: polymer.Base) {
@@ -851,7 +916,7 @@ export class App {
     if (previousLimit && limit.bytes === previousLimit.bytes) {
       return;
     }
-    const serverView = this.appRoot.getServerView(this.appRoot.selectedServerId);
+    const serverView = await this.appRoot.getServerView(this.appRoot.selectedServerId);
     try {
       await this.selectedServer.setDefaultDataLimit(limit);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
@@ -871,7 +936,7 @@ export class App {
   }
 
   private async removeDefaultDataLimit() {
-    const serverView = this.appRoot.getServerView(this.appRoot.selectedServerId);
+    const serverView = await this.appRoot.getServerView(this.appRoot.selectedServerId);
     const previousLimit = this.selectedServer.getDefaultDataLimit();
     try {
       await this.selectedServer.removeDefaultDataLimit();
@@ -904,7 +969,7 @@ export class App {
       Promise<boolean> {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
     const server = this.idServerMap.get(serverId);
-    const serverView = this.appRoot.getServerView(server.getId());
+    const serverView = await this.appRoot.getServerView(server.getId());
     try {
       await server.setAccessKeyDataLimit(keyId, {bytes: dataLimitBytes});
       this.refreshTransferStats(server, serverView);
@@ -920,7 +985,7 @@ export class App {
   private async removePerKeyDataLimit(serverId: string, keyId: string): Promise<boolean> {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
     const server = this.idServerMap.get(serverId);
-    const serverView = this.appRoot.getServerView(server.getId());
+    const serverView = await this.appRoot.getServerView(server.getId());
     try {
       await server.removeAccessKeyDataLimit(keyId);
       this.refreshTransferStats(server, serverView);
@@ -994,7 +1059,7 @@ export class App {
     }
     const manualServer = await this.manualServerRepository.addServer(serverConfig);
     if (await manualServer.isHealthy()) {
-      this.addServer(manualServer);
+      this.addServer(null, manualServer);
       this.showServer(manualServer);
     } else {
       // Remove inaccessible manual server from local storage if it was just created.
@@ -1004,21 +1069,20 @@ export class App {
     }
   }
 
-  private removeAccessKey(accessKeyId: string) {
-    this.selectedServer.removeAccessKey(accessKeyId)
-        .then(() => {
-          this.appRoot.getServerView(this.appRoot.selectedServerId).removeAccessKey(accessKeyId);
-          this.appRoot.showNotification(this.appRoot.localize('notification-key-removed'));
-        })
-        .catch((error) => {
-          console.error(`Failed to remove access key: ${error}`);
-          this.appRoot.showError(this.appRoot.localize('error-key-remove'));
-        });
+  private async removeAccessKey(accessKeyId: string) {
+    const server = this.selectedServer;
+    try {
+      await server.removeAccessKey(accessKeyId);
+      (await this.appRoot.getServerView(server.getId())).removeAccessKey(accessKeyId);
+      this.appRoot.showNotification(this.appRoot.localize('notification-key-removed'));
+    } catch (error) {
+      console.error(`Failed to remove access key: ${error}`);
+      this.appRoot.showError(this.appRoot.localize('error-key-remove'));
+    }
   }
 
-  private deleteSelectedServer() {
-    const serverToDelete = this.selectedServer;
-    const serverId = serverToDelete.getId();
+  private deleteServer(serverId: string) {
+    const serverToDelete = this.getServerById(serverId);
     if (!isManagedServer(serverToDelete)) {
       const msg = 'cannot delete non-ManagedServer';
       console.error(msg);
@@ -1035,8 +1099,6 @@ export class App {
           .then(
               () => {
                 this.removeServer(serverId);
-                this.appRoot.selectedServer = null;
-                this.selectedServer = null;
                 this.showIntro();
                 this.appRoot.showNotification(
                     this.appRoot.localize('notification-server-destroyed'));
@@ -1051,9 +1113,8 @@ export class App {
     });
   }
 
-  private forgetSelectedServer() {
-    const serverToForget = this.selectedServer;
-    const serverId = serverToForget.getId();
+  private forgetServer(serverId: string) {
+    const serverToForget = this.getServerById(serverId);
     if (!isManualServer(serverToForget)) {
       const msg = 'cannot forget non-ManualServer';
       console.error(msg);
@@ -1066,15 +1127,13 @@ export class App {
     this.appRoot.getConfirmation(confirmationTitle, confirmationText, confirmationButton, () => {
       serverToForget.forget();
       this.removeServer(serverId);
-      this.appRoot.selectedServerId = '';
-      this.selectedServer = null;
       this.showIntro();
       this.appRoot.showNotification(this.appRoot.localize('notification-server-removed'));
     });
   }
 
   private async setMetricsEnabled(metricsEnabled: boolean) {
-    const serverView = this.appRoot.getServerView(this.appRoot.selectedServerId);
+    const serverView = await this.appRoot.getServerView(this.appRoot.selectedServerId);
     try {
       await this.selectedServer.setMetricsEnabled(metricsEnabled);
       this.appRoot.showNotification(this.appRoot.localize('saved'));
@@ -1090,7 +1149,7 @@ export class App {
   private async renameServer(newName: string) {
     const serverToRename = this.selectedServer;
     const serverId = this.appRoot.selectedServerId;
-    const view = this.appRoot.getServerView(serverId);
+    const view = await this.appRoot.getServerView(serverId);
     try {
       await serverToRename.setName(newName);
       view.serverName = newName;

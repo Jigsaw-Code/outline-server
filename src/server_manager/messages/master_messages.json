@@ -128,7 +128,7 @@
   "data_limit_per_key": {
     "message": "Data limit per key",
     "description": "This string appears as a label to an input to set the default access key data limit for a server."
-  }, 
+  },
   "data_limits": {
     "message": "Data limits",
     "description": "This string appears as a title in a section to configure access key data transfer limits."
@@ -218,6 +218,10 @@
   "error_do_regions": {
     "message": "Failed to get list of available regions",
     "description": "This string appears in an error notification toast. It is shown when there is an error retrieving the regions available for server deployment."
+  },
+  "error_gcp_auth": {
+    "message": "Authentication with Google Cloud Platform failed",
+    "description": "This string appears in an error notification toast. It is shown when there is an error when logging in to the user's Google Cloud Platform account. Google Cloud Platform is a cloud server provider name and should not be translated."
   },
   "error_feedback": {
     "message": "Failed to submit feedback. Please try again.",

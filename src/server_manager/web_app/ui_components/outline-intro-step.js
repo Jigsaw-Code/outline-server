@@ -270,10 +270,17 @@ Polymer({
   is: 'outline-intro-step',
 
   properties: {
-    digitalOceanAccountName: String,
+    digitalOceanAccountName: {
+      type: String,
+      value: null,
+    },
     isDigitalOceanAccountConnected: {
       type: Boolean,
       computed: '_computeIsDigitalOceanAccountConnected(digitalOceanAccountName)',
+    },
+    gcpAccountName: {
+      type: String,
+      value: null,
     },
     localize: {
       type: Function,
@@ -302,6 +309,14 @@ Polymer({
   },
 
   setUpGcpTapped: function() {
-    this.fire('SetUpGcpRequested');
+    if (outline.gcpAuthEnabled) {
+      if (this.gcpAccountName) {
+        this.fire('CreateGcpServerRequested');
+      } else {
+        this.fire('ConnectGcpAccountRequested');
+      }
+    } else {
+      this.fire('SetUpGcpRequested');
+    }
   }
 });

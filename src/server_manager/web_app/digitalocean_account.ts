@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DigitalOceanSession, DropletInfo} from "../cloud/digitalocean_api";
-import {DigitalOceanServer, GetCityId} from "./digitalocean_server";
-import * as server from "../model/server";
-import * as crypto from "../infrastructure/crypto";
-import * as digitalocean from "../model/digitalocean";
-import * as do_install_script from "../install_scripts/do_install_script";
+import {DigitalOceanSession, DropletInfo, RestApiSession} from '../cloud/digitalocean_api';
+import * as crypto from '../infrastructure/crypto';
+import * as do_install_script from '../install_scripts/do_install_script';
+import * as digitalocean from '../model/digitalocean';
+import * as server from '../model/server';
+
+import {DigitalOceanServer, GetCityId} from './digitalocean_server';
 
 // Tag used to mark Shadowbox Droplets.
 const SHADOWBOX_TAG = 'shadowbox';
@@ -31,11 +32,18 @@ export interface ShadowboxSettings {
 }
 
 export class DigitalOceanAccount implements digitalocean.Account {
+  private readonly digitalOcean: DigitalOceanSession;
   private servers: DigitalOceanServer[] = [];
 
   constructor(
-      private digitalOcean: DigitalOceanSession, private shadowboxSettings: ShadowboxSettings,
-      private debugMode: boolean) {}
+      private id: string, private accessToken: string, private shadowboxSettings: ShadowboxSettings,
+      private debugMode: boolean) {
+    this.digitalOcean = new RestApiSession(accessToken);
+  }
+
+  getId(): string {
+    return this.id;
+  }
 
   async getName(): Promise<string> {
     return (await this.digitalOcean.getAccount())?.email;
@@ -111,9 +119,14 @@ export class DigitalOceanAccount implements digitalocean.Account {
     });
   }
 
+  getAccessToken(): string {
+    return this.accessToken;
+  }
+
   // Creates a DigitalOceanServer object and adds it to the in-memory server list.
   private createDigitalOceanServer(digitalOcean: DigitalOceanSession, dropletInfo: DropletInfo) {
-    const server = new DigitalOceanServer(digitalOcean, dropletInfo);
+    const server =
+        new DigitalOceanServer(`${this.id}:${dropletInfo.id}`, digitalOcean, dropletInfo);
     this.servers.push(server);
     return server;
   }
