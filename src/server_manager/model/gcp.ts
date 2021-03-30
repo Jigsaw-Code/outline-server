@@ -26,6 +26,11 @@ export type RegionMap = {
  */
 export interface Account {
   /**
+   * Returns a globally unique identifier for this Account.
+   */
+  getId(): string;
+
+  /**
    * Returns a user-friendly name associated with the account.
    */
   getName(): Promise<string>;

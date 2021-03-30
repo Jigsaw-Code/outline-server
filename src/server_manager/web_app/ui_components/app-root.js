@@ -38,6 +38,7 @@ import './outline-language-picker.js';
 import './outline-manual-server-entry.js';
 import './outline-modal-dialog.js';
 import './outline-region-picker-step';
+import './outline-server-list';
 import './outline-tos-view.js';
 
 import {AppLocalizeBehavior} from '@polymer/app-localize-behavior/app-localize-behavior.js';
@@ -52,11 +53,18 @@ import {ServerView} from './outline-server-view.js';
 const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
 
 /**
+ * A cloud account to be displayed
+ * @typedef {Object} AccountListEntry
+ * @prop {string} id
+ * @prop {string} name
+ */
+
+/**
  * An access key to be displayed
  * @typedef {Object} ServerListEntry
  * @prop {string} id
+ * @prop {string|null} accountId
  * @prop {string} name
- * @prop {boolean} isManaged
  * @prop {boolean} isSynced
  */
 
@@ -348,42 +356,7 @@ export class AppRoot extends mixinBehaviors
 
           <!-- Servers section -->
           <div class="servers">
-            <!-- DigitalOcean servers -->
-            <div class="servers-section" hidden\$="{{!isDigitalOceanAccountConnected}}">
-              <div class="servers-header">
-                <span>[[localize('servers-digitalocean')]]</span>
-                <paper-menu-button horizontal-align="left" class="" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
-                  <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
-                  <div class="do-overflow-menu" slot="dropdown-content">
-                    <h4>[[localize('digitalocean-disconnect-account')]]</h4>
-                    <div class="account-info"><img src="images/digital_ocean_logo.svg">{{digitalOceanAccountName}}</div>
-                    <div class="sign-out-button" on-tap="signOutTapped">[[localize('digitalocean-disconnect')]]</div>
-                  </div>
-                </paper-menu-button>
-              </div>
-              <div class="servers-container">
-                <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
-                  <div class\$="server {{_computeServerClasses(selectedServerId, server)}}" data-server\$="[[server]]" on-tap="_showServer">
-                    <img class="server-icon" src\$="images/{{_computeServerImage(selectedServerId, server)}}">
-                    <span>{{server.name}}</span>
-                  </div>
-                </template>
-              </div>
-            </div>
-            <!-- Manual servers -->
-            <div class="servers-section" hidden\$="{{!hasManualServers}}">
-              <div class="servers-header">
-                <span>[[localize('servers-manual')]]</span>
-              </div>
-              <div class="servers-container">
-                <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
-                  <div class\$="server {{_computeServerClasses(selectedServerId, server)}}" data-server\$="[[server]]" on-tap="_showServer">
-                    <img class="server-icon" src\$="images/{{_computeServerImage(selectedServerId, server)}}">
-                    <span>{{server.name}}</span>
-                  </div>
-                </template>
-              </div>
-            </div>
+            ${this.expandedServersTemplate()}
           </div>
 
           <!-- Add server -->
@@ -416,15 +389,12 @@ export class AppRoot extends mixinBehaviors
         <app-header-layout>
           <div class="app-container">
             <iron-pages attr-for-selected="id" selected="{{ currentPage }}">
-              <outline-intro-step id="intro" digital-ocean-account-name="{{digitalOceanAccountName}}" gcp-account-name="{{gcpAccountName}}" localize="[[localize]]"></outline-intro-step>
+              <outline-intro-step id="intro" digital-ocean-account-name="{{digitalOceanAccount.name}}" gcp-account-name="{{gcpAccountName}}" localize="[[localize]]"></outline-intro-step>
               <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
               <outline-gcp-oauth-step id="gcpOauth" localize="[[localize]]"></outline-gcp-oauth-step>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
               <outline-region-picker-step id="regionPicker" localize="[[localize]]"></outline-region-picker-step>
-              <div id="serverView">
-                <template is="dom-repeat" items="{{serverList}}" as="server">
-                  <outline-server-view id="serverView-{{_base64Encode(server.id)}}" language="[[language]]" localize="[[localize]]" hidden\$="{{!_isServerSelected(selectedServerId, server)}}"></outline-server-view>
-                </template>
+              <outline-server-list id="serverView" server-list="[[serverList]]" selected-server-id="[[selectedServerId]]" language="[[language]]" localize="[[localize]]"></outline-server-list>
               </div>
             </iron-pages>
           </div>
@@ -438,24 +408,7 @@ export class AppRoot extends mixinBehaviors
             <paper-icon-button icon="menu" on-click="_toggleAppDrawer"></paper-icon-button>
           </div>
           <div class="servers">
-            <!-- DigitalOcean servers -->
-            <div class="side-bar-section servers-section" hidden\$="{{!isDigitalOceanAccountConnected}}">
-              <img class="provider-icon" src="images/do_white_logo.svg">
-              <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManaged" sort="_sortServersByName">
-                <div class\$="server {{_computeServerClasses(selectedServerId, server)}}" data-server\$="[[server]]" on-tap="_showServer">
-                  <img class="server-icon" src\$="images/{{_computeServerImage(selectedServerId, server)}}">
-                </div>
-              </template>
-            </div>
-            <!-- Manual servers -->
-            <div class="side-bar-section servers-section" hidden\$="{{!hasManualServers}}">
-              <img class="provider-icon" src="images/cloud.svg">
-              <template is="dom-repeat" items="{{serverList}}" as="server" filter="_isServerManual" sort="_sortServersByName">
-                <div class\$="server {{_computeServerClasses(selectedServerId, server)}}" data-server\$="[[server]]" on-tap="_showServer">
-                  <img class="server-icon" src\$="images/{{_computeServerImage(selectedServerId, server)}}">
-                </div>
-              </template>
-            </div>
+            ${this.minimizedServersTemplate()}
           </div>
           <div class="side-bar-section add-server-section" on-tap="showIntro">
             <paper-icon-item>
@@ -497,6 +450,72 @@ export class AppRoot extends mixinBehaviors
 `;
   }
 
+  static expandedServersTemplate() {
+    return html`
+      <!-- DigitalOcean servers -->
+      <div class="servers-section" hidden\$="[[!digitalOceanAccount]]">
+        <div class="servers-header">
+          <span>[[localize('servers-digitalocean')]]</span>
+          <paper-menu-button horizontal-align="left" class="" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
+            <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
+            <div class="do-overflow-menu" slot="dropdown-content">
+              <h4>[[localize('digitalocean-disconnect-account')]]</h4>
+              <div class="account-info"><img src="images/digital_ocean_logo.svg">[[digitalOceanAccount.name]]</div>
+              <div class="sign-out-button" on-tap="signOutTapped">[[localize('digitalocean-disconnect')]]</div>
+            </div>
+          </paper-menu-button>
+        </div>
+        <div class="servers-container">
+          <template is="dom-repeat" items="[[serverList]]" as="server" filter="[[_accountServerFilter(digitalOceanAccount)]]" sort="_sortServersByName">
+            <div class\$="server [[_computeServerClasses(selectedServerId, server)]]" data-server\$="[[server]]" on-tap="_showServer">
+              <img class="server-icon" src\$="images/[[_computeServerImage(selectedServerId, server)]]">
+              <span>[[server.name]]</span>
+            </div>
+          </template>
+        </div>
+      </div>
+      <!-- TODO(fortuna): Insert GCP servers here -->
+      <!-- Manual servers -->
+      <div class="servers-section" hidden\$="[[!_hasManualServers(serverList)]]">
+        <div class="servers-header">
+          <span>[[localize('servers-manual')]]</span>
+        </div>
+        <div class="servers-container">
+          <template is="dom-repeat" items="[[serverList]]" as="server" filter="_isServerManual" sort="_sortServersByName">
+            <div class\$="server [[_computeServerClasses(selectedServerId, server)]]" data-server\$="[[server]]" on-tap="_showServer">
+              <img class="server-icon" src\$="images/[[_computeServerImage(selectedServerId, server)]]">
+              <span>[[server.name]]</span>
+            </div>
+          </template>
+        </div>
+      </div>
+    `;
+  }
+
+  static minimizedServersTemplate() {
+    return html`
+      <!-- DigitalOcean servers -->
+      <div class="side-bar-section servers-section" hidden\$="[[!digitalOceanAccount]]">
+        <img class="provider-icon" src="images/do_white_logo.svg">
+        <template is="dom-repeat" items="[[serverList]]" as="server" filter="[[_accountServerFilter(digitalOceanAccount)]]" sort="_sortServersByName">
+          <div class\$="server [[_computeServerClasses(selectedServerId, server)]]" data-server\$="[[server]]" on-tap="_showServer">
+            <img class="server-icon" src\$="images/[[_computeServerImage(selectedServerId, server)]]">
+          </div>
+        </template>
+      </div>
+      <!-- TODO(fortuna): Insert GCP servers here -->
+      <!-- Manual servers -->
+      <div class="side-bar-section servers-section" hidden\$="[[!_hasManualServers(serverList)]]">
+        <img class="provider-icon" src="images/cloud.svg">
+        <template is="dom-repeat" items="[[serverList]]" as="server" filter="_isServerManual" sort="_sortServersByName">
+          <div class\$="server [[_computeServerClasses(selectedServerId, server)]]" data-server\$="[[server]]" on-tap="_showServer">
+            <img class="server-icon" src\$="images/[[_computeServerImage(selectedServerId, server)]]">
+          </div>
+        </template>
+      </div>
+    `;
+  }
+
   static get is() {
     return 'app-root';
   }
@@ -510,16 +529,8 @@ export class AppRoot extends mixinBehaviors
       useKeyIfMissing: {type: Boolean},
       serverList: {type: Array},
       selectedServerId: {type: String},
-      hasManualServers: {
-        type: Boolean,
-        computed: '_computeHasManualServers(serverList.*)',
-      },
-      digitalOceanAccountName: {type: String},
-      isDigitalOceanAccountConnected: {
-        type: Boolean,
-        computed: '_computeIsDigitalOceanAccountConnected(digitalOceanAccountName)',
-      },
-      gcpAccountName: String,
+      digitalOceanAccount: Object,
+      gcpAccount: Object,
       outlineVersion: String,
       userAcceptedTos: {
         type: Boolean,
@@ -548,8 +559,10 @@ export class AppRoot extends mixinBehaviors
     this.useKeyIfMissing = true;
     /** @type {ServerListEntry[]} */
     this.serverList = [];
-    this.digitalOceanAccountName = '';
-    this.gcpAccountName = '';
+    /** @type {AccountListEntry} */
+    this.digitalOceanAccount = null;
+    /** @type {AccountListEntry} */
+    this.gcpAccount = null;
     this.outlineVersion = '';
     this.currentPage = 'intro';
     this.shouldShowSideBar = false;
@@ -654,16 +667,10 @@ export class AppRoot extends mixinBehaviors
   /**
    * Gets the ServerView for the server given by its id
    * @param {string} displayServerId
-   * @returns {ServerView}
+   * @returns {Promise<ServerView>}
    */
-  getServerView(displayServerId) {
-    if (!displayServerId) {
-      return null;
-    }
-    // Render to ensure that the server view has been added to the DOM.
-    this.$.serverView.querySelector('dom-repeat').render();
-    const selectedServerId = this._base64Encode(displayServerId);
-    return this.$.serverView.querySelector(`#serverView-${selectedServerId}`);
+  async getServerView(displayServerId) {
+    return await this.shadowRoot.querySelector('#serverView').getServerView(displayServerId);
   }
 
   handleRegionSelected(/** @type {Event} */ e) {
@@ -764,12 +771,8 @@ export class AppRoot extends mixinBehaviors
         });
   }
 
-  _computeIsDigitalOceanAccountConnected(digitalOceanAccountName) {
-    return Boolean(digitalOceanAccountName);
-  }
-
-  _computeHasManualServers(serverList) {
-    return this.serverList.filter(server => !server.isManaged).length > 0;
+  _hasManualServers(serverList) {
+    return serverList.filter(server => !server.accountId).length > 0;
   }
 
   _userAcceptedTosChanged(userAcceptedTos) {
@@ -904,12 +907,15 @@ export class AppRoot extends mixinBehaviors
     return shouldShowSideBar ? 'side-bar-margin' : '';
   }
 
-  _isServerManaged(server) {
-    return server.isManaged;
+  /**
+   * @param {AccountListEntry} account
+   */
+  _accountServerFilter(account) {
+    return (server) => account && server.accountId === account.id;
   }
 
   _isServerManual(server) {
-    return !server.isManaged;
+    return !server.accountId;
   }
 
   _sortServersByName(a, b) {
@@ -949,13 +955,6 @@ export class AppRoot extends mixinBehaviors
     const server = event.model.server;
     this.fire('ShowServerRequested', {displayServerId: server.id});
     this.maybeCloseDrawer();
-  }
-
-  // Wrapper to encode a string in base64. This is necessary to set the server view IDs to
-  // the display server IDs, which are URLs, so they can be used with selector methods. The IDs
-  // are never decoded.
-  _base64Encode(s) {
-    return btoa(s).replace(/=/g, '');
   }
 }
 customElements.define(AppRoot.is, AppRoot);

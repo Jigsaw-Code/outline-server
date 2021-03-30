@@ -80,7 +80,7 @@ describe('App', () => {
     expect(managedServers.length).toEqual(1);
     const manualServers = await manualServerRepo.listServers();
     expect(manualServers.length).toEqual(2);
-    appRoot.getServerView('');
+    await appRoot.getServerView('');
     const serverList = appRoot.serverList;
 
     console.log(`managedServers.length: ${managedServers.length}`);
@@ -114,7 +114,8 @@ describe('App', () => {
     await app.start();
     await app.createDigitalOceanServer('fakeRegion');
     expect(appRoot.currentPage).toEqual('serverView');
-    expect(appRoot.getServerView(appRoot.selectedServerId).selectedPage).toEqual('progressView');
+    const view = await appRoot.getServerView(appRoot.selectedServerId);
+    expect(view.selectedPage).toEqual('progressView');
   });
 
   it('shows progress screen when starting with DigitalOcean servers still being created',
@@ -128,7 +129,8 @@ describe('App', () => {
        localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, server.getId());
        await app.start();
        expect(appRoot.currentPage).toEqual('serverView');
-       expect(appRoot.getServerView(appRoot.selectedServerId).selectedPage).toEqual('progressView');
+       const view = await appRoot.getServerView(appRoot.selectedServerId);
+       expect(view.selectedPage).toEqual('progressView');
      });
 });
 

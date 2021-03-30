@@ -28,8 +28,12 @@ export class GcpAccount implements gcp.Account {
 
   private readonly apiClient: gcp_api.RestApiClient;
 
-  constructor(private refreshToken: string) {
+  constructor(private id: string, private refreshToken: string) {
     this.apiClient = new gcp_api.RestApiClient(refreshToken);
+  }
+
+  getId(): string {
+    return this.id;
   }
 
   /** @see {@link Account#getName}. */
@@ -65,7 +69,8 @@ export class GcpAccount implements gcp.Account {
   async createServer(projectId: string, name: string, zoneId: string):
       Promise<server.ManagedServer> {
     const instance = await this.createInstance(projectId, name, zoneId);
-    return new GcpServer(projectId, instance, this.apiClient);
+    const id = `${this.id}:${instance.id}`;
+    return new GcpServer(id, projectId, instance, this.apiClient);
   }
 
   /** @see {@link Account#listServers}. */
@@ -77,7 +82,8 @@ export class GcpAccount implements gcp.Account {
       const listInstancesResponseForZone = await this.apiClient.listInstances(projectId, zone.name);
       const instances = listInstancesResponseForZone.items ?? [];
       instances.forEach((instance) => {
-        const server = new GcpServer(projectId, instance, this.apiClient);
+        const id = `${this.id}:${instance.id}`;
+        const server = new GcpServer(id, projectId, instance, this.apiClient);
         result.push(server);
       });
     }
