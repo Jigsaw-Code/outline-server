@@ -78,7 +78,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
       Promise<Map<string, string>> {
     const result = new Map<string, string>();
     const guestAttributes =
-        await this.apiClient.getGuestAttributes(projectId, instanceId, zone, 'outline');
+        await this.apiClient.getGuestAttributes(projectId, instanceId, zone, 'outline/');
     // console.log(`Guest attributes: ${JSON.stringify(guestAttributes)}`);
     const attributes = guestAttributes?.queryValue?.items;
     if (attributes) {

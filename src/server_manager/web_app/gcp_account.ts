@@ -29,9 +29,7 @@ export class GcpAccount implements gcp.Account {
   private readonly apiClient: gcp_api.RestApiClient;
 
   constructor(private refreshToken: string) {
-    const hardcodedAccessToken = '';
-    // TODO: We need to convert the refreshToken to an access token somewhere.
-    this.apiClient = new gcp_api.RestApiClient(hardcodedAccessToken);
+    this.apiClient = new gcp_api.RestApiClient(refreshToken);
   }
 
   /** @see {@link Account#getName}. */

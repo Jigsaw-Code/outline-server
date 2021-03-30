@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {HttpClient} from '../infrastructure/fetch';
+// TODO: Share the same OAuth config between electron app and renderer.
+// Keep this in sync with {@link gcp_oauth.ts#OAUTH_CONFIG}
+const GCP_OAUTH_CLIENT_ID =
+    '946220775492-osi1dm2rhhpo4upm6qqfv9fiivv1qu6c.apps.googleusercontent.com';
 
 /** @see https://cloud.google.com/compute/docs/reference/rest/v1/instances */
 export type Instance = Readonly<{
@@ -77,26 +80,30 @@ type ListZonesResponse = Readonly<{items: Zone[]; nextPageToken: string}>;
 type ListProjectsResponse = Readonly<{projects: Project[]; nextPageToken: string}>;
 type ListBillingAccountsResponse =
     Readonly<{billingAccounts: BillingAccount[]; nextPageToken: string}>;
+type RefreshAccessTokenResponse = Readonly<{
+  access_token: string; expires_in: number,
+}>;
 
-export class RestApiClient {
-  private cloudBillingHttpClient: HttpClient;
-  private cloudResourceManagerHttpClient: HttpClient;
-  private computeHttpClient: HttpClient;
-  private openIdConnectHttpClient: HttpClient;
-
-  constructor(private accessToken: string) {
-    const headers = new Map<string, string>([
-      ['Content-type', 'application/json'],
-      ['Accept', 'application/json'],
-      ['Authorization', `Bearer ${accessToken}`],
-    ]);
-    this.cloudBillingHttpClient = new HttpClient('https://cloudbilling.googleapis.com/', headers);
-    this.cloudResourceManagerHttpClient =
-        new HttpClient('https://cloudresourcemanager.googleapis.com/', headers);
-    this.computeHttpClient = new HttpClient('https://compute.googleapis.com/', headers);
-    this.openIdConnectHttpClient =
-        new HttpClient('https://openidconnect.googleapis.com/v1/', headers);
+export class HttpError extends Error {
+  constructor(private statusCode: number, message?: string) {
+    super(message);
   }
+
+  getStatusCode(): number {
+    return this.statusCode;
+  }
+}
+
+// TODO: URLEncode the path
+export class RestApiClient {
+  private readonly GCP_HEADERS = new Map<string, string>([
+    ['Content-type', 'application/json'],
+    ['Accept', 'application/json'],
+  ]);
+
+  private accessToken: string;
+
+  constructor(private refreshToken: string) { }
 
   /**
    * Creates a new Google Compute Engine VM instance in a specified GCP project.
@@ -107,6 +114,7 @@ export class RestApiClient {
    * @param name - The name to be given to the created instance. See online
    *   documentation for naming requirements.
    * @param zoneId - The zone in which to create the instance.
+   * @param size - @see https://cloud.google.com/compute/docs/machine-types.
    * @param installScript - A script to run once the instance has launched.
    */
   createInstance(
@@ -161,10 +169,12 @@ export class RestApiClient {
     // TODO: Figure out how to do this in the object itself.
     // @ts-ignore
     data.labels[label] = 'true';
-    return this.computeHttpClient.post<Operation>(
-        `compute/v1/projects/${projectId}/zones/${zoneId}/instances`,
-        data,
-    );
+    return this.fetchAuthenticated(
+        'POST',
+        `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${zoneId}/instances`,
+        this.GCP_HEADERS,
+        null,
+        data);
   }
 
   /**
@@ -177,9 +187,10 @@ export class RestApiClient {
    * @param zoneId - The zone in which the instance resides.
    */
   deleteInstance(projectId: string, instanceId: string, zoneId: string): Promise<Operation> {
-    return this.computeHttpClient.delete<Operation>(
-        `compute/v1/projects/${projectId}/zones/${zoneId}/instances/${instanceId}`,
-    );
+    return this.fetchAuthenticated(
+        'DELETE',
+        `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${zoneId}/instances/${instanceId}`,
+        this.GCP_HEADERS);
   }
 
   /**
@@ -192,9 +203,10 @@ export class RestApiClient {
    * @param zoneId - The zone in which the instance resides.
    */
   getInstance(projectId: string, instanceId: string, zoneId: string): Promise<Instance> {
-    return this.computeHttpClient.get<Instance>(
-        `compute/v1/projects/${projectId}/zones/${zoneId}/instances/${instanceId}`,
-    );
+    return this.fetchAuthenticated(
+        'GET',
+        `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${zoneId}/instances/${instanceId}`,
+        this.GCP_HEADERS);
   }
 
   /**
@@ -207,10 +219,12 @@ export class RestApiClient {
    */
   // TODO: Pagination
   listInstances(projectId: string, zoneId: string): Promise<ListInstancesResponse> {
-    const filter = '?filter=labels.outline%3Dtrue';
-    return this.computeHttpClient.get<ListInstancesResponse>(
-        `compute/v1/projects/${projectId}/zones/${zoneId}/instances${filter}`,
-    );
+    const parameters = new Map<string, string>([['filter', 'labels.outline=true']]);
+    return this.fetchAuthenticated(
+        'GET',
+        `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${zoneId}/instances`,
+        this.GCP_HEADERS,
+        parameters);
   }
 
   /**
@@ -232,10 +246,12 @@ export class RestApiClient {
       name,
       ...(ipAddress && {address: ipAddress}),
     };
-    return this.computeHttpClient.post<Operation>(
-        `compute/v1/projects/${projectId}/regions/${regionId}/addresses`,
-        data,
-    );
+    return this.fetchAuthenticated(
+        'POST',
+        `https://compute.googleapis.com/compute/v1/projects/${projectId}/regions/${regionId}/addresses`,
+        this.GCP_HEADERS,
+        null,
+        data);
   }
 
   /**
@@ -248,8 +264,10 @@ export class RestApiClient {
    * @param regionId - The GCP region of the resource.
    */
   deleteStaticIp(projectId: string, addressId: string, regionId: string): Promise<Operation> {
-    return this.computeHttpClient.delete<Operation>(
-        `compute/v1/projects/${projectId}/regions/${regionId}/addresses/${addressId}`);
+    return this.fetchAuthenticated(
+        'DELETE',
+        `https://compute.googleapis.com/compute/v1/projects/${projectId}/regions/${regionId}/addresses/${addressId}`,
+        this.GCP_HEADERS);
   }
 
   /**
@@ -267,12 +285,13 @@ export class RestApiClient {
       projectId: string, instanceId: string, zoneId: string,
       namespace: string): Promise<GuestAttributes|undefined> {
     try {
-      const optionalQueryPath = namespace ? `?queryPath=${namespace}%2F` : '';
+      const parameters = new Map<string, string>([['queryPath', namespace]]);
       // We must await the call to getGuestAttributes to properly catch any exceptions.
-      return await this.computeHttpClient.get<GuestAttributes>(
-          `compute/v1/projects/${projectId}/zones/${zoneId}/instances/${
-              instanceId}/getGuestAttributes${optionalQueryPath}`,
-      );
+      return this.fetchAuthenticated(
+          'GET',
+          `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${zoneId}/instances/${instanceId}/getGuestAttributes`,
+          this.GCP_HEADERS,
+          parameters);
     } catch (error) {
       // TODO: Distinguish between 404 not found and other errors.
       return undefined;
@@ -300,8 +319,12 @@ export class RestApiClient {
       ],
       sourceRanges: ['0.0.0.0/0'],
     };
-    return this.computeHttpClient.post<Operation>(
-        `compute/v1/projects/${projectId}/global/firewalls`, data);
+    return this.fetchAuthenticated(
+        'POST',
+        `https://compute.googleapis.com/compute/v1/projects/${projectId}/global/firewalls`,
+        this.GCP_HEADERS,
+        null,
+        data);
   }
 
   /**
@@ -314,12 +337,13 @@ export class RestApiClient {
    */
   // TODO: Pagination
   listZones(projectId: string, regionId?: string): Promise<ListZonesResponse> {
-    const filter = regionId ?
-        `?filter=region%3D%22https%3A%2F%2Fwww.googleapis.com%2Fcompute%2Fv1%2Fprojects%2F${
-            projectId}%2Fregions%2F${regionId}` :
-        '';
-    return this.computeHttpClient.get<ListZonesResponse>(
-        `compute/v1/projects/${projectId}/zones${filter}`);
+    const region = `"https://www.googleapis.com/compute/v1/projects/${projectId}/regions/${regionId}"`;
+    const parameters = new Map<string, string>([['region', region]]);
+    return this.fetchAuthenticated(
+        'GET',
+        `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones`,
+        this.GCP_HEADERS,
+        parameters);
   }
 
   /**
@@ -343,7 +367,12 @@ export class RestApiClient {
         outline: 'true',
       },
     };
-    return this.cloudResourceManagerHttpClient.post<Operation>('v1/projects', data);
+    return this.fetchAuthenticated(
+        'POST',
+        'https://cloudresourcemanager.googleapis.com/v1/projects',
+        this.GCP_HEADERS,
+        null,
+        data);
   }
 
   /**
@@ -352,8 +381,12 @@ export class RestApiClient {
    * @see https://cloud.google.com/resource-manager/reference/rest/v1/projects/list
    */
   listProjects(): Promise<ListProjectsResponse> {
-    const filter = '?filter=labels.outline%20%3D%20true';
-    return this.cloudResourceManagerHttpClient.get<ListProjectsResponse>(`v1/projects${filter}`);
+    const parameters = new Map<string, string>([['filter', 'labels.outline=true']]);
+    return this.fetchAuthenticated(
+        'GET',
+        'https://cloudresourcemanager.googleapis.com/v1/projects',
+        this.GCP_HEADERS,
+        parameters);
   }
 
   /**
@@ -364,8 +397,10 @@ export class RestApiClient {
    * @param projectId - The GCP project ID.
    */
   getProjectBillingInfo(projectId: string): Promise<ProjectBillingInfo> {
-    return this.cloudBillingHttpClient.get<ProjectBillingInfo>(
-        `v1/projects/${projectId}/billingInfo`);
+    return this.fetchAuthenticated(
+        'GET',
+        `https://cloudbilling.googleapis.com/v1/projects/${projectId}/billingInfo`,
+        this.GCP_HEADERS);
   }
 
   /**
@@ -378,8 +413,12 @@ export class RestApiClient {
    */
   updateProjectBillingInfo(projectId: string, projectBillingInfo: ProjectBillingInfo):
       Promise<ProjectBillingInfo> {
-    return this.cloudBillingHttpClient.put<ProjectBillingInfo>(
-        `v1/projects/${projectId}/billingInfo`, projectBillingInfo);
+    return this.fetchAuthenticated(
+        'PUT',
+        `https://cloudbilling.googleapis.com/v1/projects/${projectId}/billingInfo`,
+        this.GCP_HEADERS,
+        null,
+        projectBillingInfo);
   }
 
   /**
@@ -388,7 +427,10 @@ export class RestApiClient {
    * @see https://cloud.google.com/billing/docs/reference/rest/v1/billingAccounts/list
    */
   listBillingAccounts(): Promise<ListBillingAccountsResponse> {
-    return this.cloudBillingHttpClient.get<ListBillingAccountsResponse>('v1/billingAccounts');
+    return this.fetchAuthenticated(
+        'GET',
+        `https://cloudbilling.googleapis.com/v1/billingAccounts`,
+        this.GCP_HEADERS);
   }
 
   /**
@@ -401,10 +443,10 @@ export class RestApiClient {
    * @param operationId - The operation ID.
    */
   gceZoneWait(projectId: string, zoneId: string, operationId: string): Promise<Operation> {
-    return this.computeHttpClient.post<Operation>(
-        `compute/v1/projects/${projectId}/zones/${zoneId}/operations/${operationId}/wait`,
-        {},
-    );
+    return this.fetchAuthenticated(
+        'POST',
+        `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${zoneId}/operations/${operationId}/wait`,
+        this.GCP_HEADERS);
   }
 
   /**
@@ -416,10 +458,10 @@ export class RestApiClient {
    * @param operationId - The operation ID.
    */
   gceGlobalWait(projectId: string, operationId: string): Promise<Operation> {
-    return this.computeHttpClient.post<Operation>(
-        `compute/v1/projects/${projectId}/global/operations/${operationId}/wait`,
-        {},
-    );
+    return this.fetchAuthenticated(
+        'POST',
+        `https://compute.googleapis.com/compute/v1/projects/${projectId}/global/operations/${operationId}/wait`,
+        this.GCP_HEADERS);
   }
 
   /**
@@ -434,6 +476,118 @@ export class RestApiClient {
    * @see https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
    */
   getUserInfo(): Promise<UserInfo> {
-    return this.openIdConnectHttpClient.get(`userinfo?access_token=${this.accessToken}`);
+    const parameters = new Map<string, string>([['access_token', this.accessToken]]);
+    return this.fetchAuthenticated(
+        'POST',
+        'https://openidconnect.googleapis.com/v1/userinfo',
+        this.GCP_HEADERS);
+  }
+
+  private async refreshGcpAccessToken(refreshToken: string): Promise<string> {
+    const headers = new Map<string, string>(
+        [['Host', 'oauth2.googleapis.com'], ['Content-Type', 'application/x-www-form-urlencoded']]);
+    const data = {
+      client_id: GCP_OAUTH_CLIENT_ID,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token',
+    };
+    const encodedData = this.encodeFormData(data);
+    const response: RefreshAccessTokenResponse = await this.fetchUnauthenticated(
+        'POST',
+        'https://oauth2.googleapis.com/token',
+        headers,
+        null,
+        encodedData);
+    return response.access_token;
+  }
+
+  /**
+   * Revokes a token.
+   *
+   * @see https://developers.google.com/identity/protocols/oauth2/native-app
+   *
+   * @param token - A refresh token or access token
+   */
+  private async revokeGcpToken(token: string): Promise<void> {
+    const headers = new Map<string, string>(
+        [['Host', 'oauth2.googleapis.com'], ['Content-Type', 'application/x-www-form-urlencoded']]);
+    const parameters = new Map<string, string>([['token', token]]);
+    return this.fetchUnauthenticated(
+        'GET',
+        'https://oauth2.googleapis.com/revoke',
+        headers,
+        parameters);
+  }
+
+  // tslint:disable-next-line:no-any
+  private async fetchAuthenticated<T>(method: string, url: string, headers: Map<string, string>, parameters?: Map<string, string>, data?: any): Promise<T> {
+    const httpHeaders = new Map(headers);
+
+    // TODO: Handle token expiration/revokation.
+    if (!this.accessToken) {
+      this.accessToken = await this.refreshGcpAccessToken(this.refreshToken);
+      httpHeaders.set('Authorization', `Bearer ${this.accessToken}`);
+    }
+
+    return this.fetchUnauthenticated(method, url, httpHeaders, parameters, data);
+  }
+
+  // tslint:disable-next-line:no-any
+  private async fetchUnauthenticated<T>(method: string, url: string, headers: Map<string, string>, parameters?: Map<string, string>, data?: any): Promise<T> {
+    const fullUrl = `${url}${this.constructQueryString(parameters)}`;
+    const customHeaders = new Headers();
+    headers.forEach((value, key) => {
+      customHeaders.append(key, value);
+    });
+
+    // TODO: More robust handling of data types
+    if (typeof data === 'object') {
+      data = JSON.stringify(data);
+    }
+
+    console.debug(`Request: ${fullUrl}`);
+    console.debug(`Headers: ${JSON.stringify(customHeaders)}`);
+    console.debug(`Body: ${JSON.stringify(data)}`);
+
+    const response = await fetch(fullUrl, {
+      method: method.toUpperCase(),
+      headers: customHeaders,
+      ...(data && {body: data}),
+    });
+
+    console.debug(`Status: ${response.statusText} (${response.status})`);
+    if (!response.ok) {
+      console.debug(`Text: ${await response.text()}`);
+      throw new HttpError(response.status, response.statusText);
+    }
+
+    try {
+      let result = undefined;
+      if (response.status !== 204) {
+        result = await response.json();
+        console.debug(`Response: ${JSON.stringify(result)}`);
+      }
+      return result;
+    } catch (e) {
+      throw new Error('Error parsing response body: ' + JSON.stringify(e));
+    }
+  }
+
+  private constructQueryString(map: Map<string, string>): string {
+    if (map && map.size > 0) {
+      const entries = [...map.entries()].map(([key, value]: [string, string]) =>
+          encodeURIComponent(key) + '=' + encodeURIComponent(value));
+      return `?${entries}`;
+    } else {
+      return '';
+    }
+  }
+
+  private encodeFormData(data: object): string {
+    return Object.entries(data)
+    .map(entry => {
+      return encodeURIComponent(entry[0]) + '=' + encodeURIComponent(entry[1]);
+    })
+    .join('&');
   }
 }
