@@ -39,8 +39,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
 
   // TODO: Consider passing the refreshToken instead of the client.
   constructor(
-      id: string, private projectId: string,
-      private instance: gcp_api.Instance,
+      id: string, private projectId: string, private instance: gcp_api.Instance,
       private apiClient: gcp_api.RestApiClient) {
     super(id);
     this.gcpHost = new GcpHost(projectId, instance, apiClient);

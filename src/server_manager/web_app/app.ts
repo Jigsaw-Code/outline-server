@@ -604,10 +604,7 @@ export class App {
       return;
     }
 
-    this.appRoot.gcpAccount = {
-      id: this.gcpAccount.getId(),
-      name: await this.gcpAccount.getName()
-    };
+    this.appRoot.gcpAccount = {id: this.gcpAccount.getId(), name: await this.gcpAccount.getName()};
     this.showIntro();
   }
 
