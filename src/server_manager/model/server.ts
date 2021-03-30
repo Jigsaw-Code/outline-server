@@ -13,7 +13,7 @@
 // limitations under the License.
 
 export interface Server {
-  // Gets the server ID.
+  // Gets a globally unique identifier for this Server.
   getId(): string;
 
   // Gets the server's name for display.
@@ -122,8 +122,6 @@ export interface ManagedServerHost {
   getRegionId(): RegionId;
   // Deletes the server - cannot be undone.
   delete(): Promise<void>;
-  // Returns the virtual host ID.
-  getHostId(): string;
 }
 
 export class DataAmount {

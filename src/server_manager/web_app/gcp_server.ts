@@ -39,9 +39,9 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
 
   // TODO: Consider passing the refreshToken instead of the client.
   constructor(
-      private projectId: string, private instance: gcp_api.Instance,
+      id: string, private projectId: string, private instance: gcp_api.Instance,
       private apiClient: gcp_api.RestApiClient) {
-    super(instance.id);
+    super(id);
     this.gcpHost = new GcpHost(projectId, instance, apiClient);
   }
 
@@ -78,7 +78,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
       Promise<Map<string, string>> {
     const result = new Map<string, string>();
     const guestAttributes =
-        await this.apiClient.getGuestAttributes(projectId, instanceId, zone, 'outline');
+        await this.apiClient.getGuestAttributes(projectId, instanceId, zone, 'outline/');
     // console.log(`Guest attributes: ${JSON.stringify(guestAttributes)}`);
     const attributes = guestAttributes?.queryValue?.items;
     if (attributes) {

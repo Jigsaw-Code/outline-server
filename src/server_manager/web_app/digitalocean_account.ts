@@ -36,9 +36,13 @@ export class DigitalOceanAccount implements digitalocean.Account {
   private servers: DigitalOceanServer[] = [];
 
   constructor(
-      private accessToken: string, private shadowboxSettings: ShadowboxSettings,
+      private id: string, private accessToken: string, private shadowboxSettings: ShadowboxSettings,
       private debugMode: boolean) {
     this.digitalOcean = new RestApiSession(accessToken);
+  }
+
+  getId(): string {
+    return this.id;
   }
 
   async getName(): Promise<string> {
@@ -121,7 +125,8 @@ export class DigitalOceanAccount implements digitalocean.Account {
 
   // Creates a DigitalOceanServer object and adds it to the in-memory server list.
   private createDigitalOceanServer(digitalOcean: DigitalOceanSession, dropletInfo: DropletInfo) {
-    const server = new DigitalOceanServer(digitalOcean, dropletInfo);
+    const server =
+        new DigitalOceanServer(`${this.id}:${dropletInfo.id}`, digitalOcean, dropletInfo);
     this.servers.push(server);
     return server;
   }

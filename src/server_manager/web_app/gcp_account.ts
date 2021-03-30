@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import * as gcp_api from '../cloud/gcp_api';
-import * as gcp_credentials from '../cloud/gcp_credentials_api';
 import {SCRIPT} from '../install_scripts/gcp_install_script';
 import * as gcp from '../model/gcp';
 import * as server from '../model/server';
@@ -29,17 +28,18 @@ export class GcpAccount implements gcp.Account {
 
   private readonly apiClient: gcp_api.RestApiClient;
 
-  constructor(private refreshToken: string) {
-    const hardcodedAccessToken = '';
-    // TODO: We need to convert the refreshToken to an access token somewhere.
-    this.apiClient = new gcp_api.RestApiClient(hardcodedAccessToken);
+  constructor(private id: string, private refreshToken: string) {
+    this.apiClient = new gcp_api.RestApiClient(refreshToken);
+  }
+
+  getId(): string {
+    return this.id;
   }
 
   /** @see {@link Account#getName}. */
   async getName(): Promise<string> {
-    const hardcodedAccessToken = '';
-    const userInfo = await gcp_credentials.getUserInfo(hardcodedAccessToken);
-    return userInfo.email ?? 'unknown';
+    const userInfo = await this.apiClient.getUserInfo();
+    return userInfo.email;
   }
 
   /** Returns the refresh token. */
@@ -69,7 +69,8 @@ export class GcpAccount implements gcp.Account {
   async createServer(projectId: string, name: string, zoneId: string):
       Promise<server.ManagedServer> {
     const instance = await this.createInstance(projectId, name, zoneId);
-    return new GcpServer(projectId, instance, this.apiClient);
+    const id = `${this.id}:${instance.id}`;
+    return new GcpServer(id, projectId, instance, this.apiClient);
   }
 
   /** @see {@link Account#listServers}. */
@@ -81,7 +82,8 @@ export class GcpAccount implements gcp.Account {
       const listInstancesResponseForZone = await this.apiClient.listInstances(projectId, zone.name);
       const instances = listInstancesResponseForZone.items ?? [];
       instances.forEach((instance) => {
-        const server = new GcpServer(projectId, instance, this.apiClient);
+        const id = `${this.id}:${instance.id}`;
+        const server = new GcpServer(id, projectId, instance, this.apiClient);
         result.push(server);
       });
     }
