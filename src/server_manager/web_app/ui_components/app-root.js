@@ -597,7 +597,7 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
     this.shouldShowSideBar = false;
 
-    this.addEventListener('RegionSelected', this.handleRegionSelected);
+    this.addEventListener('region-selected', this.handleRegionSelected);
     this.addEventListener(
         'SetUpGenericCloudProviderRequested', this.handleSetUpGenericCloudProviderRequested);
     this.addEventListener('SetUpAwsRequested', this.handleSetUpAwsRequested);
