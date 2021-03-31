@@ -23,6 +23,9 @@ const OAUTH_CONFIG = {
   scopes: [
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/compute',
+    'https://www.googleapis.com/auth/cloudplatformprojects',
+    'https://www.googleapis.com/auth/cloud-billing',
+    'https://www.googleapis.com/auth/service.management',
   ],
 };
 const REDIRECT_PATH = '/gcp/oauth/callback';

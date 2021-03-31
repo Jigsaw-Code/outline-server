@@ -30,6 +30,7 @@ import './cloud-install-styles.js';
 import './outline-about-dialog.js';
 import './outline-do-oauth-step.js';
 import './outline-gcp-oauth-step';
+import './outline-gcp-create-server-app';
 import './outline-feedback-dialog.js';
 import './outline-survey-dialog.js';
 import './outline-intro-step.js';
@@ -387,9 +388,10 @@ export class AppRoot extends mixinBehaviors
         <app-header-layout>
           <div class="app-container">
             <iron-pages attr-for-selected="id" selected="{{ currentPage }}">
-              <outline-intro-step id="intro" digital-ocean-account-name="{{digitalOceanAccount.name}}" gcp-account-name="{{gcpAccountName}}" localize="[[localize]]"></outline-intro-step>
+              <outline-intro-step id="intro" digital-ocean-account-name="{{digitalOceanAccount.name}}" gcp-account-name="{{gcpAccount.name}}" localize="[[localize]]"></outline-intro-step>
               <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
               <outline-gcp-oauth-step id="gcpOauth" localize="[[localize]]"></outline-gcp-oauth-step>
+              <outline-gcp-create-server-app id="gcpCreateServer" localize="[[localize]]"></outline-gcp-create-server-app>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
               <outline-region-picker-step id="regionPicker" localize="[[localize]]"></outline-region-picker-step>
               <outline-server-list id="serverView" server-list="[[serverList]]" selected-server-id="[[selectedServerId]]" language="[[language]]" localize="[[localize]]"></outline-server-list>
@@ -676,6 +678,12 @@ export class AppRoot extends mixinBehaviors
     const oauthFlow = this.$.gcpOauth;
     oauthFlow.onCancel = onCancel;
     return oauthFlow;
+  }
+
+  /** @return {GcpCreateServerApp} */
+  getAndShowGcpCreateServerApp() {
+    this.currentPage = 'gcpCreateServer';
+    return this.$.gcpCreateServer;
   }
 
   getAndShowRegionPicker() {

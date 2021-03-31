@@ -147,7 +147,16 @@ export class App {
         async (event: CustomEvent) => this.handleConnectGcpAccountRequest());
     appRoot.addEventListener(
         'CreateGcpServerRequested',
-        async (event: CustomEvent) => console.log('Received CreateGcpServerRequested event'));
+        async (event: CustomEvent) => {
+          this.appRoot.getAndShowGcpCreateServerApp().start(this.gcpAccount);
+        });
+    appRoot.addEventListener(
+        'gcp-server-created',
+        (event: CustomEvent) => {
+          const server = event.detail.server;
+          this.addServer(this.gcpAccount.getId(), server);
+          this.showServer(server);
+        });
     appRoot.addEventListener('DigitalOceanSignOutRequested', (event: CustomEvent) => {
       this.disconnectDigitalOceanAccount();
       this.showIntro();
@@ -158,6 +167,7 @@ export class App {
     });
 
     appRoot.addEventListener('SetUpServerRequested', (event: CustomEvent) => {
+      console.log('inside app.ts');
       this.createDigitalOceanServer(event.detail.regionId);
     });
 
@@ -368,7 +378,17 @@ export class App {
 
     this.gcpAccount = gcpAccount;
     this.appRoot.gcpAccount = {id: this.gcpAccount.getId(), name: await this.gcpAccount.getName()};
-    return [];
+
+    const result = [];
+    const gcpProjects = await this.gcpAccount.listProjects();
+    for (const gcpProject of gcpProjects) {
+      const servers = await this.gcpAccount.listServers(gcpProject.id);
+      for (const server of servers) {
+        this.addServer(this.gcpAccount.getId(), server);
+        result.push(server);
+      }
+    }
+    return result;
   }
 
   private async loadManualServers() {

@@ -103,7 +103,6 @@ log_for_sentry "Reading tags from ACCESS_CONFIG"
 tail -f "${ACCESS_CONFIG}" "--pid=${install_pid}" | while IFS=: read -r key value; do
   case "${key}" in
     certSha256)
-      # Bypass encoding
       log_for_sentry "Writing certSha256 tag"
       echo "case certSha256: ${key}/${value}"
       cloud::set_guest_attribute "${key}" "${value}"

@@ -21,6 +21,16 @@ export type RegionMap = {
   [regionId: string]: RegionId[]
 };
 
+export type Project = {
+  id: string,
+  name: string,
+};
+
+export type BillingAccount = {
+  id: string,
+  name: string,
+};
+
 /**
  * The Google Cloud Platform account model.
  */
@@ -60,5 +70,24 @@ export interface Account {
    *
    * @param projectId - The GCP project ID.
    */
-  listLocations(projectId: string): Promise<Readonly<RegionMap>>;
+  listLocations(projectId: string): Promise<RegionMap>;
+
+  /**
+   * Creates a new Google Cloud Platform project.
+   *
+   * The project ID must conform to the following:
+   * - must be 6 to 30 lowercase letters, digits, or hyphens
+   * - must start with a letter
+   * - no trailing hyphens
+   *
+   * @param id - The project ID.
+   * @param billingAccount - The billing account ID.
+   */
+  createProject(id: string, billingAccountId: string): Promise<Project>;
+
+  /** Lists the Google Cloud Platform projects available with the user. */
+  listProjects(): Promise<Project[]>;
+
+  /** Lists the Google Cloud Platform billing accounts associated with the user. */
+  listBillingAccounts(): Promise<BillingAccount[]>;
 }

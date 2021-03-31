@@ -68,6 +68,15 @@ export class FakeGcpAccount implements gcp.Account {
   listServers(projectId: string): Promise<server.ManagedServer[]> {
     return undefined;
   }
+  createProject(id: string, billingAccountId: string): Promise<gcp.Project> {
+    return undefined;
+  }
+  listBillingAccounts(): Promise<gcp.BillingAccount[]> {
+    return undefined;
+  }
+  listProjects(): Promise<gcp.Project[]> {
+    return undefined;
+  }
 }
 
 export class FakeServer implements server.Server {

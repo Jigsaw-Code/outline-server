@@ -18,6 +18,8 @@ import * as gcp from '../model/gcp';
 import * as server from '../model/server';
 
 import {GcpServer} from './gcp_server';
+import {BillingAccount, Project} from "../model/gcp";
+import {sleep} from "../infrastructure/sleep";
 
 /**
  * The Google Cloud Platform account model.
@@ -47,24 +49,6 @@ export class GcpAccount implements gcp.Account {
     return this.refreshToken;
   }
 
-  /** @see {@link Account#listLocations}. */
-  async listLocations(projectId: string): Promise<gcp.RegionMap> {
-    const listZonesResponse = await this.apiClient.listZones(projectId);
-    const zones = listZonesResponse.items ?? [];
-
-    const result: gcp.RegionMap = {};
-    zones.map((zone) => {
-      if (!(zone.region in result)) {
-        result[zone.region] = [];
-      }
-      // TODO: Check status
-      if (zone.status) {
-        result[zone.region].push(zone.name);
-      }
-    });
-    return result;
-  }
-
   /** @see {@link Account#createServer}. */
   async createServer(projectId: string, name: string, zoneId: string):
       Promise<server.ManagedServer> {
@@ -90,19 +74,99 @@ export class GcpAccount implements gcp.Account {
     return result;
   }
 
+  /** @see {@link Account#listLocations}. */
+  async listLocations(projectId: string): Promise<gcp.RegionMap> {
+    const listZonesResponse = await this.apiClient.listZones(projectId);
+    const zones = listZonesResponse.items ?? [];
+
+    const result: gcp.RegionMap = {};
+    zones.map((zone) => {
+      const region = zone.region.substring(zone.region.lastIndexOf('/') + 1);
+      if (!(region in result)) {
+        result[region] = [];
+      }
+      // TODO: Check status
+      if (zone.status) {
+        result[region].push(zone.name);
+      }
+    });
+    return result;
+  }
+
+  /** @see {@link Account#listProjects}. */
+  async listProjects(): Promise<Project[]> {
+    const response = await this.apiClient.listProjects();
+    if (response.projects?.length > 0) {
+      return response.projects.map(project => {
+        return {
+          id: project.projectId,
+          name: project.name,
+        };
+      });
+    }
+    return [];
+  }
+
+  // TODO: Add API call error handling.
+  /** @see {@link Account#createProject}. */
+  async createProject(id: string, billingAccountId: string): Promise<Project> {
+    // Create GCP project
+    const projectName = 'Outline servers';
+    const createProjectResponse = await this.apiClient.createProject(id, projectName);
+    let createProjectOperation = null;
+    while (!createProjectOperation?.done) {
+      await sleep(2 * 1000);
+      createProjectOperation = await this.apiClient.resourceManagerOperationGet(createProjectResponse.name);
+    }
+
+    // Link billing account
+    await this.apiClient.updateProjectBillingInfo(id, billingAccountId);
+
+    // Enable APIs
+    const services = ['compute.googleapis.com'];
+    const enableServicesResponse = await this.apiClient.enableServices(id, services);
+    let enableServicesOperation = null;
+    while (!enableServicesOperation?.done) {
+      await sleep(2 * 1000);
+      enableServicesOperation = await this.apiClient.serviceUsageOperationGet(enableServicesResponse.name);
+    }
+
+    return {
+      id,
+      name: projectName,
+    };
+  }
+
+  /** @see {@link Account#listBillingAccounts}. */
+  async listBillingAccounts(): Promise<BillingAccount[]> {
+    const response = await this.apiClient.listBillingAccounts();
+    if (response.billingAccounts?.length > 0) {
+      return response.billingAccounts.map(billingAccount => {
+        return {
+          id: billingAccount.name.substring(billingAccount.name.lastIndexOf('/') + 1),
+          name:billingAccount.displayName,
+        };
+      });
+    }
+    return [];
+  }
+
   private async createInstance(projectId: string, name: string, zoneId: string):
       Promise<gcp_api.Instance> {
     // Configure Outline firewall
-    const createFirewallOp =
-        await this.apiClient.createFirewall(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
-    await this.apiClient.gceGlobalWait(projectId, createFirewallOp.name);
+    const getFirewallResponse = await this.apiClient.listFirewalls(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
+    if (!getFirewallResponse?.items || getFirewallResponse?.items?.length === 0) {
+      const createFirewallOp =
+          await this.apiClient.createFirewall(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
+      await this.apiClient.computeEngineOperationGlobalWait(projectId, createFirewallOp.name);
+    }
 
     // Create VM instance
     const installScript = this.getInstallScript();
     const createInstanceOp = await this.apiClient.createInstance(
         projectId, name, zoneId, GcpAccount.MACHINE_SIZE, installScript);
     const createInstanceWait =
-        await this.apiClient.gceZoneWait(projectId, zoneId, createInstanceOp.name);
+        await this.apiClient.computeEngineOperationZoneWait(projectId, zoneId, createInstanceOp.name);
     return await this.apiClient.getInstance(projectId, createInstanceWait.targetId, zoneId);
 
     // TODO: Promote ephemeral IP to static IP

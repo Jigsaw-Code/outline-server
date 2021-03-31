@@ -55,8 +55,9 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
 
   async waitOnInstall(): Promise<void> {
     while (this.installState === InstallState.UNKNOWN) {
+      const zoneId = this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
       const outlineGuestAttributes = await this.getOutlineGuestAttributes(
-          this.projectId, this.instance.id, this.instance.zone);
+          this.projectId, this.instance.id, zoneId);
       if (outlineGuestAttributes.has('apiUrl') && outlineGuestAttributes.has('certSha256')) {
         const certSha256 = outlineGuestAttributes.get('certSha256');
         const apiUrl = outlineGuestAttributes.get('apiUrl');
@@ -79,7 +80,6 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     const result = new Map<string, string>();
     const guestAttributes =
         await this.apiClient.getGuestAttributes(projectId, instanceId, zone, 'outline/');
-    // console.log(`Guest attributes: ${JSON.stringify(guestAttributes)}`);
     const attributes = guestAttributes?.queryValue?.items;
     if (attributes) {
       const apiUrlAttr = attributes.find((attribute) => {
@@ -112,7 +112,8 @@ class GcpHost implements server.ManagedServerHost {
       private apiClient: gcp_api.RestApiClient) {}
 
   async delete(): Promise<void> {
-    await this.apiClient.deleteInstance(this.projectId, this.instance.id, this.instance.zone);
+    const zoneId = this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
+    await this.apiClient.deleteInstance(this.projectId, this.instance.id, zoneId);
   }
 
   getHostId(): string {
@@ -128,6 +129,6 @@ class GcpHost implements server.ManagedServerHost {
   }
 
   getRegionId(): string {
-    return this.instance.zone;
+    return this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
   }
 }
