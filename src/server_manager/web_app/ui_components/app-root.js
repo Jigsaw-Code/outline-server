@@ -556,7 +556,6 @@ export class AppRoot extends mixinBehaviors
       // An array of {id, name, dir} language objects.
       supportedLanguages: {type: Array, readonly: true},
       useKeyIfMissing: {type: Boolean},
-      accountList: {type: Array},
       serverList: {type: Array},
       selectedServerId: {type: String},
       digitalOceanAccount: Object,
