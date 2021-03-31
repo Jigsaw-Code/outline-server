@@ -511,7 +511,9 @@ export class RestApiClient {
 
   // tslint:disable-next-line:no-any
   private async fetchUnauthenticated<T>(method: string, url: string, headers: Map<string, string>, parameters?: Map<string, string>, data?: any): Promise<T> {
-    const fullUrl = `${url}${this.constructQueryString(parameters)}`;
+    const encodedUrl = encodeURI(url);
+    const encodedQueryString = this.encodeQueryString(parameters);
+    const fullUrl = `${encodedUrl}${encodedQueryString}`;
     const customHeaders = new Headers();
     headers.forEach((value, key) => {
       customHeaders.append(key, value);
@@ -550,7 +552,7 @@ export class RestApiClient {
     }
   }
 
-  private constructQueryString(map: Map<string, string>): string {
+  private encodeQueryString(map: Map<string, string>): string {
     if (map && map.size > 0) {
       const entries = [...map.entries()].map(
           ([key, value]: [string, string]) =>
