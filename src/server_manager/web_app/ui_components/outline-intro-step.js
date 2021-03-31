@@ -280,10 +280,6 @@ Polymer({
       type: String,
       value: null,
     },
-    isGcpAccountConnected: {
-      type: Boolean,
-      computed: '_computeIsAccountConnected(gcpAccountName)',
-    },
     localize: {
       type: Function,
       readonly: true,
