@@ -483,6 +483,14 @@
     "message": "Create a VM Instance",
     "description": "This string appears as a header for a set of instructions for creating a new Google Cloud VM"
   },
+  "gcp_disconnect": {
+    "message": "Disconnect",
+    "description": "This string appears as a button in a dialog to disconnect the user's Google Cloud Platform account from the application. Clicking it signs the user out of Google Cloud Platform, a cloud server provider."
+  },
+  "gcp_disconnect_account": {
+    "message": "Disconnect Google Cloud Platform account",
+    "description": "This string appears as a header in a dialog to disconnect the user's Google Cloud Platform account from the application. Google Cloud Platform is a cloud server provider name and should not be translated."
+  },
   "gcp_firewall_create_0": {
     "message": "$START_OF_LINK$Add a new firewall rule$END_OF_LINK$ to your Compute Engine project.",
     "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. Compute Engine is a product of Google Cloud Platform and should not be translated.",
@@ -886,6 +894,10 @@
   "servers_digitalocean": {
     "message": "DigitalOcean servers",
     "description": "This string appears in an application drawer as the header of a section that displays the list of DigitalOcean servers. DigitalOcean is a cloud server provider name and should not be translated."
+  },
+  "servers_gcp": {
+    "message": "Google Cloud Platform servers",
+    "description": "This string appears in an application drawer as the header of a section that displays the list of Google Cloud Platform servers. Google Cloud Platform is a cloud server provider name and should not be translated."
   },
   "servers_manual": {
     "message": "Servers",
