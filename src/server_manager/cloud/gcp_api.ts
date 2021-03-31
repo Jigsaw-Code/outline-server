@@ -51,16 +51,20 @@ type Zone = Readonly<{
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/globalOperations
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations
  */
-type ComputeEngineOperation = Readonly<{id: string; name: string; targetId: string; status: string;}>;
+type ComputeEngineOperation =
+    Readonly<{id: string; name: string; targetId: string; status: string;}>;
 
 /** @see https://cloud.google.com/resource-manager/reference/rest/Shared.Types/Operation */
 export type ResourceManagerOperation = Readonly<{name: string; done: boolean;}>;
 
-/** @see https://cloud.google.com/service-usage/docs/reference/rest/Shared.Types/ListOperationsResponse#Operation */
+/**
+ * @see https://cloud.google.com/service-usage/docs/reference/rest/Shared.Types/ListOperationsResponse#Operation
+ */
 type ServiceUsageOperation = Readonly<{name: string; done: boolean;}>;
 
 /** @see https://cloud.google.com/resource-manager/reference/rest/v1/projects */
-export type Project = Readonly<{projectNumber: string; projectId: string; name: string, lifecycleState: string;}>;
+export type Project =
+    Readonly<{projectNumber: string; projectId: string; name: string, lifecycleState: string;}>;
 
 /** @see https://cloud.google.com/compute/docs/reference/rest/v1/firewalls/get#response-body */
 type Firewall = Readonly<{id: string; name: string;}>;
@@ -88,8 +92,7 @@ type ListProjectsResponse = Readonly<{projects: Project[]; nextPageToken: string
 type ListFirewallsResponse = Readonly<{items: Firewall[]; nextPageToken: string;}>;
 type ListBillingAccountsResponse =
     Readonly<{billingAccounts: BillingAccount[]; nextPageToken: string}>;
-type RefreshAccessTokenResponse =
-    Readonly<{ access_token: string; expires_in: number;}>;
+type RefreshAccessTokenResponse = Readonly<{access_token: string; expires_in: number;}>;
 
 export class HttpError extends Error {
   constructor(private statusCode: number, message?: string) {
@@ -189,7 +192,8 @@ export class RestApiClient {
    * @param instanceId - The ID of the instance to delete.
    * @param zoneId - The zone in which the instance resides.
    */
-  deleteInstance(projectId: string, instanceId: string, zoneId: string): Promise<ComputeEngineOperation> {
+  deleteInstance(projectId: string, instanceId: string, zoneId: string):
+      Promise<ComputeEngineOperation> {
     return this.fetchAuthenticated(
         'DELETE',
         `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
@@ -266,7 +270,8 @@ export class RestApiClient {
    * @param addressId - The ID of the static IP address resource.
    * @param regionId - The GCP region of the resource.
    */
-  deleteStaticIp(projectId: string, addressId: string, regionId: string): Promise<ComputeEngineOperation> {
+  deleteStaticIp(projectId: string, addressId: string, regionId: string):
+      Promise<ComputeEngineOperation> {
     return this.fetchAuthenticated(
         'DELETE',
         `https://compute.googleapis.com/compute/v1/projects/${projectId}/regions/${
@@ -338,8 +343,7 @@ export class RestApiClient {
     const parameters = new Map<string, string>([['filter', filter]]);
     return this.fetchAuthenticated(
         'GET', `https://compute.googleapis.com/compute/v1/projects/${projectId}/global/firewalls`,
-        this.GCP_HEADERS,
-        parameters);
+        this.GCP_HEADERS, parameters);
   }
 
   /**
@@ -361,13 +365,10 @@ export class RestApiClient {
    * @param serviceIds - The service IDs.
    */
   enableServices(projectId: string, serviceIds: string[]): Promise<ServiceUsageOperation> {
-    const data = { serviceIds };
+    const data = {serviceIds};
     return this.fetchAuthenticated(
-        'POST',
-        `https://serviceusage.googleapis.com/v1/projects/${projectId}/services:batchEnable`,
-        this.GCP_HEADERS,
-        null,
-        data);
+        'POST', `https://serviceusage.googleapis.com/v1/projects/${projectId}/services:batchEnable`,
+        this.GCP_HEADERS, null, data);
   }
 
   /**
@@ -462,7 +463,8 @@ export class RestApiClient {
    * @param zoneId - The zone ID.
    * @param operationId - The operation ID.
    */
-  computeEngineOperationZoneWait(projectId: string, zoneId: string, operationId: string): Promise<ComputeEngineOperation> {
+  computeEngineOperationZoneWait(projectId: string, zoneId: string, operationId: string):
+      Promise<ComputeEngineOperation> {
     return this.fetchAuthenticated(
         'POST',
         `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
@@ -478,7 +480,8 @@ export class RestApiClient {
    * @param projectId - The GCP project ID.
    * @param operationId - The operation ID.
    */
-  computeEngineOperationGlobalWait(projectId: string, operationId: string): Promise<ComputeEngineOperation> {
+  computeEngineOperationGlobalWait(projectId: string, operationId: string):
+      Promise<ComputeEngineOperation> {
     return this.fetchAuthenticated(
         'POST',
         `https://compute.googleapis.com/compute/v1/projects/${projectId}/global/operations/${
@@ -488,16 +491,12 @@ export class RestApiClient {
 
   resourceManagerOperationGet(operationId: string): Promise<ResourceManagerOperation> {
     return this.fetchAuthenticated(
-        'GET',
-        `https://cloudresourcemanager.googleapis.com/v1/${operationId}`,
-        this.GCP_HEADERS);
+        'GET', `https://cloudresourcemanager.googleapis.com/v1/${operationId}`, this.GCP_HEADERS);
   }
 
   serviceUsageOperationGet(operationId: string): Promise<ServiceUsageOperation> {
     return this.fetchAuthenticated(
-        'GET',
-        `https://serviceusage.googleapis.com/v1/${operationId}`,
-        this.GCP_HEADERS);
+        'GET', `https://serviceusage.googleapis.com/v1/${operationId}`, this.GCP_HEADERS);
   }
 
   /**

@@ -145,18 +145,14 @@ export class App {
     appRoot.addEventListener(
         'ConnectGcpAccountRequested',
         async (event: CustomEvent) => this.handleConnectGcpAccountRequest());
-    appRoot.addEventListener(
-        'CreateGcpServerRequested',
-        async (event: CustomEvent) => {
-          this.appRoot.getAndShowGcpCreateServerApp().start(this.gcpAccount);
-        });
-    appRoot.addEventListener(
-        'gcp-server-created',
-        (event: CustomEvent) => {
-          const server = event.detail.server;
-          this.addServer(this.gcpAccount.getId(), server);
-          this.showServer(server);
-        });
+    appRoot.addEventListener('CreateGcpServerRequested', async (event: CustomEvent) => {
+      this.appRoot.getAndShowGcpCreateServerApp().start(this.gcpAccount);
+    });
+    appRoot.addEventListener('gcp-server-created', (event: CustomEvent) => {
+      const server = event.detail.server;
+      this.addServer(this.gcpAccount.getId(), server);
+      this.showServer(server);
+    });
     appRoot.addEventListener('DigitalOceanSignOutRequested', (event: CustomEvent) => {
       this.disconnectDigitalOceanAccount();
       this.showIntro();

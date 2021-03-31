@@ -19,10 +19,10 @@ import '@polymer/paper-item/paper-item.js';
 
 import {css, customElement, html, internalProperty, LitElement, property} from 'lit-element';
 
+import {BillingAccount, Project} from '../../model/gcp';
+import {GcpAccount} from '../gcp_account';
 import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
 import {Location, OutlineRegionPicker} from '../ui_components/outline-region-picker-step';
-import {GcpAccount} from "../gcp_account";
-import {BillingAccount, Project} from "../../model/gcp";
 
 /** @see https://cloud.google.com/compute/docs/regions-zones */
 const LOCATION_MAP = new Map<string, string>([
@@ -202,7 +202,8 @@ export class GcpCreateServerApp extends LitElement {
             <paper-button 
                 id="createServerButton" 
                 @tap="${this.handleProjectSetupNextTap}" 
-                ?disabled="${!this.isProjectSetupNextEnabled(this.selectedProjectId, this.selectedBillingAccountId)}">
+                ?disabled="${
+        !this.isProjectSetupNextEnabled(this.selectedProjectId, this.selectedBillingAccountId)}">
               CREATE PROJECT
             </paper-button>
           </span>
@@ -214,7 +215,9 @@ export class GcpCreateServerApp extends LitElement {
                 </div>
               </div>
               <div class="section-content">
-                <paper-input value="${this.selectedProjectId}" label="Project ID" always-float-label="" maxlength="100" @value-changed="${this.onProjectIdChanged}"></paper-input>
+                <paper-input value="${
+        this.selectedProjectId}" label="Project ID" always-float-label="" maxlength="100" @value-changed="${
+        this.onProjectIdChanged}"></paper-input>
               </div>
             </div>
             
@@ -227,17 +230,20 @@ export class GcpCreateServerApp extends LitElement {
               </div>
               <div class="section-content">
                 <paper-dropdown-menu no-label-float="">
-                  <paper-listbox slot="dropdown-content" selected="${this.selectedBillingAccountId}" attr-for-selected="name" @selected-changed="${this.onBillingAccountSelected}">
+                  <paper-listbox slot="dropdown-content" selected="${
+        this.selectedBillingAccountId}" attr-for-selected="name" @selected-changed="${
+        this.onBillingAccountSelected}">
                   ${this.billingAccounts.map(billingAccount => {
-                    return html`<paper-item name="${billingAccount.id}">${billingAccount.name}</paper-item>`;
-                  })}
+      return html`<paper-item name="${billingAccount.id}">${billingAccount.name}</paper-item>`;
+    })}
                   </paper-listbox>
                 </paper-dropdown-menu>
               </div>
             </div>
         </outline-step-view>
 
-        <outline-region-picker-step id="regionPicker" .localize=${this.localize} @region-selected="${this.onRegionSelected}">  
+        <outline-region-picker-step id="regionPicker" .localize=${
+        this.localize} @region-selected="${this.onRegionSelected}">  
         </outline-region-picker-step>
       </iron-pages>`;
   }
@@ -257,7 +263,8 @@ export class GcpCreateServerApp extends LitElement {
   }
 
   private async handleProjectSetupNextTap(): Promise<void> {
-    this.project = await this.account.createProject(this.selectedProjectId, this.selectedBillingAccountId);
+    this.project =
+        await this.account.createProject(this.selectedProjectId, this.selectedBillingAccountId);
     this.showRegionPicker();
   }
 
@@ -316,12 +323,9 @@ export class GcpCreateServerApp extends LitElement {
 
     this.regionPicker.isServerBeingCreated = true;
     // TODO: Make unique server name
-    const server = await this.account.createServer(this.project.id, 'outline', event.detail.selectedRegionId);
-    const params = {
-      bubbles: true,
-      composed: true,
-      detail: {server}
-    };
+    const server =
+        await this.account.createServer(this.project.id, 'outline', event.detail.selectedRegionId);
+    const params = {bubbles: true, composed: true, detail: {server}};
     const serverCreatedEvent = new CustomEvent('gcp-server-created', params);
     this.dispatchEvent(serverCreatedEvent);
   }

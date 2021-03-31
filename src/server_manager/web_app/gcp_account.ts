@@ -13,13 +13,13 @@
 // limitations under the License.
 
 import * as gcp_api from '../cloud/gcp_api';
+import {sleep} from '../infrastructure/sleep';
 import {SCRIPT} from '../install_scripts/gcp_install_script';
 import * as gcp from '../model/gcp';
+import {BillingAccount, Project} from '../model/gcp';
 import * as server from '../model/server';
 
 import {GcpServer} from './gcp_server';
-import {BillingAccount, Project} from "../model/gcp";
-import {sleep} from "../infrastructure/sleep";
 
 /**
  * The Google Cloud Platform account model.
@@ -116,7 +116,8 @@ export class GcpAccount implements gcp.Account {
     let createProjectOperation = null;
     while (!createProjectOperation?.done) {
       await sleep(2 * 1000);
-      createProjectOperation = await this.apiClient.resourceManagerOperationGet(createProjectResponse.name);
+      createProjectOperation =
+          await this.apiClient.resourceManagerOperationGet(createProjectResponse.name);
     }
 
     // Link billing account
@@ -128,7 +129,8 @@ export class GcpAccount implements gcp.Account {
     let enableServicesOperation = null;
     while (!enableServicesOperation?.done) {
       await sleep(2 * 1000);
-      enableServicesOperation = await this.apiClient.serviceUsageOperationGet(enableServicesResponse.name);
+      enableServicesOperation =
+          await this.apiClient.serviceUsageOperationGet(enableServicesResponse.name);
     }
 
     return {
@@ -144,7 +146,7 @@ export class GcpAccount implements gcp.Account {
       return response.billingAccounts.map(billingAccount => {
         return {
           id: billingAccount.name.substring(billingAccount.name.lastIndexOf('/') + 1),
-          name:billingAccount.displayName,
+          name: billingAccount.displayName,
         };
       });
     }
@@ -154,7 +156,8 @@ export class GcpAccount implements gcp.Account {
   private async createInstance(projectId: string, name: string, zoneId: string):
       Promise<gcp_api.Instance> {
     // Configure Outline firewall
-    const getFirewallResponse = await this.apiClient.listFirewalls(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
+    const getFirewallResponse =
+        await this.apiClient.listFirewalls(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
     if (!getFirewallResponse?.items || getFirewallResponse?.items?.length === 0) {
       const createFirewallOp =
           await this.apiClient.createFirewall(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
@@ -165,8 +168,8 @@ export class GcpAccount implements gcp.Account {
     const installScript = this.getInstallScript();
     const createInstanceOp = await this.apiClient.createInstance(
         projectId, name, zoneId, GcpAccount.MACHINE_SIZE, installScript);
-    const createInstanceWait =
-        await this.apiClient.computeEngineOperationZoneWait(projectId, zoneId, createInstanceOp.name);
+    const createInstanceWait = await this.apiClient.computeEngineOperationZoneWait(
+        projectId, zoneId, createInstanceOp.name);
     return await this.apiClient.getInstance(projectId, createInstanceWait.targetId, zoneId);
 
     // TODO: Promote ephemeral IP to static IP

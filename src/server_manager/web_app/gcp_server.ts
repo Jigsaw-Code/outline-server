@@ -56,8 +56,8 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   async waitOnInstall(): Promise<void> {
     while (this.installState === InstallState.UNKNOWN) {
       const zoneId = this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
-      const outlineGuestAttributes = await this.getOutlineGuestAttributes(
-          this.projectId, this.instance.id, zoneId);
+      const outlineGuestAttributes =
+          await this.getOutlineGuestAttributes(this.projectId, this.instance.id, zoneId);
       if (outlineGuestAttributes.has('apiUrl') && outlineGuestAttributes.has('certSha256')) {
         const certSha256 = outlineGuestAttributes.get('certSha256');
         const apiUrl = outlineGuestAttributes.get('apiUrl');
