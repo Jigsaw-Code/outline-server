@@ -181,34 +181,34 @@ Polymer({
       <div class="container">
         <div id="digital-ocean" class="card" on-tap="connectToDigitalOceanTapped">
           <div class="card-header">
-            <div class="tag" hidden\$="{{isDigitalOceanAccountConnected}}">[[localize('setup-recommended')]]</div>
-            <div class="email" hidden\$="{{!isDigitalOceanAccountConnected}}">{{digitalOceanAccountName}}</div>
+            <div class="tag" hidden\$="[[_computeIsAccountConnected(digitalOceanAccountName)]]">[[localize('setup-recommended')]]</div>
+            <div class="email" hidden\$="[[!_computeIsAccountConnected(digitalOceanAccountName)]]">[[digitalOceanAccountName]]</div>
             <img src="images/do_white_logo.svg">
           </div>
           <div class="card-title">DigitalOcean</div>
           <div class="card-body">
             <div class="description">
-              <ul hidden\$="{{isDigitalOceanAccountConnected}}">
+              <ul hidden\$="[[_computeIsAccountConnected(digitalOceanAccountName)]]">
                 <li>[[localize('setup-do-easiest')]]</li>
                 <li>[[localize('setup-do-cost')]]</li>
                 <li>[[localize('setup-do-data')]]</li>
                 <li>[[localize('setup-do-cancel')]]</li>
               </ul>
-              <p hidden\$="{{!isDigitalOceanAccountConnected}}">
+              <p hidden\$="[[!_computeIsAccountConnected(digitalOceanAccountName)]]">
                 [[localize('setup-do-create')]]
               </p>
             </div>
           </div>
           <div class="card-footer">
-            <paper-button class="primary" hidden\$="{{isDigitalOceanAccountConnected}}">[[localize('setup-action')]]</paper-button>
-            <paper-button class="primary" hidden\$="{{!isDigitalOceanAccountConnected}}">[[localize('setup-create')]]</paper-button>
+            <paper-button class="primary" hidden\$="[[_computeIsAccountConnected(digitalOceanAccountName)]]">[[localize('setup-action')]]</paper-button>
+            <paper-button class="primary" hidden\$="[[!_computeIsAccountConnected(digitalOceanAccountName)]]">[[localize('setup-create')]]</paper-button>
           </div>
         </div>
 
         <div id="gcp" class="card" on-tap="setUpGcpTapped">
           <div class="card-header">
-            <div class="tag" hidden\$="{{isGcpAccountConnected}}">[[localize('setup-advanced')]]</div>
-            <div class="email" hidden\$="{{!isGcpAccountConnected}}">{{digitalOceanAccountName}}</div>
+            <div class="tag" hidden\$="[[_computeIsAccountConnected]]">[[localize('setup-advanced')]]</div>
+            <div class="email" hidden\$="[[!_computeIsAccountConnected]]">[[gcpAccountName]]</div>
             <img src="images/gcp-logo.svg">
           </div>
           <div class="card-title">Google Cloud Platform</div>
@@ -222,8 +222,8 @@ Polymer({
             </div>
           </div>
           <div class="card-footer">
-            <paper-button class="primary" hidden\$="{{isGcpAccountConnected}}">[[localize('setup-action')]]</paper-button>
-            <paper-button class="primary" hidden\$="{{!isGcpAccountConnected}}">[[localize('setup-create')]]</paper-button>
+            <paper-button class="primary" hidden\$="[[_computeIsAccountConnected]]">[[localize('setup-action')]]</paper-button>
+            <paper-button class="primary" hidden\$="[[!_computeIsAccountConnected]]">[[localize('setup-create')]]</paper-button>
           </div>
         </div>
 
@@ -276,10 +276,6 @@ Polymer({
       type: String,
       value: null,
     },
-    isDigitalOceanAccountConnected: {
-      type: Boolean,
-      computed: '_computeIsAccountConnected(digitalOceanAccountName)',
-    },
     gcpAccountName: {
       type: String,
       value: null,
@@ -299,7 +295,7 @@ Polymer({
   },
 
   connectToDigitalOceanTapped: function() {
-    if (this.isDigitalOceanAccountConnected) {
+    if (this.digitalOceanAccountName) {
       this.fire('CreateDigitalOceanServerRequested');
     } else {
       this.fire('ConnectDigitalOceanAccountRequested');
