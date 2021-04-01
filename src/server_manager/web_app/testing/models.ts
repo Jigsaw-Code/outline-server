@@ -50,8 +50,7 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
 export class FakeGcpAccount implements gcp.Account {
   constructor(
       private refreshToken = 'fake-access-token',
-      private billingAccounts: gcp.BillingAccount[] = [],
-      private locations: gcp.RegionMap = {}) {}
+      private billingAccounts: gcp.BillingAccount[] = [], private locations: gcp.RegionMap = {}) {}
 
   getId() {
     return 'id';

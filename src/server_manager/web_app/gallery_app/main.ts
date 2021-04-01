@@ -26,9 +26,10 @@ import '@polymer/paper-checkbox/paper-checkbox';
 import {PaperCheckboxElement} from '@polymer/paper-checkbox/paper-checkbox';
 import IntlMessageFormat from 'intl-messageformat';
 import {css, customElement, html, LitElement, property} from 'lit-element';
+
+import * as gcp from '../../model/gcp';
+import {FakeGcpAccount} from '../testing/models';
 import {OutlinePerKeyDataLimitDialog} from '../ui_components/outline-per-key-data-limit-dialog';
-import {FakeGcpAccount} from "../testing/models";
-import * as gcp from "../../model/gcp";
 
 async function makeLocalize(language: string) {
   let messages: {[key: string]: string};
@@ -59,10 +60,8 @@ const GCP_LOCATIONS: gcp.RegionMap = {
   'asia-east1': ['asia-east1-a', 'asia-east1-b'],
   'europe-west1': ['europe-west1-a', 'europe-west1-b', 'europe-west1-c'],
 };
-const GCP_BILLING_ACCOUNTS: gcp.BillingAccount[] = [{
-  id: '1234-123456',
-  name: 'My Billing Account'
-}];
+const GCP_BILLING_ACCOUNTS: gcp.BillingAccount[] =
+    [{id: '1234-123456', name: 'My Billing Account'}];
 
 @customElement('outline-test-app')
 export class TestApp extends LitElement {
@@ -137,17 +136,20 @@ export class TestApp extends LitElement {
 
       <div class="widget">
         <h2>outline-gcp-create-server-app</h2>
-        <label for="gcpRefreshToken">GCP refresh token:</label><input type="text" id="gcpRefreshToken" value="${this.gcpRefreshToken}">
+        <label for="gcpRefreshToken">GCP refresh token:</label><input type="text" id="gcpRefreshToken" value="${
+        this.gcpRefreshToken}">
         <button @tap=${() => {
-          const billingAccounts = this.gcpAccountHasBillingAccounts ? GCP_BILLING_ACCOUNTS : [];
-          const account = new FakeGcpAccount(this.gcpRefreshToken, billingAccounts);
-          this.select('outline-gcp-create-server-app').start(account);}}>
+      const billingAccounts = this.gcpAccountHasBillingAccounts ? GCP_BILLING_ACCOUNTS : [];
+      const account = new FakeGcpAccount(this.gcpRefreshToken, billingAccounts);
+      this.select('outline-gcp-create-server-app').start(account);
+    }}>
         Create server</button>
         <paper-checkbox
            ?checked=${this.gcpAccountHasBillingAccounts}
            @tap=${() => this.gcpAccountHasBillingAccounts = !this.gcpAccountHasBillingAccounts}
         >Fake billing accounts</paper-checkbox>
-        <outline-gcp-create-server-app .localize=${this.localize}></outline-gcp-create-server-app>        
+        <outline-gcp-create-server-app .localize=${
+        this.localize}></outline-gcp-create-server-app>        
       </div>
 
       <div
