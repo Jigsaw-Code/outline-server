@@ -171,7 +171,8 @@ export class RestApiClient {
     data.labels[label] = 'true';
     return this.fetchAuthenticated(
         'POST',
-        `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${zoneId}/instances`, null, JSON.stringify(data));
+        `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${zoneId}/instances`,
+        null, JSON.stringify(data));
   }
 
   /**
@@ -219,7 +220,8 @@ export class RestApiClient {
     const parameters = new Map<string, string>([['filter', 'labels.outline=true']]);
     return this.fetchAuthenticated(
         'GET',
-        `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${zoneId}/instances`, parameters);
+        `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${zoneId}/instances`,
+        parameters);
   }
 
   /**
@@ -244,7 +246,8 @@ export class RestApiClient {
     return this.fetchAuthenticated(
         'POST',
         `https://compute.googleapis.com/compute/v1/projects/${projectId}/regions/${
-            regionId}/addresses`, null, JSON.stringify(data));
+            regionId}/addresses`,
+        null, JSON.stringify(data));
   }
 
   /**
@@ -283,7 +286,8 @@ export class RestApiClient {
       return this.fetchAuthenticated(
           'GET',
           `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
-              zoneId}/instances/${instanceId}/getGuestAttributes`, parameters);
+              zoneId}/instances/${instanceId}/getGuestAttributes`,
+          parameters);
     } catch (error) {
       // TODO: Distinguish between 404 not found and other errors.
       return undefined;
@@ -312,7 +316,8 @@ export class RestApiClient {
       sourceRanges: ['0.0.0.0/0'],
     };
     return this.fetchAuthenticated(
-        'POST', `https://compute.googleapis.com/compute/v1/projects/${projectId}/global/firewalls`, null, JSON.stringify(data));
+        'POST', `https://compute.googleapis.com/compute/v1/projects/${projectId}/global/firewalls`,
+        null, JSON.stringify(data));
   }
 
   /**
@@ -366,8 +371,7 @@ export class RestApiClient {
   listProjects(): Promise<ListProjectsResponse> {
     const parameters = new Map<string, string>([['filter', 'labels.outline=true']]);
     return this.fetchAuthenticated(
-        'GET', 'https://cloudresourcemanager.googleapis.com/v1/projects',
-        parameters);
+        'GET', 'https://cloudresourcemanager.googleapis.com/v1/projects', parameters);
   }
 
   /**
@@ -393,7 +397,8 @@ export class RestApiClient {
   updateProjectBillingInfo(projectId: string, projectBillingInfo: ProjectBillingInfo):
       Promise<ProjectBillingInfo> {
     return this.fetchAuthenticated(
-        'PUT', `https://cloudbilling.googleapis.com/v1/projects/${projectId}/billingInfo`, null, JSON.stringify(projectBillingInfo));
+        'PUT', `https://cloudbilling.googleapis.com/v1/projects/${projectId}/billingInfo`, null,
+        JSON.stringify(projectBillingInfo));
   }
 
   /**
@@ -402,8 +407,7 @@ export class RestApiClient {
    * @see https://cloud.google.com/billing/docs/reference/rest/v1/billingAccounts/list
    */
   listBillingAccounts(): Promise<ListBillingAccountsResponse> {
-    return this.fetchAuthenticated(
-        'GET', `https://cloudbilling.googleapis.com/v1/billingAccounts`);
+    return this.fetchAuthenticated('GET', `https://cloudbilling.googleapis.com/v1/billingAccounts`);
   }
 
   /**
@@ -450,8 +454,7 @@ export class RestApiClient {
    */
   getUserInfo(): Promise<UserInfo> {
     const parameters = new Map<string, string>([['access_token', this.accessToken]]);
-    return this.fetchAuthenticated(
-        'POST', 'https://openidconnect.googleapis.com/v1/userinfo');
+    return this.fetchAuthenticated('POST', 'https://openidconnect.googleapis.com/v1/userinfo');
   }
 
   private async refreshGcpAccessToken(refreshToken: string): Promise<string> {
