@@ -48,7 +48,10 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
 }
 
 export class FakeGcpAccount implements gcp.Account {
-  constructor(private refreshToken = 'fake-access-token') {}
+  constructor(
+      private refreshToken = 'fake-access-token',
+      private billingAccounts: gcp.BillingAccount[] = [],
+      private locations: gcp.RegionMap = {}) {}
 
   getId() {
     return 'id';
@@ -62,20 +65,20 @@ export class FakeGcpAccount implements gcp.Account {
   createServer(projectId: string, name: string, zoneId: string): Promise<server.ManagedServer> {
     return undefined;
   }
-  listLocations(projectId: string): Promise<Readonly<gcp.RegionMap>> {
-    return undefined;
+  async listLocations(projectId: string): Promise<Readonly<gcp.RegionMap>> {
+    return this.locations;
   }
-  listServers(projectId: string): Promise<server.ManagedServer[]> {
-    return undefined;
+  async listServers(projectId: string): Promise<server.ManagedServer[]> {
+    return [];
   }
   createProject(id: string, billingAccountId: string): Promise<gcp.Project> {
     return undefined;
   }
-  listBillingAccounts(): Promise<gcp.BillingAccount[]> {
-    return undefined;
+  async listBillingAccounts(): Promise<gcp.BillingAccount[]> {
+    return this.billingAccounts;
   }
-  listProjects(): Promise<gcp.Project[]> {
-    return undefined;
+  async listProjects(): Promise<gcp.Project[]> {
+    return [];
   }
 }
 

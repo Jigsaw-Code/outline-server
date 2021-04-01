@@ -95,7 +95,7 @@ export class GcpAccount implements gcp.Account {
 
   /** @see {@link Account#listProjects}. */
   async listProjects(): Promise<Project[]> {
-    const response = await this.apiClient.listProjects();
+    const response = await this.apiClient.listActiveOutlineProjects();
     if (response.projects?.length > 0) {
       return response.projects.map(project => {
         return {

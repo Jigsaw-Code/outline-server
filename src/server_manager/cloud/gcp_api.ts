@@ -402,7 +402,7 @@ export class RestApiClient {
    *
    * @see https://cloud.google.com/resource-manager/reference/rest/v1/projects/list
    */
-  listProjects(): Promise<ListProjectsResponse> {
+  listActiveOutlineProjects(): Promise<ListProjectsResponse> {
     const parameters = new Map<string, string>([
       ['filter', 'labels.outline=true AND lifecycleState=ACTIVE'],
     ]);

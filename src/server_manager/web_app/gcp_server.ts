@@ -42,7 +42,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
       id: string, private projectId: string, private instance: gcp_api.Instance,
       private apiClient: gcp_api.RestApiClient) {
     super(id);
-    this.gcpHost = new GcpHost(projectId, instance, apiClient);
+    this.gcpHost = new GcpHost(projectId, instance, apiClient, this.onDelete.bind(this));
   }
 
   getHost(): ManagedServerHost {
@@ -104,16 +104,23 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     }
     return result;
   }
+
+  private onDelete() {
+    // TODO: Consider setInstallState.
+    this.installState = InstallState.DELETED;
+  }
 }
 
+// TODO: GcpHost seems unnecessary – reconsider.
 class GcpHost implements server.ManagedServerHost {
   constructor(
       private projectId: string, private instance: gcp_api.Instance,
-      private apiClient: gcp_api.RestApiClient) {}
+      private apiClient: gcp_api.RestApiClient, private deleteCallback: Function) {}
 
   async delete(): Promise<void> {
     const zoneId = this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
     await this.apiClient.deleteInstance(this.projectId, this.instance.id, zoneId);
+    this.deleteCallback();
   }
 
   getHostId(): string {
