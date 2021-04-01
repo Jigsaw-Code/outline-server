@@ -37,7 +37,6 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   private readonly gcpHost: GcpHost;
   private installState: InstallState = InstallState.UNKNOWN;
 
-  // TODO: Consider passing the refreshToken instead of the client.
   constructor(
       id: string, private projectId: string, private instance: gcp_api.Instance,
       private apiClient: gcp_api.RestApiClient) {
@@ -112,6 +111,7 @@ class GcpHost implements server.ManagedServerHost {
       private apiClient: gcp_api.RestApiClient) {}
 
   async delete(): Promise<void> {
+    // TODO: Clean up resources (storage, IP, etc).
     await this.apiClient.deleteInstance(this.projectId, this.instance.id, this.instance.zone);
   }
 
