@@ -32,7 +32,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('Can create new access keys', (done) => {
     const repo = new RepoBuilder().build();
-    repo.createNewAccessKey().then((accessKey) => {
+    repo.createNewStaticAccessKey().then((accessKey) => {
       expect(accessKey).toBeDefined();
       done();
     });
@@ -40,14 +40,14 @@ describe('ServerAccessKeyRepository', () => {
 
   it('Creates access keys under limit', async (done) => {
     const repo = new RepoBuilder().build();
-    const accessKey = await repo.createNewAccessKey();
+    const accessKey = await repo.createNewStaticAccessKey();
     expect(accessKey.isOverDataLimit).toBeFalsy();
     done();
   });
 
   it('Can remove access keys', (done) => {
     const repo = new RepoBuilder().build();
-    repo.createNewAccessKey().then((accessKey) => {
+    repo.createNewStaticAccessKey().then((accessKey) => {
       expect(countAccessKeys(repo)).toEqual(1);
       expect(repo.removeAccessKey.bind(repo, accessKey.id)).not.toThrow();
       expect(countAccessKeys(repo)).toEqual(0);
@@ -57,7 +57,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('removeAccessKey throws for missing keys', (done) => {
     const repo = new RepoBuilder().build();
-    repo.createNewAccessKey().then((accessKey) => {
+    repo.createNewStaticAccessKey().then((accessKey) => {
       expect(countAccessKeys(repo)).toEqual(1);
       expect(repo.removeAccessKey.bind(repo, 'badId')).toThrowError(errors.AccessKeyNotFound);
       expect(countAccessKeys(repo)).toEqual(1);
@@ -67,7 +67,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('Can rename access keys', (done) => {
     const repo = new RepoBuilder().build();
-    repo.createNewAccessKey().then((accessKey) => {
+    repo.createNewStaticAccessKey().then((accessKey) => {
       const NEW_NAME = 'newName';
       expect(repo.renameAccessKey.bind(repo, accessKey.id, NEW_NAME)).not.toThrow();
       // List keys again and expect to see the NEW_NAME.
@@ -79,7 +79,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('renameAccessKey throws for missing keys', (done) => {
     const repo = new RepoBuilder().build();
-    repo.createNewAccessKey().then((accessKey) => {
+    repo.createNewStaticAccessKey().then((accessKey) => {
       const NEW_NAME = 'newName';
       expect(repo.renameAccessKey.bind(repo, 'badId', NEW_NAME))
           .toThrowError(errors.AccessKeyNotFound);
@@ -94,7 +94,7 @@ describe('ServerAccessKeyRepository', () => {
     const portProvider = new PortProvider();
     const port = await portProvider.reserveNewPort();
     const repo = new RepoBuilder().port(port).build();
-    const key = await repo.createNewAccessKey();
+    const key = await repo.createNewStaticAccessKey();
     expect(key.proxyParams.portNumber).toEqual(port);
     done();
   });
@@ -104,7 +104,7 @@ describe('ServerAccessKeyRepository', () => {
     const port = await portProvider.reserveNewPort();
     const repo = new RepoBuilder().build();
     await repo.setPortForNewAccessKeys(port);
-    const key = await repo.createNewAccessKey();
+    const key = await repo.createNewStaticAccessKey();
     expect(key.proxyParams.portNumber).toEqual(port);
     done();
   });
@@ -113,7 +113,7 @@ describe('ServerAccessKeyRepository', () => {
     const portProvider = new PortProvider();
     const oldPort = await portProvider.reserveNewPort();
     const repo = new RepoBuilder().port(oldPort).build();
-    const oldKey = await repo.createNewAccessKey();
+    const oldKey = await repo.createNewStaticAccessKey();
 
     const newPort = await portProvider.reserveNewPort();
     await repo.setPortForNewAccessKeys(newPort);
@@ -153,7 +153,7 @@ describe('ServerAccessKeyRepository', () => {
     const portProvider = new PortProvider();
     const oldPort = await portProvider.reserveNewPort();
     const repo = new RepoBuilder().port(oldPort).build();
-    await repo.createNewAccessKey();
+    await repo.createNewStaticAccessKey();
 
     await expectNoAsyncThrow(portProvider.reserveNewPort.bind(portProvider));
     // simulate the first key's connection on its port
@@ -164,12 +164,12 @@ describe('ServerAccessKeyRepository', () => {
       done();
     });
   });
-  
+
   it('setAccessKeyDataLimit can set a custom data limit', async(done) => {
     const server = new FakeShadowsocksServer();
     const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
     const repo = new RepoBuilder().shadowsocksServer(server).keyConfig(config).build();
-    const key = await repo.createNewAccessKey();
+    const key = await repo.createNewStaticAccessKey();
     const limit = {bytes: 5000};
     await expectNoAsyncThrow(repo.setAccessKeyDataLimit.bind(repo, key.id, {bytes: 5000}));
     expect(key.dataLimit).toEqual(limit);
@@ -188,10 +188,10 @@ describe('ServerAccessKeyRepository', () => {
   it('setAccessKeyDataLimit can change a key\'s limit status', async(done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500});
-    const repo = 
-      new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
+    const repo =
+        new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
     await repo.start(new ManualClock());
-    const key = await repo.createNewAccessKey();
+    const key = await repo.createNewStaticAccessKey();
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 0});
 
     expect(key.isOverDataLimit).toBeTruthy();
@@ -206,15 +206,15 @@ describe('ServerAccessKeyRepository', () => {
     expect(serverKeys[0].id).toEqual(key.id);
     done();
   });
-  
+
   it('setAccessKeyDataLimit overrides default data limit', async(done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 750, '1': 1250});
-    const repo = 
-      new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();  
+    const repo =
+        new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
     await repo.start(new ManualClock());
-    const lowerLimitThanDefault = await repo.createNewAccessKey();
-    const higherLimitThanDefault = await repo.createNewAccessKey();
+    const lowerLimitThanDefault = await repo.createNewStaticAccessKey();
+    const higherLimitThanDefault = await repo.createNewStaticAccessKey();
     await repo.setDefaultDataLimit({bytes: 1000});
 
     expect(lowerLimitThanDefault.isOverDataLimit).toBeFalsy();
@@ -231,7 +231,7 @@ describe('ServerAccessKeyRepository', () => {
     const server = new FakeShadowsocksServer();
     const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
     const repo = new RepoBuilder().shadowsocksServer(server).keyConfig(config).build();
-    const key = await repo.createNewAccessKey();
+    const key = await repo.createNewStaticAccessKey();
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 1});
     await expectNoAsyncThrow(repo.removeAccessKeyDataLimit.bind(repo, key.id));
     expect(key.dataLimit).toBeFalsy();
@@ -244,7 +244,7 @@ describe('ServerAccessKeyRepository', () => {
     const prometheusClient = new FakePrometheusClient({'0': 500});
     const repo =
         new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
-    const key = await repo.createNewAccessKey();
+    const key = await repo.createNewStaticAccessKey();
     await repo.start(new ManualClock());
     await repo.setDefaultDataLimit({bytes: 0});
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 1000});
@@ -261,7 +261,7 @@ describe('ServerAccessKeyRepository', () => {
     const repo =
         new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
     await repo.start(new ManualClock());
-    const key = await repo.createNewAccessKey();
+    const key = await repo.createNewStaticAccessKey();
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 0});
 
     expect(key.isOverDataLimit).toBeTruthy();
@@ -283,8 +283,8 @@ describe('ServerAccessKeyRepository', () => {
     const repo =
         new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
     await repo.start(new ManualClock());
-    const lowerLimitThanDefault = await repo.createNewAccessKey();
-    const higherLimitThanDefault = await repo.createNewAccessKey();
+    const lowerLimitThanDefault = await repo.createNewStaticAccessKey();
+    const higherLimitThanDefault = await repo.createNewStaticAccessKey();
     await repo.setDefaultDataLimit({bytes: 1000});
 
     expect(lowerLimitThanDefault.isOverDataLimit).toBeFalsy();
@@ -308,7 +308,7 @@ describe('ServerAccessKeyRepository', () => {
     const server = new FakeShadowsocksServer();
     const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
     const repo = new RepoBuilder().shadowsocksServer(server).keyConfig(config).build();
-    const key = await repo.createNewAccessKey();
+    const key = await repo.createNewStaticAccessKey();
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 1});
     await expectNoAsyncThrow(repo.removeAccessKeyDataLimit.bind(repo, key.id));
     expect(key.dataLimit).toBeFalsy();
@@ -321,7 +321,7 @@ describe('ServerAccessKeyRepository', () => {
     const prometheusClient = new FakePrometheusClient({'0': 500});
     const repo =
         new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
-    const key = await repo.createNewAccessKey();
+    const key = await repo.createNewStaticAccessKey();
     await repo.start(new ManualClock());
     await repo.setDefaultDataLimit({bytes: 0});
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 1000});
@@ -335,9 +335,9 @@ describe('ServerAccessKeyRepository', () => {
   it('removeAccessKeyDataLimit can restore an over-limit access key', async(done) => {
     const server = new FakeShadowsocksServer();
     const prometheusClient = new FakePrometheusClient({'0': 500});
-    const repo = 
-      new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
-    const key = await repo.createNewAccessKey();
+    const repo =
+        new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
+    const key = await repo.createNewStaticAccessKey();
     await repo.start(new ManualClock());
 
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 0});
@@ -349,7 +349,7 @@ describe('ServerAccessKeyRepository', () => {
     expect(server.getAccessKeys().length).toEqual(1);
     done();
   });
-  
+
   it('can set default data limit', async (done) => {
     const repo = new RepoBuilder().build();
     const limit = {bytes: 5000};
@@ -363,8 +363,8 @@ describe('ServerAccessKeyRepository', () => {
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 200});
     const repo =
         new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
-    const accessKey1 = await repo.createNewAccessKey();
-    const accessKey2 = await repo.createNewAccessKey();
+    const accessKey1 = await repo.createNewStaticAccessKey();
+    const accessKey2 = await repo.createNewStaticAccessKey();
     await repo.start(new ManualClock());
 
     repo.setDefaultDataLimit({bytes: 250});
@@ -409,8 +409,8 @@ describe('ServerAccessKeyRepository', () => {
                      .defaultDataLimit({bytes: 200})
                      .build();
 
-    const accessKey1 = await repo.createNewAccessKey();
-    const accessKey2 = await repo.createNewAccessKey();
+    const accessKey1 = await repo.createNewStaticAccessKey();
+    const accessKey2 = await repo.createNewStaticAccessKey();
     await repo.start(new ManualClock());
     expect(server.getAccessKeys().length).toEqual(1);
 
@@ -432,7 +432,7 @@ describe('ServerAccessKeyRepository', () => {
     const repo =
         new RepoBuilder().prometheusClient(prometheusClient).defaultDataLimit(limit).build();
     for (let i = 0; i < Object.keys(prometheusClient.bytesTransferredById).length; ++i) {
-      await repo.createNewAccessKey();
+      await repo.createNewStaticAccessKey();
     }
     await repo.enforceAccessKeyDataLimits();
     for (const key of repo.listAccessKeys()) {
@@ -454,8 +454,8 @@ describe('ServerAccessKeyRepository', () => {
     const prometheusClient = new FakePrometheusClient({'0': 200, '1': 300});
     const repo =
         new RepoBuilder().prometheusClient(prometheusClient).defaultDataLimit({bytes: 500}).build();
-    const perKeyLimited = await repo.createNewAccessKey();
-    const defaultLimited = await repo.createNewAccessKey();
+    const perKeyLimited = await repo.createNewStaticAccessKey();
+    const defaultLimited = await repo.createNewStaticAccessKey();
     await setKeyLimitAndEnforce(repo, perKeyLimited.id, {bytes: 100});
 
     await repo.enforceAccessKeyDataLimits();
@@ -480,8 +480,8 @@ describe('ServerAccessKeyRepository', () => {
                      .defaultDataLimit({bytes: 200})
                      .build();
 
-    const accessKey1 = await repo.createNewAccessKey();
-    const accessKey2 = await repo.createNewAccessKey();
+    const accessKey1 = await repo.createNewStaticAccessKey();
+    const accessKey2 = await repo.createNewStaticAccessKey();
 
     await repo.enforceAccessKeyDataLimits();
     const accessKeys = await repo.listAccessKeys();
@@ -500,7 +500,7 @@ describe('ServerAccessKeyRepository', () => {
     const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
     const repo1 = new RepoBuilder().keyConfig(config).build();
     // Create 2 new access keys
-    await Promise.all([repo1.createNewAccessKey(), repo1.createNewAccessKey()]);
+    await Promise.all([repo1.createNewStaticAccessKey(), repo1.createNewStaticAccessKey()]);
     // Modify properties
     repo1.renameAccessKey('1', 'name');
 
@@ -516,13 +516,13 @@ describe('ServerAccessKeyRepository', () => {
     const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
     // Create a repo with 1 access key, then delete that access key.
     const repo1 = new RepoBuilder().keyConfig(config).build();
-    repo1.createNewAccessKey().then((accessKey1) => {
+    repo1.createNewStaticAccessKey().then((accessKey1) => {
       repo1.removeAccessKey(accessKey1.id);
 
       // Create a 2nd repo with one access key, and verify that
       // it hasn't reused the first access key's ID.
       const repo2 = new RepoBuilder().keyConfig(config).build();
-      repo2.createNewAccessKey().then((accessKey2) => {
+      repo2.createNewStaticAccessKey().then((accessKey2) => {
         expect(accessKey1.id).not.toEqual(accessKey2.id);
         done();
       });
@@ -533,8 +533,8 @@ describe('ServerAccessKeyRepository', () => {
     const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
     const repo = new RepoBuilder().keyConfig(config).build();
 
-    const accessKey1 = await repo.createNewAccessKey();
-    const accessKey2 = await repo.createNewAccessKey();
+    const accessKey1 = await repo.createNewStaticAccessKey();
+    const accessKey2 = await repo.createNewStaticAccessKey();
     // Create a new repository with the same configuration. The keys should not be exposed to the
     // server until `start` is called.
     const server = new FakeShadowsocksServer();
@@ -553,9 +553,9 @@ describe('ServerAccessKeyRepository', () => {
     const prometheusClient = new FakePrometheusClient({'0': 500, '1': 200, '2': 400});
     const repo =
         new RepoBuilder().prometheusClient(prometheusClient).shadowsocksServer(server).build();
-    const accessKey1 = await repo.createNewAccessKey();
-    const accessKey2 = await repo.createNewAccessKey();
-    const accessKey3 = await repo.createNewAccessKey();
+    const accessKey1 = await repo.createNewStaticAccessKey();
+    const accessKey2 = await repo.createNewStaticAccessKey();
+    const accessKey3 = await repo.createNewStaticAccessKey();
     await repo.setDefaultDataLimit({bytes: 300});
     const clock = new ManualClock();
     await repo.start(clock);
@@ -585,7 +585,7 @@ describe('ServerAccessKeyRepository', () => {
     const newHostname = 'host2';
     const repo = new RepoBuilder().build();
     repo.setHostname(newHostname);
-    const key = await repo.createNewAccessKey();
+    const key = await repo.createNewStaticAccessKey();
     expect(key.proxyParams.hostname).toEqual(newHostname);
     done();
   });

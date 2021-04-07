@@ -108,6 +108,14 @@ export function bindService(
   apiServer.del(
       `${apiPrefix}/experimental/access-key-data-limit`,
       redirect(`${apiPrefix}/server/access-key-data-limit`));
+
+  // Dynamic, single-user keys
+  apiServer.put(`${apiPrefix}/experimental/dynamic-key`, service.createDynamicKey.bind(service));
+  // Since GET on a resource should be idempotent, we use an in-path token instead of request bodies
+  apiServer.post(
+      `${apiPrefix}/experimental/dynamic-key/:token`, service.updateDynamicKey.bind(service));
+  apiServer.get(
+      `${apiPrefix}/experimental/dynamic-key/:token`, service.getDynamicKey.bind(service));
 }
 
 // Returns a request handler that redirects a bound request path to `url` with HTTP status code 308.
@@ -139,6 +147,17 @@ function validateDataLimit(limit: unknown): DataLimit {
         {statusCode: 400}, '`limit.bytes` must be an non-negative integer');
   }
   return limit as DataLimit;
+}
+
+function validateDynamicKeyToken(token: unknown): string {
+  if (!token) {
+    throw new restifyErrors.MissingParameterError(
+        {statusCode: 400}, 'Parameter `token` is missing');
+  }
+  if (typeof token !== 'string') {
+    throw new restifyErrors.InvalidArgumentError(`Token should be a string.  Got ${token}`);
+  }
+  return token;
 }
 
 // The ShadowsocksManagerService manages the access keys that can use the server
@@ -228,7 +247,7 @@ export class ShadowsocksManagerService {
   public createNewAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
     try {
       logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
-      this.accessKeys.createNewAccessKey().then((accessKey) => {
+      this.accessKeys.createNewStaticAccessKey().then((accessKey) => {
         const accessKeyJson = accessKeyToApiJson(accessKey);
         res.send(201, accessKeyJson);
         logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);
@@ -237,6 +256,63 @@ export class ShadowsocksManagerService {
     } catch (error) {
       logging.error(error);
       return next(new restifyErrors.InternalServerError());
+    }
+  }
+
+  /**
+   * Creates a new dynamic key and responds with the new token mapping to the key.
+   */
+  public async createDynamicKey(req: RequestType, res: ResponseType, next: restify.Next):
+      Promise<void> {
+    logging.debug(`createDynamicKey request ${JSON.stringify(req.params)}`);
+    try {
+      const token = await this.accessKeys.createDynamicKey();
+      res.send(201, {token});
+    } catch (error) {
+      logging.error(error);
+      return next(new restifyErrors.InternalServerError());
+    }
+    return next();
+  }
+
+  /**
+   * Rotates the key mapped to by the provided token and responds with the new key.
+   */
+  public async updateDynamicKey(req: RequestType, res: ResponseType, next: restify.Next):
+      Promise<void> {
+    logging.debug(`getDynamicKey request ${JSON.stringify(req.params)}`);
+    let token = req.params.token;
+    try {
+      token = validateDynamicKeyToken(req.params.token);
+      const key = await this.accessKeys.updateDynamicKey(token as string);
+      res.send(HttpSuccess.OK, accessKeyToApiJson(key));
+    } catch (error) {
+      if (error instanceof errors.AccessKeyNotFound) {
+        return next(new restifyErrors.NotFoundError(
+            `No key associated with given token ${token as string}`));
+      }
+      return next(error);
+    }
+  }
+
+  /**
+   * Retrieves the key mapped to by the given token.  This is the endpoint hit by the client when
+   * connecting to the proxy.
+   */
+  public async getDynamicKey(req: RequestType, res: ResponseType, next: restify.Next):
+      Promise<void> {
+    logging.debug(`getDynamicKey request ${JSON.stringify(req.params)}`);
+    let token = req.params.token;
+    try {
+      token = validateDynamicKeyToken(req.params.token);
+      const key = await this.accessKeys.getDynamicKey(token as string);
+      res.send(HttpSuccess.OK, accessKeyToApiJson(key));
+    } catch (error) {
+      if (error instanceof errors.AccessKeyNotFound) {
+        return next(new restifyErrors.NotFoundError(
+            `No key associated with given token ${token as string}`));
+      }
+      return next(error);
     }
   }
 

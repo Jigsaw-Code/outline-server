@@ -32,6 +32,7 @@ export interface DataLimit {
   readonly bytes: number;
 }
 
+// TODOBEFOREMERGE we should rename this to AccessConfig or something like that
 // AccessKey is what admins work with. It gives ProxyParams a name and identity.
 export interface AccessKey {
   // The unique identifier for this access key.
@@ -48,9 +49,19 @@ export interface AccessKey {
   readonly dataLimit?: DataLimit;
 }
 
+export type Token = string;
+
 export interface AccessKeyRepository {
+  // Creates a new dynamic key
+  createDynamicKey(token?: Token|undefined): Promise<Token>;
+  // Rotates the dynamic key mapped to the given token.  Rejects if no key exists for the given
+  // token.
+  updateDynamicKey(token: Token): Promise<AccessKey>;
+  // Retrieves the config for a dynamic key.  Returns undefined if no key exists for the given
+  // token.
+  getDynamicKey(token: Token): AccessKey|undefined;
   // Creates a new access key. Parameters are chosen automatically.
-  createNewAccessKey(): Promise<AccessKey>;
+  createNewStaticAccessKey(): Promise<AccessKey>;
   // Removes the access key given its id. Throws on failure.
   removeAccessKey(id: AccessKeyId);
   // Lists all existing access keys

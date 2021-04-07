@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {access} from 'fs';
 import * as randomstring from 'randomstring';
 import * as uuidv4 from 'uuid/v4';
 
@@ -20,7 +21,7 @@ import {isPortUsed} from '../infrastructure/get_port';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
-import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyRepository, DataLimit, ProxyParams} from '../model/access_key';
+import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyRepository, DataLimit, ProxyParams, Token} from '../model/access_key';
 import * as errors from '../model/errors';
 import {ShadowsocksServer} from '../model/shadowsocks_server';
 import {PrometheusManagerMetrics} from './manager_metrics';
@@ -36,8 +37,13 @@ interface AccessKeyStorageJson {
   dataLimit?: DataLimit;
 }
 
+interface DynamicKeyMap {
+  [token: string]: AccessKeyId;
+}
+
 // The configuration file format as json.
 export interface AccessKeyConfigJson {
+  dynamicKeyMap?: DynamicKeyMap;
   accessKeys?: AccessKeyStorageJson[];
   // Next AccessKeyId to use.
   nextId?: number;
@@ -86,6 +92,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   private static DATA_LIMITS_ENFORCEMENT_INTERVAL_MS = 60 * 60 * 1000;  // 1h
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
   private accessKeys: ServerAccessKey[];
+  private dynamicKeys: DynamicKeyMap = {};
 
   constructor(
       private portForNewAccessKeys: number, private proxyHostname: string,
@@ -137,7 +144,11 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.portForNewAccessKeys = port;
   }
 
-  async createNewAccessKey(): Promise<AccessKey> {
+  private createToken(): Token {
+    return uuidv4();
+  }
+
+  private createAccessConfig(): AccessKey {
     const id = this.keyConfig.data().nextId.toString();
     this.keyConfig.data().nextId += 1;
     const metricsId = uuidv4();
@@ -149,9 +160,37 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       password,
     };
     const accessKey = new ServerAccessKey(id, '', metricsId, proxyParams);
+    return accessKey;
+  }
+
+  private async addAccessKeyToServer(accessKey: AccessKey): Promise<void> {
     this.accessKeys.push(accessKey);
     this.saveAccessKeys();
     await this.updateServer();
+  }
+
+  async createDynamicKey(): Promise<Token> {
+    const accessKey = this.createAccessConfig();
+    const token = this.createToken();
+    this.dynamicKeys[token] = accessKey.id;
+    await this.addAccessKeyToServer(accessKey);
+    return token;
+  }
+
+  async updateDynamicKey(token: Token): Promise<AccessKey> {
+    const accessKey = this.createAccessConfig();
+    this.dynamicKeys[token] = accessKey.id;
+    await this.addAccessKeyToServer(accessKey);
+    return accessKey;
+  }
+
+  getDynamicKey(token: Token): AccessKey|undefined {
+    return this.getAccessKey(this.dynamicKeys[token]);
+  }
+
+  async createNewStaticAccessKey(): Promise<AccessKey> {
+    const accessKey = this.createAccessConfig();
+    await this.addAccessKeyToServer(accessKey);
     return accessKey;
   }
 
@@ -244,11 +283,15 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private loadAccessKeys(): AccessKey[] {
+    // TODO do we need a copy here?
+    this.dynamicKeys = {...this.keyConfig.data().dynamicKeyMap};
     return this.keyConfig.data().accessKeys.map(key => makeAccessKey(this.proxyHostname, key));
   }
 
   private saveAccessKeys() {
     this.keyConfig.data().accessKeys = this.accessKeys.map(key => accessKeyToStorageJson(key));
+    // TODO do we need to do a copy here?
+    this.keyConfig.data().dynamicKeyMap = {...this.dynamicKeys};
     this.keyConfig.write();
   }
 
