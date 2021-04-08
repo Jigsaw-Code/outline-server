@@ -27,6 +27,7 @@ import {GcpServer} from './gcp_server';
 export class GcpAccount implements gcp.Account {
   private static readonly OUTLINE_FIREWALL_NAME = 'outline';
   private static readonly MACHINE_SIZE = 'f1-micro';
+  private static readonly REQUIRED_GCP_SERVICES = ['compute.googleapis.com'];
 
   private readonly apiClient: gcp_api.RestApiClient;
 
@@ -61,6 +62,7 @@ export class GcpAccount implements gcp.Account {
   async listServers(projectId: string): Promise<server.ManagedServer[]> {
     const result: GcpServer[] = [];
 
+    // TODO: List instances in parallel
     const listZonesResponse = await this.apiClient.listZones(projectId);
     for (const zone of listZonesResponse.items) {
       const listInstancesResponseForZone = await this.apiClient.listInstances(projectId, zone.name);
@@ -85,8 +87,7 @@ export class GcpAccount implements gcp.Account {
       if (!(region in result)) {
         result[region] = [];
       }
-      // TODO: Check status
-      if (zone.status) {
+      if (zone.status === 'UP') {
         result[region].push(zone.name);
       }
     });
@@ -107,36 +108,49 @@ export class GcpAccount implements gcp.Account {
     return [];
   }
 
-  // TODO: Add API call error handling.
   /** @see {@link Account#createProject}. */
-  async createProject(id: string, billingAccountId: string): Promise<Project> {
+  async createProject(projectId: string, billingAccountId: string): Promise<Project> {
     // Create GCP project
     const projectName = 'Outline servers';
-    const createProjectResponse = await this.apiClient.createProject(id, projectName);
+    const createProjectResponse = await this.apiClient.createProject(projectId, projectName);
     let createProjectOperation = null;
     while (!createProjectOperation?.done) {
       await sleep(2 * 1000);
       createProjectOperation =
           await this.apiClient.resourceManagerOperationGet(createProjectResponse.name);
     }
-
-    // Link billing account
-    await this.apiClient.updateProjectBillingInfo(id, billingAccountId);
-
-    // Enable APIs
-    const services = ['compute.googleapis.com'];
-    const enableServicesResponse = await this.apiClient.enableServices(id, services);
-    let enableServicesOperation = null;
-    while (!enableServicesOperation?.done) {
-      await sleep(2 * 1000);
-      enableServicesOperation =
-          await this.apiClient.serviceUsageOperationGet(enableServicesResponse.name);
+    if (createProjectOperation.error) {
+      // TODO: Throw error. The project wasn't created so we should have nothing to delete.
     }
 
+    await this.configureProject(projectId, billingAccountId);
+
     return {
-      id,
+      id: projectId,
       name: projectName,
     };
+  }
+
+  async isProjectHealthy(projectId: string): Promise<boolean> {
+    const projectBillingInfo = await this.apiClient.getProjectBillingInfo(projectId);
+    if (!projectBillingInfo.billingEnabled) {
+      return false;
+    }
+
+    const listEnabledServicesResponse = await this.apiClient.listEnabledServices(projectId);
+    for (const requiredService of GcpAccount.REQUIRED_GCP_SERVICES) {
+      const found = listEnabledServicesResponse.services.find(
+          service => service.config.name === requiredService);
+      if (!found) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  async repairProject(projectId: string, billingAccountId: string): Promise<void> {
+    return await this.configureProject(projectId, billingAccountId);
   }
 
   /** @see {@link Account#listBillingAccounts}. */
@@ -158,10 +172,13 @@ export class GcpAccount implements gcp.Account {
     // Configure Outline firewall
     const getFirewallResponse =
         await this.apiClient.listFirewalls(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
+    let createFirewallOperation = null;
     if (!getFirewallResponse?.items || getFirewallResponse?.items?.length === 0) {
-      const createFirewallOp =
-          await this.apiClient.createFirewall(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
-      await this.apiClient.computeEngineOperationGlobalWait(projectId, createFirewallOp.name);
+      createFirewallOperation = await this.apiClient.createFirewall(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
+      createFirewallOperation = await this.apiClient.computeEngineOperationGlobalWait(projectId, createFirewallOperation.name);
+      if (createFirewallOperation.error?.errors) {
+        // TODO: Throw error.
+      }
     }
 
     // Create VM instance
@@ -170,13 +187,40 @@ export class GcpAccount implements gcp.Account {
         projectId, name, zoneId, GcpAccount.MACHINE_SIZE, installScript);
     const createInstanceWait = await this.apiClient.computeEngineOperationZoneWait(
         projectId, zoneId, createInstanceOp.name);
-    return await this.apiClient.getInstance(projectId, createInstanceWait.targetId, zoneId);
+    if (createInstanceWait.error?.errors) {
+      // TODO: Throw error.
+    }
 
-    // TODO: Promote ephemeral IP to static IP
-    // const staticIpName = `${name}-ip`;
-    // const createStaticIpOp = await this.gcpRestApiClient.createStaticIp(staticIpName, regionId,
-    // instance.ip_address); await this.gcpRestApiClient.regionWait(regionId,
-    // createStaticIpOp.name);
+    const instance = await this.apiClient.getInstance(projectId, createInstanceWait.targetId, zoneId);
+    console.log('instance', instance);
+
+    // Promote ephemeral IP to static IP
+    const regionId = zoneId.substring(0, zoneId.lastIndexOf('-'));
+    const ipAddress = instance.networkInterfaces[0].accessConfigs[0].natIP;
+    let createStaticIpOperation = await this.apiClient.createStaticIp(projectId, name, regionId, ipAddress);
+    createStaticIpOperation = await this.apiClient.computeEngineOperationRegionWait(projectId, regionId, createStaticIpOperation.name);
+    if (createStaticIpOperation.error?.errors) {
+      // TODO: Delete VM instance. Throw error.
+    }
+
+    return instance;
+  }
+
+  private async configureProject(projectId: string, billingAccountId: string): Promise<void> {
+    // Link billing account
+    await this.apiClient.updateProjectBillingInfo(projectId, billingAccountId);
+
+    // Enable APIs
+    const enableServicesResponse = await this.apiClient.enableServices(projectId, GcpAccount.REQUIRED_GCP_SERVICES);
+    let enableServicesOperation = null;
+    while (!enableServicesOperation?.done) {
+      await sleep(2 * 1000);
+      enableServicesOperation =
+          await this.apiClient.serviceUsageOperationGet(enableServicesResponse.name);
+    }
+    if (enableServicesResponse.error) {
+      // TODO: Throw error.
+    }
   }
 
   private getInstallScript(): string {

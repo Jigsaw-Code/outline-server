@@ -37,7 +37,6 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   private readonly gcpHost: GcpHost;
   private installState: InstallState = InstallState.UNKNOWN;
 
-  // TODO: Consider passing the refreshToken instead of the client.
   constructor(
       id: string, private projectId: string, private instance: gcp_api.Instance,
       private apiClient: gcp_api.RestApiClient) {
@@ -61,7 +60,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
       if (outlineGuestAttributes.has('apiUrl') && outlineGuestAttributes.has('certSha256')) {
         const certSha256 = outlineGuestAttributes.get('certSha256');
         const apiUrl = outlineGuestAttributes.get('apiUrl');
-        trustCertificate(btoa(certSha256));
+        trustCertificate(certSha256);
         this.setManagementApiUrl(apiUrl);
         this.installState = InstallState.SUCCESS;
       } else if (outlineGuestAttributes.has('install-error')) {
@@ -80,28 +79,10 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     const result = new Map<string, string>();
     const guestAttributes =
         await this.apiClient.getGuestAttributes(projectId, instanceId, zone, 'outline/');
-    const attributes = guestAttributes?.queryValue?.items;
-    if (attributes) {
-      const apiUrlAttr = attributes.find((attribute) => {
-        return attribute.key === 'apiUrl';
-      });
-      const certSha256Attr = attributes.find((attribute) => {
-        return attribute.key === 'certSha256';
-      });
-      const installErrorAttr = attributes.find((attribute) => {
-        return attribute.key === 'install-error';
-      });
-
-      if (apiUrlAttr) {
-        result.set('apiUrl', apiUrlAttr.value);
-      }
-      if (certSha256Attr) {
-        result.set('certSha256', certSha256Attr.value);
-      }
-      if (installErrorAttr) {
-        result.set('install-error', installErrorAttr.value);
-      }
-    }
+    const attributes = guestAttributes?.queryValue?.items ?? [];
+    attributes.forEach((entry) => {
+      result.set(entry.key, entry.value);
+    });
     return result;
   }
 
@@ -117,9 +98,16 @@ class GcpHost implements server.ManagedServerHost {
       private projectId: string, private instance: gcp_api.Instance,
       private apiClient: gcp_api.RestApiClient, private deleteCallback: Function) {}
 
+  // TODO: Wait for deleteInstance and deleteStaticIp to finish
   async delete(): Promise<void> {
+    // Delete VM instance
     const zoneId = this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
     await this.apiClient.deleteInstance(this.projectId, this.instance.id, zoneId);
+
+    // Delete static IP
+    const regionId = zoneId.substring(0, zoneId.lastIndexOf('-'));
+    await this.apiClient.deleteStaticIp(this.projectId, this.instance.name, regionId);
+
     this.deleteCallback();
   }
 

@@ -47,20 +47,22 @@ type Zone = Readonly<{
   region: string;
 }>;
 
+type Status = Readonly<{code: number; message: string}>;
+
+/** @see https://cloud.google.com/resource-manager/reference/rest/Shared.Types/Operation */
+export type ResourceManagerOperation = Readonly<{name: string; done: boolean; error: Status;}>;
+
 /**
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/globalOperations
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations
  */
 type ComputeEngineOperation =
-    Readonly<{id: string; name: string; targetId: string; status: string;}>;
-
-/** @see https://cloud.google.com/resource-manager/reference/rest/Shared.Types/Operation */
-export type ResourceManagerOperation = Readonly<{name: string; done: boolean;}>;
+    Readonly<{id: string; name: string; targetId: string; status: string; error: {errors: Status[]}}>;
 
 /**
  * @see https://cloud.google.com/service-usage/docs/reference/rest/Shared.Types/ListOperationsResponse#Operation
  */
-type ServiceUsageOperation = Readonly<{name: string; done: boolean;}>;
+type ServiceUsageOperation = Readonly<{name: string; done: boolean; error: Status;}>;
 
 /** @see https://cloud.google.com/resource-manager/reference/rest/v1/projects */
 export type Project =
@@ -86,12 +88,21 @@ export type ProjectBillingInfo = Readonly<
  */
 export type UserInfo = Readonly<{email: string;}>;
 
+type Service = Readonly<{
+  name: string;
+  config: {
+    name: string;
+  };
+  state: 'STATE_UNSPECIFIED' | 'DISABLED' | 'ENABLED';
+}>;
+
 type ListInstancesResponse = Readonly<{items: Instance[]; nextPageToken: string;}>;
 type ListZonesResponse = Readonly<{items: Zone[]; nextPageToken: string;}>;
 type ListProjectsResponse = Readonly<{projects: Project[]; nextPageToken: string;}>;
 type ListFirewallsResponse = Readonly<{items: Firewall[]; nextPageToken: string;}>;
 type ListBillingAccountsResponse =
     Readonly<{billingAccounts: BillingAccount[]; nextPageToken: string}>;
+type ListEnabledServicesResponse = Readonly<{services: Service[]; nextPageToken: string;}>;
 type RefreshAccessTokenResponse = Readonly<{access_token: string; expires_in: number;}>;
 
 export class HttpError extends Error {
@@ -127,9 +138,12 @@ export class RestApiClient {
    * @param size - @see https://cloud.google.com/compute/docs/machine-types.
    * @param installScript - A script to run once the instance has launched.
    */
+  // TODO: Change method signature to projectId
   createInstance(
       projectId: string, name: string, zoneId: string, size: string,
       installScript: string): Promise<ComputeEngineOperation> {
+    // Pass in the dictionary
+    // TODO: Name must be unique by zone. Use outline-<timestamp> MM-DD-YYYY-HH-MM-SS
     const data = {
       name,
       machineType: `zones/${zoneId}/machineTypes/${size}`,
@@ -146,15 +160,6 @@ export class RestApiClient {
           network: 'global/networks/default',
           // Empty accessConfigs necessary to allocate ephemeral IP
           accessConfigs: [{}],
-        },
-      ],
-      serviceAccounts: [
-        {
-          scopes: [
-            'https://www.googleapis.com/auth/userinfo.email',
-            'https://www.googleapis.com/auth/compute.readonly',
-            'https://www.googleapis.com/auth/devstorage.read_only',
-          ],
         },
       ],
       labels: {
@@ -267,15 +272,15 @@ export class RestApiClient {
    * @see https://cloud.google.com/compute/docs/reference/rest/v1/addresses/delete
    *
    * @param projectId - The GCP project ID.
-   * @param addressId - The ID of the static IP address resource.
+   * @param addressName - The name of the static IP address resource.
    * @param regionId - The GCP region of the resource.
    */
-  deleteStaticIp(projectId: string, addressId: string, regionId: string):
+  deleteStaticIp(projectId: string, addressName: string, regionId: string):
       Promise<ComputeEngineOperation> {
     return this.fetchAuthenticated(
         'DELETE',
         `https://compute.googleapis.com/compute/v1/projects/${projectId}/regions/${
-            regionId}/addresses/${addressId}`,
+            regionId}/addresses/${addressName}`,
         this.GCP_HEADERS);
   }
 
@@ -358,6 +363,18 @@ export class RestApiClient {
     return this.fetchAuthenticated(
         'GET', `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones`,
         this.GCP_HEADERS);
+  }
+
+  /**
+   * Lists all services that have been enabled on the project.
+   *
+   * @param projectId - The GCP project ID.
+   */
+  listEnabledServices(projectId: string): Promise<ListEnabledServicesResponse> {
+    const parameters = new Map<string, string>([['filter', 'state:ENABLED']]);
+    return this.fetchAuthenticated(
+        'GET', `https://serviceusage.googleapis.com/v1/projects/${projectId}/services`,
+        this.GCP_HEADERS, parameters);
   }
 
   /**
@@ -469,6 +486,24 @@ export class RestApiClient {
         'POST',
         `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
             zoneId}/operations/${operationId}/wait`,
+        this.GCP_HEADERS);
+  }
+
+  /**
+   * Waits for a specified Google Compute Engine region operation to complete.
+   *
+   * @see https://cloud.google.com/compute/docs/reference/rest/v1/regionOperations/wait
+   *
+   * @param projectId - The GCP project ID.
+   * @param regionId - The region ID.
+   * @param operationId - The operation ID.
+   */
+  computeEngineOperationRegionWait(projectId: string, regionId: string, operationId: string):
+      Promise<ComputeEngineOperation> {
+    return this.fetchAuthenticated(
+        'POST',
+        `https://compute.googleapis.com/compute/v1/projects/${projectId}/regions/${
+            regionId}/operations/${operationId}/wait`,
         this.GCP_HEADERS);
   }
 

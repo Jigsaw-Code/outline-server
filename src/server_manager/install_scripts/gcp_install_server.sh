@@ -105,7 +105,10 @@ tail -f "${ACCESS_CONFIG}" "--pid=${install_pid}" | while IFS=: read -r key valu
     certSha256)
       log_for_sentry "Writing certSha256 tag"
       echo "case certSha256: ${key}/${value}"
-      cloud::set_guest_attribute "${key}" "${value}"
+      # The value is hex(fingerprint) and Electron expects base64(fingerprint).
+      hex_fingerprint="${value}"
+      base64_fingerprint="$(echo -n "${hex_fingerprint}" | xxd -revert -p -c 255 | base64)"
+      cloud::set_guest_attribute "${key}" "${base64_fingerprint}"
       ;;
     apiUrl)
       log_for_sentry "Writing apiUrl tag"

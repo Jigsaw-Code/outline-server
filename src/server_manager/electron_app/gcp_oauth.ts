@@ -26,6 +26,7 @@ const OAUTH_CONFIG = {
     'https://www.googleapis.com/auth/cloudplatformprojects',
     'https://www.googleapis.com/auth/cloud-billing',
     'https://www.googleapis.com/auth/service.management',
+    'https://www.googleapis.com/auth/cloud-platform.read-only',
   ],
 };
 const REDIRECT_PATH = '/gcp/oauth/callback';

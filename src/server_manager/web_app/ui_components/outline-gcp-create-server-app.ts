@@ -54,7 +54,7 @@ const LOCATION_MAP = new Map<string, string>([
   ['us-west4', 'Las Vegas, Nevada, USA'],
 ]);
 
-// DigitalOcean mapping of regions to flags
+// GCP mapping of regions to flags
 const FLAG_IMAGE_DIR = 'images/flags';
 const GCP_FLAG_MAPPING: {[cityId: string]: string} = {
   'asia-east1': `${FLAG_IMAGE_DIR}/us.png`,
@@ -85,7 +85,6 @@ const GCP_FLAG_MAPPING: {[cityId: string]: string} = {
 };
 
 // TODO: Handle network and authentication errors
-
 @customElement('outline-gcp-create-server-app')
 export class GcpCreateServerApp extends LitElement {
   @property({type: Function}) localize: Function;
@@ -191,7 +190,8 @@ export class GcpCreateServerApp extends LitElement {
             <div class="container">
               <img src="images/do_oauth_billing.svg">
               <p>Enter you billing information on Google Cloud Platform</p>
-              <!-- TODO: Add call to action -->
+              <!-- TODO: Add call to action to open GCP billing accounts page -->
+              <!-- https://console.cloud.google.com/billing --> 
             </div>
           </paper-card>  
         </outline-step-view>
@@ -249,6 +249,10 @@ export class GcpCreateServerApp extends LitElement {
       </iron-pages>`;
   }
 
+  private showBillingAccountSetup(): void {
+    this.currentPage = 'billingAccountSetup';
+  }
+
   private async handleBillingVerificationNextTap(): Promise<void> {
     this.billingAccounts = await this.account.listBillingAccounts();
     if (!this.billingAccounts || this.billingAccounts.length === 0) {
@@ -258,26 +262,37 @@ export class GcpCreateServerApp extends LitElement {
     }
   }
 
+  private async showProjectSetup(): Promise<void> {
+    this.billingAccounts = await this.account.listBillingAccounts();
+    if (this.billingAccounts.length === 0) {
+      return this.showBillingAccountSetup();
+    }
+
+    this.currentPage = 'projectSetup';
+  }
+
   private isProjectSetupNextEnabled(projectId: string, billingAccountId: string): boolean {
     // TODO: Proper validation
     return projectId !== '' && billingAccountId !== '';
   }
 
   private async handleProjectSetupNextTap(): Promise<void> {
-    this.project =
-        await this.account.createProject(this.selectedProjectId, this.selectedBillingAccountId);
+    if (!this.project) {
+      this.project =
+          await this.account.createProject(this.selectedProjectId, this.selectedBillingAccountId);
+    } else {
+      await this.account.repairProject(this.project.id, this.selectedBillingAccountId);
+    }
+
     this.showRegionPicker();
   }
 
-  private showBillingAccountSetup(): void {
-    this.currentPage = 'billingAccountSetup';
-  }
-
-  private showProjectSetup(): void {
-    this.currentPage = 'projectSetup';
-  }
-
   private async showRegionPicker(): Promise<void> {
+    const isProjectHealthy = await this.account.isProjectHealthy(this.project.id);
+    if (!isProjectHealthy) {
+      return this.showProjectSetup();
+    }
+
     this.currentPage = 'regionPicker';
     const regionMap = await this.account.listLocations(this.project.id);
     const locations = Object.entries(regionMap).map(([regionId, zoneIds]) => {
@@ -290,12 +305,15 @@ export class GcpCreateServerApp extends LitElement {
     this.init();
     this.account = account;
 
+    this.billingAccounts = await this.account.listBillingAccounts();
     const projects = await this.account.listProjects();
-    if (projects && projects.length > 0) {
-      this.project = projects[0];
+    // TODO: We don't support multiple projects atm, but we will want to allow
+    //  the user to choose the appropriate one.
+    this.project = projects?.[0];
+    const isProjectHealthy = await this.account.isProjectHealthy(this.project.id);
+    if (isProjectHealthy) {
       this.showRegionPicker();
     } else {
-      this.billingAccounts = await this.account.listBillingAccounts();
       if (!this.billingAccounts || this.billingAccounts.length === 0) {
         this.showBillingAccountSetup();
       } else {
@@ -323,9 +341,10 @@ export class GcpCreateServerApp extends LitElement {
     event.stopPropagation();
 
     this.regionPicker.isServerBeingCreated = true;
-    // TODO: Make unique server name
+    const randomSuffix = Math.random().toString(20).substr(3);
+    const name = `outline-${randomSuffix}`;
     const server =
-        await this.account.createServer(this.project.id, 'outline', event.detail.selectedRegionId);
+        await this.account.createServer(this.project.id, name, event.detail.selectedRegionId);
     const params = {bubbles: true, composed: true, detail: {server}};
     const serverCreatedEvent = new CustomEvent('gcp-server-created', params);
     this.dispatchEvent(serverCreatedEvent);
@@ -334,6 +353,7 @@ export class GcpCreateServerApp extends LitElement {
   private createLocationModel(regionId: string, zoneIds: string[]): Location {
     return {
       id: zoneIds.length > 0 ? zoneIds[0] : null,
+      // TODO: Add defaults for missing flags and names
       name: LOCATION_MAP.get(regionId),
       flag: GCP_FLAG_MAPPING[regionId] || '',
       available: zoneIds.length > 0,
