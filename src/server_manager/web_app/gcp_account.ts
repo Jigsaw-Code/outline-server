@@ -207,7 +207,6 @@ export class GcpAccount implements gcp.Account {
 
     const instance =
         await this.apiClient.getInstance(projectId, createInstanceOperation.targetId, zoneId);
-    console.log('instance', instance);
 
     // Promote ephemeral IP to static IP
     const regionId = zoneId.substring(0, zoneId.lastIndexOf('-'));
