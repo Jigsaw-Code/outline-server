@@ -254,20 +254,14 @@ export class GcpCreateServerApp extends LitElement {
   }
 
   private async handleBillingVerificationNextTap(): Promise<void> {
-    this.billingAccounts = await this.account.listBillingAccounts();
-    if (!this.billingAccounts || this.billingAccounts.length === 0) {
-      // TODO: Show error
-    } else {
-      this.showProjectSetup();
-    }
+    this.showProjectSetup();
   }
 
   private async showProjectSetup(): Promise<void> {
     this.billingAccounts = await this.account.listBillingAccounts();
-    if (this.billingAccounts.length === 0) {
+    if (!this.billingAccounts || this.billingAccounts.length === 0) {
       return this.showBillingAccountSetup();
     }
-
     this.currentPage = 'projectSetup';
   }
 
@@ -341,9 +335,7 @@ export class GcpCreateServerApp extends LitElement {
     event.stopPropagation();
 
     this.regionPicker.isServerBeingCreated = true;
-    // TODO: Name must be unique by zone. Use outline-<timestamp> MM-DD-YYYY-HH-MM-SS
-    const randomSuffix = Math.random().toString(20).substr(3);
-    const name = `outline-${randomSuffix}`;
+    const name = this.makeServerName();
     const server =
         await this.account.createServer(this.project.id, name, event.detail.selectedRegionId);
     const params = {bubbles: true, composed: true, detail: {server}};
@@ -356,8 +348,13 @@ export class GcpCreateServerApp extends LitElement {
       id: zoneIds.length > 0 ? zoneIds[0] : null,
       // TODO: Add defaults for missing flags and names
       name: LOCATION_MAP.get(regionId),
-      flag: GCP_FLAG_MAPPING[regionId] || '',
+      flag: GCP_FLAG_MAPPING[regionId] || `${FLAG_IMAGE_DIR}/unknown.png`,
       available: zoneIds.length > 0,
     };
+  }
+
+  private makeServerName(): string {
+    const now = new Date();
+    return `outline-${now.getFullYear()}${now.getMonth()}${now.getDate()}-${now.getUTCHours()}${now.getUTCMinutes()}${now.getUTCSeconds()}`;
   }
 }

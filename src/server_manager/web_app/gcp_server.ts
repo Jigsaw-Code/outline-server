@@ -97,16 +97,12 @@ class GcpHost implements server.ManagedServerHost {
       private projectId: string, private instance: gcp_api.Instance,
       private apiClient: gcp_api.RestApiClient, private deleteCallback: Function) {}
 
-  // TODO: Wait for deleteInstance and deleteStaticIp to finish
+  // TODO: Throw error and show message on failure
   async delete(): Promise<void> {
-    // Delete VM instance
     const zoneId = this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
-    await this.apiClient.deleteInstance(this.projectId, this.instance.id, zoneId);
-
-    // Delete static IP
     const regionId = zoneId.substring(0, zoneId.lastIndexOf('-'));
     await this.apiClient.deleteStaticIp(this.projectId, this.instance.name, regionId);
-
+    this.apiClient.deleteInstance(this.projectId, this.instance.id, zoneId);
     this.deleteCallback();
   }
 

@@ -207,13 +207,13 @@ Polymer({
 
         <div id="gcp" class="card" on-tap="setUpGcpTapped">
           <div class="card-header">
-            <div class="tag" hidden\$="[[_computeIsAccountConnected]]">[[localize('setup-advanced')]]</div>
-            <div class="email" hidden\$="[[!_computeIsAccountConnected]]">[[gcpAccountName]]</div>
+            <div class="tag" hidden\$="[[_computeIsAccountConnected(gcpAccountName)]]">[[localize('setup-advanced')]]</div>
+            <div class="email" hidden\$="[[!_computeIsAccountConnected(gcpAccountName)]]">[[gcpAccountName]]</div>
             <img src="images/gcp-logo.svg">
           </div>
           <div class="card-title">Google Cloud Platform</div>
           <div class="card-body">
-            <div class="description">
+            <div class="description" hidden\$="[[_computeIsAccountConnected(gcpAccountName)]]">
               <ul>
                 <li>[[localize('setup-step-by-step')]]</li>
                 <li>[[localize('setup-firewall-instructions')]]</li>
@@ -222,8 +222,8 @@ Polymer({
             </div>
           </div>
           <div class="card-footer">
-            <paper-button class="primary" hidden\$="[[_computeIsAccountConnected]]">[[localize('setup-action')]]</paper-button>
-            <paper-button class="primary" hidden\$="[[!_computeIsAccountConnected]]">[[localize('setup-create')]]</paper-button>
+            <paper-button class="primary" hidden\$="[[_computeIsAccountConnected(gcpAccountName)]]">[[localize('setup-action')]]</paper-button>
+            <paper-button class="primary" hidden\$="[[!_computeIsAccountConnected(gcpAccountName)]]">[[localize('setup-create')]]</paper-button>
           </div>
         </div>
 

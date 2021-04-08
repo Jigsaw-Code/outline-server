@@ -29,6 +29,8 @@ import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, ServerView} from './ui_components/outline-server-view';
+import {DigitalOceanServer} from "./digitalocean_server";
+import {GcpServer} from "./gcp_server";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -405,10 +407,14 @@ export class App {
   private makeDisplayName(server: server.Server): string {
     let name = server.getName() ?? server.getHostnameForAccessKeys();
     if (!name) {
-      if (isManagedServer(server)) {
-        // Newly created servers will not have a name.
-        name = this.makeLocalizedServerName(server.getHost().getRegionId());
+      let location = null;
+      // Newly created servers will not have a name.
+      if (server instanceof DigitalOceanServer) {
+        location = this.getLocalizedCityName(server.getHost().getRegionId());
+      } else if (server instanceof GcpServer) {
+        location = server.getHost().getRegionId();
       }
+      name = this.makeLocalizedServerName(location);
     }
     return name;
   }
@@ -707,7 +713,8 @@ export class App {
   // Shadowbox may not be fully installed once this promise is fulfilled.
   public async createDigitalOceanServer(regionId: server.RegionId): Promise<void> {
     try {
-      const serverName = this.makeLocalizedServerName(regionId);
+      const serverLocation = this.getLocalizedCityName(regionId);
+      const serverName = this.makeLocalizedServerName(serverLocation);
       const server = await this.digitalOceanRetry(() => {
         return this.digitalOceanAccount.createServer(regionId, serverName);
       });
@@ -724,9 +731,8 @@ export class App {
     return this.appRoot.localize(`city-${cityId}`);
   }
 
-  private makeLocalizedServerName(regionId: server.RegionId): string {
-    const serverLocation = this.getLocalizedCityName(regionId);
-    return this.appRoot.localize('server-name', 'serverLocation', serverLocation);
+  private makeLocalizedServerName(location: string): string {
+    return this.appRoot.localize('server-name', 'serverLocation', location);
   }
 
   public showServer(server: server.Server): void {
