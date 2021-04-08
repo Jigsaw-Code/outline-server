@@ -56,8 +56,8 @@ export type ResourceManagerOperation = Readonly<{name: string; done: boolean; er
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/globalOperations
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations
  */
-type ComputeEngineOperation =
-    Readonly<{id: string; name: string; targetId: string; status: string; error: {errors: Status[]}}>;
+type ComputeEngineOperation = Readonly<
+    {id: string; name: string; targetId: string; status: string; error: {errors: Status[]}}>;
 
 /**
  * @see https://cloud.google.com/service-usage/docs/reference/rest/Shared.Types/ListOperationsResponse#Operation
@@ -88,13 +88,8 @@ export type ProjectBillingInfo = Readonly<
  */
 export type UserInfo = Readonly<{email: string;}>;
 
-type Service = Readonly<{
-  name: string;
-  config: {
-    name: string;
-  };
-  state: 'STATE_UNSPECIFIED' | 'DISABLED' | 'ENABLED';
-}>;
+type Service = Readonly<
+    {name: string; config: {name: string;}; state: 'STATE_UNSPECIFIED' | 'DISABLED' | 'ENABLED';}>;
 
 type ListInstancesResponse = Readonly<{items: Instance[]; nextPageToken: string;}>;
 type ListZonesResponse = Readonly<{items: Zone[]; nextPageToken: string;}>;

@@ -174,8 +174,10 @@ export class GcpAccount implements gcp.Account {
         await this.apiClient.listFirewalls(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
     let createFirewallOperation = null;
     if (!getFirewallResponse?.items || getFirewallResponse?.items?.length === 0) {
-      createFirewallOperation = await this.apiClient.createFirewall(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
-      createFirewallOperation = await this.apiClient.computeEngineOperationGlobalWait(projectId, createFirewallOperation.name);
+      createFirewallOperation =
+          await this.apiClient.createFirewall(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
+      createFirewallOperation = await this.apiClient.computeEngineOperationGlobalWait(
+          projectId, createFirewallOperation.name);
       if (createFirewallOperation.error?.errors) {
         // TODO: Throw error.
       }
@@ -191,14 +193,17 @@ export class GcpAccount implements gcp.Account {
       // TODO: Throw error.
     }
 
-    const instance = await this.apiClient.getInstance(projectId, createInstanceWait.targetId, zoneId);
+    const instance =
+        await this.apiClient.getInstance(projectId, createInstanceWait.targetId, zoneId);
     console.log('instance', instance);
 
     // Promote ephemeral IP to static IP
     const regionId = zoneId.substring(0, zoneId.lastIndexOf('-'));
     const ipAddress = instance.networkInterfaces[0].accessConfigs[0].natIP;
-    let createStaticIpOperation = await this.apiClient.createStaticIp(projectId, name, regionId, ipAddress);
-    createStaticIpOperation = await this.apiClient.computeEngineOperationRegionWait(projectId, regionId, createStaticIpOperation.name);
+    let createStaticIpOperation =
+        await this.apiClient.createStaticIp(projectId, name, regionId, ipAddress);
+    createStaticIpOperation = await this.apiClient.computeEngineOperationRegionWait(
+        projectId, regionId, createStaticIpOperation.name);
     if (createStaticIpOperation.error?.errors) {
       // TODO: Delete VM instance. Throw error.
     }
@@ -211,7 +216,8 @@ export class GcpAccount implements gcp.Account {
     await this.apiClient.updateProjectBillingInfo(projectId, billingAccountId);
 
     // Enable APIs
-    const enableServicesResponse = await this.apiClient.enableServices(projectId, GcpAccount.REQUIRED_GCP_SERVICES);
+    const enableServicesResponse =
+        await this.apiClient.enableServices(projectId, GcpAccount.REQUIRED_GCP_SERVICES);
     let enableServicesOperation = null;
     while (!enableServicesOperation?.done) {
       await sleep(2 * 1000);

@@ -204,7 +204,7 @@ export class GcpCreateServerApp extends LitElement {
                 id="createServerButton" 
                 @tap="${this.handleProjectSetupNextTap}" 
                 ?disabled="${
-        !this.isProjectSetupNextEnabled(this.selectedProjectId, this.selectedBillingAccountId)}">
+    !this.isProjectSetupNextEnabled(this.selectedProjectId, this.selectedBillingAccountId)}">
               CREATE PROJECT
             </paper-button>
           </span>
