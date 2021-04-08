@@ -355,6 +355,7 @@ export class GcpCreateServerApp extends LitElement {
 
   private makeServerName(): string {
     const now = new Date();
-    return `outline-${now.getFullYear()}${now.getMonth()}${now.getDate()}-${now.getUTCHours()}${now.getUTCMinutes()}${now.getUTCSeconds()}`;
+    return `outline-${now.getFullYear()}${now.getMonth()}${now.getDate()}-${now.getUTCHours()}${
+        now.getUTCMinutes()}${now.getUTCSeconds()}`;
   }
 }

@@ -25,12 +25,12 @@ import * as server from '../model/server';
 
 import {DisplayDataAmount, displayDataAmountToBytes,} from './data_formatting';
 import * as digitalocean_server from './digitalocean_server';
+import {DigitalOceanServer} from './digitalocean_server';
+import {GcpServer} from './gcp_server';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, ServerView} from './ui_components/outline-server-view';
-import {DigitalOceanServer} from "./digitalocean_server";
-import {GcpServer} from "./gcp_server";
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/

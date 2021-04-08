@@ -132,7 +132,8 @@ export class RestApiClient {
   createInstance(projectId: string, zoneId: string, data: {}): Promise<ComputeEngineOperation> {
     return this.fetchAuthenticated(
         'POST',
-        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${zoneId}/instances`),
+        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
+            zoneId}/instances`),
         this.GCP_HEADERS, null, data);
   }
 
@@ -191,7 +192,8 @@ export class RestApiClient {
     }
     return this.fetchAuthenticated(
         'GET',
-        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${zoneId}/instances`),
+        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
+            zoneId}/instances`),
         this.GCP_HEADERS, parameters);
   }
 
@@ -271,7 +273,8 @@ export class RestApiClient {
    */
   createFirewall(projectId: string, data: {}): Promise<ComputeEngineOperation> {
     return this.fetchAuthenticated(
-        'POST', new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/global/firewalls`),
+        'POST',
+        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/global/firewalls`),
         this.GCP_HEADERS, null, data);
   }
 
@@ -284,7 +287,8 @@ export class RestApiClient {
     const filter = `name=${name}`;
     const parameters = new Map<string, string>([['filter', filter]]);
     return this.fetchAuthenticated(
-        'GET', new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/global/firewalls`),
+        'GET',
+        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/global/firewalls`),
         this.GCP_HEADERS, parameters);
   }
 
@@ -320,7 +324,9 @@ export class RestApiClient {
    */
   enableServices(projectId: string, data: {}): Promise<ServiceUsageOperation> {
     return this.fetchAuthenticated(
-        'POST', new URL(`https://serviceusage.googleapis.com/v1/projects/${projectId}/services:batchEnable`),
+        'POST',
+        new URL(
+            `https://serviceusage.googleapis.com/v1/projects/${projectId}/services:batchEnable`),
         this.GCP_HEADERS, null, data);
   }
 
@@ -339,8 +345,8 @@ export class RestApiClient {
    */
   createProject(projectId: string, data: {}): Promise<ResourceManagerOperation> {
     return this.fetchAuthenticated(
-        'POST', new URL('https://cloudresourcemanager.googleapis.com/v1/projects'), this.GCP_HEADERS, null,
-        data);
+        'POST', new URL('https://cloudresourcemanager.googleapis.com/v1/projects'),
+        this.GCP_HEADERS, null, data);
   }
 
   /**
@@ -447,14 +453,15 @@ export class RestApiClient {
       Promise<ComputeEngineOperation> {
     return this.fetchAuthenticated(
         'POST',
-        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/global/operations/${
-            operationId}/wait`),
+        new URL(`https://compute.googleapis.com/compute/v1/projects/${
+            projectId}/global/operations/${operationId}/wait`),
         this.GCP_HEADERS);
   }
 
   resourceManagerOperationGet(operationId: string): Promise<ResourceManagerOperation> {
     return this.fetchAuthenticated(
-        'GET', new URL(`https://cloudresourcemanager.googleapis.com/v1/${operationId}`), this.GCP_HEADERS);
+        'GET', new URL(`https://cloudresourcemanager.googleapis.com/v1/${operationId}`),
+        this.GCP_HEADERS);
   }
 
   serviceUsageOperationGet(operationId: string): Promise<ServiceUsageOperation> {
@@ -528,8 +535,7 @@ export class RestApiClient {
       customHeaders.append(key, value);
     });
     if (parameters) {
-      parameters.forEach(
-          (value: string, key: string) => url.searchParams.append(key, value));
+      parameters.forEach((value: string, key: string) => url.searchParams.append(key, value));
     }
 
     // TODO: More robust handling of data types
