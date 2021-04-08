@@ -112,6 +112,8 @@ export function bindService(
   // Dynamic, single-user keys
   apiServer.put(`${apiPrefix}/experimental/dynamic-key`, service.createDynamicKey.bind(service));
   // Since GET on a resource should be idempotent, we use an in-path token instead of request bodies
+  // TODO: this exposes us to a malicious client POST-ing when they should GET and invalidating
+  // other clients using the key, allowing a DoS on the key.
   apiServer.post(
       `${apiPrefix}/experimental/dynamic-key/:token`, service.updateDynamicKey.bind(service));
   apiServer.get(
