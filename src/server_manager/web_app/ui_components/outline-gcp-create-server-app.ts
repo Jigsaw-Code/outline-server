@@ -91,6 +91,7 @@ export class GcpCreateServerApp extends LitElement {
   @internalProperty() private currentPage = '';
   @internalProperty() private selectedProjectId = '';
   @internalProperty() private selectedBillingAccountId = '';
+  @internalProperty() private isProjectBeingCreated = false;
 
   private account: GcpAccount;
   private project: Project;
@@ -100,6 +101,9 @@ export class GcpCreateServerApp extends LitElement {
   static get styles() {
     return [
       COMMON_STYLES, css`
+      :host {
+        --paper-input-container-input-color: var(--medium-gray);
+      }
       .container {
         display: flex;
         flex-direction: column;
@@ -122,6 +126,7 @@ export class GcpCreateServerApp extends LitElement {
       }
       .section {
         padding: 24px 12px;
+        color: var(--light-gray);
         background: var(--background-contrast-color);
         border-radius: 2px;
       }
@@ -131,6 +136,9 @@ export class GcpCreateServerApp extends LitElement {
       .section-header {
         padding: 0 6px 0;
         display: flex;
+      }
+      .section-content {
+        padding: 0 48px;
       }
       .instructions {
         font-size: 16px;
@@ -162,7 +170,14 @@ export class GcpCreateServerApp extends LitElement {
         width: 100%;
         text-align: center;
       }
+      #projectName {
+        width: 250px;
+      }
+      #billingAccount {
+        width: 250px;
+      }
       paper-button {
+        background: var(--primary-green);
         color: var(--light-gray);
         width: 100%;
         border: 1px solid rgba(255, 255, 255, 0.12);
@@ -216,8 +231,9 @@ export class GcpCreateServerApp extends LitElement {
                 </div>
               </div>
               <div class="section-content">
-                <paper-input value="${
-        this.selectedProjectId}" label="Project ID" always-float-label="" maxlength="100" @value-changed="${
+                <!-- TODO: Make readonly if project already exists -->
+                <paper-input id="projectName" value="${this.selectedProjectId}"
+                    label="Project ID" always-float-label="" maxlength="100" @value-changed="${
         this.onProjectIdChanged}"></paper-input>
               </div>
             </div>
@@ -230,7 +246,7 @@ export class GcpCreateServerApp extends LitElement {
                 </div>
               </div>
               <div class="section-content">
-                <paper-dropdown-menu no-label-float="">
+                <paper-dropdown-menu id="billingAccount" no-label-float="">
                   <paper-listbox slot="dropdown-content" selected="${
         this.selectedBillingAccountId}" attr-for-selected="name" @selected-changed="${
         this.onBillingAccountSelected}">
@@ -241,12 +257,43 @@ export class GcpCreateServerApp extends LitElement {
                 </paper-dropdown-menu>
               </div>
             </div>
+            ${this.isProjectBeingCreated ? html`<paper-progress indeterminate="" class="slow"></paper-progress>` : ''}
         </outline-step-view>
 
         <outline-region-picker-step id="regionPicker" .localize=${
         this.localize} @region-selected="${this.onRegionSelected}">  
         </outline-region-picker-step>
       </iron-pages>`;
+  }
+
+  async start(account: GcpAccount): Promise<void> {
+    this.init();
+    this.account = account;
+
+    this.billingAccounts = await this.account.listBillingAccounts();
+    const projects = await this.account.listProjects();
+    // TODO: We don't support multiple projects atm, but we will want to allow
+    //  the user to choose the appropriate one.
+    this.project = projects?.[0];
+    const isProjectHealthy =
+        this.project ? await this.account.isProjectHealthy(this.project.id) : false;
+    if (this.project && isProjectHealthy) {
+      this.showRegionPicker();
+    } else {
+      if (!this.billingAccounts || this.billingAccounts.length === 0) {
+        this.showBillingAccountSetup();
+      } else {
+        this.showProjectSetup(this.project);
+      }
+    }
+  }
+
+  private init() {
+    this.currentPage = '';
+    this.selectedProjectId = '';
+    this.selectedBillingAccountId = '';
+    this.regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
+    this.regionPicker.reset();
   }
 
   private showBillingAccountSetup(): void {
@@ -257,11 +304,15 @@ export class GcpCreateServerApp extends LitElement {
     this.showProjectSetup();
   }
 
-  private async showProjectSetup(): Promise<void> {
+  private async showProjectSetup(existingProject?: Project): Promise<void> {
     this.billingAccounts = await this.account.listBillingAccounts();
     if (!this.billingAccounts || this.billingAccounts.length === 0) {
       return this.showBillingAccountSetup();
     }
+
+    this.project = existingProject ?? null;
+    this.selectedProjectId = this.project?.id ?? this.makeProjectName();
+    this.selectedBillingAccountId = this.billingAccounts[0].id;
     this.currentPage = 'projectSetup';
   }
 
@@ -271,12 +322,14 @@ export class GcpCreateServerApp extends LitElement {
   }
 
   private async handleProjectSetupNextTap(): Promise<void> {
+    this.isProjectBeingCreated = true;
     if (!this.project) {
       this.project =
           await this.account.createProject(this.selectedProjectId, this.selectedBillingAccountId);
     } else {
       await this.account.repairProject(this.project.id, this.selectedBillingAccountId);
     }
+    this.isProjectBeingCreated = false;
 
     this.showRegionPicker();
   }
@@ -293,35 +346,6 @@ export class GcpCreateServerApp extends LitElement {
       return this.createLocationModel(regionId, zoneIds);
     });
     this.regionPicker.locations = locations;
-  }
-
-  async start(account: GcpAccount): Promise<void> {
-    this.init();
-    this.account = account;
-
-    this.billingAccounts = await this.account.listBillingAccounts();
-    const projects = await this.account.listProjects();
-    // TODO: We don't support multiple projects atm, but we will want to allow
-    //  the user to choose the appropriate one.
-    this.project = projects?.[0];
-    const isProjectHealthy = await this.account.isProjectHealthy(this.project.id);
-    if (isProjectHealthy) {
-      this.showRegionPicker();
-    } else {
-      if (!this.billingAccounts || this.billingAccounts.length === 0) {
-        this.showBillingAccountSetup();
-      } else {
-        this.showProjectSetup();
-      }
-    }
-  }
-
-  private init() {
-    this.currentPage = '';
-    this.selectedProjectId = '';
-    this.selectedBillingAccountId = '';
-    this.regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
-    this.regionPicker.reset();
   }
 
   private onProjectIdChanged(event: CustomEvent) {
@@ -351,6 +375,10 @@ export class GcpCreateServerApp extends LitElement {
       flag: GCP_FLAG_MAPPING[regionId] || `${FLAG_IMAGE_DIR}/unknown.png`,
       available: zoneIds.length > 0,
     };
+  }
+
+  private makeProjectName(): string {
+    return `outline-${Math.random().toString(20).substring(3)}`;
   }
 
   private makeServerName(): string {

@@ -70,8 +70,14 @@ export class FakeGcpAccount implements gcp.Account {
   async listServers(projectId: string): Promise<server.ManagedServer[]> {
     return [];
   }
-  createProject(id: string, billingAccountId: string): Promise<gcp.Project> {
-    return undefined;
+  async createProject(id: string, billingAccountId: string): Promise<gcp.Project> {
+    return {
+      id: 'project-id',
+      name: 'project-name',
+    };
+  }
+  async isProjectHealthy(projectId: string): Promise<boolean> {
+    return true;
   }
   async listBillingAccounts(): Promise<gcp.BillingAccount[]> {
     return this.billingAccounts;
