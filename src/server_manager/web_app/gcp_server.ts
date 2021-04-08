@@ -92,7 +92,6 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   }
 }
 
-// TODO: GcpHost seems unnecessary – reconsider.
 class GcpHost implements server.ManagedServerHost {
   constructor(
       private projectId: string, private instance: gcp_api.Instance,

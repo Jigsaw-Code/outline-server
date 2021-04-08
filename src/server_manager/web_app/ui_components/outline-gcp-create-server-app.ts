@@ -22,8 +22,8 @@ import {css, customElement, html, internalProperty, LitElement, property} from '
 
 import {BillingAccount, Project} from '../../model/gcp';
 import {GcpAccount} from '../gcp_account';
-import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
-import {Location, OutlineRegionPicker} from '../ui_components/outline-region-picker-step';
+import {COMMON_STYLES} from './cloud-install-styles';
+import {Location, OutlineRegionPicker} from './outline-region-picker-step';
 
 /** @see https://cloud.google.com/compute/docs/regions-zones */
 const LOCATION_MAP = new Map<string, string>([
@@ -57,24 +57,24 @@ const LOCATION_MAP = new Map<string, string>([
 // GCP mapping of regions to flags
 const FLAG_IMAGE_DIR = 'images/flags';
 const GCP_FLAG_MAPPING: {[cityId: string]: string} = {
-  'asia-east1': `${FLAG_IMAGE_DIR}/us.png`,
-  'asia-east2': `${FLAG_IMAGE_DIR}/us.png`,
-  'asia-northeast1': `${FLAG_IMAGE_DIR}/us.png`,
-  'asia-northeast2': `${FLAG_IMAGE_DIR}/us.png`,
-  'asia-northeast3': `${FLAG_IMAGE_DIR}/us.png`,
-  'asia-south1': `${FLAG_IMAGE_DIR}/us.png`,
-  'asia-southeast1': `${FLAG_IMAGE_DIR}/us.png`,
-  'asia-southeast2': `${FLAG_IMAGE_DIR}/us.png`,
-  'australia-southeast1': `${FLAG_IMAGE_DIR}/us.png`,
-  'europe-north1': `${FLAG_IMAGE_DIR}/us.png`,
-  'europe-west1': `${FLAG_IMAGE_DIR}/us.png`,
-  'europe-west2': `${FLAG_IMAGE_DIR}/us.png`,
-  'europe-west3': `${FLAG_IMAGE_DIR}/us.png`,
-  'europe-west4': `${FLAG_IMAGE_DIR}/us.png`,
-  'europe-west6': `${FLAG_IMAGE_DIR}/us.png`,
-  'europe-central2': `${FLAG_IMAGE_DIR}/us.png`,
-  'northamerica-northeast1': `${FLAG_IMAGE_DIR}/us.png`,
-  'southamerica-east1': `${FLAG_IMAGE_DIR}/us.png`,
+  // 'asia-east1': `${FLAG_IMAGE_DIR}/unknown.png`,
+  // 'asia-east2': `${FLAG_IMAGE_DIR}/unknown.png`,
+  // 'asia-northeast1': `${FLAG_IMAGE_DIR}/unknown.png`,
+  // 'asia-northeast2': `${FLAG_IMAGE_DIR}/unknown.png`,
+  // 'asia-northeast3': `${FLAG_IMAGE_DIR}/unknown.png`,
+  'asia-south1': `${FLAG_IMAGE_DIR}/india.png`,
+  'asia-southeast1': `${FLAG_IMAGE_DIR}/singapore.png`,
+  // 'asia-southeast2': `${FLAG_IMAGE_DIR}/unknown.png`,
+  // 'australia-southeast1': `${FLAG_IMAGE_DIR}/unknown.png`,
+  // 'europe-north1': `${FLAG_IMAGE_DIR}/unknown.png`,
+  // 'europe-west1': `${FLAG_IMAGE_DIR}/unknown.png`,
+  'europe-west2': `${FLAG_IMAGE_DIR}/uk.png`,
+  'europe-west3': `${FLAG_IMAGE_DIR}/germany.png`,
+  'europe-west4': `${FLAG_IMAGE_DIR}/netherlands.png`,
+  // 'europe-west6': `${FLAG_IMAGE_DIR}/unknown.png`,
+  // 'europe-central2': `${FLAG_IMAGE_DIR}/unknown.png`,
+  'northamerica-northeast1': `${FLAG_IMAGE_DIR}/canada.png`,
+  // 'southamerica-east1': `${FLAG_IMAGE_DIR}/unknown.png`,
   'us-central1': `${FLAG_IMAGE_DIR}/us.png`,
   'us-east1': `${FLAG_IMAGE_DIR}/us.png`,
   'us-east4': `${FLAG_IMAGE_DIR}/us.png`,
