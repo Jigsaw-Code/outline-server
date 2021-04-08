@@ -136,11 +136,9 @@ export class TestApp extends LitElement {
 
       <div class="widget">
         <h2>outline-gcp-create-server-app</h2>
-        <label for="gcpRefreshToken">GCP refresh token:</label><input type="text" id="gcpRefreshToken" value="${
-        this.gcpRefreshToken}">
         <button @tap=${() => {
       const billingAccounts = this.gcpAccountHasBillingAccounts ? GCP_BILLING_ACCOUNTS : [];
-      const account = new FakeGcpAccount(this.gcpRefreshToken, billingAccounts, GCP_LOCATIONS);
+      const account = new FakeGcpAccount('refresh-token', billingAccounts, GCP_LOCATIONS);
       this.select('outline-gcp-create-server-app').start(account);
     }}>
         Create server</button>
