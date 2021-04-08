@@ -187,8 +187,7 @@ export class GcpAccount implements gcp.Account {
     let createFirewallOperation = null;
     if (!getFirewallResponse?.items || getFirewallResponse?.items?.length === 0) {
       const createFirewallData = this.makeCreateFirewallRequestData(name);
-      createFirewallOperation =
-          await this.apiClient.createFirewall(projectId, createFirewallData);
+      createFirewallOperation = await this.apiClient.createFirewall(projectId, createFirewallData);
       createFirewallOperation = await this.apiClient.computeEngineOperationGlobalWait(
           projectId, createFirewallOperation.name);
       if (createFirewallOperation.error?.errors) {
@@ -198,7 +197,8 @@ export class GcpAccount implements gcp.Account {
 
     // Create VM instance
     const createInstanceData = this.makeCreateInstanceRequestData(name, zoneId);
-    let createInstanceOperation = await this.apiClient.createInstance(projectId, zoneId, createInstanceData);
+    let createInstanceOperation =
+        await this.apiClient.createInstance(projectId, zoneId, createInstanceData);
     createInstanceOperation = await this.apiClient.computeEngineOperationZoneWait(
         projectId, zoneId, createInstanceOperation.name);
     if (createInstanceOperation.error?.errors) {
@@ -307,12 +307,11 @@ export class GcpAccount implements gcp.Account {
     };
   }
 
-  private makeUpdateProjectBillingInfoRequestData(
-      projectId: string, billingAccountId: string): {} {
+  private makeUpdateProjectBillingInfoRequestData(projectId: string, billingAccountId: string): {} {
     return {
       name: `projects/${projectId}/billingInfo`,
-          projectId,
-          billingAccountName: `billingAccounts/${billingAccountId}`,
+      projectId,
+      billingAccountName: `billingAccounts/${billingAccountId}`,
     };
   }
 

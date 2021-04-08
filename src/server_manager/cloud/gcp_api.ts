@@ -181,7 +181,8 @@ export class RestApiClient {
    * @param filter - See documentation.
    */
   // TODO: Pagination
-  listInstances(projectId: string, zoneId: string, filter?: string): Promise<ListInstancesResponse> {
+  listInstances(projectId: string, zoneId: string, filter?: string):
+      Promise<ListInstancesResponse> {
     let parameters = null;
     if (filter) {
       parameters = new Map<string, string>([
@@ -206,8 +207,7 @@ export class RestApiClient {
    * @param regionId - The GCP region.
    * @param data - Request body data. See documentation.
    */
-  createStaticIp(projectId: string, regionId: string, data: {}):
-      Promise<ComputeEngineOperation> {
+  createStaticIp(projectId: string, regionId: string, data: {}): Promise<ComputeEngineOperation> {
     return this.fetchAuthenticated(
         'POST',
         `https://compute.googleapis.com/compute/v1/projects/${projectId}/regions/${
