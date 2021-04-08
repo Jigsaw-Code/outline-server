@@ -25,9 +25,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/Server"
               examples:
-                '0':
+                'No data limit':
                   value: >-
-                    {"name":"My Server","serverId":"000-000-000-000","metricsEnabled":true,"createdTimestampMs":1536613192052,"portForNewAccessKeys":1234, "version": "1.0.0"}
+                    {"name":"My Server","serverId":"40f1b4a3-5c82-45f4-80a6-a25cf36734d3","metricsEnabled":true,"createdTimestampMs":1536613192052,"version":"1.0.0","portForNewAccessKeys":1234,"hostnameForAccessKeys":"example.com"}
+                'Per-key data limit':
+                  value: >-
+                    {"name":"My Server","serverId":"7fda0079-5317-4e5a-bb41-5a431dddae21","metricsEnabled":true,"createdTimestampMs":1536613192052,"version":"1.0.0","accessKeyDataLimit":{"bytes":8589934592},"portForNewAccessKeys":1234,"hostnameForAccessKeys":"example.com"}
   /server/hostname-for-access-keys:
     put:
       tags:
@@ -94,7 +97,7 @@ paths:
                 $ref: "#/components/schemas/DataLimit"
               examples:
                 '0':
-                  value: "{limit: {bytes: 10000}}"
+                  value: '{"limit": {"bytes": 10000}}'
       responses:
         '204':
           description: Access key data limit set successfully
@@ -172,7 +175,7 @@ paths:
                     {"accessKeys":[
                       {"id":"0","name":"Admin","password":"XxXxXx","port":18162,"method":"chacha20-ietf-poly1305","accessUrl":"ss://SADFJSKADFJAKSD@0.0.0.0:18162/?outline=1"},
                       {"id":"1","name":"First","password":"xXxXxX","port":4410,"method":"chacha20-ietf-poly1305","accessUrl":"ss://ASDFSADJFKAS=@0.0.0.0:4410/?outline=1"},
-                      {"id":"2","name":"Second","password":"XxXxXx","port":25424,"method":"chacha20-ietf-poly1305","accessUrl":"ss://ASDFHAKSDFSDAKFJ@0.0.0.0:25424/?outline=1"}]}
+                      {"id":"2","name":"SecondWithCustomDataLimit","password":"XxXxXx","port":25424,"method":"chacha20-ietf-poly1305","dataLimit":{"bytes":8589934592},"accessUrl":"ss://ASDFHAKSDFSDAKFJ@0.0.0.0:25424/?outline=1"}]}
   /access-keys/{id}:
     delete:
       description: Deletes an access key
@@ -254,7 +257,7 @@ paths:
               $ref: "#/components/schemas/DataLimit"
             examples:
               '0':
-                value: "{limit: {bytes: 10000}}"
+                value: '{"limit": {"bytes": 10000}}'
       responses:
         '204':
           description: Access key limit set successfully
@@ -353,7 +356,7 @@ paths:
                 $ref: "#/components/schemas/DataLimit"
               examples:
                 '0':
-                  value: "{limit: {bytes: 10000}}"
+                  value: '{"limit": {"bytes": 10000}}'
       responses:
         '204':
           description: Access key data limit set successfully
