@@ -16,9 +16,9 @@ import {ManagedServer, RegionId} from './server';
 
 // Keys are region IDs like "us-central1".
 // Values are zones like ["us-central1-a", "us-central1-b"].
-// TODO: Create separate type
-export type RegionMap = {
-  [regionId: string]: RegionId[]
+export type ZoneId = string;
+export type ZoneMap = {
+  [regionId: string]: ZoneId[]
 };
 
 export type Project = {
@@ -70,7 +70,7 @@ export interface Account {
    *
    * @param projectId - The GCP project ID.
    */
-  listLocations(projectId: string): Promise<RegionMap>;
+  listLocations(projectId: string): Promise<ZoneMap>;
 
   /**
    * Creates a new Google Cloud Platform project.

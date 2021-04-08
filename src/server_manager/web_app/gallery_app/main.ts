@@ -55,7 +55,7 @@ async function makeLocalize(language: string) {
   };
 }
 
-const GCP_LOCATIONS: gcp.RegionMap = {
+const GCP_LOCATIONS: gcp.ZoneMap = {
   'us-central1': ['us-central1-a', 'us-central1-b', 'us-central1-c'],
   'asia-east1': ['asia-east1-a', 'asia-east1-b'],
   'europe-west1': ['europe-west1-a', 'europe-west1-b', 'europe-west1-c'],

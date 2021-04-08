@@ -82,11 +82,11 @@ export class GcpAccount implements gcp.Account {
   }
 
   /** @see {@link Account#listLocations}. */
-  async listLocations(projectId: string): Promise<gcp.RegionMap> {
+  async listLocations(projectId: string): Promise<gcp.ZoneMap> {
     const listZonesResponse = await this.apiClient.listZones(projectId);
     const zones = listZonesResponse.items ?? [];
 
-    const result: gcp.RegionMap = {};
+    const result: gcp.ZoneMap = {};
     zones.map((zone) => {
       const region = zone.region.substring(zone.region.lastIndexOf('/') + 1);
       if (!(region in result)) {
