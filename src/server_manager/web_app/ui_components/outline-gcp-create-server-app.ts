@@ -257,7 +257,10 @@ export class GcpCreateServerApp extends LitElement {
                 </paper-dropdown-menu>
               </div>
             </div>
-            ${this.isProjectBeingCreated ? html`<paper-progress indeterminate="" class="slow"></paper-progress>` : ''}
+            ${
+        this.isProjectBeingCreated ?
+        html`<paper-progress indeterminate="" class="slow"></paper-progress>` :
+        ''}
         </outline-step-view>
 
         <outline-region-picker-step id="regionPicker" .localize=${
