@@ -127,56 +127,9 @@ export class RestApiClient {
    * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/insert
    *
    * @param projectId - The GCP project ID.
-   * @param name - The name to be given to the created instance. See online
-   *   documentation for naming requirements.
    * @param zoneId - The zone in which to create the instance.
-   * @param size - @see https://cloud.google.com/compute/docs/machine-types.
-   * @param installScript - A script to run once the instance has launched.
    */
-  // TODO: Change method signature to projectId
-  createInstance(
-      projectId: string, name: string, zoneId: string, size: string,
-      installScript: string): Promise<ComputeEngineOperation> {
-    // Pass in the dictionary
-    // TODO: Name must be unique by zone. Use outline-<timestamp> MM-DD-YYYY-HH-MM-SS
-    const data = {
-      name,
-      machineType: `zones/${zoneId}/machineTypes/${size}`,
-      disks: [
-        {
-          boot: true,
-          initializeParams: {
-            sourceImage: 'projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts',
-          },
-        },
-      ],
-      networkInterfaces: [
-        {
-          network: 'global/networks/default',
-          // Empty accessConfigs necessary to allocate ephemeral IP
-          accessConfigs: [{}],
-        },
-      ],
-      labels: {
-        outline: 'true',
-      },
-      tags: {
-        // This must match the firewall name.
-        items: ['outline'],
-      },
-      metadata: {
-        items: [
-          {
-            key: 'enable-guest-attributes',
-            value: 'TRUE',
-          },
-          {
-            key: 'user-data',
-            value: installScript,
-          },
-        ],
-      },
-    };
+  createInstance(projectId: string, zoneId: string, data: {}): Promise<ComputeEngineOperation> {
     return this.fetchAuthenticated(
         'POST',
         `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${zoneId}/instances`,
@@ -225,10 +178,16 @@ export class RestApiClient {
    *
    * @param projectId - The GCP project ID.
    * @param zoneId - The zone to query.
+   * @param filter - See documentation.
    */
   // TODO: Pagination
-  listInstances(projectId: string, zoneId: string): Promise<ListInstancesResponse> {
-    const parameters = new Map<string, string>([['filter', 'labels.outline=true']]);
+  listInstances(projectId: string, zoneId: string, filter?: string): Promise<ListInstancesResponse> {
+    let parameters = null;
+    if (filter) {
+      parameters = new Map<string, string>([
+        ['filter', filter],
+      ]);
+    }
     return this.fetchAuthenticated(
         'GET',
         `https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${zoneId}/instances`,
@@ -244,16 +203,11 @@ export class RestApiClient {
    * @see https://cloud.google.com/compute/docs/reference/rest/v1/addresses/insert
    *
    * @param projectId - The GCP project ID.
-   * @param name - The name to be given to be applied to the resource.
    * @param regionId - The GCP region.
-   * @param ipAddress - (optional) The ephemeral IP address to promote to static.
+   * @param data - Request body data. See documentation.
    */
-  createStaticIp(projectId: string, name: string, regionId: string, ipAddress?: string):
+  createStaticIp(projectId: string, regionId: string, data: {}):
       Promise<ComputeEngineOperation> {
-    const data = {
-      name,
-      ...(ipAddress && {address: ipAddress}),
-    };
     return this.fetchAuthenticated(
         'POST',
         `https://compute.googleapis.com/compute/v1/projects/${projectId}/regions/${
@@ -313,21 +267,9 @@ export class RestApiClient {
    * @see https://cloud.google.com/compute/docs/reference/rest/v1/firewalls/insert
    *
    * @param projectId - The GCP project ID.
-   * @param name - The name of the firewall.
+   * @param data - Request body data. See documentation.
    */
-  createFirewall(projectId: string, name: string): Promise<ComputeEngineOperation> {
-    const data = {
-      name,
-      direction: 'INGRESS',
-      priority: 1000,
-      targetTags: [name],
-      allowed: [
-        {
-          IPProtocol: 'all',
-        },
-      ],
-      sourceRanges: ['0.0.0.0/0'],
-    };
+  createFirewall(projectId: string, data: {}): Promise<ComputeEngineOperation> {
     return this.fetchAuthenticated(
         'POST', `https://compute.googleapis.com/compute/v1/projects/${projectId}/global/firewalls`,
         this.GCP_HEADERS, null, data);
@@ -374,17 +316,16 @@ export class RestApiClient {
 
   /**
    * @param projectId - The GCP project ID.
-   * @param serviceIds - The service IDs.
+   * @param data - Request body data. See documentation.
    */
-  enableServices(projectId: string, serviceIds: string[]): Promise<ServiceUsageOperation> {
-    const data = {serviceIds};
+  enableServices(projectId: string, data: {}): Promise<ServiceUsageOperation> {
     return this.fetchAuthenticated(
         'POST', `https://serviceusage.googleapis.com/v1/projects/${projectId}/services:batchEnable`,
         this.GCP_HEADERS, null, data);
   }
 
   /**
-   * Creates a new GCP project with label "outline"
+   * Creates a new GCP project
    *
    * The project ID must conform to the following:
    * - must be 6 to 30 lowercase letters, digits, or hyphens
@@ -394,30 +335,28 @@ export class RestApiClient {
    * @see https://cloud.google.com/resource-manager/reference/rest/v1/projects/create
    *
    * @param projectId - The unique user-assigned project ID.
-   * @param name - The project display name.
+   * @param data - Request body data. See documentation.
    */
-  createProject(projectId: string, name: string): Promise<ResourceManagerOperation> {
-    const data = {
-      projectId,
-      name,
-      labels: {
-        outline: 'true',
-      },
-    };
+  createProject(projectId: string, data: {}): Promise<ResourceManagerOperation> {
     return this.fetchAuthenticated(
         'POST', 'https://cloudresourcemanager.googleapis.com/v1/projects', this.GCP_HEADERS, null,
         data);
   }
 
   /**
-   * Lists the "Outline" GCP projects that the user has access to.
+   * Lists the GCP projects that the user has access to.
    *
    * @see https://cloud.google.com/resource-manager/reference/rest/v1/projects/list
+   *
+   * @param filter - See documentation.
    */
-  listActiveOutlineProjects(): Promise<ListProjectsResponse> {
-    const parameters = new Map<string, string>([
-      ['filter', 'labels.outline=true AND lifecycleState=ACTIVE'],
-    ]);
+  listProjects(filter?: string): Promise<ListProjectsResponse> {
+    let parameters = null;
+    if (filter) {
+      parameters = new Map<string, string>([
+        ['filter', filter],
+      ]);
+    }
     return this.fetchAuthenticated(
         'GET', 'https://cloudresourcemanager.googleapis.com/v1/projects', this.GCP_HEADERS,
         parameters);
@@ -442,15 +381,9 @@ export class RestApiClient {
    * @see https://cloud.google.com/billing/docs/reference/rest/v1/projects/updateBillingInfo
    *
    * @param projectId - The GCP project ID.
-   * @param billingAccountId - The billing account ID.
+   * @param data - Request body data. See documentation.
    */
-  updateProjectBillingInfo(projectId: string, billingAccountId: string):
-      Promise<ProjectBillingInfo> {
-    const data = {
-      name: `projects/${projectId}/billingInfo`,
-      projectId,
-      billingAccountName: `billingAccounts/${billingAccountId}`,
-    };
+  updateProjectBillingInfo(projectId: string, data: {}): Promise<ProjectBillingInfo> {
     return this.fetchAuthenticated(
         'PUT', `https://cloudbilling.googleapis.com/v1/projects/${projectId}/billingInfo`,
         this.GCP_HEADERS, null, data);

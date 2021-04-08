@@ -341,6 +341,7 @@ export class GcpCreateServerApp extends LitElement {
     event.stopPropagation();
 
     this.regionPicker.isServerBeingCreated = true;
+    // TODO: Name must be unique by zone. Use outline-<timestamp> MM-DD-YYYY-HH-MM-SS
     const randomSuffix = Math.random().toString(20).substr(3);
     const name = `outline-${randomSuffix}`;
     const server =

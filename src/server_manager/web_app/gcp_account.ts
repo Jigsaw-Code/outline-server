@@ -25,6 +25,7 @@ import {GcpServer} from './gcp_server';
  * The Google Cloud Platform account model.
  */
 export class GcpAccount implements gcp.Account {
+  private static readonly OUTLINE_PROJECT_NAME = 'Outline servers';
   private static readonly OUTLINE_FIREWALL_NAME = 'outline';
   private static readonly MACHINE_SIZE = 'f1-micro';
   private static readonly REQUIRED_GCP_SERVICES = ['compute.googleapis.com'];
@@ -61,12 +62,16 @@ export class GcpAccount implements gcp.Account {
   /** @see {@link Account#listServers}. */
   async listServers(projectId: string): Promise<server.ManagedServer[]> {
     const result: GcpServer[] = [];
-
-    // TODO: List instances in parallel
     const listZonesResponse = await this.apiClient.listZones(projectId);
+    const listInstancesPromises = [];
     for (const zone of listZonesResponse.items) {
-      const listInstancesResponseForZone = await this.apiClient.listInstances(projectId, zone.name);
-      const instances = listInstancesResponseForZone.items ?? [];
+      const filter = 'labels.outline=true';
+      const listInstancesPromise = this.apiClient.listInstances(projectId, zone.name, filter);
+      listInstancesPromises.push(listInstancesPromise);
+    }
+    const listInstancesResponses = await Promise.all(listInstancesPromises);
+    for (const response of listInstancesResponses) {
+      const instances = response.items ?? [];
       instances.forEach((instance) => {
         const id = `${this.id}:${instance.id}`;
         const server = new GcpServer(id, projectId, instance, this.apiClient);
@@ -96,7 +101,8 @@ export class GcpAccount implements gcp.Account {
 
   /** @see {@link Account#listProjects}. */
   async listProjects(): Promise<Project[]> {
-    const response = await this.apiClient.listActiveOutlineProjects();
+    const filter = 'labels.outline=true AND lifecycleState=ACTIVE';
+    const response = await this.apiClient.listProjects(filter);
     if (response.projects?.length > 0) {
       return response.projects.map(project => {
         return {
@@ -111,8 +117,14 @@ export class GcpAccount implements gcp.Account {
   /** @see {@link Account#createProject}. */
   async createProject(projectId: string, billingAccountId: string): Promise<Project> {
     // Create GCP project
-    const projectName = 'Outline servers';
-    const createProjectResponse = await this.apiClient.createProject(projectId, projectName);
+    const createProjectData = {
+      projectId,
+      name: GcpAccount.OUTLINE_PROJECT_NAME,
+      labels: {
+        outline: 'true',
+      },
+    };
+    const createProjectResponse = await this.apiClient.createProject(projectId, createProjectData);
     let createProjectOperation = null;
     while (!createProjectOperation?.done) {
       await sleep(2 * 1000);
@@ -127,7 +139,7 @@ export class GcpAccount implements gcp.Account {
 
     return {
       id: projectId,
-      name: projectName,
+      name: GcpAccount.OUTLINE_PROJECT_NAME,
     };
   }
 
@@ -174,8 +186,9 @@ export class GcpAccount implements gcp.Account {
         await this.apiClient.listFirewalls(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
     let createFirewallOperation = null;
     if (!getFirewallResponse?.items || getFirewallResponse?.items?.length === 0) {
+      const createFirewallData = this.makeCreateFirewallRequestData(name);
       createFirewallOperation =
-          await this.apiClient.createFirewall(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
+          await this.apiClient.createFirewall(projectId, createFirewallData);
       createFirewallOperation = await this.apiClient.computeEngineOperationGlobalWait(
           projectId, createFirewallOperation.name);
       if (createFirewallOperation.error?.errors) {
@@ -184,24 +197,27 @@ export class GcpAccount implements gcp.Account {
     }
 
     // Create VM instance
-    const installScript = this.getInstallScript();
-    const createInstanceOp = await this.apiClient.createInstance(
-        projectId, name, zoneId, GcpAccount.MACHINE_SIZE, installScript);
-    const createInstanceWait = await this.apiClient.computeEngineOperationZoneWait(
-        projectId, zoneId, createInstanceOp.name);
-    if (createInstanceWait.error?.errors) {
+    const createInstanceData = this.makeCreateInstanceRequestData(name, zoneId);
+    let createInstanceOperation = await this.apiClient.createInstance(projectId, zoneId, createInstanceData);
+    createInstanceOperation = await this.apiClient.computeEngineOperationZoneWait(
+        projectId, zoneId, createInstanceOperation.name);
+    if (createInstanceOperation.error?.errors) {
       // TODO: Throw error.
     }
 
     const instance =
-        await this.apiClient.getInstance(projectId, createInstanceWait.targetId, zoneId);
+        await this.apiClient.getInstance(projectId, createInstanceOperation.targetId, zoneId);
     console.log('instance', instance);
 
     // Promote ephemeral IP to static IP
     const regionId = zoneId.substring(0, zoneId.lastIndexOf('-'));
     const ipAddress = instance.networkInterfaces[0].accessConfigs[0].natIP;
+    const createStaticIpData = {
+      name,
+      address: ipAddress,
+    };
     let createStaticIpOperation =
-        await this.apiClient.createStaticIp(projectId, name, regionId, ipAddress);
+        await this.apiClient.createStaticIp(projectId, regionId, createStaticIpData);
     createStaticIpOperation = await this.apiClient.computeEngineOperationRegionWait(
         projectId, regionId, createStaticIpOperation.name);
     if (createStaticIpOperation.error?.errors) {
@@ -213,11 +229,16 @@ export class GcpAccount implements gcp.Account {
 
   private async configureProject(projectId: string, billingAccountId: string): Promise<void> {
     // Link billing account
-    await this.apiClient.updateProjectBillingInfo(projectId, billingAccountId);
+    const updateProjectBillingInfoData =
+        this.makeUpdateProjectBillingInfoRequestData(projectId, billingAccountId);
+    await this.apiClient.updateProjectBillingInfo(projectId, updateProjectBillingInfoData);
 
     // Enable APIs
+    const enableServicesData = {
+      serviceIds: GcpAccount.REQUIRED_GCP_SERVICES,
+    };
     const enableServicesResponse =
-        await this.apiClient.enableServices(projectId, GcpAccount.REQUIRED_GCP_SERVICES);
+        await this.apiClient.enableServices(projectId, enableServicesData);
     let enableServicesOperation = null;
     while (!enableServicesOperation?.done) {
       await sleep(2 * 1000);
@@ -227,6 +248,72 @@ export class GcpAccount implements gcp.Account {
     if (enableServicesResponse.error) {
       // TODO: Throw error.
     }
+  }
+
+  private makeCreateFirewallRequestData(name: string): {} {
+    return {
+      name: GcpAccount.OUTLINE_FIREWALL_NAME,
+      direction: 'INGRESS',
+      priority: 1000,
+      targetTags: [name],
+      allowed: [
+        {
+          IPProtocol: 'all',
+        },
+      ],
+      sourceRanges: ['0.0.0.0/0'],
+    };
+  }
+
+  private makeCreateInstanceRequestData(name: string, zoneId: string): {} {
+    const installScript = this.getInstallScript();
+    return {
+      name,
+      machineType: `zones/${zoneId}/machineTypes/${GcpAccount.MACHINE_SIZE}`,
+      disks: [
+        {
+          boot: true,
+          initializeParams: {
+            sourceImage: 'projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts',
+          },
+        },
+      ],
+      networkInterfaces: [
+        {
+          network: 'global/networks/default',
+          // Empty accessConfigs necessary to allocate ephemeral IP
+          accessConfigs: [{}],
+        },
+      ],
+      labels: {
+        outline: 'true',
+      },
+      tags: {
+        // This must match the firewall name.
+        items: ['outline'],
+      },
+      metadata: {
+        items: [
+          {
+            key: 'enable-guest-attributes',
+            value: 'TRUE',
+          },
+          {
+            key: 'user-data',
+            value: installScript,
+          },
+        ],
+      },
+    };
+  }
+
+  private makeUpdateProjectBillingInfoRequestData(
+      projectId: string, billingAccountId: string): {} {
+    return {
+      name: `projects/${projectId}/billingInfo`,
+          projectId,
+          billingAccountName: `billingAccounts/${billingAccountId}`,
+    };
   }
 
   private getInstallScript(): string {
