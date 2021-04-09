@@ -153,7 +153,7 @@ export class OutlineRegionPicker extends LitElement {
       composed: true,
       detail: {selectedRegionId: this.selectedLocationId}
     };
-    const customEvent = new CustomEvent('region-selected', params);
+    const customEvent = new CustomEvent('RegionSelected', params);
     this.dispatchEvent(customEvent);
   }
 }

@@ -70,8 +70,6 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
 
       await sleep(GcpServer.GUEST_ATTRIBUTES_POLLING_INTERVAL_MS);
     }
-
-    // TODO: Handle user clicking cancel and deleting server.
   }
 
   private async getOutlineGuestAttributes(projectId: string, instanceId: string, zone: string):

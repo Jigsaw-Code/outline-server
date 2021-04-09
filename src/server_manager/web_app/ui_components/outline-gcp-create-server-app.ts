@@ -25,6 +25,7 @@ import {GcpAccount} from '../gcp_account';
 import {COMMON_STYLES} from './cloud-install-styles';
 import {Location, OutlineRegionPicker} from './outline-region-picker-step';
 
+// TODO: Map region ids to country codes.
 /** @see https://cloud.google.com/compute/docs/regions-zones */
 const LOCATION_MAP = new Map<string, string>([
   ['asia-east1', 'Changhua County, Taiwan'],
@@ -56,7 +57,7 @@ const LOCATION_MAP = new Map<string, string>([
 
 // GCP mapping of regions to flags
 const FLAG_IMAGE_DIR = 'images/flags';
-const GCP_FLAG_MAPPING: {[cityId: string]: string} = {
+const GCP_FLAG_MAPPING: {[regionId: string]: string} = {
   // 'asia-east1': `${FLAG_IMAGE_DIR}/unknown.png`,
   // 'asia-east2': `${FLAG_IMAGE_DIR}/unknown.png`,
   // 'asia-northeast1': `${FLAG_IMAGE_DIR}/unknown.png`,
@@ -191,82 +192,95 @@ export class GcpCreateServerApp extends LitElement {
   }
 
   render() {
-    return html`
-      <iron-pages id="pages" attr-for-selected="id" .selected="${this.currentPage}">
-        <outline-step-view id="billingAccountSetup" display-action="">
-          <span slot="step-title">Activate your Google Cloud Platform account.</span>
-          <span slot="step-description">Enter your billing information on Google Cloud Platform.</span>
-          <span slot="step-action">
-            <paper-button id="createServerButton" @tap="${this.handleBillingVerificationNextTap}">
-              NEXT
-            </paper-button>
-          </span>
-          <paper-card class="card">
-            <div class="container">
-              <img src="images/do_oauth_billing.svg">
-              <p>Enter you billing information on Google Cloud Platform</p>
-              <!-- TODO: Add call to action to open GCP billing accounts page -->
-              <!-- https://console.cloud.google.com/billing --> 
-            </div>
-          </paper-card>  
-        </outline-step-view>
-        
-        <outline-step-view id="projectSetup" display-action="">
-          <span slot="step-title">Create your Google Cloud Platform project.</span>
-          <span slot="step-description">This will create a new project on your GCP account to hold your Outline servers.</span>
-          <span slot="step-action">
-            <paper-button 
-                id="createServerButton" 
-                @tap="${this.handleProjectSetupNextTap}" 
-                ?disabled="${
-    !this.isProjectSetupNextEnabled(this.selectedProjectId, this.selectedBillingAccountId)}">
-              CREATE PROJECT
-            </paper-button>
-          </span>
-            <div class="section">
-              <div class="section-header">
-                <span class="stepcircle">1</span>
-                <div class="instructions">
-                  Name your new Google Cloud Project
-                </div>
-              </div>
-              <div class="section-content">
-                <!-- TODO: Make readonly if project already exists -->
-                <paper-input id="projectName" value="${this.selectedProjectId}"
-                    label="Project ID" always-float-label="" maxlength="100" @value-changed="${
-        this.onProjectIdChanged}"></paper-input>
-              </div>
-            </div>
-            
-            <div class="section">
-              <div class="section-header">
-                <span class="stepcircle">2</span>
-                <div class="instructions">
-                  Choose your preferred billing method for this project
-                </div>
-              </div>
-              <div class="section-content">
-                <paper-dropdown-menu id="billingAccount" no-label-float="">
-                  <paper-listbox slot="dropdown-content" selected="${
-        this.selectedBillingAccountId}" attr-for-selected="name" @selected-changed="${
-        this.onBillingAccountSelected}">
-                  ${this.billingAccounts.map(billingAccount => {
-      return html`<paper-item name="${billingAccount.id}">${billingAccount.name}</paper-item>`;
-    })}
-                  </paper-listbox>
-                </paper-dropdown-menu>
-              </div>
-            </div>
-            ${
-        this.isProjectBeingCreated ?
-        html`<paper-progress indeterminate="" class="slow"></paper-progress>` :
-        ''}
-        </outline-step-view>
+    switch(this.currentPage) {
+      case 'billingAccountSetup': return this.renderBillingAccountSetup();
+      case 'projectSetup': return this.renderProjectSetup();
+      case 'regionPicker': return this.renderRegionPicker();
+      default: { }
+    }
+  }
 
-        <outline-region-picker-step id="regionPicker" .localize=${
-        this.localize} @region-selected="${this.onRegionSelected}">  
-        </outline-region-picker-step>
-      </iron-pages>`;
+  private renderBillingAccountSetup() {
+    return html`
+      <outline-step-view id="billingAccountSetup" display-action="">
+        <span slot="step-title">Activate your Google Cloud Platform account.</span>
+        <span slot="step-description">Enter your billing information on Google Cloud Platform.</span>
+        <span slot="step-action">
+          <paper-button id="createServerButton" @tap="${this.handleBillingVerificationNextTap}">
+            NEXT
+          </paper-button>
+        </span>
+        <paper-card class="card">
+          <div class="container">
+            <img src="images/do_oauth_billing.svg">
+            <p>Enter you billing information on Google Cloud Platform</p>
+            <!-- TODO: Add call to action to open GCP billing accounts page -->
+            <!-- https://console.cloud.google.com/billing --> 
+          </div>
+        </paper-card>  
+      </outline-step-view>`;
+  }
+
+  private renderProjectSetup() {
+    return html`        
+      <outline-step-view id="projectSetup" display-action="">
+        <span slot="step-title">Create your Google Cloud Platform project.</span>
+        <span slot="step-description">This will create a new project on your GCP account to hold your Outline servers.</span>
+        <span slot="step-action">
+          <paper-button 
+              id="createServerButton" 
+              @tap="${this.handleProjectSetupNextTap}" 
+              ?disabled="${
+      !this.isProjectSetupNextEnabled(this.selectedProjectId, this.selectedBillingAccountId)}">
+            CREATE PROJECT
+          </paper-button>
+        </span>
+          <div class="section">
+            <div class="section-header">
+              <span class="stepcircle">1</span>
+              <div class="instructions">
+                Name your new Google Cloud Project
+              </div>
+            </div>
+            <div class="section-content">
+              <!-- TODO: Make readonly if project already exists -->
+              <paper-input id="projectName" value="${this.selectedProjectId}"
+                  label="Project ID" always-float-label="" maxlength="100" @value-changed="${
+      this.onProjectIdChanged}"></paper-input>
+            </div>
+          </div>
+          
+          <div class="section">
+            <div class="section-header">
+              <span class="stepcircle">2</span>
+              <div class="instructions">
+                Choose your preferred billing method for this project
+              </div>
+            </div>
+            <div class="section-content">
+              <paper-dropdown-menu id="billingAccount" no-label-float="">
+                <paper-listbox slot="dropdown-content" selected="${
+      this.selectedBillingAccountId}" attr-for-selected="name" @selected-changed="${
+      this.onBillingAccountSelected}">
+                ${this.billingAccounts.map(billingAccount => {
+    return html`<paper-item name="${billingAccount.id}">${billingAccount.name}</paper-item>`;
+  })}
+                </paper-listbox>
+              </paper-dropdown-menu>
+            </div>
+          </div>
+          ${
+      this.isProjectBeingCreated ?
+          html`<paper-progress indeterminate="" class="slow"></paper-progress>` :
+          ''}
+      </outline-step-view>`;
+  }
+
+  private renderRegionPicker() {
+    return html`
+      <outline-region-picker-step id="regionPicker" .localize=${
+        this.localize} @RegionSelected="${this.onRegionSelected}">  
+      </outline-region-picker-step>`;
   }
 
   async start(account: GcpAccount): Promise<void> {
@@ -295,8 +309,6 @@ export class GcpCreateServerApp extends LitElement {
     this.currentPage = '';
     this.selectedProjectId = '';
     this.selectedBillingAccountId = '';
-    this.regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
-    this.regionPicker.reset();
   }
 
   private showBillingAccountSetup(): void {
@@ -348,6 +360,7 @@ export class GcpCreateServerApp extends LitElement {
     const locations = Object.entries(regionMap).map(([regionId, zoneIds]) => {
       return this.createLocationModel(regionId, zoneIds);
     });
+    this.regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
     this.regionPicker.locations = locations;
   }
 
@@ -366,15 +379,14 @@ export class GcpCreateServerApp extends LitElement {
     const server =
         await this.account.createServer(this.project.id, name, event.detail.selectedRegionId);
     const params = {bubbles: true, composed: true, detail: {server}};
-    const serverCreatedEvent = new CustomEvent('gcp-server-created', params);
+    const serverCreatedEvent = new CustomEvent('GcpServerCreated', params);
     this.dispatchEvent(serverCreatedEvent);
   }
 
   private createLocationModel(regionId: string, zoneIds: string[]): Location {
     return {
       id: zoneIds.length > 0 ? zoneIds[0] : null,
-      // TODO: Add defaults for missing flags and names
-      name: LOCATION_MAP.get(regionId),
+      name: LOCATION_MAP.get(regionId) ?? regionId,
       flag: GCP_FLAG_MAPPING[regionId] || `${FLAG_IMAGE_DIR}/unknown.png`,
       available: zoneIds.length > 0,
     };

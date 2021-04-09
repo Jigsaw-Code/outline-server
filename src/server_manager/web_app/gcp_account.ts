@@ -187,6 +187,7 @@ export class GcpAccount implements gcp.Account {
     let createFirewallOperation = null;
     if (!getFirewallResponse?.items || getFirewallResponse?.items?.length === 0) {
       const createFirewallData = this.makeCreateFirewallRequestData(name);
+      // TODO: Move the wait to the createFirewall call.
       createFirewallOperation = await this.apiClient.createFirewall(projectId, createFirewallData);
       createFirewallOperation = await this.apiClient.computeEngineOperationGlobalWait(
           projectId, createFirewallOperation.name);
@@ -197,6 +198,7 @@ export class GcpAccount implements gcp.Account {
 
     // Create VM instance
     const createInstanceData = this.makeCreateInstanceRequestData(name, zoneId);
+    // TODO: Move the wait to the createInstance call.
     let createInstanceOperation =
         await this.apiClient.createInstance(projectId, zoneId, createInstanceData);
     createInstanceOperation = await this.apiClient.computeEngineOperationZoneWait(
@@ -215,6 +217,7 @@ export class GcpAccount implements gcp.Account {
       name,
       address: ipAddress,
     };
+    // TODO: Move the wait to the createStaticIp call.
     let createStaticIpOperation =
         await this.apiClient.createStaticIp(projectId, regionId, createStaticIpData);
     createStaticIpOperation = await this.apiClient.computeEngineOperationRegionWait(

@@ -150,7 +150,7 @@ export class App {
     appRoot.addEventListener('CreateGcpServerRequested', async (event: CustomEvent) => {
       this.appRoot.getAndShowGcpCreateServerApp().start(this.gcpAccount);
     });
-    appRoot.addEventListener('gcp-server-created', (event: CustomEvent) => {
+    appRoot.addEventListener('GcpServerCreated', (event: CustomEvent) => {
       const server = event.detail.server;
       this.addServer(this.gcpAccount.getId(), server);
       this.showServer(server);
@@ -165,7 +165,6 @@ export class App {
     });
 
     appRoot.addEventListener('SetUpServerRequested', (event: CustomEvent) => {
-      console.log('inside app.ts');
       this.createDigitalOceanServer(event.detail.regionId);
     });
 
