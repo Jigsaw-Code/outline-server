@@ -129,12 +129,13 @@ export class RestApiClient {
    * @param zoneId - The zone in which to create the instance.
    * @param data - Request body data. See documentation.
    */
-  createInstance(projectId: string, zoneId: string, data: {}): Promise<ComputeEngineOperation> {
-    return this.fetchAuthenticated(
+  async createInstance(projectId: string, zoneId: string, data: {}): Promise<ComputeEngineOperation> {
+    const operation = await this.fetchAuthenticated<ComputeEngineOperation>(
         'POST',
         new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
             zoneId}/instances`),
         this.GCP_HEADERS, null, data);
+    return await this.computeEngineOperationZoneWait(projectId, zoneId, operation.name);
   }
 
   /**
@@ -209,12 +210,13 @@ export class RestApiClient {
    * @param regionId - The GCP region.
    * @param data - Request body data. See documentation.
    */
-  createStaticIp(projectId: string, regionId: string, data: {}): Promise<ComputeEngineOperation> {
-    return this.fetchAuthenticated(
+  async createStaticIp(projectId: string, regionId: string, data: {}): Promise<ComputeEngineOperation> {
+    const operation = await this.fetchAuthenticated<ComputeEngineOperation>(
         'POST',
         new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/regions/${
             regionId}/addresses`),
         this.GCP_HEADERS, null, data);
+    return await this.computeEngineOperationRegionWait(projectId, regionId, operation.name);
   }
 
   /**
@@ -271,11 +273,12 @@ export class RestApiClient {
    * @param projectId - The GCP project ID.
    * @param data - Request body data. See documentation.
    */
-  createFirewall(projectId: string, data: {}): Promise<ComputeEngineOperation> {
-    return this.fetchAuthenticated(
+  async createFirewall(projectId: string, data: {}): Promise<ComputeEngineOperation> {
+    const operation = await this.fetchAuthenticated<ComputeEngineOperation>(
         'POST',
         new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/global/firewalls`),
         this.GCP_HEADERS, null, data);
+    return await this.computeEngineOperationGlobalWait(projectId, operation.name);
   }
 
   /**

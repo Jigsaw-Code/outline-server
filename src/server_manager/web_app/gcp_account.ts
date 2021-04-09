@@ -184,13 +184,9 @@ export class GcpAccount implements gcp.Account {
     // Configure Outline firewall
     const getFirewallResponse =
         await this.apiClient.listFirewalls(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
-    let createFirewallOperation = null;
     if (!getFirewallResponse?.items || getFirewallResponse?.items?.length === 0) {
       const createFirewallData = this.makeCreateFirewallRequestData(name);
-      // TODO: Move the wait to the createFirewall call.
-      createFirewallOperation = await this.apiClient.createFirewall(projectId, createFirewallData);
-      createFirewallOperation = await this.apiClient.computeEngineOperationGlobalWait(
-          projectId, createFirewallOperation.name);
+      const createFirewallOperation = await this.apiClient.createFirewall(projectId, createFirewallData);
       if (createFirewallOperation.error?.errors) {
         // TODO: Throw error.
       }
@@ -198,11 +194,8 @@ export class GcpAccount implements gcp.Account {
 
     // Create VM instance
     const createInstanceData = this.makeCreateInstanceRequestData(name, zoneId);
-    // TODO: Move the wait to the createInstance call.
-    let createInstanceOperation =
+    const createInstanceOperation =
         await this.apiClient.createInstance(projectId, zoneId, createInstanceData);
-    createInstanceOperation = await this.apiClient.computeEngineOperationZoneWait(
-        projectId, zoneId, createInstanceOperation.name);
     if (createInstanceOperation.error?.errors) {
       // TODO: Throw error.
     }
@@ -217,11 +210,8 @@ export class GcpAccount implements gcp.Account {
       name,
       address: ipAddress,
     };
-    // TODO: Move the wait to the createStaticIp call.
-    let createStaticIpOperation =
+    const createStaticIpOperation =
         await this.apiClient.createStaticIp(projectId, regionId, createStaticIpData);
-    createStaticIpOperation = await this.apiClient.computeEngineOperationRegionWait(
-        projectId, regionId, createStaticIpOperation.name);
     if (createStaticIpOperation.error?.errors) {
       // TODO: Delete VM instance. Throw error.
     }
