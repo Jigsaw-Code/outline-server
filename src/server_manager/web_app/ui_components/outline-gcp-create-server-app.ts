@@ -192,11 +192,15 @@ export class GcpCreateServerApp extends LitElement {
   }
 
   render() {
-    switch(this.currentPage) {
-      case 'billingAccountSetup': return this.renderBillingAccountSetup();
-      case 'projectSetup': return this.renderProjectSetup();
-      case 'regionPicker': return this.renderRegionPicker();
-      default: { }
+    switch (this.currentPage) {
+      case 'billingAccountSetup':
+        return this.renderBillingAccountSetup();
+      case 'projectSetup':
+        return this.renderProjectSetup();
+      case 'regionPicker':
+        return this.renderRegionPicker();
+      default: {
+      }
     }
   }
 
@@ -231,7 +235,7 @@ export class GcpCreateServerApp extends LitElement {
               id="createServerButton" 
               @tap="${this.handleProjectSetupNextTap}" 
               ?disabled="${
-      !this.isProjectSetupNextEnabled(this.selectedProjectId, this.selectedBillingAccountId)}">
+    !this.isProjectSetupNextEnabled(this.selectedProjectId, this.selectedBillingAccountId)}">
             CREATE PROJECT
           </paper-button>
         </span>
@@ -246,7 +250,7 @@ export class GcpCreateServerApp extends LitElement {
               <!-- TODO: Make readonly if project already exists -->
               <paper-input id="projectName" value="${this.selectedProjectId}"
                   label="Project ID" always-float-label="" maxlength="100" @value-changed="${
-      this.onProjectIdChanged}"></paper-input>
+        this.onProjectIdChanged}"></paper-input>
             </div>
           </div>
           
@@ -260,26 +264,26 @@ export class GcpCreateServerApp extends LitElement {
             <div class="section-content">
               <paper-dropdown-menu id="billingAccount" no-label-float="">
                 <paper-listbox slot="dropdown-content" selected="${
-      this.selectedBillingAccountId}" attr-for-selected="name" @selected-changed="${
-      this.onBillingAccountSelected}">
+        this.selectedBillingAccountId}" attr-for-selected="name" @selected-changed="${
+        this.onBillingAccountSelected}">
                 ${this.billingAccounts.map(billingAccount => {
-    return html`<paper-item name="${billingAccount.id}">${billingAccount.name}</paper-item>`;
-  })}
+      return html`<paper-item name="${billingAccount.id}">${billingAccount.name}</paper-item>`;
+    })}
                 </paper-listbox>
               </paper-dropdown-menu>
             </div>
           </div>
           ${
-      this.isProjectBeingCreated ?
-          html`<paper-progress indeterminate="" class="slow"></paper-progress>` :
-          ''}
+        this.isProjectBeingCreated ?
+        html`<paper-progress indeterminate="" class="slow"></paper-progress>` :
+        ''}
       </outline-step-view>`;
   }
 
   private renderRegionPicker() {
     return html`
-      <outline-region-picker-step id="regionPicker" .localize=${
-        this.localize} @RegionSelected="${this.onRegionSelected}">  
+      <outline-region-picker-step id="regionPicker" .localize=${this.localize} @RegionSelected="${
+        this.onRegionSelected}">  
       </outline-region-picker-step>`;
   }
 
