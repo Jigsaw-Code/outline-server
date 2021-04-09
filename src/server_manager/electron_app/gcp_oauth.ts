@@ -22,7 +22,11 @@ const OAUTH_CONFIG = {
   client_id: '946220775492-osi1dm2rhhpo4upm6qqfv9fiivv1qu6c.apps.googleusercontent.com',
   scopes: [
     'https://www.googleapis.com/auth/userinfo.email',
-    'https://www.googleapis.com/auth/cloud-platform',
+    'https://www.googleapis.com/auth/compute',
+    'https://www.googleapis.com/auth/cloudplatformprojects',
+    'https://www.googleapis.com/auth/cloud-billing',
+    'https://www.googleapis.com/auth/service.management',
+    'https://www.googleapis.com/auth/cloud-platform.read-only',
   ],
 };
 const REDIRECT_PATH = '/gcp/oauth/callback';

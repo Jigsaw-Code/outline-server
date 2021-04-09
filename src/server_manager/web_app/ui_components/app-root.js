@@ -30,6 +30,7 @@ import './cloud-install-styles.js';
 import './outline-about-dialog.js';
 import './outline-do-oauth-step.js';
 import './outline-gcp-oauth-step';
+import './outline-gcp-create-server-app';
 import './outline-feedback-dialog.js';
 import './outline-survey-dialog.js';
 import './outline-intro-step.js';
@@ -45,8 +46,6 @@ import {AppLocalizeBehavior} from '@polymer/app-localize-behavior/app-localize-b
 import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 import {PolymerElement} from '@polymer/polymer/polymer-element.js';
-
-import {displayDataAmountToBytes} from '../data_formatting';
 
 import {ServerView} from './outline-server-view.js';
 
@@ -389,9 +388,10 @@ export class AppRoot extends mixinBehaviors
         <app-header-layout>
           <div class="app-container">
             <iron-pages attr-for-selected="id" selected="{{ currentPage }}">
-              <outline-intro-step id="intro" digital-ocean-account-name="{{digitalOceanAccount.name}}" gcp-account-name="{{gcpAccountName}}" localize="[[localize]]"></outline-intro-step>
+              <outline-intro-step id="intro" digital-ocean-account-name="{{digitalOceanAccount.name}}" gcp-account-name="{{gcpAccount.name}}" localize="[[localize]]"></outline-intro-step>
               <outline-do-oauth-step id="digitalOceanOauth" localize="[[localize]]"></outline-do-oauth-step>
               <outline-gcp-oauth-step id="gcpOauth" localize="[[localize]]"></outline-gcp-oauth-step>
+              <outline-gcp-create-server-app id="gcpCreateServer" localize="[[localize]]"></outline-gcp-create-server-app>
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
               <outline-region-picker-step id="regionPicker" localize="[[localize]]"></outline-region-picker-step>
               <outline-server-list id="serverView" server-list="[[serverList]]" selected-server-id="[[selectedServerId]]" language="[[language]]" localize="[[localize]]"></outline-server-list>
@@ -461,7 +461,7 @@ export class AppRoot extends mixinBehaviors
             <div class="do-overflow-menu" slot="dropdown-content">
               <h4>[[localize('digitalocean-disconnect-account')]]</h4>
               <div class="account-info"><img src="images/digital_ocean_logo.svg">[[digitalOceanAccount.name]]</div>
-              <div class="sign-out-button" on-tap="signOutTapped">[[localize('digitalocean-disconnect')]]</div>
+              <div class="sign-out-button" on-tap="_digitalOceanSignOutTapped">[[localize('digitalocean-disconnect')]]</div>
             </div>
           </paper-menu-button>
         </div>
@@ -474,7 +474,28 @@ export class AppRoot extends mixinBehaviors
           </template>
         </div>
       </div>
-      <!-- TODO(fortuna): Insert GCP servers here -->
+      <!-- GCP servers -->
+      <div class="servers-section" hidden\$="[[!gcpAccount]]">
+        <div class="servers-header">
+          <span>[[localize('servers-gcp')]]</span>
+          <paper-menu-button horizontal-align="left" class="" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
+            <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
+            <div class="do-overflow-menu" slot="dropdown-content">
+              <h4>[[localize('gcp-disconnect-account')]]</h4>
+              <div class="account-info"><img src="images/gcp-logo.svg">[[gcpAccount.name]]</div>
+              <div class="sign-out-button" on-tap="_gcpSignOutTapped">[[localize('gcp-disconnect')]]</div>
+            </div>
+          </paper-menu-button>
+        </div>
+        <div class="servers-container">
+          <template is="dom-repeat" items="[[serverList]]" as="server" filter="[[_accountServerFilter(gcpAccount)]]" sort="_sortServersByName">
+            <div class\$="server [[_computeServerClasses(selectedServerId, server)]]" data-server\$="[[server]]" on-tap="_showServer">
+              <img class="server-icon" src\$="images/[[_computeServerImage(selectedServerId, server)]]">
+              <span>[[server.name]]</span>
+            </div>
+          </template>
+        </div>
+      </div>
       <!-- Manual servers -->
       <div class="servers-section" hidden\$="[[!_hasManualServers(serverList)]]">
         <div class="servers-header">
@@ -503,7 +524,15 @@ export class AppRoot extends mixinBehaviors
           </div>
         </template>
       </div>
-      <!-- TODO(fortuna): Insert GCP servers here -->
+      <!-- GCP servers -->
+      <div class="side-bar-section servers-section" hidden\$="[[!gcpAccount]]">
+        <img class="provider-icon" src="images/gcp-logo.svg">
+        <template is="dom-repeat" items="[[serverList]]" as="server" filter="[[_accountServerFilter(gcpAccount)]]" sort="_sortServersByName">
+          <div class\$="server [[_computeServerClasses(selectedServerId, server)]]" data-server\$="[[server]]" on-tap="_showServer">
+            <img class="server-icon" src\$="images/[[_computeServerImage(selectedServerId, server)]]">
+          </div>
+        </template>
+      </div>
       <!-- Manual servers -->
       <div class="side-bar-section servers-section" hidden\$="[[!_hasManualServers(serverList)]]">
         <img class="provider-icon" src="images/cloud.svg">
@@ -648,6 +677,12 @@ export class AppRoot extends mixinBehaviors
     const oauthFlow = this.$.gcpOauth;
     oauthFlow.onCancel = onCancel;
     return oauthFlow;
+  }
+
+  /** @return {GcpCreateServerApp} */
+  getAndShowGcpCreateServerApp() {
+    this.currentPage = 'gcpCreateServer';
+    return this.$.gcpCreateServer;
   }
 
   getAndShowRegionPicker() {
@@ -817,8 +852,12 @@ export class AppRoot extends mixinBehaviors
     this.maybeCloseDrawer();
   }
 
-  signOutTapped() {
-    this.fire('SignOutRequested');
+  _digitalOceanSignOutTapped() {
+    this.fire('DigitalOceanSignOutRequested');
+  }
+
+  _gcpSignOutTapped() {
+    this.fire('GcpSignOutRequested');
   }
 
   openManualInstallFeedback(/** @type {string} */ prepopulatedMessage) {

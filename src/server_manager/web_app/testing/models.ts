@@ -25,7 +25,6 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
   getId(): string {
     return 'account-id';
   }
-
   async getName(): Promise<string> {
     return 'fake-digitalocean-account-name';
   }
@@ -49,13 +48,42 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
 }
 
 export class FakeGcpAccount implements gcp.Account {
-  constructor(private refreshToken = 'fake-access-token') {}
+  constructor(
+      private refreshToken = 'fake-access-token',
+      private billingAccounts: gcp.BillingAccount[] = [], private locations: gcp.ZoneMap = {}) {}
 
+  getId() {
+    return 'id';
+  }
   async getName(): Promise<string> {
     return 'fake-gcp-account-name';
   }
   getRefreshToken(): string {
     return this.refreshToken;
+  }
+  createServer(projectId: string, name: string, zoneId: string): Promise<server.ManagedServer> {
+    return undefined;
+  }
+  async listLocations(projectId: string): Promise<Readonly<gcp.ZoneMap>> {
+    return this.locations;
+  }
+  async listServers(projectId: string): Promise<server.ManagedServer[]> {
+    return [];
+  }
+  async createProject(id: string, billingAccountId: string): Promise<gcp.Project> {
+    return {
+      id: 'project-id',
+      name: 'project-name',
+    };
+  }
+  async isProjectHealthy(projectId: string): Promise<boolean> {
+    return true;
+  }
+  async listBillingAccounts(): Promise<gcp.BillingAccount[]> {
+    return this.billingAccounts;
+  }
+  async listProjects(): Promise<gcp.Project[]> {
+    return [];
   }
 }
 

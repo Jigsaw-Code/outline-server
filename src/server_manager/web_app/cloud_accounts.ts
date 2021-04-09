@@ -123,7 +123,7 @@ export class CloudAccounts implements accounts.CloudAccounts {
   }
 
   private createGcpAccount(refreshToken: string): GcpAccount {
-    return new GcpAccount(refreshToken);
+    return new GcpAccount('gcp', refreshToken);
   }
 
   private save(): void {
