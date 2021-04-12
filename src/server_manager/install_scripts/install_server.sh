@@ -302,7 +302,7 @@ function start_shadowbox() {
     -e "SB_CERTIFICATE_FILE=${SB_CERTIFICATE_FILE}"
     -e "SB_PRIVATE_KEY_FILE=${SB_PRIVATE_KEY_FILE}"
     -e "SB_METRICS_URL=${SB_METRICS_URL:-}"
-    -e "SB_DEFAULT_SERVER_NAME=${SB_DEFAULT_SERVER_NAME:-}"
+    -e "SB_DEFAULT_SERVER_NAME=${SB_DEFAULT_SERVER_NAME}"
   )
   # By itself, local messes up the return code.
   local STDERR_OUTPUT
