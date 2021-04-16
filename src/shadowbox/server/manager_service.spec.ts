@@ -805,6 +805,12 @@ function fakeSharedMetricsReporter(): SharedMetricsPublisher {
 
 function getAccessKeyRepository(): ServerAccessKeyRepository {
   return new ServerAccessKeyRepository(
-      OLD_PORT, 'hostname', new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}),
-      new FakeShadowsocksServer(), new FakePrometheusClient({}));
+      OLD_PORT,
+      'hostname',
+      new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}),
+      new FakeShadowsocksServer(),
+      new FakePrometheusClient({}),
+      'TODOBEFOREPUSH',
+      9999,
+      null);
 }

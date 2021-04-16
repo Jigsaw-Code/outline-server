@@ -53,10 +53,10 @@ export type Token = string;
 
 export interface AccessKeyRepository {
   // Creates a new dynamic key
-  createDynamicKey(token?: Token|undefined): Promise<Token>;
+  createDynamicKey(token?: Token|undefined): Promise<string>;
   // Rotates the dynamic key mapped to the given token.  Rejects if no key exists for the given
   // token.
-  updateDynamicKey(token: Token): Promise<AccessKey>;
+  updateDynamicKey(token: Token): Promise<string>;
   // Retrieves the config for a dynamic key.  Returns undefined if no key exists for the given
   // token.
   getDynamicKey(token: Token): AccessKey|undefined;

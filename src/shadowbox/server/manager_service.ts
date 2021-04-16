@@ -67,6 +67,7 @@ interface RequestType {
 }
 interface ResponseType {
   send(code: number, data?: {}): void;
+  redirect?(code: number, url: string, next: restify.Next);
 }
 
 enum HttpSuccess {
@@ -110,14 +111,9 @@ export function bindService(
       redirect(`${apiPrefix}/server/access-key-data-limit`));
 
   // Dynamic, single-user keys
-  apiServer.put(`${apiPrefix}/experimental/dynamic-key`, service.createDynamicKey.bind(service));
-  // Since GET on a resource should be idempotent, we use an in-path token instead of request bodies
-  // TODO: this exposes us to a malicious client POST-ing when they should GET and invalidating
-  // other clients using the key, allowing a DoS on the key.
-  apiServer.post(
-      `${apiPrefix}/experimental/dynamic-key/:token`, service.updateDynamicKey.bind(service));
-  apiServer.get(
-      `${apiPrefix}/experimental/dynamic-key/:token`, service.getDynamicKey.bind(service));
+  apiServer.put(`${apiPrefix}/experimental/dynamic-key`, service.createOrUpdateDynamicKey.bind(service));
+  apiServer.post(`${apiPrefix}/experimental/dynamic-key/:token`, service.createOrUpdateDynamicKey.bind(service));
+  apiServer.get(`/:token`, service.getDynamicKey.bind(service));
 }
 
 // Returns a request handler that redirects a bound request path to `url` with HTTP status code 308.
@@ -262,39 +258,27 @@ export class ShadowsocksManagerService {
   }
 
   /**
-   * Creates a new dynamic key and responds with the new token mapping to the key.
+   * Creates a new dynamic key and responds with the new token mapping to the key. If passed a token,
+   * rotates the backing config.
    */
-  public async createDynamicKey(req: RequestType, res: ResponseType, next: restify.Next):
+  public async createOrUpdateDynamicKey(req: RequestType, res: ResponseType, next: restify.Next):
       Promise<void> {
     logging.debug(`createDynamicKey request ${JSON.stringify(req.params)}`);
+    let token = req.params.token;
     try {
-      const token = await this.accessKeys.createDynamicKey();
-      res.send(201, {token});
+      if (token === undefined) {
+        const link = await this.accessKeys.createDynamicKey();
+        res.send(201, {link});
+      } else {
+        token = validateDynamicKeyToken(token);
+        const link = await this.accessKeys.updateDynamicKey(token as string);
+        res.send(201, {link});
+      }
     } catch (error) {
       logging.error(error);
       return next(new restifyErrors.InternalServerError());
     }
     return next();
-  }
-
-  /**
-   * Rotates the key mapped to by the provided token and responds with the new key.
-   */
-  public async updateDynamicKey(req: RequestType, res: ResponseType, next: restify.Next):
-      Promise<void> {
-    logging.debug(`getDynamicKey request ${JSON.stringify(req.params)}`);
-    let token = req.params.token;
-    try {
-      token = validateDynamicKeyToken(req.params.token);
-      const key = await this.accessKeys.updateDynamicKey(token as string);
-      res.send(HttpSuccess.OK, accessKeyToApiJson(key));
-    } catch (error) {
-      if (error instanceof errors.AccessKeyNotFound) {
-        return next(new restifyErrors.NotFoundError(
-            `No key associated with given token ${token as string}`));
-      }
-      return next(error);
-    }
   }
 
   /**
@@ -308,7 +292,7 @@ export class ShadowsocksManagerService {
     try {
       token = validateDynamicKeyToken(req.params.token);
       const key = await this.accessKeys.getDynamicKey(token as string);
-      res.send(HttpSuccess.OK, accessKeyToApiJson(key));
+      res.redirect(307, accessKeyToApiJson(key).accessUrl, next);
     } catch (error) {
       if (error instanceof errors.AccessKeyNotFound) {
         return next(new restifyErrors.NotFoundError(

@@ -93,12 +93,13 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
   private accessKeys: ServerAccessKey[];
   private dynamicKeys: DynamicKeyMap = {};
+  private ssconfTemplate: string;
 
   constructor(
       private portForNewAccessKeys: number, private proxyHostname: string,
       private keyConfig: JsonConfig<AccessKeyConfigJson>,
       private shadowsocksServer: ShadowsocksServer, private prometheusClient: PrometheusClient,
-      private _defaultDataLimit?: DataLimit) {
+      managerCertFp: string, managerPort: number, private _defaultDataLimit?: DataLimit) {
     if (this.keyConfig.data().accessKeys === undefined) {
       this.keyConfig.data().accessKeys = [];
     }
@@ -106,6 +107,8 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       this.keyConfig.data().nextId = 0;
     }
     this.accessKeys = this.loadAccessKeys();
+    // { and } are illegal in a URL
+    this.ssconfTemplate = `ssconf://${proxyHostname}:${managerPort}/{}/?outline=1&certFp=${managerCertFp}`;
   }
 
   // Starts the Shadowsocks server and exposes the access key configuration to the server.
@@ -169,19 +172,28 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     await this.updateServer();
   }
 
-  async createDynamicKey(): Promise<Token> {
+  private createDynamicLink(token: Token): string {
+    return this.ssconfTemplate.replace('{}', token);
+  }
+
+  async createDynamicKey(): Promise<string> {
     const accessKey = this.createAccessConfig();
     const token = this.createToken();
     this.dynamicKeys[token] = accessKey.id;
     await this.addAccessKeyToServer(accessKey);
-    return token;
+    return this.createDynamicLink(token);
   }
 
-  async updateDynamicKey(token: Token): Promise<AccessKey> {
+  async updateDynamicKey(token: Token): Promise<string> {
     const accessKey = this.createAccessConfig();
+    const oldKeyId = this.dynamicKeys[token];
+    if (!oldKeyId) {
+      throw new errors.AccessKeyNotFound(`No config found for token ${token}`);
+    }
     this.dynamicKeys[token] = accessKey.id;
     await this.addAccessKeyToServer(accessKey);
-    return accessKey;
+    this.removeAccessKey(oldKeyId);
+    return this.createDynamicLink(token);
   }
 
   getDynamicKey(token: Token): AccessKey|undefined {

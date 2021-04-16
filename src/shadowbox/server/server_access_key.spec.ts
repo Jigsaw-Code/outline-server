@@ -650,6 +650,6 @@ class RepoBuilder {
   public build(): ServerAccessKeyRepository {
     return new ServerAccessKeyRepository(
         this.port_, 'hostname', this.keyConfig_, this.shadowsocksServer_, this.prometheusClient_,
-        this.defaultDataLimit_);
+        'TODOBEFOREPUSH', 54321, this.defaultDataLimit_);
   }
 }

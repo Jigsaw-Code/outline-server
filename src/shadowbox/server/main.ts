@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as http from 'http';
 import * as path from 'path';
@@ -68,6 +69,16 @@ function createRolloutTracker(serverConfig: json_config.JsonConfig<server_config
     }
   }
   return rollouts;
+}
+
+function certHash(certificate: Buffer): string {
+  const certBase64 = certificate.toString()
+     .split('\n')
+     .filter(l => !l.includes('-----'))
+     .map(l => l.trim())
+     .join('');
+  const urlSafeHash = crypto.createHash('sha256').update(certBase64).digest('hex');
+  return urlSafeHash.toUpperCase();
 }
 
 async function main() {
@@ -170,9 +181,13 @@ async function main() {
     serverConfig.data().portForNewAccessKeys = await portProvider.reserveNewPort();
     serverConfig.write();
   }
+
+  const certificate = fs.readFileSync(process.env.SB_CERTIFICATE_FILE);
+  const privateKeyFilename = process.env.SB_PRIVATE_KEY_FILE;
+
   const accessKeyRepository = new ServerAccessKeyRepository(
       serverConfig.data().portForNewAccessKeys, proxyHostname, accessKeyConfig, shadowsocksServer,
-      prometheusClient, serverConfig.data().accessKeyDataLimit);
+      prometheusClient, certHash(certificate), apiPortNumber, serverConfig.data().accessKeyDataLimit);
 
   const metricsReader = new PrometheusUsageMetrics(prometheusClient);
   const toMetricsId = (id: AccessKeyId) => {
@@ -185,15 +200,15 @@ async function main() {
   const managerMetrics = new PrometheusManagerMetrics(prometheusClient);
   const metricsCollector = new RestMetricsCollectorClient(metricsCollectorUrl);
   const metricsPublisher: SharedMetricsPublisher = new OutlineSharedMetricsPublisher(
-      new RealClock(), serverConfig, accessKeyConfig, metricsReader, toMetricsId, metricsCollector);
+    new RealClock(), serverConfig, accessKeyConfig, metricsReader, toMetricsId, metricsCollector);
+
+
   const managerService = new ShadowsocksManagerService(
       process.env.SB_DEFAULT_SERVER_NAME || 'Outline Server', serverConfig, accessKeyRepository,
       managerMetrics, metricsPublisher);
 
-  const certificateFilename = process.env.SB_CERTIFICATE_FILE;
-  const privateKeyFilename = process.env.SB_PRIVATE_KEY_FILE;
   const apiServer = restify.createServer({
-    certificate: fs.readFileSync(certificateFilename),
+    certificate,
     key: fs.readFileSync(privateKeyFilename)
   });
 
