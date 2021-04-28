@@ -503,6 +503,7 @@ describe('ServerAccessKeyRepository', () => {
     await Promise.all([repo1.createNewAccessKey(), repo1.createNewAccessKey()]);
     // Modify properties
     repo1.renameAccessKey('1', 'name');
+    repo1.setAccessKeyDataLimit('0', {bytes: 1});
 
     // Create a 2nd repo from the same config file. This simulates what
     // might happen after the shadowbox server is restarted.
