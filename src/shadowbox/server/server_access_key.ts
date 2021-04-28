@@ -64,7 +64,7 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyStorageJson): A
     password: accessKeyJson.password,
   };
   return new ServerAccessKey(
-      accessKeyJson.id, accessKeyJson.name, accessKeyJson.metricsId, proxyParams);
+      accessKeyJson.id, accessKeyJson.name, accessKeyJson.metricsId, proxyParams, accessKeyJson.dataLimit);
 }
 
 function accessKeyToStorageJson(accessKey: AccessKey): AccessKeyStorageJson {
