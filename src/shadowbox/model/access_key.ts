@@ -47,21 +47,22 @@ export interface AccessKey {
   readonly isOverDataLimit: boolean;
   // The key's current data limit.  If it exists, it overrides the server default data limit.
   readonly dataLimit?: DataLimit;
+  // The token mapping to this key
+  readonly token?: Token;
 }
 
 export type Token = string;
 
 export interface AccessKeyRepository {
-  // Creates a new dynamic key
-  createDynamicKey(token?: Token|undefined): Promise<string>;
+  // Creates a new access key.  If a token is provided, it's used for the key.  Otherwise one is generated
+  // automatically.
+  createAccessKey(token?: Token|undefined): Promise<AccessKey>;
   // Rotates the dynamic key mapped to the given token.  Rejects if no key exists for the given
   // token.
-  updateDynamicKey(token: Token): Promise<string>;
+  updateDynamicKey(token: Token): Promise<AccessKey>;
   // Retrieves the config for a dynamic key.  Returns undefined if no key exists for the given
   // token.
   getDynamicKey(token: Token): AccessKey|undefined;
-  // Creates a new access key. Parameters are chosen automatically.
-  createNewStaticAccessKey(): Promise<AccessKey>;
   // Removes the access key given its id. Throws on failure.
   removeAccessKey(id: AccessKeyId);
   // Lists all existing access keys

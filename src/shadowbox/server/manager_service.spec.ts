@@ -228,8 +228,8 @@ describe('ShadowsocksManagerService', () => {
     it('lists access keys with expected properties', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
-      const accessKey = await repo.createNewStaticAccessKey();
-      await repo.createNewStaticAccessKey();
+      const accessKey = await repo.createAccessKey();
+      await repo.createAccessKey();
       const accessKeyName = 'new name';
       await repo.renameAccessKey(accessKey.id, accessKeyName);
       const res = {
@@ -265,7 +265,7 @@ describe('ShadowsocksManagerService', () => {
     });
     it('Create returns a 500 when the repository throws an exception', (done) => {
       const repo = getAccessKeyRepository();
-      spyOn(repo, 'createNewStaticAccessKey').and.throwError('cannot write to disk');
+      spyOn(repo, 'createAccessKey').and.throwError('cannot write to disk');
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
 
       const res = {send: (httpCode, data) => {}};
@@ -285,14 +285,14 @@ describe('ShadowsocksManagerService', () => {
                           .accessKeys(repo)
                           .build();
 
-      const oldKey = await repo.createNewStaticAccessKey();
+      const oldKey = await repo.createAccessKey();
       const res = {
         send: (httpCode) => {
           expect(httpCode).toEqual(204);
         }
       };
       await service.setPortForNewAccessKeys({params: {port: NEW_PORT}}, res, () => {});
-      const newKey = await repo.createNewStaticAccessKey();
+      const newKey = await repo.createAccessKey();
       expect(newKey.proxyParams.portNumber).toEqual(NEW_PORT);
       expect(oldKey.proxyParams.portNumber).not.toEqual(NEW_PORT);
       responseProcessed = true;
@@ -435,8 +435,8 @@ describe('ShadowsocksManagerService', () => {
     it('removes keys', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
-      const key1 = await repo.createNewStaticAccessKey();
-      const key2 = await repo.createNewStaticAccessKey();
+      const key1 = await repo.createAccessKey();
+      const key2 = await repo.createAccessKey();
       const res = {
         send: (httpCode, data) => {
           expect(httpCode).toEqual(204);
@@ -486,7 +486,7 @@ describe('ShadowsocksManagerService', () => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
 
-      const key = await repo.createNewStaticAccessKey();
+      const key = await repo.createAccessKey();
       const res = {send: (httpCode, data) => {}};
       service.renameAccessKey({params: {id: 123}}, res, (error) => {
         expect(error.statusCode).toEqual(400);
@@ -513,7 +513,7 @@ describe('ShadowsocksManagerService', () => {
     it('sets access key data limit', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
-      const key = await repo.createNewStaticAccessKey();
+      const key = await repo.createAccessKey();
       const limit = {bytes: 1000};
       const res = {send: (httpCode) => {
         expect(httpCode).toEqual(204);
@@ -527,7 +527,7 @@ describe('ShadowsocksManagerService', () => {
     it('rejects negative numbers', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
-      const keyId = (await repo.createNewStaticAccessKey()).id;
+      const keyId = (await repo.createAccessKey()).id;
       const limit = {bytes: -1};
       service.setAccessKeyDataLimit({params: {id: keyId, limit}}, {send: () => {}}, (error) => {
         expect(error.statusCode).toEqual(400);
@@ -539,7 +539,7 @@ describe('ShadowsocksManagerService', () => {
     it('rejects non-numeric limits', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
-      const keyId = (await repo.createNewStaticAccessKey()).id;
+      const keyId = (await repo.createAccessKey()).id;
       const limit = {bytes: "1"};
       service.setAccessKeyDataLimit({params: {id: keyId, limit}}, {send: () => {}}, (error) => {
         expect(error.statusCode).toEqual(400);
@@ -551,7 +551,7 @@ describe('ShadowsocksManagerService', () => {
     it('rejects an empty request', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
-      const keyId = (await repo.createNewStaticAccessKey()).id;
+      const keyId = (await repo.createAccessKey()).id;
       const limit = {} as DataLimit;
       service.setAccessKeyDataLimit({params: {id: keyId, limit}}, {send: () => {}}, (error) => {
         expect(error.statusCode).toEqual(400);
@@ -563,7 +563,7 @@ describe('ShadowsocksManagerService', () => {
     it('rejects requests for nonexistent keys', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
-      await repo.createNewStaticAccessKey();
+      await repo.createAccessKey();
       const limit: DataLimit = {bytes: 1000};
       service.setAccessKeyDataLimit({params: {id: "not an id", limit}}, {send: () => {}}, (error) => {
         expect(error.statusCode).toEqual(404);
@@ -577,7 +577,7 @@ describe('ShadowsocksManagerService', () => {
     it('removes an access key data limit', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
-      const key = await repo.createNewStaticAccessKey();
+      const key = await repo.createAccessKey();
       repo.setAccessKeyDataLimit(key.id, {bytes: 1000});
       await repo.enforceAccessKeyDataLimits();
       const res = {send: (httpCode) => {
@@ -591,7 +591,7 @@ describe('ShadowsocksManagerService', () => {
     it('returns 404 for a nonexistent key', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
-      await repo.createNewStaticAccessKey();
+      await repo.createAccessKey();
       service.removeAccessKeyDataLimit({params: {id: "not an id"}}, {send: () => {}}, (error) => {
         expect(error.statusCode).toEqual(404);
         responseProcessed = true;
@@ -631,7 +631,7 @@ describe('ShadowsocksManagerService', () => {
     it('returns 400 when limit is missing values', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
-      const accessKey = await repo.createNewStaticAccessKey();
+      const accessKey = await repo.createAccessKey();
       const limit = {} as DataLimit;
       const res = {send: (httpCode, data) => {}};
       service.setDefaultDataLimit({params: {limit}}, res, (error) => {
@@ -643,7 +643,7 @@ describe('ShadowsocksManagerService', () => {
     it('returns 400 when limit has negative values', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
-      const accessKey = await repo.createNewStaticAccessKey();
+      const accessKey = await repo.createAccessKey();
       const limit = {bytes: -1};
       const res = {send: (httpCode, data) => {}};
       service.setDefaultDataLimit({params: {limit}}, res, (error) => {
@@ -656,7 +656,7 @@ describe('ShadowsocksManagerService', () => {
       const repo = getAccessKeyRepository();
       spyOn(repo, 'setDefaultDataLimit').and.throwError('cannot write to disk');
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
-      await repo.createNewStaticAccessKey();
+      await repo.createAccessKey();
       const limit = {bytes: 10000};
       const res = {send: (httpCode, data) => {}};
       service.setDefaultDataLimit({params: {limit}}, res, (error) => {
@@ -692,7 +692,7 @@ describe('ShadowsocksManagerService', () => {
       const repo = getAccessKeyRepository();
       spyOn(repo, 'removeDefaultDataLimit').and.throwError('cannot write to disk');
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
-      const accessKey = await repo.createNewStaticAccessKey();
+      const accessKey = await repo.createAccessKey();
       const res = {send: (httpCode, data) => {}};
       service.removeDefaultDataLimit({params: {id: accessKey.id}}, res, (error) => {
         expect(error.statusCode).toEqual(500);
@@ -771,15 +771,16 @@ class ShadowsocksManagerServiceBuilder {
   }
 
   build(): ShadowsocksManagerService {
+    // TODO do this for real
     return new ShadowsocksManagerService(
         this.defaultServerName_, this.serverConfig_, this.accessKeys_, this.managerMetrics_,
-        this.metricsPublisher_);
+        this.metricsPublisher_, null, null);
   }
 }
 
 async function createNewAccessKeyWithName(
     repo: AccessKeyRepository, name: string): Promise<AccessKey> {
-  const accessKey = await repo.createNewStaticAccessKey();
+  const accessKey = await repo.createAccessKey();
   try {
     repo.renameAccessKey(accessKey.id, name);
   } catch (e) {
@@ -810,7 +811,5 @@ function getAccessKeyRepository(): ServerAccessKeyRepository {
       new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}),
       new FakeShadowsocksServer(),
       new FakePrometheusClient({}),
-      'TODOBEFOREPUSH',
-      9999,
       null);
 }

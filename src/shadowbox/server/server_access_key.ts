@@ -35,6 +35,7 @@ interface AccessKeyStorageJson {
   port: number;
   encryptionMethod?: string;
   dataLimit?: DataLimit;
+  token?: Token;
 }
 
 interface DynamicKeyMap {
@@ -52,9 +53,11 @@ export interface AccessKeyConfigJson {
 // AccessKey implementation with write access enabled on properties that may change.
 class ServerAccessKey implements AccessKey {
   public isOverDataLimit = false;
+  // having a key own a token is a little odd in a world where a token is shared to multiple people and is paired with multiple keys
+  // for now this is ok, but if we decide for example to have a fixed size pool of keys, then this wouldn't work.
   constructor(
       readonly id: AccessKeyId, public name: string, public metricsId: AccessKeyMetricsId,
-      readonly proxyParams: ProxyParams, public dataLimit?: DataLimit) {}
+      readonly proxyParams: ProxyParams, public token?: Token, public dataLimit?: DataLimit) {}
 }
 
 // Generates a random password for Shadowsocks access keys.
@@ -70,7 +73,7 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyStorageJson): A
     password: accessKeyJson.password,
   };
   return new ServerAccessKey(
-      accessKeyJson.id, accessKeyJson.name, accessKeyJson.metricsId, proxyParams);
+      accessKeyJson.id, accessKeyJson.name, accessKeyJson.metricsId, proxyParams, accessKeyJson.token, accessKeyJson.dataLimit);
 }
 
 function accessKeyToStorageJson(accessKey: AccessKey): AccessKeyStorageJson {
@@ -81,6 +84,7 @@ function accessKeyToStorageJson(accessKey: AccessKey): AccessKeyStorageJson {
     password: accessKey.proxyParams.password,
     port: accessKey.proxyParams.portNumber,
     encryptionMethod: accessKey.proxyParams.encryptionMethod,
+    token: accessKey.token,
     dataLimit: accessKey.dataLimit
   };
 }
@@ -92,14 +96,12 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   private static DATA_LIMITS_ENFORCEMENT_INTERVAL_MS = 60 * 60 * 1000;  // 1h
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
   private accessKeys: ServerAccessKey[];
-  private dynamicKeys: DynamicKeyMap = {};
-  private ssconfTemplate: string;
 
   constructor(
       private portForNewAccessKeys: number, private proxyHostname: string,
       private keyConfig: JsonConfig<AccessKeyConfigJson>,
       private shadowsocksServer: ShadowsocksServer, private prometheusClient: PrometheusClient,
-      managerCertFp: string, managerPort: number, private _defaultDataLimit?: DataLimit) {
+      private _defaultDataLimit?: DataLimit) {
     if (this.keyConfig.data().accessKeys === undefined) {
       this.keyConfig.data().accessKeys = [];
     }
@@ -107,8 +109,6 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       this.keyConfig.data().nextId = 0;
     }
     this.accessKeys = this.loadAccessKeys();
-    // { and } are illegal in a URL
-    this.ssconfTemplate = `ssconf://${proxyHostname}:${managerPort}/{}/?outline=1&certFp=${managerCertFp}`;
   }
 
   // Starts the Shadowsocks server and exposes the access key configuration to the server.
@@ -151,7 +151,11 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     return uuidv4();
   }
 
-  private createAccessConfig(): AccessKey {
+  /**
+   * Creates a new access key for the server.  If a token is passed, maps the key to the given token.
+   * Otherwise a new token is generated for the new key.
+   */
+  public async createAccessKey(token?: Token): Promise<AccessKey> {
     const id = this.keyConfig.data().nextId.toString();
     this.keyConfig.data().nextId += 1;
     const metricsId = uuidv4();
@@ -162,7 +166,8 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       encryptionMethod: this.NEW_USER_ENCRYPTION_METHOD,
       password,
     };
-    const accessKey = new ServerAccessKey(id, '', metricsId, proxyParams);
+    const accessKey = new ServerAccessKey(id, '', metricsId, proxyParams, token ?? this.createToken());
+    await this.addAccessKeyToServer(accessKey);
     return accessKey;
   }
 
@@ -172,38 +177,19 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     await this.updateServer();
   }
 
-  private createDynamicLink(token: Token): string {
-    return this.ssconfTemplate.replace('{}', token);
-  }
-
-  async createDynamicKey(): Promise<string> {
-    const accessKey = this.createAccessConfig();
-    const token = this.createToken();
-    this.dynamicKeys[token] = accessKey.id;
-    await this.addAccessKeyToServer(accessKey);
-    return this.createDynamicLink(token);
-  }
-
-  async updateDynamicKey(token: Token): Promise<string> {
-    const accessKey = this.createAccessConfig();
-    const oldKeyId = this.dynamicKeys[token];
-    if (!oldKeyId) {
+  async updateDynamicKey(token: Token): Promise<AccessKey> {
+    const oldKeyId = this.getDynamicKey(token)?.id
+    if (oldKeyId === undefined) {
       throw new errors.AccessKeyNotFound(`No config found for token ${token}`);
     }
-    this.dynamicKeys[token] = accessKey.id;
-    await this.addAccessKeyToServer(accessKey);
+    
+    const accessKey = this.createAccessKey(token);
     this.removeAccessKey(oldKeyId);
-    return this.createDynamicLink(token);
+    return accessKey;
   }
 
   getDynamicKey(token: Token): AccessKey|undefined {
-    return this.getAccessKey(this.dynamicKeys[token]);
-  }
-
-  async createNewStaticAccessKey(): Promise<AccessKey> {
-    const accessKey = this.createAccessConfig();
-    await this.addAccessKeyToServer(accessKey);
-    return accessKey;
+    return this.accessKeys.find((k: AccessKey) => k.token === token);
   }
 
   removeAccessKey(id: AccessKeyId) {
@@ -295,15 +281,11 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private loadAccessKeys(): AccessKey[] {
-    // TODO do we need a copy here?
-    this.dynamicKeys = {...this.keyConfig.data().dynamicKeyMap};
     return this.keyConfig.data().accessKeys.map(key => makeAccessKey(this.proxyHostname, key));
   }
 
   private saveAccessKeys() {
     this.keyConfig.data().accessKeys = this.accessKeys.map(key => accessKeyToStorageJson(key));
-    // TODO do we need to do a copy here?
-    this.keyConfig.data().dynamicKeyMap = {...this.dynamicKeys};
     this.keyConfig.write();
   }
 

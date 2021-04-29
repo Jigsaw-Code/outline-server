@@ -187,7 +187,7 @@ async function main() {
 
   const accessKeyRepository = new ServerAccessKeyRepository(
       serverConfig.data().portForNewAccessKeys, proxyHostname, accessKeyConfig, shadowsocksServer,
-      prometheusClient, certHash(certificate), apiPortNumber, serverConfig.data().accessKeyDataLimit);
+      prometheusClient, serverConfig.data().accessKeyDataLimit);
 
   const metricsReader = new PrometheusUsageMetrics(prometheusClient);
   const toMetricsId = (id: AccessKeyId) => {
@@ -205,7 +205,7 @@ async function main() {
 
   const managerService = new ShadowsocksManagerService(
       process.env.SB_DEFAULT_SERVER_NAME || 'Outline Server', serverConfig, accessKeyRepository,
-      managerMetrics, metricsPublisher);
+      managerMetrics, metricsPublisher, apiPortNumber, certHash(certificate));
 
   const apiServer = restify.createServer({
     certificate,

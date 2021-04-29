@@ -27,28 +27,6 @@ import {ManagerMetrics} from './manager_metrics';
 import {ServerConfigJson} from './server_config';
 import {SharedMetricsPublisher} from './shared_metrics';
 
-// Creates a AccessKey response.
-function accessKeyToApiJson(accessKey: AccessKey) {
-  return {
-    // The unique identifier of this access key.
-    id: accessKey.id,
-    // Admin-controlled, editable name for this access key.
-    name: accessKey.name,
-    // Shadowsocks-specific details and credentials.
-    password: accessKey.proxyParams.password,
-    port: accessKey.proxyParams.portNumber,
-    method: accessKey.proxyParams.encryptionMethod,
-    dataLimit: accessKey.dataLimit,
-    accessUrl: SIP002_URI.stringify(makeConfig({
-      host: accessKey.proxyParams.hostname,
-      port: accessKey.proxyParams.portNumber,
-      method: accessKey.proxyParams.encryptionMethod,
-      password: accessKey.proxyParams.password,
-      outline: 1
-    }))
-  };
-}
-
 // Type to reflect that we receive untyped JSON request parameters.
 interface RequestParams {
   // Supported parameters:
@@ -165,7 +143,35 @@ export class ShadowsocksManagerService {
   constructor(
       private defaultServerName: string, private serverConfig: JsonConfig<ServerConfigJson>,
       private accessKeys: AccessKeyRepository, private managerMetrics: ManagerMetrics,
-      private metricsPublisher: SharedMetricsPublisher) {}
+      private metricsPublisher: SharedMetricsPublisher, private servicePort: number, private serverCertFp) {}
+
+      // Creates a AccessKey response.
+private accessKeyToApiJson(accessKey: AccessKey) {
+  const configParams: {[k: string]: string | number} = {
+    host: accessKey.proxyParams.hostname,
+    port: accessKey.proxyParams.portNumber,
+    method: accessKey.proxyParams.encryptionMethod,
+    password: accessKey.proxyParams.password,
+    outline: 1
+  }
+  if (accessKey.token) {
+    // No need to URI encode here, the SIP002 encoding does this for us 
+    const uri = `ssconf://${accessKey.proxyParams.hostname}:${this.servicePort}/${accessKey.token}/?outline=1&certFp=${this.serverCertFp}`;
+    configParams.link = uri;
+  }
+  return {
+    // The unique identifier of this access key.
+    id: accessKey.id,
+    // Admin-controlled, editable name for this access key.
+    name: accessKey.name,
+    // Shadowsocks-specific details and credentials.
+    password: accessKey.proxyParams.password,
+    port: accessKey.proxyParams.portNumber,
+    method: accessKey.proxyParams.encryptionMethod,
+    dataLimit: accessKey.dataLimit,
+    accessUrl: SIP002_URI.stringify(makeConfig(configParams))
+  };
+}
 
   public renameServer(req: RequestType, res: ResponseType, next: restify.Next): void {
     logging.debug(`renameServer request ${JSON.stringify(req.params)}`);
@@ -234,7 +240,7 @@ export class ShadowsocksManagerService {
     logging.debug(`listAccessKeys request ${JSON.stringify(req.params)}`);
     const response = {accessKeys: []};
     for (const accessKey of this.accessKeys.listAccessKeys()) {
-      response.accessKeys.push(accessKeyToApiJson(accessKey));
+      response.accessKeys.push(this.accessKeyToApiJson(accessKey));
     }
     logging.debug(`listAccessKeys response ${JSON.stringify(response)}`);
     res.send(HttpSuccess.OK, response);
@@ -245,8 +251,8 @@ export class ShadowsocksManagerService {
   public createNewAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
     try {
       logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
-      this.accessKeys.createNewStaticAccessKey().then((accessKey) => {
-        const accessKeyJson = accessKeyToApiJson(accessKey);
+      this.accessKeys.createAccessKey().then((accessKey) => {
+        const accessKeyJson = this.accessKeyToApiJson(accessKey);
         res.send(201, accessKeyJson);
         logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);
         return next();
@@ -265,15 +271,16 @@ export class ShadowsocksManagerService {
       Promise<void> {
     logging.debug(`createDynamicKey request ${JSON.stringify(req.params)}`);
     let token = req.params.token;
+    let key: AccessKey;
     try {
       if (token === undefined) {
-        const link = await this.accessKeys.createDynamicKey();
-        res.send(201, {link});
+        key = await this.accessKeys.createAccessKey();
       } else {
         token = validateDynamicKeyToken(token);
-        const link = await this.accessKeys.updateDynamicKey(token as string);
-        res.send(201, {link});
+        key = await this.accessKeys.updateDynamicKey(token as string);
       }
+      res.send(201, this.accessKeyToApiJson(key));
+      next();
     } catch (error) {
       logging.error(error);
       return next(new restifyErrors.InternalServerError());
@@ -291,8 +298,11 @@ export class ShadowsocksManagerService {
     let token = req.params.token;
     try {
       token = validateDynamicKeyToken(req.params.token);
+      console.error(`token:`, token as string)
       const key = await this.accessKeys.getDynamicKey(token as string);
-      res.redirect(307, accessKeyToApiJson(key).accessUrl, next);
+      console.error("GOT KEY", JSON.stringify(key))
+      // TODO use a redirect.  201 is easier to debug with curl
+      res.redirect(307, this.accessKeyToApiJson(key).accessUrl, next);
     } catch (error) {
       if (error instanceof errors.AccessKeyNotFound) {
         return next(new restifyErrors.NotFoundError(
