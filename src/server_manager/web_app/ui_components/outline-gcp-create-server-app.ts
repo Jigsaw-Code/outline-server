@@ -325,6 +325,7 @@ export class GcpCreateServerApp extends LitElement {
     this.currentPage = '';
     this.selectedProjectId = '';
     this.selectedBillingAccountId = '';
+    this.stopRefreshingBillingAccounts();
   }
 
   private showBillingAccountSetup(): void {
