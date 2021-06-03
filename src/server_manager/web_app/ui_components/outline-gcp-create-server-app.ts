@@ -309,7 +309,7 @@ export class GcpCreateServerApp extends LitElement {
         // Check every five seconds to see if an account has been added.
         this.billingAccountsRefreshLoop = setInterval(() => {
           this.refreshBillingAccounts();
-        }, 5000)
+        }, 5000);
       } else {
         this.showProjectSetup(this.project);
       }
