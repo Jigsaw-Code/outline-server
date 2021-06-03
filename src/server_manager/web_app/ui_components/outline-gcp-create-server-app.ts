@@ -98,6 +98,7 @@ export class GcpCreateServerApp extends LitElement {
   private project: Project;
   private billingAccounts: BillingAccount[] = [];
   private regionPicker: OutlineRegionPicker;
+  private billingAccountsRefreshLoop: NodeJS.Timeout = null;
 
   static get styles() {
     return [
@@ -207,21 +208,23 @@ export class GcpCreateServerApp extends LitElement {
   private renderBillingAccountSetup() {
     return html`
       <outline-step-view id="billingAccountSetup" display-action="">
-        <span slot="step-title">Activate your Google Cloud Platform account.</span>
-        <span slot="step-description">Enter your billing information on Google Cloud Platform.</span>
+        <span slot="step-title">Add billing information to your Google Cloud Platform account.</span>
+        <span slot="step-description">Open the Cloud Console billing page and add an account in order to proceed.</span>
         <span slot="step-action">
-          <paper-button id="createServerButton" @tap="${this.handleBillingVerificationNextTap}">
-            NEXT
+          <paper-button id="openBillingPage" @tap="${this.openBillingPage}">
+            OPEN
           </paper-button>
         </span>
+        <paper-progress indeterminate></paper-progress>
         <paper-card class="card">
           <div class="container">
             <img src="images/do_oauth_billing.svg">
-            <p>Enter you billing information on Google Cloud Platform</p>
-            <!-- TODO: Add call to action to open GCP billing accounts page -->
-            <!-- https://console.cloud.google.com/billing --> 
+            <p>Waiting for you to add a billing account on Google Cloud</p>
+            <paper-button id="refreshBillingAccounts" @tap="${this.refreshBillingAccounts}">
+              REFRESH
+            </paper-button>
           </div>
-        </paper-card>  
+        </paper-card>
       </outline-step-view>`;
   }
 
@@ -303,10 +306,19 @@ export class GcpCreateServerApp extends LitElement {
     } else {
       if (!this.billingAccounts || this.billingAccounts.length === 0) {
         this.showBillingAccountSetup();
+        // Check every five seconds to see if an account has been added.
+        this.billingAccountsRefreshLoop = setInterval(() => {
+          this.refreshBillingAccounts();
+        }, 5000)
       } else {
         this.showProjectSetup(this.project);
       }
     }
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.stopRefreshingBillingAccounts();
   }
 
   private init() {
@@ -319,16 +331,31 @@ export class GcpCreateServerApp extends LitElement {
     this.currentPage = 'billingAccountSetup';
   }
 
-  private async handleBillingVerificationNextTap(): Promise<void> {
-    this.showProjectSetup();
+  private async refreshBillingAccounts() : Promise<void> {
+    this.billingAccounts = await this.account.listBillingAccounts();
+    // FIXME: listBillingAccounts() can reject, resulting in an uncaught
+    // exception here that is shown in the debug console but not reflected
+    // in the UI.
+
+    if (this.billingAccounts && this.billingAccounts.length > 0) {
+      this.stopRefreshingBillingAccounts();
+      this.showProjectSetup();
+      window.bringToFront();
+    }
   }
 
-  private async showProjectSetup(existingProject?: Project): Promise<void> {
-    this.billingAccounts = await this.account.listBillingAccounts();
-    if (!this.billingAccounts || this.billingAccounts.length === 0) {
-      return this.showBillingAccountSetup();
+  private stopRefreshingBillingAccounts() : void {
+    if (this.billingAccountsRefreshLoop !== null) {
+      clearInterval(this.billingAccountsRefreshLoop);
+      this.billingAccountsRefreshLoop = null;
     }
+  }
 
+  private openBillingPage() : void {
+    window.open("https://console.cloud.google.com/billing");
+  }
+
+  private async showProjectSetup(existingProject?: Project) : Promise<void> {
     this.project = existingProject ?? null;
     this.selectedProjectId = this.project?.id ?? this.makeProjectName();
     this.selectedBillingAccountId = this.billingAccounts[0].id;
