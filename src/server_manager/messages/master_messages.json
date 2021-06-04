@@ -452,7 +452,7 @@
     "description": "This instruction is a clarification regarding the title of the billing page."
   },
   "gcp_billing_action": {
-    "message": "OPEN",
+    "message": "Open",
     "description": "Button label for a button that opens a the billing page in the web browser"
   },
   "gcp_billing_body": {
@@ -460,7 +460,7 @@
     "description": "Body text on the billing page"
   },
   "gcp_billing_refresh": {
-    "message": "CHECK AGAIN",
+    "message": "Check Again",
     "description": "Button label to check whether the user has added a billing account"
   },
   "gcp_click_create": {

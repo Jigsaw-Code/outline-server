@@ -298,25 +298,28 @@ export class GcpCreateServerApp extends LitElement {
     this.init();
     this.account = account;
 
-    this.billingAccounts = await this.account.listBillingAccounts();
-    const projects = await this.account.listProjects();
-    // TODO: We don't support multiple projects atm, but we will want to allow
-    //  the user to choose the appropriate one.
-    this.project = projects?.[0];
+    try {
+      this.billingAccounts = await this.account.listBillingAccounts();
+      const projects = await this.account.listProjects();
+      // TODO: We don't support multiple projects atm, but we will want to allow
+      // the user to choose the appropriate one.
+      this.project = projects?.[0];  
+    } catch (e) {
+      // TODO: Surface this error to the user.
+      console.warn('Error fetching GCP account info', e);
+    }
     const isProjectHealthy =
         this.project ? await this.account.isProjectHealthy(this.project.id) : false;
     if (this.project && isProjectHealthy) {
       this.showRegionPicker();
+    } else if (!(this.billingAccounts?.length > 0)) {
+      this.showBillingAccountSetup();
+      // Check every five seconds to see if an account has been added.
+      this.billingAccountsRefreshLoop = window.setInterval(() => {
+        this.refreshBillingAccounts();
+      }, 5000);
     } else {
-      if (!this.billingAccounts || this.billingAccounts.length === 0) {
-        this.showBillingAccountSetup();
-        // Check every five seconds to see if an account has been added.
-        this.billingAccountsRefreshLoop = window.setInterval(() => {
-          this.refreshBillingAccounts();
-        }, 5000);
-      } else {
-        this.showProjectSetup(this.project);
-      }
+      this.showProjectSetup(this.project);
     }
   }
 
@@ -337,12 +340,17 @@ export class GcpCreateServerApp extends LitElement {
   }
 
   private async refreshBillingAccounts(): Promise<void> {
-    this.billingAccounts = await this.account.listBillingAccounts();
+    try {
+      this.billingAccounts = await this.account.listBillingAccounts();
+    } catch (e) {
+      // TODO: Surface this error to the user.
+      console.warn('Billing account refresh error', e);
+    }
     // TODO: listBillingAccounts() can reject, resulting in an uncaught
     // exception here that is shown in the debug console but not reflected
     // in the UI.  We need to something better than failing silently.
 
-    if (this.billingAccounts && this.billingAccounts.length > 0) {
+    if (this.billingAccounts?.length > 0) {
       this.stopRefreshingBillingAccounts();
       this.showProjectSetup();
       window.bringToFront();
@@ -355,7 +363,7 @@ export class GcpCreateServerApp extends LitElement {
   }
 
   private openBillingPage(): void {
-    window.open("https://console.cloud.google.com/billing");
+    window.open('https://console.cloud.google.com/billing', 'noopener,noreferrer');
   }
 
   private async showProjectSetup(existingProject?: Project): Promise<void> {
