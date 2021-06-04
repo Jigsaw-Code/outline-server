@@ -17,6 +17,16 @@
 const GCP_OAUTH_CLIENT_ID =
     '946220775492-osi1dm2rhhpo4upm6qqfv9fiivv1qu6c.apps.googleusercontent.com';
 
+export class GcpError extends Error {
+  constructor(code: number, message?: string) {
+    // ref:
+    // https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-2.html#support-for-newtarget
+    super(`Error ${code}: ${message}`);                 // 'Error' breaks prototype chain here
+    Object.setPrototypeOf(this, new.target.prototype);  // restore prototype chain
+    this.name = new.target.name;
+  }
+}
+
 /** @see https://cloud.google.com/compute/docs/reference/rest/v1/instances */
 export type Instance = Readonly<{
   id: string; creationTimestamp: string; name: string; description: string;
@@ -417,13 +427,17 @@ export class RestApiClient {
    * @param zoneId - The zone ID.
    * @param operationId - The operation ID.
    */
-  computeEngineOperationZoneWait(projectId: string, zoneId: string, operationId: string):
+  async computeEngineOperationZoneWait(projectId: string, zoneId: string, operationId: string):
       Promise<ComputeEngineOperation> {
-    return this.fetchAuthenticated(
+    const operation = await this.fetchAuthenticated<ComputeEngineOperation>(
         'POST',
         new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
             zoneId}/operations/${operationId}/wait`),
         this.GCP_HEADERS);
+    if (operation.error?.errors) {
+      throw new GcpError(operation?.error.errors[0]?.code, operation?.error.errors[0]?.message);
+    }
+    return operation;
   }
 
   /**
