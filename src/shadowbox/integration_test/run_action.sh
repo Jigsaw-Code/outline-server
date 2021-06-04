@@ -26,7 +26,9 @@ declare -i result=0
 
 if ./test.sh > "${LOGFILE}" 2>&1 ; then
   echo "Test Passed!"
-  rm "${LOGFILE}"
+  # Removing the log file sometimes fails on Travis.  There's no point in us cleaning it up
+  # on a CI build anyways.
+  rm -f "${LOGFILE}"
 else
   result=$?
   echo "Test Failed!  Logs:"

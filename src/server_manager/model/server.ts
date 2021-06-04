@@ -13,7 +13,8 @@
 // limitations under the License.
 
 export interface Server {
-  // Gets a globally unique identifier for this Server.
+  // Gets a globally unique identifier for this Server.  THIS MUST NOT make a network request, as
+  // it's used to identify unreachable servers.
   getId(): string;
 
   // Gets the server's name for display.

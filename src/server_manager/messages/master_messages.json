@@ -443,6 +443,26 @@
     "message": "Outline Server Installation Failed",
     "description": "This string appears in the feedback dialog as a header. The feedback dialog gets automatically displayed with this header when a server installation fails."
   },
+  "gcp_billing_title": {
+    "message": "Add billing information to your Google Cloud Platform account.",
+    "description": "This instruction is the title of the billing page."
+  },
+  "gcp_billing_description": {
+    "message": "Open the Cloud Console billing page and add an account in order to proceed.",
+    "description": "This instruction is a clarification regarding the title of the billing page."
+  },
+  "gcp_billing_action": {
+    "message": "OPEN",
+    "description": "Button label for a button that opens a the billing page in the web browser"
+  },
+  "gcp_billing_body": {
+    "message": "Waiting for you to add a billing account on Google Cloud",
+    "description": "Body text on the billing page"
+  },
+  "gcp_billing_refresh": {
+    "message": "CHECK AGAIN",
+    "description": "Button label to check whether the user has added a billing account"
+  },
   "gcp_click_create": {
     "message": "Click 'Create'.",
     "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'Create' should be translated and included untranslated in parentheses."

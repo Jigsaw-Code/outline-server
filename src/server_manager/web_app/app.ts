@@ -813,11 +813,13 @@ export class App {
 
   private async setServerUnreachableView(server: server.Server): Promise<void> {
     // Display the unreachable server state within the server view.
-    const serverView = await this.appRoot.getServerView(server.getId());
+    const serverId = server.getId();
+    const serverView = await this.appRoot.getServerView(serverId);
     serverView.selectedPage = 'unreachableView';
     serverView.isServerManaged = isManagedServer(server);
     serverView.serverName =
         this.makeDisplayName(server);  // Don't get the name from the remote server.
+    serverView.serverId = serverId;
     serverView.retryDisplayingServer = async () => {
       await this.updateServerView(server);
     };
@@ -1163,7 +1165,6 @@ export class App {
       console.error(msg);
       throw new Error(msg);
     }
-
     const confirmationTitle = this.appRoot.localize('confirmation-server-remove-title');
     const confirmationText = this.appRoot.localize('confirmation-server-remove');
     const confirmationButton = this.appRoot.localize('remove');
