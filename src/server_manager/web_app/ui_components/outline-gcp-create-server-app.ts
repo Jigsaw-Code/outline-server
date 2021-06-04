@@ -346,9 +346,6 @@ export class GcpCreateServerApp extends LitElement {
       // TODO: Surface this error to the user.
       console.warn('Billing account refresh error', e);
     }
-    // TODO: listBillingAccounts() can reject, resulting in an uncaught
-    // exception here that is shown in the debug console but not reflected
-    // in the UI.  We need to something better than failing silently.
 
     if (this.billingAccounts?.length > 0) {
       this.stopRefreshingBillingAccounts();
