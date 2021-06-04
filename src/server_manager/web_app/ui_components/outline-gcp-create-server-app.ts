@@ -231,13 +231,16 @@ export class GcpCreateServerApp extends LitElement {
         <span slot="step-title">Create your Google Cloud Platform project.</span>
         <span slot="step-description">This will create a new project on your GCP account to hold your Outline servers.</span>
         <span slot="step-action">
-          <paper-button 
-              id="createServerButton" 
-              @tap="${this.handleProjectSetupNextTap}" 
-              ?disabled="${
-    !this.isProjectSetupNextEnabled(this.selectedProjectId, this.selectedBillingAccountId)}">
-            CREATE PROJECT
-          </paper-button>
+          ${this.isProjectBeingCreated ?
+            // TODO: Support canceling server creation.
+            html`<paper-button disabled="true">IN PROGRESS...</paper-button>` :
+            html`<paper-button
+                id="createServerButton"
+                @tap="${this.handleProjectSetupNextTap}"
+                ?disabled="${
+      !this.isProjectSetupNextEnabled(this.selectedProjectId, this.selectedBillingAccountId)}">
+              CREATE PROJECT
+            </paper-button>`}
         </span>
           <div class="section">
             <div class="section-header">
