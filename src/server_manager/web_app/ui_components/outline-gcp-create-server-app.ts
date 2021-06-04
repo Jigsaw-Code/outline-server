@@ -360,7 +360,8 @@ export class GcpCreateServerApp extends LitElement {
   }
 
   private showError(message: string) {
-    const appRoot: AppRoot = <any>(document.getElementById('appRoot'));
+    const appRoot: AppRoot =
+        document.getElementById('appRoot') as unknown as AppRoot;
     appRoot.showError(message);
   }
 
