@@ -444,7 +444,7 @@
     "description": "This string appears in the feedback dialog as a header. The feedback dialog gets automatically displayed with this header when a server installation fails."
   },
   "gcp_billing_description": {
-    "message": "{openLink}Open the Cloud Console billing page{closeLink} and add an account in order to proceed.",
+    "message": "$START_OF_LINK$Open the Cloud Console billing page$END_OF_LINK$ and add an account in order to proceed.",
     "description": "This instruction is a clarification regarding the title of the billing page.",
     "placeholders": {
       "END_OF_LINK": {
@@ -460,7 +460,7 @@
     "description": "Button label for a button that opens a the billing page in the web browser"
   },
   "gcp_billing_body": {
-    "message": "Waiting for you to {openLink}add a billing account on Google Cloud{closeLink}",
+    "message": "Waiting for you to $START_OF_LINK$add a billing account on Google Cloud$END_OF_LINK$",
     "description": "Body text on the billing page",
     "placeholders": {
       "END_OF_LINK": {
