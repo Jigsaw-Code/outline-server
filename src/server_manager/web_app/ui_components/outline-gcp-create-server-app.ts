@@ -300,7 +300,7 @@ export class GcpCreateServerApp extends LitElement {
     this.account = account;
 
     try {
-      this.billingAccounts = await this.account.listBillingAccounts();
+      this.billingAccounts = await this.account.listOpenBillingAccounts();
       const projects = await this.account.listProjects();
       // TODO: We don't support multiple projects atm, but we will want to allow
       // the user to choose the appropriate one.
@@ -345,7 +345,7 @@ export class GcpCreateServerApp extends LitElement {
   }
 
   private async refreshBillingAccounts(): Promise<void> {
-    this.billingAccounts = await this.account.listBillingAccounts();
+    this.billingAccounts = await this.account.listOpenBillingAccounts();
 
     if (this.billingAccounts?.length > 0) {
       this.stopRefreshingBillingAccounts();

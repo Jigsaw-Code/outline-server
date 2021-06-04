@@ -88,6 +88,9 @@ export interface Account {
   /** Lists the Google Cloud Platform projects available with the user. */
   listProjects(): Promise<Project[]>;
 
-  /** Lists the Google Cloud Platform billing accounts associated with the user. */
-  listBillingAccounts(): Promise<BillingAccount[]>;
+  /**
+   * Lists the active Google Cloud Platform billing accounts associated with
+   * the user.
+   */
+  listOpenBillingAccounts(): Promise<BillingAccount[]>;
 }
