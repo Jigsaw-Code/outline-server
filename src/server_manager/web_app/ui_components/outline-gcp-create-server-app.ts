@@ -262,7 +262,7 @@ export class GcpCreateServerApp extends LitElement {
               </div>
             </div>
             <div class="section-content">
-              <paper-dropdown-menu id="billingAccount" no-label-float="">
+              <paper-dropdown-menu id="billingAccount" no-label-float="" horizontal-align="left">
                 <paper-listbox slot="dropdown-content" selected="${
         this.selectedBillingAccountId}" attr-for-selected="name" @selected-changed="${
         this.onBillingAccountSelected}">
