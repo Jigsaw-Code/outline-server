@@ -166,7 +166,7 @@ export class GcpAccount implements gcp.Account {
   }
 
   /** @see {@link Account#listBillingAccounts}. */
-  async listBillingAccounts(): Promise<BillingAccount[]> {
+  async listOpenBillingAccounts(): Promise<BillingAccount[]> {
     const response = await this.apiClient.listBillingAccounts();
     if (response.billingAccounts?.length > 0) {
       return response.billingAccounts

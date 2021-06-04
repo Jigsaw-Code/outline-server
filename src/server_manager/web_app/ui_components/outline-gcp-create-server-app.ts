@@ -298,7 +298,7 @@ export class GcpCreateServerApp extends LitElement {
     this.init();
     this.account = account;
 
-    this.billingAccounts = await this.account.listBillingAccounts();
+    this.billingAccounts = await this.account.listOpenBillingAccounts();
     const projects = await this.account.listProjects();
     // TODO: We don't support multiple projects atm, but we will want to allow
     //  the user to choose the appropriate one.
@@ -337,7 +337,7 @@ export class GcpCreateServerApp extends LitElement {
   }
 
   private async refreshBillingAccounts(): Promise<void> {
-    this.billingAccounts = await this.account.listBillingAccounts();
+    this.billingAccounts = await this.account.listOpenBillingAccounts();
     // TODO: listBillingAccounts() can reject, resulting in an uncaught
     // exception here that is shown in the debug console but not reflected
     // in the UI.  We need to something better than failing silently.

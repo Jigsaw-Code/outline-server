@@ -79,7 +79,7 @@ export class FakeGcpAccount implements gcp.Account {
   async isProjectHealthy(projectId: string): Promise<boolean> {
     return true;
   }
-  async listBillingAccounts(): Promise<gcp.BillingAccount[]> {
+  async listOpenBillingAccounts(): Promise<gcp.BillingAccount[]> {
     return this.billingAccounts;
   }
   async listProjects(): Promise<gcp.Project[]> {
