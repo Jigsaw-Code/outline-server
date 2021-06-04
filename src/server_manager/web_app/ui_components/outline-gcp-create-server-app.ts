@@ -98,6 +98,7 @@ export class GcpCreateServerApp extends LitElement {
   private project: Project;
   private billingAccounts: BillingAccount[] = [];
   private regionPicker: OutlineRegionPicker;
+  private billingAccountsRefreshLoop: number = null;
 
   static get styles() {
     return [
@@ -111,7 +112,7 @@ export class GcpCreateServerApp extends LitElement {
         justify-content: center;
         height: 100%;
         align-items: center;
-        padding: 132px 0;
+        padding: 156px 0;
         font-size: 14px;
       }
       .card {
@@ -120,7 +121,6 @@ export class GcpCreateServerApp extends LitElement {
         align-items: stretch;
         justify-content: space-between;
         margin: 24px 0;
-        padding: 24px;
         background: var(--background-contrast-color);
         box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.14), 0 2px 2px 0 rgba(0, 0, 0, 0.12), 0 1px 3px 0 rgba(0, 0, 0, 0.2);
         border-radius: 2px;
@@ -207,21 +207,25 @@ export class GcpCreateServerApp extends LitElement {
   private renderBillingAccountSetup() {
     return html`
       <outline-step-view id="billingAccountSetup" display-action="">
-        <span slot="step-title">Activate your Google Cloud Platform account.</span>
-        <span slot="step-description">Enter your billing information on Google Cloud Platform.</span>
+        <span slot="step-title">${this.localize('gcp-billing-title')}</span>
+        <span slot="step-description">${this.localize('gcp-billing-description')}</span>
         <span slot="step-action">
-          <paper-button id="createServerButton" @tap="${this.handleBillingVerificationNextTap}">
-            NEXT
+          <paper-button id="openBillingPage" @tap="${this.openBillingPage}">
+            ${this.localize('gcp-billing-action')}
           </paper-button>
         </span>
         <paper-card class="card">
           <div class="container">
             <img src="images/do_oauth_billing.svg">
-            <p>Enter you billing information on Google Cloud Platform</p>
-            <!-- TODO: Add call to action to open GCP billing accounts page -->
-            <!-- https://console.cloud.google.com/billing --> 
+            <p>${this.localize('gcp-billing-body')}</p>
+            <span slot="step-action">
+              <paper-button id="refreshBillingAccounts" @tap="${this.refreshBillingAccounts}">
+                ${this.localize('gcp-billing-refresh')}
+              </paper-button>
+            </span>
           </div>
-        </paper-card>  
+          <paper-progress indeterminate></paper-progress>
+        </paper-card>
       </outline-step-view>`;
   }
 
@@ -306,32 +310,55 @@ export class GcpCreateServerApp extends LitElement {
     } else {
       if (!this.billingAccounts || this.billingAccounts.length === 0) {
         this.showBillingAccountSetup();
+        // Check every five seconds to see if an account has been added.
+        this.billingAccountsRefreshLoop = window.setInterval(() => {
+          this.refreshBillingAccounts();
+        }, 5000);
       } else {
         this.showProjectSetup(this.project);
       }
     }
   }
 
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.stopRefreshingBillingAccounts();
+  }
+
   private init() {
     this.currentPage = '';
     this.selectedProjectId = '';
     this.selectedBillingAccountId = '';
+    this.stopRefreshingBillingAccounts();
   }
 
   private showBillingAccountSetup(): void {
     this.currentPage = 'billingAccountSetup';
   }
 
-  private async handleBillingVerificationNextTap(): Promise<void> {
-    this.showProjectSetup();
+  private async refreshBillingAccounts(): Promise<void> {
+    this.billingAccounts = await this.account.listBillingAccounts();
+    // TODO: listBillingAccounts() can reject, resulting in an uncaught
+    // exception here that is shown in the debug console but not reflected
+    // in the UI.  We need to something better than failing silently.
+
+    if (this.billingAccounts && this.billingAccounts.length > 0) {
+      this.stopRefreshingBillingAccounts();
+      this.showProjectSetup();
+      window.bringToFront();
+    }
+  }
+
+  private stopRefreshingBillingAccounts(): void {
+    window.clearInterval(this.billingAccountsRefreshLoop);
+    this.billingAccountsRefreshLoop = null;
+  }
+
+  private openBillingPage(): void {
+    window.open("https://console.cloud.google.com/billing");
   }
 
   private async showProjectSetup(existingProject?: Project): Promise<void> {
-    this.billingAccounts = await this.account.listBillingAccounts();
-    if (!this.billingAccounts || this.billingAccounts.length === 0) {
-      return this.showBillingAccountSetup();
-    }
-
     this.project = existingProject ?? null;
     this.selectedProjectId = this.project?.id ?? this.makeProjectName();
     this.selectedBillingAccountId = this.billingAccounts[0].id;
