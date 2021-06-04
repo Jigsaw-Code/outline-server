@@ -98,7 +98,7 @@ export class GcpCreateServerApp extends LitElement {
   private project: Project;
   private billingAccounts: BillingAccount[] = [];
   private regionPicker: OutlineRegionPicker;
-  private billingAccountsRefreshLoop: NodeJS.Timeout = null;
+  private billingAccountsRefreshLoop: number = null;
 
   static get styles() {
     return [
@@ -112,7 +112,7 @@ export class GcpCreateServerApp extends LitElement {
         justify-content: center;
         height: 100%;
         align-items: center;
-        padding: 132px 0;
+        padding: 156px 0;
         font-size: 14px;
       }
       .card {
@@ -121,7 +121,6 @@ export class GcpCreateServerApp extends LitElement {
         align-items: stretch;
         justify-content: space-between;
         margin: 24px 0;
-        padding: 24px;
         background: var(--background-contrast-color);
         box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.14), 0 2px 2px 0 rgba(0, 0, 0, 0.12), 0 1px 3px 0 rgba(0, 0, 0, 0.2);
         border-radius: 2px;
@@ -208,22 +207,24 @@ export class GcpCreateServerApp extends LitElement {
   private renderBillingAccountSetup() {
     return html`
       <outline-step-view id="billingAccountSetup" display-action="">
-        <span slot="step-title">Add billing information to your Google Cloud Platform account.</span>
-        <span slot="step-description">Open the Cloud Console billing page and add an account in order to proceed.</span>
+        <span slot="step-title">${this.localize('gcp-billing-title')}</span>
+        <span slot="step-description">${this.localize('gcp-billing-description')}</span>
         <span slot="step-action">
           <paper-button id="openBillingPage" @tap="${this.openBillingPage}">
-            OPEN
+            ${this.localize('gcp-billing-action')}
           </paper-button>
         </span>
-        <paper-progress indeterminate></paper-progress>
         <paper-card class="card">
           <div class="container">
             <img src="images/do_oauth_billing.svg">
-            <p>Waiting for you to add a billing account on Google Cloud</p>
-            <paper-button id="refreshBillingAccounts" @tap="${this.refreshBillingAccounts}">
-              REFRESH
-            </paper-button>
+            <p>${this.localize('gcp-billing-body')}</p>
+            <span slot="step-action">
+              <paper-button id="refreshBillingAccounts" @tap="${this.refreshBillingAccounts}">
+                ${this.localize('gcp-billing-refresh')}
+              </paper-button>
+            </span>
           </div>
+          <paper-progress indeterminate></paper-progress>
         </paper-card>
       </outline-step-view>`;
   }
@@ -307,7 +308,7 @@ export class GcpCreateServerApp extends LitElement {
       if (!this.billingAccounts || this.billingAccounts.length === 0) {
         this.showBillingAccountSetup();
         // Check every five seconds to see if an account has been added.
-        this.billingAccountsRefreshLoop = setInterval(() => {
+        this.billingAccountsRefreshLoop = window.setInterval(() => {
           this.refreshBillingAccounts();
         }, 5000);
       } else {
