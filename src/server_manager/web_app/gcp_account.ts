@@ -169,12 +169,12 @@ export class GcpAccount implements gcp.Account {
   async listBillingAccounts(): Promise<BillingAccount[]> {
     const response = await this.apiClient.listBillingAccounts();
     if (response.billingAccounts?.length > 0) {
-      return response.billingAccounts.map(billingAccount => {
-        return {
-          id: billingAccount.name.substring(billingAccount.name.lastIndexOf('/') + 1),
-          name: billingAccount.displayName,
-        };
-      });
+      return response.billingAccounts
+          .filter(billingAccount => billingAccount.open)
+          .map(billingAccount => ({
+        id: billingAccount.name.substring(billingAccount.name.lastIndexOf('/') + 1),
+        name: billingAccount.displayName,
+      }));
     }
     return [];
   }
