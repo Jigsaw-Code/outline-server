@@ -335,9 +335,9 @@ export class GcpCreateServerApp extends LitElement {
 
   private async refreshBillingAccounts(): Promise<void> {
     this.billingAccounts = await this.account.listBillingAccounts();
-    // FIXME: listBillingAccounts() can reject, resulting in an uncaught
+    // TODO: listBillingAccounts() can reject, resulting in an uncaught
     // exception here that is shown in the debug console but not reflected
-    // in the UI.
+    // in the UI.  We need to something better than failing silently.
 
     if (this.billingAccounts && this.billingAccounts.length > 0) {
       this.stopRefreshingBillingAccounts();
@@ -347,10 +347,8 @@ export class GcpCreateServerApp extends LitElement {
   }
 
   private stopRefreshingBillingAccounts(): void {
-    if (this.billingAccountsRefreshLoop !== null) {
-      clearInterval(this.billingAccountsRefreshLoop);
-      this.billingAccountsRefreshLoop = null;
-    }
+    window.clearInterval(this.billingAccountsRefreshLoop);
+    this.billingAccountsRefreshLoop = null;
   }
 
   private openBillingPage(): void {
