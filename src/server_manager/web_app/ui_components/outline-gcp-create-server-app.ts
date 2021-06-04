@@ -332,7 +332,7 @@ export class GcpCreateServerApp extends LitElement {
     this.currentPage = 'billingAccountSetup';
   }
 
-  private async refreshBillingAccounts() : Promise<void> {
+  private async refreshBillingAccounts(): Promise<void> {
     this.billingAccounts = await this.account.listBillingAccounts();
     // FIXME: listBillingAccounts() can reject, resulting in an uncaught
     // exception here that is shown in the debug console but not reflected
@@ -345,18 +345,18 @@ export class GcpCreateServerApp extends LitElement {
     }
   }
 
-  private stopRefreshingBillingAccounts() : void {
+  private stopRefreshingBillingAccounts(): void {
     if (this.billingAccountsRefreshLoop !== null) {
       clearInterval(this.billingAccountsRefreshLoop);
       this.billingAccountsRefreshLoop = null;
     }
   }
 
-  private openBillingPage() : void {
+  private openBillingPage(): void {
     window.open("https://console.cloud.google.com/billing");
   }
 
-  private async showProjectSetup(existingProject?: Project) : Promise<void> {
+  private async showProjectSetup(existingProject?: Project): Promise<void> {
     this.project = existingProject ?? null;
     this.selectedProjectId = this.project?.id ?? this.makeProjectName();
     this.selectedBillingAccountId = this.billingAccounts[0].id;
