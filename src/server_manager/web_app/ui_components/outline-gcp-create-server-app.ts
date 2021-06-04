@@ -19,7 +19,9 @@ import '@polymer/paper-item/paper-item.js';
 import './outline-region-picker-step';
 
 import {css, customElement, html, internalProperty, LitElement, property} from 'lit-element';
+import {unsafeHTML} from 'lit-html/directives/unsafe-html.js';
 
+import {AppRoot} from './app-root';
 import {BillingAccount, Project} from '../../model/gcp';
 import {GcpAccount} from '../gcp_account';
 import {COMMON_STYLES} from './cloud-install-styles';
@@ -205,24 +207,23 @@ export class GcpCreateServerApp extends LitElement {
   }
 
   private renderBillingAccountSetup() {
+    const openLink = '<a href="https://console.cloud.google.com/billing">';
+    const closeLink = '</a>';
     return html`
       <outline-step-view id="billingAccountSetup" display-action="">
         <span slot="step-title">${this.localize('gcp-billing-title')}</span>
-        <span slot="step-description">${this.localize('gcp-billing-description')}</span>
+        <span slot="step-description">
+          ${unsafeHTML(this.localize('gcp-billing-description', 'openLink', openLink, 'closeLink', closeLink))}
+        </span>
         <span slot="step-action">
-          <paper-button id="openBillingPage" @tap="${this.openBillingPage}">
+          <paper-button id="billingPageAction" @tap="${this.handleBillingVerificationNextTap}">
             ${this.localize('gcp-billing-action')}
           </paper-button>
         </span>
         <paper-card class="card">
           <div class="container">
             <img src="images/do_oauth_billing.svg">
-            <p>${this.localize('gcp-billing-body')}</p>
-            <span slot="step-action">
-              <paper-button id="refreshBillingAccounts" @tap="${this.refreshBillingAccounts}">
-                ${this.localize('gcp-billing-refresh')}
-              </paper-button>
-            </span>
+            <p>${unsafeHTML(this.localize('gcp-billing-body', 'openLink', openLink, 'closeLink', closeLink))}</p>
           </div>
           <paper-progress indeterminate></paper-progress>
         </paper-card>
@@ -316,7 +317,11 @@ export class GcpCreateServerApp extends LitElement {
       this.showBillingAccountSetup();
       // Check every five seconds to see if an account has been added.
       this.billingAccountsRefreshLoop = window.setInterval(() => {
-        this.refreshBillingAccounts();
+        try {        
+          this.refreshBillingAccounts();
+        } catch (e) {
+          console.warn('Billing account refresh error', e);
+        }
       }, 5000);
     } else {
       this.showProjectSetup(this.project);
@@ -340,12 +345,7 @@ export class GcpCreateServerApp extends LitElement {
   }
 
   private async refreshBillingAccounts(): Promise<void> {
-    try {
-      this.billingAccounts = await this.account.listBillingAccounts();
-    } catch (e) {
-      // TODO: Surface this error to the user.
-      console.warn('Billing account refresh error', e);
-    }
+    this.billingAccounts = await this.account.listBillingAccounts();
 
     if (this.billingAccounts?.length > 0) {
       this.stopRefreshingBillingAccounts();
@@ -359,8 +359,22 @@ export class GcpCreateServerApp extends LitElement {
     this.billingAccountsRefreshLoop = null;
   }
 
-  private openBillingPage(): void {
-    window.open('https://console.cloud.google.com/billing', 'noopener,noreferrer');
+  private showError(message: string) {
+    const appRoot: AppRoot = <any>(document.getElementById('appRoot'));
+    appRoot.showError(message);
+  }
+
+  private async handleBillingVerificationNextTap(): Promise<void> {
+    try {
+      await this.refreshBillingAccounts();
+    } catch (e) {
+      this.showError(this.localize('gcp-billing-error'));
+    }
+    if (this.billingAccounts?.length > 0) {
+      await this.showProjectSetup();
+    } else {
+      this.showError(this.localize('gcp-billing-error-zero'));
+    }
   }
 
   private async showProjectSetup(existingProject?: Project): Promise<void> {
