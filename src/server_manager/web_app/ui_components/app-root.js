@@ -570,7 +570,10 @@ export class AppRoot extends mixinBehaviors
         type: Boolean,
         computed: '_computeHasAcceptedTermsOfService(userAcceptedTos)',
       },
-      currentPage: {type: String},
+      currentPage: {
+        type: String,
+        observer: '_currentPageChanged',
+      },
       shouldShowSideBar: {type: Boolean},
       sideBarMarginClass: {
         type: String,
@@ -697,6 +700,14 @@ export class AppRoot extends mixinBehaviors
 
   showServerView() {
     this.currentPage = 'serverView';
+  }
+
+  _currentPageChanged() {
+    if (this.currentPage !== 'gcpCreateServer') {
+      // The refresh loop will be restarted by App, which calls
+      // GcpCreateServerApp.start() whenever it switches back to this page.
+      this.$.gcpCreateServer.stopRefreshingBillingAccounts();
+    }
   }
 
   /**
