@@ -349,7 +349,7 @@ export class GcpCreateServerApp extends LitElement {
     }
   }
 
-  private stopRefreshingBillingAccounts(): void {
+  public stopRefreshingBillingAccounts(): void {
     window.clearInterval(this.billingAccountsRefreshLoop);
     this.billingAccountsRefreshLoop = null;
   }
