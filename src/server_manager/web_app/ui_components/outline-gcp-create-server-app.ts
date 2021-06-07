@@ -304,7 +304,7 @@ export class GcpCreateServerApp extends LitElement {
       const projects = await this.account.listProjects();
       // TODO: We don't support multiple projects atm, but we will want to allow
       // the user to choose the appropriate one.
-      this.project = projects?.[0];  
+      this.project = projects?.[0];
     } catch (e) {
       // TODO: Surface this error to the user.
       console.warn('Error fetching GCP account info', e);
@@ -317,7 +317,7 @@ export class GcpCreateServerApp extends LitElement {
       this.showBillingAccountSetup();
       // Check every five seconds to see if an account has been added.
       this.billingAccountsRefreshLoop = window.setInterval(() => {
-        try {        
+        try {
           this.refreshBillingAccounts();
         } catch (e) {
           console.warn('Billing account refresh error', e);
