@@ -21,6 +21,13 @@ import * as server from '../model/server';
 
 import {GcpServer} from './gcp_server';
 
+/** Returns a unique, RFC1035-style name as required by GCE. */
+function makeGcpInstanceName(): string {
+  const now = new Date();
+  return `outline-${now.getFullYear()}${now.getMonth()}${now.getDate()}-${now.getUTCHours()}${
+      now.getUTCMinutes()}${now.getUTCSeconds()}`;
+}
+  
 /**
  * The Google Cloud Platform account model.
  */
@@ -205,8 +212,10 @@ export class GcpAccount implements gcp.Account {
     }
 
     // Create VM instance
+    const instanceName = makeGcpInstanceName();
     const createInstanceData = {
-      name,
+      name: instanceName,
+      description: name,  // Show a human-readable name in the GCP console
       machineType: `zones/${zoneId}/machineTypes/${GcpAccount.MACHINE_SIZE}`,
       disks: [
         {
@@ -253,14 +262,14 @@ export class GcpAccount implements gcp.Account {
         await this.apiClient.getInstance(projectId, createInstanceOperation.targetId, zoneId);
 
     // Promote ephemeral IP to static IP
-    const regionId = zoneId.substring(0, zoneId.lastIndexOf('-'));
     const ipAddress = instance.networkInterfaces[0].accessConfigs[0].natIP;
     const createStaticIpData = {
-      name,
+      name: instance.name,
+      description: instance.description,
       address: ipAddress,
     };
-    const createStaticIpOperation =
-        await this.apiClient.createStaticIp(projectId, regionId, createStaticIpData);
+    const createStaticIpOperation = await this.apiClient.createStaticIp(
+        projectId, gcp.getRegionId(zoneId), createStaticIpData);
     if (createStaticIpOperation.error?.errors) {
       // TODO: Delete VM instance. Throw error.
     }
@@ -295,6 +304,7 @@ export class GcpAccount implements gcp.Account {
   }
 
   private getInstallScript(): string {
+    // TODO: Populate SB_DEFAULT_SERVER_NAME and other environment variables.
     return '#!/bin/bash -eu\n' + SCRIPT;
   }
 }

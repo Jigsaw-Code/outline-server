@@ -15,6 +15,7 @@
 import * as accounts from '../../model/accounts';
 import * as digitalocean from '../../model/digitalocean';
 import * as gcp from '../../model/gcp';
+import {ServerLocation} from '../../model/location';
 import * as server from '../../model/server';
 
 export class FakeDigitalOceanAccount implements digitalocean.Account {
@@ -217,7 +218,7 @@ export class FakeManagedServer extends FakeServer implements server.ManagedServe
     return {
       getMonthlyOutboundTransferLimit: () => ({terabytes: 1}),
       getMonthlyCost: () => ({usd: 5}),
-      getRegionId: () => 'fake-region',
+      getServerLocation: () => ServerLocation.NYC,
       delete: () => Promise.resolve(),
       getHostId: () => 'fake-host-id',
     };

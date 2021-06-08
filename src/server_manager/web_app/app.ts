@@ -21,12 +21,12 @@ import {sleep} from '../infrastructure/sleep';
 import * as accounts from '../model/accounts';
 import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
+import {ServerLocation} from '../model/location';
 import * as server from '../model/server';
 
 import {DisplayDataAmount, displayDataAmountToBytes,} from './data_formatting';
 import * as digitalocean_server from './digitalocean_server';
-import {DigitalOceanServer} from './digitalocean_server';
-import {GcpServer} from './gcp_server';
+import {LOCATION_NAMES} from './location_name';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {Location} from './ui_components/outline-region-picker-step';
@@ -408,10 +408,8 @@ export class App {
     if (!name) {
       let location = null;
       // Newly created servers will not have a name.
-      if (server instanceof DigitalOceanServer) {
-        location = this.getLocalizedCityName(server.getHost().getRegionId());
-      } else if (server instanceof GcpServer) {
-        location = server.getHost().getRegionId();
+      if (isManagedServer(server)) {
+        location = server.getHost().getServerLocation();
       }
       name = this.makeLocalizedServerName(location);
     }
@@ -699,7 +697,7 @@ export class App {
         return this.digitalOceanAccount.getRegionMap();
       });
       const locations = Object.entries(map).map(([cityId, regionIds]) => {
-        return this.createLocationModel(cityId, regionIds);
+        return this.createDigitalOceanLocationModel(cityId, regionIds);
       });
       regionPicker.locations = locations;
     } catch (e) {
@@ -710,10 +708,10 @@ export class App {
 
   // Returns a promise which fulfills once the DigitalOcean droplet is created.
   // Shadowbox may not be fully installed once this promise is fulfilled.
-  public async createDigitalOceanServer(regionId: server.RegionId): Promise<void> {
+  public async createDigitalOceanServer(regionId: digitalocean.RegionId): Promise<void> {
+    const cityId = digitalocean_server.GetCityId(regionId);
+    const serverName = this.makeLocalizedServerName(digitalocean.LOCATION_MAP[cityId]);
     try {
-      const serverLocation = this.getLocalizedCityName(regionId);
-      const serverName = this.makeLocalizedServerName(serverLocation);
       const server = await this.digitalOceanRetry(() => {
         return this.digitalOceanAccount.createServer(regionId, serverName);
       });
@@ -725,13 +723,9 @@ export class App {
     }
   }
 
-  private getLocalizedCityName(regionId: server.RegionId): string {
-    const cityId = digitalocean_server.GetCityId(regionId);
-    return this.appRoot.localize(`city-${cityId}`);
-  }
-
-  private makeLocalizedServerName(location: string): string {
-    return this.appRoot.localize('server-name', 'serverLocation', location);
+  private makeLocalizedServerName(location: ServerLocation): string {
+    const cityName = LOCATION_NAMES.get(location)?.getFirstName(this.appRoot);
+    return this.appRoot.localize('server-name', 'serverLocation', cityName);
   }
 
   public showServer(server: server.Server): void {
@@ -778,10 +772,10 @@ export class App {
     if (isManagedServer(server)) {
       view.isServerManaged = true;
       const host = server.getHost();
-      view.monthlyCost = host.getMonthlyCost().usd;
+      view.monthlyCost = host.getMonthlyCost()?.usd;
       view.monthlyOutboundTransferBytes =
-          host.getMonthlyOutboundTransferLimit().terabytes * (10 ** 12);
-      view.serverLocationId = digitalocean_server.GetCityId(host.getRegionId());
+          host.getMonthlyOutboundTransferLimit()?.terabytes * (10 ** 12);
+      view.serverLocation = host.getServerLocation();
     } else {
       view.isServerManaged = false;
     }
@@ -1230,10 +1224,11 @@ export class App {
     }
   }
 
-  private createLocationModel(cityId: string, regionIds: string[]): Location {
+  private createDigitalOceanLocationModel(
+      cityId: string, regionIds: digitalocean.RegionId[]): Location {
     return {
       id: regionIds.length > 0 ? regionIds[0] : null,
-      name: this.appRoot.localize(`city-${cityId}`),
+      location: digitalocean.LOCATION_MAP[cityId],
       flag: DIGITALOCEAN_FLAG_MAPPING[cityId] || '',
       available: regionIds.length > 0,
     };

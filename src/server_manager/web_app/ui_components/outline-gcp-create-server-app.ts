@@ -22,40 +22,12 @@ import {css, customElement, html, internalProperty, LitElement, property} from '
 import {unsafeHTML} from 'lit-html/directives/unsafe-html.js';
 
 import {AppRoot} from './app-root';
-import {BillingAccount, Project} from '../../model/gcp';
+import {LOCATION_MAP, BillingAccount, Project, getRegionId} from '../../model/gcp';
 import {GcpAccount} from '../gcp_account';
 import {COMMON_STYLES} from './cloud-install-styles';
 import {Location, OutlineRegionPicker} from './outline-region-picker-step';
+import {LOCATION_NAMES} from '../location_name';
 
-// TODO: Map region ids to country codes.
-/** @see https://cloud.google.com/compute/docs/regions-zones */
-const LOCATION_MAP = new Map<string, string>([
-  ['asia-east1', 'Changhua County, Taiwan'],
-  ['asia-east2', 'Hong Kong'],
-  ['asia-northeast1', 'Tokyo, Japan'],
-  ['asia-northeast2', 'Osaka, Japan'],
-  ['asia-northeast3', 'Seoul, South Korea'],
-  ['asia-south1', 'Mumbai, India'],
-  ['asia-southeast1', 'Jurong West, Singapore'],
-  ['asia-southeast2', 'Jakarta, Indonesia'],
-  ['australia-southeast1', 'Sydney, Australia'],
-  ['europe-north1', 'Hamina, Finland'],
-  ['europe-west1', 'St. Ghislain, Belgium'],
-  ['europe-west2', 'London, England, UK'],
-  ['europe-west3', 'Frankfurt, Germany'],
-  ['europe-west4', 'Eemshaven, Netherlands'],
-  ['europe-west6', 'Zürich, Switzerland'],
-  ['europe-central2', 'Warsaw, Poland, Europe'],
-  ['northamerica-northeast1', 'Montréal, Québec, Canada'],
-  ['southamerica-east1', 'Osasco (São Paulo), Brazil'],
-  ['us-central1', 'Council Bluffs, Iowa, USA'],
-  ['us-east1', 'Moncks Corner, South Carolina, USA'],
-  ['us-east4', 'Ashburn, Northern Virginia, USA'],
-  ['us-west1', 'The Dalles, Oregon, USA'],
-  ['us-west2', 'Los Angeles, California, USA'],
-  ['us-west3', 'Salt Lake City, Utah, USA'],
-  ['us-west4', 'Las Vegas, Nevada, USA'],
-]);
 
 // GCP mapping of regions to flags
 const FLAG_IMAGE_DIR = 'images/flags';
@@ -87,10 +59,10 @@ const GCP_FLAG_MAPPING: {[regionId: string]: string} = {
   'us-west4': `${FLAG_IMAGE_DIR}/us.png`,
 };
 
-// TODO: Handle network and authentication errors
 @customElement('outline-gcp-create-server-app')
 export class GcpCreateServerApp extends LitElement {
-  @property({type: Function}) localize: Function;
+  @property({type: Function}) localize: (msgId: string, ...params: string[]) => string;
+  @property({type: String}) language: string;
   @internalProperty() private currentPage = '';
   @internalProperty() private selectedProjectId = '';
   @internalProperty() private selectedBillingAccountId = '';
@@ -290,8 +262,10 @@ export class GcpCreateServerApp extends LitElement {
 
   private renderRegionPicker() {
     return html`
-      <outline-region-picker-step id="regionPicker" .localize=${this.localize} @RegionSelected="${
-        this.onRegionSelected}">  
+      <outline-region-picker-step id="regionPicker"
+        .localize=${this.localize}
+        .language=${this.language}
+        @RegionSelected="${this.onRegionSelected}">  
       </outline-region-picker-step>`;
   }
 
@@ -433,7 +407,7 @@ export class GcpCreateServerApp extends LitElement {
     event.stopPropagation();
 
     this.regionPicker.isServerBeingCreated = true;
-    const name = this.makeServerName();
+    const name = this.makeLocalizedServerName(event.detail.selectedRegionId);
     const server =
         await this.account.createServer(this.project.id, name, event.detail.selectedRegionId);
     const params = {bubbles: true, composed: true, detail: {server}};
@@ -444,7 +418,7 @@ export class GcpCreateServerApp extends LitElement {
   private createLocationModel(regionId: string, zoneIds: string[]): Location {
     return {
       id: zoneIds.length > 0 ? zoneIds[0] : null,
-      name: LOCATION_MAP.get(regionId) ?? regionId,
+      location: LOCATION_MAP[regionId],
       flag: GCP_FLAG_MAPPING[regionId] || `${FLAG_IMAGE_DIR}/unknown.png`,
       available: zoneIds.length > 0,
     };
@@ -454,9 +428,10 @@ export class GcpCreateServerApp extends LitElement {
     return `outline-${Math.random().toString(20).substring(3)}`;
   }
 
-  private makeServerName(): string {
-    const now = new Date();
-    return `outline-${now.getFullYear()}${now.getMonth()}${now.getDate()}-${now.getUTCHours()}${
-        now.getUTCMinutes()}${now.getUTCSeconds()}`;
+  private makeLocalizedServerName(zoneId: string): string {
+    const regionId = getRegionId(zoneId);
+    const location = LOCATION_MAP[regionId];
+    const cityName = LOCATION_NAMES.get(location)?.getFirstName(this);
+    return this.localize('server-name', 'serverLocation', cityName);
   }
 }

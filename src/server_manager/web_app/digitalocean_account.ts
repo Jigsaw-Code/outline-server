@@ -78,7 +78,7 @@ export class DigitalOceanAccount implements digitalocean.Account {
   }
 
   // Creates a server and returning it when it becomes active.
-  createServer(region: server.RegionId, name: string): Promise<server.ManagedServer> {
+  createServer(region: digitalocean.RegionId, name: string): Promise<server.ManagedServer> {
     console.time('activeServer');
     console.time('servingServer');
     const onceKeyPair = crypto.generateKeyPair();

@@ -37,6 +37,7 @@ import {html, PolymerElement} from '@polymer/polymer';
 import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
 
 import * as formatting from '../data_formatting';
+import {LOCATION_NAMES} from '../location_name';
 
 export const MY_CONNECTION_USER_ID = '0';
 
@@ -468,7 +469,7 @@ export class ServerView extends DirMixin(PolymerElement) {
             </paper-listbox>
           </paper-menu-button>
         </div>
-        <div class="server-location">[[_formatLocation(serverLocationId, language)]]</div>
+        <div class="server-location">[[_formatLocation(serverLocation, language)]]</div>
       </div>
       <div class="tabs-container">
         <div class="tabs-spacer"></div>
@@ -628,7 +629,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         serverPortForNewAccessKeys: Number,
         isAccessKeyPortEditable: Boolean,
         serverCreationDate: Date,
-        serverLocation: String,
+        serverLocation: Number,  // Typescript enum
         defaultDataLimitBytes: Number,
         isDefaultDataLimitEnabled: Boolean,
         supportsDefaultDataLimit: Boolean,
@@ -673,7 +674,8 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.serverPortForNewAccessKeys = null;
       this.isAccessKeyPortEditable = false;
       this.serverCreationDate = new Date(0);
-      this.serverLocationId = '';
+      /** @type {ServerLocation} */
+      this.serverLocation = null;
       /** @type {number} */
       this.defaultDataLimitBytes = null;
       this.isDefaultDataLimitEnabled = false;
@@ -1097,11 +1099,12 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   // Takes language so that the server location is recalculated on app language change.
-  _formatLocation(serverLocationId, UNUSED_language) {
-    if (!serverLocationId) {
+  _formatLocation(serverLocation, UNUSED_language) {
+    const locationName = LOCATION_NAMES.get(serverLocation);
+    if (!locationName) {
       return '';
     }
-    return this.localize(`city-${serverLocationId}`);
+    return locationName.getFirstName(this);
   }
 }
 

@@ -22,10 +22,12 @@ import './outline-step-view';
 import {css, customElement, html, LitElement, property, unsafeCSS} from 'lit-element';
 
 import {COMMON_STYLES} from './cloud-install-styles';
+import {ServerLocation} from '../../model/location';
+import {LOCATION_NAMES} from '../location_name';
 
 export interface Location {
   id: string;
-  name: string;
+  location: ServerLocation;
   flag: string;
   available: boolean;
 }
@@ -35,7 +37,8 @@ export class OutlineRegionPicker extends LitElement {
   @property({type: Array}) locations: Location[] = [];
   @property({type: String}) selectedLocationId: string = null;
   @property({type: Boolean}) isServerBeingCreated = false;
-  @property({type: Function}) localize: Function;
+  @property({type: Function}) localize: (msgId: string, ...params: string[]) => string;
+  @property({type: String}) language: string;
 
   static get styles() {
     return [COMMON_STYLES, css`
@@ -123,7 +126,7 @@ export class OutlineRegionPicker extends LitElement {
               ${this.selectedLocationId === item.id ? html`<iron-icon icon="check-circle"></iron-icon>` : ''}
             </div>
             <img class="flag" src="${item.flag}">
-            <div class="city-name">${item.name}</div>
+            <div class="city-name">${this._formatLocation(item, this.language)}</div>
           </label>`;
         })}
       </div>
@@ -155,5 +158,10 @@ export class OutlineRegionPicker extends LitElement {
     };
     const customEvent = new CustomEvent('RegionSelected', params);
     this.dispatchEvent(customEvent);
+  }
+
+  // Takes language so that the server location is recalculated on app language change.
+  _formatLocation(item: Location, language: string): string {
+    return LOCATION_NAMES.get(item.location)?.getFullName(this) ?? item.id;
   }
 }
