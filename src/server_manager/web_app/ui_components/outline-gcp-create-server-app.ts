@@ -87,7 +87,6 @@ const GCP_FLAG_MAPPING: {[regionId: string]: string} = {
   'us-west4': `${FLAG_IMAGE_DIR}/us.png`,
 };
 
-// TODO: Handle network and authentication errors
 @customElement('outline-gcp-create-server-app')
 export class GcpCreateServerApp extends LitElement {
   @property({type: Function}) localize: Function;
@@ -101,6 +100,7 @@ export class GcpCreateServerApp extends LitElement {
   private billingAccounts: BillingAccount[] = [];
   private regionPicker: OutlineRegionPicker;
   private billingAccountsRefreshLoop: number = null;
+  private inProgressServerLocation: string = null; // Not reset by init().
 
   static get styles() {
     return [
@@ -290,14 +290,21 @@ export class GcpCreateServerApp extends LitElement {
 
   private renderRegionPicker() {
     return html`
-      <outline-region-picker-step id="regionPicker" .localize=${this.localize} @RegionSelected="${
-        this.onRegionSelected}">  
-      </outline-region-picker-step>`;
+      <outline-region-picker-step id="regionPicker"
+          .selectedLocationId="${this.inProgressServerLocation}"
+          .isServerBeingCreated="${this.inProgressServerLocation !== null}"
+          .localize=${this.localize}
+          @RegionSelected="${this.onRegionSelected}"></outline-region-picker-step>`;
   }
 
   async start(account: GcpAccount): Promise<void> {
     this.init();
     this.account = account;
+
+    if (this.inProgressServerLocation !== null) {
+      this.showRegionPicker();
+      return;
+    }
 
     try {
       this.billingAccounts = await this.account.listOpenBillingAccounts();
@@ -432,13 +439,20 @@ export class GcpCreateServerApp extends LitElement {
   private async onRegionSelected(event: CustomEvent) {
     event.stopPropagation();
 
+    this.inProgressServerLocation = event.detail.selectedRegionId;
     this.regionPicker.isServerBeingCreated = true;
     const name = this.makeServerName();
-    const server =
-        await this.account.createServer(this.project.id, name, event.detail.selectedRegionId);
-    const params = {bubbles: true, composed: true, detail: {server}};
-    const serverCreatedEvent = new CustomEvent('GcpServerCreated', params);
-    this.dispatchEvent(serverCreatedEvent);
+    try {
+      const server =
+          await this.account.createServer(this.project.id, name, this.inProgressServerLocation);
+      const params = {bubbles: true, composed: true, detail: {server}};
+      const serverCreatedEvent = new CustomEvent('GcpServerCreated', params);
+      this.dispatchEvent(serverCreatedEvent);
+    } catch (e) {
+      this.showError('error-server-creation');
+      console.warn('Server creation failed:', e);
+    }
+    this.inProgressServerLocation = null;
   }
 
   private createLocationModel(regionId: string, zoneIds: string[]): Location {
