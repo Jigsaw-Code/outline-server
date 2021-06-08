@@ -392,15 +392,19 @@ export class GcpCreateServerApp extends LitElement {
 
   private async handleProjectSetupNextTap(): Promise<void> {
     this.isProjectBeingCreated = true;
-    if (!this.project) {
-      this.project =
-          await this.account.createProject(this.selectedProjectId, this.selectedBillingAccountId);
-    } else {
-      await this.account.repairProject(this.project.id, this.selectedBillingAccountId);
+    try {
+      if (!this.project) {
+        this.project =
+            await this.account.createProject(this.selectedProjectId, this.selectedBillingAccountId);
+      } else {
+        await this.account.repairProject(this.project.id, this.selectedBillingAccountId);
+      }
+      this.showRegionPicker();
+    } catch (e) {
+      this.showError(this.localize('gcp-project-setup-error'));
+      console.warn('Project setup failed:', e);
     }
     this.isProjectBeingCreated = false;
-
-    this.showRegionPicker();
   }
 
   private async showRegionPicker(): Promise<void> {

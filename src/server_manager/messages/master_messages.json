@@ -559,6 +559,10 @@
     "message": "Name your project in the 'Project name' field.",
     "description": "This string appears as instructions for naming a new Google Cloud Project.  'Project Name' should be translated and include untranslated in parentheses"
   },
+  "gcp_project_setup_error": {
+    "message": "An error occurred while setting up your Google Cloud project",
+    "description": "Error message, shown in a popup when server creation fails"
+  },
   "gcp_select_machine_type": {
     "message": "Select 'f1-micro' under 'Machine type'",
     "description": "This string appears as an instruction for selecting the machine type for a new Google Cloud VM.  'Machine type' should be translated and include untranslated in parentheses."
