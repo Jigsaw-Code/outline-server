@@ -33,7 +33,7 @@
   const rejectWrapper = {reject: (error: Error) => {}};
   const result = new Promise((resolve, reject) => {
     rejectWrapper.reject = reject;
-    window.open('https://cloud.digitalocean.com/account/api/tokens/new', 'nopener,noreferrer');
+    window.open('https://cloud.digitalocean.com/account/api/tokens/new', 'noopener,noreferrer');
     const apiToken = window.prompt('Please enter your DigitalOcean API token');
     if (apiToken) {
       resolve(apiToken);
