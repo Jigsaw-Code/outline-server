@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as bodyParser from 'body-parser';
 import * as crypto from 'crypto';
 import * as electron from 'electron';
 import * as express from 'express';
@@ -149,7 +148,7 @@ export function runOauth(): OauthSession {
     rejectWrapper.reject = reject;
     // This is the POST endpoint that receives the access token and redirects to either DigitalOcean
     // for the user to complete their account creation, or to a page that closes the window.
-    app.post('/', bodyParser.urlencoded({type: '*/*', extended: false}), (request, response) => {
+    app.post('/', express.urlencoded({type: '*/*', extended: false}), (request, response) => {
       server.close();
 
       const params = new URLSearchParams(request.body.params);
