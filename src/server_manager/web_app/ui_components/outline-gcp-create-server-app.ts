@@ -401,7 +401,7 @@ export class GcpCreateServerApp extends LitElement {
       }
       this.showRegionPicker();
     } catch (e) {
-      this.showError(this.localize('gcp-project-setup-error'))
+      this.showError(this.localize('gcp-project-setup-error'));
       console.warn('Project setup failed:', e);
     }
     this.isProjectBeingCreated = false;
