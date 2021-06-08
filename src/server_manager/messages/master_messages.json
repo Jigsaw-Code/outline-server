@@ -560,7 +560,7 @@
     "description": "This string appears as instructions for naming a new Google Cloud Project.  'Project Name' should be translated and include untranslated in parentheses"
   },
   "gcp_project_setup_error": {
-    "message": "An error occurred while configuring your Google Cloud project",
+    "message": "An error occurred while setting up your Google Cloud project",
     "description": "Error message, shown in a popup when server creation fails"
   },
   "gcp_select_machine_type": {
