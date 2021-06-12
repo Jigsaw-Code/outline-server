@@ -48,6 +48,8 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
 }
 
 export class FakeGcpAccount implements gcp.Account {
+  private servers: server.ManagedServer[] = [];
+
   constructor(
       private refreshToken = 'fake-access-token',
       private billingAccounts: gcp.BillingAccount[] = [], private locations: gcp.ZoneMap = {}) {}
@@ -61,14 +63,17 @@ export class FakeGcpAccount implements gcp.Account {
   getRefreshToken(): string {
     return this.refreshToken;
   }
-  createServer(projectId: string, name: string, zoneId: string): Promise<server.ManagedServer> {
-    return undefined;
+  async createServer(projectId: string, name: string, zoneId: string):
+      Promise<server.ManagedServer> {
+    const newServer = new FakeManagedServer(`fake-gcp-server-${Math.random()}`, false);
+    this.servers.push(newServer);
+    return newServer;
   }
   async listLocations(projectId: string): Promise<Readonly<gcp.ZoneMap>> {
     return this.locations;
   }
   async listServers(projectId: string): Promise<server.ManagedServer[]> {
-    return [];
+    return this.servers;
   }
   async createProject(id: string, billingAccountId: string): Promise<gcp.Project> {
     return {
@@ -217,7 +222,7 @@ export class FakeManagedServer extends FakeServer implements server.ManagedServe
     return {
       getMonthlyOutboundTransferLimit: () => ({terabytes: 1}),
       getMonthlyCost: () => ({usd: 5}),
-      getRegionId: () => 'fake-region',
+      getCityName: () => 'fake-city',
       delete: () => Promise.resolve(),
       getHostId: () => 'fake-host-id',
     };

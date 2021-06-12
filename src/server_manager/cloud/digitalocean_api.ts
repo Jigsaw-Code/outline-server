@@ -25,6 +25,7 @@ export interface DigitalOceanDropletSpecification {
 // https://developers.digitalocean.com/documentation/v2/#retrieve-an-existing-droplet-by-id
 export type DropletInfo = Readonly < {
   id: number;
+  name: string;
   status: 'new'|'active';
   tags: string[];
   region: {readonly slug: string;};

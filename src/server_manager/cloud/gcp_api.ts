@@ -44,6 +44,26 @@ export type Instance = Readonly<{
 }>;
 
 /**
+ * Helper type to avoid error-prone positional arguments to instance-related
+ * functions.
+ */
+export interface InstanceLocator {
+  /** The GCP project ID. */
+  projectId: string;
+  /** The zone in which the instance resides. */
+  zoneId: string;
+  /** The ID of the instance. */
+  instanceId: string;
+}
+
+function getInstanceLink(locator: InstanceLocator): string {
+  return 'https://compute.googleapis.com/compute/v1' +
+      `/projects/${locator.projectId}` +
+      `/zones/${locator.zoneId}` +
+      `/instances/${locator.instanceId}`;
+}
+
+/**
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/getGuestAttributes#response-body
  */
 type GuestAttributes = Readonly<{
@@ -139,13 +159,17 @@ export class RestApiClient {
    * @param zoneId - The zone in which to create the instance.
    * @param data - Request body data. See documentation.
    */
-  async createInstance(projectId: string, zoneId: string, data: {}): Promise<ComputeEngineOperation> {
+  async createInstance(projectId: string, zoneId: string, data: {}):
+      Promise<{instanceId: string, result: Promise<ComputeEngineOperation>}> {
     const operation = await this.fetchAuthenticated<ComputeEngineOperation>(
         'POST',
         new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
             zoneId}/instances`),
         this.GCP_HEADERS, null, data);
-    return await this.computeEngineOperationZoneWait(projectId, zoneId, operation.name);
+    return {
+      instanceId: operation.targetId,
+      result: this.computeEngineOperationZoneWait(projectId, zoneId, operation.name)
+    };
   }
 
   /**
@@ -153,17 +177,14 @@ export class RestApiClient {
    *
    * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/delete
    *
-   * @param projectId - The GCP project ID.
-   * @param instanceId - The ID of the instance to delete.
-   * @param zoneId - The zone in which the instance resides.
+   * @param locator - Identifies the instance to delete.
    */
-  async deleteInstance(projectId: string, instanceId: string, zoneId: string): Promise<void> {
+  async deleteInstance(locator: InstanceLocator): Promise<void> {
     const operation = await this.fetchAuthenticated<ComputeEngineOperation>(
         'DELETE',
-        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
-            zoneId}/instances/${instanceId}`),
+        new URL(getInstanceLink(locator)),
         this.GCP_HEADERS);
-    await this.computeEngineOperationZoneWait(projectId, zoneId, operation.name);
+    await this.computeEngineOperationZoneWait(locator.projectId, locator.zoneId, operation.name);
   }
 
   /**
@@ -171,15 +192,12 @@ export class RestApiClient {
    *
    * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/get
    *
-   * @param projectId - The GCP project ID.
-   * @param instanceId - The ID of the instance to retrieve.
-   * @param zoneId - The zone in which the instance resides.
+   * @param locator - Identifies the instance to return.
    */
-  getInstance(projectId: string, instanceId: string, zoneId: string): Promise<Instance> {
+  getInstance(locator: InstanceLocator): Promise<Instance> {
     return this.fetchAuthenticated(
         'GET',
-        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
-            zoneId}/instances/${instanceId}`),
+        new URL(getInstanceLink(locator)),
         this.GCP_HEADERS);
   }
 
@@ -253,21 +271,17 @@ export class RestApiClient {
    * @see https://cloud.google.com/compute/docs/storing-retrieving-metadata#guest_attributes
    * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/getGuestAttributes
    *
-   * @param projectId - The GCP project ID.
-   * @param instanceId - The ID of the VM instance.
-   * @param zoneId - The zone in which the instance resides.
+   * @param locator - Identifies the instance to inspect.
    * @param namespace - The namespace of the guest attributes.
    */
-  async getGuestAttributes(
-      projectId: string, instanceId: string, zoneId: string,
-      namespace: string): Promise<GuestAttributes|undefined> {
+  async getGuestAttributes(locator: InstanceLocator, namespace: string):
+      Promise<GuestAttributes|undefined> {
     try {
       const parameters = new Map<string, string>([['queryPath', namespace]]);
       // We must await the call to getGuestAttributes to properly catch any exceptions.
       return await this.fetchAuthenticated(
           'GET',
-          new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
-              zoneId}/instances/${instanceId}/getGuestAttributes`),
+          new URL(`${getInstanceLink(locator)}/getGuestAttributes`),
           this.GCP_HEADERS, parameters);
     } catch (error) {
       // TODO: Distinguish between 404 not found and other errors.

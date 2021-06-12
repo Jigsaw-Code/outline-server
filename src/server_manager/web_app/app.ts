@@ -150,11 +150,6 @@ export class App {
     appRoot.addEventListener('CreateGcpServerRequested', async (event: CustomEvent) => {
       this.appRoot.getAndShowGcpCreateServerApp().start(this.gcpAccount);
     });
-    appRoot.addEventListener('GcpServerCreated', (event: CustomEvent) => {
-      const server = event.detail.server;
-      this.addServer(this.gcpAccount.getId(), server);
-      this.showServer(server);
-    });
     appRoot.addEventListener('DigitalOceanSignOutRequested', (event: CustomEvent) => {
       this.disconnectDigitalOceanAccount();
       this.showIntro();
@@ -165,7 +160,7 @@ export class App {
     });
 
     appRoot.addEventListener('SetUpServerRequested', (event: CustomEvent) => {
-      this.createDigitalOceanServer(event.detail.regionId);
+      this.createManagedServer(event.detail);
     });
 
     appRoot.addEventListener('DeleteServerRequested', (event: CustomEvent) => {
@@ -408,10 +403,8 @@ export class App {
     if (!name) {
       let location = null;
       // Newly created servers will not have a name.
-      if (server instanceof DigitalOceanServer) {
-        location = this.getLocalizedCityName(server.getHost().getRegionId());
-      } else if (server instanceof GcpServer) {
-        location = server.getHost().getRegionId();
+      if (isManagedServer(server)) {
+        location = this.appRoot.localize(server.getHost().getCityName());
       }
       name = this.makeLocalizedServerName(location);
     }
@@ -710,24 +703,48 @@ export class App {
 
   // Returns a promise which fulfills once the DigitalOcean droplet is created.
   // Shadowbox may not be fully installed once this promise is fulfilled.
-  public async createDigitalOceanServer(regionId: server.RegionId): Promise<void> {
+  public async createManagedServer(params: accounts.CreationParams): Promise<void> {
     try {
-      const serverLocation = this.getLocalizedCityName(regionId);
-      const serverName = this.makeLocalizedServerName(serverLocation);
-      const server = await this.digitalOceanRetry(() => {
-        return this.digitalOceanAccount.createServer(regionId, serverName);
-      });
-      this.addServer(this.digitalOceanAccount.getId(), server);
+      const {accountId, server} = await this.dispatchManagedServerCreation(params);
+      this.addServer(accountId, server);
       this.showServer(server);
     } catch (error) {
-      console.error('Error from createDigitalOceanServer', error);
+      console.error('Error from createManagedServer', error);
       this.appRoot.showError(this.appRoot.localize('error-server-creation'));
     }
   }
 
-  private getLocalizedCityName(regionId: server.RegionId): string {
-    const cityId = digitalocean_server.GetCityId(regionId);
-    return this.appRoot.localize(`city-${cityId}`);
+  private async dispatchManagedServerCreation(params: accounts.CreationParams):
+      Promise<{accountId: string, server: server.Server}> {
+    if (params.cloudProvider === accounts.CloudProvider.DO) {
+      return {
+        accountId: this.digitalOceanAccount.getId(),
+        server: await this.createDigitalOceanServer(params.regionId)
+      };
+    } else { // GCP
+      return {
+        accountId: this.gcpAccount.getId(),
+        server: await this.createGcpServer(params.projectId, params.zoneId)
+      };
+    }
+  }
+  
+  private createDigitalOceanServer(region: digitalocean.RegionId): Promise<server.Server> {
+    const name = this.makeLocalizedServerName(this.getDigitalOceanCityName(region));
+    return this.digitalOceanRetry(() => {
+      return this.digitalOceanAccount.createServer(region, name);
+    });
+  }
+
+  private createGcpServer(projectId: string, zoneId: string): Promise<server.Server> {
+    const regionId = gcp.getRegionId(zoneId);
+    const cityName = gcp.LOCATION_MAP[regionId]?.getFirstName() ?? regionId;
+    const name = this.makeLocalizedServerName(cityName);
+    return this.gcpAccount.createServer(projectId, name, zoneId);
+  }
+
+  private getDigitalOceanCityName(regionId: digitalocean.RegionId): string {
+    return this.appRoot.localize(digitalocean_server.GetCityName(regionId));
   }
 
   private makeLocalizedServerName(location: string): string {
@@ -778,10 +795,10 @@ export class App {
     if (isManagedServer(server)) {
       view.isServerManaged = true;
       const host = server.getHost();
-      view.monthlyCost = host.getMonthlyCost().usd;
+      view.monthlyCost = host.getMonthlyCost()?.usd;
       view.monthlyOutboundTransferBytes =
-          host.getMonthlyOutboundTransferLimit().terabytes * (10 ** 12);
-      view.serverLocationId = digitalocean_server.GetCityId(host.getRegionId());
+          host.getMonthlyOutboundTransferLimit()?.terabytes * (10 ** 12);
+      view.serverLocationId = host.getCityName();
     } else {
       view.isServerManaged = false;
     }
@@ -1208,16 +1225,20 @@ export class App {
     }
   }
 
-  private cancelServerCreation(serverToCancel: server.Server): void {
+  private async cancelServerCreation(serverToCancel: server.Server): Promise<void> {
     if (!isManagedServer(serverToCancel)) {
       const msg = 'cannot cancel non-ManagedServer';
       console.error(msg);
       throw new Error(msg);
     }
-    serverToCancel.getHost().delete().then(() => {
+    try {
+      await serverToCancel.getHost().delete();
       this.removeServer(serverToCancel.getId());
       this.showIntro();
-    });
+    } catch (e) {
+      this.appRoot.showError(this.appRoot.localize('error-server-destroy'));
+      console.warn(e);
+    }
   }
 
   private async setAppLanguage(languageCode: string, languageDir: string) {

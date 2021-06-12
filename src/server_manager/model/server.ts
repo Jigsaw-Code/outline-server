@@ -119,8 +119,8 @@ export interface ManagedServerHost {
   getMonthlyOutboundTransferLimit(): DataAmount;
   // Returns the monthly cost.
   getMonthlyCost(): MonetaryCost;
-  // Returns the server region.
-  getRegionId(): RegionId;
+  // Returns the server location as a localizable (but possibly pre-localized) ID.
+  getCityName(): string;
   // Deletes the server - cannot be undone.
   delete(): Promise<void>;
 }
@@ -133,8 +133,6 @@ export class MonetaryCost {
   // Value in US dollars.
   usd: number;
 }
-
-export type RegionId = string;
 
 // Configuration for manual servers.  This is the output emitted from the
 // shadowbox install script, which is needed for the manager connect to

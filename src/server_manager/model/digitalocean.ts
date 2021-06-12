@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {ManagedServer, RegionId} from "./server";
+import {CloudProvider} from "./accounts";
+import {ManagedServer} from "./server";
+
+export type RegionId = string;
 
 // Keys are cityIds like "nyc".  Values are regions like ["nyc1", "nyc3"].
 export type RegionMap = {
@@ -23,6 +26,11 @@ export enum Status {
   ACTIVE,
   EMAIL_UNVERIFIED,
   MISSING_BILLING_INFORMATION,
+}
+
+export interface CreationParams {
+  cloudProvider: CloudProvider.DO;
+  regionId: RegionId;
 }
 
 export interface Account {

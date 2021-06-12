@@ -17,6 +17,7 @@ import {EventEmitter} from 'eventemitter3';
 import {DigitalOceanSession, DropletInfo} from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {asciiToHex, hexToString} from '../infrastructure/hex_encoding';
+import {RegionId} from '../model/digitalocean';
 import * as server from '../model/server';
 
 import {ShadowboxServer} from './shadowbox_server';
@@ -298,8 +299,8 @@ class DigitalOceanHost implements server.ManagedServerHost {
     return {usd: this.dropletInfo.size.price_monthly};
   }
 
-  getRegionId(): server.RegionId {
-    return this.dropletInfo.region.slug;
+  getCityName(): string {
+    return GetCityName(this.dropletInfo.region.slug);
   }
 
   delete(): Promise<void> {
@@ -313,6 +314,10 @@ function startsWithCaseInsensitive(text: string, prefix: string) {
   return text.slice(0, prefix.length).toLowerCase() === prefix.toLowerCase();
 }
 
-export function GetCityId(slug: server.RegionId): string {
+export function GetCityId(slug: RegionId): string {
   return slug.substr(0, 3).toLowerCase();
+}
+
+export function GetCityName(regionId: RegionId): string {
+  return `city-${GetCityId(regionId)}`;
 }

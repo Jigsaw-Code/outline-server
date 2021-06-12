@@ -599,7 +599,7 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
     this.shouldShowSideBar = false;
 
-    this.addEventListener('RegionSelected', this.handleRegionSelected);
+    this.addEventListener('RegionSelected', this.handleDigitalOceanRegionSelected);
     this.addEventListener(
         'SetUpGenericCloudProviderRequested', this.handleSetUpGenericCloudProviderRequested);
     this.addEventListener('SetUpAwsRequested', this.handleSetUpAwsRequested);
@@ -719,8 +719,9 @@ export class AppRoot extends mixinBehaviors
     return await this.shadowRoot.querySelector('#serverView').getServerView(displayServerId);
   }
 
-  handleRegionSelected(/** @type {Event} */ e) {
+  handleDigitalOceanRegionSelected(/** @type {Event} */ e) {
     this.fire('SetUpServerRequested', {
+      cloudProvider: 'do',  // TODO: Import this value from accounts.ts.
       regionId: e.detail.selectedRegionId,
     });
   }

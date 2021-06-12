@@ -1101,7 +1101,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     if (!serverLocationId) {
       return '';
     }
-    return this.localize(`city-${serverLocationId}`);
+    return this.localize(serverLocationId);
   }
 }
 

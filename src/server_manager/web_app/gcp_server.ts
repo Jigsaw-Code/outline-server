@@ -15,6 +15,7 @@
 import * as gcp_api from '../cloud/gcp_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
+import {getRegionId, LOCATION_MAP} from '../model/gcp';
 import * as server from '../model/server';
 import {DataAmount, ManagedServerHost, MonetaryCost} from '../model/server';
 
@@ -38,10 +39,12 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   private installState: InstallState = InstallState.UNKNOWN;
 
   constructor(
-      id: string, private projectId: string, private instance: gcp_api.Instance,
+      accountId: string, private locator: gcp_api.InstanceLocator,
+      instanceName: string, private completion: Promise<void>,
       private apiClient: gcp_api.RestApiClient) {
-    super(id);
-    this.gcpHost = new GcpHost(projectId, instance, apiClient, this.onDelete.bind(this));
+    super(`${accountId}:${locator.instanceId}`);
+    this.gcpHost = new GcpHost(locator, instanceName, completion, apiClient,
+        this.onDelete.bind(this));
   }
 
   getHost(): ManagedServerHost {
@@ -54,9 +57,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
 
   async waitOnInstall(): Promise<void> {
     while (this.installState === InstallState.UNKNOWN) {
-      const zoneId = this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
-      const outlineGuestAttributes =
-          await this.getOutlineGuestAttributes(this.projectId, this.instance.id, zoneId);
+      const outlineGuestAttributes = await this.getOutlineGuestAttributes();
       if (outlineGuestAttributes.has('apiUrl') && outlineGuestAttributes.has('certSha256')) {
         const certSha256 = outlineGuestAttributes.get('certSha256');
         const apiUrl = outlineGuestAttributes.get('apiUrl');
@@ -72,12 +73,12 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     }
   }
 
-  private async getOutlineGuestAttributes(projectId: string, instanceId: string, zone: string):
-      Promise<Map<string, string>> {
-    const result = new Map<string, string>();
+  private async getOutlineGuestAttributes(): Promise<Map<string, string>> {
+    await this.completion;
     const guestAttributes =
-        await this.apiClient.getGuestAttributes(projectId, instanceId, zone, 'outline/');
+        await this.apiClient.getGuestAttributes(this.locator, 'outline/');
     const attributes = guestAttributes?.queryValue?.items ?? [];
+    const result = new Map<string, string>();
     attributes.forEach((entry) => {
       result.set(entry.key, entry.value);
     });
@@ -92,20 +93,25 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
 
 class GcpHost implements server.ManagedServerHost {
   constructor(
-      private projectId: string, private instance: gcp_api.Instance,
-      private apiClient: gcp_api.RestApiClient, private deleteCallback: Function) {}
+      private locator: gcp_api.InstanceLocator,
+      private addressName: string,
+      private completion: Promise<void>,
+      private apiClient: gcp_api.RestApiClient,
+      private deleteCallback: Function) {}
 
   // TODO: Throw error and show message on failure
   async delete(): Promise<void> {
-    const zoneId = this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
-    const regionId = zoneId.substring(0, zoneId.lastIndexOf('-'));
-    await this.apiClient.deleteStaticIp(this.projectId, this.instance.name, regionId);
-    this.apiClient.deleteInstance(this.projectId, this.instance.id, zoneId);
+    // TODO: Support deletion of servers that failed to complete setup, or
+    // never got a static IP.
+    await this.completion;
+    const regionId = getRegionId(this.locator.zoneId);
+    await this.apiClient.deleteStaticIp(this.locator.projectId, this.addressName, regionId);
+    this.apiClient.deleteInstance(this.locator);
     this.deleteCallback();
   }
 
   getHostId(): string {
-    return this.instance.id;
+    return this.locator.instanceId;
   }
 
   getMonthlyCost(): MonetaryCost {
@@ -116,7 +122,8 @@ class GcpHost implements server.ManagedServerHost {
     return undefined;
   }
 
-  getRegionId(): string {
-    return this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
+  getCityName(): string {
+    const regionId = getRegionId(this.locator.zoneId);
+    return LOCATION_MAP[regionId]?.getFirstName() || regionId;
   }
 }

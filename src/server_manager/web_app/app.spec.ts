@@ -18,7 +18,7 @@ import * as accounts from '../model/accounts';
 import * as server from '../model/server';
 
 import {App, LAST_DISPLAYED_SERVER_STORAGE_KEY} from './app';
-import {FakeCloudAccounts, FakeDigitalOceanAccount, FakeManualServerRepository} from './testing/models';
+import {FakeCloudAccounts, FakeDigitalOceanAccount, FakeGcpAccount, FakeManualServerRepository} from './testing/models';
 import {AppRoot} from './ui_components/app-root';
 
 
@@ -112,7 +112,26 @@ describe('App', () => {
     const cloudAccounts = new FakeCloudAccounts(new FakeDigitalOceanAccount());
     const app = createTestApp(appRoot, cloudAccounts);
     await app.start();
-    await app.createDigitalOceanServer('fakeRegion');
+    await app.createManagedServer({
+      cloudProvider: accounts.CloudProvider.DO,
+      regionId: 'fakeRegion'
+    });
+    expect(appRoot.currentPage).toEqual('serverView');
+    const view = await appRoot.getServerView(appRoot.selectedServerId);
+    expect(view.selectedPage).toEqual('progressView');
+  });
+
+  it('shows progress screen when creating a GCP server', async () => {
+    // Start the app with a fake GCP account.
+    const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
+    const cloudAccounts = new FakeCloudAccounts(null, new FakeGcpAccount());
+    const app = createTestApp(appRoot, cloudAccounts);
+    await app.start();
+    await app.createManagedServer({
+      cloudProvider: accounts.CloudProvider.GCP,
+      projectId: 'fakeProjectId',
+      zoneId: 'fakeZoneId'
+    });
     expect(appRoot.currentPage).toEqual('serverView');
     const view = await appRoot.getServerView(appRoot.selectedServerId);
     expect(view.selectedPage).toEqual('progressView');
