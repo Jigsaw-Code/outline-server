@@ -8,6 +8,6 @@
   "dependencies": {},
   "devDependencies": {
     "@sentry/types": "^4.4.1",
-    "@types/express": "^4.17.3"
+    "@types/express": "^4.17.12"
   }
 }
