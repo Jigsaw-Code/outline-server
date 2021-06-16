@@ -45,7 +45,7 @@ jobs:
 
       - name: Manager
         run: |
-          yarn do server_manager/electron_app/build
+          SENTRY_DSN='test' yarn do server_manager/electron_app/release_linux
           yarn do server_manager/test
 
       - name: Shadowbox
