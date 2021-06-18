@@ -12,19 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {ServerLocation} from './location';
+import {ZoneMap} from './zone';
 import {ManagedServer} from './server';
 
 // Keys are region IDs like "us-central1".
 // Values are zones like ["us-central1-a", "us-central1-b"].
 export type ZoneId = string;
-export type ZoneMap = {
-  [regionId: string]: ZoneId[]
-};
-
-export function getRegionId(zoneId: ZoneId): string {
-  return zoneId.substring(0, zoneId.lastIndexOf('-'));
-}
 
 export type Project = {
   id: string,
@@ -34,35 +27,6 @@ export type Project = {
 export type BillingAccount = {
   id: string,
   name: string,
-};
-
-/** @see https://cloud.google.com/compute/docs/regions-zones */
-export const LOCATION_MAP: {[regionId: string]: ServerLocation} = {
-  'asia-east1': ServerLocation.CHANGHUA,
-  'asia-east2': ServerLocation.HONGKONG,
-  'asia-northeast1': ServerLocation.TOKYO,
-  'asia-northeast2': ServerLocation.OSAKA,
-  'asia-northeast3': ServerLocation.SEOUL,
-  'asia-south1': ServerLocation.MUMBAI,
-  'asia-southeast1': ServerLocation.JURONG_WEST,
-  'asia-southeast2': ServerLocation.JAKARTA,
-  'australia-southeast1': ServerLocation.SYDNEY,
-  'europe-north1': ServerLocation.HAMINA,
-  'europe-west1': ServerLocation.ST_GHISLAIN,
-  'europe-west2': ServerLocation.LONDON,
-  'europe-west3': ServerLocation.FRANKFURT,
-  'europe-west4': ServerLocation.EEMSHAVEN,
-  'europe-west6': ServerLocation.ZURICH,
-  'europe-central2': ServerLocation.WARSAW,
-  'northamerica-northeast1': ServerLocation.MONTREAL,
-  'southamerica-east1': ServerLocation.OSASCO,
-  'us-central1': ServerLocation.COUNCIL_BLUFFS,
-  'us-east1': ServerLocation.MONCKS_CORNER,
-  'us-east4': ServerLocation.ASHBURN,
-  'us-west1': ServerLocation.THE_DALLES,
-  'us-west2': ServerLocation.LOS_ANGELES,
-  'us-west3': ServerLocation.SALT_LAKE_CITY,
-  'us-west4': ServerLocation.LAS_VEGAS,
 };
 
 /**
@@ -104,7 +68,7 @@ export interface Account {
    *
    * @param projectId - The GCP project ID.
    */
-  listLocations(projectId: string): Promise<ZoneMap>;
+  getZoneMap(projectId: string): Promise<ZoneMap>;
 
   /**
    * Creates a new Google Cloud Platform project.

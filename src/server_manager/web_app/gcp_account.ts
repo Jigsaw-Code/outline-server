@@ -17,9 +17,10 @@ import {sleep} from '../infrastructure/sleep';
 import {SCRIPT} from '../install_scripts/gcp_install_script';
 import * as gcp from '../model/gcp';
 import {BillingAccount, Project} from '../model/gcp';
+import {ZoneMap} from '../model/zone';
 import * as server from '../model/server';
 
-import {GcpServer} from './gcp_server';
+import {LOCATION_MAP, GcpServer, getRegionId} from './gcp_server';
 
 /** Returns a unique, RFC1035-style name as required by GCE. */
 function makeGcpInstanceName(): string {
@@ -90,19 +91,17 @@ export class GcpAccount implements gcp.Account {
   }
 
   /** @see {@link Account#listLocations}. */
-  async listLocations(projectId: string): Promise<gcp.ZoneMap> {
+  async getZoneMap(projectId: string): Promise<ZoneMap> {
     const listZonesResponse = await this.apiClient.listZones(projectId);
     const zones = listZonesResponse.items ?? [];
 
-    const result: gcp.ZoneMap = {};
-    zones.map((zone) => {
+    const result: ZoneMap = {};
+    zones.forEach(zone => {
       const region = zone.region.substring(zone.region.lastIndexOf('/') + 1);
-      if (!(region in result)) {
-        result[region] = [];
-      }
-      if (zone.status === 'UP') {
-        result[region].push(zone.name);
-      }
+      result[zone.name] = {
+        geoLocation: LOCATION_MAP[region],
+        available: zone.status === 'UP'
+      };
     });
     return result;
   }
@@ -269,7 +268,7 @@ export class GcpAccount implements gcp.Account {
       address: ipAddress,
     };
     const createStaticIpOperation = await this.apiClient.createStaticIp(
-        projectId, gcp.getRegionId(zoneId), createStaticIpData);
+        projectId, getRegionId(zoneId), createStaticIpData);
     if (createStaticIpOperation.error?.errors) {
       // TODO: Delete VM instance. Throw error.
     }

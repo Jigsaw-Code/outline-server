@@ -21,15 +21,12 @@ import {sleep} from '../infrastructure/sleep';
 import * as accounts from '../model/accounts';
 import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
-import {ServerLocation} from '../model/location';
 import * as server from '../model/server';
 
 import {DisplayDataAmount, displayDataAmountToBytes,} from './data_formatting';
-import * as digitalocean_server from './digitalocean_server';
-import {LOCATION_NAMES} from './location_name';
+import {collectLocations, makeDisplayLocation, getShortName, DisplayLocation} from './location';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
-import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, ServerView} from './ui_components/outline-server-view';
 
 // The Outline DigitalOcean team's referral code:
@@ -43,19 +40,6 @@ const KEY_SETTINGS_VERSION = '1.6.0';
 const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
 const CANCELLED_ERROR = new Error('Cancelled');
 export const LAST_DISPLAYED_SERVER_STORAGE_KEY = 'lastDisplayedServer';
-
-// DigitalOcean mapping of regions to flags
-const FLAG_IMAGE_DIR = 'images/flags';
-const DIGITALOCEAN_FLAG_MAPPING: {[cityId: string]: string} = {
-  ams: `${FLAG_IMAGE_DIR}/netherlands.png`,
-  sgp: `${FLAG_IMAGE_DIR}/singapore.png`,
-  blr: `${FLAG_IMAGE_DIR}/india.png`,
-  fra: `${FLAG_IMAGE_DIR}/germany.png`,
-  lon: `${FLAG_IMAGE_DIR}/uk.png`,
-  sfo: `${FLAG_IMAGE_DIR}/us.png`,
-  tor: `${FLAG_IMAGE_DIR}/canada.png`,
-  nyc: `${FLAG_IMAGE_DIR}/us.png`,
-};
 
 function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.DataLimit|null {
   if (!dataAmount) {
@@ -165,7 +149,7 @@ export class App {
     });
 
     appRoot.addEventListener('SetUpServerRequested', (event: CustomEvent) => {
-      this.createDigitalOceanServer(event.detail.regionId);
+      this.createDigitalOceanServer(event.detail.selectedLocation);
     });
 
     appRoot.addEventListener('DeleteServerRequested', (event: CustomEvent) => {
@@ -403,13 +387,18 @@ export class App {
     };
   }
 
+  private static makeDisplayLocation(host: server.ManagedServerHost): DisplayLocation {
+    const zone = host.getZone();
+    return makeDisplayLocation(zone.id, zone.info.geoLocation);
+  }
+
   private makeDisplayName(server: server.Server): string {
     let name = server.getName() ?? server.getHostnameForAccessKeys();
     if (!name) {
       let location = null;
       // Newly created servers will not have a name.
       if (isManagedServer(server)) {
-        location = server.getHost().getServerLocation();
+        location = App.makeDisplayLocation(server.getHost());
       }
       name = this.makeLocalizedServerName(location);
     }
@@ -689,17 +678,10 @@ export class App {
       return;
     }
 
-    // The region picker initially shows all options as disabled. Options are enabled by this code,
-    // after checking which regions are available.
     try {
       const regionPicker = this.appRoot.getAndShowRegionPicker();
-      const map = await this.digitalOceanRetry(() => {
-        return this.digitalOceanAccount.getRegionMap();
-      });
-      const locations = Object.entries(map).map(([cityId, regionIds]) => {
-        return this.createDigitalOceanLocationModel(cityId, regionIds);
-      });
-      regionPicker.locations = locations;
+      const regionMap = await this.digitalOceanAccount.getRegionMap();
+      regionPicker.locations = collectLocations(regionMap);
     } catch (e) {
       console.error(`Failed to get list of available regions: ${e}`);
       this.appRoot.showError(this.appRoot.localize('error-do-regions'));
@@ -708,12 +690,11 @@ export class App {
 
   // Returns a promise which fulfills once the DigitalOcean droplet is created.
   // Shadowbox may not be fully installed once this promise is fulfilled.
-  public async createDigitalOceanServer(regionId: digitalocean.RegionId): Promise<void> {
-    const cityId = digitalocean_server.GetCityId(regionId);
-    const serverName = this.makeLocalizedServerName(digitalocean.LOCATION_MAP[cityId]);
+  public async createDigitalOceanServer(serverLocation: DisplayLocation): Promise<void> {
     try {
+      const serverName = this.makeLocalizedServerName(serverLocation);
       const server = await this.digitalOceanRetry(() => {
-        return this.digitalOceanAccount.createServer(regionId, serverName);
+        return this.digitalOceanAccount.createServer(serverLocation.id, serverName);
       });
       this.addServer(this.digitalOceanAccount.getId(), server);
       this.showServer(server);
@@ -723,9 +704,10 @@ export class App {
     }
   }
 
-  private makeLocalizedServerName(location: ServerLocation): string {
-    const cityName = LOCATION_NAMES.get(location)?.getFirstName(this.appRoot);
-    return this.appRoot.localize('server-name', 'serverLocation', cityName);
+  private makeLocalizedServerName(location: DisplayLocation): string {
+    const placeName: string = getShortName(location,
+        this.appRoot.localize, this.appRoot.language);
+    return this.appRoot.localize('server-name', 'serverLocation', placeName);
   }
 
   public showServer(server: server.Server): void {
@@ -775,7 +757,7 @@ export class App {
       view.monthlyCost = host.getMonthlyCost()?.usd;
       view.monthlyOutboundTransferBytes =
           host.getMonthlyOutboundTransferLimit()?.terabytes * (10 ** 12);
-      view.serverLocation = host.getServerLocation();
+      view.serverLocation = App.makeDisplayLocation(host);
     } else {
       view.isServerManaged = false;
     }
@@ -1222,15 +1204,5 @@ export class App {
     } catch (error) {
       this.appRoot.showError(this.appRoot.localize('error-unexpected'));
     }
-  }
-
-  private createDigitalOceanLocationModel(
-      cityId: string, regionIds: digitalocean.RegionId[]): Location {
-    return {
-      id: regionIds.length > 0 ? regionIds[0] : null,
-      location: digitalocean.LOCATION_MAP[cityId],
-      flag: DIGITALOCEAN_FLAG_MAPPING[cityId] || '',
-      available: regionIds.length > 0,
-    };
   }
 }

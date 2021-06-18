@@ -16,9 +16,10 @@ import {DigitalOceanSession, DropletInfo, RestApiSession} from '../cloud/digital
 import * as crypto from '../infrastructure/crypto';
 import * as do_install_script from '../install_scripts/do_install_script';
 import * as digitalocean from '../model/digitalocean';
+import {ZoneMap} from '../model/zone';
 import * as server from '../model/server';
 
-import {DigitalOceanServer, GetCityId} from './digitalocean_server';
+import {DigitalOceanServer, getGeoLocation} from './digitalocean_server';
 
 // Tag used to mark Shadowbox Droplets.
 const SHADOWBOX_TAG = 'shadowbox';
@@ -60,21 +61,18 @@ export class DigitalOceanAccount implements digitalocean.Account {
     return digitalocean.Status.MISSING_BILLING_INFORMATION;
   }
 
-  // Return a map of regions that are available and support our target machine size.
-  getRegionMap(): Promise<Readonly<digitalocean.RegionMap>> {
-    return this.digitalOcean.getRegionInfo().then((regions) => {
-      const ret: digitalocean.RegionMap = {};
-      regions.forEach((region) => {
-        const cityId = GetCityId(region.slug);
-        if (!(cityId in ret)) {
-          ret[cityId] = [];
-        }
-        if (region.available && region.sizes.indexOf(MACHINE_SIZE) !== -1) {
-          ret[cityId].push(region.slug);
-        }
-      });
-      return ret;
+  // Return a map of regions indicating whether they are available and support
+  // our target machine size.
+  async getRegionMap(): Promise<Readonly<ZoneMap>> {
+    const regions = await this.digitalOcean.getRegionInfo();
+    const ret: ZoneMap = {};
+    regions.forEach((region) => {
+      ret[region.slug] = {
+        geoLocation: getGeoLocation(region.slug),
+        available: region.available && region.sizes.indexOf(MACHINE_SIZE) !== -1
+      };
     });
+    return ret;
   }
 
   // Creates a server and returning it when it becomes active.

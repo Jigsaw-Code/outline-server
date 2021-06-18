@@ -37,7 +37,7 @@ import {html, PolymerElement} from '@polymer/polymer';
 import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
 
 import * as formatting from '../data_formatting';
-import {LOCATION_NAMES} from '../location_name';
+import {getShortName} from '../location';
 
 export const MY_CONNECTION_USER_ID = '0';
 
@@ -607,7 +607,7 @@ export class ServerView extends DirMixin(PolymerElement) {
           </div>
         </div>
         <div name="settings">
-          <outline-server-settings id="serverSettings" metrics-id="[[metricsId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" default-data-limit="[[_computeDisplayDataLimit(defaultDataLimitBytes)]]" is-default-data-limit-enabled="{{isDefaultDataLimitEnabled}}" supports-default-data-limit="[[supportsDefaultDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" language="[[language]]" localize="[[localize]]">
+          <outline-server-settings id="serverSettings" metrics-id="[[metricsId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" default-data-limit="[[_computeDisplayDataLimit(defaultDataLimitBytes)]]" is-default-data-limit-enabled="{{isDefaultDataLimitEnabled}}" supports-default-data-limit="[[supportsDefaultDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]" is-server-managed="[[isServerManaged]]" server-location="[[_formatLocation(serverLocation, language)]]" metrics-enabled="[[metricsEnabled]]" language="[[language]]" localize="[[localize]]">
           </outline-server-settings>
         </div>
       </iron-pages>`;
@@ -629,7 +629,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         serverPortForNewAccessKeys: Number,
         isAccessKeyPortEditable: Boolean,
         serverCreationDate: Date,
-        serverLocation: Number,  // Typescript enum
+        serverLocation: Object,
         defaultDataLimitBytes: Number,
         isDefaultDataLimitEnabled: Boolean,
         supportsDefaultDataLimit: Boolean,
@@ -674,7 +674,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.serverPortForNewAccessKeys = null;
       this.isAccessKeyPortEditable = false;
       this.serverCreationDate = new Date(0);
-      /** @type {ServerLocation} */
+      /** @type {import('../location').DisplayLocation} */
       this.serverLocation = null;
       /** @type {number} */
       this.defaultDataLimitBytes = null;
@@ -1100,11 +1100,7 @@ export class ServerView extends DirMixin(PolymerElement) {
 
   // Takes language so that the server location is recalculated on app language change.
   _formatLocation(serverLocation, UNUSED_language) {
-    const locationName = LOCATION_NAMES.get(serverLocation);
-    if (!locationName) {
-      return '';
-    }
-    return locationName.getFirstName(this);
+    return getShortName(serverLocation, this.localize, this.language);
   }
 }
 

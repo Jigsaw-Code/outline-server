@@ -277,7 +277,7 @@ Polymer({
     showFeatureMetricsDisclaimer: {type: Boolean, value: false},
     isHostnameEditable: {type: Boolean, value: true},
     serverCreationDate: {type: Date, value: '1970-01-01T00:00:00.000Z'},
-    serverLocation: {type: String, value: null},
+    serverLocation: {type: Object, value: null},
     serverMonthlyCost: {type: String, value: null},
     serverMonthlyTransferLimit: {type: String, value: null},
     language: {type: String, value: 'en'},

@@ -30,6 +30,7 @@ import {css, customElement, html, LitElement, property} from 'lit-element';
 import * as gcp from '../../model/gcp';
 import {FakeGcpAccount} from '../testing/models';
 import {OutlinePerKeyDataLimitDialog} from '../ui_components/outline-per-key-data-limit-dialog';
+import {GeoLocation, ZoneMap} from '../../model/zone';
 
 async function makeLocalize(language: string) {
   let messages: {[key: string]: string};
@@ -55,11 +56,29 @@ async function makeLocalize(language: string) {
   };
 }
 
-const GCP_LOCATIONS: gcp.ZoneMap = {
-  'us-central1': ['us-central1-a', 'us-central1-b', 'us-central1-c'],
-  'asia-east1': ['asia-east1-a', 'asia-east1-b'],
-  'europe-west1': ['europe-west1-a', 'europe-west1-b', 'europe-west1-c'],
+const GCP_LOCATIONS: ZoneMap = {
+  'fake-singular': {
+    geoLocation: GeoLocation.COUNCIL_BLUFFS,
+    available: true,
+  },
+  'fake-dual-1': {
+    geoLocation: GeoLocation.FRANKFURT,
+    available: true,
+  },
+  'fake-dual-2': {
+    geoLocation: GeoLocation.FRANKFURT,
+    available: true,
+  },
+  'fake-unavailable': {
+    geoLocation: GeoLocation.OSASCO,
+    available: false,
+  },
+  'fake-unknown-location': {
+    geoLocation: null,
+    available: true
+  }
 };
+
 const GCP_BILLING_ACCOUNTS: gcp.BillingAccount[] =
     [{id: '1234-123456', name: 'My Billing Account'}];
 
@@ -146,8 +165,10 @@ export class TestApp extends LitElement {
            ?checked=${this.gcpAccountHasBillingAccounts}
            @tap=${() => this.gcpAccountHasBillingAccounts = !this.gcpAccountHasBillingAccounts}
         >Fake billing accounts</paper-checkbox>
-        <outline-gcp-create-server-app .localize=${
-        this.localize}></outline-gcp-create-server-app>        
+        <outline-gcp-create-server-app
+            .localize=${this.localize}
+            .language=${this.language}
+        ></outline-gcp-create-server-app>
       </div>
 
       <div

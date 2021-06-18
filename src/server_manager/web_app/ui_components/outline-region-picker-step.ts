@@ -22,19 +22,23 @@ import './outline-step-view';
 import {css, customElement, html, LitElement, property, unsafeCSS} from 'lit-element';
 
 import {COMMON_STYLES} from './cloud-install-styles';
-import {ServerLocation} from '../../model/location';
-import {LOCATION_NAMES} from '../location_name';
+import {DisplayLocation} from '../location';
 
-export interface Location {
-  id: string;
-  location: ServerLocation;
-  flag: string;
-  available: boolean;
-}
+// TODO: Add more flags
+const FLAG_IMAGE_DIR = 'images/flags';
+const FLAG_MAPPING: {[countryCode: string]: string} = {
+  'IN': `${FLAG_IMAGE_DIR}/india.png`,
+  'SG': `${FLAG_IMAGE_DIR}/singapore.png`,
+  'GB': `${FLAG_IMAGE_DIR}/uk.png`,
+  'DE': `${FLAG_IMAGE_DIR}/germany.png`,
+  'NL': `${FLAG_IMAGE_DIR}/netherlands.png`,
+  'CA': `${FLAG_IMAGE_DIR}/canada.png`,
+  'US': `${FLAG_IMAGE_DIR}/us.png`,
+};
 
 @customElement('outline-region-picker-step')
 export class OutlineRegionPicker extends LitElement {
-  @property({type: Array}) locations: Location[] = [];
+  @property({type: Array}) locations: DisplayLocation[] = [];
   @property({type: String}) selectedLocationId: string = null;
   @property({type: Boolean}) isServerBeingCreated = false;
   @property({type: Function}) localize: (msgId: string, ...params: string[]) => string;
@@ -74,11 +78,10 @@ export class OutlineRegionPicker extends LitElement {
         /* TODO(alalama): make it look good and indicate disabled */
         filter: blur(2px);
       }
-      .city-name {
+      .geo-name {
         color: var(--light-gray);
         font-size: 16px;
         line-height: 19px;
-        padding: 48px 0 24px 0;
       }
       paper-button {
         background: var(--primary-green);
@@ -89,6 +92,7 @@ export class OutlineRegionPicker extends LitElement {
       .flag {
         width: 86px;
         height: 86px;
+        margin-bottom: 48px
       }
       .card-content {
         display: flex;
@@ -99,6 +103,9 @@ export class OutlineRegionPicker extends LitElement {
         height: 24px;
         display: flex;
         justify-content: flex-end;
+      }
+      label.city-button {
+        padding: 0 2px 24px 2px
       }
       iron-icon {
         color: var(--primary-green);
@@ -120,13 +127,15 @@ export class OutlineRegionPicker extends LitElement {
       <div class="card-content" id="cityContainer">
         ${this.locations.map(item => {
           return html`
-          <input type="radio" id="card-${item.id}" name="city" value="${item.id}" ?disabled="${!item.available}" .checked="${this.selectedLocationId === item.id}" @change="${this._locationSelected}">
+          <input type="radio" id="card-${item.id}" name="city" value="${item.id}" ?disabled="${!item.id}" .checked="${this.selectedLocationId === item.id}" @change="${this._locationSelected}">
           <label for="card-${item.id}" class="city-button">
             <div class="card-header">
               ${this.selectedLocationId === item.id ? html`<iron-icon icon="check-circle"></iron-icon>` : ''}
             </div>
-            <img class="flag" src="${item.flag}">
-            <div class="city-name">${this._formatLocation(item, this.language)}</div>
+            <img class="flag" src="${this._flagImage(item)}">
+            ${item.name?.getSubdivisionIds().map(msgId =>
+                  html`<div class="geo-name">${this.localize(msgId)}</div>`) ?? ''}
+            <div class="geo-name">${this._formatCountry(item, this.language)}</div>
           </label>`;
         })}
       </div>
@@ -149,19 +158,27 @@ export class OutlineRegionPicker extends LitElement {
     this.selectedLocationId = inputEl.value;
   }
 
+  _flagImage(item: DisplayLocation): string {
+     return FLAG_MAPPING[item.name?.getCountryCode()] || `${FLAG_IMAGE_DIR}/unknown.png`;
+  }
+
+  _selectedLocation(): DisplayLocation {
+    return this.locations.find(item => item.id === this.selectedLocationId);
+  }
+
   _handleCreateServerTap(): void {
     this.isServerBeingCreated = true;
     const params = {
       bubbles: true,
       composed: true,
-      detail: {selectedRegionId: this.selectedLocationId}
+      detail: {selectedLocation: this._selectedLocation()}
     };
     const customEvent = new CustomEvent('RegionSelected', params);
     this.dispatchEvent(customEvent);
   }
 
   // Takes language so that the server location is recalculated on app language change.
-  _formatLocation(item: Location, language: string): string {
-    return LOCATION_NAMES.get(item.location)?.getFullName(this) ?? item.id;
+  _formatCountry(item: DisplayLocation, language: string): string {
+    return item.name?.getCountry(language) || item.id;
   }
 }

@@ -15,8 +15,8 @@
 import * as gcp_api from '../cloud/gcp_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
-import {getRegionId, LOCATION_MAP} from '../model/gcp';
-import {ServerLocation} from '../model/location';
+import {ZoneId} from '../model/gcp';
+import {GeoLocation, Zone} from '../model/zone';
 import * as server from '../model/server';
 import {DataAmount, ManagedServerHost, MonetaryCost} from '../model/server';
 
@@ -32,6 +32,39 @@ enum InstallState {
   // Server has been deleted.
   DELETED
 }
+
+export function getRegionId(zoneId: ZoneId): string {
+  return zoneId.substring(0, zoneId.lastIndexOf('-'));
+}
+
+/** @see https://cloud.google.com/compute/docs/regions-zones */
+export const LOCATION_MAP: {[regionId: string]: GeoLocation} = {
+  'asia-east1': GeoLocation.CHANGHUA,
+  'asia-east2': GeoLocation.HONGKONG,
+  'asia-northeast1': GeoLocation.TOKYO,
+  'asia-northeast2': GeoLocation.OSAKA,
+  'asia-northeast3': GeoLocation.SEOUL,
+  'asia-south1': GeoLocation.MUMBAI,
+  'asia-southeast1': GeoLocation.JURONG_WEST,
+  'asia-southeast2': GeoLocation.JAKARTA,
+  'australia-southeast1': GeoLocation.SYDNEY,
+  'europe-north1': GeoLocation.HAMINA,
+  'europe-west1': GeoLocation.ST_GHISLAIN,
+  'europe-west2': GeoLocation.LONDON,
+  'europe-west3': GeoLocation.FRANKFURT,
+  'europe-west4': GeoLocation.EEMSHAVEN,
+  'europe-west6': GeoLocation.ZURICH,
+  'europe-central2': GeoLocation.WARSAW,
+  'northamerica-northeast1': GeoLocation.MONTREAL,
+  'southamerica-east1': GeoLocation.OSASCO,
+  'us-central1': GeoLocation.COUNCIL_BLUFFS,
+  'us-east1': GeoLocation.MONCKS_CORNER,
+  'us-east4': GeoLocation.ASHBURN,
+  'us-west1': GeoLocation.THE_DALLES,
+  'us-west2': GeoLocation.LOS_ANGELES,
+  'us-west3': GeoLocation.SALT_LAKE_CITY,
+  'us-west4': GeoLocation.LAS_VEGAS,
+};
 
 export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   private static readonly GUEST_ATTRIBUTES_POLLING_INTERVAL_MS = 5 * 1000;
@@ -97,7 +130,7 @@ class GcpHost implements server.ManagedServerHost {
       private projectId: string, private instance: gcp_api.Instance,
       private apiClient: gcp_api.RestApiClient, private deleteCallback: Function) {}
 
-  private getZoneId(): string {
+  private getZoneId(): ZoneId {
     return this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
   }
 
@@ -122,8 +155,14 @@ class GcpHost implements server.ManagedServerHost {
     return undefined;
   }
 
-  getServerLocation(): ServerLocation {
-    const regionId = getRegionId(this.getZoneId());
-    return LOCATION_MAP[regionId];
+  getZone(): Zone {
+    const zoneId = this.getZoneId();
+    return {
+      id: zoneId,
+      info: {
+        geoLocation: LOCATION_MAP[getRegionId(zoneId)],
+        available: true
+      }
+    };
   }
 }

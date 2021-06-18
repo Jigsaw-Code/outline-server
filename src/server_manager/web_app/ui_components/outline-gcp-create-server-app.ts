@@ -22,42 +22,12 @@ import {css, customElement, html, internalProperty, LitElement, property} from '
 import {unsafeHTML} from 'lit-html/directives/unsafe-html.js';
 
 import {AppRoot} from './app-root';
-import {LOCATION_MAP, BillingAccount, Project, getRegionId} from '../../model/gcp';
+import {BillingAccount, Project} from '../../model/gcp';
 import {GcpAccount} from '../gcp_account';
 import {COMMON_STYLES} from './cloud-install-styles';
-import {Location, OutlineRegionPicker} from './outline-region-picker-step';
-import {LOCATION_NAMES} from '../location_name';
+import {OutlineRegionPicker} from './outline-region-picker-step';
+import {collectLocations, DisplayLocation, getShortName} from '../location';
 
-
-// GCP mapping of regions to flags
-const FLAG_IMAGE_DIR = 'images/flags';
-const GCP_FLAG_MAPPING: {[regionId: string]: string} = {
-  // 'asia-east1': `${FLAG_IMAGE_DIR}/unknown.png`,
-  // 'asia-east2': `${FLAG_IMAGE_DIR}/unknown.png`,
-  // 'asia-northeast1': `${FLAG_IMAGE_DIR}/unknown.png`,
-  // 'asia-northeast2': `${FLAG_IMAGE_DIR}/unknown.png`,
-  // 'asia-northeast3': `${FLAG_IMAGE_DIR}/unknown.png`,
-  'asia-south1': `${FLAG_IMAGE_DIR}/india.png`,
-  'asia-southeast1': `${FLAG_IMAGE_DIR}/singapore.png`,
-  // 'asia-southeast2': `${FLAG_IMAGE_DIR}/unknown.png`,
-  // 'australia-southeast1': `${FLAG_IMAGE_DIR}/unknown.png`,
-  // 'europe-north1': `${FLAG_IMAGE_DIR}/unknown.png`,
-  // 'europe-west1': `${FLAG_IMAGE_DIR}/unknown.png`,
-  'europe-west2': `${FLAG_IMAGE_DIR}/uk.png`,
-  'europe-west3': `${FLAG_IMAGE_DIR}/germany.png`,
-  'europe-west4': `${FLAG_IMAGE_DIR}/netherlands.png`,
-  // 'europe-west6': `${FLAG_IMAGE_DIR}/unknown.png`,
-  // 'europe-central2': `${FLAG_IMAGE_DIR}/unknown.png`,
-  'northamerica-northeast1': `${FLAG_IMAGE_DIR}/canada.png`,
-  // 'southamerica-east1': `${FLAG_IMAGE_DIR}/unknown.png`,
-  'us-central1': `${FLAG_IMAGE_DIR}/us.png`,
-  'us-east1': `${FLAG_IMAGE_DIR}/us.png`,
-  'us-east4': `${FLAG_IMAGE_DIR}/us.png`,
-  'us-west1': `${FLAG_IMAGE_DIR}/us.png`,
-  'us-west2': `${FLAG_IMAGE_DIR}/us.png`,
-  'us-west3': `${FLAG_IMAGE_DIR}/us.png`,
-  'us-west4': `${FLAG_IMAGE_DIR}/us.png`,
-};
 
 @customElement('outline-gcp-create-server-app')
 export class GcpCreateServerApp extends LitElement {
@@ -388,12 +358,12 @@ export class GcpCreateServerApp extends LitElement {
     }
 
     this.currentPage = 'regionPicker';
-    const regionMap = await this.account.listLocations(this.project.id);
-    const locations = Object.entries(regionMap).map(([regionId, zoneIds]) => {
-      return this.createLocationModel(regionId, zoneIds);
-    });
+    const zoneMap = await this.account.getZoneMap(this.project.id);
+    // Note: This relies on a side effect of the previous call to `await`.
+    // `this.regionPicker` is null after `this.currentPage`, and is only populated
+    // asynchronously.
     this.regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
-    this.regionPicker.locations = locations;
+    this.regionPicker.locations = collectLocations(zoneMap);
   }
 
   private onProjectIdChanged(event: CustomEvent) {
@@ -407,31 +377,20 @@ export class GcpCreateServerApp extends LitElement {
     event.stopPropagation();
 
     this.regionPicker.isServerBeingCreated = true;
-    const name = this.makeLocalizedServerName(event.detail.selectedRegionId);
+    const name = this.makeLocalizedServerName(event.detail.selectedLocation);
     const server =
-        await this.account.createServer(this.project.id, name, event.detail.selectedRegionId);
+        await this.account.createServer(this.project.id, name, event.detail.selectedLocation.id);
     const params = {bubbles: true, composed: true, detail: {server}};
     const serverCreatedEvent = new CustomEvent('GcpServerCreated', params);
     this.dispatchEvent(serverCreatedEvent);
-  }
-
-  private createLocationModel(regionId: string, zoneIds: string[]): Location {
-    return {
-      id: zoneIds.length > 0 ? zoneIds[0] : null,
-      location: LOCATION_MAP[regionId],
-      flag: GCP_FLAG_MAPPING[regionId] || `${FLAG_IMAGE_DIR}/unknown.png`,
-      available: zoneIds.length > 0,
-    };
   }
 
   private makeProjectName(): string {
     return `outline-${Math.random().toString(20).substring(3)}`;
   }
 
-  private makeLocalizedServerName(zoneId: string): string {
-    const regionId = getRegionId(zoneId);
-    const location = LOCATION_MAP[regionId];
-    const cityName = LOCATION_NAMES.get(location)?.getFirstName(this);
-    return this.localize('server-name', 'serverLocation', cityName);
+  private makeLocalizedServerName(location: DisplayLocation): string {
+    const placeName = getShortName(location, this.localize, this.language);
+    return this.localize('server-name', 'serverLocation', placeName);
   }
 }

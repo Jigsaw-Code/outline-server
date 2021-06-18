@@ -112,7 +112,7 @@ describe('App', () => {
     const cloudAccounts = new FakeCloudAccounts(new FakeDigitalOceanAccount());
     const app = createTestApp(appRoot, cloudAccounts);
     await app.start();
-    await app.createDigitalOceanServer('fakeRegion');
+    await app.createDigitalOceanServer({id: 'fakeRegion', name: null});
     expect(appRoot.currentPage).toEqual('serverView');
     const view = await appRoot.getServerView(appRoot.selectedServerId);
     expect(view.selectedPage).toEqual('progressView');

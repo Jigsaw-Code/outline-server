@@ -15,7 +15,7 @@
 import * as accounts from '../../model/accounts';
 import * as digitalocean from '../../model/digitalocean';
 import * as gcp from '../../model/gcp';
-import {ServerLocation} from '../../model/location';
+import {GeoLocation, ZoneMap} from '../../model/zone';
 import * as server from '../../model/server';
 
 export class FakeDigitalOceanAccount implements digitalocean.Account {
@@ -36,7 +36,16 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
     return Promise.resolve(this.servers);
   }
   getRegionMap() {
-    return Promise.resolve({'fake': ['fake1', 'fake2']});
+    return Promise.resolve({
+      'fake1': {
+        geoLocation: GeoLocation.AMSTERDAM,
+        available: true
+      },
+      'fake2': {
+        geoLocation: GeoLocation.FRANKFURT,
+        available: false
+      }
+    });
   }
   createServer(id: string) {
     const newServer = new FakeManagedServer(id, false);
@@ -51,7 +60,7 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
 export class FakeGcpAccount implements gcp.Account {
   constructor(
       private refreshToken = 'fake-access-token',
-      private billingAccounts: gcp.BillingAccount[] = [], private locations: gcp.ZoneMap = {}) {}
+      private billingAccounts: gcp.BillingAccount[] = [], private zones: ZoneMap = {}) {}
 
   getId() {
     return 'id';
@@ -65,8 +74,8 @@ export class FakeGcpAccount implements gcp.Account {
   createServer(projectId: string, name: string, zoneId: string): Promise<server.ManagedServer> {
     return undefined;
   }
-  async listLocations(projectId: string): Promise<Readonly<gcp.ZoneMap>> {
-    return this.locations;
+  async getZoneMap(projectId: string): Promise<Readonly<ZoneMap>> {
+    return this.zones;
   }
   async listServers(projectId: string): Promise<server.ManagedServer[]> {
     return [];
@@ -218,7 +227,12 @@ export class FakeManagedServer extends FakeServer implements server.ManagedServe
     return {
       getMonthlyOutboundTransferLimit: () => ({terabytes: 1}),
       getMonthlyCost: () => ({usd: 5}),
-      getServerLocation: () => ServerLocation.NYC,
+      getZone: () => ({
+        id: 'fake-zone-id',
+        info: {
+          geoLocation: GeoLocation.NYC,
+          available: true
+        }}),
       delete: () => Promise.resolve(),
       getHostId: () => 'fake-host-id',
     };

@@ -24,8 +24,8 @@
  * location in different terms, they will need to be represented
  * separately (e.g. SINGAPORE for DO, JURONG_WEST for GCP).
  */
-export enum ServerLocation {
-  AMSTERDAM,
+export enum GeoLocation {
+  AMSTERDAM = 1, // Ensure all locations are truthy.
   ASHBURN,
   BANGALORE,
   COUNCIL_BLUFFS,
@@ -57,3 +57,16 @@ export enum ServerLocation {
   WARSAW,
   ZURICH,
 }
+
+/** Describes a DigitalOcean "region" or a GCP "zone". */
+export interface ZoneInfo {
+  readonly geoLocation: GeoLocation;
+  readonly available: boolean;
+}
+
+export interface Zone {
+  readonly id: string;
+  readonly info: ZoneInfo
+}
+
+export type ZoneMap = {[id: string]: ZoneInfo};

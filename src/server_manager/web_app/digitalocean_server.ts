@@ -17,8 +17,8 @@ import {EventEmitter} from 'eventemitter3';
 import {DigitalOceanSession, DropletInfo} from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {asciiToHex, hexToString} from '../infrastructure/hex_encoding';
-import {LOCATION_MAP, RegionId} from '../model/digitalocean';
-import {ServerLocation} from '../model/location';
+import {RegionId} from '../model/digitalocean';
+import {GeoLocation, Zone} from '../model/zone';
 import * as server from '../model/server';
 
 import {ShadowboxServer} from './shadowbox_server';
@@ -45,6 +45,18 @@ function makeKeyValueTagPrefix(key: string) {
 function makeKeyValueTag(key: string, value: string) {
   return [KEY_VALUE_TAG, key, asciiToHex(value)].join(':');
 }
+
+// Keys are cityIds like "nyc".
+const LOCATION_MAP: {[cityId: string]: GeoLocation} = {
+  'ams': GeoLocation.AMSTERDAM,
+  'blr': GeoLocation.BANGALORE,
+  'fra': GeoLocation.FRANKFURT,
+  'lon': GeoLocation.LONDON,
+  'nyc': GeoLocation.NYC,
+  'sfo': GeoLocation.SAN_FRANCISCO,
+  'sgp': GeoLocation.SINGAPORE,
+  'tor': GeoLocation.TORONTO,
+};
 
 // Possible install states for DigitaloceanServer.
 enum InstallState {
@@ -300,8 +312,10 @@ class DigitalOceanHost implements server.ManagedServerHost {
     return {usd: this.dropletInfo.size.price_monthly};
   }
 
-  getServerLocation(): ServerLocation {
-    return LOCATION_MAP[GetCityId(this.dropletInfo.region.slug)];
+  getZone(): Zone {
+    const id = this.dropletInfo.region.slug;
+    const info = {geoLocation: getGeoLocation(id), available: true}; 
+    return {id, info};
   }
 
   delete(): Promise<void> {
@@ -315,6 +329,6 @@ function startsWithCaseInsensitive(text: string, prefix: string) {
   return text.slice(0, prefix.length).toLowerCase() === prefix.toLowerCase();
 }
 
-export function GetCityId(slug: RegionId): string {
-  return slug.substr(0, 3).toLowerCase();
+export function getGeoLocation(slug: RegionId): GeoLocation {
+  return LOCATION_MAP[slug.substr(0, 3).toLowerCase()];
 }
