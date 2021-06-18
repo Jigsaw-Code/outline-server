@@ -86,7 +86,7 @@ describe('collectLocations', () => {
       'zone-id': {geoLocation: GeoLocation.SALT_LAKE_CITY, available: false}
     });
     expect(displayLocations.length).toEqual(1);
-    expect(displayLocations[0].id).toBeNull();
+    expect(displayLocations[0].id).toEqual('');
     expect(displayLocations[0].name.getSubdivisionIds()[0]).toEqual('geo-salt-lake-city');
   });
 
@@ -106,7 +106,7 @@ describe('collectLocations', () => {
       'available': {geoLocation: GeoLocation.SAN_FRANCISCO, available: true}
     });
     expect(displayLocations.length).toEqual(3);
-    expect(displayLocations[0].id).toBeNull();
+    expect(displayLocations[0].id).toEqual('');
     expect(displayLocations[0].name.getSubdivisionIds()[0]).toEqual('geo-seoul');
     expect(displayLocations[1].id).toEqual('available');
     expect(displayLocations[1].name.getSubdivisionIds()[0]).toEqual('geo-san-francisco');
