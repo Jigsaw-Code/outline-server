@@ -66,7 +66,7 @@ export interface ZoneInfo {
 
 export interface Zone {
   readonly id: string;
-  readonly info: ZoneInfo
+  readonly info: ZoneInfo;
 }
 
 export type ZoneMap = {[id: string]: ZoneInfo};
