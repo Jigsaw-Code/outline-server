@@ -443,6 +443,42 @@
     "message": "Outline Server Installation Failed",
     "description": "This string appears in the feedback dialog as a header. The feedback dialog gets automatically displayed with this header when a server installation fails."
   },
+  "gcp_billing_description": {
+    "message": "$START_OF_LINK$Open the Cloud Console billing page$END_OF_LINK$ and add an account in order to proceed.",
+    "description": "This instruction is a clarification regarding the title of the billing page.",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
+  },
+  "gcp_billing_action": {
+    "message": "Next",
+    "description": "Button label for a button that opens a the billing page in the web browser"
+  },
+  "gcp_billing_body": {
+    "message": "Waiting for you to $START_OF_LINK$add a billing account on Google Cloud$END_OF_LINK$",
+    "description": "Body text on the billing page",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
+  },
+  "gcp_billing_error": {
+    "message": "Unable to retrieve billing information",
+    "description": "Error popup message in response to a user click"
+  },
+  "gcp_billing_error_zero": {
+    "message": "You must add a billing account before proceeding.",
+    "description": "Error popup message in response to a user click"
+  },
   "gcp_click_create": {
     "message": "Click 'Create'.",
     "description": "This string appears within the server setup view as an item of a list that provides instructions to configure a firewall in Google Cloud Platform. 'Create' should be translated and included untranslated in parentheses."
@@ -522,6 +558,10 @@
   "gcp_name_your_project": {
     "message": "Name your project in the 'Project name' field.",
     "description": "This string appears as instructions for naming a new Google Cloud Project.  'Project Name' should be translated and include untranslated in parentheses"
+  },
+  "gcp_project_setup_error": {
+    "message": "An error occurred while setting up your Google Cloud project",
+    "description": "Error message, shown in a popup when server creation fails"
   },
   "gcp_select_machine_type": {
     "message": "Select 'f1-micro' under 'Machine type'",

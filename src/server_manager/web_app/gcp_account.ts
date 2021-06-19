@@ -27,6 +27,7 @@ import {GcpServer} from './gcp_server';
 export class GcpAccount implements gcp.Account {
   private static readonly OUTLINE_PROJECT_NAME = 'Outline servers';
   private static readonly OUTLINE_FIREWALL_NAME = 'outline';
+  private static readonly OUTLINE_FIREWALL_TAG = 'outline';
   private static readonly MACHINE_SIZE = 'f1-micro';
   private static readonly REQUIRED_GCP_SERVICES = ['compute.googleapis.com'];
 
@@ -166,15 +167,15 @@ export class GcpAccount implements gcp.Account {
   }
 
   /** @see {@link Account#listBillingAccounts}. */
-  async listBillingAccounts(): Promise<BillingAccount[]> {
+  async listOpenBillingAccounts(): Promise<BillingAccount[]> {
     const response = await this.apiClient.listBillingAccounts();
     if (response.billingAccounts?.length > 0) {
-      return response.billingAccounts.map(billingAccount => {
-        return {
-          id: billingAccount.name.substring(billingAccount.name.lastIndexOf('/') + 1),
-          name: billingAccount.displayName,
-        };
-      });
+      return response.billingAccounts
+          .filter(billingAccount => billingAccount.open)
+          .map(billingAccount => ({
+        id: billingAccount.name.substring(billingAccount.name.lastIndexOf('/') + 1),
+        name: billingAccount.displayName,
+      }));
     }
     return [];
   }
@@ -185,7 +186,18 @@ export class GcpAccount implements gcp.Account {
     const getFirewallResponse =
         await this.apiClient.listFirewalls(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
     if (!getFirewallResponse?.items || getFirewallResponse?.items?.length === 0) {
-      const createFirewallData = this.makeCreateFirewallRequestData(name);
+      const createFirewallData = {
+        name: GcpAccount.OUTLINE_FIREWALL_NAME,
+        direction: 'INGRESS',
+        priority: 1000,
+        targetTags: [GcpAccount.OUTLINE_FIREWALL_TAG],
+        allowed: [
+          {
+            IPProtocol: 'all',
+          },
+        ],
+        sourceRanges: ['0.0.0.0/0'],
+      };
       const createFirewallOperation = await this.apiClient.createFirewall(projectId, createFirewallData);
       if (createFirewallOperation.error?.errors) {
         // TODO: Throw error.
@@ -193,7 +205,44 @@ export class GcpAccount implements gcp.Account {
     }
 
     // Create VM instance
-    const createInstanceData = this.makeCreateInstanceRequestData(name, zoneId);
+    const createInstanceData = {
+      name,
+      machineType: `zones/${zoneId}/machineTypes/${GcpAccount.MACHINE_SIZE}`,
+      disks: [
+        {
+          boot: true,
+          initializeParams: {
+            sourceImage: 'projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts',
+          },
+        },
+      ],
+      networkInterfaces: [
+        {
+          network: 'global/networks/default',
+          // Empty accessConfigs necessary to allocate ephemeral IP
+          accessConfigs: [{}],
+        },
+      ],
+      labels: {
+        outline: 'true',
+      },
+      tags: {
+        // This must match the firewall target tag.
+        items: [GcpAccount.OUTLINE_FIREWALL_TAG],
+      },
+      metadata: {
+        items: [
+          {
+            key: 'enable-guest-attributes',
+            value: 'TRUE',
+          },
+          {
+            key: 'user-data',
+            value: this.getInstallScript(),
+          },
+        ],
+      },
+    };
     const createInstanceOperation =
         await this.apiClient.createInstance(projectId, zoneId, createInstanceData);
     if (createInstanceOperation.error?.errors) {
@@ -221,8 +270,11 @@ export class GcpAccount implements gcp.Account {
 
   private async configureProject(projectId: string, billingAccountId: string): Promise<void> {
     // Link billing account
-    const updateProjectBillingInfoData =
-        this.makeUpdateProjectBillingInfoRequestData(projectId, billingAccountId);
+    const updateProjectBillingInfoData = {
+      name: `projects/${projectId}/billingInfo`,
+      projectId,
+      billingAccountName: `billingAccounts/${billingAccountId}`,
+    };
     await this.apiClient.updateProjectBillingInfo(projectId, updateProjectBillingInfoData);
 
     // Enable APIs
@@ -240,71 +292,6 @@ export class GcpAccount implements gcp.Account {
     if (enableServicesResponse.error) {
       // TODO: Throw error.
     }
-  }
-
-  private makeCreateFirewallRequestData(name: string): {} {
-    return {
-      name: GcpAccount.OUTLINE_FIREWALL_NAME,
-      direction: 'INGRESS',
-      priority: 1000,
-      targetTags: [name],
-      allowed: [
-        {
-          IPProtocol: 'all',
-        },
-      ],
-      sourceRanges: ['0.0.0.0/0'],
-    };
-  }
-
-  private makeCreateInstanceRequestData(name: string, zoneId: string): {} {
-    const installScript = this.getInstallScript();
-    return {
-      name,
-      machineType: `zones/${zoneId}/machineTypes/${GcpAccount.MACHINE_SIZE}`,
-      disks: [
-        {
-          boot: true,
-          initializeParams: {
-            sourceImage: 'projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts',
-          },
-        },
-      ],
-      networkInterfaces: [
-        {
-          network: 'global/networks/default',
-          // Empty accessConfigs necessary to allocate ephemeral IP
-          accessConfigs: [{}],
-        },
-      ],
-      labels: {
-        outline: 'true',
-      },
-      tags: {
-        // This must match the firewall name.
-        items: ['outline'],
-      },
-      metadata: {
-        items: [
-          {
-            key: 'enable-guest-attributes',
-            value: 'TRUE',
-          },
-          {
-            key: 'user-data',
-            value: installScript,
-          },
-        ],
-      },
-    };
-  }
-
-  private makeUpdateProjectBillingInfoRequestData(projectId: string, billingAccountId: string): {} {
-    return {
-      name: `projects/${projectId}/billingInfo`,
-      projectId,
-      billingAccountName: `billingAccounts/${billingAccountId}`,
-    };
   }
 
   private getInstallScript(): string {

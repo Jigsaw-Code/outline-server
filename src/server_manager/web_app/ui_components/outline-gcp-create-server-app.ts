@@ -19,7 +19,9 @@ import '@polymer/paper-item/paper-item.js';
 import './outline-region-picker-step';
 
 import {css, customElement, html, internalProperty, LitElement, property} from 'lit-element';
+import {unsafeHTML} from 'lit-html/directives/unsafe-html.js';
 
+import {AppRoot} from './app-root';
 import {BillingAccount, Project} from '../../model/gcp';
 import {GcpAccount} from '../gcp_account';
 import {COMMON_STYLES} from './cloud-install-styles';
@@ -98,6 +100,7 @@ export class GcpCreateServerApp extends LitElement {
   private project: Project;
   private billingAccounts: BillingAccount[] = [];
   private regionPicker: OutlineRegionPicker;
+  private billingAccountsRefreshLoop: number = null;
 
   static get styles() {
     return [
@@ -111,7 +114,7 @@ export class GcpCreateServerApp extends LitElement {
         justify-content: center;
         height: 100%;
         align-items: center;
-        padding: 132px 0;
+        padding: 156px 0;
         font-size: 14px;
       }
       .card {
@@ -120,7 +123,6 @@ export class GcpCreateServerApp extends LitElement {
         align-items: stretch;
         justify-content: space-between;
         margin: 24px 0;
-        padding: 24px;
         background: var(--background-contrast-color);
         box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.14), 0 2px 2px 0 rgba(0, 0, 0, 0.12), 0 1px 3px 0 rgba(0, 0, 0, 0.2);
         border-radius: 2px;
@@ -205,23 +207,26 @@ export class GcpCreateServerApp extends LitElement {
   }
 
   private renderBillingAccountSetup() {
+    const openLink = '<a href="https://console.cloud.google.com/billing">';
+    const closeLink = '</a>';
     return html`
       <outline-step-view id="billingAccountSetup" display-action="">
-        <span slot="step-title">Activate your Google Cloud Platform account.</span>
-        <span slot="step-description">Enter your billing information on Google Cloud Platform.</span>
+        <span slot="step-title">${this.localize('gcp-billing-title')}</span>
+        <span slot="step-description">
+          ${unsafeHTML(this.localize('gcp-billing-description', 'openLink', openLink, 'closeLink', closeLink))}
+        </span>
         <span slot="step-action">
-          <paper-button id="createServerButton" @tap="${this.handleBillingVerificationNextTap}">
-            NEXT
+          <paper-button id="billingPageAction" @tap="${this.handleBillingVerificationNextTap}">
+            ${this.localize('gcp-billing-action')}
           </paper-button>
         </span>
         <paper-card class="card">
           <div class="container">
             <img src="images/do_oauth_billing.svg">
-            <p>Enter you billing information on Google Cloud Platform</p>
-            <!-- TODO: Add call to action to open GCP billing accounts page -->
-            <!-- https://console.cloud.google.com/billing --> 
+            <p>${unsafeHTML(this.localize('gcp-billing-body', 'openLink', openLink, 'closeLink', closeLink))}</p>
           </div>
-        </paper-card>  
+          <paper-progress indeterminate></paper-progress>
+        </paper-card>
       </outline-step-view>`;
   }
 
@@ -231,13 +236,16 @@ export class GcpCreateServerApp extends LitElement {
         <span slot="step-title">Create your Google Cloud Platform project.</span>
         <span slot="step-description">This will create a new project on your GCP account to hold your Outline servers.</span>
         <span slot="step-action">
-          <paper-button 
-              id="createServerButton" 
-              @tap="${this.handleProjectSetupNextTap}" 
-              ?disabled="${
-    !this.isProjectSetupNextEnabled(this.selectedProjectId, this.selectedBillingAccountId)}">
-            CREATE PROJECT
-          </paper-button>
+          ${this.isProjectBeingCreated ?
+            // TODO: Support canceling server creation.
+            html`<paper-button disabled="true">IN PROGRESS...</paper-button>` :
+            html`<paper-button
+                id="createServerButton"
+                @tap="${this.handleProjectSetupNextTap}"
+                ?disabled="${
+      !this.isProjectSetupNextEnabled(this.selectedProjectId, this.selectedBillingAccountId)}">
+              CREATE PROJECT
+            </paper-button>`}
         </span>
           <div class="section">
             <div class="section-header">
@@ -262,7 +270,7 @@ export class GcpCreateServerApp extends LitElement {
               </div>
             </div>
             <div class="section-content">
-              <paper-dropdown-menu id="billingAccount" no-label-float="">
+              <paper-dropdown-menu id="billingAccount" no-label-float="" horizontal-align="left">
                 <paper-listbox slot="dropdown-content" selected="${
         this.selectedBillingAccountId}" attr-for-selected="name" @selected-changed="${
         this.onBillingAccountSelected}">
@@ -291,44 +299,86 @@ export class GcpCreateServerApp extends LitElement {
     this.init();
     this.account = account;
 
-    this.billingAccounts = await this.account.listBillingAccounts();
-    const projects = await this.account.listProjects();
-    // TODO: We don't support multiple projects atm, but we will want to allow
-    //  the user to choose the appropriate one.
-    this.project = projects?.[0];
+    try {
+      this.billingAccounts = await this.account.listOpenBillingAccounts();
+      const projects = await this.account.listProjects();
+      // TODO: We don't support multiple projects atm, but we will want to allow
+      // the user to choose the appropriate one.
+      this.project = projects?.[0];
+    } catch (e) {
+      // TODO: Surface this error to the user.
+      console.warn('Error fetching GCP account info', e);
+    }
     const isProjectHealthy =
         this.project ? await this.account.isProjectHealthy(this.project.id) : false;
     if (this.project && isProjectHealthy) {
       this.showRegionPicker();
+    } else if (!(this.billingAccounts?.length > 0)) {
+      this.showBillingAccountSetup();
+      // Check every five seconds to see if an account has been added.
+      this.billingAccountsRefreshLoop = window.setInterval(() => {
+        try {
+          this.refreshBillingAccounts();
+        } catch (e) {
+          console.warn('Billing account refresh error', e);
+        }
+      }, 5000);
     } else {
-      if (!this.billingAccounts || this.billingAccounts.length === 0) {
-        this.showBillingAccountSetup();
-      } else {
-        this.showProjectSetup(this.project);
-      }
+      this.showProjectSetup(this.project);
     }
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.stopRefreshingBillingAccounts();
   }
 
   private init() {
     this.currentPage = '';
     this.selectedProjectId = '';
     this.selectedBillingAccountId = '';
+    this.stopRefreshingBillingAccounts();
   }
 
   private showBillingAccountSetup(): void {
     this.currentPage = 'billingAccountSetup';
   }
 
+  private async refreshBillingAccounts(): Promise<void> {
+    this.billingAccounts = await this.account.listOpenBillingAccounts();
+
+    if (this.billingAccounts?.length > 0) {
+      this.stopRefreshingBillingAccounts();
+      this.showProjectSetup();
+      window.bringToFront();
+    }
+  }
+
+  public stopRefreshingBillingAccounts(): void {
+    window.clearInterval(this.billingAccountsRefreshLoop);
+    this.billingAccountsRefreshLoop = null;
+  }
+
+  private showError(message: string) {
+    const appRoot: AppRoot =
+        document.getElementById('appRoot') as unknown as AppRoot;
+    appRoot.showError(message);
+  }
+
   private async handleBillingVerificationNextTap(): Promise<void> {
-    this.showProjectSetup();
+    try {
+      await this.refreshBillingAccounts();
+    } catch (e) {
+      this.showError(this.localize('gcp-billing-error'));
+    }
+    if (this.billingAccounts?.length > 0) {
+      await this.showProjectSetup();
+    } else {
+      this.showError(this.localize('gcp-billing-error-zero'));
+    }
   }
 
   private async showProjectSetup(existingProject?: Project): Promise<void> {
-    this.billingAccounts = await this.account.listBillingAccounts();
-    if (!this.billingAccounts || this.billingAccounts.length === 0) {
-      return this.showBillingAccountSetup();
-    }
-
     this.project = existingProject ?? null;
     this.selectedProjectId = this.project?.id ?? this.makeProjectName();
     this.selectedBillingAccountId = this.billingAccounts[0].id;
@@ -342,15 +392,19 @@ export class GcpCreateServerApp extends LitElement {
 
   private async handleProjectSetupNextTap(): Promise<void> {
     this.isProjectBeingCreated = true;
-    if (!this.project) {
-      this.project =
-          await this.account.createProject(this.selectedProjectId, this.selectedBillingAccountId);
-    } else {
-      await this.account.repairProject(this.project.id, this.selectedBillingAccountId);
+    try {
+      if (!this.project) {
+        this.project =
+            await this.account.createProject(this.selectedProjectId, this.selectedBillingAccountId);
+      } else {
+        await this.account.repairProject(this.project.id, this.selectedBillingAccountId);
+      }
+      this.showRegionPicker();
+    } catch (e) {
+      this.showError(this.localize('gcp-project-setup-error'));
+      console.warn('Project setup failed:', e);
     }
     this.isProjectBeingCreated = false;
-
-    this.showRegionPicker();
   }
 
   private async showRegionPicker(): Promise<void> {
