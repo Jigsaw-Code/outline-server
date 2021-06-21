@@ -144,23 +144,23 @@ function getWebAppUrl() {
 function workaroundDigitalOceanApiCors() {
   const headersFilter = {urls: ['https://api.digitalocean.com/*']};
   electron.session.defaultSession.webRequest.onHeadersReceived(headersFilter,
-      (details: electron.OnHeadersReceivedListenerDetails, callback: (response: electron.CallbackResponse) => void) => {
+      (details: electron.OnHeadersReceivedListenerDetails, callback: (response: electron.HeadersReceivedResponse) => void) => {
         if (details.method === 'OPTIONS') {
-          details.responseHeaders['access-control-allow-origin'] = 'outline://web_app';
+          details.responseHeaders['access-control-allow-origin'] = ['outline://web_app'];
           if (details.statusCode === 403) {
             details.statusCode = 200;
             details.statusLine = 'HTTP/1.1 200';
-            details.responseHeaders['status'] = '200';
-            details.responseHeaders['access-control-allow-headers'] = '*';
-            details.responseHeaders['access-control-allow-credentials'] = 'true';
+            details.responseHeaders['status'] = ['200'];
+            details.responseHeaders['access-control-allow-headers'] = ['*'];
+            details.responseHeaders['access-control-allow-credentials'] = ['true'];
             details.responseHeaders['access-control-allow-methods'] =
-                'GET, POST, PUT, PATCH, DELETE, OPTIONS';
+                ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
             details.responseHeaders['access-control-expose-headers'] =
-                'RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset, Total, Link';
-            details.responseHeaders['access-control-max-age'] = '86400';
+                ['RateLimit-Limit', 'RateLimit-Remaining', 'RateLimit-Reset', 'Total', 'Link'];
+            details.responseHeaders['access-control-max-age'] = ['86400'];
           }
         }
-        callback(details as electron.CallbackResponse);
+        callback(details);
       });
 }
 
@@ -196,18 +196,16 @@ function main() {
     // Register a custom protocol so we can use absolute paths in the web app.
     // This also acts as a kind of chroot for the web app, so it cannot access
     // the user's filesystem. Hostnames are ignored.
-    electron.protocol.registerFileProtocol(
+    const registered = electron.protocol.registerFileProtocol(
         'outline',
         (request, callback) => {
           const appPath = new URL(request.url).pathname;
           const filesystemPath = path.join(__dirname, 'server_manager/web_app', appPath);
           callback(filesystemPath);
-        },
-        (error) => {
-          if (error) {
-            throw new Error('Failed to register outline protocol');
-          }
         });
+    if (!registered) {
+      throw new Error('Failed to register outline protocol');
+    }
     mainWindow = createMainWindow();
   });
 
@@ -240,7 +238,7 @@ function main() {
   // Handle "show me where" requests from the renderer process.
   ipcMain.on('open-image', (event: IpcEvent, basename: string) => {
     const p = path.join(IMAGES_BASENAME, basename);
-    if (!shell.openItem(p)) {
+    if (!shell.openPath(p)) {
       console.error(`could not open image at ${p}`);
     }
   });
