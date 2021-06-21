@@ -158,18 +158,15 @@ export class RestApiClient {
    * @param projectId - The GCP project ID.
    * @param zoneId - The zone in which to create the instance.
    * @param data - Request body data. See documentation.
+   * @return The initial operation response.  Call computeEngineOperationZoneWait
+   *     to wait for the creation process to complete.
    */
-  async createInstance(projectId: string, zoneId: string, data: {}):
-      Promise<{instanceId: string, result: Promise<ComputeEngineOperation>}> {
-    const operation = await this.fetchAuthenticated<ComputeEngineOperation>(
+  async createInstance(projectId: string, zoneId: string, data: {}): Promise<ComputeEngineOperation> {
+    return this.fetchAuthenticated<ComputeEngineOperation>(
         'POST',
         new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
             zoneId}/instances`),
         this.GCP_HEADERS, null, data);
-    return {
-      instanceId: operation.targetId,
-      result: this.computeEngineOperationZoneWait(projectId, zoneId, operation.name)
-    };
   }
 
   /**

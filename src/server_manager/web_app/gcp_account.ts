@@ -256,11 +256,12 @@ export class GcpAccount implements gcp.Account {
         ],
       },
     };
-    const {instanceId, result} =
+    const operation =
         await this.apiClient.createInstance(projectId, zoneId, createInstanceData);
 
+    const instanceId = operation.targetId;
     const completion: Promise<void> = Promise.all([
-      result.then(() => {
+      this.apiClient.computeEngineOperationZoneWait(projectId, zoneId, operation.name).then(() => {
         return this.promoteEphemeralIpIfNeeded({projectId, zoneId, instanceId});
       }),
       this.createFirewallIfNeeded(projectId)
