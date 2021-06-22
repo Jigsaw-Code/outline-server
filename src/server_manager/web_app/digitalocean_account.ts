@@ -145,17 +145,25 @@ function sanitizeDigitalOceanToken(input: string): string {
 function getInstallScript(
     accessToken: string, name: string, shadowboxSettings: ShadowboxSettings): string {
   const sanitizedAccessToken = sanitizeDigitalOceanToken(accessToken);
-  // TODO: consider shell escaping these variables.
   return '#!/bin/bash -eu\n' +
-      `export DO_ACCESS_TOKEN=${sanitizedAccessToken}\n` +
-      (shadowboxSettings.imageId ? `export SB_IMAGE=${shadowboxSettings.imageId}\n` : '') +
+      `export DO_ACCESS_TOKEN='${sanitizedAccessToken}'\n` +
+      (shadowboxSettings.imageId ? `export SB_IMAGE='${shadowboxSettings.imageId}'\n` : '') +
       (shadowboxSettings.watchtowerRefreshSeconds ?
-          `export WATCHTOWER_REFRESH_SECONDS=${shadowboxSettings.watchtowerRefreshSeconds}\n` :
+          `export WATCHTOWER_REFRESH_SECONDS='${shadowboxSettings.watchtowerRefreshSeconds}'\n` :
           '') +
       (shadowboxSettings.sentryApiUrl ?
-          `export SENTRY_API_URL="${shadowboxSettings.sentryApiUrl}"\n` :
+          `export SENTRY_API_URL='${shadowboxSettings.sentryApiUrl}'\n` :
           '') +
-      (shadowboxSettings.metricsUrl ? `export SB_METRICS_URL=${shadowboxSettings.metricsUrl}\n` :
+      (shadowboxSettings.metricsUrl ? `export SB_METRICS_URL='${shadowboxSettings.metricsUrl}'\n` :
           '') +
-      `export SB_DEFAULT_SERVER_NAME="${name}"\n` + do_install_script.SCRIPT;
+      `export SB_DEFAULT_SERVER_NAME="$(printf '${bashEscape(name)}')"\n` +
+      do_install_script.SCRIPT;
+}
+
+function bashEscape(s: string): string {
+  // Replace each non-ASCII character with a unicode escape sequence that
+  // is understood by bash.  This avoids an apparent bug in DigitalOcean's
+  // handling of unicode characters in the user_data value.
+  return s.replace(/\P{ASCII}/gu,
+      c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
 }
