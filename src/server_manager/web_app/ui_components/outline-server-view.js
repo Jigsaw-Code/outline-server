@@ -674,7 +674,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.serverPortForNewAccessKeys = null;
       this.isAccessKeyPortEditable = false;
       this.serverCreationDate = new Date(0);
-      /** @type {import('./outline-region-picker-step').DisplayLocation} */
+      /** @type {import('../../model/location').CloudLocation} */
       this.serverLocation = null;
       this.getShortName = getShortName;
       /** @type {number} */
