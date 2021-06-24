@@ -17,7 +17,7 @@ import {sleep} from '../infrastructure/sleep';
 import {SCRIPT} from '../install_scripts/gcp_install_script';
 import * as gcp from '../model/gcp';
 import {BillingAccount, Project} from '../model/gcp';
-import {ZoneMap} from '../model/zone';
+import {DataCenterMap} from '../model/location';
 import * as server from '../model/server';
 
 import {LOCATION_MAP, GcpServer, getRegionId} from './gcp_server';
@@ -91,15 +91,15 @@ export class GcpAccount implements gcp.Account {
   }
 
   /** @see {@link Account#listLocations}. */
-  async getZoneMap(projectId: string): Promise<ZoneMap> {
+  async listLocations(projectId: string): Promise<DataCenterMap> {
     const listZonesResponse = await this.apiClient.listZones(projectId);
     const zones = listZonesResponse.items ?? [];
 
-    const result: ZoneMap = {};
+    const result: DataCenterMap = {};
     zones.forEach(zone => {
       const region = zone.region.substring(zone.region.lastIndexOf('/') + 1);
       result[zone.name] = {
-        geoLocation: LOCATION_MAP[region],
+        geoId: LOCATION_MAP[region],
         available: zone.status === 'UP'
       };
     });

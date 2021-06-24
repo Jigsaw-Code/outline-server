@@ -26,7 +26,8 @@ import {BillingAccount, Project} from '../../model/gcp';
 import {GcpAccount} from '../gcp_account';
 import {COMMON_STYLES} from './cloud-install-styles';
 import {OutlineRegionPicker} from './outline-region-picker-step';
-import {collectLocations, DisplayLocation, getShortName} from '../location';
+import {collectLocations, getShortName} from '../location_formatting';
+import {CloudLocation} from '../../model/location';
 
 
 @customElement('outline-gcp-create-server-app')
@@ -358,7 +359,7 @@ export class GcpCreateServerApp extends LitElement {
     }
 
     this.currentPage = 'regionPicker';
-    const zoneMap = await this.account.getZoneMap(this.project.id);
+    const zoneMap = await this.account.listLocations(this.project.id);
     // Note: This relies on a side effect of the previous call to `await`.
     // `this.regionPicker` is null after `this.currentPage`, and is only populated
     // asynchronously.
@@ -389,8 +390,8 @@ export class GcpCreateServerApp extends LitElement {
     return `outline-${Math.random().toString(20).substring(3)}`;
   }
 
-  private makeLocalizedServerName(location: DisplayLocation): string {
-    const placeName = getShortName(location, this.localize, this.language);
+  private makeLocalizedServerName(location: CloudLocation): string {
+    const placeName = getShortName(location, this.localize);
     return this.localize('server-name', 'serverLocation', placeName);
   }
 }

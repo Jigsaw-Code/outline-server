@@ -19,17 +19,18 @@ import '@polymer/iron-icon/iron-icon';
 import '@polymer/iron-icons/iron-icons';
 import './outline-step-view';
 
-import {css, customElement, html, LitElement, property, unsafeCSS} from 'lit-element';
+import {css, customElement, html, LitElement, property} from 'lit-element';
 
 import {COMMON_STYLES} from './cloud-install-styles';
-import {DisplayLocation} from '../location';
+import {countryCode, CloudLocation, CountryCode} from '../../model/location';
+import {getShortName, localizeCountry} from '../location_formatting';
 
 // TODO: Add more flags
 const FLAG_IMAGE_DIR = 'images/flags';
-const FLAG_MAPPING: {[countryCode: string]: string} = {
+const FLAG_MAPPING: {[countryCode in CountryCode]?: string} = {
   'IN': `${FLAG_IMAGE_DIR}/india.png`,
   'SG': `${FLAG_IMAGE_DIR}/singapore.png`,
-  'GB': `${FLAG_IMAGE_DIR}/uk.png`,
+  'UK': `${FLAG_IMAGE_DIR}/uk.png`,
   'DE': `${FLAG_IMAGE_DIR}/germany.png`,
   'NL': `${FLAG_IMAGE_DIR}/netherlands.png`,
   'CA': `${FLAG_IMAGE_DIR}/canada.png`,
@@ -38,8 +39,8 @@ const FLAG_MAPPING: {[countryCode: string]: string} = {
 
 @customElement('outline-region-picker-step')
 export class OutlineRegionPicker extends LitElement {
-  @property({type: Array}) locations: DisplayLocation[] = [];
-  @property({type: String}) selectedLocationId: string = null;
+  @property({type: Array}) locations: CloudLocation[] = [];
+  @property({type: Number}) selectedIndex: number = -1;
   @property({type: Boolean}) isServerBeingCreated = false;
   @property({type: Function}) localize: (msgId: string, ...params: string[]) => string;
   @property({type: String}) language: string;
@@ -120,22 +121,21 @@ export class OutlineRegionPicker extends LitElement {
       <span slot="step-title">${this.localize('region-title')}</span>
       <span slot="step-description">${this.localize('region-description')}</span>
       <span slot="step-action">
-        <paper-button id="createServerButton" @tap="${this._handleCreateServerTap}" ?disabled="${!this._isCreateButtonEnabled(this.isServerBeingCreated, this.selectedLocationId)}">
+        <paper-button id="createServerButton" @tap="${this._handleCreateServerTap}" ?disabled="${!this._isCreateButtonEnabled(this.isServerBeingCreated, this.selectedIndex)}">
           ${this.localize('region-setup')}
         </paper-button>
       </span>
       <div class="card-content" id="cityContainer">
-        ${this.locations.map(item => {
+        ${this.locations.map((item, index) => {
           return html`
-          <input type="radio" id="card-${item.id}" name="city" value="${item.id}" ?disabled="${!item.id}" .checked="${this.selectedLocationId === item.id}" @change="${this._locationSelected}">
-          <label for="card-${item.id}" class="city-button">
+          <input type="radio" id="card-${index}" name="city" value="${index}" ?disabled="${!item.id}" .checked="${this.selectedIndex === index}" @change="${this._locationSelected}">
+          <label for="card-${index}" class="city-button">
             <div class="card-header">
-              ${this.selectedLocationId === item.id ? html`<iron-icon icon="check-circle"></iron-icon>` : ''}
+              ${this.selectedIndex === index ? html`<iron-icon icon="check-circle"></iron-icon>` : ''}
             </div>
             <img class="flag" src="${this._flagImage(item)}">
-            ${item.name?.getSubdivisionIds().map(msgId =>
-                  html`<div class="geo-name">${this.localize(msgId)}</div>`) ?? ''}
-            <div class="geo-name">${this._formatCountry(item, this.language)}</div>
+            <div class="geo-name">${getShortName(item, this.localize)}</div>
+            <div class="geo-name">${localizeCountry(item.geoId, this.language)}</div>
           </label>`;
         })}
       </div>
@@ -146,24 +146,20 @@ export class OutlineRegionPicker extends LitElement {
 
   reset(): void {
     this.isServerBeingCreated = false;
-    this.selectedLocationId = null;
+    this.selectedIndex = -1;
   }
 
-  _isCreateButtonEnabled(isCreatingServer: boolean, selectedLocationId: string): boolean {
-    return !isCreatingServer && selectedLocationId != null;
+  _isCreateButtonEnabled(isCreatingServer: boolean, selectedIndex: number): boolean {
+    return !isCreatingServer && selectedIndex >= 0;
   }
 
   _locationSelected(event: Event): void {
     const inputEl = event.target as HTMLInputElement;
-    this.selectedLocationId = inputEl.value;
+    this.selectedIndex = Number.parseInt(inputEl.value);
   }
 
-  _flagImage(item: DisplayLocation): string {
-     return FLAG_MAPPING[item.name?.getCountryCode()] || `${FLAG_IMAGE_DIR}/unknown.png`;
-  }
-
-  _selectedLocation(): DisplayLocation {
-    return this.locations.find(item => item.id === this.selectedLocationId);
+  _flagImage(item: CloudLocation): string {
+     return FLAG_MAPPING[countryCode(item.geoId)] || `${FLAG_IMAGE_DIR}/unknown.png`;
   }
 
   _handleCreateServerTap(): void {
@@ -171,14 +167,9 @@ export class OutlineRegionPicker extends LitElement {
     const params = {
       bubbles: true,
       composed: true,
-      detail: {selectedLocation: this._selectedLocation()}
+      detail: {selectedLocation: this.locations[this.selectedIndex]}
     };
     const customEvent = new CustomEvent('RegionSelected', params);
     this.dispatchEvent(customEvent);
-  }
-
-  // Takes language so that the server location is recalculated on app language change.
-  _formatCountry(item: DisplayLocation, language: string): string {
-    return item.name?.getCountry(language) || item.id;
   }
 }

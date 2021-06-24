@@ -22,9 +22,10 @@ import * as accounts from '../model/accounts';
 import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
 import * as server from '../model/server';
+import {CloudLocation} from '../model/location';
 
 import {DisplayDataAmount, displayDataAmountToBytes,} from './data_formatting';
-import {collectLocations, makeDisplayLocation, getShortName, DisplayLocation} from './location';
+import {collectLocations, getShortName} from './location_formatting';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {DisplayAccessKey, ServerView} from './ui_components/outline-server-view';
@@ -387,18 +388,13 @@ export class App {
     };
   }
 
-  private static makeDisplayLocation(host: server.ManagedServerHost): DisplayLocation {
-    const zone = host.getZone();
-    return makeDisplayLocation(zone.id, zone.info.geoLocation);
-  }
-
   private makeDisplayName(server: server.Server): string {
     let name = server.getName() ?? server.getHostnameForAccessKeys();
     if (!name) {
       let location = null;
       // Newly created servers will not have a name.
       if (isManagedServer(server)) {
-        location = App.makeDisplayLocation(server.getHost());
+        location = server.getHost().getLocation();
       }
       name = this.makeLocalizedServerName(location);
     }
@@ -680,8 +676,10 @@ export class App {
 
     try {
       const regionPicker = this.appRoot.getAndShowRegionPicker();
-      const regionMap = await this.digitalOceanAccount.getRegionMap();
-      regionPicker.locations = collectLocations(regionMap);
+      const map = await this.digitalOceanRetry(() => {
+        return this.digitalOceanAccount.listLocations();
+      });
+      regionPicker.locations = collectLocations(map);
     } catch (e) {
       console.error(`Failed to get list of available regions: ${e}`);
       this.appRoot.showError(this.appRoot.localize('error-do-regions'));
@@ -690,7 +688,7 @@ export class App {
 
   // Returns a promise which fulfills once the DigitalOcean droplet is created.
   // Shadowbox may not be fully installed once this promise is fulfilled.
-  public async createDigitalOceanServer(serverLocation: DisplayLocation): Promise<void> {
+  public async createDigitalOceanServer(serverLocation: CloudLocation): Promise<void> {
     try {
       const serverName = this.makeLocalizedServerName(serverLocation);
       const server = await this.digitalOceanRetry(() => {
@@ -704,9 +702,8 @@ export class App {
     }
   }
 
-  private makeLocalizedServerName(location: DisplayLocation): string {
-    const placeName: string = getShortName(location,
-        this.appRoot.localize, this.appRoot.language);
+  private makeLocalizedServerName(location: CloudLocation): string {
+    const placeName = getShortName(location, this.appRoot.localize);
     return this.appRoot.localize('server-name', 'serverLocation', placeName);
   }
 
@@ -757,7 +754,7 @@ export class App {
       view.monthlyCost = host.getMonthlyCost()?.usd;
       view.monthlyOutboundTransferBytes =
           host.getMonthlyOutboundTransferLimit()?.terabytes * (10 ** 12);
-      view.serverLocation = App.makeDisplayLocation(host);
+      view.serverLocation = host.getLocation();
     } else {
       view.isServerManaged = false;
     }

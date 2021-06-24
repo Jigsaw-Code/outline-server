@@ -73,29 +73,13 @@
     "message": "Amsterdam",
     "description": "Name of the city in the Netherlands."
   },
-  "geo_ashburn": {
-    "message": "Ashburn",
-    "description": "Name of the place in Virginia, USA."
-  },
   "geo_bangalore": {
     "message": "Bangalore",
     "description": "Name of the city in India."
   },
-  "geo_california": {
-    "message": "California",
-    "description": "Name of the US state."
-  },
-  "geo_changhua": {
+  "geo_changhua_county": {
     "message": "Changhua County",
     "description": "Name of the county in Taiwan."
-  },
-  "geo_council_bluffs": {
-    "message": "Council Bluffs",
-    "description": "Name of the city in Iowa, USA."
-  },
-  "geo_england": {
-    "message": "England",
-    "description": "Name of the country within the UK."
   },
   "geo_eemshaven": {
     "message": "Eemshaven",
@@ -108,6 +92,10 @@
   "geo_hamina": {
     "message": "Hamina",
     "description": "Name of the town in Finland."
+  },
+  "geo_hk": {
+    "message": "Hong Kong",
+    "description": "Name of Hong Kong in China"
   },
   "geo_iowa": {
     "message": "Iowa",
@@ -133,10 +121,6 @@
     "message": "Los Angeles",
     "description": "Name of the city in California, USA."
   },
-  "geo_moncks_corner": {
-    "message": "Moncks Corner",
-    "description": "Name of the town in South Carolina, USA."
-  },
   "geo_montreal": {
     "message": "Montréal",
     "description": "Name of the city in Canada."
@@ -145,17 +129,13 @@
     "message": "Mumbai",
     "description": "Name of the city in India."
   },
-  "geo_nevada": {
-    "message": "Nevada",
-    "description": "Name of the US state."
-  },
-  "geo_new_york": {
-    "message": "New York",
-    "description": "Name of the US state."
-  },
   "geo_new_york_city": {
     "message": "New York",
     "description": "Name of the city in the United States."
+  },
+  "geo_northern_virginia": {
+    "message": "Northern Virginia",
+    "description": "Name of the area in Virginia, USA."
   },
   "geo_oregon": {
     "message": "Oregon",
@@ -164,14 +144,6 @@
   "geo_osaka": {
     "message": "Osaka",
     "description": "Name of the city in Japan."
-  },
-  "geo_osasco": {
-    "message": "Osasco",
-    "description": "Name of the city in the state of Sao Paulo, Brazil."
-  },
-  "geo_quebec": {
-    "message": "Québec",
-    "description": "Name of the province in Canada."
   },
   "geo_salt_lake_city": {
     "message": "Salt Lake City",
@@ -189,6 +161,10 @@
     "message": "Seoul",
     "description": "Name of the city in South Korea."
   },
+  "geo_sg": {
+    "message": "Singapore",
+    "description": "Name of the country of Singapore"
+  },
   "geo_south_carolina": {
     "message": "South Carolina",
     "description": "Name of the US state."
@@ -201,10 +177,6 @@
     "message": "Sydney",
     "description": "Name of the city in Australia."
   },
-  "geo_the_dalles": {
-    "message": "The Dalles",
-    "description": "Name of the city in Oregon, USA."
-  },
   "geo_tokyo": {
     "message": "Tokyo",
     "description": "Name of the city in Japan."
@@ -212,14 +184,6 @@
   "geo_toronto": {
     "message": "Toronto",
     "description": "Name of the city in Canada."
-  },
-  "geo_utah": {
-    "message": "Utah",
-    "description": "Name of the US state."
-  },
-  "geo_virginia": {
-    "message": "Virginia",
-    "description": "Name of the US state."
   },
   "geo_warsaw": {
     "message": "Warsaw",

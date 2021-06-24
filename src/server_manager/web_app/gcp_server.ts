@@ -16,7 +16,7 @@ import * as gcp_api from '../cloud/gcp_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import {ZoneId} from '../model/gcp';
-import {GeoLocation, Zone} from '../model/zone';
+import {CloudLocation, GeoId} from '../model/location';
 import * as server from '../model/server';
 import {DataAmount, ManagedServerHost, MonetaryCost} from '../model/server';
 
@@ -38,32 +38,32 @@ export function getRegionId(zoneId: ZoneId): string {
 }
 
 /** @see https://cloud.google.com/compute/docs/regions-zones */
-export const LOCATION_MAP: {[regionId: string]: GeoLocation} = {
-  'asia-east1': GeoLocation.CHANGHUA,
-  'asia-east2': GeoLocation.HONGKONG,
-  'asia-northeast1': GeoLocation.TOKYO,
-  'asia-northeast2': GeoLocation.OSAKA,
-  'asia-northeast3': GeoLocation.SEOUL,
-  'asia-south1': GeoLocation.MUMBAI,
-  'asia-southeast1': GeoLocation.JURONG_WEST,
-  'asia-southeast2': GeoLocation.JAKARTA,
-  'australia-southeast1': GeoLocation.SYDNEY,
-  'europe-north1': GeoLocation.HAMINA,
-  'europe-west1': GeoLocation.ST_GHISLAIN,
-  'europe-west2': GeoLocation.LONDON,
-  'europe-west3': GeoLocation.FRANKFURT,
-  'europe-west4': GeoLocation.EEMSHAVEN,
-  'europe-west6': GeoLocation.ZURICH,
-  'europe-central2': GeoLocation.WARSAW,
-  'northamerica-northeast1': GeoLocation.MONTREAL,
-  'southamerica-east1': GeoLocation.OSASCO,
-  'us-central1': GeoLocation.COUNCIL_BLUFFS,
-  'us-east1': GeoLocation.MONCKS_CORNER,
-  'us-east4': GeoLocation.ASHBURN,
-  'us-west1': GeoLocation.THE_DALLES,
-  'us-west2': GeoLocation.LOS_ANGELES,
-  'us-west3': GeoLocation.SALT_LAKE_CITY,
-  'us-west4': GeoLocation.LAS_VEGAS,
+export const LOCATION_MAP: {readonly [regionId: string]: GeoId} = {
+  'asia-east1': 'changhua-county',
+  'asia-east2': 'HK',
+  'asia-northeast1': 'tokyo',
+  'asia-northeast2': 'osaka',
+  'asia-northeast3': 'seoul',
+  'asia-south1': 'mumbai',
+  'asia-southeast1': 'jurong-west',
+  'asia-southeast2': 'jakarta',
+  'australia-southeast1': 'sydney',
+  'europe-north1': 'hamina',
+  'europe-west1': 'st-ghislain',
+  'europe-west2': 'london',
+  'europe-west3': 'frankfurt',
+  'europe-west4': 'eemshaven',
+  'europe-west6': 'zurich',
+  'europe-central2': 'warsaw',
+  'northamerica-northeast1': 'montreal',
+  'southamerica-east1': 'sao-paulo',
+  'us-central1': 'iowa',
+  'us-east1': 'south-carolina',
+  'us-east4': 'northern-virginia',
+  'us-west1': 'oregon',
+  'us-west2': 'los-angeles',
+  'us-west3': 'salt-lake-city',
+  'us-west4': 'las-vegas',
 };
 
 export class GcpServer extends ShadowboxServer implements server.ManagedServer {
@@ -155,14 +155,11 @@ class GcpHost implements server.ManagedServerHost {
     return undefined;
   }
 
-  getZone(): Zone {
+  getLocation(): CloudLocation {
     const zoneId = this.getZoneId();
     return {
       id: zoneId,
-      info: {
-        geoLocation: LOCATION_MAP[getRegionId(zoneId)],
-        available: true
-      }
+      geoId: LOCATION_MAP[getRegionId(zoneId)]
     };
   }
 }

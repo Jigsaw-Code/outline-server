@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {ZoneMap} from "./zone";
+import {DataCenterMap} from "./location";
 import {ManagedServer} from "./server";
 
+// A DigitalOcean Region, e.g. "NYC2".
 export type RegionId = string;
 
 export enum Status {
@@ -34,7 +35,7 @@ export interface Account {
   // retrieve the servers; otherwise resolves with a cached server list.
   listServers(fetchFromHost?: boolean): Promise<ManagedServer[]>;
   // Return a map of regions with info about whether they are available for use.
-  getRegionMap(): Promise<ZoneMap>;
+  listLocations(): Promise<Readonly<DataCenterMap>>;
   // Creates a server and returning it when it becomes active (i.e. the server has
   // created, not necessarily once shadowbox installation has finished).
   createServer(region: RegionId, name: string): Promise<ManagedServer>;

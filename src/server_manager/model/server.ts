@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Zone} from "./zone";
+import {CloudLocation} from "./location";
 
 export interface Server {
   // Gets a globally unique identifier for this Server.  THIS MUST NOT make a network request, as
@@ -122,7 +122,7 @@ export interface ManagedServerHost {
   // Returns the monthly cost.
   getMonthlyCost(): MonetaryCost;
   // Returns the server location
-  getZone(): Zone;
+  getLocation(): CloudLocation;
   // Deletes the server - cannot be undone.
   delete(): Promise<void>;
 }

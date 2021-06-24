@@ -16,10 +16,10 @@ import {DigitalOceanSession, DropletInfo, RestApiSession} from '../cloud/digital
 import * as crypto from '../infrastructure/crypto';
 import * as do_install_script from '../install_scripts/do_install_script';
 import * as digitalocean from '../model/digitalocean';
-import {ZoneMap} from '../model/zone';
 import * as server from '../model/server';
+import {DataCenterMap} from '../model/location';
 
-import {DigitalOceanServer, getGeoLocation} from './digitalocean_server';
+import {DigitalOceanServer, getGeoId} from './digitalocean_server';
 
 // Tag used to mark Shadowbox Droplets.
 const SHADOWBOX_TAG = 'shadowbox';
@@ -63,12 +63,12 @@ export class DigitalOceanAccount implements digitalocean.Account {
 
   // Return a map of regions indicating whether they are available and support
   // our target machine size.
-  async getRegionMap(): Promise<Readonly<ZoneMap>> {
+  async listLocations(): Promise<Readonly<DataCenterMap>> {
     const regions = await this.digitalOcean.getRegionInfo();
-    const ret: ZoneMap = {};
-    regions.forEach((region) => {
+    const ret: DataCenterMap = {};
+    regions.forEach(region => {
       ret[region.slug] = {
-        geoLocation: getGeoLocation(region.slug),
+        geoId: getGeoId(region.slug),
         available: region.available && region.sizes.indexOf(MACHINE_SIZE) !== -1
       };
     });

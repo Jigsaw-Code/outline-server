@@ -18,7 +18,7 @@ import {DigitalOceanSession, DropletInfo} from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {asciiToHex, hexToString} from '../infrastructure/hex_encoding';
 import {RegionId} from '../model/digitalocean';
-import {GeoLocation, Zone} from '../model/zone';
+import {CloudLocation, GeoId} from '../model/location';
 import * as server from '../model/server';
 
 import {ShadowboxServer} from './shadowbox_server';
@@ -46,17 +46,20 @@ function makeKeyValueTag(key: string, value: string) {
   return [KEY_VALUE_TAG, key, asciiToHex(value)].join(':');
 }
 
-// Keys are cityIds like "nyc".
-const LOCATION_MAP: {[cityId: string]: GeoLocation} = {
-  'ams': GeoLocation.AMSTERDAM,
-  'blr': GeoLocation.BANGALORE,
-  'fra': GeoLocation.FRANKFURT,
-  'lon': GeoLocation.LONDON,
-  'nyc': GeoLocation.NYC,
-  'sfo': GeoLocation.SAN_FRANCISCO,
-  'sgp': GeoLocation.SINGAPORE,
-  'tor': GeoLocation.TORONTO,
+const LOCATION_MAP: {readonly [cityId: string]: GeoId} = {
+  'ams': 'amsterdam',
+  'blr': 'bangalore',
+  'fra': 'frankfurt',
+  'lon': 'london',
+  'nyc': 'new-york-city',
+  'sfo': 'san-francisco',
+  'sgp': 'SG',
+  'tor': 'toronto',
 };
+
+export function getGeoId(regionId: RegionId): GeoId {
+  return LOCATION_MAP[regionId.substr(0, 3).toLowerCase()];
+}
 
 // Possible install states for DigitaloceanServer.
 enum InstallState {
@@ -312,10 +315,9 @@ class DigitalOceanHost implements server.ManagedServerHost {
     return {usd: this.dropletInfo.size.price_monthly};
   }
 
-  getZone(): Zone {
+  getLocation(): CloudLocation {
     const id = this.dropletInfo.region.slug;
-    const info = {geoLocation: getGeoLocation(id), available: true}; 
-    return {id, info};
+    return {id, geoId: getGeoId(id)};
   }
 
   delete(): Promise<void> {
@@ -327,8 +329,4 @@ class DigitalOceanHost implements server.ManagedServerHost {
 
 function startsWithCaseInsensitive(text: string, prefix: string) {
   return text.slice(0, prefix.length).toLowerCase() === prefix.toLowerCase();
-}
-
-export function getGeoLocation(slug: RegionId): GeoLocation {
-  return LOCATION_MAP[slug.substr(0, 3).toLowerCase()];
 }

@@ -30,7 +30,7 @@ import {css, customElement, html, LitElement, property} from 'lit-element';
 import * as gcp from '../../model/gcp';
 import {FakeGcpAccount} from '../testing/models';
 import {OutlinePerKeyDataLimitDialog} from '../ui_components/outline-per-key-data-limit-dialog';
-import {GeoLocation, ZoneMap} from '../../model/zone';
+import {DataCenterMap} from '../../model/location';
 
 async function makeLocalize(language: string) {
   let messages: {[key: string]: string};
@@ -56,25 +56,25 @@ async function makeLocalize(language: string) {
   };
 }
 
-const GCP_LOCATIONS: ZoneMap = {
+const GCP_LOCATIONS: DataCenterMap = {
   'fake-singular': {
-    geoLocation: GeoLocation.COUNCIL_BLUFFS,
+    geoId: 'iowa',
     available: true,
   },
   'fake-dual-1': {
-    geoLocation: GeoLocation.FRANKFURT,
+    geoId: 'frankfurt',
     available: true,
   },
   'fake-dual-2': {
-    geoLocation: GeoLocation.FRANKFURT,
+    geoId: 'frankfurt',
     available: true,
   },
   'fake-unavailable': {
-    geoLocation: GeoLocation.OSASCO,
+    geoId: 'sao-paulo',
     available: false,
   },
   'fake-unknown-location': {
-    geoLocation: null,
+    geoId: null,
     available: true
   }
 };

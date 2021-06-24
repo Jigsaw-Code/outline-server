@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {ZoneMap} from './zone';
+import {DataCenterMap} from './location';
 import {ManagedServer} from './server';
 
 // Keys are region IDs like "us-central1".
@@ -68,7 +68,7 @@ export interface Account {
    *
    * @param projectId - The GCP project ID.
    */
-  getZoneMap(projectId: string): Promise<ZoneMap>;
+  listLocations(projectId: string): Promise<Readonly<DataCenterMap>>;
 
   /**
    * Creates a new Google Cloud Platform project.
