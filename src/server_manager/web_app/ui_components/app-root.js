@@ -734,7 +734,7 @@ export class AppRoot extends mixinBehaviors
   }
 
   handleRegionSelected(/** @type {Event} */ e) {
-    this.fire('SetUpServerRequested', e.detail);
+    this.fire('SetUpDigitalOceanServerRequested', {region: e.detail.selectedLocation});
   }
 
   handleSetUpGenericCloudProviderRequested() {

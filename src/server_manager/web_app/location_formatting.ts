@@ -12,67 +12,60 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {CloudLocation, GeoId, DataCenterMap, countryCode, DataCenterId} from '../model/location';
+import {CloudLocation, CloudLocationOption, GeoLocation} from '../model/location';
 
 /**
  * Returns the localized place name, or the data center ID if the location is
  * unknown.
  */
-export function getShortName(location: CloudLocation,
+export function getShortName(cloudLocation: CloudLocation,
     localize: (id: string) => string): string {
-  if (!location?.geoId) {
-    return location?.id ?? '';
+  if (!cloudLocation?.location) {
+    return cloudLocation?.id ?? '';
   }
-  return localize(`geo-${location.geoId.toLowerCase()}`);
+  return localize(`geo-${cloudLocation.location.id.toLowerCase()}`);
 }
 
 /**
  * Returns the localized country name, or "" if the country is unknown or
  * unnecessary.
  */
-export function localizeCountry(geoId: GeoId, language: string): string {
-  if (!geoId) {
+export function localizeCountry(geoLocation: GeoLocation, language: string): string {
+  if (!geoLocation) {
     return '';
   }
-  const cc = countryCode(geoId);
-  if (cc === geoId) {
+  if (geoLocation.countryCode === geoLocation.id) {
     // The city and the country are the same (e.g. SG).  Omit the localized country.
     return '';
   }
   // TODO: Remove typecast after https://github.com/microsoft/TypeScript/pull/44022
   // tslint:disable-next-line:no-any
   const displayName = new (Intl as any).DisplayNames([language], {type: 'region'});
-  return displayName.of(cc);
+  return displayName.of(geoLocation.countryCode);
 }
 
 /**
- * Given a map of all the datacenters in a cloud provider, this function returns
- * a list containing one representative zone for each GeoLocation.  Available
- * zones are preferred within each location.  Available zones with unknown
+ * Given an array of cloud location options, this function returns an array
+ * containing one representative option for each GeoLocation.  Available
+ * options are preferred within each location.  Available options with unknown
  * GeoLocation (e.g. newly added zones) are placed at the end of the array.
  */
-export function collectLocations(zoneMap: DataCenterMap): CloudLocation[] {
+export function filterOptions(options: readonly CloudLocationOption[]): CloudLocationOption[] {
   // Contains one available datacenter ID for each GeoLocation, or null if
   // there are datacenters for that GeoLocation but none are available.
-  const map = new Map<GeoId, DataCenterId>();
-  // Contains all available datacenter IDs with unknown GeoLocation.
-  const unmappedIds: DataCenterId[] = [];
+  const map = new Map<string, CloudLocationOption>();
+  const unmappedOptions: CloudLocationOption[] = [];
   
-  Object.entries(zoneMap).forEach(([id, info]) => {
-    if (info.geoId) {
-      if (info.available) {
-        map.set(info.geoId, id);     
-      } else if (!map.has(info.geoId)) {
-        map.set(info.geoId, null);
+  options.forEach(option => {
+    const geoLocation = option.cloudLocation.location;
+    if (geoLocation) {
+      if (option.available || !map.has(geoLocation.id)) {
+        map.set(geoLocation.id, option);
       }
-    } else if (info.available) {
-      unmappedIds.push(id);
+    } else if (option.available) {
+      unmappedOptions.push(option);
     }
   });
 
-  const locations: CloudLocation[] = [];
-  map.forEach((id, geoId) => locations.push({id, geoId}));
-  // Also show any new zones for which we do not yet know locations.
-  locations.push(...unmappedIds.map(id => ({id, geoId: null})));
-  return locations;
+  return [...map.values(), ...unmappedOptions];
 }

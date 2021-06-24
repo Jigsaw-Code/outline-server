@@ -17,8 +17,8 @@ import {EventEmitter} from 'eventemitter3';
 import {DigitalOceanSession, DropletInfo} from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {asciiToHex, hexToString} from '../infrastructure/hex_encoding';
-import {RegionId} from '../model/digitalocean';
-import {CloudLocation, GeoId} from '../model/location';
+import { Region } from '../model/digitalocean';
+import {CloudLocation} from '../model/location';
 import * as server from '../model/server';
 
 import {ShadowboxServer} from './shadowbox_server';
@@ -46,20 +46,6 @@ function makeKeyValueTag(key: string, value: string) {
   return [KEY_VALUE_TAG, key, asciiToHex(value)].join(':');
 }
 
-const LOCATION_MAP: {readonly [cityId: string]: GeoId} = {
-  'ams': 'amsterdam',
-  'blr': 'bangalore',
-  'fra': 'frankfurt',
-  'lon': 'london',
-  'nyc': 'new-york-city',
-  'sfo': 'san-francisco',
-  'sgp': 'SG',
-  'tor': 'toronto',
-};
-
-export function getGeoId(regionId: RegionId): GeoId {
-  return LOCATION_MAP[regionId.substr(0, 3).toLowerCase()];
-}
 
 // Possible install states for DigitaloceanServer.
 enum InstallState {
@@ -315,9 +301,8 @@ class DigitalOceanHost implements server.ManagedServerHost {
     return {usd: this.dropletInfo.size.price_monthly};
   }
 
-  getLocation(): CloudLocation {
-    const id = this.dropletInfo.region.slug;
-    return {id, geoId: getGeoId(id)};
+  getLocation(): Region {
+    return new Region(this.dropletInfo.region.slug);
   }
 
   delete(): Promise<void> {

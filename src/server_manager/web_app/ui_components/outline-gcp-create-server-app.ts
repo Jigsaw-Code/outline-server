@@ -26,7 +26,7 @@ import {BillingAccount, Project} from '../../model/gcp';
 import {GcpAccount} from '../gcp_account';
 import {COMMON_STYLES} from './cloud-install-styles';
 import {OutlineRegionPicker} from './outline-region-picker-step';
-import {collectLocations, getShortName} from '../location_formatting';
+import {filterOptions, getShortName} from '../location_formatting';
 import {CloudLocation} from '../../model/location';
 
 
@@ -359,12 +359,12 @@ export class GcpCreateServerApp extends LitElement {
     }
 
     this.currentPage = 'regionPicker';
-    const zoneMap = await this.account.listLocations(this.project.id);
+    const zoneOptions = await this.account.listLocations(this.project.id);
     // Note: This relies on a side effect of the previous call to `await`.
     // `this.regionPicker` is null after `this.currentPage`, and is only populated
     // asynchronously.
     this.regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
-    this.regionPicker.locations = collectLocations(zoneMap);
+    this.regionPicker.options = filterOptions(zoneOptions);
   }
 
   private onProjectIdChanged(event: CustomEvent) {

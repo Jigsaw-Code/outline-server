@@ -28,69 +28,59 @@
  * 
  * When the key and value are equal, this indicates that they are redundant.
  */
-const geoLocations = {
-  'amsterdam': 'NL',
-  'northern-virginia': 'US',
-  'bangalore': 'IN',
-  'iowa': 'US',
-  'changhua-county': 'TW',
-  'eemshaven': 'NL',
-  'frankfurt': 'DE',
-  'hamina': 'FI',
-  'HK': 'HK',
-  'jakarta': 'ID',
-  'jurong-west': 'SG',
-  'las-vegas': 'US',
-  'london': 'UK',
-  'los-angeles': 'US',
-  'oregon': 'US',
-  'montreal': 'CA',
-  'mumbai': 'IN',
-  'new-york-city': 'US',
-  'san-francisco': 'US',
-  'SG': 'SG',
-  'osaka': 'JP',
-  'sao-paulo': 'BR',
-  'salt-lake-city': 'US',
-  'seoul': 'KR',
-  'st-ghislain': 'BE',
-  'sydney': 'AU',
-  'south-carolina': 'US',
-  'tokyo': 'JP',
-  'toronto': 'CA',
-  'warsaw': 'PL',
-  'zurich': 'CH'
-} as const;
-
-export type GeoId = keyof typeof geoLocations;
-export type CountryCode = typeof geoLocations[GeoId];
-
-export function countryCode(geoId: GeoId): CountryCode {
-  return geoLocations[geoId];
+export class GeoLocation {
+  constructor(
+    public readonly id: string,
+    public readonly countryCode: string) {}
 }
 
-/** Describes a DigitalOcean "region" or a GCP "zone". */
-export interface DataCenterInfo {
-  readonly geoId: GeoId;
-  readonly available: boolean;
-}
-
-/** Unified type alias for DO RegionId and GCP ZoneId. */
-export type DataCenterId = string;
-
-/** Map from DataCenterIds to info about that data center. */
-export type DataCenterMap = {[id: string]: DataCenterInfo};
+export const AMSTERDAM = new GeoLocation('amsterdam', 'NL');
+export const NORTHERN_VIRGINIA = new GeoLocation('northern-virginia', 'US');
+export const BANGALORE = new GeoLocation('bangalore', 'IN');
+export const IOWA = new GeoLocation('iowa', 'US');
+export const CHANGHUA_COUNTY = new GeoLocation('changhua-county', 'TW');
+export const EEMSHAVEN = new GeoLocation('eemshaven', 'NL');
+export const FRANKFURT = new GeoLocation('frankfurt', 'DE');
+export const HAMINA = new GeoLocation('hamina', 'FI');
+export const HONG_KONG = new GeoLocation('HK', 'HK');
+export const JAKARTA = new GeoLocation('jakarta', 'ID');
+export const JURONG_WEST = new GeoLocation('jurong-west', 'SG');
+export const LAS_VEGAS = new GeoLocation('las-vegas', 'US');
+export const LONDON = new GeoLocation('london', 'UK');
+export const LOS_ANGELES = new GeoLocation('los-angeles', 'US');
+export const OREGON = new GeoLocation('oregon', 'US');
+export const MONTREAL = new GeoLocation('montreal', 'CA');
+export const MUMBAI = new GeoLocation('mumbai', 'IN');
+export const NEW_YORK_CITY = new GeoLocation('new-york-city', 'US');
+export const SAN_FRANCISCO = new GeoLocation('san-francisco', 'US');
+export const SINGAPORE = new GeoLocation('SG', 'SG');
+export const OSAKA = new GeoLocation('osaka', 'JP');
+export const SAO_PAULO = new GeoLocation('sao-paulo', 'BR');
+export const SALT_LAKE_CITY = new GeoLocation('salt-lake-city', 'US');
+export const SEOUL = new GeoLocation('seoul', 'KR');
+export const ST_GHISLAIN = new GeoLocation('st-ghislain', 'BE');
+export const SYDNEY = new GeoLocation('sydney', 'AU');
+export const SOUTH_CAROLINA = new GeoLocation('south-carolina', 'US');
+export const TOKYO = new GeoLocation('tokyo', 'JP');
+export const TORONTO = new GeoLocation('toronto', 'CA');
+export const WARSAW = new GeoLocation('warsaw', 'PL');
+export const ZURICH = new GeoLocation('zurich', 'CH');
 
 export interface CloudLocation {
   /**
    * The cloud-specific ID used for this location, or null to represent
    * a GeoId that lacks a usable datacenter.
    */
-  readonly id: DataCenterId;
+  readonly id: string;
 
   /**
    * The physical location of this datacenter, or null if its location is
    * unknown.
    */
-  readonly geoId: GeoId;
+  readonly location: GeoLocation;
+}
+
+export interface CloudLocationOption {
+  readonly cloudLocation: CloudLocation;
+  readonly available: boolean;
 }

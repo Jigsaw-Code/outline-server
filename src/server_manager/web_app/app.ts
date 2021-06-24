@@ -25,7 +25,7 @@ import * as server from '../model/server';
 import {CloudLocation} from '../model/location';
 
 import {DisplayDataAmount, displayDataAmountToBytes,} from './data_formatting';
-import {collectLocations, getShortName} from './location_formatting';
+import {filterOptions, getShortName} from './location_formatting';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {DisplayAccessKey, ServerView} from './ui_components/outline-server-view';
@@ -149,8 +149,8 @@ export class App {
       this.showIntro();
     });
 
-    appRoot.addEventListener('SetUpServerRequested', (event: CustomEvent) => {
-      this.createDigitalOceanServer(event.detail.selectedLocation);
+    appRoot.addEventListener('SetUpDigitalOceanServerRequested', (event: CustomEvent) => {
+      this.createDigitalOceanServer(event.detail.region);
     });
 
     appRoot.addEventListener('DeleteServerRequested', (event: CustomEvent) => {
@@ -679,7 +679,7 @@ export class App {
       const map = await this.digitalOceanRetry(() => {
         return this.digitalOceanAccount.listLocations();
       });
-      regionPicker.locations = collectLocations(map);
+      regionPicker.options = filterOptions(map);
     } catch (e) {
       console.error(`Failed to get list of available regions: ${e}`);
       this.appRoot.showError(this.appRoot.localize('error-do-regions'));
@@ -688,11 +688,11 @@ export class App {
 
   // Returns a promise which fulfills once the DigitalOcean droplet is created.
   // Shadowbox may not be fully installed once this promise is fulfilled.
-  public async createDigitalOceanServer(serverLocation: CloudLocation): Promise<void> {
+  public async createDigitalOceanServer(region: digitalocean.Region): Promise<void> {
     try {
-      const serverName = this.makeLocalizedServerName(serverLocation);
+      const serverName = this.makeLocalizedServerName(region);
       const server = await this.digitalOceanRetry(() => {
-        return this.digitalOceanAccount.createServer(serverLocation.id, serverName);
+        return this.digitalOceanAccount.createServer(region, serverName);
       });
       this.addServer(this.digitalOceanAccount.getId(), server);
       this.showServer(server);

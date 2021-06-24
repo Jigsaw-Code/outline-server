@@ -17,9 +17,8 @@ import * as crypto from '../infrastructure/crypto';
 import * as do_install_script from '../install_scripts/do_install_script';
 import * as digitalocean from '../model/digitalocean';
 import * as server from '../model/server';
-import {DataCenterMap} from '../model/location';
 
-import {DigitalOceanServer, getGeoId} from './digitalocean_server';
+import {DigitalOceanServer} from './digitalocean_server';
 
 // Tag used to mark Shadowbox Droplets.
 const SHADOWBOX_TAG = 'shadowbox';
@@ -61,22 +60,18 @@ export class DigitalOceanAccount implements digitalocean.Account {
     return digitalocean.Status.MISSING_BILLING_INFORMATION;
   }
 
-  // Return a map of regions indicating whether they are available and support
+  // Return a list of regions indicating whether they are available and support
   // our target machine size.
-  async listLocations(): Promise<Readonly<DataCenterMap>> {
+  async listLocations(): Promise<Readonly<digitalocean.RegionOption[]>> {
     const regions = await this.digitalOcean.getRegionInfo();
-    const ret: DataCenterMap = {};
-    regions.forEach(region => {
-      ret[region.slug] = {
-        geoId: getGeoId(region.slug),
-        available: region.available && region.sizes.indexOf(MACHINE_SIZE) !== -1
-      };
-    });
-    return ret;
+    return regions.map(info => ({
+      cloudLocation: new digitalocean.Region(info.slug),
+      available: info.available && info.sizes.indexOf(MACHINE_SIZE) !== -1
+    }));
   }
 
   // Creates a server and returning it when it becomes active.
-  createServer(region: digitalocean.RegionId, name: string): Promise<server.ManagedServer> {
+  createServer(region: digitalocean.Region, name: string): Promise<server.ManagedServer> {
     console.time('activeServer');
     console.time('servingServer');
     const onceKeyPair = crypto.generateKeyPair();
@@ -98,7 +93,7 @@ export class DigitalOceanAccount implements digitalocean.Account {
                 keyPair.private.replace(/\r/g, '')}\n\n` +
             'Use "ssh -i keyfile root@[ip_address]" to connect to the machine');
       }
-      return this.digitalOcean.createDroplet(name, region, keyPair.public, dropletSpec);
+      return this.digitalOcean.createDroplet(name, region.id, keyPair.public, dropletSpec);
     })
     .then((response) => {
       return this.createDigitalOceanServer(this.digitalOcean, response.droplet);

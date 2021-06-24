@@ -15,8 +15,7 @@
 import * as gcp_api from '../cloud/gcp_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
-import {ZoneId} from '../model/gcp';
-import {CloudLocation, GeoId} from '../model/location';
+import {Zone} from '../model/gcp';
 import * as server from '../model/server';
 import {DataAmount, ManagedServerHost, MonetaryCost} from '../model/server';
 
@@ -32,39 +31,6 @@ enum InstallState {
   // Server has been deleted.
   DELETED
 }
-
-export function getRegionId(zoneId: ZoneId): string {
-  return zoneId.substring(0, zoneId.lastIndexOf('-'));
-}
-
-/** @see https://cloud.google.com/compute/docs/regions-zones */
-export const LOCATION_MAP: {readonly [regionId: string]: GeoId} = {
-  'asia-east1': 'changhua-county',
-  'asia-east2': 'HK',
-  'asia-northeast1': 'tokyo',
-  'asia-northeast2': 'osaka',
-  'asia-northeast3': 'seoul',
-  'asia-south1': 'mumbai',
-  'asia-southeast1': 'jurong-west',
-  'asia-southeast2': 'jakarta',
-  'australia-southeast1': 'sydney',
-  'europe-north1': 'hamina',
-  'europe-west1': 'st-ghislain',
-  'europe-west2': 'london',
-  'europe-west3': 'frankfurt',
-  'europe-west4': 'eemshaven',
-  'europe-west6': 'zurich',
-  'europe-central2': 'warsaw',
-  'northamerica-northeast1': 'montreal',
-  'southamerica-east1': 'sao-paulo',
-  'us-central1': 'iowa',
-  'us-east1': 'south-carolina',
-  'us-east4': 'northern-virginia',
-  'us-west1': 'oregon',
-  'us-west2': 'los-angeles',
-  'us-west3': 'salt-lake-city',
-  'us-west4': 'las-vegas',
-};
 
 export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   private static readonly GUEST_ATTRIBUTES_POLLING_INTERVAL_MS = 5 * 1000;
@@ -130,16 +96,12 @@ class GcpHost implements server.ManagedServerHost {
       private projectId: string, private instance: gcp_api.Instance,
       private apiClient: gcp_api.RestApiClient, private deleteCallback: Function) {}
 
-  private getZoneId(): ZoneId {
-    return this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
-  }
-
   // TODO: Throw error and show message on failure
   async delete(): Promise<void> {
-    const zoneId = this.getZoneId();
-    const regionId = getRegionId(zoneId);
+    const zone = this.getLocation();
+    const regionId = zone.getRegionId();
     await this.apiClient.deleteStaticIp(this.projectId, this.instance.name, regionId);
-    this.apiClient.deleteInstance(this.projectId, this.instance.id, zoneId);
+    this.apiClient.deleteInstance(this.projectId, this.instance.id, zone.id);
     this.deleteCallback();
   }
 
@@ -155,11 +117,8 @@ class GcpHost implements server.ManagedServerHost {
     return undefined;
   }
 
-  getLocation(): CloudLocation {
-    const zoneId = this.getZoneId();
-    return {
-      id: zoneId,
-      geoId: LOCATION_MAP[getRegionId(zoneId)]
-    };
+  getLocation(): Zone {
+    const zoneId = this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
+    return new Zone(zoneId);
   }
 }

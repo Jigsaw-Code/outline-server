@@ -15,7 +15,6 @@
 import * as accounts from '../../model/accounts';
 import * as digitalocean from '../../model/digitalocean';
 import * as gcp from '../../model/gcp';
-import {GeoId, DataCenterMap} from '../../model/location';
 import * as server from '../../model/server';
 
 export class FakeDigitalOceanAccount implements digitalocean.Account {
@@ -36,19 +35,19 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
     return Promise.resolve(this.servers);
   }
   listLocations() {
-    return Promise.resolve({
-      'fake1': {
-        geoId: 'amsterdam' as GeoId,
+    return Promise.resolve([
+      {
+        cloudLocation: new digitalocean.Region('AMS999'),
         available: true
       },
-      'fake2': {
-        geoId: 'frankfurt' as GeoId,
+      {
+        cloudLocation: new digitalocean.Region('FRA999'),
         available: false
       }
-    });
+    ]);
   }
-  createServer(id: string) {
-    const newServer = new FakeManagedServer(id, false);
+  createServer(region: digitalocean.Region) {
+    const newServer = new FakeManagedServer(region.id, false);
     this.servers.push(newServer);
     return Promise.resolve(newServer);
   }
@@ -60,7 +59,7 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
 export class FakeGcpAccount implements gcp.Account {
   constructor(
       private refreshToken = 'fake-access-token',
-      private billingAccounts: gcp.BillingAccount[] = [], private locations: DataCenterMap = {}) {}
+      private billingAccounts: gcp.BillingAccount[] = [], private locations: gcp.ZoneOption[] = []) {}
 
   getId() {
     return 'id';
@@ -71,10 +70,10 @@ export class FakeGcpAccount implements gcp.Account {
   getRefreshToken(): string {
     return this.refreshToken;
   }
-  createServer(projectId: string, name: string, zoneId: string): Promise<server.ManagedServer> {
+  createServer(projectId: string, name: string, zone: gcp.Zone): Promise<server.ManagedServer> {
     return undefined;
   }
-  async listLocations(projectId: string): Promise<Readonly<DataCenterMap>> {
+  async listLocations(projectId: string): Promise<Readonly<gcp.ZoneOption[]>> {
     return this.locations;
   }
   async listServers(projectId: string): Promise<server.ManagedServer[]> {
@@ -227,10 +226,7 @@ export class FakeManagedServer extends FakeServer implements server.ManagedServe
     return {
       getMonthlyOutboundTransferLimit: () => ({terabytes: 1}),
       getMonthlyCost: () => ({usd: 5}),
-      getLocation: () => ({
-        id: 'fake-zone-id',
-        geoId: 'amsterdam' as GeoId
-      }),
+      getLocation: () => new digitalocean.Region('AMS999'),
       delete: () => Promise.resolve(),
       getHostId: () => 'fake-host-id',
     };

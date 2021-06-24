@@ -30,7 +30,6 @@ import {css, customElement, html, LitElement, property} from 'lit-element';
 import * as gcp from '../../model/gcp';
 import {FakeGcpAccount} from '../testing/models';
 import {OutlinePerKeyDataLimitDialog} from '../ui_components/outline-per-key-data-limit-dialog';
-import {DataCenterMap} from '../../model/location';
 
 async function makeLocalize(language: string) {
   let messages: {[key: string]: string};
@@ -56,28 +55,28 @@ async function makeLocalize(language: string) {
   };
 }
 
-const GCP_LOCATIONS: DataCenterMap = {
-  'fake-singular': {
-    geoId: 'iowa',
+const GCP_LOCATIONS: gcp.ZoneOption[] = [
+  {
+    cloudLocation: new gcp.Zone('us-central1-fake'),
     available: true,
   },
-  'fake-dual-1': {
-    geoId: 'frankfurt',
+  {
+    cloudLocation: new gcp.Zone('europe-west3-fake'),
     available: true,
   },
-  'fake-dual-2': {
-    geoId: 'frankfurt',
+  {
+    cloudLocation: new gcp.Zone('europe-west3-fake2'),
     available: true,
   },
-  'fake-unavailable': {
-    geoId: 'sao-paulo',
+  {
+    cloudLocation: new gcp.Zone('southamerica-east1-b'),
     available: false,
   },
-  'fake-unknown-location': {
-    geoId: null,
+  {
+    cloudLocation: new gcp.Zone('fake-location-z'),
     available: true
   }
-};
+];
 
 const GCP_BILLING_ACCOUNTS: gcp.BillingAccount[] =
     [{id: '1234-123456', name: 'My Billing Account'}];

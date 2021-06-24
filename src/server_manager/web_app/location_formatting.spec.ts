@@ -12,25 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {collectLocations, getShortName, localizeCountry} from './location_formatting';
+import * as location from '../model/location';
+import {filterOptions, getShortName, localizeCountry} from './location_formatting';
 
 describe('getShortName', () => {
   it('basic case', () => {
-    expect(getShortName({id: 'fake-id', geoId: 'sydney'}, msgId => {
+    expect(getShortName({id: 'fake-id', location: location.SYDNEY}, msgId => {
       expect(msgId).toEqual('geo-sydney');
       return 'foo';
     })).toEqual('foo');
   });
 
   it('city-state is converted to lowercase', () => {
-    expect(getShortName({id: 'fake-id', geoId: 'SG'}, msgId => {
+    expect(getShortName({id: 'fake-id', location: location.SINGAPORE}, msgId => {
       expect(msgId).toEqual('geo-sg');
       return 'foo';
     })).toEqual('foo');
   });
 
   it('returns the ID when geoId is null', () => {
-    expect(getShortName({id: 'fake-id', geoId: null}, msgId => {
+    expect(getShortName({id: 'fake-id', location: null}, msgId => {
       fail();
       return null;
     })).toEqual('fake-id');
@@ -52,15 +53,15 @@ describe('localizeCountry', () => {
   }
 
   it('basic case', () => {
-    expect(localizeCountry('new-york-city', 'en')).toEqual('United States');
+    expect(localizeCountry(location.NEW_YORK_CITY, 'en')).toEqual('United States');
   });
   
   it('other language', () => {
-    expect(localizeCountry('new-york-city', 'es')).toEqual('Estados Unidos');
+    expect(localizeCountry(location.NEW_YORK_CITY, 'es')).toEqual('Estados Unidos');
   });
 
   it('city-state is empty', () => {
-    expect(localizeCountry('SG', 'en')).toEqual('');
+    expect(localizeCountry(location.SINGAPORE, 'en')).toEqual('');
   });
 
   it('null is empty', () => {
@@ -68,61 +69,91 @@ describe('localizeCountry', () => {
   });
 });
 
-describe('collectLocations', () => {
+describe('filterOptions', () => {
   it('empty', () => {
-    expect(collectLocations({})).toEqual([]);
+    expect(filterOptions([])).toEqual([]);
   });
 
   it('one available', () => {
-    const displayLocations = collectLocations({
-      'zone-id': {geoId: 'sao-paulo', available: true}
-    });
-    expect(displayLocations.length).toEqual(1);
-    expect(displayLocations[0].id).toEqual('zone-id');
-    expect(displayLocations[0].geoId).toEqual('sao-paulo');
+    const option = {
+      cloudLocation: {id: 'zone-id', location: location.SAO_PAULO},
+      available: true
+    };
+    const displayOptions = filterOptions([option]);
+    expect(displayOptions.length).toEqual(1);
+    expect(displayOptions[0]).toEqual(option);
   });
 
   it('one not available', () => {
-    const displayLocations = collectLocations({
-      'zone-id': {geoId: 'salt-lake-city', available: false}
-    });
+    const option = {
+      cloudLocation: {id: 'zone-id', location: location.SALT_LAKE_CITY},
+      available: false
+    };
+    const displayLocations = filterOptions([option]);
     expect(displayLocations.length).toEqual(1);
-    expect(displayLocations[0].id).toBeNull();
-    expect(displayLocations[0].geoId).toEqual('salt-lake-city');
+    expect(displayLocations[0]).toEqual(option);
   });
 
   it('one unrecognized', () => {
-    const displayLocations = collectLocations({
-      'zone-id': {geoId: null, available: true}
-    });
+    const option: location.CloudLocationOption = {
+      cloudLocation: {id: 'zone-id', location: null},
+      available: true
+    };
+    const displayLocations = filterOptions([option]);
     expect(displayLocations.length).toEqual(1);
-    expect(displayLocations[0].id).toEqual('zone-id');
-    expect(displayLocations[0].geoId).toBeNull();
+    expect(displayLocations[0]).toEqual(option);
+  });
+
+  it('one unrecognized and unavailable', () => {
+    const option : location.CloudLocationOption = {
+      cloudLocation: {id: 'zone-id', location: null},
+      available: false
+    };
+    const displayLocations = filterOptions([option]);
+    expect(displayLocations.length).toEqual(0);
   });
 
   it('one of each', () => {
-    const displayLocations = collectLocations({
-      'unrecognized': {geoId: null, available: true},
-      'unavailable': {geoId: 'seoul', available: false},
-      'available': {geoId: 'san-francisco', available: true}
-    });
+    const available = {
+      cloudLocation: {id: 'available', location: location.SAN_FRANCISCO},
+      available: true
+    };
+    const unavailable = {
+      cloudLocation: {id: 'unavailable', location: location.SEOUL},
+      available: false
+    };
+    const unrecognized : location.CloudLocationOption = {
+      cloudLocation: {id: 'unrecognized', location: null},
+      available: true
+    };
+    const unrecognizedAndUnavailable : location.CloudLocationOption = {
+      cloudLocation: {id: 'unrecognized-and-unavailable', location: null},
+      available: false
+    };
+
+    const displayLocations = filterOptions([
+      unrecognized,
+      unavailable,
+      unrecognizedAndUnavailable,
+      available
+    ]);
     expect(displayLocations.length).toEqual(3);
-    expect(displayLocations[0].id).toBeNull();
-    expect(displayLocations[0].geoId).toEqual('seoul');
-    expect(displayLocations[1].id).toEqual('available');
-    expect(displayLocations[1].geoId).toEqual('san-francisco');
-    // Unrecognized zones are moved to the end of the list
-    expect(displayLocations[2].id).toEqual('unrecognized');
-    expect(displayLocations[2].geoId).toBeNull();
+    expect(displayLocations[0]).toEqual(available);
+    expect(displayLocations[1]).toEqual(unavailable);
+    expect(displayLocations[2]).toEqual(unrecognized);
   });
 
   it('available preferred', () => {
-    const displayLocations = collectLocations({
-      'unavailable': {geoId: 'tokyo', available: false},
-      'available': {geoId: 'tokyo', available: true}
-    });
+    const available = {
+      cloudLocation: {id: 'available', location: location.TOKYO},
+      available: true
+    };
+    const unavailable = {
+      cloudLocation: {id: 'unavailable', location: location.TOKYO},
+      available: false
+    };
+    const displayLocations = filterOptions([unavailable, available]);
     expect(displayLocations.length).toEqual(1);
-    expect(displayLocations[0].id).toEqual('available');
-    expect(displayLocations[0].geoId).toEqual('tokyo');
+    expect(displayLocations[0]).toEqual(available);
   });
 });
