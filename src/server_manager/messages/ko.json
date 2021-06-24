@@ -14,7 +14,7 @@
   "geo-london": "런던",
   "geo-new-york-city": "뉴욕",
   "geo-san-francisco": "샌프란시스코",
-  "geo-singapore": "싱가포르",
+  "geo-sg": "싱가포르",
   "geo-toronto": "토론토",
   "close": "닫기",
   "confirmation-server-destroy": "기존 사용자가 액세스할 수 없게 됩니다. 이 작업은 실행취소할 수 없습니다.",
