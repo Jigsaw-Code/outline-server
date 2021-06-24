@@ -22,7 +22,7 @@ import {css, customElement, html, internalProperty, LitElement, property} from '
 import {unsafeHTML} from 'lit-html/directives/unsafe-html.js';
 
 import {AppRoot} from './app-root';
-import {BillingAccount, Project} from '../../model/gcp';
+import {BillingAccount, Project, Zone} from '../../model/gcp';
 import {GcpAccount} from '../gcp_account';
 import {COMMON_STYLES} from './cloud-install-styles';
 import {OutlineRegionPicker} from './outline-region-picker-step';
@@ -378,9 +378,10 @@ export class GcpCreateServerApp extends LitElement {
     event.stopPropagation();
 
     this.regionPicker.isServerBeingCreated = true;
-    const name = this.makeLocalizedServerName(event.detail.selectedLocation);
+    const zone = event.detail.selectedLocation as Zone;
+    const name = this.makeLocalizedServerName(zone);
     const server =
-        await this.account.createServer(this.project.id, name, event.detail.selectedLocation.id);
+        await this.account.createServer(this.project.id, name, zone);
     const params = {bubbles: true, composed: true, detail: {server}};
     const serverCreatedEvent = new CustomEvent('GcpServerCreated', params);
     this.dispatchEvent(serverCreatedEvent);
