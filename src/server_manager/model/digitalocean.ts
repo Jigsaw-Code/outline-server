@@ -17,7 +17,7 @@ import {ManagedServer} from "./server";
 
 // A DigitalOcean Region, e.g. "NYC2".
 export class Region implements location.CloudLocation {
-  private static LOCATION_MAP: {readonly [cityId: string]: location.GeoLocation} = {
+  private static readonly LOCATION_MAP: {readonly [cityId: string]: location.GeoLocation} = {
     'ams': location.AMSTERDAM,
     'blr': location.BANGALORE,
     'fra': location.FRANKFURT,

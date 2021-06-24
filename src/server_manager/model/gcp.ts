@@ -17,7 +17,7 @@ import {ManagedServer} from './server';
 
 export class Zone implements location.CloudLocation {
   /** @see https://cloud.google.com/compute/docs/regions-zones */
-  private static LOCATION_MAP: {readonly [regionId: string]: location.GeoLocation} = {
+  private static readonly LOCATION_MAP: {readonly [regionId: string]: location.GeoLocation} = {
     'asia-east1': location.CHANGHUA_COUNTY,
     'asia-east2': location.HONG_KONG,
     'asia-northeast1': location.TOKYO,
