@@ -49,12 +49,12 @@ export class Zone implements location.CloudLocation {
   constructor(public readonly id: string) {}
 
   /** Returns a region ID like "us-central1". */
-  getRegionId(): string {
+  get regionId(): string {
     return this.id.substring(0, this.id.lastIndexOf('-'));
   }
   
   get location(): location.GeoLocation {
-    return Zone.LOCATION_MAP[this.getRegionId()];
+    return Zone.LOCATION_MAP[this.regionId];
   }
 }
 

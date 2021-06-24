@@ -60,8 +60,8 @@ describe('localizeCountry', () => {
     expect(localizeCountry(location.NEW_YORK_CITY, 'es')).toEqual('Estados Unidos');
   });
 
-  it('city-state is empty', () => {
-    expect(localizeCountry(location.SINGAPORE, 'en')).toEqual('');
+  it('city-state is localized', () => {
+    expect(localizeCountry(location.SINGAPORE, 'en')).toEqual('Singapore');
   });
 
   it('null is empty', () => {
@@ -79,9 +79,7 @@ describe('filterOptions', () => {
       cloudLocation: {id: 'zone-id', location: location.SAO_PAULO},
       available: true
     };
-    const displayOptions = filterOptions([option]);
-    expect(displayOptions.length).toEqual(1);
-    expect(displayOptions[0]).toEqual(option);
+    expect(filterOptions([option])).toEqual([option]);
   });
 
   it('one not available', () => {
@@ -89,9 +87,7 @@ describe('filterOptions', () => {
       cloudLocation: {id: 'zone-id', location: location.SALT_LAKE_CITY},
       available: false
     };
-    const displayLocations = filterOptions([option]);
-    expect(displayLocations.length).toEqual(1);
-    expect(displayLocations[0]).toEqual(option);
+    expect(filterOptions([option])).toEqual([option]);
   });
 
   it('one unrecognized', () => {
@@ -99,9 +95,7 @@ describe('filterOptions', () => {
       cloudLocation: {id: 'zone-id', location: null},
       available: true
     };
-    const displayLocations = filterOptions([option]);
-    expect(displayLocations.length).toEqual(1);
-    expect(displayLocations[0]).toEqual(option);
+    expect(filterOptions([option])).toEqual([option]);
   });
 
   it('one unrecognized and unavailable', () => {
@@ -109,8 +103,7 @@ describe('filterOptions', () => {
       cloudLocation: {id: 'zone-id', location: null},
       available: false
     };
-    const displayLocations = filterOptions([option]);
-    expect(displayLocations.length).toEqual(0);
+    expect(filterOptions([option])).toEqual([]);
   });
 
   it('one of each', () => {
@@ -131,16 +124,13 @@ describe('filterOptions', () => {
       available: false
     };
 
-    const displayLocations = filterOptions([
+    const filtered = filterOptions([
       unrecognized,
       unavailable,
       unrecognizedAndUnavailable,
       available
     ]);
-    expect(displayLocations.length).toEqual(3);
-    expect(displayLocations[0]).toEqual(available);
-    expect(displayLocations[1]).toEqual(unavailable);
-    expect(displayLocations[2]).toEqual(unrecognized);
+    expect(filtered).toEqual([unavailable, available, unrecognized]);
   });
 
   it('available preferred', () => {
@@ -152,8 +142,7 @@ describe('filterOptions', () => {
       cloudLocation: {id: 'unavailable', location: location.TOKYO},
       available: false
     };
-    const displayLocations = filterOptions([unavailable, available]);
-    expect(displayLocations.length).toEqual(1);
-    expect(displayLocations[0]).toEqual(available);
+    const filtered = filterOptions([unavailable, available]);
+    expect(filtered).toEqual([available]);
   });
 });

@@ -177,7 +177,7 @@ Polymer({
           <img class="setting-icon digital-ocean-icon" src="images/do_white_logo.svg">
           <div>
             <h3>DigitalOcean</h3>
-            <paper-input readonly="" value="[[_getShortName(serverLocation, localize)]]" label="[[localize('settings-server-location')]]" hidden\$="[[!serverLocation]]" always-float-label="" maxlength="100"></paper-input>
+            <paper-input readonly="" value="[[_getShortName(cloudLocation, localize)]]" label="[[localize('settings-server-location')]]" hidden\$="[[!cloudLocation]]" always-float-label="" maxlength="100"></paper-input>
             <paper-input readonly="" value="[[serverMonthlyCost]]" label="[[localize('settings-server-cost')]]" hidden\$="[[!serverMonthlyCost]]" always-float-label="" maxlength="100"></paper-input>
             <paper-input readonly="" value="[[serverMonthlyTransferLimit]]" label="[[localize('settings-transfer-limit')]]" hidden\$="[[!serverMonthlyTransferLimit]]" always-float-label="" maxlength="100"></paper-input>
           </div>
@@ -278,7 +278,7 @@ Polymer({
     showFeatureMetricsDisclaimer: {type: Boolean, value: false},
     isHostnameEditable: {type: Boolean, value: true},
     serverCreationDate: {type: Date, value: '1970-01-01T00:00:00.000Z'},
-    serverLocation: {type: Object, value: null},
+    cloudLocation: {type: Object, value: null},
     serverMonthlyCost: {type: String, value: null},
     serverMonthlyTransferLimit: {type: String, value: null},
     language: {type: String, value: 'en'},

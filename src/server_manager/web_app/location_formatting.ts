@@ -20,8 +20,11 @@ import {CloudLocation, CloudLocationOption, GeoLocation} from '../model/location
  */
 export function getShortName(cloudLocation: CloudLocation,
     localize: (id: string) => string): string {
-  if (!cloudLocation?.location) {
-    return cloudLocation?.id ?? '';
+  if (!cloudLocation) {
+    return '';
+  }
+  if (!cloudLocation.location) {
+    return cloudLocation.id;
   }
   return localize(`geo-${cloudLocation.location.id.toLowerCase()}`);
 }
@@ -32,10 +35,6 @@ export function getShortName(cloudLocation: CloudLocation,
  */
 export function localizeCountry(geoLocation: GeoLocation, language: string): string {
   if (!geoLocation) {
-    return '';
-  }
-  if (geoLocation.countryCode === geoLocation.id) {
-    // The city and the country are the same (e.g. SG).  Omit the localized country.
     return '';
   }
   // TODO: Remove typecast after https://github.com/microsoft/TypeScript/pull/44022

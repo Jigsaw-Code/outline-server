@@ -22,7 +22,7 @@ import './outline-step-view';
 import {css, customElement, html, LitElement, property} from 'lit-element';
 
 import {COMMON_STYLES} from './cloud-install-styles';
-import {CloudLocation, CloudLocationOption} from '../../model/location';
+import {CloudLocationOption} from '../../model/location';
 import {getShortName, localizeCountry} from '../location_formatting';
 
 // TODO: Add more flags
@@ -126,16 +126,17 @@ export class OutlineRegionPicker extends LitElement {
         </paper-button>
       </span>
       <div class="card-content" id="cityContainer">
-        ${this.options.map((item, index) => {
+        ${this.options.map((option, index) => {
           return html`
-          <input type="radio" id="card-${index}" name="city" value="${index}" ?disabled="${!item.available}" .checked="${this.selectedIndex === index}" @change="${this._locationSelected}">
+          <input type="radio" id="card-${index}" name="city" value="${index}" ?disabled="${!option.available}" .checked="${this.selectedIndex === index}" @change="${this._locationSelected}">
           <label for="card-${index}" class="city-button">
             <div class="card-header">
               ${this.selectedIndex === index ? html`<iron-icon icon="check-circle"></iron-icon>` : ''}
             </div>
-            <img class="flag" src="${this._flagImage(item)}">
-            <div class="geo-name">${getShortName(item.cloudLocation, this.localize)}</div>
-            <div class="geo-name">${localizeCountry(item.cloudLocation.location, this.language)}</div>
+            <img class="flag" src="${this._flagImage(option)}">
+            <div class="geo-name">${getShortName(option.cloudLocation, this.localize)}</div>
+            <div class="geo-name">${option.cloudLocation.location?.countryIsRedundant() ? '' :
+                localizeCountry(option.cloudLocation.location, this.language)}</div>
           </label>`;
         })}
       </div>
@@ -164,10 +165,11 @@ export class OutlineRegionPicker extends LitElement {
 
   _handleCreateServerTap(): void {
     this.isServerBeingCreated = true;
+    const selectedOption = this.options[this.selectedIndex];
     const params = {
       bubbles: true,
       composed: true,
-      detail: {selectedLocation: this.options[this.selectedIndex].cloudLocation}
+      detail: {selectedLocation: selectedOption.cloudLocation}
     };
     const customEvent = new CustomEvent('RegionSelected', params);
     this.dispatchEvent(customEvent);

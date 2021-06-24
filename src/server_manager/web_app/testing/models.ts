@@ -226,7 +226,7 @@ export class FakeManagedServer extends FakeServer implements server.ManagedServe
     return {
       getMonthlyOutboundTransferLimit: () => ({terabytes: 1}),
       getMonthlyCost: () => ({usd: 5}),
-      getLocation: () => new digitalocean.Region('AMS999'),
+      getCloudLocation: () => new digitalocean.Region('AMS999'),
       delete: () => Promise.resolve(),
       getHostId: () => 'fake-host-id',
     };

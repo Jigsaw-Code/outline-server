@@ -98,9 +98,8 @@ class GcpHost implements server.ManagedServerHost {
 
   // TODO: Throw error and show message on failure
   async delete(): Promise<void> {
-    const zone = this.getLocation();
-    const regionId = zone.getRegionId();
-    await this.apiClient.deleteStaticIp(this.projectId, this.instance.name, regionId);
+    const zone = this.getCloudLocation();
+    await this.apiClient.deleteStaticIp(this.projectId, this.instance.name, zone.regionId);
     this.apiClient.deleteInstance(this.projectId, this.instance.id, zone.id);
     this.deleteCallback();
   }
@@ -117,7 +116,7 @@ class GcpHost implements server.ManagedServerHost {
     return undefined;
   }
 
-  getLocation(): Zone {
+  getCloudLocation(): Zone {
     const zoneId = this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
     return new Zone(zoneId);
   }

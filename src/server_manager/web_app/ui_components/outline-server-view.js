@@ -469,7 +469,7 @@ export class ServerView extends DirMixin(PolymerElement) {
             </paper-listbox>
           </paper-menu-button>
         </div>
-        <div class="server-location">[[getShortName(serverLocation, localize)]]</div>
+        <div class="server-location">[[getShortName(cloudLocation, localize)]]</div>
       </div>
       <div class="tabs-container">
         <div class="tabs-spacer"></div>
@@ -607,7 +607,7 @@ export class ServerView extends DirMixin(PolymerElement) {
           </div>
         </div>
         <div name="settings">
-          <outline-server-settings id="serverSettings" metrics-id="[[metricsId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" default-data-limit="[[_computeDisplayDataLimit(defaultDataLimitBytes)]]" is-default-data-limit-enabled="{{isDefaultDataLimitEnabled}}" supports-default-data-limit="[[supportsDefaultDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]" is-server-managed="[[isServerManaged]]" server-location="[[serverLocation]]" metrics-enabled="[[metricsEnabled]]" language="[[language]]" localize="[[localize]]">
+          <outline-server-settings id="serverSettings" metrics-id="[[metricsId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" default-data-limit="[[_computeDisplayDataLimit(defaultDataLimitBytes)]]" is-default-data-limit-enabled="{{isDefaultDataLimitEnabled}}" supports-default-data-limit="[[supportsDefaultDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]" is-server-managed="[[isServerManaged]]" cloud-location="[[cloudLocation]]" metrics-enabled="[[metricsEnabled]]" language="[[language]]" localize="[[localize]]">
           </outline-server-settings>
         </div>
       </iron-pages>`;
@@ -629,7 +629,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         serverPortForNewAccessKeys: Number,
         isAccessKeyPortEditable: Boolean,
         serverCreationDate: Date,
-        serverLocation: Object,
+        cloudLocation: Object,
         defaultDataLimitBytes: Number,
         isDefaultDataLimitEnabled: Boolean,
         supportsDefaultDataLimit: Boolean,
@@ -675,7 +675,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.isAccessKeyPortEditable = false;
       this.serverCreationDate = new Date(0);
       /** @type {import('../../model/location').CloudLocation} */
-      this.serverLocation = null;
+      this.cloudLocation = null;
       this.getShortName = getShortName;
       /** @type {number} */
       this.defaultDataLimitBytes = null;

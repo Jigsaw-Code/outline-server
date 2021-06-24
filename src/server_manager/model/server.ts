@@ -122,7 +122,7 @@ export interface ManagedServerHost {
   // Returns the monthly cost.
   getMonthlyCost(): MonetaryCost;
   // Returns the server location
-  getLocation(): CloudLocation;
+  getCloudLocation(): CloudLocation;
   // Deletes the server - cannot be undone.
   delete(): Promise<void>;
 }

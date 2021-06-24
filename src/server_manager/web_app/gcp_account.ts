@@ -261,7 +261,7 @@ export class GcpAccount implements gcp.Account {
       address: ipAddress,
     };
     const createStaticIpOperation = await this.apiClient.createStaticIp(
-        projectId, zone.getRegionId(), createStaticIpData);
+        projectId, zone.regionId, createStaticIpData);
     if (createStaticIpOperation.error?.errors) {
       // TODO: Delete VM instance. Throw error.
     }

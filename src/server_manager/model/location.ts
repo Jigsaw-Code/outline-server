@@ -32,6 +32,10 @@ export class GeoLocation {
   constructor(
     public readonly id: string,
     public readonly countryCode: string) {}
+  
+  countryIsRedundant(): boolean {
+    return this.countryCode === this.id;
+  }
 }
 
 export const AMSTERDAM = new GeoLocation('amsterdam', 'NL');

@@ -391,12 +391,12 @@ export class App {
   private makeDisplayName(server: server.Server): string {
     let name = server.getName() ?? server.getHostnameForAccessKeys();
     if (!name) {
-      let location = null;
+      let cloudLocation = null;
       // Newly created servers will not have a name.
       if (isManagedServer(server)) {
-        location = server.getHost().getLocation();
+        cloudLocation = server.getHost().getCloudLocation();
       }
-      name = this.makeLocalizedServerName(location);
+      name = this.makeLocalizedServerName(cloudLocation);
     }
     return name;
   }
@@ -702,8 +702,8 @@ export class App {
     }
   }
 
-  private makeLocalizedServerName(location: CloudLocation): string {
-    const placeName = getShortName(location, this.appRoot.localize);
+  private makeLocalizedServerName(cloudLocation: CloudLocation): string {
+    const placeName = getShortName(cloudLocation, this.appRoot.localize);
     return this.appRoot.localize('server-name', 'serverLocation', placeName);
   }
 
@@ -754,7 +754,7 @@ export class App {
       view.monthlyCost = host.getMonthlyCost()?.usd;
       view.monthlyOutboundTransferBytes =
           host.getMonthlyOutboundTransferLimit()?.terabytes * (10 ** 12);
-      view.serverLocation = host.getLocation();
+      view.cloudLocation = host.getCloudLocation();
     } else {
       view.isServerManaged = false;
     }

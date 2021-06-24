@@ -391,8 +391,8 @@ export class GcpCreateServerApp extends LitElement {
     return `outline-${Math.random().toString(20).substring(3)}`;
   }
 
-  private makeLocalizedServerName(location: CloudLocation): string {
-    const placeName = getShortName(location, this.localize);
+  private makeLocalizedServerName(cloudLocation: CloudLocation): string {
+    const placeName = getShortName(cloudLocation, this.localize);
     return this.localize('server-name', 'serverLocation', placeName);
   }
 }

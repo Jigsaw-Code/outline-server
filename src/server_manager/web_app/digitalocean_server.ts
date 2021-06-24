@@ -301,7 +301,7 @@ class DigitalOceanHost implements server.ManagedServerHost {
     return {usd: this.dropletInfo.size.price_monthly};
   }
 
-  getLocation(): Region {
+  getCloudLocation(): Region {
     return new Region(this.dropletInfo.region.slug);
   }
 
