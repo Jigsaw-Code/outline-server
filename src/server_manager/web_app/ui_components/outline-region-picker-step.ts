@@ -40,7 +40,7 @@ const FLAG_MAPPING: {[countryCode in CountryCode]?: string} = {
 @customElement('outline-region-picker-step')
 export class OutlineRegionPicker extends LitElement {
   @property({type: Array}) locations: CloudLocation[] = [];
-  @property({type: Number}) selectedIndex: number = -1;
+  @property({type: Number}) selectedIndex = -1;
   @property({type: Boolean}) isServerBeingCreated = false;
   @property({type: Function}) localize: (msgId: string, ...params: string[]) => string;
   @property({type: String}) language: string;
@@ -155,7 +155,7 @@ export class OutlineRegionPicker extends LitElement {
 
   _locationSelected(event: Event): void {
     const inputEl = event.target as HTMLInputElement;
-    this.selectedIndex = Number.parseInt(inputEl.value);
+    this.selectedIndex = Number.parseInt(inputEl.value, 10);
   }
 
   _flagImage(item: CloudLocation): string {

@@ -32,14 +32,14 @@ describe('getShortName', () => {
   it('returns the ID when geoId is null', () => {
     expect(getShortName({id: 'fake-id', geoId: null}, msgId => {
       fail();
-      throw 'unreachable';
+      return null;
     })).toEqual('fake-id');
   });
 
   it('returns empty string when the location is null', () => {
     expect(getShortName(null, msgId => {
       fail();
-      throw 'unreachable';
+      return null;
     })).toEqual('');
   });
 });
