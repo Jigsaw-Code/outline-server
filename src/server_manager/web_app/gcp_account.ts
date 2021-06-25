@@ -65,7 +65,7 @@ export class GcpAccount implements gcp.Account {
     const scope = {projectId, zoneId: zone.id};
     const instance = await this.createInstance(scope, name);
     const id = `${this.id}:${instance.id}`;
-    return new GcpServer(id, projectId, instance, this.apiClient);
+    return new GcpServer(id, instance, this.apiClient);
   }
 
   /** @see {@link Account#listServers}. */
@@ -84,7 +84,7 @@ export class GcpAccount implements gcp.Account {
       const instances = response.items ?? [];
       instances.forEach((instance) => {
         const id = `${this.id}:${instance.id}`;
-        const server = new GcpServer(id, projectId, instance, this.apiClient);
+        const server = new GcpServer(id, instance, this.apiClient);
         result.push(server);
       });
     }

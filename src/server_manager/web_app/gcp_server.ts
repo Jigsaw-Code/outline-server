@@ -39,10 +39,10 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   private installState: InstallState = InstallState.UNKNOWN;
 
   constructor(
-      id: string, private projectId: string, private instance: gcp_api.Instance,
+      id: string, private instance: gcp_api.Instance,
       private apiClient: gcp_api.RestApiClient) {
     super(id);
-    this.gcpHost = new GcpHost(projectId, instance, apiClient, this.onDelete.bind(this));
+    this.gcpHost = new GcpHost(instance, apiClient, this.onDelete.bind(this));
   }
 
   getHost(): ManagedServerHost {
@@ -93,7 +93,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
 
 class GcpHost implements server.ManagedServerHost {
   constructor(
-      private projectId: string, private instance: gcp_api.Instance,
+      private instance: gcp_api.Instance,
       private apiClient: gcp_api.RestApiClient, private deleteCallback: Function) {}
 
   // TODO: Throw error and show message on failure
