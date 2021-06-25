@@ -55,11 +55,29 @@ async function makeLocalize(language: string) {
   };
 }
 
-const GCP_LOCATIONS: gcp.ZoneMap = {
-  'us-central1': ['us-central1-a', 'us-central1-b', 'us-central1-c'],
-  'asia-east1': ['asia-east1-a', 'asia-east1-b'],
-  'europe-west1': ['europe-west1-a', 'europe-west1-b', 'europe-west1-c'],
-};
+const GCP_LOCATIONS: gcp.ZoneOption[] = [
+  {
+    cloudLocation: new gcp.Zone('us-central1-fake'),
+    available: true,
+  },
+  {
+    cloudLocation: new gcp.Zone('europe-west3-fake'),
+    available: true,
+  },
+  {
+    cloudLocation: new gcp.Zone('europe-west3-fake2'),
+    available: true,
+  },
+  {
+    cloudLocation: new gcp.Zone('southamerica-east1-b'),
+    available: false,
+  },
+  {
+    cloudLocation: new gcp.Zone('fake-location-z'),
+    available: true
+  }
+];
+
 const GCP_BILLING_ACCOUNTS: gcp.BillingAccount[] =
     [{id: '1234-123456', name: 'My Billing Account'}];
 
@@ -146,8 +164,10 @@ export class TestApp extends LitElement {
            ?checked=${this.gcpAccountHasBillingAccounts}
            @tap=${() => this.gcpAccountHasBillingAccounts = !this.gcpAccountHasBillingAccounts}
         >Fake billing accounts</paper-checkbox>
-        <outline-gcp-create-server-app .localize=${
-        this.localize}></outline-gcp-create-server-app>        
+        <outline-gcp-create-server-app
+            .localize=${this.localize}
+            .language=${this.language}
+        ></outline-gcp-create-server-app>
       </div>
 
       <div

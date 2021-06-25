@@ -12,18 +12,54 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {CloudProvider} from './accounts';
+import * as location from './location';
 import {ManagedServer} from './server';
 
-// Keys are region IDs like "us-central1".
-// Values are zones like ["us-central1-a", "us-central1-b"].
-export type ZoneId = string;
-export type ZoneMap = {
-  [regionId: string]: ZoneId[]
-};
+export class Zone implements location.CloudLocation {
+  /** @see https://cloud.google.com/compute/docs/regions-zones */
+  private static readonly LOCATION_MAP: {readonly [regionId: string]: location.GeoLocation} = {
+    'asia-east1': location.CHANGHUA_COUNTY,
+    'asia-east2': location.HONG_KONG,
+    'asia-northeast1': location.TOKYO,
+    'asia-northeast2': location.OSAKA,
+    'asia-northeast3': location.SEOUL,
+    'asia-south1': location.MUMBAI,
+    'asia-southeast1': location.JURONG_WEST,
+    'asia-southeast2': location.JAKARTA,
+    'australia-southeast1': location.SYDNEY,
+    'europe-north1': location.HAMINA,
+    'europe-west1': location.ST_GHISLAIN,
+    'europe-west2': location.LONDON,
+    'europe-west3': location.FRANKFURT,
+    'europe-west4': location.EEMSHAVEN,
+    'europe-west6': location.ZURICH,
+    'europe-central2': location.WARSAW,
+    'northamerica-northeast1': location.MONTREAL,
+    'southamerica-east1': location.SAO_PAULO,
+    'us-central1': location.IOWA,
+    'us-east1': location.SOUTH_CAROLINA,
+    'us-east4': location.NORTHERN_VIRGINIA,
+    'us-west1': location.OREGON,
+    'us-west2': location.LOS_ANGELES,
+    'us-west3': location.SALT_LAKE_CITY,
+    'us-west4': location.LAS_VEGAS,
+  };
 
-export function getRegionId(zoneId: ZoneId): string {
-  return zoneId.substring(0, zoneId.lastIndexOf('-'));
+  /** ID is a GCP Zone ID like "us-central1-a". */
+  constructor(public readonly id: string) {}
+
+  /** Returns a region ID like "us-central1". */
+  get regionId(): string {
+    return this.id.substring(0, this.id.lastIndexOf('-'));
+  }
+  
+  get location(): location.GeoLocation {
+    return Zone.LOCATION_MAP[this.regionId];
+  }
+}
+
+export interface ZoneOption extends location.CloudLocationOption {
+  readonly cloudLocation: Zone;
 }
 
 export type Project = {
@@ -34,61 +70,6 @@ export type Project = {
 export type BillingAccount = {
   id: string,
   name: string,
-};
-
-export type CreationParams = {
-  cloudProvider: CloudProvider.GCP;
-  /** The GCP project ID. */
-  projectId: string;
-  /** The ID of the GCP zone to create the server in. */
-  zoneId: string;
-};
-
-/**
- * Represents a Cloud region as a hierarchy of place names,
- * e.g. city, state, country, continent.
- */
-export class Region {
-  constructor(private divisions: string[]) {}
-
-  getFullName(): string {
-    return this.divisions.join(', ');
-  }
-
-  getFirstName(): string {
-    return this.divisions[0];
-  }
-}
-
-// TODO: Map regions to country codes.
-// TODO: Localize place names.
-/** @see https://cloud.google.com/compute/docs/regions-zones */
-export const LOCATION_MAP: {[regionId: string]: Region} = {
-  'asia-east1': new Region(['Changhua County', 'Taiwan']),
-  'asia-east2': new Region(['Hong Kong']),
-  'asia-northeast1': new Region(['Tokyo', 'Japan']),
-  'asia-northeast2': new Region(['Osaka', 'Japan']),
-  'asia-northeast3': new Region(['Seoul', 'South Korea']),
-  'asia-south1': new Region(['Mumbai', 'India']),
-  'asia-southeast1': new Region(['Jurong West', 'Singapore']),
-  'asia-southeast2': new Region(['Jakarta', 'Indonesia']),
-  'australia-southeast1': new Region(['Sydney', 'Australia']),
-  'europe-north1': new Region(['Hamina', 'Finland']),
-  'europe-west1': new Region(['St. Ghislain', 'Belgium']),
-  'europe-west2': new Region(['London', 'England', 'UK']),
-  'europe-west3': new Region(['Frankfurt', 'Germany']),
-  'europe-west4': new Region(['Eemshaven', 'Netherlands']),
-  'europe-west6': new Region(['Zürich', 'Switzerland']),
-  'europe-central2': new Region(['Warsaw', 'Poland', 'Europe']),
-  'northamerica-northeast1': new Region(['Montréal', 'Québec', 'Canada']),
-  'southamerica-east1': new Region(['Osasco (São Paulo)', 'Brazil']),
-  'us-central1': new Region(['Council Bluffs', 'Iowa', 'USA']),
-  'us-east1': new Region(['Moncks Corner', 'South Carolina', 'USA']),
-  'us-east4': new Region(['Ashburn', 'Northern Virginia', 'USA']),
-  'us-west1': new Region(['The Dalles', 'Oregon', 'USA']),
-  'us-west2': new Region(['Los Angeles', 'California', 'USA']),
-  'us-west3': new Region(['Salt Lake City', 'Utah', 'USA']),
-  'us-west4': new Region(['Las Vegas', 'Nevada', 'USA']),
 };
 
 /**
@@ -108,16 +89,15 @@ export interface Account {
   /**
    * Creates an Outline server on a Google Compute Engine VM instance.
    *
-   * This method returns when the VM instance creation has been initiated.
-   * The VM may not yet have been fully created, and the Shadowbox
+   * This method returns after the VM instance has been created. The Shadowbox
    * Outline server may not be fully installed. See {@link ManagedServer#waitOnInstall}
    * to be notified when the server installation has completed.
    *
    * @param projectId - The GCP project ID.
-   * @param description - A human-readable description of the server.
-   * @param zoneId - The ID of the GCP zone to create the server in.
+   * @param name - The name to be given to the server.
+   * @param zone - The GCP zone to create the server in.
    */
-  createServer(projectId: string, description: string, zoneId: string): Promise<ManagedServer>;
+  createServer(projectId: string, name: string, zone: Zone): Promise<ManagedServer>;
 
   /**
    * Lists the Outline servers in a given GCP project.
@@ -131,7 +111,7 @@ export interface Account {
    *
    * @param projectId - The GCP project ID.
    */
-  listLocations(projectId: string): Promise<ZoneMap>;
+  listLocations(projectId: string): Promise<Readonly<ZoneOption[]>>;
 
   /**
    * Creates a new Google Cloud Platform project.

@@ -15,7 +15,7 @@
 import * as gcp_api from '../cloud/gcp_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
-import {getRegionId, LOCATION_MAP} from '../model/gcp';
+import {Zone} from '../model/gcp';
 import * as server from '../model/server';
 import {DataAmount, ManagedServerHost, MonetaryCost} from '../model/server';
 
@@ -39,12 +39,13 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   private installState: InstallState = InstallState.UNKNOWN;
 
   constructor(
-      accountId: string, private locator: gcp_api.InstanceLocator,
-      instanceName: string, private completion: Promise<void>,
+      id: string,
+      private locator: gcp_api.InstanceLocator,
+      instanceName: string,
+      private completion: Promise<void>,
       private apiClient: gcp_api.RestApiClient) {
-    super(`${accountId}:${locator.instanceId}`);
-    this.gcpHost = new GcpHost(locator, instanceName, completion, apiClient,
-        this.onDelete.bind(this));
+    super(id);
+    this.gcpHost = new GcpHost(locator, instanceName, completion, apiClient, this.onDelete.bind(this));
   }
 
   getHost(): ManagedServerHost {
@@ -56,8 +57,10 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   }
 
   async waitOnInstall(): Promise<void> {
+    await this.completion;
     while (this.installState === InstallState.UNKNOWN) {
-      const outlineGuestAttributes = await this.getOutlineGuestAttributes();
+      const outlineGuestAttributes =
+          await this.getOutlineGuestAttributes(this.locator);
       if (outlineGuestAttributes.has('apiUrl') && outlineGuestAttributes.has('certSha256')) {
         const certSha256 = outlineGuestAttributes.get('certSha256');
         const apiUrl = outlineGuestAttributes.get('apiUrl');
@@ -73,12 +76,12 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     }
   }
 
-  private async getOutlineGuestAttributes(): Promise<Map<string, string>> {
-    await this.completion;
-    const guestAttributes =
-        await this.apiClient.getGuestAttributes(this.locator, 'outline/');
-    const attributes = guestAttributes?.queryValue?.items ?? [];
+  private async getOutlineGuestAttributes(locator: gcp_api.InstanceLocator):
+      Promise<Map<string, string>> {
     const result = new Map<string, string>();
+    const guestAttributes =
+        await this.apiClient.getGuestAttributes(locator, 'outline/');
+    const attributes = guestAttributes?.queryValue?.items ?? [];
     attributes.forEach((entry) => {
       result.set(entry.key, entry.value);
     });
@@ -104,8 +107,8 @@ class GcpHost implements server.ManagedServerHost {
     // TODO: Support deletion of servers that failed to complete setup, or
     // never got a static IP.
     await this.completion;
-    const regionId = getRegionId(this.locator.zoneId);
-    await this.apiClient.deleteStaticIp(this.locator.projectId, this.addressName, regionId);
+    const regionId = this.getCloudLocation().regionId;
+    await this.apiClient.deleteStaticIp({regionId, ...this.locator}, this.addressName);
     this.apiClient.deleteInstance(this.locator);
     this.deleteCallback();
   }
@@ -122,8 +125,7 @@ class GcpHost implements server.ManagedServerHost {
     return undefined;
   }
 
-  getCityName(): string {
-    const regionId = getRegionId(this.locator.zoneId);
-    return LOCATION_MAP[regionId]?.getFirstName() || regionId;
+  getCloudLocation(): Zone {
+    return new Zone(this.locator.zoneId);
   }
 }

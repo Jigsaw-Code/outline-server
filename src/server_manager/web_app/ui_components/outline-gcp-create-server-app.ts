@@ -22,45 +22,18 @@ import {css, customElement, html, internalProperty, LitElement, property} from '
 import {unsafeHTML} from 'lit-html/directives/unsafe-html.js';
 
 import {AppRoot} from './app-root';
-import {LOCATION_MAP, BillingAccount, CreationParams, Project} from '../../model/gcp';
+import {BillingAccount, Project, Zone} from '../../model/gcp';
 import {GcpAccount} from '../gcp_account';
 import {COMMON_STYLES} from './cloud-install-styles';
-import {Location, OutlineRegionPicker} from './outline-region-picker-step';
-import {CloudProvider} from '../../model/accounts';
+import {OutlineRegionPicker} from './outline-region-picker-step';
+import {filterOptions, getShortName} from '../location_formatting';
+import {CloudLocation} from '../../model/location';
 
-// GCP mapping of regions to flags
-const FLAG_IMAGE_DIR = 'images/flags';
-const GCP_FLAG_MAPPING: {[regionId: string]: string} = {
-  // 'asia-east1': `${FLAG_IMAGE_DIR}/unknown.png`,
-  // 'asia-east2': `${FLAG_IMAGE_DIR}/unknown.png`,
-  // 'asia-northeast1': `${FLAG_IMAGE_DIR}/unknown.png`,
-  // 'asia-northeast2': `${FLAG_IMAGE_DIR}/unknown.png`,
-  // 'asia-northeast3': `${FLAG_IMAGE_DIR}/unknown.png`,
-  'asia-south1': `${FLAG_IMAGE_DIR}/india.png`,
-  'asia-southeast1': `${FLAG_IMAGE_DIR}/singapore.png`,
-  // 'asia-southeast2': `${FLAG_IMAGE_DIR}/unknown.png`,
-  // 'australia-southeast1': `${FLAG_IMAGE_DIR}/unknown.png`,
-  // 'europe-north1': `${FLAG_IMAGE_DIR}/unknown.png`,
-  // 'europe-west1': `${FLAG_IMAGE_DIR}/unknown.png`,
-  'europe-west2': `${FLAG_IMAGE_DIR}/uk.png`,
-  'europe-west3': `${FLAG_IMAGE_DIR}/germany.png`,
-  'europe-west4': `${FLAG_IMAGE_DIR}/netherlands.png`,
-  // 'europe-west6': `${FLAG_IMAGE_DIR}/unknown.png`,
-  // 'europe-central2': `${FLAG_IMAGE_DIR}/unknown.png`,
-  'northamerica-northeast1': `${FLAG_IMAGE_DIR}/canada.png`,
-  // 'southamerica-east1': `${FLAG_IMAGE_DIR}/unknown.png`,
-  'us-central1': `${FLAG_IMAGE_DIR}/us.png`,
-  'us-east1': `${FLAG_IMAGE_DIR}/us.png`,
-  'us-east4': `${FLAG_IMAGE_DIR}/us.png`,
-  'us-west1': `${FLAG_IMAGE_DIR}/us.png`,
-  'us-west2': `${FLAG_IMAGE_DIR}/us.png`,
-  'us-west3': `${FLAG_IMAGE_DIR}/us.png`,
-  'us-west4': `${FLAG_IMAGE_DIR}/us.png`,
-};
 
 @customElement('outline-gcp-create-server-app')
 export class GcpCreateServerApp extends LitElement {
-  @property({type: Function}) localize: Function;
+  @property({type: Function}) localize: (msgId: string, ...params: string[]) => string;
+  @property({type: String}) language: string;
   @internalProperty() private currentPage = '';
   @internalProperty() private selectedProjectId = '';
   @internalProperty() private selectedBillingAccountId = '';
@@ -260,8 +233,10 @@ export class GcpCreateServerApp extends LitElement {
 
   private renderRegionPicker() {
     return html`
-      <outline-region-picker-step id="regionPicker" .localize=${this.localize} @RegionSelected="${
-        this.onRegionSelected}">  
+      <outline-region-picker-step id="regionPicker"
+        .localize=${this.localize}
+        .language=${this.language}
+        @RegionSelected="${this.onRegionSelected}">  
       </outline-region-picker-step>`;
   }
 
@@ -384,12 +359,12 @@ export class GcpCreateServerApp extends LitElement {
     }
 
     this.currentPage = 'regionPicker';
-    const regionMap = await this.account.listLocations(this.project.id);
-    const locations = Object.entries(regionMap).map(([regionId, zoneIds]) => {
-      return this.createLocationModel(regionId, zoneIds);
-    });
+    const zoneOptions = await this.account.listLocations(this.project.id);
+    // Note: This relies on a side effect of the previous call to `await`.
+    // `this.regionPicker` is null after `this.currentPage`, and is only populated
+    // asynchronously.
     this.regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
-    this.regionPicker.locations = locations;
+    this.regionPicker.options = filterOptions(zoneOptions);
   }
 
   private onProjectIdChanged(event: CustomEvent) {
@@ -399,31 +374,25 @@ export class GcpCreateServerApp extends LitElement {
     this.selectedBillingAccountId = event.detail.value;
   }
 
-  private onRegionSelected(event: CustomEvent) {
+  private async onRegionSelected(event: CustomEvent) {
     event.stopPropagation();
 
-    // Terminology mismatch: OutlineRegionPicker actually returns a GCP "zone".
-    const creationParams: CreationParams = {
-      cloudProvider: CloudProvider.GCP,
-      projectId: this.project.id,
-      zoneId: event.detail.selectedRegionId
-    };
-    const setupEventParams = {bubbles: true, composed: true, detail: creationParams};
-    const setupEvent = new CustomEvent('SetUpServerRequested', setupEventParams);
-    this.dispatchEvent(setupEvent);
-  }
-
-  private createLocationModel(regionId: string, zoneIds: string[]): Location {
-    return {
-      id: zoneIds.length > 0 ? zoneIds[0] : null,
-      name: LOCATION_MAP[regionId]?.getFullName() ?? regionId,
-      flag: GCP_FLAG_MAPPING[regionId] || `${FLAG_IMAGE_DIR}/unknown.png`,
-      available: zoneIds.length > 0,
-    };
+    this.regionPicker.isServerBeingCreated = true;
+    const zone = event.detail.selectedLocation as Zone;
+    const name = this.makeLocalizedServerName(zone);
+    const server =
+        await this.account.createServer(this.project.id, name, zone);
+    const params = {bubbles: true, composed: true, detail: {server}};
+    const serverCreatedEvent = new CustomEvent('GcpServerCreated', params);
+    this.dispatchEvent(serverCreatedEvent);
   }
 
   private makeProjectName(): string {
     return `outline-${Math.random().toString(20).substring(3)}`;
   }
 
+  private makeLocalizedServerName(cloudLocation: CloudLocation): string {
+    const placeName = getShortName(cloudLocation, this.localize);
+    return this.localize('server-name', 'serverLocation', placeName);
+  }
 }

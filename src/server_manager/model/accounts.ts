@@ -15,13 +15,6 @@
 import * as digitalocean from './digitalocean';
 import * as gcp from './gcp';
 
-export enum CloudProvider {
-  DO = 'do',
-  GCP = 'gcp'
-}
-
-export type CreationParams = (digitalocean.CreationParams | gcp.CreationParams);
-
 export interface CloudAccounts {
   /**
    * Connects a DigitalOcean account.

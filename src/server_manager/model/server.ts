@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {CloudLocation} from "./location";
+
 export interface Server {
   // Gets a globally unique identifier for this Server.  THIS MUST NOT make a network request, as
   // it's used to identify unreachable servers.
@@ -119,8 +121,8 @@ export interface ManagedServerHost {
   getMonthlyOutboundTransferLimit(): DataAmount;
   // Returns the monthly cost.
   getMonthlyCost(): MonetaryCost;
-  // Returns the server location as a localizable (but possibly pre-localized) ID.
-  getCityName(): string;
+  // Returns the server location
+  getCloudLocation(): CloudLocation;
   // Deletes the server - cannot be undone.
   delete(): Promise<void>;
 }

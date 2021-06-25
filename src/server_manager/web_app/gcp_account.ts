@@ -22,7 +22,7 @@ import * as server from '../model/server';
 import {GcpServer} from './gcp_server';
 
 /** Returns a unique, RFC1035-style name as required by GCE. */
-function makeInstanceName(): string {
+function makeGcpInstanceName(): string {
   const now = new Date();
   return `outline-${now.getFullYear()}${now.getMonth()}${now.getDate()}-${now.getUTCHours()}${
       now.getUTCMinutes()}${now.getUTCSeconds()}`;
@@ -60,12 +60,14 @@ export class GcpAccount implements gcp.Account {
   }
 
   /** @see {@link Account#createServer}. */
-  async createServer(projectId: string, description: string, zoneId: string):
+  async createServer(projectId: string, name: string, zone: gcp.Zone):
       Promise<server.ManagedServer> {
-    const {instanceId, name, completion} =
-        await this.createInstance(projectId, description, zoneId);
-    const locator = {projectId, zoneId, instanceId};
-    return new GcpServer(this.id, locator, name, completion, this.apiClient);
+    const scope = {projectId, zoneId: zone.id};
+    const instanceName = makeGcpInstanceName();
+    const {instanceId, completion} = await this.createInstance(scope, name, instanceName);
+    const locator = {instanceId, ...scope};
+    const id = `${this.id}:${instanceId}`;
+    return new GcpServer(id, locator, instanceName, completion, this.apiClient);
   }
 
   /** @see {@link Account#listServers}. */
@@ -75,37 +77,30 @@ export class GcpAccount implements gcp.Account {
     const listInstancesPromises = [];
     for (const zone of listZonesResponse.items) {
       const filter = 'labels.outline=true';
-      const listInstancesPromise = this.apiClient.listInstances(projectId, zone.name, filter);
+      const listInstancesPromise = this.apiClient.listInstances({projectId, zoneId: zone.name}, filter);
       listInstancesPromises.push(listInstancesPromise);
     }
     const listInstancesResponses = await Promise.all(listInstancesPromises);
     for (const response of listInstancesResponses) {
       const instances = response.items ?? [];
       instances.forEach((instance) => {
-        const zoneId = instance.zone.substring(instance.zone.lastIndexOf('/') + 1);
+        const {zoneId} = gcp_api.parseZoneLink(instance.zone);
         const locator = {projectId, zoneId, instanceId: instance.id};
-        result.push(new GcpServer(this.id, locator, instance.name, Promise.resolve(), this.apiClient));
+        const id = `${this.id}:${instance.id}`;
+        result.push(new GcpServer(id, locator, instance.name, Promise.resolve(), this.apiClient));
       });
     }
     return result;
   }
 
   /** @see {@link Account#listLocations}. */
-  async listLocations(projectId: string): Promise<gcp.ZoneMap> {
+  async listLocations(projectId: string): Promise<gcp.ZoneOption[]> {
     const listZonesResponse = await this.apiClient.listZones(projectId);
     const zones = listZonesResponse.items ?? [];
-
-    const result: gcp.ZoneMap = {};
-    zones.map((zone) => {
-      const region = zone.region.substring(zone.region.lastIndexOf('/') + 1);
-      if (!(region in result)) {
-        result[region] = [];
-      }
-      if (zone.status === 'UP') {
-        result[region].push(zone.name);
-      }
-    });
-    return result;
+    return zones.map(zoneInfo => ({
+      cloudLocation: new gcp.Zone(zoneInfo.name),
+      available: zoneInfo.status === 'UP'
+    }));
   }
 
   /** @see {@link Account#listProjects}. */
@@ -133,7 +128,7 @@ export class GcpAccount implements gcp.Account {
         outline: 'true',
       },
     };
-    const createProjectResponse = await this.apiClient.createProject(projectId, createProjectData);
+    const createProjectResponse = await this.apiClient.createProject(createProjectData);
     let createProjectOperation = null;
     while (!createProjectOperation?.done) {
       await sleep(2 * 1000);
@@ -212,15 +207,14 @@ export class GcpAccount implements gcp.Account {
     }
   }
 
-  private async createInstance(projectId: string, description: string, zoneId: string):
-      Promise<{instanceId: string, name: string, completion: Promise<void>}> {
+  private async createInstance(scope: gcp_api.ZoneScope, name: string, instanceName: string):
+      Promise<{instanceId: string, completion: Promise<void>}> {
 
     // Create VM instance
-    const name = makeInstanceName();
     const createInstanceData = {
-      name,
-      description,
-      machineType: `zones/${zoneId}/machineTypes/${GcpAccount.MACHINE_SIZE}`,
+      name: instanceName,
+      description: name,  // Show a human-readable name in the GCP console
+      machineType: `zones/${scope.zoneId}/machineTypes/${GcpAccount.MACHINE_SIZE}`,
       disks: [
         {
           boot: true,
@@ -256,18 +250,21 @@ export class GcpAccount implements gcp.Account {
         ],
       },
     };
-    const operation =
-        await this.apiClient.createInstance(projectId, zoneId, createInstanceData);
+    const createInstanceOperation =
+        await this.apiClient.createInstance(scope, createInstanceData);
+    if (createInstanceOperation.error?.errors) {
+      // TODO: Throw error.
+    }
 
-    const instanceId = operation.targetId;
+    const instanceId = createInstanceOperation.targetId;
     const completion: Promise<void> = Promise.all([
-      this.apiClient.computeEngineOperationZoneWait(projectId, zoneId, operation.name).then(() => {
-        return this.promoteEphemeralIpIfNeeded({projectId, zoneId, instanceId});
+      this.apiClient.computeEngineOperationZoneWait(scope, createInstanceOperation.name).then(() => {
+        return this.promoteEphemeralIpIfNeeded({instanceId, ...scope});
       }),
-      this.createFirewallIfNeeded(projectId)
+      this.createFirewallIfNeeded(scope.projectId)
     ]).then();
 
-    return {instanceId, name, completion};
+    return {instanceId, completion};
   }
 
   private async promoteEphemeralIpIfNeeded(locator: gcp_api.InstanceLocator) : Promise<void> {
@@ -279,8 +276,9 @@ export class GcpAccount implements gcp.Account {
       description: instance.description,
       address: ipAddress,
     };
+    const regionId = new gcp.Zone(locator.zoneId).regionId;
     const createStaticIpOperation = await this.apiClient.createStaticIp(
-        locator.projectId, gcp.getRegionId(locator.zoneId), createStaticIpData);
+        {regionId, ...locator}, createStaticIpData);
     if (createStaticIpOperation.error?.errors) {
       // TODO: Delete VM instance. Throw error.
     }

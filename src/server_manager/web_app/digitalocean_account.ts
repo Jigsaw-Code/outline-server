@@ -18,7 +18,7 @@ import * as do_install_script from '../install_scripts/do_install_script';
 import * as digitalocean from '../model/digitalocean';
 import * as server from '../model/server';
 
-import {DigitalOceanServer, GetCityId} from './digitalocean_server';
+import {DigitalOceanServer} from './digitalocean_server';
 
 // Tag used to mark Shadowbox Droplets.
 const SHADOWBOX_TAG = 'shadowbox';
@@ -60,25 +60,18 @@ export class DigitalOceanAccount implements digitalocean.Account {
     return digitalocean.Status.MISSING_BILLING_INFORMATION;
   }
 
-  // Return a map of regions that are available and support our target machine size.
-  getRegionMap(): Promise<Readonly<digitalocean.RegionMap>> {
-    return this.digitalOcean.getRegionInfo().then((regions) => {
-      const ret: digitalocean.RegionMap = {};
-      regions.forEach((region) => {
-        const cityId = GetCityId(region.slug);
-        if (!(cityId in ret)) {
-          ret[cityId] = [];
-        }
-        if (region.available && region.sizes.indexOf(MACHINE_SIZE) !== -1) {
-          ret[cityId].push(region.slug);
-        }
-      });
-      return ret;
-    });
+  // Return a list of regions indicating whether they are available and support
+  // our target machine size.
+  async listLocations(): Promise<Readonly<digitalocean.RegionOption[]>> {
+    const regions = await this.digitalOcean.getRegionInfo();
+    return regions.map(info => ({
+      cloudLocation: new digitalocean.Region(info.slug),
+      available: info.available && info.sizes.indexOf(MACHINE_SIZE) !== -1
+    }));
   }
 
   // Creates a server and returning it when it becomes active.
-  createServer(region: digitalocean.RegionId, name: string): Promise<server.ManagedServer> {
+  createServer(region: digitalocean.Region, name: string): Promise<server.ManagedServer> {
     console.time('activeServer');
     console.time('servingServer');
     const onceKeyPair = crypto.generateKeyPair();
@@ -100,7 +93,7 @@ export class DigitalOceanAccount implements digitalocean.Account {
                 keyPair.private.replace(/\r/g, '')}\n\n` +
             'Use "ssh -i keyfile root@[ip_address]" to connect to the machine');
       }
-      return this.digitalOcean.createDroplet(name, region, keyPair.public, dropletSpec);
+      return this.digitalOcean.createDroplet(name, region.id, keyPair.public, dropletSpec);
     })
     .then((response) => {
       return this.createDigitalOceanServer(this.digitalOcean, response.droplet);
@@ -145,17 +138,25 @@ function sanitizeDigitalOceanToken(input: string): string {
 function getInstallScript(
     accessToken: string, name: string, shadowboxSettings: ShadowboxSettings): string {
   const sanitizedAccessToken = sanitizeDigitalOceanToken(accessToken);
-  // TODO: consider shell escaping these variables.
   return '#!/bin/bash -eu\n' +
-      `export DO_ACCESS_TOKEN=${sanitizedAccessToken}\n` +
-      (shadowboxSettings.imageId ? `export SB_IMAGE=${shadowboxSettings.imageId}\n` : '') +
+      `export DO_ACCESS_TOKEN='${sanitizedAccessToken}'\n` +
+      (shadowboxSettings.imageId ? `export SB_IMAGE='${shadowboxSettings.imageId}'\n` : '') +
       (shadowboxSettings.watchtowerRefreshSeconds ?
-          `export WATCHTOWER_REFRESH_SECONDS=${shadowboxSettings.watchtowerRefreshSeconds}\n` :
+          `export WATCHTOWER_REFRESH_SECONDS='${shadowboxSettings.watchtowerRefreshSeconds}'\n` :
           '') +
       (shadowboxSettings.sentryApiUrl ?
-          `export SENTRY_API_URL="${shadowboxSettings.sentryApiUrl}"\n` :
+          `export SENTRY_API_URL='${shadowboxSettings.sentryApiUrl}'\n` :
           '') +
-      (shadowboxSettings.metricsUrl ? `export SB_METRICS_URL=${shadowboxSettings.metricsUrl}\n` :
+      (shadowboxSettings.metricsUrl ? `export SB_METRICS_URL='${shadowboxSettings.metricsUrl}'\n` :
           '') +
-      `export SB_DEFAULT_SERVER_NAME="${name}"\n` + do_install_script.SCRIPT;
+      `export SB_DEFAULT_SERVER_NAME="$(printf '${bashEscape(name)}')"\n` +
+      do_install_script.SCRIPT;
+}
+
+function bashEscape(s: string): string {
+  // Replace each non-ASCII character with a unicode escape sequence that
+  // is understood by bash.  This avoids an apparent bug in DigitalOcean's
+  // handling of unicode characters in the user_data value.
+  return s.replace(/\P{ASCII}/gu,
+      c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
 }

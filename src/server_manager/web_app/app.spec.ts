@@ -18,8 +18,9 @@ import * as accounts from '../model/accounts';
 import * as server from '../model/server';
 
 import {App, LAST_DISPLAYED_SERVER_STORAGE_KEY} from './app';
-import {FakeCloudAccounts, FakeDigitalOceanAccount, FakeGcpAccount, FakeManualServerRepository} from './testing/models';
+import {FakeCloudAccounts, FakeDigitalOceanAccount, FakeManualServerRepository} from './testing/models';
 import {AppRoot} from './ui_components/app-root';
+import {Region} from '../model/digitalocean';
 
 
 // Define functions from preload.ts.
@@ -63,7 +64,7 @@ describe('App', () => {
   it('initially shows servers', async () => {
     // Create fake servers and simulate their metadata being cached before creating the app.
     const fakeAccount = new FakeDigitalOceanAccount();
-    await fakeAccount.createServer('fake-managed-server-id');
+    await fakeAccount.createServer(new Region('_fake-region-id'));
     const cloudAccounts = new FakeCloudAccounts(fakeAccount);
 
     const manualServerRepo = new FakeManualServerRepository();
@@ -89,7 +90,7 @@ describe('App', () => {
     expect(serverList.length).toEqual(manualServers.length + managedServers.length);
     expect(serverList).toContain(jasmine.objectContaining({id: 'fake-manual-server-api-url-1'}));
     expect(serverList).toContain(jasmine.objectContaining({id: 'fake-manual-server-api-url-2'}));
-    expect(serverList).toContain(jasmine.objectContaining({id: 'fake-managed-server-id'}));
+    expect(serverList).toContain(jasmine.objectContaining({id: '_fake-region-id'}));
   });
 
   it('initially shows the last selected server', async () => {
@@ -112,26 +113,7 @@ describe('App', () => {
     const cloudAccounts = new FakeCloudAccounts(new FakeDigitalOceanAccount());
     const app = createTestApp(appRoot, cloudAccounts);
     await app.start();
-    await app.createManagedServer({
-      cloudProvider: accounts.CloudProvider.DO,
-      regionId: 'fakeRegion'
-    });
-    expect(appRoot.currentPage).toEqual('serverView');
-    const view = await appRoot.getServerView(appRoot.selectedServerId);
-    expect(view.selectedPage).toEqual('progressView');
-  });
-
-  it('shows progress screen when creating a GCP server', async () => {
-    // Start the app with a fake GCP account.
-    const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
-    const cloudAccounts = new FakeCloudAccounts(null, new FakeGcpAccount());
-    const app = createTestApp(appRoot, cloudAccounts);
-    await app.start();
-    await app.createManagedServer({
-      cloudProvider: accounts.CloudProvider.GCP,
-      projectId: 'fakeProjectId',
-      zoneId: 'fakeZoneId'
-    });
+    await app.createDigitalOceanServer(new Region('_fake-region-id'));
     expect(appRoot.currentPage).toEqual('serverView');
     const view = await appRoot.getServerView(appRoot.selectedServerId);
     expect(view.selectedPage).toEqual('progressView');
@@ -141,7 +123,7 @@ describe('App', () => {
      async () => {
        const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
        const fakeAccount = new FakeDigitalOceanAccount();
-       const server = await fakeAccount.createServer(Math.random().toString());
+       const server = await fakeAccount.createServer(new Region('_fake-region-id'));
        const cloudAccounts = new FakeCloudAccounts(fakeAccount);
        const app = createTestApp(appRoot, cloudAccounts, null);
        // Sets last displayed server.

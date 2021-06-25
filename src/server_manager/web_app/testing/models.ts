@@ -34,11 +34,20 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
   listServers() {
     return Promise.resolve(this.servers);
   }
-  getRegionMap() {
-    return Promise.resolve({'fake': ['fake1', 'fake2']});
+  listLocations() {
+    return Promise.resolve([
+      {
+        cloudLocation: new digitalocean.Region('AMS999'),
+        available: true
+      },
+      {
+        cloudLocation: new digitalocean.Region('FRA999'),
+        available: false
+      }
+    ]);
   }
-  createServer(id: string) {
-    const newServer = new FakeManagedServer(id, false);
+  createServer(region: digitalocean.Region) {
+    const newServer = new FakeManagedServer(region.id, false);
     this.servers.push(newServer);
     return Promise.resolve(newServer);
   }
@@ -48,11 +57,9 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
 }
 
 export class FakeGcpAccount implements gcp.Account {
-  private servers: server.ManagedServer[] = [];
-
   constructor(
       private refreshToken = 'fake-access-token',
-      private billingAccounts: gcp.BillingAccount[] = [], private locations: gcp.ZoneMap = {}) {}
+      private billingAccounts: gcp.BillingAccount[] = [], private locations: gcp.ZoneOption[] = []) {}
 
   getId() {
     return 'id';
@@ -63,17 +70,14 @@ export class FakeGcpAccount implements gcp.Account {
   getRefreshToken(): string {
     return this.refreshToken;
   }
-  async createServer(projectId: string, name: string, zoneId: string):
-      Promise<server.ManagedServer> {
-    const newServer = new FakeManagedServer(`fake-gcp-server-${Math.random()}`, false);
-    this.servers.push(newServer);
-    return newServer;
+  createServer(projectId: string, name: string, zone: gcp.Zone): Promise<server.ManagedServer> {
+    return undefined;
   }
-  async listLocations(projectId: string): Promise<Readonly<gcp.ZoneMap>> {
+  async listLocations(projectId: string): Promise<Readonly<gcp.ZoneOption[]>> {
     return this.locations;
   }
   async listServers(projectId: string): Promise<server.ManagedServer[]> {
-    return this.servers;
+    return [];
   }
   async createProject(id: string, billingAccountId: string): Promise<gcp.Project> {
     return {
@@ -222,7 +226,7 @@ export class FakeManagedServer extends FakeServer implements server.ManagedServe
     return {
       getMonthlyOutboundTransferLimit: () => ({terabytes: 1}),
       getMonthlyCost: () => ({usd: 5}),
-      getCityName: () => 'fake-city',
+      getCloudLocation: () => new digitalocean.Region('AMS999'),
       delete: () => Promise.resolve(),
       getHostId: () => 'fake-host-id',
     };

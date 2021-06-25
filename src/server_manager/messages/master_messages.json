@@ -69,37 +69,129 @@
     "message": "Cancel",
     "description": "This string appears across the application as a button. Clicking it aborts the current flow."
   },
-  "city_ams": {
+  "geo_amsterdam": {
     "message": "Amsterdam",
-    "description": "This string appears in a card as part of the server creation flow. It allows the user to select the location to deploy a server. Refers to the city in the Netherlands."
+    "description": "Name of the city in the Netherlands."
   },
-  "city_blr": {
+  "geo_bangalore": {
     "message": "Bangalore",
-    "description": "This string appears in a card as part of the server creation flow. It allows the user to select the location to deploy a server. Refers to the city in India."
+    "description": "Name of the city in India."
   },
-  "city_fra": {
+  "geo_changhua_county": {
+    "message": "Changhua County",
+    "description": "Name of the county in Taiwan."
+  },
+  "geo_eemshaven": {
+    "message": "Eemshaven",
+    "description": "Name of the seaport in the Netherlands."
+  },
+  "geo_frankfurt": {
     "message": "Frankfurt",
-    "description": "This string appears in a card as part of the server creation flow. It allows the user to select the location to deploy a server. Refers to the city in Germany."
+    "description": "Name of the city in Germany."
   },
-  "city_lon": {
+  "geo_hamina": {
+    "message": "Hamina",
+    "description": "Name of the town in Finland."
+  },
+  "geo_hk": {
+    "message": "Hong Kong",
+    "description": "Name of Hong Kong in China"
+  },
+  "geo_iowa": {
+    "message": "Iowa",
+    "description": "Name of the US state."
+  },
+  "geo_jakarta": {
+    "message": "Jakarta",
+    "description": "Name of the capital of Indonesia."
+  },
+  "geo_jurong_west": {
+    "message": "Jurong West",
+    "description": "Name of the area in Singapore."
+  },
+  "geo_las_vegas": {
+    "message": "Las Vegas",
+    "description": "Name of the city in the Nevada, USA."
+  },
+  "geo_london": {
     "message": "London",
-    "description": "This string appears in a card as part of the server creation flow. It allows the user to select the location to deploy a server. Refers to the city in England."
+    "description": "Name of the city in England."
   },
-  "city_nyc": {
+  "geo_los_angeles": {
+    "message": "Los Angeles",
+    "description": "Name of the city in California, USA."
+  },
+  "geo_montreal": {
+    "message": "Montréal",
+    "description": "Name of the city in Canada."
+  },
+  "geo_mumbai": {
+    "message": "Mumbai",
+    "description": "Name of the city in India."
+  },
+  "geo_new_york_city": {
     "message": "New York",
-    "description": "This string appears in a card as part of the server creation flow. It allows the user to select the location to deploy a server. Refers to the city in the United States."
+    "description": "Name of the city in the United States."
   },
-  "city_sfo": {
+  "geo_northern_virginia": {
+    "message": "Northern Virginia",
+    "description": "Name of the area in Virginia, USA."
+  },
+  "geo_oregon": {
+    "message": "Oregon",
+    "description": "Name of the US state."
+  },
+  "geo_osaka": {
+    "message": "Osaka",
+    "description": "Name of the city in Japan."
+  },
+  "geo_salt_lake_city": {
+    "message": "Salt Lake City",
+    "description": "Name of the city in Utah, USA."
+  },
+  "geo_san_francisco": {
     "message": "San Francisco",
-    "description": "This string appears in a card as part of the server creation flow. It allows the user to select the location to deploy a server. Refers to the city in the United States."
+    "description": "Name of the city in the United States."
   },
-  "city_sgp": {
+  "geo_sao_paulo": {
+    "message": "São Paulo",
+    "description": "Name of the state in Brazil."
+  },
+  "geo_seoul": {
+    "message": "Seoul",
+    "description": "Name of the city in South Korea."
+  },
+  "geo_sg": {
     "message": "Singapore",
-    "description": "This string appears in a card as part of the server creation flow. It allows the user to select the location to deploy a server. Refers to the capital of Singapore."
+    "description": "Name of the country of Singapore"
   },
-  "city_tor": {
+  "geo_south_carolina": {
+    "message": "South Carolina",
+    "description": "Name of the US state."
+  },
+  "geo_st_ghislain": {
+    "message": "St. Ghislain",
+    "description": "Name of the town in Belgium."
+  },
+  "geo_sydney": {
+    "message": "Sydney",
+    "description": "Name of the city in Australia."
+  },
+  "geo_tokyo": {
+    "message": "Tokyo",
+    "description": "Name of the city in Japan."
+  },
+  "geo_toronto": {
     "message": "Toronto",
-    "description": "This string appears in a card as part of the server creation flow. It allows the user to select the location to deploy a server. Refers to the city in Canada."
+    "description": "Name of the city in Canada."
+  },
+  "geo_warsaw": {
+    "message": "Warsaw",
+    "description": "Name of the city in Poland."
+  },
+  "geo_zurich": {
+    "message": "Zürich",
+    "description": "Name of the city in Switzerland."
   },
   "close": {
     "message": "Close",
