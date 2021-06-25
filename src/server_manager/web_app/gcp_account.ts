@@ -62,7 +62,8 @@ export class GcpAccount implements gcp.Account {
   /** @see {@link Account#createServer}. */
   async createServer(projectId: string, name: string, zone: gcp.Zone):
       Promise<server.ManagedServer> {
-    const instance = await this.createInstance(projectId, name, zone);
+    const scope = {projectId, zoneId: zone.id};
+    const instance = await this.createInstance(scope, name);
     const id = `${this.id}:${instance.id}`;
     return new GcpServer(id, projectId, instance, this.apiClient);
   }
@@ -74,7 +75,8 @@ export class GcpAccount implements gcp.Account {
     const listInstancesPromises = [];
     for (const zone of listZonesResponse.items) {
       const filter = 'labels.outline=true';
-      const listInstancesPromise = this.apiClient.listInstances(projectId, zone.name, filter);
+      const scope = {projectId, zoneId: zone.name};
+      const listInstancesPromise = this.apiClient.listInstances(scope, filter);
       listInstancesPromises.push(listInstancesPromise);
     }
     const listInstancesResponses = await Promise.all(listInstancesPromises);
@@ -124,7 +126,7 @@ export class GcpAccount implements gcp.Account {
         outline: 'true',
       },
     };
-    const createProjectResponse = await this.apiClient.createProject(projectId, createProjectData);
+    const createProjectResponse = await this.apiClient.createProject(createProjectData);
     let createProjectOperation = null;
     while (!createProjectOperation?.done) {
       await sleep(2 * 1000);
@@ -179,8 +181,7 @@ export class GcpAccount implements gcp.Account {
     return [];
   }
 
-  private async createInstance(projectId: string, name: string, zone: gcp.Zone):
-      Promise<gcp_api.Instance> {
+  private async createFirewallIfNeeded(projectId: string) : Promise<void> {
     // Configure Outline firewall
     const getFirewallResponse =
         await this.apiClient.listFirewalls(projectId, GcpAccount.OUTLINE_FIREWALL_NAME);
@@ -202,13 +203,18 @@ export class GcpAccount implements gcp.Account {
         // TODO: Throw error.
       }
     }
+  }
+
+  private async createInstance(scope: gcp_api.ZoneScope, name: string):
+      Promise<gcp_api.Instance> {
+    this.createFirewallIfNeeded(scope.projectId);
 
     // Create VM instance
     const instanceName = makeGcpInstanceName();
     const createInstanceData = {
       name: instanceName,
       description: name,  // Show a human-readable name in the GCP console
-      machineType: `zones/${zone.id}/machineTypes/${GcpAccount.MACHINE_SIZE}`,
+      machineType: `zones/${scope.zoneId}/machineTypes/${GcpAccount.MACHINE_SIZE}`,
       disks: [
         {
           boot: true,
@@ -245,13 +251,13 @@ export class GcpAccount implements gcp.Account {
       },
     };
     const createInstanceOperation =
-        await this.apiClient.createInstance(projectId, zone.id, createInstanceData);
+        await this.apiClient.createInstance(scope, createInstanceData);
     if (createInstanceOperation.error?.errors) {
       // TODO: Throw error.
     }
 
-    const instance =
-        await this.apiClient.getInstance(projectId, createInstanceOperation.targetId, zone.id);
+    const locator = {instanceId: createInstanceOperation.targetId, ...scope};
+    const instance = await this.apiClient.getInstance(locator);
 
     // Promote ephemeral IP to static IP
     const ipAddress = instance.networkInterfaces[0].accessConfigs[0].natIP;
@@ -260,8 +266,9 @@ export class GcpAccount implements gcp.Account {
       description: instance.description,
       address: ipAddress,
     };
+    const regionId = new gcp.Zone(scope.zoneId).regionId;
     const createStaticIpOperation = await this.apiClient.createStaticIp(
-        projectId, zone.regionId, createStaticIpData);
+        {regionId, ...scope}, createStaticIpData);
     if (createStaticIpOperation.error?.errors) {
       // TODO: Delete VM instance. Throw error.
     }

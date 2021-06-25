@@ -43,6 +43,62 @@ export type Instance = Readonly<{
   }>;
 }>;
 
+const GCE_V1_API = 'https://compute.googleapis.com/compute/v1';
+
+function projectLink(projectId: string): string {
+  return `${GCE_V1_API}/projects/${projectId}`;
+}
+
+export interface RegionScope {
+  /** The GCP project ID. */
+  projectId: string;
+  /** The zone of the operation. */
+  regionId: string;
+}
+
+function regionLink({projectId, regionId}: RegionScope): string {
+  return `${projectLink(projectId)}/regions/${regionId}`;
+}
+
+/**
+ * Represents the scope of a zonal operation
+ */
+ export interface ZoneScope {
+  /** The GCP project ID. */
+  projectId: string;
+  /** The zone of the operation. */
+  zoneId: string;
+}
+
+function zoneLink({projectId, zoneId}: ZoneScope): string {
+  return `${projectLink(projectId)}/zones/${zoneId}`;
+}
+
+const zoneLinkRegExp =
+    new RegExp('/compute/v1/projects/(?<projectId>[^/]+)/zones/(?<zoneId>[^/]+)$');
+
+export function parseZoneLink(link: string): ZoneScope {
+  const url = new URL(link);
+  const groups = url.pathname.match(zoneLinkRegExp).groups;
+  return {
+    projectId: groups['projectId'],
+    zoneId: groups['zoneId']
+  };
+}
+
+/**
+ * Helper type to avoid error-prone positional arguments to instance-related
+ * functions.
+ */
+export interface InstanceLocator extends ZoneScope {
+  /** The ID of the instance. */
+  instanceId: string;
+}
+
+function instanceLink(locator: InstanceLocator): string {
+  return zoneLink(locator) + `/instances/${locator.instanceId}`;
+}
+
 /**
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/getGuestAttributes#response-body
  */
@@ -66,8 +122,8 @@ export type ResourceManagerOperation = Readonly<{name: string; done: boolean; er
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/globalOperations
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations
  */
-type ComputeEngineOperation = Readonly<
-    {id: string; name: string; targetId: string; status: string; error: {errors: Status[]}}>;
+export type ComputeEngineOperation = Readonly<
+    {id: string; name: string; zone: string; targetId: string; status: string; error: {errors: Status[]}}>;
 
 /**
  * @see https://cloud.google.com/service-usage/docs/reference/rest/Shared.Types/ListOperationsResponse#Operation
@@ -135,17 +191,15 @@ export class RestApiClient {
    *
    * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/insert
    *
-   * @param projectId - The GCP project ID.
-   * @param zoneId - The zone in which to create the instance.
+   * @param scope - Indicates the GCP project and zone.
    * @param data - Request body data. See documentation.
    */
-  async createInstance(projectId: string, zoneId: string, data: {}): Promise<ComputeEngineOperation> {
+  async createInstance(scope: ZoneScope, data: {}): Promise<ComputeEngineOperation> {
     const operation = await this.fetchAuthenticated<ComputeEngineOperation>(
         'POST',
-        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
-            zoneId}/instances`),
+        new URL(`${zoneLink(scope)}/instances`),
         this.GCP_HEADERS, null, data);
-    return await this.computeEngineOperationZoneWait(projectId, zoneId, operation.name);
+    return await this.computeEngineOperationZoneWait(scope, operation.name);
   }
 
   /**
@@ -153,17 +207,14 @@ export class RestApiClient {
    *
    * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/delete
    *
-   * @param projectId - The GCP project ID.
-   * @param instanceId - The ID of the instance to delete.
-   * @param zoneId - The zone in which the instance resides.
+   * @param locator - Identifies the instance to delete.
    */
-  async deleteInstance(projectId: string, instanceId: string, zoneId: string): Promise<void> {
+  async deleteInstance(locator: InstanceLocator): Promise<void> {
     const operation = await this.fetchAuthenticated<ComputeEngineOperation>(
         'DELETE',
-        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
-            zoneId}/instances/${instanceId}`),
+        new URL(instanceLink(locator)),
         this.GCP_HEADERS);
-    await this.computeEngineOperationZoneWait(projectId, zoneId, operation.name);
+    await this.computeEngineOperationZoneWait(locator, operation.name);
   }
 
   /**
@@ -171,15 +222,12 @@ export class RestApiClient {
    *
    * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/get
    *
-   * @param projectId - The GCP project ID.
-   * @param instanceId - The ID of the instance to retrieve.
-   * @param zoneId - The zone in which the instance resides.
+   * @param locator - Identifies the instance to return.
    */
-  getInstance(projectId: string, instanceId: string, zoneId: string): Promise<Instance> {
+  getInstance(locator: InstanceLocator): Promise<Instance> {
     return this.fetchAuthenticated(
         'GET',
-        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
-            zoneId}/instances/${instanceId}`),
+        new URL(instanceLink(locator)),
         this.GCP_HEADERS);
   }
 
@@ -188,12 +236,11 @@ export class RestApiClient {
    *
    * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/list
    *
-   * @param projectId - The GCP project ID.
-   * @param zoneId - The zone to query.
+   * @param scope - Indicates the GCP project and zone.
    * @param filter - See documentation.
    */
   // TODO: Pagination
-  listInstances(projectId: string, zoneId: string, filter?: string):
+  listInstances(scope: ZoneScope, filter?: string):
       Promise<ListInstancesResponse> {
     let parameters = null;
     if (filter) {
@@ -203,8 +250,7 @@ export class RestApiClient {
     }
     return this.fetchAuthenticated(
         'GET',
-        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
-            zoneId}/instances`),
+        new URL(`${zoneLink(scope)}/instances`),
         this.GCP_HEADERS, parameters);
   }
 
@@ -216,17 +262,15 @@ export class RestApiClient {
    *
    * @see https://cloud.google.com/compute/docs/reference/rest/v1/addresses/insert
    *
-   * @param projectId - The GCP project ID.
-   * @param regionId - The GCP region.
+   * @param scope - The GCP project and region.
    * @param data - Request body data. See documentation.
    */
-  async createStaticIp(projectId: string, regionId: string, data: {}): Promise<ComputeEngineOperation> {
+  async createStaticIp(scope: RegionScope, data: {}): Promise<ComputeEngineOperation> {
     const operation = await this.fetchAuthenticated<ComputeEngineOperation>(
         'POST',
-        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/regions/${
-            regionId}/addresses`),
+        new URL(`${regionLink(scope)}/addresses`),
         this.GCP_HEADERS, null, data);
-    return await this.computeEngineOperationRegionWait(projectId, regionId, operation.name);
+    return await this.computeEngineOperationRegionWait(scope, operation.name);
   }
 
   /**
@@ -234,17 +278,15 @@ export class RestApiClient {
    *
    * @see https://cloud.google.com/compute/docs/reference/rest/v1/addresses/delete
    *
-   * @param projectId - The GCP project ID.
+   * @param scope - The GCP project and region.
    * @param addressName - The name of the static IP address resource.
-   * @param regionId - The GCP region of the resource.
    */
-  async deleteStaticIp(projectId: string, addressName: string, regionId: string): Promise<void> {
+  async deleteStaticIp(scope: RegionScope, addressName: string): Promise<void> {
     const operation = await this.fetchAuthenticated<ComputeEngineOperation>(
         'DELETE',
-        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/regions/${
-            regionId}/addresses/${addressName}`),
+        new URL(`${regionLink(scope)}/addresses/${addressName}`),
         this.GCP_HEADERS);
-    await this.computeEngineOperationRegionWait(projectId, regionId, operation.name);
+    await this.computeEngineOperationRegionWait(scope, operation.name);
   }
 
   /**
@@ -253,21 +295,17 @@ export class RestApiClient {
    * @see https://cloud.google.com/compute/docs/storing-retrieving-metadata#guest_attributes
    * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/getGuestAttributes
    *
-   * @param projectId - The GCP project ID.
-   * @param instanceId - The ID of the VM instance.
-   * @param zoneId - The zone in which the instance resides.
+   * @param locator - Identifies the instance to inspect.
    * @param namespace - The namespace of the guest attributes.
    */
-  async getGuestAttributes(
-      projectId: string, instanceId: string, zoneId: string,
-      namespace: string): Promise<GuestAttributes|undefined> {
+  async getGuestAttributes(locator: InstanceLocator, namespace: string):
+      Promise<GuestAttributes|undefined> {
     try {
       const parameters = new Map<string, string>([['queryPath', namespace]]);
       // We must await the call to getGuestAttributes to properly catch any exceptions.
       return await this.fetchAuthenticated(
           'GET',
-          new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
-              zoneId}/instances/${instanceId}/getGuestAttributes`),
+          new URL(`${instanceLink(locator)}/getGuestAttributes`),
           this.GCP_HEADERS, parameters);
     } catch (error) {
       // TODO: Distinguish between 404 not found and other errors.
@@ -286,7 +324,7 @@ export class RestApiClient {
   async createFirewall(projectId: string, data: {}): Promise<ComputeEngineOperation> {
     const operation = await this.fetchAuthenticated<ComputeEngineOperation>(
         'POST',
-        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/global/firewalls`),
+        new URL(`${projectLink(projectId)}/global/firewalls`),
         this.GCP_HEADERS, null, data);
     return await this.computeEngineOperationGlobalWait(projectId, operation.name);
   }
@@ -301,7 +339,7 @@ export class RestApiClient {
     const parameters = new Map<string, string>([['filter', filter]]);
     return this.fetchAuthenticated(
         'GET',
-        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/global/firewalls`),
+        new URL(`${projectLink(projectId)}/global/firewalls`),
         this.GCP_HEADERS, parameters);
   }
 
@@ -315,7 +353,7 @@ export class RestApiClient {
   // TODO: Pagination
   listZones(projectId: string): Promise<ListZonesResponse> {
     return this.fetchAuthenticated(
-        'GET', new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/zones`),
+        'GET', new URL(`${projectLink(projectId)}/zones`),
         this.GCP_HEADERS);
   }
 
@@ -353,10 +391,9 @@ export class RestApiClient {
    *
    * @see https://cloud.google.com/resource-manager/reference/rest/v1/projects/create
    *
-   * @param projectId - The unique user-assigned project ID.
    * @param data - Request body data. See documentation.
    */
-  createProject(projectId: string, data: {}): Promise<ResourceManagerOperation> {
+  createProject(data: {}): Promise<ResourceManagerOperation> {
     return this.fetchAuthenticated(
         'POST', new URL('https://cloudresourcemanager.googleapis.com/v1/projects'),
         this.GCP_HEADERS, null, data);
@@ -423,16 +460,14 @@ export class RestApiClient {
    *
    * @see https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations/wait
    *
-   * @param projectId - The GCP project ID.
-   * @param zoneId - The zone ID.
+   * @param scope - Indicates the GCP project and zone.
    * @param operationId - The operation ID.
    */
-  async computeEngineOperationZoneWait(projectId: string, zoneId: string, operationId: string):
+  async computeEngineOperationZoneWait(scope: ZoneScope, operationId: string):
       Promise<ComputeEngineOperation> {
     const operation = await this.fetchAuthenticated<ComputeEngineOperation>(
         'POST',
-        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/zones/${
-            zoneId}/operations/${operationId}/wait`),
+        new URL(`${zoneLink(scope)}/operations/${operationId}/wait`),
         this.GCP_HEADERS);
     if (operation.error?.errors) {
       throw new GcpError(operation?.error.errors[0]?.code, operation?.error.errors[0]?.message);
@@ -445,16 +480,14 @@ export class RestApiClient {
    *
    * @see https://cloud.google.com/compute/docs/reference/rest/v1/regionOperations/wait
    *
-   * @param projectId - The GCP project ID.
-   * @param regionId - The region ID.
+   * @param scope - The GCP project and region.
    * @param operationId - The operation ID.
    */
-  computeEngineOperationRegionWait(projectId: string, regionId: string, operationId: string):
+  computeEngineOperationRegionWait(scope: RegionScope, operationId: string):
       Promise<ComputeEngineOperation> {
     return this.fetchAuthenticated(
         'POST',
-        new URL(`https://compute.googleapis.com/compute/v1/projects/${projectId}/regions/${
-            regionId}/operations/${operationId}/wait`),
+        new URL(`${regionLink(scope)}/operations/${operationId}/wait`),
         this.GCP_HEADERS);
   }
 
@@ -470,8 +503,7 @@ export class RestApiClient {
       Promise<ComputeEngineOperation> {
     return this.fetchAuthenticated(
         'POST',
-        new URL(`https://compute.googleapis.com/compute/v1/projects/${
-            projectId}/global/operations/${operationId}/wait`),
+        new URL(`${projectLink(projectId)}/global/operations/${operationId}/wait`),
         this.GCP_HEADERS);
   }
 

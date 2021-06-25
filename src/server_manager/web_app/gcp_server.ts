@@ -55,9 +55,9 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
 
   async waitOnInstall(): Promise<void> {
     while (this.installState === InstallState.UNKNOWN) {
-      const zoneId = this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
+      const scope = gcp_api.parseZoneLink(this.instance.zone);
       const outlineGuestAttributes =
-          await this.getOutlineGuestAttributes(this.projectId, this.instance.id, zoneId);
+          await this.getOutlineGuestAttributes({instanceId: this.instance.id, ...scope});
       if (outlineGuestAttributes.has('apiUrl') && outlineGuestAttributes.has('certSha256')) {
         const certSha256 = outlineGuestAttributes.get('certSha256');
         const apiUrl = outlineGuestAttributes.get('apiUrl');
@@ -73,11 +73,11 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     }
   }
 
-  private async getOutlineGuestAttributes(projectId: string, instanceId: string, zone: string):
+  private async getOutlineGuestAttributes(locator: gcp_api.InstanceLocator):
       Promise<Map<string, string>> {
     const result = new Map<string, string>();
     const guestAttributes =
-        await this.apiClient.getGuestAttributes(projectId, instanceId, zone, 'outline/');
+        await this.apiClient.getGuestAttributes(locator, 'outline/');
     const attributes = guestAttributes?.queryValue?.items ?? [];
     attributes.forEach((entry) => {
       result.set(entry.key, entry.value);
@@ -98,9 +98,12 @@ class GcpHost implements server.ManagedServerHost {
 
   // TODO: Throw error and show message on failure
   async delete(): Promise<void> {
-    const zone = this.getCloudLocation();
-    await this.apiClient.deleteStaticIp(this.projectId, this.instance.name, zone.regionId);
-    this.apiClient.deleteInstance(this.projectId, this.instance.id, zone.id);
+    // TODO: Support deletion of servers that failed to complete setup, or
+    // never got a static IP.
+    const zoneScope = gcp_api.parseZoneLink(this.instance.zone);
+    const regionId = new Zone(zoneScope.zoneId).regionId;
+    await this.apiClient.deleteStaticIp({regionId, ...zoneScope}, this.instance.name);
+    this.apiClient.deleteInstance({instanceId: this.instance.id, ...zoneScope});
     this.deleteCallback();
   }
 
@@ -117,7 +120,7 @@ class GcpHost implements server.ManagedServerHost {
   }
 
   getCloudLocation(): Zone {
-    const zoneId = this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
+    const {zoneId} = gcp_api.parseZoneLink(this.instance.zone);
     return new Zone(zoneId);
   }
 }
