@@ -12,14 +12,55 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {ManagedServer, RegionId} from './server';
+import * as location from './location';
+import {ManagedServer} from './server';
 
-// Keys are region IDs like "us-central1".
-// Values are zones like ["us-central1-a", "us-central1-b"].
-export type ZoneId = string;
-export type ZoneMap = {
-  [regionId: string]: ZoneId[]
-};
+export class Zone implements location.CloudLocation {
+  /** @see https://cloud.google.com/compute/docs/regions-zones */
+  private static readonly LOCATION_MAP: {readonly [regionId: string]: location.GeoLocation} = {
+    'asia-east1': location.CHANGHUA_COUNTY,
+    'asia-east2': location.HONG_KONG,
+    'asia-northeast1': location.TOKYO,
+    'asia-northeast2': location.OSAKA,
+    'asia-northeast3': location.SEOUL,
+    'asia-south1': location.MUMBAI,
+    'asia-southeast1': location.JURONG_WEST,
+    'asia-southeast2': location.JAKARTA,
+    'australia-southeast1': location.SYDNEY,
+    'europe-north1': location.HAMINA,
+    'europe-west1': location.ST_GHISLAIN,
+    'europe-west2': location.LONDON,
+    'europe-west3': location.FRANKFURT,
+    'europe-west4': location.EEMSHAVEN,
+    'europe-west6': location.ZURICH,
+    'europe-central2': location.WARSAW,
+    'northamerica-northeast1': location.MONTREAL,
+    'southamerica-east1': location.SAO_PAULO,
+    'us-central1': location.IOWA,
+    'us-east1': location.SOUTH_CAROLINA,
+    'us-east4': location.NORTHERN_VIRGINIA,
+    'us-west1': location.OREGON,
+    'us-west2': location.LOS_ANGELES,
+    'us-west3': location.SALT_LAKE_CITY,
+    'us-west4': location.LAS_VEGAS,
+  };
+
+  /** ID is a GCP Zone ID like "us-central1-a". */
+  constructor(public readonly id: string) {}
+
+  /** Returns a region ID like "us-central1". */
+  get regionId(): string {
+    return this.id.substring(0, this.id.lastIndexOf('-'));
+  }
+  
+  get location(): location.GeoLocation {
+    return Zone.LOCATION_MAP[this.regionId];
+  }
+}
+
+export interface ZoneOption extends location.CloudLocationOption {
+  readonly cloudLocation: Zone;
+}
 
 export type Project = {
   id: string,
@@ -54,9 +95,9 @@ export interface Account {
    *
    * @param projectId - The GCP project ID.
    * @param name - The name to be given to the server.
-   * @param zoneId - The ID of the GCP zone to create the server in.
+   * @param zone - The GCP zone to create the server in.
    */
-  createServer(projectId: string, name: string, zoneId: string): Promise<ManagedServer>;
+  createServer(projectId: string, name: string, zone: Zone): Promise<ManagedServer>;
 
   /**
    * Lists the Outline servers in a given GCP project.
@@ -70,7 +111,7 @@ export interface Account {
    *
    * @param projectId - The GCP project ID.
    */
-  listLocations(projectId: string): Promise<ZoneMap>;
+  listLocations(projectId: string): Promise<Readonly<ZoneOption[]>>;
 
   /**
    * Creates a new Google Cloud Platform project.

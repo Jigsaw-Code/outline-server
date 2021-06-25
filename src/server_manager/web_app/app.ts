@@ -22,14 +22,12 @@ import * as accounts from '../model/accounts';
 import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
 import * as server from '../model/server';
+import {CloudLocation} from '../model/location';
 
 import {DisplayDataAmount, displayDataAmountToBytes,} from './data_formatting';
-import * as digitalocean_server from './digitalocean_server';
-import {DigitalOceanServer} from './digitalocean_server';
-import {GcpServer} from './gcp_server';
+import {filterOptions, getShortName} from './location_formatting';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
-import {Location} from './ui_components/outline-region-picker-step';
 import {DisplayAccessKey, ServerView} from './ui_components/outline-server-view';
 
 // The Outline DigitalOcean team's referral code:
@@ -43,19 +41,6 @@ const KEY_SETTINGS_VERSION = '1.6.0';
 const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
 const CANCELLED_ERROR = new Error('Cancelled');
 export const LAST_DISPLAYED_SERVER_STORAGE_KEY = 'lastDisplayedServer';
-
-// DigitalOcean mapping of regions to flags
-const FLAG_IMAGE_DIR = 'images/flags';
-const DIGITALOCEAN_FLAG_MAPPING: {[cityId: string]: string} = {
-  ams: `${FLAG_IMAGE_DIR}/netherlands.png`,
-  sgp: `${FLAG_IMAGE_DIR}/singapore.png`,
-  blr: `${FLAG_IMAGE_DIR}/india.png`,
-  fra: `${FLAG_IMAGE_DIR}/germany.png`,
-  lon: `${FLAG_IMAGE_DIR}/uk.png`,
-  sfo: `${FLAG_IMAGE_DIR}/us.png`,
-  tor: `${FLAG_IMAGE_DIR}/canada.png`,
-  nyc: `${FLAG_IMAGE_DIR}/us.png`,
-};
 
 function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.DataLimit|null {
   if (!dataAmount) {
@@ -164,8 +149,8 @@ export class App {
       this.showIntro();
     });
 
-    appRoot.addEventListener('SetUpServerRequested', (event: CustomEvent) => {
-      this.createDigitalOceanServer(event.detail.regionId);
+    appRoot.addEventListener('SetUpDigitalOceanServerRequested', (event: CustomEvent) => {
+      this.createDigitalOceanServer(event.detail.region);
     });
 
     appRoot.addEventListener('DeleteServerRequested', (event: CustomEvent) => {
@@ -406,14 +391,12 @@ export class App {
   private makeDisplayName(server: server.Server): string {
     let name = server.getName() ?? server.getHostnameForAccessKeys();
     if (!name) {
-      let location = null;
+      let cloudLocation = null;
       // Newly created servers will not have a name.
-      if (server instanceof DigitalOceanServer) {
-        location = this.getLocalizedCityName(server.getHost().getRegionId());
-      } else if (server instanceof GcpServer) {
-        location = server.getHost().getRegionId();
+      if (isManagedServer(server)) {
+        cloudLocation = server.getHost().getCloudLocation();
       }
-      name = this.makeLocalizedServerName(location);
+      name = this.makeLocalizedServerName(cloudLocation);
     }
     return name;
   }
@@ -691,17 +674,12 @@ export class App {
       return;
     }
 
-    // The region picker initially shows all options as disabled. Options are enabled by this code,
-    // after checking which regions are available.
     try {
       const regionPicker = this.appRoot.getAndShowRegionPicker();
       const map = await this.digitalOceanRetry(() => {
-        return this.digitalOceanAccount.getRegionMap();
+        return this.digitalOceanAccount.listLocations();
       });
-      const locations = Object.entries(map).map(([cityId, regionIds]) => {
-        return this.createLocationModel(cityId, regionIds);
-      });
-      regionPicker.locations = locations;
+      regionPicker.options = filterOptions(map);
     } catch (e) {
       console.error(`Failed to get list of available regions: ${e}`);
       this.appRoot.showError(this.appRoot.localize('error-do-regions'));
@@ -710,12 +688,11 @@ export class App {
 
   // Returns a promise which fulfills once the DigitalOcean droplet is created.
   // Shadowbox may not be fully installed once this promise is fulfilled.
-  public async createDigitalOceanServer(regionId: server.RegionId): Promise<void> {
+  public async createDigitalOceanServer(region: digitalocean.Region): Promise<void> {
     try {
-      const serverLocation = this.getLocalizedCityName(regionId);
-      const serverName = this.makeLocalizedServerName(serverLocation);
+      const serverName = this.makeLocalizedServerName(region);
       const server = await this.digitalOceanRetry(() => {
-        return this.digitalOceanAccount.createServer(regionId, serverName);
+        return this.digitalOceanAccount.createServer(region, serverName);
       });
       this.addServer(this.digitalOceanAccount.getId(), server);
       this.showServer(server);
@@ -725,13 +702,9 @@ export class App {
     }
   }
 
-  private getLocalizedCityName(regionId: server.RegionId): string {
-    const cityId = digitalocean_server.GetCityId(regionId);
-    return this.appRoot.localize(`city-${cityId}`);
-  }
-
-  private makeLocalizedServerName(location: string): string {
-    return this.appRoot.localize('server-name', 'serverLocation', location);
+  private makeLocalizedServerName(cloudLocation: CloudLocation): string {
+    const placeName = getShortName(cloudLocation, this.appRoot.localize);
+    return this.appRoot.localize('server-name', 'serverLocation', placeName);
   }
 
   public showServer(server: server.Server): void {
@@ -778,10 +751,10 @@ export class App {
     if (isManagedServer(server)) {
       view.isServerManaged = true;
       const host = server.getHost();
-      view.monthlyCost = host.getMonthlyCost().usd;
+      view.monthlyCost = host.getMonthlyCost()?.usd;
       view.monthlyOutboundTransferBytes =
-          host.getMonthlyOutboundTransferLimit().terabytes * (10 ** 12);
-      view.serverLocationId = digitalocean_server.GetCityId(host.getRegionId());
+          host.getMonthlyOutboundTransferLimit()?.terabytes * (10 ** 12);
+      view.cloudLocation = host.getCloudLocation();
     } else {
       view.isServerManaged = false;
     }
@@ -1228,14 +1201,5 @@ export class App {
     } catch (error) {
       this.appRoot.showError(this.appRoot.localize('error-unexpected'));
     }
-  }
-
-  private createLocationModel(cityId: string, regionIds: string[]): Location {
-    return {
-      id: regionIds.length > 0 ? regionIds[0] : null,
-      name: this.appRoot.localize(`city-${cityId}`),
-      flag: DIGITALOCEAN_FLAG_MAPPING[cityId] || '',
-      available: regionIds.length > 0,
-    };
   }
 }

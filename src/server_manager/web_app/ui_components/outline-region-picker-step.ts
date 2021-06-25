@@ -19,23 +19,31 @@ import '@polymer/iron-icon/iron-icon';
 import '@polymer/iron-icons/iron-icons';
 import './outline-step-view';
 
-import {css, customElement, html, LitElement, property, unsafeCSS} from 'lit-element';
+import {css, customElement, html, LitElement, property} from 'lit-element';
 
 import {COMMON_STYLES} from './cloud-install-styles';
+import {CloudLocationOption} from '../../model/location';
+import {getShortName, localizeCountry} from '../location_formatting';
 
-export interface Location {
-  id: string;
-  name: string;
-  flag: string;
-  available: boolean;
-}
+// TODO: Add more flags
+const FLAG_IMAGE_DIR = 'images/flags';
+const FLAG_MAPPING: {[countryCode: string]: string} = {
+  'IN': `${FLAG_IMAGE_DIR}/india.png`,
+  'SG': `${FLAG_IMAGE_DIR}/singapore.png`,
+  'UK': `${FLAG_IMAGE_DIR}/uk.png`,
+  'DE': `${FLAG_IMAGE_DIR}/germany.png`,
+  'NL': `${FLAG_IMAGE_DIR}/netherlands.png`,
+  'CA': `${FLAG_IMAGE_DIR}/canada.png`,
+  'US': `${FLAG_IMAGE_DIR}/us.png`,
+};
 
 @customElement('outline-region-picker-step')
 export class OutlineRegionPicker extends LitElement {
-  @property({type: Array}) locations: Location[] = [];
-  @property({type: String}) selectedLocationId: string = null;
+  @property({type: Array}) options: CloudLocationOption[] = [];
+  @property({type: Number}) selectedIndex = -1;
   @property({type: Boolean}) isServerBeingCreated = false;
-  @property({type: Function}) localize: Function;
+  @property({type: Function}) localize: (msgId: string, ...params: string[]) => string;
+  @property({type: String}) language: string;
 
   static get styles() {
     return [COMMON_STYLES, css`
@@ -71,11 +79,10 @@ export class OutlineRegionPicker extends LitElement {
         /* TODO(alalama): make it look good and indicate disabled */
         filter: blur(2px);
       }
-      .city-name {
+      .geo-name {
         color: var(--light-gray);
         font-size: 16px;
         line-height: 19px;
-        padding: 48px 0 24px 0;
       }
       paper-button {
         background: var(--primary-green);
@@ -86,6 +93,7 @@ export class OutlineRegionPicker extends LitElement {
       .flag {
         width: 86px;
         height: 86px;
+        margin-bottom: 48px
       }
       .card-content {
         display: flex;
@@ -96,6 +104,9 @@ export class OutlineRegionPicker extends LitElement {
         height: 24px;
         display: flex;
         justify-content: flex-end;
+      }
+      label.city-button {
+        padding: 0 2px 24px 2px
       }
       iron-icon {
         color: var(--primary-green);
@@ -110,20 +121,22 @@ export class OutlineRegionPicker extends LitElement {
       <span slot="step-title">${this.localize('region-title')}</span>
       <span slot="step-description">${this.localize('region-description')}</span>
       <span slot="step-action">
-        <paper-button id="createServerButton" @tap="${this._handleCreateServerTap}" ?disabled="${!this._isCreateButtonEnabled(this.isServerBeingCreated, this.selectedLocationId)}">
+        <paper-button id="createServerButton" @tap="${this._handleCreateServerTap}" ?disabled="${!this._isCreateButtonEnabled(this.isServerBeingCreated, this.selectedIndex)}">
           ${this.localize('region-setup')}
         </paper-button>
       </span>
       <div class="card-content" id="cityContainer">
-        ${this.locations.map(item => {
+        ${this.options.map((option, index) => {
           return html`
-          <input type="radio" id="card-${item.id}" name="city" value="${item.id}" ?disabled="${!item.available}" .checked="${this.selectedLocationId === item.id}" @change="${this._locationSelected}">
-          <label for="card-${item.id}" class="city-button">
+          <input type="radio" id="card-${index}" name="city" value="${index}" ?disabled="${!option.available}" .checked="${this.selectedIndex === index}" @change="${this._locationSelected}">
+          <label for="card-${index}" class="city-button">
             <div class="card-header">
-              ${this.selectedLocationId === item.id ? html`<iron-icon icon="check-circle"></iron-icon>` : ''}
+              ${this.selectedIndex === index ? html`<iron-icon icon="check-circle"></iron-icon>` : ''}
             </div>
-            <img class="flag" src="${item.flag}">
-            <div class="city-name">${item.name}</div>
+            <img class="flag" src="${this._flagImage(option)}">
+            <div class="geo-name">${getShortName(option.cloudLocation, this.localize)}</div>
+            <div class="geo-name">${option.cloudLocation.location?.countryIsRedundant() ? '' :
+                localizeCountry(option.cloudLocation.location, this.language)}</div>
           </label>`;
         })}
       </div>
@@ -134,24 +147,29 @@ export class OutlineRegionPicker extends LitElement {
 
   reset(): void {
     this.isServerBeingCreated = false;
-    this.selectedLocationId = null;
+    this.selectedIndex = -1;
   }
 
-  _isCreateButtonEnabled(isCreatingServer: boolean, selectedLocationId: string): boolean {
-    return !isCreatingServer && selectedLocationId != null;
+  _isCreateButtonEnabled(isCreatingServer: boolean, selectedIndex: number): boolean {
+    return !isCreatingServer && selectedIndex >= 0;
   }
 
   _locationSelected(event: Event): void {
     const inputEl = event.target as HTMLInputElement;
-    this.selectedLocationId = inputEl.value;
+    this.selectedIndex = Number.parseInt(inputEl.value, 10);
+  }
+
+  _flagImage(item: CloudLocationOption): string {
+     return FLAG_MAPPING[item.cloudLocation.location?.countryCode] || `${FLAG_IMAGE_DIR}/unknown.png`;
   }
 
   _handleCreateServerTap(): void {
     this.isServerBeingCreated = true;
+    const selectedOption = this.options[this.selectedIndex];
     const params = {
       bubbles: true,
       composed: true,
-      detail: {selectedRegionId: this.selectedLocationId}
+      detail: {selectedLocation: selectedOption.cloudLocation}
     };
     const customEvent = new CustomEvent('RegionSelected', params);
     this.dispatchEvent(customEvent);

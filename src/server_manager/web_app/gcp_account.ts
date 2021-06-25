@@ -21,6 +21,13 @@ import * as server from '../model/server';
 
 import {GcpServer} from './gcp_server';
 
+/** Returns a unique, RFC1035-style name as required by GCE. */
+function makeGcpInstanceName(): string {
+  const now = new Date();
+  return `outline-${now.getFullYear()}${now.getMonth()}${now.getDate()}-${now.getUTCHours()}${
+      now.getUTCMinutes()}${now.getUTCSeconds()}`;
+}
+  
 /**
  * The Google Cloud Platform account model.
  */
@@ -53,9 +60,9 @@ export class GcpAccount implements gcp.Account {
   }
 
   /** @see {@link Account#createServer}. */
-  async createServer(projectId: string, name: string, zoneId: string):
+  async createServer(projectId: string, name: string, zone: gcp.Zone):
       Promise<server.ManagedServer> {
-    const instance = await this.createInstance(projectId, name, zoneId);
+    const instance = await this.createInstance(projectId, name, zone);
     const id = `${this.id}:${instance.id}`;
     return new GcpServer(id, projectId, instance, this.apiClient);
   }
@@ -83,21 +90,13 @@ export class GcpAccount implements gcp.Account {
   }
 
   /** @see {@link Account#listLocations}. */
-  async listLocations(projectId: string): Promise<gcp.ZoneMap> {
+  async listLocations(projectId: string): Promise<gcp.ZoneOption[]> {
     const listZonesResponse = await this.apiClient.listZones(projectId);
     const zones = listZonesResponse.items ?? [];
-
-    const result: gcp.ZoneMap = {};
-    zones.map((zone) => {
-      const region = zone.region.substring(zone.region.lastIndexOf('/') + 1);
-      if (!(region in result)) {
-        result[region] = [];
-      }
-      if (zone.status === 'UP') {
-        result[region].push(zone.name);
-      }
-    });
-    return result;
+    return zones.map(zoneInfo => ({
+      cloudLocation: new gcp.Zone(zoneInfo.name),
+      available: zoneInfo.status === 'UP'
+    }));
   }
 
   /** @see {@link Account#listProjects}. */
@@ -180,7 +179,7 @@ export class GcpAccount implements gcp.Account {
     return [];
   }
 
-  private async createInstance(projectId: string, name: string, zoneId: string):
+  private async createInstance(projectId: string, name: string, zone: gcp.Zone):
       Promise<gcp_api.Instance> {
     // Configure Outline firewall
     const getFirewallResponse =
@@ -205,9 +204,11 @@ export class GcpAccount implements gcp.Account {
     }
 
     // Create VM instance
+    const instanceName = makeGcpInstanceName();
     const createInstanceData = {
-      name,
-      machineType: `zones/${zoneId}/machineTypes/${GcpAccount.MACHINE_SIZE}`,
+      name: instanceName,
+      description: name,  // Show a human-readable name in the GCP console
+      machineType: `zones/${zone.id}/machineTypes/${GcpAccount.MACHINE_SIZE}`,
       disks: [
         {
           boot: true,
@@ -244,23 +245,23 @@ export class GcpAccount implements gcp.Account {
       },
     };
     const createInstanceOperation =
-        await this.apiClient.createInstance(projectId, zoneId, createInstanceData);
+        await this.apiClient.createInstance(projectId, zone.id, createInstanceData);
     if (createInstanceOperation.error?.errors) {
       // TODO: Throw error.
     }
 
     const instance =
-        await this.apiClient.getInstance(projectId, createInstanceOperation.targetId, zoneId);
+        await this.apiClient.getInstance(projectId, createInstanceOperation.targetId, zone.id);
 
     // Promote ephemeral IP to static IP
-    const regionId = zoneId.substring(0, zoneId.lastIndexOf('-'));
     const ipAddress = instance.networkInterfaces[0].accessConfigs[0].natIP;
     const createStaticIpData = {
-      name,
+      name: instance.name,
+      description: instance.description,
       address: ipAddress,
     };
-    const createStaticIpOperation =
-        await this.apiClient.createStaticIp(projectId, regionId, createStaticIpData);
+    const createStaticIpOperation = await this.apiClient.createStaticIp(
+        projectId, zone.regionId, createStaticIpData);
     if (createStaticIpOperation.error?.errors) {
       // TODO: Delete VM instance. Throw error.
     }
@@ -295,6 +296,7 @@ export class GcpAccount implements gcp.Account {
   }
 
   private getInstallScript(): string {
+    // TODO: Populate SB_DEFAULT_SERVER_NAME and other environment variables.
     return '#!/bin/bash -eu\n' + SCRIPT;
   }
 }

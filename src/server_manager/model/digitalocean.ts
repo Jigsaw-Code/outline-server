@@ -12,12 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {ManagedServer, RegionId} from "./server";
+import * as location from "./location";
+import {ManagedServer} from "./server";
 
-// Keys are cityIds like "nyc".  Values are regions like ["nyc1", "nyc3"].
-export type RegionMap = {
-  [cityId: string]: RegionId[]
-};
+// A DigitalOcean Region, e.g. "NYC2".
+export class Region implements location.CloudLocation {
+  private static readonly LOCATION_MAP: {readonly [cityId: string]: location.GeoLocation} = {
+    'ams': location.AMSTERDAM,
+    'blr': location.BANGALORE,
+    'fra': location.FRANKFURT,
+    'lon': location.LONDON,
+    'nyc': location.NEW_YORK_CITY,
+    'sfo': location.SAN_FRANCISCO,
+    'sgp': location.SINGAPORE,
+    'tor': location.TORONTO,
+  };
+  constructor(public readonly id: string) {}
+
+  get location(): location.GeoLocation {
+    return Region.LOCATION_MAP[this.id.substr(0, 3).toLowerCase()];
+  } 
+}
+
+export interface RegionOption extends location.CloudLocationOption {
+  readonly cloudLocation: Region;
+}
 
 export enum Status {
   ACTIVE,
@@ -35,9 +54,9 @@ export interface Account {
   // Lists all existing Shadowboxes. If `fetchFromHost` is true, performs a network request to
   // retrieve the servers; otherwise resolves with a cached server list.
   listServers(fetchFromHost?: boolean): Promise<ManagedServer[]>;
-  // Return a map of regions that are available and support our target machine size.
-  getRegionMap(): Promise<Readonly<RegionMap>>;
+  // Return a list of regions with info about whether they are available for use.
+  listLocations(): Promise<Readonly<RegionOption[]>>;
   // Creates a server and returning it when it becomes active (i.e. the server has
   // created, not necessarily once shadowbox installation has finished).
-  createServer(region: RegionId, name: string): Promise<ManagedServer>;
+  createServer(region: Region, name: string): Promise<ManagedServer>;
 }

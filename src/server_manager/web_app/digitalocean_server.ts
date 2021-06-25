@@ -17,6 +17,8 @@ import {EventEmitter} from 'eventemitter3';
 import {DigitalOceanSession, DropletInfo} from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {asciiToHex, hexToString} from '../infrastructure/hex_encoding';
+import { Region } from '../model/digitalocean';
+import {CloudLocation} from '../model/location';
 import * as server from '../model/server';
 
 import {ShadowboxServer} from './shadowbox_server';
@@ -43,6 +45,7 @@ function makeKeyValueTagPrefix(key: string) {
 function makeKeyValueTag(key: string, value: string) {
   return [KEY_VALUE_TAG, key, asciiToHex(value)].join(':');
 }
+
 
 // Possible install states for DigitaloceanServer.
 enum InstallState {
@@ -298,8 +301,8 @@ class DigitalOceanHost implements server.ManagedServerHost {
     return {usd: this.dropletInfo.size.price_monthly};
   }
 
-  getRegionId(): server.RegionId {
-    return this.dropletInfo.region.slug;
+  getCloudLocation(): Region {
+    return new Region(this.dropletInfo.region.slug);
   }
 
   delete(): Promise<void> {
@@ -311,8 +314,4 @@ class DigitalOceanHost implements server.ManagedServerHost {
 
 function startsWithCaseInsensitive(text: string, prefix: string) {
   return text.slice(0, prefix.length).toLowerCase() === prefix.toLowerCase();
-}
-
-export function GetCityId(slug: server.RegionId): string {
-  return slug.substr(0, 3).toLowerCase();
 }

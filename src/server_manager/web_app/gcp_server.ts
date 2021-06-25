@@ -15,6 +15,7 @@
 import * as gcp_api from '../cloud/gcp_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
+import {Zone} from '../model/gcp';
 import * as server from '../model/server';
 import {DataAmount, ManagedServerHost, MonetaryCost} from '../model/server';
 
@@ -97,10 +98,9 @@ class GcpHost implements server.ManagedServerHost {
 
   // TODO: Throw error and show message on failure
   async delete(): Promise<void> {
-    const zoneId = this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
-    const regionId = zoneId.substring(0, zoneId.lastIndexOf('-'));
-    await this.apiClient.deleteStaticIp(this.projectId, this.instance.name, regionId);
-    this.apiClient.deleteInstance(this.projectId, this.instance.id, zoneId);
+    const zone = this.getCloudLocation();
+    await this.apiClient.deleteStaticIp(this.projectId, this.instance.name, zone.regionId);
+    this.apiClient.deleteInstance(this.projectId, this.instance.id, zone.id);
     this.deleteCallback();
   }
 
@@ -116,7 +116,8 @@ class GcpHost implements server.ManagedServerHost {
     return undefined;
   }
 
-  getRegionId(): string {
-    return this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
+  getCloudLocation(): Zone {
+    const zoneId = this.instance.zone.substring(this.instance.zone.lastIndexOf('/') + 1);
+    return new Zone(zoneId);
   }
 }
