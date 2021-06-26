@@ -269,7 +269,7 @@ function generate_certificate_fingerprint() {
   CERT_OPENSSL_FINGERPRINT="$(openssl x509 -in "${SB_CERTIFICATE_FILE}" -noout -sha256 -fingerprint)" || return
   # Example format: "BDDBC9A4395CB34E6ECF1843619F07A2090737356367"
   local CERT_HEX_FINGERPRINT
-  CERT_HEX_FINGERPRINT="$(echo "${CERT_OPENSSL_FINGERPRINT#*=}" | tr --delete :)" || return
+  CERT_HEX_FINGERPRINT="$(echo "${CERT_OPENSSL_FINGERPRINT#*=}" | tr -d :)" || return
   output_config "certSha256:${CERT_HEX_FINGERPRINT}"
 }
 
