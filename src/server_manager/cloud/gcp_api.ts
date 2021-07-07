@@ -52,7 +52,7 @@ function projectLink(projectId: string): string {
 export interface RegionScope {
   /** The GCP project ID. */
   projectId: string;
-  /** The zone of the operation. */
+  /** The region of the operation. */
   regionId: string;
 }
 
