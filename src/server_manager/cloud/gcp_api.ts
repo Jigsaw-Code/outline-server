@@ -96,7 +96,7 @@ export interface InstanceLocator extends ZoneScope {
 }
 
 function instanceLink(locator: InstanceLocator): string {
-  return zoneLink(locator) + `/instances/${locator.instanceId}`;
+  return `${zoneLink(locator)}/instances/${locator.instanceId}`;
 }
 
 /**
@@ -122,8 +122,8 @@ export type ResourceManagerOperation = Readonly<{name: string; done: boolean; er
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/globalOperations
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations
  */
-export type ComputeEngineOperation = Readonly<
-    {id: string; name: string; zone: string; targetId: string; status: string; error: {errors: Status[]}}>;
+type ComputeEngineOperation = Readonly<
+    {id: string; name: string; targetId: string; status: string; error: {errors: Status[]}}>;
 
 /**
  * @see https://cloud.google.com/service-usage/docs/reference/rest/Shared.Types/ListOperationsResponse#Operation

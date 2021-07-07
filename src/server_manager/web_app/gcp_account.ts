@@ -207,7 +207,7 @@ export class GcpAccount implements gcp.Account {
 
   private async createInstance(scope: gcp_api.ZoneScope, name: string):
       Promise<gcp_api.Instance> {
-    this.createFirewallIfNeeded(scope.projectId);
+    await this.createFirewallIfNeeded(scope.projectId);
 
     // Create VM instance
     const instanceName = makeGcpInstanceName();
