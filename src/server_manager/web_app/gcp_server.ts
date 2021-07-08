@@ -75,8 +75,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     }
   }
 
-  private async getOutlineGuestAttributes():
-      Promise<Map<string, string>> {
+  private async getOutlineGuestAttributes(): Promise<Map<string, string>> {
     const result = new Map<string, string>();
     const guestAttributes =
         await this.apiClient.getGuestAttributes(this.locator, 'outline/');
