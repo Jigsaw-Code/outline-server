@@ -21,6 +21,8 @@ const OUTPUT_BASE = path.resolve(__dirname, '../../build/server_manager/web_app/
 
 const GENERATE_CSS_RTL_LOADER = path.resolve(__dirname, 'css-in-js-rtl-loader.js');
 
+const CIRCLE_FLAGS_PATH = path.dirname(require.resolve('circle-flags/package.json'));
+
 exports.makeConfig = (options) => {
   return {
     mode: options.defaultMode,
@@ -76,7 +78,8 @@ exports.makeConfig = (options) => {
       new CopyPlugin(
           [
             {from: 'index.html', to: '.'},
-            {from: 'images', to: 'images'},
+            {from: `${CIRCLE_FLAGS_PATH}/flags`, to: 'images/flags'},
+            {from: 'images', to: 'images'}, // Overwrite any colliding flags.
             {from: 'messages', to: 'messages'},
           ],
           {context: __dirname}),

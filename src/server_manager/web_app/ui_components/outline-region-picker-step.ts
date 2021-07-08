@@ -25,17 +25,7 @@ import {COMMON_STYLES} from './cloud-install-styles';
 import {CloudLocationOption} from '../../model/location';
 import {getShortName, localizeCountry} from '../location_formatting';
 
-// TODO: Add more flags
 const FLAG_IMAGE_DIR = 'images/flags';
-const FLAG_MAPPING: {[countryCode: string]: string} = {
-  'IN': `${FLAG_IMAGE_DIR}/india.png`,
-  'SG': `${FLAG_IMAGE_DIR}/singapore.png`,
-  'UK': `${FLAG_IMAGE_DIR}/uk.png`,
-  'DE': `${FLAG_IMAGE_DIR}/germany.png`,
-  'NL': `${FLAG_IMAGE_DIR}/netherlands.png`,
-  'CA': `${FLAG_IMAGE_DIR}/canada.png`,
-  'US': `${FLAG_IMAGE_DIR}/us.png`,
-};
 
 @customElement('outline-region-picker-step')
 export class OutlineRegionPicker extends LitElement {
@@ -160,7 +150,9 @@ export class OutlineRegionPicker extends LitElement {
   }
 
   _flagImage(item: CloudLocationOption): string {
-     return FLAG_MAPPING[item.cloudLocation.location?.countryCode] || `${FLAG_IMAGE_DIR}/unknown.png`;
+    const countryCode = item.cloudLocation.location?.countryCode?.toLowerCase();
+    const fileName = countryCode ? `${countryCode}.svg` : 'unknown.png';
+    return `${FLAG_IMAGE_DIR}/${fileName}`;
   }
 
   _handleCreateServerTap(): void {
