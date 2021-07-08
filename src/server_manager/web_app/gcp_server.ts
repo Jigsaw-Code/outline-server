@@ -59,8 +59,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   async waitOnInstall(): Promise<void> {
     await this.completion;
     while (this.installState === InstallState.UNKNOWN) {
-      const outlineGuestAttributes =
-          await this.getOutlineGuestAttributes(this.locator);
+      const outlineGuestAttributes = await this.getOutlineGuestAttributes();
       if (outlineGuestAttributes.has('apiUrl') && outlineGuestAttributes.has('certSha256')) {
         const certSha256 = outlineGuestAttributes.get('certSha256');
         const apiUrl = outlineGuestAttributes.get('apiUrl');
@@ -76,11 +75,11 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     }
   }
 
-  private async getOutlineGuestAttributes(locator: gcp_api.InstanceLocator):
+  private async getOutlineGuestAttributes():
       Promise<Map<string, string>> {
     const result = new Map<string, string>();
     const guestAttributes =
-        await this.apiClient.getGuestAttributes(locator, 'outline/');
+        await this.apiClient.getGuestAttributes(this.locator, 'outline/');
     const attributes = guestAttributes?.queryValue?.items ?? [];
     attributes.forEach((entry) => {
       result.set(entry.key, entry.value);

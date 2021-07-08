@@ -62,12 +62,12 @@ export class GcpAccount implements gcp.Account {
   /** @see {@link Account#createServer}. */
   async createServer(projectId: string, name: string, zone: gcp.Zone):
       Promise<server.ManagedServer> {
-    const scope = {projectId, zoneId: zone.id};
+    const zoneLocator = {projectId, zoneId: zone.id};
     const instanceName = makeGcpInstanceName();
-    const {instanceId, completion} = await this.createInstance(scope, name, instanceName);
-    const locator = {instanceId, ...scope};
+    const {instanceId, completion} = await this.createInstance(zoneLocator, name, instanceName);
+    const instanceLocator = {instanceId, ...zoneLocator};
     const id = `${this.id}:${instanceId}`;
-    return new GcpServer(id, locator, instanceName, completion, this.apiClient);
+    return new GcpServer(id, instanceLocator, instanceName, completion, this.apiClient);
   }
 
   /** @see {@link Account#listServers}. */
@@ -77,15 +77,15 @@ export class GcpAccount implements gcp.Account {
     const listInstancesPromises = [];
     for (const zone of listZonesResponse.items) {
       const filter = 'labels.outline=true';
-      const scope = {projectId, zoneId: zone.name};
-      const listInstancesPromise = this.apiClient.listInstances(scope, filter);
+      const zoneLocator = {projectId, zoneId: zone.name};
+      const listInstancesPromise = this.apiClient.listInstances(zoneLocator, filter);
       listInstancesPromises.push(listInstancesPromise);
     }
     const listInstancesResponses = await Promise.all(listInstancesPromises);
     for (const response of listInstancesResponses) {
       const instances = response.items ?? [];
       instances.forEach((instance) => {
-        const {zoneId} = gcp_api.parseZoneLink(instance.zone);
+        const {zoneId} = gcp_api.parseZoneUrl(instance.zone);
         const locator = {projectId, zoneId, instanceId: instance.id};
         const id = `${this.id}:${instance.id}`;
         result.push(new GcpServer(id, locator, instance.name, Promise.resolve(), this.apiClient));
@@ -208,14 +208,14 @@ export class GcpAccount implements gcp.Account {
     }
   }
 
-  private async createInstance(scope: gcp_api.ZoneScope, name: string, instanceName: string):
+  private async createInstance(zoneLocator: gcp_api.ZoneLocator, name: string, instanceName: string):
       Promise<{instanceId: string, completion: Promise<void>}> {
 
     // Create VM instance
     const createInstanceData = {
       name: instanceName,
       description: name,  // Show a human-readable name in the GCP console
-      machineType: `zones/${scope.zoneId}/machineTypes/${GcpAccount.MACHINE_SIZE}`,
+      machineType: `zones/${zoneLocator.zoneId}/machineTypes/${GcpAccount.MACHINE_SIZE}`,
       disks: [
         {
           boot: true,
@@ -252,24 +252,24 @@ export class GcpAccount implements gcp.Account {
       },
     };
     const createInstanceOperation =
-        await this.apiClient.createInstance(scope, createInstanceData);
+        await this.apiClient.createInstance(zoneLocator, createInstanceData);
     if (createInstanceOperation.error?.errors) {
       // TODO: Throw error.
     }
 
     const instanceId = createInstanceOperation.targetId;
     const completion: Promise<void> = Promise.all([
-      this.apiClient.computeEngineOperationZoneWait(scope, createInstanceOperation.name).then(() => {
-        return this.promoteEphemeralIpIfNeeded({instanceId, ...scope});
+      this.apiClient.computeEngineOperationZoneWait(zoneLocator, createInstanceOperation.name).then(() => {
+        return this.promoteEphemeralIpIfNeeded({instanceId, ...zoneLocator});
       }),
-      this.createFirewallIfNeeded(scope.projectId)
+      this.createFirewallIfNeeded(zoneLocator.projectId)
     ]).then();
 
     return {instanceId, completion};
   }
 
-  private async promoteEphemeralIpIfNeeded(locator: gcp_api.InstanceLocator): Promise<void> {
-    const instance = await this.apiClient.getInstance(locator);
+  private async promoteEphemeralIpIfNeeded(instanceLocator: gcp_api.InstanceLocator): Promise<void> {
+    const instance = await this.apiClient.getInstance(instanceLocator);
     // Promote ephemeral IP to static IP
     const ipAddress = instance.networkInterfaces[0].accessConfigs[0].natIP;
     const createStaticIpData = {
@@ -277,9 +277,9 @@ export class GcpAccount implements gcp.Account {
       description: instance.description,
       address: ipAddress,
     };
-    const regionId = new gcp.Zone(locator.zoneId).regionId;
+    const regionId = new gcp.Zone(instanceLocator.zoneId).regionId;
     const createStaticIpOperation = await this.apiClient.createStaticIp(
-        {regionId, ...locator}, createStaticIpData);
+        {regionId, ...instanceLocator}, createStaticIpData);
     if (createStaticIpOperation.error?.errors) {
       // TODO: Delete VM instance. Throw error.
     }
