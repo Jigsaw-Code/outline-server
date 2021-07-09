@@ -22,8 +22,16 @@ import {DataAmount, ManagedServerHost, MonetaryCost} from '../model/server';
 import {ShadowboxServer} from './shadowbox_server';
 
 enum InstallState {
-  // Unknown state - server may still be installing.
+  // Unknown state - server request may still be pending.
   UNKNOWN = 0,
+  // The instance has been created.
+  INSTANCE_CREATED,
+  // The static IP has been allocated.
+  IP_ALLOCATED,
+  // The system has booted (detected by the creation of guest tags)
+  BOOTED,
+  // The server has generated its management service certificate.
+  HAS_CERTIFICATE,
   // Server is running and has the API URL and certificate fingerprint set.
   SUCCESS,
   // Server is in an error state.
@@ -40,6 +48,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   private readonly instanceReadiness: Promise<void>;
   private readonly gcpHost: GcpHost;
   private installState: InstallState = InstallState.UNKNOWN;
+  private listener: (progress: number) => void = null;
 
   constructor(
       id: string,
@@ -51,9 +60,11 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     // Optimization: start the check for a static IP immediately.
     const hasStaticIp: Promise<boolean> = this.hasStaticIp();
     this.instanceReadiness = instanceCreation.then(async () => {
+      this.setInstallState(InstallState.INSTANCE_CREATED);
       if (!await hasStaticIp) {
         await this.promoteEphemeralIp();
       }
+      this.setInstallState(InstallState.IP_ALLOCATED);
     }).catch((e) => {
       this.setInstallState(InstallState.ERROR);
       throw e;
@@ -104,23 +115,29 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   }
 
   isInstallCompleted(): boolean {
-    return this.installState !== InstallState.UNKNOWN;
+    return this.installState === InstallState.SUCCESS ||
+        this.installState === InstallState.ERROR ||
+        this.installState === InstallState.DELETED;
   }
 
   async waitOnInstall(): Promise<void> {
     await this.instanceReadiness;  // Throws if instance preparation fails.
-    while (this.installState === InstallState.UNKNOWN) {
+    while (!this.isInstallCompleted()) {
       const outlineGuestAttributes = await this.getOutlineGuestAttributes();
       if (outlineGuestAttributes.has('apiUrl') && outlineGuestAttributes.has('certSha256')) {
         const certSha256 = outlineGuestAttributes.get('certSha256');
         const apiUrl = outlineGuestAttributes.get('apiUrl');
         trustCertificate(certSha256);
         this.setManagementApiUrl(apiUrl);
-        this.installState = InstallState.SUCCESS;
+        this.setInstallState(InstallState.SUCCESS);
         break;
       } else if (outlineGuestAttributes.has('install-error')) {
-        this.installState = InstallState.ERROR;
+        this.setInstallState(InstallState.ERROR);
         break;
+      } else if (outlineGuestAttributes.has('certSha256')) {
+        this.setInstallState(InstallState.HAS_CERTIFICATE);
+      } else if (outlineGuestAttributes.has('outline')) {
+        this.setInstallState(InstallState.BOOTED);
       }
 
       await sleep(GcpServer.GUEST_ATTRIBUTES_POLLING_INTERVAL_MS);
@@ -131,6 +148,25 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     } else if (this.installState === InstallState.DELETING ||
                this.installState === InstallState.DELETED) {
       throw new errors.DeletedServerError();
+    }
+  }
+
+  setProgressListener(listener: (progress: number) => void): void {
+    this.listener = listener;
+    listener(this.installProgress());
+  }
+
+  private installProgress(): number {
+    // Values are based on observed installation timing.
+    // Installation typically takes ~5 minutes in total.
+    switch (this.installState) {
+      case InstallState.UNKNOWN: return 0.005;
+      case InstallState.INSTANCE_CREATED: return 0.03;
+      case InstallState.IP_ALLOCATED: return 0.04;
+      case InstallState.BOOTED: return 0.2;
+      case InstallState.HAS_CERTIFICATE: return 0.8;
+      case InstallState.SUCCESS: return 1.0;
+      default: return 0;
     }
   }
 
@@ -147,6 +183,9 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
 
   setInstallState(newState: InstallState): void {
     this.installState = newState;
+    if (this.listener) {
+      this.listener(this.installProgress());
+    }
   }
 }
 

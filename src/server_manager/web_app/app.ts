@@ -798,10 +798,13 @@ export class App {
     };
   }
 
-  private async setServerProgressView(server: server.Server): Promise<void> {
+  private async setServerProgressView(server: server.ManagedServer): Promise<void> {
     const view = await this.appRoot.getServerView(server.getId());
     view.serverName = this.makeDisplayName(server);
     view.selectedPage = 'progressView';
+    server.setProgressListener(progress => {
+      view.installProgress = progress;
+    });
   }
 
   private showMetricsOptInWhenNeeded(selectedServer: server.Server, serverView: ServerView) {

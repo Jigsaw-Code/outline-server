@@ -29,7 +29,7 @@ export SHADOWBOX_DIR="${SHADOWBOX_DIR:-${HOME:-/root}/shadowbox}"
 mkdir -p "${SHADOWBOX_DIR}"
 
 # Save output for debugging
-exec &> "${SHADOWBOX_DIR}/install-shadowbox-output"
+true > "${SHADOWBOX_DIR}/install-shadowbox-output"
 
 function cloud::public_ip() {
   curl curl -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip"
@@ -65,6 +65,8 @@ function cloud::set_guest_attribute() {
   local SET_GUEST_ATTRIBUTE_URL="http://metadata.google.internal/computeMetadata/v1/instance/guest-attributes/${GUEST_ATTIBUTE_NAMESPACE}/${label_key}"
   curl -H "Metadata-Flavor: Google" -X PUT -d "${label_value}" "${SET_GUEST_ATTRIBUTE_URL}"
 }
+
+cloud::set_guest_attribute "outline" "true"
 
 # Enable BBR.
 # Recent DigitalOcean one-click images are based on Ubuntu 18 and have kernel 4.15+.

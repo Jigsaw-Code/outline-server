@@ -109,6 +109,8 @@ export interface ManualServer extends Server {
 export interface ManagedServer extends Server {
   // Returns a promise that fulfills once installation is complete.
   waitOnInstall(): Promise<void>;
+  // Enables notifications related to installation progress.
+  setProgressListener(listener: (progress: number) => void): void;
   // Returns server host object.
   getHost(): ManagedServerHost;
   // Returns true when installation is complete.

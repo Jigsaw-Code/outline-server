@@ -16,9 +16,8 @@ import {EventEmitter} from 'eventemitter3';
 
 import {DigitalOceanSession, DropletInfo} from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
-import {asciiToHex, hexToString} from '../infrastructure/hex_encoding';
+import {hexToString} from '../infrastructure/hex_encoding';
 import { Region } from '../model/digitalocean';
-import {CloudLocation} from '../model/location';
 import * as server from '../model/server';
 
 import {ShadowboxServer} from './shadowbox_server';
@@ -38,19 +37,16 @@ const DEPRECATED_API_PORT_TAG = 'apiport';
 // The tag key for the manager API url prefix.
 const DEPRECATED_API_PREFIX_TAG = 'apiprefix';
 
-function makeKeyValueTagPrefix(key: string) {
-  return makeKeyValueTag(key, '');
-}
-
-function makeKeyValueTag(key: string, value: string) {
-  return [KEY_VALUE_TAG, key, asciiToHex(value)].join(':');
-}
-
-
 // Possible install states for DigitaloceanServer.
 enum InstallState {
   // Unknown state - server may still be installing.
   UNKNOWN = 0,
+  // Server status is "active"
+  CREATED,
+  // Userspace is running (detected by the presence of tags)
+  BOOTED,
+  // The server has generated its management service certificate.
+  HAS_CERTIFICATE,
   // Server is running and has the API URL and certificate fingerprint set.
   SUCCESS,
   // Server is in an error state.
@@ -62,6 +58,7 @@ enum InstallState {
 export class DigitalOceanServer extends ShadowboxServer implements server.ManagedServer {
   private eventQueue = new EventEmitter();
   private installState: InstallState = InstallState.UNKNOWN;
+  private listener: (progress: number) => void;
 
   constructor(
       id: string, private digitalOcean: DigitalOceanSession, private dropletInfo: DropletInfo) {
@@ -78,11 +75,11 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
       // Poll this.installState for changes.  This can poll quickly as it
       // will not make any network requests.
       const intervalId = setInterval(() => {
-        if (this.installState === InstallState.UNKNOWN) {
-          // installState not known, wait until next retry.
+        if (!this.isInstallStateFinal()) {
+          // Final installState not known, wait until next retry.
           return;
         }
-        // State is now known, so we can stop checking.
+        // Final state is now known, so we can stop checking.
         clearInterval(intervalId);
         if (this.installState === InstallState.SUCCESS) {
           fulfill();
@@ -104,12 +101,13 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
     // Synchronous function for updating the installState, which doesn't
     // refresh droplet info.
     const updateInstallState = (): void => {
-      if (this.installState !== InstallState.UNKNOWN) {
-        // State is already known, so it cannot be changed.
+      if (this.isInstallStateFinal()) {
+        // Final state is already known, so it cannot be changed.
         return;
       }
-      if (this.getTagValue(INSTALL_ERROR_TAG)) {
-        console.error(`error tag: ${this.getTagValue(INSTALL_ERROR_TAG)}`);
+      const tagMap = this.getTagMap();
+      if (tagMap[INSTALL_ERROR_TAG]) {
+        console.error(`error tag: ${tagMap[INSTALL_ERROR_TAG]}`);
         this.setInstallState(InstallState.ERROR);
       } else if (Date.now() - startTimestamp >= TIMEOUT_MS) {
         console.error('hit timeout while waiting for installation');
@@ -119,22 +117,28 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
         // installed the server and can now make API calls.
         console.info('digitalocean_server: Successfully found API and cert tags');
         this.setInstallState(InstallState.SUCCESS);
+      } else if (tagMap[CERTIFICATE_FINGERPRINT_TAG]) {
+        this.setInstallState(InstallState.HAS_CERTIFICATE);
+      } else if (Object.keys(tagMap).length > 0) {
+        this.setInstallState(InstallState.BOOTED);
+      } else if (this.dropletInfo?.status === 'active') {
+        this.setInstallState(InstallState.CREATED);
       }
     };
 
     // Attempt to set the install state immediately, based on the initial
     // droplet info, to possibly save on a refresh API call.
     updateInstallState();
-    if (this.installState !== InstallState.UNKNOWN) {
+    if (this.isInstallStateFinal()) {
       return;
     }
 
     // Periodically refresh the droplet info then try to update the install
     // state again.
     const intervalId = setInterval(async () => {
-      // Check if install state is already known, so we don't make an unnecessary
-      // request to fetch droplet info.
-      if (this.installState !== InstallState.UNKNOWN) {
+      // Check if the final install state has been reached, so we don't make an
+      // unnecessary request to fetch droplet info.
+      if (this.isInstallStateFinal()) {
         clearInterval(intervalId);
         return;
       }
@@ -147,9 +151,9 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
         return;
       }
       updateInstallState();
-      // Immediately clear the interval if the installState is known to prevent
-      // race conditions due to setInterval firing async.
-      if (this.installState !== InstallState.UNKNOWN) {
+      // Immediately clear the interval if the final install state has been
+      // reached to prevent race conditions due to setInterval firing async.
+      if (this.isInstallStateFinal()) {
         clearInterval(intervalId);
         return;
       }
@@ -158,16 +162,42 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
     }, 3000);
   }
 
+  setProgressListener(listener: (progress: number) => void): void {
+    this.listener = listener;
+    listener(this.installProgress());
+  }
+
   private setInstallState(installState: InstallState) {
-    if (this.installState !== InstallState.UNKNOWN) {
-      // Cannot change the install state once set.
-      return;
-    }
-    if (installState === InstallState.UNKNOWN) {
+    if (this.isInstallStateFinal()) {
+      // The install state is final and cannot be changed.
       return;
     }
     this.installState = installState;
-    this.setInstallCompleted();
+    if (this.installState === InstallState.SUCCESS) {
+      this.setInstallCompleted();
+    }
+    if (this.listener) {
+      this.listener(this.installProgress());
+    }
+  }
+
+  private installProgress(): number {
+    // Values are based on observed installation timing.
+    // Installation typically takes 90 seconds in total.
+    switch (this.installState) {
+      case InstallState.UNKNOWN: return 0.1;
+      case InstallState.CREATED: return 0.5;
+      case InstallState.BOOTED: return 0.55;
+      case InstallState.HAS_CERTIFICATE: return 0.6;
+      case InstallState.SUCCESS: return 1.0;
+      default: return 0;
+    }
+  }
+
+  private isInstallStateFinal(): boolean {
+    return this.installState === InstallState.SUCCESS ||
+        this.installState === InstallState.ERROR ||
+        this.installState === InstallState.DELETED;
   }
 
   // Returns true on success, else false.
@@ -199,21 +229,23 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
     }
   }
 
-  // Gets the value for the given key, stored in the DigitalOcean tags.
-  private getTagValue(key: string): string {
-    const tagPrefix = makeKeyValueTagPrefix(key);
+  // Gets the key-value map stored in the DigitalOcean tags.
+  private getTagMap(): {[key: string]: string} {
+    const ret: {[key: string]: string} = {};
+    const tagPrefix = KEY_VALUE_TAG + ':';
     for (const tag of this.dropletInfo.tags) {
       if (!startsWithCaseInsensitive(tag, tagPrefix)) {
         continue;
       }
-      const encodedData = tag.slice(tagPrefix.length);
+      const keyValuePair = tag.slice(tagPrefix.length);
+      const [key, hexValue] = keyValuePair.split(':', 2);
       try {
-        return hexToString(encodedData);
+        ret[key.toLowerCase()] = hexToString(hexValue);
       } catch (e) {
         console.error('error decoding hex string');
-        return null;
       }
     }
+    return ret;
   }
 
   // Returns the public ipv4 address of this server.
@@ -228,11 +260,12 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
 
   // Gets the address for the user management api, throws an error if unavailable.
   private getManagementApiAddress(): string {
-    let apiAddress = this.getTagValue(API_URL_TAG);
+    const tagMap = this.getTagMap();
+    let apiAddress = tagMap[API_URL_TAG];
     // Check the old tags for backward-compatibility.
     // TODO(fortuna): Delete this before we release v1.0
     if (!apiAddress) {
-      const portNumber = this.getTagValue(DEPRECATED_API_PORT_TAG);
+      const portNumber = tagMap[DEPRECATED_API_PORT_TAG];
       if (!portNumber) {
         throw new Error('Could not get API port number');
       }
@@ -240,7 +273,7 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
         throw new Error('API hostname not set');
       }
       apiAddress = `https://${this.ipv4Address()}:${portNumber}/`;
-      const apiPrefix = this.getTagValue(DEPRECATED_API_PREFIX_TAG);
+      const apiPrefix = tagMap[DEPRECATED_API_PREFIX_TAG];
       if (apiPrefix) {
         apiAddress += apiPrefix + '/';
       }
@@ -254,7 +287,7 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
   // Gets the certificate fingerprint in base64 format, throws an error if
   // unavailable.
   private getCertificateFingerprint(): string {
-    const fingerprint = this.getTagValue(CERTIFICATE_FINGERPRINT_TAG);
+    const fingerprint = this.getTagMap()[CERTIFICATE_FINGERPRINT_TAG];
     if (fingerprint) {
       return btoa(fingerprint);
     } else {

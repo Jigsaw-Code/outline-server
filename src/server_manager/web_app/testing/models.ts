@@ -222,6 +222,9 @@ export class FakeManagedServer extends FakeServer implements server.ManagedServe
     // shadowbox install time.
     return new Promise<void>((fulfill, reject) => {});
   }
+  setProgressListener(listener: (progress: number) => void): void {
+    listener(0.5);
+  }
   getHost() {
     return {
       getMonthlyOutboundTransferLimit: () => ({terabytes: 1}),
