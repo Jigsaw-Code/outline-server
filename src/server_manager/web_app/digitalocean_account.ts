@@ -19,7 +19,7 @@ import * as digitalocean from '../model/digitalocean';
 import * as server from '../model/server';
 
 import {DigitalOceanServer} from './digitalocean_server';
-import {getShellExportCommands, ShadowboxSettings} from './shadowbox_server';
+import {getShellExportCommands, ShadowboxSettings} from "./server_install";
 
 // Tag used to mark Shadowbox Droplets.
 const SHADOWBOX_TAG = 'shadowbox';

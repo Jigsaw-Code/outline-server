@@ -20,7 +20,6 @@ import {App} from './app';
 import {CloudAccounts} from './cloud_accounts';
 import {ManualServerRepository} from './manual_server';
 import {AppRoot} from './ui_components/app-root.js';
-import {ShadowboxSettings} from './shadowbox_server.js';
 
 type LanguageDef = {
   id: string,

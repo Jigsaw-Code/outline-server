@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {getShellExportCommands, ShadowboxSettings} from "./shadowbox_server";
+import {getShellExportCommands, ShadowboxSettings} from "./server_install";
 
 describe('getShellExportCommands', () => {
   it('fully populated', () => {

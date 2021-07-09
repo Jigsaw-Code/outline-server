@@ -17,7 +17,7 @@ import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
 import {DigitalOceanAccount} from './digitalocean_account';
 import {GcpAccount} from './gcp_account';
-import {ShadowboxSettings} from './shadowbox_server';
+import {ShadowboxSettings} from "./server_install";
 
 type DigitalOceanAccountJson = {
   accessToken: string

@@ -20,7 +20,7 @@ import {BillingAccount, Project} from '../model/gcp';
 import * as server from '../model/server';
 
 import {GcpServer} from './gcp_server';
-import * as shadowbox_server from './shadowbox_server';
+import * as server_install from "./server_install";
 
 /** Returns a unique, RFC1035-style name as required by GCE. */
 function makeGcpInstanceName(): string {
@@ -42,7 +42,7 @@ export class GcpAccount implements gcp.Account {
   private readonly apiClient: gcp_api.RestApiClient;
 
   constructor(private id: string, private refreshToken: string,
-      private shadowboxSettings: shadowbox_server.ShadowboxSettings) {
+      private shadowboxSettings: server_install.ShadowboxSettings) {
     this.apiClient = new gcp_api.RestApiClient(refreshToken);
   }
 
@@ -299,7 +299,7 @@ export class GcpAccount implements gcp.Account {
 
   private getInstallScript(serverName: string): string {
     return '#!/bin/bash -eu\n' +
-        shadowbox_server.getShellExportCommands(this.shadowboxSettings, serverName) +
+        server_install.getShellExportCommands(this.shadowboxSettings, serverName) +
         SCRIPT;
   }
 }
