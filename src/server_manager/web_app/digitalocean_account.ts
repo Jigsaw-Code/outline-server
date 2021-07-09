@@ -19,17 +19,11 @@ import * as digitalocean from '../model/digitalocean';
 import * as server from '../model/server';
 
 import {DigitalOceanServer} from './digitalocean_server';
+import {getShellExportCommands, ShadowboxSettings} from "./server_install";
 
 // Tag used to mark Shadowbox Droplets.
 const SHADOWBOX_TAG = 'shadowbox';
 const MACHINE_SIZE = 's-1vcpu-1gb';
-
-export interface ShadowboxSettings {
-  imageId: string;
-  metricsUrl: string;
-  sentryApiUrl?: string;
-  watchtowerRefreshSeconds?: number;
-}
 
 export class DigitalOceanAccount implements digitalocean.Account {
   private readonly digitalOcean: DigitalOceanSession;
@@ -140,23 +134,6 @@ function getInstallScript(
   const sanitizedAccessToken = sanitizeDigitalOceanToken(accessToken);
   return '#!/bin/bash -eu\n' +
       `export DO_ACCESS_TOKEN='${sanitizedAccessToken}'\n` +
-      (shadowboxSettings.imageId ? `export SB_IMAGE='${shadowboxSettings.imageId}'\n` : '') +
-      (shadowboxSettings.watchtowerRefreshSeconds ?
-          `export WATCHTOWER_REFRESH_SECONDS='${shadowboxSettings.watchtowerRefreshSeconds}'\n` :
-          '') +
-      (shadowboxSettings.sentryApiUrl ?
-          `export SENTRY_API_URL='${shadowboxSettings.sentryApiUrl}'\n` :
-          '') +
-      (shadowboxSettings.metricsUrl ? `export SB_METRICS_URL='${shadowboxSettings.metricsUrl}'\n` :
-          '') +
-      `export SB_DEFAULT_SERVER_NAME="$(printf '${bashEscape(name)}')"\n` +
+      getShellExportCommands(shadowboxSettings, name) +
       do_install_script.SCRIPT;
-}
-
-function bashEscape(s: string): string {
-  // Replace each non-ASCII character with a unicode escape sequence that
-  // is understood by bash.  This avoids an apparent bug in DigitalOcean's
-  // handling of unicode characters in the user_data value.
-  return s.replace(/\P{ASCII}/gu,
-      c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
 }

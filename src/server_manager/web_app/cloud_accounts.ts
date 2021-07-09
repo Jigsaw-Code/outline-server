@@ -15,8 +15,9 @@
 import * as accounts from '../model/accounts';
 import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
-import {DigitalOceanAccount, ShadowboxSettings} from './digitalocean_account';
+import {DigitalOceanAccount} from './digitalocean_account';
 import {GcpAccount} from './gcp_account';
+import {ShadowboxSettings} from "./server_install";
 
 type DigitalOceanAccountJson = {
   accessToken: string
@@ -123,7 +124,7 @@ export class CloudAccounts implements accounts.CloudAccounts {
   }
 
   private createGcpAccount(refreshToken: string): GcpAccount {
-    return new GcpAccount('gcp', refreshToken);
+    return new GcpAccount('gcp', refreshToken, this.shadowboxSettings);
   }
 
   private save(): void {
