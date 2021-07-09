@@ -43,13 +43,13 @@ enum InstallState {
 
 function getCompletionFraction(state: InstallState): number {
   // Values are based on observed installation timing.
-  // Installation typically takes ~5 minutes in total.
+  // Installation typically takes ~2.6 minutes in total.
   switch (state) {
-    case InstallState.UNKNOWN: return 0.005;
-    case InstallState.INSTANCE_CREATED: return 0.03;
-    case InstallState.IP_ALLOCATED: return 0.04;
-    case InstallState.INSTANCE_RUNNING: return 0.2;
-    case InstallState.CERTIFICATE_CREATED: return 0.8;
+    case InstallState.UNKNOWN: return 0.01;
+    case InstallState.INSTANCE_CREATED: return 0.12;
+    case InstallState.IP_ALLOCATED: return 0.14;
+    case InstallState.INSTANCE_RUNNING: return 0.4;
+    case InstallState.CERTIFICATE_CREATED: return 0.7;
     case InstallState.COMPLETED: return 1.0;
     default: return 0;
   }
@@ -188,6 +188,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   }
 
   private setInstallState(newState: InstallState): void {
+    console.debug(InstallState[newState]);
     this.installState.set(newState);
     if (isFinal(newState)) {
       this.installState.close();
