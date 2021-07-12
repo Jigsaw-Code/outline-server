@@ -41,11 +41,11 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   constructor(
       id: string,
       private locator: gcp_api.InstanceLocator,
-      instanceName: string,
-      private completion: Promise<void>,
+      gcpInstanceName: string,  // See makeGcpInstanceName() in gcp_account.ts.
+      private instanceCreation: Promise<void>,
       private apiClient: gcp_api.RestApiClient) {
     super(id);
-    this.gcpHost = new GcpHost(locator, instanceName, completion, apiClient, this.onDelete.bind(this));
+    this.gcpHost = new GcpHost(locator, gcpInstanceName, instanceCreation, apiClient, this.onDelete.bind(this));
   }
 
   getHost(): ManagedServerHost {
@@ -57,7 +57,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   }
 
   async waitOnInstall(): Promise<void> {
-    await this.completion;
+    await this.instanceCreation;  // Throws if instance creation fails.
     while (this.installState === InstallState.UNKNOWN) {
       const outlineGuestAttributes = await this.getOutlineGuestAttributes();
       if (outlineGuestAttributes.has('apiUrl') && outlineGuestAttributes.has('certSha256')) {
@@ -95,18 +95,20 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
 class GcpHost implements server.ManagedServerHost {
   constructor(
       private locator: gcp_api.InstanceLocator,
-      private addressName: string,
-      private completion: Promise<void>,
+      private gcpInstanceName: string,
+      private instanceCreation: Promise<void>,
       private apiClient: gcp_api.RestApiClient,
       private deleteCallback: Function) {}
 
   // TODO: Throw error and show message on failure
   async delete(): Promise<void> {
-    // TODO: Support deletion of servers that failed to complete setup, or
-    // never got a static IP.
-    await this.completion;
+    // The GCP API documentation doesn't specify whether instances can be deleted
+    // before creation has finished, and the static IP allocation is entirely
+    // asynchronous, so we must wait for creation to complete before starting deletion.
+    await this.instanceCreation;
     const regionId = this.getCloudLocation().regionId;
-    await this.apiClient.deleteStaticIp({regionId, ...this.locator}, this.addressName);
+    // By convention, the static IP for an Outline instance uses the instance's name.
+    await this.apiClient.deleteStaticIp({regionId, ...this.locator}, this.gcpInstanceName);
     this.apiClient.deleteInstance(this.locator);
     this.deleteCallback();
   }

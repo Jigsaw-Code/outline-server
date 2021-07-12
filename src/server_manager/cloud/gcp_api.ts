@@ -43,6 +43,11 @@ export type Instance = Readonly<{
   }>;
 }>;
 
+/** @see https://cloud.google.com/compute/docs/reference/rest/v1/addresses */
+type StaticIp = Readonly<{
+  name: string;
+}>;
+
 const GCE_V1_API = 'https://compute.googleapis.com/compute/v1';
 
 function projectUrl(projectId: string): string {
@@ -156,10 +161,14 @@ export type UserInfo = Readonly<{email: string;}>;
 type Service = Readonly<
     {name: string; config: {name: string;}; state: 'STATE_UNSPECIFIED' | 'DISABLED' | 'ENABLED';}>;
 
-type ListInstancesResponse = Readonly<{items: Instance[]; nextPageToken: string;}>;
-type ListZonesResponse = Readonly<{items: Zone[]; nextPageToken: string;}>;
+type ItemsResponse<T> = Readonly<{items: T; nextPageToken: string;}>;
+
+type ListInstancesResponse = ItemsResponse<Instance[]>;
+type ListAllInstancesResponse = ItemsResponse<{[zone: string]: {instances: Instance[];}}>;
+type ListAllStaticIpsResponse = ItemsResponse<{[region: string]: {addresses: StaticIp[];}}>;
+type ListZonesResponse = ItemsResponse<Zone[]>;
 type ListProjectsResponse = Readonly<{projects: Project[]; nextPageToken: string;}>;
-type ListFirewallsResponse = Readonly<{items: Firewall[]; nextPageToken: string;}>;
+type ListFirewallsResponse = ItemsResponse<Firewall[]>;
 type ListBillingAccountsResponse =
     Readonly<{billingAccounts: BillingAccount[]; nextPageToken: string}>;
 type ListEnabledServicesResponse = Readonly<{services: Service[]; nextPageToken: string;}>;
@@ -255,6 +264,29 @@ export class RestApiClient {
   }
 
   /**
+   * Lists all the Google Compute Engine VM instances in a specified project.
+   *
+   * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/aggregatedList
+   *
+   * @param projectId - The GCP project.
+   * @param filter - See documentation.
+   */
+  // TODO: Pagination
+  listAllInstances(projectId: string, filter?: string):
+      Promise<ListAllInstancesResponse> {
+    let parameters = null;
+    if (filter) {
+      parameters = new Map<string, string>([
+        ['filter', filter],
+      ]);
+    }
+    return this.fetchAuthenticated(
+        'GET',
+        new URL(`${projectUrl(projectId)}/aggregated/instances`),
+        this.GCP_HEADERS, parameters);
+  }
+
+  /**
    * Creates a static IP address.
    *
    * If no IP address is provided, a new static IP address is created. If an
@@ -287,6 +319,22 @@ export class RestApiClient {
         new URL(`${regionUrl(region)}/addresses/${addressName}`),
         this.GCP_HEADERS);
     await this.computeEngineOperationRegionWait(region, operation.name);
+  }
+
+  /**
+   * Lists all static IPs in a project.
+   *
+   * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/list
+   *
+   * @param zone - Indicates the GCP project and zone.
+   * @param filter - See documentation.
+   */
+  // TODO: Pagination
+  listAllStaticIps(projectId: string): Promise<ListAllStaticIpsResponse> {
+    return this.fetchAuthenticated(
+        'GET',
+        new URL(`${projectUrl(projectId)}/aggregated/addresses`),
+        this.GCP_HEADERS);
   }
 
   /**
