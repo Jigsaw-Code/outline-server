@@ -105,7 +105,13 @@ class GcpHost implements server.ManagedServerHost {
     // The GCP API documentation doesn't specify whether instances can be deleted
     // before creation has finished, and the static IP allocation is entirely
     // asynchronous, so we must wait for creation to complete before starting deletion.
-    await this.instanceCreation;
+    // Also, if creation failed, then deletion is trivially successful.
+    try {
+      await this.instanceCreation;
+    } catch (e) {
+      console.warn(`Skipping deletion due to failed instance creation: ${e}`);
+      return;
+    }
     const regionId = this.getCloudLocation().regionId;
     // By convention, the static IP for an Outline instance uses the instance's name.
     await this.apiClient.deleteStaticIp({regionId, ...this.locator}, this.gcpInstanceName);
