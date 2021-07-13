@@ -57,7 +57,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     }).catch((e) => {
       this.setInstallState(InstallState.ERROR);
       throw e;
-    })
+    });
     this.gcpHost = new GcpHost(locator, gcpInstanceName, this.instanceReadiness, apiClient, this.setInstallState.bind(this));
   }
 
@@ -65,7 +65,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     return {
       regionId: new Zone(this.locator.zoneId).regionId,
       projectId: this.locator.projectId
-    }
+    };
   }
 
   private async hasStaticIp(): Promise<boolean> {
