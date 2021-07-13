@@ -44,9 +44,7 @@ export type Instance = Readonly<{
 }>;
 
 /** @see https://cloud.google.com/compute/docs/reference/rest/v1/addresses */
-type StaticIp = Readonly<{
-  name: string;
-}>;
+type StaticIp = Readonly<{}>;
 
 const GCE_V1_API = 'https://compute.googleapis.com/compute/v1';
 
@@ -165,7 +163,6 @@ type ItemsResponse<T> = Readonly<{items: T; nextPageToken: string;}>;
 
 type ListInstancesResponse = ItemsResponse<Instance[]>;
 type ListAllInstancesResponse = ItemsResponse<{[zone: string]: {instances: Instance[];}}>;
-type ListAllStaticIpsResponse = ItemsResponse<{[region: string]: {addresses: StaticIp[];}}>;
 type ListZonesResponse = ItemsResponse<Zone[]>;
 type ListProjectsResponse = Readonly<{projects: Project[]; nextPageToken: string;}>;
 type ListFirewallsResponse = ItemsResponse<Firewall[]>;
@@ -322,18 +319,17 @@ export class RestApiClient {
   }
 
   /**
-   * Lists all static IPs in a project.
+   * Retrieves a static IP address, if it exists.
    *
-   * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/list
+   * @see https://cloud.google.com/compute/docs/reference/rest/v1/addresses/get
    *
-   * @param zone - Indicates the GCP project and zone.
-   * @param filter - See documentation.
+   * @param region - The GCP project and region.
+   * @param addressName - The name of the static IP address resource.
    */
-  // TODO: Pagination
-  listAllStaticIps(projectId: string): Promise<ListAllStaticIpsResponse> {
-    return this.fetchAuthenticated(
+  getStaticIp(region: RegionLocator, addressName: string): Promise<StaticIp> {
+    return this.fetchAuthenticated<ComputeEngineOperation>(
         'GET',
-        new URL(`${projectUrl(projectId)}/aggregated/addresses`),
+        new URL(`${regionUrl(region)}/addresses/${addressName}`),
         this.GCP_HEADERS);
   }
 

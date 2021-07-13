@@ -1112,6 +1112,8 @@ export class App {
     const confirmationButton = this.appRoot.localize('destroy');
     this.appRoot.getConfirmation(confirmationTitle, confirmationText, confirmationButton, () => {
       this.digitalOceanRetry(() => {
+            // On GCP, deletion takes 1-2 minutes.
+            // TODO: Add an activity indicator in OutlineServerView during deletion.
             return serverToDelete.getHost().delete();
           })
           .then(
@@ -1187,6 +1189,10 @@ export class App {
       console.error(msg);
       throw new Error(msg);
     }
+    // On GCP, deletion takes 1-2 minutes.
+    // TODO: Make the cancel button show an immediate state transition,
+    // indicate that deletion is in-progress, and allow the user to return
+    // to server creation in the meantime.
     serverToCancel.getHost().delete().then(() => {
       this.removeServer(serverToCancel.getId());
       this.showIntro();

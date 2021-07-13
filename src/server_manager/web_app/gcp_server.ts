@@ -28,6 +28,8 @@ enum InstallState {
   SUCCESS,
   // Server is in an error state.
   ERROR,
+  // Server deletion has been initiated.
+  DELETING,
   // Server has been deleted.
   DELETED
 }
@@ -35,17 +37,66 @@ enum InstallState {
 export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   private static readonly GUEST_ATTRIBUTES_POLLING_INTERVAL_MS = 5 * 1000;
 
+  private readonly instanceReadiness: Promise<void>;
   private readonly gcpHost: GcpHost;
   private installState: InstallState = InstallState.UNKNOWN;
 
   constructor(
       id: string,
       private locator: gcp_api.InstanceLocator,
-      gcpInstanceName: string,  // See makeGcpInstanceName() in gcp_account.ts.
-      private instanceCreation: Promise<void>,
+      private gcpInstanceName: string,  // See makeGcpInstanceName() in gcp_account.ts.
+      instanceCreation: Promise<unknown>,
       private apiClient: gcp_api.RestApiClient) {
     super(id);
-    this.gcpHost = new GcpHost(locator, gcpInstanceName, instanceCreation, apiClient, this.onDelete.bind(this));
+    // Optimization: start the check for a static IP immediately.
+    const hasStaticIp = this.hasStaticIp();
+    this.instanceReadiness = instanceCreation.then(async () => {
+      if (!await hasStaticIp) {
+        await this.promoteEphemeralIp();
+      }
+    }).catch((e) => {
+      this.setInstallState(InstallState.ERROR);
+      throw e;
+    })
+    this.gcpHost = new GcpHost(locator, gcpInstanceName, this.instanceReadiness, apiClient, this.setInstallState.bind(this));
+  }
+
+  private getRegionLocator(): gcp_api.RegionLocator {
+    return {
+      regionId: new Zone(this.locator.zoneId).regionId,
+      projectId: this.locator.projectId
+    }
+  }
+
+  private async hasStaticIp(): Promise<boolean> {
+    try {
+      // By convention, the static IP for an Outline instance uses the instance's name.
+      await this.apiClient.getStaticIp(this.getRegionLocator(), this.gcpInstanceName);
+      return true;
+    } catch (e) {
+      if (is404(e)) {
+        // The IP address has not yet been reserved.
+        return false;
+      }
+      throw new errors.ServerInstallFailedError(`Static IP check failed: ${e}`);
+    }
+  }
+
+  private async promoteEphemeralIp(): Promise<void> {
+    const instance = await this.apiClient.getInstance(this.locator);
+    // Promote ephemeral IP to static IP
+    const ipAddress = instance.networkInterfaces[0].accessConfigs[0].natIP;
+    const createStaticIpData = {
+      name: instance.name,
+      description: instance.description,
+      address: ipAddress,
+    };
+    const createStaticIpOperation = await this.apiClient.createStaticIp(
+        this.getRegionLocator(), createStaticIpData);
+    const operationErrors = createStaticIpOperation.error?.errors;
+    if (operationErrors) {
+      throw new errors.ServerInstallFailedError(`Firewall creation failed: ${operationErrors}`);
+    }
   }
 
   getHost(): ManagedServerHost {
@@ -57,7 +108,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   }
 
   async waitOnInstall(): Promise<void> {
-    await this.instanceCreation;  // Throws if instance creation fails.
+    await this.instanceReadiness;  // Throws if instance preparation fails.
     while (this.installState === InstallState.UNKNOWN) {
       const outlineGuestAttributes = await this.getOutlineGuestAttributes();
       if (outlineGuestAttributes.has('apiUrl') && outlineGuestAttributes.has('certSha256')) {
@@ -66,12 +117,20 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
         trustCertificate(certSha256);
         this.setManagementApiUrl(apiUrl);
         this.installState = InstallState.SUCCESS;
+        break;
       } else if (outlineGuestAttributes.has('install-error')) {
         this.installState = InstallState.ERROR;
-        throw new errors.ServerInstallFailedError();
+        break;
       }
 
       await sleep(GcpServer.GUEST_ATTRIBUTES_POLLING_INTERVAL_MS);
+    }
+
+    if (this.installState === InstallState.ERROR) {
+      throw new errors.ServerInstallFailedError();
+    } else if (this.installState === InstallState.DELETING ||
+               this.installState === InstallState.DELETED) {
+      throw new errors.DeletedServerError();
     }
   }
 
@@ -86,37 +145,57 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     return result;
   }
 
-  private onDelete() {
-    // TODO: Consider setInstallState.
-    this.installState = InstallState.DELETED;
+  setInstallState(newState: InstallState): void {
+    this.installState = newState;
   }
 }
 
 class GcpHost implements server.ManagedServerHost {
   constructor(
-      private locator: gcp_api.InstanceLocator,
-      private gcpInstanceName: string,
-      private instanceCreation: Promise<void>,
-      private apiClient: gcp_api.RestApiClient,
-      private deleteCallback: Function) {}
+      private readonly locator: gcp_api.InstanceLocator,
+      private readonly gcpInstanceName: string,
+      private readonly instanceReadiness: Promise<unknown>,
+      private readonly apiClient: gcp_api.RestApiClient,
+      private readonly setInstallState: (newState: InstallState) => void) {}
 
-  // TODO: Throw error and show message on failure
   async delete(): Promise<void> {
+    this.setInstallState(InstallState.DELETING);
     // The GCP API documentation doesn't specify whether instances can be deleted
     // before creation has finished, and the static IP allocation is entirely
-    // asynchronous, so we must wait for creation to complete before starting deletion.
-    // Also, if creation failed, then deletion is trivially successful.
+    // asynchronous, so we must wait for instance setup to complete before starting
+    // deletion. Also, if creation failed, then deletion is trivially successful.
     try {
-      await this.instanceCreation;
+      await this.instanceReadiness;
     } catch (e) {
-      console.warn(`Skipping deletion due to failed instance creation: ${e}`);
-      return;
+      console.warn(`Attempting deletion of server that failed setup: ${e}`);
     }
-    const regionId = this.getCloudLocation().regionId;
+    const regionLocator = {
+      regionId: this.getCloudLocation().regionId,
+      projectId: this.locator.projectId
+    };
     // By convention, the static IP for an Outline instance uses the instance's name.
-    await this.apiClient.deleteStaticIp({regionId, ...this.locator}, this.gcpInstanceName);
-    this.apiClient.deleteInstance(this.locator);
-    this.deleteCallback();
+    // This process takes ~8 seconds.
+    await this.waitForDelete(
+        this.apiClient.deleteStaticIp(regionLocator, this.gcpInstanceName),
+        'Deleted server did not have a static IP');
+    // This process takes 1-2 minutes.
+    await this.waitForDelete(
+        this.apiClient.deleteInstance(this.locator),
+        'No instance for deleted server');
+    this.setInstallState(InstallState.DELETED);
+  }
+
+  private async waitForDelete(deletion: Promise<unknown>, msg404: string): Promise<void> {
+    try {
+      await deletion;
+    } catch (e) {
+      if (is404(e)) {
+        console.warn(msg404);
+        return;
+      }
+      this.setInstallState(InstallState.ERROR);
+      throw e;
+    }
   }
 
   getHostId(): string {
@@ -134,4 +213,8 @@ class GcpHost implements server.ManagedServerHost {
   getCloudLocation(): Zone {
     return new Zone(this.locator.zoneId);
   }
+}
+
+function is404(error: Error): boolean {
+  return error instanceof gcp_api.HttpError && error.getStatusCode() === 404;
 }
