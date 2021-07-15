@@ -174,20 +174,20 @@ class GcpHost implements server.ManagedServerHost {
       projectId: this.locator.projectId
     };
     // By convention, the static IP for an Outline instance uses the instance's name.
-    // This process takes ~8 seconds.
     await this.waitForDelete(
         this.apiClient.deleteStaticIp(regionLocator, this.gcpInstanceName),
         'Deleted server did not have a static IP');
-    // This process takes 1-2 minutes.
     await this.waitForDelete(
         this.apiClient.deleteInstance(this.locator),
         'No instance for deleted server');
     this.setInstallState(InstallState.DELETED);
   }
 
-  private async waitForDelete(deletion: Promise<unknown>, msg404: string): Promise<void> {
+  private async waitForDelete(deletion: Promise<gcp_api.ComputeEngineOperation>, msg404: string): Promise<void> {
     try {
       await deletion;
+      // We assume that deletion will eventually succeed once the operation has
+      // been queued successfully, so there's no need to wait for it.
     } catch (e) {
       if (is404(e)) {
         console.warn(msg404);

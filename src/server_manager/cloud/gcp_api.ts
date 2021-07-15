@@ -124,7 +124,7 @@ export type ResourceManagerOperation = Readonly<{name: string; done: boolean; er
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/globalOperations
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations
  */
-type ComputeEngineOperation = Readonly<
+export type ComputeEngineOperation = Readonly<
     {id: string; name: string; targetId: string; status: string; error: {errors: Status[]}}>;
 
 /**
@@ -214,13 +214,14 @@ export class RestApiClient {
    * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/delete
    *
    * @param instance - Identifies the instance to delete.
+   * @return The initial operation response.  Call computeEngineOperationZoneWait
+   *     to wait for the deletion process to complete.
    */
-  async deleteInstance(instance: InstanceLocator): Promise<void> {
-    const operation = await this.fetchAuthenticated<ComputeEngineOperation>(
+  deleteInstance(instance: InstanceLocator): Promise<ComputeEngineOperation> {
+    return this.fetchAuthenticated<ComputeEngineOperation>(
         'DELETE',
         new URL(instanceUrl(instance)),
         this.GCP_HEADERS);
-    await this.computeEngineOperationZoneWait(instance, operation.name);
   }
 
   /**
@@ -309,13 +310,14 @@ export class RestApiClient {
    *
    * @param region - The GCP project and region.
    * @param addressName - The name of the static IP address resource.
+   * @return The initial operation response.  Call computeEngineOperationRegionWait
+   *     to wait for the deletion process to complete.
    */
-  async deleteStaticIp(region: RegionLocator, addressName: string): Promise<void> {
-    const operation = await this.fetchAuthenticated<ComputeEngineOperation>(
+  deleteStaticIp(region: RegionLocator, addressName: string): Promise<ComputeEngineOperation> {
+    return this.fetchAuthenticated<ComputeEngineOperation>(
         'DELETE',
         new URL(`${regionUrl(region)}/addresses/${addressName}`),
         this.GCP_HEADERS);
-    await this.computeEngineOperationRegionWait(region, operation.name);
   }
 
   /**
