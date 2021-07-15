@@ -123,6 +123,8 @@ export interface ManagedServerHost {
   getMonthlyCost(): MonetaryCost;
   // Returns the server location
   getCloudLocation(): CloudLocation;
+  // Identifies the cloud provider.
+  getCloudId(): string;
   // Deletes the server - cannot be undone.
   delete(): Promise<void>;
 }

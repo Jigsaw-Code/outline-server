@@ -16,6 +16,7 @@ import '../ui_components/outline-about-dialog';
 import '../ui_components/outline-do-oauth-step';
 import '../ui_components/outline-gcp-oauth-step';
 import '../ui_components/outline-gcp-create-server-app';
+import '../ui_components/outline-server-view';
 import '../ui_components/outline-feedback-dialog';
 import '../ui_components/outline-share-dialog';
 import '../ui_components/outline-sort-span';
@@ -28,8 +29,11 @@ import IntlMessageFormat from 'intl-messageformat';
 import {css, customElement, html, LitElement, property} from 'lit-element';
 
 import * as gcp from '../../model/gcp';
-import {FakeGcpAccount} from '../testing/models';
+import {FakeManagedServer, FakeGcpAccount} from '../testing/models';
 import {OutlinePerKeyDataLimitDialog} from '../ui_components/outline-per-key-data-limit-dialog';
+import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
+
+const FAKE_SERVER = new FakeManagedServer('fake-id', true);
 
 async function makeLocalize(language: string) {
   let messages: {[key: string]: string};
@@ -53,6 +57,10 @@ async function makeLocalize(language: string) {
     const formatter = new IntlMessageFormat(messages[msgId], language);
     return formatter.format(params) as string;
   };
+}
+
+function fakeLocalize(id: string): string {
+  return id;
 }
 
 const GCP_LOCATIONS: gcp.ZoneOption[] = [
@@ -84,7 +92,7 @@ const GCP_BILLING_ACCOUNTS: gcp.BillingAccount[] =
 @customElement('outline-test-app')
 export class TestApp extends LitElement {
   @property({type: String}) dir = 'ltr';
-  @property({type: Function}) localize: (...args: string[]) => string;
+  @property({type: Function}) localize: (...args: string[]) => string = fakeLocalize;
   @property({type: Boolean}) savePerKeyDataLimitSuccessful = true;
   @property({type: Number}) keyDataLimit: number|undefined;
   @property({type: String}) gcpRefreshToken = '';
@@ -92,7 +100,7 @@ export class TestApp extends LitElement {
   private language = '';
 
   static get styles() {
-    return css`
+    return [COMMON_STYLES, css`
       :host {
         background: white;
         display: block;
@@ -105,7 +113,10 @@ export class TestApp extends LitElement {
         display: block;
         padding: 20px;
       }
-    `;
+      .backdrop {
+        background: var(--background-color);
+      }
+    `];
   }
 
   constructor() {
@@ -114,12 +125,12 @@ export class TestApp extends LitElement {
     this.setLanguage('en');
   }
 
-  async setLanguage(newLanguage: string) {
+  setLanguage(newLanguage: string) {
     if (newLanguage === this.language) {
       return;
     }
-    this.localize = await makeLocalize(newLanguage);
     this.language = newLanguage;
+    makeLocalize(newLanguage).then(localize => this.localize = localize);
   }
 
   // tslint:disable-next-line:no-any
@@ -168,6 +179,30 @@ export class TestApp extends LitElement {
             .localize=${this.localize}
             .language=${this.language}
         ></outline-gcp-create-server-app>
+      </div>
+
+      <div class="widget">
+        <h2>outline-server-view</h2>
+        <div class="backdrop">
+          <outline-server-view
+              .serverId=${FAKE_SERVER.getId()}
+              .serverName=${FAKE_SERVER.getName()}
+              .serverHostname=${FAKE_SERVER.getHostnameForAccessKeys()}
+              .serverManagementApiUrl=${FAKE_SERVER.getManagementApiUrl()}
+              .serverPortForNewAccessKeys=${FAKE_SERVER.getPortForNewAccessKeys()}
+              .serverCreationDate=${FAKE_SERVER.getCreatedDate()}
+              .serverVersion=${FAKE_SERVER.getVersion()}
+              .defaultDataLimitBytes="5000000000"
+              .isDefaultDataLimitEnabled="true"
+              .isServerManaged="true"
+              .monthlyCost=${FAKE_SERVER.getHost().getMonthlyCost().usd}
+              .monthlyOutboundTransferBytes=${FAKE_SERVER.getHost().getMonthlyOutboundTransferLimit()?.terabytes * (10 ** 12)}
+              .cloudLocation=${FAKE_SERVER.getHost().getCloudLocation()}
+              .cloudId=${FAKE_SERVER.getHost().getCloudId()}
+              .localize=${this.localize}
+              .language=${this.language}
+          ></outline-server-view>
+        </div>
       </div>
 
       <div

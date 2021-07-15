@@ -38,6 +38,7 @@ import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
 
 import * as formatting from '../data_formatting';
 import {getShortName} from '../location_formatting';
+import {DO_CLOUD_ID} from '../../model/digitalocean';
 
 export const MY_CONNECTION_USER_ID = '0';
 
@@ -489,12 +490,12 @@ export class ServerView extends DirMixin(PolymerElement) {
               </div>
               <p>[[localize('server-data-transfer')]]</p>
             </div>
-            <div hidden\$="[[!isServerManaged]]" class="stats-card card-section">
+            <div hidden\$="[[!_showUtilizationPercentage(cloudId, monthlyOutboundTransferBytes)]]" class="stats-card card-section">
               <div>
                 <img class="digital-ocean-icon" src="images/do_white_logo.svg">
               </div>
               <div class="stats">
-                <h3>[[_computeManagedServerUtilzationPercentage(totalInboundBytes, monthlyOutboundTransferBytes)]]</h3>
+                <h3>[[_computeManagedServerUtilizationPercentage(totalInboundBytes, monthlyOutboundTransferBytes)]]</h3>
                 <p>/[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]</p>
               </div>
               <p>[[localize('server-data-used')]]</p>
@@ -607,7 +608,7 @@ export class ServerView extends DirMixin(PolymerElement) {
           </div>
         </div>
         <div name="settings">
-          <outline-server-settings id="serverSettings" metrics-id="[[metricsId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" default-data-limit="[[_computeDisplayDataLimit(defaultDataLimitBytes)]]" is-default-data-limit-enabled="{{isDefaultDataLimitEnabled}}" supports-default-data-limit="[[supportsDefaultDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]" is-server-managed="[[isServerManaged]]" cloud-location="[[cloudLocation]]" metrics-enabled="[[metricsEnabled]]" language="[[language]]" localize="[[localize]]">
+          <outline-server-settings id="serverSettings" metrics-id="[[metricsId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" default-data-limit="[[_computeDisplayDataLimit(defaultDataLimitBytes)]]" is-default-data-limit-enabled="{{isDefaultDataLimitEnabled}}" supports-default-data-limit="[[supportsDefaultDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]" cloud-id="[[cloudId]]" cloud-location="[[cloudLocation]]" metrics-enabled="[[metricsEnabled]]" language="[[language]]" localize="[[localize]]">
           </outline-server-settings>
         </div>
       </iron-pages>`;
@@ -630,6 +631,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         isAccessKeyPortEditable: Boolean,
         serverCreationDate: Date,
         cloudLocation: Object,
+        cloudId: String,
         defaultDataLimitBytes: Number,
         isDefaultDataLimitEnabled: Boolean,
         supportsDefaultDataLimit: Boolean,
@@ -676,6 +678,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.serverCreationDate = new Date(0);
       /** @type {import('../../model/location').CloudLocation} */
       this.cloudLocation = null;
+      this.cloudId = '';
       this.getShortName = getShortName;
       /** @type {number} */
       this.defaultDataLimitBytes = null;
@@ -943,7 +946,13 @@ export class ServerView extends DirMixin(PolymerElement) {
         .format(monthlyCost);
   }
 
-  _computeManagedServerUtilzationPercentage(numBytes, monthlyLimitBytes) {
+  _showUtilizationPercentage(cloudId, monthlyLimitBytes) {
+    // The UI uses a DO icon for this view, so only show it for DO servers.
+    // Currently only DO servers define a monthly transfer limit.
+    return cloudId === DO_CLOUD_ID && monthlyLimitBytes > 0;
+  }
+
+  _computeManagedServerUtilizationPercentage(numBytes, monthlyLimitBytes) {
     let utilizationPercentage = 0;
     if (monthlyLimitBytes && numBytes) {
       utilizationPercentage = Math.round((numBytes / monthlyLimitBytes) * 100);

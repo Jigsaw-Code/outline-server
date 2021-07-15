@@ -58,7 +58,8 @@ async function computeDefaultDataLimit(
     // Assume non-managed servers have a data transfer capacity of 1TB.
     let serverTransferCapacity: server.DataAmount = {terabytes: 1};
     if (isManagedServer(server)) {
-      serverTransferCapacity = server.getHost().getMonthlyOutboundTransferLimit();
+      serverTransferCapacity =
+          server.getHost().getMonthlyOutboundTransferLimit() ?? serverTransferCapacity;
     }
     if (!accessKeys) {
       accessKeys = await server.listAccessKeys();
@@ -755,6 +756,7 @@ export class App {
       view.monthlyOutboundTransferBytes =
           host.getMonthlyOutboundTransferLimit()?.terabytes * (10 ** 12);
       view.cloudLocation = host.getCloudLocation();
+      view.cloudId = host.getCloudId();
     } else {
       view.isServerManaged = false;
     }
