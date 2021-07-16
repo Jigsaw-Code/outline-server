@@ -43,6 +43,9 @@ export type Instance = Readonly<{
   }>;
 }>;
 
+/** @see https://cloud.google.com/compute/docs/reference/rest/v1/addresses */
+type StaticIp = Readonly<{}>;
+
 const GCE_V1_API = 'https://compute.googleapis.com/compute/v1';
 
 function projectUrl(projectId: string): string {
@@ -121,7 +124,7 @@ export type ResourceManagerOperation = Readonly<{name: string; done: boolean; er
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/globalOperations
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/zoneOperations
  */
-type ComputeEngineOperation = Readonly<
+export type ComputeEngineOperation = Readonly<
     {id: string; name: string; targetId: string; status: string; error: {errors: Status[]}}>;
 
 /**
@@ -156,10 +159,13 @@ export type UserInfo = Readonly<{email: string;}>;
 type Service = Readonly<
     {name: string; config: {name: string;}; state: 'STATE_UNSPECIFIED' | 'DISABLED' | 'ENABLED';}>;
 
-type ListInstancesResponse = Readonly<{items: Instance[]; nextPageToken: string;}>;
-type ListZonesResponse = Readonly<{items: Zone[]; nextPageToken: string;}>;
+type ItemsResponse<T> = Readonly<{items: T; nextPageToken: string;}>;
+
+type ListInstancesResponse = ItemsResponse<Instance[]>;
+type ListAllInstancesResponse = ItemsResponse<{[zone: string]: {instances: Instance[];}}>;
+type ListZonesResponse = ItemsResponse<Zone[]>;
 type ListProjectsResponse = Readonly<{projects: Project[]; nextPageToken: string;}>;
-type ListFirewallsResponse = Readonly<{items: Firewall[]; nextPageToken: string;}>;
+type ListFirewallsResponse = ItemsResponse<Firewall[]>;
 type ListBillingAccountsResponse =
     Readonly<{billingAccounts: BillingAccount[]; nextPageToken: string}>;
 type ListEnabledServicesResponse = Readonly<{services: Service[]; nextPageToken: string;}>;
@@ -192,13 +198,14 @@ export class RestApiClient {
    *
    * @param zone - Indicates the GCP project and zone.
    * @param data - Request body data. See documentation.
+   * @return The initial operation response.  Call computeEngineOperationZoneWait
+   *     to wait for the creation process to complete.
    */
   async createInstance(zone: ZoneLocator, data: {}): Promise<ComputeEngineOperation> {
-    const operation = await this.fetchAuthenticated<ComputeEngineOperation>(
+    return this.fetchAuthenticated<ComputeEngineOperation>(
         'POST',
         new URL(`${zoneUrl(zone)}/instances`),
         this.GCP_HEADERS, null, data);
-    return await this.computeEngineOperationZoneWait(zone, operation.name);
   }
 
   /**
@@ -207,13 +214,14 @@ export class RestApiClient {
    * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/delete
    *
    * @param instance - Identifies the instance to delete.
+   * @return The initial operation response.  Call computeEngineOperationZoneWait
+   *     to wait for the deletion process to complete.
    */
-  async deleteInstance(instance: InstanceLocator): Promise<void> {
-    const operation = await this.fetchAuthenticated<ComputeEngineOperation>(
+  deleteInstance(instance: InstanceLocator): Promise<ComputeEngineOperation> {
+    return this.fetchAuthenticated<ComputeEngineOperation>(
         'DELETE',
         new URL(instanceUrl(instance)),
         this.GCP_HEADERS);
-    await this.computeEngineOperationZoneWait(instance, operation.name);
   }
 
   /**
@@ -254,6 +262,29 @@ export class RestApiClient {
   }
 
   /**
+   * Lists all the Google Compute Engine VM instances in a specified project.
+   *
+   * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/aggregatedList
+   *
+   * @param projectId - The GCP project.
+   * @param filter - See documentation.
+   */
+  // TODO: Pagination
+  listAllInstances(projectId: string, filter?: string):
+      Promise<ListAllInstancesResponse> {
+    let parameters = null;
+    if (filter) {
+      parameters = new Map<string, string>([
+        ['filter', filter],
+      ]);
+    }
+    return this.fetchAuthenticated(
+        'GET',
+        new URL(`${projectUrl(projectId)}/aggregated/instances`),
+        this.GCP_HEADERS, parameters);
+  }
+
+  /**
    * Creates a static IP address.
    *
    * If no IP address is provided, a new static IP address is created. If an
@@ -279,13 +310,29 @@ export class RestApiClient {
    *
    * @param region - The GCP project and region.
    * @param addressName - The name of the static IP address resource.
+   * @return The initial operation response.  Call computeEngineOperationRegionWait
+   *     to wait for the deletion process to complete.
    */
-  async deleteStaticIp(region: RegionLocator, addressName: string): Promise<void> {
-    const operation = await this.fetchAuthenticated<ComputeEngineOperation>(
+  deleteStaticIp(region: RegionLocator, addressName: string): Promise<ComputeEngineOperation> {
+    return this.fetchAuthenticated<ComputeEngineOperation>(
         'DELETE',
         new URL(`${regionUrl(region)}/addresses/${addressName}`),
         this.GCP_HEADERS);
-    await this.computeEngineOperationRegionWait(region, operation.name);
+  }
+
+  /**
+   * Retrieves a static IP address, if it exists.
+   *
+   * @see https://cloud.google.com/compute/docs/reference/rest/v1/addresses/get
+   *
+   * @param region - The GCP project and region.
+   * @param addressName - The name of the static IP address resource.
+   */
+  getStaticIp(region: RegionLocator, addressName: string): Promise<StaticIp> {
+    return this.fetchAuthenticated<ComputeEngineOperation>(
+        'GET',
+        new URL(`${regionUrl(region)}/addresses/${addressName}`),
+        this.GCP_HEADERS);
   }
 
   /**
