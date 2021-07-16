@@ -49,7 +49,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
       private apiClient: gcp_api.RestApiClient) {
     super(id);
     // Optimization: start the check for a static IP immediately.
-    const hasStaticIp = this.hasStaticIp();
+    const hasStaticIp: Promise<boolean> = this.hasStaticIp();
     this.instanceReadiness = instanceCreation.then(async () => {
       if (!await hasStaticIp) {
         await this.promoteEphemeralIp();
