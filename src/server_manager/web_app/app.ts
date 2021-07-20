@@ -802,9 +802,8 @@ export class App {
     const view = await this.appRoot.getServerView(server.getId());
     view.serverName = this.makeDisplayName(server);
     view.selectedPage = 'progressView';
-    server.setProgressListener(progress => {
-      view.installProgress = progress;
-    });
+    view.installProgress = server.installProgress();
+    server.onInstallProgressChange = progress => view.installProgress = progress;
   }
 
   private showMetricsOptInWhenNeeded(selectedServer: server.Server, serverView: ServerView) {

@@ -117,7 +117,7 @@ function cloud::add_encoded_kv_tag() {
   cloud::add_tag "kv:${key}:${value}"
 }
 
-echo "true" | cloud::add_encoded_kv_tag "outline"
+echo "true" | cloud::add_encoded_kv_tag "install-started"
 
 log_for_sentry "Starting install"
 

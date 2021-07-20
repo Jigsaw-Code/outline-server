@@ -214,6 +214,8 @@ export class FakeManualServerRepository implements server.ManualServerRepository
 }
 
 export class FakeManagedServer extends FakeServer implements server.ManagedServer {
+  public onInstallProgressChange: (progress: number) => void = null;
+
   constructor(id: string, private isInstalled = true) {
     super(id);
   }
@@ -222,8 +224,8 @@ export class FakeManagedServer extends FakeServer implements server.ManagedServe
     // shadowbox install time.
     return new Promise<void>((fulfill, reject) => {});
   }
-  setProgressListener(listener: (progress: number) => void): void {
-    listener(0.5);
+  installProgress() {
+    return 0.5;
   }
   getHost() {
     return {

@@ -29,11 +29,11 @@ enum InstallState {
   // The static IP has been allocated.
   IP_ALLOCATED,
   // The system has booted (detected by the creation of guest tags)
-  BOOTED,
+  INSTANCE_RUNNING,
   // The server has generated its management service certificate.
-  HAS_CERTIFICATE,
+  CERTIFICATE_CREATED,
   // Server is running and has the API URL and certificate fingerprint set.
-  SUCCESS,
+  COMPLETED,
   // Server is in an error state.
   ERROR,
   // Server deletion has been initiated.
@@ -48,7 +48,8 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   private readonly instanceReadiness: Promise<void>;
   private readonly gcpHost: GcpHost;
   private installState: InstallState = InstallState.UNKNOWN;
-  private listener: (progress: number) => void = null;
+
+  public onInstallProgressChange: (progress: number) => void = null;
 
   constructor(
       id: string,
@@ -115,7 +116,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   }
 
   isInstallCompleted(): boolean {
-    return this.installState === InstallState.SUCCESS ||
+    return this.installState === InstallState.COMPLETED ||
         this.installState === InstallState.ERROR ||
         this.installState === InstallState.DELETED;
   }
@@ -129,15 +130,15 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
         const apiUrl = outlineGuestAttributes.get('apiUrl');
         trustCertificate(certSha256);
         this.setManagementApiUrl(apiUrl);
-        this.setInstallState(InstallState.SUCCESS);
+        this.setInstallState(InstallState.COMPLETED);
         break;
       } else if (outlineGuestAttributes.has('install-error')) {
         this.setInstallState(InstallState.ERROR);
         break;
       } else if (outlineGuestAttributes.has('certSha256')) {
-        this.setInstallState(InstallState.HAS_CERTIFICATE);
-      } else if (outlineGuestAttributes.has('outline')) {
-        this.setInstallState(InstallState.BOOTED);
+        this.setInstallState(InstallState.CERTIFICATE_CREATED);
+      } else if (outlineGuestAttributes.has('install-started')) {
+        this.setInstallState(InstallState.INSTANCE_RUNNING);
       }
 
       await sleep(GcpServer.GUEST_ATTRIBUTES_POLLING_INTERVAL_MS);
@@ -151,21 +152,16 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     }
   }
 
-  setProgressListener(listener: (progress: number) => void): void {
-    this.listener = listener;
-    listener(this.installProgress());
-  }
-
-  private installProgress(): number {
+  public installProgress(): number {
     // Values are based on observed installation timing.
     // Installation typically takes ~5 minutes in total.
     switch (this.installState) {
       case InstallState.UNKNOWN: return 0.005;
       case InstallState.INSTANCE_CREATED: return 0.03;
       case InstallState.IP_ALLOCATED: return 0.04;
-      case InstallState.BOOTED: return 0.2;
-      case InstallState.HAS_CERTIFICATE: return 0.8;
-      case InstallState.SUCCESS: return 1.0;
+      case InstallState.INSTANCE_RUNNING: return 0.2;
+      case InstallState.CERTIFICATE_CREATED: return 0.8;
+      case InstallState.COMPLETED: return 1.0;
       default: return 0;
     }
   }
@@ -183,8 +179,8 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
 
   setInstallState(newState: InstallState): void {
     this.installState = newState;
-    if (this.listener) {
-      this.listener(this.installProgress());
+    if (this.onInstallProgressChange) {
+      this.onInstallProgressChange(this.installProgress());
     }
   }
 }
