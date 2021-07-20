@@ -93,7 +93,7 @@ export class GcpAccount implements gcp.Account {
     const listZonesResponse = await this.apiClient.listZones(projectId);
     const zones = listZonesResponse.items ?? [];
     return zones.map(zoneInfo => {
-      const zone = new gcp.Zone(zoneInfo.name)
+      const zone = new gcp.Zone(zoneInfo.name);
       return {
         cloudLocation: zone,
         available: zoneInfo.status === 'UP',
