@@ -885,6 +885,10 @@
     "message": "This is where your internet experience will come from.",
     "description": "This string appears within the server creation flow, as a sub-header of the server selection view. Lets the user know about the implications of selecting a server location."
   },
+  "region_lowest_cost": {
+    "message": "Lowest Cost",
+    "description": "Appears within the server creation flow, indicating that a server option costs less than the other options."
+  },
   "region_setup": {
     "message": "Set up Outline",
     "description": "This string appears within the server creation flow, as a button of the server selection view. Clicking it creates an Outline server at the selected location. 'Set up' means install and run the Outline server software."

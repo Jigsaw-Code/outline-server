@@ -87,4 +87,5 @@ export interface CloudLocation {
 export interface CloudLocationOption {
   readonly cloudLocation: CloudLocation;
   readonly available: boolean;
+  readonly lowerCost: boolean;
 }

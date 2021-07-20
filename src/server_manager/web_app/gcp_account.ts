@@ -29,7 +29,15 @@ function makeGcpInstanceName(): string {
   return `outline-${now.getFullYear()}${now.getMonth()}${now.getDate()}-${now.getUTCHours()}${
       now.getUTCMinutes()}${now.getUTCSeconds()}`;
 }
-  
+
+// Regions where the first f1-micro instance is free.
+// See https://cloud.google.com/free/docs/gcp-free-tier/#compute
+const FREE_TIER_REGIONS = new Set<string>([
+  'us-west1',
+  'us-central1',
+  'us-east1'
+]);
+
 /**
  * The Google Cloud Platform account model.
  */
@@ -84,10 +92,14 @@ export class GcpAccount implements gcp.Account {
   async listLocations(projectId: string): Promise<gcp.ZoneOption[]> {
     const listZonesResponse = await this.apiClient.listZones(projectId);
     const zones = listZonesResponse.items ?? [];
-    return zones.map(zoneInfo => ({
-      cloudLocation: new gcp.Zone(zoneInfo.name),
-      available: zoneInfo.status === 'UP'
-    }));
+    return zones.map(zoneInfo => {
+      const zone = new gcp.Zone(zoneInfo.name)
+      return {
+        cloudLocation: zone,
+        available: zoneInfo.status === 'UP',
+        lowerCost: FREE_TIER_REGIONS.has(zone.regionId),
+      };
+    });
   }
 
   /** @see {@link Account#listProjects}. */

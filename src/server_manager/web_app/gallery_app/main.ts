@@ -59,22 +59,27 @@ const GCP_LOCATIONS: gcp.ZoneOption[] = [
   {
     cloudLocation: new gcp.Zone('us-central1-fake'),
     available: true,
+    lowerCost: true,
   },
   {
     cloudLocation: new gcp.Zone('europe-west3-fake'),
     available: true,
+    lowerCost: false,
   },
   {
     cloudLocation: new gcp.Zone('europe-west3-fake2'),
     available: true,
+    lowerCost: false,
   },
   {
     cloudLocation: new gcp.Zone('southamerica-east1-b'),
     available: false,
+    lowerCost: false,
   },
   {
     cloudLocation: new gcp.Zone('fake-location-z'),
-    available: true
+    available: true,
+    lowerCost: false,
   }
 ];
 
