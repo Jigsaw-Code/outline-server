@@ -205,7 +205,7 @@ Polymer({
           </div>
         </div>
 
-        <div id="gcp" class="card" on-tap="setUpGcpTapped" hidden\$="[[!_isGcpAuthEnabled()]]">
+        <div id="gcp" class="card" on-tap="setUpGcpTapped" hidden\$="[[!_showNewGcpFlow(gcpAccountName)]]">
           <div class="card-header">
             <div class="tag">[[localize('setup-beta')]]</div>
             <div class="email" hidden\$="[[!_computeIsAccountConnected(gcpAccountName)]]">[[gcpAccountName]]</div>
@@ -230,7 +230,7 @@ Polymer({
           </div>
         </div>
 
-        <div id="gcp" class="card" on-tap="setUpGcpAdvancedTapped" hidden\$="[[_isGcpAuthEnabled()]]">
+        <div id="gcp" class="card" on-tap="setUpGcpAdvancedTapped" hidden\$="[[_showNewGcpFlow(gcpAccountName)]]">
           <div class="card-header">
             <div class="tag">[[localize('setup-advanced')]]</div>
             <img src="images/gcp-logo.svg">
@@ -313,8 +313,8 @@ Polymer({
     return Boolean(accountName);
   },
 
-  _isGcpAuthEnabled() {
-    return outline.gcpAuthEnabled;
+  _showNewGcpFlow(gcpAccountName) {
+    return outline.gcpAuthEnabled || this._computeIsAccountConnected(gcpAccountName);
   },
 
   connectToDigitalOceanTapped: function() {

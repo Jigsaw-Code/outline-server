@@ -602,6 +602,7 @@ export class App {
     } else {
       await this.showDigitalOceanCreateServer(this.digitalOceanAccount);
     }
+    bringToFront();
   }
 
   private async handleConnectGcpAccountRequest(): Promise<void> {
@@ -620,8 +621,13 @@ export class App {
       return;
     }
 
-    await this.loadGcpAccount(gcpAccount);
-    this.showIntro();
+    const gcpServers = await this.loadGcpAccount(gcpAccount);
+    if (gcpServers.length > 1) {
+      this.showServer(gcpServers[0]);
+    } else {
+      this.appRoot.getAndShowGcpCreateServerApp().start(this.gcpAccount);
+    }
+    bringToFront();
   }
 
   // Clears the DigitalOcean credentials and returns to the intro screen.

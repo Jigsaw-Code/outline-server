@@ -127,6 +127,20 @@ Polymer({
           display: none;
         }
       }
+      #gcp-tag {
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        font-size: 10px;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        color: #4285f4;
+      }
+      #gcp-new-flow-promo {
+        padding: 24px;
+        border: 1px solid var(--border-color);
+        cursor: pointer;
+        font-size: 16px;
+      }
       /* rtl:ignore */
       .code,
       #command,
@@ -187,6 +201,10 @@ Polymer({
               <span>[[localize('manual-server-instructions')]]</span>
               <iron-icon id="gcpCreateServerDropDownIcon" icon="arrow-drop-down"></iron-icon>
             </div>
+          </div>
+          <div id="gcp-new-flow-promo" class="section-content-instructions" on-tap="gcpNewFlowTapped">
+            <div id="gcp-tag">[[localize('experimental')]]</div>
+            <a>[[localize('setup-gcp-promo')]]<iron-icon icon=open-in-new></iron-icon></a>
           </div>
           <iron-collapse id="gcpCreateServerDropDown" class="instructions-collapse">
             <div class="section-content-instructions">
@@ -350,6 +368,10 @@ Polymer({
   retryTapped: function() {
     this.showConnection = false;
     this.doneTapped();
+  },
+
+  gcpNewFlowTapped: function() {
+    this.fire('ConnectGcpAccountRequested');
   },
 
   clear: function() {

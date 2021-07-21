@@ -423,6 +423,10 @@
     "message": "Could not remove data limit from this access key",
     "description": "This string appears in an error notification toast. It is shown on failure to remove the data transfer limit on a particular access key."
   },
+  "experimental": {
+    "message": "Experimental",
+    "description": "This tag appears above a feature that is not yet fully tested."
+  },
   "experiments": {
     "message": "Experiments",
     "description": "This string is the title of a section that displays opt-in experimental features."
@@ -1154,6 +1158,10 @@
   "setup_gcp_create": {
     "message": "Create a new server with your Google account. Costs vary by location and usage.",
     "description": "This string appears in the server setup view as a paragraph within a card. Describes Outline servers' features when deployed on Google Cloud Platform."
+  },
+  "setup_gcp_promo": {
+    "message": "Try the new automatic Outline server creation process for Google Cloud",
+    "description": "Link text that takes users to an easier setup procedure"
   },
   "setup_firewall_instructions": {
     "message": "Firewall instructions",
