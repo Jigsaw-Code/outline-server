@@ -205,7 +205,7 @@ Polymer({
           </div>
         </div>
 
-        <div id="gcp" class="card" on-tap="setUpGcpTapped">
+        <div id="gcp" class="card" on-tap="setUpGcpTapped" hidden\$="[[!_isGcpAuthEnabled()]]">
           <div class="card-header">
             <div class="tag">[[localize('setup-beta')]]</div>
             <div class="email" hidden\$="[[!_computeIsAccountConnected(gcpAccountName)]]">[[gcpAccountName]]</div>
@@ -227,6 +227,26 @@ Polymer({
           <div class="card-footer">
             <paper-button class="primary" hidden\$="[[_computeIsAccountConnected(gcpAccountName)]]">[[localize('setup-action')]]</paper-button>
             <paper-button class="primary" hidden\$="[[!_computeIsAccountConnected(gcpAccountName)]]">[[localize('setup-create')]]</paper-button>
+          </div>
+        </div>
+
+        <div id="gcp" class="card" on-tap="setUpGcpAdvancedTapped" hidden\$="[[_isGcpAuthEnabled()]]">
+          <div class="card-header">
+            <div class="tag">[[localize('setup-advanced')]]</div>
+            <img src="images/gcp-logo.svg">
+          </div>
+          <div class="card-title">Google Cloud Platform</div>
+          <div class="card-body">
+            <div class="description">
+              <ul>
+                <li>[[localize('setup-step-by-step')]]</li>
+                <li>[[localize('setup-firewall-instructions')]]</li>
+                <li>[[localize('setup-simple-commands')]]</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer">
+            <paper-button class="primary">[[localize('setup-action')]]</paper-button>
           </div>
         </div>
 
@@ -293,6 +313,10 @@ Polymer({
     return Boolean(accountName);
   },
 
+  _isGcpAuthEnabled() {
+    return outline.gcpAuthEnabled;
+  },
+
   connectToDigitalOceanTapped: function() {
     if (this.digitalOceanAccountName) {
       this.fire('CreateDigitalOceanServerRequested');
@@ -310,14 +334,14 @@ Polymer({
   },
 
   setUpGcpTapped: function() {
-    if (outline.gcpAuthEnabled) {
-      if (this.gcpAccountName) {
-        this.fire('CreateGcpServerRequested');
-      } else {
-        this.fire('ConnectGcpAccountRequested');
-      }
+    if (this.gcpAccountName) {
+      this.fire('CreateGcpServerRequested');
     } else {
-      this.fire('SetUpGcpRequested');
+      this.fire('ConnectGcpAccountRequested');
     }
+  },
+
+  setUpGcpAdvancedTapped: function() {
+    this.fire('SetUpGcpRequested');
   }
 });
