@@ -1148,7 +1148,7 @@
     "description": "This string appears in the server setup view as an item of a list describing Outline's features."
   },
   "setup_gcp_cost": {
-    "message": "Starting under US$2/month for your first server",
+    "message": "Your first server is free for 90 days, then as low as US$3/month",
     "description": "This string appears in the server setup view as an item of a list describing Outline's features."
   },
   "setup_gcp_create": {
