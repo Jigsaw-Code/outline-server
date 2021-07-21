@@ -133,7 +133,7 @@ Polymer({
         font-size: 10px;
         margin-bottom: 8px;
         text-transform: uppercase;
-        color: #4285f4;
+        color: var(--light-gray);
       }
       #gcp-new-flow-promo {
         padding: 24px;
@@ -191,6 +191,10 @@ Polymer({
 
       <div class="card">
         <!-- GCP -->
+        <div id="gcp-new-flow-promo" class="section-content-instructions" on-tap="gcpNewFlowTapped" hidden\$="[[!isCloudProviderGcp]]">
+          <div id="gcp-tag">[[localize('experimental')]]</div>
+          <a>[[localize('setup-gcp-promo')]]<iron-icon icon=open-in-new></iron-icon></a>
+        </div>
         <div class="section" hidden\$="[[!isCloudProviderGcp]]">
           <div class="section-header">
             <!-- TODO(alalama): localize numbers  -->
@@ -201,10 +205,6 @@ Polymer({
               <span>[[localize('manual-server-instructions')]]</span>
               <iron-icon id="gcpCreateServerDropDownIcon" icon="arrow-drop-down"></iron-icon>
             </div>
-          </div>
-          <div id="gcp-new-flow-promo" class="section-content-instructions" on-tap="gcpNewFlowTapped">
-            <div id="gcp-tag">[[localize('experimental')]]</div>
-            <a>[[localize('setup-gcp-promo')]]<iron-icon icon=open-in-new></iron-icon></a>
           </div>
           <iron-collapse id="gcpCreateServerDropDown" class="instructions-collapse">
             <div class="section-content-instructions">

@@ -207,7 +207,7 @@ Polymer({
 
         <div id="gcp" class="card" on-tap="setUpGcpTapped" hidden\$="[[!_showNewGcpFlow(gcpAccountName)]]">
           <div class="card-header">
-            <div class="tag">[[localize('setup-beta')]]</div>
+            <div class="tag">[[localize('experimental')]]</div>
             <div class="email" hidden\$="[[!_computeIsAccountConnected(gcpAccountName)]]">[[gcpAccountName]]</div>
             <img src="images/gcp-logo.svg">
           </div>

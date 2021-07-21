@@ -1103,10 +1103,6 @@
     "message": "Set up Outline anywhere",
     "description": "This string appears in the server setup view as a header within a card. The card provides information about installing Outline on an arbitrary cloud server provider."
   },
-  "setup_beta": {
-    "message": "Beta",
-    "description": "This string appears in the server setup view as a label. It indicates that this option is new and may be buggy."
-  },
   "setup_create": {
     "message": "Create server",
     "description": "This string appears in the server setup view as a button. Clicking it starts the server creation flow."
