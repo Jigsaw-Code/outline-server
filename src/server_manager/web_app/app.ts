@@ -622,7 +622,7 @@ export class App {
     }
 
     const gcpServers = await this.loadGcpAccount(gcpAccount);
-    if (gcpServers.length > 1) {
+    if (gcpServers.length > 0) {
       this.showServer(gcpServers[0]);
     } else {
       this.appRoot.getAndShowGcpCreateServerApp().start(this.gcpAccount);
