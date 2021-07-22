@@ -369,7 +369,7 @@ export class GcpCreateServerApp extends LitElement {
       (option as RegionPickerOption).markedLowCost =
           isInFreeTier(option.cloudLocation);
     }
-    this.regionPicker.options = displayOptions
+    this.regionPicker.options = displayOptions;
   }
 
   private onProjectIdChanged(event: CustomEvent) {
