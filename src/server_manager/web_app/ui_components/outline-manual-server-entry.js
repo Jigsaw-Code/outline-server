@@ -140,6 +140,7 @@ Polymer({
         border: 1px solid var(--border-color);
         cursor: pointer;
         font-size: 16px;
+        margin-top: unset;
       }
       /* rtl:ignore */
       .code,
