@@ -584,6 +584,7 @@ export class App {
     let digitalOceanAccount: digitalocean.Account = null;
     try {
       const accessToken = await this.runDigitalOceanOauthFlow();
+      bringToFront();
       digitalOceanAccount = this.cloudAccounts.connectDigitalOceanAccount(accessToken);
     } catch (error) {
       this.disconnectDigitalOceanAccount();
@@ -602,13 +603,13 @@ export class App {
     } else {
       await this.showDigitalOceanCreateServer(this.digitalOceanAccount);
     }
-    bringToFront();
   }
 
   private async handleConnectGcpAccountRequest(): Promise<void> {
     let gcpAccount: gcp.Account = null;
     try {
       const refreshToken = await this.runGcpOauthFlow();
+      bringToFront();
       gcpAccount = this.cloudAccounts.connectGcpAccount(refreshToken);
     } catch (error) {
       this.disconnectGcpAccount();
@@ -627,7 +628,6 @@ export class App {
     } else {
       this.appRoot.getAndShowGcpCreateServerApp().start(this.gcpAccount);
     }
-    bringToFront();
   }
 
   // Clears the DigitalOcean credentials and returns to the intro screen.
