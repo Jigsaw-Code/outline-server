@@ -107,7 +107,7 @@ export interface ManualServer extends Server {
 // Managed servers are servers created by the Outline Manager through our
 // "magic" user experience, e.g. DigitalOcean.
 export interface ManagedServer extends Server {
-  // Indicates how far installation has progress.
+  // Indicates how far installation has progressed (0.0 to 1.0).
   installProgress(): number;
   // Enables notifications related to installation progress.
   onInstallProgressChange: (progress: number) => void;
