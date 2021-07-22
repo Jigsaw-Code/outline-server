@@ -49,11 +49,11 @@ export function localizeCountry(geoLocation: GeoLocation, language: string): str
  * options are preferred within each location.  Available options with unknown
  * GeoLocation (e.g. newly added zones) are placed at the end of the array.
  */
-export function filterOptions(options: readonly CloudLocationOption[]): CloudLocationOption[] {
+export function filterOptions<T extends CloudLocationOption>(options: readonly T[]): T[] {
   // Contains one available datacenter ID for each GeoLocation, or null if
   // there are datacenters for that GeoLocation but none are available.
-  const map = new Map<string, CloudLocationOption>();
-  const unmappedOptions: CloudLocationOption[] = [];
+  const map = new Map<string, T>();
+  const unmappedOptions: T[] = [];
   
   options.forEach(option => {
     const geoLocation = option.cloudLocation.location;

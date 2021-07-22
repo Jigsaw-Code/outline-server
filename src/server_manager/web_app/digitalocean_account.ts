@@ -60,8 +60,7 @@ export class DigitalOceanAccount implements digitalocean.Account {
     const regions = await this.digitalOcean.getRegionInfo();
     return regions.map(info => ({
       cloudLocation: new digitalocean.Region(info.slug),
-      available: info.available && info.sizes.indexOf(MACHINE_SIZE) !== -1,
-      lowerCost: false,  // All DO regions have the same prices.
+      available: info.available && info.sizes.indexOf(MACHINE_SIZE) !== -1
     }));
   }
 

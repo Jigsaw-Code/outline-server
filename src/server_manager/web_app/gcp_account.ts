@@ -38,6 +38,10 @@ const FREE_TIER_REGIONS = new Set<string>([
   'us-east1'
 ]);
 
+export function isInFreeTier(zone: gcp.Zone): boolean {
+  return FREE_TIER_REGIONS.has(zone.regionId);
+}
+
 /**
  * The Google Cloud Platform account model.
  */
@@ -92,14 +96,10 @@ export class GcpAccount implements gcp.Account {
   async listLocations(projectId: string): Promise<gcp.ZoneOption[]> {
     const listZonesResponse = await this.apiClient.listZones(projectId);
     const zones = listZonesResponse.items ?? [];
-    return zones.map(zoneInfo => {
-      const zone = new gcp.Zone(zoneInfo.name);
-      return {
-        cloudLocation: zone,
-        available: zoneInfo.status === 'UP',
-        lowerCost: FREE_TIER_REGIONS.has(zone.regionId),
-      };
-    });
+    return zones.map(zoneInfo => ({
+      cloudLocation: new gcp.Zone(zoneInfo.name),
+      available: zoneInfo.status === 'UP'
+    }));
   }
 
   /** @see {@link Account#listProjects}. */

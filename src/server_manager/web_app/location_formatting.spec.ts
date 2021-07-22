@@ -77,8 +77,7 @@ describe('filterOptions', () => {
   it('one available', () => {
     const option = {
       cloudLocation: {id: 'zone-id', location: location.SAO_PAULO},
-      available: true,
-      lowerCost: false,
+      available: true
     };
     expect(filterOptions([option])).toEqual([option]);
   });
@@ -86,8 +85,7 @@ describe('filterOptions', () => {
   it('one not available', () => {
     const option = {
       cloudLocation: {id: 'zone-id', location: location.SALT_LAKE_CITY},
-      available: false,
-      lowerCost: false,
+      available: false
     };
     expect(filterOptions([option])).toEqual([option]);
   });
@@ -95,8 +93,7 @@ describe('filterOptions', () => {
   it('one unrecognized', () => {
     const option: location.CloudLocationOption = {
       cloudLocation: {id: 'zone-id', location: null},
-      available: true,
-      lowerCost: false,
+      available: true
     };
     expect(filterOptions([option])).toEqual([option]);
   });
@@ -104,8 +101,7 @@ describe('filterOptions', () => {
   it('one unrecognized and unavailable', () => {
     const option : location.CloudLocationOption = {
       cloudLocation: {id: 'zone-id', location: null},
-      available: false,
-      lowerCost: false,
+      available: false
     };
     expect(filterOptions([option])).toEqual([]);
   });
@@ -113,23 +109,19 @@ describe('filterOptions', () => {
   it('one of each', () => {
     const available = {
       cloudLocation: {id: 'available', location: location.SAN_FRANCISCO},
-      available: true,
-      lowerCost: false,
+      available: true
     };
     const unavailable = {
       cloudLocation: {id: 'unavailable', location: location.SEOUL},
-      available: false,
-      lowerCost: false,
+      available: false
     };
     const unrecognized : location.CloudLocationOption = {
       cloudLocation: {id: 'unrecognized', location: null},
-      available: true,
-      lowerCost: false,
+      available: true
     };
     const unrecognizedAndUnavailable : location.CloudLocationOption = {
       cloudLocation: {id: 'unrecognized-and-unavailable', location: null},
-      available: false,
-      lowerCost: false,
+      available: false
     };
 
     const filtered = filterOptions([
@@ -144,13 +136,11 @@ describe('filterOptions', () => {
   it('available preferred', () => {
     const available = {
       cloudLocation: {id: 'available', location: location.TOKYO},
-      available: true,
-      lowerCost: false,
+      available: true
     };
     const unavailable = {
       cloudLocation: {id: 'unavailable', location: location.TOKYO},
-      available: false,
-      lowerCost: false,
+      available: false
     };
     const filtered = filterOptions([unavailable, available]);
     expect(filtered).toEqual([available]);

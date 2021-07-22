@@ -38,13 +38,11 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
     return Promise.resolve([
       {
         cloudLocation: new digitalocean.Region('AMS999'),
-        available: true,
-        lowerCost: false,
+        available: true
       },
       {
         cloudLocation: new digitalocean.Region('FRA999'),
-        available: false,
-        lowerCost: false,
+        available: false
       }
     ]);
   }
