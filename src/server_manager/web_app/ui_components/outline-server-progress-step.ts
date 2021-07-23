@@ -67,7 +67,7 @@ export class OutlineServerProgressStep extends LitElement {
         <span slot="step-title">${this.localize('setup-do-title')}</span>
         <span slot="step-description">${this.localize('setup-do-description')}</span>
         <span slot="step-action">
-          <paper-button id="cancelButton" on-tap="${this.handleCancelTapped}">
+          <paper-button id="cancelButton" @tap="${this.handleCancelTapped}">
             ${this.localize('cancel')}
           </paper-button>
         </span>
@@ -82,6 +82,9 @@ export class OutlineServerProgressStep extends LitElement {
   }
 
   private handleCancelTapped() {
-    this.dispatchEvent(new CustomEvent('CancelServerCreationRequested'));
+    // Set event options required to escape the shadow DOM.
+    this.dispatchEvent(
+        new CustomEvent('CancelServerCreationRequested',
+            {bubbles: true, composed: true}));
   }
 }

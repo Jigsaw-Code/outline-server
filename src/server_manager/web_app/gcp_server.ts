@@ -45,6 +45,7 @@ enum InstallState {
 export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   private static readonly GUEST_ATTRIBUTES_POLLING_INTERVAL_MS = 5 * 1000;
 
+  private readonly instanceCreation: Promise<void>;
   private readonly instanceReadiness: Promise<void>;
   private readonly gcpHost: GcpHost;
   private installState: InstallState = InstallState.UNKNOWN;
@@ -58,10 +59,12 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
       instanceCreation: Promise<unknown>,
       private apiClient: gcp_api.RestApiClient) {
     super(id);
+    this.instanceCreation = instanceCreation.then(async () => {
+      this.setInstallState(InstallState.INSTANCE_CREATED);
+    });
     // Optimization: start the check for a static IP immediately.
     const hasStaticIp: Promise<boolean> = this.hasStaticIp();
-    this.instanceReadiness = instanceCreation.then(async () => {
-      this.setInstallState(InstallState.INSTANCE_CREATED);
+    this.instanceReadiness = this.instanceCreation.then(async () => {
       if (!await hasStaticIp) {
         await this.promoteEphemeralIp();
       }
@@ -121,8 +124,12 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
         this.installState === InstallState.DELETED;
   }
 
-  async waitOnInstall(): Promise<void> {
+  public async *installProcess(): AsyncGenerator<number, void> {
+    yield this.getCompletionFraction();    
+    await this.instanceCreation
+    yield this.getCompletionFraction();    
     await this.instanceReadiness;  // Throws if instance preparation fails.
+    yield this.getCompletionFraction();    
     while (!this.isInstallCompleted()) {
       const outlineGuestAttributes = await this.getOutlineGuestAttributes();
       if (outlineGuestAttributes.has('apiUrl') && outlineGuestAttributes.has('certSha256')) {
@@ -141,6 +148,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
         this.setInstallState(InstallState.INSTANCE_RUNNING);
       }
 
+      yield this.getCompletionFraction();
       await sleep(GcpServer.GUEST_ATTRIBUTES_POLLING_INTERVAL_MS);
     }
 
@@ -150,9 +158,10 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
                this.installState === InstallState.DELETED) {
       throw new errors.DeletedServerError();
     }
+    yield this.getCompletionFraction();
   }
 
-  public installProgress(): number {
+  private getCompletionFraction(): number {
     // Values are based on observed installation timing.
     // Installation typically takes ~5 minutes in total.
     switch (this.installState) {
@@ -179,9 +188,6 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
 
   setInstallState(newState: InstallState): void {
     this.installState = newState;
-    if (this.onInstallProgressChange) {
-      this.onInstallProgressChange(this.installProgress());
-    }
   }
 }
 
