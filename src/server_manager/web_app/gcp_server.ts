@@ -126,7 +126,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
 
   public async *installProcess(): AsyncGenerator<number, void> {
     yield this.getCompletionFraction();    
-    await this.instanceCreation
+    await this.instanceCreation;
     yield this.getCompletionFraction();    
     await this.instanceReadiness;  // Throws if instance preparation fails.
     yield this.getCompletionFraction();    
