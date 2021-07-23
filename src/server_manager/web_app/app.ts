@@ -410,7 +410,7 @@ export class App {
     // Once the server is added to the list, do the rest asynchronously.
     setTimeout(async () => {
       // Wait for server config to load, then update the server view and list.
-      if (isManagedServer(server) && !server.isInstallCompleted()) {
+      if (isManagedServer(server)) {
         try {
           await this.showInstallProcess(server);
         } catch (error) {

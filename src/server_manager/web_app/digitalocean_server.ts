@@ -285,7 +285,7 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
     localStorage.setItem(this.getInstallCompletedStorageKey(), 'true');
   }
 
-  public isInstallCompleted(): boolean {
+  private isInstallCompleted(): boolean {
     return localStorage.getItem(this.getInstallCompletedStorageKey()) === 'true';
   }
 }

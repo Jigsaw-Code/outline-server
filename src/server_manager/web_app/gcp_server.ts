@@ -118,7 +118,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     return this.gcpHost;
   }
 
-  isInstallCompleted(): boolean {
+  private isInstallStateFinal(): boolean {
     return this.installState === InstallState.COMPLETED ||
         this.installState === InstallState.ERROR ||
         this.installState === InstallState.DELETED;
@@ -130,7 +130,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     yield this.getCompletionFraction();    
     await this.instanceReadiness;  // Throws if instance preparation fails.
     yield this.getCompletionFraction();    
-    while (!this.isInstallCompleted()) {
+    while (!this.isInstallStateFinal()) {
       const outlineGuestAttributes = await this.getOutlineGuestAttributes();
       if (outlineGuestAttributes.has('apiUrl') && outlineGuestAttributes.has('certSha256')) {
         const certSha256 = outlineGuestAttributes.get('certSha256');

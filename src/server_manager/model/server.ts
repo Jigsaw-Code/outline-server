@@ -113,8 +113,6 @@ export interface ManagedServer extends Server {
   installProcess(): AsyncGenerator<number, void>;
   // Returns server host object.
   getHost(): ManagedServerHost;
-  // Returns true when installation is complete.
-  isInstallCompleted(): boolean;
 }
 
 // The managed machine where the Outline Server is running.
