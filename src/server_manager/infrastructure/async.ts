@@ -29,7 +29,7 @@ interface Waker {
  * guaranteed to see the last value in a series of updates.
  */
 export class ValueStream<T> {
-  private static readonly CLOSE = new Error('Stop sending or receiving change events');
+  private static readonly CLOSE = new Error('ValueStream is closed');
   private wakers: Waker[] = [];
   constructor(private value: T) {}
 
