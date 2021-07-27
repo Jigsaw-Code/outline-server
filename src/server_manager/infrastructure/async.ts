@@ -23,8 +23,7 @@ interface Waker {
 
 /**
  * Represents a value that can change over time, with a generator that
- * exposes changes to the value.  Callers can clean up a generator
- * by calling `generator.throw(ValueStream.CLOSE)`.
+ * exposes changes to the value.
  * 
  * Watchers are not guaranteed to see every intermediate value, but are
  * guaranteed to see the last value in a series of updates.
