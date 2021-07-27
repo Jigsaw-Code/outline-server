@@ -217,7 +217,7 @@ export class FakeManagedServer extends FakeServer implements server.ManagedServe
   constructor(id: string, private isInstalled = true) {
     super(id);
   }
-  async *installProcess() {
+  async *monitorInstallProgress() {
     yield 0.5;
     if (!this.isInstalled) {
       // Leave the progress bar at 0.5 and never return.
@@ -232,9 +232,6 @@ export class FakeManagedServer extends FakeServer implements server.ManagedServe
       delete: () => Promise.resolve(),
       getHostId: () => 'fake-host-id',
     };
-  }
-  isInstallCompleted() {
-    return this.isInstalled;
   }
 }
 

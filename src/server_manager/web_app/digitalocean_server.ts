@@ -15,7 +15,7 @@
 import {DigitalOceanSession, DropletInfo} from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {hexToString} from '../infrastructure/hex_encoding';
-import {sleep} from '../infrastructure/sleep';
+import {sleep, ValueStream} from '../infrastructure/async';
 import { Region } from '../model/digitalocean';
 import * as server from '../model/server';
 
@@ -56,12 +56,26 @@ enum InstallState {
   DELETED
 }
 
+function getCompletionFraction(state: InstallState): number {
+  // Values are based on observed installation timing.
+  // Installation typically takes 90 seconds in total.
+  switch (state) {
+    case InstallState.UNKNOWN: return 0.1;
+    case InstallState.DROPLET_CREATED: return 0.5;
+    case InstallState.DROPLET_RUNNING: return 0.55;
+    case InstallState.CERTIFICATE_CREATED: return 0.6;
+    case InstallState.COMPLETED: return 1.0;
+    default: return 0;
+  }
+}
+
 export class DigitalOceanServer extends ShadowboxServer implements server.ManagedServer {
   private onDropletActive: () => void;
   readonly onceDropletActive = new Promise<void>(fulfill => {
     this.onDropletActive = fulfill;
   });
-  private installState: InstallState = InstallState.UNKNOWN;
+  private installState = new ValueStream<InstallState>(InstallState.UNKNOWN);
+  private readonly startTimestamp = Date.now();
 
   constructor(
       id: string, private digitalOcean: DigitalOceanSession, private dropletInfo: DropletInfo) {
@@ -69,105 +83,90 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
     // to better encapsulate the management api address logic.
     super(id);
     console.info('DigitalOceanServer created');
-    if (this.isInstallCompleted()) {
-      this.setApiUrlAndCertificate();
-      this.installState = InstallState.COMPLETED;
+    // Go to the correct initial state based on the initial dropletInfo.
+    this.updateInstallState();
+    // Start polling for state updates.
+    this.pollInstallState();
+  }
+
+  async *monitorInstallProgress(): AsyncGenerator<number, void> {
+    for await (const state of this.installState.watch()) {
+      yield getCompletionFraction(state);
+      if (this.isInstallTerminated()) {
+        break;
+      }
+    }
+
+    if (this.installState.get() === InstallState.ERROR) {
+      throw new errors.ServerInstallFailedError();
+    } else if (this.installState.get() === InstallState.DELETED) {
+      throw new errors.DeletedServerError();
     }
   }
 
-  // Sets this.installState, will keep polling until this.installState can
-  // be set to something other than UNKNOWN.
-  async *installProcess(): AsyncGenerator<number, void> {
+  // Synchronous function for updating the installState based on the latest
+  // dropletInfo.
+  private updateInstallState(): void {
     const TIMEOUT_MS = 5 * 60 * 1000;
-    const startTimestamp = Date.now();
 
-    // Synchronous function for updating the installState, which doesn't
-    // refresh droplet info.
-    const updateInstallState = (): void => {
-      const tagMap = this.getTagMap();
-      if (tagMap.get(INSTALL_ERROR_TAG)) {
-        this.setInstallState(InstallState.ERROR);
-        throw new errors.ServerInstallFailedError(`error tag: ${tagMap.get(INSTALL_ERROR_TAG)}`);
-      } else if (Date.now() - startTimestamp >= TIMEOUT_MS) {
-        this.setInstallState(InstallState.ERROR);
-        throw new errors.ServerInstallFailedError('hit timeout while waiting for installation');
-      } else if (this.setApiUrlAndCertificate()) {
-        // API Url and Certificate have been set, so we have successfully
-        // installed the server and can now make API calls.
-        console.info('digitalocean_server: Successfully found API and cert tags');
-        this.setInstallState(InstallState.COMPLETED);
-      } else if (tagMap.get(CERTIFICATE_FINGERPRINT_TAG)) {
-        this.setInstallState(InstallState.CERTIFICATE_CREATED);
-      } else if (tagMap.get(INSTALL_STARTED_TAG)) {
-        this.setInstallState(InstallState.DROPLET_RUNNING);
-      } else if (this.dropletInfo?.status === 'active') {
-        this.setInstallState(InstallState.DROPLET_CREATED);
-      }
-    };
+    const tagMap = this.getTagMap();
+    if (tagMap.get(INSTALL_ERROR_TAG)) {
+      console.error(`error tag: ${tagMap.get(INSTALL_ERROR_TAG)}`);
+      this.setInstallState(InstallState.ERROR);
+    } else if (Date.now() - this.startTimestamp >= TIMEOUT_MS) {
+      console.error('hit timeout while waiting for installation');
+      this.setInstallState(InstallState.ERROR);
+    } else if (this.setApiUrlAndCertificate()) {
+      // API Url and Certificate have been set, so we have successfully
+      // installed the server and can now make API calls.
+      console.info('digitalocean_server: Successfully found API and cert tags');
+      this.setInstallState(InstallState.COMPLETED);
+    } else if (tagMap.get(CERTIFICATE_FINGERPRINT_TAG)) {
+      this.setInstallState(InstallState.CERTIFICATE_CREATED);
+    } else if (tagMap.get(INSTALL_STARTED_TAG)) {
+      this.setInstallState(InstallState.DROPLET_RUNNING);
+    } else if (this.dropletInfo?.status === 'active') {
+      this.setInstallState(InstallState.DROPLET_CREATED);
+    }
+  }
 
-    // Report initial completion fraction.
-    yield this.getCompletionFraction();
+  private isInstallTerminated(): boolean {
+    const state = this.installState.get();
+    return state === InstallState.COMPLETED ||
+        state === InstallState.ERROR ||
+        state === InstallState.DELETED;
+  }
 
+  // Maintains this.installState. Will keep polling until installation has
+  // succeeded, failed, or been canceled.
+  private async pollInstallState(): Promise<void> {
     // Periodically refresh the droplet info then try to update the install
     // state. If the final install state has been reached, don't make an
     // unnecessary request to fetch droplet info.
-    while (!this.isInstallStateFinal()) {
+    while (!this.isInstallTerminated()) {
       try {
         await this.refreshDropletInfo();
       } catch (error) {
         console.log('Failed to get droplet info', error);
         this.setInstallState(InstallState.ERROR);
-	throw new errors.ServerInstallFailedError('Failed to get droplet info');
+        return;
       }
-      updateInstallState();
-      yield this.getCompletionFraction();
-      // Return immediately if the final install state has been
-      // reached to prevent race conditions and avoid unnecessary delay.
-      if (this.isInstallStateFinal()) {
+      this.updateInstallState();
+      // Return immediately if installation is terminated
+      // to prevent race conditions and avoid unnecessary delay.
+      if (this.isInstallTerminated()) {
         return;
       }
       // TODO: If there is an error refreshing the droplet, we should just
       // try again, as there may be an intermittent network issue.
       await sleep(3000);
     }
-
-    // This code will run if these states were reached before this method
-    // ran, or during the sleep(3000) call.
-    if (this.installState === InstallState.ERROR) {
-      throw new errors.ServerInstallFailedError();
-    } else if (this.installState === InstallState.DELETED) {
-      throw new errors.DeletedServerError();
-    }
-    yield this.getCompletionFraction();
-  }
-
-  private isInstallStateFinal(): boolean {
-    return this.installState === InstallState.COMPLETED ||
-        this.installState === InstallState.ERROR ||
-        this.installState === InstallState.DELETED;
   }
 
   private setInstallState(installState: InstallState) {
-    if (this.isInstallStateFinal()) {
-      // The install state is final and cannot be changed.
-      return;
-    }
-    this.installState = installState;
-    if (this.installState === InstallState.COMPLETED) {
-      this.setInstallCompleted();
-    }
-  }
-
-  private getCompletionFraction(): number {
-    // Values are based on observed installation timing.
-    // Installation typically takes 90 seconds in total.
-    switch (this.installState) {
-      case InstallState.UNKNOWN: return 0.1;
-      case InstallState.DROPLET_CREATED: return 0.5;
-      case InstallState.DROPLET_RUNNING: return 0.55;
-      case InstallState.CERTIFICATE_CREATED: return 0.6;
-      case InstallState.COMPLETED: return 1.0;
-      default: return 0;
+    this.installState.set(installState);
+    if (installState === InstallState.DELETED) {
+      this.installState.close();
     }
   }
 
@@ -275,18 +274,6 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
   // Callback to be invoked once server is deleted.
   private onDelete() {
     this.setInstallState(InstallState.DELETED);
-  }
-
-  private getInstallCompletedStorageKey() {
-    return `droplet-${this.dropletInfo.id}-install-completed`;
-  }
-
-  private setInstallCompleted() {
-    localStorage.setItem(this.getInstallCompletedStorageKey(), 'true');
-  }
-
-  private isInstallCompleted(): boolean {
-    return localStorage.getItem(this.getInstallCompletedStorageKey()) === 'true';
   }
 }
 

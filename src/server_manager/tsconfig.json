@@ -1,4 +1,7 @@
 {
+  "compilerOptions": {
+    "target": "es2018",
+  },
   "extends": "../../tsconfig.json",
   "rootDir": ".",
   "include": [

@@ -73,6 +73,7 @@ export class DigitalOceanAccount implements digitalocean.Account {
   // Creates a server and returning it when it becomes active.
   async createServer(region: digitalocean.Region, name: string): Promise<server.ManagedServer> {
     console.time('activeServer');
+    console.time('servingServer');
     const keyPair = await crypto.generateKeyPair();
     const installCommand =
         getInstallScript(this.digitalOcean.accessToken, name, this.shadowboxSettings);
@@ -93,7 +94,11 @@ export class DigitalOceanAccount implements digitalocean.Account {
     const response = await this.digitalOcean.createDroplet(name, region.id, keyPair.public, dropletSpec);
     const server = this.createDigitalOceanServer(this.digitalOcean, response.droplet);
     // Note: This depends on the UI calling server.installProcess().
-    server.onceDropletActive.then(() => console.timeEnd('activeServer'));
+    server.onceDropletActive.then(async () => {
+      console.timeEnd('activeServer')
+      for await (const _ of server.monitorInstallProgress()) {}
+      console.timeEnd('servingServer');
+    }).catch(e => console.log('Couldn\'t time installation', e));
     return server;
   }
 

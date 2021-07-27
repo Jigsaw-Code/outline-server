@@ -108,9 +108,9 @@ export interface ManualServer extends Server {
 // "magic" user experience, e.g. DigitalOcean.
 export interface ManagedServer extends Server {
   // Yields how far installation has progressed (0.0 to 1.0).
-  // Returns when installation has completed.
+  // Exits when installation has completed.
   // Throws if installation fails.
-  installProcess(): AsyncGenerator<number, void>;
+  monitorInstallProgress(): AsyncGenerator<number, void>;
   // Returns server host object.
   getHost(): ManagedServerHost;
 }

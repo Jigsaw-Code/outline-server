@@ -14,7 +14,7 @@
 
 import * as gcp_api from '../cloud/gcp_api';
 import * as errors from '../infrastructure/errors';
-import {sleep} from '../infrastructure/sleep';
+import {sleep, ValueStream} from '../infrastructure/async';
 import {Zone} from '../model/gcp';
 import * as server from '../model/server';
 import {DataAmount, ManagedServerHost, MonetaryCost} from '../model/server';
@@ -42,15 +42,26 @@ enum InstallState {
   DELETED
 }
 
+function getCompletionFraction(state: InstallState): number {
+  // Values are based on observed installation timing.
+  // Installation typically takes ~5 minutes in total.
+  switch (state) {
+    case InstallState.UNKNOWN: return 0.005;
+    case InstallState.INSTANCE_CREATED: return 0.03;
+    case InstallState.IP_ALLOCATED: return 0.04;
+    case InstallState.INSTANCE_RUNNING: return 0.2;
+    case InstallState.CERTIFICATE_CREATED: return 0.8;
+    case InstallState.COMPLETED: return 1.0;
+    default: return 0;
+  }
+}
+
 export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   private static readonly GUEST_ATTRIBUTES_POLLING_INTERVAL_MS = 5 * 1000;
 
-  private readonly instanceCreation: Promise<void>;
   private readonly instanceReadiness: Promise<void>;
+  private readonly installState = new ValueStream<InstallState>(InstallState.UNKNOWN);
   private readonly gcpHost: GcpHost;
-  private installState: InstallState = InstallState.UNKNOWN;
-
-  public onInstallProgressChange: (progress: number) => void = null;
 
   constructor(
       id: string,
@@ -59,16 +70,21 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
       instanceCreation: Promise<unknown>,
       private apiClient: gcp_api.RestApiClient) {
     super(id);
-    this.instanceCreation = instanceCreation.then(async () => {
-      this.setInstallState(InstallState.INSTANCE_CREATED);
-    });
     // Optimization: start the check for a static IP immediately.
     const hasStaticIp: Promise<boolean> = this.hasStaticIp();
-    this.instanceReadiness = this.instanceCreation.then(async () => {
+    this.instanceReadiness = instanceCreation.then(async () => {
+      if (this.isInstallTerminated()) {
+        return;
+      }
+      this.setInstallState(InstallState.INSTANCE_CREATED);
       if (!await hasStaticIp) {
         await this.promoteEphemeralIp();
       }
+      if (this.isInstallTerminated()) {
+        return;
+      }
       this.setInstallState(InstallState.IP_ALLOCATED);
+      this.pollInstallState();  // Start asynchronous polling.
     }).catch((e) => {
       this.setInstallState(InstallState.ERROR);
       throw e;
@@ -118,19 +134,33 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     return this.gcpHost;
   }
 
-  private isInstallStateFinal(): boolean {
-    return this.installState === InstallState.COMPLETED ||
-        this.installState === InstallState.ERROR ||
-        this.installState === InstallState.DELETED;
+  async *monitorInstallProgress(): AsyncGenerator<number, void> {
+    for await (const state of this.installState.watch()) {
+      yield getCompletionFraction(state);
+      if (this.isInstallTerminated()) {
+        break;
+      }
+    }
+
+    if (this.installState.get() === InstallState.ERROR) {
+      throw new errors.ServerInstallFailedError();
+    } else if (this.installState.get() === InstallState.DELETING ||
+               this.installState.get() === InstallState.DELETED) {
+      throw new errors.DeletedServerError();
+    }
+    yield getCompletionFraction(this.installState.get());
   }
 
-  public async *installProcess(): AsyncGenerator<number, void> {
-    yield this.getCompletionFraction();    
-    await this.instanceCreation;
-    yield this.getCompletionFraction();    
-    await this.instanceReadiness;  // Throws if instance preparation fails.
-    yield this.getCompletionFraction();    
-    while (!this.isInstallStateFinal()) {
+  private isInstallTerminated(): boolean {
+    const state = this.installState.get();
+    return state === InstallState.COMPLETED ||
+        state === InstallState.ERROR ||
+        state === InstallState.DELETING ||
+        state === InstallState.DELETED;
+  }
+
+  private async pollInstallState(): Promise<void> {
+    while (!this.isInstallTerminated()) {
       const outlineGuestAttributes = await this.getOutlineGuestAttributes();
       if (outlineGuestAttributes.has('apiUrl') && outlineGuestAttributes.has('certSha256')) {
         const certSha256 = outlineGuestAttributes.get('certSha256');
@@ -148,30 +178,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
         this.setInstallState(InstallState.INSTANCE_RUNNING);
       }
 
-      yield this.getCompletionFraction();
       await sleep(GcpServer.GUEST_ATTRIBUTES_POLLING_INTERVAL_MS);
-    }
-
-    if (this.installState === InstallState.ERROR) {
-      throw new errors.ServerInstallFailedError();
-    } else if (this.installState === InstallState.DELETING ||
-               this.installState === InstallState.DELETED) {
-      throw new errors.DeletedServerError();
-    }
-    yield this.getCompletionFraction();
-  }
-
-  private getCompletionFraction(): number {
-    // Values are based on observed installation timing.
-    // Installation typically takes ~5 minutes in total.
-    switch (this.installState) {
-      case InstallState.UNKNOWN: return 0.005;
-      case InstallState.INSTANCE_CREATED: return 0.03;
-      case InstallState.IP_ALLOCATED: return 0.04;
-      case InstallState.INSTANCE_RUNNING: return 0.2;
-      case InstallState.CERTIFICATE_CREATED: return 0.8;
-      case InstallState.COMPLETED: return 1.0;
-      default: return 0;
     }
   }
 
@@ -187,7 +194,10 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   }
 
   setInstallState(newState: InstallState): void {
-    this.installState = newState;
+    this.installState.set(newState);
+    if (newState === InstallState.DELETED) {
+      this.installState.close();
+    }
   }
 }
 
