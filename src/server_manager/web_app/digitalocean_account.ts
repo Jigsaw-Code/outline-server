@@ -95,7 +95,7 @@ export class DigitalOceanAccount implements digitalocean.Account {
     const server = this.createDigitalOceanServer(this.digitalOcean, response.droplet);
     // Note: This depends on the UI calling server.installProcess().
     server.onceDropletActive.then(async () => {
-      console.timeEnd('activeServer')
+      console.timeEnd('activeServer');
       for await (const _ of server.monitorInstallProgress()) {}
       console.timeEnd('servingServer');
     }).catch(e => console.log('Couldn\'t time installation', e));
