@@ -15,8 +15,6 @@
 import * as location from "./location";
 import {ManagedServer} from "./server";
 
-export const DO_CLOUD_ID = 'do';
-
 // A DigitalOcean Region, e.g. "NYC2".
 export class Region implements location.CloudLocation {
   private static readonly LOCATION_MAP: {readonly [cityId: string]: location.GeoLocation} = {

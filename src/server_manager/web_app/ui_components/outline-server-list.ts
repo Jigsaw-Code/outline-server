@@ -14,12 +14,14 @@
 
 import {customElement, html, LitElement, property} from 'lit-element';
 import {repeat} from 'lit-html/directives/repeat.js';
+import {AccountListEntry} from './app-root.js';
 import {ServerView} from './outline-server-view.js';
 
+// TODO: Refactor AppRoot to avoid this circular dependency.
 export interface ServerListEntry {
   id: string;
   name: string;
-  isManaged: boolean;
+  account: AccountListEntry;
   isSynced: boolean;
 }
 
@@ -37,6 +39,9 @@ export class OutlineServerList extends LitElement {
     return html`<div>${repeat(this.serverList, e => e.id, e => html`
       <outline-server-view
         .id="${this.makeViewId(e.id)}"
+        .serverId="${e.id}"
+        .serverName="${e.name}"
+        .cloudId="${e.account.cloudId}"
         .language="${this.language}"
         .localize="${this.localize}"
         ?hidden="${e.id !== this.selectedServerId}">

@@ -15,7 +15,7 @@
 import * as gcp_api from '../cloud/gcp_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
-import {GCP_CLOUD_ID, Zone} from '../model/gcp';
+import {Zone} from '../model/gcp';
 import * as server from '../model/server';
 import {DataAmount, ManagedServerHost, MonetaryCost} from '../model/server';
 
@@ -212,10 +212,6 @@ class GcpHost implements server.ManagedServerHost {
 
   getCloudLocation(): Zone {
     return new Zone(this.locator.zoneId);
-  }
-
-  getCloudId(): string {
-    return GCP_CLOUD_ID;
   }
 }
 

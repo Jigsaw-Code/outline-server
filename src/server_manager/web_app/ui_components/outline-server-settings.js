@@ -23,25 +23,77 @@ import './cloud-install-styles.js';
 import './outline-server-settings-styles.js';
 import './outline-iconset.js';
 import './outline-validated-input.js';
-import './outline-do-info-setting';
-import './outline-gcp-info-setting';
 import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 
 import {formatBytesParts} from '../data_formatting';
-import {DO_CLOUD_ID} from '../../model/digitalocean';
-import {GCP_CLOUD_ID} from '../../model/gcp';
+import {getCloudName, getCloudIcon} from './cloud-assets';
+import {getShortName} from '../location_formatting';
 
 Polymer({
   _template: html`
     <style include="cloud-install-styles"></style>
     <style include="outline-server-settings-styles"></style>
     <style>
+      .content {
+        flex-grow: 1;
+      }
+      .setting {
+        padding: 24px;
+        align-items: flex-start;
+      }
+      .setting:not(:first-child) {
+        margin-top: 8px;
+      }
+      .setting-icon,
+      img.setting-icon {
+        margin-right: 24px;
+        color: #fff;
+        opacity: 0.87;
+        filter: grayscale(100%);
+      }
+      .setting > div {
+        width: 100%;
+      }
+      .setting h3 {
+        margin: 0 0 16px 0;
+        padding: 0;
+        color: #fff;
+        font-size: 16px;
+        width: 100%;
+      }
+      .setting p {
+        margin-bottom: 12px;
+        width: 60%;
+        color: var(--medium-gray);
+      }
       #experiments p {
         width: 80%;
       }
       #experiments .sub-section p {
         width: 100%;
+      }
+      .sub-section {
+        background: var(--border-color);
+        padding: 16px;
+        margin: 24px 0;
+        display: flex;
+        align-items: center;
+        border-radius: 2px;
+      }
+      .sub-section iron-icon {
+        margin-right: 16px;
+      }
+      .selection-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .selection-container > .content {
+        flex: 4;
+      }
+      .selection-container > paper-dropdown-menu {
+        flex: 1;
       }
       .data-limits-input {
         display: flex;
@@ -63,11 +115,43 @@ Polymer({
         margin-top: 0px;
         font-size: 12px;
       }
+      paper-input:not([readonly]) {
+        width: 60%;
+      }
+      paper-dropdown-menu {
+        border: 1px solid var(--medium-gray);
+        border-radius: 4px;
+        max-width: 150px;
+        --paper-input-container: {
+          padding: 0 4px;
+          text-align: center;
+        }
+        --paper-input-container-input: {
+          color: var(--medium-gray);
+          font-size: 14px;
+        }
+        --paper-dropdown-menu-ripple: {
+          display: none;
+        }
+        --paper-input-container-underline: {
+          display: none;
+        }
+        --paper-input-container-underline-focus: {
+          display: none;
+        }
+      }
       .data-limits-input paper-dropdown-menu {
         border: none;
         --paper-input-container: {
           width: 72px;
         }
+      }
+      paper-listbox paper-item {
+        font-size: 14px;
+      }
+      paper-listbox paper-item:hover {
+        cursor: pointer;
+        background-color: #eee;
       }
       #data-limits-container .selection-container p {
         margin: 0 0 24px 0;
@@ -77,17 +161,29 @@ Polymer({
         display: block;
         margin-top: 6px;
       }
+      paper-checkbox {
+        /* We want the ink to be the color we're going to, not coming from */
+        --paper-checkbox-checked-color: var(--primary-green);
+        --paper-checkbox-checked-ink-color: var(--dark-gray);
+        --paper-checkbox-unchecked-color: var(--light-gray);
+        --paper-checkbox-unchecked-ink-color: var(--primary-green);
+      }
+      .selection-container paper-checkbox {
+        margin-right: 4px;
+      }
     </style>
     <div class="container">
       <div class="content">
-        <outline-do-info-setting hidden\$="[[!_isDo(cloudId)]]"
-            cloud-location="[[cloudLocation]]"
-            server-monthly-cost="[[serverMonthlyCost]]"
-            server-monthly-transfer-limit="[[serverMonthlyTransferLimit]]"
-            localize="[[localize]]"></outline-do-info-setting>
-        <outline-gcp-info-setting hidden\$="[[!_isGcp(cloudId)]]"
-            cloud-location="[[cloudLocation]]"
-            localize="[[localize]]"></outline-gcp-info-setting>
+        <!-- Managed Server information -->
+        <div class="setting card-section" hidden\$="[[!isServerManaged]]">
+          <img class="setting-icon" src="[[_getCloudIcon(cloudId)]]">
+          <div>
+            <h3>[[_getCloudName(cloudId)]]</h3>
+            <paper-input readonly="" value="[[_getShortName(cloudLocation, localize)]]" label="[[localize('settings-server-location')]]" hidden\$="[[!cloudLocation]]" always-float-label="" maxlength="100"></paper-input>
+            <paper-input readonly="" value="[[serverMonthlyCost]]" label="[[localize('settings-server-cost')]]" hidden\$="[[!serverMonthlyCost]]" always-float-label="" maxlength="100"></paper-input>
+            <paper-input readonly="" value="[[serverMonthlyTransferLimit]]" label="[[localize('settings-transfer-limit')]]" hidden\$="[[!serverMonthlyTransferLimit]]" always-float-label="" maxlength="100"></paper-input>
+          </div>
+        </div>
         <div class="setting card-section">
           <iron-icon class="setting-icon" icon="outline-iconset:outline"></iron-icon>
           <div>
@@ -268,13 +364,9 @@ Polymer({
     return valid ? '' : this.localize('error-keys-port-bad-input');
   },
 
-  _isDo(cloudId) {
-    return cloudId === DO_CLOUD_ID;
-  },
-
-  _isGcp(cloudId) {
-    return cloudId === GCP_CLOUD_ID;
-  },
+  _getShortName: getShortName,
+  _getCloudIcon: getCloudIcon,
+  _getCloudName: getCloudName,
 
   _getInternationalizedUnit(bytesAmount, language) {
     return formatBytesParts(bytesAmount, language).unit;

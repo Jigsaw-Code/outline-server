@@ -57,15 +57,7 @@ const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
  * @typedef {Object} AccountListEntry
  * @prop {string} id
  * @prop {string} name
- */
-
-/**
- * An access key to be displayed
- * @typedef {Object} ServerListEntry
- * @prop {string} id
- * @prop {string|null} accountId
- * @prop {string} name
- * @prop {boolean} isSynced
+ * @prop {string} cloudId
  */
 
 /** @extends {PolymerElement} */
@@ -592,7 +584,7 @@ export class AppRoot extends mixinBehaviors
     this.language = '';
     this.supportedLanguages = [];
     this.useKeyIfMissing = true;
-    /** @type {ServerListEntry[]} */
+    /** @type {import('./outline-server-list').ServerListEntry[]} */
     this.serverList = [];
     /** @type {AccountListEntry} */
     this.digitalOceanAccount = null;
@@ -830,7 +822,7 @@ export class AppRoot extends mixinBehaviors
   }
 
   _hasManualServers(serverList) {
-    return serverList.filter(server => !server.accountId).length > 0;
+    return serverList.filter(server => !server.account).length > 0;
   }
 
   _userAcceptedTosChanged(userAcceptedTos) {
@@ -973,11 +965,11 @@ export class AppRoot extends mixinBehaviors
    * @param {AccountListEntry} account
    */
   _accountServerFilter(account) {
-    return (server) => account && server.accountId === account.id;
+    return (server) => account && server.account.id === account.id;
   }
 
   _isServerManual(server) {
-    return !server.accountId;
+    return !server.account;
   }
 
   _sortServersByName(a, b) {

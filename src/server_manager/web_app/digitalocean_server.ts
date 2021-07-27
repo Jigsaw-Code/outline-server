@@ -17,7 +17,8 @@ import {EventEmitter} from 'eventemitter3';
 import {DigitalOceanSession, DropletInfo} from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {asciiToHex, hexToString} from '../infrastructure/hex_encoding';
-import {DO_CLOUD_ID, Region} from '../model/digitalocean';
+import { Region } from '../model/digitalocean';
+import {CloudLocation} from '../model/location';
 import * as server from '../model/server';
 
 import {ShadowboxServer} from './shadowbox_server';
@@ -302,10 +303,6 @@ class DigitalOceanHost implements server.ManagedServerHost {
 
   getCloudLocation(): Region {
     return new Region(this.dropletInfo.region.slug);
-  }
-
-  getCloudId(): string {
-    return DO_CLOUD_ID;
   }
 
   delete(): Promise<void> {

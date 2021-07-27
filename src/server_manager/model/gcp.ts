@@ -15,8 +15,6 @@
 import * as location from './location';
 import {ManagedServer} from './server';
 
-export const GCP_CLOUD_ID = 'gcp';
-
 export class Zone implements location.CloudLocation {
   /** @see https://cloud.google.com/compute/docs/regions-zones */
   private static readonly LOCATION_MAP: {readonly [regionId: string]: location.GeoLocation} = {

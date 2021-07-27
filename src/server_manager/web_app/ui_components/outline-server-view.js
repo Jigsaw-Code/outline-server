@@ -38,7 +38,7 @@ import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
 
 import * as formatting from '../data_formatting';
 import {getShortName} from '../location_formatting';
-import {DO_CLOUD_ID} from '../../model/digitalocean';
+import {getCloudIcon} from './cloud-assets';
 
 export const MY_CONNECTION_USER_ID = '0';
 
@@ -490,9 +490,9 @@ export class ServerView extends DirMixin(PolymerElement) {
               </div>
               <p>[[localize('server-data-transfer')]]</p>
             </div>
-            <div hidden\$="[[!_showUtilizationPercentage(cloudId, monthlyOutboundTransferBytes)]]" class="stats-card card-section">
+            <div hidden\$="[[!monthlyOutboundTransferBytes]]" class="stats-card card-section">
               <div>
-                <img class="digital-ocean-icon" src="images/do_white_logo.svg">
+                <img class="digital-ocean-icon" src="[[getCloudIcon(cloudId)]]">
               </div>
               <div class="stats">
                 <h3>[[_computeManagedServerUtilizationPercentage(totalInboundBytes, monthlyOutboundTransferBytes)]]</h3>
@@ -680,6 +680,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.cloudLocation = null;
       this.cloudId = '';
       this.getShortName = getShortName;
+      this.getCloudIcon = getCloudIcon;
       /** @type {number} */
       this.defaultDataLimitBytes = null;
       this.isDefaultDataLimitEnabled = false;
@@ -944,12 +945,6 @@ export class ServerView extends DirMixin(PolymerElement) {
     return new Intl
         .NumberFormat(language, {style: 'currency', currency: 'USD', currencyDisplay: 'code'})
         .format(monthlyCost);
-  }
-
-  _showUtilizationPercentage(cloudId, monthlyLimitBytes) {
-    // The UI uses a DO icon for this view, so only show it for DO servers.
-    // Currently only DO servers define a monthly transfer limit.
-    return cloudId === DO_CLOUD_ID && monthlyLimitBytes > 0;
   }
 
   _computeManagedServerUtilizationPercentage(numBytes, monthlyLimitBytes) {

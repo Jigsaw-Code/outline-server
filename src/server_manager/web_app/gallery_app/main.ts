@@ -32,6 +32,7 @@ import * as gcp from '../../model/gcp';
 import {FakeManagedServer, FakeGcpAccount} from '../testing/models';
 import {OutlinePerKeyDataLimitDialog} from '../ui_components/outline-per-key-data-limit-dialog';
 import {COMMON_STYLES} from '../ui_components/cloud-install-styles';
+import {DisplayCloudId} from '../ui_components/cloud-assets';
 
 const FAKE_SERVER = new FakeManagedServer('fake-id', true);
 
@@ -198,7 +199,7 @@ export class TestApp extends LitElement {
               .monthlyCost=${FAKE_SERVER.getHost().getMonthlyCost().usd}
               .monthlyOutboundTransferBytes=${FAKE_SERVER.getHost().getMonthlyOutboundTransferLimit()?.terabytes * (10 ** 12)}
               .cloudLocation=${FAKE_SERVER.getHost().getCloudLocation()}
-              .cloudId=${FAKE_SERVER.getHost().getCloudId()}
+              .cloudId=${DisplayCloudId.DO}
               .localize=${this.localize}
               .language=${this.language}
           ></outline-server-view>
