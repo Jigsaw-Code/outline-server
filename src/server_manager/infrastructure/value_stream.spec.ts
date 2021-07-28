@@ -69,7 +69,7 @@ describe('ValueStream', () => {
       if (value === 'foo') {
         stream.set('bar');
       } else {
-        expect(value).toEqual('bar')
+        expect(value).toEqual('bar');
         break;
       }
     }
@@ -81,7 +81,7 @@ describe('ValueStream', () => {
     for await (value of stream.watch()) {
       if (value === 'foo') {
         stream.set('bar');
-        stream.set('baz')
+        stream.set('baz');
       } else if (value === 'baz') {
         stream.close();
       }
