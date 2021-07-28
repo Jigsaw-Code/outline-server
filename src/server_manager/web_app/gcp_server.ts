@@ -14,7 +14,8 @@
 
 import * as gcp_api from '../cloud/gcp_api';
 import * as errors from '../infrastructure/errors';
-import {sleep, ValueStream} from '../infrastructure/async';
+import {sleep} from '../infrastructure/sleep';
+import {ValueStream} from "../infrastructure/value_stream";
 import {Zone} from '../model/gcp';
 import * as server from '../model/server';
 import {DataAmount, ManagedServerHost, MonetaryCost} from '../model/server';

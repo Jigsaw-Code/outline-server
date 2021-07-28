@@ -1,4 +1,4 @@
-// Copyright 2020 The Outline Authors
+// Copyright 2021 The Outline Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,26 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-interface Waker {
-  resolve: (value: void | PromiseLike<void>) => void;
-  reject: (e: Error) => void;
-}
-
 /**
  * Represents a value that can change over time, with a generator that
  * exposes changes to the value.
- * 
+ *
  * Watchers are not guaranteed to see every intermediate value, but are
  * guaranteed to see the last value in a series of updates.
  */
 export class ValueStream<T> {
-  private static readonly CLOSE = new Error('ValueStream is closed');
-  private wakers: Waker[] = [];
-  constructor(private value: T) {}
+  private wakers: ((closed: boolean) => void)[] = [];
+  constructor(private value: T) { }
 
   get(): T {
     return this.value;
@@ -44,28 +34,32 @@ export class ValueStream<T> {
     this.value = newValue;
     const wakers = this.wakers;
     this.wakers = [];
-    wakers.forEach(({resolve}) => resolve());
+    wakers.forEach(waker => waker(false));
   }
 
   close() {
+    if (this.wakers === null) {
+      return;
+    }
     const finalWakers = this.wakers;
     this.wakers = null;
-    finalWakers.forEach(({reject}) => reject(ValueStream.CLOSE));
+    finalWakers.forEach(waker => waker(true));
+  }
+
+  private nextChange(): Promise<boolean> {
+    if (this.wakers === null) {
+      return Promise.resolve(true);
+    }
+    return new Promise<boolean>(resolve => this.wakers.push(resolve));
   }
 
   async *watch(): AsyncGenerator<T, void> {
-    try {
+    let closed = false;
+    while (!closed) {
+      const nextChange = this.nextChange();
       yield this.value;
-      while (this.wakers !== null) {
-        await new Promise<void>((resolve, reject) => {
-          this.wakers.push({resolve, reject});
-        });
-        yield this.value;
-      }  
-    } catch (e) {
-      if (e !== ValueStream.CLOSE) {
-        throw e;
-      }
+      closed = await nextChange;
     }
+    yield this.value;
   }
 }

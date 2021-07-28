@@ -17,7 +17,7 @@ import * as semver from 'semver';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
-import {sleep} from '../infrastructure/async';
+import {sleep} from '../infrastructure/sleep';
 import * as accounts from '../model/accounts';
 import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
@@ -802,7 +802,11 @@ export class App {
     const view = await this.appRoot.getServerView(server.getId());
     view.serverName = this.makeDisplayName(server);
     view.selectedPage = 'progressView';
-    for await (view.installProgress of server.monitorInstallProgress()) {}
+    try {
+      for await (view.installProgress of server.monitorInstallProgress()) {}
+    } catch {
+      // Ignore any errors; they will be handled by `this.addServer`.
+    }
   }
 
   private showMetricsOptInWhenNeeded(selectedServer: server.Server, serverView: ServerView) {

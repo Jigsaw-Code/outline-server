@@ -14,7 +14,7 @@
 
 import * as gcp_api from '../cloud/gcp_api';
 import {ServerInstallFailedError} from '../infrastructure/errors';
-import {sleep} from '../infrastructure/async';
+import {sleep} from '../infrastructure/sleep';
 import {SCRIPT} from '../install_scripts/gcp_install_script';
 import * as gcp from '../model/gcp';
 import {BillingAccount, Project} from '../model/gcp';

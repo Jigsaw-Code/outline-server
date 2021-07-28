@@ -15,7 +15,8 @@
 import {DigitalOceanSession, DropletInfo} from '../cloud/digitalocean_api';
 import * as errors from '../infrastructure/errors';
 import {hexToString} from '../infrastructure/hex_encoding';
-import {sleep, ValueStream} from '../infrastructure/async';
+import {sleep} from '../infrastructure/sleep';
+import {ValueStream} from "../infrastructure/value_stream";
 import { Region } from '../model/digitalocean';
 import * as server from '../model/server';
 
