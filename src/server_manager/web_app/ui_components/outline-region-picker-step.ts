@@ -27,6 +27,8 @@ import {getShortName, localizeCountry} from '../location_formatting';
 
 const FLAG_IMAGE_DIR = 'images/flags';
 
+// TODO: Reorganize type definitions to improve separation between
+// model and view.
 export interface RegionPickerOption extends CloudLocationOption {
   markedLowCost?: boolean;
 }

@@ -364,13 +364,11 @@ export class GcpCreateServerApp extends LitElement {
     // `this.regionPicker` is null after `this.currentPage`, and is only populated
     // asynchronously.
     this.regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
-    const displayOptions = filterOptions(zoneOptions);
-    for (const option of displayOptions) {
-      (option as RegionPickerOption).markedLowCost =
-          isInFreeTier(option.cloudLocation);
-    }
-    this.regionPicker.options = displayOptions;
-  }
+    this.regionPicker.options = filterOptions(zoneOptions).map(option => ({
+      markedLowCost: isInFreeTier(option.cloudLocation),
+      ...option
+    }));
+ }
 
   private onProjectIdChanged(event: CustomEvent) {
     this.selectedProjectId = event.detail.value;
