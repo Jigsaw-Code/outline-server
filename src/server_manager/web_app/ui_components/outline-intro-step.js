@@ -22,16 +22,208 @@ import './style.css';
 import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '@polymer/polymer/lib/utils/html-tag.js';
 
+const DO_CARD_HTML = html`
+  <style>
+    :host {
+      --do-blue: #1565c0;
+    }
+    #digital-ocean img {
+      height: 22px;
+      width: 22px;
+    }
+    .card#digital-ocean .tag,
+    .card#digital-ocean .email {
+      color: var(--medium-gray);
+    }
+    #digital-ocean .description ul {
+      /* NOTE: this URL must be relative to the ui_components sub dir,
+          unlike our <img src="..."> attributes */
+      list-style-image: url("../images/check_white.svg");
+    }
+    /* Reverse check icon for RTL languages */
+    :host(:dir(rtl)) #digital-ocean .description ul {
+      list-style-image: url("../images/check_white_rtl.svg");
+    }
+    /* DigitalOcean card background colours (gets brighter, inactive -> active). */
+    .card#digital-ocean {
+      background: var(--do-blue);
+    }
+    .card#digital-ocean:hover {
+      background: rgba(28, 103, 189, 0.92);
+    }
+  </style>
+  <div id="digital-ocean" class="card" on-tap="connectToDigitalOceanTapped">
+    <div class="card-header">
+      <div class="tag" hidden\$="[[_computeIsAccountConnected(digitalOceanAccountName)]]">[[localize('setup-recommended')]]</div>
+      <div class="email" hidden\$="[[!_computeIsAccountConnected(digitalOceanAccountName)]]">[[digitalOceanAccountName]]</div>
+      <img src="images/do_white_logo.svg">
+    </div>
+    <div class="card-title">DigitalOcean</div>
+    <div class="card-body">
+      <div class="description">
+        <ul hidden\$="[[_computeIsAccountConnected(digitalOceanAccountName)]]">
+          <li>[[localize('setup-do-easiest')]]</li>
+          <li>[[localize('setup-do-cost')]]</li>
+          <li>[[localize('setup-do-data')]]</li>
+          <li>[[localize('setup-do-cancel')]]</li>
+        </ul>
+        <p hidden\$="[[!_computeIsAccountConnected(digitalOceanAccountName)]]">
+          [[localize('setup-do-create')]]
+        </p>
+      </div>
+    </div>
+    <div class="card-footer">
+      <paper-button class="primary" hidden\$="[[_computeIsAccountConnected(digitalOceanAccountName)]]">[[localize('setup-action')]]</paper-button>
+      <paper-button class="primary" hidden\$="[[!_computeIsAccountConnected(digitalOceanAccountName)]]">[[localize('setup-create')]]</paper-button>
+    </div>
+  </div>
+`;
+
+const GCP_STYLES = html`
+  <style>
+    :host {
+      --gcp-blue: #4285f4;
+    }
+    .card#gcp .tag {
+      color: var(--gcp-blue);
+    }
+    #gcp .description ul {
+      list-style-image: url("../images/check_blue.svg");
+    }
+    :host(:dir(rtl)) #gcp .description ul {
+      list-style-image: url("../images/check_blue_rtl.svg");
+    }
+  </style>
+`;
+
+const GCP_EXPERIMENTAL_CARD_HTML = html`
+  ${GCP_STYLES}
+  <div id="gcp" class="card" on-tap="setUpGcpTapped" hidden\$="[[!_showNewGcpFlow(gcpAccountName)]]">
+    <div class="card-header">
+      <div class="tag">[[localize('experimental')]]</div>
+      <div class="email" hidden\$="[[!_computeIsAccountConnected(gcpAccountName)]]">[[gcpAccountName]]</div>
+      <img src="images/gcp-logo.svg">
+    </div>
+    <div class="card-title">Google Cloud Platform</div>
+    <div class="card-body">
+    <div class="description">
+        <ul hidden\$="[[_computeIsAccountConnected(gcpAccountName)]]">
+          <li>[[localize('setup-gcp-easy')]]</li>
+          <li>[[localize('setup-gcp-cost')]]</li>
+          <li>[[localize('setup-gcp-cancel')]]</li>
+        </ul>
+        <p hidden\$="[[!_computeIsAccountConnected(gcpAccountName)]]">
+          [[localize('setup-gcp-create')]]
+        </p>
+      </div>
+    </div>
+    <div class="card-footer">
+      <paper-button class="primary" hidden\$="[[_computeIsAccountConnected(gcpAccountName)]]">[[localize('setup-action')]]</paper-button>
+      <paper-button class="primary" hidden\$="[[!_computeIsAccountConnected(gcpAccountName)]]">[[localize('setup-create')]]</paper-button>
+    </div>
+  </div>
+`;
+
+const GCP_ADVANCED_CARD_HTML = html`
+  ${GCP_STYLES}
+  <div id="gcp" class="card" on-tap="setUpGcpAdvancedTapped" hidden\$="[[_showNewGcpFlow(gcpAccountName)]]">
+    <div class="card-header">
+      <div class="tag">[[localize('setup-advanced')]]</div>
+      <img src="images/gcp-logo.svg">
+    </div>
+    <div class="card-title">Google Cloud Platform</div>
+    <div class="card-body">
+      <div class="description">
+        <ul>
+          <li>[[localize('setup-step-by-step')]]</li>
+          <li>[[localize('setup-firewall-instructions')]]</li>
+          <li>[[localize('setup-simple-commands')]]</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card-footer">
+      <paper-button class="primary">[[localize('setup-action')]]</paper-button>
+    </div>
+  </div>
+`;
+
+const AWS_CARD_HTML = html`
+  <style>
+      :host {
+        --aws-orange: #ff9900;
+      }
+      .card#aws .tag {
+        color: var(--aws-orange);
+      }
+      #aws .description ul {
+        list-style-image: url("../images/check_orange.svg");
+      }
+      :host(:dir(rtl)) #aws .description ul {
+      list-style-image: url("../images/check_orange_rtl.svg");
+    }
+  </style>
+  <div id="gcp" class="card" on-tap="setUpGcpAdvancedTapped" hidden\$="[[_showNewGcpFlow(gcpAccountName)]]">
+    <div class="card-header">
+      <div class="tag">[[localize('setup-advanced')]]</div>
+      <img src="images/gcp-logo.svg">
+    </div>
+    <div class="card-title">Google Cloud Platform</div>
+    <div class="card-body">
+      <div class="description">
+        <ul>
+          <li>[[localize('setup-step-by-step')]]</li>
+          <li>[[localize('setup-firewall-instructions')]]</li>
+          <li>[[localize('setup-simple-commands')]]</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card-footer">
+      <paper-button class="primary">[[localize('setup-action')]]</paper-button>
+    </div>
+  </div>
+`;
+
+const MANUAL_CARD_HTML = html`
+  <style>
+      :host {
+      --manual-server-green: #00bfa5;
+    }
+    .card#manual-server .tag {
+      color: var(--manual-server-green);
+    }
+    #manual-server .description ul {
+      list-style-image: url("../images/check_green.svg");
+    }
+    :host(:dir(rtl)) #manual-server .description ul {
+      list-style-image: url("../images/check_green_rtl.svg");
+    }
+  </style>
+  <div id="manual-server" class="card" on-tap="setUpGenericCloudProviderTapped">
+    <div class="card-header">
+      <div class="tag">[[localize('setup-advanced')]]</div>
+      <img src="images/cloud.svg">
+    </div>
+    <div class="card-title">[[localize('setup-anywhere')]]</div>
+    <div class="card-body">
+      <div class="description">
+        <ul>
+          <li>[[localize('setup-tested')]]</li>
+          <li>[[localize('setup-simple-commands')]]</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card-footer">
+      <paper-button on-tap="setUpGenericCloudProviderTapped">[[localize('setup-action')]]</paper-button>
+    </div>
+  </div>
+`;
+
 Polymer({
   _template: html`
     <style include="cloud-install-styles"></style>
     <style>
       :host {
         text-align: center;
-        --manual-server-green: #00bfa5;
-        --aws-orange: #ff9900;
-        --gcp-blue: #4285f4;
-        --do-blue: #1565c0;
       }
       .container {
         display: flex;
@@ -65,13 +257,6 @@ Polymer({
         box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2), 0 8px 10px 1px rgba(0, 0, 0, 0.14),
           0 3px 14px 2px rgba(0, 0, 0, 0.12);
       }
-      /* DigitalOcean card background colours (gets brighter, inactive -> active). */
-      .card#digital-ocean {
-        background: var(--do-blue);
-      }
-      .card#digital-ocean:hover {
-        background: rgba(28, 103, 189, 0.92);
-      }
       /* Non-DigitalOcean card background colours (get darker, inactive -> active). */
       .card:hover {
         background: rgba(38, 50, 56, 0.16);
@@ -95,19 +280,8 @@ Polymer({
         font-size: 10px;
         text-transform: uppercase;
       }
-      .card#digital-ocean .tag,
-      .card#digital-ocean .email,
       .card p {
         color: var(--medium-gray);
-      }
-      .card#manual-server .tag {
-        color: var(--manual-server-green);
-      }
-      .card#aws .tag {
-        color: var(--aws-orange);
-      }
-      .card#gcp .tag {
-        color: var(--gcp-blue);
       }
       .card-title {
         font-size: 20px;
@@ -117,10 +291,6 @@ Polymer({
       }
       .card img {
         margin-top: 11px;
-      }
-      #digital-ocean img {
-        height: 22px;
-        width: 22px;
       }
       .card .description {
         letter-spacing: 0;
@@ -145,33 +315,6 @@ Polymer({
         background-color: inherit;
         color: var(--light-gray);
       }
-      #digital-ocean .description ul {
-        /* NOTE: this URL must be relative to the ui_components sub dir,
-           unlike our <img src="..."> attributes */
-        list-style-image: url("../images/check_white.svg");
-      }
-      #manual-server .description ul {
-        list-style-image: url("../images/check_green.svg");
-      }
-      #aws .description ul {
-        list-style-image: url("../images/check_orange.svg");
-      }
-      #gcp .description ul {
-        list-style-image: url("../images/check_blue.svg");
-      }
-      /* Reverse check icon for RTL languages */
-      :host(:dir(rtl)) #digital-ocean .description ul {
-        list-style-image: url("../images/check_white_rtl.svg");
-      }
-      :host(:dir(rtl)) #manual-server .description ul {
-        list-style-image: url("../images/check_green_rtl.svg");
-      }
-      :host(:dir(rtl)) #aws .description ul {
-        list-style-image: url("../images/check_orange_rtl.svg");
-      }
-      :host(:dir(rtl)) #gcp .description ul {
-        list-style-image: url("../images/check_blue_rtl.svg");
-      }
     </style>
 
     <outline-step-view>
@@ -179,95 +322,14 @@ Polymer({
       <span slot="step-description">[[localize('setup-description')]]</span>
 
       <div class="container">
-        <div id="digital-ocean" class="card" on-tap="connectToDigitalOceanTapped">
-          <div class="card-header">
-            <div class="tag" hidden\$="[[_computeIsAccountConnected(digitalOceanAccountName)]]">[[localize('setup-recommended')]]</div>
-            <div class="email" hidden\$="[[!_computeIsAccountConnected(digitalOceanAccountName)]]">[[digitalOceanAccountName]]</div>
-            <img src="images/do_white_logo.svg">
-          </div>
-          <div class="card-title">DigitalOcean</div>
-          <div class="card-body">
-            <div class="description">
-              <ul hidden\$="[[_computeIsAccountConnected(digitalOceanAccountName)]]">
-                <li>[[localize('setup-do-easiest')]]</li>
-                <li>[[localize('setup-do-cost')]]</li>
-                <li>[[localize('setup-do-data')]]</li>
-                <li>[[localize('setup-do-cancel')]]</li>
-              </ul>
-              <p hidden\$="[[!_computeIsAccountConnected(digitalOceanAccountName)]]">
-                [[localize('setup-do-create')]]
-              </p>
-            </div>
-          </div>
-          <div class="card-footer">
-            <paper-button class="primary" hidden\$="[[_computeIsAccountConnected(digitalOceanAccountName)]]">[[localize('setup-action')]]</paper-button>
-            <paper-button class="primary" hidden\$="[[!_computeIsAccountConnected(digitalOceanAccountName)]]">[[localize('setup-create')]]</paper-button>
-          </div>
-        </div>
-
-        <div id="gcp" class="card" on-tap="setUpGcpTapped">
-          <div class="card-header">
-            <div class="tag" hidden\$="[[_computeIsAccountConnected(gcpAccountName)]]">[[localize('setup-advanced')]]</div>
-            <div class="email" hidden\$="[[!_computeIsAccountConnected(gcpAccountName)]]">[[gcpAccountName]]</div>
-            <img src="images/gcp-logo.svg">
-          </div>
-          <div class="card-title">Google Cloud Platform</div>
-          <div class="card-body">
-            <div class="description" hidden\$="[[_computeIsAccountConnected(gcpAccountName)]]">
-              <ul>
-                <li>[[localize('setup-step-by-step')]]</li>
-                <li>[[localize('setup-firewall-instructions')]]</li>
-                <li>[[localize('setup-simple-commands')]]</li>
-              </ul>
-            </div>
-          </div>
-          <div class="card-footer">
-            <paper-button class="primary" hidden\$="[[_computeIsAccountConnected(gcpAccountName)]]">[[localize('setup-action')]]</paper-button>
-            <paper-button class="primary" hidden\$="[[!_computeIsAccountConnected(gcpAccountName)]]">[[localize('setup-create')]]</paper-button>
-          </div>
-        </div>
-
-        <div id="aws" class="card" on-tap="setUpAwsTapped">
-          <div class="card-header">
-            <div class="tag">[[localize('setup-advanced')]]</div>
-            <img src="images/aws-logo.svg">
-          </div>
-          <div class="card-title">Amazon Lightsail</div>
-          <div class="card-body">
-            <div class="description">
-              <ul>
-                <li>[[localize('setup-step-by-step')]]</li>
-                <li>[[localize('setup-firewall-instructions')]]</li>
-                <li>[[localize('setup-simple-commands')]]</li>
-              </ul>
-            </div>
-          </div>
-          <div class="card-footer">
-            <paper-button on-tap="setUpAwsTapped" class="primary">[[localize('setup-action')]]</paper-button>
-          </div>
-        </div>
-
-        <div id="manual-server" class="card" on-tap="setUpGenericCloudProviderTapped">
-          <div class="card-header">
-            <div class="tag">[[localize('setup-advanced')]]</div>
-            <img src="images/cloud.svg">
-          </div>
-          <div class="card-title">[[localize('setup-anywhere')]]</div>
-          <div class="card-body">
-            <div class="description">
-              <ul>
-                <li>[[localize('setup-tested')]]</li>
-                <li>[[localize('setup-simple-commands')]]</li>
-              </ul>
-            </div>
-          </div>
-          <div class="card-footer">
-            <paper-button on-tap="setUpGenericCloudProviderTapped">[[localize('setup-action')]]</paper-button>
-          </div>
-        </div>
+        ${DO_CARD_HTML}
+        ${GCP_EXPERIMENTAL_CARD_HTML}
+        ${GCP_ADVANCED_CARD_HTML}
+        ${AWS_CARD_HTML}
+        ${MANUAL_CARD_HTML}
       </div>
     </outline-step-view>
-`,
+  `,
 
   is: 'outline-intro-step',
 
@@ -290,6 +352,10 @@ Polymer({
     return Boolean(accountName);
   },
 
+  _showNewGcpFlow(gcpAccountName) {
+    return outline.gcpAuthEnabled || this._computeIsAccountConnected(gcpAccountName);
+  },
+
   connectToDigitalOceanTapped: function() {
     if (this.digitalOceanAccountName) {
       this.fire('CreateDigitalOceanServerRequested');
@@ -307,14 +373,14 @@ Polymer({
   },
 
   setUpGcpTapped: function() {
-    if (outline.gcpAuthEnabled) {
-      if (this.gcpAccountName) {
-        this.fire('CreateGcpServerRequested');
-      } else {
-        this.fire('ConnectGcpAccountRequested');
-      }
+    if (this.gcpAccountName) {
+      this.fire('CreateGcpServerRequested');
     } else {
-      this.fire('SetUpGcpRequested');
+      this.fire('ConnectGcpAccountRequested');
     }
+  },
+
+  setUpGcpAdvancedTapped: function() {
+    this.fire('SetUpGcpRequested');
   }
 });

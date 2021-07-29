@@ -127,6 +127,21 @@ Polymer({
           display: none;
         }
       }
+      #gcp-tag {
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        font-size: 10px;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        color: var(--light-gray);
+      }
+      #gcp-new-flow-promo {
+        padding: 24px;
+        border: 1px solid var(--border-color);
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: unset;
+      }
       /* rtl:ignore */
       .code,
       #command,
@@ -177,6 +192,10 @@ Polymer({
 
       <div class="card">
         <!-- GCP -->
+        <div id="gcp-new-flow-promo" class="section-content-instructions" on-tap="gcpNewFlowTapped" hidden\$="[[!isCloudProviderGcp]]">
+          <div id="gcp-tag">[[localize('experimental')]]</div>
+          <a>[[localize('setup-gcp-promo')]]<iron-icon icon=open-in-new></iron-icon></a>
+        </div>
         <div class="section" hidden\$="[[!isCloudProviderGcp]]">
           <div class="section-header">
             <!-- TODO(alalama): localize numbers  -->
@@ -350,6 +369,10 @@ Polymer({
   retryTapped: function() {
     this.showConnection = false;
     this.doneTapped();
+  },
+
+  gcpNewFlowTapped: function() {
+    this.fire('ConnectGcpAccountRequested');
   },
 
   clear: function() {

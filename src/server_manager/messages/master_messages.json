@@ -423,6 +423,10 @@
     "message": "Could not remove data limit from this access key",
     "description": "This string appears in an error notification toast. It is shown on failure to remove the data transfer limit on a particular access key."
   },
+  "experimental": {
+    "message": "Experimental",
+    "description": "This tag appears above a feature that is not yet fully tested."
+  },
   "experiments": {
     "message": "Experiments",
     "description": "This string is the title of a section that displays opt-in experimental features."
@@ -1108,7 +1112,7 @@
     "description": "This string appears in the server setup view as a sub-header. Prompts the user to create a DigitalOcean account to deploy Outline servers. DigitalOcean is a cloud provider name and should not be translated."
   },
   "setup_do_cancel": {
-    "message": "Cancel at anytime",
+    "message": "Cancel at any time",
     "description": "This string appears in the server setup view as an item of a list describing Outline's features."
   },
   "setup_do_cost": {
@@ -1134,6 +1138,26 @@
   "setup_do_title": {
     "message": "Setting up Outline.",
     "description": "This string appears in the server setup view as a header. Displayed when a server is being created along a progress bar."
+  },
+  "setup_gcp_easy": {
+    "message": "Easy setup process",
+    "description": "This string appears in the server setup view as an item of a list describing Outline's features."
+  },
+  "setup_gcp_cancel": {
+    "message": "Cancel at any time",
+    "description": "This string appears in the server setup view as an item of a list describing Outline's features."
+  },
+  "setup_gcp_cost": {
+    "message": "Your first server is free for 90 days, then as low as US$3/month",
+    "description": "This string appears in the server setup view as an item of a list describing Outline's features."
+  },
+  "setup_gcp_create": {
+    "message": "Create a new server with your Google account. Costs vary by location and usage.",
+    "description": "This string appears in the server setup view as a paragraph within a card. Describes Outline servers' features when deployed on Google Cloud Platform."
+  },
+  "setup_gcp_promo": {
+    "message": "Try the new automatic Outline server creation process for Google Cloud",
+    "description": "Link text that takes users to an easier setup procedure"
   },
   "setup_firewall_instructions": {
     "message": "Firewall instructions",
