@@ -244,7 +244,7 @@
   "setup-do-cost": "Only US$5 a month",
   "setup-do-create": "Create a new server with your DigitalOcean account for an additional US$5/30 days for 1 TB of data transfer.",
   "setup-do-data": "1 TB data transfer allowance",
-  "setup-do-description": "This could take up to two minutes. You can destroy this server at anytime.",
+  "setup-do-description": "This could take several minutes. You can destroy this server at any time.",
   "setup-do-easiest": "Easiest setup process",
   "setup-do-title": "Setting up Outline.",
   "setup-firewall-instructions": "Firewall instructions",

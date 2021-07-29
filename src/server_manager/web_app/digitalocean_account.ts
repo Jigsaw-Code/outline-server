@@ -65,10 +65,10 @@ export class DigitalOceanAccount implements digitalocean.Account {
   }
 
   // Creates a server and returning it when it becomes active.
-  createServer(region: digitalocean.Region, name: string): Promise<server.ManagedServer> {
+  async createServer(region: digitalocean.Region, name: string): Promise<server.ManagedServer> {
     console.time('activeServer');
     console.time('servingServer');
-    const onceKeyPair = crypto.generateKeyPair();
+    const keyPair = await crypto.generateKeyPair();
     const installCommand =
         getInstallScript(this.digitalOcean.accessToken, name, this.shadowboxSettings);
 
@@ -78,20 +78,21 @@ export class DigitalOceanAccount implements digitalocean.Account {
       image: 'docker-18-04',
       tags: [SHADOWBOX_TAG],
     };
-    return onceKeyPair
-    .then((keyPair) => {
-      if (this.debugMode) {
-        // Strip carriage returns, which produce weird blank lines when pasted into a terminal.
-        console.debug(
-            `private key for SSH access to new droplet:\n${
-                keyPair.private.replace(/\r/g, '')}\n\n` +
-            'Use "ssh -i keyfile root@[ip_address]" to connect to the machine');
-      }
-      return this.digitalOcean.createDroplet(name, region.id, keyPair.public, dropletSpec);
-    })
-    .then((response) => {
-      return this.createDigitalOceanServer(this.digitalOcean, response.droplet);
-    });
+    if (this.debugMode) {
+      // Strip carriage returns, which produce weird blank lines when pasted into a terminal.
+      console.debug(
+          `private key for SSH access to new droplet:\n${
+              keyPair.private.replace(/\r/g, '')}\n\n` +
+          'Use "ssh -i keyfile root@[ip_address]" to connect to the machine');
+    }
+    const response = await this.digitalOcean.createDroplet(name, region.id, keyPair.public, dropletSpec);
+    const server = this.createDigitalOceanServer(this.digitalOcean, response.droplet);
+    server.onceDropletActive.then(async () => {
+      console.timeEnd('activeServer');
+      for await (const _ of server.monitorInstallProgress()) {}
+      console.timeEnd('servingServer');
+    }).catch(e => console.log('Couldn\'t time installation', e));
+    return server;
   }
 
   listServers(fetchFromHost = true): Promise<server.ManagedServer[]> {

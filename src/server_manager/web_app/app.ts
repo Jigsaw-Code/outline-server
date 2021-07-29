@@ -407,18 +407,18 @@ export class App {
     const serverEntry = this.makeServerListEntry(accountId, server);
     this.appRoot.serverList = this.appRoot.serverList.concat([serverEntry]);
 
-    if (isManagedServer(server) && !server.isInstallCompleted()) {
+    if (isManagedServer(server)) {
       this.setServerProgressView(server);
     }
 
     // Once the server is added to the list, do the rest asynchronously.
     setTimeout(async () => {
       // Wait for server config to load, then update the server view and list.
-      if (isManagedServer(server) && !server.isInstallCompleted()) {
+      if (isManagedServer(server)) {
         try {
-          await server.waitOnInstall();
+          for await (const _ of server.monitorInstallProgress()) {}
         } catch (error) {
-          if (error instanceof errors.DeletedServerError) {
+          if (error instanceof errors.ServerInstallCanceledError) {
             // User clicked "Cancel" on the loading screen.
             return;
           }
@@ -804,10 +804,15 @@ export class App {
     };
   }
 
-  private async setServerProgressView(server: server.Server): Promise<void> {
+  private async setServerProgressView(server: server.ManagedServer): Promise<void> {
     const view = await this.appRoot.getServerView(server.getId());
     view.serverName = this.makeDisplayName(server);
     view.selectedPage = 'progressView';
+    try {
+      for await (view.installProgress of server.monitorInstallProgress()) {}
+    } catch {
+      // Ignore any errors; they will be handled by `this.addServer`.
+    }
   }
 
   private showMetricsOptInWhenNeeded(selectedServer: server.Server, serverView: ServerView) {
