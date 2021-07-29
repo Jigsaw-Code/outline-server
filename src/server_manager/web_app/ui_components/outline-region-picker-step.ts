@@ -27,9 +27,15 @@ import {getShortName, localizeCountry} from '../location_formatting';
 
 const FLAG_IMAGE_DIR = 'images/flags';
 
+// TODO: Reorganize type definitions to improve separation between
+// model and view.
+export interface RegionPickerOption extends CloudLocationOption {
+  markedLowCost?: boolean;
+}
+
 @customElement('outline-region-picker-step')
 export class OutlineRegionPicker extends LitElement {
-  @property({type: Array}) options: CloudLocationOption[] = [];
+  @property({type: Array}) options: RegionPickerOption[] = [];
   @property({type: Number}) selectedIndex = -1;
   @property({type: Boolean}) isServerBeingCreated = false;
   @property({type: Function}) localize: (msgId: string, ...params: string[]) => string;
@@ -116,7 +122,16 @@ export class OutlineRegionPicker extends LitElement {
       .card-header {
         height: 24px;
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between;
+      }
+      .tag {
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: var(--primary-green);
+        margin-top: 8px;
+        white-space: nowrap;
       }
       label.city-button {
         padding: 0 8px 8px 8px;
@@ -144,6 +159,9 @@ export class OutlineRegionPicker extends LitElement {
           <input type="radio" id="card-${index}" name="city" value="${index}" ?disabled="${!option.available}" .checked="${this.selectedIndex === index}" @change="${this._locationSelected}">
           <label for="card-${index}" class="city-button">
             <div class="card-header">
+              <div class="tag">
+                ${option.markedLowCost ? this.localize('region-lowest-cost') : ''}
+              </div>
               ${this.selectedIndex === index ? html`<iron-icon icon="check-circle"></iron-icon>` : ''}
             </div>
             <div class="flag-overlay">
