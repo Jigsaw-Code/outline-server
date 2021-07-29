@@ -51,10 +51,10 @@ enum InstallState {
   CERTIFICATE_CREATED,
   // Server is running and has the API URL and certificate fingerprint set.
   COMPLETED,
-  // Server is in an error state.
-  ERROR,
-  // Server has been deleted.
-  DELETED
+  // Server installation failed.
+  FAILED,
+  // Server installation was canceled by the user.
+  CANCELED
 }
 
 function getCompletionFraction(state: InstallState): number {
@@ -68,6 +68,12 @@ function getCompletionFraction(state: InstallState): number {
     case InstallState.COMPLETED: return 1.0;
     default: return 0;
   }
+}
+
+function isFinal(state: InstallState): boolean {
+  return state === InstallState.COMPLETED ||
+      state === InstallState.FAILED ||
+      state === InstallState.CANCELED;
 }
 
 export class DigitalOceanServer extends ShadowboxServer implements server.ManagedServer {
@@ -93,15 +99,12 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
   async *monitorInstallProgress(): AsyncGenerator<number, void> {
     for await (const state of this.installState.watch()) {
       yield getCompletionFraction(state);
-      if (this.isInstallTerminated()) {
-        break;
-      }
     }
 
-    if (this.installState.get() === InstallState.ERROR) {
+    if (this.installState.get() === InstallState.FAILED) {
       throw new errors.ServerInstallFailedError();
-    } else if (this.installState.get() === InstallState.DELETED) {
-      throw new errors.DeletedServerError();
+    } else if (this.installState.get() === InstallState.CANCELED) {
+      throw new errors.ServerInstallCanceledError();
     }
   }
 
@@ -113,10 +116,10 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
     const tagMap = this.getTagMap();
     if (tagMap.get(INSTALL_ERROR_TAG)) {
       console.error(`error tag: ${tagMap.get(INSTALL_ERROR_TAG)}`);
-      this.setInstallState(InstallState.ERROR);
+      this.setInstallState(InstallState.FAILED);
     } else if (Date.now() - this.startTimestamp >= TIMEOUT_MS) {
       console.error('hit timeout while waiting for installation');
-      this.setInstallState(InstallState.ERROR);
+      this.setInstallState(InstallState.FAILED);
     } else if (this.setApiUrlAndCertificate()) {
       // API Url and Certificate have been set, so we have successfully
       // installed the server and can now make API calls.
@@ -131,31 +134,24 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
     }
   }
 
-  private isInstallTerminated(): boolean {
-    const state = this.installState.get();
-    return state === InstallState.COMPLETED ||
-        state === InstallState.ERROR ||
-        state === InstallState.DELETED;
-  }
-
   // Maintains this.installState. Will keep polling until installation has
   // succeeded, failed, or been canceled.
   private async pollInstallState(): Promise<void> {
     // Periodically refresh the droplet info then try to update the install
     // state. If the final install state has been reached, don't make an
     // unnecessary request to fetch droplet info.
-    while (!this.isInstallTerminated()) {
+    while (!this.installState.isClosed()) {
       try {
         await this.refreshDropletInfo();
       } catch (error) {
         console.log('Failed to get droplet info', error);
-        this.setInstallState(InstallState.ERROR);
+        this.setInstallState(InstallState.FAILED);
         return;
       }
       this.updateInstallState();
       // Return immediately if installation is terminated
       // to prevent race conditions and avoid unnecessary delay.
-      if (this.isInstallTerminated()) {
+      if (this.installState.isClosed()) {
         return;
       }
       // TODO: If there is an error refreshing the droplet, we should just
@@ -166,7 +162,7 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
 
   private setInstallState(installState: InstallState) {
     this.installState.set(installState);
-    if (installState === InstallState.DELETED) {
+    if (isFinal(installState)) {
       this.installState.close();
     }
   }
@@ -274,7 +270,9 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
 
   // Callback to be invoked once server is deleted.
   private onDelete() {
-    this.setInstallState(InstallState.DELETED);
+    if (!this.installState.isClosed()) {
+      this.setInstallState(InstallState.CANCELED);
+    }
   }
 }
 
@@ -298,9 +296,8 @@ class DigitalOceanHost implements server.ManagedServerHost {
   }
 
   delete(): Promise<void> {
-    return this.digitalOcean.deleteDroplet(this.dropletInfo.id).then(() => {
-      this.deleteCallback();
-    });
+    this.deleteCallback();
+    return this.digitalOcean.deleteDroplet(this.dropletInfo.id);
   }
 }
 

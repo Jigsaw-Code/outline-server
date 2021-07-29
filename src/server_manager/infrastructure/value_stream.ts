@@ -28,7 +28,7 @@ export class ValueStream<T> {
   }
 
   set(newValue: T) {
-    if (this.wakers === null) {
+    if (this.isClosed()) {
       throw new Error('Cannot change a closed value stream');
     }
     this.value = newValue;
@@ -38,7 +38,7 @@ export class ValueStream<T> {
   }
 
   close() {
-    if (this.wakers === null) {
+    if (this.isClosed()) {
       return;
     }
     const finalWakers = this.wakers;
@@ -46,8 +46,12 @@ export class ValueStream<T> {
     finalWakers.forEach(waker => waker(true));
   }
 
+  isClosed() {
+    return this.wakers === null;
+  }
+
   private nextChange(): Promise<boolean> {
-    if (this.wakers === null) {
+    if (this.isClosed()) {
       return Promise.resolve(true);
     }
     return new Promise<boolean>(resolve => this.wakers.push(resolve));

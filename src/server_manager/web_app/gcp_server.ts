@@ -35,12 +35,10 @@ enum InstallState {
   CERTIFICATE_CREATED,
   // Server is running and has the API URL and certificate fingerprint set.
   COMPLETED,
-  // Server is in an error state.
-  ERROR,
-  // Server deletion has been initiated.
-  DELETING,
-  // Server has been deleted.
-  DELETED
+  // Server installation failed.
+  FAILED,
+  // Server installation was canceled by the user.
+  CANCELED
 }
 
 function getCompletionFraction(state: InstallState): number {
@@ -57,12 +55,18 @@ function getCompletionFraction(state: InstallState): number {
   }
 }
 
+function isFinal(state: InstallState): boolean {
+  return state === InstallState.COMPLETED ||
+      state === InstallState.FAILED ||
+      state === InstallState.CANCELED;
+}
+
 export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   private static readonly GUEST_ATTRIBUTES_POLLING_INTERVAL_MS = 5 * 1000;
 
   private readonly instanceReadiness: Promise<void>;
-  private readonly installState = new ValueStream<InstallState>(InstallState.UNKNOWN);
   private readonly gcpHost: GcpHost;
+  private readonly installState = new ValueStream<InstallState>(InstallState.UNKNOWN);
 
   constructor(
       id: string,
@@ -74,23 +78,23 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     // Optimization: start the check for a static IP immediately.
     const hasStaticIp: Promise<boolean> = this.hasStaticIp();
     this.instanceReadiness = instanceCreation.then(async () => {
-      if (this.isInstallTerminated()) {
+      if (this.installState.isClosed()) {
         return;
       }
       this.setInstallState(InstallState.INSTANCE_CREATED);
       if (!await hasStaticIp) {
         await this.promoteEphemeralIp();
       }
-      if (this.isInstallTerminated()) {
+      if (this.installState.isClosed()) {
         return;
       }
       this.setInstallState(InstallState.IP_ALLOCATED);
       this.pollInstallState();  // Start asynchronous polling.
     }).catch((e) => {
-      this.setInstallState(InstallState.ERROR);
+      this.setInstallState(InstallState.FAILED);
       throw e;
     });
-    this.gcpHost = new GcpHost(locator, gcpInstanceName, this.instanceReadiness, apiClient, this.setInstallState.bind(this));
+    this.gcpHost = new GcpHost(locator, gcpInstanceName, this.instanceReadiness, apiClient, this.onDelete.bind(this));
   }
 
   private getRegionLocator(): gcp_api.RegionLocator {
@@ -138,30 +142,19 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
   async *monitorInstallProgress(): AsyncGenerator<number, void> {
     for await (const state of this.installState.watch()) {
       yield getCompletionFraction(state);
-      if (this.isInstallTerminated()) {
-        break;
-      }
     }
 
-    if (this.installState.get() === InstallState.ERROR) {
+    if (this.installState.get() === InstallState.FAILED) {
       throw new errors.ServerInstallFailedError();
-    } else if (this.installState.get() === InstallState.DELETING ||
-               this.installState.get() === InstallState.DELETED) {
-      throw new errors.DeletedServerError();
+    } else if (this.installState.get() === InstallState.CANCELED) {
+      throw new errors.ServerInstallCanceledError();
     }
     yield getCompletionFraction(this.installState.get());
   }
 
-  private isInstallTerminated(): boolean {
-    const state = this.installState.get();
-    return state === InstallState.COMPLETED ||
-        state === InstallState.ERROR ||
-        state === InstallState.DELETING ||
-        state === InstallState.DELETED;
-  }
 
   private async pollInstallState(): Promise<void> {
-    while (!this.isInstallTerminated()) {
+    while (!this.installState.isClosed()) {
       const outlineGuestAttributes = await this.getOutlineGuestAttributes();
       if (outlineGuestAttributes.has('apiUrl') && outlineGuestAttributes.has('certSha256')) {
         const certSha256 = outlineGuestAttributes.get('certSha256');
@@ -171,7 +164,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
         this.setInstallState(InstallState.COMPLETED);
         break;
       } else if (outlineGuestAttributes.has('install-error')) {
-        this.setInstallState(InstallState.ERROR);
+        this.setInstallState(InstallState.FAILED);
         break;
       } else if (outlineGuestAttributes.has('certSha256')) {
         this.setInstallState(InstallState.CERTIFICATE_CREATED);
@@ -194,10 +187,16 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     return result;
   }
 
-  setInstallState(newState: InstallState): void {
+  private setInstallState(newState: InstallState): void {
     this.installState.set(newState);
-    if (newState === InstallState.DELETED) {
+    if (isFinal(newState)) {
       this.installState.close();
+    }
+  }
+
+  private onDelete(): void {
+    if (!this.installState.isClosed()) {
+      this.setInstallState(InstallState.CANCELED);
     }
   }
 }
@@ -208,10 +207,10 @@ class GcpHost implements server.ManagedServerHost {
       private readonly gcpInstanceName: string,
       private readonly instanceReadiness: Promise<unknown>,
       private readonly apiClient: gcp_api.RestApiClient,
-      private readonly setInstallState: (newState: InstallState) => void) {}
+      private readonly deleteCallback: () => void) {}
 
   async delete(): Promise<void> {
-    this.setInstallState(InstallState.DELETING);
+    this.deleteCallback();
     // The GCP API documentation doesn't specify whether instances can be deleted
     // before creation has finished, and the static IP allocation is entirely
     // asynchronous, so we must wait for instance setup to complete before starting
@@ -232,7 +231,6 @@ class GcpHost implements server.ManagedServerHost {
     await this.waitForDelete(
         this.apiClient.deleteInstance(this.locator),
         'No instance for deleted server');
-    this.setInstallState(InstallState.DELETED);
   }
 
   private async waitForDelete(deletion: Promise<gcp_api.ComputeEngineOperation>, msg404: string): Promise<void> {
@@ -245,7 +243,6 @@ class GcpHost implements server.ManagedServerHost {
         console.warn(msg404);
         return;
       }
-      this.setInstallState(InstallState.ERROR);
       throw e;
     }
   }

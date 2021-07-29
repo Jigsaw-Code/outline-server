@@ -418,7 +418,7 @@ export class App {
         try {
           for await (const _ of server.monitorInstallProgress()) {}
         } catch (error) {
-          if (error instanceof errors.DeletedServerError) {
+          if (error instanceof errors.ServerInstallCanceledError) {
             // User clicked "Cancel" on the loading screen.
             return;
           }

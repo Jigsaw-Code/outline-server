@@ -93,7 +93,6 @@ export class DigitalOceanAccount implements digitalocean.Account {
     }
     const response = await this.digitalOcean.createDroplet(name, region.id, keyPair.public, dropletSpec);
     const server = this.createDigitalOceanServer(this.digitalOcean, response.droplet);
-    // Note: This depends on the UI calling server.installProcess().
     server.onceDropletActive.then(async () => {
       console.timeEnd('activeServer');
       for await (const _ of server.monitorInstallProgress()) {}
