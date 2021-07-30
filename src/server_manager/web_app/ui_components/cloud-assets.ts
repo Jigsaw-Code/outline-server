@@ -25,6 +25,8 @@ export function getCloudIcon(id: DisplayCloudId): string {
       return 'images/do_white_logo.svg';
     case DisplayCloudId.GCP:
       return 'images/gcp-logo.svg';
+    default:
+      throw new Error('unreachable');
   }
 }
 
@@ -34,5 +36,7 @@ export function getCloudName(id: DisplayCloudId): string {
       return 'DigitalOcean';
     case DisplayCloudId.GCP:
       return 'Google Cloud Platform';
+    default:
+      throw new Error('unreachable');
   }
 }
