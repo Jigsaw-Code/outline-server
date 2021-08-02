@@ -60,10 +60,6 @@ async function makeLocalize(language: string) {
   };
 }
 
-function fakeLocalize(id: string): string {
-  return id;
-}
-
 const GCP_LOCATIONS: gcp.ZoneOption[] = [
   {
     cloudLocation: new gcp.Zone('us-central1-fake'),
@@ -93,12 +89,12 @@ const GCP_BILLING_ACCOUNTS: gcp.BillingAccount[] =
 @customElement('outline-test-app')
 export class TestApp extends LitElement {
   @property({type: String}) dir = 'ltr';
-  @property({type: Function}) localize: (...args: string[]) => string = fakeLocalize;
+  @property({type: Function}) localize: (...args: string[]) => string;
+  @property({type: String}) language = '';
   @property({type: Boolean}) savePerKeyDataLimitSuccessful = true;
   @property({type: Number}) keyDataLimit: number|undefined;
   @property({type: String}) gcpRefreshToken = '';
   @property({type: Boolean}) gcpAccountHasBillingAccounts = false;
-  private language = '';
 
   static get styles() {
     return [COMMON_STYLES, css`
@@ -126,12 +122,12 @@ export class TestApp extends LitElement {
     this.setLanguage('en');
   }
 
-  setLanguage(newLanguage: string) {
+  async setLanguage(newLanguage: string) {
     if (newLanguage === this.language) {
       return;
     }
+    this.localize = await makeLocalize(newLanguage);
     this.language = newLanguage;
-    makeLocalize(newLanguage).then(localize => this.localize = localize);
   }
 
   // tslint:disable-next-line:no-any

@@ -43,6 +43,10 @@ describe('getShortName', () => {
       return null;
     })).toEqual('');
   });
+
+  it('returns empty string when the localizer is null', () => {
+    expect(getShortName({id: 'fake-id', location: location.SYDNEY}, null)).toEqual('');
+  });
 });
 
 describe('localizeCountry', () => {

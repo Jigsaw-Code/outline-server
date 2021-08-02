@@ -538,11 +538,11 @@ export class ServerView extends DirMixin(PolymerElement) {
                 <span class="measurement">
                     <bdi>[[_formatBytesTransferred(myConnection.transferredBytes, language, "...")]]</bdi>
                     /
-                    <bdi>[[_formatDataLimitForKey(myConnection, language)]]</bdi>
+                    <bdi>[[_formatDataLimitForKey(myConnection, language, localize)]]</bdi>
                   </span>
                 <paper-progress max="[[_getRelevantTransferAmountForKey(myConnection)]]" value="[[myConnection.transferredBytes]]" class\$="[[_computePaperProgressClass(myConnection)]]" style\$="[[_computeProgressWidthStyling(myConnection, baselineDataTransfer)]]"></paper-progress>
                 <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!_activeDataLimitForKey(myConnection)]]">
-                  [[_getDataLimitsUsageString(myConnection, language)]]
+                  [[_getDataLimitsUsageString(myConnection, language, localize)]]
                 </paper-tooltip>
               </span>
               <span class="actions">
@@ -567,11 +567,11 @@ export class ServerView extends DirMixin(PolymerElement) {
                     <span class="measurement">
                       <bdi>[[_formatBytesTransferred(item.transferredBytes, language, "...")]]</bdi>
                       /
-                      <bdi>[[_formatDataLimitForKey(item, language)]]</bdi>
+                      <bdi>[[_formatDataLimitForKey(item, language, localize)]]</bdi>
                     </span>
                     <paper-progress max="[[_getRelevantTransferAmountForKey(item)]]" value="[[item.transferredBytes]]" class\$="[[_computePaperProgressClass(item)]]" style\$="[[_computeProgressWidthStyling(item, baselineDataTransfer)]]"></paper-progress>
                     <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!_activeDataLimitForKey(item)]]">
-                      [[_getDataLimitsUsageString(item, language)]]
+                      [[_getDataLimitsUsageString(item, language, localize)]]
                     </paper-tooltip>
                   </span>
                   <span class="actions">
@@ -856,12 +856,21 @@ export class ServerView extends DirMixin(PolymerElement) {
     }));
   }
 
+  // Avoids uncaught exceptions when this.localize is transiently null,
+  // as is the case when using the widget gallery app.
+  _localize() {
+    if (!this.localize) {
+      return '';
+    }
+    return this.localize.apply(null, arguments);
+  }
+
   _handleShowPerKeyDataLimitDialogPressed(event) {
     // TODO(cohenjon) change to optional chaining when we upgrade to Electron > >= 8
     const accessKey = (event.model && event.model.item) || this.myConnection;
     const keyId = accessKey.id;
     const keyDataLimitBytes = accessKey.dataLimitBytes;
-    const keyName = accessKey === this.myConnection ? this.localize('server-my-access-key') :
+    const keyName = accessKey === this.myConnection ? this._localize('server-my-access-key') :
                                                       accessKey.name || accessKey.placeholderName;
     const defaultDataLimitBytes =
         this.isDefaultDataLimitEnabled ? this.defaultDataLimitBytes : undefined;
@@ -897,8 +906,8 @@ export class ServerView extends DirMixin(PolymerElement) {
     this.dispatchEvent(makePublicEvent('RemoveAccessKeyRequested', {accessKeyId: accessKey.id}));
   }
 
-  _formatDataLimitForKey(key, language) {
-    return this._formatDisplayDataLimit(this._activeDataLimitForKey(key), language)
+  _formatDataLimitForKey(key, language, localize) {
+    return this._formatDisplayDataLimit(this._activeDataLimitForKey(key), language, localize)
   }
 
   _computeDisplayDataLimit(/** @param {number=} */ limit) {
@@ -908,9 +917,10 @@ export class ServerView extends DirMixin(PolymerElement) {
   /**
    * @param {number=} limit The data limit in bytes
    * @param {string} language The 2-letter ISO language code to format for.
+   * @param {Function} UNUSED_localize The localization function
    */
-  _formatDisplayDataLimit(limit, language) {
-    return exists(limit) ? formatting.formatBytes(limit, language) : this.localize('no-data-limit');
+  _formatDisplayDataLimit(limit, language, UNUSED_localize) {
+    return exists(limit) ? formatting.formatBytes(limit, language) : this._localize('no-data-limit');
   }
 
   _formatInboundBytesUnit(totalBytes, language) {
@@ -1087,16 +1097,16 @@ export class ServerView extends DirMixin(PolymerElement) {
     return `width: ${width}px;`;
   }
 
-  _getDataLimitsUsageString(accessKey, UNUSED_language) {
+  _getDataLimitsUsageString(accessKey, language, localize) {
     if (!accessKey) {
       // We're in app startup
       return '';
     }
 
     const activeDataLimit = this._activeDataLimitForKey(accessKey);
-    const used = this._formatBytesTransferred(accessKey.transferredBytes, this.language, '0');
-    const total = this._formatDisplayDataLimit(activeDataLimit, this.language);
-    return this.localize('data-limits-usage', 'used', used, 'total', total);
+    const used = this._formatBytesTransferred(accessKey.transferredBytes, language, '0');
+    const total = this._formatDisplayDataLimit(activeDataLimit, language, localize);
+    return this._localize('data-limits-usage', 'used', used, 'total', total);
   }
 
 }

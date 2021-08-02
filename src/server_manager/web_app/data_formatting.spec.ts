@@ -64,6 +64,10 @@ describe('formatBytes', () => {
     it('Omits trailing zero decimal digits', () => {
       expect(formatting.formatBytes(10 ** 12, 'en')).toEqual('1 TB');
     });
+
+    it('returns null when language is missing', () => {
+      expect(formatting.formatBytes(10 ** 12, '')).toBeFalsy();
+    });
   }
 });
 

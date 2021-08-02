@@ -20,7 +20,7 @@ import {CloudLocation, CloudLocationOption, GeoLocation} from '../model/location
  */
 export function getShortName(cloudLocation: CloudLocation,
     localize: (id: string) => string): string {
-  if (!cloudLocation) {
+  if (!cloudLocation || !localize) {
     return '';
   }
   if (!cloudLocation.location) {

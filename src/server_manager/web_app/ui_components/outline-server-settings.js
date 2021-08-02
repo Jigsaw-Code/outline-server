@@ -361,7 +361,10 @@ Polymer({
   _validatePort: function(value) {
     const port = Number(value);
     const valid = !Number.isNaN(port) && port >= 1 && port <= 65535 && Number.isInteger(port);
-    return valid ? '' : this.localize('error-keys-port-bad-input');
+    if (!valid && this.localize) {
+      return this.localize('error-keys-port-bad-input');
+    }
+    return '';
   },
 
   _getShortName: getShortName,
@@ -373,6 +376,9 @@ Polymer({
   },
 
   _formatDate(language, date) {
+    if (!language) {
+      return '';
+    }
     return date.toLocaleString(language, {year: 'numeric', month: 'long', day: 'numeric'});
   }
 });
