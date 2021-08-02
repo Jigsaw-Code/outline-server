@@ -175,7 +175,7 @@ Polymer({
     <div class="container">
       <div class="content">
         <!-- Managed Server information -->
-        <div class="setting card-section" hidden\$="[[!isServerManaged]]">
+        <div class="setting card-section" hidden\$="[[!cloudId]]">
           <img class="setting-icon" src="[[_getCloudIcon(cloudId)]]">
           <div>
             <h3>[[_getCloudName(cloudId)]]</h3>

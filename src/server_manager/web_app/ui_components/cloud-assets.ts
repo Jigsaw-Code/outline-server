@@ -26,7 +26,7 @@ export function getCloudIcon(id: DisplayCloudId): string {
     case DisplayCloudId.GCP:
       return 'images/gcp-logo.svg';
     default:
-      throw new Error('unreachable');
+      return null;
   }
 }
 
@@ -37,6 +37,6 @@ export function getCloudName(id: DisplayCloudId): string {
     case DisplayCloudId.GCP:
       return 'Google Cloud Platform';
     default:
-      throw new Error('unreachable');
+      return null;
   }
 }

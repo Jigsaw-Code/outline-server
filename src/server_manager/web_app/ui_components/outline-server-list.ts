@@ -14,20 +14,18 @@
 
 import {customElement, html, LitElement, property} from 'lit-element';
 import {repeat} from 'lit-html/directives/repeat.js';
-import {AccountListEntry} from './app-root.js';
+import {DisplayCloudId} from './cloud-assets.js';
 import {ServerView} from './outline-server-view.js';
 
-// TODO: Refactor AppRoot to avoid this circular dependency.
-export interface ServerListEntry {
+export interface ServerViewListEntry {
   id: string;
   name: string;
-  account: AccountListEntry;
-  isSynced: boolean;
+  cloudId: DisplayCloudId;
 }
 
 @customElement('outline-server-list')
 export class OutlineServerList extends LitElement {
-  @property({type: Array}) serverList: ServerListEntry[];
+  @property({type: Array}) serverList: ServerViewListEntry[];
   @property({type: String}) selectedServerId: string;
   @property({type: Function}) localize: Function;
   @property({type: String}) language: string;
@@ -41,7 +39,7 @@ export class OutlineServerList extends LitElement {
         .id="${this.makeViewId(e.id)}"
         .serverId="${e.id}"
         .serverName="${e.name}"
-        .cloudId="${e.account.cloudId}"
+        .cloudId="${e.cloudId}"
         .language="${this.language}"
         .localize="${this.localize}"
         ?hidden="${e.id !== this.selectedServerId}">

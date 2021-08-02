@@ -49,6 +49,7 @@ import {PolymerElement} from '@polymer/polymer/polymer-element.js';
 
 import {ServerView} from './outline-server-view.js';
 import {OutlineRegionPicker} from './outline-region-picker-step';
+import {DisplayCloudId} from './cloud-assets';
 
 const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
 
@@ -57,7 +58,16 @@ const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
  * @typedef {Object} AccountListEntry
  * @prop {string} id
  * @prop {string} name
- * @prop {string} cloudId
+ * @prop {DisplayCloudId} cloudId
+ */
+
+/**
+ * An access key to be displayed
+ * @typedef {Object} ServerListEntry
+ * @prop {string} id
+ * @prop {string|null} accountId
+ * @prop {string} name
+ * @prop {boolean} isSynced
  */
 
 /** @extends {PolymerElement} */
@@ -389,7 +399,7 @@ export class AppRoot extends mixinBehaviors
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
               <!-- TODO: Move to a new outline-do-oauth-step. -->
               <outline-region-picker-step id="regionPicker" localize="[[localize]]" language="[[language]]"></outline-region-picker-step>
-              <outline-server-list id="serverView" server-list="[[serverList]]" selected-server-id="[[selectedServerId]]" language="[[language]]" localize="[[localize]]"></outline-server-list>
+              <outline-server-list id="serverView" server-list="[[_serverViewList(serverList)]]" selected-server-id="[[selectedServerId]]" language="[[language]]" localize="[[localize]]"></outline-server-list>
               </div>
             </iron-pages>
           </div>
@@ -584,7 +594,7 @@ export class AppRoot extends mixinBehaviors
     this.language = '';
     this.supportedLanguages = [];
     this.useKeyIfMissing = true;
-    /** @type {import('./outline-server-list').ServerListEntry[]} */
+    /** @type {ServerListEntry[]} */
     this.serverList = [];
     /** @type {AccountListEntry} */
     this.digitalOceanAccount = null;
@@ -822,7 +832,7 @@ export class AppRoot extends mixinBehaviors
   }
 
   _hasManualServers(serverList) {
-    return serverList.filter(server => !server.account).length > 0;
+    return serverList.filter(server => !server.accountId).length > 0;
   }
 
   _userAcceptedTosChanged(userAcceptedTos) {
@@ -965,11 +975,11 @@ export class AppRoot extends mixinBehaviors
    * @param {AccountListEntry} account
    */
   _accountServerFilter(account) {
-    return (server) => account && server.account.id === account.id;
+    return (server) => account && server.accountId === account.id;
   }
 
   _isServerManual(server) {
-    return !server.account;
+    return !server.accountId;
   }
 
   _sortServersByName(a, b) {
@@ -999,6 +1009,32 @@ export class AppRoot extends mixinBehaviors
       return 'server-icon-selected.png';
     }
     return 'server-icon.png';
+  }
+
+  /**
+   * @param {string} accountId 
+   * @return {DisplayCloudId}
+   */
+  _getCloudId(accountId) {
+    // TODO: Replace separate account fields with a map.
+    if (this.gcpAccount && accountId === this.gcpAccount.id) {
+      return this.gcpAccount.cloudId;
+    } else if (this.digitalOceanAccount && accountId === this.digitalOceanAccount.id) {
+      return this.digitalOceanAccount.cloudId;
+    }
+    return null;
+  }
+
+  /**
+   * @param {ServerListEntry[]} serverList
+   * @return {import('./outline-server-list').ServerViewListEntry}
+   */
+  _serverViewList(serverList) {
+    return serverList.map(entry => ({
+      id: entry.id,
+      name: entry.name,
+      cloudId: this._getCloudId(entry.accountId),
+    }));
   }
 
   _isServerSelected(selectedServerId, server) {

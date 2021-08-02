@@ -195,7 +195,6 @@ export class TestApp extends LitElement {
               .serverVersion=${FAKE_SERVER.getVersion()}
               .defaultDataLimitBytes="5000000000"
               .isDefaultDataLimitEnabled="true"
-              .isServerManaged="true"
               .monthlyCost=${FAKE_SERVER.getHost().getMonthlyCost().usd}
               .monthlyOutboundTransferBytes=${FAKE_SERVER.getHost().getMonthlyOutboundTransferLimit()?.terabytes * (10 ** 12)}
               .cloudLocation=${FAKE_SERVER.getHost().getCloudLocation()}

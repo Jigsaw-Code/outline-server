@@ -27,10 +27,9 @@ import {CloudLocation} from '../model/location';
 import {DisplayDataAmount, displayDataAmountToBytes,} from './data_formatting';
 import {filterOptions, getShortName} from './location_formatting';
 import {parseManualServerConfig} from './management_urls';
-import {AccountListEntry, AppRoot} from './ui_components/app-root';
+import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {DisplayAccessKey, ServerView} from './ui_components/outline-server-view';
 import {DisplayCloudId} from './ui_components/cloud-assets';
-import {ServerListEntry} from './ui_components/outline-server-list';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -138,10 +137,9 @@ export class App {
     appRoot.addEventListener('CreateGcpServerRequested', async (event: CustomEvent) => {
       this.appRoot.getAndShowGcpCreateServerApp().start(this.gcpAccount);
     });
-    appRoot.addEventListener('GcpServerCreated', async (event: CustomEvent) => {
+    appRoot.addEventListener('GcpServerCreated', (event: CustomEvent) => {
       const server = event.detail.server;
-      const accountListEntry = await this.getGcpAccountListEntry(this.gcpAccount);
-      this.addServer(accountListEntry, server);
+      this.addServer(this.gcpAccount.getId(), server);
       this.showServer(server);
     });
     appRoot.addEventListener('DigitalOceanSignOutRequested', (event: CustomEvent) => {
@@ -329,15 +327,6 @@ export class App {
     }
   }
 
-  private async getDigitalOceanAccountListEntry(digitalOceanAccount: digitalocean.Account):
-      Promise<AccountListEntry> {
-    return {
-      id: this.digitalOceanAccount.getId(),
-      name: await this.digitalOceanAccount.getName(),
-      cloudId: DisplayCloudId.DO
-    };
-  }
-
   private async loadDigitalOceanAccount(digitalOceanAccount: digitalocean.Account):
       Promise<server.ManagedServer[]> {
     if (!digitalOceanAccount) {
@@ -345,15 +334,18 @@ export class App {
     }
     try {
       this.digitalOceanAccount = digitalOceanAccount;
-      const accountListEntry = await this.getDigitalOceanAccountListEntry(digitalOceanAccount);
-      this.appRoot.digitalOceanAccount = accountListEntry;
+      this.appRoot.digitalOceanAccount = {
+        id: this.digitalOceanAccount.getId(),
+        name: await this.digitalOceanAccount.getName(),
+        cloudId: DisplayCloudId.DO,
+      };
       const status = await this.digitalOceanAccount.getStatus();
       if (status !== digitalocean.Status.ACTIVE) {
         return [];
       }
       const servers = await this.digitalOceanAccount.listServers();
       for (const server of servers) {
-        this.addServer(accountListEntry, server);
+        this.addServer(this.digitalOceanAccount.getId(), server);
       }
       return servers;
     } catch (error) {
@@ -364,29 +356,24 @@ export class App {
     return [];
   }
 
-  private async getGcpAccountListEntry(gcpAccount: gcp.Account): Promise<AccountListEntry> {
-    return {
-      id: this.gcpAccount.getId(),
-      name: await this.gcpAccount.getName(),
-      cloudId: DisplayCloudId.GCP
-    };
-  }
-
   private async loadGcpAccount(gcpAccount: gcp.Account): Promise<server.ManagedServer[]> {
     if (!gcpAccount) {
       return [];
     }
 
     this.gcpAccount = gcpAccount;
-    const accountListEntry = await this.getGcpAccountListEntry(gcpAccount);
-    this.appRoot.gcpAccount = accountListEntry;
+    this.appRoot.gcpAccount = {
+      id: this.gcpAccount.getId(),
+      name: await this.gcpAccount.getName(),
+      cloudId: DisplayCloudId.GCP,
+    };
 
     const result = [];
     const gcpProjects = await this.gcpAccount.listProjects();
     for (const gcpProject of gcpProjects) {
       const servers = await this.gcpAccount.listServers(gcpProject.id);
       for (const server of servers) {
-        this.addServer(accountListEntry, server);
+        this.addServer(this.gcpAccount.getId(), server);
         result.push(server);
       }
     }
@@ -399,12 +386,12 @@ export class App {
     }
   }
 
-  private makeServerListEntry(account: AccountListEntry, server: server.Server): ServerListEntry {
+  private makeServerListEntry(accountId: string, server: server.Server): ServerListEntry {
     return {
       id: server.getId(),
-      account,
+      accountId,
       name: this.makeDisplayName(server),
-      isSynced: !!server.getName()
+      isSynced: !!server.getName(),
     };
   }
 
@@ -421,10 +408,10 @@ export class App {
     return name;
   }
 
-  private addServer(account: AccountListEntry, server: server.Server): void {
+  private addServer(accountId: string, server: server.Server): void {
     console.log('Loading server', server);
     this.idServerMap.set(server.getId(), server);
-    const serverEntry = this.makeServerListEntry(account, server);
+    const serverEntry = this.makeServerListEntry(accountId, server);
     this.appRoot.serverList = this.appRoot.serverList.concat([serverEntry]);
 
     if (isManagedServer(server) && !server.isInstallCompleted()) {
@@ -465,7 +452,7 @@ export class App {
 
   private updateServerEntry(server: server.Server): void {
     this.appRoot.serverList = this.appRoot.serverList.map(
-        (ds) => ds.id === server.getId() ? this.makeServerListEntry(ds.account, server) : ds);
+        (ds) => ds.id === server.getId() ? this.makeServerListEntry(ds.accountId, server) : ds);
   }
 
   private getServerById(serverId: string): server.Server {
@@ -654,7 +641,7 @@ export class App {
     this.cloudAccounts.disconnectDigitalOceanAccount();
     this.digitalOceanAccount = null;
     for (const serverEntry of this.appRoot.serverList) {
-      if (serverEntry.account?.id === accountId) {
+      if (serverEntry.accountId === accountId) {
         this.removeServer(serverEntry.id);
       }
     }
@@ -671,7 +658,7 @@ export class App {
     this.cloudAccounts.disconnectGcpAccount();
     this.gcpAccount = null;
     for (const serverEntry of this.appRoot.serverList) {
-      if (serverEntry.account?.id === accountId) {
+      if (serverEntry.accountId === accountId) {
         this.removeServer(serverEntry.id);
       }
     }
@@ -714,9 +701,7 @@ export class App {
       const server = await this.digitalOceanRetry(() => {
         return this.digitalOceanAccount.createServer(region, serverName);
       });
-      const accountListEntry =
-          await this.getDigitalOceanAccountListEntry(this.digitalOceanAccount);
-      this.addServer(accountListEntry, server);
+      this.addServer(this.digitalOceanAccount.getId(), server);
       this.showServer(server);
     } catch (error) {
       console.error('Error from createDigitalOceanServer', error);
@@ -769,14 +754,11 @@ export class App {
     }
 
     if (isManagedServer(server)) {
-      view.isServerManaged = true;
       const host = server.getHost();
       view.monthlyCost = host.getMonthlyCost()?.usd;
       view.monthlyOutboundTransferBytes =
           host.getMonthlyOutboundTransferLimit()?.terabytes * (10 ** 12);
       view.cloudLocation = host.getCloudLocation();
-    } else {
-      view.isServerManaged = false;
     }
 
     view.metricsEnabled = server.getMetricsEnabled();
@@ -809,10 +791,6 @@ export class App {
     const serverId = server.getId();
     const serverView = await this.appRoot.getServerView(serverId);
     serverView.selectedPage = 'unreachableView';
-    serverView.isServerManaged = isManagedServer(server);
-    serverView.serverName =
-        this.makeDisplayName(server);  // Don't get the name from the remote server.
-    serverView.serverId = serverId;
     serverView.retryDisplayingServer = async () => {
       await this.updateServerView(server);
     };

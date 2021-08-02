@@ -443,11 +443,11 @@ export class ServerView extends DirMixin(PolymerElement) {
         <h3>[[localize('server-unreachable')]]</h3>
         <p></p>
         <div>[[localize('server-unreachable-description')]]</div>
-        <span hidden\$="{{isServerManaged}}">[[localize('server-unreachable-managed-description')]]</span>
-        <span hidden\$="{{!isServerManaged}}">[[localize('server-unreachable-manual-description')]]</span>
+        <span hidden\$="[[_isServerManaged(cloudId)]]">[[localize('server-unreachable-managed-description')]]</span>
+        <span hidden\$="[[!_isServerManaged(cloudId)]]">[[localize('server-unreachable-manual-description')]]</span>
         <div class="button-container">
-          <paper-button on-tap="removeServer" hidden\$="{{isServerManaged}}">[[localize('server-remove')]]</paper-button>
-          <paper-button on-tap="destroyServer" hidden\$="{{!isServerManaged}}">[[localize('server-destroy')]]</paper-button>
+          <paper-button on-tap="removeServer" hidden\$="[[_isServerManaged(cloudId)]]">[[localize('server-remove')]]</paper-button>
+          <paper-button on-tap="destroyServer" hidden\$="[[!_isServerManaged(cloudId)]]">[[localize('server-destroy')]]</paper-button>
           <paper-button on-tap="retryDisplayingServer" class="try-again-btn">[[localize('retry')]]</paper-button>
         </div>
       </div>`;
@@ -461,10 +461,10 @@ export class ServerView extends DirMixin(PolymerElement) {
           <paper-menu-button horizontal-align="right" class="overflow-menu flex-1" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
             <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
             <paper-listbox slot="dropdown-content">
-              <paper-item hidden\$="[[!isServerManaged]]" on-tap="destroyServer">
+              <paper-item hidden\$="[[!_isServerManaged(cloudId)]]" on-tap="destroyServer">
                 <iron-icon icon="icons:remove-circle-outline"></iron-icon>[[localize('server-destroy')]]
               </paper-item>
-              <paper-item hidden\$="[[isServerManaged]]" on-tap="removeServer">
+              <paper-item hidden\$="[[_isServerManaged(cloudId)]]" on-tap="removeServer">
                 <iron-icon icon="icons:remove-circle-outline"></iron-icon>[[localize('server-remove')]]
               </paper-item>
             </paper-listbox>
@@ -636,7 +636,6 @@ export class ServerView extends DirMixin(PolymerElement) {
         isDefaultDataLimitEnabled: Boolean,
         supportsDefaultDataLimit: Boolean,
         showFeatureMetricsDisclaimer: Boolean,
-        isServerManaged: Boolean,
         isServerReachable: Boolean,
         retryDisplayingServer: Function,
         myConnection: Object,
@@ -688,7 +687,6 @@ export class ServerView extends DirMixin(PolymerElement) {
       /** Whether the server supports default data limits. */
       this.supportsDefaultDataLimit = false;
       this.showFeatureMetricsDisclaimer = false;
-      this.isServerManaged = false;
       this.isServerReachable = false;
       /**
        *  Callback for retrying to display an unreachable server.
@@ -1050,6 +1048,10 @@ export class ServerView extends DirMixin(PolymerElement) {
 
   removeServer() {
     this.dispatchEvent(makePublicEvent('ForgetServerRequested', {serverId: this.serverId}));
+  }
+
+  _isServerManaged(cloudId) {
+    return !!cloudId;
   }
 
   /**
