@@ -29,8 +29,8 @@ export class UnreachableServerError extends OutlineError {
   }
 }
 
-// Error thrown when trying to access a server that has been deleted.
-export class DeletedServerError extends OutlineError {
+// Error thrown when monitoring an installation that the user canceled.
+export class ServerInstallCanceledError extends OutlineError {
   constructor(message?: string) {
     super(message);
   }

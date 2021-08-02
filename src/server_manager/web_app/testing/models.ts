@@ -217,10 +217,12 @@ export class FakeManagedServer extends FakeServer implements server.ManagedServe
   constructor(id: string, private isInstalled = true) {
     super(id);
   }
-  waitOnInstall() {
-    // Return a promise which does not yet fulfill, to simulate long
-    // shadowbox install time.
-    return new Promise<void>((fulfill, reject) => {});
+  async *monitorInstallProgress() {
+    yield 0.5;
+    if (!this.isInstalled) {
+      // Leave the progress bar at 0.5 and never return.
+      await new Promise(() => {});
+    }
   }
   getHost() {
     return {
@@ -230,9 +232,6 @@ export class FakeManagedServer extends FakeServer implements server.ManagedServe
       delete: () => Promise.resolve(),
       getHostId: () => 'fake-host-id',
     };
-  }
-  isInstallCompleted() {
-    return this.isInstalled;
   }
 }
 

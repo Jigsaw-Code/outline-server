@@ -23,9 +23,9 @@ import {unsafeHTML} from 'lit-html/directives/unsafe-html.js';
 
 import {AppRoot} from './app-root';
 import {BillingAccount, Project, Zone} from '../../model/gcp';
-import {GcpAccount} from '../gcp_account';
+import {GcpAccount, isInFreeTier} from '../gcp_account';
 import {COMMON_STYLES} from './cloud-install-styles';
-import {OutlineRegionPicker} from './outline-region-picker-step';
+import {OutlineRegionPicker, RegionPickerOption} from './outline-region-picker-step';
 import {filterOptions, getShortName} from '../location_formatting';
 import {CloudLocation} from '../../model/location';
 
@@ -364,8 +364,11 @@ export class GcpCreateServerApp extends LitElement {
     // `this.regionPicker` is null after `this.currentPage`, and is only populated
     // asynchronously.
     this.regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
-    this.regionPicker.options = filterOptions(zoneOptions);
-  }
+    this.regionPicker.options = filterOptions(zoneOptions).map(option => ({
+      markedLowCost: isInFreeTier(option.cloudLocation),
+      ...option
+    }));
+ }
 
   private onProjectIdChanged(event: CustomEvent) {
     this.selectedProjectId = event.detail.value;

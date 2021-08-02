@@ -66,6 +66,8 @@ function cloud::set_guest_attribute() {
   curl -H "Metadata-Flavor: Google" -X PUT -d "${label_value}" "${SET_GUEST_ATTRIBUTE_URL}"
 }
 
+cloud::set_guest_attribute "install-started" "true"
+
 # Enable BBR.
 # Recent DigitalOcean one-click images are based on Ubuntu 18 and have kernel 4.15+.
 log_for_sentry "Enabling BBR"

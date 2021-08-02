@@ -29,7 +29,19 @@ function makeGcpInstanceName(): string {
   return `outline-${now.getFullYear()}${now.getMonth()}${now.getDate()}-${now.getUTCHours()}${
       now.getUTCMinutes()}${now.getUTCSeconds()}`;
 }
-  
+
+// Regions where the first f1-micro instance is free.
+// See https://cloud.google.com/free/docs/gcp-free-tier/#compute
+const FREE_TIER_REGIONS = new Set<string>([
+  'us-west1',
+  'us-central1',
+  'us-east1'
+]);
+
+export function isInFreeTier(zone: gcp.Zone): boolean {
+  return FREE_TIER_REGIONS.has(zone.regionId);
+}
+
 /**
  * The Google Cloud Platform account model.
  */

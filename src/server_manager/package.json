@@ -44,7 +44,6 @@
     "clipboard-polyfill": "^2.4.6",
     "dotenv": "~8.2.0",
     "electron-updater": "^4.1.2",
-    "eventemitter3": "^2.0.3",
     "express": "^4.17.1",
     "google-auth-library": "^7.0.2",
     "intl-messageformat": "^7",

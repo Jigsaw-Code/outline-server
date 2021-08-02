@@ -117,6 +117,8 @@ function cloud::add_encoded_kv_tag() {
   cloud::add_tag "kv:${key}:${value}"
 }
 
+echo "true" | cloud::add_encoded_kv_tag "install-started"
+
 log_for_sentry "Starting install"
 
 # DigitalOcean's docker image comes with ufw enabled by default, disable so when

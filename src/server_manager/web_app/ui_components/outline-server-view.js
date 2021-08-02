@@ -29,7 +29,7 @@ import './cloud-install-styles.js';
 import './outline-iconset.js';
 import './outline-help-bubble.js';
 import './outline-metrics-option-dialog.js';
-import './outline-server-progress-step.js';
+import './outline-server-progress-step';
 import './outline-server-settings.js';
 import './outline-share-dialog.js';
 import './outline-sort-span.js';
@@ -404,8 +404,8 @@ export class ServerView extends DirMixin(PolymerElement) {
     </style>
 
     <div class="container">
-      <iron-pages id="pages" attr-for-selected="id" selected="[[selectedPage]]" on-changed="_selectedPageChanged">
-        <outline-server-progress-step id="progressView" server-name="[[serverName]]" localize="[[localize]]"></outline-server-progress-step>
+      <iron-pages id="pages" attr-for-selected="id" selected="[[selectedPage]]">
+        <outline-server-progress-step id="progressView" server-name="[[serverName]]" localize="[[localize]]" progress="[[installProgress]]"></outline-server-progress-step>
         <div id="unreachableView">${this.unreachableViewTemplate}</div>
         <div id="managementView">${this.managementViewTemplate}</div>
       </iron-pages>
@@ -636,6 +636,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         isDefaultDataLimitEnabled: Boolean,
         supportsDefaultDataLimit: Boolean,
         showFeatureMetricsDisclaimer: Boolean,
+        installProgress: Number,
         isServerReachable: Boolean,
         retryDisplayingServer: Function,
         myConnection: Object,
@@ -687,6 +688,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       /** Whether the server supports default data limits. */
       this.supportsDefaultDataLimit = false;
       this.showFeatureMetricsDisclaimer = false;
+      this.installProgress = 0;
       this.isServerReachable = false;
       /**
        *  Callback for retrying to display an unreachable server.
@@ -972,14 +974,6 @@ export class ServerView extends DirMixin(PolymerElement) {
   _myConnectionChanged(myConnection) {
     if (!myConnection) {
       this.$.getConnectedHelpBubble.hide();
-    }
-  }
-
-  _selectedPageChanged() {
-    if (this.selectedPage === 'progressView') {
-      this.$.progressView.startAnimation();
-    } else {
-      this.$.progressView.stopAnimation();
     }
   }
 

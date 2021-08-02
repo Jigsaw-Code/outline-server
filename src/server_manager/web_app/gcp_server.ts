@@ -15,6 +15,7 @@
 import * as gcp_api from '../cloud/gcp_api';
 import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
+import {ValueStream} from "../infrastructure/value_stream";
 import {Zone} from '../model/gcp';
 import * as server from '../model/server';
 import {DataAmount, ManagedServerHost, MonetaryCost} from '../model/server';
@@ -22,16 +23,42 @@ import {DataAmount, ManagedServerHost, MonetaryCost} from '../model/server';
 import {ShadowboxServer} from './shadowbox_server';
 
 enum InstallState {
-  // Unknown state - server may still be installing.
+  // Unknown state - server request may still be pending.
   UNKNOWN = 0,
+  // The instance has been created.
+  INSTANCE_CREATED,
+  // The static IP has been allocated.
+  IP_ALLOCATED,
+  // The system has booted (detected by the creation of guest tags)
+  INSTANCE_RUNNING,
+  // The server has generated its management service certificate.
+  CERTIFICATE_CREATED,
   // Server is running and has the API URL and certificate fingerprint set.
-  SUCCESS,
-  // Server is in an error state.
-  ERROR,
-  // Server deletion has been initiated.
-  DELETING,
-  // Server has been deleted.
-  DELETED
+  COMPLETED,
+  // Server installation failed.
+  FAILED,
+  // Server installation was canceled by the user.
+  CANCELED
+}
+
+function getCompletionFraction(state: InstallState): number {
+  // Values are based on observed installation timing.
+  // Installation typically takes ~5 minutes in total.
+  switch (state) {
+    case InstallState.UNKNOWN: return 0.005;
+    case InstallState.INSTANCE_CREATED: return 0.03;
+    case InstallState.IP_ALLOCATED: return 0.04;
+    case InstallState.INSTANCE_RUNNING: return 0.2;
+    case InstallState.CERTIFICATE_CREATED: return 0.8;
+    case InstallState.COMPLETED: return 1.0;
+    default: return 0;
+  }
+}
+
+function isFinal(state: InstallState): boolean {
+  return state === InstallState.COMPLETED ||
+      state === InstallState.FAILED ||
+      state === InstallState.CANCELED;
 }
 
 export class GcpServer extends ShadowboxServer implements server.ManagedServer {
@@ -39,7 +66,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
 
   private readonly instanceReadiness: Promise<void>;
   private readonly gcpHost: GcpHost;
-  private installState: InstallState = InstallState.UNKNOWN;
+  private readonly installState = new ValueStream<InstallState>(InstallState.UNKNOWN);
 
   constructor(
       id: string,
@@ -51,14 +78,23 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     // Optimization: start the check for a static IP immediately.
     const hasStaticIp: Promise<boolean> = this.hasStaticIp();
     this.instanceReadiness = instanceCreation.then(async () => {
+      if (this.installState.isClosed()) {
+        return;
+      }
+      this.setInstallState(InstallState.INSTANCE_CREATED);
       if (!await hasStaticIp) {
         await this.promoteEphemeralIp();
       }
+      if (this.installState.isClosed()) {
+        return;
+      }
+      this.setInstallState(InstallState.IP_ALLOCATED);
+      this.pollInstallState();  // Start asynchronous polling.
     }).catch((e) => {
-      this.setInstallState(InstallState.ERROR);
+      this.setInstallState(InstallState.FAILED);
       throw e;
     });
-    this.gcpHost = new GcpHost(locator, gcpInstanceName, this.instanceReadiness, apiClient, this.setInstallState.bind(this));
+    this.gcpHost = new GcpHost(locator, gcpInstanceName, this.instanceReadiness, apiClient, this.onDelete.bind(this));
   }
 
   private getRegionLocator(): gcp_api.RegionLocator {
@@ -103,34 +139,40 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     return this.gcpHost;
   }
 
-  isInstallCompleted(): boolean {
-    return this.installState !== InstallState.UNKNOWN;
+  async *monitorInstallProgress(): AsyncGenerator<number, void> {
+    for await (const state of this.installState.watch()) {
+      yield getCompletionFraction(state);
+    }
+
+    if (this.installState.get() === InstallState.FAILED) {
+      throw new errors.ServerInstallFailedError();
+    } else if (this.installState.get() === InstallState.CANCELED) {
+      throw new errors.ServerInstallCanceledError();
+    }
+    yield getCompletionFraction(this.installState.get());
   }
 
-  async waitOnInstall(): Promise<void> {
-    await this.instanceReadiness;  // Throws if instance preparation fails.
-    while (this.installState === InstallState.UNKNOWN) {
+
+  private async pollInstallState(): Promise<void> {
+    while (!this.installState.isClosed()) {
       const outlineGuestAttributes = await this.getOutlineGuestAttributes();
       if (outlineGuestAttributes.has('apiUrl') && outlineGuestAttributes.has('certSha256')) {
         const certSha256 = outlineGuestAttributes.get('certSha256');
         const apiUrl = outlineGuestAttributes.get('apiUrl');
         trustCertificate(certSha256);
         this.setManagementApiUrl(apiUrl);
-        this.installState = InstallState.SUCCESS;
+        this.setInstallState(InstallState.COMPLETED);
         break;
       } else if (outlineGuestAttributes.has('install-error')) {
-        this.installState = InstallState.ERROR;
+        this.setInstallState(InstallState.FAILED);
         break;
+      } else if (outlineGuestAttributes.has('certSha256')) {
+        this.setInstallState(InstallState.CERTIFICATE_CREATED);
+      } else if (outlineGuestAttributes.has('install-started')) {
+        this.setInstallState(InstallState.INSTANCE_RUNNING);
       }
 
       await sleep(GcpServer.GUEST_ATTRIBUTES_POLLING_INTERVAL_MS);
-    }
-
-    if (this.installState === InstallState.ERROR) {
-      throw new errors.ServerInstallFailedError();
-    } else if (this.installState === InstallState.DELETING ||
-               this.installState === InstallState.DELETED) {
-      throw new errors.DeletedServerError();
     }
   }
 
@@ -145,8 +187,17 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     return result;
   }
 
-  setInstallState(newState: InstallState): void {
-    this.installState = newState;
+  private setInstallState(newState: InstallState): void {
+    this.installState.set(newState);
+    if (isFinal(newState)) {
+      this.installState.close();
+    }
+  }
+
+  private onDelete(): void {
+    if (!this.installState.isClosed()) {
+      this.setInstallState(InstallState.CANCELED);
+    }
   }
 }
 
@@ -156,10 +207,10 @@ class GcpHost implements server.ManagedServerHost {
       private readonly gcpInstanceName: string,
       private readonly instanceReadiness: Promise<unknown>,
       private readonly apiClient: gcp_api.RestApiClient,
-      private readonly setInstallState: (newState: InstallState) => void) {}
+      private readonly deleteCallback: () => void) {}
 
   async delete(): Promise<void> {
-    this.setInstallState(InstallState.DELETING);
+    this.deleteCallback();
     // The GCP API documentation doesn't specify whether instances can be deleted
     // before creation has finished, and the static IP allocation is entirely
     // asynchronous, so we must wait for instance setup to complete before starting
@@ -180,7 +231,6 @@ class GcpHost implements server.ManagedServerHost {
     await this.waitForDelete(
         this.apiClient.deleteInstance(this.locator),
         'No instance for deleted server');
-    this.setInstallState(InstallState.DELETED);
   }
 
   private async waitForDelete(deletion: Promise<gcp_api.ComputeEngineOperation>, msg404: string): Promise<void> {
@@ -193,7 +243,6 @@ class GcpHost implements server.ManagedServerHost {
         console.warn(msg404);
         return;
       }
-      this.setInstallState(InstallState.ERROR);
       throw e;
     }
   }

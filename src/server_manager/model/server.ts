@@ -107,12 +107,12 @@ export interface ManualServer extends Server {
 // Managed servers are servers created by the Outline Manager through our
 // "magic" user experience, e.g. DigitalOcean.
 export interface ManagedServer extends Server {
-  // Returns a promise that fulfills once installation is complete.
-  waitOnInstall(): Promise<void>;
+  // Yields how far installation has progressed (0.0 to 1.0).
+  // Exits when installation has completed.
+  // Throws if installation fails or is canceled.
+  monitorInstallProgress(): AsyncGenerator<number, void>;
   // Returns server host object.
   getHost(): ManagedServerHost;
-  // Returns true when installation is complete.
-  isInstallCompleted(): boolean;
 }
 
 // The managed machine where the Outline Server is running.
