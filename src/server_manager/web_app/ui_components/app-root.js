@@ -58,7 +58,6 @@ const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
  * @typedef {Object} AccountListEntry
  * @prop {string} id
  * @prop {string} name
- * @prop {DisplayCloudId} cloudId
  */
 
 /**
@@ -1018,9 +1017,9 @@ export class AppRoot extends mixinBehaviors
   _getCloudId(accountId) {
     // TODO: Replace separate account fields with a map.
     if (this.gcpAccount && accountId === this.gcpAccount.id) {
-      return this.gcpAccount.cloudId;
+      return DisplayCloudId.GCP;
     } else if (this.digitalOceanAccount && accountId === this.digitalOceanAccount.id) {
-      return this.digitalOceanAccount.cloudId;
+      return DisplayCloudId.DO;
     }
     return null;
   }

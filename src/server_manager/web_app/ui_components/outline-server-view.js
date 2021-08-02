@@ -389,7 +389,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         height: auto;
         margin: 12px 0px 24px 0px;
       }
-      .digital-ocean-icon {
+      .cloud-icon {
         opacity: 0.54;
       }
       .flex-1 {
@@ -492,7 +492,7 @@ export class ServerView extends DirMixin(PolymerElement) {
             </div>
             <div hidden\$="[[!monthlyOutboundTransferBytes]]" class="stats-card card-section">
               <div>
-                <img class="digital-ocean-icon" src="[[getCloudIcon(cloudId)]]">
+                <img class="cloud-icon" src="[[getCloudIcon(cloudId)]]">
               </div>
               <div class="stats">
                 <h3>[[_computeManagedServerUtilizationPercentage(totalInboundBytes, monthlyOutboundTransferBytes)]]</h3>

@@ -337,7 +337,6 @@ export class App {
       this.appRoot.digitalOceanAccount = {
         id: this.digitalOceanAccount.getId(),
         name: await this.digitalOceanAccount.getName(),
-        cloudId: DisplayCloudId.DO,
       };
       const status = await this.digitalOceanAccount.getStatus();
       if (status !== digitalocean.Status.ACTIVE) {
@@ -365,7 +364,6 @@ export class App {
     this.appRoot.gcpAccount = {
       id: this.gcpAccount.getId(),
       name: await this.gcpAccount.getName(),
-      cloudId: DisplayCloudId.GCP,
     };
 
     const result = [];
