@@ -94,7 +94,7 @@ const GCP_BILLING_ACCOUNTS: gcp.BillingAccount[] =
 export class TestApp extends LitElement {
   @property({type: String}) dir = 'ltr';
   @property({type: Function}) localize: (...args: string[]) => string = fakeLocalize;
-  @property({type: String}) language = 'es-419';  // Replaced asynchronously in the constructor.
+  @property({type: String}) language = 'zz';  // Replaced asynchronously in the constructor.
   @property({type: Boolean}) savePerKeyDataLimitSuccessful = true;
   @property({type: Number}) keyDataLimit: number|undefined;
   @property({type: String}) gcpRefreshToken = '';
