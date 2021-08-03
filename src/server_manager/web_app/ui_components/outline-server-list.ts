@@ -14,18 +14,18 @@
 
 import {customElement, html, LitElement, property} from 'lit-element';
 import {repeat} from 'lit-html/directives/repeat.js';
+import {DisplayCloudId} from './cloud-assets.js';
 import {ServerView} from './outline-server-view.js';
 
-export interface ServerListEntry {
+export interface ServerViewListEntry {
   id: string;
   name: string;
-  isManaged: boolean;
-  isSynced: boolean;
+  cloudId: DisplayCloudId;
 }
 
 @customElement('outline-server-list')
 export class OutlineServerList extends LitElement {
-  @property({type: Array}) serverList: ServerListEntry[];
+  @property({type: Array}) serverList: ServerViewListEntry[];
   @property({type: String}) selectedServerId: string;
   @property({type: Function}) localize: Function;
   @property({type: String}) language: string;
@@ -37,6 +37,9 @@ export class OutlineServerList extends LitElement {
     return html`<div>${repeat(this.serverList, e => e.id, e => html`
       <outline-server-view
         .id="${this.makeViewId(e.id)}"
+        .serverId="${e.id}"
+        .serverName="${e.name}"
+        .cloudId="${e.cloudId}"
         .language="${this.language}"
         .localize="${this.localize}"
         ?hidden="${e.id !== this.selectedServerId}">

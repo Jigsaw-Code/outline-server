@@ -49,6 +49,7 @@ import {PolymerElement} from '@polymer/polymer/polymer-element.js';
 
 import {ServerView} from './outline-server-view.js';
 import {OutlineRegionPicker} from './outline-region-picker-step';
+import {DisplayCloudId} from './cloud-assets';
 
 const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
 
@@ -397,7 +398,7 @@ export class AppRoot extends mixinBehaviors
               <outline-manual-server-entry id="manualEntry" localize="[[localize]]"></outline-manual-server-entry>
               <!-- TODO: Move to a new outline-do-oauth-step. -->
               <outline-region-picker-step id="regionPicker" localize="[[localize]]" language="[[language]]"></outline-region-picker-step>
-              <outline-server-list id="serverView" server-list="[[serverList]]" selected-server-id="[[selectedServerId]]" language="[[language]]" localize="[[localize]]"></outline-server-list>
+              <outline-server-list id="serverView" server-list="[[_serverViewList(serverList)]]" selected-server-id="[[selectedServerId]]" language="[[language]]" localize="[[localize]]"></outline-server-list>
               </div>
             </iron-pages>
           </div>
@@ -1007,6 +1008,32 @@ export class AppRoot extends mixinBehaviors
       return 'server-icon-selected.png';
     }
     return 'server-icon.png';
+  }
+
+  /**
+   * @param {string} accountId 
+   * @return {DisplayCloudId}
+   */
+  _getCloudId(accountId) {
+    // TODO: Replace separate account fields with a map.
+    if (this.gcpAccount && accountId === this.gcpAccount.id) {
+      return DisplayCloudId.GCP;
+    } else if (this.digitalOceanAccount && accountId === this.digitalOceanAccount.id) {
+      return DisplayCloudId.DO;
+    }
+    return null;
+  }
+
+  /**
+   * @param {ServerListEntry[]} serverList
+   * @return {import('./outline-server-list').ServerViewListEntry}
+   */
+  _serverViewList(serverList) {
+    return serverList.map(entry => ({
+      id: entry.id,
+      name: entry.name,
+      cloudId: this._getCloudId(entry.accountId),
+    }));
   }
 
   _isServerSelected(selectedServerId, server) {

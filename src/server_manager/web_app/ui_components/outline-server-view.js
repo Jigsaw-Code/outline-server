@@ -38,6 +38,7 @@ import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
 
 import * as formatting from '../data_formatting';
 import {getShortName} from '../location_formatting';
+import {getCloudIcon} from './cloud-assets';
 
 export const MY_CONNECTION_USER_ID = '0';
 
@@ -388,7 +389,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         height: auto;
         margin: 12px 0px 24px 0px;
       }
-      .digital-ocean-icon {
+      .cloud-icon {
         opacity: 0.54;
       }
       .flex-1 {
@@ -442,11 +443,11 @@ export class ServerView extends DirMixin(PolymerElement) {
         <h3>[[localize('server-unreachable')]]</h3>
         <p></p>
         <div>[[localize('server-unreachable-description')]]</div>
-        <span hidden\$="{{isServerManaged}}">[[localize('server-unreachable-managed-description')]]</span>
-        <span hidden\$="{{!isServerManaged}}">[[localize('server-unreachable-manual-description')]]</span>
+        <span hidden\$="[[_isServerManaged(cloudId)]]">[[localize('server-unreachable-managed-description')]]</span>
+        <span hidden\$="[[!_isServerManaged(cloudId)]]">[[localize('server-unreachable-manual-description')]]</span>
         <div class="button-container">
-          <paper-button on-tap="removeServer" hidden\$="{{isServerManaged}}">[[localize('server-remove')]]</paper-button>
-          <paper-button on-tap="destroyServer" hidden\$="{{!isServerManaged}}">[[localize('server-destroy')]]</paper-button>
+          <paper-button on-tap="removeServer" hidden\$="[[_isServerManaged(cloudId)]]">[[localize('server-remove')]]</paper-button>
+          <paper-button on-tap="destroyServer" hidden\$="[[!_isServerManaged(cloudId)]]">[[localize('server-destroy')]]</paper-button>
           <paper-button on-tap="retryDisplayingServer" class="try-again-btn">[[localize('retry')]]</paper-button>
         </div>
       </div>`;
@@ -460,10 +461,10 @@ export class ServerView extends DirMixin(PolymerElement) {
           <paper-menu-button horizontal-align="right" class="overflow-menu flex-1" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
             <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
             <paper-listbox slot="dropdown-content">
-              <paper-item hidden\$="[[!isServerManaged]]" on-tap="destroyServer">
+              <paper-item hidden\$="[[!_isServerManaged(cloudId)]]" on-tap="destroyServer">
                 <iron-icon icon="icons:remove-circle-outline"></iron-icon>[[localize('server-destroy')]]
               </paper-item>
-              <paper-item hidden\$="[[isServerManaged]]" on-tap="removeServer">
+              <paper-item hidden\$="[[_isServerManaged(cloudId)]]" on-tap="removeServer">
                 <iron-icon icon="icons:remove-circle-outline"></iron-icon>[[localize('server-remove')]]
               </paper-item>
             </paper-listbox>
@@ -489,12 +490,12 @@ export class ServerView extends DirMixin(PolymerElement) {
               </div>
               <p>[[localize('server-data-transfer')]]</p>
             </div>
-            <div hidden\$="[[!isServerManaged]]" class="stats-card card-section">
+            <div hidden\$="[[!monthlyOutboundTransferBytes]]" class="stats-card card-section">
               <div>
-                <img class="digital-ocean-icon" src="images/do_white_logo.svg">
+                <img class="cloud-icon" src="[[getCloudIcon(cloudId)]]">
               </div>
               <div class="stats">
-                <h3>[[_computeManagedServerUtilzationPercentage(totalInboundBytes, monthlyOutboundTransferBytes)]]</h3>
+                <h3>[[_computeManagedServerUtilizationPercentage(totalInboundBytes, monthlyOutboundTransferBytes)]]</h3>
                 <p>/[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]</p>
               </div>
               <p>[[localize('server-data-used')]]</p>
@@ -537,11 +538,11 @@ export class ServerView extends DirMixin(PolymerElement) {
                 <span class="measurement">
                     <bdi>[[_formatBytesTransferred(myConnection.transferredBytes, language, "...")]]</bdi>
                     /
-                    <bdi>[[_formatDataLimitForKey(myConnection, language)]]</bdi>
+                    <bdi>[[_formatDataLimitForKey(myConnection, language, localize)]]</bdi>
                   </span>
                 <paper-progress max="[[_getRelevantTransferAmountForKey(myConnection)]]" value="[[myConnection.transferredBytes]]" class\$="[[_computePaperProgressClass(myConnection)]]" style\$="[[_computeProgressWidthStyling(myConnection, baselineDataTransfer)]]"></paper-progress>
                 <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!_activeDataLimitForKey(myConnection)]]">
-                  [[_getDataLimitsUsageString(myConnection, language)]]
+                  [[_getDataLimitsUsageString(myConnection, language, localize)]]
                 </paper-tooltip>
               </span>
               <span class="actions">
@@ -566,11 +567,11 @@ export class ServerView extends DirMixin(PolymerElement) {
                     <span class="measurement">
                       <bdi>[[_formatBytesTransferred(item.transferredBytes, language, "...")]]</bdi>
                       /
-                      <bdi>[[_formatDataLimitForKey(item, language)]]</bdi>
+                      <bdi>[[_formatDataLimitForKey(item, language, localize)]]</bdi>
                     </span>
                     <paper-progress max="[[_getRelevantTransferAmountForKey(item)]]" value="[[item.transferredBytes]]" class\$="[[_computePaperProgressClass(item)]]" style\$="[[_computeProgressWidthStyling(item, baselineDataTransfer)]]"></paper-progress>
                     <paper-tooltip animation-delay="0" offset="0" position="top" hidden\$="[[!_activeDataLimitForKey(item)]]">
-                      [[_getDataLimitsUsageString(item, language)]]
+                      [[_getDataLimitsUsageString(item, language, localize)]]
                     </paper-tooltip>
                   </span>
                   <span class="actions">
@@ -607,7 +608,7 @@ export class ServerView extends DirMixin(PolymerElement) {
           </div>
         </div>
         <div name="settings">
-          <outline-server-settings id="serverSettings" metrics-id="[[metricsId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" default-data-limit="[[_computeDisplayDataLimit(defaultDataLimitBytes)]]" is-default-data-limit-enabled="{{isDefaultDataLimitEnabled}}" supports-default-data-limit="[[supportsDefaultDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]" is-server-managed="[[isServerManaged]]" cloud-location="[[cloudLocation]]" metrics-enabled="[[metricsEnabled]]" language="[[language]]" localize="[[localize]]">
+          <outline-server-settings id="serverSettings" metrics-id="[[metricsId]]" server-hostname="[[serverHostname]]" server-name="[[serverName]]" server-version="[[serverVersion]]" is-hostname-editable="[[isHostnameEditable]]" server-management-api-url="[[serverManagementApiUrl]]" server-port-for-new-access-keys="[[serverPortForNewAccessKeys]]" is-access-key-port-editable="[[isAccessKeyPortEditable]]" default-data-limit="[[_computeDisplayDataLimit(defaultDataLimitBytes)]]" is-default-data-limit-enabled="{{isDefaultDataLimitEnabled}}" supports-default-data-limit="[[supportsDefaultDataLimit]]" show-feature-metrics-disclaimer="[[showFeatureMetricsDisclaimer]]" server-creation-date="[[serverCreationDate]]" server-monthly-cost="[[monthlyCost]]" server-monthly-transfer-limit="[[_formatBytesTransferred(monthlyOutboundTransferBytes, language)]]" cloud-id="[[cloudId]]" cloud-location="[[cloudLocation]]" metrics-enabled="[[metricsEnabled]]" language="[[language]]" localize="[[localize]]">
           </outline-server-settings>
         </div>
       </iron-pages>`;
@@ -630,11 +631,11 @@ export class ServerView extends DirMixin(PolymerElement) {
         isAccessKeyPortEditable: Boolean,
         serverCreationDate: Date,
         cloudLocation: Object,
+        cloudId: String,
         defaultDataLimitBytes: Number,
         isDefaultDataLimitEnabled: Boolean,
         supportsDefaultDataLimit: Boolean,
         showFeatureMetricsDisclaimer: Boolean,
-        isServerManaged: Boolean,
         installProgress: Number,
         isServerReachable: Boolean,
         retryDisplayingServer: Function,
@@ -677,7 +678,9 @@ export class ServerView extends DirMixin(PolymerElement) {
       this.serverCreationDate = new Date(0);
       /** @type {import('../../model/location').CloudLocation} */
       this.cloudLocation = null;
+      this.cloudId = '';
       this.getShortName = getShortName;
+      this.getCloudIcon = getCloudIcon;
       /** @type {number} */
       this.defaultDataLimitBytes = null;
       this.isDefaultDataLimitEnabled = false;
@@ -685,7 +688,6 @@ export class ServerView extends DirMixin(PolymerElement) {
       /** Whether the server supports default data limits. */
       this.supportsDefaultDataLimit = false;
       this.showFeatureMetricsDisclaimer = false;
-      this.isServerManaged = false;
       this.installProgress = 0;
       this.isServerReachable = false;
       /**
@@ -895,8 +897,8 @@ export class ServerView extends DirMixin(PolymerElement) {
     this.dispatchEvent(makePublicEvent('RemoveAccessKeyRequested', {accessKeyId: accessKey.id}));
   }
 
-  _formatDataLimitForKey(key, language) {
-    return this._formatDisplayDataLimit(this._activeDataLimitForKey(key), language)
+  _formatDataLimitForKey(key, language, localize) {
+    return this._formatDisplayDataLimit(this._activeDataLimitForKey(key), language, localize)
   }
 
   _computeDisplayDataLimit(/** @param {number=} */ limit) {
@@ -906,9 +908,10 @@ export class ServerView extends DirMixin(PolymerElement) {
   /**
    * @param {number=} limit The data limit in bytes
    * @param {string} language The 2-letter ISO language code to format for.
+   * @param {Function} localize The localization function
    */
-  _formatDisplayDataLimit(limit, language) {
-    return exists(limit) ? formatting.formatBytes(limit, language) : this.localize('no-data-limit');
+  _formatDisplayDataLimit(limit, language, localize) {
+    return exists(limit) ? formatting.formatBytes(limit, language) : localize('no-data-limit');
   }
 
   _formatInboundBytesUnit(totalBytes, language) {
@@ -945,7 +948,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         .format(monthlyCost);
   }
 
-  _computeManagedServerUtilzationPercentage(numBytes, monthlyLimitBytes) {
+  _computeManagedServerUtilizationPercentage(numBytes, monthlyLimitBytes) {
     let utilizationPercentage = 0;
     if (monthlyLimitBytes && numBytes) {
       utilizationPercentage = Math.round((numBytes / monthlyLimitBytes) * 100);
@@ -1042,6 +1045,10 @@ export class ServerView extends DirMixin(PolymerElement) {
     this.dispatchEvent(makePublicEvent('ForgetServerRequested', {serverId: this.serverId}));
   }
 
+  _isServerManaged(cloudId) {
+    return !!cloudId;
+  }
+
   /**
    * @param {DisplayAccessKey=} accessKey
    * @returns {number=}
@@ -1081,16 +1088,16 @@ export class ServerView extends DirMixin(PolymerElement) {
     return `width: ${width}px;`;
   }
 
-  _getDataLimitsUsageString(accessKey, UNUSED_language) {
+  _getDataLimitsUsageString(accessKey, language, localize) {
     if (!accessKey) {
       // We're in app startup
       return '';
     }
 
     const activeDataLimit = this._activeDataLimitForKey(accessKey);
-    const used = this._formatBytesTransferred(accessKey.transferredBytes, this.language, '0');
-    const total = this._formatDisplayDataLimit(activeDataLimit, this.language);
-    return this.localize('data-limits-usage', 'used', used, 'total', total);
+    const used = this._formatBytesTransferred(accessKey.transferredBytes, language, '0');
+    const total = this._formatDisplayDataLimit(activeDataLimit, language, localize);
+    return localize('data-limits-usage', 'used', used, 'total', total);
   }
 
 }

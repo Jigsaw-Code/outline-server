@@ -29,6 +29,7 @@ import {filterOptions, getShortName} from './location_formatting';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {DisplayAccessKey, ServerView} from './ui_components/outline-server-view';
+import {DisplayCloudId} from './ui_components/cloud-assets';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -58,7 +59,8 @@ async function computeDefaultDataLimit(
     // Assume non-managed servers have a data transfer capacity of 1TB.
     let serverTransferCapacity: server.DataAmount = {terabytes: 1};
     if (isManagedServer(server)) {
-      serverTransferCapacity = server.getHost().getMonthlyOutboundTransferLimit();
+      serverTransferCapacity =
+          server.getHost().getMonthlyOutboundTransferLimit() ?? serverTransferCapacity;
     }
     if (!accessKeys) {
       accessKeys = await server.listAccessKeys();
@@ -334,7 +336,7 @@ export class App {
       this.digitalOceanAccount = digitalOceanAccount;
       this.appRoot.digitalOceanAccount = {
         id: this.digitalOceanAccount.getId(),
-        name: await this.digitalOceanAccount.getName()
+        name: await this.digitalOceanAccount.getName(),
       };
       const status = await this.digitalOceanAccount.getStatus();
       if (status !== digitalocean.Status.ACTIVE) {
@@ -359,7 +361,10 @@ export class App {
     }
 
     this.gcpAccount = gcpAccount;
-    this.appRoot.gcpAccount = {id: this.gcpAccount.getId(), name: await this.gcpAccount.getName()};
+    this.appRoot.gcpAccount = {
+      id: this.gcpAccount.getId(),
+      name: await this.gcpAccount.getName(),
+    };
 
     const result = [];
     const gcpProjects = await this.gcpAccount.listProjects();
@@ -734,9 +739,7 @@ export class App {
     const view = await this.appRoot.getServerView(server.getId());
     const version = server.getVersion();
     view.selectedPage = 'managementView';
-    view.serverId = server.getId();
     view.metricsId = server.getMetricsId();
-    view.serverName = server.getName();
     view.serverHostname = server.getHostnameForAccessKeys();
     view.serverManagementApiUrl = server.getManagementApiUrl();
     view.serverPortForNewAccessKeys = server.getPortForNewAccessKeys();
@@ -755,14 +758,11 @@ export class App {
     }
 
     if (isManagedServer(server)) {
-      view.isServerManaged = true;
       const host = server.getHost();
       view.monthlyCost = host.getMonthlyCost()?.usd;
       view.monthlyOutboundTransferBytes =
           host.getMonthlyOutboundTransferLimit()?.terabytes * (10 ** 12);
       view.cloudLocation = host.getCloudLocation();
-    } else {
-      view.isServerManaged = false;
     }
 
     view.metricsEnabled = server.getMetricsEnabled();
@@ -795,10 +795,6 @@ export class App {
     const serverId = server.getId();
     const serverView = await this.appRoot.getServerView(serverId);
     serverView.selectedPage = 'unreachableView';
-    serverView.isServerManaged = isManagedServer(server);
-    serverView.serverName =
-        this.makeDisplayName(server);  // Don't get the name from the remote server.
-    serverView.serverId = serverId;
     serverView.retryDisplayingServer = async () => {
       await this.updateServerView(server);
     };
