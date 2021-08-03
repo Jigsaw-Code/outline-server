@@ -60,6 +60,10 @@ async function makeLocalize(language: string) {
   };
 }
 
+function fakeLocalize(id: string) {
+  return id;
+}
+
 const GCP_LOCATIONS: gcp.ZoneOption[] = [
   {
     cloudLocation: new gcp.Zone('us-central1-fake'),
@@ -89,8 +93,8 @@ const GCP_BILLING_ACCOUNTS: gcp.BillingAccount[] =
 @customElement('outline-test-app')
 export class TestApp extends LitElement {
   @property({type: String}) dir = 'ltr';
-  @property({type: Function}) localize: (...args: string[]) => string;
-  @property({type: String}) language = '';
+  @property({type: Function}) localize: (...args: string[]) => string = fakeLocalize;
+  @property({type: String}) language = 'es-419';  // Replaced asynchronously in the constructor.
   @property({type: Boolean}) savePerKeyDataLimitSuccessful = true;
   @property({type: Number}) keyDataLimit: number|undefined;
   @property({type: String}) gcpRefreshToken = '';

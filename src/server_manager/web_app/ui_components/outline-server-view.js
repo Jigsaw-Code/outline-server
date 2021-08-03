@@ -856,21 +856,12 @@ export class ServerView extends DirMixin(PolymerElement) {
     }));
   }
 
-  // Avoids uncaught exceptions when this.localize is transiently null,
-  // as is the case when using the widget gallery app.
-  _localize() {
-    if (!this.localize) {
-      return '';
-    }
-    return this.localize.apply(null, arguments);
-  }
-
   _handleShowPerKeyDataLimitDialogPressed(event) {
     // TODO(cohenjon) change to optional chaining when we upgrade to Electron > >= 8
     const accessKey = (event.model && event.model.item) || this.myConnection;
     const keyId = accessKey.id;
     const keyDataLimitBytes = accessKey.dataLimitBytes;
-    const keyName = accessKey === this.myConnection ? this._localize('server-my-access-key') :
+    const keyName = accessKey === this.myConnection ? this.localize('server-my-access-key') :
                                                       accessKey.name || accessKey.placeholderName;
     const defaultDataLimitBytes =
         this.isDefaultDataLimitEnabled ? this.defaultDataLimitBytes : undefined;
@@ -917,10 +908,10 @@ export class ServerView extends DirMixin(PolymerElement) {
   /**
    * @param {number=} limit The data limit in bytes
    * @param {string} language The 2-letter ISO language code to format for.
-   * @param {Function} UNUSED_localize The localization function
+   * @param {Function} localize The localization function
    */
-  _formatDisplayDataLimit(limit, language, UNUSED_localize) {
-    return exists(limit) ? formatting.formatBytes(limit, language) : this._localize('no-data-limit');
+  _formatDisplayDataLimit(limit, language, localize) {
+    return exists(limit) ? formatting.formatBytes(limit, language) : localize('no-data-limit');
   }
 
   _formatInboundBytesUnit(totalBytes, language) {
@@ -1106,7 +1097,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     const activeDataLimit = this._activeDataLimitForKey(accessKey);
     const used = this._formatBytesTransferred(accessKey.transferredBytes, language, '0');
     const total = this._formatDisplayDataLimit(activeDataLimit, language, localize);
-    return this._localize('data-limits-usage', 'used', used, 'total', total);
+    return localize('data-limits-usage', 'used', used, 'total', total);
   }
 
 }

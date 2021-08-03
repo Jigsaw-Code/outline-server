@@ -49,9 +49,6 @@ function getDataFormattingParams(numBytes: number): FormatParams {
 function makeDataAmountFormatter(language: string, params: FormatParams) {
   // We need to cast through `unknown` since `tsc` mistakenly omits the 'unit' field in
   // `NumberFormatOptions`.
-  if (!language) {
-    return null;
-  }
   const options = {
     style: 'unit',
     unit: params.unit,
@@ -78,11 +75,7 @@ export function formatBytesParts(numBytes: number, language: string): DataAmount
     throw new Error('formatBytesParts only works in web app code. Node usage isn\'t supported.');
   }
   const params = getDataFormattingParams(numBytes);
-  const formatter = makeDataAmountFormatter(language, params);
-  if (!formatter) {
-    return {value: '0', unit: 'unknown'};
-  }
-  const parts = formatter.formatToParts(params.value);
+  const parts = makeDataAmountFormatter(language, params).formatToParts(params.value);
   // Cast away the type since `tsc` mistakenly omits the possibility for a 'unit' part
   const isUnit = (part: Intl.NumberFormatPart) => (part as {type: string}).type === 'unit';
   const unitText = parts.find(isUnit).value;
@@ -110,11 +103,7 @@ export function formatBytes(numBytes: number, language: string): string {
     throw new Error('formatBytes only works in web app code. Node usage isn\'t supported.');
   }
   const params = getDataFormattingParams(numBytes);
-  const formatter = makeDataAmountFormatter(language, params);
-  if (!formatter) {
-    return null;
-  }
-  return formatter.format(params.value);
+  return makeDataAmountFormatter(language, params).format(params.value);
 }
 
 // TODO(JonathanDCohen222) Differentiate between this type, which is an input data limit, and
