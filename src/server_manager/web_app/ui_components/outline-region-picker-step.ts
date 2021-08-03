@@ -15,8 +15,6 @@
 */
 import '@polymer/paper-button/paper-button';
 import '@polymer/paper-progress/paper-progress';
-import '@polymer/iron-icon/iron-icon';
-import '@polymer/iron-icons/iron-icons';
 import './outline-step-view';
 
 import {css, customElement, html, LitElement, property} from 'lit-element';
@@ -136,10 +134,6 @@ export class OutlineRegionPicker extends LitElement {
       label.city-button {
         padding: 0 8px 8px 8px;
       }
-      iron-icon {
-        color: var(--primary-green);
-        padding: 6px 6px 0px 6px;
-      }
     `];
   }
 
@@ -162,7 +156,6 @@ export class OutlineRegionPicker extends LitElement {
               <div class="tag">
                 ${option.markedLowCost ? this.localize('region-lowest-cost') : ''}
               </div>
-              ${this.selectedIndex === index ? html`<iron-icon icon="check-circle"></iron-icon>` : ''}
             </div>
             <div class="flag-overlay">
               <img class="flag" src="${this._flagImage(option)}">
