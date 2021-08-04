@@ -890,7 +890,7 @@
     "description": "This string appears within the server creation flow, as a sub-header of the server selection view. Lets the user know about the implications of selecting a server location."
   },
   "region_lowest_cost": {
-    "message": "Lowest Cost",
+    "message": "Best Value",
     "description": "Appears within the server creation flow, indicating that a server option costs less than the other options."
   },
   "region_setup": {
