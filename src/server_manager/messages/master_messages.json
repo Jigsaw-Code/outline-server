@@ -81,6 +81,10 @@
     "message": "Changhua County",
     "description": "Name of the county in Taiwan."
   },
+  "geo_delhi": {
+    "message": "Delhi",
+    "description": "Name of the city in India."
+  },
   "geo_eemshaven": {
     "message": "Eemshaven",
     "description": "Name of the seaport in the Netherlands."
@@ -120,6 +124,10 @@
   "geo_los_angeles": {
     "message": "Los Angeles",
     "description": "Name of the city in California, USA."
+  },
+  "geo_melbourne": {
+    "message": "Melbourne",
+    "description": "Name of the city in Australia."
   },
   "geo_montreal": {
     "message": "Montréal",
