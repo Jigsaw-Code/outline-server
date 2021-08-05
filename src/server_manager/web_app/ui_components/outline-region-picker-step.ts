@@ -28,7 +28,7 @@ const FLAG_IMAGE_DIR = 'images/flags';
 // TODO: Reorganize type definitions to improve separation between
 // model and view.
 export interface RegionPickerOption extends CloudLocationOption {
-  markedLowCost?: boolean;
+  markedBestValue?: boolean;
 }
 
 @customElement('outline-region-picker-step')
@@ -112,7 +112,7 @@ export class OutlineRegionPicker extends LitElement {
         border-radius: inherit;
         background: linear-gradient(to right, rgba(20, 20, 20, 0.2) 0%, rgba(0, 0, 0, 0) 100%);
       }
-      .low-cost-label {
+      .best-value-label {
         background-color: var(--primary-green);
         color: #374248;
         position: absolute;
@@ -159,8 +159,8 @@ export class OutlineRegionPicker extends LitElement {
             <div class="geo-name">${getShortName(option.cloudLocation, this.localize)}</div>
             <div class="country-name">${option.cloudLocation.location?.countryIsRedundant() ? '' :
                 localizeCountry(option.cloudLocation.location, this.language)}</div>
-            ${option.markedLowCost ?
-                html`<div class="low-cost-label">${this.localize('region-lowest-cost')}</div>`
+            ${option.markedBestValue ?
+            html`<div class="best-value-label">${this.localize('region-best-value')}</div>`
                 : ''}
           </label>`;
         })}
