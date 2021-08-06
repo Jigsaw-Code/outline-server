@@ -188,7 +188,7 @@
   "per-key-data-limit-dialog-set-custom": "Set a custom data limit",
   "per-key-data-limit-dialog-title": "Data Limit - {keyName}",
   "region-description": "This is where your internet experience will come from.",
-  "region-lowest-cost": "Lowest Cost",
+  "region-best-value": "Best Value",
   "region-setup": "Set up Outline",
   "region-title": "Select the location of your server.",
   "remove": "Remove",

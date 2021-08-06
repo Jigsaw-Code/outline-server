@@ -365,7 +365,7 @@ export class GcpCreateServerApp extends LitElement {
     // asynchronously.
     this.regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
     this.regionPicker.options = filterOptions(zoneOptions).map(option => ({
-      markedLowCost: isInFreeTier(option.cloudLocation),
+      markedBestValue: isInFreeTier(option.cloudLocation),
       ...option
     }));
  }
