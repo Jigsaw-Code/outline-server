@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Karena saat ini Anda melaporkan metrik, penggunaan fitur batas data akan disertakan. Baca {openLink}kebijakan pengumpulan data{closeLink} untuk detail selengkapnya.",
   "data-limits-usage": "{used} dari {total} digunakan",
   "destroy": "Hancurkan",
-  "digitalocean-disconnect": "Putuskan sambungan",
+  "disconnect": "Putuskan sambungan",
   "digitalocean-disconnect-account": "Putus sambungan akun DigitalOcean",
   "digitalocean-unreachable": "Error ini mungkin disebabkan oleh firewall di jaringan Anda atau masalah konektivitas sementara dengan digitalocean.com.",
   "disabled": "Nonaktifkan",

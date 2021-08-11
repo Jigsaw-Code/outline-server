@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Оскільки ви зараз надсилаєте звіти про показники, у них включатиметься функція обмеження обсягу даних. Щоб отримати докладні відомості, перегляньте {openLink}правила збору даних{closeLink}.",
   "data-limits-usage": "Використано {used} з {total}",
   "destroy": "Видалити",
-  "digitalocean-disconnect": "Відключити",
+  "disconnect": "Відключити",
   "digitalocean-disconnect-account": "Відключити обліковий запис DigitalOcean",
   "digitalocean-unreachable": "Цю помилку може спричиняти брандмауер у вашій мережі або тимчасові проблеми з'єднання з digitalocean.com.",
   "disabled": "Вимкнено",

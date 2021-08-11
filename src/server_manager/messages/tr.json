@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Şu anda metrik raporlaması yapmakta olduğunuzdan veri limiti özelliğinin kullanımı dahil edilecek. Daha ayrıntılı bilgi için lütfen {openLink}veri toplama politikasını{closeLink} inceleyin.",
   "data-limits-usage": "{used}/{total} kullanılıyor",
   "destroy": "Sil",
-  "digitalocean-disconnect": "Bağlantıyı kes",
+  "disconnect": "Bağlantıyı kes",
   "digitalocean-disconnect-account": "DigitalOcean hesabının bağlantısını kesin",
   "digitalocean-unreachable": "Bu hatanın nedeni ağınızdaki bir güvenlik duvarı veya digitalocean.com sitesiyle ilgili geçici bağlantı sorunları olabilir.",
   "disabled": "Devre dışı",

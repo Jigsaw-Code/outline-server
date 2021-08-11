@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "چونکہ آپ فی الحال میٹرکس کی اطلاع دے رہے ہیں، اس لئے ڈیٹا کی حدود خصوصیت کا استعمال شامل کیا جائے گا۔ مزید تفصیلات کے لیے براہ کرم {openLink}ڈیٹا کی جمع آوری کی پالیسی{closeLink} دیکھیں۔",
   "data-limits-usage": "{total} میں سے {used} استعمال کیا گیا",
   "destroy": "حذف کریں",
-  "digitalocean-disconnect": "غیر منسلک کریں",
+  "disconnect": "غیر منسلک کریں",
   "digitalocean-disconnect-account": "DigitalOcean اکاؤنٹ غیر منسلک کریں",
   "digitalocean-unreachable": "یہ خرابی آپ کے نیٹ ورک پر فائروال یا digitalocean.com کے ساتھ عارضی کنیکٹوٹی کے مسائل کی وجہ سے ہوسکتی ہے۔",
   "disabled": "غیر فعال ہے",

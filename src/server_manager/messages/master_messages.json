@@ -275,9 +275,9 @@
     "message": "Destroy",
     "description": "This string appears as a button in a dialog that requests user confirmation for destroying a server. Clicking the button causes the server to be deleted."
   },
-  "digitalocean_disconnect": {
+  "disconnect": {
     "message": "Disconnect",
-    "description": "This string appears as a button in a dialog to disconnect the user's DigitalOcean account from the application. Clicking it signs the user out of DigitalOcean, a cloud server provider."
+    "description": "This string appears as a button in a dialog to disconnect the user's cloud service account from the application. Clicking it signs the user out of the cloud server provider."
   },
   "digitalocean_disconnect_account": {
     "message": "Disconnect DigitalOcean account",
@@ -622,10 +622,6 @@
   "gcp_create_vm": {
     "message": "Create a VM Instance",
     "description": "This string appears as a header for a set of instructions for creating a new Google Cloud VM"
-  },
-  "gcp_disconnect": {
-    "message": "Disconnect",
-    "description": "This string appears as a button in a dialog to disconnect the user's Google Cloud Platform account from the application. Clicking it signs the user out of Google Cloud Platform, a cloud server provider."
   },
   "gcp_disconnect_account": {
     "message": "Disconnect Google Cloud Platform account",

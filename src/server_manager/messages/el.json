@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Εφόσον στέλνετε αναφορές μετρήσεων αυτήν τη στιγμή, θα συμπεριληφθεί η χρήση της λειτουργίας ορίων δεδομένων. Ανατρέξτε στην {openLink}πολιτική συλλογής δεδομένων{closeLink} για περισσότερες λεπτομέρειες.",
   "data-limits-usage": "Χρησιμοποιούνται {used} από {total}",
   "destroy": "Διαγραφή",
-  "digitalocean-disconnect": "Αποσύνδεση",
+  "disconnect": "Αποσύνδεση",
   "digitalocean-disconnect-account": "Αποσύνδεση λογαριασμού DigitalOcean",
   "digitalocean-unreachable": "Αυτό το σφάλμα μπορεί να οφείλεται σε ένα τείχος προστασίας στο δίκτυό σας ή σε προσωρινά προβλήματα σύνδεσης με τη διεύθυνση digitalocean.com.",
   "disabled": "Απενεργοποίηση",

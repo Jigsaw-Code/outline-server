@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Apkopojot rādītāju pārskatus, tiks ietverta datu ierobežojumu funkcija. Plašāku informāciju skatiet {openLink}datu vākšanas politikā{closeLink}.",
   "data-limits-usage": "Izmantots: {used} no {total}",
   "destroy": "Iznīcināt",
-  "digitalocean-disconnect": "Pārtraukt savienojumu",
+  "disconnect": "Pārtraukt savienojumu",
   "digitalocean-disconnect-account": "DigitalOcean konta atsaistīšana",
   "digitalocean-unreachable": "Iespējams, šī kļūda ir saistīta ar jūsu tīkla ugunsmūri vai ar īslaicīgām savienojamības problēmām vietnē digitalocean.com.",
   "disabled": "Atspējota",

@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Siden du rapporterer statistikk nå, tas bruk av funksjonen for datagrenser med. Du finner mer informasjon i {openLink}retningslinjene for innsamling av data{closeLink}.",
   "data-limits-usage": "{used} av {total} er brukt",
   "destroy": "Slett",
-  "digitalocean-disconnect": "Koble fra",
+  "disconnect": "Koble fra",
   "digitalocean-disconnect-account": "Koble fra DigitalOcean-kontoen",
   "digitalocean-unreachable": "Denne feilen kan skyldes en brannmur på nettverket ditt eller midlertidige tilkoblingsproblemer med digitalocean.com.",
   "disabled": "Slått av",

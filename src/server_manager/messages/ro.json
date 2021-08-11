@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Deoarece în prezent raportați valori, se va include și utilizarea funcției de limite de date. Consultați {openLink}politica de colectare a datelor{closeLink} pentru a afla mai multe detalii.",
   "data-limits-usage": "Se utilizează {used} din {total}",
   "destroy": "Distrugeți",
-  "digitalocean-disconnect": "Deconectați",
+  "disconnect": "Deconectați",
   "digitalocean-disconnect-account": "Deconectați contul DigitalOcean",
   "digitalocean-unreachable": "Este posibil ca eroarea să fie cauzată de un firewall din rețeaua dvs. sau de probleme temporare de conectare la digitalocean.com.",
   "disabled": "Dezactivată",

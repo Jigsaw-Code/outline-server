@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Будући да тренутно шаљете извештаје о показатељима, биће обухваћена употреба функције за ограничење потрошње података. Додатне податке потражите у {openLink}смерницама за прикупљање података{closeLink}.",
   "data-limits-usage": "Искоришћено је {used} од {total}",
   "destroy": "Избриши",
-  "digitalocean-disconnect": "Прекини везу",
+  "disconnect": "Прекини везу",
   "digitalocean-disconnect-account": "Прекините везу са DigitalOcean налогом",
   "digitalocean-unreachable": "До ове грешке је можда дошло због заштитног зида на вашој мрежи или привремених проблема са повезивањем на digitalocean.com.",
   "disabled": "Онемогућено",

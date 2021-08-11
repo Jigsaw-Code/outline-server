@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Тъй като понастоящем отчитате показатели, ще се включи използването на функцията за ограничение на данните. Моля, вижте {openLink}Правилата за събиране на данни{closeLink} за повече подробности.",
   "data-limits-usage": "Използвани са {used} от {total}",
   "destroy": "Унищожаване",
-  "digitalocean-disconnect": "Прекратяване на връзката",
+  "disconnect": "Прекратяване на връзката",
   "digitalocean-disconnect-account": "Прекратяване на връзката с профила в DigitalOcean",
   "digitalocean-unreachable": "Тази грешка може да се дължи на защитна стена в мрежата ви или на временни проблеми със свързаността на digitalocean.com.",
   "disabled": "Деактивиране",

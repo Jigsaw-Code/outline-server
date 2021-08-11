@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Budući da trenutačno prijavljujete mjerne podatke, uključit će se značajka ograničenja podatkovnog prometa. Više pojedinosti potražite u {openLink}pravilima o prikupljanju podataka{closeLink}.",
   "data-limits-usage": "Iskorišteno: {used} od {total}",
   "destroy": "Izbriši",
-  "digitalocean-disconnect": "Prekini vezu",
+  "disconnect": "Prekini vezu",
   "digitalocean-disconnect-account": "Prekinite vezu s DigitalOcean računom",
   "digitalocean-unreachable": "Pogreška je možda nastala zbog vatrozida na vašoj mreži ili privremenim problemima s povezivanjem putem digitalocean.com.",
   "disabled": "Onemogućeno",

@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "چون درحال‌حاضر سنجه‌ها را گزارش می‌دهید، استفاده از ویژگی محدودیت‌های داده لحاظ می‌شود. لطفاً برای جزئیات بیشتر {openLink}خط‌مشی جمع‌آوری داده{closeLink} را ببینید.",
   "data-limits-usage": "{used} از {total} استفاده شده",
   "destroy": "تخریب شود",
-  "digitalocean-disconnect": "قطع اتصال",
+  "disconnect": "قطع اتصال",
   "digitalocean-disconnect-account": "اتصال حساب DigitalOcean را قطع کنید",
   "digitalocean-unreachable": "این خطا ممکن است ناشی از دیوار آتشی در شبکه شما یا مشکلات موقتی اتصال در digitalocean.com باشد.",
   "disabled": "غیرفعال",

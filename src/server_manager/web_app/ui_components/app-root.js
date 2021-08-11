@@ -465,7 +465,7 @@ export class AppRoot extends mixinBehaviors
             <div class="do-overflow-menu" slot="dropdown-content">
               <h4>[[localize('digitalocean-disconnect-account')]]</h4>
               <div class="account-info"><img src="images/digital_ocean_logo.svg">[[digitalOceanAccount.name]]</div>
-              <div class="sign-out-button" on-tap="_digitalOceanSignOutTapped">[[localize('digitalocean-disconnect')]]</div>
+              <div class="sign-out-button" on-tap="_digitalOceanSignOutTapped">[[localize('disconnect')]]</div>
             </div>
           </paper-menu-button>
         </div>
@@ -487,7 +487,7 @@ export class AppRoot extends mixinBehaviors
             <div class="do-overflow-menu" slot="dropdown-content">
               <h4>[[localize('gcp-disconnect-account')]]</h4>
               <div class="account-info"><img src="images/gcp-logo.svg">[[gcpAccount.name]]</div>
-              <div class="sign-out-button" on-tap="_gcpSignOutTapped">[[localize('gcp-disconnect')]]</div>
+              <div class="sign-out-button" on-tap="_gcpSignOutTapped">[[localize('disconnect')]]</div>
             </div>
           </paper-menu-button>
         </div>

@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "ระบบจะใช้ฟีเจอร์ขีดจำกัดของข้อมูลเนื่องจากกำลังมีการรายงานเมตริกอยู่ในขณะนี้ โปรดดูรายละเอียดเพิ่มเติมใน{openLink}นโยบายการเก็บรวบรวมข้อมูล{closeLink}",
   "data-limits-usage": "ใช้ไป {used} จาก {total}",
   "destroy": "ลบ",
-  "digitalocean-disconnect": "ยกเลิกการเชื่อมต่อ",
+  "disconnect": "ยกเลิกการเชื่อมต่อ",
   "digitalocean-disconnect-account": "ยกเลิกการเชื่อมต่อบัญชี DigitalOcean",
   "digitalocean-unreachable": "ข้อผิดพลาดนี้อาจเกิดจากไฟร์วอลล์ในเครือข่ายของคุณหรือปัญหาชั่วคราวในการเชื่อมต่อกับ digitalocean.com",
   "disabled": "ปิดใช้",

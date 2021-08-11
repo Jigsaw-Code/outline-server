@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "نظرًا لأنك ترسل تقارير عن المقاييس حاليًا، سيتم إدراج ميزة الحد الأقصى للبيانات. يُرجى الرجوع إلى {openLink}سياسة جمع البيانات{closeLink} لمزيد من التفاصيل.",
   "data-limits-usage": "تم استخدام {used} من إجمالي {total}.",
   "destroy": "إزالة",
-  "digitalocean-disconnect": "قطع الاتصال",
+  "disconnect": "قطع الاتصال",
   "digitalocean-disconnect-account": "قطع الاتصال بحساب DigitalOcean",
   "digitalocean-unreachable": "قد يرجع السبب في حدوث هذا الخطأ إلى وجود جدار ناري على شبكتك أو حدوث مشاكل مؤقتة عند الاتصال بالرابط digitalocean.com.",
   "disabled": "متوقفة",

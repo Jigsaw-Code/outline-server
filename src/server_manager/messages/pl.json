@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Ponieważ obecnie raportujesz dane, zostaną w nich uwzględnione informacje o funkcji ograniczania użycia danych. Aby dowiedzieć się więcej na ten temat, poznaj {openLink}zasady zbierania danych{closeLink}.",
   "data-limits-usage": "Użyto {used} z {total}",
   "destroy": "Zlikwiduj",
-  "digitalocean-disconnect": "Odłącz",
+  "disconnect": "Odłącz",
   "digitalocean-disconnect-account": "Odłącz konto DigitalOcean",
   "digitalocean-unreachable": "Ten błąd może być spowodowany przez zaporę w Twojej sieci albo tymczasowe problemy z połączeniem z serwerem digitalocean.com",
   "disabled": "Wyłączono",

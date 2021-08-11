@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Dahil kasalukuyan kang nag-uulat ng mga sukatan, isasama ang paggamit ng feature na mga limitasyon ng data. Pakitingnan ang {openLink}patakaran sa pangongolekta ng data{closeLink} para sa higit pang detalye.",
   "data-limits-usage": "{used} sa {total} ang nagamit",
   "destroy": "Sirain",
-  "digitalocean-disconnect": "Idiskonekta",
+  "disconnect": "Idiskonekta",
   "digitalocean-disconnect-account": "Idiskonekta ang DigitalOcean account",
   "digitalocean-unreachable": "Ang error na ito ay posibleng dahil sa firewall sa iyong network o mga pansamantalang isyu sa pagkakakonekta sa digitalocean.com.",
   "disabled": "Naka-disable",
