@@ -223,7 +223,7 @@ export class GcpAccount implements gcp.Account {
         {
           boot: true,
           initializeParams: {
-            sourceImage: 'projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts',
+            sourceImage: 'projects/ubuntu-os-cloud/global/images/family/ubuntu-2004-lts',
           },
         },
       ],

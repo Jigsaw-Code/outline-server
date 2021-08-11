@@ -95,6 +95,25 @@ function finish {
 }
 trap finish EXIT
 
+# Docker is not installed by default.  If we don't install it here,
+# install.sh will download it using the get.docker.com script (much slower).
+log_for_sentry "Downloading Docker"
+# Following instructions from https://docs.docker.com/engine/install/ubuntu/#install-from-a-package
+
+declare -ar PACKAGES=(
+  'containerd.io_1.4.9-1_amd64.deb'
+  'docker-ce_20.10.8~3-0~ubuntu-focal_amd64.deb'
+  'docker-ce-cli_20.10.8~3-0~ubuntu-focal_amd64.deb'
+)
+
+declare packages_csv
+packages_csv="$(printf ',%s' "${PACKAGES[@]}")"
+packages_csv="${packages_csv:1}"
+curl --remote-name-all --fail "https://download.docker.com/linux/ubuntu/dists/focal/pool/stable/amd64/{${packages_csv}}"
+log_for_sentry "Installing Docker"
+dpkg --install "${PACKAGES[@]}"
+rm "${PACKAGES[@]}"
+
 # Run install script asynchronously, so tags can be written as soon as they are ready.
 log_for_sentry "Running install_server.sh"
 ./install_server.sh&
