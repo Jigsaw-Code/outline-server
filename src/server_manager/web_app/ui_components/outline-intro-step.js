@@ -162,12 +162,12 @@ const AWS_CARD_HTML = html`
       list-style-image: url("../images/check_orange_rtl.svg");
     }
   </style>
-  <div id="gcp" class="card" on-tap="setUpGcpAdvancedTapped" hidden\$="[[_showNewGcpFlow(gcpAccountName)]]">
+  <div id="aws" class="card" on-tap="setUpAwsTapped">
     <div class="card-header">
       <div class="tag">[[localize('setup-advanced')]]</div>
-      <img src="images/gcp-logo.svg">
+      <img src="images/aws-logo.svg">
     </div>
-    <div class="card-title">Google Cloud Platform</div>
+    <div class="card-title">Amazon Lightsail</div>
     <div class="card-body">
       <div class="description">
         <ul>
@@ -178,7 +178,7 @@ const AWS_CARD_HTML = html`
       </div>
     </div>
     <div class="card-footer">
-      <paper-button class="primary">[[localize('setup-action')]]</paper-button>
+      <paper-button on-tap="setUpAwsTapped" class="primary">[[localize('setup-action')]]</paper-button>
     </div>
   </div>
 `;
