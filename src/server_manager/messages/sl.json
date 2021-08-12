@@ -167,7 +167,7 @@
   "server-data-used": "Uporabljena količina/zadnjih 30 dni",
   "server-destroy": "Uniči strežnik",
   "server-help-access-key-description": "Ključe za dostop delite s prijatelji, tako da se lahko povežejo v vaš strežnik Outline. V vseh svojih napravah lahko uporabijo isti ključ za dostop.",
-  "next": "Naprej",
+  "server-help-access-key-next": "Naprej",
   "server-help-access-key-title": "Ustvarjanje ključev, delitev dostopa",
   "server-help-connection-description": "Kliknite tukaj, da namestite aplikacijo odjemalca Outline prek osebnega ključa za dostop do strežnika Outline.",
   "server-help-connection-ok": "V redu, razumem.",

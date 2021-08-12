@@ -167,7 +167,7 @@
   "server-data-used": "Išnaudotas pralaidumas / pastarosios 30 dienų",
   "server-destroy": "Naikinti serverį",
   "server-help-access-key-description": "Bendrinkite prieigos raktą su draugais, kad jie galėtų prisijungti prie jūsų „Outline“ serverio. Jie galės naudoti tą patį prieigos raktą visuose įrenginiuose.",
-  "next": "Kitas",
+  "server-help-access-key-next": "Kitas",
   "server-help-access-key-title": "Raktų kūrimas, prieigos bendrinimas",
   "server-help-connection-description": "Spustelėkite čia, kad įdiegtumėte „Outline“ klientų programą naudodami prieigos raktą „Outline“ serveryje.",
   "server-help-connection-ok": "Gerai, supratau!",

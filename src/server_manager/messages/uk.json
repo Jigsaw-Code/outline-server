@@ -167,7 +167,7 @@
   "server-data-used": "Використано ліміту за 30 днів",
   "server-destroy": "Видалити сервер",
   "server-help-access-key-description": "Поділіться ключами доступу з друзями, щоб вони могли підключатися до вашого сервера Outline. Вони можуть використовувати один ключ доступу на всіх своїх пристроях.",
-  "next": "Далі",
+  "server-help-access-key-next": "Далі",
   "server-help-access-key-title": "Створіть ключі та надайте доступ",
   "server-help-connection-description": "Натисніть тут, щоб встановити клієнтський додаток Outline, використовуючи особистий ключ доступу до свого сервера Outline.",
   "server-help-connection-ok": "Зрозуміло",

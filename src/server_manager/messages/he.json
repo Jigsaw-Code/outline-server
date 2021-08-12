@@ -167,7 +167,7 @@
   "server-data-used": "אחוז הניצול ב-30 הימים האחרונים",
   "server-destroy": "מחיקת השרת",
   "server-help-access-key-description": "הידעת שאפשר לשתף את מפתחות הגישה עם חברים כדי שהם יוכלו להתחבר לשרת שלך ב-Outline? הם יוכלו להשתמש באותו מפתח גישה בכל המכשירים שלהם.",
-  "next": "הבא",
+  "server-help-access-key-next": "הבא",
   "server-help-access-key-title": "יצירת מפתחות, שיתוף הגישה",
   "server-help-connection-description": "אפשר ללחוץ כאן כדי להתקין את אפליקציית הלקוח של Outline ולהשתמש במפתח הגישה האישי לשרת שלך ב-Outline.",
   "server-help-connection-ok": "אוקיי, הבנתי!",

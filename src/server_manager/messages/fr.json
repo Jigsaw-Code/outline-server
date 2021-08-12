@@ -167,7 +167,7 @@
   "server-data-used": "Dotation utilisée/30 derniers jours",
   "server-destroy": "Supprimer le serveur",
   "server-help-access-key-description": "Partagez vos clés d'accès avec vos proches, afin qu'ils puissent se connecter à votre serveur Outline. Ils peuvent utiliser la même clé d'accès sur tous leurs appareils.",
-  "next": "Suivant",
+  "server-help-access-key-next": "Suivant",
   "server-help-access-key-title": "Créer des clés et partager l'accès",
   "server-help-connection-description": "Cliquez ici pour installer l'application cliente Outline à l'aide de votre clé personnelle d'accès à votre serveur Outline.",
   "server-help-connection-ok": "OK",

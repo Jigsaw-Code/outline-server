@@ -559,6 +559,11 @@
       }
     }
   },
+  "gcp_billing_action": {
+    "message": "Next",
+    "description": "Button label for a button that opens the billing page in the web browser (i.e. next step).",
+    "meaning": "gcp_billing_action"
+  },
   "gcp_billing_body": {
     "message": "Waiting for you to $START_OF_LINK$add a billing account on Google Cloud$END_OF_LINK$",
     "description": "Body text on the billing page",
@@ -961,9 +966,9 @@
     "message": "Share access keys with friends, so they can connect to your Outline server. They can use the same access key on all their devices.",
     "description": "This string appears within a help bubble as a paragraph. The help bubble is displayed when a server is installed. Informs to the user how to share access to their server."
   },
-  "next": {
+  "server_help_access_key_next": {
     "message": "Next",
-    "description": "Button label for a button that takes a user to the next step in a sequence."
+    "description": "This string appears within a help bubble as a button. Clicking it displays the next help bubble."
   },
   "server_help_access_key_title": {
     "message": "Create keys, share access",

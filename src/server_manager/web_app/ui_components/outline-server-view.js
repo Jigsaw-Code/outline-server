@@ -421,7 +421,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       <img src="images/key-tip-2x.png">
       <h3>[[localize('server-help-access-key-title')]]</h3>
       <p>[[localize('server-help-access-key-description')]]</p>
-      <paper-button on-tap="_closeAddAccessKeyHelpBubble">[[localize('next')]]</paper-button>
+      <paper-button on-tap="_closeAddAccessKeyHelpBubble">[[localize('server-help-access-key-next')]]</paper-button>
     </outline-help-bubble>
     <outline-help-bubble id="dataLimitsHelpBubble" vertical-align="top" horizontal-align="right">
       <h3>[[localize('data-limits-dialog-title')]]</h3>

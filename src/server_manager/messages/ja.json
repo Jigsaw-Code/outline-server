@@ -167,7 +167,7 @@
   "server-data-used": "過去 30 日間の使用割り当て量",
   "server-destroy": "サーバーを削除",
   "server-help-access-key-description": "他のユーザーが Outline サーバーに接続できるよう、アクセスキーを共有します。すべてのデバイスで同じアクセスキーを使用できます。",
-  "next": "次へ",
+  "server-help-access-key-next": "次へ",
   "server-help-access-key-title": "キーの作成とアクセスの共有",
   "server-help-connection-description": "ここをクリックして Outline クライアント アプリをインストールし、個人のアクセスキーを使用して Outline サーバーに接続します。",
   "server-help-connection-ok": "OK",

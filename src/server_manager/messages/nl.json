@@ -167,7 +167,7 @@
   "server-data-used": "Gebruikte toegestane hoeveelheid/afgelopen dertig dagen",
   "server-destroy": "Server vernietigen",
   "server-help-access-key-description": "Deel toegangssleutels met vrienden, zodat zij verbinding kunnen maken met je Outline-server. Ze kunnen dezelfde sleutel gebruiken op al hun apparaten.",
-  "next": "Volgende",
+  "server-help-access-key-next": "Volgende",
   "server-help-access-key-title": "Sleutels maken, toegang delen",
   "server-help-connection-description": "Klik hier om de Outline-client-app te installeren met je persoonlijke toegangssleutel voor je Outline-server.",
   "server-help-connection-ok": "OK",

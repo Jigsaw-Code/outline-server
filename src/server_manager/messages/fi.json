@@ -167,7 +167,7 @@
   "server-data-used": "Kiintiötä käytetty / 30 viime päivää",
   "server-destroy": "Tuhoa palvelin",
   "server-help-access-key-description": "Jaa pääsyavaimia ystäville, jotta he voivat muodostaa yhteyden Outline-palvelimeesi. He voivat käyttää samaa pääsyavainta kaikilla laitteillaan.",
-  "next": "Seuraava",
+  "server-help-access-key-next": "Seuraava",
   "server-help-access-key-title": "Luo avaimia, jaa pääsyoikeuksia",
   "server-help-connection-description": "Asenna Outline-asiakassovellus klikkaamalla tätä. Käytä henkilökohtaista Outline-palvelimen pääsyavaintasi.",
   "server-help-connection-ok": "Selvä!",

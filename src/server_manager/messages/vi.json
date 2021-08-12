@@ -167,7 +167,7 @@
   "server-data-used": "Hạn mức sử dụng/30 ngày qua",
   "server-destroy": "Hủy máy chủ",
   "server-help-access-key-description": "Chia sẻ khóa truy cập với bạn bè để họ có thể kết nối với máy chủ Outline của bạn. Họ có thể dùng cùng một khóa truy cập trên tất cả thiết bị.",
-  "next": "Tiếp",
+  "server-help-access-key-next": "Tiếp",
   "server-help-access-key-title": "Tạo khóa, chia sẻ quyền truy cập",
   "server-help-connection-description": "Nhấp vào đây để cài đặt ứng dụng Outline, sử dụng khóa truy cập cá nhân vào máy chủ Outline của bạn.",
   "server-help-connection-ok": "Đã hiểu!",

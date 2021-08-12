@@ -167,7 +167,7 @@
   "server-data-used": "Nagamit na allowance / huling 30 araw",
   "server-destroy": "Sirain ang server",
   "server-help-access-key-description": "Magbahagi ng mga access key sa mga kaibigan, para makakonekta sila sa iyong Outline server. Puwede nilang gamitin ang iisang access key sa lahat ng kanilang device.",
-  "next": "Susunod",
+  "server-help-access-key-next": "Susunod",
   "server-help-access-key-title": "Gumawa ng mga key, magbahagi ng access",
   "server-help-connection-description": "Mag-click dito para i-install ang client app ng Outline, gamit ang iyong personal na access key sa Outline server mo.",
   "server-help-connection-ok": "Okay!",

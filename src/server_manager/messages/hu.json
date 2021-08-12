@@ -167,7 +167,7 @@
   "server-data-used": "Felhasznált keret/elmúlt 30 nap",
   "server-destroy": "Szerver megsemmisítése",
   "server-help-access-key-description": "Ossza meg a hozzáférési kulcsokat az ismerőseivel, hogy csatlakozhassanak az Outline-szerveréhez. Az összes eszközükön ugyanazt a hozzáférési kulcsot használhatják.",
-  "next": "Következő",
+  "server-help-access-key-next": "Következő",
   "server-help-access-key-title": "Kulcsok létrehozása, hozzáférés megosztása",
   "server-help-connection-description": "Kattintson ide az Outline ügyfélprogramnak az Outline-szerveréhez tartozó személyes hozzáférési kulccsal történő telepítéséhez",
   "server-help-connection-ok": "Rendben, értem!",

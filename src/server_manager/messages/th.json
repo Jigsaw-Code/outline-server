@@ -167,7 +167,7 @@
   "server-data-used": "ปริมาณที่ใช้ไป / 30 วันที่ผ่านมา",
   "server-destroy": "ลบเซิร์ฟเวอร์",
   "server-help-access-key-description": "แชร์คีย์การเข้าถึงกับเพื่อน เพื่อให้เพื่อนเชื่อมต่อเซิร์ฟเวอร์ Outline ของคุณได้ โดยให้ใช้คีย์การเข้าถึงเดียวกันนี้กับอุปกรณ์ทุกเครื่อง",
-  "next": "ถัดไป",
+  "server-help-access-key-next": "ถัดไป",
   "server-help-access-key-title": "สร้างคีย์และแชร์สิทธิ์เข้าถึง",
   "server-help-connection-description": "คลิกที่นี่เพื่อติดตั้งแอปไคลเอ็นต์ Outline โดยใช้คีย์การเข้าถึงเซิร์ฟเวอร์ Outline ส่วนตัวของคุณ",
   "server-help-connection-ok": "รับทราบ",

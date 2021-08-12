@@ -167,7 +167,7 @@
   "server-data-used": "Använd datamängd de senaste 30 dagarna",
   "server-destroy": "Förstör servern",
   "server-help-access-key-description": "Dela åtkomstnycklar med vänner, så att de kan ansluta till din Outline-server. De kan använda samma åtkomstnyckel på alla sina enheter.",
-  "next": "Nästa",
+  "server-help-access-key-next": "Nästa",
   "server-help-access-key-title": "Skapa nycklar, dela åtkomst",
   "server-help-connection-description": "Klicka här för att installera klientappen för Outline. Använd din personliga åtkomstnyckel till Outline-servern.",
   "server-help-connection-ok": "OK!",

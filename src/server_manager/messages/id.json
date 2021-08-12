@@ -167,7 +167,7 @@
   "server-data-used": "Batas yang digunakan/30 hari terakhir",
   "server-destroy": "Hancurkan server",
   "server-help-access-key-description": "Bagikan kunci akses dengan teman agar mereka dapat tersambung ke server Outline Anda. Mereka dapat menggunakan kunci akses yang sama di semua perangkatnya.",
-  "next": "Berikutnya",
+  "server-help-access-key-next": "Berikutnya",
   "server-help-access-key-title": "Buat kunci, bagikan akses",
   "server-help-connection-description": "Klik di sini untuk menginstal aplikasi klien Outline, menggunakan kunci akses pribadi ke server Outline Anda.",
   "server-help-connection-ok": "Oke, mengerti.",

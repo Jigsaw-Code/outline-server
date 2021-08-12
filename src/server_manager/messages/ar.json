@@ -167,7 +167,7 @@
   "server-data-used": "معدّل نقل البيانات / آخر 30 يومًا",
   "server-destroy": "إزالة الخادم",
   "server-help-access-key-description": "يمكنك مشاركة مفاتيح الوصول مع الأصدقاء حتى يتمكّنوا من الاتصال بخادمك على Outline. يمكنهم استخدام نفس مفتاح الوصول على جميع أجهزتهم.",
-  "next": "التالي",
+  "server-help-access-key-next": "التالي",
   "server-help-access-key-title": "إنشاء المفاتيح ومشاركة الوصول",
   "server-help-connection-description": "انقر هنا لتثبيت تطبيق عميل Outline باستخدام مفتاح وصولك الشخصي إلى خادم Outline.",
   "server-help-connection-ok": "حسنًا.",

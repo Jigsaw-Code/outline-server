@@ -167,7 +167,7 @@
   "server-data-used": "Искоришћена количина/последњих 30 дана",
   "server-destroy": "Избриши сервер",
   "server-help-access-key-description": "Делите приступне кључеве са пријатељима да би могли да се повезују на ваш Outline сервер. Могу да користе исти приступни кључ на свим уређајима.",
-  "next": "Даље",
+  "server-help-access-key-next": "Даље",
   "server-help-access-key-title": "Правите кључеве, делите приступ",
   "server-help-connection-description": "Кликните овде да бисте инсталирали клијентску апликацију Outline помоћу личног приступног кључа за Outline сервер.",
   "server-help-connection-ok": "Важи!",

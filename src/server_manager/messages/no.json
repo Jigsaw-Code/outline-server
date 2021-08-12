@@ -167,7 +167,7 @@
   "server-data-used": "Kvote brukt / siste 30 dager",
   "server-destroy": "Slett tjeneren",
   "server-help-access-key-description": "Del tilgangsnøkler med venner slik at de kan koble seg til Outline-tjeneren din. De kan bruke samme tilgangsnøkkel på alle enhetene sine.",
-  "next": "Neste",
+  "server-help-access-key-next": "Neste",
   "server-help-access-key-title": "Opprett nøkler og del tilgang",
   "server-help-connection-description": "Klikk her for å installere Outline-klientappen ved å bruke den personlige tilgangsnøkkelen din til Outline-tjeneren din.",
   "server-help-connection-ok": "OK, skjønner!",

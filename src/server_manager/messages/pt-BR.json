@@ -167,7 +167,7 @@
   "server-data-used": "Limite usado / últimos 30 dias",
   "server-destroy": "Destruir o servidor",
   "server-help-access-key-description": "Compartilhe as chaves de acesso com os amigos para eles se conectarem ao seu servidor do Outline. Eles podem usar a mesma chave de acesso em todos os dispositivos.",
-  "next": "Próxima",
+  "server-help-access-key-next": "Próxima",
   "server-help-access-key-title": "Crie chaves, compartilhe o acesso",
   "server-help-connection-description": "Clique aqui para instalar o app cliente do Outline usando sua chave de acesso pessoal com o servidor do Outline.",
   "server-help-connection-ok": "Ok.",

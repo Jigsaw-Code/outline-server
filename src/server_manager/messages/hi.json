@@ -167,7 +167,7 @@
   "server-data-used": "इस्तेमाल किया गया कुल डेटा / पिछले 30 दिनों में",
   "server-destroy": "सर्वर मिटाएं",
   "server-help-access-key-description": "दोस्तों के साथ ऐक्सेस कुंजियां शेयर करें, ताकि वे आपके आउटलाइन सर्वर से कनेक्ट हो सकें. वे अपने सभी डिवाइस पर उसी ऐक्सेस कुंजी का इस्तेमाल कर सकते हैं.",
-  "next": "आगे बढ़ें",
+  "server-help-access-key-next": "आगे बढ़ें",
   "server-help-access-key-title": "कुंजियां बनाएं और ऐक्सेस शेयर करें",
   "server-help-connection-description": "अपने Outline सर्वर की निजी ऐक्सेस कुंजी का इस्तेमाल करके, Outline क्लाइंट ऐप्लिकेशन इंस्टॉल करने के लिए यहां क्लिक करें.",
   "server-help-connection-ok": "ठीक है, समझ लिया!",

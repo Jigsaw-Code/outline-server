@@ -167,7 +167,7 @@
   "server-data-used": "Procentdel af de tilladte data, der er blevet brugt i løbet af de seneste 30 dage",
   "server-destroy": "Slet server",
   "server-help-access-key-description": "Del din adgangsnøgle med dine venner, så de kan forbinde til din Outline-server. De kan bruge samme adgangsnøgle på alle deres enheder.",
-  "next": "Næste",
+  "server-help-access-key-next": "Næste",
   "server-help-access-key-title": "Opret nøgler og del adgang",
   "server-help-connection-description": "Klik her for at installere Outline-klienten, og brug din personlige adgangsnøgle til din Outline-server.",
   "server-help-connection-ok": "OK",

@@ -167,7 +167,7 @@
   "server-data-used": "ጥቅም ላይ የዋለው አበል / ባለፉት 30 ቀናት",
   "server-destroy": "አገልጋዩን ያጥፉ",
   "server-help-access-key-description": "Outline (አውትላይን) አገልጋይዎን እንዲጠቀሙበት የመግቢያ ቁልፎን ከወዳጆችዎ ጋር ይጋሩ። ሁሉም ዲቫይሶቻቸው ላይ ተመሳሳይ የመግቢያ ቁልፍ መጠቀም ይችላሉ። ",
-  "next": "ቀጣይ",
+  "server-help-access-key-next": "ቀጣይ",
   "server-help-access-key-title": "ቁልፍ ይፍጠሩ፣ በጋራ ተጠቀሙ",
   "server-help-connection-description": "Outline (አውትላይን) አገልጋይዎ የመግቢያ ቁልፍዎን ተጠቅመው Outline (አውትላይን) ተጠቃሚ መተግበሪያ ለመጫን እዚህ ክሊክ ያድርጉ",
   "server-help-connection-ok": "እሺ፣ ገባኝ",

@@ -167,7 +167,7 @@
   "server-data-used": "Пайдаланылған трафик/соңғы 30 күн",
   "server-destroy": "Серверді жою",
   "server-help-access-key-description": "Рұқсат кілттерін достарыңызбен бөліссеңіз, олар Outline серверімен байланыс орната алады. Олар барлық құрылғыларда бірдей рұқсат кілтін пайдалана алады.",
-  "next": "Келесі",
+  "server-help-access-key-next": "Келесі",
   "server-help-access-key-title": "Кілттер жасау, рұқсатты бөлісу",
   "server-help-connection-description": "Outline серверіне жеке рұқсат кілтін пайдалана отырып, Outline клиенттік қолданбасын орнату үшін осы жерді басыңыз.",
   "server-help-connection-ok": "Жарайды, түсінікті!",

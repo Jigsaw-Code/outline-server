@@ -167,7 +167,7 @@
   "server-data-used": "میزان سهمیه استفاده‌شده / ۳۰ روز گذشته",
   "server-destroy": "سرور تخریب شود",
   "server-help-access-key-description": "کلیدهای دسترسی را با دوستان به‌اشتراک بگذارید تا بتوانند به سرور Outline شما متصل شوند. آن‌ها می‌توانند از یک کلید دسترسی در همه دستگاه‌هایشان استفاده کنند.",
-  "next": "بعدی",
+  "server-help-access-key-next": "بعدی",
   "server-help-access-key-title": "ایجاد کردن کلید، به‌اشتراک گذاشتن دسترسی",
   "server-help-connection-description": "اینجا را کلیک کنید تا بااستفاده از کلید دسترسی شخصی به سرور Outline خود، برنامه کارخواه Outline را نصب کنید.",
   "server-help-connection-ok": "بسیار خب، متوجه شدم!",

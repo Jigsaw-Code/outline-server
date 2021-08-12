@@ -167,7 +167,7 @@
   "server-data-used": "Využité povolené vytížení / posledních 30 dní",
   "server-destroy": "Zničit server",
   "server-help-access-key-description": "Sdílejte přístupové klíče s přáteli, aby se mohli připojit k vašemu serveru Outline. Mohou používat jeden přístupový klíč na všech svých zařízeních.",
-  "next": "Další",
+  "server-help-access-key-next": "Další",
   "server-help-access-key-title": "Vytvořte klíče a sdílejte přístup",
   "server-help-connection-description": "Kliknutím sem nainstalujete klienta Outline s použitím svého osobního přístupového klíče k serveru Outline.",
   "server-help-connection-ok": "OK, rozumím",

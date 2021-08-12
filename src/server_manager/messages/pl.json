@@ -167,7 +167,7 @@
   "server-data-used": "Limit wykorzystany w ciągu ostatnich 30 dni",
   "server-destroy": "Zlikwiduj serwer",
   "server-help-access-key-description": "Udostępnij klucze dostępu znajomym, by mogli połączyć się z Twoim serwerem Outline. Mogą używać tego samego klucza dostępu na wszystkich swoich urządzeniach.",
-  "next": "Dalej",
+  "server-help-access-key-next": "Dalej",
   "server-help-access-key-title": "Utwórz klucze i przyznaj dostęp",
   "server-help-connection-description": "Kliknij tutaj, by zainstalować aplikację klienta Outline, używając własnego klucza dostępu do serwera Outline.",
   "server-help-connection-ok": "OK",

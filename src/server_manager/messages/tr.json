@@ -167,7 +167,7 @@
   "server-data-used": "Kullanılan veri miktarı/son 30 gün",
   "server-destroy": "Sunucuyu sil",
   "server-help-access-key-description": "Outline sunucunuza bağlanabilmeleri için erişim anahtarlarınızı arkadaşlarınızla paylaşın. Arkadaşlarınız tüm cihazlarında aynı erişim anahtarını kullanabilir.",
-  "next": "Sonraki",
+  "server-help-access-key-next": "Sonraki",
   "server-help-access-key-title": "Anahtarlar oluşturun, erişimi paylaşın",
   "server-help-connection-description": "Outline sunucunuza ait kişisel erişim anahtarını kullanarak Outline istemci uygulamasını yüklemek için burayı tıklayın.",
   "server-help-connection-ok": "Tamam, anladım!",

@@ -167,7 +167,7 @@
   "server-data-used": "Genutztes Datenvolumen / letzte 30 Tage",
   "server-destroy": "Server löschen",
   "server-help-access-key-description": "Geben Sie Zugriffsschlüssel für andere frei, damit sie eine Verbindung zu Ihrem Outline-Server herstellen können. Auf allen Geräten kann derselbe Zugriffsschlüssel verwendet werden.",
-  "next": "Weiter",
+  "server-help-access-key-next": "Weiter",
   "server-help-access-key-title": "Schlüssel erstellen und Zugriff freigeben",
   "server-help-connection-description": "Klicken Sie hier, um die Client-App von Outline zu installieren und mit Ihrem persönlichen Zugriffsschlüssel eine Verbindung zum Outline-Server herzustellen.",
   "server-help-connection-ok": "Ok.",

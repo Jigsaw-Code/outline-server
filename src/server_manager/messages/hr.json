@@ -167,7 +167,7 @@
   "server-data-used": "Iskorišteno dopuštenje / posljednjih 30 dana",
   "server-destroy": "Izbriši poslužitelj",
   "server-help-access-key-description": "Podijelite pristupne ključeve s prijateljima kako bi se mogli povezati s vašim Outline poslužiteljem. Mogu koristiti iste pristupne ključeve na svim svojim uređajima.",
-  "next": "Dalje",
+  "server-help-access-key-next": "Dalje",
   "server-help-access-key-title": "Izradite ključeve, podijelite pristup",
   "server-help-connection-description": "Kliknite ovdje da biste instalirali klijentsku aplikaciju Outline pomoću osobnog pristupnog ključa za Outline poslužitelj.",
   "server-help-connection-ok": "U redu, shvaćam!",
