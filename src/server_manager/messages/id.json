@@ -203,7 +203,7 @@
   "setup-anywhere": "Siapkan Outline di mana saja",
   "setup-create": "Buat server",
   "setup-description": "Tidak memiliki server? Buat akun DigitalOcean.",
-  "setup-do-cancel": "Batalkan kapan saja",
+  "setup-cancel": "Batalkan kapan saja",
   "setup-do-cost": "Hanya USD $5 per bulan",
   "setup-do-create": "Buat server baru menggunakan akun DigitalOcean dengan biaya tambahan sebesar USD $5/30 hari untuk mendapatkan transfer data sebesar 1 TB.",
   "setup-do-data": "Batas transfer data sebesar 1 TB",

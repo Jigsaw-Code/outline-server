@@ -203,7 +203,7 @@
   "setup-anywhere": "Outline überall einrichten",
   "setup-create": "Server erstellen",
   "setup-description": "Sie haben keinen Server? Erstellen Sie einfach ein Konto bei DigitalOcean.",
-  "setup-do-cancel": "Jederzeit kündbar",
+  "setup-cancel": "Jederzeit kündbar",
   "setup-do-cost": "Nur 5 $ pro Monat",
   "setup-do-create": "Sie können mit Ihrem DigitalOcean-Konto für zusätzliche 5 $ / 30 Tage einen neuen Server mit 1 TB Datenvolumen erstellen.",
   "setup-do-data": "1 TB verfügbares Datenvolumen",

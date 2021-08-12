@@ -203,7 +203,7 @@
   "setup-anywhere": "Configura Outline en qualsevol lloc",
   "setup-create": "Crea un servidor",
   "setup-description": "No tens cap servidor? Crea un compte amb DigitalOcean.",
-  "setup-do-cancel": "Pots cancel·lar-lo en qualsevol moment",
+  "setup-cancel": "Pots cancel·lar-lo en qualsevol moment",
   "setup-do-cost": "Només 5 USD al mes",
   "setup-do-create": "Crea un servidor amb el compte de DigitalOcean per 5 USD més cada 30 dies i obtén una transferència de dades d'1 TB.",
   "setup-do-data": "Capacitat de transferència de dades d'1 TB",

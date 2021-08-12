@@ -203,7 +203,7 @@
   "setup-anywhere": "随时随地安装 Outline",
   "setup-create": "创建服务器",
   "setup-description": "没有服务器？您可以创建一个 DigitalOcean 帐号。",
-  "setup-do-cancel": "可随时取消",
+  "setup-cancel": "可随时取消",
   "setup-do-cost": "每月只需 5 美元",
   "setup-do-create": "使用您的 DigitalOcean 帐号创建一个新服务器，就能以每 30 天 5 美元的价格额外获享 1 TB 的数据传输流量。",
   "setup-do-data": "1 TB 数据传输限额",

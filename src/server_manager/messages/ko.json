@@ -203,7 +203,7 @@
   "setup-anywhere": "어디서든 Outline 설정",
   "setup-create": "서버 만들기",
   "setup-description": "서버가 없으신가요? DigitalOcean으로 계정을 만드세요.",
-  "setup-do-cancel": "언제든지 취소할 수 있습니다.",
+  "setup-cancel": "언제든지 취소할 수 있습니다.",
   "setup-do-cost": "USD $5/월",
   "setup-do-create": "DigitalOcean 계정으로 새 서버를 만드세요. USD $5/30일의 추가 요금으로 1TB의 데이터 전송 용량을 이용할 수 있습니다.",
   "setup-do-data": "1TB 데이터 전송 용량",

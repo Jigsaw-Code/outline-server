@@ -203,7 +203,7 @@
   "setup-anywhere": "Nustatykite „Outline“ bet kur",
   "setup-create": "Kurti serverį",
   "setup-description": "Neturite serverio? Sukurkite „DigitalOcean“ paskyrą.",
-  "setup-do-cancel": "Atšaukite bet kuriuo metu",
+  "setup-cancel": "Atšaukite bet kuriuo metu",
   "setup-do-cost": "Tik 5 USD per mėnesį",
   "setup-do-create": "Sukurkite naują serverį naudodami „DigitalOcean“ paskyrą už papildomą 5 USD mokestį per 30 dienų ir gaukite 1 TB duomenims perkelti.",
   "setup-do-data": "1 TB duomenų perkėlimo pralaidumas",

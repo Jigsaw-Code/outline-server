@@ -203,7 +203,7 @@
   "setup-anywhere": "Nastavte si Outline kdekoli",
   "setup-create": "Vytvořit server",
   "setup-description": "Nemáte server? Vytvořte si účet u DigitalOcean.",
-  "setup-do-cancel": "Zrušit to můžete kdykoli",
+  "setup-cancel": "Zrušit to můžete kdykoli",
   "setup-do-cost": "Jen za 5 $ za měsíc",
   "setup-do-create": "Vytvořte si k účtu DigitalOcean nový server za dalších 5 $ za 30 dní a povoleným přenosem dat o objemu 1 TB.",
   "setup-do-data": "Povolený přenos dat: 1 TB",

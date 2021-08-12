@@ -203,7 +203,7 @@
   "setup-anywhere": "តំឡើង Outline គ្រប់ទីកន្លែង",
   "setup-create": "បង្កើតម៉ាស៊ីនមេ",
   "setup-description": "មិនមានម៉ាស៊ីនមេ? បង្កើតគណនីជាមួយ ជាមួយនឹង DigitalOcean ។",
-  "setup-do-cancel": "បោះបង់នៅពេលណាក៏បាន",
+  "setup-cancel": "បោះបង់នៅពេលណាក៏បាន",
   "setup-do-cost": "ត្រឹមតែ $5 ក្នុងមួយខែ",
   "setup-do-create": "បង្កើតម៉ាស៊ីនមេថ្មីជាមួយគណនី DigitalOcean របស់អ្នកសម្រាប់ការបន្ថែម US$5 / 30 ថ្ងៃសម្រាប់ផ្ទេរទិន្នន័យ 1 TB ។",
   "setup-do-data": "អនុញ្ញាត 1 TB ទិន្នន័យផ្ទេរ",

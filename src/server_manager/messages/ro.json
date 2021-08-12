@@ -203,7 +203,7 @@
   "setup-anywhere": "Configurați Outline oriunde",
   "setup-create": "Creați un server",
   "setup-description": "Nu aveți un server? Creați un cont cu DigitalOcean.",
-  "setup-do-cancel": "Anulați oricând",
+  "setup-cancel": "Anulați oricând",
   "setup-do-cost": "Doar 5 USD pe lună",
   "setup-do-create": "Creați un server nou prin contul DigitalOcean la un preț suplimentar de 5 USD/30 zile pentru transfer de date de 1 TB.",
   "setup-do-data": "Transfer de date de 1 TB",

@@ -203,7 +203,7 @@
   "setup-anywhere": "Konfigurera Outline var som helst",
   "setup-create": "Skapa server",
   "setup-description": "Har du ingen server? Skapa ett konto med DigitalOcean.",
-  "setup-do-cancel": "Avbryt när du vill",
+  "setup-cancel": "Avbryt när du vill",
   "setup-do-cost": "Endast 50 kronor i månaden",
   "setup-do-create": "Skapa en ny server med DigitalOcean-kontot för ytterligare 50 kronor/30 dagar för 1 TB dataöverföring.",
   "setup-do-data": "1 TB dataöverföring",

@@ -203,7 +203,7 @@
   "setup-anywhere": "I-set up ang Outline kahit saan",
   "setup-create": "Gumawa ng server",
   "setup-description": "Walang server? Gumawa ng account sa DigitalOcean.",
-  "setup-do-cancel": "Kanselahin anumang oras",
+  "setup-cancel": "Kanselahin anumang oras",
   "setup-do-cost": "US$5 lang bawat buwan",
   "setup-do-create": "Gumawa ng bagong server sa iyong DigitalOcean account para sa karagdagang US$5/30 araw para sa paglilipat ng data na 1 TB.",
   "setup-do-data": "Allowance sa paglilipat ng data na 1 TB",

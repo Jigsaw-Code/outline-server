@@ -65,7 +65,7 @@ const DO_CARD_HTML = html`
           <li>[[localize('setup-do-easiest')]]</li>
           <li>[[localize('setup-do-cost')]]</li>
           <li>[[localize('setup-do-data')]]</li>
-          <li>[[localize('setup-do-cancel')]]</li>
+          <li>[[localize('setup-cancel')]]</li>
         </ul>
         <p hidden\$="[[!_computeIsAccountConnected(digitalOceanAccountName)]]">
           [[localize('setup-do-create')]]
@@ -110,7 +110,7 @@ const GCP_EXPERIMENTAL_CARD_HTML = html`
         <ul hidden\$="[[_computeIsAccountConnected(gcpAccountName)]]">
           <li>[[localize('setup-gcp-easy')]]</li>
           <li>[[localize('setup-gcp-cost')]]</li>
-          <li>[[localize('setup-gcp-cancel')]]</li>
+          <li>[[localize('setup-cancel')]]</li>
         </ul>
         <p hidden\$="[[!_computeIsAccountConnected(gcpAccountName)]]">
           [[localize('setup-gcp-create')]]

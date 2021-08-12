@@ -203,7 +203,7 @@
   "setup-anywhere": "אפשר להתקין את Outline בכל מקום",
   "setup-create": "יצירת שרת",
   "setup-description": "אין לך שרת? אפשר ליצור חשבון ב-DigitalOcean.",
-  "setup-do-cancel": "ביטול מתי שרוצים",
+  "setup-cancel": "ביטול מתי שרוצים",
   "setup-do-cost": "רק $5 לחודש",
   "setup-do-create": "אפשר ליצור שרת חדש בחשבון שלך ב-DigitalOcean תמורת $5 נוספים ל-30 יום ולקבל מכסה של 1TB להעברת נתונים.",
   "setup-do-data": "מכסה של 1TB להעברת נתונים",

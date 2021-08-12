@@ -203,7 +203,7 @@
   "setup-anywhere": "ติดตั้ง Outline ได้ทุกที่",
   "setup-create": "สร้างเซิร์ฟเวอร์",
   "setup-description": "หากยังไม่มีเซิร์ฟเวอร์ โปรดสร้างบัญชีกับ DigitalOcean",
-  "setup-do-cancel": "ยกเลิกได้ทุกเมื่อ",
+  "setup-cancel": "ยกเลิกได้ทุกเมื่อ",
   "setup-do-cost": "เพียงเดือนละ US$5",
   "setup-do-create": "สร้างเซิร์ฟเวอร์ใหม่ด้วยบัญชี DigitalOcean และทุกๆ US$5/30 วัน คุณจะโอนข้อมูลได้ 1 TB",
   "setup-do-data": "ปริมาณการโอนข้อมูลที่ใช้ได้ 1 TB",

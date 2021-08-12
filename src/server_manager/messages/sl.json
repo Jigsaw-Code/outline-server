@@ -203,7 +203,7 @@
   "setup-anywhere": "Outline lahko nastavite kjer koli",
   "setup-create": "Ustvari strežnik",
   "setup-description": "Ali nimate strežnika? Ustvarite račun pri ponudniku DigitalOcean.",
-  "setup-do-cancel": "Preklic je mogoč kadar koli",
+  "setup-cancel": "Preklic je mogoč kadar koli",
   "setup-do-cost": "Samo 5 USD na mesec",
   "setup-do-create": "Ustvarite nov strežnik z računom DigitalOcean in si zagotovite 5 USD/30 dni za 1 TB prenosa podatkov.",
   "setup-do-data": "1 TB razpoložljive količine prenosa podatkov",

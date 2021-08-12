@@ -203,7 +203,7 @@
   "setup-anywhere": "Bárhol beállíthatja az Outline-t",
   "setup-create": "Szerver létrehozása",
   "setup-description": "Nincs szervere? Hozzon létre egy fiókot a DigitalOceannel.",
-  "setup-do-cancel": "Bármikor lemondhatja",
+  "setup-cancel": "Bármikor lemondhatja",
   "setup-do-cost": "Csak havi 5 USD",
   "setup-do-create": "Hozzon létre új szervert a DigitalOcean-fiókjával mindössze ennyiért: 5 USD/30 nap (1 TB-nyi adatátvitel).",
   "setup-do-data": "1 TB-os adatátvitel-korlát",

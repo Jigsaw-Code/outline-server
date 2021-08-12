@@ -203,7 +203,7 @@
   "setup-anywhere": "Настройване на Outline където и да е",
   "setup-create": "Създаване на сървър",
   "setup-description": "Нямате сървър? Създайте си профил в DigitalOcean.",
-  "setup-do-cancel": "Анулиране по всяко време",
+  "setup-cancel": "Анулиране по всяко време",
   "setup-do-cost": "Само 5 щ.д. на месец",
   "setup-do-create": "Създайте нов сървър с профила си в DigitalOcean за още 5 щ.д./30 дни за трафик от 1 ТБ.",
   "setup-do-data": "Квота от 1 ТБ трафик",

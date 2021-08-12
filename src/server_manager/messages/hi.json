@@ -203,7 +203,7 @@
   "setup-anywhere": "Outline को कहीं भी सेट अप करें",
   "setup-create": "सर्वर बनाएं",
   "setup-description": "सर्वर नहीं है? DigitalOcean के साथ खाता बनाएं.",
-  "setup-do-cancel": "किसी भी समय रद्द करें",
+  "setup-cancel": "किसी भी समय रद्द करें",
   "setup-do-cost": "हर महीने सिर्फ़ पांच अमेरिकी डॉलर",
   "setup-do-create": "1 TB डेटा ट्रांसफ़र के लिए हर महीने पांच अमेरिकी डॉलर ज़्यादा देकर, अपने DigitalOcean खाते के साथ एक नया सर्वर बनाएं.",
   "setup-do-data": "1 TB डेटा ट्रांसफ़र करने की सुविधा",

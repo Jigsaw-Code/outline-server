@@ -203,7 +203,7 @@
   "setup-anywhere": "Outline iestatīšana pie jebkura mākoņpakalpojumu sniedzēja",
   "setup-create": "Izveidot serveri",
   "setup-description": "Vai jums nav servera? Izveidojiet DigitalOcean kontu.",
-  "setup-do-cancel": "Atcelšana jebkurā brīdī",
+  "setup-cancel": "Atcelšana jebkurā brīdī",
   "setup-do-cost": "Tikai 5 USD mēnesī",
   "setup-do-create": "Izveidojiet jaunu serveri, izmantojot savu DigitalOcean kontu, par papildu 5 USD mēnesī un pārsūtiet datus 1 TB apmērā.",
   "setup-do-data": "Atļautais datu pārsūtīšanas apjoms: 1 TB",

@@ -203,7 +203,7 @@
   "setup-anywhere": "Подесите Outline било где",
   "setup-create": "Направи сервер",
   "setup-description": "Немате сервер? Направите DigitalOcean налог.",
-  "setup-do-cancel": "Увек можете да откажете",
+  "setup-cancel": "Увек можете да откажете",
   "setup-do-cost": "Само 5 USD месечно",
   "setup-do-create": "Направите нов сервер помоћу DigitalOcean налога по цени од додатних 5 USD за 30 дана и 1 TB података које можете да пренесете.",
   "setup-do-data": "Дозвољена количина података за пренос је 1 TB",

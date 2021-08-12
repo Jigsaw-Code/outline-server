@@ -203,7 +203,7 @@
   "setup-anywhere": "どこにでも Outline をセットアップ可能",
   "setup-create": "サーバーを作成",
   "setup-description": "サーバーがない場合は、DigitalOcean でアカウントを作成してください。",
-  "setup-do-cancel": "いつでもキャンセル可能",
+  "setup-cancel": "いつでもキャンセル可能",
   "setup-do-cost": "月々わずか 5 米ドル",
   "setup-do-create": "30 日につき 5 米ドルを追加すると、1 TB のデータ転送が可能な新しいサーバーを DigitalOcean アカウントに作成できます。",
   "setup-do-data": "1 TB のデータ転送が可能",

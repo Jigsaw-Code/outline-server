@@ -203,7 +203,7 @@
   "setup-anywhere": "Outline overal installeren",
   "setup-create": "Server maken",
   "setup-description": "Heb je geen server? Maak een account bij DigitalOcean.",
-  "setup-do-cancel": "Altijd opzegbaar",
+  "setup-cancel": "Altijd opzegbaar",
   "setup-do-cost": "Slechts $ 5 per maand",
   "setup-do-create": "Maak een nieuwe server met je DigitalOcean-account voor $ 5 per dertig dagen extra, voor 1 TB aan gegevensoverdracht.",
   "setup-do-data": "1 TB aan toegestane gegevensoverdracht",

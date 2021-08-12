@@ -561,7 +561,8 @@
   },
   "gcp_billing_action": {
     "message": "Next",
-    "description": "Button label for a button that opens a the billing page in the web browser"
+    "description": "Button label for a button that opens the billing page in the web browser (i.e. next step).",
+    "meaning": "gcp_billing_action"
   },
   "gcp_billing_body": {
     "message": "Waiting for you to $START_OF_LINK$add a billing account on Google Cloud$END_OF_LINK$",
@@ -1119,7 +1120,7 @@
     "message": "Don't have a server? Create an account with DigitalOcean.",
     "description": "This string appears in the server setup view as a sub-header. Prompts the user to create a DigitalOcean account to deploy Outline servers. DigitalOcean is a cloud provider name and should not be translated."
   },
-  "setup_do_cancel": {
+  "setup_cancel": {
     "message": "Cancel at any time",
     "description": "This string appears in the server setup view as an item of a list describing Outline's features."
   },
@@ -1149,10 +1150,6 @@
   },
   "setup_gcp_easy": {
     "message": "Easy setup process",
-    "description": "This string appears in the server setup view as an item of a list describing Outline's features."
-  },
-  "setup_gcp_cancel": {
-    "message": "Cancel at any time",
     "description": "This string appears in the server setup view as an item of a list describing Outline's features."
   },
   "setup_gcp_cost": {

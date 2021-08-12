@@ -203,7 +203,7 @@
   "setup-anywhere": "Installer Outline sur n'importe quel serveur cloud",
   "setup-create": "Créer un serveur",
   "setup-description": "Vous n'avez pas de serveur ? Créez un compte auprès de DigitalOcean.",
-  "setup-do-cancel": "Annulation possible à tout moment",
+  "setup-cancel": "Annulation possible à tout moment",
   "setup-do-cost": "Seulement 5 USD par mois",
   "setup-do-create": "Créez un serveur avec votre compte DigitalOcean pour 5 USD de plus pour 30 jours et pour un volume maximal d'un téraoctet de données transférées.",
   "setup-do-data": "Volume maximal de données transférées : 1 To",

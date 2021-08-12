@@ -203,7 +203,7 @@
   "setup-anywhere": "Thiết lập Outline ở mọi nơi",
   "setup-create": "Tạo máy chủ",
   "setup-description": "Bạn chưa có máy chủ? Hãy tạo một tài khoản bằng DigitalOcean.",
-  "setup-do-cancel": "Hủy bất cứ lúc nào",
+  "setup-cancel": "Hủy bất cứ lúc nào",
   "setup-do-cost": "Chỉ 5 đô la Mỹ một tháng",
   "setup-do-create": "Tạo một máy chủ mới bằng tài khoản DigitalOcean của bạn. Bạn chỉ phải trả thêm 5 đô la Mỹ/30 ngày để chuyển 1 TB dữ liệu.",
   "setup-do-data": "Hạn mức chuyển dữ liệu 1 TB",

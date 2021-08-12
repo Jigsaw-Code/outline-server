@@ -203,7 +203,7 @@
   "setup-anywhere": "Outline'ı dilediğiniz yere kurun",
   "setup-create": "Sunucu oluştur",
   "setup-description": "Bir sunucunuz yok mu? DigitalOcean ile hesap oluşturun.",
-  "setup-do-cancel": "Dilediğiniz zaman iptal edebilirsiniz",
+  "setup-cancel": "Dilediğiniz zaman iptal edebilirsiniz",
   "setup-do-cost": "Ayda yalnızca 5 ABD doları",
   "setup-do-create": "1 TB veri aktarımı için ek 5 ABD doları/30 gün fiyata DigitalOcean hesabınızla yeni bir sunucu oluşturun.",
   "setup-do-data": "1 TB veri aktarımı hakkı",

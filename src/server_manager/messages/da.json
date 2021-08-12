@@ -203,7 +203,7 @@
   "setup-anywhere": "Konfigurer Outline hvor som helst",
   "setup-create": "Opret server",
   "setup-description": "Har du ikke en server? Opret en konto med DigitalOcean.",
-  "setup-do-cancel": "Du kan opsige når som helst",
+  "setup-cancel": "Du kan opsige når som helst",
   "setup-do-cost": "Kun 5 USD om måneden",
   "setup-do-create": "Opret en ny server med din DigitalOcean-konto for yderligere 5 USD om måneden for at overføre op til 1 TB data.",
   "setup-do-data": "Du kan overføre op til 1 TB data",

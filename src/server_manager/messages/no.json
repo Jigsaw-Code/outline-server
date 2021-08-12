@@ -203,7 +203,7 @@
   "setup-anywhere": "Konfigurer Outline hvor som helst",
   "setup-create": "Opprett tjeneren",
   "setup-description": "Har du ikke noen tjener? Opprett en konto med DigitalOcean.",
-  "setup-do-cancel": "Du kan si opp når som helst",
+  "setup-cancel": "Du kan si opp når som helst",
   "setup-do-cost": "Bare US $ 5 per måned",
   "setup-do-create": "Opprett en ny tjener med DigitalOcean-kontoen din for US $ 5 ekstra per 30 dager for 1 TB dataoverføring.",
   "setup-do-data": "Dataoverføringskvote på 1 TB",

@@ -203,7 +203,7 @@
   "setup-anywhere": "هرجا خواستید Outline را نصب کنید",
   "setup-create": "سرور ایجاد شود",
   "setup-description": "سرور ندارید؟ حسابی با DigitalOcean ایجاد کنید.",
-  "setup-do-cancel": "هرزمان خواستید لغو کنید",
+  "setup-cancel": "هرزمان خواستید لغو کنید",
   "setup-do-cost": "فقط ۵ دلار آمریکا در ماه",
   "setup-do-create": "با اضافه کردن ۵ دلار آمریکا به هزینه ماهانه‌تان، سرور جدیدی با سهمیه ۱ ‎TB انتقال داده با حساب DigitalOcean خود ایجاد کنید.",
   "setup-do-data": "سهمیه ۱ ‏TB انتقال داده",

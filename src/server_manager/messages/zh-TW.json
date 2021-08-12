@@ -203,7 +203,7 @@
   "setup-anywhere": "隨時隨地設定 Outline",
   "setup-create": "建立伺服器",
   "setup-description": "沒有伺服器嗎？請建立 DigitalOcean 帳戶。",
-  "setup-do-cancel": "隨時都能取消服務",
+  "setup-cancel": "隨時都能取消服務",
   "setup-do-cost": "每月只要 $5 美元",
   "setup-do-create": "只要使用你的 DigitalOcean 帳戶建立新伺服器，即可額外享有每 30 天 $5 美元的 1 TB 資料傳輸量。",
   "setup-do-data": "1 TB 資料傳輸配額",

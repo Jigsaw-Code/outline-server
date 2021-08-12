@@ -203,7 +203,7 @@
   "setup-anywhere": "Postavite Outline bilo gdje",
   "setup-create": "Izradi poslužitelj",
   "setup-description": "Nemate poslužitelj? Izradite račun kod davatelja usluge DigitalOcean.",
-  "setup-do-cancel": "Otkažite u bilo kojem trenutku",
+  "setup-cancel": "Otkažite u bilo kojem trenutku",
   "setup-do-cost": "Samo 5 USD mjesečno",
   "setup-do-create": "Izradite novi poslužitelj sa svojim DigitalOcean računom za dodatnih 5 USD/30 dana za prijenos podataka od 1 TB.",
   "setup-do-data": "Dopuštenje prijenosa podataka od 1 TB",
