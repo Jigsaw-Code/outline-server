@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Vì bạn hiện đang báo cáo số liệu, hãy đưa thông tin về việc sử dụng tính năng hạn mức dữ liệu vào báo cáo. Vui lòng xem {openLink}chính sách thu thập dữ liệu{closeLink} để biết thêm chi tiết.",
   "data-limits-usage": "Đã dùng {used}/{total}",
   "destroy": "Hủy",
-  "digitalocean-disconnect": "Ngắt kết nối",
+  "disconnect": "Ngắt kết nối",
   "digitalocean-disconnect-account": "Hủy kết nối tài khoản DigitalOcean",
   "digitalocean-unreachable": "Lỗi này có thể do tường lửa trong mạng của bạn hoặc lỗi tạm thời khi kết nối với digitalocean.com.",
   "disabled": "Đã vô hiệu hóa",

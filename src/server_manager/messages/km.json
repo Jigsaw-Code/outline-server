@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "ដោយសារ​អ្នក​កំពុង​រាយការណ៍​អំពី​មេទ្រិក​ក្នុង​ពេល​បច្ចុប្បន្ន ការប្រើប្រាស់​មុខងារ​ដែន​កំណត់​ទិន្នន័យ​នឹង​ត្រូវ​បាន​រួម​បញ្ចូល។ សូម​មើល​{openLink}គោលការណ៍​ប្រមូល​ទិន្នន័យ{closeLink} ដើម្បី​ទទួល​បាន​ព័ត៌មាន​លម្អិត​បន្ថែម។",
   "data-limits-usage": "បាន​ប្រើ​អស់ {used} នៃ {total}",
   "destroy": "បំផ្លាញ",
-  "digitalocean-disconnect": "ផ្តាច់",
+  "disconnect": "ផ្តាច់",
   "digitalocean-disconnect-account": "ផ្តាច់គណនីពី DigitalOcean",
   "digitalocean-unreachable": "កំហុសនេះអាចបណ្តាលមកពីជញ្ជាំងភ្លើងនៅលើបណ្តាញរបស់អ្នកឬបណ្តាញបញ្ហាបណ្តោះអាសន្នជាមួយនឹង digitalocean.com",
   "disabled": "បាន​បិទ",

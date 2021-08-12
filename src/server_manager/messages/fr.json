@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Dans la mesure où vous créez actuellement des rapports de statistiques, l'utilisation de la fonctionnalité de limite de données sera incluse. Veuillez vous reporter à nos {openLink}Règles relatives à la collecte des données{closeLink} pour plus d'informations.",
   "data-limits-usage": "Utilisation : {used} sur {total}",
   "destroy": "Supprimer",
-  "digitalocean-disconnect": "Déconnecter",
+  "disconnect": "Déconnecter",
   "digitalocean-disconnect-account": "Déconnectez le compte DigitalOcean",
   "digitalocean-unreachable": "Cette erreur peut être due à un pare-feu de votre réseau ou à des problèmes de connexion temporaires avec digitalocean.com.",
   "disabled": "Désactivée",

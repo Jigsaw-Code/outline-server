@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "השימוש במגבלות הנתונים ייכלל במדדים שמדווחים על ידיך. למידע נוסף, אפשר לקרוא את {openLink}מדיניות איסוף המידע{closeLink}.",
   "data-limits-usage": "‎{used} מתוך ‎{total} בשימוש",
   "destroy": "מחיקה",
-  "digitalocean-disconnect": "ניתוק",
+  "disconnect": "ניתוק",
   "digitalocean-disconnect-account": "התנתקות מהחשבון ב-DigitalOcean",
   "digitalocean-unreachable": "ייתכן שהשגיאה נובעת מחומת אש ברשת שלך או מבעיות קישוריות זמניות ב-digitalocean.com.",
   "disabled": "מושבתת",

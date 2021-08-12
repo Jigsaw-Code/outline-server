@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Da Sie die Berichterstellung mit Messwerten nutzen, wird auch die Funktion zum Datenlimit berücksichtigt. Weitere Informationen finden Sie in unseren {openLink}Richtlinien zur Datenerhebung{closeLink}.",
   "data-limits-usage": "{used} von {total} belegt",
   "destroy": "Löschen",
-  "digitalocean-disconnect": "Verbindung trennen",
+  "disconnect": "Verbindung trennen",
   "digitalocean-disconnect-account": "Verbindung zum DigitalOcean-Konto trennen",
   "digitalocean-unreachable": "Dieser Fehler wird möglicherweise durch eine Firewall in Ihrem Netzwerk oder vorübergehende Verbindungsprobleme mit digitalocean.com verursacht.",
   "disabled": "Deaktiviert",

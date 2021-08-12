@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "您当前正在报告有关指标的情况，因此指标会包含流量限制功能的使用情况。要了解详情，请参阅{openLink}数据收集政策{closeLink}。",
   "data-limits-usage": "已使用 {used}，共 {total}",
   "destroy": "销毁",
-  "digitalocean-disconnect": "断开连接",
+  "disconnect": "断开连接",
   "digitalocean-disconnect-account": "断开 DigitalOcean 帐号与此应用的连接",
   "digitalocean-unreachable": "此错误可能是由于您网络上的防火墙所致，也能是因为在与 digitalocean.com 连接时出现暂时性的问题。",
   "disabled": "已停用的",

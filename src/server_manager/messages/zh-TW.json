@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "由於您正在回報指標，因此其中將包含資料傳輸上限功能的使用資料。詳情請參閱《{openLink}資料收集政策{closeLink}》。",
   "data-limits-usage": "已使用 {used} (共 {total})",
   "destroy": "刪除",
-  "digitalocean-disconnect": "中斷連線",
+  "disconnect": "中斷連線",
   "digitalocean-disconnect-account": "取消 DigitalOcean 帳戶連結",
   "digitalocean-unreachable": "導致這項錯誤的原因可能是你的網路設有防火牆，或者 digitalocean.com 暫時發生連線問題。",
   "disabled": "已停用",

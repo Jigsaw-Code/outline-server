@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Көрсеткіштерді жазып жүргендіктен, деректер шегін пайдалану функциясы қамтылады. Қосымша ақпарат алу үшін {openLink}Деректерді жинау саясатын{closeLink} қараңыз.",
   "data-limits-usage": "{used}/{total} пайдаланылды",
   "destroy": "Жою",
-  "digitalocean-disconnect": "Ажырату",
+  "disconnect": "Ажырату",
   "digitalocean-disconnect-account": "DigitalOcean есептік жазбасын ажырату",
   "digitalocean-unreachable": "Бұл қате желідегі брандмауэр немесе digitalocean.com сайтына қосылу мүмкіндігінің уақытша қателері салдарынан болуы мүмкін.",
   "disabled": "Өшірілді",

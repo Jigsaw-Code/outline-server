@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Использование ограничений на передачу данных будет учитываться при сборе статистики для ваших отчетов. Чтобы получить дополнительные сведения, ознакомьтесь с {openLink}Политикой сбора данных{closeLink}.",
   "data-limits-usage": "Использовано: {used} из {total}",
   "destroy": "Удалить",
-  "digitalocean-disconnect": "Отключить",
+  "disconnect": "Отключить",
   "digitalocean-disconnect-account": "Отключить аккаунт DigitalOcean?",
   "digitalocean-unreachable": "Эта ошибка может быть вызвана работой брандмауэра в вашей сети или временным отсутствием связи с сайтом digitalocean.com.",
   "disabled": "Отключено",

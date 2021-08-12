@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "फ़िलहाल, आप मेट्रिक की जानकारी भेज रहे हैं. इसलिए, इसमें डेटा सीमा की सुविधा के इस्तेमाल की जानकारी भी शामिल की जाएगी. ज़्यादा जानकारी के लिए, कृपया {openLink}डेटा इकट्ठा करने की नीति{closeLink} देखें.",
   "data-limits-usage": "{total} में से {used} का इस्तेमाल किया गया",
   "destroy": "मिटाएं",
-  "digitalocean-disconnect": "डिसकनेक्ट करें",
+  "disconnect": "डिसकनेक्ट करें",
   "digitalocean-disconnect-account": "DigitalOcean खाते से डिसकनेक्ट करें",
   "digitalocean-unreachable": "यह गड़बड़ी आपके नेटवर्क पर फ़ायरवॉल या digitalocean.com में कभी-कभी होने वाली कनेक्टिविटी की समस्याओं की वजह से हो सकती है.",
   "disabled": "बंद करें",

@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "በአሁኑ ጊዜ ሜትሪክሶችን ሪፖርት እያደረጉ ስለሆነ፣ የውሂብ ገደቦች ባህሪን መጠቀም ይካተታል። እባክዎ ለተጨማሪ መረጃ {openLink}የውሂብ አሰባሰብ መመሪያ{closeLink}ን ይመልከቱ።",
   "data-limits-usage": "{used} ከ{total} ጥቅም ላይ ውሏል",
   "destroy": "ይወገድ",
-  "digitalocean-disconnect": "የእርስዎ ግብረመልስ",
+  "disconnect": "የእርስዎ ግብረመልስ",
   "digitalocean-disconnect-account": "የዲጂታልኦሽን አካውንቱ ግንኙነት ይቋረጥ",
   "digitalocean-unreachable": "ይህ ስህተት የተፈጠረው በአውታረ መረብዎ ፋየርዎል ምክንያት አልያም ከdigitalocean.com ጋር መገናኘት አልቻሉም።",
   "disabled": "ተሰናክሏል",

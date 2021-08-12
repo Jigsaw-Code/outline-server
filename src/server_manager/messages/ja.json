@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "現在指標をレポートしているため、データ制限機能の使用が含まれることになります。詳しくは、{openLink}データ収集ポリシー{closeLink}をご覧ください。",
   "data-limits-usage": "使用量: {used}/{total}",
   "destroy": "削除",
-  "digitalocean-disconnect": "接続を切断",
+  "disconnect": "接続を切断",
   "digitalocean-disconnect-account": "DigitalOcean アカウントの接続を解除する",
   "digitalocean-unreachable": "このエラーは、ネットワーク上のファイアウォール、または digitalocean.com への一時的な接続の問題が原因で発生している可能性があります。",
   "disabled": "無効",

@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Com que estàs creant informes de mètriques, s'hi inclourà l'ús de la funció de límits de dades. Consulta la {openLink}política sobre la recollida de dades{closeLink} per obtenir més informació.",
   "data-limits-usage": "Dades utilitzades: {used} de {total}",
   "destroy": "Suprimeix",
-  "digitalocean-disconnect": "Desconnecta",
+  "disconnect": "Desconnecta",
   "digitalocean-disconnect-account": "Desconnecta el compte de DigitalOcean",
   "digitalocean-unreachable": "Aquest error pot estar relacionat amb un tallafoc de la xarxa o bé amb problemes de connectivitat temporals amb digitalocean.com.",
   "disabled": "Desactivat",

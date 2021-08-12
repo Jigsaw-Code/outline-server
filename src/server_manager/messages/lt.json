@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Kadangi šiuo metu teikiate metrikų ataskaitas, bus įtraukta duomenų naudojimo apribojimų funkcija. Peržiūrėkite {openLink}duomenų rinkimo politiką{closeLink}, jei reikia daugiau išsamios informacijos.",
   "data-limits-usage": "Naudojama: {used} iš {total}",
   "destroy": "Naikinti",
-  "digitalocean-disconnect": "Atsijungti",
+  "disconnect": "Atsijungti",
   "digitalocean-disconnect-account": "„DigitalOcean“ paskyros atjungimas",
   "digitalocean-unreachable": "Ši klaida galėjo įvykti dėl tinklo užkardos arba laikinų ryšio su digitalocean.com problemų.",
   "disabled": "Išjungta",

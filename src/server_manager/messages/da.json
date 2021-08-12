@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Da du i øjeblikket rapporterer metrics, bliver brug af datagrænsefunktionen inkluderet. Få flere oplysninger i {openLink}politikken for indsamling af data{closeLink}.",
   "data-limits-usage": "{used} af {total} er brugt",
   "destroy": "Slet",
-  "digitalocean-disconnect": "Afbryd forbindelsen",
+  "disconnect": "Afbryd forbindelsen",
   "digitalocean-disconnect-account": "Vil du fjerne forbindelsen til denne DigitalOcean-konto?",
   "digitalocean-unreachable": "Denne fejl kan skyldes, at der er en firewall på dit netværk, eller at der er midlertidige problemer med forbindelsen til digitalocean.com.",
   "disabled": "Deaktiveret",

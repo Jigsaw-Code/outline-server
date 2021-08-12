@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "현재 측정항목을 보고하는 중이므로 데이터 한도 기능 사용이 포함됩니다. {openLink}데이터 수집 정책{closeLink}에서 자세한 내용을 확인하세요.",
   "data-limits-usage": "{total} 중 {used} 사용됨",
   "destroy": "삭제",
-  "digitalocean-disconnect": "연결 해제",
+  "disconnect": "연결 해제",
   "digitalocean-disconnect-account": "DigitalOcean 계정 연결 해제",
   "digitalocean-unreachable": "이 오류는 네트워크의 방화벽 또는 digitalocean.com의 일시적인 연결 문제로 인해 발생할 수 있습니다.",
   "disabled": "사용 중지됨",

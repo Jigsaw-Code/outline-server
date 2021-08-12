@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Dado que actualmente informas métricas, se incluirá el uso de la función de límites de datos. Si deseas conocer más detalles, consulta la {openLink}política de recopilación de datos{closeLink}.",
   "data-limits-usage": "{used} de {total} en uso",
   "destroy": "Destruir",
-  "digitalocean-disconnect": "Desconectar",
+  "disconnect": "Desconectar",
   "digitalocean-disconnect-account": "Desconectar la cuenta de DigitalOcean",
   "digitalocean-unreachable": "Es posible que este error se deba a un firewall de tu red o a problemas de conectividad temporales con digitalocean.com.",
   "disabled": "Inhabilitada",

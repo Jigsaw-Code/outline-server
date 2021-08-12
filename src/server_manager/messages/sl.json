@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Ker v poročilih trenutno prikazujete meritve, bo vključena tudi uporaba funkcij omejitev prenosa podatkov. Več podrobnosti je na voljo v {openLink}pravilniku o zbiranju podatkov{closeLink}.",
   "data-limits-usage": "Uporabljeno: {used} od {total}",
   "destroy": "Uniči",
-  "digitalocean-disconnect": "Prekini povezavo",
+  "disconnect": "Prekini povezavo",
   "digitalocean-disconnect-account": "Prekinitev povezave računa DigitalOcean",
   "digitalocean-unreachable": "Do te napake je morda prišlo zaradi požarnega zidu v vašem omrežju ali začasnih težav glede povezljivosti z digitalocean.com.",
   "disabled": "Onemogočeno",

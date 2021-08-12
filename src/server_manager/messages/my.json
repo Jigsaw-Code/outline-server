@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "လက်ရှိတွင် မက်ထရစ်များကို သတင်းပို့နေသည့်အတွက် ဒေတာကန့်သတ်ချက်များ ဝန်ဆောင်မှု အသုံးပြုခြင်း ပါဝင်သွားပါမည်။ နောက်ထပ်အသေးစိတ်အတွက် {openLink}ဒေတာစုဆောင်းမှု မူဝါဒ{closeLink} ကို ကြည့်ပါ။",
   "data-limits-usage": "{total} အနက် {used} ကို သုံးထားသည်",
   "destroy": "ဖျက်ရန်",
-  "digitalocean-disconnect": "ချိတ်ဆက်မှု ဖြုတ်ရန်",
+  "disconnect": "ချိတ်ဆက်မှု ဖြုတ်ရန်",
   "digitalocean-disconnect-account": "DigitalOcean အကောင့်ကို ချိတ်ဆက်မှုဖြုတ်ခြင်း",
   "digitalocean-unreachable": "ဤအမှားသည် သင့်ကွန်ရက်ပေါ်ရှိ firewall သို့မဟုတ် digitalocean.com နှင့် ယာယီချိတ်ဆက်မှု ပြဿနာများကြောင့် ဖြစ်နိုင်သည်။",
   "disabled": "ပိတ်ထားသည်",

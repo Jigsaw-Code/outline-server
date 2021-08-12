@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Datan rajoitusominaisuus on käytössä, koska käytät tällä hetkellä raportointitietoja. Lue lisää {openLink}datankeruukäytännöstä{closeLink}.",
   "data-limits-usage": "{used} / {total} käytetty",
   "destroy": "Tuhoa",
-  "digitalocean-disconnect": "Katkaise yhteys",
+  "disconnect": "Katkaise yhteys",
   "digitalocean-disconnect-account": "Katkaise yhteys DigitalOcean-tiliin",
   "digitalocean-unreachable": "Tämä virhe voi johtua verkkosi palomuurista tai väliaikaisesta ongelmasta digitalocean.comiin yhdistettäessä.",
   "disabled": "Pois käytöstä",

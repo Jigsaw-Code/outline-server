@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Protože momentálně posíláte přehledy metrik, používání funkce limitů dat v nich bude zahrnuto. Další podrobnosti najdete v {openLink}zásadách sběru dat{closeLink}.",
   "data-limits-usage": "Využito {used} z {total}",
   "destroy": "Zničit",
-  "digitalocean-disconnect": "Odpojit",
+  "disconnect": "Odpojit",
   "digitalocean-disconnect-account": "Odpojit účet DigitalOcean",
   "digitalocean-unreachable": "Tuto chybu mohl zapříčinit firewall na vaší síti nebo dočasný problém s připojením na digitalocean.com.",
   "disabled": "Vypnuto",

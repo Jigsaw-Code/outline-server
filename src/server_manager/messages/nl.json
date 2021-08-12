@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Omdat je momenteel statistieken rapporteert, wordt gebruik van de functie voor gegevenslimieten daarin meegenomen. Bekijk het {openLink}beleid voor gegevens verzamelen{closeLink} voor meer informatie.",
   "data-limits-usage": "{used} van {total} gebruikt",
   "destroy": "Vernietigen",
-  "digitalocean-disconnect": "Verbinding verbreken",
+  "disconnect": "Verbinding verbreken",
   "digitalocean-disconnect-account": "Verbinding met DigitalOcean-account verbreken",
   "digitalocean-unreachable": "Deze fout kan worden veroorzaakt door een firewall in je netwerk of tijdelijke verbindingsproblemen met digitalocean.com.",
   "disabled": "Uitgeschakeld",

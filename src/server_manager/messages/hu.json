@@ -30,7 +30,7 @@
   "data-limits-disclaimer": "Jelenleg jelentést küld a mutatókról, így ezentúl a jelentésekben adatforgalmi korlátozási funkció használata is szerepelni fog. További részleteket {openLink}az adatgyűjtési irányelvekben{closeLink} talál.",
   "data-limits-usage": "{total}/{used} felhasználva",
   "destroy": "Megsemmisítés",
-  "digitalocean-disconnect": "Leválasztás",
+  "disconnect": "Leválasztás",
   "digitalocean-disconnect-account": "DigitalOcean-fiók leválasztása",
   "digitalocean-unreachable": "A hibát okozhatja a hálózatra telepített tűzfal vagy a digitalocean.com oldallal kapcsolatban fellépő ideiglenes kapcsolódási hiba.",
   "disabled": "Letiltva",
