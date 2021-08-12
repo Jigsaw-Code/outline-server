@@ -160,7 +160,7 @@ export class GcpCreateServerApp extends LitElement {
         </span>
         <span slot="step-action">
           <paper-button id="billingPageAction" @tap="${this.handleBillingVerificationNextTap}">
-            ${this.localize('gcp-billing-action')}
+            ${this.localize('next')}
           </paper-button>
         </span>
         <paper-card class="card">

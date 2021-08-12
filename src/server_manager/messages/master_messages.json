@@ -559,10 +559,6 @@
       }
     }
   },
-  "gcp_billing_action": {
-    "message": "Next",
-    "description": "Button label for a button that opens a the billing page in the web browser"
-  },
   "gcp_billing_body": {
     "message": "Waiting for you to $START_OF_LINK$add a billing account on Google Cloud$END_OF_LINK$",
     "description": "Body text on the billing page",
@@ -965,9 +961,9 @@
     "message": "Share access keys with friends, so they can connect to your Outline server. They can use the same access key on all their devices.",
     "description": "This string appears within a help bubble as a paragraph. The help bubble is displayed when a server is installed. Informs to the user how to share access to their server."
   },
-  "server_help_access_key_next": {
+  "next": {
     "message": "Next",
-    "description": "This string appears within a help bubble as a button. Clicking it displays the next help bubble."
+    "description": "Button label for a button that takes a user to the next step in a sequence."
   },
   "server_help_access_key_title": {
     "message": "Create keys, share access",
@@ -1119,7 +1115,7 @@
     "message": "Don't have a server? Create an account with DigitalOcean.",
     "description": "This string appears in the server setup view as a sub-header. Prompts the user to create a DigitalOcean account to deploy Outline servers. DigitalOcean is a cloud provider name and should not be translated."
   },
-  "setup_do_cancel": {
+  "setup_cancel": {
     "message": "Cancel at any time",
     "description": "This string appears in the server setup view as an item of a list describing Outline's features."
   },
@@ -1149,10 +1145,6 @@
   },
   "setup_gcp_easy": {
     "message": "Easy setup process",
-    "description": "This string appears in the server setup view as an item of a list describing Outline's features."
-  },
-  "setup_gcp_cancel": {
-    "message": "Cancel at any time",
     "description": "This string appears in the server setup view as an item of a list describing Outline's features."
   },
   "setup_gcp_cost": {
