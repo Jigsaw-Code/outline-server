@@ -49,7 +49,7 @@ export class GcpAccount implements gcp.Account {
   private static readonly OUTLINE_PROJECT_NAME = 'Outline servers';
   private static readonly OUTLINE_FIREWALL_NAME = 'outline';
   private static readonly OUTLINE_FIREWALL_TAG = 'outline';
-  private static readonly MACHINE_SIZE = 'f1-micro';
+  private static readonly MACHINE_SIZE = 'e2-micro';
   private static readonly REQUIRED_GCP_SERVICES = ['compute.googleapis.com'];
 
   private readonly apiClient: gcp_api.RestApiClient;
