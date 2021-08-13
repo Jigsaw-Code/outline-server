@@ -1152,9 +1152,32 @@
     "message": "Easy setup process",
     "description": "This string appears in the server setup view as an item of a list describing Outline's features."
   },
-  "setup_gcp_cost": {
-    "message": "Your first server is free for 90 days, then as low as US$3/month",
-    "description": "This string appears in the server setup view as an item of a list describing Outline's features."
+  "setup_gcp_free_tier": {
+    "message": "With $START_OF_LINK1$Free Tier$END_OF_LINK$, your first server starts at $START_OF_LINK2$US$3/month$END_OF_LINK$",
+    "description": "Describes the benefits of the GCP Free Tier program (https://cloud.google.com/free/docs/gcp-free-tier)",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK1": {
+        "content": "{openLinkFreeTier}"
+      },
+      "START_OF_LINK2": {
+        "content": "{openLinkIpPrice}"
+      }
+    }
+  },
+  "setup_gcp_free_trial": {
+    "message": "$START_OF_LINK$90 day free trial$END_OF_LINK$ for new users",
+    "description": "Describes the benefits of the GCP Free Trial program (https://cloud.google.com/free/docs/gcp-free-tier/#free-trial)",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLinkFreeTrial}"
+      }
+    }
   },
   "setup_gcp_create": {
     "message": "Create a new server with your Google account. Costs vary by location and usage.",

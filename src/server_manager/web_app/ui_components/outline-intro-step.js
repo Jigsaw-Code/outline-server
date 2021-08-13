@@ -93,12 +93,27 @@ const GCP_STYLES = html`
     :host(:dir(rtl)) #gcp .description ul {
       list-style-image: url("../images/check_blue_rtl.svg");
     }
+    iron-icon {
+      width: 16px;
+      height: 16px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
   </style>
 `;
 
 const GCP_EXPERIMENTAL_CARD_HTML = html`
   ${GCP_STYLES}
-  <div id="gcp" class="card" on-tap="setUpGcpTapped" hidden\$="[[!_showNewGcpFlow(gcpAccountName)]]">
+  <style>
+    /* This card contains hyperlinks so the whole thing can't be clickable. */
+    .card#gcp {
+      cursor: auto;
+    }
+    .card-footer {
+      cursor: pointer;
+    }
+  </style>
+  <div id="gcp" class="card" hidden\$="[[!_showNewGcpFlow(gcpAccountName)]]">
     <div class="card-header">
       <div class="tag">[[localize('experimental')]]</div>
       <div class="email" hidden\$="[[!_computeIsAccountConnected(gcpAccountName)]]">[[gcpAccountName]]</div>
@@ -109,7 +124,13 @@ const GCP_EXPERIMENTAL_CARD_HTML = html`
     <div class="description">
         <ul hidden\$="[[_computeIsAccountConnected(gcpAccountName)]]">
           <li>[[localize('setup-gcp-easy')]]</li>
-          <li>[[localize('setup-gcp-cost')]]</li>
+          <li inner-h-t-m-l="[[localize('setup-gcp-free-tier',
+              'openLinkFreeTier', _openLinkFreeTier,
+              'openLinkIpPrice', _openLinkIpPrice,
+              'closeLink', _closeLink)]]"></li>
+          <li inner-h-t-m-l="[[localize('setup-gcp-free-trial',
+              'openLinkFreeTrial', _openLinkFreeTrial,
+              'closeLink', _closeLink)]]"></li>
           <li>[[localize('setup-cancel')]]</li>
         </ul>
         <p hidden\$="[[!_computeIsAccountConnected(gcpAccountName)]]">
@@ -117,7 +138,7 @@ const GCP_EXPERIMENTAL_CARD_HTML = html`
         </p>
       </div>
     </div>
-    <div class="card-footer">
+    <div class="card-footer" on-tap="setUpGcpTapped">
       <paper-button class="primary" hidden\$="[[_computeIsAccountConnected(gcpAccountName)]]">[[localize('setup-action')]]</paper-button>
       <paper-button class="primary" hidden\$="[[!_computeIsAccountConnected(gcpAccountName)]]">[[localize('setup-create')]]</paper-button>
     </div>
@@ -347,6 +368,11 @@ Polymer({
       readonly: true,
     },
   },
+
+  _openLinkFreeTier: '<a href="https://cloud.google.com/free/docs/gcp-free-tier#compute">',
+  _openLinkIpPrice: '<a href="https://cloud.google.com/vpc/network-pricing#ipaddress">',
+  _openLinkFreeTrial: '<a href="https://cloud.google.com/free/docs/gcp-free-tier/#free-trial">',
+  _closeLink: '<iron-icon icon=open-in-new></iron-icon></a>',
 
   _computeIsAccountConnected(accountName) {
     return Boolean(accountName);
