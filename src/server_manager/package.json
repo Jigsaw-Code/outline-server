@@ -91,7 +91,7 @@
     "karma-jasmine": "^4.0.1",
     "karma-webpack": "^4.0.2",
     "node-jq": "^1.11.2",
-    "postcss": "^7.0.29",
+    "postcss": "^7.0.36",
     "postcss-rtl": "^1.7.3",
     "posthtml-postcss": "^0.2.6",
     "prettier": "1.19.1",
