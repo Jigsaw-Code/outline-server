@@ -26,8 +26,8 @@ import * as server_install from "./server_install";
 /** Returns a unique, RFC1035-style name as required by GCE. */
 function makeGcpInstanceName(): string {
   const now = new Date();
-  return `outline-${now.getFullYear()}${now.getMonth()}${now.getDate()}-${now.getUTCHours()}${
-      now.getUTCMinutes()}${now.getUTCSeconds()}`;
+  const isoMinusMilliseconds = now.toISOString().substring(0, 19);
+  return `outline-${isoMinusMilliseconds.toLowerCase().replace(/:/g, '-')}`;
 }
 
 // Regions where the first f1-micro instance is free.
