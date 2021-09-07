@@ -29,6 +29,7 @@ type LanguageDef = {
 const SUPPORTED_LANGUAGES: {[key: string]: LanguageDef} = {
   'am': {id: 'am', name: 'አማርኛ', dir: 'ltr'},
   'ar': {id: 'ar', name: 'العربية', dir: 'rtl'},
+  'az': {id: 'az', name: 'Azərbaycanca', dir: 'ltr'},
   'bg': {id: 'bg', name: 'Български', dir: 'ltr'},
   'ca': {id: 'ca', name: 'Català', dir: 'ltr'},
   'cs': {id: 'cs', name: 'Česky', dir: 'ltr'},
