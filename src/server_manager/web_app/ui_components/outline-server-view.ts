@@ -13,47 +13,54 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import '@polymer/paper-dialog/paper-dialog.js';
-import '@polymer/iron-icons/iron-icons.js';
-import '@polymer/iron-pages/iron-pages.js';
-import '@polymer/iron-icons/editor-icons.js';
-import '@polymer/iron-icons/social-icons.js';
-import '@polymer/paper-icon-button/paper-icon-button.js';
-import '@polymer/paper-item/paper-item.js';
-import '@polymer/paper-listbox/paper-listbox.js';
-import '@polymer/paper-menu-button/paper-menu-button.js';
-import '@polymer/paper-progress/paper-progress.js';
-import '@polymer/paper-tabs/paper-tabs.js';
-import '@polymer/paper-tooltip/paper-tooltip.js';
-import './cloud-install-styles.js';
-import './outline-iconset.js';
-import './outline-help-bubble.js';
-import './outline-metrics-option-dialog.js';
+import '@polymer/paper-dialog/paper-dialog';
+import '@polymer/iron-icons/iron-icons';
+import '@polymer/iron-pages/iron-pages';
+import '@polymer/iron-icons/editor-icons';
+import '@polymer/iron-icons/social-icons';
+import '@polymer/paper-icon-button/paper-icon-button';
+import '@polymer/paper-item/paper-item';
+import '@polymer/paper-listbox/paper-listbox';
+import '@polymer/paper-menu-button/paper-menu-button';
+import '@polymer/paper-progress/paper-progress';
+import '@polymer/paper-tabs/paper-tabs';
+import '@polymer/paper-tooltip/paper-tooltip';
+import './cloud-install-styles';
+import './outline-iconset';
+import './outline-help-bubble';
+import './outline-metrics-option-dialog';
 import './outline-server-progress-step';
-import './outline-server-settings.js';
-import './outline-share-dialog.js';
-import './outline-sort-span.js';
+import './outline-server-settings';
+import './outline-share-dialog';
+import './outline-sort-span';
 import {html, PolymerElement} from '@polymer/polymer';
-import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
+import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin';
 
 import * as formatting from '../data_formatting';
 import {getShortName} from '../location_formatting';
 import {getCloudIcon} from './cloud-assets';
+
+import type {PolymerElementProperties} from '@polymer/polymer/interfaces';
+import type {DomRepeat} from '@polymer/polymer/lib/elements/dom-repeat';
+import type {CloudLocation} from '../../model/location';
+import type {AccessKeyId} from '../../model/server';
+import type {OutlineHelpBubble} from './outline-help-bubble';
+import type {OutlineServerSettings} from './outline-server-settings';
 
 export const MY_CONNECTION_USER_ID = '0';
 
 const progressBarMaxWidthPx = 72;
 
 // Makes an CustomEvent that bubbles up beyond the shadow root.
-function makePublicEvent(eventName, detail) {
-  const params = {bubbles: true, composed: true};
+function makePublicEvent(eventName: string, detail?: object) {
+  const params: CustomEventInit = {bubbles: true, composed: true};
   if (detail !== undefined) {
     params.detail = detail;
   }
   return new CustomEvent(eventName, params);
 }
 
-function compare(a, b) {
+function compare<T>(a: T, b: T): -1|0|1 {
   if (a < b) {
     return -1;
   } else if (a > b) {
@@ -62,26 +69,29 @@ function compare(a, b) {
   return 0;
 }
 
-/**
- * Allows using an optional number as a boolean value without 0 being falsey.
- * @param {number=} x
- * @returns {number=} True if x is neither null nor undefined
- */
-function exists(x) {
-  return (x !== null && x !== undefined);
+interface KeyRowEvent extends Event {
+  model: { index: number; item: DisplayAccessKey; };
 }
 
 /**
- * An access key to be displayed
- * @typedef {Object} DisplayAccessKey
- * @prop {string} id
- * @prop {string} placeholderName
- * @prop {string} name
- * @prop {string} accessUrl
- * @prop {number} transferredBytes
- * @prop {number=} dataLimitBytes The data limit assigned to the key if it exists.
- * @prop {DisplayDataAmount=} dataLimit The data limit assigned to the key if it exists.
+ * Allows using an optional number as a boolean value without 0 being falsey.
+ * @returns True if x is neither null nor undefined
  */
+function exists(x: number): boolean {
+  return (x !== null && x !== undefined);
+}
+
+/** An access key to be displayed */
+export type DisplayAccessKey = {
+  id: string;
+  placeholderName: string;
+  name: string;
+  accessUrl: string;
+  transferredBytes: number;
+  /** The data limit assigned to the key, if it exists. */
+  dataLimitBytes?: number;
+  dataLimit?: formatting.DisplayDataAmount;
+}
 
 export class ServerView extends DirMixin(PolymerElement) {
   static get template() {
@@ -618,7 +628,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       return 'outline-server-view';
     }
 
-    static get properties() {
+    static get properties(): PolymerElementProperties {
       return {
         metricsId: String,
         serverId: String,
@@ -663,93 +673,74 @@ export class ServerView extends DirMixin(PolymerElement) {
       ];
     }
 
-    constructor() {
-      super();
-      this.serverId = '';
-      this.metricsId = '';
-      this.serverName = '';
-      this.serverHostname = '';
-      this.serverVersion = '';
-      this.isHostnameEditable = false;
-      this.serverManagementApiUrl = '';
-      /** @type {number} */
-      this.serverPortForNewAccessKeys = null;
-      this.isAccessKeyPortEditable = false;
-      this.serverCreationDate = new Date(0);
-      /** @type {import('../../model/location').CloudLocation} */
-      this.cloudLocation = null;
-      this.cloudId = '';
-      this.getShortName = getShortName;
-      this.getCloudIcon = getCloudIcon;
-      /** @type {number} */
-      this.defaultDataLimitBytes = null;
-      this.isDefaultDataLimitEnabled = false;
-      this.hasPerKeyDataLimitDialog = false;
-      /** Whether the server supports default data limits. */
-      this.supportsDefaultDataLimit = false;
-      this.showFeatureMetricsDisclaimer = false;
-      this.installProgress = 0;
-      this.isServerReachable = false;
-      /**
-       *  Callback for retrying to display an unreachable server.
-       *  @type {() => void)}
-       */
-      this.retryDisplayingServer = null;
-      /**
-       *  myConnection has the same fields as each item in accessKeyRows.  It may
-       *  be unset in some old versions of Outline that allowed deleting this row
-       *
-       * TODO(JonathanDCohen) Refactor out special casing for myConnection.  It exists as a separate
-       * item in the view even though it's also in accessKeyRows.  We can have the special casing
-       * be in display only, so we can just use accessKeyRows[0] and not have extra logic when it's
-       * not needed.
-       * @type {DisplayAccessKey}
-       */
-      this.myConnection = null;
-      this.totalInboundBytes = 0;
-      /** The number to which access key transfer amounts are compared for progress bar display */
-      this.baselineDataTransfer = Number.POSITIVE_INFINITY;
-      /** @type {DisplayAccessKey[]} */
-      this.accessKeyRows = [];
-      this.hasNonAdminAccessKeys = false;
-      this.metricsEnabled = false;
-      // Initialize monthlyOutboundTransferBytes and monthlyCost to 0, so they can
-      // be bound to hidden attributes.  Initializing to undefined does not
-      // cause hidden$=... expressions to be evaluated and so elements may be
-      // shown incorrectly.  See:
-      //   https://stackoverflow.com/questions/33700125/polymer-1-0-hidden-attribute-negate-operator
-      //   https://www.polymer-project.org/1.0/docs/devguide/data-binding.html
-      this.monthlyOutboundTransferBytes = 0;
-      this.monthlyCost = 0;
-      this.accessKeySortBy = 'name';
-      /**
-       * The direction to sort: 1 == ascending, -1 == descending
-       * @type {-1|1}
-       */
-      this.accessKeySortDirection = 1;
-      this.language = 'en';
-      /** @type {(msgId: string, ...params: string[]) => string} */
-      this.localize = null;
-      /** @type {'progressView'|'unreachableView'|'managementView'} */
-      this.selectedPage = 'managementView';
-      this.selectedTab = 'connections';
-    }
-
+    serverId = '';
+    metricsId = '';
+    serverName = '';
+    serverHostname = '';
+    serverVersion = '';
+    isHostnameEditable = false;
+    serverManagementApiUrl = '';
+    serverPortForNewAccessKeys: number = null;
+    isAccessKeyPortEditable = false;
+    serverCreationDate = new Date(0);
+    cloudLocation: CloudLocation = null;
+    cloudId = '';
+    readonly getShortName = getShortName;
+    readonly getCloudIcon = getCloudIcon;
+    defaultDataLimitBytes: number = null;
+    isDefaultDataLimitEnabled = false;
+    hasPerKeyDataLimitDialog = false;
+    /** Whether the server supports default data limits. */
+    supportsDefaultDataLimit = false;
+    showFeatureMetricsDisclaimer = false;
+    installProgress = 0;
+    isServerReachable = false;
+    /** Callback for retrying to display an unreachable server. */
+    retryDisplayingServer: () => void = null;
     /**
-     * @param {DisplayAccessKey} accessKey
+     *  myConnection has the same fields as each item in accessKeyRows.  It may
+     *  be unset in some old versions of Outline that allowed deleting this row
+     *
+     * TODO(JonathanDCohen) Refactor out special casing for myConnection.  It exists as a separate
+     * item in the view even though it's also in accessKeyRows.  We can have the special casing
+     * be in display only, so we can just use accessKeyRows[0] and not have extra logic when it's
+     * not needed.
      */
-    addAccessKey(accessKey) {
+    myConnection: DisplayAccessKey = null;
+    totalInboundBytes = 0;
+    /** The number to which access key transfer amounts are compared for progress bar display */
+    baselineDataTransfer = Number.POSITIVE_INFINITY;
+    accessKeyRows: DisplayAccessKey[] = [];
+    hasNonAdminAccessKeys = false;
+    metricsEnabled = false;
+    // Initialize monthlyOutboundTransferBytes and monthlyCost to 0, so they can
+    // be bound to hidden attributes.  Initializing to undefined does not
+    // cause hidden$=... expressions to be evaluated and so elements may be
+    // shown incorrectly.  See:
+    //   https://stackoverflow.com/questions/33700125/polymer-1-0-hidden-attribute-negate-operator
+    //   https://www.polymer-project.org/1.0/docs/devguide/data-binding.html
+    monthlyOutboundTransferBytes = 0;
+    monthlyCost = 0;
+    accessKeySortBy = 'name';
+    /** The direction to sort: 1 == ascending, -1 == descending */
+    accessKeySortDirection: -1|1 = 1;
+    language = 'en';
+    localize: (msgId: string, ...params: string[]) => string = null;
+    selectedPage: 'progressView'|'unreachableView'|'managementView' = 'managementView';
+    selectedTab: 'connections'|'settings' = 'connections';
+
+    addAccessKey(accessKey: DisplayAccessKey) {
       // TODO(fortuna): Restore loading animation.
       // TODO(fortuna): Restore highlighting.
       this.push('accessKeyRows', accessKey);
       // Force render the access key list so that the input is present in the DOM
-      this.$.accessKeysContainer.querySelector('dom-repeat').render();
-      const input = this.shadowRoot.querySelector(`#access-key-${accessKey.id}`);
+      this.$.accessKeysContainer.querySelector<DomRepeat>('dom-repeat').render();
+      const input = this.shadowRoot.querySelector<HTMLInputElement>(`#access-key-${accessKey.id}`);
       input.select();
     }
 
-  removeAccessKey(accessKeyId) {
-    for (let ui in this.accessKeyRows) {
+  removeAccessKey(accessKeyId: string) {
+    for (let ui = 0; ui < this.accessKeyRows.length; ui++) {
       if (this.accessKeyRows[ui].id === accessKeyId) {
         this.splice('accessKeyRows', ui, 1);
         return;
@@ -757,7 +748,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     }
   }
 
-  updateAccessKeyRow(accessKeyId, fields) {
+  updateAccessKeyRow(accessKeyId: string, fields: object) {
     let newAccessKeyRow;
     if (accessKeyId === MY_CONNECTION_USER_ID) {
       newAccessKeyRow = Object.assign({}, this.get('myConnection'), fields);
@@ -788,35 +779,31 @@ export class ServerView extends DirMixin(PolymerElement) {
     return this._showHelpBubble('dataLimitsHelpBubble', 'settingsTab', 'up', 'right');
   }
 
-  /**
-   * Returns the UI access key with the given ID.
-   * @param {server.accessKeyId} id The id of the key to find
-   * @returns {DisplayAccessKey} The displayed UI key with the given id.
-   */
-  findUiKey(id) {
+  /** Returns the UI access key with the given ID. */
+  findUiKey(id: AccessKeyId): DisplayAccessKey {
     return id === MY_CONNECTION_USER_ID ? this.myConnection :
                                           this.accessKeyRows.find(key => key.id === id);
   }
 
   _closeAddAccessKeyHelpBubble() {
-    this.$.addAccessKeyHelpBubble.hide();
+    (this.$.addAccessKeyHelpBubble as OutlineHelpBubble).hide();
   }
 
   _closeGetConnectedHelpBubble() {
-    this.$.getConnectedHelpBubble.hide();
+    (this.$.getConnectedHelpBubble as OutlineHelpBubble).hide();
   }
 
   _closeDataLimitsHelpBubble() {
-    this.$.dataLimitsHelpBubble.hide();
+    (this.$.dataLimitsHelpBubble as OutlineHelpBubble).hide();
   }
 
   _handleAddAccessKeyPressed() {
     this.dispatchEvent(makePublicEvent('AddAccessKeyRequested'));
-    this.$.addAccessKeyHelpBubble.hide();
+    (this.$.addAccessKeyHelpBubble as OutlineHelpBubble).hide();
   }
 
-  _handleNameInputKeyDown(event) {
-    const input = event.target;
+  _handleNameInputKeyDown(event: KeyRowEvent&KeyboardEvent) {
+    const input = event.target as HTMLInputElement;
     if (event.key === 'Escape') {
       const accessKey = event.model.item;
       input.value = accessKey.name;
@@ -826,8 +813,8 @@ export class ServerView extends DirMixin(PolymerElement) {
     }
   }
 
-  _handleNameInputBlur(event) {
-    const input = event.target;
+  _handleNameInputBlur(event: KeyRowEvent&FocusEvent) {
+    const input = event.target as HTMLInputElement;
     const accessKey = event.model.item;
     const displayName = input.value;
     if (displayName === accessKey.name) {
@@ -856,9 +843,8 @@ export class ServerView extends DirMixin(PolymerElement) {
     }));
   }
 
-  _handleShowPerKeyDataLimitDialogPressed(event) {
-    // TODO(cohenjon) change to optional chaining when we upgrade to Electron > >= 8
-    const accessKey = (event.model && event.model.item) || this.myConnection;
+  _handleShowPerKeyDataLimitDialogPressed(event: KeyRowEvent) {
+    const accessKey = event.model?.item || this.myConnection;
     const keyId = accessKey.id;
     const keyDataLimitBytes = accessKey.dataLimitBytes;
     const keyName = accessKey === this.myConnection ? this.localize('server-my-access-key') :
@@ -871,8 +857,8 @@ export class ServerView extends DirMixin(PolymerElement) {
         {keyId, keyDataLimitBytes, keyName, serverId, defaultDataLimitBytes}));
   }
 
-  _handleRenameAccessKeyPressed(event) {
-    const input = this.$.accessKeysContainer.querySelectorAll(
+  _handleRenameAccessKeyPressed(event: KeyRowEvent) {
+    const input = this.$.accessKeysContainer.querySelectorAll<HTMLInputElement>(
         '.access-key-row .access-key-container > input')[event.model.index];
     // This needs to be deferred because the closing menu messes up with the focus.
     window.setTimeout(() => {
@@ -881,40 +867,35 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   _handleConnectPressed() {
-    this.$.getConnectedHelpBubble.hide();
+    (this.$.getConnectedHelpBubble as OutlineHelpBubble).hide();
     this.dispatchEvent(makePublicEvent(
         'OpenGetConnectedDialogRequested', {accessKey: this.myConnection.accessUrl}));
   }
 
-  _handleShareCodePressed(event) {
+  _handleShareCodePressed(event: KeyRowEvent) {
     const accessKey = event.model.item;
     this.dispatchEvent(
         makePublicEvent('OpenShareDialogRequested', {accessKey: accessKey.accessUrl}));
   }
 
-  _handleRemoveAccessKeyPressed(e) {
+  _handleRemoveAccessKeyPressed(e: KeyRowEvent) {
     const accessKey = e.model.item;
     this.dispatchEvent(makePublicEvent('RemoveAccessKeyRequested', {accessKeyId: accessKey.id}));
   }
 
-  _formatDataLimitForKey(key, language, localize) {
+  _formatDataLimitForKey(key: DisplayAccessKey, language: string, localize: Function) {
     return this._formatDisplayDataLimit(this._activeDataLimitForKey(key), language, localize)
   }
 
-  _computeDisplayDataLimit(/** @param {number=} */ limit) {
+  _computeDisplayDataLimit(limit?: number) {
     return formatting.bytesToDisplayDataAmount(limit);
   }
 
-  /**
-   * @param {number=} limit The data limit in bytes
-   * @param {string} language The 2-letter ISO language code to format for.
-   * @param {Function} localize The localization function
-   */
-  _formatDisplayDataLimit(limit, language, localize) {
+  _formatDisplayDataLimit(limit: number, language: string, localize: Function) {
     return exists(limit) ? formatting.formatBytes(limit, language) : localize('no-data-limit');
   }
 
-  _formatInboundBytesUnit(totalBytes, language) {
+  _formatInboundBytesUnit(totalBytes: number, language: string) {
     // This happens during app startup before we set the language
     if (!language) {
       return '';
@@ -922,7 +903,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     return formatting.formatBytesParts(totalBytes, language).unit;
   }
 
-  _formatInboundBytesValue(totalBytes, language) {
+  _formatInboundBytesValue(totalBytes: number, language: string) {
     // This happens during app startup before we set the language
     if (!language) {
       return '';
@@ -930,7 +911,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     return formatting.formatBytesParts(totalBytes, language).value;
   }
 
-  _formatBytesTransferred(numBytes, language, emptyValue = '') {
+  _formatBytesTransferred(numBytes: number, language: string, emptyValue = '') {
     if (!numBytes) {
       // numBytes may not be set for manual servers, or may be 0 for
       // unused access keys.
@@ -939,7 +920,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     return formatting.formatBytes(numBytes, language);
   }
 
-  _formatMonthlyCost(monthlyCost, language) {
+  _formatMonthlyCost(monthlyCost: number, language: string) {
     if (!monthlyCost) {
       return '';
     }
@@ -948,7 +929,7 @@ export class ServerView extends DirMixin(PolymerElement) {
         .format(monthlyCost);
   }
 
-  _computeManagedServerUtilizationPercentage(numBytes, monthlyLimitBytes) {
+  _computeManagedServerUtilizationPercentage(numBytes: number, monthlyLimitBytes: number) {
     let utilizationPercentage = 0;
     if (monthlyLimitBytes && numBytes) {
       utilizationPercentage = Math.round((numBytes / monthlyLimitBytes) * 100);
@@ -959,7 +940,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     return `${utilizationPercentage}%`;
   }
 
-  _accessKeysAddedOrRemoved(changeRecord) {
+  _accessKeysAddedOrRemoved(changeRecord: unknown) {
     // Check for myConnection and regular access keys.
     let hasNonAdminAccessKeys = false;
     for (let ui in this.accessKeyRows) {
@@ -972,9 +953,9 @@ export class ServerView extends DirMixin(PolymerElement) {
     this.hasNonAdminAccessKeys = hasNonAdminAccessKeys;
   }
 
-  _myConnectionChanged(myConnection) {
+  _myConnectionChanged(myConnection: DisplayAccessKey) {
     if (!myConnection) {
-      this.$.getConnectedHelpBubble.hide();
+      (this.$.getConnectedHelpBubble as OutlineHelpBubble).hide();
     }
   }
 
@@ -983,32 +964,34 @@ export class ServerView extends DirMixin(PolymerElement) {
       this._closeAddAccessKeyHelpBubble();
       this._closeGetConnectedHelpBubble();
       this._closeDataLimitsHelpBubble();
-      this.$.serverSettings.setServerName(this.serverName);
+      (this.$.serverSettings as OutlineServerSettings).setServerName(this.serverName);
     }
   }
 
   _showHelpBubble(
-      helpBubbleId, positionTargetId, arrowDirection = 'down', arrowAlignment = 'right') {
+      helpBubbleId: string, positionTargetId: string, arrowDirection = 'down', arrowAlignment = 'right') {
     return new Promise(resolve => {
-      const helpBubble = this.$[helpBubbleId];
+      const helpBubble = this.$[helpBubbleId] as OutlineHelpBubble;
       helpBubble.show(this.$[positionTargetId], arrowDirection, arrowAlignment);
       helpBubble.addEventListener('outline-help-bubble-dismissed', resolve);
     });
   }
 
-  isRegularConnection(item) {
+  isRegularConnection(item: DisplayAccessKey) {
     return item.id !== MY_CONNECTION_USER_ID;
   }
 
-  _computeColumnDirection(columnName, accessKeySortBy, accessKeySortDirection) {
+  _computeColumnDirection(columnName: string, accessKeySortBy: string,
+      accessKeySortDirection: -1|1) {
     if (columnName === accessKeySortBy) {
       return accessKeySortDirection;
     }
     return 0;
   }
 
-  _setSortByOrToggleDirection(e) {
-    const sortBy = e.target.dataset.sortBy;
+  _setSortByOrToggleDirection(e: MouseEvent) {
+    const element = e.target as HTMLElement;
+    const sortBy = element.dataset.sortBy;
     if (this.accessKeySortBy !== sortBy) {
       this.accessKeySortBy = sortBy;
       this.accessKeySortDirection = sortBy == 'usage' ? -1 : 1;
@@ -1017,14 +1000,14 @@ export class ServerView extends DirMixin(PolymerElement) {
     }
   }
 
-  _sortAccessKeys(accessKeySortBy, accessKeySortDirection) {
+  _sortAccessKeys(accessKeySortBy: string, accessKeySortDirection: -1|1) {
     if (accessKeySortBy === 'usage') {
-      return (a, b) => {
+      return (a: DisplayAccessKey, b: DisplayAccessKey) => {
         return (a.transferredBytes - b.transferredBytes) * accessKeySortDirection;
       };
     }
     // Default to sorting by name.
-    return (a, b) => {
+    return (a: DisplayAccessKey, b: DisplayAccessKey) => {
       if (a.name && b.name) {
         return compare(a.name.toUpperCase(), b.name.toUpperCase()) * accessKeySortDirection;
       } else if (a.name) {
@@ -1045,15 +1028,11 @@ export class ServerView extends DirMixin(PolymerElement) {
     this.dispatchEvent(makePublicEvent('ForgetServerRequested', {serverId: this.serverId}));
   }
 
-  _isServerManaged(cloudId) {
+  _isServerManaged(cloudId: string) {
     return !!cloudId;
   }
 
-  /**
-   * @param {DisplayAccessKey=} accessKey
-   * @returns {number=}
-   */
-  _activeDataLimitForKey(accessKey) {
+  _activeDataLimitForKey(accessKey?: DisplayAccessKey): number {
     if (!accessKey) {
       // We're in app startup
       return null;
@@ -1066,11 +1045,11 @@ export class ServerView extends DirMixin(PolymerElement) {
     return this.isDefaultDataLimitEnabled ? this.defaultDataLimitBytes : null;
   }
 
-  _computePaperProgressClass(accessKey) {
+  _computePaperProgressClass(accessKey: DisplayAccessKey) {
     return exists(this._activeDataLimitForKey(accessKey)) ? 'data-limits' : '';
   }
 
-  _getRelevantTransferAmountForKey(/** @type{DisplayAccessKey} */ accessKey) {
+  _getRelevantTransferAmountForKey(accessKey: DisplayAccessKey) {
     if (!accessKey) {
       // We're in app startup
       return null;
@@ -1080,7 +1059,7 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   _computeProgressWidthStyling(
-      /** @type {DisplayAccessKey} */ accessKey, /** @type {number} */ baselineDataTransfer) {
+      accessKey: DisplayAccessKey, baselineDataTransfer: number) {
     const relativeTransfer = this._getRelevantTransferAmountForKey(accessKey);
     const width = Math.floor(progressBarMaxWidthPx * relativeTransfer / baselineDataTransfer);
     // It's important that there's no space in between width and "px" in order for Chrome to accept
@@ -1088,7 +1067,8 @@ export class ServerView extends DirMixin(PolymerElement) {
     return `width: ${width}px;`;
   }
 
-  _getDataLimitsUsageString(accessKey, language, localize) {
+  _getDataLimitsUsageString(accessKey: DisplayAccessKey, language: string,
+      localize: Function) {
     if (!accessKey) {
       // We're in app startup
       return '';

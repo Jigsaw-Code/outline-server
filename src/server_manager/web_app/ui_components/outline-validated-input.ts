@@ -13,11 +13,11 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import './cloud-install-styles.js';
+import './cloud-install-styles';
 
-import './outline-server-settings-styles.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import './outline-server-settings-styles';
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn';
+import {html} from '@polymer/polymer/lib/utils/html-tag';
 
 // outline-validated-input
 // This is an input, with a cancel and a save button, which performs client-side validation and has
@@ -100,7 +100,7 @@ Polymer({
     editable: {type: Boolean, value: false},
     visible: {type: Boolean, value: false},
     // Properties affecting the input
-    label: {type: String, readonly: true, value: null},
+    label: {type: String, value: null},
     allowedPattern: {type: String, value: '.*'},
     maxLength: {type: Number, value: Number.POSITIVE_INFINITY},
     value: {type: String, value: null},
@@ -110,7 +110,6 @@ Polymer({
     // with any server-side validation and cause unpredictable results.
     clientSideValidator: {
       type: Function,
-      readonly: true,
       value: () => {
         return () => '';
       },
@@ -120,10 +119,10 @@ Polymer({
     _enableButtons: {type: Boolean, value: false},
     // Other properties
     event: {type: String, value: null},
-    localize: {type: Function, readonly: true},
+    localize: {type: Function},
   },
 
-  _onKeyUp: function(e) {
+  _onKeyUp: function(e: KeyboardEvent) {
     const input = this.$.input;
     if (e.key === 'Escape') {
       this._cancel();
@@ -192,7 +191,7 @@ Polymer({
     input.readonly = false;
   },
 
-  enterErrorState: function(message) {
+  enterErrorState: function(message: string) {
     const input = this.$.input;
     this._enableButtons = true;
     input.errorMessage = message;

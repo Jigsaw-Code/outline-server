@@ -13,10 +13,15 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import '@polymer/paper-dialog/paper-dialog.js';
+import '@polymer/paper-dialog/paper-dialog';
 
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn';
+import {html} from '@polymer/polymer/lib/utils/html-tag';
+
+export interface OutlineModalDialog extends Element {
+  open(title: string, text: string, buttons: string[]): Promise<number>;
+  close(): void;
+}
 
 Polymer({
   _template: html`
@@ -48,11 +53,11 @@ Polymer({
   properties: {
     title: String,
     text: String,
-    buttons: String,
+    buttons: Array,
   },
 
   // Returns a Promise which fulfills with the index of the button clicked.
-  open: function(title, text, buttons) {
+  open: function(title: string, text: string, buttons: string[]) {
     this.title = title;
     this.text = text;
     this.buttons = buttons;
@@ -67,7 +72,7 @@ Polymer({
     this.$.dialog.close();
   },
 
-  buttonTapped: function(event) {
+  buttonTapped: function(event: Event&{model: {index: number;};}) {
     if (!this.fulfill) {
       console.error('outline-modal-dialog: this.fulfill not defined');
       return;

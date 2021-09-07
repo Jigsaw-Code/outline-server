@@ -18,7 +18,7 @@ import '@polymer/paper-button/paper-button';
 import './outline-progress-spinner';
 import './outline-step-view';
 import {css, customElement, html, LitElement, property} from 'lit-element';
-import {COMMON_STYLES} from './cloud-install-styles.js';
+import {COMMON_STYLES} from './cloud-install-styles';
 
 @customElement('outline-server-progress-step')
 export class OutlineServerProgressStep extends LitElement {
@@ -61,7 +61,7 @@ export class OutlineServerProgressStep extends LitElement {
     `];
   }
 
-  render() {
+  override render() {
     return html`
       <outline-step-view display-action="">
         <span slot="step-title">${this.localize('setup-do-title')}</span>

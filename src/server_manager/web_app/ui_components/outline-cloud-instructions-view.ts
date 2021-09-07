@@ -13,12 +13,12 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import '@polymer/polymer/polymer-legacy.js';
+import '@polymer/polymer/polymer-legacy';
 
-import '@polymer/iron-icons/iron-icons.js';
-import '@polymer/paper-button/paper-button.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import '@polymer/iron-icons/iron-icons';
+import '@polymer/paper-button/paper-button';
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn';
+import {html} from '@polymer/polymer/lib/utils/html-tag';
 Polymer({
   _template: html`
     <style include="cloud-install-styles">
@@ -97,7 +97,7 @@ Polymer({
     imagePath: String,
     thumbnailPath: String,
     instructions: Array,
-    localize: {type: Function, readonly: true},
+    localize: Function,
   },
 
   _openImage: function() {

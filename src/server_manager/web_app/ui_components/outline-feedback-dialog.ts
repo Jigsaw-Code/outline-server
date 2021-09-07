@@ -13,18 +13,29 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import '@polymer/paper-dialog/paper-dialog.js';
-import '@polymer/paper-dropdown-menu/paper-dropdown-menu.js';
-import '@polymer/paper-item/paper-item.js';
-import '@polymer/paper-listbox/paper-listbox.js';
-import '@polymer/paper-input/paper-input.js';
-import '@polymer/paper-input/paper-textarea.js';
+import '@polymer/paper-dialog/paper-dialog';
+import '@polymer/paper-dropdown-menu/paper-dropdown-menu';
+import '@polymer/paper-item/paper-item';
+import '@polymer/paper-listbox/paper-listbox';
+import '@polymer/paper-input/paper-input';
+import '@polymer/paper-input/paper-textarea';
 // This is needed to fix the "KeyframeEffect is not defined"
 // see https://github.com/PolymerElements/paper-swatch-picker/issues/36
-import 'web-animations-js/web-animations-next.min.js';
+import 'web-animations-js/web-animations-next.min';
 
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn';
+import {html} from '@polymer/polymer/lib/utils/html-tag';
+
+export interface OutlineFeedbackDialog extends Element {
+  open(prepopulatedMessage?: string, showInstallationFailed?: boolean): void;
+}
+
+export interface FeedbackDetail {
+  feedbackCategory: string;
+  userFeedback: string;
+  userEmail: string;
+  cloudProvider?: string;
+}
 
 Polymer({
   _template: html`
@@ -125,7 +136,7 @@ Polymer({
     feedbackExplanation: String,
     feedbackCategories: {
       type: Object,
-      readonly: true,
+      readOnly: true,
       value: {
         // Maps a category to its `feedbackCategoryListbox` item index.
         GENERAL: 0,
@@ -150,11 +161,10 @@ Polymer({
     },
     localize: {
       type: Function,
-      readonly: true,
     },
   },
 
-  open: function(prepopulatedMessage, showInstallationFailed) {
+  open: function(prepopulatedMessage: string, showInstallationFailed: boolean) {
     // Clear all fields, in case feedback had already been entered.
     if (showInstallationFailed) {
       this.title = this.localize('feedback-title-install');
@@ -182,14 +192,14 @@ Polymer({
       this.$.userFeedback.invalid = true;
       return;
     }
-    const data = {
+    const data: FeedbackDetail = {
       feedbackCategory: this.$.feedbackCategory.selectedItemLabel,
       userFeedback: this.$.userFeedback.value,
       userEmail: this.$.userEmail.value,
     };
     const selectedCloudProvider = this.$.cloudProvider.selectedItemLabel;
     if (this.shouldShowCloudProvider && !!selectedCloudProvider) {
-      data['cloudProvider'] = selectedCloudProvider;
+      data.cloudProvider = selectedCloudProvider;
     }
     this.fire('SubmitFeedback', data);
     this.$.dialog.close();
@@ -221,7 +231,7 @@ Polymer({
 
   // Returns whether the window's locale is English (i.e. EN, en-US) and the user has
   // entered their email.
-  _computeShouldShowLanguageDisclaimer: function(hasEnteredEmail) {
+  _computeShouldShowLanguageDisclaimer: function(hasEnteredEmail: boolean) {
     return !window.navigator.language.match(/^en/i) && hasEnteredEmail;
   }
 });

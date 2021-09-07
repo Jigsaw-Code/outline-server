@@ -10,15 +10,23 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/paper-dropdown-menu/paper-dropdown-menu.js';
-import '@polymer/paper-listbox/paper-listbox.js';
-import '@polymer/paper-item/paper-item.js';
-import '@polymer/iron-icon/iron-icon.js';
-import '@polymer/iron-icons/iron-icons.js';
-import './cloud-install-styles.js';
+import '@polymer/polymer/polymer-legacy';
+import '@polymer/paper-dropdown-menu/paper-dropdown-menu';
+import '@polymer/paper-listbox/paper-listbox';
+import '@polymer/paper-item/paper-item';
+import '@polymer/iron-icon/iron-icon';
+import '@polymer/iron-icons/iron-icons';
+import './cloud-install-styles';
 
 import {html, PolymerElement} from '@polymer/polymer';
+import type {PolymerElementProperties} from '@polymer/polymer/interfaces';
+
+export type LanguageDef = {
+  id: string,
+  name: string,
+  dir: 'ltr'|'rtl'
+};
+
 
 export class OutlineLanguagePicker extends PolymerElement {
   static get template() {
@@ -61,26 +69,21 @@ export class OutlineLanguagePicker extends PolymerElement {
     return 'outline-language-picker';
   }
 
-  static get properties() {
+  static get properties(): PolymerElementProperties {
     return {
       selectedLanguage: {type: String},
-      // An array of {id, name, dir} language objects.
-      languages: {type: Array, readonly: true},
+      languages: {type: Array},
     };
   }
 
-  constructor() {
-    super();
-    this.selectedLanguage = '';
-    /** @type {Array<{id: string, name: string, dir: "rtl"|"ltr"}>} */
-    this.languages = [];
-  }
+  selectedLanguage = '';
+  languages: LanguageDef[] = [];
 
-  _shouldHideCheckmark(language, languageCode) {
+  _shouldHideCheckmark(language: string, languageCode: string) {
     return language !== languageCode;
   }
 
-  _languageChanged(event) {
+  _languageChanged(event: CustomEvent) {
     const languageCode = event.detail.value;
     const languageDir = this.languages.find((lang) => {return lang.id === languageCode}).dir;
 

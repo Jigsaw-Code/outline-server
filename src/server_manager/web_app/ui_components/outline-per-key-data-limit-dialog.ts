@@ -152,7 +152,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   private _onDataLimitSet?: OnSetDataLimitHandler;
   private _onDataLimitRemoved?: OnRemoveDataLimitHandler;
 
-  render() {
+  override render() {
     return html`
       <style>
         /* Custom element mixins with brackets don't work in style() */

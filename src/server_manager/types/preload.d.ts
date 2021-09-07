@@ -33,3 +33,6 @@ declare function runDigitalOceanOauth(): OauthSession;
 declare function runGcpOauth(): OauthSession;
 
 declare function bringToFront(): void;
+
+// From base.webpack.js.
+declare const outline: { gcpAuthEnabled: boolean; };

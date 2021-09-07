@@ -13,14 +13,14 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import '@polymer/polymer/polymer-legacy.js';
+import '@polymer/polymer/polymer-legacy';
 
-import '@polymer/paper-button/paper-button.js';
-import './cloud-install-styles.js';
-import './outline-step-view.js';
+import '@polymer/paper-button/paper-button';
+import './cloud-install-styles';
+import './outline-step-view';
 import './style.css';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn';
+import {html} from '@polymer/polymer/lib/utils/html-tag';
 
 const DO_CARD_HTML = html`
   <style>
@@ -365,7 +365,6 @@ Polymer({
     },
     localize: {
       type: Function,
-      readonly: true,
     },
   },
 
@@ -374,11 +373,11 @@ Polymer({
   _openLinkFreeTrial: '<a href="https://cloud.google.com/free/docs/gcp-free-tier/#free-trial">',
   _closeLink: '<iron-icon icon=open-in-new></iron-icon></a>',
 
-  _computeIsAccountConnected(accountName) {
+  _computeIsAccountConnected(accountName: string) {
     return Boolean(accountName);
   },
 
-  _showNewGcpFlow(gcpAccountName) {
+  _showNewGcpFlow(gcpAccountName: string) {
     return outline.gcpAuthEnabled || this._computeIsAccountConnected(gcpAccountName);
   },
 

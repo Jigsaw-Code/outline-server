@@ -23,6 +23,7 @@
     "@polymer/iron-autogrow-textarea": "^3.0.0",
     "@polymer/iron-collapse": "^3.0.0",
     "@polymer/iron-fit-behavior": "^3.0.0",
+    "@polymer/iron-icon": "^3.0.1",
     "@polymer/iron-icons": "^3.0.0",
     "@polymer/iron-pages": "^3.0.0",
     "@polymer/paper-button": "^3.0.0",

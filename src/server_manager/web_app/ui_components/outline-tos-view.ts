@@ -13,9 +13,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn';
 
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import {html} from '@polymer/polymer/lib/utils/html-tag';
 Polymer({
   _template: html`
     <style include="cloud-install-styles"></style>
@@ -69,7 +69,6 @@ Polymer({
     },
     localize: {
       type: Function,
-      readonly: true,
     },
   },
 

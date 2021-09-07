@@ -13,22 +13,33 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/iron-collapse/iron-collapse.js';
-import '@polymer/iron-icon/iron-icon.js';
-import '@polymer/iron-icons/iron-icons.js';
-import '@polymer/paper-button/paper-button.js';
-import '@polymer/paper-dialog/paper-dialog.js';
-import '@polymer/paper-input/paper-textarea.js';
-import '@polymer/paper-progress/paper-progress.js';
-import './cloud-install-styles.js';
-import './outline-cloud-instructions-view.js';
-import './outline-step-view.js';
+import '@polymer/polymer/polymer-legacy';
+import '@polymer/iron-collapse/iron-collapse';
+import '@polymer/iron-icon/iron-icon';
+import '@polymer/iron-icons/iron-icons';
+import '@polymer/paper-button/paper-button';
+import '@polymer/paper-dialog/paper-dialog';
+import '@polymer/paper-input/paper-textarea';
+import '@polymer/paper-progress/paper-progress';
+import './cloud-install-styles';
+import './outline-cloud-instructions-view';
+import './outline-step-view';
 import './style.css';
 
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {dom} from '@polymer/polymer/lib/legacy/polymer.dom.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn';
+import {html} from '@polymer/polymer/lib/utils/html-tag';
+
+import type {IronCollapseElement} from '@polymer/iron-collapse/iron-collapse';
+import type {IronIconElement} from '@polymer/iron-icon/iron-icon';
+
+export interface OutlineManualServerEntry extends Element {
+  clear(): void;
+  retryTapped(): void;
+  cancelTapped(): void;
+  cloudProvider: 'generic'|'aws'|'gcp';
+  enableDoneButton: boolean;
+  showConnection: boolean;
+}
 
 Polymer({
   _template: html`
@@ -351,7 +362,6 @@ Polymer({
     },
     localize: {
       type: Function,
-      readonly: true,
     },
   },
 
@@ -378,12 +388,12 @@ Polymer({
   clear: function() {
     this.$.serverConfig.value = '';
     this.showConnection = false;
-    for (const dropdown of dom(this.root).querySelectorAll('.instructions-collapse')) {
+    for (const dropdown of this.root.querySelectorAll('.instructions-collapse')) {
       dropdown.hide();
     }
   },
 
-  _computeCloudProviderName: function(cloudProvider) {
+  _computeCloudProviderName: function(cloudProvider: string) {
     switch (cloudProvider) {
       case 'aws':
         return 'Amazon Web Services';
@@ -394,23 +404,23 @@ Polymer({
     }
   },
 
-  _computeIsCloudProviderAws: function(cloudProvider) {
+  _computeIsCloudProviderAws: function(cloudProvider: string) {
     return cloudProvider === 'aws';
   },
 
-  _computeIsCloudProviderGcp: function(cloudProvider) {
+  _computeIsCloudProviderGcp: function(cloudProvider: string) {
     return cloudProvider === 'gcp';
   },
 
-  _computeIsGenericCloudProvider: function(cloudProvider) {
+  _computeIsGenericCloudProvider: function(cloudProvider: string) {
     return cloudProvider === 'generic';
   },
 
-  _computeInstallScriptStepNumber: function(isGenericCloudProvider) {
+  _computeInstallScriptStepNumber: function(isGenericCloudProvider: boolean) {
     return isGenericCloudProvider ? 1 : 2;
   },
 
-  _computePasteJsonStepNumber: function(installScriptStepNumber) {
+  _computePasteJsonStepNumber: function(installScriptStepNumber: number) {
     return installScriptStepNumber + 1;
   },
 
@@ -430,7 +440,7 @@ Polymer({
     this._toggleDropDown(this.$.gcpCreateProjectDropDown, this.$.gcpCreateProjectDropDownIcon);
   },
 
-  _toggleDropDown: function(dropDown, icon) {
+  _toggleDropDown: function(dropDown: IronCollapseElement, icon: IronIconElement) {
     dropDown.toggle();
     icon.icon = dropDown.opened ? 'arrow-drop-up' : 'arrow-drop-down';
   },
