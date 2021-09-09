@@ -376,7 +376,7 @@ export class App {
           result.push(server);
         }
       } catch (e) {
-        if (e instanceof HttpError && e.getStatusCode() == 403) {
+        if (e instanceof HttpError && e.getStatusCode() === 403) {
           // listServers() throws an HTTP 403 if the outline project has been
           // created but the billing account has been removed, which can
           // easily happen after the free trial period expires.  This is
