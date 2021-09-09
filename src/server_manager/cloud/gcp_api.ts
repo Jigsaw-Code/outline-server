@@ -15,7 +15,10 @@
 // TODO: Share the same OAuth config between electron app and renderer.
 // Keep this in sync with {@link gcp_oauth.ts#OAUTH_CONFIG}
 const GCP_OAUTH_CLIENT_ID =
-    '946220775492-osi1dm2rhhpo4upm6qqfv9fiivv1qu6c.apps.googleusercontent.com';
+    '946220775492-a5v6bsdin6o7ncnqn34snuatmrp7dqh0.apps.googleusercontent.com';
+// Note: For native apps, the "client secret" is not actually a secret.
+// See https://developers.google.com/identity/protocols/oauth2/native-app.
+const GCP_OAUTH_CLIENT_SECRET = 'lQT4Qx9b3CaSHDcnuYFgyYVE';
 
 export class GcpError extends Error {
   constructor(code: number, message?: string) {
@@ -587,6 +590,7 @@ export class RestApiClient {
     const data = {
       // TODO: Consider moving client ID to the caller.
       client_id: GCP_OAUTH_CLIENT_ID,
+      client_secret: GCP_OAUTH_CLIENT_SECRET,
       refresh_token: refreshToken,
       grant_type: 'refresh_token',
     };
