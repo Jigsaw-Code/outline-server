@@ -254,9 +254,7 @@ export class GcpCreateServerApp extends LitElement {
       // TODO: Surface this error to the user.
       console.warn('Error fetching GCP account info', e);
     }
-    const isProjectHealthy =
-        this.project ? await this.account.isProjectHealthy(this.project.id) : false;
-    if (this.project && isProjectHealthy) {
+    if (await this.isProjectHealthy()) {
       this.showRegionPicker();
     } else if (!(this.billingAccounts?.length > 0)) {
       this.showBillingAccountSetup();
@@ -271,6 +269,12 @@ export class GcpCreateServerApp extends LitElement {
     } else {
       this.showProjectSetup(this.project);
     }
+  }
+
+  private async isProjectHealthy(): Promise<boolean> {
+    return this.project ?
+        await this.account.isProjectHealthy(this.project.id)
+        : false;
   }
 
   disconnectedCallback() {
@@ -294,7 +298,11 @@ export class GcpCreateServerApp extends LitElement {
 
     if (this.billingAccounts?.length > 0) {
       this.stopRefreshingBillingAccounts();
-      this.showProjectSetup();
+      if (await this.isProjectHealthy()) {
+        this.showRegionPicker();
+      } else {
+        this.showProjectSetup(this.project);
+      }
       window.bringToFront();
     }
   }
