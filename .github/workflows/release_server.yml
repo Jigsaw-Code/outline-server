@@ -8,7 +8,7 @@ on:
 jobs: 
   release_shadowbox:
     name: Release Shadowbox Canary
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-16.04
     environment: Deploy Shadowbox Canary
 
     steps:
