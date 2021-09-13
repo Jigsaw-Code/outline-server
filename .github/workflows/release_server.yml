@@ -1,1 +1,35 @@
 name: Release Server
+
+run-on: ubuntu-20.04
+
+steps:
+  - name: Checkout repo
+    uses: actions/checkout@v1
+
+  - name: Install Node.js, NPM and Yarn
+    uses: actions/setup-node@v1
+    with:
+      node-version: 12
+
+  - name: Show Environment Info
+    run: yarn -v
+
+  - name: Get yarn cache directory path
+    id: yarn-cache-dir-path
+    run: echo "::set-output name=dir::$(yarn cache dir)"
+
+  - name: Check yarn cache
+    uses: actions/cache@v2
+    with:
+      path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+      key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+      restore-keys: ${{ runner.os }}-yarn-
+
+  - name: Install dependencies
+    run: yarn --prefer-offline
+
+  - name: Shadowbox Unit Tests
+    run: yarn do shadowbox/test
+
+  - name: Shadowbox Integration Tests
+    run: yarn do shadowbox/integration_test/run
