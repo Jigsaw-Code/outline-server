@@ -1,8 +1,9 @@
 name: Release Server
 
 on: 
-  schedule:
-    - cron: '0 0 * * *'
+  workflow_dispatch
+  # schedule:
+  #   - cron: '0 0 * * *'
 
 jobs: 
   release_shadowbox:
@@ -44,10 +45,11 @@ jobs:
 
       - name: Deploy Canary
         run: |
-          TAG=server-$(date -I)
+          # TAG=server-$(date -I)
+          TAG=$(uuidgen)
           yarn do shadowbox/docker/build
           docker login quay.io -u="$QUAY_IO_USERNAME" -p="$QUAY_IO_PASSWORD"
           docker tag outline/shadowbox quay.io/outline/shadowbox:$TAG
           docker push quay.io/outline/shadowbox:$TAG
-          docker tag outline/shadowbox quay.io/outline/shadowbox:daily
-          docker push quay.io/outline/shadowbox:daily
+          # docker tag outline/shadowbox quay.io/outline/shadowbox:daily
+          # docker push quay.io/outline/shadowbox:daily TODO uncomment
