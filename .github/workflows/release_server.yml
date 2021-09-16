@@ -8,7 +8,7 @@ on:
 jobs: 
   release_shadowbox:
     name: Release Shadowbox Canary
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-20.04
     environment: Deploy Shadowbox Canary
 
     steps:
@@ -23,16 +23,16 @@ jobs:
       - name: Show Environment Info
         run: yarn -v
 
-      # - name: Get yarn cache directory path
-      #   id: yarn-cache-dir-path
-      #   run: echo "::set-output name=dir::$(yarn cache dir)"
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
 
-      # - name: Check yarn cache
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-      #     key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-      #     restore-keys: ${{ runner.os }}-yarn-
+      - name: Check yarn cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-
 
       - name: Install dependencies
         run: yarn --prefer-offline
@@ -41,7 +41,9 @@ jobs:
         run: yarn do shadowbox/test
 
       - name: Shadowbox Integration Tests
-        run: yarn do shadowbox/integration_test/run
+        run: |
+          yarn do shadowbox/server/build
+          yarn do shadowbox/integration_test/run
 
       - name: Deploy Canary
         run: |
