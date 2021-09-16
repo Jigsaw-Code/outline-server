@@ -23,7 +23,10 @@ jobs:
           node-version: 12
 
       - name: Show Environment Info
-        run: yarn -v
+        run: |
+          yarn -v
+          docker --version
+          exit 1
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path

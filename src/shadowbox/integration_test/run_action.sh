@@ -28,8 +28,6 @@ if ./test.sh > "${LOGFILE}" 2>&1 ; then
   echo "Test Passed!"
   # Removing the log file sometimes fails on Travis.  There's no point in us cleaning it up
   # on a CI build anyways.
-  #TODOREMOVE 
-  cat "${LOGFILE}"
   rm -f "${LOGFILE}"
 else
   result=$?
