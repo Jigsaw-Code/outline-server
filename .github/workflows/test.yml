@@ -6,10 +6,12 @@ jobs:
   manager:
     name: Build and Test
     
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     strategy:
       # Don't cancel jobs on other platforms if one fails
       fail-fast: false
+      matrix:
+        os: [ubuntu-16.04, ubuntu-18.04, ubuntu-20.04]
       
     steps:
       - name: Checkout repo
