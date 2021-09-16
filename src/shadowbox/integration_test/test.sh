@@ -112,6 +112,9 @@ function cleanup() {
   TARGET_IP="$(docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${TARGET_CONTAINER}")"
   readonly TARGET_IP
 
+  echo "Curl version: "
+  docker exec "${CLIENT_CONTAINER}" curl --version
+
   # Verify that the client cannot access or even resolve the target
   # Exit code 28 for "Connection timed out".
   (docker exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 "${TARGET_IP}" > /dev/null && \
