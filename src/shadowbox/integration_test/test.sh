@@ -121,7 +121,7 @@ function cleanup() {
   dig target
 
   # Exit code 6 for "Could not resolve host".
-  (docker exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 http://target > /dev/null && \
+  (docker exec "${CLIENT_CONTAINER}" curl -vvv --connect-timeout 5 http://target > /dev/null && \
     fail "Client should not have access to target host") || (($? == 6))
 
   # Wait for shadowbox to come up.
