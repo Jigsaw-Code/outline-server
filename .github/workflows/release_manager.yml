@@ -1,9 +1,9 @@
 name: Release Manager
 
-on: 
+on:
   push:
     tags:
-      - "v[0-9]"
+      - "v[0-9]*"
 
 jobs:
   release_manager:
@@ -37,10 +37,10 @@ jobs:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: ${{ runner.os }}-yarn-
-      
+
       - name: Install dependencies
         run: yarn --prefer-offline
-      
+
       - name: Release Linux
         if: runner.os == 'Linux'
         run: yarn do server_manager/electron_app/release_linux
@@ -52,7 +52,7 @@ jobs:
           pwd #TODO REMOVE
           export CSC_LINK=$(pwd)/macos-signing-certificate.p12
           yarn do server_manager/electron_app/release_macos
-      
+
       - name: Deploy
         uses: softprops/action-gh-release@v1
         with:
