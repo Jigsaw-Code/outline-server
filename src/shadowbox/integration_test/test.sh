@@ -117,12 +117,10 @@ function cleanup() {
   (docker exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 "${TARGET_IP}" > /dev/null && \
     fail "Client should not have access to target IP") || (($? == 28))
 
-
-  dig target
-
-  # Exit code 6 for "Could not resolve host".
-  (docker exec "${CLIENT_CONTAINER}" curl -vvv --connect-timeout 5 http://target > /dev/null && \
-    fail "Client should not have access to target host") || (($? == 6))
+  # Exit code 6 for "Could not resolve host".  On some versions of docker, curl will give a timeout
+  # error (28) instead
+  (docker exec "${CLIENT_CONTAINER}" curl --connect-timeout 5 http://target > /dev/null && \
+    fail "Client should not have access to target host") || (($? == 6 || $? == 28))
 
   # Wait for shadowbox to come up.
   wait_for_resource https://localhost:20443/access-keys
