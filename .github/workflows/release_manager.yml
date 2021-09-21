@@ -5,6 +5,9 @@ on:
     tags:
       - "v[0-9]*"
 
+env:
+  SENTRY_DSN: https://533e56d1b2d64314bd6092a574e6d0f1@o74047.ingest.sentry.io/215496
+
 jobs:
   release_manager:
     name: Release Manager
@@ -48,8 +51,6 @@ jobs:
       - name: Release Linux
         if: runner.os == 'Linux'
         run: yarn do server_manager/electron_app/release_linux
-        env:
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
       - name: Release MacOS
         if: runner.os == 'macOS'
@@ -58,7 +59,6 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           ENCRYPTED_SIGNING_CERT_IV: ${{ secrets.ENCRYPTED_SIGNING_CERT_IV }}
           ENCRYPTED_SIGNING_CERT_KEY: ${{ secrets.ENCRYPTED_SIGNING_CERT_KEY }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: |
           openssl aes-256-cbc -K $ENCRYPTED_SIGNING_CERT_KEY -iv  $ENCRYPTED_SIGNING_CERT_IV -in macos-signing-certificate.p12.enc -out macos-signing-certificate.p12 -d -md sha256
           export CSC_LINK=$(pwd)/macos-signing-certificate.p12
