@@ -56,10 +56,9 @@ jobs:
         run: docker login quay.io -u="$QUAY_IO_USERNAME" -p="$QUAY_IO_PASSWORD"
 
       - name: Deploy
-        if:
         run: |
-          date_tag=$(date -I)
-          TAG=${{ startsWith(github.ref, 'refs/tags/server-v') && $date_tag || daily }}
+          PROD=${{ startsWith(github.ref, 'refs/tags/server-v') && true || '' }}
+          TAG=$([[ -z $PROD ]] && echo "daily" || echo $(date -I))
           echo "Tagging image with tag: $TAG"
           docker tag outline/shadowbox quay.io/outline/shadowbox:TAG
           docker push quay.io/outline/shadowbox:TAG
