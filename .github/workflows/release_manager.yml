@@ -68,3 +68,4 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: "build/server_manager/electron_app/static/dist/*.*"
+          draft: true
