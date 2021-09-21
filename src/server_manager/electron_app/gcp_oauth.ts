@@ -17,9 +17,13 @@ import * as express from 'express';
 import {OAuth2Client} from 'google-auth-library';
 import {AddressInfo} from 'net';
 
+// Note: For native apps, the "client secret" is not actually a secret.
+// See https://developers.google.com/identity/protocols/oauth2/native-app.
+
 const OAUTH_CONFIG = {
   project_id: 'outline-manager-oauth',
-  client_id: '946220775492-osi1dm2rhhpo4upm6qqfv9fiivv1qu6c.apps.googleusercontent.com',
+  client_id: '946220775492-a5v6bsdin6o7ncnqn34snuatmrp7dqh0.apps.googleusercontent.com',
+  client_secret: 'lQT4Qx9b3CaSHDcnuYFgyYVE',
   scopes: [
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/compute',
@@ -67,7 +71,7 @@ export function runOauth(): OauthSession {
   // Open browser to OAuth URL
   const oAuthClient = new OAuth2Client(
       OAUTH_CONFIG.client_id,
-      null,
+      OAUTH_CONFIG.client_secret,
       `http://localhost:${port}${REDIRECT_PATH}`,
   );
   const oAuthUrl = oAuthClient.generateAuthUrl({

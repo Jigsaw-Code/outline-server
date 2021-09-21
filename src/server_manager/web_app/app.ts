@@ -29,7 +29,7 @@ import {filterOptions, getShortName} from './location_formatting';
 import {parseManualServerConfig} from './management_urls';
 import {AppRoot, ServerListEntry} from './ui_components/app-root';
 import {DisplayAccessKey, ServerView} from './ui_components/outline-server-view';
-import {DisplayCloudId} from './ui_components/cloud-assets';
+import {HttpError} from '../cloud/gcp_api';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -369,10 +369,24 @@ export class App {
     const result = [];
     const gcpProjects = await this.gcpAccount.listProjects();
     for (const gcpProject of gcpProjects) {
-      const servers = await this.gcpAccount.listServers(gcpProject.id);
-      for (const server of servers) {
-        this.addServer(this.gcpAccount.getId(), server);
-        result.push(server);
+      try {
+        const servers = await this.gcpAccount.listServers(gcpProject.id);
+        for (const server of servers) {
+          this.addServer(this.gcpAccount.getId(), server);
+          result.push(server);
+        }
+      } catch (e) {
+        if (e instanceof HttpError && e.getStatusCode() === 403) {
+          // listServers() throws an HTTP 403 if the outline project has been
+          // created but the billing account has been removed, which can
+          // easily happen after the free trial period expires.  This is
+          // harmless, because a project with no billing cannot contain any
+          // servers, and the GCP server creation flow will check and correct
+          // the billing account setup.
+          console.warn(`Ignoring HTTP 403 for GCP project "${gcpProject.id}"`);
+        } else {
+          throw e;
+        }
       }
     }
     return result;
