@@ -30,7 +30,6 @@ jobs:
           yarn -v
           openssl version
           env
-          echo $SENTRY_DSN " -- dsn"
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
