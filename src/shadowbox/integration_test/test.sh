@@ -117,8 +117,8 @@ function cleanup() {
   (docker exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 "${TARGET_IP}" > /dev/null && \
     fail "Client should not have access to target IP") || (($? == 28))
 
-  # Exit code 6 for "Could not resolve host".  On some versions of docker, curl will give a timeout
-  # error (28) instead
+  # Exit code 6 for "Could not resolve host".  In some environments, curl reports a timeout
+  # error (28) instead, which is surprising.  TODO: Investigate and fix.
   (docker exec "${CLIENT_CONTAINER}" curl --connect-timeout 5 http://target > /dev/null && \
     fail "Client should not have access to target host") || (($? == 6 || $? == 28))
 
