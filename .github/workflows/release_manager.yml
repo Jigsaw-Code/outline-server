@@ -48,8 +48,7 @@ jobs:
       - name: Release MacOS
         if: runner.os == 'macOS'
         run: |
-          openssl aes-256-cbc -K TODOENCRYPTEDKEY -iv TODOENCRYPTEDIV -in macos-signing-certificate.p12.enc -out macos-signing-certificate.p12 -d
-          pwd #TODO REMOVE
+          openssl aes-256-cbc -k $ENCRYPTED_SIGNING_CERT_KEY -iv  $ENCRYPTED_SIGNING_CERT_IV -in macos-signing-certificate.p12.enc -out macos-signing-certificate.p12 -d
           export CSC_LINK=$(pwd)/macos-signing-certificate.p12
           yarn do server_manager/electron_app/release_macos
 
