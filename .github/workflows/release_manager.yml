@@ -25,7 +25,11 @@ jobs:
           node-version: 12
 
       - name: Show Environment Info
-        run: yarn -v
+        run: |
+          yarn -v
+          openssl version
+          env
+          echo $SENTRY_DSN " -- dsn"
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
@@ -48,7 +52,7 @@ jobs:
       - name: Release MacOS
         if: runner.os == 'macOS'
         run: |
-          openssl aes-256-cbc -k $ENCRYPTED_SIGNING_CERT_KEY -iv  $ENCRYPTED_SIGNING_CERT_IV -in macos-signing-certificate.p12.enc -out macos-signing-certificate.p12 -d
+          openssl aes-256-cbc -K $ENCRYPTED_SIGNING_CERT_KEY -iv  $ENCRYPTED_SIGNING_CERT_IV -in macos-signing-certificate.p12.enc -out macos-signing-certificate.p12 -d -md sha256
           export CSC_LINK=$(pwd)/macos-signing-certificate.p12
           yarn do server_manager/electron_app/release_macos
 
