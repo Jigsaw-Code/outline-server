@@ -34,6 +34,7 @@ const config = {
     new webpack.DefinePlugin({'global.GENTLY': false})
   ],
   resolve: {extensions: ['.tsx', '.ts', '.js']},
+  externals: ['dtrace-provider']
 };
 
 module.exports = config;
