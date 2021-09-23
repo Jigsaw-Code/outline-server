@@ -33,8 +33,7 @@ const config = {
     // Setting global.GENTLY to false makes these dependencies use standard require.
     new webpack.DefinePlugin({'global.GENTLY': false})
   ],
-  resolve: {extensions: ['.tsx', '.ts', '.js']},
-  // externals: ['dtrace-provider']
+  resolve: {extensions: ['.tsx', '.ts', '.js']}
 };
 
 module.exports = config;
