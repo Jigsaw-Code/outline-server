@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@types/js-yaml": "^3.11.2",
-    "@types/node": "^8",
+    "@types/node": "^12",
     "@types/node-fetch": "^2.5.7",
     "@types/randomstring": "^1.1.6",
     "@types/restify": "^8.4.2",

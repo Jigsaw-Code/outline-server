@@ -1,0 +1,71 @@
+name: Release Manager
+
+on:
+  push:
+    tags:
+      - "v[0-9]*"
+
+env:
+  SENTRY_DSN: https://533e56d1b2d64314bd6092a574e6d0f1@o74047.ingest.sentry.io/215496
+
+jobs:
+  release_manager:
+    name: Release Manager
+    runs-on: ${{ matrix.os }}
+    environment: Production Outline Manager
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, macos-latest]
+      # Don't cancel jobs on other platforms if one fails
+      fail-fast: false
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v1
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+
+      - name: Show Environment Info
+        run: |
+          yarn -v
+          openssl version
+          env
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - name: Check yarn cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        run: yarn --prefer-offline
+
+      - name: Release Linux
+        if: runner.os == 'Linux'
+        run: yarn do server_manager/electron_app/release_linux
+
+      - name: Release MacOS
+        if: runner.os == 'macOS'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          ENCRYPTED_SIGNING_CERT_IV: ${{ secrets.ENCRYPTED_SIGNING_CERT_IV }}
+          ENCRYPTED_SIGNING_CERT_KEY: ${{ secrets.ENCRYPTED_SIGNING_CERT_KEY }}
+        run: |
+          openssl aes-256-cbc -K $ENCRYPTED_SIGNING_CERT_KEY -iv  $ENCRYPTED_SIGNING_CERT_IV -in macos-signing-certificate.p12.enc -out macos-signing-certificate.p12 -d -md sha256
+          export CSC_LINK=$(pwd)/macos-signing-certificate.p12
+          yarn do server_manager/electron_app/release_macos
+
+      - name: Deploy
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "build/server_manager/electron_app/static/dist/*.*"
+          draft: true

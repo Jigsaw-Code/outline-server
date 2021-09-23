@@ -117,9 +117,10 @@ function cleanup() {
   (docker exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 "${TARGET_IP}" > /dev/null && \
     fail "Client should not have access to target IP") || (($? == 28))
 
-  # Exit code 6 for "Could not resolve host".
-  (docker exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 http://target > /dev/null && \
-    fail "Client should not have access to target host") || (($? == 6))
+  # Exit code 6 for "Could not resolve host".  In some environments, curl reports a timeout
+  # error (28) instead, which is surprising.  TODO: Investigate and fix.
+  (docker exec "${CLIENT_CONTAINER}" curl --connect-timeout 5 http://target > /dev/null && \
+    fail "Client should not have access to target host") || (($? == 6 || $? == 28))
 
   # Wait for shadowbox to come up.
   wait_for_resource https://localhost:20443/access-keys
@@ -172,13 +173,13 @@ function cleanup() {
     local ACCESS_KEY_JSON
     ACCESS_KEY_JSON="$(client_curl --insecure -X POST "${SB_API_URL}/access-keys" \
       || fail "Couldn't get a new access key after changing port")"
-    
+
     if [[ "${ACCESS_KEY_JSON}" != *'"port":12345'* ]]; then
       fail "Port for new access keys wasn't changed.  Newly created access key: ${ACCESS_KEY_JSON}"
     fi
   }
 
-  function test_hostname_for_new_keys() { 
+  function test_hostname_for_new_keys() {
     # Verify that we can change the hostname for new access keys
     local -r NEW_HOSTNAME="newhostname"
     client_curl --insecure -X PUT -H 'Content-Type: application/json' -d '{"hostname": "'"${NEW_HOSTNAME}"'"}' "${SB_API_URL}/server/hostname-for-access-keys" \
@@ -187,7 +188,7 @@ function cleanup() {
     local ACCESS_KEY_JSON
     ACCESS_KEY_JSON="$(client_curl --insecure -X POST "${SB_API_URL}/access-keys" \
       || fail "Couldn't get a new access key after changing hostname")"
-    
+
     if [[ "${ACCESS_KEY_JSON}" != *"@${NEW_HOSTNAME}:"* ]]; then
       fail "Hostname for new access keys wasn't changed.  Newly created access key: ${ACCESS_KEY_JSON}"
     fi
@@ -199,7 +200,7 @@ function cleanup() {
         "${SB_API_URL}/server/access-key-data-limit" \
       || fail "Couldn't create default data limit"
     client_curl --insecure "${SB_API_URL}/server" | grep -q 'accessKeyDataLimit' || fail 'Default data limit not set'
-   
+
    # Verify that we can remove default data limits
     client_curl --insecure -X DELETE "${SB_API_URL}/server/access-key-data-limit" \
       || fail "Couldn't remove default data limit"
@@ -218,7 +219,7 @@ function cleanup() {
     client_curl --insecure "${SB_API_URL}/access-keys" \
       | util_jq -e ".accessKeys[] | select(.id == \"${ACCESS_KEY_ID}\") | .dataLimit.bytes" \
       || fail 'Per-key data limit not set'
-   
+
     # Verify that we can remove per-key data limits
     client_curl --insecure -X DELETE "${SB_API_URL}/access-keys/${ACCESS_KEY_ID}/data-limit" \
       || fail "Couldn't remove per-key data limit"
@@ -226,9 +227,9 @@ function cleanup() {
       | util_jq -e ".accessKeys[] | select(.id == \"${ACCESS_KEY_ID}\") | .dataLimit.bytes" \
       || fail 'Per-key data limit not removed'
   }
-  
+
   test_networking
-  test_port_for_new_keys 
+  test_port_for_new_keys
   test_hostname_for_new_keys
   test_default_data_limit
   test_per_key_data_limits
