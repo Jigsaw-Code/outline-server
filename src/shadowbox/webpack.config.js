@@ -34,6 +34,10 @@ const config = {
     new webpack.DefinePlugin({'global.GENTLY': false})
   ],
   resolve: {extensions: ['.tsx', '.ts', '.js']},
+  // dtrace-provider is a transitive dep used for sampling profiling on certain (non-Linux)
+  // platforms. It stubs itself out and sometimes causes a build error, and since we never actually
+  // use it it's safe to just remove it from our output bundle.
+  externals: /dtrace-provider/
 };
 
 module.exports = config;
