@@ -20,7 +20,7 @@ set -eu
 #       well, it would be worth pushd-ing to ROOT_DIR before invoking
 #       them and making BUILD_DIR a relative path, viz. just "build".
 
-export ROOT_DIR=${ROOT_DIR:-$(git rev-parse --show-toplevel)}
+export ROOT_DIR=${ROOT_DIR:-$(pwd)/$(git rev-parse --show-cdup)}
 export BUILD_DIR=${BUILD_DIR:-${ROOT_DIR}/build}
 export _DO_ACTION_INDENT=''
 
