@@ -16,6 +16,7 @@
   "scripts": {
     "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts src/server_manager/install_scripts/gcp_install_script.ts third_party/shellcheck/download/",
     "do": "bash ./scripts/do_action.sh",
+    "actions": "find . -name '*_action.sh' | sed -E 's:./src/(.*)_action.sh:\\1:' | grep -v 'scripts/do_action'",
     "lint": "yarn shellcheck && yarn tslint",
     "shellcheck": "bash ./scripts/shellcheck.sh",
     "tslint": "tslint 'src/**/*.ts' -e '**/node_modules/**'"

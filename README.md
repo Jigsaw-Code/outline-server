@@ -65,6 +65,8 @@ It also defines two environmental variables:
 - ROOT_DIR: the root directory of the project, as an absolute path.
 - BUILD_DIR: where the build output should go, as an absolute path.
 
+> ⚠️ To find all the actions in this project, run `yarn actions`
+
 ### Build output
 
 Building creates the following directories under `build/`:
