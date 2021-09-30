@@ -193,6 +193,14 @@ function cleanup() {
       fail "Hostname for new access keys wasn't changed.  Newly created access key: ${ACCESS_KEY_JSON}"
     fi
   }
+    
+  function test_bulk_key_creation() {
+    # Verify multiple keys can be created without corrupting the config file (#946)
+    for KEY_NUMBER in {1...100};
+      do client_curl --insecure -X POST "${SB_API_URL}/access-keys" \
+        || fail "Was unable to create many keys at once. Failed on key: ${KEY_NUMBER}";
+    done
+  }
 
   function test_default_data_limit() {
     # Verify that we can create default data limits
@@ -231,6 +239,7 @@ function cleanup() {
   test_networking
   test_port_for_new_keys
   test_hostname_for_new_keys
+  test_bulk_key_creation
   test_default_data_limit
   test_per_key_data_limits
 

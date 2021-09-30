@@ -18,6 +18,7 @@ import * as jsyaml from 'js-yaml';
 import * as mkdirp from 'mkdirp';
 import * as path from 'path';
 
+import {atomicFileWrite} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {ShadowsocksAccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
 
@@ -68,16 +69,18 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
               key.id} is not supported: use an AEAD cipher instead.`);
           continue;
         }
+
         keysJson.keys.push(key);
       }
-      const ymlTxt = jsyaml.safeDump(keysJson, {'sortKeys': true});
+
       mkdirp.sync(path.dirname(this.configFilename));
-      fs.writeFile(this.configFilename, ymlTxt, 'utf-8', (err) => {
-        if (err) {
-          reject(err);
-        }
+
+      try {
+        atomicFileWrite(this.configFilename, jsyaml.safeDump(keysJson, {sortKeys: true}));
         resolve();
-      });
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 
