@@ -58,6 +58,7 @@ interface RequestParams {
   //   limit: DataLimit
   //   port: number
   //   hours: number
+  //   encryptionMethod: string
   [param: string]: unknown;
 }
 // Simplified request and response type interfaces containing only the
@@ -228,7 +229,17 @@ export class ShadowsocksManagerService {
   public createNewAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
     try {
       logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
-      this.accessKeys.createNewAccessKey().then((accessKey) => {
+      let encryptionMethod = req.params.encryptionMethod;
+      if (!encryptionMethod) {
+        encryptionMethod = '';
+      }
+      if (typeof encryptionMethod !== 'string') {
+        return next(new restifyErrors.InvalidArgumentError(
+            {statusCode: 400},
+            `Expected a string encryptionMethod, instead got ${encryptionMethod} of type ${
+                typeof encryptionMethod}`));
+      }
+      this.accessKeys.createNewAccessKey(encryptionMethod).then((accessKey) => {
         const accessKeyJson = accessKeyToApiJson(accessKey);
         res.send(201, accessKeyJson);
         logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);

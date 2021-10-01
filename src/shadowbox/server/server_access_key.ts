@@ -137,15 +137,18 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.portForNewAccessKeys = port;
   }
 
-  async createNewAccessKey(): Promise<AccessKey> {
+  async createNewAccessKey(encryptionMethod?: string): Promise<AccessKey> {
     const id = this.keyConfig.data().nextId.toString();
     this.keyConfig.data().nextId += 1;
     const metricsId = uuidv4();
     const password = generatePassword();
+    if (encryptionMethod == null) {
+      encryptionMethod = this.NEW_USER_ENCRYPTION_METHOD;
+    }
     const proxyParams = {
       hostname: this.proxyHostname,
       portNumber: this.portForNewAccessKeys,
-      encryptionMethod: this.NEW_USER_ENCRYPTION_METHOD,
+      encryptionMethod,
       password,
     };
     const accessKey = new ServerAccessKey(id, '', metricsId, proxyParams);
