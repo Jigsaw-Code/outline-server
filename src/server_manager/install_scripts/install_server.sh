@@ -19,6 +19,9 @@
 
 # You may set the following environment variables, overriding their defaults:
 # SB_IMAGE: The Outline Server Docker image to install, e.g. quay.io/outline/shadowbox:nightly
+# SHADOWBOX_NAME: Docker instance name for shadowbox (default shadowbox).
+#     For multiple instances also change SHADOWBOX_DIR to an other location
+#     e.g. SHADOWBOX_NAME=shadowbox-inst1 SHADOWBOX_DIR=/opt/outline/inst1
 # SHADOWBOX_DIR: Directory for persistent Outline Server state.
 # ACCESS_CONFIG: The location of the access config text file.
 # SB_DEFAULT_SERVER_NAME: Default name for this server, e.g. "Outline server New York".
@@ -167,7 +170,7 @@ function docker_container_exists() {
 }
 
 function remove_shadowbox_container() {
-  remove_docker_container shadowbox
+  remove_docker_container ${SHADOWBOX_NAME}
 }
 
 function remove_watchtower_container() {
@@ -293,7 +296,7 @@ function start_shadowbox() {
   # TODO(fortuna): Write API_PORT to config file,
   # rather than pass in the environment.
   local -ar docker_shadowbox_flags=(
-    --name shadowbox --restart always --net host
+    --name ${SHADOWBOX_NAME} --restart always --net host
     --label 'com.centurylinklabs.watchtower.enable=true'
     -v "${STATE_DIR}:${STATE_DIR}"
     -e "SB_STATE_DIR=${STATE_DIR}"
@@ -309,8 +312,8 @@ function start_shadowbox() {
   STDERR_OUTPUT="$(docker run -d "${docker_shadowbox_flags[@]}" "${SB_IMAGE}" 2>&1 >/dev/null)" && return
   readonly STDERR_OUTPUT
   log_error "FAILED"
-  if docker_container_exists shadowbox; then
-    handle_docker_container_conflict shadowbox true
+  if docker_container_exists ${SHADOWBOX_NAME}; then
+    handle_docker_container_conflict ${SHADOWBOX_NAME} true
     return
   else
     log_error "${STDERR_OUTPUT}"
@@ -327,7 +330,7 @@ function start_watchtower() {
       -v /var/run/docker.sock:/var/run/docker.sock)
   # By itself, local messes up the return code.
   local STDERR_OUTPUT
-  STDERR_OUTPUT="$(docker run -d "${docker_watchtower_flags[@]}" containrrr/watchtower --cleanup --label-enable --tlsverify --interval "${WATCHTOWER_REFRESH_SECONDS}" 2>&1 >/dev/null)" && return
+  STDERR_OUTPUT="$(docker start watchtower || docker run -d "${docker_watchtower_flags[@]}" containrrr/watchtower --cleanup --label-enable --tlsverify --interval "${WATCHTOWER_REFRESH_SECONDS}" 2>&1 >/dev/null)" && return
   readonly STDERR_OUTPUT
   log_error "FAILED"
   if docker_container_exists watchtower; then
@@ -362,7 +365,7 @@ function check_firewall() {
   # TODO(JonathanDCohen) This is incorrect if access keys are using more than one port.
   local -i ACCESS_KEY_PORT
   ACCESS_KEY_PORT=$(fetch --insecure "${LOCAL_API_URL}/access-keys" |
-      docker exec -i shadowbox node -e '
+      docker exec -i ${SHADOWBOX_NAME} node -e '
           const fs = require("fs");
           const accessKeys = JSON.parse(fs.readFileSync(0, {encoding: "utf-8"}));
           console.log(accessKeys["accessKeys"][0]["port"]);
@@ -406,6 +409,8 @@ function set_hostname() {
 install_shadowbox() {
   # Make sure we don't leak readable files to other users.
   umask 0007
+
+  export SHADOWBOX_NAME="${SHADOWBOX_NAME:-shadowbox}"
 
   run_step "Verifying that Docker is installed" verify_docker_installed
   run_step "Verifying that Docker daemon is running" verify_docker_running
