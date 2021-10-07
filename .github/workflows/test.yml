@@ -1,4 +1,4 @@
-name: Build and Test
+name: Test
 
 on: 
   pull_request:
@@ -8,11 +8,9 @@ on:
       - opened
       - synchronize
 
-
 jobs:
-  manager:
-    name: Build and Test
-
+  setup:
+    name: Setup and Lint
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -20,54 +18,163 @@ jobs:
         os: [ubuntu-20.04]
       # Don't cancel jobs on other platforms if one fails
       fail-fast: false
-
+  
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v1
+      - name: Checkout
+        uses: actions/checkout@v2
 
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v1
+      - name: Install Node
+        uses: actions/setup-node@v2
         with:
-          node-version: 12
+          node-version: 15
 
-      - name: Show Environment Info
-        run: yarn -v
-
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-
-      - name: Check yarn cache
+      - name: Cache Dependencies
+        id: cache
         uses: actions/cache@v2
         with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: ${{ runner.os }}-yarn-
+          path: ./node_modules
+          key: ${{ matrix.os }};node_modules;${{ hashFiles('package-lock.json' )}}
 
-      - name: Install dependencies
-        run: NODE_DTRACE_PROVIDER_REQUIRE=hard yarn --prefer-offline
+      - name: Install Dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: NODE_DTRACE_PROVIDER_REQUIRE=hard npm install --prefer-offline
+
+      - name: Sanitize Dependency Permissions for Cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: chmod -R --verbose 777 ./node_modules
 
       - name: Lint
-        run: yarn lint
+        run: npm run lint 
 
-      - name: Manager
-        run: |
-          SENTRY_DSN='test' yarn do server_manager/electron_app/release_linux
-          yarn do server_manager/test
+  manager:
+    name: Manager
+    needs: setup
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+      fail-fast: false
 
-      - name: Shadowbox
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 15
+
+      - name: Cache Dependencies
+        id: cache
+        uses: actions/cache@v2
+        with:
+          path: ./node_modules
+          key: ${{ matrix.os }};node_modules;${{ hashFiles('package-lock.json' )}}
+
+      - name: Linux Release
+        run: SENTRY_DSN='test' npm run do server_manager/electron_app/release_linux
+
+      - name: Unit Test
+        run: npm run do server_manager/test
+
+  shadowbox:
+    name: Shadowbox
+    needs: setup
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+      fail-fast: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 15
+
+      - name: Cache Dependencies
+        id: cache
+        uses: actions/cache@v2
+        with:
+          path: ./node_modules
+          key: ${{ matrix.os }};node_modules;${{ hashFiles('package-lock.json' )}}
+
+      - name: Build
         if: runner.os == 'Linux'
-        run: |
-          yarn do shadowbox/server/build
-          yarn do shadowbox/test
-          yarn do shadowbox/integration_test/run
+        run: npm run do shadowbox/server/build
 
-      - name: Metrics Server
+      - name: Unit Test
         if: runner.os == 'Linux'
-        run: |
-          yarn do metrics_server/build
-          yarn do metrics_server/test
+        run: npm run do shadowbox/test
 
-      - name:  Sentry Webhook
+      - name: Integration Test
         if: runner.os == 'Linux'
-        run: yarn do sentry_webhook/build
+        run: npm run do shadowbox/integration_test/run
+
+  metrics:
+    name: Metrics Server
+    needs: setup
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+      fail-fast: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 15
+
+      - name: Cache Dependencies
+        id: cache
+        uses: actions/cache@v2
+        with:
+          path: ./node_modules
+          key: ${{ matrix.os }};node_modules;${{ hashFiles('package-lock.json' )}}
+
+      - name: Build
+        if: runner.os == 'Linux'
+        run: npm run do metrics_server/build
+
+      - name: Unit Test
+        if: runner.os == 'Linux'
+        run: npm run do metrics_server/test
+  
+  sentry:
+    name: Sentry Webhook
+    needs: setup
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+      fail-fast: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 15
+
+      - name: Cache Dependencies
+        id: cache
+        uses: actions/cache@v2
+        with:
+          path: ./node_modules
+          key: ${{ matrix.os }};node_modules;${{ hashFiles('package-lock.json' )}}
+
+      - name: Install Local Workspace Dependencies
+        run: cd src/sentry_webhook && NODE_DTRACE_PROVIDER_REQUIRE=hard npm install --prefer-offline
+
+      - name: Build
+        if: runner.os == 'Linux'
+        run: npm run do sentry_webhook/build

@@ -17,9 +17,9 @@
 readonly SRC_DIR="src/metrics_server"
 readonly BUILD_DIR="build/metrics_server"
 
-yarn 'do' metrics_server/build
+npm run 'do' metrics_server/build
 
 cp "${SRC_DIR}/config_dev.json" "${BUILD_DIR}/config.json"
 cp "${SRC_DIR}/package.json" "${BUILD_DIR}/"
 
-yarn node "${BUILD_DIR}/index.js"
+npx node "${BUILD_DIR}/index.js"

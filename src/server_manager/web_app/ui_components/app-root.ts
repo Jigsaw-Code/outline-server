@@ -73,23 +73,18 @@ const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
 
 /** A cloud account to be displayed */
 type AccountListEntry = {
-  id: string;
-  name: string;
+  id: string; name: string;
 };
 
 /** An access key to be displayed */
 export type ServerListEntry = {
-  id: string;
-  accountId: string;
-  name: string;
-  isSynced: boolean;
+  id: string; accountId: string; name: string; isSynced: boolean;
 };
 
 // mixinBehaviors() returns `any`, but the documentation indicates that
 // this is the actual return type.
-const polymerElementWithLocalize =
-    mixinBehaviors(AppLocalizeBehavior, PolymerElement) as
-        new () => PolymerElement&LegacyElementMixin&AppLocalizeBehavior;
+const polymerElementWithLocalize = mixinBehaviors(AppLocalizeBehavior, PolymerElement) as new () =>
+                                       PolymerElement & LegacyElementMixin & AppLocalizeBehavior;
 
 export class AppRoot extends polymerElementWithLocalize {
   static get template() {
@@ -800,14 +795,15 @@ export class AppRoot extends polymerElementWithLocalize {
   showConnectivityDialog(cb: (retry: boolean) => void) {
     const dialogTitle = this.localize('error-connectivity-title');
     const dialogText = this.localize('error-connectivity');
-    this.showModalDialog(dialogTitle, dialogText, [this.localize('digitalocean-disconnect'), this.localize('retry')])
+    this.showModalDialog(
+            dialogTitle, dialogText,
+            [this.localize('digitalocean-disconnect'), this.localize('retry')])
         .then(clickedButtonIndex => {
           cb(clickedButtonIndex === 1);  // pass true if user clicked retry
         });
   }
 
-  getConfirmation(title: string, text: string, confirmButtonText: string,
-      continueFunc: Function) {
+  getConfirmation(title: string, text: string, confirmButtonText: string, continueFunc: Function) {
     this.showModalDialog(title, text, [this.localize('cancel'), confirmButtonText])
         .then(clickedButtonIndex => {
           if (clickedButtonIndex === 1) {
@@ -893,12 +889,13 @@ export class AppRoot extends polymerElementWithLocalize {
     (this.$.shareDialog as OutlineShareDialog).open(accessKey, s3Url);
   }
 
-  openPerKeyDataLimitDialog(keyName: string, activeDataLimitBytes: number,
+  openPerKeyDataLimitDialog(
+      keyName: string, activeDataLimitBytes: number,
       onDataLimitSet: (dataLimitBytes: number) => Promise<boolean>,
       onDataLimitRemoved: () => Promise<boolean>) {
     // attach listeners here
-    (this.$.perKeyDataLimitDialog as OutlinePerKeyDataLimitDialog).open(
-        keyName, activeDataLimitBytes, onDataLimitSet, onDataLimitRemoved);
+    (this.$.perKeyDataLimitDialog as OutlinePerKeyDataLimitDialog)
+        .open(keyName, activeDataLimitBytes, onDataLimitSet, onDataLimitRemoved);
   }
 
   openGetConnectedDialog(inviteUrl: string) {
@@ -1012,17 +1009,19 @@ export class AppRoot extends polymerElementWithLocalize {
 
   _serverViewList(serverList: ServerListEntry[]): ServerViewListEntry[] {
     return serverList.map(entry => ({
-      id: entry.id,
-      name: entry.name,
-      cloudId: this._getCloudId(entry.accountId),
-    }));
+                            id: entry.id,
+                            name: entry.name,
+                            cloudId: this._getCloudId(entry.accountId),
+                          }));
   }
 
   _isServerSelected(selectedServerId: string, server: ServerListEntry) {
     return !!selectedServerId && selectedServerId === server.id;
   }
 
-  _showServer(event: Event&{ model: {server: ServerListEntry; }; }) {
+  _showServer(event: Event&{
+    model: {server: ServerListEntry;};
+  }) {
     const server = event.model.server;
     this.fire('ShowServerRequested', {displayServerId: server.id});
     this.maybeCloseDrawer();

@@ -16,4 +16,4 @@
 
 set -eu
 
-yarn workspace outline-manager run webpack-dev-server --config=gallery.webpack.js --open
+npm run webpack-dev-server --workspace=outline-manager --config=gallery.webpack.js --open

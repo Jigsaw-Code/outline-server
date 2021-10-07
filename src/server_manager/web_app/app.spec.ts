@@ -15,12 +15,13 @@
 import './ui_components/app-root';
 
 import * as accounts from '../model/accounts';
+import {Region} from '../model/digitalocean';
 import * as server from '../model/server';
 
 import {App, LAST_DISPLAYED_SERVER_STORAGE_KEY} from './app';
 import {FakeCloudAccounts, FakeDigitalOceanAccount, FakeManualServerRepository} from './testing/models';
 import {AppRoot} from './ui_components/app-root';
-import {Region} from '../model/digitalocean';
+
 
 
 // Define functions from preload.ts.

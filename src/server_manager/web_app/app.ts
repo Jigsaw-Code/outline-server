@@ -730,8 +730,7 @@ export class App {
   }
 
   private makeLocalizedServerName(cloudLocation: CloudLocation): string {
-    const placeName = getShortName(cloudLocation,
-        this.appRoot.localize as (id: string) => string);
+    const placeName = getShortName(cloudLocation, this.appRoot.localize as (id: string) => string);
     return this.appRoot.localize('server-name', 'serverLocation', placeName);
   }
 

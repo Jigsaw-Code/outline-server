@@ -15,29 +15,29 @@
 ARG NODE_IMAGE
 
 # Multi-stage build: use a build image to prevent bloating the shadowbox image with dependencies.
-# Run `yarn` and build inside the container to package the right dependencies for the image.
+# Run `npm install` and build inside the container to package the right dependencies for the image.
 FROM ${NODE_IMAGE} AS build
 
 RUN apk add --no-cache --upgrade bash
 WORKDIR /
 
 # Don't copy node_modules and other things not needed for install.
-COPY package.json yarn.lock ./
+COPY package.json package-lock.json ./
 COPY src/shadowbox/package.json src/shadowbox/
-RUN yarn install
+RUN npm install
 
-# We copy the source code only after yarn install, so that source code changes don't trigger re-installs.
+# We copy the source code only after npm install, so that source code changes don't trigger re-installs.
 COPY scripts scripts/
 COPY src src/
 COPY tsconfig.json ./
 COPY third_party third_party
-RUN ROOT_DIR=/ yarn do shadowbox/server/build
+RUN ROOT_DIR=/ npm run do shadowbox/server/build
 
 # shadowbox image
 FROM ${NODE_IMAGE}
 
 # Save metadata on the software versions we are using.
-LABEL shadowbox.node_version=12.16.3
+LABEL shadowbox.node_version=14.18.0
 
 ARG GITHUB_RELEASE
 LABEL shadowbox.github.release="${GITHUB_RELEASE}"

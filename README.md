@@ -34,25 +34,24 @@ The system comprises the following components:
 
 In order to build and run the code, you need the following installed:
   - [Node](https://nodejs.org/)
-  - [Yarn](https://yarnpkg.com/en/docs/install)
   - [Wine](https://www.winehq.org/download), if you would like to generate binaries for Windows.
 
 Then you need to install all the NPM package dependencies:
 ```
-yarn
+npm install
 ```
 
-This project uses [Yarn workspaces](https://yarnpkg.com/blog/2017/08/02/introducing-workspaces/).
+This project uses [NPM workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces/).
 
 
 ## Build System
 
-We have a very simple build system based on package.json scripts that are called using `yarn`
+We have a very simple build system based on package.json scripts that are called using `npm run`
 and a thin wrapper for what we call build "actions".
 
 We've defined a `do` package.json script that takes an `action` parameter:
 ```shell
-yarn do $ACTION
+npm run do $ACTION
 ```
 
 This command will define a `do_action()` function and call `${ACTION}_action.sh`, which must exist.
@@ -65,7 +64,7 @@ It also defines two environmental variables:
 - ROOT_DIR: the root directory of the project, as an absolute path.
 - BUILD_DIR: where the build output should go, as an absolute path.
 
-> ⚠️ To find all the actions in this project, run `yarn actions`
+> ⚠️ To find all the actions in this project, run `npm run actions`
 
 ### Build output
 
@@ -87,7 +86,7 @@ The directories have subdirectories for intermediate output:
 
 To clean up:
 ```
-yarn run clean
+npm run clean
 ```
 
 ## Shadowsocks Resistance Against Detection and Blocking

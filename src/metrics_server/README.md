@@ -47,7 +47,7 @@ The metrics server supports two URL paths:
 ## Build
 
 ```sh
-yarn do metrics_server/build
+npm run do metrics_server/build
 ```
 
 ## Run
@@ -55,7 +55,7 @@ yarn do metrics_server/build
 Run a local development metrics server:
 
 ```sh
-yarn do metrics_server/run
+npm run do metrics_server/run
 ```
 
 ## Deploy
@@ -66,20 +66,20 @@ yarn do metrics_server/run
   ```
 * To deploy to dev:
   ```sh
-  yarn do metrics_server/deploy_dev
+  npm run do metrics_server/deploy_dev
   ```
 * To deploy to prod:
   ```sh
-  yarn do metrics_server/deploy_prod
+  npm run do metrics_server/deploy_prod
   ```
 
 ## Test
 
 * Unit test
   ```sh
-  yarn do metrics_server/test
+  npm run do metrics_server/test
   ```
 * Integration test
   ```sh
-  yarn do metrics_server/test_integration
+  npm run do metrics_server/test_integration
   ```

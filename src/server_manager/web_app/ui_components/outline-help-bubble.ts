@@ -20,8 +20,7 @@ import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn';
 import {html} from '@polymer/polymer/lib/utils/html-tag';
 
 export interface OutlineHelpBubble extends Element {
-  show(positionTarget: Element, arrowDirection: string,
-       leftOrRightOffset: string): void;
+  show(positionTarget: Element, arrowDirection: string, leftOrRightOffset: string): void;
   hide(): void;
 }
 
@@ -147,8 +146,7 @@ Polymer({
     this.setAttribute('hidden', true);
   },
 
-  show(positionTarget: Element, arrowDirection: string,
-      leftOrRightOffset: string) {
+  show(positionTarget: Element, arrowDirection: string, leftOrRightOffset: string) {
     this.removeAttribute('hidden');
 
     // Set arrow direction.
