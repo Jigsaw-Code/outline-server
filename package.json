@@ -11,7 +11,7 @@
   },
   "engines": {
     "yarn": ">=1.0",
-    "node": "^12"
+    "node": ">=14.0.0"
   },
   "scripts": {
     "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts src/server_manager/install_scripts/gcp_install_script.ts third_party/shellcheck/download/",
