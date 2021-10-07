@@ -37,7 +37,7 @@ RUN ROOT_DIR=/ yarn do shadowbox/server/build
 FROM ${NODE_IMAGE}
 
 # Save metadata on the software versions we are using.
-LABEL shadowbox.node_version=12.16.3
+LABEL shadowbox.node_version=14.18.0
 
 ARG GITHUB_RELEASE
 LABEL shadowbox.github.release="${GITHUB_RELEASE}"
