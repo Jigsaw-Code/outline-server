@@ -18,7 +18,7 @@ import * as jsyaml from 'js-yaml';
 import * as mkdirp from 'mkdirp';
 import * as path from 'path';
 
-import {atomicFileWrite} from '../infrastructure/json_config';
+import {atomicWriteFileSync} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {ShadowsocksAccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
 
@@ -76,7 +76,7 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
       mkdirp.sync(path.dirname(this.configFilename));
 
       try {
-        atomicFileWrite(this.configFilename, jsyaml.safeDump(keysJson, {sortKeys: true}));
+        atomicWriteFileSync(this.configFilename, jsyaml.safeDump(keysJson, {sortKeys: true}));
         resolve();
       } catch (error) {
         reject(error);

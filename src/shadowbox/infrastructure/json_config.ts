@@ -37,7 +37,7 @@ export function loadFileConfig<T>(filename: string): JsonConfig<T> {
 // persistent location, to avoid accidentally breaking the metrics file.
 // Use *Sync calls for atomic operations, to guard against corrupting
 // these files.
-export function atomicFileWrite(filename: string, filebody: string) {
+export function atomicWriteFileSync(filename: string, filebody: string) {
   const tempFilename = `${filename}.${Date.now()}`;
   fs.writeFileSync(tempFilename, filebody, {encoding: 'utf8'});
   fs.renameSync(tempFilename, filename);
@@ -53,7 +53,7 @@ export class FileConfig<T> implements JsonConfig<T> {
 
   write() {
     try {
-      atomicFileWrite(this.filename, JSON.stringify(this.dataJson));
+      atomicWriteFileSync(this.filename, JSON.stringify(this.dataJson));
     } catch (error) {
       // TODO: Stop swallowing the exception and handle it in the callers.
       logging.error(`Error writing config ${this.filename} ${error}`);
