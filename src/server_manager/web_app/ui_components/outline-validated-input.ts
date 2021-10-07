@@ -122,7 +122,7 @@ Polymer({
     localize: {type: Function},
   },
 
-  _onKeyUp: function(e: KeyboardEvent) {
+  _onKeyUp(e: KeyboardEvent) {
     const input = this.$.input;
     if (e.key === 'Escape') {
       this._cancel();
@@ -146,14 +146,14 @@ Polymer({
     }
   },
 
-  _cancel: function() {
+  _cancel() {
     const input = this.$.input;
     input.value = this.value;
     input.invalid = false;
     this._showButtons = false;
   },
 
-  _save: function() {
+  _save() {
     const input = this.$.input;
     const value = input.value;
     if (value === this.value) {
@@ -175,7 +175,7 @@ Polymer({
     });
   },
 
-  _enterEditingState: function() {
+  _enterEditingState() {
     if (!this.editable) {
       return;
     }
@@ -184,14 +184,14 @@ Polymer({
     this.$.saveButton.disabled = this.$.input.invalid;
   },
 
-  enterSavedState: function() {
+  enterSavedState() {
     const input = this.$.input;
     this.value = input.value;
     this._showButtons = false;
     input.readonly = false;
   },
 
-  enterErrorState: function(message: string) {
+  enterErrorState(message: string) {
     const input = this.$.input;
     this._enableButtons = true;
     input.errorMessage = message;

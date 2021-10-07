@@ -139,7 +139,7 @@ Polymer({
     IronFitBehavior,
   ],
 
-  ready: function() {
+  ready() {
     // Prevent help bubble from overlapping with it's positionTarget.
     this.setAttribute('no-overlap', true);
 
@@ -147,7 +147,7 @@ Polymer({
     this.setAttribute('hidden', true);
   },
 
-  show: function(positionTarget: Element, arrowDirection: string,
+  show(positionTarget: Element, arrowDirection: string,
       leftOrRightOffset: string) {
     this.removeAttribute('hidden');
 
@@ -170,7 +170,7 @@ Polymer({
     window.addEventListener('resize', this.refit.bind(this));
   },
 
-  hide: function() {
+  hide() {
     this.setAttribute('hidden', true);
     window.removeEventListener('scroll', this.refit.bind(this));
     window.removeEventListener('resize', this.refit.bind(this));

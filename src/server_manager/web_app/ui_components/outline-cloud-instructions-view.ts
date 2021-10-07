@@ -100,7 +100,7 @@ Polymer({
     localize: Function,
   },
 
-  _openImage: function() {
+  _openImage() {
     this.fire('OpenImageRequested', {imagePath: this.imagePath});
   }
 });

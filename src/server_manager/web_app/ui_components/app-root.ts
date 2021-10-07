@@ -75,7 +75,7 @@ const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
 type AccountListEntry = {
   id: string;
   name: string;
-}
+};
 
 /** An access key to be displayed */
 export type ServerListEntry = {
@@ -83,15 +83,15 @@ export type ServerListEntry = {
   accountId: string;
   name: string;
   isSynced: boolean;
-}
+};
 
 // mixinBehaviors() returns `any`, but the documentation indicates that
 // this is the actual return type.
-const PolymerElementWithLocalize =
+const polymerElementWithLocalize =
     mixinBehaviors(AppLocalizeBehavior, PolymerElement) as
         new () => PolymerElement&LegacyElementMixin&AppLocalizeBehavior;
 
-export class AppRoot extends PolymerElementWithLocalize {
+export class AppRoot extends polymerElementWithLocalize {
   static get template() {
     return html`
     <style include="cloud-install-styles"></style>
@@ -708,7 +708,7 @@ export class AppRoot extends PolymerElementWithLocalize {
 
   getAndShowRegionPicker(): OutlineRegionPicker {
     this.currentPage = 'regionPicker';
-    const regionPicker = this.$.regionPicker as OutlineRegionPicker
+    const regionPicker = this.$.regionPicker as OutlineRegionPicker;
     regionPicker.reset();
     return regionPicker;
   }
@@ -782,7 +782,7 @@ export class AppRoot extends PolymerElementWithLocalize {
     setTimeout(() => {
       toast.show({
         text: message,
-        duration: duration,
+        duration,
         noOverlap: true,
       });
     }, 0);
@@ -821,7 +821,7 @@ export class AppRoot extends PolymerElementWithLocalize {
     this.showModalDialog(errorTitle, errorText, [this.localize('cancel'), this.localize('retry')])
         .then(clickedButtonIndex => {
           const manualEntry = this.$.manualEntry as OutlineManualServerEntry;
-          if (clickedButtonIndex == 1) {
+          if (clickedButtonIndex === 1) {
             manualEntry.retryTapped();
           } else {
             manualEntry.cancelTapped();
@@ -911,9 +911,7 @@ export class AppRoot extends PolymerElementWithLocalize {
     // this Chrome error:
     // "Blocked a frame with origin "outline://web_app" from accessing a cross-origin frame."
     const iframe = document.createElement('iframe');
-    iframe.onload = function() {
-      dialog.open();
-    };
+    iframe.onload = () => dialog.open();
     iframe.src = inviteUrl;
     dialog.insertBefore(iframe, dialog.children[0]);
   }
@@ -939,7 +937,7 @@ export class AppRoot extends PolymerElementWithLocalize {
   }
 
   showLicensesTapped() {
-    var xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequest();
     xhr.onload = () => {
       (this.$.licensesText as HTMLElement).innerText = xhr.responseText;
       (this.$.licenses as PaperDialogElement).open();
@@ -985,7 +983,7 @@ export class AppRoot extends PolymerElementWithLocalize {
   }
 
   _computeServerClasses(selectedServerId: string, server: ServerListEntry) {
-    let serverClasses = [];
+    const serverClasses = [];
     if (this._isServerSelected(selectedServerId, server)) {
       serverClasses.push('selected');
     }

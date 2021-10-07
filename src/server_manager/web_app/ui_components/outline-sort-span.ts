@@ -36,9 +36,9 @@ export class SortSpan extends LitElement {
   override render() {
     let arrow = html`<iron-icon></iron-icon>`;
     if (this.direction === -1) {
-      arrow = html`<iron-icon icon='arrow-upward'></iron-icon>`
+      arrow = html`<iron-icon icon='arrow-upward'></iron-icon>`;
     } else if (this.direction === 1) {
-      arrow = html`<iron-icon icon='arrow-downward'></iron-icon>`
+      arrow = html`<iron-icon icon='arrow-downward'></iron-icon>`;
     }
     return html`<slot></slot>${arrow}`;
   }

@@ -381,7 +381,7 @@ Polymer({
     return outline.gcpAuthEnabled || this._computeIsAccountConnected(gcpAccountName);
   },
 
-  connectToDigitalOceanTapped: function() {
+  connectToDigitalOceanTapped() {
     if (this.digitalOceanAccountName) {
       this.fire('CreateDigitalOceanServerRequested');
     } else {
@@ -389,15 +389,15 @@ Polymer({
     }
   },
 
-  setUpGenericCloudProviderTapped: function() {
+  setUpGenericCloudProviderTapped() {
     this.fire('SetUpGenericCloudProviderRequested');
   },
 
-  setUpAwsTapped: function() {
+  setUpAwsTapped() {
     this.fire('SetUpAwsRequested');
   },
 
-  setUpGcpTapped: function() {
+  setUpGcpTapped() {
     if (this.gcpAccountName) {
       this.fire('CreateGcpServerRequested');
     } else {
@@ -405,7 +405,7 @@ Polymer({
     }
   },
 
-  setUpGcpAdvancedTapped: function() {
+  setUpGcpAdvancedTapped() {
     this.fire('SetUpGcpRequested');
   }
 });

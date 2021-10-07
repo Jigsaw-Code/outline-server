@@ -85,7 +85,7 @@ export class OutlineLanguagePicker extends PolymerElement {
 
   _languageChanged(event: CustomEvent) {
     const languageCode = event.detail.value;
-    const languageDir = this.languages.find((lang) => {return lang.id === languageCode}).dir;
+    const languageDir = this.languages.find(lang => lang.id === languageCode).dir;
 
     const params = {bubbles: true, composed: true, detail: {languageCode, languageDir}};
     const customEvent = new CustomEvent('SetLanguageRequested', params);

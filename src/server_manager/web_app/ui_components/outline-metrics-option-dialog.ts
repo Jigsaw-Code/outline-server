@@ -52,15 +52,15 @@ Polymer({
     },
   },
 
-  showMetricsOptInDialog: function() {
+  showMetricsOptInDialog() {
     this.$.metricsEnabledDialog.open();
   },
 
-  enableMetricsRequested: function() {
+  enableMetricsRequested() {
     this.fire('EnableMetricsRequested');
   },
 
-  disableMetricsRequested: function() {
+  disableMetricsRequested() {
     this.fire('DisableMetricsRequested');
   }
 });

@@ -292,12 +292,12 @@ Polymer({
     shouldShowExperiments: {type: Boolean, value: false},
   },
 
-  setServerName: function(name: string) {
+  setServerName(name: string) {
     this.initialName = name;
     this.name = name;
   },
 
-  _handleNameInputKeyDown: function(event: KeyboardEvent) {
+  _handleNameInputKeyDown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
       this.serverName = this.initialName;
       this.$.serverNameInput.blur();
@@ -306,7 +306,7 @@ Polymer({
     }
   },
 
-  _handleNameInputBlur: function(event: FocusEvent) {
+  _handleNameInputBlur(event: FocusEvent) {
     const newName = this.serverName;
     if (!newName) {
       this.serverName = this.initialName;
@@ -318,13 +318,13 @@ Polymer({
     }
   },
 
-  _metricsEnabledChanged: function() {
+  _metricsEnabledChanged() {
     const metricsSignal =
         this.metricsEnabled ? 'EnableMetricsRequested' : 'DisableMetricsRequested';
     this.fire(metricsSignal);
   },
 
-  _defaultDataLimitEnabledChanged: function(e: CustomEvent) {
+  _defaultDataLimitEnabledChanged(e: CustomEvent) {
     const wasDataLimitEnabled = this.isDefaultDataLimitEnabled;
     const isDataLimitEnabled = e.detail.value === 'enabled';
     if (isDataLimitEnabled === undefined || wasDataLimitEnabled === undefined) {
@@ -340,7 +340,7 @@ Polymer({
     }
   },
 
-  _handleDefaultDataLimitInputKeyDown: function(event: KeyboardEvent) {
+  _handleDefaultDataLimitInputKeyDown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
       this.$.defaultDataLimitInput.value = this.defaultDataLimit.value;
       this.$.defaultDataLimitInput.blur();
@@ -349,7 +349,7 @@ Polymer({
     }
   },
 
-  _requestSetDefaultDataLimit: function() {
+  _requestSetDefaultDataLimit() {
     if (this.$.defaultDataLimitInput.invalid) {
       return;
     }
@@ -358,11 +358,11 @@ Polymer({
     this.fire('SetDefaultDataLimitRequested', {limit: {value, unit}});
   },
 
-  _computeDataLimitsEnabledName: function(isDefaultDataLimitEnabled: boolean) {
+  _computeDataLimitsEnabledName(isDefaultDataLimitEnabled: boolean) {
     return isDefaultDataLimitEnabled ? 'enabled' : 'disabled';
   },
 
-  _validatePort: function(value: string) {
+  _validatePort(value: string) {
     const port = Number(value);
     const valid = !Number.isNaN(port) && port >= 1 && port <= 65535 && Number.isInteger(port);
     return valid ? '' : this.localize('error-keys-port-bad-input');

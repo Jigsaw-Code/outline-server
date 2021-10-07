@@ -91,7 +91,7 @@ export type DisplayAccessKey = {
   /** The data limit assigned to the key, if it exists. */
   dataLimitBytes?: number;
   dataLimit?: formatting.DisplayDataAmount;
-}
+};
 
 export class ServerView extends DirMixin(PolymerElement) {
   static get template() {
@@ -754,7 +754,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       newAccessKeyRow = Object.assign({}, this.get('myConnection'), fields);
       this.set('myConnection', newAccessKeyRow);
     }
-    for (let accessKeyRowIndex in this.accessKeyRows) {
+    for (const accessKeyRowIndex in this.accessKeyRows) {
       if (this.accessKeyRows[accessKeyRowIndex].id === accessKeyId) {
         newAccessKeyRow = Object.assign({}, this.get(['accessKeyRows', accessKeyRowIndex]), fields);
         this.set(['accessKeyRows', accessKeyRowIndex], newAccessKeyRow);
@@ -830,7 +830,7 @@ export class ServerView extends DirMixin(PolymerElement) {
           // Update accessKeyRows so the UI is updated.
           this.accessKeyRows = this.accessKeyRows.map((row) => {
             if (row.id !== accessKey.id) {
-              return row
+              return row;
             }
             return {...row, name: displayName};
           });
@@ -884,7 +884,7 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   _formatDataLimitForKey(key: DisplayAccessKey, language: string, localize: Function) {
-    return this._formatDisplayDataLimit(this._activeDataLimitForKey(key), language, localize)
+    return this._formatDisplayDataLimit(this._activeDataLimitForKey(key), language, localize);
   }
 
   _computeDisplayDataLimit(limit?: number) {
@@ -943,7 +943,7 @@ export class ServerView extends DirMixin(PolymerElement) {
   _accessKeysAddedOrRemoved(changeRecord: unknown) {
     // Check for myConnection and regular access keys.
     let hasNonAdminAccessKeys = false;
-    for (let ui in this.accessKeyRows) {
+    for (const ui in this.accessKeyRows) {
       if (this.accessKeyRows[ui].id === MY_CONNECTION_USER_ID) {
         this.myConnection = this.accessKeyRows[ui];
       } else {
@@ -994,7 +994,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     const sortBy = element.dataset.sortBy;
     if (this.accessKeySortBy !== sortBy) {
       this.accessKeySortBy = sortBy;
-      this.accessKeySortDirection = sortBy == 'usage' ? -1 : 1;
+      this.accessKeySortDirection = sortBy === 'usage' ? -1 : 1;
     } else {
       this.accessKeySortDirection *= -1;
     }
@@ -1013,7 +1013,7 @@ export class ServerView extends DirMixin(PolymerElement) {
       } else if (a.name) {
         return -1;
       } else if (b.name) {
-        return 1
+        return 1;
       } else {
         return 0;
       }

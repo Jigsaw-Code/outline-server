@@ -365,27 +365,27 @@ Polymer({
     },
   },
 
-  doneTapped: function() {
+  doneTapped() {
     this.showConnection = true;
     this.fire('ManualServerEntered', {
       userInput: this.$.serverConfig.value,
     });
   },
 
-  cancelTapped: function() {
+  cancelTapped() {
     this.fire('ManualServerEntryCancelled');
   },
 
-  retryTapped: function() {
+  retryTapped() {
     this.showConnection = false;
     this.doneTapped();
   },
 
-  gcpNewFlowTapped: function() {
+  gcpNewFlowTapped() {
     this.fire('ConnectGcpAccountRequested');
   },
 
-  clear: function() {
+  clear() {
     this.$.serverConfig.value = '';
     this.showConnection = false;
     for (const dropdown of this.root.querySelectorAll('.instructions-collapse')) {
@@ -393,7 +393,7 @@ Polymer({
     }
   },
 
-  _computeCloudProviderName: function(cloudProvider: string) {
+  _computeCloudProviderName(cloudProvider: string) {
     switch (cloudProvider) {
       case 'aws':
         return 'Amazon Web Services';
@@ -404,48 +404,48 @@ Polymer({
     }
   },
 
-  _computeIsCloudProviderAws: function(cloudProvider: string) {
+  _computeIsCloudProviderAws(cloudProvider: string) {
     return cloudProvider === 'aws';
   },
 
-  _computeIsCloudProviderGcp: function(cloudProvider: string) {
+  _computeIsCloudProviderGcp(cloudProvider: string) {
     return cloudProvider === 'gcp';
   },
 
-  _computeIsGenericCloudProvider: function(cloudProvider: string) {
+  _computeIsGenericCloudProvider(cloudProvider: string) {
     return cloudProvider === 'generic';
   },
 
-  _computeInstallScriptStepNumber: function(isGenericCloudProvider: boolean) {
+  _computeInstallScriptStepNumber(isGenericCloudProvider: boolean) {
     return isGenericCloudProvider ? 1 : 2;
   },
 
-  _computePasteJsonStepNumber: function(installScriptStepNumber: number) {
+  _computePasteJsonStepNumber(installScriptStepNumber: number) {
     return installScriptStepNumber + 1;
   },
 
-  _toggleAwsDropDown: function() {
+  _toggleAwsDropDown() {
     this._toggleDropDown(this.$.awsDropDown, this.$.awsDropDownIcon);
   },
 
-  _toggleGcpFirewallDropDown: function() {
+  _toggleGcpFirewallDropDown() {
     this._toggleDropDown(this.$.gcpFirewallDropDown, this.$.gcpFirewallDropDownIcon);
   },
 
-  _toggleGcpCreateServerDropDown: function() {
+  _toggleGcpCreateServerDropDown() {
     this._toggleDropDown(this.$.gcpCreateServerDropDown, this.$.gcpCreateServerDropDownIcon);
   },
 
-  _toggleGcpCreateProjectDropDown: function() {
+  _toggleGcpCreateProjectDropDown() {
     this._toggleDropDown(this.$.gcpCreateProjectDropDown, this.$.gcpCreateProjectDropDownIcon);
   },
 
-  _toggleDropDown: function(dropDown: IronCollapseElement, icon: IronIconElement) {
+  _toggleDropDown(dropDown: IronCollapseElement, icon: IronIconElement) {
     dropDown.toggle();
     icon.icon = dropDown.opened ? 'arrow-drop-up' : 'arrow-drop-down';
   },
 
-  onServerConfigChanged: function() {
+  onServerConfigChanged() {
     this.fire('ManualServerEdited', {
       userInput: this.$.serverConfig.value,
     });

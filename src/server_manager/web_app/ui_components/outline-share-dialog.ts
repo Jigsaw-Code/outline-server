@@ -140,15 +140,15 @@ Polymer({
     localize: {type: Function},
   },
 
-  open: function(accessKey: string, s3Url: string) {
+  open(accessKey: string, s3Url: string) {
     this.accessKey = accessKey;
     this.s3Url = s3Url;
     this.$.copyText.setAttribute('hidden', true);
     this.$.dialog.open();
   },
 
-  copyClicked: function() {
-    var dt = new clipboard.DT();
+  copyClicked() {
+    const dt = new clipboard.DT();
     dt.setData('text/plain', this.$.selectableText.innerText);
     dt.setData('text/html', this.$.selectableText.innerHTML);
     clipboard.write(dt);

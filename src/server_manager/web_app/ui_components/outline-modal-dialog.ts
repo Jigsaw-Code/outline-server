@@ -57,7 +57,7 @@ Polymer({
   },
 
   // Returns a Promise which fulfills with the index of the button clicked.
-  open: function(title: string, text: string, buttons: string[]) {
+  open(title: string, text: string, buttons: string[]) {
     this.title = title;
     this.text = text;
     this.buttons = buttons;
@@ -68,11 +68,11 @@ Polymer({
     });
   },
 
-  close: function() {
+  close() {
     this.$.dialog.close();
   },
 
-  buttonTapped: function(event: Event&{model: {index: number;};}) {
+  buttonTapped(event: Event&{model: {index: number;};}) {
     if (!this.fulfill) {
       console.error('outline-modal-dialog: this.fulfill not defined');
       return;

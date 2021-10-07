@@ -94,7 +94,7 @@ Polymer({
     outlineVersion: String,
   },
 
-  open: function() {
+  open() {
     this.$.dialog.open();
   }
 });

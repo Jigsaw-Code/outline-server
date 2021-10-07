@@ -164,7 +164,7 @@ Polymer({
     },
   },
 
-  open: function(prepopulatedMessage: string, showInstallationFailed: boolean) {
+  open(prepopulatedMessage: string, showInstallationFailed: boolean) {
     // Clear all fields, in case feedback had already been entered.
     if (showInstallationFailed) {
       this.title = this.localize('feedback-title-install');
@@ -186,7 +186,7 @@ Polymer({
     this.$.dialog.open();
   },
 
-  submitTappedHandler: function() {
+  submitTappedHandler() {
     // Verify that userFeedback is entered.
     if (!this.$.userFeedback.value) {
       this.$.userFeedback.invalid = true;
@@ -205,11 +205,11 @@ Polymer({
     this.$.dialog.close();
   },
 
-  userEmailValueChanged: function() {
+  userEmailValueChanged() {
     this.hasEnteredEmail = !!this.$.userEmail.value;
   },
 
-  feedbackCategoryChanged: function() {
+  feedbackCategoryChanged() {
     const selectedCategory = this.$.feedbackCategoryListbox.selected;
     if (selectedCategory === this.feedbackCategories.INSTALLATION ||
         selectedCategory === this.feedbackCategories.CONNECTION ||
@@ -221,7 +221,7 @@ Polymer({
     this.$.dialog.notifyResize();
   },
 
-  userFeedbackValueChanged: function() {
+  userFeedbackValueChanged() {
     // Hides any error message when the user starts typing feedback.
     this.$.userFeedback.invalid = false;
 
@@ -231,7 +231,7 @@ Polymer({
 
   // Returns whether the window's locale is English (i.e. EN, en-US) and the user has
   // entered their email.
-  _computeShouldShowLanguageDisclaimer: function(hasEnteredEmail: boolean) {
+  _computeShouldShowLanguageDisclaimer(hasEnteredEmail: boolean) {
     return !window.navigator.language.match(/^en/i) && hasEnteredEmail;
   }
 });

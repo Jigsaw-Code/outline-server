@@ -155,25 +155,25 @@ Polymer({
     onCancel: Function,
   },
 
-  _cancelTapped: function() {
+  _cancelTapped() {
     if (this.onCancel) {
       this.onCancel();
     }
   },
 
-  showEmailVerification: function() {
+  showEmailVerification() {
     this.currentPage = 'verifyEmail';
   },
 
-  showBilling: function() {
+  showBilling() {
     this.currentPage = 'enterBilling';
   },
 
-  showAccountActive: function() {
+  showAccountActive() {
     this.currentPage = 'accountActive';
   },
 
-  showConnectAccount: function() {
+  showConnectAccount() {
     this.currentPage = 'connectAccount';
   }
 });

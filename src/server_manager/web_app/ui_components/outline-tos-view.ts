@@ -72,7 +72,7 @@ Polymer({
     },
   },
 
-  acceptTermsOfService: function() {
+  acceptTermsOfService() {
     this.hasAcceptedTermsOfService = true;
   }
 });
