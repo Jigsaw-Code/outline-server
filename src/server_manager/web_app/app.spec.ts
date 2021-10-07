@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import './ui_components/app-root.js';
+import './ui_components/app-root';
 
 import * as accounts from '../model/accounts';
 import * as server from '../model/server';
