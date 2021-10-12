@@ -13,12 +13,11 @@
 // limitations under the License.
 
 import * as child_process from 'child_process';
-import * as fs from 'fs';
 import * as jsyaml from 'js-yaml';
 import * as mkdirp from 'mkdirp';
 import * as path from 'path';
 
-import {atomicWriteFileSync} from '../infrastructure/json_config';
+import * as file from '../infrastructure/file';
 import * as logging from '../infrastructure/logging';
 import {ShadowsocksAccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
 
@@ -76,7 +75,7 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
       mkdirp.sync(path.dirname(this.configFilename));
 
       try {
-        atomicWriteFileSync(this.configFilename, jsyaml.safeDump(keysJson, {sortKeys: true}));
+        file.atomicWriteFileSync(this.configFilename, jsyaml.safeDump(keysJson, {sortKeys: true}));
         resolve();
       } catch (error) {
         reject(error);

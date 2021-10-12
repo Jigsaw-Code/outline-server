@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as fs from 'fs';
-
-import * as file_read from './file_read';
+import * as file from './file';
 import * as logging from './logging';
 
 export interface JsonConfig<T> {
@@ -25,7 +23,7 @@ export interface JsonConfig<T> {
 }
 
 export function loadFileConfig<T>(filename: string): JsonConfig<T> {
-  const text = file_read.readFileIfExists(filename);
+  const text = file.readFileIfExists(filename);
   let dataJson = {} as T;
   if (text) {
     dataJson = JSON.parse(text) as T;
@@ -33,15 +31,6 @@ export function loadFileConfig<T>(filename: string): JsonConfig<T> {
   return new FileConfig<T>(filename, dataJson);
 }
 
-// Write to temporary file, then move that temporary file to the
-// persistent location, to avoid accidentally breaking the metrics file.
-// Use *Sync calls for atomic operations, to guard against corrupting
-// these files.
-export function atomicWriteFileSync(filename: string, filebody: string) {
-  const tempFilename = `${filename}.${Date.now()}`;
-  fs.writeFileSync(tempFilename, filebody, {encoding: 'utf8'});
-  fs.renameSync(tempFilename, filename);
-}
 
 // FileConfig is a JsonConfig backed by a filesystem file.
 export class FileConfig<T> implements JsonConfig<T> {
@@ -53,7 +42,7 @@ export class FileConfig<T> implements JsonConfig<T> {
 
   write() {
     try {
-      atomicWriteFileSync(this.filename, JSON.stringify(this.dataJson));
+      file.atomicWriteFileSync(this.filename, JSON.stringify(this.dataJson));
     } catch (error) {
       // TODO: Stop swallowing the exception and handle it in the callers.
       logging.error(`Error writing config ${this.filename} ${error}`);
