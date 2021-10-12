@@ -654,7 +654,7 @@ export class AppRoot extends polymerElementWithLocalize {
     });
 
     const messagesUrl = `./messages/${language}.json`;
-    this.loadResources(messagesUrl, language, false);
+    this.loadResources(messagesUrl, language, /* merge= */ false);
     return localizeResourcesResponder;
   }
 
