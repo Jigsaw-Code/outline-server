@@ -21,7 +21,7 @@ export DOCKER_BUILDKIT=1
 # Newer node images have no valid content trust data.
 # Pin the image node:lts-alpine3.14 (linux/amd64) by hash.
 # See versions at https://hub.docker.com/_/node?tab=tags&name=alpine
-readonly NODE_IMAGE="node@sha256:9b40ee281e8797067fb2ae207c406084cb81593090338a8b7cb09ade52168daa"
+readonly NODE_IMAGE="node@sha256:60ad5bd37eb274a1645f505aa38aabe13996aeb4dccecb025defc594f893eeae"
 
 # Doing an explicit `docker pull` of the container base image to work around an issue where
 # Travis fails to pull the base image when using BuildKit. Seems to be related to:
