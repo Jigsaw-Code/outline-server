@@ -1,32 +1,44 @@
 import * as fs from 'fs';
+import * as tmp from 'tmp';
 import * as file from './file';
 
-const [TEMP_FILE_PATH, TEMP_FILE_CONTENTS] = ['./.tmp', ''];
-
 describe('file', () => {
+  tmp.setGracefulCleanup();
+
   describe('readFileIfExists', () => {
+    let tmpFile: tmp.FileResult;
+
+    beforeEach(() => tmpFile = tmp.fileSync());
+
     it('reads the file if it exists', () => {
-      fs.writeFileSync(TEMP_FILE_PATH, TEMP_FILE_CONTENTS);
+      const contents = 'test';
 
-      expect(file.readFileIfExists(TEMP_FILE_PATH)).toBe(TEMP_FILE_CONTENTS);
+      fs.writeFileSync(tmpFile.name, contents);
 
-      fs.unlinkSync(TEMP_FILE_PATH);
+      expect(file.readFileIfExists(tmpFile.name)).toBe(contents);
+    });
+
+    it('reads the file if it exists and is empty', () => {
+      fs.writeFileSync(tmpFile.name, '');
+
+      expect(file.readFileIfExists(tmpFile.name)).toBe('');
     });
 
     it('returns null if file doesn\'t exist',
-       () => expect(file.readFileIfExists(TEMP_FILE_PATH)).toBe(null));
+       () => expect(file.readFileIfExists(tmp.tmpNameSync())).toBe(null));
   });
 
   describe('atomicWriteFileSync', () => {
-    beforeEach(() => fs.writeFileSync(TEMP_FILE_PATH, TEMP_FILE_CONTENTS));
-    afterEach(() => fs.unlinkSync(TEMP_FILE_PATH));
+    let tmpFile: tmp.FileResult;
+
+    beforeEach(() => tmpFile = tmp.fileSync());
 
     it('writes to the file', () => {
       const contents = 'test';
 
-      file.atomicWriteFileSync(TEMP_FILE_PATH, contents);
+      file.atomicWriteFileSync(tmpFile.name, contents);
 
-      expect(fs.readFileSync(TEMP_FILE_PATH, {encoding: 'utf8'})).toEqual(contents);
+      expect(fs.readFileSync(tmpFile.name, {encoding: 'utf8'})).toEqual(contents);
     });
 
     it('supports multiple simultaneous writes to the same file', async () => {
@@ -35,7 +47,7 @@ describe('file', () => {
       const writer = (_, id) => new Promise<void>((resolve, reject) => {
         try {
           file.atomicWriteFileSync(
-              TEMP_FILE_PATH, `${fs.readFileSync(TEMP_FILE_PATH, {encoding: 'utf-8'})}${id}\n`);
+              tmpFile.name, `${fs.readFileSync(tmpFile.name, {encoding: 'utf-8'})}${id}\n`);
           resolve();
         } catch (e) {
           reject(e);
@@ -44,7 +56,7 @@ describe('file', () => {
 
       await Promise.all(Array.from({length: writeCount}, writer));
 
-      expect(fs.readFileSync(TEMP_FILE_PATH, {encoding: 'utf8'}).trimEnd().split('\n').length)
+      expect(fs.readFileSync(tmpFile.name, {encoding: 'utf8'}).trimEnd().split('\n').length)
           .toBe(writeCount);
     });
   });
