@@ -12,10 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import './outline-server-view';
+
 import {customElement, html, LitElement, property} from 'lit-element';
-import {repeat} from 'lit-html/directives/repeat.js';
-import {DisplayCloudId} from './cloud-assets.js';
-import {ServerView} from './outline-server-view.js';
+import {repeat} from 'lit-html/directives/repeat';
+
+import type {DisplayCloudId} from './cloud-assets';
+import type {ServerView} from './outline-server-view';
 
 export interface ServerViewListEntry {
   id: string;

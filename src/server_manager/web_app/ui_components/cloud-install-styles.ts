@@ -14,7 +14,7 @@
   limitations under the License.
 */
 
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import {html} from '@polymer/polymer/lib/utils/html-tag';
 import {unsafeCSS} from 'lit-element';
 
 // Polymer style module to share styles between steps

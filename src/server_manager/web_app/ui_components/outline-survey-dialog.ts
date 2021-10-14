@@ -13,14 +13,17 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import '@polymer/neon-animation/animations/slide-down-animation.js';
-import '@polymer/neon-animation/animations/slide-from-bottom-animation.js';
-import '@polymer/paper-button/paper-button.js';
-import '@polymer/paper-dialog/paper-dialog.js';
+import '@polymer/neon-animation/animations/slide-down-animation';
+import '@polymer/neon-animation/animations/slide-from-bottom-animation';
+import '@polymer/paper-button/paper-button';
+import '@polymer/paper-dialog/paper-dialog';
 
-import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-import {PolymerElement} from '@polymer/polymer/polymer-element.js';
+import {DirMixin} from '@polymer/polymer/lib/mixins/dir-mixin';
+import {html} from '@polymer/polymer/lib/utils/html-tag';
+import {PolymerElement} from '@polymer/polymer/polymer-element';
+
+import type {PolymerElementProperties} from '@polymer/polymer/interfaces';
+import type {PaperDialogElement} from '@polymer/paper-dialog/paper-dialog';
 
 class OutlineSurveyDialog extends DirMixin
 (PolymerElement) {
@@ -102,22 +105,22 @@ class OutlineSurveyDialog extends DirMixin
     return 'outline-survey-dialog';
   }
 
-  static get properties() {
+  static get properties(): PolymerElementProperties {
     return {
-      localize: {
-        type: Function,
-        readonly: true,
-      },
+      localize: Function,
       surveyLink: String,
       title: String,
     };
   }
 
-  open(title, surveyLink) {
+  surveyLink: string;
+
+  open(title: string, surveyLink: string) {
     this.title = title;
     this.surveyLink = surveyLink;
-    this.$.dialog.horizontalAlign = this.dir === 'ltr' ? 'left' : 'right';
-    this.$.dialog.open();
+    const dialog = this.$.dialog as PaperDialogElement;
+    dialog.horizontalAlign = this.dir === 'ltr' ? 'left' : 'right';
+    dialog.open();
   }
 }
 customElements.define(OutlineSurveyDialog.is, OutlineSurveyDialog);

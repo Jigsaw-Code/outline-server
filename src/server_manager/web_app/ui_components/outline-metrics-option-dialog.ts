@@ -13,13 +13,17 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import '@polymer/polymer/polymer-legacy.js';
+import '@polymer/polymer/polymer-legacy';
 
-import '@polymer/paper-button/paper-button.js';
-import '@polymer/paper-dialog/paper-dialog.js';
-import './cloud-install-styles.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import '@polymer/paper-button/paper-button';
+import '@polymer/paper-dialog/paper-dialog';
+import './cloud-install-styles';
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn';
+import {html} from '@polymer/polymer/lib/utils/html-tag';
+
+export interface OutlineMetricsOptionDialog extends Element {
+  showMetricsOptInDialog(): void;
+}
 
 Polymer({
   _template: html`
@@ -45,19 +49,18 @@ Polymer({
   properties: {
     localize: {
       type: Function,
-      readonly: true,
     },
   },
 
-  showMetricsOptInDialog: function() {
+  showMetricsOptInDialog() {
     this.$.metricsEnabledDialog.open();
   },
 
-  enableMetricsRequested: function() {
+  enableMetricsRequested() {
     this.fire('EnableMetricsRequested');
   },
 
-  disableMetricsRequested: function() {
+  disableMetricsRequested() {
     this.fire('DisableMetricsRequested');
   }
 });

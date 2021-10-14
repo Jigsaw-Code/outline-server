@@ -13,11 +13,18 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import '@polymer/polymer/polymer-legacy.js';
+import '@polymer/polymer/polymer-legacy';
 
-import {IronFitBehavior} from '@polymer/iron-fit-behavior/iron-fit-behavior.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import {IronFitBehavior} from '@polymer/iron-fit-behavior/iron-fit-behavior';
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn';
+import {html} from '@polymer/polymer/lib/utils/html-tag';
+
+export interface OutlineHelpBubble extends Element {
+  show(positionTarget: Element, arrowDirection: string,
+       leftOrRightOffset: string): void;
+  hide(): void;
+}
+
 Polymer({
   _template: html`
     <style include="cloud-install-styles"></style>
@@ -132,7 +139,7 @@ Polymer({
     IronFitBehavior,
   ],
 
-  ready: function() {
+  ready() {
     // Prevent help bubble from overlapping with it's positionTarget.
     this.setAttribute('no-overlap', true);
 
@@ -140,7 +147,8 @@ Polymer({
     this.setAttribute('hidden', true);
   },
 
-  show: function(positionTarget, arrowDirection, leftOrRightOffset) {
+  show(positionTarget: Element, arrowDirection: string,
+      leftOrRightOffset: string) {
     this.removeAttribute('hidden');
 
     // Set arrow direction.
@@ -162,7 +170,7 @@ Polymer({
     window.addEventListener('resize', this.refit.bind(this));
   },
 
-  hide: function() {
+  hide() {
     this.setAttribute('hidden', true);
     window.removeEventListener('scroll', this.refit.bind(this));
     window.removeEventListener('resize', this.refit.bind(this));
