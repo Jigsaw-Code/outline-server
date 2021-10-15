@@ -23,10 +23,10 @@ export interface JsonConfig<T> {
 }
 
 export function loadFileConfig<T>(filename: string): JsonConfig<T> {
-  const TEXT = file.readFileIfExists(filename);
+  const text = file.readFileIfExists(filename);
   let dataJson = {} as T;
-  if (TEXT) {
-    dataJson = JSON.parse(TEXT) as T;
+  if (text) {
+    dataJson = JSON.parse(text) as T;
   }
   return new FileConfig<T>(filename, dataJson);
 }
