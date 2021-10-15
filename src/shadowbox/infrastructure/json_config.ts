@@ -26,7 +26,7 @@ export function loadFileConfig<T>(filename: string): JsonConfig<T> {
   const TEXT = file.readFileIfExists(filename);
   let dataJson = {} as T;
   if (TEXT) {
-    dataJson = JSON.parse(text) as T;
+    dataJson = JSON.parse(TEXT) as T;
   }
   return new FileConfig<T>(filename, dataJson);
 }
