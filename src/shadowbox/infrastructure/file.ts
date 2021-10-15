@@ -34,7 +34,7 @@ export function readFileIfExists(filename: string): string {
 // Use *Sync calls for atomic operations, to guard against corrupting
 // these files.
 export function atomicWriteFileSync(filename: string, filebody: string) {
-  const tempFilename = `${filename}.${Date.now()}`;
-  fs.writeFileSync(tempFilename, filebody, {encoding: 'utf8'});
-  fs.renameSync(tempFilename, filename);
+  const TEMP_FILENAME = `${filename}.${Date.now()}`;
+  fs.writeFileSync(TEMP_FILENAME, filebody, {encoding: 'utf8'});
+  fs.renameSync(TEMP_FILENAME, filename);
 }

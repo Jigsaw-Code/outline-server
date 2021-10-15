@@ -23,9 +23,9 @@ export interface JsonConfig<T> {
 }
 
 export function loadFileConfig<T>(filename: string): JsonConfig<T> {
-  const text = file.readFileIfExists(filename);
+  const TEXT = file.readFileIfExists(filename);
   let dataJson = {} as T;
-  if (text) {
+  if (TEXT) {
     dataJson = JSON.parse(text) as T;
   }
   return new FileConfig<T>(filename, dataJson);

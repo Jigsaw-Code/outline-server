@@ -11,9 +11,9 @@ describe('file', () => {
     beforeEach(() => tmpFile = tmp.fileSync());
 
     it('reads the file if it exists', () => {
-      const contents = 'test';
+      const TEST_CONTENTS = 'test';
 
-      fs.writeFileSync(tmpFile.name, contents);
+      fs.writeFileSync(tmpFile.name, TEST_CONTENTS);
 
       expect(file.readFileIfExists(tmpFile.name)).toBe(contents);
     });
@@ -34,15 +34,15 @@ describe('file', () => {
     beforeEach(() => tmpFile = tmp.fileSync());
 
     it('writes to the file', () => {
-      const contents = 'test';
+      const TEST_CONTENTS = 'test';
 
-      file.atomicWriteFileSync(tmpFile.name, contents);
+      file.atomicWriteFileSync(tmpFile.name, TEST_CONTENTS);
 
-      expect(fs.readFileSync(tmpFile.name, {encoding: 'utf8'})).toEqual(contents);
+      expect(fs.readFileSync(tmpFile.name, {encoding: 'utf8'})).toEqual(TEST_CONTENTS);
     });
 
     it('supports multiple simultaneous writes to the same file', async () => {
-      const writeCount = 100;
+      const TEST_WRITE_COUNT = 100;
 
       const writer = (_, id) => new Promise<void>((resolve, reject) => {
         try {
@@ -54,7 +54,7 @@ describe('file', () => {
         }
       });
 
-      await Promise.all(Array.from({length: writeCount}, writer));
+      await Promise.all(Array.from({length: TEST_WRITE_COUNT}, writer));
 
       expect(fs.readFileSync(tmpFile.name, {encoding: 'utf8'}).trimEnd().split('\n').length)
           .toBe(writeCount);
