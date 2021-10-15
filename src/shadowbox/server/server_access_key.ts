@@ -142,9 +142,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.keyConfig.data().nextId += 1;
     const metricsId = uuidv4();
     const password = generatePassword();
-    if (encryptionMethod == null) {
-      encryptionMethod = this.NEW_USER_ENCRYPTION_METHOD;
-    }
+    encryptionMethod = encryptionMethod || this.NEW_USER_ENCRYPTION_METHOD;
     const proxyParams = {
       hostname: this.proxyHostname,
       portNumber: this.portForNewAccessKeys,

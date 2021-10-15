@@ -139,6 +139,13 @@ paths:
       description: Creates a new access key
       tags:
         - Access Key
+      parameters:
+        - name: encryptionMethod
+          in: path
+          description: encryption method to use for access key.
+          required: false
+          schema:
+            type: string
       responses:
         '201':
           description: The newly created access key
