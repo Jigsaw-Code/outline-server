@@ -15,7 +15,7 @@ describe('file', () => {
 
       fs.writeFileSync(tmpFile.name, TEST_CONTENTS);
 
-      expect(file.readFileIfExists(tmpFile.name)).toBe(contents);
+      expect(file.readFileIfExists(tmpFile.name)).toBe(TEST_CONTENTS);
     });
 
     it('reads the file if it exists and is empty', () => {
@@ -57,7 +57,7 @@ describe('file', () => {
       await Promise.all(Array.from({length: TEST_WRITE_COUNT}, writer));
 
       expect(fs.readFileSync(tmpFile.name, {encoding: 'utf8'}).trimEnd().split('\n').length)
-          .toBe(writeCount);
+          .toBe(TEST_WRITE_COUNT);
     });
   });
 });
