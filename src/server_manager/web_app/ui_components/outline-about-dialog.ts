@@ -13,12 +13,17 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import '@polymer/polymer/polymer-legacy.js';
+import '@polymer/polymer/polymer-legacy';
 
-import '@polymer/paper-dialog/paper-dialog.js';
-import './cloud-install-styles.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import '@polymer/paper-dialog/paper-dialog';
+import './cloud-install-styles';
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn';
+import {html} from '@polymer/polymer/lib/utils/html-tag';
+
+export interface OutlineAboutDialog extends Element {
+  open(): void;
+}
+
 Polymer({
   _template: html`
     <style include="cloud-install-styles">
@@ -85,11 +90,11 @@ Polymer({
   is: 'outline-about-dialog',
 
   properties: {
-    localize: {type: Function, readonly: true},
+    localize: Function,
     outlineVersion: String,
   },
 
-  open: function() {
+  open() {
     this.$.dialog.open();
   }
 });

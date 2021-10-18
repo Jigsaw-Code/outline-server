@@ -15,7 +15,7 @@
 import '@polymer/iron-icon/iron-icon';
 import '@polymer/iron-icons/iron-icons';
 
-import {css, html, LitElement} from 'lit-element';
+import {css, html, LitElement, PropertyDeclarations} from 'lit-element';
 
 export class SortSpan extends LitElement {
   static get styles() {
@@ -27,22 +27,18 @@ export class SortSpan extends LitElement {
       }
     `;
   }
-  static get properties() {
+  static get properties(): PropertyDeclarations {
     return {direction: {type: Number}};
   }
 
-  constructor() {
-    super();
-    /** @type {-1|0|1} */
-    this.direction = 0;
-  }
+  direction: -1|0|1 = 0;
 
-  render() {
+  override render() {
     let arrow = html`<iron-icon></iron-icon>`;
     if (this.direction === -1) {
-      arrow = html`<iron-icon icon='arrow-upward'></iron-icon>`
+      arrow = html`<iron-icon icon='arrow-upward'></iron-icon>`;
     } else if (this.direction === 1) {
-      arrow = html`<iron-icon icon='arrow-downward'></iron-icon>`
+      arrow = html`<iron-icon icon='arrow-downward'></iron-icon>`;
     }
     return html`<slot></slot>${arrow}`;
   }

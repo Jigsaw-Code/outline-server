@@ -13,13 +13,23 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import '@polymer/polymer/polymer-legacy.js';
+import '@polymer/polymer/polymer-legacy';
 
-import '@polymer/iron-pages/iron-pages.js';
-import './cloud-install-styles.js';
-import './outline-step-view.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import '@polymer/iron-pages/iron-pages';
+import './cloud-install-styles';
+import './outline-step-view';
+
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn';
+import {html} from '@polymer/polymer/lib/utils/html-tag';
+
+export interface OutlineDoOauthStep extends Element {
+  onCancel: Function;
+  showConnectAccount(): void;
+  showAccountActive(): void;
+  showBilling(): void;
+  showEmailVerification(): void;
+}
+
 Polymer({
   _template: html`
     <style include="cloud-install-styles">
@@ -141,30 +151,29 @@ Polymer({
     },
     localize: {
       type: Function,
-      readonly: true,
     },
     onCancel: Function,
   },
 
-  _cancelTapped: function() {
+  _cancelTapped() {
     if (this.onCancel) {
       this.onCancel();
     }
   },
 
-  showEmailVerification: function() {
+  showEmailVerification() {
     this.currentPage = 'verifyEmail';
   },
 
-  showBilling: function() {
+  showBilling() {
     this.currentPage = 'enterBilling';
   },
 
-  showAccountActive: function() {
+  showAccountActive() {
     this.currentPage = 'accountActive';
   },
 
-  showConnectAccount: function() {
+  showConnectAccount() {
     this.currentPage = 'connectAccount';
   }
 });

@@ -18,7 +18,7 @@ import * as fs from 'fs';
 // Throws any other error except file not found.
 export function readFileIfExists(filename: string): string {
   try {
-    return fs.readFileSync(filename, {encoding: 'utf8'}) || null;
+    return fs.readFileSync(filename, {encoding: 'utf8'}) ?? null;
   } catch (err) {
     // err.code will be 'ENOENT' if the file is not found, this is expected.
     if (err.code === 'ENOENT') {
@@ -27,4 +27,14 @@ export function readFileIfExists(filename: string): string {
       throw err;
     }
   }
+}
+
+// Write to temporary file, then move that temporary file to the
+// persistent location, to avoid accidentally breaking the metrics file.
+// Use *Sync calls for atomic operations, to guard against corrupting
+// these files.
+export function atomicWriteFileSync(filename: string, filebody: string) {
+  const tempFilename = `${filename}.${Date.now()}`;
+  fs.writeFileSync(tempFilename, filebody, {encoding: 'utf8'});
+  fs.renameSync(tempFilename, filename);
 }

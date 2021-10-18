@@ -14,7 +14,7 @@
   limitations under the License.
 */
 
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import {html} from '@polymer/polymer/lib/utils/html-tag';
 
 //  outline-server-settings-styles
 //  This file holds common styles for outline-server-settings and outline-validated-input

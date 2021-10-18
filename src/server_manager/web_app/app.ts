@@ -22,14 +22,16 @@ import * as accounts from '../model/accounts';
 import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
 import * as server from '../model/server';
-import {CloudLocation} from '../model/location';
 
 import {DisplayDataAmount, displayDataAmountToBytes,} from './data_formatting';
 import {filterOptions, getShortName} from './location_formatting';
 import {parseManualServerConfig} from './management_urls';
-import {AppRoot, ServerListEntry} from './ui_components/app-root';
-import {DisplayAccessKey, ServerView} from './ui_components/outline-server-view';
 import {HttpError} from '../cloud/gcp_api';
+
+import type {CloudLocation} from '../model/location';
+import type {AppRoot, ServerListEntry} from './ui_components/app-root';
+import type {FeedbackDetail} from './ui_components/outline-feedback-dialog';
+import type {DisplayAccessKey, ServerView} from './ui_components/outline-server-view';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -246,7 +248,7 @@ export class App {
     });
 
     appRoot.addEventListener('SubmitFeedback', (event: CustomEvent) => {
-      const detail = event.detail;
+      const detail: FeedbackDetail = event.detail;
       try {
         sentry.captureEvent({
           message: detail.userFeedback,
@@ -728,7 +730,8 @@ export class App {
   }
 
   private makeLocalizedServerName(cloudLocation: CloudLocation): string {
-    const placeName = getShortName(cloudLocation, this.appRoot.localize);
+    const placeName = getShortName(cloudLocation,
+        this.appRoot.localize as (id: string) => string);
     return this.appRoot.localize('server-name', 'serverLocation', placeName);
   }
 
@@ -1218,7 +1221,7 @@ export class App {
     });
   }
 
-  private async setAppLanguage(languageCode: string, languageDir: string) {
+  private async setAppLanguage(languageCode: string, languageDir: 'rtl'|'ltr') {
     try {
       await this.appRoot.setLanguage(languageCode, languageDir);
       document.documentElement.setAttribute('dir', languageDir);

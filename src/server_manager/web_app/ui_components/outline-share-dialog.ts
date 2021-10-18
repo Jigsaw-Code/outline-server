@@ -13,12 +13,16 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import '@polymer/paper-dialog/paper-dialog.js';
+import '@polymer/paper-dialog/paper-dialog';
 
-import '@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
-import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
+import '@polymer/paper-dialog-scrollable/paper-dialog-scrollable';
+import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn';
+import {html} from '@polymer/polymer/lib/utils/html-tag';
 import * as clipboard from 'clipboard-polyfill';
+
+export interface OutlineShareDialog extends Element {
+  open(accessKey: string, s3url: string): void;
+}
 
 // TODO(alalama): add a language selector. This should be a separate instance of
 // Polymer.AppLocalizeBehavior so the app language is not changed. Consider refactoring l10n into a
@@ -114,7 +118,7 @@ Polymer({
         <ol>
           <li>
             [[localize('share-invite-copy-access-key')]]
-            <a href="{{acessKey}}">{{acessKey}}</a>
+            <a href="{{accessKey}}">{{accessKey}}</a>
           </li>
           <li>
             [[localize('share-invite-instructions')]]
@@ -133,18 +137,18 @@ Polymer({
   is: 'outline-share-dialog',
 
   properties: {
-    localize: {type: Function, readonly: true},
+    localize: {type: Function},
   },
 
-  open: function(acessKey, s3Url) {
-    this.acessKey = acessKey;
+  open(accessKey: string, s3Url: string) {
+    this.accessKey = accessKey;
     this.s3Url = s3Url;
     this.$.copyText.setAttribute('hidden', true);
     this.$.dialog.open();
   },
 
-  copyClicked: function() {
-    var dt = new clipboard.DT();
+  copyClicked() {
+    const dt = new clipboard.DT();
     dt.setData('text/plain', this.$.selectableText.innerText);
     dt.setData('text/html', this.$.selectableText.innerHTML);
     clipboard.write(dt);

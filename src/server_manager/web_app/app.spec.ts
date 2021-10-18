@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import './ui_components/app-root.js';
+import './ui_components/app-root';
 
 import * as accounts from '../model/accounts';
 import * as server from '../model/server';
@@ -36,7 +36,7 @@ beforeEach(() => {
 
 describe('App', () => {
   it('shows intro when starting with no manual servers or DigitalOcean token', async () => {
-    const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
+    const appRoot = document.getElementById('appRoot') as AppRoot;
     const app = createTestApp(appRoot);
     await app.start();
     expect(appRoot.currentPage).toEqual('intro');
@@ -44,7 +44,7 @@ describe('App', () => {
 
   it('will not create a manual server with invalid input', async () => {
     // Create a new app with no existing servers or DigitalOcean token.
-    const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
+    const appRoot = document.getElementById('appRoot') as AppRoot;
     const app = createTestApp(appRoot);
     await app.start();
     expect(appRoot.currentPage).toEqual('intro');
@@ -53,7 +53,7 @@ describe('App', () => {
 
   it('creates a manual server with valid input', async () => {
     // Create a new app with no existing servers or DigitalOcean token.
-    const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
+    const appRoot = document.getElementById('appRoot') as AppRoot;
     const app = createTestApp(appRoot);
     await app.start();
     expect(appRoot.currentPage).toEqual('intro');
@@ -71,7 +71,7 @@ describe('App', () => {
     await manualServerRepo.addServer({certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-1'});
     await manualServerRepo.addServer({certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
 
-    const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
+    const appRoot = document.getElementById('appRoot') as AppRoot;
     expect(appRoot.serverList.length).toEqual(0);
     const app = createTestApp(appRoot, cloudAccounts, manualServerRepo);
 
@@ -100,7 +100,7 @@ describe('App', () => {
         await manualServerRepo.addServer({certSha256: 'cert', apiUrl: LAST_DISPLAYED_SERVER_ID});
     await manualServerRepo.addServer({certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
     localStorage.setItem('lastDisplayedServer', LAST_DISPLAYED_SERVER_ID);
-    const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
+    const appRoot = document.getElementById('appRoot') as AppRoot;
     const app = createTestApp(appRoot, null, manualServerRepo);
     await app.start();
     expect(appRoot.currentPage).toEqual('serverView');
@@ -109,7 +109,7 @@ describe('App', () => {
 
   it('shows progress screen once DigitalOcean droplets are created', async () => {
     // Start the app with a fake DigitalOcean token.
-    const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
+    const appRoot = document.getElementById('appRoot') as AppRoot;
     const cloudAccounts = new FakeCloudAccounts(new FakeDigitalOceanAccount());
     const app = createTestApp(appRoot, cloudAccounts);
     await app.start();
@@ -121,7 +121,7 @@ describe('App', () => {
 
   it('shows progress screen when starting with DigitalOcean servers still being created',
      async () => {
-       const appRoot = document.getElementById('appRoot') as unknown as AppRoot;
+       const appRoot = document.getElementById('appRoot') as AppRoot;
        const fakeAccount = new FakeDigitalOceanAccount();
        const server = await fakeAccount.createServer(new Region('_fake-region-id'));
        const cloudAccounts = new FakeCloudAccounts(fakeAccount);

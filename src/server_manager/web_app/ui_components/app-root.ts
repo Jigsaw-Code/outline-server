@@ -13,65 +13,85 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/app-layout/app-drawer/app-drawer.js';
-import '@polymer/app-layout/app-drawer-layout/app-drawer-layout.js';
-import '@polymer/app-layout/app-toolbar/app-toolbar.js';
-import '@polymer/iron-icon/iron-icon.js';
-import '@polymer/iron-icons/iron-icons.js';
-import '@polymer/iron-pages/iron-pages.js';
-import '@polymer/paper-icon-button/paper-icon-button.js';
-import '@polymer/paper-toast/paper-toast.js';
-import '@polymer/paper-dialog/paper-dialog.js';
-import '@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
-import '@polymer/paper-listbox/paper-listbox.js';
-import '@polymer/paper-menu-button/paper-menu-button.js';
-import './cloud-install-styles.js';
-import './outline-about-dialog.js';
-import './outline-do-oauth-step.js';
+import '@polymer/polymer/polymer-legacy';
+import '@polymer/app-layout/app-drawer/app-drawer';
+import '@polymer/app-layout/app-drawer-layout/app-drawer-layout';
+import '@polymer/app-layout/app-toolbar/app-toolbar';
+import '@polymer/iron-icon/iron-icon';
+import '@polymer/iron-icons/iron-icons';
+import '@polymer/iron-pages/iron-pages';
+import '@polymer/paper-icon-button/paper-icon-button';
+import '@polymer/paper-toast/paper-toast';
+import '@polymer/paper-dialog/paper-dialog';
+import '@polymer/paper-dialog-scrollable/paper-dialog-scrollable';
+import '@polymer/paper-listbox/paper-listbox';
+import '@polymer/paper-menu-button/paper-menu-button';
+import './cloud-install-styles';
+import './outline-about-dialog';
+import './outline-do-oauth-step';
 import './outline-gcp-oauth-step';
 import './outline-gcp-create-server-app';
-import './outline-feedback-dialog.js';
-import './outline-survey-dialog.js';
-import './outline-intro-step.js';
+import './outline-feedback-dialog';
+import './outline-survey-dialog';
+import './outline-intro-step';
 import './outline-per-key-data-limit-dialog';
-import './outline-language-picker.js';
-import './outline-manual-server-entry.js';
-import './outline-modal-dialog.js';
+import './outline-language-picker';
+import './outline-manual-server-entry';
+import './outline-modal-dialog';
 import './outline-region-picker-step';
 import './outline-server-list';
-import './outline-tos-view.js';
+import './outline-tos-view';
 
-import {AppLocalizeBehavior} from '@polymer/app-localize-behavior/app-localize-behavior.js';
-import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class.js';
-import {html} from '@polymer/polymer/lib/utils/html-tag.js';
-import {PolymerElement} from '@polymer/polymer/polymer-element.js';
-
-import {ServerView} from './outline-server-view.js';
-import {OutlineRegionPicker} from './outline-region-picker-step';
+import {AppLocalizeBehavior} from '@polymer/app-localize-behavior/app-localize-behavior';
+import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class';
+import {html} from '@polymer/polymer/lib/utils/html-tag';
+import {PolymerElement} from '@polymer/polymer/polymer-element';
 import {DisplayCloudId} from './cloud-assets';
+
+import type {LegacyElementMixin} from '@polymer/polymer/lib/legacy/legacy-element-mixin';
+import type {AppDrawerElement} from '@polymer/app-layout/app-drawer/app-drawer';
+import type {AppDrawerLayoutElement} from '@polymer/app-layout/app-drawer-layout/app-drawer-layout';
+import type {PaperDialogElement} from '@polymer/paper-dialog/paper-dialog';
+import type {PaperToastElement} from '@polymer/paper-toast/paper-toast';
+import type {PolymerElementProperties} from '@polymer/polymer/interfaces';
+import type {OutlineRegionPicker} from './outline-region-picker-step';
+import type {OutlineDoOauthStep} from './outline-do-oauth-step';
+import type {GcpConnectAccountApp} from './outline-gcp-oauth-step';
+import type {GcpCreateServerApp} from './outline-gcp-create-server-app';
+import type {OutlineServerList, ServerViewListEntry} from './outline-server-list';
+import type {OutlineManualServerEntry} from './outline-manual-server-entry';
+import type {OutlinePerKeyDataLimitDialog} from './outline-per-key-data-limit-dialog';
+import type {OutlineFeedbackDialog} from './outline-feedback-dialog';
+import type {OutlineAboutDialog} from './outline-about-dialog';
+import type {OutlineShareDialog} from './outline-share-dialog';
+import type {OutlineMetricsOptionDialog} from './outline-metrics-option-dialog';
+import type {OutlineModalDialog} from './outline-modal-dialog';
+import type {ServerView} from './outline-server-view';
+import type {LanguageDef} from './outline-language-picker';
 
 const TOS_ACK_LOCAL_STORAGE_KEY = 'tos-ack';
 
-/**
- * A cloud account to be displayed
- * @typedef {Object} AccountListEntry
- * @prop {string} id
- * @prop {string} name
- */
+/** A cloud account to be displayed */
+type AccountListEntry = {
+  id: string;
+  name: string;
+};
 
-/**
- * An access key to be displayed
- * @typedef {Object} ServerListEntry
- * @prop {string} id
- * @prop {string|null} accountId
- * @prop {string} name
- * @prop {boolean} isSynced
- */
+/** An access key to be displayed */
+export type ServerListEntry = {
+  id: string;
+  accountId: string;
+  name: string;
+  isSynced: boolean;
+};
 
-/** @extends {PolymerElement} */
-export class AppRoot extends mixinBehaviors
-([AppLocalizeBehavior], PolymerElement) {
+// mixinBehaviors() returns `any`, but the documentation indicates that
+// this is the actual return type.
+const polymerElementWithLocalize =
+    mixinBehaviors(AppLocalizeBehavior, PolymerElement) as
+        new () => PolymerElement&LegacyElementMixin&AppLocalizeBehavior;
+
+export class AppRoot extends polymerElementWithLocalize {
   static get template() {
     return html`
     <style include="cloud-install-styles"></style>
@@ -553,12 +573,11 @@ export class AppRoot extends mixinBehaviors
     return 'app-root';
   }
 
-  static get properties() {
+  static get properties(): PolymerElementProperties {
     return {
       // Properties language and useKeyIfMissing are used by Polymer.AppLocalizeBehavior.
-      language: {type: String, readonly: true},
-      // An array of {id, name, dir} language objects.
-      supportedLanguages: {type: Array, readonly: true},
+      language: {type: String},
+      supportedLanguages: {type: Array},
       useKeyIfMissing: {type: Boolean},
       serverList: {type: Array},
       selectedServerId: {type: String},
@@ -586,27 +605,19 @@ export class AppRoot extends mixinBehaviors
     };
   }
 
+  selectedServerId = '';
+  language = '';
+  supportedLanguages: LanguageDef[] = [];
+  useKeyIfMissing = true;
+  serverList: ServerListEntry[] = [];
+  digitalOceanAccount: AccountListEntry = null;
+  gcpAccount: AccountListEntry = null;
+  outlineVersion = '';
+  currentPage = 'intro';
+  shouldShowSideBar = false;
+
   constructor() {
     super();
-    /** @type {string} */
-    this.selectedServerId = '';
-    this.language = '';
-    this.supportedLanguages = [];
-    this.useKeyIfMissing = true;
-    /** @type {ServerListEntry[]} */
-    this.serverList = [];
-    /** @type {AccountListEntry} */
-    this.digitalOceanAccount = null;
-    /** @type {AccountListEntry} */
-    this.gcpAccount = null;
-    this.outlineVersion = '';
-    this.currentPage = 'intro';
-    this.shouldShowSideBar = false;
-
-    // Inform the Typescript compiler about the localize() function provided by
-    // the AppLocalizeBehavior mixin.
-    /** @type {(msgId: string, ...params: string[]) => string} */
-    this.localize;
 
     this.addEventListener('RegionSelected', this.handleRegionSelected);
     this.addEventListener(
@@ -620,21 +631,21 @@ export class AppRoot extends mixinBehaviors
    * Loads a new translation file and returns a Promise which resolves when the file is loaded or
    *  rejects when there was an error loading translations.
    *
-   *  @param {string} language The language code to load translations for, eg 'en'
+   *  @param language The language code to load translations for, eg 'en'
    */
-  async loadLanguageResources(language) {
-    const localizeResourcesResponder = new Promise((resolve, reject) => {
+  loadLanguageResources(language: string) {
+    const localizeResourcesResponder = new Promise<void>((resolve, reject) => {
       // loadResources uses events and continuation instead of Promises.  In order to make this
       // function easier to use, we wrap the language-changing logic in event handlers which
       // resolve or reject the Promise.  Note that they need to clean up whichever event handler
       // didn't fire so we don't leak it, which could cause future language changes to not work
       // properly by triggering old event listeners.
-      let successHandler, failureHandler;
+      let successHandler: () => void, failureHandler: () => void;
       successHandler = () => {
         this.removeEventListener('app-localize-resources-error', failureHandler);
         resolve();
       };
-      failureHandler = (event) => {
+      failureHandler = () => {
         this.removeEventListener('app-localize-resources-loaded', successHandler);
         reject(new Error(`Failed to load resources for language ${language}`));
       };
@@ -643,21 +654,20 @@ export class AppRoot extends mixinBehaviors
     });
 
     const messagesUrl = `./messages/${language}.json`;
-    this.loadResources(messagesUrl, language);
+    this.loadResources(messagesUrl, language, /* merge= */ false);
     return localizeResourcesResponder;
   }
 
   /**
    * Sets the language and direction for the application
-   * @param {string} language The ISO language code for the new language, eg 'en'
-   * @param {string} direction The direction of the language, either 'rtl' or 'ltr'
+   * @param language The ISO language code for the new language, e.g. 'en'.
    */
-  async setLanguage(language, direction) {
+  async setLanguage(language: string, direction: 'rtl'|'ltr') {
     await this.loadLanguageResources(language);
 
     const alignDir = direction === 'ltr' ? 'left' : 'right';
-    this.$.appDrawer.align = alignDir;
-    this.$.sideBar.align = alignDir;
+    (this.$.appDrawer as AppDrawerElement).align = alignDir;
+    (this.$.sideBar as AppDrawerElement).align = alignDir;
     this.language = language;
   }
 
@@ -667,12 +677,8 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
   }
 
-  /**
-   * @param {Function}
-   * @return {*}
-   */
-  getDigitalOceanOauthFlow(onCancel) {
-    const oauthFlow = this.$.digitalOceanOauth;
+  getDigitalOceanOauthFlow(onCancel: Function): OutlineDoOauthStep {
+    const oauthFlow = this.$.digitalOceanOauth as OutlineDoOauthStep;
     oauthFlow.onCancel = onCancel;
     return oauthFlow;
   }
@@ -681,36 +687,34 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'digitalOceanOauth';
   }
 
-  getAndShowDigitalOceanOauthFlow(onCancel) {
+  getAndShowDigitalOceanOauthFlow(onCancel: Function) {
     this.currentPage = 'digitalOceanOauth';
     const oauthFlow = this.getDigitalOceanOauthFlow(onCancel);
     oauthFlow.showConnectAccount();
     return oauthFlow;
   }
 
-  getAndShowGcpOauthFlow(onCancel) {
+  getAndShowGcpOauthFlow(onCancel: Function) {
     this.currentPage = 'gcpOauth';
-    const oauthFlow = this.$.gcpOauth;
+    const oauthFlow = this.$.gcpOauth as GcpConnectAccountApp;
     oauthFlow.onCancel = onCancel;
     return oauthFlow;
   }
 
-  /** @return {GcpCreateServerApp} */
-  getAndShowGcpCreateServerApp() {
+  getAndShowGcpCreateServerApp(): GcpCreateServerApp {
     this.currentPage = 'gcpCreateServer';
-    return this.$.gcpCreateServer;
+    return this.$.gcpCreateServer as GcpCreateServerApp;
   }
 
-  /** @return {OutlineRegionPicker} */
-  getAndShowRegionPicker() {
+  getAndShowRegionPicker(): OutlineRegionPicker {
     this.currentPage = 'regionPicker';
-    this.$.regionPicker.reset();
-    return this.$.regionPicker;
+    const regionPicker = this.$.regionPicker as OutlineRegionPicker;
+    regionPicker.reset();
+    return regionPicker;
   }
 
-  /** @return {*} */
   getManualServerEntry() {
-    return this.$.manualEntry;
+    return this.$.manualEntry as OutlineManualServerEntry;
   }
 
   showServerView() {
@@ -721,20 +725,17 @@ export class AppRoot extends mixinBehaviors
     if (this.currentPage !== 'gcpCreateServer') {
       // The refresh loop will be restarted by App, which calls
       // GcpCreateServerApp.start() whenever it switches back to this page.
-      this.$.gcpCreateServer.stopRefreshingBillingAccounts();
+      (this.$.gcpCreateServer as GcpCreateServerApp).stopRefreshingBillingAccounts();
     }
   }
 
-  /**
-   * Gets the ServerView for the server given by its id
-   * @param {string} displayServerId
-   * @returns {Promise<ServerView>}
-   */
-  async getServerView(displayServerId) {
-    return await this.shadowRoot.querySelector('#serverView').getServerView(displayServerId);
+  /** Gets the ServerView for the server given by its id */
+  getServerView(displayServerId: string): Promise<ServerView> {
+    const serverList = this.shadowRoot.querySelector<OutlineServerList>('#serverView');
+    return serverList.getServerView(displayServerId);
   }
 
-  handleRegionSelected(/** @type {Event} */ e) {
+  handleRegionSelected(e: CustomEvent) {
     this.fire('SetUpDigitalOceanServerRequested', {region: e.detail.selectedLocation});
   }
 
@@ -750,9 +751,10 @@ export class AppRoot extends mixinBehaviors
     this.handleManualServerSelected('gcp');
   }
 
-  handleManualServerSelected(/** @type {'generic'|'aws'|'gcp'} */ cloudProvider) {
-    this.$.manualEntry.clear();
-    this.$.manualEntry.cloudProvider = cloudProvider;
+  handleManualServerSelected(cloudProvider: 'generic'|'aws'|'gcp') {
+    const manualEntry = this.$.manualEntry as OutlineManualServerEntry;
+    manualEntry.clear();
+    manualEntry.cloudProvider = cloudProvider;
     this.currentPage = 'manualEntry';
   }
 
@@ -760,43 +762,42 @@ export class AppRoot extends mixinBehaviors
     this.currentPage = 'intro';
   }
 
-  showError(/** @type {string} */ errorMsg) {
+  showError(errorMsg: string) {
     this.showToast(errorMsg, Infinity);
   }
 
-  showNotification(/** @type {string} */ message, durationMs = 3000) {
+  showNotification(message: string, durationMs = 3000) {
     this.showToast(message, durationMs);
   }
 
   /**
    * Show a toast with a message
-   * @param {string} message
-   * @param {number} duration in seconds
+   * @param duration in seconds
    */
-  showToast(message, duration) {
-    const toast = this.$.toast;
+  showToast(message: string, duration: number) {
+    const toast = this.$.toast as PaperToastElement;
     toast.close();
     // Defer in order to trigger the toast animation, otherwise the
     // update happens in place.
     setTimeout(() => {
       toast.show({
         text: message,
-        duration: duration,
+        duration,
         noOverlap: true,
       });
     }, 0);
   }
 
   closeError() {
-    this.$.toast.close();
+    (this.$.toast as PaperToastElement).close();
   }
 
   /**
-   * @param {(retry: boolean) => void} cb a function which accepts a single boolean which is true
+   * @param cb a function which accepts a single boolean which is true
    *     iff
    *      the user chose to retry the failing operation.
    */
-  showConnectivityDialog(cb) {
+  showConnectivityDialog(cb: (retry: boolean) => void) {
     const dialogTitle = this.localize('error-connectivity-title');
     const dialogText = this.localize('error-connectivity');
     this.showModalDialog(dialogTitle, dialogText, [this.localize('digitalocean-disconnect'), this.localize('retry')])
@@ -805,7 +806,8 @@ export class AppRoot extends mixinBehaviors
         });
   }
 
-  getConfirmation(title, text, confirmButtonText, continueFunc) {
+  getConfirmation(title: string, text: string, confirmButtonText: string,
+      continueFunc: Function) {
     this.showModalDialog(title, text, [this.localize('cancel'), confirmButtonText])
         .then(clickedButtonIndex => {
           if (clickedButtonIndex === 1) {
@@ -815,64 +817,63 @@ export class AppRoot extends mixinBehaviors
         });
   }
 
-  /**
-   * @param {string} errorTitle
-   * @param {string} errorText
-   */
-  showManualServerError(errorTitle, errorText) {
+  showManualServerError(errorTitle: string, errorText: string) {
     this.showModalDialog(errorTitle, errorText, [this.localize('cancel'), this.localize('retry')])
         .then(clickedButtonIndex => {
-          if (clickedButtonIndex == 1) {
-            this.$.manualEntry.retryTapped();
+          const manualEntry = this.$.manualEntry as OutlineManualServerEntry;
+          if (clickedButtonIndex === 1) {
+            manualEntry.retryTapped();
           } else {
-            this.$.manualEntry.cancelTapped();
+            manualEntry.cancelTapped();
           }
         });
   }
 
-  _hasManualServers(serverList) {
+  _hasManualServers(serverList: ServerListEntry[]) {
     return serverList.filter(server => !server.accountId).length > 0;
   }
 
-  _userAcceptedTosChanged(userAcceptedTos) {
+  _userAcceptedTosChanged(userAcceptedTos: boolean) {
     if (userAcceptedTos) {
       window.localStorage[TOS_ACK_LOCAL_STORAGE_KEY] = Date.now();
     }
   }
 
-  _computeHasAcceptedTermsOfService(userAcceptedTos) {
+  _computeHasAcceptedTermsOfService(userAcceptedTos: boolean) {
     return userAcceptedTos || !!window.localStorage[TOS_ACK_LOCAL_STORAGE_KEY];
   }
 
   _toggleAppDrawer() {
-    const drawerNarrow = this.$.drawerLayout.narrow;
-    const forceNarrow = this.$.drawerLayout.forceNarrow;
+    const drawerLayout = this.$.drawerLayout as AppDrawerLayoutElement;
+    const drawerNarrow = drawerLayout.narrow;
+    const forceNarrow = drawerLayout.forceNarrow;
     if (drawerNarrow) {
       if (forceNarrow) {
         // The window width is below the responsive threshold. Do not force narrow mode.
-        this.$.drawerLayout.forceNarrow = false;
+        drawerLayout.forceNarrow = false;
       }
-      this.$.appDrawer.toggle();
+      (this.$.appDrawer as AppDrawerElement).toggle();
     } else {
       // Forcing narrow mode when the window width is above the responsive threshold effectively
       // collapses the drawer. Conversely, reverting force narrow expands the drawer.
-      this.$.drawerLayout.forceNarrow = !forceNarrow;
+      drawerLayout.forceNarrow = !forceNarrow;
     }
   }
 
   maybeCloseDrawer() {
-    if (this.$.drawerLayout.narrow || this.$.drawerLayout.forceNarrow) {
-      this.$.appDrawer.close();
+    const drawerLayout = this.$.drawerLayout as AppDrawerLayoutElement;
+    if (drawerLayout.narrow || drawerLayout.forceNarrow) {
+      (this.$.appDrawer as AppDrawerElement).close();
     }
   }
 
   submitFeedbackTapped() {
-    this.$.feedbackDialog.open();
+    (this.$.feedbackDialog as OutlineFeedbackDialog).open();
     this.maybeCloseDrawer();
   }
 
   aboutTapped() {
-    this.$.aboutDialog.open();
+    (this.$.aboutDialog as OutlineAboutDialog).open();
     this.maybeCloseDrawer();
   }
 
@@ -884,25 +885,24 @@ export class AppRoot extends mixinBehaviors
     this.fire('GcpSignOutRequested');
   }
 
-  openManualInstallFeedback(/** @type {string} */ prepopulatedMessage) {
-    this.$.feedbackDialog.open(prepopulatedMessage, true);
+  openManualInstallFeedback(prepopulatedMessage: string) {
+    (this.$.feedbackDialog as OutlineFeedbackDialog).open(prepopulatedMessage, true);
   }
 
-  openShareDialog(accessKey, s3Url) {
-    this.$.shareDialog.open(accessKey, s3Url);
+  openShareDialog(accessKey: string, s3Url: string) {
+    (this.$.shareDialog as OutlineShareDialog).open(accessKey, s3Url);
   }
 
-  /**
-   * @param accessKey The DisplayAccessKey for the dialog to work on
-   */
-  openPerKeyDataLimitDialog(keyName, activeDataLimitBytes, onDataLimitSet, onDataLimitRemoved) {
+  openPerKeyDataLimitDialog(keyName: string, activeDataLimitBytes: number,
+      onDataLimitSet: (dataLimitBytes: number) => Promise<boolean>,
+      onDataLimitRemoved: () => Promise<boolean>) {
     // attach listeners here
-    this.$.perKeyDataLimitDialog.open(
+    (this.$.perKeyDataLimitDialog as OutlinePerKeyDataLimitDialog).open(
         keyName, activeDataLimitBytes, onDataLimitSet, onDataLimitRemoved);
   }
 
-  openGetConnectedDialog(/** @type {string} */ inviteUrl) {
-    const dialog = this.$.getConnectedDialog;
+  openGetConnectedDialog(inviteUrl: string) {
+    const dialog = this.$.getConnectedDialog as PaperDialogElement;
     if (dialog.children.length > 1) {
       return;  // The iframe is already loading.
     }
@@ -911,43 +911,36 @@ export class AppRoot extends mixinBehaviors
     // this Chrome error:
     // "Blocked a frame with origin "outline://web_app" from accessing a cross-origin frame."
     const iframe = document.createElement('iframe');
-    iframe.onload = function() {
-      dialog.open();
-    };
+    iframe.onload = () => dialog.open();
     iframe.src = inviteUrl;
     dialog.insertBefore(iframe, dialog.children[0]);
   }
 
   closeGetConnectedDialog() {
-    const dialog = this.$.getConnectedDialog;
+    const dialog = this.$.getConnectedDialog as PaperDialogElement;
     dialog.close();
     const oldIframe = dialog.children[0];
     dialog.removeChild(oldIframe);
   }
 
   showMetricsDialogForNewServer() {
-    this.$.metricsDialog.showMetricsOptInDialog();
+    (this.$.metricsDialog as OutlineMetricsOptionDialog).showMetricsOptInDialog();
   }
 
-  /**
-   * @param {string} title
-   * @param {string} text
-   * @param {string[]} buttons
-   * @returns {Promise<number>} a Promise which fulfills with the index of the button clicked.
-   */
-  showModalDialog(title, text, buttons) {
-    return this.$.modalDialog.open(title, text, buttons);
+  /** @return A Promise which fulfills with the index of the button clicked. */
+  showModalDialog(title: string, text: string, buttons: string[]): Promise<number> {
+    return (this.$.modalDialog as OutlineModalDialog).open(title, text, buttons);
   }
 
-  closeModalDialog(title, text, buttons) {
-    return this.$.modalDialog.close();
+  closeModalDialog() {
+    return (this.$.modalDialog as OutlineModalDialog).close();
   }
 
   showLicensesTapped() {
-    var xhr = new XMLHttpRequest();
+    const xhr = new XMLHttpRequest();
     xhr.onload = () => {
-      this.$.licensesText.innerText = xhr.responseText;
-      this.$.licenses.open();
+      (this.$.licensesText as HTMLElement).innerText = xhr.responseText;
+      (this.$.licenses as PaperDialogElement).open();
     };
     xhr.onerror = () => {
       console.error('could not load license.txt');
@@ -957,8 +950,8 @@ export class AppRoot extends mixinBehaviors
   }
 
   _computeShouldShowSideBar() {
-    const drawerNarrow = this.$.drawerLayout.narrow;
-    const drawerOpened = this.$.appDrawer.opened;
+    const drawerNarrow = (this.$.drawerLayout as AppDrawerLayoutElement).narrow;
+    const drawerOpened = (this.$.appDrawer as AppDrawerElement).opened;
     if (drawerOpened && drawerNarrow) {
       this.shouldShowSideBar = false;
     } else {
@@ -966,22 +959,19 @@ export class AppRoot extends mixinBehaviors
     }
   }
 
-  _computeSideBarMarginClass(shouldShowSideBar) {
+  _computeSideBarMarginClass(shouldShowSideBar: boolean) {
     return shouldShowSideBar ? 'side-bar-margin' : '';
   }
 
-  /**
-   * @param {AccountListEntry} account
-   */
-  _accountServerFilter(account) {
-    return (server) => account && server.accountId === account.id;
+  _accountServerFilter(account: AccountListEntry) {
+    return (server: ServerListEntry) => account && server.accountId === account.id;
   }
 
-  _isServerManual(server) {
+  _isServerManual(server: ServerListEntry) {
     return !server.accountId;
   }
 
-  _sortServersByName(a, b) {
+  _sortServersByName(a: ServerListEntry, b: ServerListEntry) {
     const aName = a.name.toUpperCase();
     const bName = b.name.toUpperCase();
     if (aName < bName) {
@@ -992,8 +982,8 @@ export class AppRoot extends mixinBehaviors
     return 0;
   }
 
-  _computeServerClasses(selectedServerId, server) {
-    let serverClasses = [];
+  _computeServerClasses(selectedServerId: string, server: ServerListEntry) {
+    const serverClasses = [];
     if (this._isServerSelected(selectedServerId, server)) {
       serverClasses.push('selected');
     }
@@ -1003,18 +993,14 @@ export class AppRoot extends mixinBehaviors
     return serverClasses.join(' ');
   }
 
-  _computeServerImage(selectedServerId, server) {
+  _computeServerImage(selectedServerId: string, server: ServerListEntry) {
     if (this._isServerSelected(selectedServerId, server)) {
       return 'server-icon-selected.png';
     }
     return 'server-icon.png';
   }
 
-  /**
-   * @param {string} accountId 
-   * @return {DisplayCloudId}
-   */
-  _getCloudId(accountId) {
+  _getCloudId(accountId: string): DisplayCloudId {
     // TODO: Replace separate account fields with a map.
     if (this.gcpAccount && accountId === this.gcpAccount.id) {
       return DisplayCloudId.GCP;
@@ -1024,11 +1010,7 @@ export class AppRoot extends mixinBehaviors
     return null;
   }
 
-  /**
-   * @param {ServerListEntry[]} serverList
-   * @return {import('./outline-server-list').ServerViewListEntry}
-   */
-  _serverViewList(serverList) {
+  _serverViewList(serverList: ServerListEntry[]): ServerViewListEntry[] {
     return serverList.map(entry => ({
       id: entry.id,
       name: entry.name,
@@ -1036,11 +1018,11 @@ export class AppRoot extends mixinBehaviors
     }));
   }
 
-  _isServerSelected(selectedServerId, server) {
+  _isServerSelected(selectedServerId: string, server: ServerListEntry) {
     return !!selectedServerId && selectedServerId === server.id;
   }
 
-  _showServer(event) {
+  _showServer(event: Event&{ model: {server: ServerListEntry; }; }) {
     const server = event.model.server;
     this.fire('ShowServerRequested', {displayServerId: server.id});
     this.maybeCloseDrawer();

@@ -13,11 +13,11 @@
 // limitations under the License.
 
 import * as child_process from 'child_process';
-import * as fs from 'fs';
 import * as jsyaml from 'js-yaml';
 import * as mkdirp from 'mkdirp';
 import * as path from 'path';
 
+import * as file from '../infrastructure/file';
 import * as logging from '../infrastructure/logging';
 import {ShadowsocksAccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
 
@@ -68,16 +68,18 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
               key.id} is not supported: use an AEAD cipher instead.`);
           continue;
         }
+
         keysJson.keys.push(key);
       }
-      const ymlTxt = jsyaml.safeDump(keysJson, {'sortKeys': true});
+
       mkdirp.sync(path.dirname(this.configFilename));
-      fs.writeFile(this.configFilename, ymlTxt, 'utf-8', (err) => {
-        if (err) {
-          reject(err);
-        }
+
+      try {
+        file.atomicWriteFileSync(this.configFilename, jsyaml.safeDump(keysJson, {sortKeys: true}));
         resolve();
-      });
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 
