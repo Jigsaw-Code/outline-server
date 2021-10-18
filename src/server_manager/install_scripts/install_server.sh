@@ -170,7 +170,7 @@ function docker_container_exists() {
 }
 
 function remove_shadowbox_container() {
-  remove_docker_container ${CONTAINER_NAME}
+  remove_docker_container "${CONTAINER_NAME}"
 }
 
 function remove_watchtower_container() {
@@ -296,7 +296,7 @@ function start_shadowbox() {
   # TODO(fortuna): Write API_PORT to config file,
   # rather than pass in the environment.
   local -ar docker_shadowbox_flags=(
-    --name ${CONTAINER_NAME} --restart always --net host
+    --name "${CONTAINER_NAME}" --restart always --net host
     --label 'com.centurylinklabs.watchtower.enable=true'
     -v "${STATE_DIR}:${STATE_DIR}"
     -e "SB_STATE_DIR=${STATE_DIR}"
@@ -312,8 +312,8 @@ function start_shadowbox() {
   STDERR_OUTPUT="$(docker run -d "${docker_shadowbox_flags[@]}" "${SB_IMAGE}" 2>&1 >/dev/null)" && return
   readonly STDERR_OUTPUT
   log_error "FAILED"
-  if docker_container_exists ${CONTAINER_NAME}; then
-    handle_docker_container_conflict ${CONTAINER_NAME} true
+  if docker_container_exists "${CONTAINER_NAME}"; then
+    handle_docker_container_conflict "${CONTAINER_NAME}" true
     return
   else
     log_error "${STDERR_OUTPUT}"
@@ -365,7 +365,7 @@ function check_firewall() {
   # TODO(JonathanDCohen) This is incorrect if access keys are using more than one port.
   local -i ACCESS_KEY_PORT
   ACCESS_KEY_PORT=$(fetch --insecure "${LOCAL_API_URL}/access-keys" |
-      docker exec -i ${CONTAINER_NAME} node -e '
+      docker exec -i "${CONTAINER_NAME}" node -e '
           const fs = require("fs");
           const accessKeys = JSON.parse(fs.readFileSync(0, {encoding: "utf-8"}));
           console.log(accessKeys["accessKeys"][0]["port"]);
