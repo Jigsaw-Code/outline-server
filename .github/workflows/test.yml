@@ -28,10 +28,6 @@ jobs:
         with:
           node-version: 15
 
-      - name: Environment Information
-        if: runner.os == 'Linux'
-        run: dpkg --print-architecture
-
       - name: Cache Dependencies
         id: cache
         uses: actions/cache@v2

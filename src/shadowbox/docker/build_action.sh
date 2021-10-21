@@ -19,12 +19,16 @@ export DOCKER_CONTENT_TRUST="${DOCKER_CONTENT_TRUST:-1}"
 export DOCKER_BUILDKIT=1
 
 # Newer node images have no valid content trust data.
-# Pin the image node:lts-alpine3.14 (linux/amd64) by hash.
-# See versions at https://hub.docker.com/_/node?tab=tags&name=alpine
-readonly NODE_IMAGE="node@sha256:60ad5bd37eb274a1645f505aa38aabe13996aeb4dccecb025defc594f893eeae"
+# Pin the image amd64/node:14-alpine3.14 (linux/amd64) by hash.
+# See versions at https://hub.docker.com/r/amd64/node/
+readonly NODE_IMAGE="amd64/node@sha256:1c33ae6b6ee0b0b5f1532a881722e7bc18facfa287de010cba10553db87ccf38"
 
 # Doing an explicit `docker pull` of the container base image to work around an issue where
 # Travis fails to pull the base image when using BuildKit. Seems to be related to:
 # https://github.com/moby/buildkit/issues/606 and https://github.com/moby/buildkit/issues/1397
 docker pull "${NODE_IMAGE}"
-docker buildx build --force-rm --build-arg NODE_IMAGE="${NODE_IMAGE}" --build-arg GITHUB_RELEASE="${TRAVIS_TAG:-none}" -t "${SB_IMAGE:-outline/shadowbox}" "${ROOT_DIR}" -f src/shadowbox/docker/Dockerfile
+docker build --force-rm \
+    --build-arg NODE_IMAGE="${NODE_IMAGE}" \
+    --build-arg GITHUB_RELEASE="${TRAVIS_TAG:-none}" \
+    -f src/shadowbox/docker/Dockerfile \
+    -t "${SB_IMAGE:-outline/shadowbox}" "${ROOT_DIR}"
