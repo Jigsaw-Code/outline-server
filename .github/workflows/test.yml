@@ -26,7 +26,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v2
         with:
-          node-version: 15
+          node-version: 16
 
       - name: Cache Dependencies
         id: cache
@@ -62,7 +62,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v2
         with:
-          node-version: 15
+          node-version: 16
 
       - name: Cache Dependencies
         id: cache
@@ -93,7 +93,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v2
         with:
-          node-version: 15
+          node-version: 16
 
       - name: Cache Dependencies
         id: cache
@@ -130,7 +130,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v2
         with:
-          node-version: 15
+          node-version: 16
 
       - name: Cache Dependencies
         id: cache
@@ -163,7 +163,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v2
         with:
-          node-version: 15
+          node-version: 16
 
       - name: Cache Dependencies
         id: cache

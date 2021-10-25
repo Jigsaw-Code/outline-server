@@ -19,9 +19,9 @@ export DOCKER_CONTENT_TRUST="${DOCKER_CONTENT_TRUST:-1}"
 export DOCKER_BUILDKIT=1
 
 # Newer node images have no valid content trust data.
-# Pin the image amd64/node:14-alpine3.14 (linux/amd64) by hash.
+# Pin the image amd64/node:16.10.0-alpine3.13 (linux/amd64) by hash.
 # See versions at https://hub.docker.com/r/amd64/node/
-readonly NODE_IMAGE="amd64/node@sha256:1c33ae6b6ee0b0b5f1532a881722e7bc18facfa287de010cba10553db87ccf38"
+readonly NODE_IMAGE="amd64/node@sha256:7d73fbbe131f83ccbdcdfd1f20720a94a0b8239365b4d74dfc97a9528a79a945"
 
 # Doing an explicit `docker pull` of the container base image to work around an issue where
 # Travis fails to pull the base image when using BuildKit. Seems to be related to:
