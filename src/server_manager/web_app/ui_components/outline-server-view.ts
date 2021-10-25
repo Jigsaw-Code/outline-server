@@ -70,7 +70,7 @@ function compare<T>(a: T, b: T): -1|0|1 {
 }
 
 interface KeyRowEvent extends Event {
-  model: {index: number; item: DisplayAccessKey;};
+  model: { index: number; item: DisplayAccessKey; };
 }
 
 /**
@@ -83,14 +83,17 @@ function exists(x: number): boolean {
 
 /** An access key to be displayed */
 export type DisplayAccessKey = {
-  id: string; placeholderName: string; name: string; accessUrl: string; transferredBytes: number;
+  id: string;
+  placeholderName: string;
+  name: string;
+  accessUrl: string;
+  transferredBytes: number;
   /** The data limit assigned to the key, if it exists. */
   dataLimitBytes?: number;
   dataLimit?: formatting.DisplayDataAmount;
 };
 
-export class ServerView extends DirMixin
-(PolymerElement) {
+export class ServerView extends DirMixin(PolymerElement) {
   static get template() {
     return html`
     <style include="cloud-install-styles"></style>
@@ -621,120 +624,120 @@ export class ServerView extends DirMixin
       </iron-pages>`;
   }
 
-  static get is() {
-    return 'outline-server-view';
-  }
+    static get is() {
+      return 'outline-server-view';
+    }
 
-  static get properties(): PolymerElementProperties {
-    return {
-      metricsId: String,
-      serverId: String,
-      serverName: String,
-      serverHostname: String,
-      serverVersion: String,
-      isHostnameEditable: Boolean,
-      serverManagementApiUrl: String,
-      serverPortForNewAccessKeys: Number,
-      isAccessKeyPortEditable: Boolean,
-      serverCreationDate: Date,
-      cloudLocation: Object,
-      cloudId: String,
-      defaultDataLimitBytes: Number,
-      isDefaultDataLimitEnabled: Boolean,
-      supportsDefaultDataLimit: Boolean,
-      showFeatureMetricsDisclaimer: Boolean,
-      installProgress: Number,
-      isServerReachable: Boolean,
-      retryDisplayingServer: Function,
-      myConnection: Object,
-      totalInboundBytes: Number,
-      baselineDataTransfer: Number,
-      accessKeyRows: Array,
-      hasNonAdminAccessKeys: Boolean,
-      metricsEnabled: Boolean,
-      monthlyOutboundTransferBytes: Number,
-      monthlyCost: Number,
-      accessKeySortBy: String,
-      accessKeySortDirection: Number,
-      language: String,
-      localize: Function,
-      selectedPage: String,
-      selectedTab: String,
-    };
-  }
+    static get properties(): PolymerElementProperties {
+      return {
+        metricsId: String,
+        serverId: String,
+        serverName: String,
+        serverHostname: String,
+        serverVersion: String,
+        isHostnameEditable: Boolean,
+        serverManagementApiUrl: String,
+        serverPortForNewAccessKeys: Number,
+        isAccessKeyPortEditable: Boolean,
+        serverCreationDate: Date,
+        cloudLocation: Object,
+        cloudId: String,
+        defaultDataLimitBytes: Number,
+        isDefaultDataLimitEnabled: Boolean,
+        supportsDefaultDataLimit: Boolean,
+        showFeatureMetricsDisclaimer: Boolean,
+        installProgress: Number,
+        isServerReachable: Boolean,
+        retryDisplayingServer: Function,
+        myConnection: Object,
+        totalInboundBytes: Number,
+        baselineDataTransfer: Number,
+        accessKeyRows: Array,
+        hasNonAdminAccessKeys: Boolean,
+        metricsEnabled: Boolean,
+        monthlyOutboundTransferBytes: Number,
+        monthlyCost: Number,
+        accessKeySortBy: String,
+        accessKeySortDirection: Number,
+        language: String,
+        localize: Function,
+        selectedPage: String,
+        selectedTab: String,
+      };
+    }
 
-  static get observers() {
-    return [
-      '_accessKeysAddedOrRemoved(accessKeyRows.splices)',
-      '_myConnectionChanged(myConnection)',
-    ];
-  }
+    static get observers() {
+      return [
+        '_accessKeysAddedOrRemoved(accessKeyRows.splices)',
+        '_myConnectionChanged(myConnection)',
+      ];
+    }
 
-  serverId = '';
-  metricsId = '';
-  serverName = '';
-  serverHostname = '';
-  serverVersion = '';
-  isHostnameEditable = false;
-  serverManagementApiUrl = '';
-  serverPortForNewAccessKeys: number = null;
-  isAccessKeyPortEditable = false;
-  serverCreationDate = new Date(0);
-  cloudLocation: CloudLocation = null;
-  cloudId = '';
-  readonly getShortName = getShortName;
-  readonly getCloudIcon = getCloudIcon;
-  defaultDataLimitBytes: number = null;
-  isDefaultDataLimitEnabled = false;
-  hasPerKeyDataLimitDialog = false;
-  /** Whether the server supports default data limits. */
-  supportsDefaultDataLimit = false;
-  showFeatureMetricsDisclaimer = false;
-  installProgress = 0;
-  isServerReachable = false;
-  /** Callback for retrying to display an unreachable server. */
-  retryDisplayingServer: () => void = null;
-  /**
-   *  myConnection has the same fields as each item in accessKeyRows.  It may
-   *  be unset in some old versions of Outline that allowed deleting this row
-   *
-   * TODO(JonathanDCohen) Refactor out special casing for myConnection.  It exists as a separate
-   * item in the view even though it's also in accessKeyRows.  We can have the special casing
-   * be in display only, so we can just use accessKeyRows[0] and not have extra logic when it's
-   * not needed.
-   */
-  myConnection: DisplayAccessKey = null;
-  totalInboundBytes = 0;
-  /** The number to which access key transfer amounts are compared for progress bar display */
-  baselineDataTransfer = Number.POSITIVE_INFINITY;
-  accessKeyRows: DisplayAccessKey[] = [];
-  hasNonAdminAccessKeys = false;
-  metricsEnabled = false;
-  // Initialize monthlyOutboundTransferBytes and monthlyCost to 0, so they can
-  // be bound to hidden attributes.  Initializing to undefined does not
-  // cause hidden$=... expressions to be evaluated and so elements may be
-  // shown incorrectly.  See:
-  //   https://stackoverflow.com/questions/33700125/polymer-1-0-hidden-attribute-negate-operator
-  //   https://www.polymer-project.org/1.0/docs/devguide/data-binding.html
-  monthlyOutboundTransferBytes = 0;
-  monthlyCost = 0;
-  accessKeySortBy = 'name';
-  /** The direction to sort: 1 == ascending, -1 == descending */
-  accessKeySortDirection: -1|1 = 1;
-  language = 'en';
-  localize: (msgId: string, ...params: string[]) => string = null;
-  selectedPage: 'progressView'|'unreachableView'|'managementView' = 'managementView';
-  selectedTab: 'connections'|'settings' = 'connections';
+    serverId = '';
+    metricsId = '';
+    serverName = '';
+    serverHostname = '';
+    serverVersion = '';
+    isHostnameEditable = false;
+    serverManagementApiUrl = '';
+    serverPortForNewAccessKeys: number = null;
+    isAccessKeyPortEditable = false;
+    serverCreationDate = new Date(0);
+    cloudLocation: CloudLocation = null;
+    cloudId = '';
+    readonly getShortName = getShortName;
+    readonly getCloudIcon = getCloudIcon;
+    defaultDataLimitBytes: number = null;
+    isDefaultDataLimitEnabled = false;
+    hasPerKeyDataLimitDialog = false;
+    /** Whether the server supports default data limits. */
+    supportsDefaultDataLimit = false;
+    showFeatureMetricsDisclaimer = false;
+    installProgress = 0;
+    isServerReachable = false;
+    /** Callback for retrying to display an unreachable server. */
+    retryDisplayingServer: () => void = null;
+    /**
+     *  myConnection has the same fields as each item in accessKeyRows.  It may
+     *  be unset in some old versions of Outline that allowed deleting this row
+     *
+     * TODO(JonathanDCohen) Refactor out special casing for myConnection.  It exists as a separate
+     * item in the view even though it's also in accessKeyRows.  We can have the special casing
+     * be in display only, so we can just use accessKeyRows[0] and not have extra logic when it's
+     * not needed.
+     */
+    myConnection: DisplayAccessKey = null;
+    totalInboundBytes = 0;
+    /** The number to which access key transfer amounts are compared for progress bar display */
+    baselineDataTransfer = Number.POSITIVE_INFINITY;
+    accessKeyRows: DisplayAccessKey[] = [];
+    hasNonAdminAccessKeys = false;
+    metricsEnabled = false;
+    // Initialize monthlyOutboundTransferBytes and monthlyCost to 0, so they can
+    // be bound to hidden attributes.  Initializing to undefined does not
+    // cause hidden$=... expressions to be evaluated and so elements may be
+    // shown incorrectly.  See:
+    //   https://stackoverflow.com/questions/33700125/polymer-1-0-hidden-attribute-negate-operator
+    //   https://www.polymer-project.org/1.0/docs/devguide/data-binding.html
+    monthlyOutboundTransferBytes = 0;
+    monthlyCost = 0;
+    accessKeySortBy = 'name';
+    /** The direction to sort: 1 == ascending, -1 == descending */
+    accessKeySortDirection: -1|1 = 1;
+    language = 'en';
+    localize: (msgId: string, ...params: string[]) => string = null;
+    selectedPage: 'progressView'|'unreachableView'|'managementView' = 'managementView';
+    selectedTab: 'connections'|'settings' = 'connections';
 
-  addAccessKey(accessKey: DisplayAccessKey) {
-    // TODO(fortuna): Restore loading animation.
-    // TODO(fortuna): Restore highlighting.
-    this.push('accessKeyRows', accessKey);
-    // Force render the access key list so that the input is present in the DOM
-    this.$.accessKeysContainer.querySelector<DomRepeat>('dom-repeat').render();
-    const input = this.shadowRoot.querySelector<HTMLInputElement>(`#access-key-${accessKey.id}`);
-    input.select();
-  }
+    addAccessKey(accessKey: DisplayAccessKey) {
+      // TODO(fortuna): Restore loading animation.
+      // TODO(fortuna): Restore highlighting.
+      this.push('accessKeyRows', accessKey);
+      // Force render the access key list so that the input is present in the DOM
+      this.$.accessKeysContainer.querySelector<DomRepeat>('dom-repeat').render();
+      const input = this.shadowRoot.querySelector<HTMLInputElement>(`#access-key-${accessKey.id}`);
+      input.select();
+    }
 
   removeAccessKey(accessKeyId: string) {
     for (let ui = 0; ui < this.accessKeyRows.length; ui++) {
@@ -966,8 +969,7 @@ export class ServerView extends DirMixin
   }
 
   _showHelpBubble(
-      helpBubbleId: string, positionTargetId: string, arrowDirection = 'down',
-      arrowAlignment = 'right') {
+      helpBubbleId: string, positionTargetId: string, arrowDirection = 'down', arrowAlignment = 'right') {
     return new Promise(resolve => {
       const helpBubble = this.$[helpBubbleId] as OutlineHelpBubble;
       helpBubble.show(this.$[positionTargetId], arrowDirection, arrowAlignment);
@@ -979,8 +981,8 @@ export class ServerView extends DirMixin
     return item.id !== MY_CONNECTION_USER_ID;
   }
 
-  _computeColumnDirection(
-      columnName: string, accessKeySortBy: string, accessKeySortDirection: -1|1) {
+  _computeColumnDirection(columnName: string, accessKeySortBy: string,
+      accessKeySortDirection: -1|1) {
     if (columnName === accessKeySortBy) {
       return accessKeySortDirection;
     }
@@ -1056,7 +1058,8 @@ export class ServerView extends DirMixin
     return exists(activeLimit) ? activeLimit : accessKey.transferredBytes;
   }
 
-  _computeProgressWidthStyling(accessKey: DisplayAccessKey, baselineDataTransfer: number) {
+  _computeProgressWidthStyling(
+      accessKey: DisplayAccessKey, baselineDataTransfer: number) {
     const relativeTransfer = this._getRelevantTransferAmountForKey(accessKey);
     const width = Math.floor(progressBarMaxWidthPx * relativeTransfer / baselineDataTransfer);
     // It's important that there's no space in between width and "px" in order for Chrome to accept
@@ -1064,7 +1067,8 @@ export class ServerView extends DirMixin
     return `width: ${width}px;`;
   }
 
-  _getDataLimitsUsageString(accessKey: DisplayAccessKey, language: string, localize: Function) {
+  _getDataLimitsUsageString(accessKey: DisplayAccessKey, language: string,
+      localize: Function) {
     if (!accessKey) {
       // We're in app startup
       return '';
@@ -1075,6 +1079,7 @@ export class ServerView extends DirMixin
     const total = this._formatDisplayDataLimit(activeDataLimit, language, localize);
     return localize('data-limits-usage', 'used', used, 'total', total);
   }
+
 }
 
 customElements.define(ServerView.is, ServerView);

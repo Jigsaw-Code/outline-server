@@ -72,10 +72,7 @@ Polymer({
     this.$.dialog.close();
   },
 
-  buttonTapped(event:
-                   Event&{
-                     model: {index: number;};
-                   }) {
+  buttonTapped(event: Event&{model: {index: number;};}) {
     if (!this.fulfill) {
       console.error('outline-modal-dialog: this.fulfill not defined');
       return;

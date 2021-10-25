@@ -14,6 +14,7 @@
   limitations under the License.
 */
 import '@polymer/polymer/polymer-legacy';
+
 import '@polymer/paper-button/paper-button';
 import '@polymer/paper-checkbox/paper-checkbox';
 import '@polymer/paper-dropdown-menu/paper-dropdown-menu';
@@ -22,14 +23,12 @@ import './cloud-install-styles';
 import './outline-server-settings-styles';
 import './outline-iconset';
 import './outline-validated-input';
-
 import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn';
 import {html} from '@polymer/polymer/lib/utils/html-tag';
 
 import {formatBytesParts} from '../data_formatting';
+import {getCloudName, getCloudIcon} from './cloud-assets';
 import {getShortName} from '../location_formatting';
-
-import {getCloudIcon, getCloudName} from './cloud-assets';
 
 export interface OutlineServerSettings extends Element {
   setServerName(name: string): void;
