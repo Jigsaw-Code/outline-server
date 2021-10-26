@@ -16,4 +16,4 @@
 
 set -eu
 
-npm --workspace=outline-manager run webpack-dev-server --config=gallery.webpack.js --open
+webpack-dev-server --config=src/server_manager/gallery.webpack.js --open
