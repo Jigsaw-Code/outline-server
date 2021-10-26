@@ -20,4 +20,4 @@ rm -rf "${BUILD_DIR}/server_manager/web_app"
 
 do_action server_manager/web_app/build_install_script
 
-npm run webpack-dev-server --workspace=outline-manager --config=browser.webpack.js --open
+npm --workspace=outline-manager  run webpack-dev-server --config=browser.webpack.js --open
