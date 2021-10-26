@@ -35,7 +35,7 @@ jobs:
           env
 
       - name: Install Dependencies
-        run: npm install --prefer-offline
+        run: npm ci
 
       - name: Release Linux
         if: runner.os == 'Linux'
