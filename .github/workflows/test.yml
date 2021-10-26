@@ -33,7 +33,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./node_modules
-          key: ${{ matrix.os }};TEST;${{ hashFiles('package-lock.json' )}}
+          key: ${{ matrix.os }};node_modules;${{ hashFiles('package-lock.json' )}}
 
       - name: Install Dependencies
         if: steps.cache.outputs.cache-hit != 'true'
@@ -69,7 +69,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./node_modules
-          key: ${{ matrix.os }};TEST;${{ hashFiles('package-lock.json' )}}
+          key: ${{ matrix.os }};node_modules;${{ hashFiles('package-lock.json' )}}
 
       - name: Linux Release
         run: SENTRY_DSN='test' npm run do server_manager/electron_app/release_linux
@@ -100,7 +100,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./node_modules
-          key: ${{ matrix.os }};TEST;${{ hashFiles('package-lock.json' )}}
+          key: ${{ matrix.os }};node_modules;${{ hashFiles('package-lock.json' )}}
 
       - name: Build
         if: runner.os == 'Linux'
@@ -137,7 +137,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./node_modules
-          key: ${{ matrix.os }};TEST;${{ hashFiles('package-lock.json' )}}
+          key: ${{ matrix.os }};node_modules;${{ hashFiles('package-lock.json' )}}
 
       - name: Build
         if: runner.os == 'Linux'
@@ -170,10 +170,11 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./node_modules
-          key: ${{ matrix.os }};TEST;${{ hashFiles('package-lock.json' )}}
+          key: ${{ matrix.os }};node_modules;${{ hashFiles('package-lock.json' )}}
 
+      # we're using `install` here `ci` requires a package-lock.json
       - name: Install Local Workspace Dependencies
-        run: cd src/sentry_webhook && NODE_DTRACE_PROVIDER_REQUIRE=hard npm ci --prefer-offline
+        run: cd src/sentry_webhook && npm install --prefer-offline
 
       - name: Build
         if: runner.os == 'Linux'
