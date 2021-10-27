@@ -51,20 +51,20 @@ and a thin wrapper for what we call build "actions".
 
 We've defined a `do` package.json script that takes an `action` parameter:
 ```shell
-npm run do $ACTION
+npm run action $ACTION
 ```
 
-This command will define a `do_action()` function and call `${ACTION}_action.sh`, which must exist.
-The called action script can use `do_action` to call its dependencies. The $ACTION parameter is
+This command will define a `run_action()` function and call `${ACTION}_action.sh`, which must exist.
+The called action script can use `run_action` to call its dependencies. The $ACTION parameter is
 always resolved from the project root, regardless of the caller location.
 
-The idea of `do_action` is to keep the build logic next to where the relevant code is.
+The idea of `run_action` is to keep the build logic next to where the relevant code is.
 It also defines two environmental variables:
 
 - ROOT_DIR: the root directory of the project, as an absolute path.
 - BUILD_DIR: where the build output should go, as an absolute path.
 
-> ⚠️ To find all the actions in this project, run `npm run actions`
+> ⚠️ To find all the actions in this project, run `npm run action:list`
 
 ### Build output
 

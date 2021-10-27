@@ -76,10 +76,10 @@ jobs:
           key: ${{ matrix.os }};TEST4;${{ hashFiles('package-lock.json' )}}
 
       - name: Linux Release
-        run: SENTRY_DSN='test' npm run do server_manager/electron_app/release_linux
+        run: SENTRY_DSN='test' npm run action server_manager/electron_app/release_linux
 
       - name: Unit Test
-        run: npm run do server_manager/test
+        run: npm run action server_manager/test
 
   shadowbox:
     name: Shadowbox
@@ -109,13 +109,13 @@ jobs:
           key: ${{ matrix.os }};TEST4;${{ hashFiles('package-lock.json' )}}
 
       - name: Build
-        run: npm run do shadowbox/server/build
+        run: npm run action shadowbox/server/build
 
       - name: Unit Test
-        run: npm run do shadowbox/test
+        run: npm run action shadowbox/test
 
       - name: Integration Test
-        run: npm run do shadowbox/integration_test/run
+        run: npm run action shadowbox/integration_test/start
 
   metrics:
     name: Metrics Server
@@ -145,10 +145,10 @@ jobs:
           key: ${{ matrix.os }};TEST4;${{ hashFiles('package-lock.json' )}}
 
       - name: Build
-        run: npm run do metrics_server/build
+        run: npm run action metrics_server/build
 
       - name: Unit Test
-        run: npm run do metrics_server/test
+        run: npm run action metrics_server/test
   
   sentry:
     name: Sentry Webhook
@@ -178,4 +178,4 @@ jobs:
           key: ${{ matrix.os }};TEST4;${{ hashFiles('package-lock.json' )}}
 
       - name: Build
-        run: npm run do sentry_webhook/build
+        run: npm run action sentry_webhook/build

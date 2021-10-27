@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-do_action shadowbox/docker/build
+run_action shadowbox/docker/build
 
 RUN_ID="${RUN_ID:-$(date +%Y-%m-%d-%H%M%S)}"
 readonly RUN_ID
