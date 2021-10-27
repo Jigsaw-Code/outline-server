@@ -32,8 +32,10 @@ jobs:
         id: cache
         uses: actions/cache@v2
         with:
-          path: ./node_modules
-          key: ${{ matrix.os }};node_modules;${{ hashFiles('package-lock.json' )}}
+          path: |
+            ./node_modules
+            ./src/**/node_modules
+          key: ${{ matrix.os }};TEST2;${{ hashFiles('package-lock.json' )}}
 
       - name: Install Dependencies
         if: steps.cache.outputs.cache-hit != 'true'
@@ -69,7 +71,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./node_modules
-          key: ${{ matrix.os }};node_modules;${{ hashFiles('package-lock.json' )}}
+          key: ${{ matrix.os }};TEST2;${{ hashFiles('package-lock.json' )}}
 
       - name: Linux Release
         run: SENTRY_DSN='test' npm run do server_manager/electron_app/release_linux
@@ -99,19 +101,18 @@ jobs:
         id: cache
         uses: actions/cache@v2
         with:
-          path: ./node_modules
-          key: ${{ matrix.os }};node_modules;${{ hashFiles('package-lock.json' )}}
+          path: |
+            ./node_modules
+            ./src/**/node_modules
+          key: ${{ matrix.os }};TEST2;${{ hashFiles('package-lock.json' )}}
 
       - name: Build
-        if: runner.os == 'Linux'
         run: npm run do shadowbox/server/build
 
       - name: Unit Test
-        if: runner.os == 'Linux'
         run: npm run do shadowbox/test
 
       - name: Integration Test
-        if: runner.os == 'Linux'
         run: npm run do shadowbox/integration_test/run
 
   metrics:
@@ -136,15 +137,15 @@ jobs:
         id: cache
         uses: actions/cache@v2
         with:
-          path: ./node_modules
-          key: ${{ matrix.os }};node_modules;${{ hashFiles('package-lock.json' )}}
+          path: |
+            ./node_modules
+            ./src/**/node_modules
+          key: ${{ matrix.os }};TEST2;${{ hashFiles('package-lock.json' )}}
 
       - name: Build
-        if: runner.os == 'Linux'
         run: npm run do metrics_server/build
 
       - name: Unit Test
-        if: runner.os == 'Linux'
         run: npm run do metrics_server/test
   
   sentry:
@@ -169,13 +170,10 @@ jobs:
         id: cache
         uses: actions/cache@v2
         with:
-          path: ./node_modules
-          key: ${{ matrix.os }};node_modules;${{ hashFiles('package-lock.json' )}}
-
-      # we're using `install` here `ci` requires a package-lock.json
-      - name: Install Local Workspace Dependencies
-        run: cd src/sentry_webhook && npm install --prefer-offline
+          path: |
+            ./node_modules
+            ./src/**/node_modules
+          key: ${{ matrix.os }};TEST2;${{ hashFiles('package-lock.json' )}}
 
       - name: Build
-        if: runner.os == 'Linux'
         run: npm run do sentry_webhook/build
