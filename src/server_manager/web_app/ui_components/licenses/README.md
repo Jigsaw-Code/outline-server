@@ -1,9 +1,5 @@
 # HOWTO re-generate `license.txt`
 
-## Requirements
-
-* `npm install`
-
 ## Steps
 
 * `cd` to the root of your clone of this repo
