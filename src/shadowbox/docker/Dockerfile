@@ -15,7 +15,7 @@
 ARG NODE_IMAGE
 
 # Multi-stage build: use a build image to prevent bloating the shadowbox image with dependencies.
-# Run `npm install` and build inside the container to package the right dependencies for the image.
+# Run `npm ci` and build inside the container to package the right dependencies for the image.
 FROM ${NODE_IMAGE} AS build
 
 RUN apk add --no-cache --upgrade bash

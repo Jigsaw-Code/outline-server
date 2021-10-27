@@ -61,7 +61,7 @@
         "the bundled Chromium in our version of Electron.  Whenever upgrading Electron, run the",
         "server_manager tests.  You'll get a failure that looks like <Expected '812852' to equal '693954>.",
         "Set PUPPETEER_CHROMIUM_REVISION to the first of those numbers to get the correct revision",
-        "and `npm run clean && npm install` to re-install puppeteer, causing it to download the new",
+        "and `npm ci` to re-install puppeteer, causing it to download the new",
         "Chromium version."
       ]
     }
