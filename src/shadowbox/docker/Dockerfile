@@ -26,7 +26,7 @@ COPY package.json package-lock.json ./
 COPY src/shadowbox/package.json src/shadowbox/
 RUN npm ci
 
-# We copy the source code only after npm install, so that source code changes don't trigger re-installs.
+# We copy the source code only after npm ci, so that source code changes don't trigger re-installs.
 COPY scripts scripts/
 COPY src src/
 COPY tsconfig.json ./
