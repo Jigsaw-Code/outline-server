@@ -35,7 +35,7 @@ jobs:
           path: |
             ./node_modules
             ./src/**/node_modules
-          key: ${{ matrix.os }};TEST3;${{ hashFiles('package-lock.json' )}}
+          key: ${{ matrix.os }};TEST4;${{ hashFiles('package-lock.json' )}}
 
       - name: Install Dependencies
         if: steps.cache.outputs.cache-hit != 'true'
@@ -43,7 +43,9 @@ jobs:
 
       - name: Sanitize Dependency Permissions for Cache
         if: steps.cache.outputs.cache-hit != 'true'
-        run: find . -type d -name node_modules -prune -o -path "node_modules/*" -execdir chmod -R 777 {} +
+        run: |
+          chmod -v -R 777 ./node_modules
+          chmod -v -R 777 ./src/**/node_modules
 
       - name: Lint
         run: npm run lint 
@@ -71,7 +73,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./node_modules
-          key: ${{ matrix.os }};TEST3;${{ hashFiles('package-lock.json' )}}
+          key: ${{ matrix.os }};TEST4;${{ hashFiles('package-lock.json' )}}
 
       - name: Linux Release
         run: SENTRY_DSN='test' npm run do server_manager/electron_app/release_linux
@@ -104,7 +106,7 @@ jobs:
           path: |
             ./node_modules
             ./src/**/node_modules
-          key: ${{ matrix.os }};TEST3;${{ hashFiles('package-lock.json' )}}
+          key: ${{ matrix.os }};TEST4;${{ hashFiles('package-lock.json' )}}
 
       - name: Build
         run: npm run do shadowbox/server/build
@@ -140,7 +142,7 @@ jobs:
           path: |
             ./node_modules
             ./src/**/node_modules
-          key: ${{ matrix.os }};TEST3;${{ hashFiles('package-lock.json' )}}
+          key: ${{ matrix.os }};TEST4;${{ hashFiles('package-lock.json' )}}
 
       - name: Build
         run: npm run do metrics_server/build
@@ -173,7 +175,7 @@ jobs:
           path: |
             ./node_modules
             ./src/**/node_modules
-          key: ${{ matrix.os }};TEST3;${{ hashFiles('package-lock.json' )}}
+          key: ${{ matrix.os }};TEST4;${{ hashFiles('package-lock.json' )}}
 
       - name: Build
         run: npm run do sentry_webhook/build
