@@ -34,7 +34,7 @@ jobs:
         run: NODE_DTRACE_PROVIDER_REQUIRE=hard npm ci
 
       - name: Lint
-        run: npm lint
+        run: npm run lint
 
       - name: Manager
         run: |
