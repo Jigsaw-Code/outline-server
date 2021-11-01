@@ -115,8 +115,8 @@ function split_version {
     VERSION_AND_COMPARATOR=$1
 
     VERSION="${VERSION_AND_COMPARATOR/=/}"
-    VERSION="${VERSION_AND_COMPARATOR/</}"
-    VERSION="${VERSION_AND_COMPARATOR/>/}"
+    VERSION="${VERSION/</}"
+    VERSION="${VERSION/>/}"
 
     echo "${VERSION}"
 }

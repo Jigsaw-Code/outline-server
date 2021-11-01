@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 #
-# Copyright 2021 The Outline Authors
+# Copyright 2018 The Outline Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,14 +16,8 @@
 
 # This script intended to run at the repository root.
 
-while getopts "j" OPTION; do
-    case "${OPTION}" in
-        "j")
-            bash ./scripts/reqcheck/javascript.sh
-            ;;
-        *)
-            ;;
-    esac
-done
+# if nvm is present, use it to switch to the correct version
+command -v nvm >/dev/null && nvm use
 
-echo "All requirements met!"
+npm run reqcheck -- -j
+npm ci

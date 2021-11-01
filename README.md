@@ -33,12 +33,12 @@ The system comprises the following components:
 ## Code Prerequisites
 
 In order to build and run the code, you need the following installed:
-  - [Node](https://nodejs.org/)
+  - [Node](https://nodejs.org/) (lts/gallium - `nvm use lts/gallium`)
   - [Wine](https://www.winehq.org/download), if you would like to generate binaries for Windows.
 
-Then you need to install all the NPM package dependencies:
+Then you need to set up the repository with:
 ```
-npm install
+npm run setup
 ```
 
 This project uses [NPM workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces/).

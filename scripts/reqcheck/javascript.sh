@@ -27,9 +27,10 @@ source ./scripts/reqcheck/library.sh
 function locate_package_json_key {
     LOCATOR=$1
 
-    TEMP="$(cmd package.json | grep "${LOCATOR}")"
+    TEMP="$(grep "${LOCATOR}" package.json)"
     TEMP=${TEMP#${LOCATOR}}
-    TEMP=${TEMP%\",}
+    TEMP=${TEMP%\",} # json key could end with a comma or be the end of the list
+    TEMP=${TEMP%\"}  # (e.g. no comma)
 
     echo "${TEMP}"
 }
