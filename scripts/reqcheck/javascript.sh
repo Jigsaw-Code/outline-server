@@ -18,22 +18,46 @@
 
 source ./scripts/reqcheck/library.sh
 
+# params - locator
+# the locator is the literal prefix string of the key 
+# in the package.json we're looking for
+# for example:
+#   locate_package_json_key "    \"node\": \""
+#       => >=16.0.0
+function locate_package_json_key {
+    LOCATOR=$1
+
+    TEMP="$(cmd package.json | grep "${LOCATOR}")"
+    TEMP=${TEMP#${LOCATOR}}
+    TEMP=${TEMP%\",}
+
+    echo "${TEMP}"
+}
+
 # check node version
 LOCAL_NODE_VERSION="$(node --version)"
-NODE_TARGET_VERSION="16.12.0"
-NODE_TARGET_COMPARATOR=">="
+
+NODE_PACKAGE_JSON_LOCATOR="    \"node\": \""
+NODE_TARGET_VERSION_AND_COMPARATOR="$(
+    locate_package_json_key \
+        "${NODE_PACKAGE_JSON_LOCATOR}"
+)"
 
 check_resource_version Node \
-    "${LOCAL_NODE_VERSION}" \
-    "${NODE_TARGET_COMPARATOR}" \
-    "${NODE_TARGET_VERSION}"
+    "${LOCAL_NODE_VERSION#v}" \
+    "$(split_comparator "${NODE_TARGET_VERSION_AND_COMPARATOR}")" \
+    "$(split_version "${NODE_TARGET_VERSION_AND_COMPARATOR}")"
 
 # check npm version
 LOCAL_NPM_VERSION="$(npm --version)"
-NPM_TARGET_VERSION="7.24.0"
-NPM_TARGET_COMPARATOR=">="
+
+NPM_PACKAGE_JSON_LOCATOR="    \"npm\": \""
+NPM_TARGET_VERSION_AND_COMPARATOR="$(
+    locate_package_json_key \
+        "${NPM_PACKAGE_JSON_LOCATOR}"
+)"
 
 check_resource_version NPM \
     "${LOCAL_NPM_VERSION}" \
-    "${NPM_TARGET_COMPARATOR}" \
-    "${NPM_TARGET_VERSION}"
+    "$(split_comparator "${NPM_TARGET_VERSION_AND_COMPARATOR}")" \
+    "$(split_version "${NPM_TARGET_VERSION_AND_COMPARATOR}")"

@@ -105,3 +105,31 @@ MESSAGE
         exit 1
     fi
 }
+
+# params - version and comparator, together
+# version numbers are period-delimited, target comparator is a string containing =, <, >
+# for example:
+#   split_version >=12.0.0
+#       => 12.0.0
+function split_version {
+    VERSION_AND_COMPARATOR=$1
+
+    VERSION="${VERSION_AND_COMPARATOR/=/}"
+    VERSION="${VERSION_AND_COMPARATOR/</}"
+    VERSION="${VERSION_AND_COMPARATOR/>/}"
+
+    echo "${VERSION}"
+}
+
+# params - version and comparator, together
+# version numbers are period-delimited, target comparator is a string containing =, <, >
+# for example:
+#   split_comparator >=12.0.0
+#       => >=
+function split_comparator {
+    VERSION_AND_COMPARATOR=$1
+
+    VERSION="$(split_version "${VERSION_AND_COMPARATOR}")"
+
+    echo "${VERSION_AND_COMPARATOR%${VERSION}}"
+}
