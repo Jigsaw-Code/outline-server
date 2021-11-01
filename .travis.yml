@@ -47,15 +47,15 @@ jobs:
           curl -L https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m) > docker-compose
           chmod +x docker-compose
           sudo mv docker-compose /usr/local/bin
-        - npm run do shadowbox/test
-        - npm run do shadowbox/docker/build && cd src/shadowbox/integration_test && ./test.sh
+        - npm run action shadowbox/test
+        - npm run action shadowbox/docker/build && cd src/shadowbox/integration_test && ./test.sh
 
     - stage: "Deploy Server"
       name: Server Docker Image
       sudo: required
       services: docker
       script:
-        - npm run do shadowbox/docker/build
+        - npm run action shadowbox/docker/build
         - docker login quay.io -u="$QUAY_IO_USERNAME" -p="$QUAY_IO_PASSWORD"
         - docker tag outline/shadowbox quay.io/outline/shadowbox:$TRAVIS_TAG
         - docker push quay.io/outline/shadowbox:$TRAVIS_TAG
@@ -70,7 +70,7 @@ jobs:
         apt:
           packages:
           - rpm
-      script: npm run do server_manager/electron_app/release_linux
+      script: npm run action server_manager/electron_app/release_linux
 
     - stage: "Manager Release"
       os: osx
@@ -81,7 +81,7 @@ jobs:
         - openssl aes-256-cbc -K $encrypted_61a49da75942_key -iv $encrypted_61a49da75942_iv -in macos-signing-certificate.p12.enc -out macos-signing-certificate.p12 -d
         - export CSC_LINK=$(pwd)/macos-signing-certificate.p12
         # Must run npm again due to the OS change, required for signing to work.
-        - npm install && npm run do server_manager/electron_app/release_macos
+        - npm install && npm run action server_manager/electron_app/release_macos
 
 deploy:
   provider: releases

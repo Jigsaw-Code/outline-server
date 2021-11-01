@@ -39,7 +39,7 @@ jobs:
 
       - name: Release Linux
         if: runner.os == 'Linux'
-        run: npm run do server_manager/electron_app/release_linux
+        run: npm run action server_manager/electron_app/release_linux
 
       - name: Release MacOS
         if: runner.os == 'macOS'
@@ -51,7 +51,7 @@ jobs:
         run: |
           openssl aes-256-cbc -K $ENCRYPTED_SIGNING_CERT_KEY -iv  $ENCRYPTED_SIGNING_CERT_IV -in macos-signing-certificate.p12.enc -out macos-signing-certificate.p12 -d -md sha256
           export CSC_LINK=$(pwd)/macos-signing-certificate.p12
-          npm run do server_manager/electron_app/release_macos
+          npm run action server_manager/electron_app/release_macos
 
       - name: Deploy
         uses: softprops/action-gh-release@v1
