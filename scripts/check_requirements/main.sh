@@ -19,7 +19,7 @@
 while getopts "j" OPTION; do
     case "${OPTION}" in
         "j")
-            bash ./scripts/reqcheck/javascript.sh
+            bash ./scripts/check_requirements/javascript.sh
             ;;
         *)
             ;;

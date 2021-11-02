@@ -16,7 +16,7 @@
 
 # This script intended to run at the repository root.
 
-source ./scripts/reqcheck/library.sh
+source ./scripts/check_requirements/library.sh
 
 # params - locator
 # the locator is the literal prefix string of the key 
