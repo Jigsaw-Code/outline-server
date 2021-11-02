@@ -33,20 +33,15 @@ The system comprises the following components:
 ## Code Prerequisites
 
 In order to build and run the code, you need the following installed:
-  - [Node](https://nodejs.org/)
+  - [Node](https://nodejs.org/); latest LTS
   - [Wine](https://www.winehq.org/download), if you would like to generate binaries for Windows.
 
 
-To make sure you have the proper requirements to start working, run:
-```sh
-bash ./scripts/check_requirements/main.sh
-```
+> 💡 NOTE: if you have `nvm` installed, run `nvm use` to switch to the correct node version!
 
-> 💡 NOTE: if you have `nvm` installed, you can run `nvm use` instead!
-
-Finally, you can install dependencies with:
+Install dependencies with:
 ```sh
-npm ci
+npm install
 ```
 
 This project uses [NPM workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces/).

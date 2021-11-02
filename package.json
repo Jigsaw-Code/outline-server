@@ -20,16 +20,16 @@
     "actions": "find . -name '*_action.sh' | sed -E 's:./src/(.*)_action.sh:\\1:' | grep -v 'scripts/do_action'",
     "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts src/server_manager/install_scripts/gcp_install_script.ts third_party/shellcheck/download/",
     "do": "bash ./scripts/do_action.sh",
-    "lint": "npm run shellcheck && npm run tslint",
-    "shellcheck": "bash ./scripts/check_shell.sh",
-    "tslint": "npx tslint 'src/**/*.ts' -e '**/node_modules/**'"
+    "lint": "npm run lint:sh && npm run lint:ts",
+    "lint:sh": "bash ./scripts/shellcheck.sh",
+    "lint:ts": "npx tslint 'src/**/*.ts' -e '**/node_modules/**'"
   },
   "workspaces": [
     "src/*"
   ],
   "husky": {
     "hooks": {
-      "pre-commit": "bash ./scripts/check_requirements/main.sh -j && npm run lint && npx git-clang-format && npx pretty-quick --staged --pattern '**/*.html'"
+      "pre-commit": "npm run lint && npx git-clang-format && npx pretty-quick --staged --pattern '**/*.html'"
     }
   }
 }
