@@ -24,7 +24,7 @@ export ROOT_DIR=${ROOT_DIR:-$(pwd)/$(git rev-parse --show-cdup)}
 export BUILD_DIR=${BUILD_DIR:-${ROOT_DIR}/build}
 export _DO_ACTION_INDENT=''
 
-function do_action() {
+function run_action() {
   local -r OLD_INDENT="${_DO_ACTION_INDENT}"
   _DO_ACTION_INDENT="..${_DO_ACTION_INDENT}"
   local -r STYLE_BOLD_WHITE='\033[1;37m'
@@ -33,7 +33,7 @@ function do_action() {
   local -r action="$1"
   echo -e "${OLD_INDENT}${STYLE_BOLD_WHITE}[Running ${action}]${STYLE_RESET}"
   shift
-  "${ROOT_DIR}/src/${action}_action.sh" "$@"
+  "${ROOT_DIR}/src/${action}.action.sh" "$@"
   local -ir status=$?
   if ((status == 0)); then
     echo -e "${OLD_INDENT}${STYLE_BOLD_WHITE}[Done ${action}]${STYLE_RESET}"
@@ -43,6 +43,6 @@ function do_action() {
   _DO_ACTION_INDENT=${OLD_INDENT}
   return "${status}"
 }
-export -f do_action
+export -f run_action
 
-do_action "$@"
+run_action "$@"

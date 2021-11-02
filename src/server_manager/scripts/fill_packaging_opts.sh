@@ -23,10 +23,10 @@
 # script, allowing fill_packaging_opts.sh to fill variables for the caller.
 
 # Input: "/absolute/path/src/server_manager/electron_app/something_action.sh"
-# Output: "npm run do server_manager/electron_app/something"
+# Output: "npm run action server_manager/electron_app/something"
 readonly ELECTRON_PATH='server_manager/electron_app/'
 readonly RELATIVE="${1#*/src/${ELECTRON_PATH}}"
-readonly NPM_COMMAND="npm run do ${ELECTRON_PATH}${RELATIVE%_action.sh}"
+readonly NPM_COMMAND="npm run action ${ELECTRON_PATH}${RELATIVE%_action.sh}"
 shift
 
 function usage () {

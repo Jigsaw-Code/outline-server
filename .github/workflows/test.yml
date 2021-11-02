@@ -34,26 +34,23 @@ jobs:
         run: NODE_DTRACE_PROVIDER_REQUIRE=hard npm ci
 
       - name: Lint
-        run: yarn lint
+        run: npm run lint
 
       - name: Manager
         run: |
           SENTRY_DSN='test' npm run do server_manager/electron_app/release_linux
-          npm run do server_manager/test
+          npm run action server_manager/test
 
       - name: Shadowbox
         if: runner.os == 'Linux'
         run: |
-          npm run do shadowbox/server/build
-          npm run do shadowbox/test
-          npm run do shadowbox/integration_test/run
+          npm run action shadowbox/server/build
+          npm run action shadowbox/test
+          npm run action shadowbox/integration_test/run
 
       - name: Metrics Server
         if: runner.os == 'Linux'
         run: |
-          npm run do metrics_server/build
-          npm run do metrics_server/test
+          npm run action metrics_server/build
+          npm run action metrics_server/test
 
-      - name:  Sentry Webhook
-        if: runner.os == 'Linux'
-        run: npm run do sentry_webhook/build

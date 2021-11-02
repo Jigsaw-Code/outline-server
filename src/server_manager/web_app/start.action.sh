@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash
 #
 # Copyright 2018 The Outline Authors
 #
@@ -14,11 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-do_action server_manager/electron_app/build
+set -eu
 
-readonly NODE_MODULES_BIN_DIR="${ROOT_DIR}/src/server_manager/node_modules/.bin"
+rm -rf "${BUILD_DIR}/server_manager/web_app"
 
-cd "${BUILD_DIR}/server_manager/electron_app/static"
-OUTLINE_DEBUG='true' \
-SB_METRICS_URL='https://dev.metrics.getoutline.org' \
-"${NODE_MODULES_BIN_DIR}/electron" .
+run_action server_manager/web_app/build_install_script
+
+webpack-dev-server --config=src/server_manager/browser.webpack.js --open
