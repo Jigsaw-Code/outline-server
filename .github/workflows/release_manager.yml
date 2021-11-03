@@ -26,6 +26,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v2
         with:
+          cache: npm
           node-version: 16
 
       - name: Show Environment Info
