@@ -28,6 +28,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v1
         with:
+          cache: npm
           node-version: 16
 
       - name: Install dependencies
@@ -38,7 +39,7 @@ jobs:
 
       - name: Manager
         run: |
-          SENTRY_DSN='test' npm run do server_manager/electron_app/release_linux
+          SENTRY_DSN='test' npm run action server_manager/electron_app/release_linux
           npm run action server_manager/test
 
       - name: Shadowbox
