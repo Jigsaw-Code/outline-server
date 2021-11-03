@@ -16,7 +16,7 @@
 
 source src/server_manager/scripts/fill_packaging_opts.sh "$0" "$@"
 
-npm run 'do' server_manager/electron_app/build
+npm run 'action' server_manager/electron_app/build
 
 readonly BUILD_DIR=build/server_manager/electron_app/static
 

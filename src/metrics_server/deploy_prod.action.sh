@@ -19,7 +19,7 @@ readonly BUILD_DIR="build/metrics_server"
 
 rm -rf "${BUILD_DIR}"
 
-npm run 'do' metrics_server/build
+npm run 'action' metrics_server/build
 
 cp "${SRC_DIR}/app_prod.yaml" "${BUILD_DIR}/app.yaml"
 cp "${SRC_DIR}/config_prod.json" "${BUILD_DIR}/config.json"
