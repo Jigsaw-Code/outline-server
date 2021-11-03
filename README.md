@@ -33,11 +33,14 @@ The system comprises the following components:
 ## Code Prerequisites
 
 In order to build and run the code, you need the following installed:
-  - [Node](https://nodejs.org/)
+  - [Node](https://nodejs.org/); latest LTS
   - [Wine](https://www.winehq.org/download), if you would like to generate binaries for Windows.
 
-Then you need to install all the NPM package dependencies:
-```
+
+> 💡 NOTE: if you have `nvm` installed, run `nvm use` to switch to the correct node version!
+
+Install dependencies with:
+```sh
 npm install
 ```
 

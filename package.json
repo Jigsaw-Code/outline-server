@@ -13,16 +13,16 @@
     "typescript": "^4"
   },
   "engines": {
-    "node": ">=16.0.0",
-    "npm": ">=7.0.0"
+    "node": ">=16.13.0",
+    "npm": ">=8.1.0"
   },
   "scripts": {
-    "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts src/server_manager/install_scripts/gcp_install_script.ts third_party/shellcheck/download/",
     "action": "bash ./scripts/run_action.sh",
     "action:list": "find . -name '*.action.sh' | sed -E 's:./src/(.*).action.sh:\\1:' | grep -v 'scripts/run_action'",
-    "lint": "npm run shellcheck && npm run tslint",
-    "shellcheck": "bash ./scripts/shellcheck.sh",
-    "tslint": "npx tslint 'src/**/*.ts' -e '**/node_modules/**'"
+    "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts src/server_manager/install_scripts/gcp_install_script.ts third_party/shellcheck/download/",
+    "lint": "npm run lint:sh && npm run lint:ts",
+    "lint:sh": "bash ./scripts/shellcheck.sh",
+    "lint:ts": "npx tslint 'src/**/*.ts' -e '**/node_modules/**'"
   },
   "workspaces": [
     "src/*"
