@@ -14,11 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-do_action server_manager/electron_app/build
+readonly SRC_DIR="src/metrics_server"
+readonly BUILD_DIR="build/metrics_server"
 
-readonly NODE_MODULES_BIN_DIR="${ROOT_DIR}/src/server_manager/node_modules/.bin"
+rm -rf "${BUILD_DIR}"
 
-cd "${BUILD_DIR}/server_manager/electron_app/static"
-OUTLINE_DEBUG='true' \
-SB_METRICS_URL='https://dev.metrics.getoutline.org' \
-"${NODE_MODULES_BIN_DIR}/electron" .
+npm run action metrics_server/build
+
+cp "${SRC_DIR}/app_dev.yaml" "${BUILD_DIR}/app.yaml"
+cp "${SRC_DIR}/config_dev.json" "${BUILD_DIR}/config.json"
+cp "${SRC_DIR}/package.json" "${BUILD_DIR}/"
+
+gcloud app deploy "${SRC_DIR}/dispatch.yaml" "${BUILD_DIR}" --project uproxysite --verbosity info --promote --stop-previous-version

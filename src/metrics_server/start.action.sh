@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/bash -eu
 #
-# Copyright 2018 The Outline Authors
+# Copyright 2020 The Outline Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -eu
+readonly SRC_DIR="src/metrics_server"
+readonly BUILD_DIR="build/metrics_server"
 
-yarn workspace outline-manager run webpack-dev-server --config=gallery.webpack.js --open
+npm run action metrics_server/build
+
+cp "${SRC_DIR}/config_dev.json" "${BUILD_DIR}/config.json"
+cp "${SRC_DIR}/package.json" "${BUILD_DIR}/"
+
+npx node "${BUILD_DIR}/index.js"

@@ -1,6 +1,6 @@
-#!/bin/bash -eu
+#!/bin/bash
 #
-# Copyright 2020 The Outline Authors
+# Copyright 2018 The Outline Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-readonly SRC_DIR="src/metrics_server"
-readonly BUILD_DIR="build/metrics_server"
+set -eu
 
-yarn 'do' metrics_server/build
+readonly OUT_DIR="${BUILD_DIR}/server_manager/web_app"
+rm -rf "${OUT_DIR}"
 
-cp "${SRC_DIR}/config_dev.json" "${BUILD_DIR}/config.json"
-cp "${SRC_DIR}/package.json" "${BUILD_DIR}/"
+run_action server_manager/web_app/build_install_script
 
-yarn node "${BUILD_DIR}/index.js"
+# Node.js on Cygwin doesn't like absolute Unix-style paths.
+# So, we use a relative path as input to webpack.
+pushd "${ROOT_DIR}" > /dev/null
+# Notice that we forward the build environment if defined.
+webpack --config=src/server_manager/electron_renderer.webpack.js ${BUILD_ENV:+--mode=${BUILD_ENV}}
+popd > /dev/null

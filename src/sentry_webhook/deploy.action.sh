@@ -14,15 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-readonly SRC_DIR="src/metrics_server"
-readonly BUILD_DIR="build/metrics_server"
+npm run action sentry_webhook/build
 
-rm -rf "${BUILD_DIR}"
-
-yarn 'do' metrics_server/build
-
-cp "${SRC_DIR}/app_prod.yaml" "${BUILD_DIR}/app.yaml"
-cp "${SRC_DIR}/config_prod.json" "${BUILD_DIR}/config.json"
-cp "${SRC_DIR}/package.json" "${BUILD_DIR}/"
-
-gcloud app deploy "${SRC_DIR}/dispatch.yaml" "${BUILD_DIR}" --project uproxysite --verbosity info --no-promote --no-stop-previous-version
+cp src/sentry_webhook/package.json build/sentry_webhook/
+gcloud --project=uproxysite functions deploy postSentryEventToSalesforce --runtime=nodejs12 --trigger-http --source=build/sentry_webhook --entry-point=postSentryEventToSalesforce

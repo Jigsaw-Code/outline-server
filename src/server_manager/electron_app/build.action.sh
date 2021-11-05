@@ -20,7 +20,7 @@ readonly OUT_DIR="${BUILD_DIR}/server_manager/electron_app"
 rm -rf "${OUT_DIR}"
 
 # Build the Web App.
-do_action server_manager/web_app/build
+run_action server_manager/web_app/build
 
 # Compile the Electron app source.
 # Since Node.js on Cygwin doesn't like absolute Unix-style paths,
@@ -38,9 +38,9 @@ cp -r "${BUILD_DIR}/server_manager/web_app/static" "${STATIC_DIR}/server_manager
 # We also need to install NPMs at this location for require()
 # in order for require() to work right in the renderer process, which
 # is loaded via a custom protocol.
-cp src/server_manager/package.json yarn.lock "${STATIC_DIR}"
+cp src/server_manager/package.json package-lock.json "${STATIC_DIR}"
 cd "${STATIC_DIR}"
-yarn install --prod --ignore-scripts
+npm install --prod --ignore-scripts
 
 # Icons.
 cd "${ROOT_DIR}"

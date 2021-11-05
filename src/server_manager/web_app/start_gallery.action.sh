@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash
 #
 # Copyright 2018 The Outline Authors
 #
@@ -14,15 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-readonly SRC_DIR="src/metrics_server"
-readonly BUILD_DIR="build/metrics_server"
+set -eu
 
-rm -rf "${BUILD_DIR}"
-
-yarn 'do' metrics_server/build
-
-cp "${SRC_DIR}/app_dev.yaml" "${BUILD_DIR}/app.yaml"
-cp "${SRC_DIR}/config_dev.json" "${BUILD_DIR}/config.json"
-cp "${SRC_DIR}/package.json" "${BUILD_DIR}/"
-
-gcloud app deploy "${SRC_DIR}/dispatch.yaml" "${BUILD_DIR}" --project uproxysite --verbosity info --promote --stop-previous-version
+webpack-dev-server --config=src/server_manager/gallery.webpack.js --open

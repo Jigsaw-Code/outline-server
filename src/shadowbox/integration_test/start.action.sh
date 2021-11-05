@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 #
 # Copyright 2018 The Outline Authors
 #
@@ -14,16 +14,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -eu
+run_action shadowbox/docker/build
 
-readonly OUT_DIR="${BUILD_DIR}/server_manager/web_app"
-rm -rf "${OUT_DIR}"
+LOGFILE="$(mktemp)"
+readonly LOGFILE
+echo "Running Shadowbox integration test.  Logs at ${LOGFILE}"
 
-do_action server_manager/web_app/build_install_script
+cd src/shadowbox/integration_test
 
-# Node.js on Cygwin doesn't like absolute Unix-style paths.
-# So, we use a relative path as input to webpack.
-pushd "${ROOT_DIR}" > /dev/null
-# Notice that we forward the build environment if defined.
-webpack --config=src/server_manager/electron_renderer.webpack.js ${BUILD_ENV:+--mode=${BUILD_ENV}}
-popd > /dev/null
+declare -i result=0
+
+if ./test.sh > "${LOGFILE}" 2>&1 ; then
+  echo "Test Passed!"
+  # Removing the log file sometimes fails on Travis.  There's no point in us cleaning it up
+  # on a CI build anyways.
+  rm -f "${LOGFILE}"
+else
+  result=$?
+  echo "Test Failed!  Logs:"
+  cat "${LOGFILE}"
+fi
+
+exit "${result}"

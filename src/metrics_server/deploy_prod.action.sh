@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 #
-# Copyright 2020 The Outline Authors
+# Copyright 2018 The Outline Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,5 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-yarn 'do' server_manager/web_app/build_install_script
-karma start "${ROOT_DIR}/src/server_manager/web_app/karma.conf.js"
+readonly SRC_DIR="src/metrics_server"
+readonly BUILD_DIR="build/metrics_server"
+
+rm -rf "${BUILD_DIR}"
+
+npm run action metrics_server/build
+
+cp "${SRC_DIR}/app_prod.yaml" "${BUILD_DIR}/app.yaml"
+cp "${SRC_DIR}/config_prod.json" "${BUILD_DIR}/config.json"
+cp "${SRC_DIR}/package.json" "${BUILD_DIR}/"
+
+gcloud app deploy "${SRC_DIR}/dispatch.yaml" "${BUILD_DIR}" --project uproxysite --verbosity info --no-promote --no-stop-previous-version

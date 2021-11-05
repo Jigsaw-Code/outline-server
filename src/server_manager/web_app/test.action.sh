@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 #
-# Copyright 2018 The Outline Authors
+# Copyright 2020 The Outline Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-yarn 'do' sentry_webhook/build
-
-cp src/sentry_webhook/package.json build/sentry_webhook/
-gcloud --project=uproxysite functions deploy postSentryEventToSalesforce --runtime=nodejs12 --trigger-http --source=build/sentry_webhook --entry-point=postSentryEventToSalesforce
+npm run action server_manager/web_app/build_install_script
+karma start "${ROOT_DIR}/src/server_manager/web_app/karma.conf.js"

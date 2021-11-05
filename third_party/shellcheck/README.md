@@ -7,4 +7,4 @@ This directory is used to lint our scripts using [Shellcheck](https://www.shellc
 * Extracts the executable
 * Runs the executable
 
-The executable is cached on the developer's system after the first download.  To clear the cache, run `rm download` (or `yarn clean` in the repository root).
+The executable is cached on the developer's system after the first download.  To clear the cache, run `rm download` (or `npm run clean` in the repository root).
