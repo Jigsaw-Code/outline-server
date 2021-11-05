@@ -22,7 +22,8 @@ set -eu
 
 export ROOT_DIR=${ROOT_DIR:-$(pwd)/$(git rev-parse --show-cdup)}
 export BUILD_DIR=${BUILD_DIR:-${ROOT_DIR}/build}
-export RUN_ACTION_INDENT=''
+
+export run_action_indent=''
 
 function run_action() {
   local -r ACTION="${1:-""}"
@@ -30,13 +31,13 @@ function run_action() {
   local -r STYLE_BOLD_GREEN='\033[1;32m'
   local -r STYLE_BOLD_RED='\033[1;31m'
   local -r STYLE_RESET='\033[0m'
-  local -r OLD_INDENT="${RUN_ACTION_INDENT}"
+  local -r OLD_INDENT="${run_action_indent}"
 
-  RUN_ACTION_INDENT="=> ${RUN_ACTION_INDENT}"
+  run_action_indent="=> ${run_action_indent}"
 
-  if [[ "${ACTION}" == "" ]]; then
+  if [[ -z "${ACTION}" ]]; then
     echo -e "Please provide an action to run. ${STYLE_BOLD_WHITE}List of valid actions:${STYLE_RESET}\n"
-    find . -name '*.action.sh' | sed -E 's:./src/(.*).action.sh:\1:'
+    find . -name '*.action.sh' | sed -E 's:./src/(.*)\.action\.sh:\1:'
     exit 0
   fi
 
@@ -52,7 +53,7 @@ function run_action() {
     echo -e "${OLD_INDENT}${STYLE_BOLD_RED}[${ACTION}: Failed]${STYLE_RESET}"
   fi
 
-  RUN_ACTION_INDENT="${OLD_INDENT}"
+  run_action_indent="${OLD_INDENT}"
 
   return "${STATUS}"
 }
