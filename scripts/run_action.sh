@@ -22,27 +22,41 @@ set -eu
 
 export ROOT_DIR=${ROOT_DIR:-$(pwd)/$(git rev-parse --show-cdup)}
 export BUILD_DIR=${BUILD_DIR:-${ROOT_DIR}/build}
-export _DO_ACTION_INDENT=''
+export RUN_ACTION_INDENT=''
 
 function run_action() {
-  local -r OLD_INDENT="${_DO_ACTION_INDENT}"
-  _DO_ACTION_INDENT="..${_DO_ACTION_INDENT}"
+  local -r ACTION="${1:-""}"
   local -r STYLE_BOLD_WHITE='\033[1;37m'
+  local -r STYLE_BOLD_GREEN='\033[1;32m'
   local -r STYLE_BOLD_RED='\033[1;31m'
   local -r STYLE_RESET='\033[0m'
-  local -r action="$1"
-  echo -e "${OLD_INDENT}${STYLE_BOLD_WHITE}[Running ${action}]${STYLE_RESET}"
-  shift
-  "${ROOT_DIR}/src/${action}.action.sh" "$@"
-  local -ir status=$?
-  if ((status == 0)); then
-    echo -e "${OLD_INDENT}${STYLE_BOLD_WHITE}[Done ${action}]${STYLE_RESET}"
-  else
-    echo -e "${OLD_INDENT}${STYLE_BOLD_RED}[Failed ${action}]${STYLE_RESET}"
+  local -r OLD_INDENT="${RUN_ACTION_INDENT}"
+
+  RUN_ACTION_INDENT="=> ${RUN_ACTION_INDENT}"
+
+  if [[ "${ACTION}" == "" ]]; then
+    echo -e "Please provide an action to run. ${STYLE_BOLD_WHITE}List of valid actions:${STYLE_RESET}\n"
+    find . -name '*.action.sh' | sed -E 's:./src/(.*).action.sh:\1:'
+    exit 0
   fi
-  _DO_ACTION_INDENT=${OLD_INDENT}
-  return "${status}"
+
+  echo -e "${OLD_INDENT}${STYLE_BOLD_WHITE}[Running ${ACTION}]${STYLE_RESET}"
+  shift
+
+  "${ROOT_DIR}/src/${ACTION}.action.sh" "$@"
+
+  local -ir STATUS="$?"
+  if [[ "${STATUS}" == "0" ]]; then
+    echo -e "${OLD_INDENT}${STYLE_BOLD_GREEN}[${ACTION}: Finished]${STYLE_RESET}"
+  else
+    echo -e "${OLD_INDENT}${STYLE_BOLD_RED}[${ACTION}: Failed]${STYLE_RESET}"
+  fi
+
+  RUN_ACTION_INDENT="${OLD_INDENT}"
+
+  return "${STATUS}"
 }
+
 export -f run_action
 
 run_action "$@"
