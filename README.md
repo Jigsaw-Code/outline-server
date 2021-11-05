@@ -58,7 +58,7 @@ We've defined a package.json script called `action` whose parameter is a relativ
 npm run action $ACTION
 ```
 
-This command will define a `run_action()` function and call `${ACTION}_action.sh`, which must exist.
+This command will define a `run_action()` function and call `${ACTION}.action.sh`, which must exist.
 The called action script can use `run_action` to call its dependencies. The $ACTION parameter is
 always resolved from the project root, regardless of the caller location.
 
