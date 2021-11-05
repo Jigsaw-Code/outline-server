@@ -46,7 +46,7 @@ function run_action() {
   "${ROOT_DIR}/src/${ACTION}.action.sh" "$@"
 
   local -ir STATUS="$?"
-  if [[ "${STATUS}" == "0" ]]; then
+  if (( STATUS == 0 )); then
     echo -e "${OLD_INDENT}${STYLE_BOLD_GREEN}[${ACTION}: Finished]${STYLE_RESET}"
   else
     echo -e "${OLD_INDENT}${STYLE_BOLD_RED}[${ACTION}: Failed]${STYLE_RESET}"
