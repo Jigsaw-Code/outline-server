@@ -53,7 +53,7 @@ This project uses [NPM workspaces](https://docs.npmjs.com/cli/v7/using-npm/works
 We have a very simple build system based on package.json scripts that are called using `npm run`
 and a thin wrapper for what we call build "actions".
 
-We've defined a `do` package.json script that takes an `action` parameter:
+We've defined a package.json script called `action` whose parameter is a relative path:
 ```shell
 npm run action $ACTION
 ```
