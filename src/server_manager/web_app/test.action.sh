@@ -14,5 +14,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-npm run 'action' server_manager/web_app/build_install_script
+npm run action server_manager/web_app/build_install_script
 karma start "${ROOT_DIR}/src/server_manager/web_app/karma.conf.js"
