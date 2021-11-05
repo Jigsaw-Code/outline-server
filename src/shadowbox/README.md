@@ -175,4 +175,4 @@ start-up time, then you mey need to remove the pre-existing test config:
 rm /tmp/outline/persisted-state/shadowbox_server_config.json
 ```
 
-This will warn about deleting a write-protected file, which is okay to ignore.  You will then need to hand-edit the JSON string in src/shadowbox/docker/start_action.sh.
+This will warn about deleting a write-protected file, which is okay to ignore.  You will then need to hand-edit the JSON string in src/shadowbox/docker/start.action.sh.
