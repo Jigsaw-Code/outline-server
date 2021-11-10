@@ -15,10 +15,9 @@
 'use strict';
 
 const fs = require('fs');
-const path = require('path');
 
 const tarballBinary = fs.readFileSync(process.argv[2]);
-const base64Tarball = new Buffer(tarballBinary).toString('base64');
+const base64Tarball = tarballBinary.toString('base64');
 const scriptText = `
 (base64 --decode | tar --extract --gzip ) <<EOM
 ${base64Tarball}
