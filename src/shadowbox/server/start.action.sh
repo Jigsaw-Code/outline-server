@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-run_action shadowbox/server/build
+run_action build shadowbox/server
 
 RUN_ID="${RUN_ID:-$(date +%Y-%m-%d-%H%M%S)}"
 readonly RUN_DIR="/tmp/outline/${RUN_ID}"

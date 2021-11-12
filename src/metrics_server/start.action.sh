@@ -17,7 +17,7 @@
 readonly SRC_DIR="src/metrics_server"
 readonly BUILD_DIR="build/metrics_server"
 
-npm run action metrics_server/build
+npm run action build metrics_server
 
 cp "${SRC_DIR}/config_dev.json" "${BUILD_DIR}/config.json"
 cp "${SRC_DIR}/package.json" "${BUILD_DIR}/"

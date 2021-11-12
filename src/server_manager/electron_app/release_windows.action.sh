@@ -18,8 +18,8 @@ source src/server_manager/scripts/fill_packaging_opts.sh "$0" "$@"
 
 export BUILD_ENV='production'
 
-npm run action server_manager/electron_app/build
-npm run action server_manager/electron_app/write_production_environment
+npm run action build server_manager/electron_app
+npm run action write_production_environment server_manager/electron_app
 
 readonly BUILD_DIR=build/server_manager/electron_app/static
 

@@ -10,7 +10,7 @@ The Outline Sentry webhook is a [Google Cloud Function](https://cloud.google.com
 ## Build
 
 ```sh
-npm run action sentry_webhook/build
+npm run action build sentry_webhook
 ```
 
 ## Deploy
@@ -21,7 +21,7 @@ Authenticate with `gcloud`:
   ```
 To deploy:
   ```sh
-  npm run action sentry_webhook/deploy
+  npm run action deploy sentry_webhook
   ```
 
 ## Configure Sentry Webhooks

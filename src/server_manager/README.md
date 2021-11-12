@@ -4,12 +4,12 @@
 
 To run the Outline Manager Electron app:
 ```
-npm run action server_manager/electron_app/start
+npm start server_manager/electron_app
 ```
 
 To run the Outline Manager Electron app with a development build (code not minified):
 ```
-BUILD_ENV=development npm run action server_manager/electron_app/start
+BUILD_ENV=development npm start server_manager/electron_app
 ```
 
 ## Development Server
@@ -17,7 +17,7 @@ BUILD_ENV=development npm run action server_manager/electron_app/start
 To run the Outline Manager as a web app on the browser and listen for changes:
 
 ```
-npm run action server_manager/web_app/start
+npm start server_manager/web_app
 ```
 
 ## Gallery Server for UI Development
@@ -25,7 +25,7 @@ npm run action server_manager/web_app/start
 We have a server app to for quickly iterating on UI components.  To spin it up, run
 
 ```
-npm run action server_manager/web_app/start_gallery
+npm run action start_gallery server_manager/web_app
 ```
 
 Changes to UI components will be hot reloaded into the gallery.
@@ -39,7 +39,7 @@ This will enable the Developer menu on the application window.
 
 To build the app binary:
 ```
-npm run action server_manager/electron_app/package_${PLATFORM}
+npm run action package_${PLATFORM} server_manager/electron_app
 ```
 
 Where `${PLATFORM}` is one of `linux`, `macos`, `only_windows`.
@@ -54,7 +54,7 @@ The per-platform standalone apps will be at `build/electron_app/static/dist`.
 
 To perform a release, use
 ```
-npm run action server_manager/electron_app/release
+npm run action release server_manager/electron_app
 ```
 
 This will perform a clean and reinstall all dependencies to make sure the build is not tainted.
@@ -64,7 +64,7 @@ This will perform a clean and reinstall all dependencies to make sure the build 
 To enable error reporting through [Sentry](https://sentry.io/) for local builds, run:
 ``` bash
 export SENTRY_DSN=[Sentry development API key]
-npm run action server_manager/electron_app/start
+npm start server_manager/electron_app
 ```
 
 Release builds on CI are configured with a production Sentry API key.

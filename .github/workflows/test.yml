@@ -39,19 +39,19 @@ jobs:
 
       - name: Manager
         run: |
-          SENTRY_DSN='test' npm run action server_manager/electron_app/release_linux
-          npm run action server_manager/test
+          SENTRY_DSN='test' npm run action release_linux server_manager/electron_app
+          npm test server_manager
 
       - name: Shadowbox
         if: runner.os == 'Linux'
         run: |
-          npm run action shadowbox/server/build
-          npm run action shadowbox/test
-          npm run action shadowbox/integration_test/start
+          npm run action build shadowbox/server
+          npm test shadowbox
+          npm start shadowbox/integration_test
 
       - name: Metrics Server
         if: runner.os == 'Linux'
         run: |
-          npm run action metrics_server/build
-          npm run action metrics_server/test
+          npm run action build metrics_server
+          npm test metrics_server
 

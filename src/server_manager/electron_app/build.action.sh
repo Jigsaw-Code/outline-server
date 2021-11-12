@@ -20,7 +20,7 @@ readonly OUT_DIR="${BUILD_DIR}/server_manager/electron_app"
 rm -rf "${OUT_DIR}"
 
 # Build the Web App.
-run_action server_manager/web_app/build
+run_action build server_manager/web_app
 
 # Compile the Electron app source.
 # Since Node.js on Cygwin doesn't like absolute Unix-style paths,

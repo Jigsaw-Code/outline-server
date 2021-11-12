@@ -18,6 +18,6 @@ set -eu
 
 rm -rf "${BUILD_DIR}/server_manager/web_app"
 
-run_action server_manager/web_app/build_install_script
+run_action build_install_script server_manager/web_app
 
 webpack-dev-server --config=src/server_manager/browser.webpack.js --open

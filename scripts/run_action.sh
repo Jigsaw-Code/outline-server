@@ -35,20 +35,27 @@ function run_action() {
   local -r STYLE_RESET='\033[0m'
 
   local -r action="${1:-""}"
+  if [[ -z "${action}" ]]; then
+    echo -e "Please provide an action to run. ${STYLE_BOLD_WHITE}List of valid actions:${STYLE_RESET}\n"
+    find . -name '*.action.sh' | sed -E 's:\./src/.*/([^/]+)\.action\.sh:\1:' | sort -u
+    exit 0
+  fi
+
+  local -r scope="${2:-""}"
+  if [[ -z "${scope}" ]]; then
+    echo -e "Please specify the scope for this ${action} action. ${STYLE_BOLD_WHITE}List of valid scopes:${STYLE_RESET}\n"
+    find . -name "${action}.action.sh" | sed -E "s:\./src/(.*)/${action}\.action\.sh:\1:"
+    exit 0
+  fi
+
   local -r old_indent="${run_action_indent}"
 
   run_action_indent="=> ${run_action_indent}"
 
-  if [[ -z "${action}" ]]; then
-    echo -e "Please provide an action to run. ${STYLE_BOLD_WHITE}List of valid actions:${STYLE_RESET}\n"
-    find . -name '*.action.sh' | sed -E 's:\./src/(.*)\.action\.sh:\1:'
-    exit 0
-  fi
-
   echo -e "${old_indent}${STYLE_BOLD_WHITE}[Running ${action}]${STYLE_RESET}"
   shift
 
-  "${ROOT_DIR}/src/${action}.action.sh" "$@"
+  "${ROOT_DIR}/src/${scope}/${action}.action.sh" "$@"
 
   local -ir status="$?"
   if (( status == 0 )); then

@@ -53,12 +53,12 @@ This project uses [NPM workspaces](https://docs.npmjs.com/cli/v7/using-npm/works
 We have a very simple build system based on package.json scripts that are called using `npm run`
 and a thin wrapper for what we call build "actions".
 
-We've defined a package.json script called `action` whose parameter is a relative path:
+We've defined a package.json script called `action` whose parameters are an action and a scope:
 ```shell
-npm run action $ACTION
+npm run action $ACTION $SCOPE
 ```
 
-This command will define a `run_action()` function and call `${ACTION}.action.sh`, which must exist.
+This command will define a `run_action()` function and call `${SCOPE}/${ACTION}.action.sh`, which must exist.
 The called action script can use `run_action` to call its dependencies. The $ACTION parameter is
 always resolved from the project root, regardless of the caller location.
 

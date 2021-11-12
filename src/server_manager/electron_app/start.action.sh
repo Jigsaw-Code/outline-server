@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-run_action server_manager/electron_app/build
+run_action buid  server_manager/electron_app
 
 readonly NODE_MODULES_BIN_DIR="${ROOT_DIR}/src/server_manager/node_modules/.bin"
 

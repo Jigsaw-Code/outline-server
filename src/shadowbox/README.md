@@ -36,7 +36,7 @@ Besides [Node](https://nodejs.org/en/download/) you will also need:
 
 Build and run the server as a Node.js app:
 ```
-npm run action shadowbox/server/start
+npm start shadowbox/server
 ```
 The output will be at `build/shadowbox/app`.
 
@@ -46,7 +46,7 @@ The output will be at `build/shadowbox/app`.
 
 Build the image and run server:
 ```
-npm run action shadowbox/docker/start
+npm start shadowbox/docker
 ```
 
 You should be able to successfully query the management API:
@@ -56,7 +56,7 @@ curl --insecure https://[::]:8081/TestApiPrefix/server
 
 To build the image only:
 ```
-npm run action shadowbox/docker/build
+npm run action build shadowbox/docker
 ```
 
 Debug image:
@@ -136,14 +136,14 @@ upload it to your favorite registry
 
 Then set your `SB_IMAGE` environment variable to point to the image you just
 uploaded (e.g. `export SB_IMAGE=yourdockerhubusername/shadowbox`) and
-run `npm run action server_manager/electron_app/start` and your droplet should be created with your
+run `npm start server_manager/electron_app` and your droplet should be created with your
 modified image.
 
 ### Automated
 
 To run the integration test:
 ```
-npm run action shadowbox/integration_test/start
+npm start shadowbox/integration_test
 ```
 
 This will set up three containers and two networks:
@@ -156,12 +156,12 @@ client <-> shadowbox <-> target
 To test clients that rely on fetching a docker image from Dockerhub, you can push an image to your account and modify the
 client to use your image. To push your own image:
 ```
-npm run action shadowbox/docker/build && docker tag quay.io/outline/shadowbox $USER/shadowbox && docker push $USER/shadowbox
+npm run action build shadowbox/docker && docker tag quay.io/outline/shadowbox $USER/shadowbox && docker push $USER/shadowbox
 ```
 
 If you need to test an unsigned image (e.g. your dev one):
 ```
-DOCKER_CONTENT_TRUST=0 SB_IMAGE=$USER/shadowbox npm run action shadowbox/integration_test/start
+DOCKER_CONTENT_TRUST=0 SB_IMAGE=$USER/shadowbox npm start shadowbox/integration_test
 ```
 
 You can add tags if you need different versions in different clients.
