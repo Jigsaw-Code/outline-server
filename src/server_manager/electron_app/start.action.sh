@@ -16,9 +16,8 @@
 
 run_action server_manager/electron_app/build
 
-readonly NODE_MODULES_BIN_DIR="${ROOT_DIR}/node_modules/.bin"
-
 cd "${BUILD_DIR}/server_manager/electron_app/static"
+
 OUTLINE_DEBUG='true' \
-SB_METRICS_URL='https://dev.metrics.getoutline.org' \
-"${NODE_MODULES_BIN_DIR}/electron" .
+    SB_METRICS_URL='https://dev.metrics.getoutline.org' \
+    electron .
