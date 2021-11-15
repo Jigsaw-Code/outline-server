@@ -16,7 +16,7 @@
 
 run_action server_manager/electron_app/build
 
-readonly NODE_MODULES_BIN_DIR="${ROOT_DIR}/src/server_manager/node_modules/.bin"
+readonly NODE_MODULES_BIN_DIR="${ROOT_DIR}/node_modules/.bin"
 
 cd "${BUILD_DIR}/server_manager/electron_app/static"
 OUTLINE_DEBUG='true' \
