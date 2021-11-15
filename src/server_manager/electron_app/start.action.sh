@@ -19,5 +19,5 @@ run_action server_manager/electron_app/build
 cd "${BUILD_DIR}/server_manager/electron_app/static"
 
 OUTLINE_DEBUG='true' \
-    SB_METRICS_URL='https://dev.metrics.getoutline.org' \
-    electron .
+  SB_METRICS_URL='https://dev.metrics.getoutline.org' \
+  electron .
