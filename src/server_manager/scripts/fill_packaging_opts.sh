@@ -23,15 +23,15 @@
 # script, allowing fill_packaging_opts.sh to fill variables for the caller.
 
 # Input: "/absolute/path/src/server_manager/electron_app/something_action.sh"
-# Output: "yarn do server_manager/electron_app/something"
+# Output: "npm run action server_manager/electron_app/something"
 readonly ELECTRON_PATH='server_manager/electron_app/'
 readonly RELATIVE="${1#*/src/${ELECTRON_PATH}}"
-readonly YARN_COMMAND="yarn do ${ELECTRON_PATH}${RELATIVE%_action.sh}"
+readonly NPM_COMMAND="npm run action ${ELECTRON_PATH}${RELATIVE%.action.sh}"
 shift
 
 function usage () {
   echo "Usage:" 1>&2
-  echo "${YARN_COMMAND} [-s stagingPercentage]" 1>&2
+  echo "${NPM_COMMAND} [-s stagingPercentage]" 1>&2
   echo "  -s: The staged rollout percentage for this release.  Must be in the interval (0, 100].  Defaults to 100" 1>&2
   echo "  -h: this help message" 1>&2
   echo 1>&2

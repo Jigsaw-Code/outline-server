@@ -33,39 +33,42 @@ The system comprises the following components:
 ## Code Prerequisites
 
 In order to build and run the code, you need the following installed:
-  - [Node](https://nodejs.org/)
-  - [Yarn](https://yarnpkg.com/en/docs/install)
+  - [Node](https://nodejs.org/) (version `16.13.0`)
+  - [NPM](http://npmjs.org/) (version `8.1.0`)
   - [Wine](https://www.winehq.org/download), if you would like to generate binaries for Windows.
 
-Then you need to install all the NPM package dependencies:
-```
-yarn
+
+> 💡 NOTE: if you have `nvm` installed, run `nvm use` to switch to the correct node version!
+
+Install dependencies with:
+```sh
+npm install
 ```
 
-This project uses [Yarn workspaces](https://yarnpkg.com/blog/2017/08/02/introducing-workspaces/).
+This project uses [NPM workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces/).
 
 
 ## Build System
 
-We have a very simple build system based on package.json scripts that are called using `yarn`
+We have a very simple build system based on package.json scripts that are called using `npm run`
 and a thin wrapper for what we call build "actions".
 
-We've defined a `do` package.json script that takes an `action` parameter:
+We've defined a package.json script called `action` whose parameter is a relative path:
 ```shell
-yarn do $ACTION
+npm run action $ACTION
 ```
 
-This command will define a `do_action()` function and call `${ACTION}_action.sh`, which must exist.
-The called action script can use `do_action` to call its dependencies. The $ACTION parameter is
+This command will define a `run_action()` function and call `${ACTION}.action.sh`, which must exist.
+The called action script can use `run_action` to call its dependencies. The $ACTION parameter is
 always resolved from the project root, regardless of the caller location.
 
-The idea of `do_action` is to keep the build logic next to where the relevant code is.
+The idea of `run_action` is to keep the build logic next to where the relevant code is.
 It also defines two environmental variables:
 
 - ROOT_DIR: the root directory of the project, as an absolute path.
 - BUILD_DIR: where the build output should go, as an absolute path.
 
-> ⚠️ To find all the actions in this project, run `yarn actions`
+> ⚠️ To find all the actions in this project, run `npm run action:list`
 
 ### Build output
 
@@ -87,7 +90,7 @@ The directories have subdirectories for intermediate output:
 
 To clean up:
 ```
-yarn run clean
+npm run clean
 ```
 
 ## Shadowsocks Resistance Against Detection and Blocking

@@ -1,4 +1,4 @@
-# Configuration for `yarn shellcheck` and IDEs
+# Configuration for `npx shellcheck` and IDEs
 
 # Enable relative path references
 source-path=SCRIPTDIR

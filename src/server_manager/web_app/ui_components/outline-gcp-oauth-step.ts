@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import '@polymer/polymer/polymer-legacy.js';
-import '@polymer/iron-pages/iron-pages.js';
-import '../ui_components/outline-step-view.js';
+import '@polymer/polymer/polymer-legacy';
+import '@polymer/iron-pages/iron-pages';
+import './outline-step-view';
 
 import {css, customElement, html, LitElement, property} from 'lit-element';
 import {COMMON_STYLES} from '../ui_components/cloud-install-styles';

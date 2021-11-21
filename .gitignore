@@ -3,7 +3,6 @@
 node_modules/
 /src/server_manager/install_scripts/do_install_script.ts
 /src/server_manager/install_scripts/gcp_install_script.ts
-yarn-error.log
 .vscode/
 .idea/
 third_party/shellcheck/download/

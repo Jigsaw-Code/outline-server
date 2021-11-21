@@ -27,16 +27,16 @@ Use `sudo --preserve-env` if you need to pass environment variables. Use `bash -
 
 Shadowbox supports running on linux and macOS hosts.
 
-Besides [Node](https://nodejs.org/en/download/) and [Yarn](https://yarnpkg.com/en/docs/install), you will also need:
+Besides [Node](https://nodejs.org/en/download/) you will also need:
 
 1. [Docker 1.13+](https://docs.docker.com/engine/installation/)
-1. [docker-compose 1.11+](https://docs.docker.com/compose/install/)
+2. [docker-compose 1.11+](https://docs.docker.com/compose/install/)
 
 ### Running Shadowbox as a Node.js app
 
 Build and run the server as a Node.js app:
 ```
-yarn do shadowbox/server/run
+npm run action shadowbox/server/start
 ```
 The output will be at `build/shadowbox/app`.
 
@@ -46,7 +46,7 @@ The output will be at `build/shadowbox/app`.
 
 Build the image and run server:
 ```
-yarn do shadowbox/docker/run
+npm run action shadowbox/docker/start
 ```
 
 You should be able to successfully query the management API:
@@ -56,7 +56,7 @@ curl --insecure https://[::]:8081/TestApiPrefix/server
 
 To build the image only:
 ```
-yarn do shadowbox/docker/build
+npm run action shadowbox/docker/build
 ```
 
 Debug image:
@@ -136,14 +136,14 @@ upload it to your favorite registry
 
 Then set your `SB_IMAGE` environment variable to point to the image you just
 uploaded (e.g. `export SB_IMAGE=yourdockerhubusername/shadowbox`) and
-run `yarn do server_manager/electron_app/run` and your droplet should be created with your
+run `npm run action server_manager/electron_app/start` and your droplet should be created with your
 modified image.
 
 ### Automated
 
 To run the integration test:
 ```
-yarn do shadowbox/integration_test/run
+npm run action shadowbox/integration_test/start
 ```
 
 This will set up three containers and two networks:
@@ -156,12 +156,12 @@ client <-> shadowbox <-> target
 To test clients that rely on fetching a docker image from Dockerhub, you can push an image to your account and modify the
 client to use your image. To push your own image:
 ```
-yarn do shadowbox/docker/build && docker tag quay.io/outline/shadowbox $USER/shadowbox && docker push $USER/shadowbox
+npm run action shadowbox/docker/build && docker tag quay.io/outline/shadowbox $USER/shadowbox && docker push $USER/shadowbox
 ```
 
 If you need to test an unsigned image (e.g. your dev one):
 ```
-DOCKER_CONTENT_TRUST=0 SB_IMAGE=$USER/shadowbox yarn do shadowbox/integration_test/run
+DOCKER_CONTENT_TRUST=0 SB_IMAGE=$USER/shadowbox npm run action shadowbox/integration_test/start
 ```
 
 You can add tags if you need different versions in different clients.
@@ -175,4 +175,4 @@ start-up time, then you mey need to remove the pre-existing test config:
 rm /tmp/outline/persisted-state/shadowbox_server_config.json
 ```
 
-This will warn about deleting a write-protected file, which is okay to ignore.  You will then need to hand-edit the JSON string in src/shadowbox/docker/run_action.sh.
+This will warn about deleting a write-protected file, which is okay to ignore.  You will then need to hand-edit the JSON string in src/shadowbox/docker/start.action.sh.

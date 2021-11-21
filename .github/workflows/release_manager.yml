@@ -20,37 +20,27 @@ jobs:
       fail-fast: false
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v1
+      - name: Checkout
+        uses: actions/checkout@v2
 
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v1
+      - name: Install Node
+        uses: actions/setup-node@v2
         with:
-          node-version: 12
+          cache: npm
+          node-version: 16
 
       - name: Show Environment Info
         run: |
-          yarn -v
+          npm -v
           openssl version
           env
 
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-
-      - name: Check yarn cache
-        uses: actions/cache@v2
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: ${{ runner.os }}-yarn-
-
-      - name: Install dependencies
-        run: yarn --prefer-offline
+      - name: Install Dependencies
+        run: npm ci
 
       - name: Release Linux
         if: runner.os == 'Linux'
-        run: yarn do server_manager/electron_app/release_linux
+        run: npm run action server_manager/electron_app/release_linux
 
       - name: Release MacOS
         if: runner.os == 'macOS'
@@ -62,7 +52,7 @@ jobs:
         run: |
           openssl aes-256-cbc -K $ENCRYPTED_SIGNING_CERT_KEY -iv  $ENCRYPTED_SIGNING_CERT_IV -in macos-signing-certificate.p12.enc -out macos-signing-certificate.p12 -d -md sha256
           export CSC_LINK=$(pwd)/macos-signing-certificate.p12
-          yarn do server_manager/electron_app/release_macos
+          npm run action server_manager/electron_app/release_macos
 
       - name: Deploy
         uses: softprops/action-gh-release@v1

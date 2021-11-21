@@ -23,6 +23,7 @@
     "@polymer/iron-autogrow-textarea": "^3.0.0",
     "@polymer/iron-collapse": "^3.0.0",
     "@polymer/iron-fit-behavior": "^3.0.0",
+    "@polymer/iron-icon": "^3.0.1",
     "@polymer/iron-icons": "^3.0.0",
     "@polymer/iron-pages": "^3.0.0",
     "@polymer/paper-button": "^3.0.0",
@@ -60,7 +61,7 @@
         "the bundled Chromium in our version of Electron.  Whenever upgrading Electron, run the",
         "server_manager tests.  You'll get a failure that looks like <Expected '812852' to equal '693954>.",
         "Set PUPPETEER_CHROMIUM_REVISION to the first of those numbers to get the correct revision",
-        "and `yarn run clean && yarn` to re-install puppeteer, causing it to download the new",
+        "and `npm ci` to re-install puppeteer, causing it to download the new",
         "Chromium version."
       ]
     }
@@ -77,7 +78,7 @@
     "@types/semver": "^5.5.0",
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.5.3",
-    "electron": "13.1.2",
+    "electron": "13.3.0",
     "electron-builder": "~22.10.5",
     "electron-icon-maker": "^0.0.4",
     "electron-notarize": "^0.2.1",

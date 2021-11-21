@@ -12,20 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import '@polymer/paper-dropdown-menu/paper-dropdown-menu.js';
-import '@polymer/paper-listbox/paper-listbox.js';
-import '@polymer/paper-input/paper-input.js';
-import '@polymer/paper-item/paper-item.js';
+import '@polymer/paper-dropdown-menu/paper-dropdown-menu';
+import '@polymer/paper-listbox/paper-listbox';
+import '@polymer/paper-input/paper-input';
+import '@polymer/paper-item/paper-item';
+
+import './outline-step-view';
 import './outline-region-picker-step';
 
 import {css, customElement, html, internalProperty, LitElement, property} from 'lit-element';
-import {unsafeHTML} from 'lit-html/directives/unsafe-html.js';
+import {unsafeHTML} from 'lit-html/directives/unsafe-html';
 
 import {AppRoot} from './app-root';
-import {BillingAccount, Project, Zone} from '../../model/gcp';
+import {BillingAccount, Project, Zone, Account} from '../../model/gcp';
 import {GcpAccount, isInFreeTier} from '../gcp_account';
 import {COMMON_STYLES} from './cloud-install-styles';
-import {OutlineRegionPicker, RegionPickerOption} from './outline-region-picker-step';
+import {OutlineRegionPicker} from './outline-region-picker-step';
 import {filterOptions, getShortName} from '../location_formatting';
 import {CloudLocation} from '../../model/location';
 
@@ -240,9 +242,9 @@ export class GcpCreateServerApp extends LitElement {
       </outline-region-picker-step>`;
   }
 
-  async start(account: GcpAccount): Promise<void> {
+  async start(account: Account): Promise<void> {
     this.init();
-    this.account = account;
+    this.account = account as GcpAccount;
 
     try {
       this.billingAccounts = await this.account.listOpenBillingAccounts();
@@ -303,7 +305,7 @@ export class GcpCreateServerApp extends LitElement {
       } else {
         this.showProjectSetup(this.project);
       }
-      window.bringToFront();
+      bringToFront();
     }
   }
 
@@ -313,8 +315,7 @@ export class GcpCreateServerApp extends LitElement {
   }
 
   private showError(message: string) {
-    const appRoot: AppRoot =
-        document.getElementById('appRoot') as unknown as AppRoot;
+    const appRoot: AppRoot = document.getElementById('appRoot') as AppRoot;
     appRoot.showError(message);
   }
 
