@@ -258,11 +258,11 @@ describe('ShadowsocksManagerService', () => {
         send: (httpCode, data) => {
           expect(httpCode).toEqual(201);
           expect(Object.keys(data).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
-          expect(data.method).toEqual("chacha20-ietf-poly1305");
+          expect(data.method).toEqual('chacha20-ietf-poly1305');
           responseProcessed = true;  // required for afterEach to pass.
         }
       };
-      service.createNewAccessKey({params: {encryptionMethod: "chacha20-ietf-poly1305"}}, res, done);
+      service.createNewAccessKey({params: {encryptionMethod: 'chacha20-ietf-poly1305'}}, res, done);
     });
     it('encryptionMethod must be of type string', (done) => {
       const repo = getAccessKeyRepository();
