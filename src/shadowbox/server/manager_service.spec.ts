@@ -258,10 +258,22 @@ describe('ShadowsocksManagerService', () => {
         send: (httpCode, data) => {
           expect(httpCode).toEqual(201);
           expect(Object.keys(data).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
+          expect(data.method).toEqual("chacha20-ietf-poly1305");
           responseProcessed = true;  // required for afterEach to pass.
         }
       };
-      service.createNewAccessKey({params: {}}, res, done);
+      service.createNewAccessKey({params: {encryptionMethod: "chacha20-ietf-poly1305"}}, res, done);
+    });
+    it('encryptionMethod must be of type string', (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+
+      const res = {send: (httpCode, data) => {}};
+      service.createNewAccessKey({params: {encryptionMethod: 12345}}, res, (error) => {
+        expect(error.statusCode).toEqual(400);
+        responseProcessed = true;  // required for afterEach to pass.
+        done();
+      });
     });
     it('Create returns a 500 when the repository throws an exception', (done) => {
       const repo = getAccessKeyRepository();
