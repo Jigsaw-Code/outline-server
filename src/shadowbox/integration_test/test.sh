@@ -196,7 +196,7 @@ function cleanup() {
 
   function test_encryption_for_new_keys() {
     # Verify that we can create news keys with custom encryption.
-    curl --insecure -X POST -H "Content-Type: application/json" -d '{"method":"value2"}' "${API_URL}/access-keys" \
+    curl --insecure -X POST -H "Content-Type: application/json" -d '{"method":"value2"}' "${SB_API_URL}/access-keys" \
     || fail "Couldn't create a new access key with a custom method"
   }
 
