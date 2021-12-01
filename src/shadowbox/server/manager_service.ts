@@ -58,7 +58,7 @@ interface RequestParams {
   //   limit: DataLimit
   //   port: number
   //   hours: number
-  //   encryptionMethod: string
+  //   method: string
   [param: string]: unknown;
 }
 // Simplified request and response type interfaces containing only the
@@ -229,7 +229,8 @@ export class ShadowsocksManagerService {
   public createNewAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
     try {
       logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
-      let encryptionMethod = req.params.encryptionMethod;
+      let encryptionMethod = req.params.method;
+      logging.debug(`encryptionMethod: $(encryptionMethod)`);
       if (!encryptionMethod) {
         encryptionMethod = '';
       }

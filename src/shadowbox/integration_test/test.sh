@@ -194,6 +194,12 @@ function cleanup() {
     fi
   }
 
+  function test_encryption_for_new_keys() {
+    # Verify that we can create news keys with custom encryption.
+    curl --insecure -X POST -H "Content-Type: application/json" -d '{"method":"value2"}' "${API_URL}/access-keys" \
+    || fail "Couldn't create a new access key with a custom method"
+  }
+
   function test_default_data_limit() {
     # Verify that we can create default data limits
     client_curl --insecure -X PUT -H 'Content-Type: application/json' -d '{"limit": {"bytes": 1000}}' \
@@ -231,6 +237,7 @@ function cleanup() {
   test_networking
   test_port_for_new_keys
   test_hostname_for_new_keys
+  test_encryption_for_new_keys
   test_default_data_limit
   test_per_key_data_limits
 
