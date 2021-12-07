@@ -43,5 +43,4 @@ export class InvalidCipher extends OutlineError {
   constructor(public cipher: string) {
     super(cipher.toString());
   }
-
 }
