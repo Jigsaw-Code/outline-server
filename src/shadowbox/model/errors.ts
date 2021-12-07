@@ -38,3 +38,10 @@ export class AccessKeyNotFound extends OutlineError {
     super(`Access key "${accessKeyId}" not found`);
   }
 }
+
+export class InvalidCipher extends OutlineError {
+  constructor(public cipher: string) {
+    super(cipher.toString());
+  }
+
+}
