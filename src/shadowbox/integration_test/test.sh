@@ -203,7 +203,7 @@ function cleanup() {
     ACCESS_KEY_JSON="$(client_curl --insecure -X GET "${SB_API_URL}/access-keys" \
       || fail "Couldn't get a new access key after changing hostname")"
 
-    if [[ "${ACCESS_KEY_JSON}" != *'"encryption":"aes-256-gcm"'* ]]; then
+    if [[ "${ACCESS_KEY_JSON}" != *'"method":"aes-256-gcm"'* ]]; then
       fail "Custom encryption key not taken by new access key: ${ACCESS_KEY_JSON}"
     fi
   }
