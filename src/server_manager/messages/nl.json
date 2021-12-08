@@ -43,7 +43,7 @@
   "error-keys-port-bad-input": "De poort moet een geheel getal zijn tussen 1 en 65.535.",
   "error-keys-port-in-use": "Deze poort wordt al gebruikt op de server.",
   "error-licenses": "De licenties kunnen niet worden geladen.",
-  "error-metrics": "Fout: bij inschakelen van statistieken",
+  "error-metrics": "Fout: bij aanzetten van statistieken",
   "error-network": "Er is een netwerkfout opgetreden.",
   "error-not-saved": "Niet opgeslagen",
   "error-remove-data-limit": "De standaard gegevenslimiet kan niet worden uitgezet",
