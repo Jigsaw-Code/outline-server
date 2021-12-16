@@ -249,7 +249,7 @@ describe('ShadowsocksManagerService', () => {
   });
 
   describe('createNewAccessKey', () => {
-    it('creates keys', (done) => {
+    it('verify default method', (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
 
@@ -264,12 +264,27 @@ describe('ShadowsocksManagerService', () => {
       };
       service.createNewAccessKey({params: {}}, res, done);
     });
+    it('non-default method gets set', (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+
+      // Verify that response returns a key with the expected properties.
+      const res = {
+        send: (httpCode, data) => {
+          expect(httpCode).toEqual(201);
+          expect(Object.keys(data).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
+          expect(data.method).toEqual('aes-256-gcm');
+          responseProcessed = true;  // required for afterEach to pass.
+        }
+      };
+      service.createNewAccessKey({params: {method: "aes-256-gcm"}}, res, done);
+    });
     it('method must be of type string', (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
 
       const res = {send: (httpCode, data) => {}};
-      service.createNewAccessKey({params: {method: Number("9876")}}, res, (error) => {
+      service.createNewAccessKey({params: {method: Number('9876')}}, res, (error) => {
         expect(error.statusCode).toEqual(400);
         responseProcessed = true;  // required for afterEach to pass.
         done();
