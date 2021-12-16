@@ -262,14 +262,14 @@ describe('ShadowsocksManagerService', () => {
           responseProcessed = true;  // required for afterEach to pass.
         }
       };
-      service.createNewAccessKey({params: {encryptionMethod: 'chacha20-ietf-poly1305'}}, res, done);
+      service.createNewAccessKey({params: {}}, res, done);
     });
-    it('encryptionMethod must be of type string', (done) => {
+    it('method must be of type string', (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
 
       const res = {send: (httpCode, data) => {}};
-      service.createNewAccessKey({params: {encryptionMethod: 12345}}, res, (error) => {
+      service.createNewAccessKey({params: {method: Number("9876")}}, res, (error) => {
         expect(error.statusCode).toEqual(400);
         responseProcessed = true;  // required for afterEach to pass.
         done();

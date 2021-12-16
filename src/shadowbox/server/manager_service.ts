@@ -230,7 +230,6 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
       let encryptionMethod = req.params.method;
-      logging.debug(`encryptionMethod: $(encryptionMethod)`);
       if (!encryptionMethod) {
         encryptionMethod = '';
       }
