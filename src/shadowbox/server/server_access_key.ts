@@ -79,6 +79,13 @@ function accessKeyToStorageJson(accessKey: AccessKey): AccessKeyStorageJson {
   };
 }
 
+function isValidCipher(cipher: string): boolean {
+    if (["aes-256-gcm", "aes-192-gcm", "aes-128-gcm", "chacha20-ietf-poly1305"].indexOf(cipher) === -1) {
+      return false;
+    }
+    return true;
+}
+
 // AccessKeyRepository that keeps its state in a config file and uses ShadowsocksServer
 // to start and stop per-access-key Shadowsocks instances.  Requires external validation
 // that portForNewAccessKeys is valid.
@@ -143,6 +150,10 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     const metricsId = uuidv4();
     const password = generatePassword();
     encryptionMethod = encryptionMethod || this.NEW_USER_ENCRYPTION_METHOD;
+    // Validate encryption method.
+    if (!isValidCipher(encryptionMethod)) {
+      throw new errors.InvalidCipher(encryptionMethod);
+    }
     const proxyParams = {
       hostname: this.proxyHostname,
       portNumber: this.portForNewAccessKeys,

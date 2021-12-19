@@ -226,7 +226,7 @@ export class ShadowsocksManagerService {
   }
 
   // Creates a new access key
-  public createNewAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
+  public async createNewAccessKey(req: RequestType, res: ResponseType, next: restify.Next): Promise<void> {
     try {
       logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
       let encryptionMethod = req.params.method;
@@ -239,14 +239,15 @@ export class ShadowsocksManagerService {
             `Expected a string encryptionMethod, instead got ${encryptionMethod} of type ${
                 typeof encryptionMethod}`));
       }
-      this.accessKeys.createNewAccessKey(encryptionMethod).then((accessKey) => {
-        const accessKeyJson = accessKeyToApiJson(accessKey);
-        res.send(201, accessKeyJson);
-        logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);
-        return next();
-      });
-    } catch (error) {
+      const accessKeyJson = accessKeyToApiJson(await this.accessKeys.createNewAccessKey(encryptionMethod));
+      res.send(201, accessKeyJson);
+      logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);
+      return next();
+    } catch(error) {
       logging.error(error);
+      if (error instanceof errors.InvalidCipher) {
+        return next(new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message));
+      }
       return next(new restifyErrors.InternalServerError());
     }
   }

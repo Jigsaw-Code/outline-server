@@ -41,6 +41,6 @@ export class AccessKeyNotFound extends OutlineError {
 
 export class InvalidCipher extends OutlineError {
   constructor(public cipher: string) {
-    super(cipher.toString());
+    super(`cipher "${cipher}" is not valid`);
   }
 }

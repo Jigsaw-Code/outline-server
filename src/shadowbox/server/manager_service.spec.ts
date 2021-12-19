@@ -16,7 +16,6 @@ import * as net from 'net';
 
 import {InMemoryConfig, JsonConfig} from '../infrastructure/json_config';
 import {AccessKey, AccessKeyRepository, DataLimit} from '../model/access_key';
-
 import {ManagerMetrics} from './manager_metrics';
 import {ShadowsocksManagerService} from './manager_service';
 import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
@@ -277,7 +276,7 @@ describe('ShadowsocksManagerService', () => {
           responseProcessed = true;  // required for afterEach to pass.
         }
       };
-      service.createNewAccessKey({params: {method: "aes-256-gcm"}}, res, done);
+      service.createNewAccessKey({params: {method: 'aes-256-gcm'}}, res, done);
     });
     it('method must be of type string', (done) => {
       const repo = getAccessKeyRepository();
@@ -290,13 +289,24 @@ describe('ShadowsocksManagerService', () => {
         done();
       });
     });
+    it('method must be valid', (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+
+      const res = {send: (httpCode, data) => {}};
+      service.createNewAccessKey({params: {method: 'abcdef'}}, res, (error) => {
+        expect(error.statusCode).toEqual(400);
+        responseProcessed = true;  // required for afterEach to pass.
+        done();
+      });
+    });
     it('Create returns a 500 when the repository throws an exception', (done) => {
       const repo = getAccessKeyRepository();
       spyOn(repo, 'createNewAccessKey').and.throwError('cannot write to disk');
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
 
       const res = {send: (httpCode, data) => {}};
-      service.createNewAccessKey({params: {}}, res, (error) => {
+      service.createNewAccessKey({params: {method: 'aes-192-gcm'}}, res, (error) => {
         expect(error.statusCode).toEqual(500);
         responseProcessed = true;  // required for afterEach to pass.
         done();
