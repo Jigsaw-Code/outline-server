@@ -158,7 +158,10 @@ function fetch() {
 }
 
 function install_docker() {
+  umask 0022
+  (chmod a+r /usr/share/keyrings/docker-archive-keyring.gpg 2>/dev/null || true)
   (fetch https://get.docker.com/ | sh) >&2
+  umask 0007
 }
 
 function start_docker() {
