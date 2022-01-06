@@ -158,7 +158,13 @@ function fetch() {
 }
 
 function install_docker() {
-  (fetch https://get.docker.com/ | sh) >&2
+  (
+    # Change umask so that /usr/share/keyrings/docker-archive-keyring.gpg has the right permissions.
+    # See https://github.com/Jigsaw-Code/outline-server/issues/951.
+    # We do this in a subprocess so the umask for the calling process is unaffected.
+    umask 0022
+    fetch https://get.docker.com/ | sh
+  ) >&2
 }
 
 function start_docker() {
