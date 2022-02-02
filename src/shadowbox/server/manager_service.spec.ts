@@ -800,13 +800,16 @@ describe('bindService', () => {
       spyOnAllFunctions(service);
       jasmine.setDefaultSpyStrategy(fail);
       bindService(server, prefix, service);
-  
+
       url.pathname = path;
       const response = await fetch(url);
       const body = await response.json();
-  
-      expect(body).toEqual({code: 'ResourceNotFound', message: `${path} does not exist`});
-    });  
+
+      expect(body).toEqual({
+        code: 'ResourceNotFound',
+        message: `${path} does not exist`
+      });
+    });
   });
 });
 
