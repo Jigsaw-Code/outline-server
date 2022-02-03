@@ -744,7 +744,7 @@ describe('bindService', () => {
   let server: restify.Server;
   let service: ShadowsocksManagerService;
   let url: URL;
-  const prefix = '/TestApiPrefix';
+  const PREFIX = '/TestApiPrefix';
 
   const fakeResponse = {'foo': 'bar'};
   const fakeHandler = async (req, res, next) => {
@@ -765,9 +765,9 @@ describe('bindService', () => {
 
   it('basic routing', async () => {
     spyOn(service, "renameServer").and.callFake(fakeHandler);
-    bindService(server, prefix, service);
+    bindService(server, PREFIX, service);
 
-    url.pathname = `${prefix}/name`;
+    url.pathname = `${PREFIX}/name`;
     const response = await fetch(url, {method: 'put'});
     const body = await response.json();
 
@@ -777,9 +777,9 @@ describe('bindService', () => {
 
   it('parameterized routing', async () => {
     spyOn(service, "removeAccessKeyDataLimit").and.callFake(fakeHandler);
-    bindService(server, prefix, service);
+    bindService(server, PREFIX, service);
 
-    url.pathname = `${prefix}/access-keys/fake-access-key-id/data-limit`;
+    url.pathname = `${PREFIX}/access-keys/fake-access-key-id/data-limit`;
     const response = await fetch(url, {method: 'delete'});
     const body = await response.json();
 
@@ -792,14 +792,16 @@ describe('bindService', () => {
     '/',
     '/TestApiPre',
     '/foo',
+    '/TestApiPrefix123',
+    '/123TestApiPrefix',
     '/very-long-path-that-does-not-exist',
-    `${prefix}/does-not-exist`,
+    `${PREFIX}/does-not-exist`,
   ].forEach(path => {
     it(`404 (${path})`, async () => {
       // Ensure no methods are called.
       spyOnAllFunctions(service);
       jasmine.setDefaultSpyStrategy(fail);
-      bindService(server, prefix, service);
+      bindService(server, PREFIX, service);
 
       url.pathname = path;
       const response = await fetch(url);
