@@ -79,7 +79,7 @@ enum HttpSuccess {
 function timingSafeStartsWith(input: string, prefix: string): boolean {
   const prefixBuf = Buffer.from(prefix);
   const inputBuf = Buffer.from(input);
-  const L = Math.min(inputBuf.length, prefixBuf.length)
+  const L = Math.min(inputBuf.length, prefixBuf.length);
   const inputOverlap = inputBuf.slice(0, L);
   const prefixOverlap = prefixBuf.slice(0, L);
   const match = crypto.timingSafeEqual(inputOverlap, prefixOverlap);
