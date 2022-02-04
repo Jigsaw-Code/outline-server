@@ -77,13 +77,13 @@ enum HttpSuccess {
 
 // Similar to String.startsWith(), but constant-time.
 function timingSafeStartsWith(input: string, prefix: string): boolean {
-  if (input.length < prefix.length) {
-    return false;
-  }
   const prefixBuf = Buffer.from(prefix);
   const inputBuf = Buffer.from(input);
-  const overlap = inputBuf.slice(0, prefixBuf.length);
-  return crypto.timingSafeEqual(overlap, prefixBuf);
+  const L = Math.min(inputBuf.length, prefixBuf.length)
+  const inputOverlap = inputBuf.slice(0, L);
+  const prefixOverlap = prefixBuf.slice(0, L);
+  const match = crypto.timingSafeEqual(inputOverlap, prefixOverlap);
+  return inputBuf.length >= prefixBuf.length && match;
 }
 
 // Returns a pre-routing hook that injects a 404 if the request does not
