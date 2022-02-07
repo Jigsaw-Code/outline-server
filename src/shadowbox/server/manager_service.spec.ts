@@ -798,7 +798,7 @@ describe('bindService', () => {
     `${PREFIX}/does-not-exist`,
   ].forEach(path => {
     it(`404 (${path})`, async () => {
-      // Ensure no methods are called.
+      // Ensure no methods are called on the Service.
       spyOnAllFunctions(service);
       jasmine.setDefaultSpyStrategy(fail);
       bindService(server, PREFIX, service);
@@ -807,10 +807,62 @@ describe('bindService', () => {
       const response = await fetch(url);
       const body = await response.json();
 
+      expect(response.status).toEqual(404);
       expect(body).toEqual({
         code: 'ResourceNotFound',
         message: `${path} does not exist`
       });
+    });
+  });
+
+  // This is primarily a reverse testcase for the unauthorized case.
+  it(`standard routing for authorized queries`, async () => {
+    bindService(server, PREFIX, service);
+    // Verify that ordinary routing goes through the Router.
+    spyOn(server.router, "lookup").and.callThrough();
+
+    // This is an authorized request, so it will pass the prefix filter
+    // and reach the Router.
+    url.pathname = `${PREFIX}`;
+    const response = await fetch(url);
+    expect(response.status).toEqual(404);
+    await response.json();
+
+    expect(server.router.lookup).toHaveBeenCalled();
+  });
+
+  // Check that unauthorized queries are rejected without ever reaching
+  // the routing stage.
+  [
+    '/',
+    '/T',
+    '/TestApiPre',
+    '/TestApi123456',
+    '/TestApi123456789',
+  ].forEach(path => {
+    it(`no routing for unauthorized queries (${path})`, async () => {
+      bindService(server, PREFIX, service);
+      // Ensure no methods are called on the Router.
+      spyOnAllFunctions(server.router);
+      jasmine.setDefaultSpyStrategy(fail);
+
+      // Try bare pathname.
+      url.pathname = path;
+      const response1 = await fetch(url);
+      expect(response1.status).toEqual(404);
+      await response1.json();
+
+      // Try a subpath that would exist if this were a valid prefix
+      url.pathname = `${path}/server`;
+      const response2 = await fetch(url);
+      expect(response2.status).toEqual(404);
+      await response2.json();
+
+      // Try an arbitrary subpath
+      url.pathname = `${path}/does-not-exist`;
+      const response3 = await fetch(url);
+      expect(response3.status).toEqual(404);
+      await response3.json();
     });
   });
 });

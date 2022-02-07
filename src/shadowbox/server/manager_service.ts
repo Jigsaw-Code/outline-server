@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as crypto from 'crypto';
 import * as ipRegex from 'ip-regex';
 import * as restify from 'restify';
 import * as restifyErrors from 'restify-errors';
@@ -74,8 +75,34 @@ enum HttpSuccess {
   NO_CONTENT = 204,
 }
 
+// Similar to String.startsWith(), but constant-time.
+function timingSafeStartsWith(input: string, prefix: string): boolean {
+  const prefixBuf = Buffer.from(prefix);
+  const inputBuf = Buffer.from(input);
+  const L = Math.min(inputBuf.length, prefixBuf.length);
+  const inputOverlap = inputBuf.slice(0, L);
+  const prefixOverlap = prefixBuf.slice(0, L);
+  const match = crypto.timingSafeEqual(inputOverlap, prefixOverlap);
+  return inputBuf.length >= prefixBuf.length && match;
+}
+
+// Returns a pre-routing hook that injects a 404 if the request does not
+// start with `apiPrefix`.  This filter runs in constant time.
+function prefixFilter(apiPrefix: string): restify.RequestHandler {
+  return (req: restify.Request, res: restify.Response, next: restify.Next) => {
+    if (timingSafeStartsWith(req.path(), apiPrefix)) {
+      return next();
+    }
+    // This error matches the router's default 404 response.
+    next(new restifyErrors.ResourceNotFoundError('%s does not exist', req.path()));
+  };
+}
+
 export function bindService(
     apiServer: restify.Server, apiPrefix: string, service: ShadowsocksManagerService) {
+  // Reject unauthorized requests in constant time before they reach the routing step.
+  apiServer.pre(prefixFilter(apiPrefix));
+
   apiServer.put(`${apiPrefix}/name`, service.renameServer.bind(service));
   apiServer.get(`${apiPrefix}/server`, service.getServer.bind(service));
   apiServer.put(
