@@ -32,7 +32,7 @@ jobs:
 
   shadowbox:
     name: Shadowbox
-    runs-on: ubuntu-20.24
+    runs-on: ubuntu-latest
     needs: lint
     steps:
       - name: Checkout
@@ -58,7 +58,7 @@ jobs:
 
   metrics-server:
     name: Metrics Server
-    runs-on: ubuntu-20.24
+    runs-on: ubuntu-latest
     needs: lint
     steps:
       - name: Checkout
@@ -81,7 +81,7 @@ jobs:
 
   manager-web-test:
     name: Manager Web Test
-    runs-on: ubuntu-20.24
+    runs-on: ubuntu-latest
     needs: lint
     steps:
       - name: Checkout
@@ -101,7 +101,7 @@ jobs:
 
   manager-linux-debug-build:
     name: Manager Linux Debug Build
-    runs-on: ubuntu-20.24
+    runs-on: ubuntu-latest
     needs: manager-web-test
     env:
       SENTRY_DSN: debug
