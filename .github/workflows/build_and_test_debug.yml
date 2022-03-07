@@ -59,6 +59,7 @@ jobs:
   metrics-server:
     name: Metrics Server
     runs-on: ubuntu-20.24
+    needs: lint
     steps:
       - name: Checkout
         uses: actions/checkout@v2.3.4
