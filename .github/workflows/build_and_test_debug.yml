@@ -80,7 +80,7 @@ jobs:
         run: npm run action metrics_server/test
 
   manager-web-test:
-    name: Manager
+    name: Manager Web Test
     runs-on: ubuntu-20.24
     needs: lint
     steps:
@@ -100,7 +100,7 @@ jobs:
         run: npm run action server_manager/test
 
   manager-linux-debug-build:
-    name: Manager
+    name: Manager Linux Debug Build
     runs-on: ubuntu-20.24
     needs: manager-web-test
     env:
@@ -129,7 +129,7 @@ jobs:
           if-no-files-found: error
 
   manager-windows-debug-build:
-    name: Manager
+    name: Manager Windows Debug Build
     runs-on: windows-2019
     needs: manager-web-test
     env:
@@ -158,7 +158,7 @@ jobs:
           if-no-files-found: error
 
   manager-mac-debug-build:
-    name: Manager
+    name: Manager MacOS Debug Build
     runs-on: macos-11
     needs: manager-web-test
     env:
