@@ -20,7 +20,7 @@ npm run action server_manager/electron_app/build
 
 readonly BUILD_DIR='build/server_manager/electron_app/static'
 
-"${ROOT_DIR}/src/server_manager/node_modules/.bin/electron-builder" \
+"${ROOT_DIR}/node_modules/.bin/electron-builder" \
   --projectDir="${BUILD_DIR}" \
   --config.asarUnpack=server_manager/web_app/images \
   --config.generateUpdatesFilesForAllChannels=true \
