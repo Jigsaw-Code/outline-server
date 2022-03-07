@@ -3,17 +3,20 @@
 # of migrating to the same process we use on the client:
 # https://github.com/Jigsaw-Code/outline-client/blob/master/.github/workflows/build_release_candidates.yml
 
-# name: Release Manager
-
-# on:
-#   push:
-#     tags:
-#       - "v[0-9]*"
-
+name: LEGACY Release Manager
+on:
+  push:
+    tags:
+      - "v[0-9]*"
 # env:
 #   SENTRY_DSN: https://533e56d1b2d64314bd6092a574e6d0f1@o74047.ingest.sentry.io/215496
 
-# jobs:
+jobs:
+  noop:
+    name: No-op
+    steps:
+      - name: No-op
+        run: 'echo "DEPRECATED: FOR REFERENCE ONLY"'
 #   release_manager:
 #     name: Release Manager
 #     runs-on: ${{ matrix.os }}
