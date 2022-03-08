@@ -14,8 +14,12 @@
 
 import {version} from "../package.json";
 
+export function get_version() {
+  return version;
+}
+
 async function main() {
-  console.log(version);
+  console.log(get_version());
 }
 
 if (import.meta.url === url.pathToFileURL(process.argv[1]).href) {
