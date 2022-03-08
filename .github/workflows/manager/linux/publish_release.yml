@@ -8,9 +8,9 @@ on:
         required: true
 
 jobs:
-  release:
+  publish-release:
     name: Publish Client Linux Release Candidate
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: Releases Repository
     env:
@@ -55,12 +55,12 @@ jobs:
 
           [ "$(git tag -l "$RELEASE_TAG")" != "" ] && exit 1
 
-          cp manager_linux_release/Outline-Client.AppImage outline-releases/manager/stable/Outline-Client.AppImage
+          cp manager_linux_release/Outline-Manager.AppImage outline-releases/manager/stable/Outline-Manager.AppImage
           cp manager_linux_release/latest-linux.yml outline-releases/manager/stable/latest-linux.yml
 
           cd outline-releases
           git checkout master
-          git add manager/stable/Outline-Client.AppImage manager/stable/latest-linux.yml
+          git add manager/stable/Outline-Manager.AppImage manager/stable/latest-linux.yml
           git commit -m "Release linux manager v${RELEASE_VERSION}"
           git push origin master
           git tag "$RELEASE_TAG"
@@ -75,5 +75,5 @@ jobs:
     #   uses: snapcore/action-publish@v1
     #   with:
     #     store_login: ${{ secrets.STORE_LOGIN }}
-    #     snap: build/dist/Outline-Client.AppImage
+    #     snap: build/dist/Outline-Manager.AppImage
     #     release: edge

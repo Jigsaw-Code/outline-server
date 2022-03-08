@@ -10,7 +10,7 @@ on:
       - master
 
 jobs:
-  windows:
-    uses: ./.github/workflows/build_linux_release_candidate.yml
+  linux:
+    uses: ./.github/workflows/manager/linux/build_release_candidate.yml
     secrets:
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}

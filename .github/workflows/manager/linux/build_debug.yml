@@ -1,0 +1,34 @@
+name: Build Manager Linux Debug
+
+on:
+  workflow_call:
+    secrets:
+      SENTRY_DSN:
+        required: true
+
+jobs:
+  manager-linux-debug-build:
+    name: Manager Linux Debug Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Install Node
+        uses: actions/setup-node@v2.2.0
+        with:
+          node-version: 16
+          cache: npm
+
+      - name: Install NPM Dependencies
+        run: npm ci
+
+      - name: Build Linux Manager
+        run: npm run action server_manager/electron_app/build --platform linux
+
+      - name: Upload Linux Client
+        uses: actions/upload-artifact@v2
+        with:
+          name: manager_linux_debug
+          path: build/server_manager/electron_app/static/dist/Outline-Manager.AppImage
+          if-no-files-found: error
