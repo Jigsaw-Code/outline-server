@@ -12,16 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {version} from "../package.json";
+import url from "url";
+import path from "path";
+import {readFile} from "fs/promises";
 
-export function get_version() {
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export async function get_version() {
+  const {version} = JSON.parse(await readFile(path.resolve(__dirname, "../package.json")));
+
   return version;
 }
 
 async function main() {
-  console.log(get_version());
+  console.log(await get_version());
 }
 
 if (import.meta.url === url.pathToFileURL(process.argv[1]).href) {
-  main();
+  (async function() {
+    return main();
+  })();
 }
