@@ -179,5 +179,12 @@ jobs:
       - name: Set XCode Version
         run: sudo xcode-select -switch /Applications/Xcode_13.2.app
 
-      - name: Build OSX Manager
+      - name: Build MacOS Manager
         run: npm run action server_manager/electron_app/build --platform mac
+
+      - name: Upload MacOS Manager
+        uses: actions/upload-artifact@v2
+        with:
+          name: manager_macos_debug
+          path: build/server_manager/electron_app/static/dist/Outline-Manager.dmg
+          if-no-files-found: error
