@@ -154,7 +154,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: manager_windows_debug
-          path: build/server_manager/electron_app/static/dist/Outline-Manager.nsis
+          path: build/server_manager/electron_app/static/dist/Outline-Manager.exe
           if-no-files-found: error
 
   manager-mac-debug-build:
