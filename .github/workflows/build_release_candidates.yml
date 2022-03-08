@@ -11,6 +11,6 @@ on:
 
 jobs:
   linux:
-    uses: ./.github/workflows/manager/linux/build_release_candidate.yml
+    uses: ./.github/workflows/manager_linux_build_release_candidate.yml
     secrets:
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
