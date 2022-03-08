@@ -19,7 +19,7 @@ PLATFORM=$1
 STAGING_PERCENTAGE=100
 BUILD_MODE=debug
 for i in "$@"; do
-  case $i in
+  case ${i} in
   --buildMode=*)
     BUILD_MODE="${i#*=}"
     shift
@@ -28,15 +28,13 @@ for i in "$@"; do
     STAGING_PERCENTAGE="${i#*=}"
     shift
     ;;
-  -* | --*)
+  --* | -*)
     echo "Unknown option: ${i}"
     exit 1
     ;;
   *) ;;
   esac
 done
-
-# Builds the Electron App
 
 readonly OUT_DIR="${BUILD_DIR}/server_manager/electron_app"
 rm -rf "${OUT_DIR}"
@@ -68,6 +66,7 @@ npm ci --prod --ignore-scripts
 cd "${ROOT_DIR}"
 electron-icon-maker --input=src/server_manager/images/launcher-icon.png --output=build/server_manager/electron_app/static
 
-electron-builder $(node src/server_manager/scripts/get_electron_build_flags.mjs $PLATFORM --buildMode $BUILD_MODE)
+# shellcheck disable=SC2046
+electron-builder $(node src/server_manager/scripts/get_electron_build_flags.mjs "${PLATFORM}" --buildMode "${BUILD_MODE}")
 
 src/server_manager/scripts/finish_info_files.sh "${PLATFORM}" "${STAGING_PERCENTAGE}"
