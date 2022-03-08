@@ -18,8 +18,14 @@
 # in a Docker container. *Building* is not supported by that Docker image
 # so we build separately.
 
+source src/server_manager/scripts/fill_packaging_opts.sh "$0" "$@"
+
+npm run action server_manager/electron_app/build
+
+readonly BUILD_DIR=build/server_manager/electron_app/static
+
 "${ROOT_DIR}/node_modules/.bin/electron-builder" \
-  --projectDir=build/server_manager/electron_app/static \
+  --projectDir="${BUILD_DIR}" \
   --config.asarUnpack=server_manager/web_app/images \
   --config.generateUpdatesFilesForAllChannels=true \
   --publish=never \
