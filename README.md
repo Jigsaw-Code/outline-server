@@ -33,9 +33,13 @@ The system comprises the following components:
 ## Code Prerequisites
 
 In order to build and run the code, you need the following installed:
-  - [Node](https://nodejs.org/) (version `16.13.0`)
-  - [NPM](http://npmjs.org/) (version `8.1.0`)
-  - [Wine](https://www.winehq.org/download), if you would like to generate binaries for Windows.
+  - [Node](https://nodejs.org/en/download/) LTS (version `16.13.0`)
+  - [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (version `8.1.0`)
+  - Manager-specic
+    - [Wine](https://www.winehq.org/download), if you would like to generate binaries for Windows.
+  - Server-specific
+    - [Docker](https://docs.docker.com/engine/install/), to build the Docker image and to run the integration test.
+    - [docker-compose](https://docs.docker.com/compose/install/), to run the integration test.
 
 
 > 💡 NOTE: if you have `nvm` installed, run `nvm use` to switch to the correct node version!
