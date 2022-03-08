@@ -54,7 +54,7 @@ jobs:
         run: npm run action shadowbox/test
 
       - name: Shadowbox Integration Test
-        run: npm run action shadowbox/integration_test/start
+        run: npm run action shadowbox/integration_test/run
 
   metrics-server:
     name: Metrics Server
