@@ -119,7 +119,7 @@ jobs:
         run: npm ci
 
       - name: Build Linux Manager
-        run: npm run action server_manager/electron_app/package_linux
+        run: npm run action server_manager/electron_app/build --platform linux
 
       - name: Upload Linux Client
         uses: actions/upload-artifact@v2
@@ -148,13 +148,13 @@ jobs:
         run: npm ci
 
       - name: Build Windows Manager
-        run: npm run action server_manager/electron_app/package_only_windows
+        run: npm run action server_manager/electron_app/build --platform windows
 
       - name: Upload Windows Manager
         uses: actions/upload-artifact@v2
         with:
           name: manager_windows_debug
-          path: build/server_manager/electron_app/static/dist/Outline-Manager.exe
+          path: build/server_manager/electron_app/static/dist/Outline-Manager.nsis
           if-no-files-found: error
 
   manager-mac-debug-build:
@@ -180,4 +180,4 @@ jobs:
         run: sudo xcode-select -switch /Applications/Xcode_13.2.app
 
       - name: Build OSX Manager
-        run: npm run action server_manager/electron_app/package_macos
+        run: npm run action server_manager/electron_app/build --platform mac
