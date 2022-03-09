@@ -35,7 +35,7 @@ import type {DisplayAccessKey, ServerView} from './ui_components/outline-server-
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
-const UNUSED_DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
+//const UNUSED_DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
 
 const CHANGE_KEYS_PORT_VERSION = '1.0.0';
 const DATA_LIMITS_VERSION = '1.1.0';

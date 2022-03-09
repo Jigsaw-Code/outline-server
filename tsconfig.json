@@ -9,5 +9,6 @@
     "experimentalDecorators":true,
     "allowJs": true,
     "resolveJsonModule": true,
+    "noUnusedLocals": true,
   }
 }
