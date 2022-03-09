@@ -21,6 +21,7 @@
     "action:list": "npm run action",
     "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts src/server_manager/install_scripts/gcp_install_script.ts third_party/shellcheck/download/",
     "format": "pretty-quick --staged --pattern \"**/*.{cjs,html,js,json,md,ts}\"",
+    "format:all": "prettier --write \"**/*.{cjs,html,js,json,md,ts}\"",
     "lint": "npm run lint:sh && npm run lint:ts",
     "lint:sh": "bash ./scripts/shellcheck.sh",
     "lint:ts": "npx tslint 'src/**/*.ts' -e '**/node_modules/**'",
