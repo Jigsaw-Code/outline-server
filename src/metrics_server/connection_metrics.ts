@@ -59,9 +59,7 @@ function getConnectionRowsFromReport(report: HourlyConnectionMetricsReport): Con
 
 // Returns true iff testObject contains a valid HourlyConnectionMetricsReport.
 // tslint:disable-next-line:no-any
-export function isValidConnectionMetricsReport(
-  testObject: any
-): testObject is HourlyConnectionMetricsReport {
+export function isValidConnectionMetricsReport(testObject: any): testObject is HourlyConnectionMetricsReport {
   if (!testObject) {
     return false;
   }
