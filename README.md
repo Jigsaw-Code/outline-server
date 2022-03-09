@@ -33,7 +33,7 @@ The system comprises the following components:
 ## Code Prerequisites
 
 In order to build and run the code, you need the following installed:
-  - [Node](https://nodejs.org/en/download/) LTS (version `16.13.0`)
+  - [Node](https://nodejs.org/en/download/) LTS (`lts/gallium`, version `16.13.0`)
   - [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (version `8.1.0`)
   - Manager-specic
     - [Wine](https://www.winehq.org/download), if you would like to generate binaries for Windows.
