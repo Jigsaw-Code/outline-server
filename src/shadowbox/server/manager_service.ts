@@ -16,7 +16,7 @@ import * as crypto from 'crypto';
 import * as ipRegex from 'ip-regex';
 import * as restify from 'restify';
 import * as restifyErrors from 'restify-errors';
-import {makeConfig, SIP002_URI} from 'ShadowsocksConfig';
+import {makeConfig, SIP002_URI} from 'outline-shadowsocksconfig';
 
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
