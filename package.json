@@ -21,6 +21,7 @@
     "action:help": "npm run action",
     "action:list": "npm run action",
     "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts src/server_manager/install_scripts/gcp_install_script.ts third_party/shellcheck/download/",
+    "format": "prettier \"**/*.{cjs,html,js,json,md,ts}\" --write",
     "lint": "npm run lint:sh && npm run lint:ts",
     "lint:sh": "bash ./scripts/shellcheck.sh",
     "lint:ts": "npx tslint 'src/**/*.ts' -e '**/node_modules/**'",
@@ -31,7 +32,7 @@
   ],
   "husky": {
     "hooks": {
-      "pre-commit": "npm run lint && npx git-clang-format && npx pretty-quick --staged --pattern '**/*.html'"
+      "pre-commit": "npm run lint && npx git-clang-format && npx pretty-quick --staged --pattern \"**/*.{cjs,html,js,json,md,ts}\""
     }
   }
 }

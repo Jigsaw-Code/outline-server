@@ -36,9 +36,11 @@ const config = loadConfig();
 
 const bigqueryDataset = new BigQuery({projectId: 'uproxysite'}).dataset(config.datasetName);
 const connectionsTable = new connections.BigQueryConnectionsTable(
-    bigqueryDataset.table(config.connectionMetricsTableName));
-const featuresTable =
-    new features.BigQueryFeaturesTable(bigqueryDataset.table(config.featureMetricsTableName));
+  bigqueryDataset.table(config.connectionMetricsTableName)
+);
+const featuresTable = new features.BigQueryFeaturesTable(
+  bigqueryDataset.table(config.featureMetricsTableName)
+);
 
 const app = express();
 // Parse the request body for content-type 'application/json'.

@@ -20,7 +20,14 @@ import {isPortUsed} from '../infrastructure/get_port';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
-import {AccessKey, AccessKeyId, AccessKeyMetricsId, AccessKeyRepository, DataLimit, ProxyParams} from '../model/access_key';
+import {
+  AccessKey,
+  AccessKeyId,
+  AccessKeyMetricsId,
+  AccessKeyRepository,
+  DataLimit,
+  ProxyParams,
+} from '../model/access_key';
 import * as errors from '../model/errors';
 import {ShadowsocksServer} from '../model/shadowsocks_server';
 import {PrometheusManagerMetrics} from './manager_metrics';
@@ -47,8 +54,12 @@ export interface AccessKeyConfigJson {
 class ServerAccessKey implements AccessKey {
   public isOverDataLimit = false;
   constructor(
-      readonly id: AccessKeyId, public name: string, public metricsId: AccessKeyMetricsId,
-      readonly proxyParams: ProxyParams, public dataLimit?: DataLimit) {}
+    readonly id: AccessKeyId,
+    public name: string,
+    public metricsId: AccessKeyMetricsId,
+    readonly proxyParams: ProxyParams,
+    public dataLimit?: DataLimit
+  ) {}
 }
 
 // Generates a random password for Shadowsocks access keys.
@@ -64,7 +75,12 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyStorageJson): A
     password: accessKeyJson.password,
   };
   return new ServerAccessKey(
-      accessKeyJson.id, accessKeyJson.name, accessKeyJson.metricsId, proxyParams, accessKeyJson.dataLimit);
+    accessKeyJson.id,
+    accessKeyJson.name,
+    accessKeyJson.metricsId,
+    proxyParams,
+    accessKeyJson.dataLimit
+  );
 }
 
 function accessKeyToStorageJson(accessKey: AccessKey): AccessKeyStorageJson {
@@ -75,7 +91,7 @@ function accessKeyToStorageJson(accessKey: AccessKey): AccessKeyStorageJson {
     password: accessKey.proxyParams.password,
     port: accessKey.proxyParams.portNumber,
     encryptionMethod: accessKey.proxyParams.encryptionMethod,
-    dataLimit: accessKey.dataLimit
+    dataLimit: accessKey.dataLimit,
   };
 }
 
@@ -83,15 +99,18 @@ function accessKeyToStorageJson(accessKey: AccessKey): AccessKeyStorageJson {
 // to start and stop per-access-key Shadowsocks instances.  Requires external validation
 // that portForNewAccessKeys is valid.
 export class ServerAccessKeyRepository implements AccessKeyRepository {
-  private static DATA_LIMITS_ENFORCEMENT_INTERVAL_MS = 60 * 60 * 1000;  // 1h
+  private static DATA_LIMITS_ENFORCEMENT_INTERVAL_MS = 60 * 60 * 1000; // 1h
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
   private accessKeys: ServerAccessKey[];
 
   constructor(
-      private portForNewAccessKeys: number, private proxyHostname: string,
-      private keyConfig: JsonConfig<AccessKeyConfigJson>,
-      private shadowsocksServer: ShadowsocksServer, private prometheusClient: PrometheusClient,
-      private _defaultDataLimit?: DataLimit) {
+    private portForNewAccessKeys: number,
+    private proxyHostname: string,
+    private keyConfig: JsonConfig<AccessKeyConfigJson>,
+    private shadowsocksServer: ShadowsocksServer,
+    private prometheusClient: PrometheusClient,
+    private _defaultDataLimit?: DataLimit
+  ) {
     if (this.keyConfig.data().accessKeys === undefined) {
       this.keyConfig.data().accessKeys = [];
     }
@@ -114,7 +133,9 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     await tryEnforceDataLimits();
     await this.updateServer();
     clock.setInterval(
-        tryEnforceDataLimits, ServerAccessKeyRepository.DATA_LIMITS_ENFORCEMENT_INTERVAL_MS);
+      tryEnforceDataLimits,
+      ServerAccessKeyRepository.DATA_LIMITS_ENFORCEMENT_INTERVAL_MS
+    );
   }
 
   private isExistingAccessKeyPort(port: number): boolean {
@@ -131,7 +152,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     if (!Number.isInteger(port) || port < 1 || port > 65535) {
       throw new errors.InvalidPortNumber(port.toString());
     }
-    if (!this.isExistingAccessKeyPort(port) && await isPortUsed(port)) {
+    if (!this.isExistingAccessKeyPort(port) && (await isPortUsed(port))) {
       throw new errors.PortUnavailable(port);
     }
     this.portForNewAccessKeys = port;
@@ -169,7 +190,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   listAccessKeys(): AccessKey[] {
-    return [...this.accessKeys];  // Return a copy of the access key array.
+    return [...this.accessKeys]; // Return a copy of the access key array.
   }
 
   renameAccessKey(id: AccessKeyId, name: string) {
@@ -190,7 +211,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.enforceAccessKeyDataLimits();
   }
 
-  get defaultDataLimit(): DataLimit|undefined {
+  get defaultDataLimit(): DataLimit | undefined {
     return this._defaultDataLimit;
   }
 
@@ -204,7 +225,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.enforceAccessKeyDataLimits();
   }
 
-  getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined {
+  getMetricsId(id: AccessKeyId): AccessKeyMetricsId | undefined {
     const accessKey = this.getAccessKey(id);
     return accessKey ? accessKey.metricsId : undefined;
   }
@@ -213,8 +234,8 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   // Updates access key data usage.
   async enforceAccessKeyDataLimits() {
     const metrics = new PrometheusManagerMetrics(this.prometheusClient);
-    const bytesTransferredById =
-        (await metrics.getOutboundByteTransfer({hours: 30 * 24})).bytesTransferredByUserId;
+    const bytesTransferredById = (await metrics.getOutboundByteTransfer({hours: 30 * 24}))
+      .bytesTransferredByUserId;
     let limitStatusChanged = false;
     for (const accessKey of this.accessKeys) {
       const usageBytes = bytesTransferredById[accessKey.id] ?? 0;
@@ -232,23 +253,25 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private updateServer(): Promise<void> {
-    const serverAccessKeys = this.accessKeys.filter(key => !key.isOverDataLimit).map(key => {
-      return {
-        id: key.id,
-        port: key.proxyParams.portNumber,
-        cipher: key.proxyParams.encryptionMethod,
-        secret: key.proxyParams.password
-      };
-    });
+    const serverAccessKeys = this.accessKeys
+      .filter((key) => !key.isOverDataLimit)
+      .map((key) => {
+        return {
+          id: key.id,
+          port: key.proxyParams.portNumber,
+          cipher: key.proxyParams.encryptionMethod,
+          secret: key.proxyParams.password,
+        };
+      });
     return this.shadowsocksServer.update(serverAccessKeys);
   }
 
   private loadAccessKeys(): AccessKey[] {
-    return this.keyConfig.data().accessKeys.map(key => makeAccessKey(this.proxyHostname, key));
+    return this.keyConfig.data().accessKeys.map((key) => makeAccessKey(this.proxyHostname, key));
   }
 
   private saveAccessKeys() {
-    this.keyConfig.data().accessKeys = this.accessKeys.map(key => accessKeyToStorageJson(key));
+    this.keyConfig.data().accessKeys = this.accessKeys.map((key) => accessKeyToStorageJson(key));
     this.keyConfig.write();
   }
 

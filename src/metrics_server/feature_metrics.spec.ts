@@ -17,7 +17,7 @@ import {InsertableTable} from './infrastructure/table';
 import {DailyFeatureMetricsReport} from './model';
 
 class FakeFeaturesTable implements InsertableTable<FeatureRow> {
-  public rows: FeatureRow[]|undefined;
+  public rows: FeatureRow[] | undefined;
 
   async insert(rows: FeatureRow[]) {
     this.rows = rows;
@@ -31,15 +31,17 @@ describe('postFeatureMetrics', () => {
       serverId: 'id',
       serverVersion: '0.0.0',
       timestampUtcMs: 123456,
-      dataLimit: {enabled: false}
+      dataLimit: {enabled: false},
     };
     await postFeatureMetrics(table, report);
-    const rows: FeatureRow[] = [{
-      serverId: report.serverId,
-      serverVersion: report.serverVersion,
-      timestamp: new Date(report.timestampUtcMs).toISOString(),
-      dataLimit: report.dataLimit
-    }];
+    const rows: FeatureRow[] = [
+      {
+        serverId: report.serverId,
+        serverVersion: report.serverVersion,
+        timestamp: new Date(report.timestampUtcMs).toISOString(),
+        dataLimit: report.dataLimit,
+      },
+    ];
     expect(table.rows).toEqual(rows);
   });
 });
@@ -50,7 +52,7 @@ describe('isValidFeatureMetricsReport', () => {
       serverId: 'id',
       serverVersion: '0.0.0',
       timestampUtcMs: 123456,
-      dataLimit: {enabled: true}
+      dataLimit: {enabled: true},
     };
     expect(isValidFeatureMetricsReport(report)).toBeTruthy();
   });
@@ -59,7 +61,7 @@ describe('isValidFeatureMetricsReport', () => {
       serverId: 'id',
       serverVersion: '0.0.0',
       timestampUtcMs: 123456,
-      dataLimit: {enabled: true, perKeyLimitCount: 1}
+      dataLimit: {enabled: true, perKeyLimitCount: 1},
     };
     expect(isValidFeatureMetricsReport(report)).toBeTruthy();
   });
@@ -68,7 +70,7 @@ describe('isValidFeatureMetricsReport', () => {
       serverId: 'id',
       serverVersion: '0.0.0',
       timestampUtcMs: 123456,
-      dataLimit: {enabled: true, perKeyLimitCount: -1}
+      dataLimit: {enabled: true, perKeyLimitCount: -1},
     };
     expect(isValidFeatureMetricsReport(report)).toBeFalsy();
   });
@@ -77,26 +79,26 @@ describe('isValidFeatureMetricsReport', () => {
   });
   it('returns false for incorrect report field types', () => {
     const invalidReport = {
-      serverId: 1234,  // Should be a string
+      serverId: 1234, // Should be a string
       serverVersion: '0.0.0',
       timestampUtcMs: 123456,
-      dataLimit: {enabled: true}
+      dataLimit: {enabled: true},
     };
     expect(isValidFeatureMetricsReport(invalidReport)).toBeFalsy();
 
     const invalidReport2 = {
       serverId: 'id',
-      serverVersion: 1010,  // Should be a string
+      serverVersion: 1010, // Should be a string
       timestampUtcMs: 123456,
-      dataLimit: {enabled: true}
+      dataLimit: {enabled: true},
     };
     expect(isValidFeatureMetricsReport(invalidReport2)).toBeFalsy();
 
     const invalidReport3 = {
       serverId: 'id',
       serverVersion: '0.0.0',
-      timestampUtcMs: '123',  // Should be a number
-      dataLimit: {enabled: true}
+      timestampUtcMs: '123', // Should be a number
+      dataLimit: {enabled: true},
     };
     expect(isValidFeatureMetricsReport(invalidReport3)).toBeFalsy();
 
@@ -104,7 +106,7 @@ describe('isValidFeatureMetricsReport', () => {
       serverId: 'id',
       serverVersion: '0.0.0',
       timestampUtcMs: 123456,
-      dataLimit: 'enabled'  // Should be `DailyDataLimitMetricsReport`
+      dataLimit: 'enabled', // Should be `DailyDataLimitMetricsReport`
     };
     expect(isValidFeatureMetricsReport(invalidReport4)).toBeFalsy();
 
@@ -113,8 +115,8 @@ describe('isValidFeatureMetricsReport', () => {
       serverVersion: '0.0.0',
       timestampUtcMs: 123456,
       dataLimit: {
-        enabled: 'true'  // Should be a boolean
-      }
+        enabled: 'true', // Should be a boolean
+      },
     };
     expect(isValidFeatureMetricsReport(invalidReport5)).toBeFalsy();
   });
@@ -123,7 +125,7 @@ describe('isValidFeatureMetricsReport', () => {
       // Missing `serverId`
       serverVersion: '0.0.0',
       timestampUtcMs: 123456,
-      dataLimit: {enabled: true}
+      dataLimit: {enabled: true},
     };
     expect(isValidFeatureMetricsReport(invalidReport)).toBeFalsy();
 
@@ -131,7 +133,7 @@ describe('isValidFeatureMetricsReport', () => {
       // Missing `serverVersion`
       serverId: 'id',
       timestampUtcMs: 123456,
-      dataLimit: {enabled: true}
+      dataLimit: {enabled: true},
     };
     expect(isValidFeatureMetricsReport(invalidReport2)).toBeFalsy();
 
@@ -139,7 +141,7 @@ describe('isValidFeatureMetricsReport', () => {
       // Missing `timestampUtcMs`
       serverId: 'id',
       serverVersion: '0.0.0',
-      dataLimit: {enabled: true}
+      dataLimit: {enabled: true},
     };
     expect(isValidFeatureMetricsReport(invalidReport3)).toBeFalsy();
 
@@ -156,7 +158,7 @@ describe('isValidFeatureMetricsReport', () => {
       serverId: 'id',
       serverVersion: '0.0.0',
       timestampUtcMs: 123456,
-      dataLimit: {}
+      dataLimit: {},
     };
     expect(isValidFeatureMetricsReport(invalidReport5)).toBeFalsy();
   });

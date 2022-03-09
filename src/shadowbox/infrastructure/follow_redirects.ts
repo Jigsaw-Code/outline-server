@@ -20,7 +20,9 @@ import fetch, {RequestInit, Response} from 'node-fetch';
 // method to GET and removing the request body.  The options parameter matches the
 // fetch() function.
 export async function requestFollowRedirectsWithSameMethodAndBody(
-    url: string, options: RequestInit): Promise<Response> {
+  url: string,
+  options: RequestInit
+): Promise<Response> {
   // Make a copy of options to modify parameters.
   const manualRedirectOptions = {
     ...options,

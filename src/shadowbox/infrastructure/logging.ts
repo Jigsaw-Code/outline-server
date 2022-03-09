@@ -35,7 +35,7 @@ function getCallsite(): Callsite {
 }
 
 // Possible values for the level prefix.
-type LevelPrefix = 'E'|'W'|'I'|'D';
+type LevelPrefix = 'E' | 'W' | 'I' | 'D';
 
 // Formats the log message. Example:
 // I2018-08-16T16:46:21.577Z 167288 main.js:86] ...
@@ -46,8 +46,9 @@ function makeLogMessage(level: LevelPrefix, callsite: Callsite, message: string)
   const timeStr = new Date().toISOString();
   // TODO(alalama): preserve the source file structure in the webpack build so we can use
   // `callsite.getFileName()`.
-  return `${level}${timeStr} ${process.pid} ${
-      path.basename(callsite.getFileName() || __filename)}:${callsite.getLineNumber()}] ${message}`;
+  return `${level}${timeStr} ${process.pid} ${path.basename(
+    callsite.getFileName() || __filename
+  )}:${callsite.getLineNumber()}] ${message}`;
 }
 
 export function error(message: string) {
