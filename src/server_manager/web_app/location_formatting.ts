@@ -38,7 +38,7 @@ export function localizeCountry(geoLocation: GeoLocation, language: string): str
     return '';
   }
   // TODO: Remove typecast after https://github.com/microsoft/TypeScript/pull/44022
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const displayName = new (Intl as any).DisplayNames([language], {type: 'region'});
   return displayName.of(geoLocation.countryCode);
 }

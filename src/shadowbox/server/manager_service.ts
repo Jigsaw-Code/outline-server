@@ -259,7 +259,7 @@ export class ShadowsocksManagerService {
     // Hostnames can have any number of segments of alphanumeric characters and hyphens, separated
     // by periods. No segment may start or end with a hyphen.
     const hostnameRegex =
-      /^([a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?\.)*[A-Za-z0-9]([A-Za-z0-9\-]*[A-Za-z0-9])?$/;
+      /^([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)*[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?$/;
     if (!hostnameRegex.test(hostname) && !ipRegex({includeBoundaries: true}).test(hostname)) {
       return next(
         new restifyErrors.InvalidArgumentError(

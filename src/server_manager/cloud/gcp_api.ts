@@ -615,7 +615,7 @@ export class RestApiClient {
   //       'GET', new URL('https://oauth2.googleapis.com/revoke'), headers, parameters);
   // }
 
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async fetchAuthenticated<T>(method: string, url: URL, headers: Map<string, string>, parameters?: Map<string, string>, data?: any): Promise<T> {
     const httpHeaders = new Map(headers);
 
@@ -627,7 +627,7 @@ export class RestApiClient {
     return this.fetchUnauthenticated(method, url, httpHeaders, parameters, data);
   }
 
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async fetchUnauthenticated<T>(method: string, url: URL, headers: Map<string, string>, parameters?: Map<string, string>, data?: any): Promise<T> {
     const customHeaders = new Headers();
     headers.forEach((value, key) => {

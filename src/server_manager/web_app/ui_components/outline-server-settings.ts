@@ -306,7 +306,7 @@ Polymer({
     }
   },
 
-  _handleNameInputBlur(event: FocusEvent) {
+  _handleNameInputBlur(_event: FocusEvent) {
     const newName = this.serverName;
     if (!newName) {
       this.serverName = this.initialName;

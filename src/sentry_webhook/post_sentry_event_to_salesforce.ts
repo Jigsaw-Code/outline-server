@@ -73,7 +73,7 @@ const SALESFORCE_FORM_VALUES_PROD: SalesforceFormValues = {
 
 // Returns whether a Sentry event should be sent to Salesforce by checking that it contains an
 // email address.
-export function shouldPostEventToSalesforce(event: sentry.SentryEvent) {
+export function shouldPostEventToSalesforce(event: sentry.SentryEvent): boolean {
   return !!event.user && !!event.user.email;
 }
 
@@ -141,7 +141,7 @@ function getSalesforceFormData(
   form.push(encodeFormData(formFields.sentryEventUrl, getSentryEventUrl(project, event.event_id)));
   form.push(encodeFormData(formFields.description, event.message));
   form.push(encodeFormData(formFields.type, isClient ? 'Outline client' : 'Outline manager'));
-  if (!!event.tags) {
+  if (event.tags) {
     const tags = getTagsMap(event.tags);
     form.push(encodeFormData(formFields.category, tags.get('category')));
     form.push(encodeFormData(formFields.os, tags.get('os.name')));

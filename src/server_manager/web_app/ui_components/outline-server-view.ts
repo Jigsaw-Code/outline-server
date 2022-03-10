@@ -940,7 +940,7 @@ export class ServerView extends DirMixin(PolymerElement) {
     return `${utilizationPercentage}%`;
   }
 
-  _accessKeysAddedOrRemoved(changeRecord: unknown) {
+  _accessKeysAddedOrRemoved(_changeRecord: unknown) {
     // Check for myConnection and regular access keys.
     let hasNonAdminAccessKeys = false;
     for (const ui in this.accessKeyRows) {

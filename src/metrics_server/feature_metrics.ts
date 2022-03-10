@@ -47,7 +47,7 @@ export async function postFeatureMetrics(
 }
 
 // Returns true iff `obj` contains a valid DailyFeatureMetricsReport.
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isValidFeatureMetricsReport(obj: any): obj is DailyFeatureMetricsReport {
   if (!obj) {
     return false;

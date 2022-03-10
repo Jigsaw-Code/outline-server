@@ -44,7 +44,7 @@ async function makeLocalize(language: string) {
     window.alert(`Could not load messages for language "${language}"`);
   }
   return (msgId: string, ...args: string[]): string => {
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const params = {} as {[key: string]: any};
     for (let i = 0; i < args.length; i += 2) {
       params[args[i]] = args[i + 1];
@@ -134,7 +134,7 @@ export class TestApp extends LitElement {
     this.language = newLanguage;
   }
 
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private select(querySelector: string): any {
     return this.shadowRoot.querySelector(querySelector);
   }

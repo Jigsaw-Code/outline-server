@@ -146,8 +146,7 @@ export class GcpCreateServerApp extends LitElement {
         return this.renderProjectSetup();
       case 'regionPicker':
         return this.renderRegionPicker();
-      default: {
-      }
+      default:
     }
   }
 

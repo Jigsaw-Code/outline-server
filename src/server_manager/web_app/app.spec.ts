@@ -24,9 +24,9 @@ import {Region} from '../model/digitalocean';
 
 
 // Define functions from preload.ts.
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).onUpdateDownloaded = () => {};
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).bringToFront = () => {};
 
 // Inject app-root element into DOM once before each test.

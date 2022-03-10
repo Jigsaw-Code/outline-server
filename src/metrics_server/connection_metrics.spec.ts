@@ -18,7 +18,6 @@ import {
   postConnectionMetrics,
 } from './connection_metrics';
 import {InsertableTable} from './infrastructure/table';
-import {HourlyConnectionMetricsReport} from './model';
 
 class FakeConnectionsTable implements InsertableTable<ConnectionRow> {
   public rows: ConnectionRow[] | undefined;

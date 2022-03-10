@@ -14,6 +14,7 @@
 
 'use strict';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('fs');
 
 const tarballBinary = fs.readFileSync(process.argv[2]);

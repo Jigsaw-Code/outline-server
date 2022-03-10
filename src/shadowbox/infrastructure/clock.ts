@@ -15,15 +15,15 @@
 export interface Clock {
   // Returns the current time in milliseconds from the epoch.
   now(): number;
-  setInterval(callback, intervalMs): void;
+  setInterval(callback: () => void, intervalMs: number): void;
 }
 
 export class RealClock implements Clock {
-  now() {
+  now(): number {
     return Date.now();
   }
 
-  setInterval(callback, intervalMs) {
+  setInterval(callback, intervalMs: number): void {
     setInterval(callback, intervalMs);
   }
 }
@@ -32,15 +32,13 @@ export class RealClock implements Clock {
 // Useful for tests.
 export class ManualClock implements Clock {
   public nowMs = 0;
-  private callbacks = [] as Function[];
+  private callbacks = [] as (() => void)[];
 
-  constructor() {}
-
-  now() {
+  now(): number {
     return this.nowMs;
   }
 
-  setInterval(callback, intervalMs) {
+  setInterval(callback, _intervalMs): void {
     this.callbacks.push(callback);
   }
 

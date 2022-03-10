@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 // Copyright 2020 The Outline Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -74,7 +75,7 @@ exports.makeConfig = (options) => {
       // @sentry/electron depends on electron code, even though it's never activated
       // in the browser. Webpack still tries to build it, but fails with missing APIs.
       // The IgnorePlugin prevents the compilation of the electron dependency.
-      new webpack.IgnorePlugin(/^electron$/),
+      new webpack.IgnorePlugin({resourceRegExp: /^electron$/, contextRegExp: /@sentry\/electron/}),
       new CopyPlugin(
           [
             {from: 'index.html', to: '.'},

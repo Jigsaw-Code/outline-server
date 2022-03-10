@@ -185,7 +185,7 @@ export class ShadowboxServer implements server.Server {
   }
 
   isHealthy(timeoutMs = 30000): Promise<boolean> {
-    return new Promise<boolean>((fulfill, reject) => {
+    return new Promise<boolean>((fulfill, _reject) => {
       // Query the API and expect a successful response to validate that the
       // service is up and running.
       this.getServerConfig().then(
@@ -193,7 +193,7 @@ export class ShadowboxServer implements server.Server {
             this.serverConfig = serverConfig;
             fulfill(true);
           },
-          (e) => {
+          (_e) => {
             fulfill(false);
           });
       // Return not healthy if API doesn't complete within timeoutMs.
@@ -287,7 +287,7 @@ export class ShadowboxServer implements server.Server {
                 }
                 return response.text();
               },
-              (error) => {
+              (_error) => {
                 throw new errors.ServerApiError(
                     `API request to ${path} failed due to network error`);
               })

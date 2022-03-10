@@ -25,8 +25,7 @@ import {PolymerElement} from '@polymer/polymer/polymer-element';
 import type {PolymerElementProperties} from '@polymer/polymer/interfaces';
 import type {PaperDialogElement} from '@polymer/paper-dialog/paper-dialog';
 
-class OutlineSurveyDialog extends DirMixin
-(PolymerElement) {
+class OutlineSurveyDialog extends DirMixin(PolymerElement) {
   static get template() {
     return html`
     <style include="cloud-install-styles"></style>

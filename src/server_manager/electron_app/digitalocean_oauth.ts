@@ -143,7 +143,7 @@ export function runOauth(): OauthSession {
       </html>`);
   });
 
-  const rejectWrapper = {reject: (error: Error) => {}};
+  const rejectWrapper = {reject: (_error: Error) => {}};
   const result = new Promise<string>((resolve, reject) => {
     rejectWrapper.reject = reject;
     // This is the POST endpoint that receives the access token and redirects to either DigitalOcean

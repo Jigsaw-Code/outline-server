@@ -17,7 +17,7 @@ import * as net from 'net';
 import {ManualClock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
 import {InMemoryConfig} from '../infrastructure/json_config';
-import {AccessKey, AccessKeyId, AccessKeyRepository, DataLimit} from '../model/access_key';
+import {AccessKeyId, AccessKeyRepository, DataLimit} from '../model/access_key';
 import * as errors from '../model/errors';
 
 import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
@@ -57,7 +57,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('removeAccessKey throws for missing keys', (done) => {
     const repo = new RepoBuilder().build();
-    repo.createNewAccessKey().then((accessKey) => {
+    repo.createNewAccessKey().then((_accessKey) => {
       expect(countAccessKeys(repo)).toEqual(1);
       expect(repo.removeAccessKey.bind(repo, 'badId')).toThrowError(errors.AccessKeyNotFound);
       expect(countAccessKeys(repo)).toEqual(1);
@@ -79,7 +79,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('renameAccessKey throws for missing keys', (done) => {
     const repo = new RepoBuilder().build();
-    repo.createNewAccessKey().then((accessKey) => {
+    repo.createNewAccessKey().then((_accessKey) => {
       const NEW_NAME = 'newName';
       expect(repo.renameAccessKey.bind(repo, 'badId', NEW_NAME)).toThrowError(
         errors.AccessKeyNotFound
@@ -515,11 +515,11 @@ describe('ServerAccessKeyRepository', () => {
       .defaultDataLimit({bytes: 200})
       .build();
 
-    const accessKey1 = await repo.createNewAccessKey();
+    await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey();
 
     await repo.enforceAccessKeyDataLimits();
-    const accessKeys = await repo.listAccessKeys();
+    await repo.listAccessKeys();
     let serverAccessKeys = server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(1);
     expect(serverAccessKeys[0].id).toEqual(accessKey2.id);
@@ -641,7 +641,7 @@ async function expectNoAsyncThrow(fn: Function) {
 
 // Convenience function to expect that an asynchronous function throws an error. Fails if the thrown
 // error does not match `errorType`, when defined.
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function expectAsyncThrow(fn: Function, errorType?: new (...args: any[]) => Error) {
   try {
     await fn();

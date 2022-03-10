@@ -14,7 +14,7 @@
 
 import {Table} from '@google-cloud/bigquery';
 import {InsertableTable} from './infrastructure/table';
-import {HourlyConnectionMetricsReport, HourlyUserConnectionMetricsReport} from './model';
+import {HourlyConnectionMetricsReport} from './model';
 
 export interface ConnectionRow {
   serverId: string;
@@ -36,7 +36,7 @@ export class BigQueryConnectionsTable implements InsertableTable<ConnectionRow> 
 export function postConnectionMetrics(
   table: InsertableTable<ConnectionRow>,
   report: HourlyConnectionMetricsReport
-) {
+): Promise<void> {
   return table.insert(getConnectionRowsFromReport(report));
 }
 
@@ -59,7 +59,7 @@ function getConnectionRowsFromReport(report: HourlyConnectionMetricsReport): Con
 
 // Returns true iff testObject contains a valid HourlyConnectionMetricsReport.
 export function isValidConnectionMetricsReport(
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   testObject: any
 ): testObject is HourlyConnectionMetricsReport {
   if (!testObject) {
