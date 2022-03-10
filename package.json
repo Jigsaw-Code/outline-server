@@ -26,7 +26,7 @@
     "format:all": "prettier --write \"**/*.{cjs,html,js,json,md,ts}\"",
     "lint": "npm run lint:sh && npm run lint:ts",
     "lint:sh": "bash ./scripts/shellcheck.sh",
-    "lint:ts": "npx eslint \"**/*.{js,ts}\"",
+    "lint:ts": "eslint \"**/*.{js,ts}\"",
     "test": "npm run lint && npm run action metrics_server/test && npm run action sentry_webhook/build && npm run action server_manager/test && npm run action shadowbox/test"
   },
   "workspaces": [
