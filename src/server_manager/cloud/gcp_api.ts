@@ -713,12 +713,12 @@ export class RestApiClient {
   //       'GET', new URL('https://oauth2.googleapis.com/revoke'), headers, parameters);
   // }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async fetchAuthenticated<T>(
     method: string,
     url: URL,
     headers: Map<string, string>,
     parameters?: Map<string, string>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data?: any
   ): Promise<T> {
     const httpHeaders = new Map(headers);
@@ -731,12 +731,12 @@ export class RestApiClient {
     return this.fetchUnauthenticated(method, url, httpHeaders, parameters, data);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async fetchUnauthenticated<T>(
     method: string,
     url: URL,
     headers: Map<string, string>,
     parameters?: Map<string, string>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data?: any
   ): Promise<T> {
     const customHeaders = new Headers();
