@@ -579,7 +579,6 @@ export class RestApiClient {
    * @see https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
    */
   getUserInfo(): Promise<UserInfo> {
-    const parameters = new Map<string, string>([['access_token', this.accessToken]]);
     return this.fetchAuthenticated(
         'POST', new URL('https://openidconnect.googleapis.com/v1/userinfo'), this.GCP_HEADERS);
   }
@@ -607,13 +606,14 @@ export class RestApiClient {
    *
    * @param token - A refresh token or access token
    */
-  private async revokeGcpToken(token: string): Promise<void> {
-    const headers = new Map<string, string>(
-        [['Host', 'oauth2.googleapis.com'], ['Content-Type', 'application/x-www-form-urlencoded']]);
-    const parameters = new Map<string, string>([['token', token]]);
-    return this.fetchUnauthenticated(
-        'GET', new URL('https://oauth2.googleapis.com/revoke'), headers, parameters);
-  }
+  // TODO(fortuna): use this to revoke the access token on account disconnection.
+  // private async revokeGcpToken(token: string): Promise<void> {
+  //   const headers = new Map<string, string>(
+  //       [['Host', 'oauth2.googleapis.com'], ['Content-Type', 'application/x-www-form-urlencoded']]);
+  //   const parameters = new Map<string, string>([['token', token]]);
+  //   return this.fetchUnauthenticated(
+  //       'GET', new URL('https://oauth2.googleapis.com/revoke'), headers, parameters);
+  // }
 
   // tslint:disable-next-line:no-any
   private async fetchAuthenticated<T>(method: string, url: URL, headers: Map<string, string>, parameters?: Map<string, string>, data?: any): Promise<T> {

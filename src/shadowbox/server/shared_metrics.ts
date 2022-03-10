@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 import {Clock} from '../infrastructure/clock';
 import * as follow_redirects from '../infrastructure/follow_redirects';
 import {JsonConfig} from '../infrastructure/json_config';
@@ -88,9 +87,9 @@ export class PrometheusUsageMetrics implements UsageMetrics {
   async getUsage(): Promise<KeyUsage[]> {
     const timeDeltaSecs = Math.round((Date.now() - this.resetTimeMs) / 1000);
     // We measure the traffic to and from the target, since that's what we are protecting.
-    const result =
-        await this.prometheusClient.query(`sum(increase(shadowsocks_data_bytes{dir=~"p>t|p<t"}[${
-            timeDeltaSecs}s])) by (location, access_key)`);
+    const result = await this.prometheusClient.query(
+      `sum(increase(shadowsocks_data_bytes{dir=~"p>t|p<t"}[${timeDeltaSecs}s])) by (location, access_key)`
+    );
     const usage = [] as KeyUsage[];
     for (const entry of result.result) {
       const accessKeyId = entry.metric['access_key'] || '';
@@ -130,13 +129,15 @@ export class RestMetricsCollectorClient {
     const options = {
       headers: {'Content-Type': 'application/json'},
       method: 'POST',
-      body: reportJson
+      body: reportJson,
     };
     const url = `${this.serviceUrl}${urlPath}`;
     logging.info(`Posting metrics to ${url} with options ${JSON.stringify(options)}`);
     try {
-      const response =
-          await follow_redirects.requestFollowRedirectsWithSameMethodAndBody(url, options);
+      const response = await follow_redirects.requestFollowRedirectsWithSameMethodAndBody(
+        url,
+        options
+      );
       if (!response.ok) {
         throw new Error(`Got status ${response.status}`);
       }
@@ -158,11 +159,13 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
   // toMetricsId: maps Access key ids to metric ids
   // metricsUrl: where to post the metrics
   constructor(
-      private clock: Clock, private serverConfig: JsonConfig<ServerConfigJson>,
-      private keyConfig: JsonConfig<AccessKeyConfigJson>,
-      usageMetrics: UsageMetrics,
-      private toMetricsId: (accessKeyId: AccessKeyId) => AccessKeyMetricsId,
-      private metricsCollector: MetricsCollectorClient) {
+    private clock: Clock,
+    private serverConfig: JsonConfig<ServerConfigJson>,
+    private keyConfig: JsonConfig<AccessKeyConfigJson>,
+    usageMetrics: UsageMetrics,
+    private toMetricsId: (accessKeyId: AccessKeyId) => AccessKeyMetricsId,
+    private metricsCollector: MetricsCollectorClient
+  ) {
     // Start timer
     this.reportStartTimestampMs = this.clock.now();
 
@@ -219,14 +222,14 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       userReports.push({
         userId: this.toMetricsId(keyUsage.accessKeyId) || '',
         bytesTransferred: keyUsage.inboundBytes,
-        countries: [...keyUsage.countries]
+        countries: [...keyUsage.countries],
       });
     }
     const report = {
       serverId: this.serverConfig.data().serverId,
       startUtcMs: this.reportStartTimestampMs,
       endUtcMs: reportEndTimestampMs,
-      userReports
+      userReports,
     } as HourlyServerMetricsReportJson;
 
     this.reportStartTimestampMs = reportEndTimestampMs;
@@ -244,8 +247,8 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       timestampUtcMs: this.clock.now(),
       dataLimit: {
         enabled: !!this.serverConfig.data().accessKeyDataLimit,
-        perKeyLimitCount: keys.filter(key => !!key.dataLimit).length
-      }
+        perKeyLimitCount: keys.filter((key) => !!key.dataLimit).length,
+      },
     };
     await this.metricsCollector.collectFeatureMetrics(featureMetricsReport);
   }

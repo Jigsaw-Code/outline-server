@@ -3,11 +3,13 @@
 ## Running
 
 To run the Outline Manager Electron app:
+
 ```
 npm run action server_manager/electron_app/start
 ```
 
 To run the Outline Manager Electron app with a development build (code not minified):
+
 ```
 BUILD_ENV=development npm run action server_manager/electron_app/start
 ```
@@ -22,7 +24,7 @@ npm run action server_manager/web_app/start
 
 ## Gallery Server for UI Development
 
-We have a server app to for quickly iterating on UI components.  To spin it up, run
+We have a server app to for quickly iterating on UI components. To spin it up, run
 
 ```
 npm run action server_manager/web_app/start_gallery
@@ -38,6 +40,7 @@ This will enable the Developer menu on the application window.
 ## Packaging
 
 To build the app binary:
+
 ```
 npm run action server_manager/electron_app/build ${PLATFORM} -- --buildMode=[debug,release]
 ```
@@ -53,7 +56,8 @@ The per-platform standalone apps will be at `build/electron_app/static/dist`.
 ## Error reporting
 
 To enable error reporting through [Sentry](https://sentry.io/) for local builds, run:
-``` bash
+
+```bash
 export SENTRY_DSN=[Sentry development API key]
 npm run action server_manager/electron_app/start
 ```

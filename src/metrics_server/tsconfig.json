@@ -6,7 +6,5 @@
     "module": "commonjs",
     "outDir": "../../build/metrics_server"
   },
-  "include": [
-    "**/*.ts"
-  ]
+  "include": ["**/*.ts"]
 }

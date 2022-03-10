@@ -6,8 +6,9 @@
     "noImplicitThis": true,
     "moduleResolution": "Node",
     "sourceMap": true,
-    "experimentalDecorators":true,
+    "experimentalDecorators": true,
     "allowJs": true,
     "resolveJsonModule": true,
+    "noUnusedLocals": true
   }
 }

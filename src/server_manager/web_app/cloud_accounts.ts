@@ -60,12 +60,14 @@ export class CloudAccounts implements accounts.CloudAccounts {
 
   /** See {@link CloudAccounts#disconnectDigitalOceanAccount} */
   disconnectDigitalOceanAccount(): void {
+    // TODO(fortuna): Revoke access token.
     this.digitalOceanAccount = null;
     this.save();
   }
 
   /** See {@link CloudAccounts#disconnectGcpAccount} */
   disconnectGcpAccount(): void {
+    // TODO(fortuna): Revoke access token.
     this.gcpAccount = null;
     this.save();
   }

@@ -58,8 +58,10 @@ export class FakePrometheusClient extends PrometheusClient {
     const queryResultData = {result: []} as QueryResultData;
     for (const accessKeyId of Object.keys(this.bytesTransferredById)) {
       const bytesTransferred = this.bytesTransferredById[accessKeyId] || 0;
-      queryResultData.result.push(
-          {metric: {'access_key': accessKeyId}, value: [bytesTransferred, `${bytesTransferred}`]});
+      queryResultData.result.push({
+        metric: {access_key: accessKeyId},
+        value: [bytesTransferred, `${bytesTransferred}`],
+      });
     }
     return queryResultData;
   }

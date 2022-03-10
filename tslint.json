@@ -3,7 +3,8 @@
   "rules": {
     "array-type": [true, "array-simple"],
     "arrow-return-shorthand": true,
-    "ban-types": [true,
+    "ban-types": [
+      true,
       ["Object", "Use {} instead."],
       ["String", "Use 'string' instead."],
       ["Number", "Use 'number' instead."],
@@ -25,7 +26,6 @@
     "no-reference": true,
     "no-require-imports": true,
     "no-unused-expression": true,
-    "no-unused-variable": [true, {"ignore-pattern": "^UNUSED"}],
     "no-use-before-declare": false,
     "no-var-keyword": true,
     "object-literal-shorthand": true,

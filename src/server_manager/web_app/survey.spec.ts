@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import {InMemoryStorage} from '../infrastructure/memory_storage';
-import {Surveys} from '../model/survey';
 
 import {OutlineSurveys} from './survey';
 

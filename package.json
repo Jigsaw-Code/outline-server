@@ -3,7 +3,6 @@
   "private": true,
   "devDependencies": {
     "@types/jasmine": "^3.5.10",
-    "clang-format": "^1.2.2",
     "generate-license-file": "^1.2.0",
     "husky": "^1.3.1",
     "jasmine": "^3.5.0",
@@ -21,16 +20,19 @@
     "action:help": "npm run action",
     "action:list": "npm run action",
     "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts src/server_manager/install_scripts/gcp_install_script.ts third_party/shellcheck/download/",
+    "format": "pretty-quick --staged --pattern \"**/*.{cjs,html,js,json,md,ts}\"",
+    "format:all": "prettier --write \"**/*.{cjs,html,js,json,md,ts}\"",
     "lint": "npm run lint:sh && npm run lint:ts",
     "lint:sh": "bash ./scripts/shellcheck.sh",
-    "lint:ts": "npx tslint 'src/**/*.ts' -e '**/node_modules/**'"
+    "lint:ts": "npx tslint 'src/**/*.ts' -e '**/node_modules/**'",
+    "test": "npm run lint && npm run action metrics_server/test && npm run action sentry_webhook/build && npm run action server_manager/test && npm run action shadowbox/test"
   },
   "workspaces": [
     "src/*"
   ],
   "husky": {
     "hooks": {
-      "pre-commit": "npm run lint && npx git-clang-format && npx pretty-quick --staged --pattern '**/*.html'"
+      "pre-commit": "npm run lint && npm run format"
     }
   }
 }

@@ -6,7 +6,5 @@
     "module": "commonjs",
     "outDir": "../../build/sentry_webhook"
   },
-  "include": [
-    "**/*.ts"
-  ]
+  "include": ["**/*.ts"]
 }

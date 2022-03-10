@@ -1,5 +1,5 @@
 .DS_Store
-/build
+/build/
 node_modules/
 /src/server_manager/install_scripts/do_install_script.ts
 /src/server_manager/install_scripts/gcp_install_script.ts

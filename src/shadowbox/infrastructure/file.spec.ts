@@ -8,7 +8,7 @@ describe('file', () => {
   describe('readFileIfExists', () => {
     let tmpFile: tmp.FileResult;
 
-    beforeEach(() => tmpFile = tmp.fileSync());
+    beforeEach(() => (tmpFile = tmp.fileSync()));
 
     it('reads the file if it exists', () => {
       const contents = 'test';
@@ -24,14 +24,14 @@ describe('file', () => {
       expect(file.readFileIfExists(tmpFile.name)).toBe('');
     });
 
-    it('returns null if file doesn\'t exist',
-       () => expect(file.readFileIfExists(tmp.tmpNameSync())).toBe(null));
+    it("returns null if file doesn't exist", () =>
+      expect(file.readFileIfExists(tmp.tmpNameSync())).toBe(null));
   });
 
   describe('atomicWriteFileSync', () => {
     let tmpFile: tmp.FileResult;
 
-    beforeEach(() => tmpFile = tmp.fileSync());
+    beforeEach(() => (tmpFile = tmp.fileSync()));
 
     it('writes to the file', () => {
       const contents = 'test';
@@ -44,20 +44,24 @@ describe('file', () => {
     it('supports multiple simultaneous writes to the same file', async () => {
       const writeCount = 100;
 
-      const writer = (_, id) => new Promise<void>((resolve, reject) => {
-        try {
-          file.atomicWriteFileSync(
-              tmpFile.name, `${fs.readFileSync(tmpFile.name, {encoding: 'utf-8'})}${id}\n`);
-          resolve();
-        } catch (e) {
-          reject(e);
-        }
-      });
+      const writer = (_, id) =>
+        new Promise<void>((resolve, reject) => {
+          try {
+            file.atomicWriteFileSync(
+              tmpFile.name,
+              `${fs.readFileSync(tmpFile.name, {encoding: 'utf-8'})}${id}\n`
+            );
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+        });
 
       await Promise.all(Array.from({length: writeCount}, writer));
 
-      expect(fs.readFileSync(tmpFile.name, {encoding: 'utf8'}).trimEnd().split('\n').length)
-          .toBe(writeCount);
+      expect(fs.readFileSync(tmpFile.name, {encoding: 'utf8'}).trimEnd().split('\n').length).toBe(
+        writeCount
+      );
     });
   });
 });

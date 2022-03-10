@@ -31,7 +31,6 @@ export function loadFileConfig<T>(filename: string): JsonConfig<T> {
   return new FileConfig<T>(filename, dataJson);
 }
 
-
 // FileConfig is a JsonConfig backed by a filesystem file.
 export class FileConfig<T> implements JsonConfig<T> {
   constructor(private filename: string, private dataJson: T) {}

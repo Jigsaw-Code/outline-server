@@ -9,13 +9,6 @@
     "resolveJsonModule": true,
     "sourceMap": true
   },
-  "include": [
-    "server/main.ts",
-    "**/*.spec.ts",
-    "types/**/*.d.ts"
-  ],
-  "exclude": [
-    "build",
-    "node_modules"
-  ]
+  "include": ["server/main.ts", "**/*.spec.ts", "types/**/*.d.ts"],
+  "exclude": ["build", "node_modules"]
 }

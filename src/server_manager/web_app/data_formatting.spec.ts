@@ -14,7 +14,6 @@
   limitations under the License.
 */
 
-import {format} from 'path';
 import * as formatting from './data_formatting';
 
 describe('formatBytesParts', () => {
