@@ -5,17 +5,9 @@
     "noImplicitAny": true,
     "module": "commonjs",
     "rootDir": ".",
-    "lib": [
-      "dom",
-      "es2016"
-    ]
+    "lib": ["dom", "es2016"]
   },
-  "include": [
-    "*.ts",
-    "../types/*.d.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ],
+  "include": ["*.ts", "../types/*.d.ts"],
+  "exclude": ["node_modules"],
   "compileOnSave": true
 }

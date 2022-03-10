@@ -1,12 +1,10 @@
 {
   "compilerOptions": {
-    "target": "es2018",
+    "target": "es2018"
   },
   "extends": "../../tsconfig.json",
   "rootDir": ".",
-  "include": [
-    "**/*.ts"
-  ],
+  "include": ["**/*.ts"],
   "exclude": [
     "node_modules",
     "web_app/galery_app",
