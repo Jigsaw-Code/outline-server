@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {getShellExportCommands, ShadowboxSettings} from "./server_install";
+import {getShellExportCommands, ShadowboxSettings} from './server_install';
 
 describe('getShellExportCommands', () => {
   it('fully populated', () => {
@@ -20,14 +20,14 @@ describe('getShellExportCommands', () => {
       imageId: 'foo',
       metricsUrl: 'https://metrics.example/',
       sentryApiUrl: 'https://sentry.example/',
-      watchtowerRefreshSeconds: 999
+      watchtowerRefreshSeconds: 999,
     };
     const serverName = 'Outline Server Foo';
     expect(getShellExportCommands(settings, serverName)).toEqual(
-        'export SB_IMAGE=\'foo\'\n' +
-        'export WATCHTOWER_REFRESH_SECONDS=\'999\'\n' +
-        'export SENTRY_API_URL=\'https://sentry.example/\'\n' +
-        'export SB_METRICS_URL=\'https://metrics.example/\'\n' +
+      "export SB_IMAGE='foo'\n" +
+        "export WATCHTOWER_REFRESH_SECONDS='999'\n" +
+        "export SENTRY_API_URL='https://sentry.example/'\n" +
+        "export SB_METRICS_URL='https://metrics.example/'\n" +
         'export SB_DEFAULT_SERVER_NAME="$(printf \'Outline Server Foo\')"\n'
     );
   });
@@ -35,22 +35,22 @@ describe('getShellExportCommands', () => {
   it('minimal', () => {
     const settings: ShadowboxSettings = {
       imageId: null,
-      metricsUrl: ''
+      metricsUrl: '',
     };
     const serverName = '';
     expect(getShellExportCommands(settings, serverName)).toEqual(
-        'export SB_DEFAULT_SERVER_NAME="$(printf \'\')"\n'
+      'export SB_DEFAULT_SERVER_NAME="$(printf \'\')"\n'
     );
   });
 
   it('server name escaping', () => {
     const settings: ShadowboxSettings = {
       imageId: '',
-      metricsUrl: null
+      metricsUrl: null,
     };
     const serverName = 'Outline Server فرانكفورت';
     expect(getShellExportCommands(settings, serverName)).toEqual(
-        'export SB_DEFAULT_SERVER_NAME="$(printf \'Outline Server \\u0641\\u0631\\u0627\\u0646\\u0643\\u0641\\u0648\\u0631\\u062a\')"\n'
+      'export SB_DEFAULT_SERVER_NAME="$(printf \'Outline Server \\u0641\\u0631\\u0627\\u0646\\u0643\\u0641\\u0648\\u0631\\u062a\')"\n'
     );
   });
 });

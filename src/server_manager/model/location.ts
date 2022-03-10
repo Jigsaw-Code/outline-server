@@ -14,9 +14,9 @@
 
 /**
  * Unified server location model for all cloud providers.
- * 
+ *
  * Keys are GeoIds, identifying the location.  Values are ISO country codes.
- * 
+ *
  * Each key identifies a location as displayed in the Outline
  * user interface.  To minimize confusion, Outline attempts to
  * present each location in a manner consistent with the cloud
@@ -25,14 +25,12 @@
  * (e.g. 'frankfurt' for GCP and DO), but if they present a similar
  * location in different terms, they will need to be represented
  * separately (e.g. 'SG' for DO, 'jurong-west' for GCP).
- * 
+ *
  * When the key and value are equal, this indicates that they are redundant.
  */
 export class GeoLocation {
-  constructor(
-    public readonly id: string,
-    public readonly countryCode: string) {}
-  
+  constructor(public readonly id: string, public readonly countryCode: string) {}
+
   countryIsRedundant(): boolean {
     return this.countryCode === this.id;
   }

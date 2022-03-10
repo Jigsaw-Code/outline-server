@@ -44,10 +44,7 @@ exports.makeConfig = (options) => {
         {
           test: /\.ts(x)?$/,
           exclude: /node_modules/,
-          use: [
-            'ts-loader',
-            GENERATE_CSS_RTL_LOADER,
-          ],
+          use: ['ts-loader', GENERATE_CSS_RTL_LOADER],
         },
         {
           test: /\.js$/,
@@ -56,12 +53,9 @@ exports.makeConfig = (options) => {
         },
         {
           test: /\.css?$/,
-          use: [
-            'style-loader',
-            'css-loader',
-          ],
-        }
-      ]
+          use: ['style-loader', 'css-loader'],
+        },
+      ],
     },
     resolve: {extensions: ['.tsx', '.ts', '.js']},
     plugins: [
@@ -77,13 +71,14 @@ exports.makeConfig = (options) => {
       // The IgnorePlugin prevents the compilation of the electron dependency.
       new webpack.IgnorePlugin({resourceRegExp: /^electron$/, contextRegExp: /@sentry\/electron/}),
       new CopyPlugin(
-          [
-            {from: 'index.html', to: '.'},
-            {from: `${CIRCLE_FLAGS_PATH}/flags`, to: 'images/flags'},
-            {from: 'images', to: 'images'}, // Overwrite any colliding flags.
-            {from: 'messages', to: 'messages'},
-          ],
-          {context: __dirname}),
+        [
+          {from: 'index.html', to: '.'},
+          {from: `${CIRCLE_FLAGS_PATH}/flags`, to: 'images/flags'},
+          {from: 'images', to: 'images'}, // Overwrite any colliding flags.
+          {from: 'messages', to: 'messages'},
+        ],
+        {context: __dirname}
+      ),
       new HtmlWebpackPlugin({
         template: options.template || path.resolve(__dirname, './index.html'),
       }),

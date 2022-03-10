@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {CloudLocation} from "./location";
+import {CloudLocation} from './location';
 
 export interface Server {
   // Gets a globally unique identifier for this Server.  THIS MUST NOT make a network request, as
@@ -49,7 +49,7 @@ export interface Server {
   setDefaultDataLimit(limit: DataLimit): Promise<void>;
 
   // Returns the server default access key data transfer limit, or undefined if it has not been set.
-  getDefaultDataLimit(): DataLimit|undefined;
+  getDefaultDataLimit(): DataLimit | undefined;
 
   // Removes the server default data limit.  Per-key data limits are still enforced.  Traffic is
   // tracked for if the limit is re-enabled.  Forces enforcement of all data limits, including
@@ -90,7 +90,7 @@ export interface Server {
 
   // Returns the port number for new access keys.
   // Returns undefined if the server doesn't have a port set.
-  getPortForNewAccessKeys(): number|undefined;
+  getPortForNewAccessKeys(): number | undefined;
 
   // Changes the port number for new access keys.
   setPortForNewAccessKeys(port: number): Promise<void>;
@@ -152,7 +152,7 @@ export interface ManualServerRepository {
   // Adds a manual server using the config (e.g. user input).
   addServer(config: ManualServerConfig): Promise<ManualServer>;
   // Retrieves a server with `config`.
-  findServer(config: ManualServerConfig): ManualServer|undefined;
+  findServer(config: ManualServerConfig): ManualServer | undefined;
 }
 
 export type AccessKeyId = string;

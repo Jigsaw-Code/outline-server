@@ -55,7 +55,7 @@ export class Zone implements location.CloudLocation {
   get regionId(): string {
     return this.id.substring(0, this.id.lastIndexOf('-'));
   }
-  
+
   get location(): location.GeoLocation {
     return Zone.LOCATION_MAP[this.regionId];
   }
@@ -66,13 +66,13 @@ export interface ZoneOption extends location.CloudLocationOption {
 }
 
 export type Project = {
-  id: string,
-  name: string,
+  id: string;
+  name: string;
 };
 
 export type BillingAccount = {
-  id: string,
-  name: string,
+  id: string;
+  name: string;
 };
 
 /**

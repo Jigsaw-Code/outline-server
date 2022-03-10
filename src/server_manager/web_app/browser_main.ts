@@ -50,7 +50,7 @@
       console.log('Session cancelled');
       isCancelled = true;
       rejectWrapper.reject(new Error('Authentication cancelled'));
-    }
+    },
   };
 };
 

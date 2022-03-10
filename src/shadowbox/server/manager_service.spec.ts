@@ -43,7 +43,7 @@ const EXPECTED_ACCESS_KEY_PROPERTIES = [
   'dataLimit',
 ].sort();
 
-const SEND_NOTHING = (_httpCode, _data) => {/* do nothing */};
+const SEND_NOTHING = (_httpCode, _data) => {};
 
 describe('ShadowsocksManagerService', () => {
   // After processing the response callback, we should set
@@ -151,7 +151,7 @@ describe('ShadowsocksManagerService', () => {
         '2606:2800:220:1:248:1893:25c8:1946',
       ];
       for (const hostname of goodHostnames) {
-        service.setHostnameForAccessKeys({params: {hostname}}, res, () => {/* do nothing */});
+        service.setHostnameForAccessKeys({params: {hostname}}, res, () => {});
       }
 
       responseProcessed = true;
@@ -321,7 +321,7 @@ describe('ShadowsocksManagerService', () => {
           expect(httpCode).toEqual(204);
         },
       };
-      await service.setPortForNewAccessKeys({params: {port: NEW_PORT}}, res, () => {/* do nothing */});
+      await service.setPortForNewAccessKeys({params: {port: NEW_PORT}}, res, () => {});
       const newKey = await repo.createNewAccessKey();
       expect(newKey.proxyParams.portNumber).toEqual(NEW_PORT);
       expect(oldKey.proxyParams.portNumber).not.toEqual(NEW_PORT);
@@ -412,8 +412,8 @@ describe('ShadowsocksManagerService', () => {
         .accessKeys(repo)
         .build();
 
-      await service.createNewAccessKey({params: {}}, {send: () => {/* do nothing */}}, () => {/* do nothing */});
-      await service.setPortForNewAccessKeys({params: {port: NEW_PORT}}, {send: () => {/* do nothing */}}, () => {/* do nothing */});
+      await service.createNewAccessKey({params: {}}, {send: () => {}}, () => {});
+      await service.setPortForNewAccessKeys({params: {port: NEW_PORT}}, {send: () => {}}, () => {});
       const res = {
         send: (httpCode) => {
           expect(httpCode).toEqual(204);
@@ -423,7 +423,7 @@ describe('ShadowsocksManagerService', () => {
 
       const firstKeyConnection = new net.Server();
       firstKeyConnection.listen(OLD_PORT, async () => {
-        await service.setPortForNewAccessKeys({params: {port: OLD_PORT}}, res, () => {/* do nothing */});
+        await service.setPortForNewAccessKeys({params: {port: OLD_PORT}}, res, () => {});
         firstKeyConnection.close();
         done();
       });
@@ -488,7 +488,7 @@ describe('ShadowsocksManagerService', () => {
       spyOn(repo, 'removeAccessKey').and.throwError('cannot write to disk');
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
       const key = await createNewAccessKeyWithName(repo, 'keyName1');
-      const res = {send: (_httpCode, _data) => {/* do nothing */}};
+      const res = {send: (_httpCode, _data) => {}};
       service.removeAccessKey({params: {id: key.id}}, res, (error) => {
         expect(error.statusCode).toEqual(500);
         responseProcessed = true; // required for afterEach to pass.
@@ -556,7 +556,7 @@ describe('ShadowsocksManagerService', () => {
           done();
         },
       };
-      service.setAccessKeyDataLimit({params: {id: key.id, limit}}, res, () => {/* do nothing */});
+      service.setAccessKeyDataLimit({params: {id: key.id, limit}}, res, () => {});
     });
 
     it('rejects negative numbers', async (done) => {
@@ -564,7 +564,7 @@ describe('ShadowsocksManagerService', () => {
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
       const keyId = (await repo.createNewAccessKey()).id;
       const limit = {bytes: -1};
-      service.setAccessKeyDataLimit({params: {id: keyId, limit}}, {send: () => {/* do nothing */}}, (error) => {
+      service.setAccessKeyDataLimit({params: {id: keyId, limit}}, {send: () => {}}, (error) => {
         expect(error.statusCode).toEqual(400);
         responseProcessed = true;
         done();
@@ -576,7 +576,7 @@ describe('ShadowsocksManagerService', () => {
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
       const keyId = (await repo.createNewAccessKey()).id;
       const limit = {bytes: '1'};
-      service.setAccessKeyDataLimit({params: {id: keyId, limit}}, {send: () => {/* do nothing */}}, (error) => {
+      service.setAccessKeyDataLimit({params: {id: keyId, limit}}, {send: () => {}}, (error) => {
         expect(error.statusCode).toEqual(400);
         responseProcessed = true;
         done();
@@ -588,7 +588,7 @@ describe('ShadowsocksManagerService', () => {
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
       const keyId = (await repo.createNewAccessKey()).id;
       const limit = {} as DataLimit;
-      service.setAccessKeyDataLimit({params: {id: keyId, limit}}, {send: () => {/* do nothing */}}, (error) => {
+      service.setAccessKeyDataLimit({params: {id: keyId, limit}}, {send: () => {}}, (error) => {
         expect(error.statusCode).toEqual(400);
         responseProcessed = true;
         done();
@@ -602,7 +602,7 @@ describe('ShadowsocksManagerService', () => {
       const limit: DataLimit = {bytes: 1000};
       service.setAccessKeyDataLimit(
         {params: {id: 'not an id', limit}},
-        {send: () => {/* do nothing */}},
+        {send: () => {}},
         (error) => {
           expect(error.statusCode).toEqual(404);
           responseProcessed = true;
@@ -627,13 +627,13 @@ describe('ShadowsocksManagerService', () => {
           done();
         },
       };
-      service.removeAccessKeyDataLimit({params: {id: key.id}}, res, () => {/* do nothing */});
+      service.removeAccessKeyDataLimit({params: {id: key.id}}, res, () => {});
     });
     it('returns 404 for a nonexistent key', async (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
       await repo.createNewAccessKey();
-      service.removeAccessKeyDataLimit({params: {id: 'not an id'}}, {send: () => {/* do nothing */}}, (error) => {
+      service.removeAccessKeyDataLimit({params: {id: 'not an id'}}, {send: () => {}}, (error) => {
         expect(error.statusCode).toEqual(404);
         responseProcessed = true;
         done();

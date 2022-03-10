@@ -16,7 +16,7 @@
 
 export enum DisplayCloudId {
   DO = 'do',
-  GCP = 'gcp'
+  GCP = 'gcp',
 }
 
 export function getCloudIcon(id: DisplayCloudId): string {
