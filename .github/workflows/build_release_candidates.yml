@@ -1,0 +1,16 @@
+name: Build Release Candidates
+
+concurrency:
+  group: ${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  linux:
+    uses: ./.github/workflows/manager_linux_build_release_candidate.yml
+    secrets:
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
