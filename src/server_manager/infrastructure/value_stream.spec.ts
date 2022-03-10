@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ValueStream } from "./value_stream";
+import {ValueStream} from './value_stream';
 
 describe('ValueStream', () => {
   it('get returns initial value', () => {
@@ -26,7 +26,7 @@ describe('ValueStream', () => {
       expect(value).toEqual('foo');
       return;
     }
-    fail('Loop didn\'t run');
+    fail("Loop didn't run");
   });
 
   it('watch on a closed stream yields the final value and exits', async () => {

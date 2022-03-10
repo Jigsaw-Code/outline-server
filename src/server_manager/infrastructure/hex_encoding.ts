@@ -17,7 +17,7 @@ export function asciiToHex(text: string) {
   const hexBytes: string[] = [];
   for (let i = 0; i < text.length; ++i) {
     const charCode = text.charCodeAt(i);
-    if (charCode > 0xFF) {
+    if (charCode > 0xff) {
       // Consider supporting non-ascii characters:
       // http://monsur.hossa.in/2012/07/20/utf-8-in-javascript.html
       throw new Error(`Cannot encode wide character with value ${charCode}`);

@@ -80,18 +80,38 @@ Polymer({
         background-color: rgba(0, 0, 0, 0);
       }
     </style>
-    <div id="container" hidden\$="[[!visible]]">
+    <div id="container" hidden$="[[!visible]]">
       <!-- We use on-focus instead of on-tap to handle the case where text is selected but the tap event isn't fired. -->
-      <paper-input id="input" readonly\$="[[!editable]]" allowed-pattern="[[allowedPattern]]" value="[[value]]" label="[[label]]" maxlength="[[maxLength]]" on-focus="_enterEditingState" on-keyup="_onKeyUp" always-float-label="">
+      <paper-input
+        id="input"
+        readonly$="[[!editable]]"
+        allowed-pattern="[[allowedPattern]]"
+        value="[[value]]"
+        label="[[label]]"
+        maxlength="[[maxLength]]"
+        on-focus="_enterEditingState"
+        on-keyup="_onKeyUp"
+        always-float-label=""
+      >
       </paper-input>
-      <paper-button id="cancelButton" hidden\$="[[!_showButtons]]" disabled\$="[[!_enableButtons]]" on-tap="_cancel">
+      <paper-button
+        id="cancelButton"
+        hidden$="[[!_showButtons]]"
+        disabled$="[[!_enableButtons]]"
+        on-tap="_cancel"
+      >
         [[localize('cancel')]]
       </paper-button>
-      <paper-button id="saveButton" hidden\$="[[!_showButtons]]" disabled\$="[[!_enableButtons]]" on-tap="_save">
+      <paper-button
+        id="saveButton"
+        hidden$="[[!_showButtons]]"
+        disabled$="[[!_enableButtons]]"
+        on-tap="_save"
+      >
         [[localize('save')]]
       </paper-button>
     </div>
-`,
+  `,
 
   is: 'outline-validated-input',
 
@@ -198,5 +218,5 @@ Polymer({
     input.invalid = true;
     input.readonly = false;
     input.focus();
-  }
+  },
 });

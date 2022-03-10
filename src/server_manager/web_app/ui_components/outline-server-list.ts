@@ -37,17 +37,24 @@ export class OutlineServerList extends LitElement {
     if (!this.serverList) {
       return;
     }
-    return html`<div>${repeat(this.serverList, e => e.id, e => html`
-      <outline-server-view
-        .id="${this.makeViewId(e.id)}"
-        .serverId="${e.id}"
-        .serverName="${e.name}"
-        .cloudId="${e.cloudId}"
-        .language="${this.language}"
-        .localize="${this.localize}"
-        ?hidden="${e.id !== this.selectedServerId}">
-      </outline-server-view>
-    `)}</div>`;
+    return html`<div>
+      ${repeat(
+        this.serverList,
+        (e) => e.id,
+        (e) => html`
+          <outline-server-view
+            .id="${this.makeViewId(e.id)}"
+            .serverId="${e.id}"
+            .serverName="${e.name}"
+            .cloudId="${e.cloudId}"
+            .language="${this.language}"
+            .localize="${this.localize}"
+            ?hidden="${e.id !== this.selectedServerId}"
+          >
+          </outline-server-view>
+        `
+      )}
+    </div>`;
   }
 
   async getServerView(serverId: string): Promise<ServerView> {

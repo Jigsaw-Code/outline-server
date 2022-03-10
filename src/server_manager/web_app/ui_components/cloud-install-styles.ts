@@ -20,8 +20,7 @@ import {unsafeCSS} from 'lit-element';
 // Polymer style module to share styles between steps
 // https://polymer-library.polymer-project.org/3.0/docs/devguide/style-shadow-dom#share-styles-between-elements
 const styleElement = document.createElement('dom-module');
-styleElement.appendChild(html`
-<style>
+styleElement.appendChild(html` <style>
   :host {
     --primary-green: #00bfa5;
     --background-color: #263238;
@@ -199,7 +198,8 @@ styleElement.appendChild(html`
 
   .walkthrough {
     background: #ffffff;
-    box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.1), 0 2px 4px 0 rgba(0, 0, 0, 0.1), 0 4px 4px 0 rgba(0, 0, 0, 0.12);
+    box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.1), 0 2px 4px 0 rgba(0, 0, 0, 0.1),
+      0 4px 4px 0 rgba(0, 0, 0, 0.12);
     top: 0px;
     display: block;
   }

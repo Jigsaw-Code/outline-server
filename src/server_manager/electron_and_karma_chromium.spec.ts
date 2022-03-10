@@ -23,10 +23,11 @@ describe('Karma', () => {
   it('uses the correct Chromium version', async (done) => {
     // Omaha Proxy is a service maintained by the Chrome team which serves metadata about current
     // and legacy Chrome versions.
-    const electronChromiumVersionInfo =
-        await (await fetch(`http://omahaproxy.appspot.com/deps.json?version=${
-                   electronToChromium(electronVersion)}`))
-            .json();
+    const electronChromiumVersionInfo = await (
+      await fetch(
+        `http://omahaproxy.appspot.com/deps.json?version=${electronToChromium(electronVersion)}`
+      )
+    ).json();
     const electronChromeRevision = electronChromiumVersionInfo.chromium_base_position;
     expect(electronChromeRevision).toEqual(config.PUPPETEER_CHROMIUM_REVISION);
     done();

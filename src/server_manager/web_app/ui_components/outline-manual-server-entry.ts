@@ -36,7 +36,7 @@ export interface OutlineManualServerEntry extends Element {
   clear(): void;
   retryTapped(): void;
   cancelTapped(): void;
-  cloudProvider: 'generic'|'aws'|'gcp';
+  cloudProvider: 'generic' | 'aws' | 'gcp';
   enableDoneButton: boolean;
   showConnection: boolean;
 }
@@ -199,39 +199,60 @@ Polymer({
     </style>
     <outline-step-view>
       <span slot="step-title">[[localize('manual-server-title')]]</span>
-      <span slot="step-description">[[localize('manual-server-description', 'cloudProvider', cloudProviderName)]]</span>
+      <span slot="step-description"
+        >[[localize('manual-server-description', 'cloudProvider', cloudProviderName)]]</span
+      >
 
       <div class="card">
         <!-- GCP -->
-        <div id="gcp-new-flow-promo" class="section-content-instructions" on-tap="gcpNewFlowTapped" hidden\$="[[!isCloudProviderGcp]]">
+        <div
+          id="gcp-new-flow-promo"
+          class="section-content-instructions"
+          on-tap="gcpNewFlowTapped"
+          hidden$="[[!isCloudProviderGcp]]"
+        >
           <div id="gcp-tag">[[localize('experimental')]]</div>
-          <a>[[localize('setup-gcp-promo')]]<iron-icon icon=open-in-new></iron-icon></a>
+          <a>[[localize('setup-gcp-promo')]]<iron-icon icon="open-in-new"></iron-icon></a>
         </div>
-        <div class="section" hidden\$="[[!isCloudProviderGcp]]">
+        <div class="section" hidden$="[[!isCloudProviderGcp]]">
           <div class="section-header">
             <!-- TODO(alalama): localize numbers  -->
             <span class="stepcircle">1</span>
             <div class="instructions">[[localize('gcp-create-server')]]</div>
             <div class="drop-down" on-tap="_toggleGcpCreateServerDropDown">
-              <img src="images/gcp-logo.svg">
+              <img src="images/gcp-logo.svg" />
               <span>[[localize('manual-server-instructions')]]</span>
               <iron-icon id="gcpCreateServerDropDownIcon" icon="arrow-drop-down"></iron-icon>
             </div>
           </div>
           <iron-collapse id="gcpCreateServerDropDown" class="instructions-collapse">
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view title="[[localize('gcp-create-project')]]" thumbnail-path="images/gcp-create-project-thumbnail.png" image-path="images/gcp-create-project-screenshot.png" localize="[[localize]]">
+              <outline-cloud-instructions-view
+                title="[[localize('gcp-create-project')]]"
+                thumbnail-path="images/gcp-create-project-thumbnail.png"
+                image-path="images/gcp-create-project-screenshot.png"
+                localize="[[localize]]"
+              >
                 <ol>
-                  <li inner-h-t-m-l="[[localize('gcp-create-new-project', 'openLink', '<a href=https://console.cloud.google.com/projectcreate>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
+                  <li
+                    inner-h-t-m-l="[[localize('gcp-create-new-project', 'openLink', '<a href=https://console.cloud.google.com/projectcreate>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
+                  ></li>
                   <li>[[localize('gcp-name-your-project')]]</li>
                   <li>[[localize('gcp-click-create')]]</li>
                 </ol>
               </outline-cloud-instructions-view>
             </div>
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view title="[[localize('manual-server-create-firewall')]]" thumbnail-path="images/gcp-thumbnail-1.png" image-path="images/gcp-screenshot-1.png" localize="[[localize]]">
+              <outline-cloud-instructions-view
+                title="[[localize('manual-server-create-firewall')]]"
+                thumbnail-path="images/gcp-thumbnail-1.png"
+                image-path="images/gcp-screenshot-1.png"
+                localize="[[localize]]"
+              >
                 <ol>
-                  <li inner-h-t-m-l="[[localize('gcp-firewall-create-0', 'openLink', '<a href=https://console.cloud.google.com/networking/firewalls/add>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
+                  <li
+                    inner-h-t-m-l="[[localize('gcp-firewall-create-0', 'openLink', '<a href=https://console.cloud.google.com/networking/firewalls/add>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
+                  ></li>
                   <li>[[localize('gcp-firewall-create-1')]]</li>
                   <li>[[localize('gcp-firewall-create-2')]]</li>
                   <li>[[localize('gcp-firewall-create-3')]]</li>
@@ -241,9 +262,16 @@ Polymer({
               </outline-cloud-instructions-view>
             </div>
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view title="[[localize('gcp-create-vm')]]" thumbnail-path="images/gcp-create-instance-thumbnail.png" image-path="images/gcp-create-instance-screenshot.png" localize="[[localize]]">
+              <outline-cloud-instructions-view
+                title="[[localize('gcp-create-vm')]]"
+                thumbnail-path="images/gcp-create-instance-thumbnail.png"
+                image-path="images/gcp-create-instance-screenshot.png"
+                localize="[[localize]]"
+              >
                 <ol>
-                  <li inner-h-t-m-l="[[localize('gcp-create-new-vm', 'openLink', '<a href=https://console.cloud.google.com/compute/instancesAdd>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
+                  <li
+                    inner-h-t-m-l="[[localize('gcp-create-new-vm', 'openLink', '<a href=https://console.cloud.google.com/compute/instancesAdd>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
+                  ></li>
                   <li>[[localize('gcp-type-outline-server')]]</li>
                   <li>[[localize('gcp-select-region')]]</li>
                   <li>[[localize('gcp-select-machine-type')]]</li>
@@ -256,23 +284,28 @@ Polymer({
           </iron-collapse>
         </div>
         <!-- AWS -->
-        <div class="section" hidden\$="[[!isCloudProviderAws]]">
+        <div class="section" hidden$="[[!isCloudProviderAws]]">
           <div class="section-header">
             <span class="stepcircle">1</span>
-            <div class="instructions">
-              [[localize('manual-server-firewall')]]
-            </div>
+            <div class="instructions">[[localize('manual-server-firewall')]]</div>
             <div class="drop-down" on-tap="_toggleAwsDropDown">
-              <img id="aws-logo" src="images/aws-logo.svg">
+              <img id="aws-logo" src="images/aws-logo.svg" />
               <span>[[localize('manual-server-instructions')]]</span>
               <iron-icon id="awsDropDownIcon" icon="arrow-drop-down"></iron-icon>
             </div>
           </div>
           <iron-collapse id="awsDropDown" class="instructions-collapse">
             <div class="section-content-instructions">
-              <outline-cloud-instructions-view title="[[localize('manual-server-create-group')]]" thumbnail-path="images/aws-lightsail-thumbnail-1.png" image-path="images/aws-lightsail-screenshot-1.png" localize="[[localize]]">
+              <outline-cloud-instructions-view
+                title="[[localize('manual-server-create-group')]]"
+                thumbnail-path="images/aws-lightsail-thumbnail-1.png"
+                image-path="images/aws-lightsail-screenshot-1.png"
+                localize="[[localize]]"
+              >
                 <ol>
-                  <li inner-h-t-m-l="[[localize('aws-lightsail-firewall-0', 'openLink', '<a href=https://lightsail.aws.amazon.com>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"></li>
+                  <li
+                    inner-h-t-m-l="[[localize('aws-lightsail-firewall-0', 'openLink', '<a href=https://lightsail.aws.amazon.com>', 'closeLink', '<iron-icon icon=open-in-new></iron-icon></a>')]]"
+                  ></li>
                   <li>[[localize('aws-lightsail-firewall-1')]]</li>
                   <li>[[localize('aws-lightsail-firewall-2')]]</li>
                   <li>[[localize('aws-lightsail-firewall-3')]]</li>
@@ -287,13 +320,11 @@ Polymer({
         <div class="section">
           <div class="section-header">
             <span class="stepcircle">[[installScriptStepNumber]]</span>
-            <div class="instructions">
-              [[localize('manual-server-install-run')]]
-            </div>
+            <div class="instructions">[[localize('manual-server-install-run')]]</div>
           </div>
           <div class="section-content">
             <div id="command">
-              sudo bash -c "\$(wget -qO-
+              sudo bash -c "$(wget -qO-
               https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"
             </div>
           </div>
@@ -302,22 +333,41 @@ Polymer({
         <div class="section">
           <div class="section-header">
             <span class="stepcircle">[[pasteJsonStepNumber]]</span>
-            <div class="instructions">
-              [[localize('manual-server-install-paste')]]
-            </div>
+            <div class="instructions">[[localize('manual-server-install-paste')]]</div>
           </div>
           <div class="section-content">
-            <paper-textarea id="serverConfig" type="text" placeholder\$="[[placeholderText]]" class="code" rows="4" max-rows="4" no-label-float="" on-value-changed="onServerConfigChanged"></paper-textarea>
+            <paper-textarea
+              id="serverConfig"
+              type="text"
+              placeholder$="[[placeholderText]]"
+              class="code"
+              rows="4"
+              max-rows="4"
+              no-label-float=""
+              on-value-changed="onServerConfigChanged"
+            ></paper-textarea>
           </div>
         </div>
         <div id="button-row">
-          <paper-button id="cancelButton" on-tap="cancelTapped" class="secondary">[[localize('cancel')]]</paper-button>
-          <paper-button id="doneButton" on-tap="doneTapped" class="primary" disabled\$="[[!enableDoneButton]]">[[localize('done')]]</paper-button>
+          <paper-button id="cancelButton" on-tap="cancelTapped" class="secondary"
+            >[[localize('cancel')]]</paper-button
+          >
+          <paper-button
+            id="doneButton"
+            on-tap="doneTapped"
+            class="primary"
+            disabled$="[[!enableDoneButton]]"
+            >[[localize('done')]]</paper-button
+          >
         </div>
-        <paper-progress hidden\$="[[!showConnection]]" indeterminate="" class="slow"></paper-progress>
+        <paper-progress
+          hidden$="[[!showConnection]]"
+          indeterminate=""
+          class="slow"
+        ></paper-progress>
       </div>
     </outline-step-view>
-`,
+  `,
 
   is: 'outline-manual-server-entry',
 
@@ -325,7 +375,7 @@ Polymer({
     placeholderText: {
       type: String,
       value:
-          '{"apiUrl":"https://xxx.xxx.xxx.xxx:xxxxx/xxxxxxxxxxxxxxxxxxxxxx","certSha256":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}',
+        '{"apiUrl":"https://xxx.xxx.xxx.xxx:xxxxx/xxxxxxxxxxxxxxxxxxxxxx","certSha256":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}',
     },
     showConnection: Boolean,
     cloudProvider: {
@@ -449,5 +499,5 @@ Polymer({
     this.fire('ManualServerEdited', {
       userInput: this.$.serverConfig.value,
     });
-  }
+  },
 });

@@ -35,4 +35,4 @@ declare function runGcpOauth(): OauthSession;
 declare function bringToFront(): void;
 
 // From base.webpack.js.
-declare const outline: { gcpAuthEnabled: boolean; };
+declare const outline: {gcpAuthEnabled: boolean};

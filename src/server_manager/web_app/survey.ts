@@ -19,17 +19,21 @@ export const DEFAULT_PROMPT_IMPRESSION_DELAY_MS = 3000;
 
 export class OutlineSurveys implements Surveys {
   constructor(
-      private view: polymer.Base, private storage: Storage = localStorage,
-      private promptImpressionDelayMs: number = DEFAULT_PROMPT_IMPRESSION_DELAY_MS,
-      private dataLimitsAvailabilityDate?: Date) {}
+    private view: polymer.Base,
+    private storage: Storage = localStorage,
+    private promptImpressionDelayMs: number = DEFAULT_PROMPT_IMPRESSION_DELAY_MS,
+    private dataLimitsAvailabilityDate?: Date
+  ) {}
 
   async presentDataLimitsEnabledSurvey() {
     if (this.isSurveyExpired(this.dataLimitsAvailabilityDate)) {
       return;
     }
     await this.presentSurvey(
-        'dataLimitsEnabledSurvey', this.view.localize('survey-data-limits-title'),
-        'https://docs.google.com/forms/d/e/1FAIpQLSeXQ5WUHXQHlF1Ul_ViX52GjTUPlrRB_7rhwbol3dKJfM4Kiw/viewform');
+      'dataLimitsEnabledSurvey',
+      this.view.localize('survey-data-limits-title'),
+      'https://docs.google.com/forms/d/e/1FAIpQLSeXQ5WUHXQHlF1Ul_ViX52GjTUPlrRB_7rhwbol3dKJfM4Kiw/viewform'
+    );
   }
 
   async presentDataLimitsDisabledSurvey() {
@@ -37,8 +41,10 @@ export class OutlineSurveys implements Surveys {
       return;
     }
     await this.presentSurvey(
-        'dataLimitsDisabledSurvey', this.view.localize('survey-data-limits-title'),
-        'https://docs.google.com/forms/d/e/1FAIpQLSc2ZNx0C1a-alFlXLxhJ8jWk-WgcxqKilFoQ5ToI8HBOK9qRA/viewform');
+      'dataLimitsDisabledSurvey',
+      this.view.localize('survey-data-limits-title'),
+      'https://docs.google.com/forms/d/e/1FAIpQLSc2ZNx0C1a-alFlXLxhJ8jWk-WgcxqKilFoQ5ToI8HBOK9qRA/viewform'
+    );
   }
 
   // Displays a survey dialog for`surveyId` with title `surveyTitle` and a link to `surveyLink`
@@ -53,7 +59,7 @@ export class OutlineSurveys implements Surveys {
   }
 
   // Returns whether `surveyAvailabilityDate` is in the past.
-  private isSurveyExpired(surveyAvailabilityDate: Date|undefined) {
+  private isSurveyExpired(surveyAvailabilityDate: Date | undefined) {
     const now = new Date();
     return surveyAvailabilityDate && now > surveyAvailabilityDate;
   }

@@ -12,26 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as location from "./location";
-import {ManagedServer} from "./server";
+import * as location from './location';
+import {ManagedServer} from './server';
 
 // A DigitalOcean Region, e.g. "NYC2".
 export class Region implements location.CloudLocation {
   private static readonly LOCATION_MAP: {readonly [cityId: string]: location.GeoLocation} = {
-    'ams': location.AMSTERDAM,
-    'blr': location.BANGALORE,
-    'fra': location.FRANKFURT,
-    'lon': location.LONDON,
-    'nyc': location.NEW_YORK_CITY,
-    'sfo': location.SAN_FRANCISCO,
-    'sgp': location.SINGAPORE,
-    'tor': location.TORONTO,
+    ams: location.AMSTERDAM,
+    blr: location.BANGALORE,
+    fra: location.FRANKFURT,
+    lon: location.LONDON,
+    nyc: location.NEW_YORK_CITY,
+    sfo: location.SAN_FRANCISCO,
+    sgp: location.SINGAPORE,
+    tor: location.TORONTO,
   };
   constructor(public readonly id: string) {}
 
   get location(): location.GeoLocation {
     return Region.LOCATION_MAP[this.id.substr(0, 3).toLowerCase()];
-  } 
+  }
 }
 
 export interface RegionOption extends location.CloudLocationOption {

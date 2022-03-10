@@ -38,12 +38,12 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
     return Promise.resolve([
       {
         cloudLocation: new digitalocean.Region('AMS999'),
-        available: true
+        available: true,
       },
       {
         cloudLocation: new digitalocean.Region('FRA999'),
-        available: false
-      }
+        available: false,
+      },
     ]);
   }
   createServer(region: digitalocean.Region) {
@@ -58,8 +58,10 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
 
 export class FakeGcpAccount implements gcp.Account {
   constructor(
-      private refreshToken = 'fake-access-token',
-      private billingAccounts: gcp.BillingAccount[] = [], private locations: gcp.ZoneOption[] = []) {}
+    private refreshToken = 'fake-access-token',
+    private billingAccounts: gcp.BillingAccount[] = [],
+    private locations: gcp.ZoneOption[] = []
+  ) {}
 
   getId() {
     return 'id';
@@ -157,7 +159,7 @@ export class FakeServer implements server.Server {
   getManagementApiUrl() {
     return this.apiUrl || Math.random().toString();
   }
-  getPortForNewAccessKeys(): number|undefined {
+  getPortForNewAccessKeys(): number | undefined {
     return undefined;
   }
   setPortForNewAccessKeys(): Promise<void> {
@@ -175,7 +177,7 @@ export class FakeServer implements server.Server {
   removeDefaultDataLimit(): Promise<void> {
     return Promise.resolve();
   }
-  getDefaultDataLimit(): server.DataLimit|undefined {
+  getDefaultDataLimit(): server.DataLimit | undefined {
     return undefined;
   }
 }
@@ -205,7 +207,7 @@ export class FakeManualServerRepository implements server.ManualServerRepository
   }
 
   findServer(config: server.ManualServerConfig) {
-    return this.servers.find(server => server.getManagementApiUrl() === config.apiUrl);
+    return this.servers.find((server) => server.getManagementApiUrl() === config.apiUrl);
   }
 
   listServers() {
@@ -237,8 +239,9 @@ export class FakeManagedServer extends FakeServer implements server.ManagedServe
 
 export class FakeCloudAccounts implements accounts.CloudAccounts {
   constructor(
-      private digitalOceanAccount: digitalocean.Account = null,
-      private gcpAccount: gcp.Account = null) {}
+    private digitalOceanAccount: digitalocean.Account = null,
+    private gcpAccount: gcp.Account = null
+  ) {}
 
   connectDigitalOceanAccount(accessToken: string): digitalocean.Account {
     this.digitalOceanAccount = new FakeDigitalOceanAccount(accessToken);

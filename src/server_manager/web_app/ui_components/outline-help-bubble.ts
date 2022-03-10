@@ -20,8 +20,7 @@ import {Polymer} from '@polymer/polymer/lib/legacy/polymer-fn';
 import {html} from '@polymer/polymer/lib/utils/html-tag';
 
 export interface OutlineHelpBubble extends Element {
-  show(positionTarget: Element, arrowDirection: string,
-       leftOrRightOffset: string): void;
+  show(positionTarget: Element, arrowDirection: string, leftOrRightOffset: string): void;
   hide(): void;
 }
 
@@ -131,13 +130,11 @@ Polymer({
     <div class="upArrowWrapper"><div class="upArrow"></div></div>
     <div class="downArrowWrapper"><div class="downArrow"></div></div>
     <div class="helpContent"><slot></slot></div>
-`,
+  `,
 
   is: 'outline-help-bubble',
 
-  behaviors: [
-    IronFitBehavior,
-  ],
+  behaviors: [IronFitBehavior],
 
   ready() {
     // Prevent help bubble from overlapping with it's positionTarget.
@@ -147,8 +144,7 @@ Polymer({
     this.setAttribute('hidden', true);
   },
 
-  show(positionTarget: Element, arrowDirection: string,
-      leftOrRightOffset: string) {
+  show(positionTarget: Element, arrowDirection: string, leftOrRightOffset: string) {
     this.removeAttribute('hidden');
 
     // Set arrow direction.
@@ -175,5 +171,5 @@ Polymer({
     window.removeEventListener('scroll', this.refit.bind(this));
     window.removeEventListener('resize', this.refit.bind(this));
     this.fire('outline-help-bubble-dismissed');
-  }
+  },
 });

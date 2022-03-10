@@ -16,8 +16,8 @@ export class OutlineError extends Error {
   constructor(message?: string) {
     // ref:
     // https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-2.html#support-for-newtarget
-    super(message);                                     // 'Error' breaks prototype chain here
-    Object.setPrototypeOf(this, new.target.prototype);  // restore prototype chain
+    super(message); // 'Error' breaks prototype chain here
+    Object.setPrototypeOf(this, new.target.prototype); // restore prototype chain
     this.name = new.target.name;
   }
 }
@@ -52,6 +52,6 @@ export class ServerApiError extends OutlineError {
   // Returns true if no response was received, i.e. a network error was encountered.
   // Can be used to distinguish between client and server-side issues.
   isNetworkError() {
-    return !(this.response);
+    return !this.response;
   }
 }

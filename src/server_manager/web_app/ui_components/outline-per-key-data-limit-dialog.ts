@@ -27,7 +27,12 @@ import {PaperInputElement} from '@polymer/paper-input/paper-input';
 import {PaperListboxElement} from '@polymer/paper-listbox/paper-listbox';
 import {css, customElement, html, internalProperty, LitElement, property} from 'lit-element';
 
-import {bytesToDisplayDataAmount, DisplayDataAmount, displayDataAmountToBytes, formatBytesParts} from '../data_formatting';
+import {
+  bytesToDisplayDataAmount,
+  DisplayDataAmount,
+  displayDataAmountToBytes,
+  formatBytesParts,
+} from '../data_formatting';
 
 import {COMMON_STYLES} from './cloud-install-styles';
 
@@ -182,8 +187,9 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
           ${this._showDataLimit ? this.renderDataLimit() : ''}
         </div>
         <div id="buttonsSection">
-          <paper-button id="save" ?disabled=${!this._enableSave} @tap=${this._onSaveButtonTapped}>${
-        this.localize('save')}</paper-button>
+          <paper-button id="save" ?disabled=${!this._enableSave} @tap=${this._onSaveButtonTapped}
+            >${this.localize('save')}</paper-button
+          >
           <paper-button @tap=${this.close}>${this.localize('cancel')}</paper-button>
         </div>
       </paper-dialog>
@@ -193,7 +199,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
   private renderDataLimit() {
     return html`
       <div id="menu">
-      <!-- This input doesn't work for languages which don't use decimal points or Arabic numerals
+        <!-- This input doesn't work for languages which don't use decimal points or Arabic numerals
            but it's difficult to accept internationalized inputs.  -->
         <paper-input
           id="dataLimitInput"
@@ -234,7 +240,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     return Number(this._input?.value) ?? 0;
   }
 
-  private _dataLimitUnit(): 'GB'|'MB' {
+  private _dataLimitUnit(): 'GB' | 'MB' {
     return this._queryAs<PaperListboxElement>('#unitsListbox').selected as 'GB' | 'MB';
   }
 
@@ -242,7 +248,7 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     return formatBytesParts(bytes, this.language).unit;
   }
 
-  private _initialUnit(): 'GB'|'MB' {
+  private _initialUnit(): 'GB' | 'MB' {
     return bytesToDisplayDataAmount(this._initialDataLimitBytes)?.unit || 'GB';
   }
 
@@ -267,9 +273,10 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
     if (change === Change.UNCHANGED) {
       return;
     }
-    const result = change === Change.SET ?
-        await this._onDataLimitSet(displayDataAmountToBytes(this.inputDataLimit())) :
-        await this._onDataLimitRemoved();
+    const result =
+      change === Change.SET
+        ? await this._onDataLimitSet(displayDataAmountToBytes(this.inputDataLimit()))
+        : await this._onDataLimitRemoved();
     if (result) {
       this.close();
     }
@@ -301,8 +308,9 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    * The current data limit as input by the user, but not necessarily as saved.
    */
   public inputDataLimit(): DisplayDataAmount {
-    return this._showDataLimit ? {unit: this._dataLimitUnit(), value: this._dataLimitValue()} :
-                                 null;
+    return this._showDataLimit
+      ? {unit: this._dataLimitUnit(), value: this._dataLimitValue()}
+      : null;
   }
 
   /**
@@ -319,8 +327,11 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
    *    not the data limit was removed successfully.  Must not throw or change the dialog's state.
    */
   public open(
-      keyName: string, keyLimitBytes: number, onDataLimitSet: OnSetDataLimitHandler,
-      onDataLimitRemoved: OnRemoveDataLimitHandler) {
+    keyName: string,
+    keyLimitBytes: number,
+    onDataLimitSet: OnSetDataLimitHandler,
+    onDataLimitRemoved: OnRemoveDataLimitHandler
+  ) {
     this._keyName = keyName;
     this._initialDataLimitBytes = keyLimitBytes;
     this._showDataLimit = this._initialDataLimitBytes !== undefined;
@@ -349,9 +360,9 @@ export class OutlinePerKeyDataLimitDialog extends LitElement {
 }
 
 enum Change {
-  SET,        // A data limit was added or the existing data limit changed
-  REMOVED,    // The data limit for the key was removed
-  UNCHANGED,  // No functional change happened.
+  SET, // A data limit was added or the existing data limit changed
+  REMOVED, // The data limit for the key was removed
+  UNCHANGED, // No functional change happened.
 }
 
 type OnSetDataLimitHandler = (dataLimitBytes: number) => Promise<boolean>;

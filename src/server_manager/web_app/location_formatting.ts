@@ -18,8 +18,10 @@ import {CloudLocation, CloudLocationOption, GeoLocation} from '../model/location
  * Returns the localized place name, or the data center ID if the location is
  * unknown.
  */
-export function getShortName(cloudLocation: CloudLocation,
-    localize: (id: string) => string): string {
+export function getShortName(
+  cloudLocation: CloudLocation,
+  localize: (id: string) => string
+): string {
   if (!cloudLocation) {
     return '';
   }
@@ -54,8 +56,8 @@ export function filterOptions<T extends CloudLocationOption>(options: readonly T
   // there are datacenters for that GeoLocation but none are available.
   const map = new Map<string, T>();
   const unmappedOptions: T[] = [];
-  
-  options.forEach(option => {
+
+  options.forEach((option) => {
     const geoLocation = option.cloudLocation.location;
     if (geoLocation) {
       if (option.available || !map.has(geoLocation.id)) {
