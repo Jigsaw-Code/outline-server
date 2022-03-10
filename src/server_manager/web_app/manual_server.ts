@@ -52,7 +52,7 @@ export class ManualServerRepository implements server.ManualServerRepository {
 
   addServer(config: server.ManualServerConfig): Promise<server.ManualServer> {
     const existingServer = this.findServer(config);
-    if (!!existingServer) {
+    if (existingServer) {
       console.debug('server already added');
       return Promise.resolve(existingServer);
     }

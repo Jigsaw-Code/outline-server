@@ -27,7 +27,7 @@ export class InMemoryStorage implements Storage {
     return this.store.get(key) || null;
   }
 
-  key(index: number): string|null {
+  key(_index: number): string|null {
     throw new Error('InMemoryStorage.key not implemented');
   }
 

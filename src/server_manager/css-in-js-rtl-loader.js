@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 // Copyright 2020 The Outline Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +28,7 @@ function generateRtlCss(css) {
 }
 // This is a Webpack loader that searches for <style> blocks and edits the CSS to support RTL
 // in a Polymer element.
-module.exports = function loader(content, map, meta) {
+module.exports = function loader(content, _map, _meta) {
   const callback = this.async();
   const styleRe = RegExp(/(<style[^>]*>)(\s*[^<\s](.*\n)*?\s*)(<\/style>)/gm);
   try {

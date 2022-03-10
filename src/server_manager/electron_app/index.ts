@@ -210,7 +210,7 @@ function main() {
   });
 
   const UPDATE_DOWNLOADED_EVENT = 'update-downloaded';
-  autoUpdater.on(UPDATE_DOWNLOADED_EVENT, (ev, info) => {
+  autoUpdater.on(UPDATE_DOWNLOADED_EVENT, (_ev, _info) => {
     if (mainWindow) {
       mainWindow.webContents.send(UPDATE_DOWNLOADED_EVENT);
     }
@@ -228,7 +228,7 @@ function main() {
   });
 
   // Restores the mainWindow if minimized and brings it into focus.
-  ipcMain.on('bring-to-front', (event: IpcEvent) => {
+  ipcMain.on('bring-to-front', (_event: IpcEvent) => {
     if (mainWindow.isMinimized()) {
       mainWindow.restore();
     }

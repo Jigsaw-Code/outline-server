@@ -89,7 +89,8 @@ export class DigitalOceanAccount implements digitalocean.Account {
     const server = this.createDigitalOceanServer(this.digitalOcean, response.droplet);
     server.onceDropletActive.then(async () => {
       console.timeEnd('activeServer');
-      for await (const _ of server.monitorInstallProgress()) {}
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      for await (const _ of server.monitorInstallProgress()) {/* do nothing */}
       console.timeEnd('servingServer');
     }).catch(e => console.log('Couldn\'t time installation', e));
     return server;
@@ -122,7 +123,7 @@ export class DigitalOceanAccount implements digitalocean.Account {
 
 function sanitizeDigitalOceanToken(input: string): string {
   const sanitizedInput = input.trim();
-  const pattern = /^[A-Za-z0-9_\/-]+$/;
+  const pattern = /^[A-Za-z0-9_/-]+$/;
   if (!pattern.test(sanitizedInput)) {
     throw new Error('Invalid DigitalOcean Token');
   }

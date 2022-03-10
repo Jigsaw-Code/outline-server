@@ -31,14 +31,14 @@ describe('getShortName', () => {
   });
 
   it('returns the ID when geoId is null', () => {
-    expect(getShortName({id: 'fake-id', location: null}, msgId => {
+    expect(getShortName({id: 'fake-id', location: null}, _msgId => {
       fail();
       return null;
     })).toEqual('fake-id');
   });
 
   it('returns empty string when the location is null', () => {
-    expect(getShortName(null, msgId => {
+    expect(getShortName(null, _msgId => {
       fail();
       return null;
     })).toEqual('');
@@ -46,7 +46,7 @@ describe('getShortName', () => {
 });
 
 describe('localizeCountry', () => {
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!(Intl as any).DisplayNames) {
     console.log('country localization requires modern Intl features');
     return;

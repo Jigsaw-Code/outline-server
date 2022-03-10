@@ -82,7 +82,7 @@ export function runOauth(): OauthSession {
 
   // Handle OAuth redirect callback
   let isCancelled = false;
-  const rejectWrapper = {reject: (error: Error) => {}};
+  const rejectWrapper = {reject: (_error: Error) => {}};
   const tokenPromise = new Promise<string>((resolve, reject) => {
     rejectWrapper.reject = reject;
     app.get(REDIRECT_PATH, async (request: express.Request, response: express.Response) => {

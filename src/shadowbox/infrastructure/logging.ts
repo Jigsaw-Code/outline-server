@@ -28,7 +28,7 @@ function getCallsite(): Callsite {
   };
   const error = new Error();
   Error.captureStackTrace(error, getCallsite);
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const stack = error.stack as any as Callsite[];
   Error.prepareStackTrace = originalPrepareStackTrace;
   return stack[1];

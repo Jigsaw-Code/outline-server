@@ -121,10 +121,10 @@ export class App {
       private cloudAccounts: accounts.CloudAccounts) {
     appRoot.setAttribute('outline-version', this.version);
 
-    appRoot.addEventListener('ConnectDigitalOceanAccountRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('ConnectDigitalOceanAccountRequested', (_: CustomEvent) => {
       this.handleConnectDigitalOceanAccountRequest();
     });
-    appRoot.addEventListener('CreateDigitalOceanServerRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('CreateDigitalOceanServerRequested', (_: CustomEvent) => {
       const digitalOceanAccount = this.cloudAccounts.getDigitalOceanAccount();
       if (digitalOceanAccount) {
         this.showDigitalOceanCreateServer(digitalOceanAccount);
@@ -135,8 +135,8 @@ export class App {
     });
     appRoot.addEventListener(
         'ConnectGcpAccountRequested',
-        async (event: CustomEvent) => this.handleConnectGcpAccountRequest());
-    appRoot.addEventListener('CreateGcpServerRequested', async (event: CustomEvent) => {
+        async (_: CustomEvent) => this.handleConnectGcpAccountRequest());
+    appRoot.addEventListener('CreateGcpServerRequested', async (_: CustomEvent) => {
       this.appRoot.getAndShowGcpCreateServerApp().start(this.gcpAccount);
     });
     appRoot.addEventListener('GcpServerCreated', (event: CustomEvent) => {
@@ -144,11 +144,11 @@ export class App {
       this.addServer(this.gcpAccount.getId(), server);
       this.showServer(server);
     });
-    appRoot.addEventListener('DigitalOceanSignOutRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('DigitalOceanSignOutRequested', (_: CustomEvent) => {
       this.disconnectDigitalOceanAccount();
       this.showIntro();
     });
-    appRoot.addEventListener('GcpSignOutRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('GcpSignOutRequested', (_: CustomEvent) => {
       this.disconnectGcpAccount();
       this.showIntro();
     });
@@ -165,7 +165,7 @@ export class App {
       this.forgetServer(event.detail.serverId);
     });
 
-    appRoot.addEventListener('AddAccessKeyRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('AddAccessKeyRequested', (_: CustomEvent) => {
       this.addAccessKey();
     });
 
@@ -184,7 +184,7 @@ export class App {
       this.setDefaultDataLimit(displayDataAmountToDataLimit(event.detail.limit));
     });
 
-    appRoot.addEventListener('RemoveDefaultDataLimitRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('RemoveDefaultDataLimitRequested', (_: CustomEvent) => {
       this.removeDefaultDataLimit();
     });
 
@@ -239,11 +239,11 @@ export class App {
           });
     });
 
-    appRoot.addEventListener('EnableMetricsRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('EnableMetricsRequested', (_: CustomEvent) => {
       this.setMetricsEnabled(true);
     });
 
-    appRoot.addEventListener('DisableMetricsRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('DisableMetricsRequested', (_: CustomEvent) => {
       this.setMetricsEnabled(false);
     });
 
@@ -270,7 +270,7 @@ export class App {
       this.renameServer(event.detail.newName);
     });
 
-    appRoot.addEventListener('CancelServerCreationRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('CancelServerCreationRequested', (_: CustomEvent) => {
       this.cancelServerCreation(this.selectedServer);
     });
 
@@ -437,7 +437,8 @@ export class App {
       // Wait for server config to load, then update the server view and list.
       if (isManagedServer(server)) {
         try {
-          for await (const _ of server.monitorInstallProgress()) {}
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          for await (const _ of server.monitorInstallProgress()) {/* empty */}
         } catch (error) {
           if (error instanceof errors.ServerInstallCanceledError) {
             // User clicked "Cancel" on the loading screen.
@@ -486,7 +487,7 @@ export class App {
       this.disconnectDigitalOceanAccount();
     };
     const oauthUi = this.appRoot.getDigitalOceanOauthFlow(signOutAction);
-    while (true) {
+    for (;;) {
       const status = await this.digitalOceanRetry(async () => {
         if (cancelled) {
           throw CANCELLED_ERROR;
@@ -787,7 +788,7 @@ export class App {
     // Asynchronously load "My Connection" and other access keys in order to no block showing the
     // server.
     setTimeout(async () => {
-      this.showMetricsOptInWhenNeeded(server, view);
+      this.showMetricsOptInWhenNeeded(server);
       try {
         const serverAccessKeys = await server.listAccessKeys();
         view.accessKeyRows = serverAccessKeys.map(this.convertToUiAccessKey.bind(this));
@@ -822,13 +823,13 @@ export class App {
     view.serverName = this.makeDisplayName(server);
     view.selectedPage = 'progressView';
     try {
-      for await (view.installProgress of server.monitorInstallProgress()) {}
+      for await (view.installProgress of server.monitorInstallProgress()) {/* empty */}
     } catch {
       // Ignore any errors; they will be handled by `this.addServer`.
     }
   }
 
-  private showMetricsOptInWhenNeeded(selectedServer: server.Server, serverView: ServerView) {
+  private showMetricsOptInWhenNeeded(selectedServer: server.Server) {
     const showMetricsOptInOnce = () => {
       // Sanity check to make sure the running server is still displayed, i.e.
       // it hasn't been deleted.
@@ -1094,7 +1095,7 @@ export class App {
     // Don't let `ManualServerRepository.addServer` throw to avoid redundant error handling if we
     // are adding an existing server. Query the repository instead to treat the UI accordingly.
     const storedServer = this.manualServerRepository.findServer(serverConfig);
-    if (!!storedServer) {
+    if (storedServer) {
       this.appRoot.showNotification(this.appRoot.localize('notification-server-exists'), 5000);
       this.showServer(storedServer);
       return;
@@ -1201,7 +1202,7 @@ export class App {
       this.appRoot.showError(this.appRoot.localize('error-server-rename'));
       const oldName = this.selectedServer.getName();
       view.serverName = oldName;
-      // tslint:disable-next-line:no-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (view.$.serverSettings as any).serverName = oldName;
     }
   }

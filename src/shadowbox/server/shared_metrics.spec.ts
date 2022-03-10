@@ -185,7 +185,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       serverConfig,
       keyConfig,
       new ManualUsageMetrics(),
-      (id: AccessKeyId) => '',
+      (_id: AccessKeyId) => '',
       metricsCollector
     );
 
@@ -229,12 +229,12 @@ describe('OutlineSharedMetricsPublisher', () => {
     const metricsCollector = new FakeMetricsCollector();
     spyOn(metricsCollector, 'collectServerUsageMetrics').and.callThrough();
     spyOn(metricsCollector, 'collectFeatureMetrics').and.callThrough();
-    const publisher = new OutlineSharedMetricsPublisher(
+    new OutlineSharedMetricsPublisher(
       clock,
       serverConfig,
       new InMemoryConfig<AccessKeyConfigJson>({}),
       new ManualUsageMetrics(),
-      (id: AccessKeyId) => '',
+      (_id: AccessKeyId) => '',
       metricsCollector
     );
 

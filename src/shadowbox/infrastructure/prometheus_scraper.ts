@@ -125,12 +125,12 @@ async function waitForPrometheusReady(prometheusEndpoint: string) {
 }
 
 function isHttpEndpointHealthy(endpoint: string): Promise<boolean> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve, _) => {
     http
       .get(endpoint, (response) => {
         resolve(response.statusCode >= 200 && response.statusCode < 300);
       })
-      .on('error', (e) => {
+      .on('error', () => {
         // Prometheus is not ready yet.
         resolve(false);
       });

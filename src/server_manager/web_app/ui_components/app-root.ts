@@ -640,12 +640,11 @@ export class AppRoot extends polymerElementWithLocalize {
       // resolve or reject the Promise.  Note that they need to clean up whichever event handler
       // didn't fire so we don't leak it, which could cause future language changes to not work
       // properly by triggering old event listeners.
-      let successHandler: () => void, failureHandler: () => void;
-      successHandler = () => {
+      const successHandler = () => {
         this.removeEventListener('app-localize-resources-error', failureHandler);
         resolve();
       };
-      failureHandler = () => {
+      const failureHandler = () => {
         this.removeEventListener('app-localize-resources-loaded', successHandler);
         reject(new Error(`Failed to load resources for language ${language}`));
       };

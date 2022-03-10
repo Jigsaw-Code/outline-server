@@ -70,22 +70,22 @@ export class FakeGcpAccount implements gcp.Account {
   getRefreshToken(): string {
     return this.refreshToken;
   }
-  createServer(projectId: string, name: string, zone: gcp.Zone): Promise<server.ManagedServer> {
+  createServer(_projectId: string, _name: string, _zone: gcp.Zone): Promise<server.ManagedServer> {
     return undefined;
   }
-  async listLocations(projectId: string): Promise<Readonly<gcp.ZoneOption[]>> {
+  async listLocations(_projectId: string): Promise<Readonly<gcp.ZoneOption[]>> {
     return this.locations;
   }
-  async listServers(projectId: string): Promise<server.ManagedServer[]> {
+  async listServers(_projectId: string): Promise<server.ManagedServer[]> {
     return [];
   }
-  async createProject(id: string, billingAccountId: string): Promise<gcp.Project> {
+  async createProject(_id: string, _billingAccountId: string): Promise<gcp.Project> {
     return {
       id: 'project-id',
       name: 'project-name',
     };
   }
-  async isProjectHealthy(projectId: string): Promise<boolean> {
+  async isProjectHealthy(_projectId: string): Promise<boolean> {
     return true;
   }
   async listOpenBillingAccounts(): Promise<gcp.BillingAccount[]> {
@@ -142,13 +142,13 @@ export class FakeServer implements server.Server {
   addAccessKey() {
     return Promise.reject(new Error('FakeServer.addAccessKey not implemented'));
   }
-  renameAccessKey(accessKeyId: server.AccessKeyId, name: string) {
+  renameAccessKey(_accessKeyId: server.AccessKeyId, _name: string) {
     return Promise.reject(new Error('FakeServer.renameAccessKey not implemented'));
   }
-  removeAccessKey(accessKeyId: server.AccessKeyId) {
+  removeAccessKey(_accessKeyId: server.AccessKeyId) {
     return Promise.reject(new Error('FakeServer.removeAccessKey not implemented'));
   }
-  setHostnameForAccessKeys(hostname: string) {
+  setHostnameForAccessKeys(_hostname: string) {
     return Promise.reject(new Error('FakeServer.setHostname not implemented'));
   }
   getHostnameForAccessKeys() {
@@ -163,13 +163,13 @@ export class FakeServer implements server.Server {
   setPortForNewAccessKeys(): Promise<void> {
     return Promise.reject(new Error('FakeServer.setPortForNewAccessKeys not implemented'));
   }
-  setAccessKeyDataLimit(accessKeyId: string, limit: server.DataLimit): Promise<void> {
+  setAccessKeyDataLimit(_accessKeyId: string, _limit: server.DataLimit): Promise<void> {
     return Promise.reject(new Error('FakeServer.setAccessKeyDataLimit not implemented'));
   }
-  removeAccessKeyDataLimit(accessKeyId: string): Promise<void> {
+  removeAccessKeyDataLimit(_accessKeyId: string): Promise<void> {
     return Promise.reject(new Error('FakeServer.removeAccessKeyDataLimit not implemented'));
   }
-  setDefaultDataLimit(limit: server.DataLimit): Promise<void> {
+  setDefaultDataLimit(_limit: server.DataLimit): Promise<void> {
     return Promise.reject(new Error('FakeServer.setDefaultDataLimit not implemented'));
   }
   removeDefaultDataLimit(): Promise<void> {

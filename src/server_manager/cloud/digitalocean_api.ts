@@ -248,5 +248,5 @@ export class RestApiSession implements DigitalOceanSession {
 // DigitalOcean APIs.
 function makeValidDropletName(name: string): string {
   // Remove all characters outside of A-Z, a-z, 0-9 and '-'.
-  return name.replace(/[^A-Za-z0-9\-]/g, '');
+  return name.replace(/[^A-Za-z0-9-]/g, '');
 }
