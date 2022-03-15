@@ -41,11 +41,6 @@
 
 set -euo pipefail
 
-if [[ $(uname -m 2> /dev/null) != x86_64 ]]; then
-    echo Please run this script on x86_64 machine.
-    exit 1
-fi
-
 function display_usage() {
   cat <<EOF
 Usage: install_server.sh [--hostname <hostname>] [--api-port <port>] [--keys-port <port>]
@@ -418,6 +413,11 @@ function set_hostname() {
 }
 
 install_shadowbox() {
+  
+  if [[ $(uname -m 2> /dev/null) != x86_64 ]]; then
+    log_error " Please run this script on an x86_64 machine."
+    exit 1
+  fi
   # Make sure we don't leak readable files to other users.
   umask 0007
 
