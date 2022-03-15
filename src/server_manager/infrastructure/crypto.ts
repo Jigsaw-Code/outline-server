@@ -31,7 +31,7 @@ export function generateKeyPair(): Promise<KeyPair> {
       // public keys which really messes things up later.
       resolve({
         public: forge.ssh.publicKeyToOpenSSH(keypair.publicKey, '').trim(),
-        private: forge.ssh.privateKeyToOpenSSH(keypair.privateKey, '').trim()
+        private: forge.ssh.privateKeyToOpenSSH(keypair.privateKey, '').trim(),
       });
     });
   });

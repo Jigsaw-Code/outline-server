@@ -95,19 +95,12 @@
     "postcss": "^7.0.29",
     "postcss-rtl": "^1.7.3",
     "posthtml-postcss": "^0.2.6",
-    "prettier": "1.19.1",
-    "pretty-quick": "2.0.1",
     "puppeteer": "^5.5.0",
     "style-loader": "^1.2.1",
     "ts-loader": "^7.0.1",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.10.3"
-  },
-  "prettier": {
-    "printWidth": 120,
-    "bracketSpacing": false,
-    "trailingComma": "es5"
   },
   "resolutions": {
     "inherits": "2.0.3",

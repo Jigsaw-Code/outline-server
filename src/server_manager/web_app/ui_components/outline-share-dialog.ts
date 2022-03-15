@@ -107,12 +107,14 @@ Polymer({
     <paper-dialog id="dialog" modal="">
       <div id="dialog-header">
         <h3>[[localize('share-title')]]</h3>
-        <p inner-h-t-m-l="[[localize('share-description', 'openLink', '<a href=https://securityplanner.org/#/all-recommendations>', 'closeLink', '</a>')]]"></p>
+        <p
+          inner-h-t-m-l="[[localize('share-description', 'openLink', '<a href=https://securityplanner.org/#/all-recommendations>', 'closeLink', '</a>')]]"
+        ></p>
       </div>
       <div contenteditable="" id="selectableText" style="-webkit-text-size-adjust: 100%;">
         <p>[[localize('share-invite')]]</p>
 
-        <p><a href\$="{{s3Url}}">{{s3Url}}</a></p>
+        <p><a href$="{{s3Url}}">{{s3Url}}</a></p>
         <p>-----</p>
         <p>[[localize('share-invite-trouble')]]</p>
         <ol>
@@ -122,17 +124,22 @@ Polymer({
           </li>
           <li>
             [[localize('share-invite-instructions')]]
-            <a href="https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md">https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md</a>
+            <a
+              href="https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md"
+              >https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md</a
+            >
           </li>
         </ol>
       </div>
       <div id="button-row">
-        <paper-button id="copyButton" on-tap="copyClicked">[[localize('share-invite-copy')]]</paper-button>
+        <paper-button id="copyButton" on-tap="copyClicked"
+          >[[localize('share-invite-copy')]]</paper-button
+        >
         <paper-button id="doneButton" dialog-confirm="">[[localize('done')]]</paper-button>
       </div>
       <div id="copyText" hidden="">[[localize('share-invite-copied')]]</div>
     </paper-dialog>
-`,
+  `,
 
   is: 'outline-share-dialog',
 
@@ -153,5 +160,5 @@ Polymer({
     dt.setData('text/html', this.$.selectableText.innerHTML);
     clipboard.write(dt);
     this.$.copyText.removeAttribute('hidden');
-  }
+  },
 });

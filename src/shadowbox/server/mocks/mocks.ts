@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import {PrometheusClient, QueryResultData} from '../../infrastructure/prometheus_scraper';
-import {DataUsageByUser} from '../../model/metrics';
 import {ShadowsocksAccessKey, ShadowsocksServer} from '../../model/shadowsocks_server';
 import {TextFile} from '../../model/text_file';
 
@@ -25,7 +24,7 @@ export class InMemoryFile implements TextFile {
       return this.savedText;
     } else {
       const err = new Error('no such file or directory');
-      // tslint:disable-next-line:no-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (err as any).code = 'ENOENT';
       throw err;
     }
@@ -54,12 +53,14 @@ export class FakePrometheusClient extends PrometheusClient {
     super('');
   }
 
-  async query(query: string): Promise<QueryResultData> {
+  async query(_query: string): Promise<QueryResultData> {
     const queryResultData = {result: []} as QueryResultData;
     for (const accessKeyId of Object.keys(this.bytesTransferredById)) {
       const bytesTransferred = this.bytesTransferredById[accessKeyId] || 0;
-      queryResultData.result.push(
-          {metric: {'access_key': accessKeyId}, value: [bytesTransferred, `${bytesTransferred}`]});
+      queryResultData.result.push({
+        metric: {access_key: accessKeyId},
+        value: [bytesTransferred, `${bytesTransferred}`],
+      });
     }
     return queryResultData;
   }

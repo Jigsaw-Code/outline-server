@@ -43,38 +43,26 @@ if (sentryDsn) {
         }
       }
       return breadcrumb;
-    }
+    },
   });
 }
 
-contextBridge.exposeInMainWorld(
-    'trustCertificate',
-    (fingerprint: string) => {
-      return ipcRenderer.sendSync('trust-certificate', fingerprint);
-    });
+contextBridge.exposeInMainWorld('trustCertificate', (fingerprint: string) => {
+  return ipcRenderer.sendSync('trust-certificate', fingerprint);
+});
 
-contextBridge.exposeInMainWorld(
-    'openImage',
-    (basename: string) => {
-      ipcRenderer.send('open-image', basename);
-    });
+contextBridge.exposeInMainWorld('openImage', (basename: string) => {
+  ipcRenderer.send('open-image', basename);
+});
 
-contextBridge.exposeInMainWorld(
-    'onUpdateDownloaded',
-    (callback: () => void) => {
-      ipcRenderer.on('update-downloaded', callback);
-    });
+contextBridge.exposeInMainWorld('onUpdateDownloaded', (callback: () => void) => {
+  ipcRenderer.on('update-downloaded', callback);
+});
 
-contextBridge.exposeInMainWorld(
-    'runDigitalOceanOauth',
-    digitalocean_oauth.runOauth);
+contextBridge.exposeInMainWorld('runDigitalOceanOauth', digitalocean_oauth.runOauth);
 
-contextBridge.exposeInMainWorld(
-    'runGcpOauth',
-    gcp_oauth.runOauth);
+contextBridge.exposeInMainWorld('runGcpOauth', gcp_oauth.runOauth);
 
-contextBridge.exposeInMainWorld(
-    'bringToFront',
-    () => {
-      return ipcRenderer.send('bring-to-front');
-    });
+contextBridge.exposeInMainWorld('bringToFront', () => {
+  return ipcRenderer.send('bring-to-front');
+});

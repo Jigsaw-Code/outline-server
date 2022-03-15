@@ -41,7 +41,7 @@ export class PortProvider {
   async reserveNewPort(): Promise<number> {
     // TODO: consider using a set of available ports, so we don't randomly
     // try the same port multiple times.
-    while (true) {
+    for (;;) {
       const port = getRandomPortOver1023();
       if (this.reservedPorts.has(port)) {
         continue;

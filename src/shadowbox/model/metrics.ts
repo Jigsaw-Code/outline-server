@@ -25,4 +25,6 @@ export interface DataUsageByUser {
 }
 
 // Sliding time frame for measuring data utilization.
-export interface DataUsageTimeframe { hours: number; }
+export interface DataUsageTimeframe {
+  hours: number;
+}

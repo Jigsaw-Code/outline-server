@@ -26,71 +26,73 @@ export class GcpConnectAccountApp extends LitElement {
 
   static get styles() {
     return [
-      COMMON_STYLES, css`
-      :host {
-      }
-      .container {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        height: 100%;
-        align-items: center;
-        padding: 132px 0;
-        font-size: 14px;
-      }
-      #connectAccount img {
-        width: 48px;
-        height: 48px;
-        margin-bottom: 12px;
-      }
-      .card {
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        justify-content: space-between;
-        margin: 24px 0;
-        padding: 24px;
-        background: var(--background-contrast-color);
-        box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.14), 0 2px 2px 0 rgba(0, 0, 0, 0.12), 0 1px 3px 0 rgba(0, 0, 0, 0.2);
-        border-radius: 2px;
-      }
-      @media (min-width: 1025px) {
-        paper-card {
-          /* Set min with for the paper-card to grow responsively. */
-          min-width: 600px;
+      COMMON_STYLES,
+      css`
+        :host {
         }
-      }
-      .card p {
-        color: var(--light-gray);
-        width: 100%;
-        text-align: center;
-      }
-      .card paper-button {
-        color: var(--light-gray);
-        width: 100%;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 2px;
-      }
-      .card paper-button[disabled] {
-        color: var(--medium-gray);
-        background: transparent;
-      }
-      /* Mirror images */
-      :host(:dir(rtl)) .mirror {
-        transform: scaleX(-1);
-      }`
+        .container {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          height: 100%;
+          align-items: center;
+          padding: 132px 0;
+          font-size: 14px;
+        }
+        #connectAccount img {
+          width: 48px;
+          height: 48px;
+          margin-bottom: 12px;
+        }
+        .card {
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+          justify-content: space-between;
+          margin: 24px 0;
+          padding: 24px;
+          background: var(--background-contrast-color);
+          box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.14), 0 2px 2px 0 rgba(0, 0, 0, 0.12),
+            0 1px 3px 0 rgba(0, 0, 0, 0.2);
+          border-radius: 2px;
+        }
+        @media (min-width: 1025px) {
+          paper-card {
+            /* Set min with for the paper-card to grow responsively. */
+            min-width: 600px;
+          }
+        }
+        .card p {
+          color: var(--light-gray);
+          width: 100%;
+          text-align: center;
+        }
+        .card paper-button {
+          color: var(--light-gray);
+          width: 100%;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 2px;
+        }
+        .card paper-button[disabled] {
+          color: var(--medium-gray);
+          background: transparent;
+        }
+        /* Mirror images */
+        :host(:dir(rtl)) .mirror {
+          transform: scaleX(-1);
+        }
+      `,
     ];
     // TODO: RTL
   }
 
   render() {
-    return html`
-    <outline-step-view id="connectAccount">
+    return html` <outline-step-view id="connectAccount">
       <span slot="step-title">${this.localize('gcp-oauth-connect-title')}</span>
       <span slot="step-description">${this.localize('oauth-connect-description')}</span>
       <paper-card class="card">
         <div class="container">
-          <img src="images/gcp-logo.svg">
+          <img src="images/gcp-logo.svg" />
           <p>${this.localize('oauth-connect-tag')}</p>
         </div>
         <paper-button @tap="${this.onCancelTapped}">${this.localize('cancel')}</paper-button>

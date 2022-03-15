@@ -19,7 +19,7 @@ import * as digitalocean from '../model/digitalocean';
 import * as server from '../model/server';
 
 import {DigitalOceanServer} from './digitalocean_server';
-import {getShellExportCommands, ShadowboxSettings} from "./server_install";
+import {getShellExportCommands, ShadowboxSettings} from './server_install';
 
 // Tag used to mark Shadowbox Droplets.
 const SHADOWBOX_TAG = 'shadowbox';
@@ -30,8 +30,11 @@ export class DigitalOceanAccount implements digitalocean.Account {
   private servers: DigitalOceanServer[] = [];
 
   constructor(
-      private id: string, private accessToken: string, private shadowboxSettings: ShadowboxSettings,
-      private debugMode: boolean) {
+    private id: string,
+    private accessToken: string,
+    private shadowboxSettings: ShadowboxSettings,
+    private debugMode: boolean
+  ) {
     this.digitalOcean = new RestApiSession(accessToken);
   }
 
@@ -58,9 +61,9 @@ export class DigitalOceanAccount implements digitalocean.Account {
   // our target machine size.
   async listLocations(): Promise<Readonly<digitalocean.RegionOption[]>> {
     const regions = await this.digitalOcean.getRegionInfo();
-    return regions.map(info => ({
+    return regions.map((info) => ({
       cloudLocation: new digitalocean.Region(info.slug),
-      available: info.available && info.sizes.indexOf(MACHINE_SIZE) !== -1
+      available: info.available && info.sizes.indexOf(MACHINE_SIZE) !== -1,
     }));
   }
 
@@ -69,8 +72,11 @@ export class DigitalOceanAccount implements digitalocean.Account {
     console.time('activeServer');
     console.time('servingServer');
     const keyPair = await crypto.generateKeyPair();
-    const installCommand =
-        getInstallScript(this.digitalOcean.accessToken, name, this.shadowboxSettings);
+    const installCommand = getInstallScript(
+      this.digitalOcean.accessToken,
+      name,
+      this.shadowboxSettings
+    );
 
     const dropletSpec = {
       installCommand,
@@ -81,23 +87,33 @@ export class DigitalOceanAccount implements digitalocean.Account {
     if (this.debugMode) {
       // Strip carriage returns, which produce weird blank lines when pasted into a terminal.
       console.debug(
-          `private key for SSH access to new droplet:\n${
-              keyPair.private.replace(/\r/g, '')}\n\n` +
-          'Use "ssh -i keyfile root@[ip_address]" to connect to the machine');
+        `private key for SSH access to new droplet:\n${keyPair.private.replace(/\r/g, '')}\n\n` +
+          'Use "ssh -i keyfile root@[ip_address]" to connect to the machine'
+      );
     }
-    const response = await this.digitalOcean.createDroplet(name, region.id, keyPair.public, dropletSpec);
+    const response = await this.digitalOcean.createDroplet(
+      name,
+      region.id,
+      keyPair.public,
+      dropletSpec
+    );
     const server = this.createDigitalOceanServer(this.digitalOcean, response.droplet);
-    server.onceDropletActive.then(async () => {
-      console.timeEnd('activeServer');
-      for await (const _ of server.monitorInstallProgress()) {}
-      console.timeEnd('servingServer');
-    }).catch(e => console.log('Couldn\'t time installation', e));
+    server.onceDropletActive
+      .then(async () => {
+        console.timeEnd('activeServer');
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        for await (const _ of server.monitorInstallProgress()) {
+          /* do nothing */
+        }
+        console.timeEnd('servingServer');
+      })
+      .catch((e) => console.log("Couldn't time installation", e));
     return server;
   }
 
   listServers(fetchFromHost = true): Promise<server.ManagedServer[]> {
     if (!fetchFromHost) {
-      return Promise.resolve(this.servers);  // Return the in-memory servers.
+      return Promise.resolve(this.servers); // Return the in-memory servers.
     }
     return this.digitalOcean.getDropletsByTag(SHADOWBOX_TAG).then((droplets) => {
       this.servers = [];
@@ -113,8 +129,11 @@ export class DigitalOceanAccount implements digitalocean.Account {
 
   // Creates a DigitalOceanServer object and adds it to the in-memory server list.
   private createDigitalOceanServer(digitalOcean: DigitalOceanSession, dropletInfo: DropletInfo) {
-    const server =
-        new DigitalOceanServer(`${this.id}:${dropletInfo.id}`, digitalOcean, dropletInfo);
+    const server = new DigitalOceanServer(
+      `${this.id}:${dropletInfo.id}`,
+      digitalOcean,
+      dropletInfo
+    );
     this.servers.push(server);
     return server;
   }
@@ -122,7 +141,7 @@ export class DigitalOceanAccount implements digitalocean.Account {
 
 function sanitizeDigitalOceanToken(input: string): string {
   const sanitizedInput = input.trim();
-  const pattern = /^[A-Za-z0-9_\/-]+$/;
+  const pattern = /^[A-Za-z0-9_/-]+$/;
   if (!pattern.test(sanitizedInput)) {
     throw new Error('Invalid DigitalOcean Token');
   }
@@ -131,10 +150,15 @@ function sanitizeDigitalOceanToken(input: string): string {
 
 // cloudFunctions needs to define cloud::public_ip and cloud::add_tag.
 function getInstallScript(
-    accessToken: string, name: string, shadowboxSettings: ShadowboxSettings): string {
+  accessToken: string,
+  name: string,
+  shadowboxSettings: ShadowboxSettings
+): string {
   const sanitizedAccessToken = sanitizeDigitalOceanToken(accessToken);
-  return '#!/bin/bash -eu\n' +
-      `export DO_ACCESS_TOKEN='${sanitizedAccessToken}'\n` +
-      getShellExportCommands(shadowboxSettings, name) +
-      do_install_script.SCRIPT;
+  return (
+    '#!/bin/bash -eu\n' +
+    `export DO_ACCESS_TOKEN='${sanitizedAccessToken}'\n` +
+    getShellExportCommands(shadowboxSettings, name) +
+    do_install_script.SCRIPT
+  );
 }

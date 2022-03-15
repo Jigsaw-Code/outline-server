@@ -57,7 +57,8 @@ Polymer({
         margin: 24px 0;
         padding: 24px;
         background: var(--background-contrast-color);
-        box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.14), 0 2px 2px 0 rgba(0, 0, 0, 0.12), 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+        box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.14), 0 2px 2px 0 rgba(0, 0, 0, 0.12),
+          0 1px 3px 0 rgba(0, 0, 0, 0.2);
         border-radius: 2px;
       }
       @media (min-width: 1025px) {
@@ -93,7 +94,7 @@ Polymer({
         <span slot="step-description">[[localize('oauth-connect-description')]]</span>
         <paper-card class="card">
           <div class="container">
-            <img src="images/digital_ocean_logo.svg">
+            <img src="images/digital_ocean_logo.svg" />
             <p>[[localize('oauth-connect-tag')]]</p>
           </div>
           <paper-button on-tap="_cancelTapped">[[localize('cancel')]]</paper-button>
@@ -105,7 +106,7 @@ Polymer({
         <span slot="step-description">[[localize('oauth-verify')]]</span>
         <paper-card class="card">
           <div class="container">
-            <img class="mirror" src="images/do_oauth_email.svg">
+            <img class="mirror" src="images/do_oauth_email.svg" />
             <p>[[localize('oauth-verify-tag')]]</p>
           </div>
           <paper-button on-tap="_cancelTapped">[[localize('oauth-sign-out')]]</paper-button>
@@ -117,7 +118,7 @@ Polymer({
         <span slot="step-description">[[localize('oauth-billing')]]</span>
         <paper-card class="card">
           <div class="container">
-            <img class="mirror" src="images/do_oauth_billing.svg">
+            <img class="mirror" src="images/do_oauth_billing.svg" />
             <p>[[localize('oauth-billing-tag')]]</p>
           </div>
           <paper-button on-tap="_cancelTapped">[[localize('oauth-sign-out')]]</paper-button>
@@ -129,14 +130,14 @@ Polymer({
         <span slot="step-description">[[localize('oauth-account-active')]]</span>
         <paper-card class="card">
           <div class="container">
-            <img class="mirror" src="images/do_oauth_done.svg">
+            <img class="mirror" src="images/do_oauth_done.svg" />
             <p>[[localize('oauth-account-active-tag')]]</p>
           </div>
           <paper-button disabled="">[[localize('oauth-sign-out')]]</paper-button>
         </paper-card>
       </outline-step-view>
     </iron-pages>
-`,
+  `,
 
   is: 'outline-do-oauth-step',
 
@@ -175,5 +176,5 @@ Polymer({
 
   showConnectAccount() {
     this.currentPage = 'connectAccount';
-  }
+  },
 });

@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {PrometheusClient, QueryResultData} from '../infrastructure/prometheus_scraper';
-import {DataUsageByUser} from '../model/metrics';
 import {PrometheusManagerMetrics} from './manager_metrics';
 import {FakePrometheusClient} from './mocks/mocks';
 
 describe('PrometheusManagerMetrics', () => {
   it('getOutboundByteTransfer', async (done) => {
     const managerMetrics = new PrometheusManagerMetrics(
-        new FakePrometheusClient({'access-key-1': 1000, 'access-key-2': 10000}));
+      new FakePrometheusClient({'access-key-1': 1000, 'access-key-2': 10000})
+    );
     const dataUsage = await managerMetrics.getOutboundByteTransfer({hours: 0});
     const bytesTransferredByUserId = dataUsage.bytesTransferredByUserId;
     expect(Object.keys(bytesTransferredByUserId).length).toEqual(2);

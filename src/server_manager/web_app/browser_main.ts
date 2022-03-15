@@ -12,25 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).trustCertificate = (fingerprint: string) => {
   console.log(`Requested to trust certificate with fingerprint ${fingerprint}`);
 };
 
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).openImage = (basename: string) => {
   window.open(`./images/${basename})`);
 };
 
-// tslint:disable-next-line:no-any
-(window as any).onUpdateDownloaded = (callback: () => void) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(window as any).onUpdateDownloaded = (_callback: () => void) => {
   console.info(`Requested registration of callbak for update download`);
 };
 
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).runDigitalOceanOauth = () => {
   let isCancelled = false;
-  const rejectWrapper = {reject: (error: Error) => {}};
+  const rejectWrapper = {reject: (_error: Error) => {}};
   const result = new Promise((resolve, reject) => {
     rejectWrapper.reject = reject;
     window.open('https://cloud.digitalocean.com/account/api/tokens/new', 'noopener,noreferrer');
@@ -50,11 +50,11 @@
       console.log('Session cancelled');
       isCancelled = true;
       rejectWrapper.reject(new Error('Authentication cancelled'));
-    }
+    },
   };
 };
 
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).bringToFront = () => {
   console.info(`Requested bringToFront`);
 };

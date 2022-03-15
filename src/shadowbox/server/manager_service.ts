@@ -16,7 +16,7 @@ import * as crypto from 'crypto';
 import * as ipRegex from 'ip-regex';
 import * as restify from 'restify';
 import * as restifyErrors from 'restify-errors';
-import {makeConfig, SIP002_URI} from 'ShadowsocksConfig';
+import {makeConfig, SIP002_URI} from 'outline-shadowsocksconfig';
 
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
@@ -40,13 +40,15 @@ function accessKeyToApiJson(accessKey: AccessKey) {
     port: accessKey.proxyParams.portNumber,
     method: accessKey.proxyParams.encryptionMethod,
     dataLimit: accessKey.dataLimit,
-    accessUrl: SIP002_URI.stringify(makeConfig({
-      host: accessKey.proxyParams.hostname,
-      port: accessKey.proxyParams.portNumber,
-      method: accessKey.proxyParams.encryptionMethod,
-      password: accessKey.proxyParams.password,
-      outline: 1
-    }))
+    accessUrl: SIP002_URI.stringify(
+      makeConfig({
+        host: accessKey.proxyParams.hostname,
+        port: accessKey.proxyParams.portNumber,
+        method: accessKey.proxyParams.encryptionMethod,
+        password: accessKey.proxyParams.password,
+        outline: 1,
+      })
+    ),
   };
 }
 
@@ -99,30 +101,45 @@ function prefixFilter(apiPrefix: string): restify.RequestHandler {
 }
 
 export function bindService(
-    apiServer: restify.Server, apiPrefix: string, service: ShadowsocksManagerService) {
+  apiServer: restify.Server,
+  apiPrefix: string,
+  service: ShadowsocksManagerService
+) {
   // Reject unauthorized requests in constant time before they reach the routing step.
   apiServer.pre(prefixFilter(apiPrefix));
 
   apiServer.put(`${apiPrefix}/name`, service.renameServer.bind(service));
   apiServer.get(`${apiPrefix}/server`, service.getServer.bind(service));
   apiServer.put(
-      `${apiPrefix}/server/access-key-data-limit`, service.setDefaultDataLimit.bind(service));
+    `${apiPrefix}/server/access-key-data-limit`,
+    service.setDefaultDataLimit.bind(service)
+  );
   apiServer.del(
-      `${apiPrefix}/server/access-key-data-limit`, service.removeDefaultDataLimit.bind(service));
+    `${apiPrefix}/server/access-key-data-limit`,
+    service.removeDefaultDataLimit.bind(service)
+  );
   apiServer.put(
-      `${apiPrefix}/server/hostname-for-access-keys`,
-      service.setHostnameForAccessKeys.bind(service));
+    `${apiPrefix}/server/hostname-for-access-keys`,
+    service.setHostnameForAccessKeys.bind(service)
+  );
   apiServer.put(
-      `${apiPrefix}/server/port-for-new-access-keys`,
-      service.setPortForNewAccessKeys.bind(service));
+    `${apiPrefix}/server/port-for-new-access-keys`,
+    service.setPortForNewAccessKeys.bind(service)
+  );
 
   apiServer.post(`${apiPrefix}/access-keys`, service.createNewAccessKey.bind(service));
   apiServer.get(`${apiPrefix}/access-keys`, service.listAccessKeys.bind(service));
 
   apiServer.del(`${apiPrefix}/access-keys/:id`, service.removeAccessKey.bind(service));
   apiServer.put(`${apiPrefix}/access-keys/:id/name`, service.renameAccessKey.bind(service));
-  apiServer.put(`${apiPrefix}/access-keys/:id/data-limit`, service.setAccessKeyDataLimit.bind(service));
-  apiServer.del(`${apiPrefix}/access-keys/:id/data-limit`, service.removeAccessKeyDataLimit.bind(service));
+  apiServer.put(
+    `${apiPrefix}/access-keys/:id/data-limit`,
+    service.setAccessKeyDataLimit.bind(service)
+  );
+  apiServer.del(
+    `${apiPrefix}/access-keys/:id/data-limit`,
+    service.removeAccessKeyDataLimit.bind(service)
+  );
 
   apiServer.get(`${apiPrefix}/metrics/transfer`, service.getDataUsage.bind(service));
   apiServer.get(`${apiPrefix}/metrics/enabled`, service.getShareMetrics.bind(service));
@@ -130,11 +147,13 @@ export function bindService(
 
   // Redirect former experimental APIs
   apiServer.put(
-      `${apiPrefix}/experimental/access-key-data-limit`,
-      redirect(`${apiPrefix}/server/access-key-data-limit`));
+    `${apiPrefix}/experimental/access-key-data-limit`,
+    redirect(`${apiPrefix}/server/access-key-data-limit`)
+  );
   apiServer.del(
-      `${apiPrefix}/experimental/access-key-data-limit`,
-      redirect(`${apiPrefix}/server/access-key-data-limit`));
+    `${apiPrefix}/experimental/access-key-data-limit`,
+    redirect(`${apiPrefix}/server/access-key-data-limit`)
+  );
 }
 
 // Returns a request handler that redirects a bound request path to `url` with HTTP status code 308.
@@ -150,20 +169,23 @@ function validateAccessKeyId(accessKeyId: unknown): string {
     throw new restifyErrors.MissingParameterError({statusCode: 400}, 'Parameter `id` is missing');
   } else if (typeof accessKeyId !== 'string') {
     throw new restifyErrors.InvalidArgumentError(
-        {statusCode: 400}, 'Parameter `id` must be of type string');
+      {statusCode: 400},
+      'Parameter `id` must be of type string'
+    );
   }
   return accessKeyId;
 }
 
 function validateDataLimit(limit: unknown): DataLimit {
   if (!limit) {
-    throw new restifyErrors.MissingParameterError(
-        {statusCode: 400}, 'Missing `limit` parameter');
+    throw new restifyErrors.MissingParameterError({statusCode: 400}, 'Missing `limit` parameter');
   }
   const bytes = (limit as DataLimit).bytes;
   if (!(Number.isInteger(bytes) && bytes >= 0)) {
     throw new restifyErrors.InvalidArgumentError(
-        {statusCode: 400}, '`limit.bytes` must be an non-negative integer');
+      {statusCode: 400},
+      '`limit.bytes` must be an non-negative integer'
+    );
   }
   return limit as DataLimit;
 }
@@ -173,20 +195,27 @@ function validateDataLimit(limit: unknown): DataLimit {
 // for each existing access key, with the port and password assigned for that access key.
 export class ShadowsocksManagerService {
   constructor(
-      private defaultServerName: string, private serverConfig: JsonConfig<ServerConfigJson>,
-      private accessKeys: AccessKeyRepository, private managerMetrics: ManagerMetrics,
-      private metricsPublisher: SharedMetricsPublisher) {}
+    private defaultServerName: string,
+    private serverConfig: JsonConfig<ServerConfigJson>,
+    private accessKeys: AccessKeyRepository,
+    private managerMetrics: ManagerMetrics,
+    private metricsPublisher: SharedMetricsPublisher
+  ) {}
 
   public renameServer(req: RequestType, res: ResponseType, next: restify.Next): void {
     logging.debug(`renameServer request ${JSON.stringify(req.params)}`);
     const name = req.params.name;
     if (!name) {
-      return next(new restifyErrors.MissingParameterError(
-          {statusCode: 400}, 'Parameter `name` is missing'));
+      return next(
+        new restifyErrors.MissingParameterError({statusCode: 400}, 'Parameter `name` is missing')
+      );
     }
     if (typeof name !== 'string' || name.length > 100) {
-      next(new restifyErrors.InvalidArgumentError(
-          `Requested server name should be a string <= 100 characters long.  Got ${name}`));
+      next(
+        new restifyErrors.InvalidArgumentError(
+          `Requested server name should be a string <= 100 characters long.  Got ${name}`
+        )
+      );
       return;
     }
     this.serverConfig.data().name = name;
@@ -204,7 +233,7 @@ export class ShadowsocksManagerService {
       version,
       accessKeyDataLimit: this.serverConfig.data().accessKeyDataLimit,
       portForNewAccessKeys: this.serverConfig.data().portForNewAccessKeys,
-      hostnameForAccessKeys: this.serverConfig.data().hostname
+      hostnameForAccessKeys: this.serverConfig.data().hostname,
     });
     next();
   }
@@ -216,20 +245,28 @@ export class ShadowsocksManagerService {
     const hostname = req.params.hostname;
     if (typeof hostname === 'undefined') {
       return next(
-          new restifyErrors.MissingParameterError({statusCode: 400}, 'hostname must be provided'));
+        new restifyErrors.MissingParameterError({statusCode: 400}, 'hostname must be provided')
+      );
     }
     if (typeof hostname !== 'string') {
-      return next(new restifyErrors.InvalidArgumentError(
+      return next(
+        new restifyErrors.InvalidArgumentError(
           {statusCode: 400},
-          `Expected hostname to be a string, instead got ${hostname} of type ${typeof hostname}`));
+          `Expected hostname to be a string, instead got ${hostname} of type ${typeof hostname}`
+        )
+      );
     }
     // Hostnames can have any number of segments of alphanumeric characters and hyphens, separated
     // by periods. No segment may start or end with a hyphen.
     const hostnameRegex =
-        /^([a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?\.)*[A-Za-z0-9]([A-Za-z0-9\-]*[A-Za-z0-9])?$/;
+      /^([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)*[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?$/;
     if (!hostnameRegex.test(hostname) && !ipRegex({includeBoundaries: true}).test(hostname)) {
-      return next(new restifyErrors.InvalidArgumentError(
-          {statusCode: 400}, `Hostname ${hostname} isn't a valid hostname or IP address`));
+      return next(
+        new restifyErrors.InvalidArgumentError(
+          {statusCode: 400},
+          `Hostname ${hostname} isn't a valid hostname or IP address`
+        )
+      );
     }
 
     this.serverConfig.data().hostname = hostname;
@@ -268,18 +305,25 @@ export class ShadowsocksManagerService {
   }
 
   // Sets the default ports for new access keys
-  public async setPortForNewAccessKeys(req: RequestType, res: ResponseType, next: restify.Next):
-      Promise<void> {
+  public async setPortForNewAccessKeys(
+    req: RequestType,
+    res: ResponseType,
+    next: restify.Next
+  ): Promise<void> {
     try {
       logging.debug(`setPortForNewAccessKeys request ${JSON.stringify(req.params)}`);
       const port = req.params.port;
       if (!port) {
-        return next(new restifyErrors.MissingParameterError(
-            {statusCode: 400}, 'Parameter `port` is missing'));
+        return next(
+          new restifyErrors.MissingParameterError({statusCode: 400}, 'Parameter `port` is missing')
+        );
       } else if (typeof port !== 'number') {
-        return next(new restifyErrors.InvalidArgumentError(
+        return next(
+          new restifyErrors.InvalidArgumentError(
             {statusCode: 400},
-            `Expected a numeric port, instead got ${port} of type ${typeof port}`));
+            `Expected a numeric port, instead got ${port} of type ${typeof port}`
+          )
+        );
       }
       await this.accessKeys.setPortForNewAccessKeys(port);
       this.serverConfig.data().portForNewAccessKeys = port;
@@ -322,11 +366,16 @@ export class ShadowsocksManagerService {
       const accessKeyId = validateAccessKeyId(req.params.id);
       const name = req.params.name;
       if (!name) {
-        return next(new restifyErrors.MissingParameterError(
-            {statusCode: 400}, 'Parameter `name` is missing'));
+        return next(
+          new restifyErrors.MissingParameterError({statusCode: 400}, 'Parameter `name` is missing')
+        );
       } else if (typeof name !== 'string') {
-        return next(new restifyErrors.InvalidArgumentError(
-            {statusCode: 400}, 'Parameter `name` must be of type string'));
+        return next(
+          new restifyErrors.InvalidArgumentError(
+            {statusCode: 400},
+            'Parameter `name` must be of type string'
+          )
+        );
       }
       this.accessKeys.renameAccessKey(accessKeyId, name);
       res.send(HttpSuccess.NO_CONTENT);
@@ -352,7 +401,7 @@ export class ShadowsocksManagerService {
       this.accessKeys.setAccessKeyDataLimit(accessKeyId, limit);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
-    } catch(error) {
+    } catch (error) {
       logging.error(error);
       if (error instanceof errors.AccessKeyNotFound) {
         return next(new restifyErrors.NotFoundError(error.message));
@@ -370,7 +419,7 @@ export class ShadowsocksManagerService {
       this.accessKeys.removeAccessKeyDataLimit(accessKeyId);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
-    } catch(error) {
+    } catch (error) {
       logging.error(error);
       if (error instanceof errors.AccessKeyNotFound) {
         return next(new restifyErrors.NotFoundError(error.message));
@@ -392,7 +441,10 @@ export class ShadowsocksManagerService {
       return next();
     } catch (error) {
       logging.error(error);
-      if (error instanceof restifyErrors.InvalidArgumentError || error instanceof restifyErrors.MissingParameterError) {
+      if (
+        error instanceof restifyErrors.InvalidArgumentError ||
+        error instanceof restifyErrors.MissingParameterError
+      ) {
         return next(error);
       }
       return next(new restifyErrors.InternalServerError());
@@ -440,11 +492,19 @@ export class ShadowsocksManagerService {
     logging.debug(`setShareMetrics request ${JSON.stringify(req.params)}`);
     const metricsEnabled = req.params.metricsEnabled;
     if (metricsEnabled === undefined || metricsEnabled === null) {
-      return next(new restifyErrors.MissingParameterError(
-          {statusCode: 400}, 'Parameter `metricsEnabled` is missing'));
+      return next(
+        new restifyErrors.MissingParameterError(
+          {statusCode: 400},
+          'Parameter `metricsEnabled` is missing'
+        )
+      );
     } else if (typeof metricsEnabled !== 'boolean') {
-      return next(new restifyErrors.InvalidArgumentError(
-          {statusCode: 400}, 'Parameter `hours` must be an integer'));
+      return next(
+        new restifyErrors.InvalidArgumentError(
+          {statusCode: 400},
+          'Parameter `hours` must be an integer'
+        )
+      );
     }
     if (metricsEnabled) {
       this.metricsPublisher.startSharing();

@@ -48,7 +48,7 @@ const SALESFORCE_FORM_FIELDS_DEV: SalesforceFormFields = {
   sentryEventUrl: '00N3F000002Rqhq',
   os: '00N3F000002cLcN',
   version: '00N3F000002cLcI',
-  type: 'type'
+  type: 'type',
 };
 const SALESFORCE_FORM_FIELDS_PROD: SalesforceFormFields = {
   orgId: 'orgid',
@@ -60,7 +60,7 @@ const SALESFORCE_FORM_FIELDS_PROD: SalesforceFormFields = {
   sentryEventUrl: '00N0b00000BqOA4',
   os: '00N0b00000BqOfW',
   version: '00N0b00000BqOfR',
-  type: 'type'
+  type: 'type',
 };
 const SALESFORCE_FORM_VALUES_DEV: SalesforceFormValues = {
   orgId: '00D3F000000DDDH',
@@ -73,14 +73,16 @@ const SALESFORCE_FORM_VALUES_PROD: SalesforceFormValues = {
 
 // Returns whether a Sentry event should be sent to Salesforce by checking that it contains an
 // email address.
-export function shouldPostEventToSalesforce(event: sentry.SentryEvent) {
+export function shouldPostEventToSalesforce(event: sentry.SentryEvent): boolean {
   return !!event.user && !!event.user.email;
 }
 
 // Posts a Sentry event to Salesforce using predefined form data. Assumes
 // `shouldPostEventToSalesforce` has returned true for `event`.
 export function postSentryEventToSalesforce(
-    event: sentry.SentryEvent, project: string): Promise<void> {
+  event: sentry.SentryEvent,
+  project: string
+): Promise<void> {
   return new Promise((resolve, reject) => {
     // Sentry development projects are marked with 'dev', i.e. outline-client-dev.
     const isProd = project.indexOf('-dev') === -1;
@@ -88,26 +90,33 @@ export function postSentryEventToSalesforce(
     const formFields = isProd ? SALESFORCE_FORM_FIELDS_PROD : SALESFORCE_FORM_FIELDS_DEV;
     const formValues = isProd ? SALESFORCE_FORM_VALUES_PROD : SALESFORCE_FORM_VALUES_DEV;
     const isClient = project.indexOf('client') !== -1;
-    const formData =
-        getSalesforceFormData(formFields, formValues, event, event.user!.email!, isClient, project);
+    const formData = getSalesforceFormData(
+      formFields,
+      formValues,
+      event,
+      event.user!.email!,
+      isClient,
+      project
+    );
     const req = https.request(
-        {
-          host: salesforceHost,
-          path: SALESFORCE_PATH,
-          protocol: 'https:',
-          method: 'post',
-          headers: {
-            // The production server will reject requests that do not specify this content type.
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
+      {
+        host: salesforceHost,
+        path: SALESFORCE_PATH,
+        protocol: 'https:',
+        method: 'post',
+        headers: {
+          // The production server will reject requests that do not specify this content type.
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-        (res) => {
-          if (res.statusCode === 200) {
-            resolve();
-          } else {
-            reject(new Error(`Failed to post form data, response status: ${res.statusCode}`));
-          }
-        });
+      },
+      (res) => {
+        if (res.statusCode === 200) {
+          resolve();
+        } else {
+          reject(new Error(`Failed to post form data, response status: ${res.statusCode}`));
+        }
+      }
+    );
     req.on('error', (err) => {
       reject(new Error(`Failed to submit form: ${err}`));
     });
@@ -118,8 +127,13 @@ export function postSentryEventToSalesforce(
 
 // Returns a URL-encoded string with the Salesforce form data.
 function getSalesforceFormData(
-    formFields: SalesforceFormFields, formValues: SalesforceFormValues, event: sentry.SentryEvent,
-    email: string, isClient: boolean, project: string): string {
+  formFields: SalesforceFormFields,
+  formValues: SalesforceFormValues,
+  event: sentry.SentryEvent,
+  email: string,
+  isClient: boolean,
+  project: string
+): string {
   const form = [];
   form.push(encodeFormData(formFields.orgId, formValues.orgId));
   form.push(encodeFormData(formFields.recordType, formValues.recordType));
@@ -127,7 +141,7 @@ function getSalesforceFormData(
   form.push(encodeFormData(formFields.sentryEventUrl, getSentryEventUrl(project, event.event_id)));
   form.push(encodeFormData(formFields.description, event.message));
   form.push(encodeFormData(formFields.type, isClient ? 'Outline client' : 'Outline manager'));
-  if (!!event.tags) {
+  if (event.tags) {
     const tags = getTagsMap(event.tags);
     form.push(encodeFormData(formFields.category, tags.get('category')));
     form.push(encodeFormData(formFields.os, tags.get('os.name')));

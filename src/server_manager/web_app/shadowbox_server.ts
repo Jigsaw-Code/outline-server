@@ -74,7 +74,8 @@ export class ShadowboxServer implements server.Server {
   async addAccessKey(): Promise<server.AccessKey> {
     console.info('Adding access key');
     return makeAccessKeyModel(
-        await this.apiRequest<AccessKeyJson>('access-keys', {method: 'POST'}));
+      await this.apiRequest<AccessKeyJson>('access-keys', {method: 'POST'})
+    );
   }
 
   renameAccessKey(accessKeyId: server.AccessKeyId, name: string): Promise<void> {
@@ -94,7 +95,7 @@ export class ShadowboxServer implements server.Server {
     const requestOptions = {
       method: 'PUT',
       headers: new Headers({'Content-Type': 'application/json'}),
-      body: JSON.stringify({limit})
+      body: JSON.stringify({limit}),
     };
     await this.apiRequest<void>(this.getDefaultDataLimitPath(), requestOptions);
     this.serverConfig.accessKeyDataLimit = limit;
@@ -106,7 +107,7 @@ export class ShadowboxServer implements server.Server {
     delete this.serverConfig.accessKeyDataLimit;
   }
 
-  getDefaultDataLimit(): server.DataLimit|undefined {
+  getDefaultDataLimit(): server.DataLimit | undefined {
     return this.serverConfig.accessKeyDataLimit;
   }
 
@@ -124,7 +125,7 @@ export class ShadowboxServer implements server.Server {
     const requestOptions = {
       method: 'PUT',
       headers: new Headers({'Content-Type': 'application/json'}),
-      body: JSON.stringify({limit})
+      body: JSON.stringify({limit}),
     };
     await this.apiRequest<void>(`access-keys/${keyId}/data-limit`, requestOptions);
   }
@@ -152,7 +153,7 @@ export class ShadowboxServer implements server.Server {
     const requestOptions: RequestInit = {
       method: 'PUT',
       headers: new Headers({'Content-Type': 'application/json'}),
-      body: JSON.stringify({name})
+      body: JSON.stringify({name}),
     };
     return this.apiRequest<void>('name', requestOptions).then(() => {
       this.serverConfig.name = name;
@@ -173,7 +174,7 @@ export class ShadowboxServer implements server.Server {
     const requestOptions: RequestInit = {
       method: 'PUT',
       headers: new Headers({'Content-Type': 'application/json'}),
-      body: JSON.stringify({metricsEnabled})
+      body: JSON.stringify({metricsEnabled}),
     };
     return this.apiRequest<void>('metrics/enabled', requestOptions).then(() => {
       this.serverConfig.metricsEnabled = metricsEnabled;
@@ -185,17 +186,18 @@ export class ShadowboxServer implements server.Server {
   }
 
   isHealthy(timeoutMs = 30000): Promise<boolean> {
-    return new Promise<boolean>((fulfill, reject) => {
+    return new Promise<boolean>((fulfill, _reject) => {
       // Query the API and expect a successful response to validate that the
       // service is up and running.
       this.getServerConfig().then(
-          (serverConfig) => {
-            this.serverConfig = serverConfig;
-            fulfill(true);
-          },
-          (e) => {
-            fulfill(false);
-          });
+        (serverConfig) => {
+          this.serverConfig = serverConfig;
+          fulfill(true);
+        },
+        (_e) => {
+          fulfill(false);
+        }
+      );
       // Return not healthy if API doesn't complete within timeoutMs.
       setTimeout(() => {
         fulfill(false);
@@ -213,7 +215,7 @@ export class ShadowboxServer implements server.Server {
     const requestOptions: RequestInit = {
       method: 'PUT',
       headers: new Headers({'Content-Type': 'application/json'}),
-      body: JSON.stringify({hostname})
+      body: JSON.stringify({hostname}),
     };
     return this.apiRequest<void>('server/hostname-for-access-keys', requestOptions).then(() => {
       this.serverConfig.hostnameForAccessKeys = hostname;
@@ -222,14 +224,15 @@ export class ShadowboxServer implements server.Server {
 
   getHostnameForAccessKeys(): string {
     try {
-      return this.serverConfig?.hostnameForAccessKeys ??
-          new URL(this.managementApiAddress).hostname;
+      return (
+        this.serverConfig?.hostnameForAccessKeys ?? new URL(this.managementApiAddress).hostname
+      );
     } catch (e) {
       return '';
     }
   }
 
-  getPortForNewAccessKeys(): number|undefined {
+  getPortForNewAccessKeys(): number | undefined {
     try {
       if (typeof this.serverConfig.portForNewAccessKeys !== 'number') {
         return undefined;
@@ -245,7 +248,7 @@ export class ShadowboxServer implements server.Server {
     const requestOptions: RequestInit = {
       method: 'PUT',
       headers: new Headers({'Content-Type': 'application/json'}),
-      body: JSON.stringify({"port": newPort})
+      body: JSON.stringify({port: newPort}),
     };
     return this.apiRequest<void>('server/port-for-new-access-keys', requestOptions).then(() => {
       this.serverConfig.portForNewAccessKeys = newPort;
@@ -279,24 +282,26 @@ export class ShadowboxServer implements server.Server {
       }
       const url = apiAddress + path;
       return fetch(url, options)
-          .then(
-              (response) => {
-                if (!response.ok) {
-                  throw new errors.ServerApiError(
-                      `API request to ${path} failed with status ${response.status}`, response);
-                }
-                return response.text();
-              },
-              (error) => {
-                throw new errors.ServerApiError(
-                    `API request to ${path} failed due to network error`);
-              })
-          .then((body) => {
-            if (!body) {
-              return;
+        .then(
+          (response) => {
+            if (!response.ok) {
+              throw new errors.ServerApiError(
+                `API request to ${path} failed with status ${response.status}`,
+                response
+              );
             }
-            return JSON.parse(body);
-          });
+            return response.text();
+          },
+          (_error) => {
+            throw new errors.ServerApiError(`API request to ${path} failed due to network error`);
+          }
+        )
+        .then((body) => {
+          if (!body) {
+            return;
+          }
+          return JSON.parse(body);
+        });
     } catch (error) {
       return Promise.reject(error);
     }

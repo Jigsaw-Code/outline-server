@@ -23,7 +23,7 @@ import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
 import * as server from '../model/server';
 
-import {DisplayDataAmount, displayDataAmountToBytes,} from './data_formatting';
+import {DisplayDataAmount, displayDataAmountToBytes} from './data_formatting';
 import {filterOptions, getShortName} from './location_formatting';
 import {parseManualServerConfig} from './management_urls';
 import {HttpError} from '../cloud/gcp_api';
@@ -35,17 +35,17 @@ import type {DisplayAccessKey, ServerView} from './ui_components/outline-server-
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
-const UNUSED_DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
+//const UNUSED_DIGITALOCEAN_REFERRAL_CODE = '5ddb4219b716';
 
 const CHANGE_KEYS_PORT_VERSION = '1.0.0';
 const DATA_LIMITS_VERSION = '1.1.0';
 const CHANGE_HOSTNAME_VERSION = '1.2.0';
 const KEY_SETTINGS_VERSION = '1.6.0';
-const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * (10 ** 9);  // 50GB
+const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * 10 ** 9; // 50GB
 const CANCELLED_ERROR = new Error('Cancelled');
 export const LAST_DISPLAYED_SERVER_STORAGE_KEY = 'lastDisplayedServer';
 
-function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.DataLimit|null {
+function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.DataLimit | null {
   if (!dataAmount) {
     return null;
   }
@@ -56,18 +56,20 @@ function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.Dat
 // Compute the suggested data limit based on the server's transfer capacity and number of access
 // keys.
 async function computeDefaultDataLimit(
-    server: server.Server, accessKeys?: server.AccessKey[]): Promise<server.DataLimit> {
+  server: server.Server,
+  accessKeys?: server.AccessKey[]
+): Promise<server.DataLimit> {
   try {
     // Assume non-managed servers have a data transfer capacity of 1TB.
     let serverTransferCapacity: server.DataAmount = {terabytes: 1};
     if (isManagedServer(server)) {
       serverTransferCapacity =
-          server.getHost().getMonthlyOutboundTransferLimit() ?? serverTransferCapacity;
+        server.getHost().getMonthlyOutboundTransferLimit() ?? serverTransferCapacity;
     }
     if (!accessKeys) {
       accessKeys = await server.listAccessKeys();
     }
-    let dataLimitBytes = serverTransferCapacity.terabytes * (10 ** 12) / (accessKeys.length || 1);
+    let dataLimitBytes = (serverTransferCapacity.terabytes * 10 ** 12) / (accessKeys.length || 1);
     if (dataLimitBytes > MAX_ACCESS_KEY_DATA_LIMIT_BYTES) {
       dataLimitBytes = MAX_ACCESS_KEY_DATA_LIMIT_BYTES;
     }
@@ -81,8 +83,10 @@ async function computeDefaultDataLimit(
 // Returns whether the user has seen a notification for the updated feature metrics data collection
 // policy.
 function hasSeenFeatureMetricsNotification(): boolean {
-  return !!window.localStorage.getItem('dataLimitsHelpBubble-dismissed') &&
-      !!window.localStorage.getItem('dataLimits-feature-collection-notification');
+  return (
+    !!window.localStorage.getItem('dataLimitsHelpBubble-dismissed') &&
+    !!window.localStorage.getItem('dataLimits-feature-collection-notification')
+  );
 }
 
 async function showHelpBubblesOnce(serverView: ServerView) {
@@ -94,8 +98,10 @@ async function showHelpBubblesOnce(serverView: ServerView) {
     await serverView.showGetConnectedHelpBubble();
     window.localStorage.setItem('getConnectedHelpBubble-dismissed', 'true');
   }
-  if (!window.localStorage.getItem('dataLimitsHelpBubble-dismissed') &&
-      serverView.supportsDefaultDataLimit) {
+  if (
+    !window.localStorage.getItem('dataLimitsHelpBubble-dismissed') &&
+    serverView.supportsDefaultDataLimit
+  ) {
     await serverView.showDataLimitsHelpBubble();
     window.localStorage.setItem('dataLimitsHelpBubble-dismissed', 'true');
   }
@@ -116,15 +122,17 @@ export class App {
   private idServerMap = new Map<string, server.Server>();
 
   constructor(
-      private appRoot: AppRoot, private readonly version: string,
-      private manualServerRepository: server.ManualServerRepository,
-      private cloudAccounts: accounts.CloudAccounts) {
+    private appRoot: AppRoot,
+    private readonly version: string,
+    private manualServerRepository: server.ManualServerRepository,
+    private cloudAccounts: accounts.CloudAccounts
+  ) {
     appRoot.setAttribute('outline-version', this.version);
 
-    appRoot.addEventListener('ConnectDigitalOceanAccountRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('ConnectDigitalOceanAccountRequested', (_: CustomEvent) => {
       this.handleConnectDigitalOceanAccountRequest();
     });
-    appRoot.addEventListener('CreateDigitalOceanServerRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('CreateDigitalOceanServerRequested', (_: CustomEvent) => {
       const digitalOceanAccount = this.cloudAccounts.getDigitalOceanAccount();
       if (digitalOceanAccount) {
         this.showDigitalOceanCreateServer(digitalOceanAccount);
@@ -133,10 +141,10 @@ export class App {
         this.handleConnectDigitalOceanAccountRequest();
       }
     });
-    appRoot.addEventListener(
-        'ConnectGcpAccountRequested',
-        async (event: CustomEvent) => this.handleConnectGcpAccountRequest());
-    appRoot.addEventListener('CreateGcpServerRequested', async (event: CustomEvent) => {
+    appRoot.addEventListener('ConnectGcpAccountRequested', async (_: CustomEvent) =>
+      this.handleConnectGcpAccountRequest()
+    );
+    appRoot.addEventListener('CreateGcpServerRequested', async (_: CustomEvent) => {
       this.appRoot.getAndShowGcpCreateServerApp().start(this.gcpAccount);
     });
     appRoot.addEventListener('GcpServerCreated', (event: CustomEvent) => {
@@ -144,11 +152,11 @@ export class App {
       this.addServer(this.gcpAccount.getId(), server);
       this.showServer(server);
     });
-    appRoot.addEventListener('DigitalOceanSignOutRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('DigitalOceanSignOutRequested', (_: CustomEvent) => {
       this.disconnectDigitalOceanAccount();
       this.showIntro();
     });
-    appRoot.addEventListener('GcpSignOutRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('GcpSignOutRequested', (_: CustomEvent) => {
       this.disconnectGcpAccount();
       this.showIntro();
     });
@@ -165,7 +173,7 @@ export class App {
       this.forgetServer(event.detail.serverId);
     });
 
-    appRoot.addEventListener('AddAccessKeyRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('AddAccessKeyRequested', (_: CustomEvent) => {
       this.addAccessKey();
     });
 
@@ -174,7 +182,9 @@ export class App {
     });
 
     appRoot.addEventListener(
-        'OpenPerKeyDataLimitDialogRequested', this.openPerKeyDataLimitDialog.bind(this));
+      'OpenPerKeyDataLimitDialogRequested',
+      this.openPerKeyDataLimitDialog.bind(this)
+    );
 
     appRoot.addEventListener('RenameAccessKeyRequested', (event: CustomEvent) => {
       this.renameAccessKey(event.detail.accessKeyId, event.detail.newName, event.detail.entry);
@@ -184,7 +194,7 @@ export class App {
       this.setDefaultDataLimit(displayDataAmountToDataLimit(event.detail.limit));
     });
 
-    appRoot.addEventListener('RemoveDefaultDataLimitRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('RemoveDefaultDataLimitRequested', (_: CustomEvent) => {
       this.removeDefaultDataLimit();
     });
 
@@ -213,37 +223,37 @@ export class App {
       const userInput = event.detail.userInput;
       const manualServerEntryEl = appRoot.getManualServerEntry();
       this.createManualServer(userInput)
-          .then(() => {
-            // Clear fields on outline-manual-server-entry (e.g. dismiss the connecting popup).
-            manualServerEntryEl.clear();
-          })
-          .catch((e: Error) => {
-            // Remove the progress indicator.
-            manualServerEntryEl.showConnection = false;
-            // Display either error dialog or feedback depending on error type.
-            if (e instanceof errors.UnreachableServerError) {
-              const errorTitle = appRoot.localize('error-server-unreachable-title');
-              const errorMessage = appRoot.localize('error-server-unreachable');
-              this.appRoot.showManualServerError(errorTitle, errorMessage);
-            } else {
-              // TODO(alalama): with UI validation, this code path never gets executed. Remove?
-              let errorMessage = '';
-              if (e.message) {
-                errorMessage += `${e.message}\n`;
-              }
-              if (userInput) {
-                errorMessage += userInput;
-              }
-              appRoot.openManualInstallFeedback(errorMessage);
+        .then(() => {
+          // Clear fields on outline-manual-server-entry (e.g. dismiss the connecting popup).
+          manualServerEntryEl.clear();
+        })
+        .catch((e: Error) => {
+          // Remove the progress indicator.
+          manualServerEntryEl.showConnection = false;
+          // Display either error dialog or feedback depending on error type.
+          if (e instanceof errors.UnreachableServerError) {
+            const errorTitle = appRoot.localize('error-server-unreachable-title');
+            const errorMessage = appRoot.localize('error-server-unreachable');
+            this.appRoot.showManualServerError(errorTitle, errorMessage);
+          } else {
+            // TODO(alalama): with UI validation, this code path never gets executed. Remove?
+            let errorMessage = '';
+            if (e.message) {
+              errorMessage += `${e.message}\n`;
             }
-          });
+            if (userInput) {
+              errorMessage += userInput;
+            }
+            appRoot.openManualInstallFeedback(errorMessage);
+          }
+        });
     });
 
-    appRoot.addEventListener('EnableMetricsRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('EnableMetricsRequested', (_: CustomEvent) => {
       this.setMetricsEnabled(true);
     });
 
-    appRoot.addEventListener('DisableMetricsRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('DisableMetricsRequested', (_: CustomEvent) => {
       this.setMetricsEnabled(false);
     });
 
@@ -253,7 +263,7 @@ export class App {
         sentry.captureEvent({
           message: detail.userFeedback,
           user: {email: detail.userEmail},
-          tags: {category: detail.feedbackCategory, cloudProvider: detail.cloudProvider}
+          tags: {category: detail.feedbackCategory, cloudProvider: detail.cloudProvider},
         });
         appRoot.showNotification(appRoot.localize('notification-feedback-thanks'));
       } catch (e) {
@@ -270,7 +280,7 @@ export class App {
       this.renameServer(event.detail.newName);
     });
 
-    appRoot.addEventListener('CancelServerCreationRequested', (event: CustomEvent) => {
+    appRoot.addEventListener('CancelServerCreationRequested', (_: CustomEvent) => {
       this.cancelServerCreation(this.selectedServer);
     });
 
@@ -294,7 +304,8 @@ export class App {
       } else {
         // This should never happen if we are managine the list correctly.
         console.error(
-            `Could not find server for display server ID ${event.detail.displayServerId}`);
+          `Could not find server for display server ID ${event.detail.displayServerId}`
+        );
       }
     });
 
@@ -316,7 +327,8 @@ export class App {
     // Load connected accounts and servers.
     await Promise.all([
       this.loadDigitalOceanAccount(this.cloudAccounts.getDigitalOceanAccount()),
-      this.loadGcpAccount(this.cloudAccounts.getGcpAccount()), this.loadManualServers()
+      this.loadGcpAccount(this.cloudAccounts.getGcpAccount()),
+      this.loadManualServers(),
     ]);
 
     // Show last displayed server, if any.
@@ -329,8 +341,9 @@ export class App {
     }
   }
 
-  private async loadDigitalOceanAccount(digitalOceanAccount: digitalocean.Account):
-      Promise<server.ManagedServer[]> {
+  private async loadDigitalOceanAccount(
+    digitalOceanAccount: digitalocean.Account
+  ): Promise<server.ManagedServer[]> {
     if (!digitalOceanAccount) {
       return [];
     }
@@ -437,7 +450,10 @@ export class App {
       // Wait for server config to load, then update the server view and list.
       if (isManagedServer(server)) {
         try {
-          for await (const _ of server.monitorInstallProgress()) {}
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          for await (const _ of server.monitorInstallProgress()) {
+            /* empty */
+          }
         } catch (error) {
           if (error instanceof errors.ServerInstallCanceledError) {
             // User clicked "Cancel" on the loading screen.
@@ -465,8 +481,9 @@ export class App {
   }
 
   private updateServerEntry(server: server.Server): void {
-    this.appRoot.serverList = this.appRoot.serverList.map(
-        (ds) => ds.id === server.getId() ? this.makeServerListEntry(ds.accountId, server) : ds);
+    this.appRoot.serverList = this.appRoot.serverList.map((ds) =>
+      ds.id === server.getId() ? this.makeServerListEntry(ds.accountId, server) : ds
+    );
   }
 
   private getServerById(serverId: string): server.Server {
@@ -475,8 +492,9 @@ export class App {
 
   // Returns a promise that resolves when the account is active.
   // Throws CANCELLED_ERROR on cancellation, and the error on failure.
-  private async ensureActiveDigitalOceanAccount(digitalOceanAccount: digitalocean.Account):
-      Promise<void> {
+  private async ensureActiveDigitalOceanAccount(
+    digitalOceanAccount: digitalocean.Account
+  ): Promise<void> {
     let cancelled = false;
     let activatingAccount = false;
 
@@ -486,7 +504,7 @@ export class App {
       this.disconnectDigitalOceanAccount();
     };
     const oauthUi = this.appRoot.getDigitalOceanOauthFlow(signOutAction);
-    while (true) {
+    for (;;) {
       const status = await this.digitalOceanRetry(async () => {
         if (cancelled) {
           throw CANCELLED_ERROR;
@@ -686,8 +704,9 @@ export class App {
   }
 
   // Opens the screen to create a server.
-  private async showDigitalOceanCreateServer(digitalOceanAccount: digitalocean.Account):
-      Promise<void> {
+  private async showDigitalOceanCreateServer(
+    digitalOceanAccount: digitalocean.Account
+  ): Promise<void> {
     try {
       await this.ensureActiveDigitalOceanAccount(digitalOceanAccount);
     } catch (error) {
@@ -730,8 +749,7 @@ export class App {
   }
 
   private makeLocalizedServerName(cloudLocation: CloudLocation): string {
-    const placeName = getShortName(cloudLocation,
-        this.appRoot.localize as (id: string) => string);
+    const placeName = getShortName(cloudLocation, this.appRoot.localize as (id: string) => string);
     return this.appRoot.localize('server-name', 'serverLocation', placeName);
   }
 
@@ -764,8 +782,10 @@ export class App {
     view.serverVersion = version;
     view.defaultDataLimitBytes = server.getDefaultDataLimit()?.bytes;
     view.isDefaultDataLimitEnabled = view.defaultDataLimitBytes !== undefined;
-    view.showFeatureMetricsDisclaimer = server.getMetricsEnabled() &&
-        !server.getDefaultDataLimit() && !hasSeenFeatureMetricsNotification();
+    view.showFeatureMetricsDisclaimer =
+      server.getMetricsEnabled() &&
+      !server.getDefaultDataLimit() &&
+      !hasSeenFeatureMetricsNotification();
 
     if (version) {
       view.isAccessKeyPortEditable = semver.gte(version, CHANGE_KEYS_PORT_VERSION);
@@ -778,7 +798,7 @@ export class App {
       const host = server.getHost();
       view.monthlyCost = host.getMonthlyCost()?.usd;
       view.monthlyOutboundTransferBytes =
-          host.getMonthlyOutboundTransferLimit()?.terabytes * (10 ** 12);
+        host.getMonthlyOutboundTransferLimit()?.terabytes * 10 ** 12;
       view.cloudLocation = host.getCloudLocation();
     }
 
@@ -787,13 +807,14 @@ export class App {
     // Asynchronously load "My Connection" and other access keys in order to no block showing the
     // server.
     setTimeout(async () => {
-      this.showMetricsOptInWhenNeeded(server, view);
+      this.showMetricsOptInWhenNeeded(server);
       try {
         const serverAccessKeys = await server.listAccessKeys();
         view.accessKeyRows = serverAccessKeys.map(this.convertToUiAccessKey.bind(this));
         if (view.defaultDataLimitBytes === undefined) {
-          view.defaultDataLimitBytes =
-              (await computeDefaultDataLimit(server, serverAccessKeys))?.bytes;
+          view.defaultDataLimitBytes = (
+            await computeDefaultDataLimit(server, serverAccessKeys)
+          )?.bytes;
         }
         // Show help bubbles once the page has rendered.
         setTimeout(() => {
@@ -822,13 +843,15 @@ export class App {
     view.serverName = this.makeDisplayName(server);
     view.selectedPage = 'progressView';
     try {
-      for await (view.installProgress of server.monitorInstallProgress()) {}
+      for await (view.installProgress of server.monitorInstallProgress()) {
+        /* empty */
+      }
     } catch {
       // Ignore any errors; they will be handled by `this.addServer`.
     }
   }
 
-  private showMetricsOptInWhenNeeded(selectedServer: server.Server, serverView: ServerView) {
+  private showMetricsOptInWhenNeeded(selectedServer: server.Server) {
     const showMetricsOptInOnce = () => {
       // Sanity check to make sure the running server is still displayed, i.e.
       // it hasn't been deleted.
@@ -872,9 +895,10 @@ export class App {
       let keyTransferMax = 0;
       let dataLimitMax = selectedServer.getDefaultDataLimit()?.bytes ?? 0;
       for (const key of await selectedServer.listAccessKeys()) {
-        serverView.updateAccessKeyRow(
-            key.id,
-            {transferredBytes: usageMap.get(key.id) ?? 0, dataLimitBytes: key.dataLimit?.bytes});
+        serverView.updateAccessKeyRow(key.id, {
+          transferredBytes: usageMap.get(key.id) ?? 0,
+          dataLimitBytes: key.dataLimit?.bytes,
+        });
         keyTransferMax = Math.max(keyTransferMax, usageMap.get(key.id) ?? 0);
         dataLimitMax = Math.max(dataLimitMax, key.dataLimit?.bytes ?? 0);
       }
@@ -908,8 +932,9 @@ export class App {
   private getS3InviteUrl(accessUrl: string, isAdmin = false) {
     // TODO(alalama): display the invite in the user's preferred language.
     const adminParam = isAdmin ? '?admin_embed' : '';
-    return `https://s3.amazonaws.com/outline-vpn/invite.html${adminParam}#${
-        encodeURIComponent(accessUrl)}`;
+    return `https://s3.amazonaws.com/outline-vpn/invite.html${adminParam}#${encodeURIComponent(
+      accessUrl
+    )}`;
   }
 
   // Converts the access key model to the format used by outline-server-view.
@@ -939,15 +964,16 @@ export class App {
   }
 
   private renameAccessKey(accessKeyId: string, newName: string, entry: polymer.Base) {
-    this.selectedServer.renameAccessKey(accessKeyId, newName)
-        .then(() => {
-          entry.commitName();
-        })
-        .catch((error) => {
-          console.error(`Failed to rename access key: ${error}`);
-          this.appRoot.showError(this.appRoot.localize('error-key-rename'));
-          entry.revertName();
-        });
+    this.selectedServer
+      .renameAccessKey(accessKeyId, newName)
+      .then(() => {
+        entry.commitName();
+      })
+      .catch((error) => {
+        console.error(`Failed to rename access key: ${error}`);
+        this.appRoot.showError(this.appRoot.localize('error-key-rename'));
+        entry.revertName();
+      });
   }
 
   private async setDefaultDataLimit(limit: server.DataLimit) {
@@ -971,7 +997,7 @@ export class App {
     } catch (error) {
       console.error(`Failed to set server default data limit: ${error}`);
       this.appRoot.showError(this.appRoot.localize('error-set-data-limit'));
-      const defaultLimit = previousLimit || await computeDefaultDataLimit(this.selectedServer);
+      const defaultLimit = previousLimit || (await computeDefaultDataLimit(this.selectedServer));
       serverView.defaultDataLimitBytes = defaultLimit?.bytes;
       serverView.isDefaultDataLimitEnabled = !!previousLimit;
     }
@@ -992,23 +1018,32 @@ export class App {
     }
   }
 
-  private openPerKeyDataLimitDialog(event: CustomEvent<{
-    keyId: string,
-    keyDataLimitBytes: number|undefined,
-    keyName: string,
-    serverId: string,
-    defaultDataLimitBytes: number|undefined
-  }>) {
+  private openPerKeyDataLimitDialog(
+    event: CustomEvent<{
+      keyId: string;
+      keyDataLimitBytes: number | undefined;
+      keyName: string;
+      serverId: string;
+      defaultDataLimitBytes: number | undefined;
+    }>
+  ) {
     const detail = event.detail;
     const onDataLimitSet = this.savePerKeyDataLimit.bind(this, detail.serverId, detail.keyId);
     const onDataLimitRemoved = this.removePerKeyDataLimit.bind(this, detail.serverId, detail.keyId);
     const activeDataLimitBytes = detail.keyDataLimitBytes ?? detail.defaultDataLimitBytes;
     this.appRoot.openPerKeyDataLimitDialog(
-        detail.keyName, activeDataLimitBytes, onDataLimitSet, onDataLimitRemoved);
+      detail.keyName,
+      activeDataLimitBytes,
+      onDataLimitSet,
+      onDataLimitRemoved
+    );
   }
 
-  private async savePerKeyDataLimit(serverId: string, keyId: string, dataLimitBytes: number):
-      Promise<boolean> {
+  private async savePerKeyDataLimit(
+    serverId: string,
+    keyId: string,
+    dataLimitBytes: number
+  ): Promise<boolean> {
     this.appRoot.showNotification(this.appRoot.localize('saving'));
     const server = this.idServerMap.get(serverId);
     const serverView = await this.appRoot.getServerView(server.getId());
@@ -1094,7 +1129,7 @@ export class App {
     // Don't let `ManualServerRepository.addServer` throw to avoid redundant error handling if we
     // are adding an existing server. Query the repository instead to treat the UI accordingly.
     const storedServer = this.manualServerRepository.findServer(serverConfig);
-    if (!!storedServer) {
+    if (storedServer) {
       this.appRoot.showNotification(this.appRoot.localize('notification-server-exists'), 5000);
       this.showServer(storedServer);
       return;
@@ -1136,23 +1171,22 @@ export class App {
     const confirmationButton = this.appRoot.localize('destroy');
     this.appRoot.getConfirmation(confirmationTitle, confirmationText, confirmationButton, () => {
       this.digitalOceanRetry(() => {
-            // TODO: Add an activity indicator in OutlineServerView during deletion.
-            return serverToDelete.getHost().delete();
-          })
-          .then(
-              () => {
-                this.removeServer(serverId);
-                this.showIntro();
-                this.appRoot.showNotification(
-                    this.appRoot.localize('notification-server-destroyed'));
-              },
-              (e) => {
-                // Don't show a toast on the login screen.
-                if (!(e instanceof digitalocean_api.XhrError)) {
-                  console.error(`Failed destroy server: ${e}`);
-                  this.appRoot.showError(this.appRoot.localize('error-server-destroy'));
-                }
-              });
+        // TODO: Add an activity indicator in OutlineServerView during deletion.
+        return serverToDelete.getHost().delete();
+      }).then(
+        () => {
+          this.removeServer(serverId);
+          this.showIntro();
+          this.appRoot.showNotification(this.appRoot.localize('notification-server-destroyed'));
+        },
+        (e) => {
+          // Don't show a toast on the login screen.
+          if (!(e instanceof digitalocean_api.XhrError)) {
+            console.error(`Failed destroy server: ${e}`);
+            this.appRoot.showError(this.appRoot.localize('error-server-destroy'));
+          }
+        }
+      );
     });
   }
 
@@ -1201,7 +1235,7 @@ export class App {
       this.appRoot.showError(this.appRoot.localize('error-server-rename'));
       const oldName = this.selectedServer.getName();
       view.serverName = oldName;
-      // tslint:disable-next-line:no-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (view.$.serverSettings as any).serverName = oldName;
     }
   }
@@ -1215,13 +1249,16 @@ export class App {
     // TODO: Make the cancel button show an immediate state transition,
     // indicate that deletion is in-progress, and allow the user to return
     // to server creation in the meantime.
-    serverToCancel.getHost().delete().then(() => {
-      this.removeServer(serverToCancel.getId());
-      this.showIntro();
-    });
+    serverToCancel
+      .getHost()
+      .delete()
+      .then(() => {
+        this.removeServer(serverToCancel.getId());
+        this.showIntro();
+      });
   }
 
-  private async setAppLanguage(languageCode: string, languageDir: 'rtl'|'ltr') {
+  private async setAppLanguage(languageCode: string, languageDir: 'rtl' | 'ltr') {
     try {
       await this.appRoot.setLanguage(languageCode, languageDir);
       document.documentElement.setAttribute('dir', languageDir);

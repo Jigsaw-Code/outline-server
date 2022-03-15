@@ -21,7 +21,7 @@
  */
 export class ValueStream<T> {
   private wakers: Array<(closed: boolean) => void> = [];
-  constructor(private value: T) { }
+  constructor(private value: T) {}
 
   get(): T {
     return this.value;
@@ -34,7 +34,7 @@ export class ValueStream<T> {
     this.value = newValue;
     const wakers = this.wakers;
     this.wakers = [];
-    wakers.forEach(waker => waker(false));
+    wakers.forEach((waker) => waker(false));
   }
 
   close() {
@@ -43,7 +43,7 @@ export class ValueStream<T> {
     }
     const finalWakers = this.wakers;
     this.wakers = null;
-    finalWakers.forEach(waker => waker(true));
+    finalWakers.forEach((waker) => waker(true));
   }
 
   isClosed() {
@@ -54,7 +54,7 @@ export class ValueStream<T> {
     if (this.isClosed()) {
       return Promise.resolve(true);
     }
-    return new Promise<boolean>(resolve => this.wakers.push(resolve));
+    return new Promise<boolean>((resolve) => this.wakers.push(resolve));
   }
 
   async *watch(): AsyncGenerator<T, void> {

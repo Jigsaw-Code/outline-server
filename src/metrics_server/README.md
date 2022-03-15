@@ -12,7 +12,7 @@ The metrics server deploys two services: `dev`, used for development testing and
 
 The metrics server supports two URL paths:
 
-* `POST /connections`: report server data usage broken down by user.
+- `POST /connections`: report server data usage broken down by user.
 
   ```
   {
@@ -26,23 +26,24 @@ The metrics server supports two URL paths:
     }]
   }
   ```
-* `POST /features`: report feature usage.
 
-    ```
-    {
-        serverId: string,
-        serverVersion: string,
-        timestampUtcMs: number,
-        dataLimit: {
-            enabled: boolean
-            perKeyLimitCount: number
-        }
-    }
-    ```
+- `POST /features`: report feature usage.
+
+  ```
+  {
+      serverId: string,
+      serverVersion: string,
+      timestampUtcMs: number,
+      dataLimit: {
+          enabled: boolean
+          perKeyLimitCount: number
+      }
+  }
+  ```
 
 ## Requirements
 
-* [Google Cloud SDK](https://cloud.google.com/sdk/)
+- [Google Cloud SDK](https://cloud.google.com/sdk/)
 
 ## Build
 
@@ -60,26 +61,26 @@ npm run action metrics_server/start
 
 ## Deploy
 
-* Authenticate with `gcloud`:
+- Authenticate with `gcloud`:
   ```sh
   gcloud auth login
   ```
-* To deploy to dev:
+- To deploy to dev:
   ```sh
   npm run action metrics_server/deploy_dev
   ```
-* To deploy to prod:
+- To deploy to prod:
   ```sh
   npm run action metrics_server/deploy_prod
   ```
 
 ## Test
 
-* Unit test
+- Unit test
   ```sh
   npm run action metrics_server/test
   ```
-* Integration test
+- Integration test
   ```sh
   npm run action metrics_server/test_integration
   ```

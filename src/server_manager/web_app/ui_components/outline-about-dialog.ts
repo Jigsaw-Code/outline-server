@@ -70,22 +70,24 @@ Polymer({
 
     <paper-dialog id="dialog" modal="">
       <div>
-        <img id="outlineLogo" src="images/manager-about-logo2x.png">
+        <img id="outlineLogo" src="images/manager-about-logo2x.png" />
       </div>
       <p id="version" inner-h-t-m-l="[[localize('about-version', 'version', outlineVersion)]]"></p>
-      <p inner-h-t-m-l="[[localize('about-outline', 'jigsawUrl', 'https://jigsaw.google.com', 'shadowsocksUrl', 'https://shadowsocks.org', 'gitHubUrl', 'https://github.com/jigsaw-Code/?q=outline', 'redditUrl', 'https://www.reddit.com/r/outlinevpn', 'mediumUrl', 'https://medium.com/jigsaw')]]">
+      <p
+        inner-h-t-m-l="[[localize('about-outline', 'jigsawUrl', 'https://jigsaw.google.com', 'shadowsocksUrl', 'https://shadowsocks.org', 'gitHubUrl', 'https://github.com/jigsaw-Code/?q=outline', 'redditUrl', 'https://www.reddit.com/r/outlinevpn', 'mediumUrl', 'https://medium.com/jigsaw')]]"
+      >
         &gt;
       </p>
       <p>
         <a href="https://jigsaw.google.com/">
-          <img id="jigsaw-logo" src="images/jigsaw-logo.svg">
+          <img id="jigsaw-logo" src="images/jigsaw-logo.svg" />
         </a>
       </p>
       <div class="buttons">
         <paper-button dialog-dismiss="" autofocus="">[[localize('close')]]</paper-button>
       </div>
     </paper-dialog>
-`,
+  `,
 
   is: 'outline-about-dialog',
 
@@ -96,5 +98,5 @@ Polymer({
 
   open() {
     this.$.dialog.open();
-  }
+  },
 });

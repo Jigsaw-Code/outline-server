@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 // Copyright 2020 The Outline Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +18,7 @@ const {notarize} = require('electron-notarize');
 // Notarizes the macOS app through an Apple Developer Account when building for release.
 // Must set environment variables: `APPLE_ID`, the account's Apple ID;
 // and `APPLE_PASSWORD`, the password to the account.
-exports.default = async function(context) {
+exports.default = async function (context) {
   const {electronPlatformName, appOutDir} = context;
   if (electronPlatformName !== 'darwin' || !process.env.CSC_LINK) {
     // Skip notarization if not releasing macOS or if the app is unsigned (i.e. packaging).

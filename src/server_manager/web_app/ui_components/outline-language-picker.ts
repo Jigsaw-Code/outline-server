@@ -22,47 +22,53 @@ import {html, PolymerElement} from '@polymer/polymer';
 import type {PolymerElementProperties} from '@polymer/polymer/interfaces';
 
 export type LanguageDef = {
-  id: string,
-  name: string,
-  dir: 'ltr'|'rtl'
+  id: string;
+  name: string;
+  dir: 'ltr' | 'rtl';
 };
-
 
 export class OutlineLanguagePicker extends PolymerElement {
   static get template() {
-    return html`
-    <style include="cloud-install-styles"></style>
-    <style>
-      paper-dropdown-menu {
-        --paper-input-container-input: {
-          color: var(--medium-gray);
-          font-size: 14px;
-        };
-      }
-      .language-item {
-        display: flex;
-        cursor: pointer;
-        font-size: 16px;
-        padding-left: 24px;
-        --paper-item-selected: {
-          color: var(--primary-green);
-          font-weight: normal;
+    return html` <style include="cloud-install-styles"></style>
+      <style>
+        paper-dropdown-menu {
+          --paper-input-container-input: {
+            color: var(--medium-gray);
+            font-size: 14px;
+          }
         }
-      }
-      .language-name {
-        flex-grow: 1;
-      }
-    </style>
-    <paper-dropdown-menu no-label-float="" vertical-align="bottom">
-      <paper-listbox slot="dropdown-content" selected="{{selectedLanguage}}" attr-for-selected="value" on-selected-changed="_languageChanged">
-        <template is="dom-repeat" items="{{languages}}" as="lang">
-          <paper-item class="language-item" value="{{lang.id}}">
-            <span class="language-name">{{lang.name}}</span>
-            <iron-icon icon="check" hidden$="{{_shouldHideCheckmark(selectedLanguage, lang.id)}}"></iron-icon>
-          </paper-item>
-        </template>
-      </paper-listbox>
-    </paper-dropdown-menu>`;
+        .language-item {
+          display: flex;
+          cursor: pointer;
+          font-size: 16px;
+          padding-left: 24px;
+          --paper-item-selected: {
+            color: var(--primary-green);
+            font-weight: normal;
+          }
+        }
+        .language-name {
+          flex-grow: 1;
+        }
+      </style>
+      <paper-dropdown-menu no-label-float="" vertical-align="bottom">
+        <paper-listbox
+          slot="dropdown-content"
+          selected="{{selectedLanguage}}"
+          attr-for-selected="value"
+          on-selected-changed="_languageChanged"
+        >
+          <template is="dom-repeat" items="{{languages}}" as="lang">
+            <paper-item class="language-item" value="{{lang.id}}">
+              <span class="language-name">{{lang.name}}</span>
+              <iron-icon
+                icon="check"
+                hidden$="{{_shouldHideCheckmark(selectedLanguage, lang.id)}}"
+              ></iron-icon>
+            </paper-item>
+          </template>
+        </paper-listbox>
+      </paper-dropdown-menu>`;
   }
 
   static get is() {
@@ -85,7 +91,7 @@ export class OutlineLanguagePicker extends PolymerElement {
 
   _languageChanged(event: CustomEvent) {
     const languageCode = event.detail.value;
-    const languageDir = this.languages.find(lang => lang.id === languageCode).dir;
+    const languageDir = this.languages.find((lang) => lang.id === languageCode).dir;
 
     const params = {bubbles: true, composed: true, detail: {languageCode, languageDir}};
     const customEvent = new CustomEvent('SetLanguageRequested', params);

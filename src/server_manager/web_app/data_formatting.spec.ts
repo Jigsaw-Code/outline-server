@@ -14,12 +14,11 @@
   limitations under the License.
 */
 
-import {format} from 'path';
 import * as formatting from './data_formatting';
 
 describe('formatBytesParts', () => {
   if (process?.versions?.node) {
-    it('doesn\'t run on Node', () => {
+    it("doesn't run on Node", () => {
       expect(() => formatting.formatBytesParts(0, 'en')).toThrow();
     });
   } else {
@@ -49,7 +48,7 @@ describe('formatBytesParts', () => {
 
 describe('formatBytes', () => {
   if (process?.versions?.node) {
-    it('doesn\'t run on Node', () => {
+    it("doesn't run on Node", () => {
       expect(() => formatting.formatBytes(0, 'en')).toThrow();
     });
   } else {
@@ -67,15 +66,16 @@ describe('formatBytes', () => {
   }
 });
 
-function makeDisplayDataAmount(value: number, unit: 'MB'|'GB') {
+function makeDisplayDataAmount(value: number, unit: 'MB' | 'GB') {
   return {unit, value};
 }
 
 describe('displayDataAmountToBytes', () => {
   it('correctly converts DisplayDataAmounts to byte values', () => {
     expect(formatting.displayDataAmountToBytes(makeDisplayDataAmount(1, 'MB'))).toEqual(10 ** 6);
-    expect(formatting.displayDataAmountToBytes(makeDisplayDataAmount(20, 'GB')))
-        .toEqual(2 * 10 ** 10);
+    expect(formatting.displayDataAmountToBytes(makeDisplayDataAmount(20, 'GB'))).toEqual(
+      2 * 10 ** 10
+    );
     expect(formatting.displayDataAmountToBytes(makeDisplayDataAmount(0, 'MB'))).toEqual(0);
   });
   it('handles null input', () => {
@@ -86,10 +86,12 @@ describe('displayDataAmountToBytes', () => {
 describe('bytesToDisplayDataAmount', () => {
   it('correctly converts byte values to DisplayDataAmounts', () => {
     expect(formatting.bytesToDisplayDataAmount(10 ** 6)).toEqual(makeDisplayDataAmount(1, 'MB'));
-    expect(formatting.bytesToDisplayDataAmount(3 * 10 ** 9))
-        .toEqual(makeDisplayDataAmount(3, 'GB'));
-    expect(formatting.bytesToDisplayDataAmount(7 * 10 ** 5))
-        .toEqual(makeDisplayDataAmount(0, 'MB'));
+    expect(formatting.bytesToDisplayDataAmount(3 * 10 ** 9)).toEqual(
+      makeDisplayDataAmount(3, 'GB')
+    );
+    expect(formatting.bytesToDisplayDataAmount(7 * 10 ** 5)).toEqual(
+      makeDisplayDataAmount(0, 'MB')
+    );
   });
   it('handles null and undefined input', () => {
     expect(formatting.bytesToDisplayDataAmount(null)).toBeNull();

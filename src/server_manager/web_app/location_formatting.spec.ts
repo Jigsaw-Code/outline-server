@@ -17,36 +17,44 @@ import {filterOptions, getShortName, localizeCountry} from './location_formattin
 
 describe('getShortName', () => {
   it('basic case', () => {
-    expect(getShortName({id: 'fake-id', location: location.SYDNEY}, msgId => {
-      expect(msgId).toEqual('geo-sydney');
-      return 'foo';
-    })).toEqual('foo');
+    expect(
+      getShortName({id: 'fake-id', location: location.SYDNEY}, (msgId) => {
+        expect(msgId).toEqual('geo-sydney');
+        return 'foo';
+      })
+    ).toEqual('foo');
   });
 
   it('city-state is converted to lowercase', () => {
-    expect(getShortName({id: 'fake-id', location: location.SINGAPORE}, msgId => {
-      expect(msgId).toEqual('geo-sg');
-      return 'foo';
-    })).toEqual('foo');
+    expect(
+      getShortName({id: 'fake-id', location: location.SINGAPORE}, (msgId) => {
+        expect(msgId).toEqual('geo-sg');
+        return 'foo';
+      })
+    ).toEqual('foo');
   });
 
   it('returns the ID when geoId is null', () => {
-    expect(getShortName({id: 'fake-id', location: null}, msgId => {
-      fail();
-      return null;
-    })).toEqual('fake-id');
+    expect(
+      getShortName({id: 'fake-id', location: null}, (_msgId) => {
+        fail();
+        return null;
+      })
+    ).toEqual('fake-id');
   });
 
   it('returns empty string when the location is null', () => {
-    expect(getShortName(null, msgId => {
-      fail();
-      return null;
-    })).toEqual('');
+    expect(
+      getShortName(null, (_msgId) => {
+        fail();
+        return null;
+      })
+    ).toEqual('');
   });
 });
 
 describe('localizeCountry', () => {
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!(Intl as any).DisplayNames) {
     console.log('country localization requires modern Intl features');
     return;
@@ -55,7 +63,7 @@ describe('localizeCountry', () => {
   it('basic case', () => {
     expect(localizeCountry(location.NEW_YORK_CITY, 'en')).toEqual('United States');
   });
-  
+
   it('other language', () => {
     expect(localizeCountry(location.NEW_YORK_CITY, 'es')).toEqual('Estados Unidos');
   });
@@ -77,7 +85,7 @@ describe('filterOptions', () => {
   it('one available', () => {
     const option = {
       cloudLocation: {id: 'zone-id', location: location.SAO_PAULO},
-      available: true
+      available: true,
     };
     expect(filterOptions([option])).toEqual([option]);
   });
@@ -85,7 +93,7 @@ describe('filterOptions', () => {
   it('one not available', () => {
     const option = {
       cloudLocation: {id: 'zone-id', location: location.SALT_LAKE_CITY},
-      available: false
+      available: false,
     };
     expect(filterOptions([option])).toEqual([option]);
   });
@@ -93,15 +101,15 @@ describe('filterOptions', () => {
   it('one unrecognized', () => {
     const option: location.CloudLocationOption = {
       cloudLocation: {id: 'zone-id', location: null},
-      available: true
+      available: true,
     };
     expect(filterOptions([option])).toEqual([option]);
   });
 
   it('one unrecognized and unavailable', () => {
-    const option : location.CloudLocationOption = {
+    const option: location.CloudLocationOption = {
       cloudLocation: {id: 'zone-id', location: null},
-      available: false
+      available: false,
     };
     expect(filterOptions([option])).toEqual([]);
   });
@@ -109,26 +117,26 @@ describe('filterOptions', () => {
   it('one of each', () => {
     const available = {
       cloudLocation: {id: 'available', location: location.SAN_FRANCISCO},
-      available: true
+      available: true,
     };
     const unavailable = {
       cloudLocation: {id: 'unavailable', location: location.SEOUL},
-      available: false
+      available: false,
     };
-    const unrecognized : location.CloudLocationOption = {
+    const unrecognized: location.CloudLocationOption = {
       cloudLocation: {id: 'unrecognized', location: null},
-      available: true
+      available: true,
     };
-    const unrecognizedAndUnavailable : location.CloudLocationOption = {
+    const unrecognizedAndUnavailable: location.CloudLocationOption = {
       cloudLocation: {id: 'unrecognized-and-unavailable', location: null},
-      available: false
+      available: false,
     };
 
     const filtered = filterOptions([
       unrecognized,
       unavailable,
       unrecognizedAndUnavailable,
-      available
+      available,
     ]);
     expect(filtered).toEqual([unavailable, available, unrecognized]);
   });
@@ -136,11 +144,11 @@ describe('filterOptions', () => {
   it('available preferred', () => {
     const available = {
       cloudLocation: {id: 'available', location: location.TOKYO},
-      available: true
+      available: true,
     };
     const unavailable = {
       cloudLocation: {id: 'unavailable', location: location.TOKYO},
-      available: false
+      available: false,
     };
     const filtered = filterOptions([unavailable, available]);
     expect(filtered).toEqual([available]);

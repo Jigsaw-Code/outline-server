@@ -19,16 +19,17 @@ import * as http from 'http';
 import {AddressInfo} from 'net';
 import * as request from 'request';
 
-const REGISTERED_REDIRECTS: Array<{clientId: string, port: number}> = [
+const REGISTERED_REDIRECTS: Array<{clientId: string; port: number}> = [
   {clientId: '7f84935771d49c2331e1cfb60c7827e20eaf128103435d82ad20b3c53253b721', port: 55189},
   {clientId: '4af51205e8d0d8f4a5b84a6b5ca9ea7124f914a5621b6a731ce433c2c7db533b', port: 60434},
-  {clientId: '706928a1c91cbd646c4e0d744c8cbdfbf555a944b821ac7812a7314a4649683a', port: 61437}
+  {clientId: '706928a1c91cbd646c4e0d744c8cbdfbf555a944b821ac7812a7314a4649683a', port: 61437},
 ];
 
 function randomValueHex(len: number): string {
-  return crypto.randomBytes(Math.ceil(len / 2))
-      .toString('hex')  // convert to hexadecimal format
-      .slice(0, len);   // return required number of characters
+  return crypto
+    .randomBytes(Math.ceil(len / 2))
+    .toString('hex') // convert to hexadecimal format
+    .slice(0, len); // return required number of characters
 }
 
 interface ServerError extends Error {
@@ -77,21 +78,22 @@ interface Account {
 function getAccount(accessToken: string): Promise<Account> {
   return new Promise((resolve, reject) => {
     request(
-        {
-          url: 'https://api.digitalocean.com/v2/account',
-          headers: {
-            'User-Agent': 'Outline Manager',
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`
-          }
+      {
+        url: 'https://api.digitalocean.com/v2/account',
+        headers: {
+          'User-Agent': 'Outline Manager',
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
         },
-        (error, response, body) => {
-          if (error) {
-            return reject(error);
-          }
-          const bodyJson: {account: Account} = JSON.parse(body);
-          return resolve(bodyJson.account as Account);
-        });
+      },
+      (error, response, body) => {
+        if (error) {
+          return reject(error);
+        }
+        const bodyJson: {account: Account} = JSON.parse(body);
+        return resolve(bodyJson.account as Account);
+      }
+    );
   });
 }
 
@@ -143,7 +145,7 @@ export function runOauth(): OauthSession {
       </html>`);
   });
 
-  const rejectWrapper = {reject: (error: Error) => {}};
+  const rejectWrapper = {reject: (_error: Error) => {}};
   const result = new Promise<string>((resolve, reject) => {
     rejectWrapper.reject = reject;
     // This is the POST endpoint that receives the access token and redirects to either DigitalOcean
@@ -166,15 +168,15 @@ export function runOauth(): OauthSession {
       const accessToken = params.get('access_token');
       if (accessToken) {
         getAccount(accessToken)
-            .then((account) => {
-              if (account.status === 'active') {
-                response.send(closeWindowHtml('Authentication successful'));
-              } else {
-                response.redirect('https://cloud.digitalocean.com');
-              }
-              resolve(accessToken);
-            })
-            .catch(reject);
+          .then((account) => {
+            if (account.status === 'active') {
+              response.send(closeWindowHtml('Authentication successful'));
+            } else {
+              response.redirect('https://cloud.digitalocean.com');
+            }
+            resolve(accessToken);
+          })
+          .catch(reject);
       } else {
         response.status(400).send(closeWindowHtml('Authentication failed'));
         reject(new Error('No access_token on OAuth response'));
@@ -184,25 +186,29 @@ export function runOauth(): OauthSession {
     // Unfortunately DigitalOcean matches the port in the redirect url against the registered ones.
     // We registered the application 3 times with different ports, so we have fallbacks in case
     // the first port is in use.
-    listenOnFirstPort(server, REGISTERED_REDIRECTS.map(e => e.port))
-        .then((index) => {
-          const {port, clientId} = REGISTERED_REDIRECTS[index];
-          const address = server.address() as AddressInfo;
-          console.log(`OAuth target listening on ${address.address}:${address.port}`);
+    listenOnFirstPort(
+      server,
+      REGISTERED_REDIRECTS.map((e) => e.port)
+    )
+      .then((index) => {
+        const {port, clientId} = REGISTERED_REDIRECTS[index];
+        const address = server.address() as AddressInfo;
+        console.log(`OAuth target listening on ${address.address}:${address.port}`);
 
-          const oauthUrl = `https://cloud.digitalocean.com/v1/oauth/authorize?client_id=${
-              encodeURIComponent(
-                  clientId)}&response_type=token&scope=read%20write&redirect_uri=http://localhost:${
-              encodeURIComponent(port.toString())}/&state=${encodeURIComponent(secret)}`;
-          console.log(`Opening OAuth URL ${oauthUrl}`);
-          electron.shell.openExternal(oauthUrl);
-        })
-        .catch((error) => {
-          if (error.code && error.code === 'EADDRINUSE') {
-            return reject(new Error('All OAuth ports are in use'));
-          }
-          reject(error);
-        });
+        const oauthUrl = `https://cloud.digitalocean.com/v1/oauth/authorize?client_id=${encodeURIComponent(
+          clientId
+        )}&response_type=token&scope=read%20write&redirect_uri=http://localhost:${encodeURIComponent(
+          port.toString()
+        )}/&state=${encodeURIComponent(secret)}`;
+        console.log(`Opening OAuth URL ${oauthUrl}`);
+        electron.shell.openExternal(oauthUrl);
+      })
+      .catch((error) => {
+        if (error.code && error.code === 'EADDRINUSE') {
+          return reject(new Error('All OAuth ports are in use'));
+        }
+        reject(error);
+      });
   });
   return {
     result,
@@ -214,6 +220,6 @@ export function runOauth(): OauthSession {
       isCancelled = true;
       server.close();
       rejectWrapper.reject(new Error('Authentication cancelled'));
-    }
+    },
   };
 }

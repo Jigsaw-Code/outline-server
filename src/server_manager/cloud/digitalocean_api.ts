@@ -23,47 +23,43 @@ export interface DigitalOceanDropletSpecification {
 
 // See definition and example at
 // https://developers.digitalocean.com/documentation/v2/#retrieve-an-existing-droplet-by-id
-export type DropletInfo = Readonly < {
+export type DropletInfo = Readonly<{
   id: number;
-  status: 'new'|'active';
+  status: 'new' | 'active';
   tags: string[];
-  region: {readonly slug: string;};
-  size: Readonly < {
+  region: {readonly slug: string};
+  size: Readonly<{
     transfer: number;
     price_monthly: number;
-  }
-  > ;
-  networks: Readonly < {
-    v4: ReadonlyArray < Readonly < {
-      type: string;
-      ip_address: string;
-    }
-    >> ;
-  }
-  > ;
-}
-> ;
+  }>;
+  networks: Readonly<{
+    v4: ReadonlyArray<
+      Readonly<{
+        type: string;
+        ip_address: string;
+      }>
+    >;
+  }>;
+}>;
 
 // Reference:
 // https://developers.digitalocean.com/documentation/v2/#get-user-information
-export type Account = Readonly < {
+export type Account = Readonly<{
   email: string;
   uuid: string;
   email_verified: boolean;
   status: string;
-}
-> ;
+}>;
 
 // Reference:
 // https://developers.digitalocean.com/documentation/v2/#regions
-export type RegionInfo = Readonly < {
+export type RegionInfo = Readonly<{
   slug: string;
   name: string;
   sizes: string[];
   available: boolean;
   features: string[];
-}
-> ;
+}>;
 
 // Marker class for errors due to network or authentication.
 // See below for more details on when this is raised.
@@ -79,8 +75,11 @@ export interface DigitalOceanSession {
   accessToken: string;
   getAccount(): Promise<Account>;
   createDroplet(
-      displayName: string, region: string, publicKeyForSSH: string,
-      dropletSpec: DigitalOceanDropletSpecification): Promise<{droplet: DropletInfo}>;
+    displayName: string,
+    region: string,
+    publicKeyForSSH: string,
+    dropletSpec: DigitalOceanDropletSpecification
+  ): Promise<{droplet: DropletInfo}>;
   deleteDroplet(dropletId: number): Promise<void>;
   getRegionInfo(): Promise<RegionInfo[]>;
   getDroplet(dropletId: number): Promise<DropletInfo>;
@@ -102,8 +101,11 @@ export class RestApiSession implements DigitalOceanSession {
   }
 
   public createDroplet(
-      displayName: string, region: string, publicKeyForSSH: string,
-      dropletSpec: DigitalOceanDropletSpecification): Promise<{droplet: DropletInfo}> {
+    displayName: string,
+    region: string,
+    publicKeyForSSH: string,
+    dropletSpec: DigitalOceanDropletSpecification
+  ): Promise<{droplet: DropletInfo}> {
     const dropletName = makeValidDropletName(displayName);
     // Register a key with DigitalOcean, so the user will not get a potentially
     // confusing email with their droplet password, which could get mistaken for
@@ -114,8 +116,11 @@ export class RestApiSession implements DigitalOceanSession {
   }
 
   private makeCreateDropletRequest(
-      dropletName: string, region: string, keyId: number,
-      dropletSpec: DigitalOceanDropletSpecification): Promise<{droplet: DropletInfo}> {
+    dropletName: string,
+    region: string,
+    keyId: number,
+    dropletSpec: DigitalOceanDropletSpecification
+  ): Promise<{droplet: DropletInfo}> {
     let requestCount = 0;
     const MAX_REQUESTS = 10;
     const RETRY_TIMEOUT_MS = 5000;
@@ -124,27 +129,26 @@ export class RestApiSession implements DigitalOceanSession {
         ++requestCount;
         console.info(`Requesting droplet creation ${requestCount}/${MAX_REQUESTS}`);
         this.request<{droplet: DropletInfo}>('POST', 'droplets', {
-              name: dropletName,
-              region,
-              size: dropletSpec.size,
-              image: dropletSpec.image,
-              ssh_keys: [keyId],
-              user_data: dropletSpec.installCommand,
-              tags: dropletSpec.tags,
-              ipv6: true,
-            })
-            .then(fulfill)
-            .catch((e) => {
-              if (e.message.toLowerCase().indexOf('finalizing') >= 0 &&
-                  requestCount < MAX_REQUESTS) {
-                // DigitalOcean is still validating this account and may take
-                // up to 30 seconds.  We can retry more frequently to see when
-                // this error goes away.
-                setTimeout(makeRequestRecursive, RETRY_TIMEOUT_MS);
-              } else {
-                reject(e);
-              }
-            });
+          name: dropletName,
+          region,
+          size: dropletSpec.size,
+          image: dropletSpec.image,
+          ssh_keys: [keyId],
+          user_data: dropletSpec.installCommand,
+          tags: dropletSpec.tags,
+          ipv6: true,
+        })
+          .then(fulfill)
+          .catch((e) => {
+            if (e.message.toLowerCase().indexOf('finalizing') >= 0 && requestCount < MAX_REQUESTS) {
+              // DigitalOcean is still validating this account and may take
+              // up to 30 seconds.  We can retry more frequently to see when
+              // this error goes away.
+              setTimeout(makeRequestRecursive, RETRY_TIMEOUT_MS);
+            } else {
+              reject(e);
+            }
+          });
       };
       makeRequestRecursive();
     });
@@ -165,12 +169,12 @@ export class RestApiSession implements DigitalOceanSession {
   // Registers a SSH key with DigitalOcean.
   private registerKey_(keyName: string, publicKeyForSSH: string): Promise<number> {
     console.info('Requesting key registration');
-    return this
-        .request<{ssh_key: {id: number}}>(
-            'POST', 'account/keys', {name: keyName, public_key: publicKeyForSSH})
-        .then((response) => {
-          return response.ssh_key.id;
-        });
+    return this.request<{ssh_key: {id: number}}>('POST', 'account/keys', {
+      name: keyName,
+      public_key: publicKeyForSSH,
+    }).then((response) => {
+      return response.ssh_key.id;
+    });
   }
 
   public getDroplet(dropletId: number): Promise<DropletInfo> {
@@ -188,10 +192,12 @@ export class RestApiSession implements DigitalOceanSession {
 
   public getDropletsByTag(tag: string): Promise<DropletInfo[]> {
     console.info('Requesting droplet by tag');
-    return this.request<{droplets: DropletInfo[]}>('GET', `droplets?tag_name=${encodeURI(tag)}`)
-        .then((response) => {
-          return response.droplets;
-        });
+    return this.request<{droplets: DropletInfo[]}>(
+      'GET',
+      `droplets?tag_name=${encodeURI(tag)}`
+    ).then((response) => {
+      return response.droplets;
+    });
   }
 
   public getDroplets(): Promise<DropletInfo[]> {
@@ -214,7 +220,7 @@ export class RestApiSession implements DigitalOceanSession {
         if (xhr.status >= 200 && xhr.status <= 299) {
           // Parse JSON response if available.  For requests like DELETE
           // this.response may be empty.
-          const responseObj = (xhr.response ? JSON.parse(xhr.response) : {});
+          const responseObj = xhr.response ? JSON.parse(xhr.response) : {};
           resolve(responseObj);
         } else if (xhr.status === 401) {
           console.error('DigitalOcean request failed with Unauthorized error');
@@ -223,8 +229,9 @@ export class RestApiSession implements DigitalOceanSession {
           // this.response is a JSON object, whose message is an error string.
           const responseJson = JSON.parse(xhr.response);
           console.error(`DigitalOcean request failed with status ${xhr.status}`);
-          reject(new Error(
-              `XHR ${responseJson.id} failed with ${xhr.status}: ${responseJson.message}`));
+          reject(
+            new Error(`XHR ${responseJson.id} failed with ${xhr.status}: ${responseJson.message}`)
+          );
         }
       };
       xhr.onerror = () => {
@@ -248,5 +255,5 @@ export class RestApiSession implements DigitalOceanSession {
 // DigitalOcean APIs.
 function makeValidDropletName(name: string): string {
   // Remove all characters outside of A-Z, a-z, 0-9 and '-'.
-  return name.replace(/[^A-Za-z0-9\-]/g, '');
+  return name.replace(/[^A-Za-z0-9-]/g, '');
 }

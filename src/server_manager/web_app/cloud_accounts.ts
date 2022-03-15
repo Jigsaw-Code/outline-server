@@ -17,14 +17,14 @@ import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
 import {DigitalOceanAccount} from './digitalocean_account';
 import {GcpAccount} from './gcp_account';
-import {ShadowboxSettings} from "./server_install";
+import {ShadowboxSettings} from './server_install';
 
 type DigitalOceanAccountJson = {
-  accessToken: string
+  accessToken: string;
 };
 
 type GcpAccountJson = {
-  refreshToken: string,
+  refreshToken: string;
 };
 
 /**
@@ -39,8 +39,10 @@ export class CloudAccounts implements accounts.CloudAccounts {
   private gcpAccount: GcpAccount = null;
 
   constructor(
-      private shadowboxSettings: ShadowboxSettings, private isDebugMode: boolean,
-      private storage = localStorage) {
+    private shadowboxSettings: ShadowboxSettings,
+    private isDebugMode: boolean,
+    private storage = localStorage
+  ) {
     this.load();
   }
 
@@ -60,12 +62,14 @@ export class CloudAccounts implements accounts.CloudAccounts {
 
   /** See {@link CloudAccounts#disconnectDigitalOceanAccount} */
   disconnectDigitalOceanAccount(): void {
+    // TODO(fortuna): Revoke access token.
     this.digitalOceanAccount = null;
     this.save();
   }
 
   /** See {@link CloudAccounts#disconnectGcpAccount} */
   disconnectGcpAccount(): void {
+    // TODO(fortuna): Revoke access token.
     this.gcpAccount = null;
     this.save();
   }
@@ -82,8 +86,9 @@ export class CloudAccounts implements accounts.CloudAccounts {
 
   /** Loads the saved cloud accounts from disk. */
   private load(): void {
-    const digitalOceanAccountJsonString =
-        this.storage.getItem(this.DIGITALOCEAN_ACCOUNT_STORAGE_KEY);
+    const digitalOceanAccountJsonString = this.storage.getItem(
+      this.DIGITALOCEAN_ACCOUNT_STORAGE_KEY
+    );
     if (!digitalOceanAccountJsonString) {
       const digitalOceanToken = this.loadLegacyDigitalOceanToken();
       if (digitalOceanToken) {
@@ -91,16 +96,19 @@ export class CloudAccounts implements accounts.CloudAccounts {
         this.save();
       }
     } else {
-      const digitalOceanAccountJson: DigitalOceanAccountJson =
-          JSON.parse(digitalOceanAccountJsonString);
-      this.digitalOceanAccount =
-          this.createDigitalOceanAccount(digitalOceanAccountJson.accessToken);
+      const digitalOceanAccountJson: DigitalOceanAccountJson = JSON.parse(
+        digitalOceanAccountJsonString
+      );
+      this.digitalOceanAccount = this.createDigitalOceanAccount(
+        digitalOceanAccountJson.accessToken
+      );
     }
 
     const gcpAccountJsonString = this.storage.getItem(this.GCP_ACCOUNT_STORAGE_KEY);
     if (gcpAccountJsonString) {
-      const gcpAccountJson: GcpAccountJson =
-          JSON.parse(this.storage.getItem(this.GCP_ACCOUNT_STORAGE_KEY));
+      const gcpAccountJson: GcpAccountJson = JSON.parse(
+        this.storage.getItem(this.GCP_ACCOUNT_STORAGE_KEY)
+      );
       this.gcpAccount = this.createGcpAccount(gcpAccountJson.refreshToken);
     }
   }
@@ -132,7 +140,9 @@ export class CloudAccounts implements accounts.CloudAccounts {
       const accessToken = this.digitalOceanAccount.getAccessToken();
       const digitalOceanAccountJson: DigitalOceanAccountJson = {accessToken};
       this.storage.setItem(
-          this.DIGITALOCEAN_ACCOUNT_STORAGE_KEY, JSON.stringify(digitalOceanAccountJson));
+        this.DIGITALOCEAN_ACCOUNT_STORAGE_KEY,
+        JSON.stringify(digitalOceanAccountJson)
+      );
       this.saveLegacyDigitalOceanToken(accessToken);
     } else {
       this.storage.removeItem(this.DIGITALOCEAN_ACCOUNT_STORAGE_KEY);

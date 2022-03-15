@@ -15,7 +15,10 @@
 import * as sentry from '@sentry/types';
 import * as express from 'express';
 
-import {postSentryEventToSalesforce, shouldPostEventToSalesforce} from './post_sentry_event_to_salesforce';
+import {
+  postSentryEventToSalesforce,
+  shouldPostEventToSalesforce,
+} from './post_sentry_event_to_salesforce';
 
 exports.postSentryEventToSalesforce = (req: express.Request, res: express.Response<string>) => {
   if (req.method !== 'POST') {
@@ -35,13 +38,13 @@ exports.postSentryEventToSalesforce = (req: express.Request, res: express.Respon
   // Use the request message if SentryEvent.message is unpopulated.
   sentryEvent.message = sentryEvent.message || req.body.message;
   postSentryEventToSalesforce(sentryEvent, req.body.project)
-      .then(() => {
-        res.status(200).send();
-      })
-      .catch((e) => {
-        console.error(e);
-        // Send an OK response to Sentry - they don't need to know about errors with posting to
-        // Salesforce.
-        res.status(200).send();
-      });
+    .then(() => {
+      res.status(200).send();
+    })
+    .catch((e) => {
+      console.error(e);
+      // Send an OK response to Sentry - they don't need to know about errors with posting to
+      // Salesforce.
+      res.status(200).send();
+    });
 };

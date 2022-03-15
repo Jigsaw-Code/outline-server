@@ -63,11 +63,11 @@ Polymer({
           <div class="step-title"><slot name="step-title"></slot></div>
           <div class="step-description"><slot name="step-description"></slot></div>
         </div>
-        <div class="step-action" hidden\$="[[!displayAction]]"><slot name="step-action"></slot></div>
+        <div class="step-action" hidden$="[[!displayAction]]"><slot name="step-action"></slot></div>
       </div>
       <slot></slot>
     </div>
-`,
+  `,
 
   is: 'outline-step-view',
 
@@ -76,5 +76,5 @@ Polymer({
       type: Boolean,
       value: false,
     },
-  }
+  },
 });

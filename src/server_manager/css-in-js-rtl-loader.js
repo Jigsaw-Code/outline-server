@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 // Copyright 2020 The Outline Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,24 +19,28 @@ const rtl = require('postcss-rtl');
 const CSS_PROCESSOR = postcss([rtl()]);
 
 function generateRtlCss(css) {
-  return CSS_PROCESSOR.process(css).css
-      // Replace the generated selectors with Shadow DOM selectors for Polymer compatibility.
+  return (
+    CSS_PROCESSOR.process(css)
+      .css // Replace the generated selectors with Shadow DOM selectors for Polymer compatibility.
       .replace(/\[dir=rtl\]/g, ':host(:dir(rtl))')
       .replace(/\[dir=ltr\]/g, ':host(:dir(ltr))')
       // rtlcss generates [dir] selectors for rules unaffected by directionality; ignore them.
-      .replace(/\[dir\]/g, '');
+      .replace(/\[dir\]/g, '')
+  );
 }
 // This is a Webpack loader that searches for <style> blocks and edits the CSS to support RTL
 // in a Polymer element.
-module.exports = function loader(content, map, meta) {
+module.exports = function loader(content, _map, _meta) {
   const callback = this.async();
   const styleRe = RegExp(/(<style[^>]*>)(\s*[^<\s](.*\n)*?\s*)(<\/style>)/gm);
   try {
-    const newContent =
-        content.replace(styleRe, (match, g1, g2, g3, g4) => `${g1}${generateRtlCss(g2)}${g4}`);
+    const newContent = content.replace(
+      styleRe,
+      (match, g1, g2, g3, g4) => `${g1}${generateRtlCss(g2)}${g4}`
+    );
     callback(null, newContent);
   } catch (e) {
     console.warn(e.toString());
     throw e;
   }
-}
+};

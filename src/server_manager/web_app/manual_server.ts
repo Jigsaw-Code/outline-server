@@ -19,8 +19,10 @@ import {ShadowboxServer} from './shadowbox_server';
 
 class ManualServer extends ShadowboxServer implements server.ManualServer {
   constructor(
-      id: string, private manualServerConfig: server.ManualServerConfig,
-      private forgetCallback: Function) {
+    id: string,
+    private manualServerConfig: server.ManualServerConfig,
+    private forgetCallback: Function
+  ) {
     super(id);
     this.setManagementApiUrl(manualServerConfig.apiUrl);
     // manualServerConfig.certSha256 is expected to be in hex format (install script).
@@ -52,7 +54,7 @@ export class ManualServerRepository implements server.ManualServerRepository {
 
   addServer(config: server.ManualServerConfig): Promise<server.ManualServer> {
     const existingServer = this.findServer(config);
-    if (!!existingServer) {
+    if (existingServer) {
       console.debug('server already added');
       return Promise.resolve(existingServer);
     }
@@ -66,8 +68,8 @@ export class ManualServerRepository implements server.ManualServerRepository {
     return Promise.resolve(this.servers);
   }
 
-  findServer(config: server.ManualServerConfig): server.ManualServer|undefined {
-    return this.servers.find(server => server.getManagementApiUrl() === config.apiUrl);
+  findServer(config: server.ManualServerConfig): server.ManualServer | undefined {
+    return this.servers.find((server) => server.getManagementApiUrl() === config.apiUrl);
   }
 
   private loadServers() {

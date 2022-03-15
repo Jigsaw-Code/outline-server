@@ -30,8 +30,11 @@ dotenv.config({path: path.join(__dirname, '.env')});
 
 const debugMode = process.env.OUTLINE_DEBUG === 'true';
 
-const IMAGES_BASENAME =
-    `${path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), 'server_manager', 'web_app')}`;
+const IMAGES_BASENAME = `${path.join(
+  __dirname.replace('app.asar', 'app.asar.unpacked'),
+  'server_manager',
+  'web_app'
+)}`;
 
 const sentryDsn = process.env.SENTRY_DSN;
 if (sentryDsn) {
@@ -49,7 +52,7 @@ if (sentryDsn) {
         }
       }
       return breadcrumb;
-    }
+    },
   });
 }
 
@@ -72,8 +75,8 @@ function createMainWindow() {
       nodeIntegration: false,
       preload: path.join(__dirname, 'preload.js'),
       nativeWindowOpen: true,
-      webviewTag: false
-    }
+      webviewTag: false,
+    },
   });
   const webAppUrl = getWebAppUrl();
   win.loadURL(webAppUrl);
@@ -81,8 +84,11 @@ function createMainWindow() {
   const handleNavigation = (event: Event, url: string) => {
     try {
       const parsed: URL = new URL(url);
-      if (parsed.protocol === 'http:' || parsed.protocol === 'https:' ||
-          parsed.protocol === 'macappstore:') {
+      if (
+        parsed.protocol === 'http:' ||
+        parsed.protocol === 'https:' ||
+        parsed.protocol === 'macappstore:'
+      ) {
         shell.openExternal(url);
       } else {
         console.warn(`Refusing to open URL with protocol "${parsed.protocol}"`);
@@ -143,25 +149,41 @@ function getWebAppUrl() {
 // status code and inject CORS response headers.
 function workaroundDigitalOceanApiCors() {
   const headersFilter = {urls: ['https://api.digitalocean.com/*']};
-  electron.session.defaultSession.webRequest.onHeadersReceived(headersFilter,
-      (details: electron.OnHeadersReceivedListenerDetails, callback: (response: electron.HeadersReceivedResponse) => void) => {
-        if (details.method === 'OPTIONS') {
-          details.responseHeaders['access-control-allow-origin'] = ['outline://web_app'];
-          if (details.statusCode === 403) {
-            details.statusCode = 200;
-            details.statusLine = 'HTTP/1.1 200';
-            details.responseHeaders['status'] = ['200'];
-            details.responseHeaders['access-control-allow-headers'] = ['*'];
-            details.responseHeaders['access-control-allow-credentials'] = ['true'];
-            details.responseHeaders['access-control-allow-methods'] =
-                ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
-            details.responseHeaders['access-control-expose-headers'] =
-                ['RateLimit-Limit', 'RateLimit-Remaining', 'RateLimit-Reset', 'Total', 'Link'];
-            details.responseHeaders['access-control-max-age'] = ['86400'];
-          }
+  electron.session.defaultSession.webRequest.onHeadersReceived(
+    headersFilter,
+    (
+      details: electron.OnHeadersReceivedListenerDetails,
+      callback: (response: electron.HeadersReceivedResponse) => void
+    ) => {
+      if (details.method === 'OPTIONS') {
+        details.responseHeaders['access-control-allow-origin'] = ['outline://web_app'];
+        if (details.statusCode === 403) {
+          details.statusCode = 200;
+          details.statusLine = 'HTTP/1.1 200';
+          details.responseHeaders['status'] = ['200'];
+          details.responseHeaders['access-control-allow-headers'] = ['*'];
+          details.responseHeaders['access-control-allow-credentials'] = ['true'];
+          details.responseHeaders['access-control-allow-methods'] = [
+            'GET',
+            'POST',
+            'PUT',
+            'PATCH',
+            'DELETE',
+            'OPTIONS',
+          ];
+          details.responseHeaders['access-control-expose-headers'] = [
+            'RateLimit-Limit',
+            'RateLimit-Remaining',
+            'RateLimit-Reset',
+            'Total',
+            'Link',
+          ];
+          details.responseHeaders['access-control-max-age'] = ['86400'];
         }
-        callback(details);
-      });
+      }
+      callback(details);
+    }
+  );
 }
 
 function main() {
@@ -169,9 +191,11 @@ function main() {
   let mainWindow: Electron.BrowserWindow;
 
   // Mark secure to avoid mixed content warnings when loading DigitalOcean pages via https://.
-  electron.protocol.registerSchemesAsPrivileged([{ scheme: 'outline', privileges: { standard: true, secure: true } }]);
+  electron.protocol.registerSchemesAsPrivileged([
+    {scheme: 'outline', privileges: {standard: true, secure: true}},
+  ]);
 
-  if(!app.requestSingleInstanceLock()) {
+  if (!app.requestSingleInstanceLock()) {
     console.log('another instance is running - exiting');
     app.quit();
   }
@@ -196,13 +220,11 @@ function main() {
     // Register a custom protocol so we can use absolute paths in the web app.
     // This also acts as a kind of chroot for the web app, so it cannot access
     // the user's filesystem. Hostnames are ignored.
-    const registered = electron.protocol.registerFileProtocol(
-        'outline',
-        (request, callback) => {
-          const appPath = new URL(request.url).pathname;
-          const filesystemPath = path.join(__dirname, 'server_manager/web_app', appPath);
-          callback(filesystemPath);
-        });
+    const registered = electron.protocol.registerFileProtocol('outline', (request, callback) => {
+      const appPath = new URL(request.url).pathname;
+      const filesystemPath = path.join(__dirname, 'server_manager/web_app', appPath);
+      callback(filesystemPath);
+    });
     if (!registered) {
       throw new Error('Failed to register outline protocol');
     }
@@ -210,7 +232,7 @@ function main() {
   });
 
   const UPDATE_DOWNLOADED_EVENT = 'update-downloaded';
-  autoUpdater.on(UPDATE_DOWNLOADED_EVENT, (ev, info) => {
+  autoUpdater.on(UPDATE_DOWNLOADED_EVENT, (_ev, _info) => {
     if (mainWindow) {
       mainWindow.webContents.send(UPDATE_DOWNLOADED_EVENT);
     }
@@ -228,7 +250,7 @@ function main() {
   });
 
   // Restores the mainWindow if minimized and brings it into focus.
-  ipcMain.on('bring-to-front', (event: IpcEvent) => {
+  ipcMain.on('bring-to-front', (_event: IpcEvent) => {
     if (mainWindow.isMinimized()) {
       mainWindow.restore();
     }

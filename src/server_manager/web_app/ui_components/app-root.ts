@@ -87,9 +87,10 @@ export type ServerListEntry = {
 
 // mixinBehaviors() returns `any`, but the documentation indicates that
 // this is the actual return type.
-const polymerElementWithLocalize =
-    mixinBehaviors(AppLocalizeBehavior, PolymerElement) as
-        new () => PolymerElement&LegacyElementMixin&AppLocalizeBehavior;
+const polymerElementWithLocalize = mixinBehaviors(
+  AppLocalizeBehavior,
+  PolymerElement
+) as new () => PolymerElement & LegacyElementMixin & AppLocalizeBehavior;
 
 export class AppRoot extends polymerElementWithLocalize {
   static get template() {
@@ -477,58 +478,117 @@ export class AppRoot extends polymerElementWithLocalize {
   static expandedServersTemplate() {
     return html`
       <!-- DigitalOcean servers -->
-      <div class="servers-section" hidden\$="[[!digitalOceanAccount]]">
+      <div class="servers-section" hidden$="[[!digitalOceanAccount]]">
         <div class="servers-header">
           <span>[[localize('servers-digitalocean')]]</span>
-          <paper-menu-button horizontal-align="left" class="" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
+          <paper-menu-button
+            horizontal-align="left"
+            class=""
+            close-on-activate=""
+            no-animations=""
+            dynamic-align=""
+            no-overlap=""
+          >
             <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
             <div class="do-overflow-menu" slot="dropdown-content">
               <h4>[[localize('digitalocean-disconnect-account')]]</h4>
-              <div class="account-info"><img src="images/digital_ocean_logo.svg">[[digitalOceanAccount.name]]</div>
-              <div class="sign-out-button" on-tap="_digitalOceanSignOutTapped">[[localize('disconnect')]]</div>
+              <div class="account-info">
+                <img src="images/digital_ocean_logo.svg" />[[digitalOceanAccount.name]]
+              </div>
+              <div class="sign-out-button" on-tap="_digitalOceanSignOutTapped">
+                [[localize('disconnect')]]
+              </div>
             </div>
           </paper-menu-button>
         </div>
         <div class="servers-container">
-          <template is="dom-repeat" items="[[serverList]]" as="server" filter="[[_accountServerFilter(digitalOceanAccount)]]" sort="_sortServersByName">
-            <div class\$="server [[_computeServerClasses(selectedServerId, server)]]" data-server\$="[[server]]" on-tap="_showServer">
-              <img class="server-icon" src\$="images/[[_computeServerImage(selectedServerId, server)]]">
+          <template
+            is="dom-repeat"
+            items="[[serverList]]"
+            as="server"
+            filter="[[_accountServerFilter(digitalOceanAccount)]]"
+            sort="_sortServersByName"
+          >
+            <div
+              class$="server [[_computeServerClasses(selectedServerId, server)]]"
+              data-server$="[[server]]"
+              on-tap="_showServer"
+            >
+              <img
+                class="server-icon"
+                src$="images/[[_computeServerImage(selectedServerId, server)]]"
+              />
               <span>[[server.name]]</span>
             </div>
           </template>
         </div>
       </div>
       <!-- GCP servers -->
-      <div class="servers-section" hidden\$="[[!gcpAccount]]">
+      <div class="servers-section" hidden$="[[!gcpAccount]]">
         <div class="servers-header">
           <span>[[localize('servers-gcp')]]</span>
-          <paper-menu-button horizontal-align="left" class="" close-on-activate="" no-animations="" dynamic-align="" no-overlap="">
+          <paper-menu-button
+            horizontal-align="left"
+            class=""
+            close-on-activate=""
+            no-animations=""
+            dynamic-align=""
+            no-overlap=""
+          >
             <paper-icon-button icon="more-vert" slot="dropdown-trigger"></paper-icon-button>
             <div class="do-overflow-menu" slot="dropdown-content">
               <h4>[[localize('gcp-disconnect-account')]]</h4>
-              <div class="account-info"><img src="images/gcp-logo.svg">[[gcpAccount.name]]</div>
-              <div class="sign-out-button" on-tap="_gcpSignOutTapped">[[localize('disconnect')]]</div>
+              <div class="account-info"><img src="images/gcp-logo.svg" />[[gcpAccount.name]]</div>
+              <div class="sign-out-button" on-tap="_gcpSignOutTapped">
+                [[localize('disconnect')]]
+              </div>
             </div>
           </paper-menu-button>
         </div>
         <div class="servers-container">
-          <template is="dom-repeat" items="[[serverList]]" as="server" filter="[[_accountServerFilter(gcpAccount)]]" sort="_sortServersByName">
-            <div class\$="server [[_computeServerClasses(selectedServerId, server)]]" data-server\$="[[server]]" on-tap="_showServer">
-              <img class="server-icon" src\$="images/[[_computeServerImage(selectedServerId, server)]]">
+          <template
+            is="dom-repeat"
+            items="[[serverList]]"
+            as="server"
+            filter="[[_accountServerFilter(gcpAccount)]]"
+            sort="_sortServersByName"
+          >
+            <div
+              class$="server [[_computeServerClasses(selectedServerId, server)]]"
+              data-server$="[[server]]"
+              on-tap="_showServer"
+            >
+              <img
+                class="server-icon"
+                src$="images/[[_computeServerImage(selectedServerId, server)]]"
+              />
               <span>[[server.name]]</span>
             </div>
           </template>
         </div>
       </div>
       <!-- Manual servers -->
-      <div class="servers-section" hidden\$="[[!_hasManualServers(serverList)]]">
+      <div class="servers-section" hidden$="[[!_hasManualServers(serverList)]]">
         <div class="servers-header">
           <span>[[localize('servers-manual')]]</span>
         </div>
         <div class="servers-container">
-          <template is="dom-repeat" items="[[serverList]]" as="server" filter="_isServerManual" sort="_sortServersByName">
-            <div class\$="server [[_computeServerClasses(selectedServerId, server)]]" data-server\$="[[server]]" on-tap="_showServer">
-              <img class="server-icon" src\$="images/[[_computeServerImage(selectedServerId, server)]]">
+          <template
+            is="dom-repeat"
+            items="[[serverList]]"
+            as="server"
+            filter="_isServerManual"
+            sort="_sortServersByName"
+          >
+            <div
+              class$="server [[_computeServerClasses(selectedServerId, server)]]"
+              data-server$="[[server]]"
+              on-tap="_showServer"
+            >
+              <img
+                class="server-icon"
+                src$="images/[[_computeServerImage(selectedServerId, server)]]"
+              />
               <span>[[server.name]]</span>
             </div>
           </template>
@@ -540,29 +600,68 @@ export class AppRoot extends polymerElementWithLocalize {
   static minimizedServersTemplate() {
     return html`
       <!-- DigitalOcean servers -->
-      <div class="side-bar-section servers-section" hidden\$="[[!digitalOceanAccount]]">
-        <img class="provider-icon" src="images/do_white_logo.svg">
-        <template is="dom-repeat" items="[[serverList]]" as="server" filter="[[_accountServerFilter(digitalOceanAccount)]]" sort="_sortServersByName">
-          <div class\$="server [[_computeServerClasses(selectedServerId, server)]]" data-server\$="[[server]]" on-tap="_showServer">
-            <img class="server-icon" src\$="images/[[_computeServerImage(selectedServerId, server)]]">
+      <div class="side-bar-section servers-section" hidden$="[[!digitalOceanAccount]]">
+        <img class="provider-icon" src="images/do_white_logo.svg" />
+        <template
+          is="dom-repeat"
+          items="[[serverList]]"
+          as="server"
+          filter="[[_accountServerFilter(digitalOceanAccount)]]"
+          sort="_sortServersByName"
+        >
+          <div
+            class$="server [[_computeServerClasses(selectedServerId, server)]]"
+            data-server$="[[server]]"
+            on-tap="_showServer"
+          >
+            <img
+              class="server-icon"
+              src$="images/[[_computeServerImage(selectedServerId, server)]]"
+            />
           </div>
         </template>
       </div>
       <!-- GCP servers -->
-      <div class="side-bar-section servers-section" hidden\$="[[!gcpAccount]]">
-        <img class="provider-icon" src="images/gcp-logo.svg">
-        <template is="dom-repeat" items="[[serverList]]" as="server" filter="[[_accountServerFilter(gcpAccount)]]" sort="_sortServersByName">
-          <div class\$="server [[_computeServerClasses(selectedServerId, server)]]" data-server\$="[[server]]" on-tap="_showServer">
-            <img class="server-icon" src\$="images/[[_computeServerImage(selectedServerId, server)]]">
+      <div class="side-bar-section servers-section" hidden$="[[!gcpAccount]]">
+        <img class="provider-icon" src="images/gcp-logo.svg" />
+        <template
+          is="dom-repeat"
+          items="[[serverList]]"
+          as="server"
+          filter="[[_accountServerFilter(gcpAccount)]]"
+          sort="_sortServersByName"
+        >
+          <div
+            class$="server [[_computeServerClasses(selectedServerId, server)]]"
+            data-server$="[[server]]"
+            on-tap="_showServer"
+          >
+            <img
+              class="server-icon"
+              src$="images/[[_computeServerImage(selectedServerId, server)]]"
+            />
           </div>
         </template>
       </div>
       <!-- Manual servers -->
-      <div class="side-bar-section servers-section" hidden\$="[[!_hasManualServers(serverList)]]">
-        <img class="provider-icon" src="images/cloud.svg">
-        <template is="dom-repeat" items="[[serverList]]" as="server" filter="_isServerManual" sort="_sortServersByName">
-          <div class\$="server [[_computeServerClasses(selectedServerId, server)]]" data-server\$="[[server]]" on-tap="_showServer">
-            <img class="server-icon" src\$="images/[[_computeServerImage(selectedServerId, server)]]">
+      <div class="side-bar-section servers-section" hidden$="[[!_hasManualServers(serverList)]]">
+        <img class="provider-icon" src="images/cloud.svg" />
+        <template
+          is="dom-repeat"
+          items="[[serverList]]"
+          as="server"
+          filter="_isServerManual"
+          sort="_sortServersByName"
+        >
+          <div
+            class$="server [[_computeServerClasses(selectedServerId, server)]]"
+            data-server$="[[server]]"
+            on-tap="_showServer"
+          >
+            <img
+              class="server-icon"
+              src$="images/[[_computeServerImage(selectedServerId, server)]]"
+            />
           </div>
         </template>
       </div>
@@ -621,7 +720,9 @@ export class AppRoot extends polymerElementWithLocalize {
 
     this.addEventListener('RegionSelected', this.handleRegionSelected);
     this.addEventListener(
-        'SetUpGenericCloudProviderRequested', this.handleSetUpGenericCloudProviderRequested);
+      'SetUpGenericCloudProviderRequested',
+      this.handleSetUpGenericCloudProviderRequested
+    );
     this.addEventListener('SetUpAwsRequested', this.handleSetUpAwsRequested);
     this.addEventListener('SetUpGcpRequested', this.handleSetUpGcpRequested);
     this.addEventListener('ManualServerEntryCancelled', this.handleManualCancelled);
@@ -640,12 +741,11 @@ export class AppRoot extends polymerElementWithLocalize {
       // resolve or reject the Promise.  Note that they need to clean up whichever event handler
       // didn't fire so we don't leak it, which could cause future language changes to not work
       // properly by triggering old event listeners.
-      let successHandler: () => void, failureHandler: () => void;
-      successHandler = () => {
+      const successHandler = () => {
         this.removeEventListener('app-localize-resources-error', failureHandler);
         resolve();
       };
-      failureHandler = () => {
+      const failureHandler = () => {
         this.removeEventListener('app-localize-resources-loaded', successHandler);
         reject(new Error(`Failed to load resources for language ${language}`));
       };
@@ -662,7 +762,7 @@ export class AppRoot extends polymerElementWithLocalize {
    * Sets the language and direction for the application
    * @param language The ISO language code for the new language, e.g. 'en'.
    */
-  async setLanguage(language: string, direction: 'rtl'|'ltr') {
+  async setLanguage(language: string, direction: 'rtl' | 'ltr') {
     await this.loadLanguageResources(language);
 
     const alignDir = direction === 'ltr' ? 'left' : 'right';
@@ -751,7 +851,7 @@ export class AppRoot extends polymerElementWithLocalize {
     this.handleManualServerSelected('gcp');
   }
 
-  handleManualServerSelected(cloudProvider: 'generic'|'aws'|'gcp') {
+  handleManualServerSelected(cloudProvider: 'generic' | 'aws' | 'gcp') {
     const manualEntry = this.$.manualEntry as OutlineManualServerEntry;
     manualEntry.clear();
     manualEntry.cloudProvider = cloudProvider;
@@ -800,37 +900,41 @@ export class AppRoot extends polymerElementWithLocalize {
   showConnectivityDialog(cb: (retry: boolean) => void) {
     const dialogTitle = this.localize('error-connectivity-title');
     const dialogText = this.localize('error-connectivity');
-    this.showModalDialog(dialogTitle, dialogText, [this.localize('digitalocean-disconnect'), this.localize('retry')])
-        .then(clickedButtonIndex => {
-          cb(clickedButtonIndex === 1);  // pass true if user clicked retry
-        });
+    this.showModalDialog(dialogTitle, dialogText, [
+      this.localize('digitalocean-disconnect'),
+      this.localize('retry'),
+    ]).then((clickedButtonIndex) => {
+      cb(clickedButtonIndex === 1); // pass true if user clicked retry
+    });
   }
 
-  getConfirmation(title: string, text: string, confirmButtonText: string,
-      continueFunc: Function) {
-    this.showModalDialog(title, text, [this.localize('cancel'), confirmButtonText])
-        .then(clickedButtonIndex => {
-          if (clickedButtonIndex === 1) {
-            // user clicked to confirm.
-            continueFunc();
-          }
-        });
+  getConfirmation(title: string, text: string, confirmButtonText: string, continueFunc: Function) {
+    this.showModalDialog(title, text, [this.localize('cancel'), confirmButtonText]).then(
+      (clickedButtonIndex) => {
+        if (clickedButtonIndex === 1) {
+          // user clicked to confirm.
+          continueFunc();
+        }
+      }
+    );
   }
 
   showManualServerError(errorTitle: string, errorText: string) {
-    this.showModalDialog(errorTitle, errorText, [this.localize('cancel'), this.localize('retry')])
-        .then(clickedButtonIndex => {
-          const manualEntry = this.$.manualEntry as OutlineManualServerEntry;
-          if (clickedButtonIndex === 1) {
-            manualEntry.retryTapped();
-          } else {
-            manualEntry.cancelTapped();
-          }
-        });
+    this.showModalDialog(errorTitle, errorText, [
+      this.localize('cancel'),
+      this.localize('retry'),
+    ]).then((clickedButtonIndex) => {
+      const manualEntry = this.$.manualEntry as OutlineManualServerEntry;
+      if (clickedButtonIndex === 1) {
+        manualEntry.retryTapped();
+      } else {
+        manualEntry.cancelTapped();
+      }
+    });
   }
 
   _hasManualServers(serverList: ServerListEntry[]) {
-    return serverList.filter(server => !server.accountId).length > 0;
+    return serverList.filter((server) => !server.accountId).length > 0;
   }
 
   _userAcceptedTosChanged(userAcceptedTos: boolean) {
@@ -893,18 +997,25 @@ export class AppRoot extends polymerElementWithLocalize {
     (this.$.shareDialog as OutlineShareDialog).open(accessKey, s3Url);
   }
 
-  openPerKeyDataLimitDialog(keyName: string, activeDataLimitBytes: number,
-      onDataLimitSet: (dataLimitBytes: number) => Promise<boolean>,
-      onDataLimitRemoved: () => Promise<boolean>) {
+  openPerKeyDataLimitDialog(
+    keyName: string,
+    activeDataLimitBytes: number,
+    onDataLimitSet: (dataLimitBytes: number) => Promise<boolean>,
+    onDataLimitRemoved: () => Promise<boolean>
+  ) {
     // attach listeners here
     (this.$.perKeyDataLimitDialog as OutlinePerKeyDataLimitDialog).open(
-        keyName, activeDataLimitBytes, onDataLimitSet, onDataLimitRemoved);
+      keyName,
+      activeDataLimitBytes,
+      onDataLimitSet,
+      onDataLimitRemoved
+    );
   }
 
   openGetConnectedDialog(inviteUrl: string) {
     const dialog = this.$.getConnectedDialog as PaperDialogElement;
     if (dialog.children.length > 1) {
-      return;  // The iframe is already loading.
+      return; // The iframe is already loading.
     }
     // Reset the iframe's state, by replacing it with a newly constructed
     // iframe. Unfortunately the location.reload API does not work in our case due to
@@ -1011,7 +1122,7 @@ export class AppRoot extends polymerElementWithLocalize {
   }
 
   _serverViewList(serverList: ServerListEntry[]): ServerViewListEntry[] {
-    return serverList.map(entry => ({
+    return serverList.map((entry) => ({
       id: entry.id,
       name: entry.name,
       cloudId: this._getCloudId(entry.accountId),
@@ -1022,7 +1133,7 @@ export class AppRoot extends polymerElementWithLocalize {
     return !!selectedServerId && selectedServerId === server.id;
   }
 
-  _showServer(event: Event&{ model: {server: ServerListEntry; }; }) {
+  _showServer(event: Event & {model: {server: ServerListEntry}}) {
     const server = event.model.server;
     this.fire('ShowServerRequested', {displayServerId: server.id});
     this.maybeCloseDrawer();

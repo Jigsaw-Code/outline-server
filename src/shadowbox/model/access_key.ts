@@ -62,7 +62,7 @@ export interface AccessKeyRepository {
   // Apply the specified update to the specified access key. Throws on failure.
   renameAccessKey(id: AccessKeyId, name: string): void;
   // Gets the metrics id for a given Access Key.
-  getMetricsId(id: AccessKeyId): AccessKeyMetricsId|undefined;
+  getMetricsId(id: AccessKeyId): AccessKeyMetricsId | undefined;
   // Sets a data transfer limit for all access keys.
   setDefaultDataLimit(limit: DataLimit): void;
   // Removes the access key data transfer limit.

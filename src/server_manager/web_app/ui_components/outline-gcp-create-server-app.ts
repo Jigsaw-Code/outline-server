@@ -31,7 +31,6 @@ import {OutlineRegionPicker} from './outline-region-picker-step';
 import {filterOptions, getShortName} from '../location_formatting';
 import {CloudLocation} from '../../model/location';
 
-
 @customElement('outline-gcp-create-server-app')
 export class GcpCreateServerApp extends LitElement {
   @property({type: Function}) localize: (msgId: string, ...params: string[]) => string;
@@ -49,92 +48,95 @@ export class GcpCreateServerApp extends LitElement {
 
   static get styles() {
     return [
-      COMMON_STYLES, css`
-      :host {
-        --paper-input-container-input-color: var(--medium-gray);
-      }
-      .container {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        height: 100%;
-        align-items: center;
-        padding: 156px 0;
-        font-size: 14px;
-      }
-      .card {
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        justify-content: space-between;
-        margin: 24px 0;
-        background: var(--background-contrast-color);
-        box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.14), 0 2px 2px 0 rgba(0, 0, 0, 0.12), 0 1px 3px 0 rgba(0, 0, 0, 0.2);
-        border-radius: 2px;
-      }
-      .section {
-        padding: 24px 12px;
-        color: var(--light-gray);
-        background: var(--background-contrast-color);
-        border-radius: 2px;
-      }
-      .section:not(:first-child) {
-        margin-top: 8px;
-      }
-      .section-header {
-        padding: 0 6px 0;
-        display: flex;
-      }
-      .section-content {
-        padding: 0 48px;
-      }
-      .instructions {
-        font-size: 16px;
-        line-height: 26px;
-        margin-left: 16px;
-        flex: 2;
-      }
-      .stepcircle {
-        height: 26px;
-        width: 26px;
-        font-size: 14px;
-        border-radius: 50%;
-        float: left;
-        vertical-align: middle;
-        color: #000;
-        background-color: #fff;
-        margin: auto;
-        text-align: center;
-        line-height: 26px;
-      }
-      @media (min-width: 1025px) {
-        paper-card {
-          /* Set min with for the paper-card to grow responsively. */
-          min-width: 600px;
+      COMMON_STYLES,
+      css`
+        :host {
+          --paper-input-container-input-color: var(--medium-gray);
         }
-      }
-      .card p {
-        color: var(--light-gray);
-        width: 100%;
-        text-align: center;
-      }
-      #projectName {
-        width: 250px;
-      }
-      #billingAccount {
-        width: 250px;
-      }
-      paper-button {
-        background: var(--primary-green);
-        color: var(--light-gray);
-        width: 100%;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 2px;
-      }
-      paper-button[disabled] {
-        color: var(--medium-gray);
-        background: transparent;
-      }`
+        .container {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          height: 100%;
+          align-items: center;
+          padding: 156px 0;
+          font-size: 14px;
+        }
+        .card {
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+          justify-content: space-between;
+          margin: 24px 0;
+          background: var(--background-contrast-color);
+          box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.14), 0 2px 2px 0 rgba(0, 0, 0, 0.12),
+            0 1px 3px 0 rgba(0, 0, 0, 0.2);
+          border-radius: 2px;
+        }
+        .section {
+          padding: 24px 12px;
+          color: var(--light-gray);
+          background: var(--background-contrast-color);
+          border-radius: 2px;
+        }
+        .section:not(:first-child) {
+          margin-top: 8px;
+        }
+        .section-header {
+          padding: 0 6px 0;
+          display: flex;
+        }
+        .section-content {
+          padding: 0 48px;
+        }
+        .instructions {
+          font-size: 16px;
+          line-height: 26px;
+          margin-left: 16px;
+          flex: 2;
+        }
+        .stepcircle {
+          height: 26px;
+          width: 26px;
+          font-size: 14px;
+          border-radius: 50%;
+          float: left;
+          vertical-align: middle;
+          color: #000;
+          background-color: #fff;
+          margin: auto;
+          text-align: center;
+          line-height: 26px;
+        }
+        @media (min-width: 1025px) {
+          paper-card {
+            /* Set min with for the paper-card to grow responsively. */
+            min-width: 600px;
+          }
+        }
+        .card p {
+          color: var(--light-gray);
+          width: 100%;
+          text-align: center;
+        }
+        #projectName {
+          width: 250px;
+        }
+        #billingAccount {
+          width: 250px;
+        }
+        paper-button {
+          background: var(--primary-green);
+          color: var(--light-gray);
+          width: 100%;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 2px;
+        }
+        paper-button[disabled] {
+          color: var(--medium-gray);
+          background: transparent;
+        }
+      `,
     ];
   }
 
@@ -146,100 +148,114 @@ export class GcpCreateServerApp extends LitElement {
         return this.renderProjectSetup();
       case 'regionPicker':
         return this.renderRegionPicker();
-      default: {
-      }
+      default:
     }
   }
 
   private renderBillingAccountSetup() {
     const openLink = '<a href="https://console.cloud.google.com/billing">';
     const closeLink = '</a>';
-    return html`
-      <outline-step-view id="billingAccountSetup" display-action="">
-        <span slot="step-title">${this.localize('gcp-billing-title')}</span>
-        <span slot="step-description">
-          ${unsafeHTML(this.localize('gcp-billing-description', 'openLink', openLink, 'closeLink', closeLink))}
-        </span>
-        <span slot="step-action">
-          <paper-button id="billingPageAction" @tap="${this.handleBillingVerificationNextTap}">
-            ${this.localize('gcp-billing-action')}
-          </paper-button>
-        </span>
-        <paper-card class="card">
-          <div class="container">
-            <img src="images/do_oauth_billing.svg">
-            <p>${unsafeHTML(this.localize('gcp-billing-body', 'openLink', openLink, 'closeLink', closeLink))}</p>
-          </div>
-          <paper-progress indeterminate></paper-progress>
-        </paper-card>
-      </outline-step-view>`;
+    return html` <outline-step-view id="billingAccountSetup" display-action="">
+      <span slot="step-title">${this.localize('gcp-billing-title')}</span>
+      <span slot="step-description">
+        ${unsafeHTML(
+          this.localize('gcp-billing-description', 'openLink', openLink, 'closeLink', closeLink)
+        )}
+      </span>
+      <span slot="step-action">
+        <paper-button id="billingPageAction" @tap="${this.handleBillingVerificationNextTap}">
+          ${this.localize('gcp-billing-action')}
+        </paper-button>
+      </span>
+      <paper-card class="card">
+        <div class="container">
+          <img src="images/do_oauth_billing.svg" />
+          <p>
+            ${unsafeHTML(
+              this.localize('gcp-billing-body', 'openLink', openLink, 'closeLink', closeLink)
+            )}
+          </p>
+        </div>
+        <paper-progress indeterminate></paper-progress>
+      </paper-card>
+    </outline-step-view>`;
   }
 
   private renderProjectSetup() {
-    return html`        
-      <outline-step-view id="projectSetup" display-action="">
-        <span slot="step-title">Create your Google Cloud Platform project.</span>
-        <span slot="step-description">This will create a new project on your GCP account to hold your Outline servers.</span>
-        <span slot="step-action">
-          ${this.isProjectBeingCreated ?
-            // TODO: Support canceling server creation.
-            html`<paper-button disabled="true">IN PROGRESS...</paper-button>` :
-            html`<paper-button
-                id="createServerButton"
-                @tap="${this.handleProjectSetupNextTap}"
-                ?disabled="${
-      !this.isProjectSetupNextEnabled(this.selectedProjectId, this.selectedBillingAccountId)}">
+    return html` <outline-step-view id="projectSetup" display-action="">
+      <span slot="step-title">Create your Google Cloud Platform project.</span>
+      <span slot="step-description"
+        >This will create a new project on your GCP account to hold your Outline servers.</span
+      >
+      <span slot="step-action">
+        ${this.isProjectBeingCreated
+          ? // TODO: Support canceling server creation.
+            html`<paper-button disabled="true">IN PROGRESS...</paper-button>`
+          : html`<paper-button
+              id="createServerButton"
+              @tap="${this.handleProjectSetupNextTap}"
+              ?disabled="${!this.isProjectSetupNextEnabled(
+                this.selectedProjectId,
+                this.selectedBillingAccountId
+              )}"
+            >
               CREATE PROJECT
             </paper-button>`}
-        </span>
-          <div class="section">
-            <div class="section-header">
-              <span class="stepcircle">1</span>
-              <div class="instructions">
-                Name your new Google Cloud Project
-              </div>
-            </div>
-            <div class="section-content">
-              <!-- TODO: Make readonly if project already exists -->
-              <paper-input id="projectName" value="${this.selectedProjectId}"
-                  label="Project ID" always-float-label="" maxlength="100" @value-changed="${
-        this.onProjectIdChanged}"></paper-input>
-            </div>
-          </div>
-          
-          <div class="section">
-            <div class="section-header">
-              <span class="stepcircle">2</span>
-              <div class="instructions">
-                Choose your preferred billing method for this project
-              </div>
-            </div>
-            <div class="section-content">
-              <paper-dropdown-menu id="billingAccount" no-label-float="" horizontal-align="left">
-                <paper-listbox slot="dropdown-content" selected="${
-        this.selectedBillingAccountId}" attr-for-selected="name" @selected-changed="${
-        this.onBillingAccountSelected}">
-                ${this.billingAccounts.map(billingAccount => {
-      return html`<paper-item name="${billingAccount.id}">${billingAccount.name}</paper-item>`;
-    })}
-                </paper-listbox>
-              </paper-dropdown-menu>
-            </div>
-          </div>
-          ${
-        this.isProjectBeingCreated ?
-        html`<paper-progress indeterminate="" class="slow"></paper-progress>` :
-        ''}
-      </outline-step-view>`;
+      </span>
+      <div class="section">
+        <div class="section-header">
+          <span class="stepcircle">1</span>
+          <div class="instructions">Name your new Google Cloud Project</div>
+        </div>
+        <div class="section-content">
+          <!-- TODO: Make readonly if project already exists -->
+          <paper-input
+            id="projectName"
+            value="${this.selectedProjectId}"
+            label="Project ID"
+            always-float-label=""
+            maxlength="100"
+            @value-changed="${this.onProjectIdChanged}"
+          ></paper-input>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <span class="stepcircle">2</span>
+          <div class="instructions">Choose your preferred billing method for this project</div>
+        </div>
+        <div class="section-content">
+          <paper-dropdown-menu id="billingAccount" no-label-float="" horizontal-align="left">
+            <paper-listbox
+              slot="dropdown-content"
+              selected="${this.selectedBillingAccountId}"
+              attr-for-selected="name"
+              @selected-changed="${this.onBillingAccountSelected}"
+            >
+              ${this.billingAccounts.map((billingAccount) => {
+                return html`<paper-item name="${billingAccount.id}"
+                  >${billingAccount.name}</paper-item
+                >`;
+              })}
+            </paper-listbox>
+          </paper-dropdown-menu>
+        </div>
+      </div>
+      ${this.isProjectBeingCreated
+        ? html`<paper-progress indeterminate="" class="slow"></paper-progress>`
+        : ''}
+    </outline-step-view>`;
   }
 
   private renderRegionPicker() {
-    return html`
-      <outline-region-picker-step id="regionPicker"
-        .localize=${this.localize}
-        .language=${this.language}
-        @RegionSelected="${this.onRegionSelected}">  
-      </outline-region-picker-step>`;
+    return html` <outline-region-picker-step
+      id="regionPicker"
+      .localize=${this.localize}
+      .language=${this.language}
+      @RegionSelected="${this.onRegionSelected}"
+    >
+    </outline-region-picker-step>`;
   }
 
   async start(account: Account): Promise<void> {
@@ -274,9 +290,7 @@ export class GcpCreateServerApp extends LitElement {
   }
 
   private async isProjectHealthy(): Promise<boolean> {
-    return this.project ?
-        await this.account.isProjectHealthy(this.project.id)
-        : false;
+    return this.project ? await this.account.isProjectHealthy(this.project.id) : false;
   }
 
   disconnectedCallback() {
@@ -348,8 +362,10 @@ export class GcpCreateServerApp extends LitElement {
     this.isProjectBeingCreated = true;
     try {
       if (!this.project) {
-        this.project =
-            await this.account.createProject(this.selectedProjectId, this.selectedBillingAccountId);
+        this.project = await this.account.createProject(
+          this.selectedProjectId,
+          this.selectedBillingAccountId
+        );
       } else {
         await this.account.repairProject(this.project.id, this.selectedBillingAccountId);
       }
@@ -373,11 +389,11 @@ export class GcpCreateServerApp extends LitElement {
     // `this.regionPicker` is null after `this.currentPage`, and is only populated
     // asynchronously.
     this.regionPicker = this.shadowRoot.querySelector('#regionPicker') as OutlineRegionPicker;
-    this.regionPicker.options = filterOptions(zoneOptions).map(option => ({
+    this.regionPicker.options = filterOptions(zoneOptions).map((option) => ({
       markedBestValue: isInFreeTier(option.cloudLocation),
-      ...option
+      ...option,
     }));
- }
+  }
 
   private onProjectIdChanged(event: CustomEvent) {
     this.selectedProjectId = event.detail.value;
@@ -392,8 +408,7 @@ export class GcpCreateServerApp extends LitElement {
     this.regionPicker.isServerBeingCreated = true;
     const zone = event.detail.selectedLocation as Zone;
     const name = this.makeLocalizedServerName(zone);
-    const server =
-        await this.account.createServer(this.project.id, name, zone);
+    const server = await this.account.createServer(this.project.id, name, zone);
     const params = {bubbles: true, composed: true, detail: {server}};
     const serverCreatedEvent = new CustomEvent('GcpServerCreated', params);
     this.dispatchEvent(serverCreatedEvent);

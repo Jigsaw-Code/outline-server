@@ -1,3 +1,7 @@
+# -- DEPRECATED: FOR REFERENCE ONLY --
+# Due to security issues with travis, we are in the process
+# of migrating to github actions: https://github.com/features/actions.
+
 language: node_js
 
 node_js:
@@ -69,7 +73,7 @@ jobs:
       addons:
         apt:
           packages:
-          - rpm
+            - rpm
       script: npm run action server_manager/electron_app/release_linux
 
     - stage: "Manager Release"

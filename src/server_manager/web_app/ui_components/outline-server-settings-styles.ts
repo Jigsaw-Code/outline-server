@@ -19,8 +19,7 @@ import {html} from '@polymer/polymer/lib/utils/html-tag';
 //  outline-server-settings-styles
 //  This file holds common styles for outline-server-settings and outline-validated-input
 const styleElement = document.createElement('dom-module');
-styleElement.appendChild(html`
-<style>
+styleElement.appendChild(html` <style>
   /* Skip processing these with postcss-rtl as it incorrectly parses the border-color
       in the paper-input-container-underline-focus mixin.
       https://github.com/vkalinichev/postcss-rtl/issues/50 */
