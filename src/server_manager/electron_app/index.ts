@@ -20,7 +20,6 @@ import * as path from 'path';
 import {URL, URLSearchParams} from 'url';
 
 import * as menu from './menu';
-import {HostAnchor} from './util';
 
 const app = electron.app;
 const ipcMain = electron.ipcMain;

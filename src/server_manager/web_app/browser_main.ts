@@ -59,5 +59,4 @@
   console.info(`Requested bringToFront`);
 };
 
-import {HostAnchor} from '../electron_app/util';
 import './main';

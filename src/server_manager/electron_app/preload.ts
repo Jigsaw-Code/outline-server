@@ -18,7 +18,7 @@ import {URL} from 'url';
 
 import * as digitalocean_oauth from './digitalocean_oauth';
 import * as gcp_oauth from './gcp_oauth';
-import {HostAnchor, redactManagerUrl} from './util';
+import {redactManagerUrl} from './util';
 
 // This file is run in the renderer process *before* nodeIntegration is disabled.
 //
