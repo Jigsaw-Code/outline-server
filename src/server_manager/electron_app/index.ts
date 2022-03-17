@@ -20,6 +20,7 @@ import * as path from 'path';
 import {URL, URLSearchParams} from 'url';
 
 import * as menu from './menu';
+import {HostAnchor} from './util';
 
 const app = electron.app;
 const ipcMain = electron.ipcMain;
@@ -239,14 +240,20 @@ function main() {
   });
 
   // Handle request to trust the certificate from the renderer process.
-  const trustedFingerprints = new Set<string>();
-  ipcMain.on('trust-certificate', (event: IpcEvent, fingerprint: string) => {
-    trustedFingerprints.add(`sha256/${fingerprint}`);
+  const trustedFingerprints = new Map<string, string>();
+  ipcMain.on('trust-certificate', (event: IpcEvent, anchor: HostAnchor) => {
+    trustedFingerprints.set(anchor.host, `sha256/${anchor.fingerprint}`);
     event.returnValue = true;
   });
   app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
     event.preventDefault();
-    callback(trustedFingerprints.has(certificate.fingerprint));
+    try {
+      const parsed = new URL(url);
+      callback(trustedFingerprints.get(parsed.host) === certificate.fingerprint);
+    } catch (e) {
+      console.error(e);
+      callback(false);
+    }
   });
 
   // Restores the mainWindow if minimized and brings it into focus.

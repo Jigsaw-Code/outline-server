@@ -18,7 +18,7 @@ import {URL} from 'url';
 
 import * as digitalocean_oauth from './digitalocean_oauth';
 import * as gcp_oauth from './gcp_oauth';
-import {redactManagerUrl} from './util';
+import {HostAnchor, redactManagerUrl} from './util';
 
 // This file is run in the renderer process *before* nodeIntegration is disabled.
 //
@@ -47,8 +47,8 @@ if (sentryDsn) {
   });
 }
 
-contextBridge.exposeInMainWorld('trustCertificate', (fingerprint: string) => {
-  return ipcRenderer.sendSync('trust-certificate', fingerprint);
+contextBridge.exposeInMainWorld('trustCertificate', (anchor: HostAnchor) => {
+  return ipcRenderer.sendSync('trust-certificate', anchor);
 });
 
 contextBridge.exposeInMainWorld('openImage', (basename: string) => {

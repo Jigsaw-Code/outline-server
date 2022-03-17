@@ -14,7 +14,12 @@
 
 // Functions made available to the renderer process via preload.ts.
 
-declare function trustCertificate(fingerprint: string): boolean;
+interface HostAnchor {
+  host: string;
+  fingerprint: string;
+}
+
+declare function trustCertificate(anchor: HostAnchor): boolean;
 declare function openImage(basename: string): void;
 declare function onUpdateDownloaded(callback: () => void): void;
 

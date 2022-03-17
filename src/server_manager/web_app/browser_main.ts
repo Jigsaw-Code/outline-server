@@ -13,8 +13,8 @@
 // limitations under the License.
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).trustCertificate = (fingerprint: string) => {
-  console.log(`Requested to trust certificate with fingerprint ${fingerprint}`);
+(window as any).trustCertificate = (anchor: HostAnchor) => {
+  console.log(`Requested to trust certificate: ${anchor}`);
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,4 +59,5 @@
   console.info(`Requested bringToFront`);
 };
 
+import {HostAnchor} from '../electron_app/util';
 import './main';

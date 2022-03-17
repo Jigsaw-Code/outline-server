@@ -25,3 +25,9 @@ import {URL} from 'url';
 export function redactManagerUrl(s: string) {
   return new URL(s).pathname.split('/').slice(2).join('/');
 }
+
+/** Represents an additional trust anchor for a single host. */
+export interface HostAnchor {
+  host: string;
+  fingerprint: string;
+}
