@@ -187,7 +187,7 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
       const apiAddress = this.getManagementApiAddress();
       const parsed = new URL(apiAddress);
       // Loaded both the cert and url without exceptions, they can be set.
-      trustCertificate({host: parsed.host, fingerprint: certificateFingerprint});
+      trustCertificate(parsed.host, certificateFingerprint);
       this.setManagementApiUrl(apiAddress);
       return true;
     } catch (e) {

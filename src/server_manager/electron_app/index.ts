@@ -239,16 +239,17 @@ function main() {
   });
 
   // Handle request to trust the certificate from the renderer process.
-  const trustedFingerprints = new Map<string, string>();
-  ipcMain.on('trust-certificate', (event: IpcEvent, anchor: HostAnchor) => {
-    trustedFingerprints.set(anchor.host, `sha256/${anchor.fingerprint}`);
+  const trustedFingerprints = new Set<string>();
+  const makeKey = (host: string, fingerprint: string) => `${host};${fingerprint}`;
+  ipcMain.on('trust-certificate', (event: IpcEvent, host: string, fingerprint: string) => {
+    trustedFingerprints.add(makeKey(host, `sha256/${fingerprint}`));
     event.returnValue = true;
   });
   app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
     event.preventDefault();
     try {
       const parsed = new URL(url);
-      callback(trustedFingerprints.get(parsed.host) === certificate.fingerprint);
+      callback(trustedFingerprints.has(makeKey(parsed.host, certificate.fingerprint)));
     } catch (e) {
       console.error(e);
       callback(false);

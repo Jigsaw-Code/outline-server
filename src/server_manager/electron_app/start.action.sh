@@ -14,7 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-run_action server_manager/electron_app/build linux
+run_action server_manager/electron_app/build
+
 cd "${BUILD_DIR}/server_manager/electron_app/static"
 
 OUTLINE_DEBUG='true' \

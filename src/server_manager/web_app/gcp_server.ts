@@ -180,7 +180,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
         const apiUrl = outlineGuestAttributes.get('apiUrl');
         try {
           const parsed = new URL(apiUrl);
-          trustCertificate({host: parsed.host, fingerprint: certSha256});
+          trustCertificate(parsed.host, certSha256);
         } catch (e) {
           console.error(e);
           this.setInstallState(InstallState.FAILED);
