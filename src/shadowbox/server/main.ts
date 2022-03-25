@@ -178,7 +178,7 @@ async function main() {
   // Use 127.0.0.1 instead of localhost for Prometheus because it's resolving incorrectly for some users.
   // See https://github.com/Jigsaw-Code/outline-server/issues/341
   const prometheusLocation = `127.0.0.1:${prometheusPort}`;
-  logging.info(`Prometheus is at ${process.env.PROMETEUS_ENDPOINT || prometheusLocation}`);
+  logging.info(`Prometheus is at ${process.env.PROMETHEUS_ENDPOINT || prometheusLocation}`);
 
   const nodeMetricsPort = await portProvider.reserveFirstFreePort(prometheusPort + 1);
   exportPrometheusMetrics(prometheus.register, nodeMetricsPort);
@@ -208,9 +208,9 @@ async function main() {
     shadowsocksServer.enableReplayProtection();
   }
 
-  const prometheusEndpoint = process.env.PROMETEUS_ENDPOINT || `http://${prometheusLocation}`;
+  const prometheusEndpoint = process.env.PROMETHEUS_ENDPOINT || `http://${prometheusLocation}`;
 
-  !process.env.PROMETEUS_ENDPOINT &&
+  !process.env.PROMETHEUS_ENDPOINT &&
     (await createPrometheusInstance(
       prometheusLocation,
       prometheusEndpoint,
