@@ -240,13 +240,20 @@ function main() {
 
   // Handle request to trust the certificate from the renderer process.
   const trustedFingerprints = new Set<string>();
-  ipcMain.on('trust-certificate', (event: IpcEvent, fingerprint: string) => {
-    trustedFingerprints.add(`sha256/${fingerprint}`);
+  const makeKey = (host: string, fingerprint: string) => `${host};${fingerprint}`;
+  ipcMain.on('trust-certificate', (event: IpcEvent, host: string, fingerprint: string) => {
+    trustedFingerprints.add(makeKey(host, `sha256/${fingerprint}`));
     event.returnValue = true;
   });
   app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
     event.preventDefault();
-    callback(trustedFingerprints.has(certificate.fingerprint));
+    try {
+      const parsed = new URL(url);
+      callback(trustedFingerprints.has(makeKey(parsed.host, certificate.fingerprint)));
+    } catch (e) {
+      console.error(e);
+      callback(false);
+    }
   });
 
   // Restores the mainWindow if minimized and brings it into focus.

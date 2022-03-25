@@ -47,8 +47,8 @@ if (sentryDsn) {
   });
 }
 
-contextBridge.exposeInMainWorld('trustCertificate', (fingerprint: string) => {
-  return ipcRenderer.sendSync('trust-certificate', fingerprint);
+contextBridge.exposeInMainWorld('trustCertificate', (host: string, fingerprint: string) => {
+  return ipcRenderer.sendSync('trust-certificate', host, fingerprint);
 });
 
 contextBridge.exposeInMainWorld('openImage', (basename: string) => {

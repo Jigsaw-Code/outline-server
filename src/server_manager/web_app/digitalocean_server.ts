@@ -185,8 +185,9 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
       // these methods throw exceptions if the fields are unavailable.
       const certificateFingerprint = this.getCertificateFingerprint();
       const apiAddress = this.getManagementApiAddress();
+      const parsed = new URL(apiAddress);
       // Loaded both the cert and url without exceptions, they can be set.
-      trustCertificate(certificateFingerprint);
+      trustCertificate(parsed.host, certificateFingerprint);
       this.setManagementApiUrl(apiAddress);
       return true;
     } catch (e) {
