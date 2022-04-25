@@ -70,7 +70,7 @@
     "PUPPETEER_CHROMIUM_REVISION": "870763"
   },
   "devDependencies": {
-    "@types/node": "^15.12.2",
+    "@types/node": "^16.11.29",
     "@types/node-forge": "^0.6.9",
     "@types/polymer": "^1.2.9",
     "@types/puppeteer": "^5.4.2",
@@ -78,7 +78,7 @@
     "@types/semver": "^5.5.0",
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.5.3",
-    "electron": "13.3.0",
+    "electron": "18.1.0",
     "electron-builder": "~22.10.5",
     "electron-icon-maker": "^0.0.4",
     "electron-notarize": "^0.2.1",
