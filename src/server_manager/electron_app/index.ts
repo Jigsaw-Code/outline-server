@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import * as sentry from '@sentry/electron';
+import * as crypto from 'crypto';
 import * as dotenv from 'dotenv';
 import * as electron from 'electron';
 import {autoUpdater} from 'electron-updater';
@@ -238,17 +239,36 @@ function main() {
   });
 
   // Handle request to trust the certificate from the renderer process.
-  const trustedFingerprints = new Set<string>();
-  const makeKey = (host: string, fingerprint: string) => `${host};${fingerprint}`;
+  const trustedFingerprints = new Map<string, string>();
   ipcMain.on('trust-certificate', (event: IpcEvent, host: string, fingerprint: string) => {
-    trustedFingerprints.add(makeKey(host, `sha256/${fingerprint}`));
+    const value = `sha256/${fingerprint}`;
+    if (trustedFingerprints.has(host) && trustedFingerprints.get(host) !== value) {
+      console.warn('Rejecting colliding certificate');
+      // TODO: Provide UI to guide users out of this situation, e.g. by
+      // deleting one server and restarting before adding a different server
+      // with the same IP and port.
+      event.returnValue = false;
+      return;
+    }
+    trustedFingerprints.set(host, value);
     event.returnValue = true;
   });
   app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
     event.preventDefault();
     try {
-      const parsed = new URL(url);
-      callback(trustedFingerprints.has(makeKey(parsed.host, certificate.fingerprint)));
+      const x509 = new crypto.X509Certificate(certificate.data);
+      const errorUrl = new URL(url);
+      // Check that `certificate` covers `errorUrl.hostname` and
+      // nothing else.  Together with the collision check above, this
+      // ensures that socket pooling will never direct one server's HTTP
+      // requests to a different server, even if one server is also an
+      // on-path attacker.
+      if (!x509.checkHost(errorUrl.hostname)) {
+        throw new Error('Certificate coverage check failed');
+      } else if (x509.subjectAltName?.length > 0) {
+        throw new Error('Certificate must cover only the Common Name');
+      }
+      callback(certificate.fingerprint == trustedFingerprints.get(errorUrl.host));
     } catch (e) {
       console.error(e);
       callback(false);

@@ -31,7 +31,9 @@ class ManualServer extends ShadowboxServer implements server.ManualServer {
     try {
       const parsed = new URL(manualServerConfig.apiUrl);
       const fingerprint = btoa(hexToString(manualServerConfig.certSha256));
-      trustCertificate(parsed.host, fingerprint);
+      if (!trustCertificate(parsed.host, fingerprint)) {
+        console.error('Failed to trust certificate');
+      }
     } catch (e) {
       // Error trusting certificate, may be due to bad user input.
       console.error('Error trusting certificate');

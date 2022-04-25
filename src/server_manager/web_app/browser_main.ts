@@ -13,8 +13,9 @@
 // limitations under the License.
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).trustCertificate = (host: string, fingerprint: string) => {
+(window as any).trustCertificate = (host: string, fingerprint: string): boolean => {
   console.log(`Requested to trust certificate for ${host}: ${fingerprint}`);
+  return true; // Simulate success for the gallery.
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
