@@ -17,7 +17,10 @@ import * as dotenv from 'dotenv';
 import * as electron from 'electron';
 import {autoUpdater} from 'electron-updater';
 import * as path from 'path';
-import {URL, URLSearchParams} from 'url';
+import * as https from 'https';
+import * as tls from 'tls';
+import {URL, URLSearchParams, urlToHttpOptions} from 'url';
+import type {IncomingMessage, OutgoingHttpHeaders} from 'http';
 
 import * as menu from './menu';
 
@@ -237,23 +240,69 @@ function main() {
     }
   });
 
-  // Handle request to trust the certificate from the renderer process.
-  const trustedFingerprints = new Set<string>();
-  const makeKey = (host: string, fingerprint: string) => `${host};${fingerprint}`;
-  ipcMain.on('trust-certificate', (event: IpcEvent, host: string, fingerprint: string) => {
-    trustedFingerprints.add(makeKey(host, `sha256/${fingerprint}`));
-    event.returnValue = true;
-  });
-  app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
-    event.preventDefault();
-    try {
-      const parsed = new URL(url);
-      callback(trustedFingerprints.has(makeKey(parsed.host, certificate.fingerprint)));
-    } catch (e) {
-      console.error(e);
-      callback(false);
+  // Proxy for fetch calls that require fingerprint pinning.  Assumes response is JSON.
+  ipcMain.handle(
+    'fetch-with-pin',
+    async (
+      event: Electron.IpcMainInvokeEvent,
+      url: string,
+      fingerprint: string,
+      method: string,
+      bodyJson: object,
+      bodyForm: {[id: string]: string}
+    ): Promise<object | void> => {
+      const headers: OutgoingHttpHeaders = {};
+      if (bodyJson) {
+        headers['Content-Type'] = 'application/json';
+      } else if (bodyForm) {
+        headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      }
+      const response = await new Promise<IncomingMessage>((resolve, reject) => {
+        const options: https.RequestOptions = {
+          ...urlToHttpOptions(new URL(url)),
+          method,
+          headers,
+          rejectUnauthorized: false, // Disable certificate chain validation.
+        };
+        const request = https.request(options, resolve).on('error', reject);
+
+        // Enforce certificate fingerprint match.
+        request.on('socket', (socket: tls.TLSSocket) =>
+          socket.on('secureConnect', () => {
+            const certificate = socket.getPeerCertificate();
+            // Parse fingerprint in "AB:CD:EF" form.
+            const sha2hex = certificate.fingerprint256.replace(/:/g, '');
+            const sha2binary = Buffer.from(sha2hex, 'hex').toString('binary');
+            if (sha2binary !== fingerprint) {
+              request.emit('error', new Error('Fingerprint mismatch'));
+              return request.destroy();
+            }
+          })
+        );
+
+        if (bodyJson) {
+          request.write(JSON.stringify(bodyJson));
+        } else if (bodyForm) {
+          request.write(new URLSearchParams(bodyForm).toString());
+        }
+
+        request.end();
+      });
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw new Error(`Unexpected status code: ${response.statusCode}`);
+      }
+
+      const chunks: Buffer[] = [];
+      for await (const chunk of response) {
+        chunks.push(chunk);
+      }
+      const responseBody = Buffer.concat(chunks).toString();
+      if (responseBody) {
+        return JSON.parse(responseBody);
+      }
     }
-  });
+  );
 
   // Restores the mainWindow if minimized and brings it into focus.
   ipcMain.on('bring-to-front', (_event: IpcEvent) => {

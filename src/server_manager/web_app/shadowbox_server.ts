@@ -54,8 +54,15 @@ function makeAccessKeyModel(apiAccessKey: AccessKeyJson): server.AccessKey {
   return apiAccessKey as server.AccessKey;
 }
 
+// Represents either a JSON payload or a FormData payload.
+interface ApiRequestBody {
+  json?: object;
+  form?: {[name: string]: string};
+}
+
 export class ShadowboxServer implements server.Server {
   private managementApiAddress: string;
+  private fingerprint: string;
   private serverConfig: ServerConfigJson;
 
   constructor(private readonly id: string) {}
@@ -73,37 +80,30 @@ export class ShadowboxServer implements server.Server {
 
   async addAccessKey(): Promise<server.AccessKey> {
     console.info('Adding access key');
-    return makeAccessKeyModel(
-      await this.apiRequest<AccessKeyJson>('access-keys', {method: 'POST'})
-    );
+    return makeAccessKeyModel(await this.apiRequest<AccessKeyJson>('access-keys', 'POST'));
   }
 
   renameAccessKey(accessKeyId: server.AccessKeyId, name: string): Promise<void> {
     console.info('Renaming access key');
-    const body = new FormData();
-    body.append('name', name);
-    return this.apiRequest<void>('access-keys/' + accessKeyId + '/name', {method: 'PUT', body});
+    return this.apiRequest<void>('access-keys/' + accessKeyId + '/name', 'PUT', {
+      form: {name: name},
+    });
   }
 
   removeAccessKey(accessKeyId: server.AccessKeyId): Promise<void> {
     console.info('Removing access key');
-    return this.apiRequest<void>('access-keys/' + accessKeyId, {method: 'DELETE'});
+    return this.apiRequest<void>('access-keys/' + accessKeyId, 'DELETE');
   }
 
   async setDefaultDataLimit(limit: server.DataLimit): Promise<void> {
     console.info(`Setting server default data limit: ${JSON.stringify(limit)}`);
-    const requestOptions = {
-      method: 'PUT',
-      headers: new Headers({'Content-Type': 'application/json'}),
-      body: JSON.stringify({limit}),
-    };
-    await this.apiRequest<void>(this.getDefaultDataLimitPath(), requestOptions);
+    await this.apiRequest<void>(this.getDefaultDataLimitPath(), 'PUT', {json: {limit}});
     this.serverConfig.accessKeyDataLimit = limit;
   }
 
   async removeDefaultDataLimit(): Promise<void> {
     console.info(`Removing server default data limit`);
-    await this.apiRequest<void>(this.getDefaultDataLimitPath(), {method: 'DELETE'});
+    await this.apiRequest<void>(this.getDefaultDataLimitPath(), 'DELETE');
     delete this.serverConfig.accessKeyDataLimit;
   }
 
@@ -122,17 +122,12 @@ export class ShadowboxServer implements server.Server {
 
   async setAccessKeyDataLimit(keyId: server.AccessKeyId, limit: server.DataLimit): Promise<void> {
     console.info(`Setting data limit of ${limit.bytes} bytes for access key ${keyId}`);
-    const requestOptions = {
-      method: 'PUT',
-      headers: new Headers({'Content-Type': 'application/json'}),
-      body: JSON.stringify({limit}),
-    };
-    await this.apiRequest<void>(`access-keys/${keyId}/data-limit`, requestOptions);
+    await this.apiRequest<void>(`access-keys/${keyId}/data-limit`, 'PUT', {json: {limit}});
   }
 
   async removeAccessKeyDataLimit(keyId: server.AccessKeyId): Promise<void> {
     console.info(`Removing data limit from access key ${keyId}`);
-    await this.apiRequest<void>(`access-keys/${keyId}/data-limit`, {method: 'DELETE'});
+    await this.apiRequest<void>(`access-keys/${keyId}/data-limit`, 'DELETE');
   }
 
   async getDataUsage(): Promise<server.BytesByAccessKey> {
@@ -148,16 +143,10 @@ export class ShadowboxServer implements server.Server {
     return this.serverConfig?.name;
   }
 
-  setName(name: string): Promise<void> {
+  async setName(name: string): Promise<void> {
     console.info('Setting server name');
-    const requestOptions: RequestInit = {
-      method: 'PUT',
-      headers: new Headers({'Content-Type': 'application/json'}),
-      body: JSON.stringify({name}),
-    };
-    return this.apiRequest<void>('name', requestOptions).then(() => {
-      this.serverConfig.name = name;
-    });
+    await this.apiRequest<void>('name', 'PUT', {json: {name}});
+    this.serverConfig.name = name;
   }
 
   getVersion(): string {
@@ -168,17 +157,11 @@ export class ShadowboxServer implements server.Server {
     return this.serverConfig.metricsEnabled;
   }
 
-  setMetricsEnabled(metricsEnabled: boolean): Promise<void> {
+  async setMetricsEnabled(metricsEnabled: boolean): Promise<void> {
     const action = metricsEnabled ? 'Enabling' : 'Disabling';
     console.info(`${action} metrics`);
-    const requestOptions: RequestInit = {
-      method: 'PUT',
-      headers: new Headers({'Content-Type': 'application/json'}),
-      body: JSON.stringify({metricsEnabled}),
-    };
-    return this.apiRequest<void>('metrics/enabled', requestOptions).then(() => {
-      this.serverConfig.metricsEnabled = metricsEnabled;
-    });
+    await this.apiRequest<void>('metrics/enabled', 'PUT', {json: {metricsEnabled}});
+    this.serverConfig.metricsEnabled = metricsEnabled;
   }
 
   getMetricsId(): string {
@@ -212,14 +195,8 @@ export class ShadowboxServer implements server.Server {
   async setHostnameForAccessKeys(hostname: string): Promise<void> {
     console.info(`setHostname ${hostname}`);
     this.serverConfig.hostnameForAccessKeys = hostname;
-    const requestOptions: RequestInit = {
-      method: 'PUT',
-      headers: new Headers({'Content-Type': 'application/json'}),
-      body: JSON.stringify({hostname}),
-    };
-    return this.apiRequest<void>('server/hostname-for-access-keys', requestOptions).then(() => {
-      this.serverConfig.hostnameForAccessKeys = hostname;
-    });
+    await this.apiRequest<void>('server/hostname-for-access-keys', 'PUT', {json: {hostname}});
+    this.serverConfig.hostnameForAccessKeys = hostname;
   }
 
   getHostnameForAccessKeys(): string {
@@ -243,16 +220,10 @@ export class ShadowboxServer implements server.Server {
     }
   }
 
-  setPortForNewAccessKeys(newPort: number): Promise<void> {
+  async setPortForNewAccessKeys(newPort: number): Promise<void> {
     console.info(`setPortForNewAccessKeys: ${newPort}`);
-    const requestOptions: RequestInit = {
-      method: 'PUT',
-      headers: new Headers({'Content-Type': 'application/json'}),
-      body: JSON.stringify({port: newPort}),
-    };
-    return this.apiRequest<void>('server/port-for-new-access-keys', requestOptions).then(() => {
-      this.serverConfig.portForNewAccessKeys = newPort;
-    });
+    await this.apiRequest<void>('server/port-for-new-access-keys', 'PUT', {json: {port: newPort}});
+    this.serverConfig.portForNewAccessKeys = newPort;
   }
 
   private async getServerConfig(): Promise<ServerConfigJson> {
@@ -260,8 +231,9 @@ export class ShadowboxServer implements server.Server {
     return await this.apiRequest<ServerConfigJson>('server');
   }
 
-  protected setManagementApiUrl(apiAddress: string): void {
+  protected setManagementApiUrl(apiAddress: string, fingerprint?: string): void {
     this.managementApiAddress = apiAddress;
+    this.fingerprint = fingerprint;
   }
 
   getManagementApiUrl() {
@@ -269,7 +241,11 @@ export class ShadowboxServer implements server.Server {
   }
 
   // Makes a request to the management API.
-  private apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
+  private apiRequest<T extends object | void>(
+    path: string,
+    method = 'GET',
+    body?: ApiRequestBody
+  ): Promise<T> {
     try {
       let apiAddress = this.managementApiAddress;
       if (!apiAddress) {
@@ -281,6 +257,19 @@ export class ShadowboxServer implements server.Server {
         apiAddress += '/';
       }
       const url = apiAddress + path;
+      if (this.fingerprint) {
+        return fetchWithPin(url, this.fingerprint, method, body?.json, body?.form) as Promise<T>;
+      }
+      const options: RequestInit = {method};
+      if (body?.json) {
+        options.body = JSON.stringify(body.json);
+        options.headers = new Headers({'Content-Type': 'application/json'});
+      } else if (body?.form) {
+        options.body = new FormData();
+        for (const key in body.form) {
+          options.body.set(key, body.form[key]);
+        }
+      }
       return fetch(url, options)
         .then(
           (response) => {

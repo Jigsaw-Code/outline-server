@@ -13,8 +13,15 @@
 // limitations under the License.
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).trustCertificate = (host: string, fingerprint: string) => {
-  console.log(`Requested to trust certificate for ${host}: ${fingerprint}`);
+(window as any).fetchWithPin = (
+  url: string,
+  _fingerprint: string,
+  method: string,
+  _bodyJson: object,
+  _bodyForm: {[k: string]: string}
+): Promise<object | void> => {
+  console.log(`${method} request for ${url}`);
+  throw new Error('Custom fetch is only support in Electron');
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

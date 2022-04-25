@@ -14,7 +14,13 @@
 
 // Functions made available to the renderer process via preload.ts.
 
-declare function trustCertificate(host: string, fingerprint: string): boolean;
+declare function fetchWithPin(
+  url: string,
+  fingerprint: string,
+  method: string,
+  bodyJson: object,
+  bodyForm: {[k: string]: string}
+): Promise<object | void>;
 declare function openImage(basename: string): void;
 declare function onUpdateDownloaded(callback: () => void): void;
 

@@ -47,9 +47,16 @@ if (sentryDsn) {
   });
 }
 
-contextBridge.exposeInMainWorld('trustCertificate', (host: string, fingerprint: string) => {
-  return ipcRenderer.sendSync('trust-certificate', host, fingerprint);
-});
+contextBridge.exposeInMainWorld(
+  'fetchWithPin',
+  (
+    url: string,
+    fingerprint: string,
+    method: string,
+    bodyJson: object,
+    bodyForm: {[k: string]: string}
+  ) => ipcRenderer.invoke('fetch-with-pin', url, fingerprint, method, bodyJson, bodyForm)
+);
 
 contextBridge.exposeInMainWorld('openImage', (basename: string) => {
   ipcRenderer.send('open-image', basename);
