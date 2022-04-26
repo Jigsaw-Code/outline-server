@@ -14,12 +14,7 @@
   limitations under the License.
 */
 
-// import '@formatjs/intl-numberformat/polyfill'
-
 // Utility functions for internationalizing numbers and units
-
-// WARNING!  This assumes an ES2020 target as this will always run on browser code in
-// electron's built-in Chromium.  This code shouldn't be used by anything running in Node.
 
 const TERABYTE = 10 ** 12;
 const GIGABYTE = 10 ** 9;
