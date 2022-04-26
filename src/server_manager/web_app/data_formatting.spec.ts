@@ -36,11 +36,11 @@ describe('formatBytesParts', () => {
       expect(russian.value).toEqual('3');
 
       const simplifiedChinese = formatting.formatBytesParts(1.5 * 10 ** 9, 'zh-CN');
-      expect(simplifiedChinese.unit).toEqual('吉字节');
+      expect(simplifiedChinese.unit).toEqual('GB');
       expect(simplifiedChinese.value).toEqual('1.5');
 
       const farsi = formatting.formatBytesParts(133.5 * 10 ** 6, 'fa');
-      expect(farsi.unit).toEqual('مگابایت');
+      expect(farsi.unit).toEqual('MB');
       expect(farsi.value).toEqual('۱۳۳٫۵');
     });
   }
