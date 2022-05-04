@@ -721,6 +721,17 @@ export class App {
     }
 
     try {
+      if (await digitalOceanAccount.hasReachedLimit()) {
+        this.appRoot.showError(
+          'Your DigitalOcean account has reached its Droplet limit.  You can request an increase at https://cloud.digitalocean.com/account/team/droplet_limit_increase'
+        );
+        return;
+      }
+    } catch (e) {
+      console.error('Failed to check droplet limit status', e);
+    }
+
+    try {
       const regionPicker = this.appRoot.getAndShowRegionPicker();
       const map = await this.digitalOceanRetry(() => {
         return this.digitalOceanAccount.listLocations();

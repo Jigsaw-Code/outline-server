@@ -48,11 +48,17 @@ export class DigitalOceanAccount implements digitalocean.Account {
 
   async getStatus(): Promise<digitalocean.Status> {
     const account = await this.digitalOcean.getAccount();
-    if (account.status === 'active') {
+    if (account.status !== 'locked') {
       return digitalocean.Status.ACTIVE;
     }
     if (!account.email_verified) {
       return digitalocean.Status.EMAIL_UNVERIFIED;
+    }
+    const servers = await this.digitalOcean.getDroplets();
+    if (servers.length > 0) {
+      // The account is locked, but it has droplets so it must have
+      // been activated with billing information.
+      return digitalocean.Status.ACTIVE;
     }
     return digitalocean.Status.MISSING_BILLING_INFORMATION;
   }
@@ -65,6 +71,13 @@ export class DigitalOceanAccount implements digitalocean.Account {
       cloudLocation: new digitalocean.Region(info.slug),
       available: info.available && info.sizes.indexOf(MACHINE_SIZE) !== -1,
     }));
+  }
+
+  // Returns true if there is no more room for additional Droplets.
+  async hasReachedLimit(): Promise<boolean> {
+    const account = this.digitalOcean.getAccount();
+    const droplets = await this.digitalOcean.getDroplets();
+    return droplets.length >= (await account).droplet_limit;
   }
 
   // Creates a server and returning it when it becomes active.

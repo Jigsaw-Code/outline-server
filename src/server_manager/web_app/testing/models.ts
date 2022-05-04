@@ -34,6 +34,9 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
   listServers() {
     return Promise.resolve(this.servers);
   }
+  async hasReachedLimit(): Promise<boolean> {
+    return false;
+  }
   listLocations() {
     return Promise.resolve([
       {

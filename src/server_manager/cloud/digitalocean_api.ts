@@ -49,6 +49,7 @@ export type Account = Readonly<{
   uuid: string;
   email_verified: boolean;
   status: string;
+  droplet_limit: number;
 }>;
 
 // Reference:

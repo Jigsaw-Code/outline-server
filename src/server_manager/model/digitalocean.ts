@@ -59,4 +59,6 @@ export interface Account {
   // Creates a server and returning it when it becomes active (i.e. the server has
   // created, not necessarily once shadowbox installation has finished).
   createServer(region: Region, name: string): Promise<ManagedServer>;
+
+  hasReachedLimit(): Promise<boolean>;
 }
