@@ -353,8 +353,8 @@ export class App {
         id: this.digitalOceanAccount.getId(),
         name: await this.digitalOceanAccount.getName(),
       };
-      const status = await this.digitalOceanAccount.getStatus();
-      if (status !== digitalocean.Status.ACTIVE) {
+      const info = await this.digitalOceanAccount.getStatus();
+      if (info.status !== digitalocean.Status.ACTIVE) {
         return [];
       }
       const servers = await this.digitalOceanAccount.listServers();
@@ -505,13 +505,16 @@ export class App {
     };
     const oauthUi = this.appRoot.getDigitalOceanOauthFlow(signOutAction);
     for (;;) {
-      const status = await this.digitalOceanRetry(async () => {
+      const info = await this.digitalOceanRetry(async () => {
         if (cancelled) {
           throw CANCELLED_ERROR;
         }
         return await digitalOceanAccount.getStatus();
       });
-      if (status === digitalocean.Status.ACTIVE) {
+      if (info.warning) {
+        this.appRoot.showError(`DigitalOcean warning: ${info.warning}`);
+      }
+      if (info.status === digitalocean.Status.ACTIVE) {
         bringToFront();
         if (activatingAccount) {
           // Show the 'account active' screen for a few seconds if the account was activated
@@ -523,7 +526,7 @@ export class App {
       }
       this.appRoot.showDigitalOceanOauthFlow();
       activatingAccount = true;
-      if (status === digitalocean.Status.MISSING_BILLING_INFORMATION) {
+      if (info.status === digitalocean.Status.MISSING_BILLING_INFORMATION) {
         oauthUi.showBilling();
       } else {
         oauthUi.showEmailVerification();

@@ -28,8 +28,8 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
   async getName(): Promise<string> {
     return 'fake-digitalocean-account-name';
   }
-  async getStatus(): Promise<digitalocean.Status> {
-    return digitalocean.Status.ACTIVE;
+  async getStatus(): Promise<digitalocean.AccountInfo> {
+    return {status: digitalocean.Status.ACTIVE};
   }
   listServers() {
     return Promise.resolve(this.servers);

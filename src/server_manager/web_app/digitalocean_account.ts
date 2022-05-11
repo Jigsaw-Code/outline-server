@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {DigitalOceanSession, DropletInfo, RestApiSession} from '../cloud/digitalocean_api';
+import {Account, DigitalOceanSession, DropletInfo, RestApiSession} from '../cloud/digitalocean_api';
 import * as crypto from '../infrastructure/crypto';
 import * as do_install_script from '../install_scripts/do_install_script';
 import * as digitalocean from '../model/digitalocean';
@@ -46,13 +46,23 @@ export class DigitalOceanAccount implements digitalocean.Account {
     return (await this.digitalOcean.getAccount())?.email;
   }
 
-  async getStatus(): Promise<digitalocean.Status> {
+  async getStatus(): Promise<digitalocean.AccountInfo> {
     const account = await this.digitalOcean.getAccount();
-    if (account.status !== 'locked') {
+    return {
+      status: await this.summarizeStatus(account),
+      warning: account.status !== 'active' ? account.status_message : '',
+    };
+  }
+
+  private async summarizeStatus(account: Account): Promise<digitalocean.Status> {
+    if (account.status === 'active') {
       return digitalocean.Status.ACTIVE;
     }
     if (!account.email_verified) {
       return digitalocean.Status.EMAIL_UNVERIFIED;
+    }
+    if (account.status === 'warning') {
+      return digitalocean.Status.ACTIVE;
     }
     const servers = await this.digitalOcean.getDroplets();
     if (servers.length > 0) {

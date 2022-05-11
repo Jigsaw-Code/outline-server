@@ -45,11 +45,12 @@ export type DropletInfo = Readonly<{
 // Reference:
 // https://developers.digitalocean.com/documentation/v2/#get-user-information
 export type Account = Readonly<{
+  droplet_limit: number;
   email: string;
   uuid: string;
   email_verified: boolean;
   status: string;
-  droplet_limit: number;
+  status_message: string;
 }>;
 
 // Reference:

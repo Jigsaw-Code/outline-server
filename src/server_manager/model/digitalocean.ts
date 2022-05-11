@@ -44,13 +44,18 @@ export enum Status {
   MISSING_BILLING_INFORMATION,
 }
 
+export interface AccountInfo {
+  status: Status;
+  warning?: string;
+}
+
 export interface Account {
   // Gets a globally unique identifier for this Account.
   getId(): string;
   // Returns a user-friendly name (email address) associated with the account.
   getName(): Promise<string>;
   // Returns the status of the account.
-  getStatus(): Promise<Status>;
+  getStatus(): Promise<AccountInfo>;
   // Lists all existing Shadowboxes. If `fetchFromHost` is true, performs a network request to
   // retrieve the servers; otherwise resolves with a cached server list.
   listServers(fetchFromHost?: boolean): Promise<ManagedServer[]>;
