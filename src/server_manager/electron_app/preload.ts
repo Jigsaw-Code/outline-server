@@ -18,6 +18,7 @@ import {URL} from 'url';
 
 import * as digitalocean_oauth from './digitalocean_oauth';
 import * as gcp_oauth from './gcp_oauth';
+import {HttpRequest, HttpResponse} from './http/types';
 import {redactManagerUrl} from './util';
 
 // This file is run in the renderer process *before* nodeIntegration is disabled.
@@ -49,13 +50,8 @@ if (sentryDsn) {
 
 contextBridge.exposeInMainWorld(
   'fetchWithPin',
-  (
-    url: string,
-    fingerprint: string,
-    method: string,
-    bodyJson: object,
-    bodyForm: {[k: string]: string}
-  ) => ipcRenderer.invoke('fetch-with-pin', url, fingerprint, method, bodyJson, bodyForm)
+  (request: HttpRequest, fingerprint: string): Promise<HttpResponse> =>
+    ipcRenderer.invoke('fetch-with-pin', request, fingerprint)
 );
 
 contextBridge.exposeInMainWorld('openImage', (basename: string) => {

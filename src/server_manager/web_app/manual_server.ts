@@ -14,6 +14,7 @@
 
 import {hexToString} from '../infrastructure/hex_encoding';
 import * as server from '../model/server';
+import {makePathApiClient} from './path_api';
 
 import {ShadowboxServer} from './shadowbox_server';
 
@@ -25,7 +26,7 @@ class ManualServer extends ShadowboxServer implements server.ManualServer {
   ) {
     super(id);
     const fingerprint = hexToString(manualServerConfig.certSha256);
-    this.setManagementApiUrl(manualServerConfig.apiUrl, fingerprint);
+    this.setManagementApi(makePathApiClient(manualServerConfig.apiUrl, fingerprint));
   }
 
   getCertificateFingerprint() {

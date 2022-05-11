@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type {HttpResponse} from '../electron_app/http/types';
+
 export class OutlineError extends Error {
   constructor(message?: string) {
     // ref:
@@ -45,7 +47,7 @@ export class ServerInstallFailedError extends OutlineError {
 
 // Thrown when a Shadowbox API request fails.
 export class ServerApiError extends OutlineError {
-  constructor(message: string, public readonly response?: Response) {
+  constructor(message: string, public readonly response?: HttpResponse) {
     super(message);
   }
 

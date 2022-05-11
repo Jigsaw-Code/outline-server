@@ -14,13 +14,10 @@
 
 // Functions made available to the renderer process via preload.ts.
 
-declare function fetchWithPin(
-  url: string,
-  fingerprint: string,
-  method: string,
-  bodyJson: object,
-  bodyForm: {[k: string]: string}
-): Promise<object | void>;
+type HttpRequest = import('../electron_app/http/types').HttpRequest;
+type HttpResponse = import('../electron_app/http/types').HttpResponse;
+
+declare function fetchWithPin(request: HttpRequest, fingerprint: string): Promise<HttpResponse>;
 declare function openImage(basename: string): void;
 declare function onUpdateDownloaded(callback: () => void): void;
 

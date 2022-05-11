@@ -13,15 +13,8 @@
 // limitations under the License.
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).fetchWithPin = (
-  url: string,
-  _fingerprint: string,
-  method: string,
-  _bodyJson: object,
-  _bodyForm: {[k: string]: string}
-): Promise<object | void> => {
-  console.log(`${method} request for ${url}`);
-  throw new Error('Custom fetch is only support in Electron');
+(window as any).fetchWithPin = (_request: HttpRequest, _fingerprint: string) => {
+  return Promise.reject(new Error('Fingerprint pins are not supported'));
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

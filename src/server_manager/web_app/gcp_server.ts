@@ -19,6 +19,7 @@ import {ValueStream} from '../infrastructure/value_stream';
 import {Zone} from '../model/gcp';
 import * as server from '../model/server';
 import {DataAmount, ManagedServerHost, MonetaryCost} from '../model/server';
+import {makePathApiClient} from './path_api';
 
 import {ShadowboxServer} from './shadowbox_server';
 
@@ -178,7 +179,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
       if (outlineGuestAttributes.has('apiUrl') && outlineGuestAttributes.has('certSha256')) {
         const certSha256 = outlineGuestAttributes.get('certSha256');
         const apiUrl = outlineGuestAttributes.get('apiUrl');
-        this.setManagementApiUrl(apiUrl, atob(certSha256));
+        this.setManagementApi(makePathApiClient(apiUrl, atob(certSha256)));
         this.setInstallState(InstallState.COMPLETED);
         break;
       } else if (outlineGuestAttributes.has('install-error')) {
