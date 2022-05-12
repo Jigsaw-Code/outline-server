@@ -353,9 +353,12 @@ export class App {
         id: this.digitalOceanAccount.getId(),
         name: await this.digitalOceanAccount.getName(),
       };
-      const info = await this.digitalOceanAccount.getStatus();
-      if (info.status !== digitalocean.Status.ACTIVE) {
+      const status = await this.digitalOceanAccount.getStatus();
+      if (status.needsBillingInfo || status.needsEmailVerification) {
         return [];
+      }
+      if (status.warning) {
+        this.showDigitalOceanWarning(status.warning);
       }
       const servers = await this.digitalOceanAccount.listServers();
       for (const server of servers) {
@@ -368,6 +371,10 @@ export class App {
       console.error('Failed to load DigitalOcean Account:', error);
     }
     return [];
+  }
+
+  private showDigitalOceanWarning(warning: string) {
+    this.appRoot.showError(`${this.appRoot.localize('error-do-warning')} ${warning}`);
   }
 
   private async loadGcpAccount(gcpAccount: gcp.Account): Promise<server.ManagedServer[]> {
@@ -505,16 +512,20 @@ export class App {
     };
     const oauthUi = this.appRoot.getDigitalOceanOauthFlow(signOutAction);
     for (;;) {
-      const info = await this.digitalOceanRetry(async () => {
+      const status = await this.digitalOceanRetry(async () => {
         if (cancelled) {
           throw CANCELLED_ERROR;
         }
         return await digitalOceanAccount.getStatus();
       });
-      if (info.warning) {
-        this.appRoot.showError(`DigitalOcean warning: ${info.warning}`);
-      }
-      if (info.status === digitalocean.Status.ACTIVE) {
+      if (status.needsBillingInfo) {
+        oauthUi.showBilling();
+      } else if (status.needsEmailVerification) {
+        oauthUi.showEmailVerification();
+      } else {
+        if (status.warning) {
+          this.showDigitalOceanWarning(status.warning);
+        }
         bringToFront();
         if (activatingAccount) {
           // Show the 'account active' screen for a few seconds if the account was activated
@@ -526,11 +537,6 @@ export class App {
       }
       this.appRoot.showDigitalOceanOauthFlow();
       activatingAccount = true;
-      if (info.status === digitalocean.Status.MISSING_BILLING_INFORMATION) {
-        oauthUi.showBilling();
-      } else {
-        oauthUi.showEmailVerification();
-      }
       await sleep(1000);
       if (this.appRoot.currentPage !== 'digitalOceanOauth') {
         // The user navigated away.
@@ -725,10 +731,8 @@ export class App {
 
     try {
       if (await digitalOceanAccount.hasReachedLimit()) {
-        this.appRoot.showError(
-          'Your DigitalOcean account has reached its Droplet limit.  You can request an increase at https://cloud.digitalocean.com/account/team/droplet_limit_increase'
-        );
-        return;
+        this.appRoot.showError(this.appRoot.localize('error-do-limit'));
+        return; // Don't proceed to the region picker.
       }
     } catch (e) {
       console.error('Failed to check droplet limit status', e);

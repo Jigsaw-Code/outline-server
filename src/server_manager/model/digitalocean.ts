@@ -38,15 +38,10 @@ export interface RegionOption extends location.CloudLocationOption {
   readonly cloudLocation: Region;
 }
 
-export enum Status {
-  ACTIVE,
-  EMAIL_UNVERIFIED,
-  MISSING_BILLING_INFORMATION,
-}
-
-export interface AccountInfo {
-  status: Status;
-  warning?: string;
+export interface Status {
+  readonly needsBillingInfo: boolean;
+  readonly needsEmailVerification: boolean;
+  readonly warning?: string;
 }
 
 export interface Account {
@@ -55,7 +50,7 @@ export interface Account {
   // Returns a user-friendly name (email address) associated with the account.
   getName(): Promise<string>;
   // Returns the status of the account.
-  getStatus(): Promise<AccountInfo>;
+  getStatus(): Promise<Status>;
   // Lists all existing Shadowboxes. If `fetchFromHost` is true, performs a network request to
   // retrieve the servers; otherwise resolves with a cached server list.
   listServers(fetchFromHost?: boolean): Promise<ManagedServer[]>;
@@ -64,6 +59,7 @@ export interface Account {
   // Creates a server and returning it when it becomes active (i.e. the server has
   // created, not necessarily once shadowbox installation has finished).
   createServer(region: Region, name: string): Promise<ManagedServer>;
-
+  // Returns true if the account has reached its Droplet limit and
+  // will not be allowed to create new droplets.
   hasReachedLimit(): Promise<boolean>;
 }

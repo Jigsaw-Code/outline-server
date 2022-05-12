@@ -49,7 +49,7 @@ export type Account = Readonly<{
   email: string;
   uuid: string;
   email_verified: boolean;
-  status: string;
+  status: 'active' | 'warning' | 'locked';
   status_message: string;
 }>;
 

@@ -319,6 +319,14 @@
     "message": "Failed to get list of available regions",
     "description": "This string appears in an error notification toast. It is shown when there is an error retrieving the regions available for server deployment."
   },
+  "error_do_limit": {
+    "message": "Your DigitalOcean account has reached its Droplet limit.  You can request an increase at https://cloud.digitalocean.com/account/team/droplet_limit_increase",
+    "description": "This string appears in an error notification toast. It is shown when the user has created the maximum number of allowed servers."
+  },
+  "error_do_warning": {
+    "message": "DigitalOcean warning:",
+    "description": "This string appears at the start of an error notification toast. It is followed by an English-language error description in quotes."
+  },
   "error_gcp_auth": {
     "message": "Authentication with Google Cloud Platform failed",
     "description": "This string appears in an error notification toast. It is shown when there is an error when logging in to the user's Google Cloud Platform account. Google Cloud Platform is a cloud server provider name and should not be translated."

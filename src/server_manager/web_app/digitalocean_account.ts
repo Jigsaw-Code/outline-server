@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Account, DigitalOceanSession, DropletInfo, RestApiSession} from '../cloud/digitalocean_api';
+import {DigitalOceanSession, DropletInfo, RestApiSession} from '../cloud/digitalocean_api';
 import * as crypto from '../infrastructure/crypto';
 import * as do_install_script from '../install_scripts/do_install_script';
 import * as digitalocean from '../model/digitalocean';
@@ -46,31 +46,20 @@ export class DigitalOceanAccount implements digitalocean.Account {
     return (await this.digitalOcean.getAccount())?.email;
   }
 
-  async getStatus(): Promise<digitalocean.AccountInfo> {
+  async getStatus(): Promise<digitalocean.Status> {
     const account = await this.digitalOcean.getAccount();
-    return {
-      status: await this.summarizeStatus(account),
-      warning: account.status !== 'active' ? account.status_message : '',
-    };
-  }
-
-  private async summarizeStatus(account: Account): Promise<digitalocean.Status> {
-    if (account.status === 'active') {
-      return digitalocean.Status.ACTIVE;
+    const needsEmailVerification = !account.email_verified;
+    let needsBillingInfo = false;
+    if (!needsEmailVerification && account.status === 'locked') {
+      // If the account is locked for no discernible reason, and there are no droplets,
+      // assume the billing info is missing.
+      const droplets = await this.digitalOcean.getDroplets();
+      if (droplets.length == 0) {
+        needsBillingInfo = true;
+      }
     }
-    if (!account.email_verified) {
-      return digitalocean.Status.EMAIL_UNVERIFIED;
-    }
-    if (account.status === 'warning') {
-      return digitalocean.Status.ACTIVE;
-    }
-    const servers = await this.digitalOcean.getDroplets();
-    if (servers.length > 0) {
-      // The account is locked, but it has droplets so it must have
-      // been activated with billing information.
-      return digitalocean.Status.ACTIVE;
-    }
-    return digitalocean.Status.MISSING_BILLING_INFORMATION;
+    const warning = account.status !== 'active' ? account.status_message : '';
+    return {needsBillingInfo, needsEmailVerification, warning};
   }
 
   // Return a list of regions indicating whether they are available and support
