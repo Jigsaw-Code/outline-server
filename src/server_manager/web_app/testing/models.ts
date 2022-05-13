@@ -29,7 +29,7 @@ export class FakeDigitalOceanAccount implements digitalocean.Account {
     return 'fake-digitalocean-account-name';
   }
   async getStatus(): Promise<digitalocean.Status> {
-    return {needsBillingInfo: false, needsEmailVerification: false};
+    return {needsBillingInfo: false, needsEmailVerification: false, hasReachedLimit: false};
   }
   listServers() {
     return Promise.resolve(this.servers);

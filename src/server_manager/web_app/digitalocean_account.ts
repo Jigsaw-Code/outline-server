@@ -47,19 +47,18 @@ export class DigitalOceanAccount implements digitalocean.Account {
   }
 
   async getStatus(): Promise<digitalocean.Status> {
-    const account = await this.digitalOcean.getAccount();
+    const [account, droplets] = await Promise.all([
+      this.digitalOcean.getAccount(),
+      this.digitalOcean.getDroplets(),
+    ]);
     const needsEmailVerification = !account.email_verified;
-    let needsBillingInfo = false;
-    if (!needsEmailVerification && account.status === 'locked') {
-      // If the account is locked for no discernible reason, and there are no droplets,
-      // assume the billing info is missing.
-      const droplets = await this.digitalOcean.getDroplets();
-      if (droplets.length == 0) {
-        needsBillingInfo = true;
-      }
-    }
+    // If the account is locked for no discernible reason, and there are no droplets,
+    // assume the billing info is missing.
+    const needsBillingInfo =
+      account.status === 'locked' && !needsEmailVerification && droplets.length == 0;
+    const hasReachedLimit = droplets.length >= account.droplet_limit;
     const warning = account.status !== 'active' ? account.status_message : '';
-    return {needsBillingInfo, needsEmailVerification, warning};
+    return {needsBillingInfo, needsEmailVerification, warning, hasReachedLimit};
   }
 
   // Return a list of regions indicating whether they are available and support

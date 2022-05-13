@@ -39,8 +39,13 @@ export interface RegionOption extends location.CloudLocationOption {
 }
 
 export interface Status {
+  // The account has not had any billing info added yet.
   readonly needsBillingInfo: boolean;
+  // The account has not had an email address added yet.
   readonly needsEmailVerification: boolean;
+  // The account cannot add any more droplets.
+  readonly hasReachedLimit: boolean;
+  // A warning message from DigitalOcean.
   readonly warning?: string;
 }
 
@@ -59,7 +64,4 @@ export interface Account {
   // Creates a server and returning it when it becomes active (i.e. the server has
   // created, not necessarily once shadowbox installation has finished).
   createServer(region: Region, name: string): Promise<ManagedServer>;
-  // Returns true if the account has reached its Droplet limit and
-  // will not be allowed to create new droplets.
-  hasReachedLimit(): Promise<boolean>;
 }

@@ -730,7 +730,8 @@ export class App {
     }
 
     try {
-      if (await digitalOceanAccount.hasReachedLimit()) {
+      const status = await digitalOceanAccount.getStatus();
+      if (status.hasReachedLimit) {
         this.appRoot.showError(this.appRoot.localize('error-do-limit'));
         return; // Don't proceed to the region picker.
       }
