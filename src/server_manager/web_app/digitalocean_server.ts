@@ -19,6 +19,7 @@ import {sleep} from '../infrastructure/sleep';
 import {ValueStream} from '../infrastructure/value_stream';
 import {Region} from '../model/digitalocean';
 import * as server from '../model/server';
+import {makePathApiClient} from './fetcher';
 
 import {ShadowboxServer} from './shadowbox_server';
 
@@ -185,10 +186,7 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
       // these methods throw exceptions if the fields are unavailable.
       const certificateFingerprint = this.getCertificateFingerprint();
       const apiAddress = this.getManagementApiAddress();
-      const parsed = new URL(apiAddress);
-      // Loaded both the cert and url without exceptions, they can be set.
-      trustCertificate(parsed.host, certificateFingerprint);
-      this.setManagementApiUrl(apiAddress);
+      this.setManagementApi(makePathApiClient(apiAddress, certificateFingerprint));
       return true;
     } catch (e) {
       // Install state not yet ready.
@@ -263,12 +261,12 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
     return apiAddress;
   }
 
-  // Gets the certificate fingerprint in base64 format, throws an error if
+  // Gets the certificate fingerprint in binary, throws an error if
   // unavailable.
   private getCertificateFingerprint(): string {
     const fingerprint = this.getTagMap().get(CERTIFICATE_FINGERPRINT_TAG);
     if (fingerprint) {
-      return btoa(fingerprint);
+      return fingerprint;
     } else {
       throw new Error('certificate fingerprint unavailable');
     }

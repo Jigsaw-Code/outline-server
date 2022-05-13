@@ -1,4 +1,4 @@
-// Copyright 2018 The Outline Authors
+// Copyright 2022 The Outline Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Extension to @types/node-forge to add the missing definitions that we need.
-declare module 'node-forge' {
-  namespace ssh {
-    function publicKeyToOpenSSH(privateKey?: string, passphrase?: string): string;
+import {makePathApiClient} from './fetcher';
+
+describe('makePathApiClient', () => {
+  const api = makePathApiClient('https://api.github.com/repos/Jigsaw-Code/');
+
+  if (process?.versions?.node) {
+    // This test relies on fetch(), which doesn't exist in Node (yet).
+    return;
   }
-}
+  it('GET', async () => {
+    const response = await api.request<{name: string}>('outline-server');
+    expect(response.name).toEqual('outline-server');
+  });
+});

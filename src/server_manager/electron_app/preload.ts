@@ -18,6 +18,7 @@ import {URL} from 'url';
 
 import * as digitalocean_oauth from './digitalocean_oauth';
 import * as gcp_oauth from './gcp_oauth';
+import {HttpRequest, HttpResponse} from '../infrastructure/path_api';
 import {redactManagerUrl} from './util';
 
 // This file is run in the renderer process *before* nodeIntegration is disabled.
@@ -47,9 +48,11 @@ if (sentryDsn) {
   });
 }
 
-contextBridge.exposeInMainWorld('trustCertificate', (host: string, fingerprint: string) => {
-  return ipcRenderer.sendSync('trust-certificate', host, fingerprint);
-});
+contextBridge.exposeInMainWorld(
+  'fetchWithPin',
+  (request: HttpRequest, fingerprint: string): Promise<HttpResponse> =>
+    ipcRenderer.invoke('fetch-with-pin', request, fingerprint)
+);
 
 contextBridge.exposeInMainWorld('openImage', (basename: string) => {
   ipcRenderer.send('open-image', basename);
