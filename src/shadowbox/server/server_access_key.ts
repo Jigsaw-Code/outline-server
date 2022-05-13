@@ -64,7 +64,8 @@ class ServerAccessKey implements AccessKey {
 
 // Generates a random password for Shadowsocks access keys.
 function generatePassword(): string {
-  return randomstring.generate(12);
+  // 22 * log2(62) = 131 bits of entropy.
+  return randomstring.generate(22);
 }
 
 function makeAccessKey(hostname: string, accessKeyJson: AccessKeyStorageJson): AccessKey {
