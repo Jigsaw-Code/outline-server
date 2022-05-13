@@ -19,7 +19,7 @@ import {ValueStream} from '../infrastructure/value_stream';
 import {Zone} from '../model/gcp';
 import * as server from '../model/server';
 import {DataAmount, ManagedServerHost, MonetaryCost} from '../model/server';
-import {makePathApiClient} from './path_api';
+import {makePathApiClient} from './fetcher';
 
 import {ShadowboxServer} from './shadowbox_server';
 

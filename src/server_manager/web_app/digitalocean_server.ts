@@ -19,7 +19,7 @@ import {sleep} from '../infrastructure/sleep';
 import {ValueStream} from '../infrastructure/value_stream';
 import {Region} from '../model/digitalocean';
 import * as server from '../model/server';
-import {makePathApiClient} from './path_api';
+import {makePathApiClient} from './fetcher';
 
 import {ShadowboxServer} from './shadowbox_server';
 

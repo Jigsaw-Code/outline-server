@@ -4,10 +4,10 @@
     "removeComments": false,
     "noImplicitAny": true,
     "module": "commonjs",
-    "rootDir": ".",
+    "rootDir": "..",
     "lib": ["dom", "es2021"]
   },
-  "include": ["*.ts", "../types/*.d.ts"],
+  "include": ["*.ts", "../infrastructure/path_api.ts", "../types/*.d.ts"],
   "exclude": ["node_modules"],
   "compileOnSave": true
 }

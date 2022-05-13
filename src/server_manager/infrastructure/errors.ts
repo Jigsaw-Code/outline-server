@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type {HttpResponse} from '../electron_app/http/types';
+import type {HttpResponse} from './path_api';
 
 export class OutlineError extends Error {
   constructor(message?: string) {

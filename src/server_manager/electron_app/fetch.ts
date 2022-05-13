@@ -18,7 +18,7 @@ import {urlToHttpOptions} from 'url';
 
 import type {IncomingMessage} from 'http';
 
-import type {HttpRequest, HttpResponse} from './types';
+import type {HttpRequest, HttpResponse} from '../infrastructure/path_api';
 
 export const fetchWithPin = async (
   req: HttpRequest,

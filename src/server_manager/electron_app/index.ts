@@ -19,8 +19,8 @@ import {autoUpdater} from 'electron-updater';
 import * as path from 'path';
 import {URL, URLSearchParams} from 'url';
 
-import type {HttpRequest, HttpResponse} from './http/types';
-import {fetchWithPin} from './http/fetch';
+import type {HttpRequest, HttpResponse} from '../infrastructure/path_api';
+import {fetchWithPin} from './fetch';
 import * as menu from './menu';
 
 const app = electron.app;

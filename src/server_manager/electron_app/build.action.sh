@@ -51,7 +51,7 @@ tsc -p src/server_manager/electron_app/tsconfig.json --outDir build/server_manag
 readonly STATIC_DIR="${OUT_DIR}/static"
 mkdir -p "${STATIC_DIR}"
 mkdir -p "${STATIC_DIR}/server_manager"
-cp -r "${OUT_DIR}/js/"* "${STATIC_DIR}"
+cp -r "${OUT_DIR}/js/electron_app/"* "${STATIC_DIR}"
 cp -r "${BUILD_DIR}/server_manager/web_app/static" "${STATIC_DIR}/server_manager/web_app/"
 
 # Electron requires a package.json file for the app's name, etc.

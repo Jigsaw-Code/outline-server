@@ -12,39 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as errors from '../infrastructure/errors';
-import {HttpRequest, HttpResponse} from '../electron_app/http/types';
+// This file is imported by both the Electron and Renderer process code,
+// so it cannot contain any imports that are not available in both
+// environments.
 
-async function fetchWrapper(request: HttpRequest): Promise<HttpResponse> {
-  const response = await fetch(request.url, request);
-  return {
-    status: response.status,
-    body: await response.text(),
-  };
+// These type definitions are designed to bridge the differences between
+// the Fetch API and the Node.JS HTTP API, while also being compatible
+// with the Structured Clone algorithm so that they can be passed between
+// the Electron and Renderer processes.
+
+import * as errors from './errors';
+
+export interface HttpRequest {
+  url: string;
+  method: string;
+  headers?: Record<string, string>;
+  body?: string;
+}
+
+export interface HttpResponse {
+  status: number;
+  body?: string;
 }
 
 // A Fetcher provides the HTTP client functionality for PathApi.
-export type Fetcher = typeof fetchWrapper;
-
-/**
- * @param fingerprint A SHA-256 hash of the expected leaf certificate, in binary encoding.
- * @returns An HTTP client that enforces `fingerprint`, if set.
- */
-function makeFetcher(fingerprint?: string): Fetcher {
-  if (fingerprint) {
-    return (request) => fetchWithPin(request, fingerprint);
-  }
-  return fetchWrapper;
-}
-
-/**
- * @param base A valid URL
- * @param fingerprint A SHA-256 hash of the expected leaf certificate, in binary encoding.
- * @returns A fully initialized API client.
- */
-export function makePathApiClient(base: string, fingerprint?: string): PathApiClient {
-  return new PathApiClient(base, makeFetcher(fingerprint));
-}
+export type Fetcher = (request: HttpRequest) => Promise<HttpResponse>;
 
 /**
  * Provides access to an HTTP API of the kind exposed by the Shadowbox server.
