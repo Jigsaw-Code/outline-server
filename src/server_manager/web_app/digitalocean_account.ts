@@ -58,7 +58,15 @@ export class DigitalOceanAccount implements digitalocean.Account {
       account.status === 'locked' && !needsEmailVerification && droplets.length == 0;
     const hasReachedLimit = droplets.length >= account.droplet_limit;
     const warning = account.status !== 'active' ? account.status_message : '';
-    return {needsBillingInfo, needsEmailVerification, warning, hasReachedLimit};
+    const detail = `status: "${account.status}"`;
+    return {
+      needsBillingInfo,
+      needsEmailVerification,
+      dropletLimit: account.droplet_limit,
+      hasReachedLimit,
+      warning,
+      detail,
+    };
   }
 
   // Return a list of regions indicating whether they are available and support

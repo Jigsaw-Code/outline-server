@@ -43,10 +43,14 @@ export interface Status {
   readonly needsBillingInfo: boolean;
   // The account has not had an email address added yet.
   readonly needsEmailVerification: boolean;
+  // The maximum number of droplets this account can create.
+  readonly dropletLimit: number;
   // The account cannot add any more droplets.
   readonly hasReachedLimit: boolean;
   // A warning message from DigitalOcean.
   readonly warning?: string;
+  // A string with detailed status info
+  readonly detail?: string;
 }
 
 export interface Account {

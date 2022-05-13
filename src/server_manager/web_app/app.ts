@@ -358,7 +358,7 @@ export class App {
         return [];
       }
       if (status.warning) {
-        this.showDigitalOceanWarning(status.warning);
+        this.showDigitalOceanWarning(status);
       }
       const servers = await this.digitalOceanAccount.listServers();
       for (const server of servers) {
@@ -373,8 +373,10 @@ export class App {
     return [];
   }
 
-  private showDigitalOceanWarning(warning: string) {
-    this.appRoot.showError(`${this.appRoot.localize('error-do-warning')} ${warning}`);
+  private showDigitalOceanWarning(status: digitalocean.Status) {
+    this.appRoot.showError(
+      this.appRoot.localize('error-do-warning', 'message', status.warning, 'detail', status.detail)
+    );
   }
 
   private async loadGcpAccount(gcpAccount: gcp.Account): Promise<server.ManagedServer[]> {
@@ -524,7 +526,7 @@ export class App {
         oauthUi.showEmailVerification();
       } else {
         if (status.warning) {
-          this.showDigitalOceanWarning(status.warning);
+          this.showDigitalOceanWarning(status);
         }
         bringToFront();
         if (activatingAccount) {
@@ -732,7 +734,7 @@ export class App {
     try {
       const status = await digitalOceanAccount.getStatus();
       if (status.hasReachedLimit) {
-        this.appRoot.showError(this.appRoot.localize('error-do-limit'));
+        this.appRoot.showError(this.appRoot.localize('error-do-limit', 'num', status.dropletLimit));
         return; // Don't proceed to the region picker.
       }
     } catch (e) {
