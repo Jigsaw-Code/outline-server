@@ -347,6 +347,7 @@ export class App {
     if (!digitalOceanAccount) {
       return [];
     }
+    let showedWarning = false;
     try {
       this.digitalOceanAccount = digitalOceanAccount;
       this.appRoot.digitalOceanAccount = {
@@ -354,11 +355,9 @@ export class App {
         name: await this.digitalOceanAccount.getName(),
       };
       const status = await this.digitalOceanAccount.getStatus();
-      if (status.needsBillingInfo || status.needsEmailVerification) {
-        return [];
-      }
       if (status.warning) {
         this.showDigitalOceanWarning(status);
+        showedWarning = true;
       }
       const servers = await this.digitalOceanAccount.listServers();
       for (const server of servers) {
@@ -367,7 +366,9 @@ export class App {
       return servers;
     } catch (error) {
       // TODO(fortuna): Handle expired token.
-      this.appRoot.showError(this.appRoot.localize('error-do-account-info'));
+      if (!showedWarning) {
+        this.appRoot.showError(this.appRoot.localize('error-do-account-info'));
+      }
       console.error('Failed to load DigitalOcean Account:', error);
     }
     return [];
