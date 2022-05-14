@@ -78,6 +78,60 @@ function createRolloutTracker(
   return rollouts;
 }
 
+async function createPrometheusInstance(
+  prometheusLocation: string,
+  prometheusEndpoint: string,
+  nodeMetricsLocation: string,
+  ssMetricsLocation: string,
+  verbose: boolean
+) {
+  const prometheusConfigJson = {
+    global: {
+      scrape_interval: '1m',
+    },
+    scrape_configs: [
+      {
+        job_name: 'prometheus',
+        static_configs: [{targets: [prometheusLocation]}],
+      },
+      {
+        job_name: 'outline-server-main',
+        static_configs: [{targets: [nodeMetricsLocation]}],
+      },
+      {
+        job_name: 'outline-server-ss',
+        static_configs: [{targets: [ssMetricsLocation]}],
+      },
+    ],
+  };
+
+  // Start Prometheus subprocess and wait for it to be up and running.
+  const prometheusConfigFilename = getPersistentFilename('prometheus/config.yml');
+  const prometheusTsdbFilename = getPersistentFilename('prometheus/data');
+  const prometheusBinary = getBinaryFilename('prometheus');
+  const prometheusArgs = [
+    '--config.file',
+    prometheusConfigFilename,
+    '--web.enable-admin-api',
+    '--storage.tsdb.retention.time',
+    '31d',
+    '--storage.tsdb.path',
+    prometheusTsdbFilename,
+    '--web.listen-address',
+    prometheusLocation,
+    '--log.level',
+    verbose ? 'debug' : 'info',
+  ];
+
+  await startPrometheus(
+    prometheusBinary,
+    prometheusConfigFilename,
+    prometheusConfigJson,
+    prometheusArgs,
+    prometheusEndpoint
+  );
+}
+
 async function main() {
   const verbose = process.env.LOG_LEVEL === 'debug';
   const portProvider = new PortProvider();
@@ -124,31 +178,17 @@ async function main() {
   // Use 127.0.0.1 instead of localhost for Prometheus because it's resolving incorrectly for some users.
   // See https://github.com/Jigsaw-Code/outline-server/issues/341
   const prometheusLocation = `127.0.0.1:${prometheusPort}`;
+  logging.info(`Prometheus is at ${process.env.PROMETHEUS_ENDPOINT || prometheusLocation}`);
 
   const nodeMetricsPort = await portProvider.reserveFirstFreePort(prometheusPort + 1);
   exportPrometheusMetrics(prometheus.register, nodeMetricsPort);
   const nodeMetricsLocation = `127.0.0.1:${nodeMetricsPort}`;
-
-  const ssMetricsPort = await portProvider.reserveFirstFreePort(nodeMetricsPort + 1);
-  logging.info(`Prometheus is at ${prometheusLocation}`);
   logging.info(`Node metrics is at ${nodeMetricsLocation}`);
 
-  const prometheusConfigJson = {
-    global: {
-      scrape_interval: '1m',
-    },
-    scrape_configs: [
-      {job_name: 'prometheus', static_configs: [{targets: [prometheusLocation]}]},
-      {job_name: 'outline-server-main', static_configs: [{targets: [nodeMetricsLocation]}]},
-    ],
-  };
-
+  const ssMetricsPort = await portProvider.reserveFirstFreePort(nodeMetricsPort + 1);
   const ssMetricsLocation = `127.0.0.1:${ssMetricsPort}`;
   logging.info(`outline-ss-server metrics is at ${ssMetricsLocation}`);
-  prometheusConfigJson.scrape_configs.push({
-    job_name: 'outline-server-ss',
-    static_configs: [{targets: [ssMetricsLocation]}],
-  });
+
   const shadowsocksServer = new OutlineShadowsocksServer(
     getBinaryFilename('outline-ss-server'),
     getPersistentFilename('outline-ss-server/config.yml'),
@@ -168,31 +208,16 @@ async function main() {
     shadowsocksServer.enableReplayProtection();
   }
 
-  // Start Prometheus subprocess and wait for it to be up and running.
-  const prometheusConfigFilename = getPersistentFilename('prometheus/config.yml');
-  const prometheusTsdbFilename = getPersistentFilename('prometheus/data');
-  const prometheusEndpoint = `http://${prometheusLocation}`;
-  const prometheusBinary = getBinaryFilename('prometheus');
-  const prometheusArgs = [
-    '--config.file',
-    prometheusConfigFilename,
-    '--web.enable-admin-api',
-    '--storage.tsdb.retention.time',
-    '31d',
-    '--storage.tsdb.path',
-    prometheusTsdbFilename,
-    '--web.listen-address',
-    prometheusLocation,
-    '--log.level',
-    verbose ? 'debug' : 'info',
-  ];
-  await startPrometheus(
-    prometheusBinary,
-    prometheusConfigFilename,
-    prometheusConfigJson,
-    prometheusArgs,
-    prometheusEndpoint
-  );
+  const prometheusEndpoint = process.env.PROMETHEUS_ENDPOINT || `http://${prometheusLocation}`;
+
+  !process.env.PROMETHEUS_ENDPOINT &&
+    (await createPrometheusInstance(
+      prometheusLocation,
+      prometheusEndpoint,
+      nodeMetricsLocation,
+      ssMetricsLocation,
+      verbose
+    ));
 
   const prometheusClient = new PrometheusClient(prometheusEndpoint);
   if (!serverConfig.data().portForNewAccessKeys) {
