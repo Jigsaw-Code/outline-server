@@ -330,16 +330,12 @@
     }
   },
   "error_do_warning": {
-    "message": "DigitalOcean warning: \"$MESSAGE$\" ($DETAIL$)",
+    "message": "DigitalOcean warning: \"$MESSAGE$\"",
     "description": "This string appears in an error notification toast when login has succeeded but there is a warning message.",
     "placeholders": {
       "MESSAGE": {
         "content": "{message}",
         "example": "Your team has been locked due to improper use of the platform."
-      },
-      "DETAIL": {
-        "content": "{detail}",
-        "example": "status: \"locked\""
       }
     }
   },

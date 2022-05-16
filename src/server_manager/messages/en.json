@@ -67,7 +67,7 @@
   "error-do-auth": "Authentication with DigitalOcean failed",
   "error-do-regions": "Failed to get list of available regions",
   "error-do-limit": "Your DigitalOcean account has reached its limit of {num} Droplets.  You can request an increase at https://cloud.digitalocean.com/account/team/droplet_limit_increase",
-  "error-do-warning": "DigitalOcean warning: \"{message}\" ({detail})",
+  "error-do-warning": "DigitalOcean warning: \"{message}\"",
   "error-gcp-auth": "Authentication with Google Cloud Platform failed",
   "error-feedback": "Failed to submit feedback. Please try again.",
   "error-hostname-invalid": "Must be an IP address or valid hostname.",

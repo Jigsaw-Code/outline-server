@@ -57,15 +57,16 @@ export class DigitalOceanAccount implements digitalocean.Account {
     const needsBillingInfo =
       account.status === 'locked' && !needsEmailVerification && droplets.length == 0;
     const hasReachedLimit = droplets.length >= account.droplet_limit;
-    const warning = account.status !== 'active' ? account.status_message : '';
-    const detail = `status: "${account.status}"`;
+    let warning: string;
+    if (account.status !== 'active') {
+      warning = `${account.status_message} (status=${account.status})`;
+    }
     return {
       needsBillingInfo,
       needsEmailVerification,
       dropletLimit: account.droplet_limit,
       hasReachedLimit,
       warning,
-      detail,
     };
   }
 

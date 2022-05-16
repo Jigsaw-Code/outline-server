@@ -375,9 +375,7 @@ export class App {
   }
 
   private showDigitalOceanWarning(status: digitalocean.Status) {
-    this.appRoot.showError(
-      this.appRoot.localize('error-do-warning', 'message', status.warning, 'detail', status.detail)
-    );
+    this.appRoot.showError(this.appRoot.localize('error-do-warning', 'message', status.warning));
   }
 
   private async loadGcpAccount(gcpAccount: gcp.Account): Promise<server.ManagedServer[]> {
