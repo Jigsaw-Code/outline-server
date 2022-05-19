@@ -47,14 +47,27 @@ export class DigitalOceanAccount implements digitalocean.Account {
   }
 
   async getStatus(): Promise<digitalocean.Status> {
-    const account = await this.digitalOcean.getAccount();
-    if (account.status === 'active') {
-      return digitalocean.Status.ACTIVE;
+    const [account, droplets] = await Promise.all([
+      this.digitalOcean.getAccount(),
+      this.digitalOcean.getDroplets(),
+    ]);
+    const needsEmailVerification = !account.email_verified;
+    // If the account is locked for no discernible reason, and there are no droplets,
+    // assume the billing info is missing.
+    const needsBillingInfo =
+      account.status === 'locked' && !needsEmailVerification && droplets.length == 0;
+    const hasReachedLimit = droplets.length >= account.droplet_limit;
+    let warning: string;
+    if (account.status !== 'active') {
+      warning = `${account.status_message} (status=${account.status})`;
     }
-    if (!account.email_verified) {
-      return digitalocean.Status.EMAIL_UNVERIFIED;
-    }
-    return digitalocean.Status.MISSING_BILLING_INFORMATION;
+    return {
+      needsBillingInfo,
+      needsEmailVerification,
+      dropletLimit: account.droplet_limit,
+      hasReachedLimit,
+      warning,
+    };
   }
 
   // Return a list of regions indicating whether they are available and support
@@ -65,6 +78,13 @@ export class DigitalOceanAccount implements digitalocean.Account {
       cloudLocation: new digitalocean.Region(info.slug),
       available: info.available && info.sizes.indexOf(MACHINE_SIZE) !== -1,
     }));
+  }
+
+  // Returns true if there is no more room for additional Droplets.
+  async hasReachedLimit(): Promise<boolean> {
+    const account = this.digitalOcean.getAccount();
+    const droplets = await this.digitalOcean.getDroplets();
+    return droplets.length >= (await account).droplet_limit;
   }
 
   // Creates a server and returning it when it becomes active.

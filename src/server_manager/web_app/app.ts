@@ -347,6 +347,7 @@ export class App {
     if (!digitalOceanAccount) {
       return [];
     }
+    let showedWarning = false;
     try {
       this.digitalOceanAccount = digitalOceanAccount;
       this.appRoot.digitalOceanAccount = {
@@ -354,8 +355,9 @@ export class App {
         name: await this.digitalOceanAccount.getName(),
       };
       const status = await this.digitalOceanAccount.getStatus();
-      if (status !== digitalocean.Status.ACTIVE) {
-        return [];
+      if (status.warning) {
+        this.showDigitalOceanWarning(status);
+        showedWarning = true;
       }
       const servers = await this.digitalOceanAccount.listServers();
       for (const server of servers) {
@@ -364,10 +366,16 @@ export class App {
       return servers;
     } catch (error) {
       // TODO(fortuna): Handle expired token.
-      this.appRoot.showError(this.appRoot.localize('error-do-account-info'));
+      if (!showedWarning) {
+        this.appRoot.showError(this.appRoot.localize('error-do-account-info'));
+      }
       console.error('Failed to load DigitalOcean Account:', error);
     }
     return [];
+  }
+
+  private showDigitalOceanWarning(status: digitalocean.Status) {
+    this.appRoot.showError(this.appRoot.localize('error-do-warning', 'message', status.warning));
   }
 
   private async loadGcpAccount(gcpAccount: gcp.Account): Promise<server.ManagedServer[]> {
@@ -511,7 +519,14 @@ export class App {
         }
         return await digitalOceanAccount.getStatus();
       });
-      if (status === digitalocean.Status.ACTIVE) {
+      if (status.needsBillingInfo) {
+        oauthUi.showBilling();
+      } else if (status.needsEmailVerification) {
+        oauthUi.showEmailVerification();
+      } else {
+        if (status.warning) {
+          this.showDigitalOceanWarning(status);
+        }
         bringToFront();
         if (activatingAccount) {
           // Show the 'account active' screen for a few seconds if the account was activated
@@ -523,11 +538,6 @@ export class App {
       }
       this.appRoot.showDigitalOceanOauthFlow();
       activatingAccount = true;
-      if (status === digitalocean.Status.MISSING_BILLING_INFORMATION) {
-        oauthUi.showBilling();
-      } else {
-        oauthUi.showEmailVerification();
-      }
       await sleep(1000);
       if (this.appRoot.currentPage !== 'digitalOceanOauth') {
         // The user navigated away.
@@ -718,6 +728,16 @@ export class App {
         this.appRoot.showError(this.appRoot.localize('error-do-account-info'));
       }
       return;
+    }
+
+    try {
+      const status = await digitalOceanAccount.getStatus();
+      if (status.hasReachedLimit) {
+        this.appRoot.showError(this.appRoot.localize('error-do-limit', 'num', status.dropletLimit));
+        return; // Don't proceed to the region picker.
+      }
+    } catch (e) {
+      console.error('Failed to check droplet limit status', e);
     }
 
     try {
