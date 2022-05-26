@@ -6,6 +6,7 @@
     "@types/jasmine": "^3.5.10",
     "@typescript-eslint/eslint-plugin": "^5.14.0",
     "@typescript-eslint/parser": "^5.14.0",
+    "browserslist": "^4.20.3",
     "eslint": "^8.10.0",
     "eslint-plugin-compat": "^4.0.2",
     "generate-license-file": "^1.2.0",
