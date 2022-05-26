@@ -119,7 +119,7 @@ jobs:
         run: npm ci
 
       - name: Build Linux Manager
-        run: npm run action server_manager/electron_app/build --platform linux
+        run: npm run action server_manager/electron_app/build linux
 
       - name: Upload Linux Client
         uses: actions/upload-artifact@v2
@@ -148,7 +148,7 @@ jobs:
         run: npm ci
 
       - name: Build Windows Manager
-        run: npm run action server_manager/electron_app/build --platform windows
+        run: npm run action server_manager/electron_app/build windows
 
       - name: Upload Windows Manager
         uses: actions/upload-artifact@v2
@@ -180,7 +180,7 @@ jobs:
         run: sudo xcode-select -switch /Applications/Xcode_13.2.app
 
       - name: Build MacOS Manager
-        run: npm run action server_manager/electron_app/build --platform mac
+        run: npm run action server_manager/electron_app/build macos
 
       - name: Upload MacOS Manager
         uses: actions/upload-artifact@v2
