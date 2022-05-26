@@ -45,7 +45,7 @@ To build the app binary:
 npm run action server_manager/electron_app/build ${PLATFORM} -- --buildMode=[debug,release]
 ```
 
-Where `${PLATFORM}` is one of `linux`, `mac`, `windows`.
+Where `${PLATFORM}` is one of `linux`, `macos`, `windows`.
 
 The per-platform standalone apps will be at `build/electron_app/static/dist`.
 

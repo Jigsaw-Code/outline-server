@@ -125,7 +125,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: manager_linux_debug
-          path: build/server_manager/electron_app/static/dist/Outline-Manager.AppImage
+          path: build/server_manager/electron_app/static/dist
           if-no-files-found: error
 
   manager-windows-debug-build:
@@ -154,7 +154,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: manager_windows_debug
-          path: build/server_manager/electron_app/static/dist/Outline-Manager.exe
+          path: build/server_manager/electron_app/static/dist
           if-no-files-found: error
 
   manager-mac-debug-build:
@@ -186,5 +186,5 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: manager_macos_debug
-          path: build/server_manager/electron_app/static/dist/Outline-Manager.dmg
+          path: build/server_manager/electron_app/static/dist
           if-no-files-found: error

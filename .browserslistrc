@@ -1,0 +1,3 @@
+# We use Electron v18.
+# This is the version of Chrome it requires:
+chrome >= 100
