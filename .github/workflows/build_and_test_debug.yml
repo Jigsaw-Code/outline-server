@@ -124,13 +124,6 @@ jobs:
       - name: Build Linux Manager
         run: npm run action server_manager/electron_app/build linux
 
-      - name: Upload Linux Client
-        uses: actions/upload-artifact@v2
-        with:
-          name: manager_linux_debug
-          path: build/server_manager/electron_app/static/dist
-          if-no-files-found: error
-
   manager-windows-debug-build:
     name: Manager Windows Debug Build
     runs-on: windows-2019
@@ -152,13 +145,6 @@ jobs:
 
       - name: Build Windows Manager
         run: npm run action server_manager/electron_app/build windows
-
-      - name: Upload Windows Manager
-        uses: actions/upload-artifact@v2
-        with:
-          name: manager_windows_debug
-          path: build/server_manager/electron_app/static/dist
-          if-no-files-found: error
 
   manager-mac-debug-build:
     name: Manager MacOS Debug Build
@@ -184,10 +170,3 @@ jobs:
 
       - name: Build MacOS Manager
         run: npm run action server_manager/electron_app/build macos
-
-      - name: Upload MacOS Manager
-        uses: actions/upload-artifact@v2
-        with:
-          name: manager_macos_debug
-          path: build/server_manager/electron_app/static/dist
-          if-no-files-found: error
