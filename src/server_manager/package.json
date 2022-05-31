@@ -79,7 +79,7 @@
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.5.3",
     "electron": "18.1.0",
-    "electron-builder": "~22.10.5",
+    "electron-builder": "~23.0.3",
     "electron-icon-maker": "^0.0.4",
     "electron-notarize": "^0.2.1",
     "electron-to-chromium": "^1.4.122",
@@ -99,7 +99,7 @@
     "style-loader": "^1.2.1",
     "ts-loader": "^7.0.1",
     "webpack": "^4.43.0",
-    "webpack-cli": "^3.3.11",
+    "webpack-cli": "^4.9.2",
     "webpack-dev-server": "^4.9.0"
   },
   "resolutions": {
