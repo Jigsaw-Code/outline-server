@@ -27,7 +27,11 @@ export async function getElectronBuildFlags(platform, buildMode) {
       buildFlags = ["--linux", "--config.linux.icon=icons/png", "--config.linux.category=Network", ...buildFlags];
       break;
     case "windows":
-      buildFlags = ["--win", "--ia32", "--config.win.icon=icons/win/icon.ico", ...buildFlags];
+      buildFlags = [
+        "--win", "--ia32",
+        "--config.win.icon=icons/win/icon.ico",
+        "--config.win.sign=src/server_manager/electron_app/windows/electron_builder_signing_plugin.cjs",
+        ...buildFlags];
       break;
     case "mac":
       buildFlags = ["--mac", "--config.mac.icon=icons/mac/icon.icns", ...buildFlags];
@@ -43,10 +47,6 @@ export async function getElectronBuildFlags(platform, buildMode) {
       "--config.publish.provider=generic",
       `--config.publish.url=${process.env.RELEASES_REPOSITORY}`,
     ];
-  }
-
-  if (buildMode === "release" && platform === "windows") {
-    buildFlags.push("--config.win.certificateSubjectName='Jigsaw Operations LLC'");
   }
 
   return buildFlags;
