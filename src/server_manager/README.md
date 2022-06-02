@@ -5,14 +5,16 @@
 To run the Outline Manager Electron app:
 
 ```
-npm run action server_manager/electron_app/start
+npm run action server_manager/electron_app/start ${PLATFORM}
 ```
 
 To run the Outline Manager Electron app with a development build (code not minified):
 
 ```
-BUILD_ENV=development npm run action server_manager/electron_app/start
+BUILD_ENV=development npm run action server_manager/electron_app/start ${PLATFORM}
 ```
+
+Where `${PLATFORM}` is one of `linux`, `mac`, `windows`.
 
 ## Development Server
 

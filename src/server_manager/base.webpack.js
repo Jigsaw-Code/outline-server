@@ -36,7 +36,9 @@ exports.makeConfig = (options) => {
     devtool: 'inline-source-map',
     // Run the dev server with `npm run webpack-dev-server --workspace=outline-manager --open`
     devServer: {
-      overlay: true,
+      client: {
+        overlay: true,
+      },
     },
     output: {path: OUTPUT_BASE, filename: 'main.js'},
     module: {
