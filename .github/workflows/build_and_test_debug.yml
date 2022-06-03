@@ -9,6 +9,9 @@ on:
     types:
       - opened
       - synchronize
+  push:
+    branches:
+      - master
 
 jobs:
   lint:
@@ -119,14 +122,7 @@ jobs:
         run: npm ci
 
       - name: Build Linux Manager
-        run: npm run action server_manager/electron_app/build --platform linux
-
-      - name: Upload Linux Client
-        uses: actions/upload-artifact@v2
-        with:
-          name: manager_linux_debug
-          path: build/server_manager/electron_app/static/dist/Outline-Manager.AppImage
-          if-no-files-found: error
+        run: npm run action server_manager/electron_app/build linux
 
   manager-windows-debug-build:
     name: Manager Windows Debug Build
@@ -148,14 +144,7 @@ jobs:
         run: npm ci
 
       - name: Build Windows Manager
-        run: npm run action server_manager/electron_app/build --platform windows
-
-      - name: Upload Windows Manager
-        uses: actions/upload-artifact@v2
-        with:
-          name: manager_windows_debug
-          path: build/server_manager/electron_app/static/dist/Outline-Manager.exe
-          if-no-files-found: error
+        run: npm run action server_manager/electron_app/build windows
 
   manager-mac-debug-build:
     name: Manager MacOS Debug Build
@@ -180,11 +169,4 @@ jobs:
         run: sudo xcode-select -switch /Applications/Xcode_13.2.app
 
       - name: Build MacOS Manager
-        run: npm run action server_manager/electron_app/build --platform mac
-
-      - name: Upload MacOS Manager
-        uses: actions/upload-artifact@v2
-        with:
-          name: manager_macos_debug
-          path: build/server_manager/electron_app/static/dist/Outline-Manager.dmg
-          if-no-files-found: error
+        run: npm run action server_manager/electron_app/build macos
