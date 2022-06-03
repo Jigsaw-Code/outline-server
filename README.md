@@ -1,6 +1,6 @@
 # Outline Server
 
-[![Build Status](https://travis-ci.org/Jigsaw-Code/outline-server.svg?branch=master)](https://travis-ci.org/Jigsaw-Code/outline-server)
+![Build and Test](https://github.com/Jigsaw-Code/outline-server/actions/workflows/build_and_test_debug.yml/badge.svg?branch=master)
 
 This repository has all the code needed to create and manage Outline servers on
 DigitalOcean. An Outline server runs instances of Shadowsocks proxies and

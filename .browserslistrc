@@ -1,0 +1,4 @@
+# We use Electron v18.
+# This is the version of Chrome it requires:
+# https://github.com/electron/releases#releases
+chrome >= 100
