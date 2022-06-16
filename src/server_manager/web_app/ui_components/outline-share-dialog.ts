@@ -125,8 +125,8 @@ Polymer({
           <li>
             [[localize('share-invite-instructions')]]
             <a
-              href="https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md"
-              >https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md</a
+              href="https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation_instructions.md"
+              >https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation_instructions.md</a
             >
           </li>
         </ol>
