@@ -196,7 +196,7 @@ export class RestApiSession implements DigitalOceanSession {
     console.info('Requesting droplet by tag');
     return this.request<{droplets: DropletInfo[]}>(
       'GET',
-      `droplets?tag_name=${encodeURI(tag)}`
+      `droplets?per_page=100&tag_name=${encodeURI(tag)}`
     ).then((response) => {
       return response.droplets;
     });
