@@ -17,19 +17,19 @@ import '@polymer/paper-listbox/paper-listbox';
 import '@polymer/paper-input/paper-input';
 import '@polymer/paper-item/paper-item';
 
-import './outline-step-view';
-import './outline-region-picker-step';
+import './ui_components/outline-step-view';
+import './ui_components/outline-region-picker-step';
 
 import {css, customElement, html, internalProperty, LitElement, property} from 'lit-element';
 import {unsafeHTML} from 'lit-html/directives/unsafe-html';
 
-import {AppRoot} from './app-root';
-import {BillingAccount, Project, Zone, Account} from '../../model/gcp';
-import {GcpAccount, isInFreeTier} from '../gcp_account';
-import {COMMON_STYLES} from './cloud-install-styles';
-import {OutlineRegionPicker} from './outline-region-picker-step';
-import {filterOptions, getShortName} from '../location_formatting';
-import {CloudLocation} from '../../model/location';
+import {AppRoot} from './ui_components/app-root';
+import {BillingAccount, Project, Zone, Account} from '../model/gcp';
+import {GcpAccount, isInFreeTier} from './gcp_account';
+import {COMMON_STYLES} from './ui_components/cloud-install-styles';
+import {OutlineRegionPicker} from './ui_components/outline-region-picker-step';
+import {filterOptions, getShortName} from './location_formatting';
+import {CloudLocation} from '../model/location';
 
 @customElement('outline-gcp-create-server-app')
 export class GcpCreateServerApp extends LitElement {

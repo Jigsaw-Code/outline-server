@@ -4,15 +4,70 @@
     "es2021": true,
     "node": true
   },
-  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:import/typescript"
+  ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
-  "plugins": ["@typescript-eslint", "compat"],
+  "plugins": ["@typescript-eslint", "compat", "import"],
   "rules": {
     "compat/compat": "error",
+    "import/no-restricted-paths": [
+      "error",
+      {
+        "zones": [
+          // this means that in the src/shadowbox/infrastructure folder,
+          // you can't import any code,
+          // with the exception of other files within the src/shadowbox/infrastructure folder
+          {
+            "target": "./src/shadowbox/infrastructure",
+            "from": ".",
+            "except": ["./src/shadowbox/infrastructure", "./node_modules"]
+          },
+          {
+            "target": "./src/server_manager/infrastructure",
+            "from": ".",
+            "except": ["./src/server_manager/infrastructure", "./node_modules"]
+          },
+          {
+            "target": "./src/metrics_server/infrastructure",
+            "from": ".",
+            "except": ["./src/metrics_server/infrastructure", "./node_modules"]
+          },
+          // similar to above but for src/shadowbox/model, but you can use files from both the
+          // src/shadowbox/model and src/shadowbox/infrastructure paths
+          {
+            "target": "./src/shadowbox/model",
+            "from": ".",
+            "except": ["./src/shadowbox/model", "./src/shadowbox/infrastructure", "./node_modules"]
+          },
+          {
+            "target": "./src/server_manager/model",
+            "from": ".",
+            "except": [
+              "./src/server_manager/model",
+              "./src/server_manager/infrastructure",
+              "./node_modules"
+            ]
+          }
+          // TODO(daniellacosse): fix ui_component-specific import violations
+          // {
+          //   "target": "./src/server_manager/web_app/ui_components",
+          //   "from": "./src/server_manager/model"
+          // },
+          // {
+          //   "target": "./src/server_manager/web_app/ui_components",
+          //   "from": "./src/server_manager/web_app",
+          //   "except": ["./ui_components"]
+          // }
+        ]
+      }
+    ],
     "no-prototype-builtins": "off",
     "@typescript-eslint/ban-types": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
