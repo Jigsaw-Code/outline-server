@@ -27,29 +27,33 @@
           {
             "target": "./src/shadowbox/infrastructure",
             "from": ".",
-            "except": ["./src/shadowbox/infrastructure"]
+            "except": ["./src/shadowbox/infrastructure", "./node_modules"]
           },
           {
             "target": "./src/server_manager/infrastructure",
             "from": ".",
-            "except": ["./src/server_manager/infrastructure"]
+            "except": ["./src/server_manager/infrastructure", "./node_modules"]
           },
           {
             "target": "./src/metrics_server/infrastructure",
             "from": ".",
-            "except": ["./src/metrics_server/infrastructure"]
+            "except": ["./src/metrics_server/infrastructure", "./node_modules"]
           },
           // similar to above but for src/shadowbox/model, but you can use files from both the
           // src/shadowbox/model and src/shadowbox/infrastructure paths
           {
             "target": "./src/shadowbox/model",
             "from": ".",
-            "except": ["./src/shadowbox/model", "./src/shadowbox/infrastructure"]
+            "except": ["./src/shadowbox/model", "./src/shadowbox/infrastructure", "./node_modules"]
           },
           {
             "target": "./src/server_manager/model",
             "from": ".",
-            "except": ["./src/server_manager/model", "./src/server_manager/infrastructure"]
+            "except": [
+              "./src/server_manager/model",
+              "./src/server_manager/infrastructure",
+              "./node_modules"
+            ]
           },
           {
             "target": "./src/server_manager/web_app/ui_components",
