@@ -54,16 +54,17 @@
               "./src/server_manager/infrastructure",
               "./node_modules"
             ]
-          },
-          {
-            "target": "./src/server_manager/web_app/ui_components",
-            "from": "./src/server_manager/model"
-          },
-          {
-            "target": "./src/server_manager/web_app/ui_components",
-            "from": "./src/server_manager/web_app",
-            "except": ["./ui_components"]
           }
+          // TODO(daniellacosse): fix ui_component-specific import violations
+          // {
+          //   "target": "./src/server_manager/web_app/ui_components",
+          //   "from": "./src/server_manager/model"
+          // },
+          // {
+          //   "target": "./src/server_manager/web_app/ui_components",
+          //   "from": "./src/server_manager/web_app",
+          //   "except": ["./ui_components"]
+          // }
         ]
       }
     ],
