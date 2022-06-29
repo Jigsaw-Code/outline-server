@@ -72,7 +72,7 @@ function createMainWindow() {
     minWidth: 600,
     minHeight: 768,
     maximizable: false,
-    icon: path.join(__dirname, 'web_app', 'ui_components', 'icons', 'launcher.png'),
+    icon: path.join(__dirname, 'server_manager', 'web_app', 'images', 'launcher-icon.png'),
     webPreferences: {
       nodeIntegration: false,
       preload: path.join(__dirname, 'preload.js'),
