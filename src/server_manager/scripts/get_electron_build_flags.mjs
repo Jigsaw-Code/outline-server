@@ -33,24 +33,23 @@ export async function getElectronBuildFlags(platform, buildMode) {
       break;
     case 'windows':
       buildFlags = [
-        '--win', '--ia32',
+        '--win',
+        '--ia32',
         '--config.win.icon=icons/win/icon.ico',
         '--config.win.sign=src/server_manager/electron_app/windows/electron_builder_signing_plugin.cjs',
-        ...buildFlags];
+        ...buildFlags,
+      ];
       break;
     case 'macos':
       buildFlags = ['--mac', '--config.mac.icon=icons/mac/icon.icns', ...buildFlags];
   }
 
   if (buildMode === 'release') {
-    // Publishing is disabled, updates are pulled from AWS. We use the generic provider instead of the S3
-    // provider since the S3 provider uses "virtual-hosted style" URLs (my-bucket.s3.amazonaws.com)
-    // which can be blocked by DNS or SNI without taking down other buckets.
     buildFlags = [
       ...buildFlags,
       '--config.generateUpdatesFilesForAllChannels=true',
       '--config.publish.provider=generic',
-      `--config.publish.url=${process.env.RELEASES_REPOSITORY}`,
+      '--config.publish.url=https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/',
     ];
   }
 
