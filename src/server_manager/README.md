@@ -63,11 +63,3 @@ To enable error reporting through [Sentry](https://sentry.io/) for local builds,
 export SENTRY_DSN=[Sentry development API key]
 npm run action server_manager/electron_app/start
 ```
-
-## CI Environment Variables
-
-For your CI to run smoothly, you'll need the following in your ENV:
-
-- `SENTRY_DSN` - [url required](https://docs.sentry.io/product/sentry-basics/dsn-explainer/) to enable sentry integration. Same across all platforms.
-- `RELEASES_REPOSITORY` - the username and repository name of the repository you're pushing releases to. In our case, `Jigsaw-Code/outline-releases`
-- `RELEASES_DEPLOY_KEY` - an ssh secret key for the matching releases repository public deploy key - [how to set this up](https://docs.github.com/en/developers/overview/managing-deploy-keys#setup-2)
