@@ -48,7 +48,7 @@ export async function getElectronBuildFlags(platform, buildMode) {
     buildFlags = [
       ...buildFlags,
       '--config.generateUpdatesFilesForAllChannels=true',
-      '--config.publish.provider=github',
+      '--config.publish.provider=generic',
       '--config.publish.url=https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/',
     ];
   }
