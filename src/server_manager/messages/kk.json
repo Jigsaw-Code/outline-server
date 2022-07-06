@@ -215,7 +215,7 @@
   "server-unreachable": "Сервер қолжетімді емес",
   "server-unreachable-description": "Осы сервермен байланыс орнату кезінде қате пайда болды.",
   "server-unreachable-managed-description": "Әрекетті қайталап көріңіз немесе осы серверді қолданбадан өшіріңіз.",
-  "server-unreachable-manual-description": "Әрекетті қайталап көріңіз немесе осы сервер мен виртуалды хосты жойыңыз.",
+  "server-unreachable-manual-description": "Әрекетті қайталап көріңіз немесе осы сервер мен виртуалдық хосты жойыңыз.",
   "server-usage": "Пайдаланылуы (соңғы 30 күн)",
   "servers-add": "Сервер қосу",
   "servers-digitalocean": "DigitalOcean серверлері",
