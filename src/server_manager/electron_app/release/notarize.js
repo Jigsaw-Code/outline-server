@@ -29,9 +29,10 @@ exports.default = async function (context) {
   const appName = context.packager.appInfo.productFilename;
   console.log(`Notarizing ${appName}. This may take a few minutes.`);
   await notarize({
-    appBundleId: 'com.electron.outline-manager',
+    tool: 'notarytool',
     appPath: `${appOutDir}/${appName}.app`,
     appleId: process.env.APPLE_ID,
     appleIdPassword: process.env.APPLE_PASSWORD,
+    teamId: 'QT8Z3Q9V3A',
   });
 };
