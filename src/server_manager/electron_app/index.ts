@@ -74,6 +74,7 @@ function createMainWindow() {
     maximizable: false,
     icon: path.join(__dirname, 'server_manager', 'web_app', 'images', 'launcher-icon.png'),
     webPreferences: {
+      devTools: debugMode,
       nodeIntegration: false,
       preload: path.join(__dirname, 'preload.js'),
       webviewTag: false,
