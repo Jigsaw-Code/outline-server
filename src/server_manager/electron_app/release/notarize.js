@@ -32,7 +32,11 @@ exports.default = async function (context) {
     tool: 'notarytool',
     appPath: `${appOutDir}/${appName}.app`,
     appleId: process.env.APPLE_ID,
+
+    // You'll have to generate a one-time password as the
+    // notary tool does not support 2FA:
+    // https://support.apple.com/en-us/HT204397
     appleIdPassword: process.env.APPLE_PASSWORD,
-    teamId: 'QT8Z3Q9V3A',
+    teamId: process.env.APPLE_TEAM_ID,
   });
 };
