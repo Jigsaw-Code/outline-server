@@ -29,9 +29,14 @@ exports.default = async function (context) {
   const appName = context.packager.appInfo.productFilename;
   console.log(`Notarizing ${appName}. This may take a few minutes.`);
   await notarize({
-    appBundleId: 'com.electron.outline-manager',
+    tool: 'notarytool',
     appPath: `${appOutDir}/${appName}.app`,
     appleId: process.env.APPLE_ID,
+
+    // You'll have to generate a one-time password as the
+    // notary tool does not support 2FA:
+    // https://support.apple.com/en-us/HT204397
     appleIdPassword: process.env.APPLE_PASSWORD,
+    teamId: process.env.APPLE_TEAM_ID,
   });
 };
