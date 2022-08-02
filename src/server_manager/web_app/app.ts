@@ -290,11 +290,12 @@ export class App {
 
     appRoot.addEventListener('OpenShareDialogRequested', (event: CustomEvent) => {
       const accessKey = event.detail.accessKey;
-      this.appRoot.openShareDialog(accessKey, this.getS3InviteUrl(accessKey));
+      this.appRoot.openShareDialog(accessKey);
     });
 
     appRoot.addEventListener('OpenGetConnectedDialogRequested', (event: CustomEvent) => {
-      this.appRoot.openGetConnectedDialog(this.getS3InviteUrl(event.detail.accessKey, true));
+      const accessKey = event.detail.accessKey;
+      this.appRoot.openShareDialog(accessKey);
     });
 
     appRoot.addEventListener('ShowServerRequested', (event: CustomEvent) => {
@@ -947,14 +948,6 @@ export class App {
       }
       this.refreshTransferStats(selectedServer, serverView);
     }, statsRefreshRateMs);
-  }
-
-  private getS3InviteUrl(accessUrl: string, isAdmin = false) {
-    // TODO(alalama): display the invite in the user's preferred language.
-    const adminParam = isAdmin ? '?admin_embed' : '';
-    return `https://s3.amazonaws.com/outline-vpn/invite.html${adminParam}#${encodeURIComponent(
-      accessUrl
-    )}`;
   }
 
   // Converts the access key model to the format used by outline-server-view.

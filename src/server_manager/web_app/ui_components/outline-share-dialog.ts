@@ -21,7 +21,7 @@ import {html} from '@polymer/polymer/lib/utils/html-tag';
 import * as clipboard from 'clipboard-polyfill';
 
 export interface OutlineShareDialog extends Element {
-  open(accessKey: string, s3url: string): void;
+  open(accessKey: string): void;
 }
 
 // TODO(alalama): add a language selector. This should be a separate instance of
@@ -112,24 +112,51 @@ Polymer({
         ></p>
       </div>
       <div contenteditable="" id="selectableText" style="-webkit-text-size-adjust: 100%;">
-        <p>[[localize('share-invite')]]</p>
-
-        <p><a href$="{{s3Url}}">{{s3Url}}</a></p>
-        <p>-----</p>
-        <p>[[localize('share-invite-trouble')]]</p>
+        <p>[[localize('share-invite-intro')]]</p>
+        <p>[[localize('share-invite-step-one')]]</p>
         <ol>
           <li>
-            [[localize('share-invite-copy-access-key')]]
-            <a href="{{accessKey}}">{{accessKey}}</a>
+            <a href="https://play.google.com/store/apps/details?id=org.outline.android.client"
+              >[[localize('share-invite-android')]]</a
+            >
+            (<a href="https://s3.amazonaws.com/outline-releases/client/Outline-Client.apk"
+              >[[localize('share-invite-android-mirror')]]</a
+            >)
           </li>
           <li>
-            [[localize('share-invite-instructions')]]
-            <a
-              href="https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation_instructions.md"
-              >https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation_instructions.md</a
+            <a href="https://itunes.apple.com/app/outline-app/id1356177741"
+              >[[localize('share-invite-ios')]]</a
             >
           </li>
+          <li>
+            <a href="https://s3.amazonaws.com/outline-releases/client/Outline-Client.exe"
+              >[[localize('share-invite-windows')]]</a
+            >
+            -
+            <span>[[localize('share-invite-windows-instructions')]]</span>
+          </li>
+          <li>
+            <a href="https://itunes.apple.com/app/outline-app/id1356178125"
+              >[[localize('share-invite-macos')]]</a
+            >
+            (<a href="https://s3.amazonaws.com/outline-releases/client/Outline-Client.dmg"
+              >[[localize('share-invite-macos-mirror')]]</a
+            >)
+          </li>
+          <li>
+            <a href="https://s3.amazonaws.com/outline-releases/client/Outline-Client.AppImage"
+              >[[localize('share-invite-linux')]]</a
+            >
+            -
+            <span
+              inner-h-t-m-l="[[localize('share-invite-linux-instructions', 'openLink', '<a href=https://docs.appimage.org/introduction/quickstart.html>', 'closeLink', '</a>')]]"
+            ></span>
+          </li>
         </ol>
+        <p>[[localize('share-invite-step-two')]]</p>
+        <p>{{accessKey}}</p>
+        <p>[[localize('share-invite-step-three')]]</p>
+        <p>[[localize('share-invite-step-four')]]</p>
       </div>
       <div id="button-row">
         <paper-button id="copyButton" on-tap="copyClicked"
@@ -147,9 +174,8 @@ Polymer({
     localize: {type: Function},
   },
 
-  open(accessKey: string, s3Url: string) {
+  open(accessKey: string) {
     this.accessKey = accessKey;
-    this.s3Url = s3Url;
     this.$.copyText.setAttribute('hidden', true);
     this.$.dialog.open();
   },

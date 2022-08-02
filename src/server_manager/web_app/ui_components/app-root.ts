@@ -454,13 +454,6 @@ export class AppRoot extends polymerElementWithLocalize {
       <outline-metrics-option-dialog id="metricsDialog" localize="[[localize]]"></outline-metrics-option-dialog>
       <outline-per-key-data-limit-dialog id="perKeyDataLimitDialog" language="[[language]]" localize="[[localize]]"></outline-per-key-data-limit-dialog>
 
-      <paper-dialog id="getConnectedDialog" modal="">
-        <!-- iframe gets inserted here once we are given the invite URL. -->
-        <div class="buttons">
-          <paper-button on-tap="closeGetConnectedDialog" autofocus="">[[localize('close')]]</paper-button>
-        </div>
-      </paper-dialog>
-
       <paper-dialog id="licenses" modal="" restorefocusonclose="">
         <paper-dialog-scrollable>
           <code id="licensesText">
@@ -993,8 +986,8 @@ export class AppRoot extends polymerElementWithLocalize {
     (this.$.feedbackDialog as OutlineFeedbackDialog).open(prepopulatedMessage, true);
   }
 
-  openShareDialog(accessKey: string, s3Url: string) {
-    (this.$.shareDialog as OutlineShareDialog).open(accessKey, s3Url);
+  openShareDialog(accessKey: string) {
+    (this.$.shareDialog as OutlineShareDialog).open(accessKey);
   }
 
   openPerKeyDataLimitDialog(
@@ -1010,28 +1003,6 @@ export class AppRoot extends polymerElementWithLocalize {
       onDataLimitSet,
       onDataLimitRemoved
     );
-  }
-
-  openGetConnectedDialog(inviteUrl: string) {
-    const dialog = this.$.getConnectedDialog as PaperDialogElement;
-    if (dialog.children.length > 1) {
-      return; // The iframe is already loading.
-    }
-    // Reset the iframe's state, by replacing it with a newly constructed
-    // iframe. Unfortunately the location.reload API does not work in our case due to
-    // this Chrome error:
-    // "Blocked a frame with origin "outline://web_app" from accessing a cross-origin frame."
-    const iframe = document.createElement('iframe');
-    iframe.onload = () => dialog.open();
-    iframe.src = inviteUrl;
-    dialog.insertBefore(iframe, dialog.children[0]);
-  }
-
-  closeGetConnectedDialog() {
-    const dialog = this.$.getConnectedDialog as PaperDialogElement;
-    dialog.close();
-    const oldIframe = dialog.children[0];
-    dialog.removeChild(oldIframe);
   }
 
   showMetricsDialogForNewServer() {

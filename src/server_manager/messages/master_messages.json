@@ -1243,9 +1243,69 @@
       }
     }
   },
-  "share_invite": {
-    "message": "You\u2019re invited to connect to my Outline server. Use it to access the open internet, no matter where you are. Follow the instructions on your invitation link below to download the Outline App and get connected.",
-    "description": "This string appears as a paragraph within a dialog that provides an invitation to share access to a server. Belongs to the instructions for the user with whom access is being shared."
+  "share_invite_intro": {
+    "message": "You’re invited to Outline! Follow these instructions to use my server to access the open internet on any device, no matter where you are. No personal information will be collected.",
+    "description": "TODO"
+  },
+  "share_invite_step_one": {
+    "message": "1) Download and install the Outline app for your device:",
+    "description": "TODO"
+  },
+  "share_invite_android": {
+    "message": "Android",
+    "description": "TODO"
+  },
+  "share_invite_android_mirror": {
+    "message": "Mirror",
+    "description": "TODO"
+  },
+  "share_invite_ios": {
+    "message": "iOS",
+    "description": "TODO"
+  },
+  "share_invite_windows": {
+    "message": "Windows",
+    "description": "TODO"
+  },
+  "share_invite_windows_instructions": {
+    "message": "once downloaded, double click to launch.",
+    "description": "TODO"
+  },
+  "share_invite_macos": {
+    "message": "MacOS",
+    "description": "TODO"
+  },
+  "share_invite_macos_mirror": {
+    "message": "Mirror",
+    "description": "TODO"
+  },
+  "share_invite_linux": {
+    "message": "Linux",
+    "description": "TODO"
+  },
+  "share_invite_linux_instructions": {
+    "message": "once downloaded, $START_OF_LINK$make it executable$END_OF_LINK$, then double click to launch.",
+    "description": "TODO",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
+  },
+  "share_invite_step_two": {
+    "message": "2) Copy the following access key. In the Outline app, tap the \"+\" sign on the top bar and paste the access key:",
+    "description": "TODO"
+  },
+  "share_invite_step_three": {
+    "message": "3) Press the \"ADD SERVER\" button to confirm.",
+    "description": "TODO"
+  },
+  "share_invite_step_four": {
+    "message": "4) A card will be added to your app. Tap \"Connect\" to get connected with the new service you added.",
+    "description": "TODO"
   },
   "share_invite_copied": {
     "message": "Copied to clipboard",
@@ -1254,18 +1314,6 @@
   "share_invite_copy": {
     "message": "Copy invitation",
     "description": "This string appears as a button within a dialog that provides an invitation to share access to a server. Clicking it copies the invitation instructions text to the clipboard."
-  },
-  "share_invite_copy_access_key": {
-    "message": "Copy your access key:",
-    "description": "This string appears as a paragraph within a dialog that provides an invitation to share access to a server. Belongs to the instructions for the user with whom access is being shared."
-  },
-  "share_invite_instructions": {
-    "message": "Follow our invitation instructions on GitHub:",
-    "description": "This string appears as a list item within a dialog that provides an invitation to share access to a server. Belongs to the instructions for the user with whom access is being shared."
-  },
-  "share_invite_trouble": {
-    "message": "Having trouble accessing the invitation link?",
-    "description": "This string appears as a paragraph within a dialog that provides an invitation to share access to a server. Belongs to the instructions for the user with whom access is being shared."
   },
   "share_title": {
     "message": "Share access",
