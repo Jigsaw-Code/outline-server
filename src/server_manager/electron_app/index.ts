@@ -259,8 +259,9 @@ function main() {
   });
 
   // Handle "show me where" requests from the renderer process.
-  ipcMain.on('open-image', (event: IpcEvent, basename: string) => {
-    const p = path.join(IMAGES_BASENAME, basename);
+  ipcMain.on('open-image', (event: IpcEvent, img_path: string) => {
+    const p = path.join(IMAGES_BASENAME, path.resolve('/', img_path));
+
     if (!shell.openPath(p)) {
       console.error(`could not open image at ${p}`);
     }
