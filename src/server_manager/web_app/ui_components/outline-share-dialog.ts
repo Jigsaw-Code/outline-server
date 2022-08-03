@@ -112,57 +112,7 @@ Polymer({
         ></p>
       </div>
       <div contenteditable="" id="selectableText" style="-webkit-text-size-adjust: 100%;">
-        <p>[[localize('share-invite-intro')]]</p>
-        <ol>
-          <li>
-            [[localize('share-invite-install-outline-step')]]
-            <ul>
-              <li>
-                <a href="https://play.google.com/store/apps/details?id=org.outline.android.client"
-                  >[[localize('share-invite-android')]]</a
-                >
-                (<a href="https://s3.amazonaws.com/outline-releases/client/Outline-Client.apk"
-                  >[[localize('share-invite-android-mirror')]]</a
-                >)
-              </li>
-              <li>
-                <a href="https://itunes.apple.com/app/outline-app/id1356177741"
-                  >[[localize('share-invite-ios')]]</a
-                >
-              </li>
-              <li>
-                <a href="https://s3.amazonaws.com/outline-releases/client/Outline-Client.exe"
-                  >[[localize('share-invite-windows')]]</a
-                >
-                -
-                <span>[[localize('share-invite-windows-instructions')]]</span>
-              </li>
-              <li>
-                <a href="https://itunes.apple.com/app/outline-app/id1356178125"
-                  >[[localize('share-invite-macos')]]</a
-                >
-                (<a href="https://s3.amazonaws.com/outline-releases/client/Outline-Client.dmg"
-                  >[[localize('share-invite-macos-mirror')]]</a
-                >)
-              </li>
-              <li>
-                <a href="https://s3.amazonaws.com/outline-releases/client/Outline-Client.AppImage"
-                  >[[localize('share-invite-linux')]]</a
-                >
-                -
-                <span
-                  inner-h-t-m-l="[[localize('share-invite-linux-instructions', 'openLink', '<a href=https://docs.appimage.org/introduction/quickstart.html>', 'closeLink', '</a>')]]"
-                ></span>
-              </li>
-            </ul>
-          </li>
-          <li>
-            [[localize('share-invite-copy-access-key-step')]]
-            <p>{{accessKey}}</p>
-          </li>
-          <li>[[localize('share-invite-add-server-step')]]</li>
-          <li>[[localize('share-invite-connect-server-step')]]</li>
-        </ol>
+        [[localize('share-invite')]]
       </div>
       <div id="button-row">
         <paper-button id="copyButton" on-tap="copyClicked"
@@ -189,7 +139,6 @@ Polymer({
   copyClicked() {
     const dt = new clipboard.DT();
     dt.setData('text/plain', this.$.selectableText.innerText);
-    dt.setData('text/html', this.$.selectableText.innerHTML);
     clipboard.write(dt);
     this.$.copyText.removeAttribute('hidden');
   },

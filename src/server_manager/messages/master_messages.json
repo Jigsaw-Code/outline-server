@@ -1243,69 +1243,14 @@
       }
     }
   },
-  "share_invite_intro": {
-    "message": "You’re invited to Outline! Follow these instructions to use my server to access the open internet on any device, no matter where you are. No personal information will be collected.",
-    "description": "This string appears at the beginning of an email invite introducing a potential new user to using Outline."
-  },
-  "share_invite_install_outline_step": {
-    "message": "Download and install the Outline app for your device:",
-    "description": "This string appears as the first step of an email invite directing the user to install the Outline client."
-  },
-  "share_invite_android": {
-    "message": "Android",
-    "description": "This string appears as a link in an email invite to install the Outline Android application if that is their device of choice."
-  },
-  "share_invite_android_mirror": {
-    "message": "Mirror",
-    "description": "This string appears as a link in an email invite to install the Outline Android application if the Play Store link dosen't work."
-  },
-  "share_invite_ios": {
-    "message": "iOS",
-    "description": "This string appears as a link in an email invite to install the Outline iOS application if that is their device of choice."
-  },
-  "share_invite_windows": {
-    "message": "Windows",
-    "description": "This string appears as a link in an email invite to install the Outline Windows application if that is their device of choice."
-  },
-  "share_invite_windows_instructions": {
-    "message": "once downloaded, double click to launch.",
-    "description": "This string appears in an email invite on how to install the Ouline Windows application once downloaded."
-  },
-  "share_invite_macos": {
-    "message": "MacOS",
-    "description": "This string appears as a link in an email invite to install the Outline MacOS application if that is their device of choice."
-  },
-  "share_invite_macos_mirror": {
-    "message": "Mirror",
-    "description": "This string appears as a link in an email invite to install the Outline MacOS application if the App Store link doesn't work."
-  },
-  "share_invite_linux": {
-    "message": "Linux",
-    "description": "This string appears as a link in an email invite to install the Outline Linux application if that is their device of choice."
-  },
-  "share_invite_linux_instructions": {
-    "message": "once downloaded, $START_OF_LINK$make it executable$END_OF_LINK$, then double click to launch.",
-    "description": "This string appears in an email invite on how to install the Outline Linux application once downloaded.",
+  "share_invite": {
+    "message": "You're invited to Outline! Follow these instructions to use my server to access the open internet on any device, no matter where you are. No personal information will be collected.\n1) Download and install the Outline app for your device:\n\n  - Android: https://play.google.com/store/apps/details?id=org.outline.android.client\n  - iOS: https://itunes.apple.com/app/outline-app/id1356177741\n  - Windows: https://s3.amazonaws.com/outline-releases/client/Outline-Client.exe - once downloaded, double click to launch.\n\n  - macOS: https://itunes.apple.com/app/outline-app/id1356178125\n  - Linux: https://s3.amazonaws.com/outline-releases/client/Outline-Client.AppImage - once downloaded, make it executable, then double click to launch.\n\n2) Copy the following access key.\n\n  $ACCESS_KEY$\n\n3) In the Outline app, tap the \"+\" sign on the top bar and paste the access key.\n\n4) Press the \"ADD SERVER\" button to confirm.\n\n5) A card will be added to your app. Tap \"Connect\" to get connected with the new service you added.",
+    "description": "This string appears as an email invitation instructing new Outline users how to set up and connect to Outline.",
     "placeholders": {
-      "END_OF_LINK": {
-        "content": "{closeLink}"
-      },
-      "START_OF_LINK": {
-        "content": "{openLink}"
+      "ACCESS_KEY": {
+        "content": "{accessKey}"
       }
     }
-  },
-  "share_invite_copy_access_key_step": {
-    "message": "Copy the following access key. In the Outline app, tap the \"+\" sign on the top bar and paste the access key:",
-    "description": "This string appears as the second step in an email invite instructing the invited user on how to register the server in their newly install Outline Application."
-  },
-  "share_invite_add_server_step": {
-    "message": "Press the \"ADD SERVER\" button to confirm.",
-    "description": "This string appears as the third step in an email invite instructing the invited user on how to confirm the installation of their new Outline server."
-  },
-  "share_invite_connect_step": {
-    "message": "A card will be added to your app. Tap \"Connect\" to get connected with the new service you added.",
-    "description": "This string appears as the fourth step in an email invite instructing the invited user on how to connect to their newly confirmed Outline server installation."
   },
   "share_invite_copied": {
     "message": "Copied to clipboard",
