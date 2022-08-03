@@ -114,7 +114,7 @@ Polymer({
       <div
         contenteditable=""
         id="selectableText"
-        style="-webkit-text-size-adjust: 100%;"
+        style="-webkit-text-size-adjust: 100%; white-space: pre-wrap;"
         inner-h-t-m-l="[[localize('share-invite', 'accessKey', accessKey)]]"
       ></div>
       <div id="button-row">
