@@ -111,9 +111,12 @@ Polymer({
           inner-h-t-m-l="[[localize('share-description', 'openLink', '<a href=https://securityplanner.org/#/all-recommendations>', 'closeLink', '</a>')]]"
         ></p>
       </div>
-      <div contenteditable="" id="selectableText" style="-webkit-text-size-adjust: 100%;">
-        [[localize('share-invite')]]
-      </div>
+      <div
+        contenteditable=""
+        id="selectableText"
+        style="-webkit-text-size-adjust: 100%;"
+        inner-h-t-m-l="[[localize('share-invite', 'accessKey', accessKey)]]"
+      ></div>
       <div id="button-row">
         <paper-button id="copyButton" on-tap="copyClicked"
           >[[localize('share-invite-copy')]]</paper-button
