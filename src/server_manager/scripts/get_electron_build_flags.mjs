@@ -49,7 +49,7 @@ export async function getElectronBuildFlags(platform, buildMode) {
       ...buildFlags,
       '--config.generateUpdatesFilesForAllChannels=true',
       '--config.publish.provider=generic',
-      '--config.publish.url=https://raw.githubusercontent.com/Jigsaw-Code/outline-releases/master/manager/',
+      '--config.publish.url=https://s3.amazonaws.com/outline-releases/manager/',
     ];
   }
 
