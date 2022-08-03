@@ -1245,47 +1245,47 @@
   },
   "share_invite_intro": {
     "message": "You’re invited to Outline! Follow these instructions to use my server to access the open internet on any device, no matter where you are. No personal information will be collected.",
-    "description": "TODO"
+    "description": "This string appears at the beginning of an email invite introducing a potential new user to using Outline."
   },
   "share_invite_install_outline_step": {
-    "message": "1) Download and install the Outline app for your device:",
-    "description": "TODO"
+    "message": "Download and install the Outline app for your device:",
+    "description": "This string appears as the first step of an email invite directing the user to install the Outline client."
   },
   "share_invite_android": {
     "message": "Android",
-    "description": "TODO"
+    "description": "This string appears as a link in an email invite to install the Outline Android application if that is their device of choice."
   },
   "share_invite_android_mirror": {
     "message": "Mirror",
-    "description": "TODO"
+    "description": "This string appears as a link in an email invite to install the Outline Android application if the Play Store link dosen't work."
   },
   "share_invite_ios": {
     "message": "iOS",
-    "description": "TODO"
+    "description": "This string appears as a link in an email invite to install the Outline iOS application if that is their device of choice."
   },
   "share_invite_windows": {
     "message": "Windows",
-    "description": "TODO"
+    "description": "This string appears as a link in an email invite to install the Outline Windows application if that is their device of choice."
   },
   "share_invite_windows_instructions": {
     "message": "once downloaded, double click to launch.",
-    "description": "TODO"
+    "description": "This string appears in an email invite on how to install the Ouline Windows application once downloaded."
   },
   "share_invite_macos": {
     "message": "MacOS",
-    "description": "TODO"
+    "description": "This string appears as a link in an email invite to install the Outline MacOS application if that is their device of choice."
   },
   "share_invite_macos_mirror": {
     "message": "Mirror",
-    "description": "TODO"
+    "description": "This string appears as a link in an email invite to install the Outline MacOS application if the App Store link doesn't work."
   },
   "share_invite_linux": {
     "message": "Linux",
-    "description": "TODO"
+    "description": "This string appears as a link in an email invite to install the Outline Linux application if that is their device of choice."
   },
   "share_invite_linux_instructions": {
     "message": "once downloaded, $START_OF_LINK$make it executable$END_OF_LINK$, then double click to launch.",
-    "description": "TODO",
+    "description": "This string appears in an email invite on how to install the Outline Linux application once downloaded.",
     "placeholders": {
       "END_OF_LINK": {
         "content": "{closeLink}"
@@ -1297,15 +1297,15 @@
   },
   "share_invite_copy_access_key_step": {
     "message": "Copy the following access key. In the Outline app, tap the \"+\" sign on the top bar and paste the access key:",
-    "description": "TODO"
+    "description": "This string appears as the second step in an email invite instructing the invited user on how to register the server in their newly install Outline Application."
   },
   "share_invite_add_server_step": {
     "message": "Press the \"ADD SERVER\" button to confirm.",
-    "description": "TODO"
+    "description": "This string appears as the third step in an email invite instructing the invited user on how to confirm the installation of their new Outline server."
   },
   "share_invite_connect_step": {
     "message": "A card will be added to your app. Tap \"Connect\" to get connected with the new service you added.",
-    "description": "TODO"
+    "description": "This string appears as the fourth step in an email invite instructing the invited user on how to connect to their newly confirmed Outline server installation."
   },
   "share_invite_copied": {
     "message": "Copied to clipboard",
