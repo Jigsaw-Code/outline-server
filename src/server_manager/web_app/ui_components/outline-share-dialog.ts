@@ -114,8 +114,8 @@ Polymer({
       <div contenteditable="" id="selectableText" style="-webkit-text-size-adjust: 100%;">
         <p>[[localize('share-invite-intro')]]</p>
         <ol>
-          <li>[[localize('share-invite-install-outline-step')]]</li>
           <li>
+            [[localize('share-invite-install-outline-step')]]
             <ul>
               <li>
                 <a href="https://play.google.com/store/apps/details?id=org.outline.android.client"
