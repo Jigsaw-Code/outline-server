@@ -1247,7 +1247,7 @@
     "message": "You’re invited to Outline! Follow these instructions to use my server to access the open internet on any device, no matter where you are. No personal information will be collected.",
     "description": "TODO"
   },
-  "share_invite_step_one": {
+  "share_invite_install_outline_step": {
     "message": "1) Download and install the Outline app for your device:",
     "description": "TODO"
   },
@@ -1295,16 +1295,16 @@
       }
     }
   },
-  "share_invite_step_two": {
-    "message": "2) Copy the following access key. In the Outline app, tap the \"+\" sign on the top bar and paste the access key:",
+  "share_invite_copy_access_key_step": {
+    "message": "Copy the following access key. In the Outline app, tap the \"+\" sign on the top bar and paste the access key:",
     "description": "TODO"
   },
-  "share_invite_step_three": {
-    "message": "3) Press the \"ADD SERVER\" button to confirm.",
+  "share_invite_add_server_step": {
+    "message": "Press the \"ADD SERVER\" button to confirm.",
     "description": "TODO"
   },
-  "share_invite_step_four": {
-    "message": "4) A card will be added to your app. Tap \"Connect\" to get connected with the new service you added.",
+  "share_invite_connect_step": {
+    "message": "A card will be added to your app. Tap \"Connect\" to get connected with the new service you added.",
     "description": "TODO"
   },
   "share_invite_copied": {

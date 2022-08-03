@@ -113,50 +113,56 @@ Polymer({
       </div>
       <div contenteditable="" id="selectableText" style="-webkit-text-size-adjust: 100%;">
         <p>[[localize('share-invite-intro')]]</p>
-        <p>[[localize('share-invite-step-one')]]</p>
         <ol>
+          <li>[[localize('share-invite-install-outline-step')]]</li>
           <li>
-            <a href="https://play.google.com/store/apps/details?id=org.outline.android.client"
-              >[[localize('share-invite-android')]]</a
-            >
-            (<a href="https://s3.amazonaws.com/outline-releases/client/Outline-Client.apk"
-              >[[localize('share-invite-android-mirror')]]</a
-            >)
+            <ul>
+              <li>
+                <a href="https://play.google.com/store/apps/details?id=org.outline.android.client"
+                  >[[localize('share-invite-android')]]</a
+                >
+                (<a href="https://s3.amazonaws.com/outline-releases/client/Outline-Client.apk"
+                  >[[localize('share-invite-android-mirror')]]</a
+                >)
+              </li>
+              <li>
+                <a href="https://itunes.apple.com/app/outline-app/id1356177741"
+                  >[[localize('share-invite-ios')]]</a
+                >
+              </li>
+              <li>
+                <a href="https://s3.amazonaws.com/outline-releases/client/Outline-Client.exe"
+                  >[[localize('share-invite-windows')]]</a
+                >
+                -
+                <span>[[localize('share-invite-windows-instructions')]]</span>
+              </li>
+              <li>
+                <a href="https://itunes.apple.com/app/outline-app/id1356178125"
+                  >[[localize('share-invite-macos')]]</a
+                >
+                (<a href="https://s3.amazonaws.com/outline-releases/client/Outline-Client.dmg"
+                  >[[localize('share-invite-macos-mirror')]]</a
+                >)
+              </li>
+              <li>
+                <a href="https://s3.amazonaws.com/outline-releases/client/Outline-Client.AppImage"
+                  >[[localize('share-invite-linux')]]</a
+                >
+                -
+                <span
+                  inner-h-t-m-l="[[localize('share-invite-linux-instructions', 'openLink', '<a href=https://docs.appimage.org/introduction/quickstart.html>', 'closeLink', '</a>')]]"
+                ></span>
+              </li>
+            </ul>
           </li>
           <li>
-            <a href="https://itunes.apple.com/app/outline-app/id1356177741"
-              >[[localize('share-invite-ios')]]</a
-            >
+            [[localize('share-invite-copy-access-key-step')]]
+            <p>{{accessKey}}</p>
           </li>
-          <li>
-            <a href="https://s3.amazonaws.com/outline-releases/client/Outline-Client.exe"
-              >[[localize('share-invite-windows')]]</a
-            >
-            -
-            <span>[[localize('share-invite-windows-instructions')]]</span>
-          </li>
-          <li>
-            <a href="https://itunes.apple.com/app/outline-app/id1356178125"
-              >[[localize('share-invite-macos')]]</a
-            >
-            (<a href="https://s3.amazonaws.com/outline-releases/client/Outline-Client.dmg"
-              >[[localize('share-invite-macos-mirror')]]</a
-            >)
-          </li>
-          <li>
-            <a href="https://s3.amazonaws.com/outline-releases/client/Outline-Client.AppImage"
-              >[[localize('share-invite-linux')]]</a
-            >
-            -
-            <span
-              inner-h-t-m-l="[[localize('share-invite-linux-instructions', 'openLink', '<a href=https://docs.appimage.org/introduction/quickstart.html>', 'closeLink', '</a>')]]"
-            ></span>
-          </li>
+          <li>[[localize('share-invite-add-server-step')]]</li>
+          <li>[[localize('share-invite-connect-server-step')]]</li>
         </ol>
-        <p>[[localize('share-invite-step-two')]]</p>
-        <p>{{accessKey}}</p>
-        <p>[[localize('share-invite-step-three')]]</p>
-        <p>[[localize('share-invite-step-four')]]</p>
       </div>
       <div id="button-row">
         <paper-button id="copyButton" on-tap="copyClicked"
