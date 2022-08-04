@@ -290,7 +290,7 @@ export class App {
 
     appRoot.addEventListener('OpenShareDialogRequested', (event: CustomEvent) => {
       const accessKey = event.detail.accessKey;
-      this.appRoot.openShareDialog(accessKey, this.getS3InviteUrl(accessKey));
+      this.appRoot.openShareDialog(accessKey);
     });
 
     appRoot.addEventListener('OpenGetConnectedDialogRequested', (event: CustomEvent) => {
