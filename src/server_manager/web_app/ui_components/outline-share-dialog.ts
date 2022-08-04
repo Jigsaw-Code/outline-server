@@ -108,14 +108,14 @@ Polymer({
       <div id="dialog-header">
         <h3>[[localize('share-title')]]</h3>
         <p
-          inner-h-t-m-l="[[localize('share-description', 'openLink', '<a href=https://securityplanner.org/#/all-recommendations>', 'closeLink', '</a>')]]"
+          inner-h-t-m-l="[[localize('share-description-html', 'openLink', '<a href=https://securityplanner.org/#/all-recommendations>', 'closeLink', '</a>')]]"
         ></p>
       </div>
       <div
         contenteditable=""
         id="selectableText"
         style="-webkit-text-size-adjust: 100%; white-space: pre-wrap;"
-        inner-h-t-m-l="[[localize('share-invite', 'accessKey', accessKey)]]"
+        inner-h-t-m-l="[[localize('share-invite-html', 'openLink', '<a href=[[accessKey]]>', 'accessKey', accessKey, 'closeLink', '</a>')]]"
       ></div>
       <div id="button-row">
         <paper-button id="copyButton" on-tap="copyClicked"

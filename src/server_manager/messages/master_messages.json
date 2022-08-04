@@ -1231,7 +1231,7 @@
     "message": "Choose a cloud service to set up Outline.",
     "description": "This string appears in the server setup view as a header. Prompts the user to create deploy Outline servers on the cloud provider of their choice. 'Set up' means install and run the Outline server software."
   },
-  "share_description": {
+  "share_description_html": {
     "message": "Copy this invitation and send it from a communication tool you trust. $START_OF_LINK$Need help?$END_OF_LINK$",
     "description": "This string appears as a sub-header of a dialog that provides instructions on how to share access to a server.",
     "placeholders": {
@@ -1243,12 +1243,18 @@
       }
     }
   },
-  "share_invite": {
-    "message": "You're invited to Outline! Follow these instructions to use my server to access the open internet on any device, no matter where you are. No personal information will be collected.&#10;1) Download and install the Outline app for your device:&#10;&#10;  - Android: https://play.google.com/store/apps/details?id=org.outline.android.client&#10;  - iOS: https://itunes.apple.com/app/outline-app/id1356177741&#10;  - Windows: https://s3.amazonaws.com/outline-releases/client/Outline-Client.exe - once downloaded, double click to launch.&#10;  - macOS: https://itunes.apple.com/app/outline-app/id1356178125&#10;  - Linux: https://s3.amazonaws.com/outline-releases/client/Outline-Client.AppImage - once downloaded, make it executable, then double click to launch.&#10;&#10;2) Copy the following access key.&#10;&#10;  $ACCESS_KEY$&#10;&#10;3) In the Outline app, tap the \"+\" sign on the top bar and paste the access key.&#10;&#10;4) Press the \"ADD SERVER\" button to confirm.&#10;&#10;5) A card will be added to your app. Tap \"Connect\" to get connected with the new service you added.",
+  "share_invite_html": {
+    "message": "You're invited to Outline! Follow these instructions to use my server to access the open internet on any device, no matter where you are. No personal information will be collected.<br><br>1) Download and install the Outline app for your device:<br><br>  - Android: https://play.google.com/store/apps/details?id=org.outline.android.client<br>  - iOS: https://itunes.apple.com/app/outline-app/id1356177741<br>  - Windows: https://s3.amazonaws.com/outline-releases/client/Outline-Client.exe - once downloaded, double click to launch.<br>  - macOS: https://itunes.apple.com/app/outline-app/id1356178125<br>  - Linux: https://s3.amazonaws.com/outline-releases/client/Outline-Client.AppImage - once downloaded, make it executable, then double click to launch.<br><br>2) Copy the following access key.<br>  $START_OF_LINK$$ACCESS_KEY$$END_OF_LINK$<br><br>3) In the Outline app, tap the \"+\" sign on the top bar and paste the access key.<br><br>4) Press the \"ADD SERVER\" button to confirm.<br><br>5) A card will be added to your app. Tap \"Connect\" to get connected with the new service you added.",
     "description": "This string appears as an email invitation instructing new Outline users how to set up and connect to Outline.",
     "placeholders": {
       "ACCESS_KEY": {
         "content": "{accessKey}"
+      },
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
       }
     }
   },
