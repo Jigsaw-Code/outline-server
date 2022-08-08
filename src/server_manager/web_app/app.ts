@@ -94,10 +94,6 @@ async function showHelpBubblesOnce(serverView: ServerView) {
     await serverView.showAddAccessKeyHelpBubble();
     window.localStorage.setItem('addAccessKeyHelpBubble-dismissed', 'true');
   }
-  if (!window.localStorage.getItem('getConnectedHelpBubble-dismissed')) {
-    await serverView.showGetConnectedHelpBubble();
-    window.localStorage.setItem('getConnectedHelpBubble-dismissed', 'true');
-  }
   if (
     !window.localStorage.getItem('dataLimitsHelpBubble-dismissed') &&
     serverView.supportsDefaultDataLimit

@@ -292,15 +292,6 @@ export class ServerView extends DirMixin(PolymerElement) {
            parent, which defines the dataset elements needed for displaying the icon. */
           pointer-events: none;
         }
-        #manager-access-key-description {
-          font-size: 12px;
-          font-weight: 400;
-          margin-top: 4px;
-          color: var(--medium-gray);
-        }
-        .manager-access-key-icon.access-key-icon {
-          height: 48px;
-        }
         .access-key-icon {
           width: 42px;
           height: 42px;
@@ -582,67 +573,11 @@ export class ServerView extends DirMixin(PolymerElement) {
               </outline-sort-span>
               <span class="flex-1 header-row-spacer"></span>
             </div>
-            <!-- admin row -->
-            <div class="access-key-row" id="managerRow">
-              <span class="access-key-container">
-                <img
-                  class="manager-access-key-icon access-key-icon"
-                  src="images/manager-key-avatar.svg"
-                />
-                <div class="access-key-name">
-                  <div>[[localize('server-my-access-key')]]</div>
-                  <div id="manager-access-key-description">
-                    [[localize('server-connect-devices')]]
-                  </div>
-                </div>
-              </span>
-              <span class="measurement-container">
-                <span class="measurement">
-                  <bdi
-                    >[[_formatBytesTransferred(myConnection.transferredBytes, language,
-                    "...")]]</bdi
-                  >
-                  /
-                  <bdi>[[_formatDataLimitForKey(myConnection, language, localize)]]</bdi>
-                </span>
-                <paper-progress
-                  max="[[_getRelevantTransferAmountForKey(myConnection)]]"
-                  value="[[myConnection.transferredBytes]]"
-                  class$="[[_computePaperProgressClass(myConnection)]]"
-                  style$="[[_computeProgressWidthStyling(myConnection, baselineDataTransfer)]]"
-                ></paper-progress>
-                <paper-tooltip
-                  animation-delay="0"
-                  offset="0"
-                  position="top"
-                  hidden$="[[!_activeDataLimitForKey(myConnection)]]"
-                >
-                  [[_getDataLimitsUsageString(myConnection, language, localize)]]
-                </paper-tooltip>
-              </span>
-              <span class="actions">
-                <span class="flex-1">
-                  <paper-icon-button
-                    icon="outline-iconset:devices"
-                    class="connect-button"
-                    on-tap="_handleConnectPressed"
-                  ></paper-icon-button>
-                </span>
-                <span class="flex-1">
-                  <paper-icon-button
-                    icon="icons:perm-data-setting"
-                    hidden$="[[!hasPerKeyDataLimitDialog]]"
-                    on-tap="_handleShowPerKeyDataLimitDialogPressed"
-                  ></paper-icon-button>
-                </span>
-              </span>
-            </div>
             <div id="accessKeysContainer">
               <!-- rows for each access key -->
               <template
                 is="dom-repeat"
                 items="{{accessKeyRows}}"
-                filter="isRegularConnection"
                 sort="{{_sortAccessKeys(accessKeySortBy, accessKeySortDirection)}}"
                 observe="name transferredBytes"
               >
@@ -794,7 +729,6 @@ export class ServerView extends DirMixin(PolymerElement) {
       installProgress: Number,
       isServerReachable: Boolean,
       retryDisplayingServer: Function,
-      myConnection: Object,
       totalInboundBytes: Number,
       baselineDataTransfer: Number,
       accessKeyRows: Array,
@@ -812,10 +746,7 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   static get observers() {
-    return [
-      '_accessKeysAddedOrRemoved(accessKeyRows.splices)',
-      '_myConnectionChanged(myConnection)',
-    ];
+    return ['_accessKeysAddedOrRemoved(accessKeyRows.splices)'];
   }
 
   serverId = '';
@@ -842,16 +773,6 @@ export class ServerView extends DirMixin(PolymerElement) {
   isServerReachable = false;
   /** Callback for retrying to display an unreachable server. */
   retryDisplayingServer: () => void = null;
-  /**
-   *  myConnection has the same fields as each item in accessKeyRows.  It may
-   *  be unset in some old versions of Outline that allowed deleting this row
-   *
-   * TODO(JonathanDCohen) Refactor out special casing for myConnection.  It exists as a separate
-   * item in the view even though it's also in accessKeyRows.  We can have the special casing
-   * be in display only, so we can just use accessKeyRows[0] and not have extra logic when it's
-   * not needed.
-   */
-  myConnection: DisplayAccessKey = null;
   totalInboundBytes = 0;
   /** The number to which access key transfer amounts are compared for progress bar display */
   baselineDataTransfer = Number.POSITIVE_INFINITY;
@@ -895,10 +816,6 @@ export class ServerView extends DirMixin(PolymerElement) {
 
   updateAccessKeyRow(accessKeyId: string, fields: object) {
     let newAccessKeyRow;
-    if (accessKeyId === MY_CONNECTION_USER_ID) {
-      newAccessKeyRow = Object.assign({}, this.get('myConnection'), fields);
-      this.set('myConnection', newAccessKeyRow);
-    }
     for (const accessKeyRowIndex in this.accessKeyRows) {
       if (this.accessKeyRows[accessKeyRowIndex].id === accessKeyId) {
         newAccessKeyRow = Object.assign({}, this.get(['accessKeyRows', accessKeyRowIndex]), fields);
@@ -906,14 +823,6 @@ export class ServerView extends DirMixin(PolymerElement) {
         return;
       }
     }
-  }
-
-  // Help bubbles should be shown after this outline-server-view
-  // is on the screen (e.g. selected in iron-pages). If help bubbles
-  // are initialized before this point, setPosition will not work and
-  // they will appear in the top left of the view.
-  showGetConnectedHelpBubble() {
-    return this._showHelpBubble('getConnectedHelpBubble', 'managerRow');
   }
 
   showAddAccessKeyHelpBubble() {
@@ -926,9 +835,7 @@ export class ServerView extends DirMixin(PolymerElement) {
 
   /** Returns the UI access key with the given ID. */
   findUiKey(id: AccessKeyId): DisplayAccessKey {
-    return id === MY_CONNECTION_USER_ID
-      ? this.myConnection
-      : this.accessKeyRows.find((key) => key.id === id);
+    return this.accessKeyRows.find((key) => key.id === id);
   }
 
   _closeAddAccessKeyHelpBubble() {
@@ -992,13 +899,10 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   _handleShowPerKeyDataLimitDialogPressed(event: KeyRowEvent) {
-    const accessKey = event.model?.item || this.myConnection;
+    const accessKey = event.model?.item;
     const keyId = accessKey.id;
     const keyDataLimitBytes = accessKey.dataLimitBytes;
-    const keyName =
-      accessKey === this.myConnection
-        ? this.localize('server-my-access-key')
-        : accessKey.name || accessKey.placeholderName;
+    const keyName = accessKey.name || accessKey.placeholderName;
     const defaultDataLimitBytes = this.isDefaultDataLimitEnabled
       ? this.defaultDataLimitBytes
       : undefined;
@@ -1022,13 +926,6 @@ export class ServerView extends DirMixin(PolymerElement) {
     window.setTimeout(() => {
       input.focus();
     }, 0);
-  }
-
-  _handleConnectPressed() {
-    (this.$.getConnectedHelpBubble as OutlineHelpBubble).hide();
-    this.dispatchEvent(
-      makePublicEvent('OpenGetConnectedDialogRequested', {accessKey: this.myConnection.accessUrl})
-    );
   }
 
   _handleShareCodePressed(event: KeyRowEvent) {
@@ -1103,22 +1000,15 @@ export class ServerView extends DirMixin(PolymerElement) {
   }
 
   _accessKeysAddedOrRemoved(_changeRecord: unknown) {
-    // Check for myConnection and regular access keys.
-    let hasNonAdminAccessKeys = false;
+    // Check for user key and regular access keys.
+    let hasNonAdminAccessKeys = true;
     for (const ui in this.accessKeyRows) {
       if (this.accessKeyRows[ui].id === MY_CONNECTION_USER_ID) {
-        this.myConnection = this.accessKeyRows[ui];
-      } else {
-        hasNonAdminAccessKeys = true;
+        hasNonAdminAccessKeys = false;
+        break;
       }
     }
     this.hasNonAdminAccessKeys = hasNonAdminAccessKeys;
-  }
-
-  _myConnectionChanged(myConnection: DisplayAccessKey) {
-    if (!myConnection) {
-      (this.$.getConnectedHelpBubble as OutlineHelpBubble).hide();
-    }
   }
 
   _selectedTabChanged() {
