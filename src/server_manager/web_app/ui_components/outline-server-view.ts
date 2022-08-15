@@ -825,6 +825,14 @@ export class ServerView extends DirMixin(PolymerElement) {
     }
   }
 
+  // Help bubbles should be shown after this outline-server-view
+  // is on the screen (e.g. selected in iron-pages). If help bubbles
+  // are initialized before this point, setPosition will not work and
+  // they will appear in the top left of the view.
+  showGetConnectedHelpBubble() {
+    return this._showHelpBubble('getConnectedHelpBubble', 'addAccessKeyRow');
+  }
+
   showAddAccessKeyHelpBubble() {
     return this._showHelpBubble('addAccessKeyHelpBubble', 'addAccessKeyRow', 'down', 'left');
   }

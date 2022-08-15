@@ -90,6 +90,10 @@ function hasSeenFeatureMetricsNotification(): boolean {
 }
 
 async function showHelpBubblesOnce(serverView: ServerView) {
+  if (!window.localStorage.getItem('getConnectedHelpBubble-dismissed')) {
+    await serverView.showGetConnectedHelpBubble();
+    window.localStorage.setItem('getConnectedHelpBubble-dismissed', 'true');
+  }
   if (!window.localStorage.getItem('addAccessKeyHelpBubble-dismissed')) {
     await serverView.showAddAccessKeyHelpBubble();
     window.localStorage.setItem('addAccessKeyHelpBubble-dismissed', 'true');
