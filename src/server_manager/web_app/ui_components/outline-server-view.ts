@@ -830,7 +830,7 @@ export class ServerView extends DirMixin(PolymerElement) {
   // are initialized before this point, setPosition will not work and
   // they will appear in the top left of the view.
   showGetConnectedHelpBubble() {
-    return this._showHelpBubble('getConnectedHelpBubble', 'addAccessKeyRow');
+    return this._showHelpBubble('getConnectedHelpBubble', 'accessKeysContainer');
   }
 
   showAddAccessKeyHelpBubble() {
