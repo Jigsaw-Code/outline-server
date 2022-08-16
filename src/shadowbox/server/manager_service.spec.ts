@@ -234,6 +234,35 @@ describe('ShadowsocksManagerService', () => {
     });
   });
 
+  describe('getAccessKey', () => {
+    it('Returns an access key', async (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+      const key1 = await createNewAccessKeyWithName(repo, 'keyName1');
+      service.getAccessKey(
+        {params: {id: key1.id}},
+        {
+          send: (httpCode, data: AccessKey) => {
+            expect(httpCode).toEqual(200);
+            expect(data.id).toEqual('0');
+            responseProcessed = true;
+          },
+        },
+        done
+      );
+    });
+
+    it('Returns 404 if the access key does not exist', (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+      service.getAccessKey({params: {id: '1'}}, {send: () => {}}, (error) => {
+        expect(error.statusCode).toEqual(404);
+        responseProcessed = true;
+        done();
+      });
+    });
+  });
+
   describe('listAccessKeys', () => {
     it('lists access keys in order', async (done) => {
       const repo = getAccessKeyRepository();

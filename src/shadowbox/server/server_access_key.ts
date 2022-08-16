@@ -190,6 +190,15 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     throw new errors.AccessKeyNotFound(id);
   }
 
+  getAccessKey(id: AccessKeyId): ServerAccessKey {
+    for (const accessKey of this.accessKeys) {
+      if (accessKey.id === id) {
+        return accessKey;
+      }
+    }
+    throw new errors.AccessKeyNotFound(id);
+  }
+
   listAccessKeys(): AccessKey[] {
     return [...this.accessKeys]; // Return a copy of the access key array.
   }
@@ -274,15 +283,5 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   private saveAccessKeys() {
     this.keyConfig.data().accessKeys = this.accessKeys.map((key) => accessKeyToStorageJson(key));
     this.keyConfig.write();
-  }
-
-  // Returns a reference to the access key with `id`, or throws if the key is not found.
-  private getAccessKey(id: AccessKeyId): ServerAccessKey {
-    for (const accessKey of this.accessKeys) {
-      if (accessKey.id === id) {
-        return accessKey;
-      }
-    }
-    throw new errors.AccessKeyNotFound(id);
   }
 }

@@ -28,6 +28,9 @@ export interface Server {
   // Updates the server name.
   setName(name: string): Promise<void>;
 
+  // Return access key
+  getAccessKey(accessKeyId: AccessKeyId): Promise<AccessKey>;
+
   // Lists the access keys for this server, including the admin.
   listAccessKeys(): Promise<AccessKey[]>;
 

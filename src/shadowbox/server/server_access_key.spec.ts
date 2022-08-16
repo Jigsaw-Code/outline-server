@@ -30,6 +30,17 @@ describe('ServerAccessKeyRepository', () => {
     done();
   });
 
+  it('Can get a access keys', (done) => {
+    const repo = new RepoBuilder().build();
+    repo.createNewAccessKey().then((accessKey) => {
+      const accessKey2 = repo.getAccessKey(accessKey.id);
+      expect(accessKey2).toBeDefined();
+      expect(accessKey2.id).toEqual(accessKey.id);
+      expect(repo.removeAccessKey.bind(repo, accessKey.id)).not.toThrow();
+      done();
+    });
+  });
+
   it('Can create new access keys', (done) => {
     const repo = new RepoBuilder().build();
     repo.createNewAccessKey().then((accessKey) => {
