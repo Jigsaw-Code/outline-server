@@ -962,10 +962,6 @@
     "message": "Access keys",
     "description": "This string appears within the server view as a header of a table column that displays server access keys."
   },
-  "server_connect_devices": {
-    "message": "Connect your devices",
-    "description": "This string appears within the server view as a sub-header for the default server access key. This key is meant to be used by the server administrator."
-  },
   "server_connections": {
     "message": "Connections",
     "description": "This string appears within the server view as a header of the section that displays server information and access keys."
