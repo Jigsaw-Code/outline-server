@@ -51,6 +51,10 @@ npm install
 
 This project uses [NPM workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces/).
 
+## Code Design
+
+See [Code Design Principles](docs/CodeDesign.md) for the code design principles we follow to preserve the health of the codebase.
+
 ## Build System
 
 We have a very simple build system based on package.json scripts that are called using `npm run`
