@@ -127,11 +127,10 @@ export function bindService(
     service.setPortForNewAccessKeys.bind(service)
   );
 
-  apiServer.get(`${apiPrefix}/access-keys/:id`, service.getAccessKey.bind(service));
-
   apiServer.post(`${apiPrefix}/access-keys`, service.createNewAccessKey.bind(service));
   apiServer.get(`${apiPrefix}/access-keys`, service.listAccessKeys.bind(service));
 
+  apiServer.get(`${apiPrefix}/access-keys/:id`, service.getAccessKey.bind(service));
   apiServer.del(`${apiPrefix}/access-keys/:id`, service.removeAccessKey.bind(service));
   apiServer.put(`${apiPrefix}/access-keys/:id/name`, service.renameAccessKey.bind(service));
   apiServer.put(
