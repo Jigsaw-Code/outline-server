@@ -101,7 +101,7 @@ export class DigitalOceanAccount implements digitalocean.Account {
     const dropletSpec = {
       installCommand,
       size: MACHINE_SIZE,
-      image: 'docker-18-04',
+      image: 'docker-20-04',
       tags: [SHADOWBOX_TAG],
     };
     if (this.debugMode) {
