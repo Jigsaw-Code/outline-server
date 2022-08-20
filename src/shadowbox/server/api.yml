@@ -177,6 +177,42 @@ paths:
                       {"id":"1","name":"First","password":"xXxXxX","port":4410,"method":"chacha20-ietf-poly1305","accessUrl":"ss://ASDFSADJFKAS=@0.0.0.0:4410/?outline=1"},
                       {"id":"2","name":"SecondWithCustomDataLimit","password":"XxXxXx","port":25424,"method":"chacha20-ietf-poly1305","dataLimit":{"bytes":8589934592},"accessUrl":"ss://ASDFHAKSDFSDAKFJ@0.0.0.0:25424/?outline=1"}]}
   /access-keys/{id}:
+    get:
+      description: Get an access key
+      tags:
+        - Access Key
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id to get the access key
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The access key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessKey"
+              examples:
+                '0':
+                  value: '{"id":"0","name":"Admin","password":"XxXxXx","port":18162,"method":"chacha20-ietf-poly1305","accessUrl":"ss://SADFJSKADFJAKSD@0.0.0.0:18162/?outline=1"}'
+        '404':
+          description: Access key inexistent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"NotFoundError","message":"No access key found"}
     delete:
       description: Deletes an access key
       tags:
