@@ -66,6 +66,9 @@ npm ci --prod --ignore-scripts
 cd "${ROOT_DIR}"
 electron-icon-maker --input=src/server_manager/images/launcher-icon.png --output=build/server_manager/electron_app/static
 
+# TODO(fortuna): Separate the build of Electron main and the Electron package.
+# Building the package significantly delays the start action.
+
 # TODO(daniellacosse): refactor these scripts into node so we can call the electron builder there directly
 # shellcheck disable=SC2046
 electron-builder $(node src/server_manager/scripts/get_electron_build_flags.mjs "${PLATFORM}" --buildMode "${BUILD_MODE}")
