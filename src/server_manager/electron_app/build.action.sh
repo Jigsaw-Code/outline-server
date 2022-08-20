@@ -54,6 +54,9 @@ mkdir -p "${STATIC_DIR}/server_manager"
 cp -r "${OUT_DIR}/js/electron_app/"* "${STATIC_DIR}"
 cp -r "${BUILD_DIR}/server_manager/web_app/static" "${STATIC_DIR}/server_manager/web_app/"
 
+# TODO(fortuna): Separate the build of Electron main and the Electron package.
+# Building the package significantly delays the start action.
+
 # Electron requires a package.json file for the app's name, etc.
 # We also need to install NPMs at this location for require()
 # in order for require() to work right in the renderer process, which
@@ -65,9 +68,6 @@ npm ci --prod --ignore-scripts
 # Icons.
 cd "${ROOT_DIR}"
 electron-icon-maker --input=src/server_manager/images/launcher-icon.png --output=build/server_manager/electron_app/static
-
-# TODO(fortuna): Separate the build of Electron main and the Electron package.
-# Building the package significantly delays the start action.
 
 # TODO(daniellacosse): refactor these scripts into node so we can call the electron builder there directly
 # shellcheck disable=SC2046
