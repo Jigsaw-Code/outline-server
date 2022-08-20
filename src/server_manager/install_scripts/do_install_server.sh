@@ -195,7 +195,7 @@ done
 # the finish trap in this file will be able to access its error code.
 wait "${install_pid}"
 
-# We could install the agents below in create droplet request, but they add
+# We could install the agents below in the create droplet request, but they add
 # over a minute of delay to the droplet readiness. Instead, we do it here.
 # Since the server manager looks only for the tags created in the previous
 # step, this does not slow down server creation.
