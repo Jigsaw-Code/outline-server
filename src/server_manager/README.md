@@ -61,5 +61,5 @@ To enable error reporting through [Sentry](https://sentry.io/) for local builds,
 
 ```bash
 export SENTRY_DSN=[Sentry development API key]
-npm run action server_manager/electron_app/start
+npm run action server_manager/electron_app/start ${PLATFORM}
 ```
