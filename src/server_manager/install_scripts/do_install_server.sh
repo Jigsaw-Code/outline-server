@@ -204,6 +204,6 @@ wait "${install_pid}"
 # https://docs.digitalocean.com/products/monitoring/how-to/install-agent/
 curl -sSL https://repos.insights.digitalocean.com/install.sh | bash
 
-# Install the DigitalOcean Droplet Agennt, for web console integration:
+# Install the DigitalOcean Droplet Agent, for web console integration:
 # https://docs.digitalocean.com/products/droplets/how-to/manage-agent/
 curl -sSL https://repos-droplet.digitalocean.com/install.sh | bash
