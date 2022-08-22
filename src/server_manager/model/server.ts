@@ -123,8 +123,8 @@ export class ServerInstallFailedError extends CustomError {
 // "magic" user experience, e.g. DigitalOcean.
 export interface ManagedServer extends Server {
   // Yields how far installation has progressed (0.0 to 1.0).
-  // Exits when installation has completed.
-  // Throws ServerInstallCanceledError if installation fails or is canceled.
+  // Exits when installation has completed. Throws ServerInstallFailedError or
+  // ServerInstallCanceledError if installation fails or is canceled.
   monitorInstallProgress(): AsyncGenerator<number, void>;
   // Returns server host object.
   getHost(): ManagedServerHost;
