@@ -130,6 +130,7 @@ export class RestApiSession implements DigitalOceanSession {
       const makeRequestRecursive = () => {
         ++requestCount;
         console.info(`Requesting droplet creation ${requestCount}/${MAX_REQUESTS}`);
+        // See https://docs.digitalocean.com/reference/api/api-reference/#operation/droplets_create
         this.request<{droplet: DropletInfo}>('POST', 'droplets', {
           name: dropletName,
           region,
@@ -139,6 +140,9 @@ export class RestApiSession implements DigitalOceanSession {
           user_data: dropletSpec.installCommand,
           tags: dropletSpec.tags,
           ipv6: true,
+          // We install metrics and droplet agents in the user_data script in order to not delay the droplet readiness.
+          monitoring: false,
+          with_droplet_agent: false,
         })
           .then(fulfill)
           .catch((e) => {

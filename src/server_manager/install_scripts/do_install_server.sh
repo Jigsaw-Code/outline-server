@@ -195,9 +195,15 @@ done
 # the finish trap in this file will be able to access its error code.
 wait "${install_pid}"
 
-# Install the DigitalOcean Agent, for improved monitoring:
-# https://www.digitalocean.com/docs/monitoring/quickstart/#enable-the-digitalocean-agent-on-existing-droplets
-#
+# We could install the agents below in the create droplet request, but they add
+# over a minute of delay to the droplet readiness. Instead, we do it here.
 # Since the server manager looks only for the tags created in the previous
 # step, this does not slow down server creation.
+
+# Install the DigitalOcean Metrics Agent, for improved monitoring:
+# https://docs.digitalocean.com/products/monitoring/how-to/install-agent/
 curl -sSL https://repos.insights.digitalocean.com/install.sh | bash
+
+# Install the DigitalOcean Droplet Agent, for web console integration:
+# https://docs.digitalocean.com/products/droplets/how-to/manage-agent/
+curl -sSL https://repos-droplet.digitalocean.com/install.sh | bash
