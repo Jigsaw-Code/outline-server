@@ -16,12 +16,12 @@ import * as sentry from '@sentry/electron';
 import * as semver from 'semver';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
-import * as errors from '../infrastructure/errors';
+import * as path_api from '../infrastructure/path_api';
 import {sleep} from '../infrastructure/sleep';
 import * as accounts from '../model/accounts';
 import * as digitalocean from '../model/digitalocean';
 import * as gcp from '../model/gcp';
-import * as server from '../model/server';
+import * as server_model from '../model/server';
 
 import {DisplayDataAmount, displayDataAmountToBytes} from './data_formatting';
 import {filterOptions, getShortName} from './location_formatting';
@@ -32,6 +32,7 @@ import type {CloudLocation} from '../model/location';
 import type {AppRoot, ServerListEntry} from './ui_components/app-root';
 import type {FeedbackDetail} from './ui_components/outline-feedback-dialog';
 import type {DisplayAccessKey, ServerView} from './ui_components/outline-server-view';
+import {CustomError} from '../infrastructure/custom_error';
 
 // The Outline DigitalOcean team's referral code:
 //   https://www.digitalocean.com/help/referral-program/
@@ -45,7 +46,9 @@ const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * 10 ** 9; // 50GB
 const CANCELLED_ERROR = new Error('Cancelled');
 export const LAST_DISPLAYED_SERVER_STORAGE_KEY = 'lastDisplayedServer';
 
-function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.DataLimit | null {
+function displayDataAmountToDataLimit(
+  dataAmount: DisplayDataAmount
+): server_model.DataLimit | null {
   if (!dataAmount) {
     return null;
   }
@@ -56,12 +59,12 @@ function displayDataAmountToDataLimit(dataAmount: DisplayDataAmount): server.Dat
 // Compute the suggested data limit based on the server's transfer capacity and number of access
 // keys.
 async function computeDefaultDataLimit(
-  server: server.Server,
-  accessKeys?: server.AccessKey[]
-): Promise<server.DataLimit> {
+  server: server_model.Server,
+  accessKeys?: server_model.AccessKey[]
+): Promise<server_model.DataLimit> {
   try {
     // Assume non-managed servers have a data transfer capacity of 1TB.
-    let serverTransferCapacity: server.DataAmount = {terabytes: 1};
+    let serverTransferCapacity: server_model.DataAmount = {terabytes: 1};
     if (isManagedServer(server)) {
       serverTransferCapacity =
         server.getHost().getMonthlyOutboundTransferLimit() ?? serverTransferCapacity;
@@ -107,24 +110,33 @@ async function showHelpBubblesOnce(serverView: ServerView) {
   }
 }
 
-function isManagedServer(testServer: server.Server): testServer is server.ManagedServer {
-  return !!(testServer as server.ManagedServer).getHost;
+function isManagedServer(
+  testServer: server_model.Server
+): testServer is server_model.ManagedServer {
+  return !!(testServer as server_model.ManagedServer).getHost;
 }
 
-function isManualServer(testServer: server.Server): testServer is server.ManualServer {
-  return !!(testServer as server.ManualServer).forget;
+function isManualServer(testServer: server_model.Server): testServer is server_model.ManualServer {
+  return !!(testServer as server_model.ManualServer).forget;
+}
+
+// Error thrown when a shadowbox server cannot be reached (e.g. due to Firewall)
+class UnreachableServerError extends CustomError {
+  constructor(message?: string) {
+    super(message);
+  }
 }
 
 export class App {
   private digitalOceanAccount: digitalocean.Account;
   private gcpAccount: gcp.Account;
-  private selectedServer: server.Server;
-  private idServerMap = new Map<string, server.Server>();
+  private selectedServer: server_model.Server;
+  private idServerMap = new Map<string, server_model.Server>();
 
   constructor(
     private appRoot: AppRoot,
     private readonly version: string,
-    private manualServerRepository: server.ManualServerRepository,
+    private manualServerRepository: server_model.ManualServerRepository,
     private cloudAccounts: accounts.CloudAccounts
   ) {
     appRoot.setAttribute('outline-version', this.version);
@@ -231,7 +243,7 @@ export class App {
           // Remove the progress indicator.
           manualServerEntryEl.showConnection = false;
           // Display either error dialog or feedback depending on error type.
-          if (e instanceof errors.UnreachableServerError) {
+          if (e instanceof UnreachableServerError) {
             const errorTitle = appRoot.localize('error-server-unreachable-title');
             const errorMessage = appRoot.localize('error-server-unreachable');
             this.appRoot.showManualServerError(errorTitle, errorMessage);
@@ -343,7 +355,7 @@ export class App {
 
   private async loadDigitalOceanAccount(
     digitalOceanAccount: digitalocean.Account
-  ): Promise<server.ManagedServer[]> {
+  ): Promise<server_model.ManagedServer[]> {
     if (!digitalOceanAccount) {
       return [];
     }
@@ -378,7 +390,7 @@ export class App {
     this.appRoot.showError(this.appRoot.localize('error-do-warning', 'message', status.warning));
   }
 
-  private async loadGcpAccount(gcpAccount: gcp.Account): Promise<server.ManagedServer[]> {
+  private async loadGcpAccount(gcpAccount: gcp.Account): Promise<server_model.ManagedServer[]> {
     if (!gcpAccount) {
       return [];
     }
@@ -421,7 +433,7 @@ export class App {
     }
   }
 
-  private makeServerListEntry(accountId: string, server: server.Server): ServerListEntry {
+  private makeServerListEntry(accountId: string, server: server_model.Server): ServerListEntry {
     return {
       id: server.getId(),
       accountId,
@@ -430,7 +442,7 @@ export class App {
     };
   }
 
-  private makeDisplayName(server: server.Server): string {
+  private makeDisplayName(server: server_model.Server): string {
     let name = server.getName() ?? server.getHostnameForAccessKeys();
     if (!name) {
       let cloudLocation = null;
@@ -443,7 +455,7 @@ export class App {
     return name;
   }
 
-  private addServer(accountId: string, server: server.Server): void {
+  private addServer(accountId: string, server: server_model.Server): void {
     console.log('Loading server', server);
     this.idServerMap.set(server.getId(), server);
     const serverEntry = this.makeServerListEntry(accountId, server);
@@ -463,7 +475,7 @@ export class App {
             /* empty */
           }
         } catch (error) {
-          if (error instanceof errors.ServerInstallCanceledError) {
+          if (error instanceof server_model.ServerInstallCanceledError) {
             // User clicked "Cancel" on the loading screen.
             return;
           }
@@ -488,13 +500,13 @@ export class App {
     }
   }
 
-  private updateServerEntry(server: server.Server): void {
+  private updateServerEntry(server: server_model.Server): void {
     this.appRoot.serverList = this.appRoot.serverList.map((ds) =>
       ds.id === server.getId() ? this.makeServerListEntry(ds.accountId, server) : ds
     );
   }
 
-  private getServerById(serverId: string): server.Server {
+  private getServerById(serverId: string): server_model.Server {
     return this.idServerMap.get(serverId);
   }
 
@@ -773,14 +785,14 @@ export class App {
     return this.appRoot.localize('server-name', 'serverLocation', placeName);
   }
 
-  public showServer(server: server.Server): void {
+  public showServer(server: server_model.Server): void {
     this.selectedServer = server;
     this.appRoot.selectedServerId = server.getId();
     localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, server.getId());
     this.appRoot.showServerView();
   }
 
-  private async updateServerView(server: server.Server): Promise<void> {
+  private async updateServerView(server: server_model.Server): Promise<void> {
     if (await server.isHealthy()) {
       this.setServerManagementView(server);
     } else {
@@ -789,7 +801,7 @@ export class App {
   }
 
   // Show the server management screen. Assumes the server is healthy.
-  private async setServerManagementView(server: server.Server): Promise<void> {
+  private async setServerManagementView(server: server_model.Server): Promise<void> {
     // Show view and initialize fields from selectedServer.
     const view = await this.appRoot.getServerView(server.getId());
     const version = server.getVersion();
@@ -824,7 +836,7 @@ export class App {
 
     view.metricsEnabled = server.getMetricsEnabled();
 
-    // Asynchronously load "My Connection" and other access keys in order to no block showing the
+    // Asynchronously load "My Connection" and other access keys in order to not block showing the
     // server.
     setTimeout(async () => {
       this.showMetricsOptInWhenNeeded(server);
@@ -848,7 +860,7 @@ export class App {
     }, 0);
   }
 
-  private async setServerUnreachableView(server: server.Server): Promise<void> {
+  private async setServerUnreachableView(server: server_model.Server): Promise<void> {
     // Display the unreachable server state within the server view.
     const serverId = server.getId();
     const serverView = await this.appRoot.getServerView(serverId);
@@ -858,7 +870,7 @@ export class App {
     };
   }
 
-  private async setServerProgressView(server: server.ManagedServer): Promise<void> {
+  private async setServerProgressView(server: server_model.ManagedServer): Promise<void> {
     const view = await this.appRoot.getServerView(server.getId());
     view.serverName = this.makeDisplayName(server);
     view.selectedPage = 'progressView';
@@ -871,7 +883,7 @@ export class App {
     }
   }
 
-  private showMetricsOptInWhenNeeded(selectedServer: server.Server) {
+  private showMetricsOptInWhenNeeded(selectedServer: server_model.Server) {
     const showMetricsOptInOnce = () => {
       // Sanity check to make sure the running server is still displayed, i.e.
       // it hasn't been deleted.
@@ -901,7 +913,7 @@ export class App {
     }
   }
 
-  private async refreshTransferStats(selectedServer: server.Server, serverView: ServerView) {
+  private async refreshTransferStats(selectedServer: server_model.Server, serverView: ServerView) {
     try {
       const usageMap = await selectedServer.getDataUsage();
       const keyTransfers = [...usageMap.values()];
@@ -928,14 +940,16 @@ export class App {
       // up and trigger a Sentry report. The exception is network errors, about which we can't
       // do much (note: ShadowboxServer generates a breadcrumb for failures regardless which
       // will show up when someone explicitly submits feedback).
-      if (e instanceof errors.ServerApiError && e.isNetworkError()) {
+      // TODO(fortuna): the model is leaking implementation details here. We should clean this up
+      // Perhaps take a more event-based approach.
+      if (e instanceof path_api.ServerApiError && e.isNetworkError()) {
         return;
       }
       throw e;
     }
   }
 
-  private showTransferStats(selectedServer: server.Server, serverView: ServerView) {
+  private showTransferStats(selectedServer: server_model.Server, serverView: ServerView) {
     this.refreshTransferStats(selectedServer, serverView);
     // Get transfer stats once per minute for as long as server is selected.
     const statsRefreshRateMs = 60 * 1000;
@@ -958,7 +972,7 @@ export class App {
   }
 
   // Converts the access key model to the format used by outline-server-view.
-  private convertToUiAccessKey(remoteAccessKey: server.AccessKey): DisplayAccessKey {
+  private convertToUiAccessKey(remoteAccessKey: server_model.AccessKey): DisplayAccessKey {
     return {
       id: remoteAccessKey.id,
       placeholderName: this.appRoot.localize('key', 'keyId', remoteAccessKey.id),
@@ -996,7 +1010,7 @@ export class App {
       });
   }
 
-  private async setDefaultDataLimit(limit: server.DataLimit) {
+  private async setDefaultDataLimit(limit: server_model.DataLimit) {
     if (!limit) {
       return;
     }
@@ -1136,7 +1150,7 @@ export class App {
   // Returns promise which fulfills when the server is created successfully,
   // or rejects with an error message that can be displayed to the user.
   public async createManualServer(userInput: string): Promise<void> {
-    let serverConfig: server.ManualServerConfig;
+    let serverConfig: server_model.ManualServerConfig;
     try {
       serverConfig = parseManualServerConfig(userInput);
     } catch (e) {
@@ -1162,7 +1176,7 @@ export class App {
       // Remove inaccessible manual server from local storage if it was just created.
       manualServer.forget();
       console.error('Manual server installed but unreachable.');
-      throw new errors.UnreachableServerError();
+      throw new UnreachableServerError();
     }
   }
 
@@ -1260,7 +1274,7 @@ export class App {
     }
   }
 
-  private cancelServerCreation(serverToCancel: server.Server): void {
+  private cancelServerCreation(serverToCancel: server_model.Server): void {
     if (!isManagedServer(serverToCancel)) {
       const msg = 'cannot cancel non-ManagedServer';
       console.error(msg);

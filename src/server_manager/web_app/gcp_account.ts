@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import * as gcp_api from '../cloud/gcp_api';
-import {ServerInstallFailedError} from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import {SCRIPT} from '../install_scripts/gcp_install_script';
 import * as gcp from '../model/gcp';
@@ -216,7 +215,7 @@ export class GcpAccount implements gcp.Account {
       );
       const errors = createFirewallOperation.error?.errors;
       if (errors) {
-        throw new ServerInstallFailedError(`Firewall creation failed: ${errors}`);
+        throw new server.ServerInstallFailedError(`Firewall creation failed: ${errors}`);
       }
     }
   }
@@ -278,7 +277,7 @@ export class GcpAccount implements gcp.Account {
     );
     const errors = createInstanceOperation.error?.errors;
     if (errors) {
-      throw new ServerInstallFailedError(`Instance creation failed: ${errors}`);
+      throw new server.ServerInstallFailedError(`Instance creation failed: ${errors}`);
     }
 
     const instanceId = createInstanceOperation.targetId;
