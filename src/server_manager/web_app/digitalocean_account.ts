@@ -98,6 +98,7 @@ export class DigitalOceanAccount implements digitalocean.Account {
       this.shadowboxSettings
     );
 
+    // You can find the API slugs at https://slugs.do-api.dev/.
     const dropletSpec = {
       installCommand,
       size: MACHINE_SIZE,
