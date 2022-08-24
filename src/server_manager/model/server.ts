@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {CustomError} from '../infrastructure/custom_error';
 import {CloudLocation} from './location';
 
 export interface Server {
@@ -104,12 +105,26 @@ export interface ManualServer extends Server {
   forget(): void;
 }
 
+// Error thrown when monitoring an installation that the user canceled.
+export class ServerInstallCanceledError extends CustomError {
+  constructor(message?: string) {
+    super(message);
+  }
+}
+
+// Error thrown when server installation failed.
+export class ServerInstallFailedError extends CustomError {
+  constructor(message?: string) {
+    super(message);
+  }
+}
+
 // Managed servers are servers created by the Outline Manager through our
 // "magic" user experience, e.g. DigitalOcean.
 export interface ManagedServer extends Server {
   // Yields how far installation has progressed (0.0 to 1.0).
-  // Exits when installation has completed.
-  // Throws if installation fails or is canceled.
+  // Exits when installation has completed. Throws ServerInstallFailedError or
+  // ServerInstallCanceledError if installation fails or is canceled.
   monitorInstallProgress(): AsyncGenerator<number, void>;
   // Returns server host object.
   getHost(): ManagedServerHost;

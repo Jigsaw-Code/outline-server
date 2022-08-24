@@ -21,7 +21,7 @@
 // with the Structured Clone algorithm so that they can be passed between
 // the Electron and Renderer processes.
 
-import * as errors from './errors';
+import {CustomError} from './custom_error';
 
 export interface HttpRequest {
   url: string;
@@ -37,6 +37,19 @@ export interface HttpResponse {
 
 // A Fetcher provides the HTTP client functionality for PathApi.
 export type Fetcher = (request: HttpRequest) => Promise<HttpResponse>;
+
+// Thrown when an API request fails.
+export class ServerApiError extends CustomError {
+  constructor(message: string, public readonly response?: HttpResponse) {
+    super(message);
+  }
+
+  // Returns true if no response was received, i.e. a network error was encountered.
+  // Can be used to distinguish between client and server-side issues.
+  isNetworkError() {
+    return !this.response;
+  }
+}
 
 /**
  * Provides access to an HTTP API of the kind exposed by the Shadowbox server.
@@ -106,12 +119,10 @@ export class PathApiClient {
     try {
       response = await this.fetcher(request);
     } catch (e) {
-      throw new errors.ServerApiError(
-        `API request to ${path} failed due to network error: ${e.message}`
-      );
+      throw new ServerApiError(`API request to ${path} failed due to network error: ${e.message}`);
     }
     if (response.status < 200 || response.status >= 300) {
-      throw new errors.ServerApiError(
+      throw new ServerApiError(
         `API request to ${path} failed with status ${response.status}`,
         response
       );
