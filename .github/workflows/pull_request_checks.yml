@@ -46,7 +46,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - if: ${{ github.event.pull_request.head.repo.full_name == 'Jigsaw-Code/outline-server' }}
+      - if: github.event.pull_request.head.repo.full_name == github.repository
         name: Apply Size Label
         uses: pascalgn/size-label-action@a4655c448bb838e8d73b81e97fd0831bb4cbda1e
         env:
