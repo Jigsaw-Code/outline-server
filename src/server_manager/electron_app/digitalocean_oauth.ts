@@ -177,7 +177,7 @@ export function runOauth(): OauthSession {
           })
           .catch(reject);
       } else {
-        response.status(400).send(errorResponseHtml('Authentication failed'));
+        response.status(400).send(closeWindowHtml('Authentication failed'));
         reject(new Error('No access_token on OAuth response'));
       }
     });
