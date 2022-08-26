@@ -151,8 +151,6 @@ export function runOauth(): OauthSession {
     // This is the POST endpoint that receives the access token and redirects to either DigitalOcean
     // for the user to complete their account creation, or to a page that closes the window.
     app.post('/', express.urlencoded({type: '*/*', extended: false}), (request, response) => {
-      server.close();
-
       const params = new URLSearchParams(request.body.params);
       if (params.get('error')) {
         response.status(400).send(closeWindowHtml('Authentication failed'));
@@ -174,11 +172,12 @@ export function runOauth(): OauthSession {
             } else {
               response.redirect('https://cloud.digitalocean.com');
             }
+            server.close();
             resolve(accessToken);
           })
           .catch(reject);
       } else {
-        response.status(400).send(closeWindowHtml('Authentication failed'));
+        response.status(400).send(errorResponseHtml('Authentication failed'));
         reject(new Error('No access_token on OAuth response'));
       }
     });
@@ -209,6 +208,9 @@ export function runOauth(): OauthSession {
         }
         reject(error);
       });
+
+    // Automatically close the server after 30 seconds.
+    setTimeout(server.close, 30000);
   });
   return {
     result,
