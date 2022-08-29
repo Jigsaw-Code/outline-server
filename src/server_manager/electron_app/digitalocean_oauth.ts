@@ -176,6 +176,7 @@ export function runOauth(): OauthSession {
             } else {
               response.redirect('https://cloud.digitalocean.com');
             }
+            // OAuth token exchange with DigitalOcean is now done.
             server.close();
             resolve(accessToken);
           })
