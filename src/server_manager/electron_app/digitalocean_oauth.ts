@@ -25,6 +25,8 @@ const REGISTERED_REDIRECTS: Array<{clientId: string; port: number}> = [
   {clientId: '706928a1c91cbd646c4e0d744c8cbdfbf555a944b821ac7812a7314a4649683a', port: 61437},
 ];
 
+const CALLBACK_SERVER_CLOSE_TIMEOUT = 30000;  // 30 seconds
+
 function randomValueHex(len: number): string {
   return crypto
     .randomBytes(Math.ceil(len / 2))
@@ -109,6 +111,8 @@ export function runOauth(): OauthSession {
   const app = express();
   const server = http.createServer(app);
   server.on('close', () => console.log('Oauth server closed'));
+  // Automatically close the server after waiting some time.
+  setTimeout(server.close, CALLBACK_SERVER_CLOSE_TIMEOUT);
 
   let isCancelled = false;
   // Disable caching.
@@ -208,9 +212,6 @@ export function runOauth(): OauthSession {
         }
         reject(error);
       });
-
-    // Automatically close the server after 30 seconds.
-    setTimeout(server.close, 30000);
   });
   return {
     result,
