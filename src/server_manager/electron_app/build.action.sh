@@ -67,7 +67,7 @@ npm ci --prod --ignore-scripts
 
 # Icons.
 cd "${ROOT_DIR}"
-electron-icon-maker --input=src/server_manager/images/launcher-icon.png --output=build/server_manager/electron_app/static
+# electron-icon-maker --input=src/server_manager/images/launcher-icon.png --output=build/server_manager/electron_app/static
 
 # TODO(daniellacosse): refactor these scripts into node so we can call the electron builder there directly
 # shellcheck disable=SC2046
