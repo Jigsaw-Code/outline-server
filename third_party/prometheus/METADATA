@@ -10,13 +10,10 @@ third_party {
   }
   url {
     type: ARCHIVE
-    value: "https://github.com/prometheus/prometheus/releases/download/v2.33.5/prometheus-2.33.5.linux-amd64.tar.gz"
+    value: "https://github.com/prometheus/prometheus/releases/download/v2.38.0/prometheus-2.38.0.linux-arm64.tar.gz"
   }
-  url {
-    type: ARCHIVE
-    value: "https://github.com/prometheus/prometheus/releases/download/v2.33.5/prometheus-2.33.5.darwin-amd64.tar.gz"
-  }
-  version: "2.33.5"
-  last_upgrade_date { year: 2022 month: 3 day: 8 }
+
+  version: "2.38.0"
+  last_upgrade_date { year: 2022 month: 8 day: 17 }
   license_type: PERMISSIVE
 }

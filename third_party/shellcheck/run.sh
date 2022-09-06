@@ -33,11 +33,16 @@ function sha256wrapper() {
 
 declare file="shellcheck-${VERSION}" # Name of the file to download
 declare cmd="${DOWNLOAD_DIR}/shellcheck-${VERSION}" # Path to the executable
-case "$(uname -s)" in
-  Linux) file+='.linux.x86_64.tar.xz'; cmd+='/shellcheck';;
-  Darwin) file+='.darwin.x86_64.tar.xz'; cmd+='/shellcheck';;
-  *) file+='.zip'; cmd+='.exe';; # Presume Windows/Cygwin
-esac
+
+# Platform selection is disabled for this build
+# case "$(uname -s)" in
+#   Linux) file+='.linux.x86_64.tar.xz'; cmd+='/shellcheck';;
+#   Darwin) file+='.darwin.x86_64.tar.xz'; cmd+='/shellcheck';;
+#   *) file+='.zip'; cmd+='.exe';; # Presume Windows/Cygwin
+# esac
+
+file+='.linux.aarch64.tar.xz'; cmd+='/shellcheck'
+
 readonly file cmd
 
 if [[ ! -s "${cmd}" ]]; then

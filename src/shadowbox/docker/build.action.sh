@@ -21,7 +21,7 @@ export DOCKER_BUILDKIT=1
 # Newer node images have no valid content trust data.
 # Pin the image node:16.14.0-alpine3.15 by hash.
 # See versions at https://hub.docker.com/_/node/
-readonly NODE_IMAGE="node@sha256:425c81a04546a543da824e67c91d4a603af16fbc3d875ee2f276acf8ec2b1577"
+readonly NODE_IMAGE="node@sha256:853d953febc5bf1a0888cd41d992bddd7d699d718c7740a1bf2ecb8be02adf33"
 
 # Doing an explicit `docker pull` of the container base image to work around an issue where
 # Travis fails to pull the base image when using BuildKit. Seems to be related to:
@@ -31,5 +31,5 @@ docker build --force-rm \
     --build-arg NODE_IMAGE="${NODE_IMAGE}" \
     --build-arg GITHUB_RELEASE="${TRAVIS_TAG:-none}" \
     -f src/shadowbox/docker/Dockerfile \
-    -t "${SB_IMAGE:-outline/shadowbox}" \
+    -t "${SB_IMAGE:-maxelrus/shadowbox-arm}" \
     "${ROOT_DIR}"

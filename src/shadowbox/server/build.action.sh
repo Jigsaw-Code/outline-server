@@ -18,12 +18,17 @@ readonly OUT_DIR="${BUILD_DIR}/shadowbox"
 rm -rf "${OUT_DIR}"
 mkdir -p "${OUT_DIR}"
 
-webpack --config=src/shadowbox/webpack.config.js ${BUILD_ENV:+--mode="${BUILD_ENV}"}
+${ROOT_DIR}/node_modules/.bin/webpack --config=src/shadowbox/webpack.config.js ${BUILD_ENV:+--mode="${BUILD_ENV}"}
 
 # Install third_party dependencies
-readonly OS="$([[ "$(uname)" == "Darwin" ]] && echo "macos" || echo "linux")"
+
 readonly BIN_DIR="${OUT_DIR}/bin"
 mkdir -p "${BIN_DIR}"
+
+# Other platforms are hidden
+# readonly OS="$([[ "$(uname)" == "Darwin" ]] && echo "macos" || echo "linux")"
+
+readonly OS="linux"
 cp "${ROOT_DIR}/third_party/prometheus/${OS}/prometheus" "${BIN_DIR}/"
 cp "${ROOT_DIR}/third_party/outline-ss-server/${OS}/outline-ss-server" "${BIN_DIR}/"
 

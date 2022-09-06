@@ -413,17 +413,19 @@ function set_hostname() {
 }
 
 install_shadowbox() {
+
+  # Check for aarch64-based linux
   local MACHINE_TYPE
   MACHINE_TYPE="$(uname -m)"
-  if [[ "${MACHINE_TYPE}" != "x86_64" ]]; then
-    log_error "Unsupported machine type: ${MACHINE_TYPE}. Please run this script on a x86_64 machine"
+  if [[ "${MACHINE_TYPE}" != "aarch64" ]]; then
+    log_error "Unsupported machine type: ${MACHINE_TYPE}. Please run this script on a ARMv8 machine"
     exit 1
   fi
 
   # Make sure we don't leak readable files to other users.
   umask 0007
 
-  export CONTAINER_NAME="${CONTAINER_NAME:-shadowbox}"
+  export CONTAINER_NAME="${CONTAINER_NAME:-shadowbox-arm}"
 
   run_step "Verifying that Docker is installed" verify_docker_installed
   run_step "Verifying that Docker daemon is running" verify_docker_running
@@ -440,7 +442,7 @@ install_shadowbox() {
   fi
   readonly API_PORT
   readonly ACCESS_CONFIG="${ACCESS_CONFIG:-${SHADOWBOX_DIR}/access.txt}"
-  readonly SB_IMAGE="${SB_IMAGE:-quay.io/outline/shadowbox:stable}"
+  readonly SB_IMAGE="${SB_IMAGE:-maxelrus/shadowbox-arm}"
 
   PUBLIC_HOSTNAME="${FLAGS_HOSTNAME:-${SB_PUBLIC_IP:-}}"
   if [[ -z "${PUBLIC_HOSTNAME}" ]]; then
