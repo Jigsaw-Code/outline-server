@@ -7,3 +7,5 @@ node_modules/
 .idea/
 third_party/shellcheck/download/
 macos-signing-certificate.p12
+third_party/outline-ss-server/linux/outline-ss-server
+third_party/prometheus/linux/prometheus
