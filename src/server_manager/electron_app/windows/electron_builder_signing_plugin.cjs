@@ -23,6 +23,13 @@
 async function electronBuilderEntryPoint(configuration) {
   // CommonJS module is required, ES6 module is not supported by electron-builder
   const {signWindowsExecutable} = await import('./sign_windows_executable.mjs');
+  if (configuration.hash === 'sha1') {
+    // SHA-1 signatures are retired and should be replaced by SHA-2, Windows 7
+    // users are required to upgrade to Windows 7 SP1 (or install the standalone
+    // update KB4474419)
+    console.info('skipping SHA-1 signature');
+    return;
+  }
   await signWindowsExecutable(configuration.path, configuration.hash, null);
 }
 
