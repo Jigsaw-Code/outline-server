@@ -288,7 +288,8 @@ describe('ShadowsocksManagerService', () => {
           expect(httpCode).toEqual(201);
           expect(Object.keys(data).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
           expect(data.method).toEqual('chacha20-ietf-poly1305');
-          responseProcessed = true;  // required for afterEach to pass.
+          responseProcessed = true; // required for afterEach to pass.
+        },
       };
       service.createNewAccessKey({params: {}}, res, done);
     });
@@ -302,8 +303,8 @@ describe('ShadowsocksManagerService', () => {
           expect(httpCode).toEqual(201);
           expect(Object.keys(data).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
           expect(data.method).toEqual('aes-256-gcm');
-          responseProcessed = true;  // required for afterEach to pass.
-        }
+          responseProcessed = true; // required for afterEach to pass.
+        },
       };
       service.createNewAccessKey({params: {method: 'aes-256-gcm'}}, res, done);
     });
@@ -314,7 +315,7 @@ describe('ShadowsocksManagerService', () => {
       const res = {send: (httpCode, data) => {}};
       service.createNewAccessKey({params: {method: Number('9876')}}, res, (error) => {
         expect(error.statusCode).toEqual(400);
-        responseProcessed = true;  // required for afterEach to pass.
+        responseProcessed = true; // required for afterEach to pass.
         done();
       });
     });
@@ -325,7 +326,7 @@ describe('ShadowsocksManagerService', () => {
       const res = {send: (httpCode, data) => {}};
       service.createNewAccessKey({params: {method: 'abcdef'}}, res, (error) => {
         expect(error.statusCode).toEqual(400);
-        responseProcessed = true;  // required for afterEach to pass.
+        responseProcessed = true; // required for afterEach to pass.
         done();
       });
     });
