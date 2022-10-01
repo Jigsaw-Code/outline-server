@@ -179,13 +179,34 @@ Polymer({
     <div class="container">
       <div class="content">
         <!-- Managed Server information -->
-        <div class="setting card-section" hidden\$="[[!cloudId]]">
-          <img class="setting-icon" src="[[_getCloudIcon(cloudId)]]">
+        <div class="setting card-section" hidden$="[[!cloudId]]">
+          <img class="setting-icon" src="[[_getCloudIcon(cloudId)]]" />
           <div>
             <h3>[[_getCloudName(cloudId)]]</h3>
-            <paper-input readonly="" value="[[_getShortName(cloudLocation, localize)]]" label="[[localize('settings-server-location')]]" hidden\$="[[!cloudLocation]]" always-float-label="" maxlength="100"></paper-input>
-            <paper-input readonly="" value="[[serverMonthlyCost]]" label="[[localize('settings-server-cost')]]" hidden\$="[[!serverMonthlyCost]]" always-float-label="" maxlength="100"></paper-input>
-            <paper-input readonly="" value="[[serverMonthlyTransferLimit]]" label="[[localize('settings-transfer-limit')]]" hidden\$="[[!serverMonthlyTransferLimit]]" always-float-label="" maxlength="100"></paper-input>
+            <paper-input
+              readonly=""
+              value="[[_getShortName(cloudLocation, localize)]]"
+              label="[[localize('settings-server-location')]]"
+              hidden$="[[!cloudLocation]]"
+              always-float-label=""
+              maxlength="100"
+            ></paper-input>
+            <paper-input
+              readonly=""
+              value="[[serverMonthlyCost]]"
+              label="[[localize('settings-server-cost')]]"
+              hidden$="[[!serverMonthlyCost]]"
+              always-float-label=""
+              maxlength="100"
+            ></paper-input>
+            <paper-input
+              readonly=""
+              value="[[serverMonthlyTransferLimit]]"
+              label="[[localize('settings-transfer-limit')]]"
+              hidden$="[[!serverMonthlyTransferLimit]]"
+              always-float-label=""
+              maxlength="100"
+            ></paper-input>
           </div>
         </div>
         <div class="setting card-section">
@@ -193,18 +214,73 @@ Polymer({
           <div>
             <h3>[[localize('settings-server-info')]]</h3>
             <!-- TODO: consider making this an outline-validated-input -->
-            <paper-input id="serverNameInput" class="server-name" value="{{serverName}}" label="[[localize('settings-server-name')]]" always-float-label="" maxlength="100" on-keydown="_handleNameInputKeyDown" on-blur="_handleNameInputBlur"></paper-input>
+            <paper-input
+              id="serverNameInput"
+              class="server-name"
+              value="{{serverName}}"
+              label="[[localize('settings-server-name')]]"
+              always-float-label=""
+              maxlength="100"
+              on-keydown="_handleNameInputKeyDown"
+              on-blur="_handleNameInputBlur"
+            ></paper-input>
             <p class="detail">[[localize('settings-server-rename')]]</p>
-            <outline-validated-input editable="[[isAccessKeyPortEditable]]" visible="[[serverPortForNewAccessKeys]]" label="[[localize('settings-access-key-port')]]" allowed-pattern="[0-9]{1,5}" max-length="5" value="[[serverPortForNewAccessKeys]]" client-side-validator="[[_validatePort]]" event="ChangePortForNewAccessKeysRequested" localize="[[localize]]"></outline-validated-input>
-            <outline-validated-input editable="[[isHostnameEditable]]" visible="[[serverHostname]]" label="[[localize('settings-server-hostname')]]" max-length="253" value="[[serverHostname]]" event="ChangeHostnameForAccessKeysRequested" localize="[[localize]]"></outline-validated-input>
-            <paper-input readonly="" value="[[serverManagementApiUrl]]" label="[[localize('settings-server-api-url')]]" hidden\$="[[!serverManagementApiUrl]]" always-float-label="" maxlength="100"></paper-input>
-            <paper-input readonly="" value="[[_formatDate(language, serverCreationDate)]]" label="[[localize('settings-server-creation')]]" hidden\$="[[!_formatDate(language, serverCreationDate)]]" always-float-label="" maxlength="100"></paper-input>
-            <paper-input readonly="" value="[[metricsId]]" label="[[localize('settings-server-id')]]" hidden\$="[[!metricsId]]" always-float-label="" maxlength="100"></paper-input>
-            <paper-input readonly="" value="[[serverVersion]]" label="[[localize('settings-server-version')]]" hidden\$="[[!serverVersion]]" always-float-label="" maxlength="100"></paper-input>
+            <outline-validated-input
+              editable="[[isAccessKeyPortEditable]]"
+              visible="[[serverPortForNewAccessKeys]]"
+              label="[[localize('settings-access-key-port')]]"
+              allowed-pattern="[0-9]{1,5}"
+              max-length="5"
+              value="[[serverPortForNewAccessKeys]]"
+              client-side-validator="[[_validatePort]]"
+              event="ChangePortForNewAccessKeysRequested"
+              localize="[[localize]]"
+            ></outline-validated-input>
+            <outline-validated-input
+              editable="[[isHostnameEditable]]"
+              visible="[[serverHostname]]"
+              label="[[localize('settings-server-hostname')]]"
+              max-length="253"
+              value="[[serverHostname]]"
+              event="ChangeHostnameForAccessKeysRequested"
+              localize="[[localize]]"
+            ></outline-validated-input>
+            <paper-input
+              readonly=""
+              value="[[serverManagementApiUrl]]"
+              label="[[localize('settings-server-api-url')]]"
+              hidden$="[[!serverManagementApiUrl]]"
+              always-float-label=""
+              maxlength="100"
+            ></paper-input>
+            <paper-input
+              readonly=""
+              value="[[_formatDate(language, serverCreationDate)]]"
+              label="[[localize('settings-server-creation')]]"
+              hidden$="[[!_formatDate(language, serverCreationDate)]]"
+              always-float-label=""
+              maxlength="100"
+            ></paper-input>
+            <paper-input
+              readonly=""
+              value="[[metricsId]]"
+              label="[[localize('settings-server-id')]]"
+              hidden$="[[!metricsId]]"
+              always-float-label=""
+              maxlength="100"
+            ></paper-input>
+            <paper-input
+              readonly=""
+              value="[[serverVersion]]"
+              label="[[localize('settings-server-version')]]"
+              hidden$="[[!serverVersion]]"
+              always-float-label=""
+              maxlength="100"
+            ></paper-input>
           </div>
         </div>
         <!-- Data limits -->
-        <div class="setting card-section" hidden\$="[[!supportsDefaultDataLimit]]">
+        <div class="setting card-section" hidden$="[[!supportsDefaultDataLimit]]">
           <iron-icon class="setting-icon" icon="icons:perm-data-setting"></iron-icon>
           <div id="data-limits-container">
             <div class="selection-container">
@@ -215,36 +291,69 @@ Polymer({
               <!-- NOTE: The dropdown is not automatically sized to the button's width:
                            https://github.com/PolymerElements/paper-dropdown-menu/issues/229 -->
               <paper-dropdown-menu no-label-float="" horizontal-align="left">
-                <paper-listbox slot="dropdown-content" selected="{{_computeDataLimitsEnabledName(isDefaultDataLimitEnabled)}}" attr-for-selected="name" on-selected-changed="_defaultDataLimitEnabledChanged">
+                <paper-listbox
+                  slot="dropdown-content"
+                  selected="{{_computeDataLimitsEnabledName(isDefaultDataLimitEnabled)}}"
+                  attr-for-selected="name"
+                  on-selected-changed="_defaultDataLimitEnabledChanged"
+                >
                   <paper-item name="enabled">[[localize('enabled')]]</paper-item>
                   <paper-item name="disabled">[[localize('disabled')]]</paper-item>
                 </paper-listbox>
               </paper-dropdown-menu>
             </div>
-            <div class="sub-section data-limits-disclaimer" hidden\$="[[!showFeatureMetricsDisclaimer]]">
+            <div
+              class="sub-section data-limits-disclaimer"
+              hidden$="[[!showFeatureMetricsDisclaimer]]"
+            >
               <iron-icon icon="icons:error-outline"></iron-icon>
-              <p inner-h-t-m-l="[[localize('data-limits-disclaimer', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
+              <p
+                inner-h-t-m-l="[[localize('data-limits-disclaimer', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"
+              ></p>
             </div>
-            <div class="data-limits-input" hidden\$="[[!isDefaultDataLimitEnabled]]">
-              <paper-input id="defaultDataLimitInput" value="[[defaultDataLimit.value]]" label="[[localize('data-limit-per-key')]]" always-float-label="" allowed-pattern="[0-9]+" required="" auto-validate="" maxlength="9" on-keydown="_handleDefaultDataLimitInputKeyDown" on-blur="_requestSetDefaultDataLimit"></paper-input>
+            <div class="data-limits-input" hidden$="[[!isDefaultDataLimitEnabled]]">
+              <paper-input
+                id="defaultDataLimitInput"
+                value="[[defaultDataLimit.value]]"
+                label="[[localize('data-limit-per-key')]]"
+                always-float-label=""
+                allowed-pattern="[0-9]+"
+                required=""
+                auto-validate=""
+                maxlength="9"
+                on-keydown="_handleDefaultDataLimitInputKeyDown"
+                on-blur="_requestSetDefaultDataLimit"
+              ></paper-input>
               <paper-dropdown-menu no-label-float="">
-                <paper-listbox id="defaultDataLimitUnits" slot="dropdown-content" selected="[[defaultDataLimit.unit]]" attr-for-selected="name" on-selected-changed="_requestSetDefaultDataLimit">
-                <paper-item name="MB">[[_getInternationalizedUnit(1000000, language)]]</paper-item>
-                <paper-item name="GB">[[_getInternationalizedUnit(1000000000, language)]]</paper-item>
+                <paper-listbox
+                  id="defaultDataLimitUnits"
+                  slot="dropdown-content"
+                  selected="[[defaultDataLimit.unit]]"
+                  attr-for-selected="name"
+                  on-selected-changed="_requestSetDefaultDataLimit"
+                >
+                  <paper-item name="MB"
+                    >[[_getInternationalizedUnit(1000000, language)]]</paper-item
+                  >
+                  <paper-item name="GB"
+                    >[[_getInternationalizedUnit(1000000000, language)]]</paper-item
+                  >
                 </paper-listbox>
               </paper-dropdown-menu>
             </div>
           </div>
         </div>
         <!-- Experiments -->
-        <div id="experiments" class="setting card-section" hidden\$="[[!shouldShowExperiments]]">
+        <div id="experiments" class="setting card-section" hidden$="[[!shouldShowExperiments]]">
           <iron-icon class="setting-icon" icon="icons:build"></iron-icon>
           <div>
             <h3>[[localize('experiments')]]</h3>
             <p>[[localize('experiments-description')]]</p>
             <div class="sub-section">
               <iron-icon icon="icons:error-outline"></iron-icon>
-              <p inner-h-t-m-l="[[localize('experiments-disclaimer', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
+              <p
+                inner-h-t-m-l="[[localize('experiments-disclaimer', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"
+              ></p>
             </div>
           </div>
         </div>
@@ -253,15 +362,20 @@ Polymer({
           <iron-icon class="setting-icon" icon="editor:insert-chart"></iron-icon>
           <div>
             <div class="selection-container">
-              <paper-checkbox checked="{{metricsEnabled}}" on-change="_metricsEnabledChanged"></paper-checkbox>
+              <paper-checkbox
+                checked="{{metricsEnabled}}"
+                on-change="_metricsEnabledChanged"
+              ></paper-checkbox>
               <h3>[[localize('settings-metrics-header')]]</h3>
             </div>
-            <p inner-h-t-m-l="[[localize('metrics-description', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
+            <p
+              inner-h-t-m-l="[[localize('metrics-description', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"
+            ></p>
           </div>
         </div>
       </div>
     </div>
-`,
+  `,
 
   is: 'outline-server-settings',
 
@@ -277,9 +391,8 @@ Polymer({
     serverVersion: {type: String, value: null},
     isAccessKeyPortEditable: {type: Boolean, value: false},
     isDefaultDataLimitEnabled: {type: Boolean, notify: true},
-    defaultDataLimit: {type: Object, value: null},  // type: app.DisplayDataAmount
-    supportsDefaultDataLimit:
-        {type: Boolean, value: false},  // Whether the server supports default data limits.
+    defaultDataLimit: {type: Object, value: null}, // type: app.DisplayDataAmount
+    supportsDefaultDataLimit: {type: Boolean, value: false}, // Whether the server supports default data limits.
     showFeatureMetricsDisclaimer: {type: Boolean, value: false},
     isHostnameEditable: {type: Boolean, value: true},
     serverCreationDate: {type: Date, value: '1970-01-01T00:00:00.000Z'},
@@ -306,7 +419,7 @@ Polymer({
     }
   },
 
-  _handleNameInputBlur(event: FocusEvent) {
+  _handleNameInputBlur(_event: FocusEvent) {
     const newName = this.serverName;
     if (!newName) {
       this.serverName = this.initialName;
@@ -319,8 +432,9 @@ Polymer({
   },
 
   _metricsEnabledChanged() {
-    const metricsSignal =
-        this.metricsEnabled ? 'EnableMetricsRequested' : 'DisableMetricsRequested';
+    const metricsSignal = this.metricsEnabled
+      ? 'EnableMetricsRequested'
+      : 'DisableMetricsRequested';
     this.fire(metricsSignal);
   },
 
@@ -378,5 +492,5 @@ Polymer({
 
   _formatDate(language: string, date: Date) {
     return date.toLocaleString(language, {year: 'numeric', month: 'long', day: 'numeric'});
-  }
+  },
 });

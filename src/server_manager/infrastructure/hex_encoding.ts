@@ -12,21 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export function asciiToHex(text: string) {
-  // Assumes that text is no more than 8 bits per char, i.e. no unicode.
-  const hexBytes: string[] = [];
-  for (let i = 0; i < text.length; ++i) {
-    const charCode = text.charCodeAt(i);
-    if (charCode > 0xFF) {
-      // Consider supporting non-ascii characters:
-      // http://monsur.hossa.in/2012/07/20/utf-8-in-javascript.html
-      throw new Error(`Cannot encode wide character with value ${charCode}`);
-    }
-    hexBytes.push(('0' + charCode.toString(16)).slice(-2));
-  }
-  return hexBytes.join('');
-}
-
 export function hexToString(hexString: string) {
   const bytes: string[] = [];
   if (hexString.length % 2 !== 0) {

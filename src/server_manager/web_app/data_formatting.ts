@@ -14,12 +14,7 @@
   limitations under the License.
 */
 
-// import '@formatjs/intl-numberformat/polyfill'
-
 // Utility functions for internationalizing numbers and units
-
-// WARNING!  This assumes an ES2020 target as this will always run on browser code in
-// electron's built-in Chromium.  This code shouldn't be used by anything running in Node.
 
 const TERABYTE = 10 ** 12;
 const GIGABYTE = 10 ** 9;
@@ -29,7 +24,7 @@ const KILOBYTE = 10 ** 3;
 const inWebApp = typeof window !== 'undefined' && typeof window.document !== 'undefined';
 interface FormatParams {
   value: number;
-  unit: 'terabyte'|'gigabyte'|'megabyte'|'kilobyte'|'byte';
+  unit: 'terabyte' | 'gigabyte' | 'megabyte' | 'kilobyte' | 'byte';
   decimalPlaces: number;
 }
 
@@ -53,7 +48,7 @@ function makeDataAmountFormatter(language: string, params: FormatParams) {
     style: 'unit',
     unit: params.unit,
     unitDisplay: 'short',
-    maximumFractionDigits: params.decimalPlaces
+    maximumFractionDigits: params.decimalPlaces,
   } as unknown as Intl.NumberFormatOptions;
   return new Intl.NumberFormat(language, options);
 }
@@ -72,7 +67,7 @@ interface DataAmountParts {
  */
 export function formatBytesParts(numBytes: number, language: string): DataAmountParts {
   if (!inWebApp) {
-    throw new Error('formatBytesParts only works in web app code. Node usage isn\'t supported.');
+    throw new Error("formatBytesParts only works in web app code. Node usage isn't supported.");
   }
   const params = getDataFormattingParams(numBytes);
   const parts = makeDataAmountFormatter(language, params).formatToParts(params.value);
@@ -80,14 +75,15 @@ export function formatBytesParts(numBytes: number, language: string): DataAmount
   const isUnit = (part: Intl.NumberFormatPart) => (part as {type: string}).type === 'unit';
   const unitText = parts.find(isUnit).value;
   return {
-    value: parts.filter((part: Intl.NumberFormatPart) => !isUnit(part))
-               .map((part: Intl.NumberFormatPart) => part.value)
-               .join('')
-               .trim(),
+    value: parts
+      .filter((part: Intl.NumberFormatPart) => !isUnit(part))
+      .map((part: Intl.NumberFormatPart) => part.value)
+      .join('')
+      .trim(),
     // Special case for "byte", since we'd rather be consistent with "KB", etc.  "byte" is
     // presumably used due to the example in the Unicode standard,
     // http://unicode.org/reports/tr35/tr35-general.html#Example_Units
-    unit: unitText === 'byte' ? 'B' : unitText
+    unit: unitText === 'byte' ? 'B' : unitText,
   };
 }
 
@@ -100,7 +96,7 @@ export function formatBytesParts(numBytes: number, language: string): DataAmount
  */
 export function formatBytes(numBytes: number, language: string): string {
   if (!inWebApp) {
-    throw new Error('formatBytes only works in web app code. Node usage isn\'t supported.');
+    throw new Error("formatBytes only works in web app code. Node usage isn't supported.");
   }
   const params = getDataFormattingParams(numBytes);
   return makeDataAmountFormatter(language, params).format(params.value);
@@ -109,7 +105,7 @@ export function formatBytes(numBytes: number, language: string): string {
 // TODO(JonathanDCohen222) Differentiate between this type, which is an input data limit, and
 // a more general DisplayDataAmount with a string-typed unit and value which respects i18n.
 export interface DisplayDataAmount {
-  unit: 'MB'|'GB';
+  unit: 'MB' | 'GB';
   value: number;
 }
 
@@ -122,9 +118,9 @@ export function displayDataAmountToBytes(dataAmount: DisplayDataAmount): number 
     return null;
   }
   if (dataAmount.unit === 'GB') {
-    return dataAmount.value * (10 ** 9);
+    return dataAmount.value * 10 ** 9;
   } else if (dataAmount.unit === 'MB') {
-    return dataAmount.value * (10 ** 6);
+    return dataAmount.value * 10 ** 6;
   }
 }
 
@@ -137,7 +133,7 @@ export function bytesToDisplayDataAmount(bytes: number): DisplayDataAmount {
     return null;
   }
   if (bytes >= 10 ** 9) {
-    return {value: Math.floor(bytes / (10 ** 9)), unit: 'GB'};
+    return {value: Math.floor(bytes / 10 ** 9), unit: 'GB'};
   }
-  return {value: Math.floor(bytes / (10 ** 6)), unit: 'MB'};
+  return {value: Math.floor(bytes / 10 ** 6), unit: 'MB'};
 }

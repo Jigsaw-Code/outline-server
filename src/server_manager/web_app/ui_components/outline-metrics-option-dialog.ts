@@ -34,15 +34,21 @@ Polymer({
       }
     </style>
     <paper-dialog id="metricsEnabledDialog" modal="">
-      <div class="dialogBanner"><img src="images/metrics.png"></div>
+      <div class="dialogBanner"><img src="images/metrics.png" /></div>
       <h3>[[localize('metrics-title')]]</h3>
-      <p inner-h-t-m-l="[[localize('metrics-description', 'openLink', '<a class=link href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
+      <p
+        inner-h-t-m-l="[[localize('metrics-description', 'openLink', '<a class=link href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"
+      ></p>
       <div class="buttons">
-        <paper-button dialog-dismiss="" on-tap="disableMetricsRequested">[[localize('metrics-skip')]]</paper-button>
-        <paper-button autofocus="" dialog-dismiss="" on-tap="enableMetricsRequested">[[localize('metrics-share')]]</paper-button>
+        <paper-button dialog-dismiss="" on-tap="disableMetricsRequested"
+          >[[localize('metrics-skip')]]</paper-button
+        >
+        <paper-button autofocus="" dialog-dismiss="" on-tap="enableMetricsRequested"
+          >[[localize('metrics-share')]]</paper-button
+        >
       </div>
     </paper-dialog>
-`,
+  `,
 
   is: 'outline-metrics-option-dialog',
 
@@ -62,5 +68,5 @@ Polymer({
 
   disableMetricsRequested() {
     this.fire('DisableMetricsRequested');
-  }
+  },
 });

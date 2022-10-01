@@ -44,14 +44,14 @@ async function makeLocalize(language: string) {
     window.alert(`Could not load messages for language "${language}"`);
   }
   return (msgId: string, ...args: string[]): string => {
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const params = {} as {[key: string]: any};
     for (let i = 0; i < args.length; i += 2) {
       params[args[i]] = args[i + 1];
     }
     if (!messages || !messages[msgId]) {
       // Fallback that shows message id and params.
-      return `${msgId}(${JSON.stringify(params, null, " ")})`;
+      return `${msgId}(${JSON.stringify(params, null, ' ')})`;
     }
     // Ideally we would pre-parse and cache the IntlMessageFormat objects,
     // but it's ok here because it's a test app.
@@ -83,41 +83,45 @@ const GCP_LOCATIONS: gcp.ZoneOption[] = [
   },
   {
     cloudLocation: new gcp.Zone('fake-location-z'),
-    available: true
-  }
+    available: true,
+  },
 ];
 
-const GCP_BILLING_ACCOUNTS: gcp.BillingAccount[] =
-    [{id: '1234-123456', name: 'My Billing Account'}];
+const GCP_BILLING_ACCOUNTS: gcp.BillingAccount[] = [
+  {id: '1234-123456', name: 'My Billing Account'},
+];
 
 @customElement('outline-test-app')
 export class TestApp extends LitElement {
   @property({type: String}) dir = 'ltr';
   @property({type: Function}) localize: (...args: string[]) => string = fakeLocalize;
-  @property({type: String}) language = 'zz';  // Replaced asynchronously in the constructor.
+  @property({type: String}) language = 'zz'; // Replaced asynchronously in the constructor.
   @property({type: Boolean}) savePerKeyDataLimitSuccessful = true;
-  @property({type: Number}) keyDataLimit: number|undefined;
+  @property({type: Number}) keyDataLimit: number | undefined;
   @property({type: String}) gcpRefreshToken = '';
   @property({type: Boolean}) gcpAccountHasBillingAccounts = false;
 
   static get styles() {
-    return [COMMON_STYLES, css`
-      :host {
-        background: white;
-        display: block;
-        height: 100%;
-        overflow-y: auto;
-        padding: 10px;
-        width: 100%;
-      }
-      .widget {
-        display: block;
-        padding: 20px;
-      }
-      .backdrop {
-        background: var(--background-color);
-      }
-    `];
+    return [
+      COMMON_STYLES,
+      css`
+        :host {
+          background: white;
+          display: block;
+          height: 100%;
+          overflow-y: auto;
+          padding: 10px;
+          width: 100%;
+        }
+        .widget {
+          display: block;
+          padding: 20px;
+        }
+        .backdrop {
+          background: var(--background-color);
+        }
+      `,
+    ];
   }
 
   constructor() {
@@ -134,7 +138,7 @@ export class TestApp extends LitElement {
     this.language = newLanguage;
   }
 
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private select(querySelector: string): any {
     return this.shadowRoot.querySelector(querySelector);
   }
@@ -166,19 +170,23 @@ export class TestApp extends LitElement {
 
       <div class="widget">
         <h2>outline-gcp-create-server-app</h2>
-        <button @tap=${() => {
-      const billingAccounts = this.gcpAccountHasBillingAccounts ? GCP_BILLING_ACCOUNTS : [];
-      const account = new FakeGcpAccount('refresh-token', billingAccounts, GCP_LOCATIONS);
-      this.select('outline-gcp-create-server-app').start(account);
-    }}>
-        Create server</button>
+        <button
+          @tap=${() => {
+            const billingAccounts = this.gcpAccountHasBillingAccounts ? GCP_BILLING_ACCOUNTS : [];
+            const account = new FakeGcpAccount('refresh-token', billingAccounts, GCP_LOCATIONS);
+            this.select('outline-gcp-create-server-app').start(account);
+          }}
+        >
+          Create server
+        </button>
         <paper-checkbox
-           ?checked=${this.gcpAccountHasBillingAccounts}
-           @tap=${() => this.gcpAccountHasBillingAccounts = !this.gcpAccountHasBillingAccounts}
-        >Fake billing accounts</paper-checkbox>
+          ?checked=${this.gcpAccountHasBillingAccounts}
+          @tap=${() => (this.gcpAccountHasBillingAccounts = !this.gcpAccountHasBillingAccounts)}
+          >Fake billing accounts</paper-checkbox
+        >
         <outline-gcp-create-server-app
-            .localize=${this.localize}
-            .language=${this.language}
+          .localize=${this.localize}
+          .language=${this.language}
         ></outline-gcp-create-server-app>
       </div>
 
@@ -186,46 +194,48 @@ export class TestApp extends LitElement {
         <h2>outline-server-view</h2>
         <div class="backdrop">
           <outline-server-view
-              .serverId=${FAKE_SERVER.getId()}
-              .serverName=${FAKE_SERVER.getName()}
-              .serverHostname=${FAKE_SERVER.getHostnameForAccessKeys()}
-              .serverManagementApiUrl=${FAKE_SERVER.getManagementApiUrl()}
-              .serverPortForNewAccessKeys=${FAKE_SERVER.getPortForNewAccessKeys()}
-              .serverCreationDate=${FAKE_SERVER.getCreatedDate()}
-              .serverVersion=${FAKE_SERVER.getVersion()}
-              .defaultDataLimitBytes="5000000000"
-              .isDefaultDataLimitEnabled="true"
-              .monthlyCost=${FAKE_SERVER.getHost().getMonthlyCost().usd}
-              .monthlyOutboundTransferBytes=${FAKE_SERVER.getHost().getMonthlyOutboundTransferLimit()?.terabytes * (10 ** 12)}
-              .cloudLocation=${FAKE_SERVER.getHost().getCloudLocation()}
-              .cloudId=${DisplayCloudId.DO}
-              .localize=${this.localize}
-              .language=${this.language}
+            .serverId=${FAKE_SERVER.getId()}
+            .serverName=${FAKE_SERVER.getName()}
+            .serverHostname=${FAKE_SERVER.getHostnameForAccessKeys()}
+            .serverManagementApiUrl=${FAKE_SERVER.getManagementApiUrl()}
+            .serverPortForNewAccessKeys=${FAKE_SERVER.getPortForNewAccessKeys()}
+            .serverCreationDate=${FAKE_SERVER.getCreatedDate()}
+            .serverVersion=${FAKE_SERVER.getVersion()}
+            .defaultDataLimitBytes="5000000000"
+            .isDefaultDataLimitEnabled="true"
+            .monthlyCost=${FAKE_SERVER.getHost().getMonthlyCost().usd}
+            .monthlyOutboundTransferBytes=${FAKE_SERVER.getHost().getMonthlyOutboundTransferLimit()
+              ?.terabytes *
+            10 ** 12}
+            .cloudLocation=${FAKE_SERVER.getHost().getCloudLocation()}
+            .cloudId=${DisplayCloudId.DO}
+            .localize=${this.localize}
+            .language=${this.language}
           ></outline-server-view>
         </div>
       </div>
 
-      <div
-        class="widget"
-        id="key-settings-widget"
-      >
+      <div class="widget" id="key-settings-widget">
         <h2>outline-per-key-data-limit-dialog</h2>
         <button
-          @tap=${
-        () => (this.select('outline-per-key-data-limit-dialog') as OutlinePerKeyDataLimitDialog)
-                  .open(
-                      'Key Name', this.keyDataLimit, this.setKeyDataLimit.bind(this),
-                      this.removeKeyDataLimit.bind(this))}
+          @tap=${() =>
+            (this.select('outline-per-key-data-limit-dialog') as OutlinePerKeyDataLimitDialog).open(
+              'Key Name',
+              this.keyDataLimit,
+              this.setKeyDataLimit.bind(this),
+              this.removeKeyDataLimit.bind(this)
+            )}
         >
           Open Dialog
         </button>
         <paper-checkbox
-           ?checked=${this.savePerKeyDataLimitSuccessful}
-           @tap=${() => {
-      this.savePerKeyDataLimitSuccessful = !this.savePerKeyDataLimitSuccessful;
-    }}
-           id="perKeyDataLimitSuccessCheckbox"
-        >Save Successful</paper-checkbox>
+          ?checked=${this.savePerKeyDataLimitSuccessful}
+          @tap=${() => {
+            this.savePerKeyDataLimitSuccessful = !this.savePerKeyDataLimitSuccessful;
+          }}
+          id="perKeyDataLimitSuccessCheckbox"
+          >Save Successful</paper-checkbox
+        >
         <outline-per-key-data-limit-dialog
           .localize=${this.localize}
           .language=${this.language}
@@ -236,15 +246,18 @@ export class TestApp extends LitElement {
       <div class="widget">
         <h2>outline-about-dialog</h2>
         <button @tap=${() => this.select('outline-about-dialog').open()}>Open Dialog</button>
-        <outline-about-dialog .localize=${this.localize} dir=${
-        this.dir} outline-version="1.2.3"></outline-about-dialog>
+        <outline-about-dialog
+          .localize=${this.localize}
+          dir=${this.dir}
+          outline-version="1.2.3"
+        ></outline-about-dialog>
       </div>
 
       <div class="widget">
         <h2>outline-do-oauth-step</h2>
         <outline-do-oauth-step .localize=${this.localize} dir=${this.dir}></outline-do-oauth-step>
       </div>
-      
+
       <div class="widget">
         <h2>outline-gcp-oauth-step</h2>
         <outline-gcp-oauth-step .localize=${this.localize} dir=${this.dir}></outline-gcp-oauth-step>
@@ -252,34 +265,48 @@ export class TestApp extends LitElement {
 
       <div class="widget">
         <h2>outline-feedback-dialog</h2>
-        <button @tap=${
-        () => this.select('outline-feedback-dialog')
-                  .open('Pre-populated message', false)}>Open Dialog</button>
-        <outline-feedback-dialog .localize=${this.localize} dir=${
-        this.dir}></outline-feedback-dialog>
+        <button
+          @tap=${() => this.select('outline-feedback-dialog').open('Pre-populated message', false)}
+        >
+          Open Dialog
+        </button>
+        <outline-feedback-dialog
+          .localize=${this.localize}
+          dir=${this.dir}
+        ></outline-feedback-dialog>
       </div>
 
       <div class="widget">
         <h2>outline-share-dialog</h2>
-        <button @tap=${
-        () => this.select('outline-share-dialog')
-                  .open('<ACCESS_KEY>', '<INVITE_URL>')}>Open Dialog</button>
+        <button
+          @tap=${() => this.select('outline-share-dialog').open('<ACCESS_KEY>', '<INVITE_URL>')}
+        >
+          Open Dialog
+        </button>
         <outline-share-dialog .localize=${this.localize} dir=${this.dir}></outline-share-dialog>
       </div>
 
       <div class="widget">
         <h2>outline-sort-icon</h2>
-        <outline-sort-span dir=${this.dir} direction=1 @tap=${() => {
-      const el = this.select('outline-sort-span');
-      el.direction *= -1;
-    }}>Column Header</outline-sort-span>
+        <outline-sort-span
+          dir=${this.dir}
+          direction="1"
+          @tap=${() => {
+            const el = this.select('outline-sort-span');
+            el.direction *= -1;
+          }}
+          >Column Header</outline-sort-span
+        >
       </div>
 
       <div class="widget">
         <h2>outline-survey-dialog</h2>
-        <button @tap=${
-        () => this.select('outline-survey-dialog')
-                  .open('Survey title', 'https://getoutline.org')}>Open Dialog</button>
+        <button
+          @tap=${() =>
+            this.select('outline-survey-dialog').open('Survey title', 'https://getoutline.org')}
+        >
+          Open Dialog
+        </button>
         <outline-survey-dialog .localize=${this.localize} dir=${this.dir}></outline-survey-dialog>
       </div>
     `;
@@ -287,13 +314,17 @@ export class TestApp extends LitElement {
 
   get pageControls() {
     return html`<p>
-      <label for="language">Language:</label><input type="text" id="language" value="${this.language}">
-      <button @tap=${() => this.setLanguage((this.shadowRoot.querySelector('#language') as HTMLInputElement).value)
-      }>Set Language</button>
+      <label for="language">Language:</label><input type="text" id="language" value="${
+        this.language
+      }">
+      <button @tap=${() =>
+        this.setLanguage(
+          (this.shadowRoot.querySelector('#language') as HTMLInputElement).value
+        )}>Set Language</button>
     </p>
     <p>
-      <label for="dir-select" @change=${(e: Event) => this.dir = (e.target as HTMLSelectElement).value
-      }>Direction: <select id="dir-select">
+      <label for="dir-select" @change=${(e: Event) =>
+        (this.dir = (e.target as HTMLSelectElement).value)}>Direction: <select id="dir-select">
         <option value="ltr" selected>LTR</option>
         <option value="rtl">RTL</option>
       </select>

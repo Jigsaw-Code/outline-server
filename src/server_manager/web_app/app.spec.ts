@@ -18,15 +18,18 @@ import * as accounts from '../model/accounts';
 import * as server from '../model/server';
 
 import {App, LAST_DISPLAYED_SERVER_STORAGE_KEY} from './app';
-import {FakeCloudAccounts, FakeDigitalOceanAccount, FakeManualServerRepository} from './testing/models';
+import {
+  FakeCloudAccounts,
+  FakeDigitalOceanAccount,
+  FakeManualServerRepository,
+} from './testing/models';
 import {AppRoot} from './ui_components/app-root';
 import {Region} from '../model/digitalocean';
 
-
 // Define functions from preload.ts.
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).onUpdateDownloaded = () => {};
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).bringToFront = () => {};
 
 // Inject app-root element into DOM once before each test.
@@ -96,8 +99,10 @@ describe('App', () => {
   it('initially shows the last selected server', async () => {
     const LAST_DISPLAYED_SERVER_ID = 'fake-manual-server-api-url-1';
     const manualServerRepo = new FakeManualServerRepository();
-    const lastDisplayedServer =
-        await manualServerRepo.addServer({certSha256: 'cert', apiUrl: LAST_DISPLAYED_SERVER_ID});
+    const lastDisplayedServer = await manualServerRepo.addServer({
+      certSha256: 'cert',
+      apiUrl: LAST_DISPLAYED_SERVER_ID,
+    });
     await manualServerRepo.addServer({certSha256: 'cert', apiUrl: 'fake-manual-server-api-url-2'});
     localStorage.setItem('lastDisplayedServer', LAST_DISPLAYED_SERVER_ID);
     const appRoot = document.getElementById('appRoot') as AppRoot;
@@ -119,25 +124,26 @@ describe('App', () => {
     expect(view.selectedPage).toEqual('progressView');
   });
 
-  it('shows progress screen when starting with DigitalOcean servers still being created',
-     async () => {
-       const appRoot = document.getElementById('appRoot') as AppRoot;
-       const fakeAccount = new FakeDigitalOceanAccount();
-       const server = await fakeAccount.createServer(new Region('_fake-region-id'));
-       const cloudAccounts = new FakeCloudAccounts(fakeAccount);
-       const app = createTestApp(appRoot, cloudAccounts, null);
-       // Sets last displayed server.
-       localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, server.getId());
-       await app.start();
-       expect(appRoot.currentPage).toEqual('serverView');
-       const view = await appRoot.getServerView(appRoot.selectedServerId);
-       expect(view.selectedPage).toEqual('progressView');
-     });
+  it('shows progress screen when starting with DigitalOcean servers still being created', async () => {
+    const appRoot = document.getElementById('appRoot') as AppRoot;
+    const fakeAccount = new FakeDigitalOceanAccount();
+    const server = await fakeAccount.createServer(new Region('_fake-region-id'));
+    const cloudAccounts = new FakeCloudAccounts(fakeAccount);
+    const app = createTestApp(appRoot, cloudAccounts, null);
+    // Sets last displayed server.
+    localStorage.setItem(LAST_DISPLAYED_SERVER_STORAGE_KEY, server.getId());
+    await app.start();
+    expect(appRoot.currentPage).toEqual('serverView');
+    const view = await appRoot.getServerView(appRoot.selectedServerId);
+    expect(view.selectedPage).toEqual('progressView');
+  });
 });
 
 function createTestApp(
-    appRoot: AppRoot, cloudAccounts?: accounts.CloudAccounts,
-    manualServerRepo?: server.ManualServerRepository) {
+  appRoot: AppRoot,
+  cloudAccounts?: accounts.CloudAccounts,
+  manualServerRepo?: server.ManualServerRepository
+) {
   const VERSION = '0.0.1';
   if (!cloudAccounts) {
     cloudAccounts = new FakeCloudAccounts();

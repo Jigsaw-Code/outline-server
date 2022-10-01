@@ -14,8 +14,8 @@
 
 import * as semver from 'semver';
 
-import * as errors from '../infrastructure/errors';
 import * as server from '../model/server';
+import {PathApiClient} from '../infrastructure/path_api';
 
 interface AccessKeyJson {
   id: string;
@@ -55,7 +55,7 @@ function makeAccessKeyModel(apiAccessKey: AccessKeyJson): server.AccessKey {
 }
 
 export class ShadowboxServer implements server.Server {
-  private managementApiAddress: string;
+  private api: PathApiClient;
   private serverConfig: ServerConfigJson;
 
   constructor(private readonly id: string) {}
@@ -66,47 +66,39 @@ export class ShadowboxServer implements server.Server {
 
   listAccessKeys(): Promise<server.AccessKey[]> {
     console.info('Listing access keys');
-    return this.apiRequest<{accessKeys: AccessKeyJson[]}>('access-keys').then((response) => {
+    return this.api.request<{accessKeys: AccessKeyJson[]}>('access-keys').then((response) => {
       return response.accessKeys.map(makeAccessKeyModel);
     });
   }
 
   async addAccessKey(): Promise<server.AccessKey> {
     console.info('Adding access key');
-    return makeAccessKeyModel(
-        await this.apiRequest<AccessKeyJson>('access-keys', {method: 'POST'}));
+    return makeAccessKeyModel(await this.api.request<AccessKeyJson>('access-keys', 'POST'));
   }
 
   renameAccessKey(accessKeyId: server.AccessKeyId, name: string): Promise<void> {
     console.info('Renaming access key');
-    const body = new FormData();
-    body.append('name', name);
-    return this.apiRequest<void>('access-keys/' + accessKeyId + '/name', {method: 'PUT', body});
+    return this.api.requestForm<void>('access-keys/' + accessKeyId + '/name', 'PUT', {name});
   }
 
   removeAccessKey(accessKeyId: server.AccessKeyId): Promise<void> {
     console.info('Removing access key');
-    return this.apiRequest<void>('access-keys/' + accessKeyId, {method: 'DELETE'});
+    return this.api.request<void>('access-keys/' + accessKeyId, 'DELETE');
   }
 
   async setDefaultDataLimit(limit: server.DataLimit): Promise<void> {
     console.info(`Setting server default data limit: ${JSON.stringify(limit)}`);
-    const requestOptions = {
-      method: 'PUT',
-      headers: new Headers({'Content-Type': 'application/json'}),
-      body: JSON.stringify({limit})
-    };
-    await this.apiRequest<void>(this.getDefaultDataLimitPath(), requestOptions);
+    await this.api.requestJson<void>(this.getDefaultDataLimitPath(), 'PUT', {limit});
     this.serverConfig.accessKeyDataLimit = limit;
   }
 
   async removeDefaultDataLimit(): Promise<void> {
     console.info(`Removing server default data limit`);
-    await this.apiRequest<void>(this.getDefaultDataLimitPath(), {method: 'DELETE'});
+    await this.api.request<void>(this.getDefaultDataLimitPath(), 'DELETE');
     delete this.serverConfig.accessKeyDataLimit;
   }
 
-  getDefaultDataLimit(): server.DataLimit|undefined {
+  getDefaultDataLimit(): server.DataLimit | undefined {
     return this.serverConfig.accessKeyDataLimit;
   }
 
@@ -121,21 +113,16 @@ export class ShadowboxServer implements server.Server {
 
   async setAccessKeyDataLimit(keyId: server.AccessKeyId, limit: server.DataLimit): Promise<void> {
     console.info(`Setting data limit of ${limit.bytes} bytes for access key ${keyId}`);
-    const requestOptions = {
-      method: 'PUT',
-      headers: new Headers({'Content-Type': 'application/json'}),
-      body: JSON.stringify({limit})
-    };
-    await this.apiRequest<void>(`access-keys/${keyId}/data-limit`, requestOptions);
+    await this.api.requestJson<void>(`access-keys/${keyId}/data-limit`, 'PUT', {limit});
   }
 
   async removeAccessKeyDataLimit(keyId: server.AccessKeyId): Promise<void> {
     console.info(`Removing data limit from access key ${keyId}`);
-    await this.apiRequest<void>(`access-keys/${keyId}/data-limit`, {method: 'DELETE'});
+    await this.api.request<void>(`access-keys/${keyId}/data-limit`, 'DELETE');
   }
 
   async getDataUsage(): Promise<server.BytesByAccessKey> {
-    const jsonResponse = await this.apiRequest<DataUsageByAccessKeyJson>('metrics/transfer');
+    const jsonResponse = await this.api.request<DataUsageByAccessKeyJson>('metrics/transfer');
     const usageMap = new Map<server.AccessKeyId, number>();
     for (const [accessKeyId, bytes] of Object.entries(jsonResponse.bytesTransferredByUserId)) {
       usageMap.set(accessKeyId, bytes ?? 0);
@@ -147,16 +134,10 @@ export class ShadowboxServer implements server.Server {
     return this.serverConfig?.name;
   }
 
-  setName(name: string): Promise<void> {
+  async setName(name: string): Promise<void> {
     console.info('Setting server name');
-    const requestOptions: RequestInit = {
-      method: 'PUT',
-      headers: new Headers({'Content-Type': 'application/json'}),
-      body: JSON.stringify({name})
-    };
-    return this.apiRequest<void>('name', requestOptions).then(() => {
-      this.serverConfig.name = name;
-    });
+    await this.api.requestJson<void>('name', 'PUT', {name});
+    this.serverConfig.name = name;
   }
 
   getVersion(): string {
@@ -167,17 +148,11 @@ export class ShadowboxServer implements server.Server {
     return this.serverConfig.metricsEnabled;
   }
 
-  setMetricsEnabled(metricsEnabled: boolean): Promise<void> {
+  async setMetricsEnabled(metricsEnabled: boolean): Promise<void> {
     const action = metricsEnabled ? 'Enabling' : 'Disabling';
     console.info(`${action} metrics`);
-    const requestOptions: RequestInit = {
-      method: 'PUT',
-      headers: new Headers({'Content-Type': 'application/json'}),
-      body: JSON.stringify({metricsEnabled})
-    };
-    return this.apiRequest<void>('metrics/enabled', requestOptions).then(() => {
-      this.serverConfig.metricsEnabled = metricsEnabled;
-    });
+    await this.api.requestJson<void>('metrics/enabled', 'PUT', {metricsEnabled});
+    this.serverConfig.metricsEnabled = metricsEnabled;
   }
 
   getMetricsId(): string {
@@ -185,17 +160,18 @@ export class ShadowboxServer implements server.Server {
   }
 
   isHealthy(timeoutMs = 30000): Promise<boolean> {
-    return new Promise<boolean>((fulfill, reject) => {
+    return new Promise<boolean>((fulfill, _reject) => {
       // Query the API and expect a successful response to validate that the
       // service is up and running.
       this.getServerConfig().then(
-          (serverConfig) => {
-            this.serverConfig = serverConfig;
-            fulfill(true);
-          },
-          (e) => {
-            fulfill(false);
-          });
+        (serverConfig) => {
+          this.serverConfig = serverConfig;
+          fulfill(true);
+        },
+        (_e) => {
+          fulfill(false);
+        }
+      );
       // Return not healthy if API doesn't complete within timeoutMs.
       setTimeout(() => {
         fulfill(false);
@@ -210,26 +186,19 @@ export class ShadowboxServer implements server.Server {
   async setHostnameForAccessKeys(hostname: string): Promise<void> {
     console.info(`setHostname ${hostname}`);
     this.serverConfig.hostnameForAccessKeys = hostname;
-    const requestOptions: RequestInit = {
-      method: 'PUT',
-      headers: new Headers({'Content-Type': 'application/json'}),
-      body: JSON.stringify({hostname})
-    };
-    return this.apiRequest<void>('server/hostname-for-access-keys', requestOptions).then(() => {
-      this.serverConfig.hostnameForAccessKeys = hostname;
-    });
+    await this.api.requestJson<void>('server/hostname-for-access-keys', 'PUT', {hostname});
+    this.serverConfig.hostnameForAccessKeys = hostname;
   }
 
   getHostnameForAccessKeys(): string {
     try {
-      return this.serverConfig?.hostnameForAccessKeys ??
-          new URL(this.managementApiAddress).hostname;
+      return this.serverConfig?.hostnameForAccessKeys ?? new URL(this.api.base).hostname;
     } catch (e) {
       return '';
     }
   }
 
-  getPortForNewAccessKeys(): number|undefined {
+  getPortForNewAccessKeys(): number | undefined {
     try {
       if (typeof this.serverConfig.portForNewAccessKeys !== 'number') {
         return undefined;
@@ -240,65 +209,22 @@ export class ShadowboxServer implements server.Server {
     }
   }
 
-  setPortForNewAccessKeys(newPort: number): Promise<void> {
+  async setPortForNewAccessKeys(newPort: number): Promise<void> {
     console.info(`setPortForNewAccessKeys: ${newPort}`);
-    const requestOptions: RequestInit = {
-      method: 'PUT',
-      headers: new Headers({'Content-Type': 'application/json'}),
-      body: JSON.stringify({"port": newPort})
-    };
-    return this.apiRequest<void>('server/port-for-new-access-keys', requestOptions).then(() => {
-      this.serverConfig.portForNewAccessKeys = newPort;
-    });
+    await this.api.requestJson<void>('server/port-for-new-access-keys', 'PUT', {port: newPort});
+    this.serverConfig.portForNewAccessKeys = newPort;
   }
 
   private async getServerConfig(): Promise<ServerConfigJson> {
     console.info('Retrieving server configuration');
-    return await this.apiRequest<ServerConfigJson>('server');
+    return await this.api.request<ServerConfigJson>('server');
   }
 
-  protected setManagementApiUrl(apiAddress: string): void {
-    this.managementApiAddress = apiAddress;
+  protected setManagementApi(api: PathApiClient): void {
+    this.api = api;
   }
 
-  getManagementApiUrl() {
-    return this.managementApiAddress;
-  }
-
-  // Makes a request to the management API.
-  private apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
-    try {
-      let apiAddress = this.managementApiAddress;
-      if (!apiAddress) {
-        const msg = 'Management API address unavailable';
-        console.error(msg);
-        throw new Error(msg);
-      }
-      if (!apiAddress.endsWith('/')) {
-        apiAddress += '/';
-      }
-      const url = apiAddress + path;
-      return fetch(url, options)
-          .then(
-              (response) => {
-                if (!response.ok) {
-                  throw new errors.ServerApiError(
-                      `API request to ${path} failed with status ${response.status}`, response);
-                }
-                return response.text();
-              },
-              (error) => {
-                throw new errors.ServerApiError(
-                    `API request to ${path} failed due to network error`);
-              })
-          .then((body) => {
-            if (!body) {
-              return;
-            }
-            return JSON.parse(body);
-          });
-    } catch (error) {
-      return Promise.reject(error);
-    }
+  getManagementApiUrl(): string {
+    return this.api.base;
   }
 }

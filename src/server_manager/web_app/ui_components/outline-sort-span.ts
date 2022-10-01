@@ -31,14 +31,14 @@ export class SortSpan extends LitElement {
     return {direction: {type: Number}};
   }
 
-  direction: -1|0|1 = 0;
+  direction: -1 | 0 | 1 = 0;
 
   override render() {
     let arrow = html`<iron-icon></iron-icon>`;
     if (this.direction === -1) {
-      arrow = html`<iron-icon icon='arrow-upward'></iron-icon>`;
+      arrow = html`<iron-icon icon="arrow-upward"></iron-icon>`;
     } else if (this.direction === 1) {
-      arrow = html`<iron-icon icon='arrow-downward'></iron-icon>`;
+      arrow = html`<iron-icon icon="arrow-downward"></iron-icon>`;
     }
     return html`<slot></slot>${arrow}`;
   }

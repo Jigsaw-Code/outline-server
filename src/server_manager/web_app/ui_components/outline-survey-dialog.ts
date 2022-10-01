@@ -25,80 +25,85 @@ import {PolymerElement} from '@polymer/polymer/polymer-element';
 import type {PolymerElementProperties} from '@polymer/polymer/interfaces';
 import type {PaperDialogElement} from '@polymer/paper-dialog/paper-dialog';
 
-class OutlineSurveyDialog extends DirMixin
-(PolymerElement) {
+class OutlineSurveyDialog extends DirMixin(PolymerElement) {
   static get template() {
     return html`
-    <style include="cloud-install-styles"></style>
-    <style>
-      :host {
-        position: fixed;
-        bottom: 0px;
-      }
-      /* rtl:begin:ignore */
-      /* RTLCSS incorrectly adds a :host selector when converting this rule. */
-      :host(:dir(ltr)) {
-        right: 0px;
-      }
-      :host(:dir(rtl)) {
-        left: 0px;
-      }
-      /* rtl:end:ignore */
-      #dialog {
-        margin: 0 24px 24px 24px;
-        border-radius: 2px;
-      }
-      #container {
-        display: flex;
-      }
-      #content {
-        width: 100%;
-      }
-      #button-container {
-        display: flex;
-        justify-content: space-between;
-      }
-      h3 {
-        margin-top: 8px;
-      }
-      img {
-        height: 32px;
-        margin-right: 24px;
-      }
-      paper-button {
-        padding: 1em 0;
-        margin: 0;
-      }
-      hr {
-        margin: 12px 0;
-        border: 1px solid #eee;
-      }
-      p {
-        font-size: 11px;
-        line-height: 14px;
-      }
-    </style>
-    <paper-dialog id="dialog" vertical-align="bottom" no-cancel-on-outside-click="" entry-animation="slide-from-bottom-animation" exit-animation="slide-down-animation">
-      <div id="container">
-        <img id="outlineLogo" src="images/manager-profile-2x.png">
-        <div id="content">
-          <h3>[[title]]</h3>
-          <div id="button-container">
-            <paper-button dialog-dismiss="" noink="">
-              [[localize('survey-decline')]]
-            </paper-button>
-            <paper-button dialog-confirm="" autofocus="" noink="">
-              <a href="[[surveyLink]]">[[localize('survey-go-to-survey')]]</a>
-            </paper-button>
+      <style include="cloud-install-styles"></style>
+      <style>
+        :host {
+          position: fixed;
+          bottom: 0px;
+        }
+        /* rtl:begin:ignore */
+        /* RTLCSS incorrectly adds a :host selector when converting this rule. */
+        :host(:dir(ltr)) {
+          right: 0px;
+        }
+        :host(:dir(rtl)) {
+          left: 0px;
+        }
+        /* rtl:end:ignore */
+        #dialog {
+          margin: 0 24px 24px 24px;
+          border-radius: 2px;
+        }
+        #container {
+          display: flex;
+        }
+        #content {
+          width: 100%;
+        }
+        #button-container {
+          display: flex;
+          justify-content: space-between;
+        }
+        h3 {
+          margin-top: 8px;
+        }
+        img {
+          height: 32px;
+          margin-right: 24px;
+        }
+        paper-button {
+          padding: 1em 0;
+          margin: 0;
+        }
+        hr {
+          margin: 12px 0;
+          border: 1px solid #eee;
+        }
+        p {
+          font-size: 11px;
+          line-height: 14px;
+        }
+      </style>
+      <paper-dialog
+        id="dialog"
+        vertical-align="bottom"
+        no-cancel-on-outside-click=""
+        entry-animation="slide-from-bottom-animation"
+        exit-animation="slide-down-animation"
+      >
+        <div id="container">
+          <img id="outlineLogo" src="images/manager-profile-2x.png" />
+          <div id="content">
+            <h3>[[title]]</h3>
+            <div id="button-container">
+              <paper-button dialog-dismiss="" noink="">
+                [[localize('survey-decline')]]
+              </paper-button>
+              <paper-button dialog-confirm="" autofocus="" noink="">
+                <a href="[[surveyLink]]">[[localize('survey-go-to-survey')]]</a>
+              </paper-button>
+            </div>
           </div>
         </div>
-      </div>
-      <div id="disclaimer">
-        <hr>
-        <p>[[localize('survey-disclaimer')]]</p>
-      </div>
-    </paper-dialog>
-`;
+        <div id="disclaimer">
+          <hr />
+          <p>[[localize('survey-disclaimer')]]</p>
+        </div>
+      </paper-dialog>
+    `;
   }
 
   static get is() {

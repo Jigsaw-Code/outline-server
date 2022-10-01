@@ -51,13 +51,15 @@ Polymer({
       }
     </style>
     <div class="container">
-      <img id="logo" src="images/tos-icon.png">
+      <img id="logo" src="images/tos-icon.png" />
     </div>
     <div id="tos">
-      <span inner-h-t-m-l="[[localize('terms-of-service', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html>', 'closeLink', '</a>')]]"></span>
+      <span
+        inner-h-t-m-l="[[localize('terms-of-service', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/static_downloads/Outline-Terms-of-Service.html>', 'closeLink', '</a>')]]"
+      ></span>
       <paper-button on-tap="acceptTermsOfService">[[localize('okay')]]</paper-button>
     </div>
-`,
+  `,
 
   is: 'outline-tos-view',
 
@@ -74,5 +76,5 @@ Polymer({
 
   acceptTermsOfService() {
     this.hasAcceptedTermsOfService = true;
-  }
+  },
 });

@@ -27,9 +27,9 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     // TODO(fortuna): Consider pre-computing this to save server's CPU.
     // We measure only traffic leaving the server, since that's what DigitalOcean charges.
     // TODO: Display all directions to admin
-    const result =
-        await this.prometheusClient.query(`sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t"}[${
-            timeframe.hours}h])) by (access_key)`);
+    const result = await this.prometheusClient.query(
+      `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t"}[${timeframe.hours}h])) by (access_key)`
+    );
     const usage = {} as {[userId: string]: number};
     for (const entry of result.result) {
       const bytes = Math.round(parseFloat(entry.value[1]));

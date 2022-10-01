@@ -72,11 +72,11 @@ Polymer({
       }
     </style>
     <div id="container">
-      <img id="lg" src="images/connected_large.png">
-      <img id="md" src="images/connected_large.png">
-      <img id="sm" src="images/connected_large.png">
+      <img id="lg" src="images/connected_large.png" />
+      <img id="md" src="images/connected_large.png" />
+      <img id="sm" src="images/connected_large.png" />
     </div>
-`,
+  `,
 
-  is: 'outline-progress-spinner'
+  is: 'outline-progress-spinner',
 });

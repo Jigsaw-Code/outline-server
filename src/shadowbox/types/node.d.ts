@@ -21,9 +21,11 @@ declare module 'dns' {
 
 // https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html#child_process_child_process_exec_command_options_callback
 declare module 'child_process' {
-  export interface ExecError { code: number; }
+  export interface ExecError {
+    code: number;
+  }
   export function exec(
-      command: string,
-      callback?: (error: ExecError|undefined, stdout: string, stderr: string) =>
-          void): ChildProcess;
+    command: string,
+    callback?: (error: ExecError | undefined, stdout: string, stderr: string) => void
+  ): ChildProcess;
 }

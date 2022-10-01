@@ -13,12 +13,12 @@
 // limitations under the License.
 
 import {DigitalOceanSession, DropletInfo} from '../cloud/digitalocean_api';
-import * as errors from '../infrastructure/errors';
 import {hexToString} from '../infrastructure/hex_encoding';
 import {sleep} from '../infrastructure/sleep';
-import {ValueStream} from "../infrastructure/value_stream";
-import { Region } from '../model/digitalocean';
+import {ValueStream} from '../infrastructure/value_stream';
+import {Region} from '../model/digitalocean';
 import * as server from '../model/server';
+import {makePathApiClient} from './fetcher';
 
 import {ShadowboxServer} from './shadowbox_server';
 
@@ -54,38 +54,49 @@ enum InstallState {
   // Server installation failed.
   FAILED,
   // Server installation was canceled by the user.
-  CANCELED
+  CANCELED,
 }
 
 function getCompletionFraction(state: InstallState): number {
   // Values are based on observed installation timing.
   // Installation typically takes 90 seconds in total.
   switch (state) {
-    case InstallState.UNKNOWN: return 0.1;
-    case InstallState.DROPLET_CREATED: return 0.5;
-    case InstallState.DROPLET_RUNNING: return 0.55;
-    case InstallState.CERTIFICATE_CREATED: return 0.6;
-    case InstallState.COMPLETED: return 1.0;
-    default: return 0;
+    case InstallState.UNKNOWN:
+      return 0.1;
+    case InstallState.DROPLET_CREATED:
+      return 0.5;
+    case InstallState.DROPLET_RUNNING:
+      return 0.55;
+    case InstallState.CERTIFICATE_CREATED:
+      return 0.6;
+    case InstallState.COMPLETED:
+      return 1.0;
+    default:
+      return 0;
   }
 }
 
 function isFinal(state: InstallState): boolean {
-  return state === InstallState.COMPLETED ||
-      state === InstallState.FAILED ||
-      state === InstallState.CANCELED;
+  return (
+    state === InstallState.COMPLETED ||
+    state === InstallState.FAILED ||
+    state === InstallState.CANCELED
+  );
 }
 
 export class DigitalOceanServer extends ShadowboxServer implements server.ManagedServer {
   private onDropletActive: () => void;
-  readonly onceDropletActive = new Promise<void>(fulfill => {
+  readonly onceDropletActive = new Promise<void>((fulfill) => {
     this.onDropletActive = fulfill;
   });
   private installState = new ValueStream<InstallState>(InstallState.UNKNOWN);
   private readonly startTimestamp = Date.now();
 
   constructor(
-      id: string, private digitalOcean: DigitalOceanSession, private dropletInfo: DropletInfo) {
+    id: string,
+    private digitalOcean: DigitalOceanSession,
+    private dropletInfo: DropletInfo
+  ) {
     // Consider passing a RestEndpoint object to the parent constructor,
     // to better encapsulate the management api address logic.
     super(id);
@@ -102,9 +113,9 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
     }
 
     if (this.installState.get() === InstallState.FAILED) {
-      throw new errors.ServerInstallFailedError();
+      throw new server.ServerInstallFailedError();
     } else if (this.installState.get() === InstallState.CANCELED) {
-      throw new errors.ServerInstallCanceledError();
+      throw new server.ServerInstallCanceledError();
     }
   }
 
@@ -174,9 +185,7 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
       // these methods throw exceptions if the fields are unavailable.
       const certificateFingerprint = this.getCertificateFingerprint();
       const apiAddress = this.getManagementApiAddress();
-      // Loaded both the cert and url without exceptions, they can be set.
-      trustCertificate(certificateFingerprint);
-      this.setManagementApiUrl(apiAddress);
+      this.setManagementApi(makePathApiClient(apiAddress, certificateFingerprint));
       return true;
     } catch (e) {
       // Install state not yet ready.
@@ -251,12 +260,12 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
     return apiAddress;
   }
 
-  // Gets the certificate fingerprint in base64 format, throws an error if
+  // Gets the certificate fingerprint in binary, throws an error if
   // unavailable.
   private getCertificateFingerprint(): string {
     const fingerprint = this.getTagMap().get(CERTIFICATE_FINGERPRINT_TAG);
     if (fingerprint) {
-      return btoa(fingerprint);
+      return fingerprint;
     } else {
       throw new Error('certificate fingerprint unavailable');
     }
@@ -278,8 +287,10 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
 
 class DigitalOceanHost implements server.ManagedServerHost {
   constructor(
-      private digitalOcean: DigitalOceanSession, private dropletInfo: DropletInfo,
-      private deleteCallback: Function) {}
+    private digitalOcean: DigitalOceanSession,
+    private dropletInfo: DropletInfo,
+    private deleteCallback: Function
+  ) {}
 
   getMonthlyOutboundTransferLimit(): server.DataAmount {
     // Details on the bandwidth limits can be found at

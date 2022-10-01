@@ -30,8 +30,11 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
   // binaryFilename is the location for the outline-ss-server binary.
   // configFilename is the location for the outline-ss-server config.
   constructor(
-      private readonly binaryFilename: string, private readonly configFilename: string,
-      private readonly verbose: boolean, private readonly metricsLocation: string) {}
+    private readonly binaryFilename: string,
+    private readonly configFilename: string,
+    private readonly verbose: boolean,
+    private readonly metricsLocation: string
+  ) {}
 
   // Annotates the Prometheus data metrics with countries.
   // ipCountryFilename is the location of the ip-country.mmdb IP-to-country database file.
@@ -64,8 +67,9 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
       const keysJson = {keys: [] as ShadowsocksAccessKey[]};
       for (const key of keys) {
         if (!isAeadCipher(key.cipher)) {
-          logging.error(`Cipher ${key.cipher} for access key ${
-              key.id} is not supported: use an AEAD cipher instead.`);
+          logging.error(
+            `Cipher ${key.cipher} for access key ${key.id} is not supported: use an AEAD cipher instead.`
+          );
           continue;
         }
 

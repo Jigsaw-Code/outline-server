@@ -158,7 +158,13 @@ function fetch() {
 }
 
 function install_docker() {
-  (fetch https://get.docker.com/ | sh) >&2
+  (
+    # Change umask so that /usr/share/keyrings/docker-archive-keyring.gpg has the right permissions.
+    # See https://github.com/Jigsaw-Code/outline-server/issues/951.
+    # We do this in a subprocess so the umask for the calling process is unaffected.
+    umask 0022
+    fetch https://get.docker.com/ | sh
+  ) >&2
 }
 
 function start_docker() {
@@ -257,7 +263,7 @@ function generate_certificate() {
   readonly SB_CERTIFICATE_FILE="${CERTIFICATE_NAME}.crt"
   readonly SB_PRIVATE_KEY_FILE="${CERTIFICATE_NAME}.key"
   declare -a openssl_req_flags=(
-    -x509 -nodes -days 36500 -newkey rsa:2048
+    -x509 -nodes -days 36500 -newkey rsa:4096
     -subj "/CN=${PUBLIC_HOSTNAME}"
     -keyout "${SB_PRIVATE_KEY_FILE}" -out "${SB_CERTIFICATE_FILE}"
   )
@@ -407,6 +413,13 @@ function set_hostname() {
 }
 
 install_shadowbox() {
+  local MACHINE_TYPE
+  MACHINE_TYPE="$(uname -m)"
+  if [[ "${MACHINE_TYPE}" != "x86_64" ]]; then
+    log_error "Unsupported machine type: ${MACHINE_TYPE}. Please run this script on a x86_64 machine"
+    exit 1
+  fi
+
   # Make sure we don't leak readable files to other users.
   umask 0007
 

@@ -76,7 +76,7 @@ describe('isPortUsed', () => {
 
 function listen(): Promise<net.Server> {
   const server = net.createServer();
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve, _reject) => {
     server.listen({host: 'localhost', port: 0, exclusive: true}, () => {
       resolve(server);
     });

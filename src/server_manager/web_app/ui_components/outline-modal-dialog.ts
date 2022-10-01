@@ -38,7 +38,7 @@ Polymer({
       }
     </style>
     <paper-dialog id="dialog" modal="">
-      <h3 hidden\$="[[!title]]">[[title]]</h3>
+      <h3 hidden$="[[!title]]">[[title]]</h3>
       <div>[[text]]</div>
       <p class="buttons">
         <template is="dom-repeat" items="{{buttons}}">
@@ -46,7 +46,7 @@ Polymer({
         </template>
       </p>
     </paper-dialog>
-`,
+  `,
 
   is: 'outline-modal-dialog',
 
@@ -72,11 +72,11 @@ Polymer({
     this.$.dialog.close();
   },
 
-  buttonTapped(event: Event&{model: {index: number;};}) {
+  buttonTapped(event: Event & {model: {index: number}}) {
     if (!this.fulfill) {
       console.error('outline-modal-dialog: this.fulfill not defined');
       return;
     }
     this.fulfill(event.model.index);
-  }
+  },
 });

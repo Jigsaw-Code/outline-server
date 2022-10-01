@@ -33,8 +33,9 @@ export class LanguageCode {
 
 export class LanguageMatcher {
   constructor(
-      private supportedLanguages: LanguageCode[],
-      private defaultLanguage: LanguageCode = undefined) {}
+    private supportedLanguages: LanguageCode[],
+    private defaultLanguage: LanguageCode = undefined
+  ) {}
 
   // Goes over each user language, trying to find the supported language that matches
   // the best. We'll trim variants of the user and supported languages in order to find
@@ -72,7 +73,7 @@ export class LanguageMatcher {
 }
 
 export function languageList(languagesAsStr: string[]): LanguageCode[] {
-  return languagesAsStr.map(l => new LanguageCode(l));
+  return languagesAsStr.map((l) => new LanguageCode(l));
 }
 
 // Returns the languages supported by the browser.

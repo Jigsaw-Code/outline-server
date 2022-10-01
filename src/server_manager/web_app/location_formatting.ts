@@ -18,8 +18,10 @@ import {CloudLocation, CloudLocationOption, GeoLocation} from '../model/location
  * Returns the localized place name, or the data center ID if the location is
  * unknown.
  */
-export function getShortName(cloudLocation: CloudLocation,
-    localize: (id: string) => string): string {
+export function getShortName(
+  cloudLocation: CloudLocation,
+  localize: (id: string) => string
+): string {
   if (!cloudLocation) {
     return '';
   }
@@ -38,7 +40,7 @@ export function localizeCountry(geoLocation: GeoLocation, language: string): str
     return '';
   }
   // TODO: Remove typecast after https://github.com/microsoft/TypeScript/pull/44022
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const displayName = new (Intl as any).DisplayNames([language], {type: 'region'});
   return displayName.of(geoLocation.countryCode);
 }
@@ -54,8 +56,8 @@ export function filterOptions<T extends CloudLocationOption>(options: readonly T
   // there are datacenters for that GeoLocation but none are available.
   const map = new Map<string, T>();
   const unmappedOptions: T[] = [];
-  
-  options.forEach(option => {
+
+  options.forEach((option) => {
     const geoLocation = option.cloudLocation.location;
     if (geoLocation) {
       if (option.available || !map.has(geoLocation.id)) {

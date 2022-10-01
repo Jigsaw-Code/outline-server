@@ -16,7 +16,7 @@
 // e.g. for DSN "https://[API_KEY]@[SUBDOMAIN].ingest.sentry.io/[PROJECT_ID]"
 // this will return
 // "https://[SUBDOMAIN].ingest.sentry.io/api/[PROJECT_ID]/store/?sentry_version=7&sentry_key=[API_KEY]"
-export function getSentryApiUrl(sentryDsn?: string): string|undefined {
+export function getSentryApiUrl(sentryDsn?: string): string | undefined {
   if (!sentryDsn) {
     return undefined;
   }
@@ -24,6 +24,7 @@ export function getSentryApiUrl(sentryDsn?: string): string|undefined {
   const sentryKey = dsnUrl.username;
   // Trims leading '/';
   const project = dsnUrl.pathname.substr(1);
-  return `https://${encodeURIComponent(dsnUrl.hostname)}/api/${
-      encodeURIComponent(project)}/store/?sentry_version=7&sentry_key=${sentryKey}`;
+  return `https://${encodeURIComponent(dsnUrl.hostname)}/api/${encodeURIComponent(
+    project
+  )}/store/?sentry_version=7&sentry_key=${sentryKey}`;
 }

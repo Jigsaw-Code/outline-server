@@ -22,23 +22,34 @@ export function getMenuTemplate(debugMode: boolean): Electron.MenuItemConstructo
 
   if (process.platform === 'darwin') {
     template.push(
-        // From default_app's main.js.
-        {
-          role: 'appMenu',
-          submenu: electron.Menu.buildFromTemplate([
-            {role: 'about'}, {type: 'separator'}, {role: 'services', submenu: []},
-            {type: 'separator'}, {role: 'hide'}, {role: 'hideOthers'}, {role: 'unhide'},
-            {type: 'separator'}, {role: 'quit'}
-          ])
-        },
-        // editMenu is required for copy+paste keyboard shortcuts to work on Mac.
-        {role: 'editMenu'});
+      // From default_app's main.js.
+      {
+        role: 'appMenu',
+        submenu: electron.Menu.buildFromTemplate([
+          {role: 'about'},
+          {type: 'separator'},
+          {role: 'services', submenu: []},
+          {type: 'separator'},
+          {role: 'hide'},
+          {role: 'hideOthers'},
+          {role: 'unhide'},
+          {type: 'separator'},
+          {role: 'quit'},
+        ]),
+      },
+      // editMenu is required for copy+paste keyboard shortcuts to work on Mac.
+      {role: 'editMenu'}
+    );
   }
 
   if (debugMode) {
     template.push({
       label: 'Developer',
-      submenu: electron.Menu.buildFromTemplate([{role: 'reload'}, {role: 'forceReload'}, {role: 'toggleDevTools'}])
+      submenu: electron.Menu.buildFromTemplate([
+        {role: 'reload'},
+        {role: 'forceReload'},
+        {role: 'toggleDevTools'},
+      ]),
     });
   }
 

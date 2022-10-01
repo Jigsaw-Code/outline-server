@@ -36,8 +36,7 @@ const OAUTH_CONFIG = {
 const REDIRECT_PATH = '/gcp/oauth/callback';
 
 function responseHtml(messageHtml: string): string {
-  return `<html><script>window.close()</script><body>${
-      messageHtml}. You can close this window.</body></html>`;
+  return `<html><script>window.close()</script><body>${messageHtml}. You can close this window.</body></html>`;
 }
 
 /**
@@ -50,11 +49,14 @@ function responseHtml(messageHtml: string): string {
  * @param accessToken: The granted access token.
  */
 async function verifyGrantedScopes(
-    oAuthClient: OAuth2Client, accessToken: string): Promise<boolean> {
+  oAuthClient: OAuth2Client,
+  accessToken: string
+): Promise<boolean> {
   const getTokenInfoResponse = await oAuthClient.getTokenInfo(accessToken);
   for (const requiredScope of OAUTH_CONFIG.scopes) {
-    const matchedScope =
-        getTokenInfoResponse.scopes.find((grantedScope) => grantedScope === requiredScope);
+    const matchedScope = getTokenInfoResponse.scopes.find(
+      (grantedScope) => grantedScope === requiredScope
+    );
     if (!matchedScope) {
       return false;
     }
@@ -70,9 +72,9 @@ export function runOauth(): OauthSession {
 
   // Open browser to OAuth URL
   const oAuthClient = new OAuth2Client(
-      OAUTH_CONFIG.client_id,
-      OAUTH_CONFIG.client_secret,
-      `http://localhost:${port}${REDIRECT_PATH}`,
+    OAUTH_CONFIG.client_id,
+    OAUTH_CONFIG.client_secret,
+    `http://localhost:${port}${REDIRECT_PATH}`
   );
   const oAuthUrl = oAuthClient.generateAuthUrl({
     access_type: 'offline',
@@ -82,7 +84,7 @@ export function runOauth(): OauthSession {
 
   // Handle OAuth redirect callback
   let isCancelled = false;
-  const rejectWrapper = {reject: (error: Error) => {}};
+  const rejectWrapper = {reject: (_error: Error) => {}};
   const tokenPromise = new Promise<string>((resolve, reject) => {
     rejectWrapper.reject = reject;
     app.get(REDIRECT_PATH, async (request: express.Request, response: express.Response) => {
@@ -99,12 +101,15 @@ export function runOauth(): OauthSession {
         try {
           const getTokenResponse = await oAuthClient.getToken(request.query.code as string);
           if (getTokenResponse.res.status / 100 === 2) {
-            const scopesValid =
-                await verifyGrantedScopes(oAuthClient, getTokenResponse.tokens.access_token);
+            const scopesValid = await verifyGrantedScopes(
+              oAuthClient,
+              getTokenResponse.tokens.access_token
+            );
             if (!scopesValid) {
               console.error(
-                  'Authentication failed with missing scope(s). Granted: ',
-                  getTokenResponse.tokens.scope);
+                'Authentication failed with missing scope(s). Granted: ',
+                getTokenResponse.tokens.scope
+              );
               response.send(responseHtml('Authentication failed with missing scope(s)'));
               reject(new Error('Authentication failed with missing scope(s)'));
             } else if (!getTokenResponse.tokens.refresh_token) {
@@ -116,8 +121,11 @@ export function runOauth(): OauthSession {
             }
           } else {
             response.send(responseHtml('Authentication failed'));
-            reject(new Error(
-                `Authentication failed with HTTP status code: ${getTokenResponse.res.status}`));
+            reject(
+              new Error(
+                `Authentication failed with HTTP status code: ${getTokenResponse.res.status}`
+              )
+            );
           }
         } catch (error) {
           response.send(responseHtml('Authentication failed'));
@@ -138,6 +146,6 @@ export function runOauth(): OauthSession {
       isCancelled = true;
       server.close();
       rejectWrapper.reject(new Error('Authentication cancelled'));
-    }
+    },
   };
 }

@@ -21,39 +21,45 @@ import {DailyDataLimitMetricsReport, DailyFeatureMetricsReport} from './model';
 export interface FeatureRow {
   serverId: string;
   serverVersion: string;
-  timestamp: string;  // ISO formatted string
+  timestamp: string; // ISO formatted string
   dataLimit: DailyDataLimitMetricsReport;
 }
 
 export class BigQueryFeaturesTable implements InsertableTable<FeatureRow> {
   constructor(private bigqueryTable: Table) {}
 
-  async insert(rows: FeatureRow|FeatureRow[]): Promise<void> {
+  async insert(rows: FeatureRow | FeatureRow[]): Promise<void> {
     await this.bigqueryTable.insert(rows);
   }
 }
 
 export async function postFeatureMetrics(
-    table: InsertableTable<FeatureRow>, report: DailyFeatureMetricsReport) {
+  table: InsertableTable<FeatureRow>,
+  report: DailyFeatureMetricsReport
+) {
   const featureRow: FeatureRow = {
     serverId: report.serverId,
     serverVersion: report.serverVersion,
     timestamp: new Date(report.timestampUtcMs).toISOString(),
-    dataLimit: report.dataLimit
+    dataLimit: report.dataLimit,
   };
   return table.insert([featureRow]);
 }
 
 // Returns true iff `obj` contains a valid DailyFeatureMetricsReport.
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isValidFeatureMetricsReport(obj: any): obj is DailyFeatureMetricsReport {
   if (!obj) {
     return false;
   }
 
   // Check that all required fields are present.
-  const requiredFeatureMetricsReportFields =
-      ['serverId', 'serverVersion', 'timestampUtcMs', 'dataLimit'];
+  const requiredFeatureMetricsReportFields = [
+    'serverId',
+    'serverVersion',
+    'timestampUtcMs',
+    'dataLimit',
+  ];
   for (const fieldName of requiredFeatureMetricsReportFields) {
     if (!obj[fieldName]) {
       return false;
@@ -61,8 +67,11 @@ export function isValidFeatureMetricsReport(obj: any): obj is DailyFeatureMetric
   }
 
   // Validate the report types are what we expect.
-  if (typeof obj.serverId !== 'string' || typeof obj.serverVersion !== 'string' ||
-      typeof obj.timestampUtcMs !== 'number') {
+  if (
+    typeof obj.serverId !== 'string' ||
+    typeof obj.serverVersion !== 'string' ||
+    typeof obj.timestampUtcMs !== 'number'
+  ) {
     return false;
   }
 
@@ -73,7 +82,7 @@ export function isValidFeatureMetricsReport(obj: any): obj is DailyFeatureMetric
 
   // Validate the per-key data limit feature
   const perKeyLimitCount = obj.dataLimit.perKeyLimitCount;
-  if(perKeyLimitCount === undefined) {
+  if (perKeyLimitCount === undefined) {
     return true;
   }
   if (typeof perKeyLimitCount === 'number') {

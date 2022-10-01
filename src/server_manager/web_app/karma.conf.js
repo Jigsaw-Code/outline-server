@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 // Copyright 2020 The Outline Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,13 +17,13 @@ const {makeConfig} = require('../base.webpack.js');
 process.env.CHROMIUM_BIN = require('puppeteer').executablePath();
 
 const baseConfig = makeConfig({
-  defaultMode: 'development'
+  defaultMode: 'development',
 });
 
 const test_patterns = [
   '**/*.spec.ts',
   // We need to test data_formatting in a browser context
-  './data_formatting.spec.ts'
+  './data_formatting.spec.ts',
 ];
 
 let preprocessors = {};
@@ -30,7 +31,7 @@ for (const pattern of test_patterns) {
   preprocessors[pattern] = ['webpack'];
 }
 
-module.exports = function(config) {
+module.exports = function (config) {
   config.set({
     frameworks: ['jasmine'],
     files: test_patterns,
@@ -46,6 +47,6 @@ module.exports = function(config) {
       resolve: baseConfig.resolve,
       plugins: baseConfig.plugins,
       mode: baseConfig.mode,
-    }
-  })
+    },
+  });
 };

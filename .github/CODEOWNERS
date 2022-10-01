@@ -1,0 +1,8 @@
+* @Jigsaw-Code/outline-owners
+
+/src/server_manager/messages/ @Jigsaw-Code/outline-strings-owners
+*.json                        @Jigsaw-Code/outline-strings-owners
+*.md                          @Jigsaw-Code/outline-strings-owners
+*.png                         @Jigsaw-Code/outline-strings-owners
+*.svg                         @Jigsaw-Code/outline-strings-owners
+LICENSE                       @Jigsaw-Code/outline-strings-owners

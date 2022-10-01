@@ -21,7 +21,7 @@ import {html} from '@polymer/polymer/lib/utils/html-tag';
 import * as clipboard from 'clipboard-polyfill';
 
 export interface OutlineShareDialog extends Element {
-  open(accessKey: string, s3url: string): void;
+  open(accessKey: string): void;
 }
 
 // TODO(alalama): add a language selector. This should be a separate instance of
@@ -107,32 +107,25 @@ Polymer({
     <paper-dialog id="dialog" modal="">
       <div id="dialog-header">
         <h3>[[localize('share-title')]]</h3>
-        <p inner-h-t-m-l="[[localize('share-description', 'openLink', '<a href=https://securityplanner.org/#/all-recommendations>', 'closeLink', '</a>')]]"></p>
+        <p
+          inner-h-t-m-l="[[localize('share-description-html', 'openLink', '<a href=https://securityplanner.org/#/all-recommendations>', 'closeLink', '</a>')]]"
+        ></p>
       </div>
-      <div contenteditable="" id="selectableText" style="-webkit-text-size-adjust: 100%;">
-        <p>[[localize('share-invite')]]</p>
-
-        <p><a href\$="{{s3Url}}">{{s3Url}}</a></p>
-        <p>-----</p>
-        <p>[[localize('share-invite-trouble')]]</p>
-        <ol>
-          <li>
-            [[localize('share-invite-copy-access-key')]]
-            <a href="{{accessKey}}">{{accessKey}}</a>
-          </li>
-          <li>
-            [[localize('share-invite-instructions')]]
-            <a href="https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md">https://github.com/Jigsaw-Code/outline-client/blob/master/docs/invitation-instructions.md</a>
-          </li>
-        </ol>
-      </div>
+      <div
+        contenteditable=""
+        id="selectableText"
+        style="-webkit-text-size-adjust: 100%; white-space: pre-wrap;"
+        inner-h-t-m-l="[[localize('share-invite-html', 'openLink', '<a href=[[accessKey]]>', 'accessKey', accessKey, 'closeLink', '</a>')]]"
+      ></div>
       <div id="button-row">
-        <paper-button id="copyButton" on-tap="copyClicked">[[localize('share-invite-copy')]]</paper-button>
+        <paper-button id="copyButton" on-tap="copyClicked"
+          >[[localize('share-invite-copy')]]</paper-button
+        >
         <paper-button id="doneButton" dialog-confirm="">[[localize('done')]]</paper-button>
       </div>
       <div id="copyText" hidden="">[[localize('share-invite-copied')]]</div>
     </paper-dialog>
-`,
+  `,
 
   is: 'outline-share-dialog',
 
@@ -140,9 +133,8 @@ Polymer({
     localize: {type: Function},
   },
 
-  open(accessKey: string, s3Url: string) {
+  open(accessKey: string) {
     this.accessKey = accessKey;
-    this.s3Url = s3Url;
     this.$.copyText.setAttribute('hidden', true);
     this.$.dialog.open();
   },
@@ -150,8 +142,7 @@ Polymer({
   copyClicked() {
     const dt = new clipboard.DT();
     dt.setData('text/plain', this.$.selectableText.innerText);
-    dt.setData('text/html', this.$.selectableText.innerHTML);
     clipboard.write(dt);
     this.$.copyText.removeAttribute('hidden');
-  }
+  },
 });

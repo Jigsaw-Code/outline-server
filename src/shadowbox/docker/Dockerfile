@@ -37,7 +37,7 @@ RUN ROOT_DIR=/ npm run action shadowbox/server/build
 FROM ${NODE_IMAGE}
 
 # Save metadata on the software versions we are using.
-LABEL shadowbox.node_version=16.12.0
+LABEL shadowbox.node_version=16.14.0
 
 ARG GITHUB_RELEASE
 LABEL shadowbox.github.release="${GITHUB_RELEASE}"

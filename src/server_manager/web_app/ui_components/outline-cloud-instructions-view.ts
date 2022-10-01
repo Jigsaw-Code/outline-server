@@ -83,12 +83,12 @@ Polymer({
       <div class="thumbnail overlay" on-tap="_openImage">
         <iron-icon icon="open-in-new"></iron-icon>
       </div>
-      <img class="thumbnail" src\$="[[thumbnailPath]]">
+      <img class="thumbnail" src$="[[thumbnailPath]]" />
       <div class="instructions">
         <slot></slot>
       </div>
     </div>
-`,
+  `,
 
   is: 'outline-cloud-instructions-view',
 
@@ -102,5 +102,5 @@ Polymer({
 
   _openImage() {
     this.fire('OpenImageRequested', {imagePath: this.imagePath});
-  }
+  },
 });

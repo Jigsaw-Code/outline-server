@@ -16,8 +16,9 @@ import {redactManagerUrl} from './util';
 
 describe('XHR breadcrumbs', () => {
   it('handles the normal case', () => {
-    expect(redactManagerUrl('https://124.10.10.2:48000/abcd123/access-keys'))
-        .toEqual('access-keys');
+    expect(redactManagerUrl('https://124.10.10.2:48000/abcd123/access-keys')).toEqual(
+      'access-keys'
+    );
   });
 
   it('handles no port', () => {
@@ -35,8 +36,9 @@ describe('XHR breadcrumbs', () => {
   });
 
   it('handles commands with args', () => {
-    expect(redactManagerUrl('https://124.10.10.2/abcd123/access-keys/52'))
-        .toEqual('access-keys/52');
+    expect(redactManagerUrl('https://124.10.10.2/abcd123/access-keys/52')).toEqual(
+      'access-keys/52'
+    );
   });
 
   it('throws on garbage', () => {

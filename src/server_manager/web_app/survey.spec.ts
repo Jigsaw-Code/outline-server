@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import {InMemoryStorage} from '../infrastructure/memory_storage';
-import {Surveys} from '../model/survey';
 
 import {OutlineSurveys} from './survey';
 
@@ -25,15 +24,15 @@ describe('Surveys', () => {
 
     await surveys.presentDataLimitsEnabledSurvey();
     expect(view.title).toEqual('survey-data-limits-title');
-    expect(view.surveyLink)
-        .toEqual(
-            'https://docs.google.com/forms/d/e/1FAIpQLSeXQ5WUHXQHlF1Ul_ViX52GjTUPlrRB_7rhwbol3dKJfM4Kiw/viewform');
+    expect(view.surveyLink).toEqual(
+      'https://docs.google.com/forms/d/e/1FAIpQLSeXQ5WUHXQHlF1Ul_ViX52GjTUPlrRB_7rhwbol3dKJfM4Kiw/viewform'
+    );
 
     await surveys.presentDataLimitsDisabledSurvey();
     expect(view.title).toEqual('survey-data-limits-title');
-    expect(view.surveyLink)
-        .toEqual(
-            'https://docs.google.com/forms/d/e/1FAIpQLSc2ZNx0C1a-alFlXLxhJ8jWk-WgcxqKilFoQ5ToI8HBOK9qRA/viewform');
+    expect(view.surveyLink).toEqual(
+      'https://docs.google.com/forms/d/e/1FAIpQLSc2ZNx0C1a-alFlXLxhJ8jWk-WgcxqKilFoQ5ToI8HBOK9qRA/viewform'
+    );
     done();
   });
 

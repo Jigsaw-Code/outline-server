@@ -16,9 +16,9 @@ import * as i18n from './i18n';
 
 describe('LanguageMatcher', () => {
   it('returns supported language on match', () => {
-    const SUPPORTED_LANGUAGES = i18n.languageList(["es", "pt-BR", "ru"]);
+    const SUPPORTED_LANGUAGES = i18n.languageList(['es', 'pt-BR', 'ru']);
     const matcher = new i18n.LanguageMatcher(SUPPORTED_LANGUAGES, undefined);
-    const supportedLanguage = matcher.getBestSupportedLanguage(i18n.languageList(["pt-PT"]));
+    const supportedLanguage = matcher.getBestSupportedLanguage(i18n.languageList(['pt-PT']));
     expect(supportedLanguage.string()).toEqual('pt-BR');
   });
   it('returns the right variant', () => {
@@ -30,8 +30,9 @@ describe('LanguageMatcher', () => {
   it('prefers first matched user language', () => {
     const SUPPORTED_LANGUAGES = i18n.languageList(['en-US', 'pt-BR']);
     const matcher = new i18n.LanguageMatcher(SUPPORTED_LANGUAGES, undefined);
-    const supportedLanguage =
-        matcher.getBestSupportedLanguage(i18n.languageList(['cn', 'en-GB', 'pt-BR']));
+    const supportedLanguage = matcher.getBestSupportedLanguage(
+      i18n.languageList(['cn', 'en-GB', 'pt-BR'])
+    );
     expect(supportedLanguage.string()).toEqual('en-US');
   });
   it('returns default on no match', () => {
@@ -41,9 +42,9 @@ describe('LanguageMatcher', () => {
     expect(supportedLanguage.string()).toEqual('fr');
   });
   it('returns undefined on no match and no default', () => {
-    const SUPPORTED_LANGUAGES = i18n.languageList(["es", "pt-BR", "ru"]);
+    const SUPPORTED_LANGUAGES = i18n.languageList(['es', 'pt-BR', 'ru']);
     const matcher = new i18n.LanguageMatcher(SUPPORTED_LANGUAGES);
-    const supportedLanguage = matcher.getBestSupportedLanguage(i18n.languageList(["cn"]));
+    const supportedLanguage = matcher.getBestSupportedLanguage(i18n.languageList(['cn']));
     expect(supportedLanguage).toBeUndefined();
   });
 });

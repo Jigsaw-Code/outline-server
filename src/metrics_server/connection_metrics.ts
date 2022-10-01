@@ -14,12 +14,12 @@
 
 import {Table} from '@google-cloud/bigquery';
 import {InsertableTable} from './infrastructure/table';
-import {HourlyConnectionMetricsReport, HourlyUserConnectionMetricsReport} from './model';
+import {HourlyConnectionMetricsReport} from './model';
 
 export interface ConnectionRow {
   serverId: string;
-  startTimestamp: string;  // ISO formatted string.
-  endTimestamp: string;    // ISO formatted string.
+  startTimestamp: string; // ISO formatted string.
+  endTimestamp: string; // ISO formatted string.
   userId: string;
   bytesTransferred: number;
   countries: string[];
@@ -34,7 +34,9 @@ export class BigQueryConnectionsTable implements InsertableTable<ConnectionRow> 
 }
 
 export function postConnectionMetrics(
-    table: InsertableTable<ConnectionRow>, report: HourlyConnectionMetricsReport) {
+  table: InsertableTable<ConnectionRow>,
+  report: HourlyConnectionMetricsReport
+): Promise<void> {
   return table.insert(getConnectionRowsFromReport(report));
 }
 
@@ -49,16 +51,17 @@ function getConnectionRowsFromReport(report: HourlyConnectionMetricsReport): Con
       endTimestamp: endTimestampStr,
       userId: userReport.userId,
       bytesTransferred: userReport.bytesTransferred,
-      countries: userReport.countries
+      countries: userReport.countries,
     });
   }
   return rows;
 }
 
 // Returns true iff testObject contains a valid HourlyConnectionMetricsReport.
-// tslint:disable-next-line:no-any
-export function isValidConnectionMetricsReport(testObject: any):
-    testObject is HourlyConnectionMetricsReport {
+export function isValidConnectionMetricsReport(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  testObject: any
+): testObject is HourlyConnectionMetricsReport {
   if (!testObject) {
     return false;
   }
@@ -77,8 +80,11 @@ export function isValidConnectionMetricsReport(testObject: any):
   }
 
   // Check timestamp types and that startUtcMs is not after endUtcMs.
-  if (typeof testObject.startUtcMs !== 'number' || typeof testObject.endUtcMs !== 'number' ||
-      testObject.startUtcMs >= testObject.endUtcMs) {
+  if (
+    typeof testObject.startUtcMs !== 'number' ||
+    typeof testObject.endUtcMs !== 'number' ||
+    testObject.startUtcMs >= testObject.endUtcMs
+  ) {
     return false;
   }
 
@@ -89,7 +95,7 @@ export function isValidConnectionMetricsReport(testObject: any):
 
   const requiredUserReportFields = ['userId', 'countries', 'bytesTransferred'];
   const MIN_BYTES_TRANSFERRED = 0;
-  const MAX_BYTES_TRANSFERRED = 1 * Math.pow(2, 40);  // 1 TB.
+  const MAX_BYTES_TRANSFERRED = 1 * Math.pow(2, 40); // 1 TB.
   for (const userReport of testObject.userReports) {
     // Test that each `userReport` contains the required fields.
     for (const fieldName of requiredUserReportFields) {
@@ -103,9 +109,11 @@ export function isValidConnectionMetricsReport(testObject: any):
     }
 
     // Check that `bytesTransferred` is a number between min and max transfer limits
-    if (typeof userReport.bytesTransferred !== 'number' ||
-        userReport.bytesTransferred < MIN_BYTES_TRANSFERRED ||
-        userReport.bytesTransferred > MAX_BYTES_TRANSFERRED) {
+    if (
+      typeof userReport.bytesTransferred !== 'number' ||
+      userReport.bytesTransferred < MIN_BYTES_TRANSFERRED ||
+      userReport.bytesTransferred > MAX_BYTES_TRANSFERRED
+    ) {
       return false;
     }
 

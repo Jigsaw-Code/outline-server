@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// TODO(fortuna): Reuse CustomError from server_manager.
 class OutlineError extends Error {
   constructor(message: string) {
     super(message);

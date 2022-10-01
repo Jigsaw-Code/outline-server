@@ -98,8 +98,17 @@ Polymer({
       <h2>[[title]]</h2>
       <div id="feedbackWrapper">
         <p id="feedbackExplanation">[[feedbackExplanation]]</p>
-        <paper-dropdown-menu id="feedbackCategory" horizontal-align="left" on-selected-item-changed="feedbackCategoryChanged">
-          <paper-listbox id="feedbackCategoryListbox" slot="dropdown-content" class="dropdown-content" selected="0">
+        <paper-dropdown-menu
+          id="feedbackCategory"
+          horizontal-align="left"
+          on-selected-item-changed="feedbackCategoryChanged"
+        >
+          <paper-listbox
+            id="feedbackCategoryListbox"
+            slot="dropdown-content"
+            class="dropdown-content"
+            selected="0"
+          >
             <paper-item>[[localize('feedback-general')]]</paper-item>
             <paper-item>[[localize('feedback-install')]]</paper-item>
             <paper-item>[[localize('feedback-connection')]]</paper-item>
@@ -108,7 +117,13 @@ Polymer({
             <paper-item>[[localize('feedback-suggestion')]]</paper-item>
           </paper-listbox>
         </paper-dropdown-menu>
-        <paper-dropdown-menu id="cloudProvider" horizontal-align="left" placeholder="[[localize('feedback-cloud-provider')]]" hidden\$="[[!shouldShowCloudProvider]]" error-message="[[localize('feedback-cloud-provider-error')]]">
+        <paper-dropdown-menu
+          id="cloudProvider"
+          horizontal-align="left"
+          placeholder="[[localize('feedback-cloud-provider')]]"
+          hidden$="[[!shouldShowCloudProvider]]"
+          error-message="[[localize('feedback-cloud-provider-error')]]"
+        >
           <paper-listbox id="cloudProviderListbox" slot="dropdown-content" class="dropdown-content">
             <paper-item>DigitalOcean</paper-item>
             <paper-item>Amazon Web Services</paper-item>
@@ -116,18 +131,37 @@ Polymer({
             <paper-item>[[localize('feedback-other')]]</paper-item>
           </paper-listbox>
         </paper-dropdown-menu>
-        <paper-input id="userEmail" type="text" placeholder="[[localize('feedback-email')]]" on-value-changed="userEmailValueChanged"></paper-input>
-        <p class="disclaimer" hidden\$="[[!shouldShowLanguageDisclaimer]]">[[localize('feedback-disclaimer')]]</p>
-        <paper-textarea id="userFeedback" type="text" label="[[localize('feedback-label')]]" always-float-label="" rows="4" error-message="[[localize('feedback-error')]]" on-value-changed="userFeedbackValueChanged"></paper-textarea>
-        <p inner-h-t-m-l="[[localize('feedback-privacy', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"></p>
+        <paper-input
+          id="userEmail"
+          type="text"
+          placeholder="[[localize('feedback-email')]]"
+          on-value-changed="userEmailValueChanged"
+        ></paper-input>
+        <p class="disclaimer" hidden$="[[!shouldShowLanguageDisclaimer]]">
+          [[localize('feedback-disclaimer')]]
+        </p>
+        <paper-textarea
+          id="userFeedback"
+          type="text"
+          label="[[localize('feedback-label')]]"
+          always-float-label=""
+          rows="4"
+          error-message="[[localize('feedback-error')]]"
+          on-value-changed="userFeedbackValueChanged"
+        ></paper-textarea>
+        <p
+          inner-h-t-m-l="[[localize('feedback-privacy', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"
+        ></p>
       </div>
       <!-- end of #feedbackWrapper -->
       <p class="buttons">
         <paper-button dialog-dismiss="">[[localize('cancel')]]</paper-button>
-        <paper-button autofocus="" on-tap="submitTappedHandler">[[localize('feedback-submit')]]</paper-button>
+        <paper-button autofocus="" on-tap="submitTappedHandler"
+          >[[localize('feedback-submit')]]</paper-button
+        >
       </p>
     </paper-dialog>
-`,
+  `,
 
   is: 'outline-feedback-dialog',
 
@@ -211,9 +245,11 @@ Polymer({
 
   feedbackCategoryChanged() {
     const selectedCategory = this.$.feedbackCategoryListbox.selected;
-    if (selectedCategory === this.feedbackCategories.INSTALLATION ||
-        selectedCategory === this.feedbackCategories.CONNECTION ||
-        selectedCategory === this.feedbackCategories.CONNECTION_OTHERS) {
+    if (
+      selectedCategory === this.feedbackCategories.INSTALLATION ||
+      selectedCategory === this.feedbackCategories.CONNECTION ||
+      selectedCategory === this.feedbackCategories.CONNECTION_OTHERS
+    ) {
       this.shouldShowCloudProvider = true;
     } else {
       this.shouldShowCloudProvider = false;
@@ -233,5 +269,5 @@ Polymer({
   // entered their email.
   _computeShouldShowLanguageDisclaimer(hasEnteredEmail: boolean) {
     return !window.navigator.language.match(/^en/i) && hasEnteredEmail;
-  }
+  },
 });

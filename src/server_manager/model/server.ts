@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {CloudLocation} from "./location";
+import {CustomError} from '../infrastructure/custom_error';
+import {CloudLocation} from './location';
 
 export interface Server {
   // Gets a globally unique identifier for this Server.  THIS MUST NOT make a network request, as
@@ -49,7 +50,7 @@ export interface Server {
   setDefaultDataLimit(limit: DataLimit): Promise<void>;
 
   // Returns the server default access key data transfer limit, or undefined if it has not been set.
-  getDefaultDataLimit(): DataLimit|undefined;
+  getDefaultDataLimit(): DataLimit | undefined;
 
   // Removes the server default data limit.  Per-key data limits are still enforced.  Traffic is
   // tracked for if the limit is re-enabled.  Forces enforcement of all data limits, including
@@ -90,7 +91,7 @@ export interface Server {
 
   // Returns the port number for new access keys.
   // Returns undefined if the server doesn't have a port set.
-  getPortForNewAccessKeys(): number|undefined;
+  getPortForNewAccessKeys(): number | undefined;
 
   // Changes the port number for new access keys.
   setPortForNewAccessKeys(port: number): Promise<void>;
@@ -104,12 +105,26 @@ export interface ManualServer extends Server {
   forget(): void;
 }
 
+// Error thrown when monitoring an installation that the user canceled.
+export class ServerInstallCanceledError extends CustomError {
+  constructor(message?: string) {
+    super(message);
+  }
+}
+
+// Error thrown when server installation failed.
+export class ServerInstallFailedError extends CustomError {
+  constructor(message?: string) {
+    super(message);
+  }
+}
+
 // Managed servers are servers created by the Outline Manager through our
 // "magic" user experience, e.g. DigitalOcean.
 export interface ManagedServer extends Server {
   // Yields how far installation has progressed (0.0 to 1.0).
-  // Exits when installation has completed.
-  // Throws if installation fails or is canceled.
+  // Exits when installation has completed. Throws ServerInstallFailedError or
+  // ServerInstallCanceledError if installation fails or is canceled.
   monitorInstallProgress(): AsyncGenerator<number, void>;
   // Returns server host object.
   getHost(): ManagedServerHost;
@@ -152,7 +167,7 @@ export interface ManualServerRepository {
   // Adds a manual server using the config (e.g. user input).
   addServer(config: ManualServerConfig): Promise<ManualServer>;
   // Retrieves a server with `config`.
-  findServer(config: ManualServerConfig): ManualServer|undefined;
+  findServer(config: ManualServerConfig): ManualServer | undefined;
 }
 
 export type AccessKeyId = string;

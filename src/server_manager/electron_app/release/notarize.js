@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 // Copyright 2020 The Outline Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +18,7 @@ const {notarize} = require('electron-notarize');
 // Notarizes the macOS app through an Apple Developer Account when building for release.
 // Must set environment variables: `APPLE_ID`, the account's Apple ID;
 // and `APPLE_PASSWORD`, the password to the account.
-exports.default = async function(context) {
+exports.default = async function (context) {
   const {electronPlatformName, appOutDir} = context;
   if (electronPlatformName !== 'darwin' || !process.env.CSC_LINK) {
     // Skip notarization if not releasing macOS or if the app is unsigned (i.e. packaging).
@@ -28,9 +29,14 @@ exports.default = async function(context) {
   const appName = context.packager.appInfo.productFilename;
   console.log(`Notarizing ${appName}. This may take a few minutes.`);
   await notarize({
-    appBundleId: 'com.electron.outline-manager',
+    tool: 'notarytool',
     appPath: `${appOutDir}/${appName}.app`,
     appleId: process.env.APPLE_ID,
+
+    // You'll have to generate a one-time password as the
+    // notary tool does not support 2FA:
+    // https://support.apple.com/en-us/HT204397
     appleIdPassword: process.env.APPLE_PASSWORD,
+    teamId: process.env.APPLE_TEAM_ID,
   });
 };

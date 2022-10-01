@@ -18,6 +18,7 @@ import {URL} from 'url';
 
 import * as digitalocean_oauth from './digitalocean_oauth';
 import * as gcp_oauth from './gcp_oauth';
+import {HttpRequest, HttpResponse} from '../infrastructure/path_api';
 import {redactManagerUrl} from './util';
 
 // This file is run in the renderer process *before* nodeIntegration is disabled.
@@ -43,38 +44,28 @@ if (sentryDsn) {
         }
       }
       return breadcrumb;
-    }
+    },
   });
 }
 
 contextBridge.exposeInMainWorld(
-    'trustCertificate',
-    (fingerprint: string) => {
-      return ipcRenderer.sendSync('trust-certificate', fingerprint);
-    });
+  'fetchWithPin',
+  (request: HttpRequest, fingerprint: string): Promise<HttpResponse> =>
+    ipcRenderer.invoke('fetch-with-pin', request, fingerprint)
+);
 
-contextBridge.exposeInMainWorld(
-    'openImage',
-    (basename: string) => {
-      ipcRenderer.send('open-image', basename);
-    });
+contextBridge.exposeInMainWorld('openImage', (basename: string) => {
+  ipcRenderer.send('open-image', basename);
+});
 
-contextBridge.exposeInMainWorld(
-    'onUpdateDownloaded',
-    (callback: () => void) => {
-      ipcRenderer.on('update-downloaded', callback);
-    });
+contextBridge.exposeInMainWorld('onUpdateDownloaded', (callback: () => void) => {
+  ipcRenderer.on('update-downloaded', callback);
+});
 
-contextBridge.exposeInMainWorld(
-    'runDigitalOceanOauth',
-    digitalocean_oauth.runOauth);
+contextBridge.exposeInMainWorld('runDigitalOceanOauth', digitalocean_oauth.runOauth);
 
-contextBridge.exposeInMainWorld(
-    'runGcpOauth',
-    gcp_oauth.runOauth);
+contextBridge.exposeInMainWorld('runGcpOauth', gcp_oauth.runOauth);
 
-contextBridge.exposeInMainWorld(
-    'bringToFront',
-    () => {
-      return ipcRenderer.send('bring-to-front');
-    });
+contextBridge.exposeInMainWorld('bringToFront', () => {
+  return ipcRenderer.send('bring-to-front');
+});

@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Extension to @types/node-forge to add the missing definitions that we need.
-declare module 'node-forge' {
-  namespace ssh {
-    function publicKeyToOpenSSH(privateKey?: string, passphrase?: string): string;
+export class CustomError extends Error {
+  constructor(message?: string) {
+    // ref:
+    // https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-2.html#support-for-newtarget
+    super(message); // 'Error' breaks prototype chain here
+    Object.setPrototypeOf(this, new.target.prototype); // restore prototype chain
+    this.name = new.target.name;
   }
 }
