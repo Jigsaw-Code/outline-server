@@ -312,7 +312,7 @@ describe('ShadowsocksManagerService', () => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
 
-      const res = {send: (_, _) => {}};
+      const res = {send: (_httpCode, _data) => {}};
       service.createNewAccessKey({params: {method: Number('9876')}}, res, (error) => {
         expect(error.statusCode).toEqual(400);
         responseProcessed = true; // required for afterEach to pass.
@@ -323,7 +323,7 @@ describe('ShadowsocksManagerService', () => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
 
-      const res = {send: (_, _) => {}};
+      const res = {send: (_httpCode, _data) => {}};
       service.createNewAccessKey({params: {method: 'abcdef'}}, res, (error) => {
         expect(error.statusCode).toEqual(400);
         responseProcessed = true; // required for afterEach to pass.
@@ -335,7 +335,7 @@ describe('ShadowsocksManagerService', () => {
       spyOn(repo, 'createNewAccessKey').and.throwError('cannot write to disk');
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
 
-      const res = {send: (_, _) => {}};
+      const res = {send: (_httpCode, _data) => {}};
       service.createNewAccessKey({params: {method: 'aes-192-gcm'}}, res, (error) => {
         expect(error.statusCode).toEqual(500);
         responseProcessed = true; // required for afterEach to pass.
