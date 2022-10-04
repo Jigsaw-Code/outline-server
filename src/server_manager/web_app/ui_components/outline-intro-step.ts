@@ -114,7 +114,7 @@ const GCP_STYLES = html`
   </style>
 `;
 
-const GCP_EXPERIMENTAL_CARD_HTML = html`
+const GCP_CARD_HTML = html`
   ${GCP_STYLES}
   <style>
     /* This card contains hyperlinks so the whole thing can't be clickable. */
@@ -127,7 +127,9 @@ const GCP_EXPERIMENTAL_CARD_HTML = html`
   </style>
   <div id="gcp" class="card" hidden$="[[!_showNewGcpFlow(gcpAccountName)]]">
     <div class="card-header">
-      <div class="tag">[[localize('experimental')]]</div>
+      <div class="tag" hidden$="[[_computeIsAccountConnected(gcpAccountName)]]">
+        [[localize('setup-recommended')]]
+      </div>
       <div class="email" hidden$="[[!_computeIsAccountConnected(gcpAccountName)]]">
         [[gcpAccountName]]
       </div>
@@ -167,7 +169,8 @@ const GCP_EXPERIMENTAL_CARD_HTML = html`
   </div>
 `;
 
-const GCP_ADVANCED_CARD_HTML = html`
+// TODO: Delete this card once we have full confidence in the new GCP flow.
+const GCP_LEGACY_CARD_HTML = html`
   ${GCP_STYLES}
   <div
     id="gcp"
@@ -376,7 +379,7 @@ Polymer({
       <span slot="step-description">[[localize('setup-description')]]</span>
 
       <div class="container">
-        ${DO_CARD_HTML} ${GCP_EXPERIMENTAL_CARD_HTML} ${GCP_ADVANCED_CARD_HTML} ${AWS_CARD_HTML}
+        ${DO_CARD_HTML} ${GCP_CARD_HTML} ${GCP_LEGACY_CARD_HTML} ${AWS_CARD_HTML}
         ${MANUAL_CARD_HTML}
       </div>
     </outline-step-view>

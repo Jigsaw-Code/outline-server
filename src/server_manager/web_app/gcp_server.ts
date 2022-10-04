@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import * as gcp_api from '../cloud/gcp_api';
-import * as errors from '../infrastructure/errors';
 import {sleep} from '../infrastructure/sleep';
 import {ValueStream} from '../infrastructure/value_stream';
 import {Zone} from '../model/gcp';
@@ -133,7 +132,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
         // The IP address has not yet been reserved.
         return false;
       }
-      throw new errors.ServerInstallFailedError(`Static IP check failed: ${e}`);
+      throw new server.ServerInstallFailedError(`Static IP check failed: ${e}`);
     }
   }
 
@@ -152,7 +151,7 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     );
     const operationErrors = createStaticIpOperation.error?.errors;
     if (operationErrors) {
-      throw new errors.ServerInstallFailedError(`Firewall creation failed: ${operationErrors}`);
+      throw new server.ServerInstallFailedError(`Firewall creation failed: ${operationErrors}`);
     }
   }
 
@@ -166,9 +165,9 @@ export class GcpServer extends ShadowboxServer implements server.ManagedServer {
     }
 
     if (this.installState.get() === InstallState.FAILED) {
-      throw new errors.ServerInstallFailedError();
+      throw new server.ServerInstallFailedError();
     } else if (this.installState.get() === InstallState.CANCELED) {
-      throw new errors.ServerInstallCanceledError();
+      throw new server.ServerInstallCanceledError();
     }
     yield getCompletionFraction(this.installState.get());
   }

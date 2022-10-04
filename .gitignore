@@ -6,3 +6,4 @@ node_modules/
 .vscode/
 .idea/
 third_party/shellcheck/download/
+macos-signing-certificate.p12

@@ -30,7 +30,7 @@ import './cloud-install-styles';
 import './outline-about-dialog';
 import './outline-do-oauth-step';
 import './outline-gcp-oauth-step';
-import './outline-gcp-create-server-app';
+import '../outline-gcp-create-server-app';
 import './outline-feedback-dialog';
 import './outline-survey-dialog';
 import './outline-intro-step';
@@ -57,7 +57,7 @@ import type {PolymerElementProperties} from '@polymer/polymer/interfaces';
 import type {OutlineRegionPicker} from './outline-region-picker-step';
 import type {OutlineDoOauthStep} from './outline-do-oauth-step';
 import type {GcpConnectAccountApp} from './outline-gcp-oauth-step';
-import type {GcpCreateServerApp} from './outline-gcp-create-server-app';
+import type {GcpCreateServerApp} from '../outline-gcp-create-server-app';
 import type {OutlineServerList, ServerViewListEntry} from './outline-server-list';
 import type {OutlineManualServerEntry} from './outline-manual-server-entry';
 import type {OutlinePerKeyDataLimitDialog} from './outline-per-key-data-limit-dialog';
@@ -993,8 +993,8 @@ export class AppRoot extends polymerElementWithLocalize {
     (this.$.feedbackDialog as OutlineFeedbackDialog).open(prepopulatedMessage, true);
   }
 
-  openShareDialog(accessKey: string, s3Url: string) {
-    (this.$.shareDialog as OutlineShareDialog).open(accessKey, s3Url);
+  openShareDialog(accessKey: string) {
+    (this.$.shareDialog as OutlineShareDialog).open(accessKey);
   }
 
   openPerKeyDataLimitDialog(

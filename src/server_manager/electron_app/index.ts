@@ -72,8 +72,9 @@ function createMainWindow() {
     minWidth: 600,
     minHeight: 768,
     maximizable: false,
-    icon: path.join(__dirname, 'web_app', 'ui_components', 'icons', 'launcher.png'),
+    icon: path.join(__dirname, 'server_manager', 'web_app', 'images', 'launcher-icon.png'),
     webPreferences: {
+      devTools: debugMode,
       nodeIntegration: false,
       preload: path.join(__dirname, 'preload.js'),
       webviewTag: false,
@@ -258,8 +259,9 @@ function main() {
   });
 
   // Handle "show me where" requests from the renderer process.
-  ipcMain.on('open-image', (event: IpcEvent, basename: string) => {
-    const p = path.join(IMAGES_BASENAME, basename);
+  ipcMain.on('open-image', (event: IpcEvent, img_path: string) => {
+    const p = path.join(IMAGES_BASENAME, path.resolve('/', img_path));
+
     if (!shell.openPath(p)) {
       console.error(`could not open image at ${p}`);
     }

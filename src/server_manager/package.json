@@ -1,7 +1,7 @@
 {
   "name": "outline-manager",
   "productName": "Outline Manager",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "description": "Create and manage access to Outline servers",
   "homepage": "https://getoutline.org/",
   "author": {
@@ -81,7 +81,7 @@
     "electron": "18.1.0",
     "electron-builder": "~23.0.3",
     "electron-icon-maker": "^0.0.4",
-    "electron-notarize": "^0.2.1",
+    "electron-notarize": "^1.2.1",
     "electron-to-chromium": "^1.4.122",
     "gulp": "^4.0.0",
     "gulp-posthtml": "^3.0.4",
