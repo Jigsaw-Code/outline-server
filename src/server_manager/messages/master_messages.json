@@ -1227,7 +1227,7 @@
     "message": "Choose a cloud service to set up Outline.",
     "description": "This string appears in the server setup view as a header. Prompts the user to create deploy Outline servers on the cloud provider of their choice. 'Set up' means install and run the Outline server software."
   },
-  "share_description_html": {
+  "share_description": {
     "message": "Copy this invitation and send it from a communication tool you trust. $START_OF_LINK$Need help?$END_OF_LINK$",
     "description": "This string appears as a sub-header of a dialog that provides instructions on how to share access to a server.",
     "placeholders": {
@@ -1239,23 +1239,9 @@
       }
     }
   },
-  "share_invite_html": {
-    "message": "You're invited to Outline! Follow these instructions to use my server to access the open internet on any device, no matter where you are. No personal information will be collected.$LINE_BREAK$$LINE_BREAK$1) Download and install the Outline app for your device:$LINE_BREAK$$LINE_BREAK$  - Android: https://play.google.com/store/apps/details?id=org.outline.android.client$LINE_BREAK$  - iOS: https://itunes.apple.com/app/outline-app/id1356177741$LINE_BREAK$  - Windows: https://s3.amazonaws.com/outline-releases/client/Outline-Client.exe - once downloaded, double click to launch.$LINE_BREAK$  - macOS: https://itunes.apple.com/app/outline-app/id1356178125$LINE_BREAK$  - Linux: https://s3.amazonaws.com/outline-releases/client/Outline-Client.AppImage - once downloaded, make it executable, then double click to launch.$LINE_BREAK$$LINE_BREAK$2) Copy the following access key.$LINE_BREAK$  $START_OF_LINK$$ACCESS_KEY$$END_OF_LINK$$LINE_BREAK$$LINE_BREAK$3) In the Outline app, tap the \"+\" sign on the top bar and paste the access key.$LINE_BREAK$$LINE_BREAK$4) Press the \"ADD SERVER\" button to confirm.$LINE_BREAK$$LINE_BREAK$5) A card will be added to your app. Tap \"Connect\" to get connected with the new service you added.",
-    "description": "This string appears as an email invitation instructing new Outline users how to set up and connect to Outline.",
-    "placeholders": {
-      "ACCESS_KEY": {
-        "content": "{accessKey}"
-      },
-      "END_OF_LINK": {
-        "content": "{closeLink}"
-      },
-      "LINE_BREAK": {
-        "content": "<br>"
-      },
-      "START_OF_LINK": {
-        "content": "{openLink}"
-      }
-    }
+  "share_invite": {
+    "message": "You\u2019re invited to connect to my Outline server. Use it to access the open internet, no matter where you are. Follow the instructions on your invitation link below to download the Outline App and get connected.",
+    "description": "This string appears as a paragraph within a dialog that provides an invitation to share access to a server. Belongs to the instructions for the user with whom access is being shared."
   },
   "share_invite_copied": {
     "message": "Copied to clipboard",
@@ -1264,6 +1250,18 @@
   "share_invite_copy": {
     "message": "Copy invitation",
     "description": "This string appears as a button within a dialog that provides an invitation to share access to a server. Clicking it copies the invitation instructions text to the clipboard."
+  },
+  "share_invite_copy_access_key": {
+    "message": "Copy your access key:",
+    "description": "This string appears as a paragraph within a dialog that provides an invitation to share access to a server. Belongs to the instructions for the user with whom access is being shared."
+  },
+  "share_invite_instructions": {
+    "message": "Follow our invitation instructions on GitHub:",
+    "description": "This string appears as a list item within a dialog that provides an invitation to share access to a server. Belongs to the instructions for the user with whom access is being shared."
+  },
+  "share_invite_trouble": {
+    "message": "Having trouble accessing the invitation link?",
+    "description": "This string appears as a paragraph within a dialog that provides an invitation to share access to a server. Belongs to the instructions for the user with whom access is being shared."
   },
   "share_title": {
     "message": "Share access",

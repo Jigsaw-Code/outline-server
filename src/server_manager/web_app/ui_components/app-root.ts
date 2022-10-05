@@ -993,8 +993,8 @@ export class AppRoot extends polymerElementWithLocalize {
     (this.$.feedbackDialog as OutlineFeedbackDialog).open(prepopulatedMessage, true);
   }
 
-  openShareDialog(accessKey: string) {
-    (this.$.shareDialog as OutlineShareDialog).open(accessKey);
+  openShareDialog(accessKey: string, s3Url: string) {
+    (this.$.shareDialog as OutlineShareDialog).open(accessKey, s3Url);
   }
 
   openPerKeyDataLimitDialog(
