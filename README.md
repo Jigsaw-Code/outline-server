@@ -1,6 +1,6 @@
 # Outline Server
 
-![Build and Test](https://github.com/Jigsaw-Code/outline-server/actions/workflows/build_and_test_debug.yml/badge.svg?branch=master)
+![Build and Test](https://github.com/Jigsaw-Code/outline-server/actions/workflows/build_and_test_debug.yml/badge.svg?branch=master) [![Mattermost](https://badgen.net/badge/Chat/Mattermost/blue)](https://community.internetfreedomfestival.org/community/channels/outline-community)
 
 This repository has all the code needed to create and manage Outline servers on
 DigitalOcean. An Outline server runs instances of Shadowsocks proxies and
