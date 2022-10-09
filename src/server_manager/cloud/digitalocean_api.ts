@@ -198,9 +198,10 @@ export class RestApiSession implements DigitalOceanSession {
 
   public getDropletsByTag(tag: string): Promise<DropletInfo[]> {
     console.info('Requesting droplet by tag');
+    // TODO Add proper pagination support. Going with 100 for now to extend the default of 20, and confirm UI works
     return this.request<{droplets: DropletInfo[]}>(
       'GET',
-      `droplets?tag_name=${encodeURI(tag)}`
+      `droplets?per_page=100&tag_name=${encodeURI(tag)}`
     ).then((response) => {
       return response.droplets;
     });
@@ -208,7 +209,8 @@ export class RestApiSession implements DigitalOceanSession {
 
   public getDroplets(): Promise<DropletInfo[]> {
     console.info('Requesting droplets');
-    return this.request<{droplets: DropletInfo[]}>('GET', 'droplets').then((response) => {
+    // TODO Add proper pagination support. Going with 100 for now to extend the default of 20, and confirm UI works
+    return this.request<{droplets: DropletInfo[]}>('GET', 'droplets?per_page=100').then((response) => {
       return response.droplets;
     });
   }
