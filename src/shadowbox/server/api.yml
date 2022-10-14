@@ -139,13 +139,18 @@ paths:
       description: Creates a new access key
       tags:
         - Access Key
-      parameters:
-        - name: encryptionMethod
-          in: path
-          description: encryption method to use for access key.
-          required: false
-          schema:
-            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                method:
+                  type: string
+            examples:
+              '0':
+                value: '{"method":"aes-192-gcm"}'
       responses:
         '201':
           description: The newly created access key
