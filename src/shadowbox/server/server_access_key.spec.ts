@@ -38,6 +38,24 @@ describe('ServerAccessKeyRepository', () => {
     });
   });
 
+  it('New access keys have the correct default encryption method', (done) => {
+    const repo = new RepoBuilder().build();
+    repo.createNewAccessKey().then((accessKey) => {
+      expect(accessKey).toBeDefined();
+      expect(accessKey.proxyParams.encryptionMethod).toEqual('chacha20-ietf-poly1305');
+      done();
+    });
+  });
+
+  it('New access keys sees the encryption method correctly', (done) => {
+    const repo = new RepoBuilder().build();
+    repo.createNewAccessKey('aes-256-gcm').then((accessKey) => {
+      expect(accessKey).toBeDefined();
+      expect(accessKey.proxyParams.encryptionMethod).toEqual('aes-256-gcm');
+      done();
+    });
+  });
+
   it('Creates access keys under limit', async (done) => {
     const repo = new RepoBuilder().build();
     const accessKey = await repo.createNewAccessKey();

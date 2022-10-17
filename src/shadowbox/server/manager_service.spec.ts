@@ -18,7 +18,6 @@ import * as restify from 'restify';
 
 import {InMemoryConfig, JsonConfig} from '../infrastructure/json_config';
 import {AccessKey, AccessKeyRepository, DataLimit} from '../model/access_key';
-
 import {ManagerMetrics} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
 import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
@@ -279,7 +278,7 @@ describe('ShadowsocksManagerService', () => {
   });
 
   describe('createNewAccessKey', () => {
-    it('creates keys', (done) => {
+    it('verify default method', (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
 
@@ -288,18 +287,56 @@ describe('ShadowsocksManagerService', () => {
         send: (httpCode, data) => {
           expect(httpCode).toEqual(201);
           expect(Object.keys(data).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
+          expect(data.method).toEqual('chacha20-ietf-poly1305');
           responseProcessed = true; // required for afterEach to pass.
         },
       };
       service.createNewAccessKey({params: {}}, res, done);
+    });
+    it('non-default method gets set', (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+
+      // Verify that response returns a key with the expected properties.
+      const res = {
+        send: (httpCode, data) => {
+          expect(httpCode).toEqual(201);
+          expect(Object.keys(data).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
+          expect(data.method).toEqual('aes-256-gcm');
+          responseProcessed = true; // required for afterEach to pass.
+        },
+      };
+      service.createNewAccessKey({params: {method: 'aes-256-gcm'}}, res, done);
+    });
+    it('method must be of type string', (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+
+      const res = {send: (_httpCode, _data) => {}};
+      service.createNewAccessKey({params: {method: Number('9876')}}, res, (error) => {
+        expect(error.statusCode).toEqual(400);
+        responseProcessed = true; // required for afterEach to pass.
+        done();
+      });
+    });
+    it('method must be valid', (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+
+      const res = {send: (_httpCode, _data) => {}};
+      service.createNewAccessKey({params: {method: 'abcdef'}}, res, (error) => {
+        expect(error.statusCode).toEqual(400);
+        responseProcessed = true; // required for afterEach to pass.
+        done();
+      });
     });
     it('Create returns a 500 when the repository throws an exception', (done) => {
       const repo = getAccessKeyRepository();
       spyOn(repo, 'createNewAccessKey').and.throwError('cannot write to disk');
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
 
-      const res = {send: SEND_NOTHING};
-      service.createNewAccessKey({params: {}}, res, (error) => {
+      const res = {send: (_httpCode, _data) => {}};
+      service.createNewAccessKey({params: {method: 'aes-192-gcm'}}, res, (error) => {
         expect(error.statusCode).toEqual(500);
         responseProcessed = true; // required for afterEach to pass.
         done();
