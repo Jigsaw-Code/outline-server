@@ -24,7 +24,11 @@ webpack --config=src/shadowbox/webpack.config.js ${BUILD_ENV:+--mode="${BUILD_EN
 readonly OS="$([[ "$(uname)" == "Darwin" ]] && echo "macos" || echo "linux")"
 readonly BIN_DIR="${OUT_DIR}/bin"
 mkdir -p "${BIN_DIR}"
-cp "${ROOT_DIR}/third_party/prometheus/${OS}/prometheus" "${BIN_DIR}/"
+{
+  cd "${ROOT_DIR}/third_party/prometheus"
+  make "bin/${OS}/prometheus"
+  cp "bin/${OS}/prometheus" "${BIN_DIR}/"
+}
 cp "${ROOT_DIR}/third_party/outline-ss-server/${OS}/outline-ss-server" "${BIN_DIR}/"
 
 # Copy shadowbox package.json
