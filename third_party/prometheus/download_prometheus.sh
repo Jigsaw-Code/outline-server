@@ -18,7 +18,8 @@
 # Requires VERSION, OUTPUT and BASENAME to be defined.
 
 declare -r ARCHIVE="${BASENAME}.tar.gz"
-curl --silent -L "https://github.com/prometheus/prometheus/releases/download/v${VERSION}/${ARCHIVE}" -o "${ARCHIVE}"
+# We use wget instead of curl because it's already available on Alpine distros.
+wget --quiet "https://github.com/prometheus/prometheus/releases/download/v${VERSION}/${ARCHIVE}" -O "${ARCHIVE}"
 shasum -a 256 --check --ignore-missing sha256sums.txt
 mkdir -p $(dirname "${OUTPUT}")
 tar -zx -f "${BASENAME}.tar.gz" --strip-components=1 -C $(dirname "${OUTPUT}") "${BASENAME}/prometheus"

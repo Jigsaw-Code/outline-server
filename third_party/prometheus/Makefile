@@ -9,7 +9,7 @@ bin/linux/prometheus bin/macos/prometheus: sha256sums.txt
 	VERSION=$(VERSION) BASENAME="$(BASENAME)" OUTPUT="$@" ./download_prometheus.sh
 
 sha256sums.txt:
-	curl --silent -L https://github.com/prometheus/prometheus/releases/download/v$(VERSION)/sha256sums.txt -o $@
+	wget --quiet https://github.com/prometheus/prometheus/releases/download/v$(VERSION)/sha256sums.txt -O $@
 
 .PHONY: clean
 clean:
