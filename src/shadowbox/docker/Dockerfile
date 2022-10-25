@@ -18,7 +18,7 @@ ARG NODE_IMAGE
 # Run `npm ci` and build inside the container to package the right dependencies for the image.
 FROM ${NODE_IMAGE} AS build
 
-RUN apk add --no-cache --upgrade bash
+RUN apk add --no-cache --upgrade bash make
 WORKDIR /
 
 # Don't copy node_modules and other things not needed for install.
