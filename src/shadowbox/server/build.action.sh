@@ -29,7 +29,11 @@ mkdir -p "${BIN_DIR}"
   make "bin/${OS}/prometheus"
   cp "bin/${OS}/prometheus" "${BIN_DIR}/"
 }
-cp "${ROOT_DIR}/third_party/outline-ss-server/${OS}/outline-ss-server" "${BIN_DIR}/"
+{
+  cd "${ROOT_DIR}/third_party/outline-ss-server"
+  make "bin/${OS}/outline-ss-server"
+  cp "bin/${OS}/outline-ss-server" "${BIN_DIR}/"
+}
 
 # Copy shadowbox package.json
 cp "${ROOT_DIR}/src/shadowbox/package.json" "${OUT_DIR}/"
