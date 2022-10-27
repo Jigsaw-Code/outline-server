@@ -402,6 +402,7 @@ function set_hostname() {
   # We have more than one to try in case one starts failing
   # (e.g. https://github.com/Jigsaw-Code/outline-server/issues/776).
   local -ar urls=(
+    'https://ifconfig.me/ip'
     'https://icanhazip.com/'
     'https://ipinfo.io/ip'
     'https://domains.google.com/checkip'
