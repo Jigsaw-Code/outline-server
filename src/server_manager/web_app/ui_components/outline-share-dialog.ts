@@ -132,7 +132,7 @@ Polymer({
       </div>
 
       <div contenteditable="" id="selectableAccessKey" style="-webkit-text-size-adjust: 100%;">
-        <pre><a href="[[accessKey]]">{{accessKey}}</a></pre>
+        <pre><a href="[[accessKey]]">[[accessKey]]</a></pre>
       </div>
       <div id="copyAccessKeyIndicator" hidden="">
         [[localize('share-invite-access-key-copied')]]
