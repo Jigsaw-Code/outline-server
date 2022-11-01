@@ -1239,12 +1239,17 @@
       }
     }
   },
-  "share_invite": {
-    "message": "You\u2019re invited to connect to my Outline server. Use it to access the open internet, no matter where you are. Follow the instructions on your invitation link below to download the Outline App and get connected.",
-    "description": "This string appears as a paragraph within a dialog that provides an invitation to share access to a server. Belongs to the instructions for the user with whom access is being shared."
+  "share_invite_html": {
+    "message": "Use this server to safely access the open internet:$LINE_BREAK$$LINE_BREAK$1) Download and install the Outline app for your device:$LINE_BREAK$$LINE_BREAK$  - iOS: https://itunes.apple.com/app/outline-app/id1356177741$LINE_BREAK$  - MacOS: https://itunes.apple.com/app/outline-app/id1356178125$LINE_BREAK$  - Windows: https://s3.amazonaws.com/outline-releases/client/windows/stable/Outline-Client.exe$LINE_BREAK$  - Linux: https://s3.amazonaws.com/outline-releases/client/linux/stable/Outline-Client.AppImage$LINE_BREAK$  - Android: https://play.google.com/store/apps/details?id=org.outline.android.client$LINE_BREAK$   - Android alternative link: https://s3.amazonaws.com/outline-releases/client/android/stable/Outline-Client.apk$LINE_BREAK$$LINE_BREAK$2) You will receive an access key that starts with ss://. Once your receive it, copy this access key.$LINE_BREAK$$LINE_BREAK$3) Open the Outline client app. If your access key is auto-detected, tap \"Connect\" and proceed. If your access key is not auto-detected, then paste it in the field, then tap \"Connect\" and proceed.$LINE_BREAK$$LINE_BREAK$You're ready to use the open internet! To make sure you successfully connected to the server, try searching for \"what is my ip\" on Google Search. The IP address shown in Google should match the IP address in the Outline client.$LINE_BREAK$$LINE_BREAK$Learn more about Outline here: https://getoutline.org/",
+    "description": "This string appears as an email invitation instructing new Outline users how to set up and connect to Outline.",
+    "placeholders": {
+      "LINE_BREAK": {
+        "content": "<br>"
+      }
+    }
   },
   "share_invite_copied": {
-    "message": "Copied to clipboard",
+    "message": "Copied invitation to clipboard",
     "description": "This string appears as a label within a dialog that provides an invitation to share access to a server. Displayed when the user clicks a button to copy the invitation text to the clipboard."
   },
   "share_invite_copy": {
@@ -1252,8 +1257,12 @@
     "description": "This string appears as a button within a dialog that provides an invitation to share access to a server. Clicking it copies the invitation instructions text to the clipboard."
   },
   "share_invite_copy_access_key": {
-    "message": "Copy your access key:",
-    "description": "This string appears as a paragraph within a dialog that provides an invitation to share access to a server. Belongs to the instructions for the user with whom access is being shared."
+    "message": "Copy access key",
+    "description": "This string appears as a button within a dialog that provides an access key to use a server. Clicking it copies the access key to the clipboard."
+  },
+  "share_invite_access_key_copied": {
+    "message": "Copied access key to clipboard",
+    "description": "This string appears as a label within a dialog that provides an access key to use a server. Displayed when the user clicks a button to copy this access key to the clipboard."
   },
   "share_invite_instructions": {
     "message": "Follow our invitation instructions on GitHub:",
