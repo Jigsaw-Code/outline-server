@@ -118,6 +118,10 @@ Third, you need **protection against replayed data**. Both shadowsocks-libev and
 
 Fourth, Outline and clients using shadowsocks-libev now **merge the SOCKS address and the initial data** in the same initial encrypted frame, making the size of the first packet variable. Before the first packet only had the SOCKS address, with a fixed size, and that was a giveaway.
 
-The censors used to block Shadowsocks, but Shadowsocks has evolved, and as for 2021, it's ahead again in the cat and mouse game.
+The censors used to block Shadowsocks, but Shadowsocks has evolved, and in 2021, it was ahead again in the cat and mouse game.
+
+In 2022 China started blocking seemingly random traffic ([report](https://www.opentech.fund/news/exposing-the-great-firewalls-dynamic-blocking-of-fully-encrypted-traffic/)). While there is no evidence they could detect Shadowsocks, the protocol ended up blocked.
+
+As a reponse, we [added a feature to the Outline Client](https://github.com/Jigsaw-Code/outline-client/pull/1454) that allows service managers to specify in the access key a prefix to be used in the Shadowsocks initialization, which can be used to bypass the blocking in China.
 
 Shadowsocks remains our protocol of choice because it's simple, well understood and very performant. Furthermore, it has an enthusiastic community of very smart people behind it.
