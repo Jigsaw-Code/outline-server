@@ -115,7 +115,8 @@ function command_exists {
 }
 
 function log_for_sentry() {
-  if [[ -n "${SENTRY_LOG_FILE}" ]]; then
+  # Used to report install failures to Sentry. Usually "${SHADOWBOX_DIR}/sentry-log-file.txt"
+  if [[ -n "${SENTRY_LOG_FILE:-}" ]]; then
     echo "[$(date "+%Y-%m-%d@%H:%M:%S")] install_server.sh" "$@" >> "${SENTRY_LOG_FILE}"
   fi
   echo "$@" >> "${FULL_LOG}"
@@ -144,9 +145,6 @@ function setup_file_paths() {
   # The server-level configuration (doesn't include the access keys).
   declare -rg SERVER_CONFIG_FILE="${STATE_DIR}/shadowbox_server_config.json"
   # NOTE: The access keys are in "${STATE_DIR}/shadowbox_config.json", a different file.
-
-  # Used to report install failures to Sentry. Usually "${SHADOWBOX_DIR}/sentry-log-file.txt"
-  declare -rg SENTRY_LOG_FILE=${SENTRY_LOG_FILE:-}
 }
 
 # Check to see if docker is installed.
