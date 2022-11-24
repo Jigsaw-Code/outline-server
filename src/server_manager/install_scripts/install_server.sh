@@ -130,7 +130,7 @@ function setup_file_paths() {
   chmod u+s,ug+rwx,o-rwx "${OUTLINE_DIR}"
 
   # Holds the information on how to access the management API.
-  declare -rg ACCESS_CONFIG_FILE="${ACCESS_CONFIG:-${BASE_DIR}/access.txt}"
+  declare -rg ACCESS_CONFIG_FILE="${ACCESS_CONFIG:-${OUTLINE_DIR}/access.txt}"
 
   # Directory for data to be peristed across container restarts. Mounted on `docker run`.
   declare -rg STATE_DIR="${OUTLINE_DIR}/persisted-state"
