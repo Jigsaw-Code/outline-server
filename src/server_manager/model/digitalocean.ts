@@ -25,12 +25,13 @@ export class Region implements location.CloudLocation {
     nyc: location.NEW_YORK_CITY,
     sfo: location.SAN_FRANCISCO,
     sgp: location.SINGAPORE,
+    syd: location.SYDNEY,
     tor: location.TORONTO,
   };
   constructor(public readonly id: string) {}
 
   get location(): location.GeoLocation {
-    return Region.LOCATION_MAP[this.id.substr(0, 3).toLowerCase()];
+    return Region.LOCATION_MAP[this.id.substring(0, 3).toLowerCase()];
   }
 }
 
