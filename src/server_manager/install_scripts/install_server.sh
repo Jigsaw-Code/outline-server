@@ -390,7 +390,7 @@ function check_firewall() {
           console.log(accessKeys["accessKeys"][0]["port"]);
       ') || return
   readonly ACCESS_KEY_PORT
-  if ! fetch --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" "${PUBLIC_API_URL}/access-keys" >/dev/null; then
+  if ! fetch --max-time 5 --cacert "${CERTIFICATE_FILE}" "${PUBLIC_API_URL}/access-keys" >/dev/null; then
      log_error "BLOCKED"
      FIREWALL_STATUS="\
 You won’t be able to access it externally, despite your server being correctly
