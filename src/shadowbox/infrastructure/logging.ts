@@ -64,9 +64,8 @@ const maxMsgLevel = logLevelFromEnvironment();
 function logLevelFromEnvironment(): LogLevel {
   if (process.env.LOG_LEVEL) {
     return parseLogLevel(process.env.LOG_LEVEL);
-  } else {
-    return LogLevel.INFO;
   }
+  return LogLevel.INFO;
 }
 
 function parseLogLevel(levelStr: string) {
