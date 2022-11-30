@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Server } from 'http';
 import * as net from 'net';
 
 import * as get_port from './get_port';
