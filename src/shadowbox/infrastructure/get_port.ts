@@ -75,7 +75,7 @@ export function isPortUsed(port: number): Promise<boolean> {
       }
       server.close();
     });
-    server.listen({host: 'localhost', port, exclusive: true}, () => {
+    server.listen({port, exclusive: true}, () => {
       isUsed = false;
       server.close();
     });
