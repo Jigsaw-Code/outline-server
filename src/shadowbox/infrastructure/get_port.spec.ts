@@ -49,7 +49,8 @@ describe('PortProvider', () => {
 
   describe('reserveNewPort', () => {
     it('Returns a port not in use', async () => {
-      for (let i = 0; i < 1000; ++i) {
+      // We run 100 times to try to trigger possible race conditions.
+      for (let i = 0; i < 100; ++i) {
         const port = await new get_port.PortProvider().reserveNewPort();
         expect(await get_port.isPortUsed(port)).toBeFalsy();
       }
@@ -95,14 +96,8 @@ function listen(): Promise<net.Server> {
   });
 }
 
-async function closeServer(server: net.Server): Promise<void> {
+function closeServer(server: net.Server): Promise<void> {
   return new Promise((resolve, reject) => {
-    server.close((err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
+    server.close(err => err ? reject(err) : resolve());
   });
 }
