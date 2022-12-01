@@ -27,6 +27,7 @@ import * as logging from '../infrastructure/logging';
 import {PrometheusClient, startPrometheus} from '../infrastructure/prometheus_scraper';
 import {RolloutTracker} from '../infrastructure/rollout';
 import {AccessKeyId} from '../model/access_key';
+import {version} from '../package.json';
 
 import {PrometheusManagerMetrics} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
@@ -80,6 +81,9 @@ function createRolloutTracker(
 
 async function main() {
   const verbose = process.env.LOG_LEVEL === 'debug';
+  logging.info('======== Outline Server main() ========');
+  logging.info(`Version is ${version}`);
+
   const portProvider = new PortProvider();
   const accessKeyConfig = json_config.loadFileConfig<AccessKeyConfigJson>(
     getPersistentFilename('shadowbox_config.json')
