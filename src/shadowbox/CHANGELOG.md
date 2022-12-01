@@ -1,3 +1,7 @@
+# Unreleased
+- Fixes
+  - Fix reporting of country metrics (https://github.com/Jigsaw-Code/outline-server/pull/1242)
+
 # 1.7.1
 - Fixes
   - Corner case of isPortUsed that could result in infinite restart loop (https://github.com/Jigsaw-Code/outline-server/pull/1238)
