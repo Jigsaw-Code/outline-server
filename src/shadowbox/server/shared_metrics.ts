@@ -149,7 +149,7 @@ export class RestMetricsCollectorClient {
       body: reportJson,
     };
     const url = `${this.serviceUrl}${urlPath}`;
-    logging.info(`Posting metrics to ${url} with options ${JSON.stringify(options)}`);
+    logging.debug(`Posting metrics to ${url} with options ${JSON.stringify(options)}`);
     try {
       const response = await follow_redirects.requestFollowRedirectsWithSameMethodAndBody(
         url,
