@@ -7,6 +7,7 @@
 
 - Features
   - Add encryption cipher selection to create access key API (https://github.com/Jigsaw-Code/outline-server/pull/1002)
+  - Make access key secrets longer (https://github.com/Jigsaw-Code/outline-server/pull/1098)
 - Fixes
   - Race condition on concurrent API calls (https://github.com/Jigsaw-Code/outline-server/pull/995)
 - Upgrades (https://github.com/Jigsaw-Code/outline-server/pull/1211)
