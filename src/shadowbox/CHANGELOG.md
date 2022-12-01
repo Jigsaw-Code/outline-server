@@ -1,9 +1,9 @@
-# 1.7.1-rc1
+# 1.7.1
 - Fixes
   - Corner case of isPortUsed that could result in infinite restart loop (https://github.com/Jigsaw-Code/outline-server/pull/1238)
   - Prevent excessive logging (https://github.com/Jigsaw-Code/outline-server/pull/1232)
 
-# 1.7.0 (stable)
+# 1.7.0
 
 - Features
   - Add encryption cipher selection to create access key API (https://github.com/Jigsaw-Code/outline-server/pull/1002)
