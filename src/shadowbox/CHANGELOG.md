@@ -1,6 +1,6 @@
 # Unreleased
 - Fixes
-  - Fix reporting of country metrics (https://github.com/Jigsaw-Code/outline-server/pull/1242)
+  - Fix reporting of country metrics and improve logging output (https://github.com/Jigsaw-Code/outline-server/pull/1242)
 
 # 1.7.1
 - Fixes
