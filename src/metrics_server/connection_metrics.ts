@@ -97,7 +97,7 @@ export function isValidConnectionMetricsReport(
   const MAX_BYTES_TRANSFERRED = 1 * Math.pow(2, 40); // 1 TB.
   for (const userReport of testObject.userReports) {
     // We require at least the userId or the country to be set.
-    if (!userReport.userId && (!userReport.countries || userReport.countries.length === 0)) {
+    if (!userReport.userId && (userReport.countries?.length ?? 0) === 0) {
       return false;
     }
     // Check that `userId` is a string.
