@@ -103,14 +103,14 @@ describe('OutlineSharedMetricsPublisher', () => {
         startUtcMs: startTime,
         endUtcMs: clock.nowMs,
         userReports: [
-          {userId: 'M(user-0)', bytesTransferred: 11, countries: []},
-          {userId: 'M(user-1)', bytesTransferred: 22, countries: []},
-          {userId: 'M(user-0)', bytesTransferred: 33, countries: []},
-          {userId: '', bytesTransferred: 11, countries: ['AA']},
-          {userId: '', bytesTransferred: 11, countries: ['BB']},
-          {userId: '', bytesTransferred: 22, countries: ['CC']},
-          {userId: '', bytesTransferred: 33, countries: ['AA']},
-          {userId: '', bytesTransferred: 33, countries: ['DD']},
+          {userId: 'M(user-0)', bytesTransferred: 11},
+          {userId: 'M(user-1)', bytesTransferred: 22},
+          {userId: 'M(user-0)', bytesTransferred: 33},
+          {bytesTransferred: 11, countries: ['AA']},
+          {bytesTransferred: 11, countries: ['BB']},
+          {bytesTransferred: 22, countries: ['CC']},
+          {bytesTransferred: 33, countries: ['AA']},
+          {bytesTransferred: 33, countries: ['DD']},
         ],
       });
 
@@ -131,10 +131,10 @@ describe('OutlineSharedMetricsPublisher', () => {
         startUtcMs: startTime,
         endUtcMs: clock.nowMs,
         userReports: [
-          {userId: 'M(user-0)', bytesTransferred: 44, countries: []},
-          {userId: 'M(user-2)', bytesTransferred: 55, countries: []},
-          {userId: '', bytesTransferred: 44, countries: ['EE']},
-          {userId: '', bytesTransferred: 55, countries: ['FF']},
+          {userId: 'M(user-0)', bytesTransferred: 44},
+          {userId: 'M(user-2)', bytesTransferred: 55},
+          {bytesTransferred: 44, countries: ['EE']},
+          {bytesTransferred: 55, countries: ['FF']},
         ],
       });
 
@@ -177,13 +177,13 @@ describe('OutlineSharedMetricsPublisher', () => {
         startUtcMs: startTime,
         endUtcMs: clock.nowMs,
         userReports: [
-          {userId: 'M(user-0)', bytesTransferred: 11, countries: []},
-          {userId: 'M(user-1)', bytesTransferred: 22, countries: []},
-          {userId: 'M(user-0)', bytesTransferred: 33, countries: []},
-          {userId: '', bytesTransferred: 11, countries: ['AA']},
-          {userId: '', bytesTransferred: 22, countries: ['CC']},
-          {userId: '', bytesTransferred: 33, countries: ['AA']},
-          {userId: '', bytesTransferred: 33, countries: ['DD']},
+          {userId: 'M(user-0)', bytesTransferred: 11},
+          {userId: 'M(user-1)', bytesTransferred: 22},
+          {userId: 'M(user-0)', bytesTransferred: 33},
+          {bytesTransferred: 11, countries: ['AA']},
+          {bytesTransferred: 22, countries: ['CC']},
+          {bytesTransferred: 33, countries: ['AA']},
+          {bytesTransferred: 33, countries: ['DD']},
         ],
       });
       publisher.stopSharing();
