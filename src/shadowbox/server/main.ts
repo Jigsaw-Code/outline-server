@@ -117,12 +117,8 @@ async function main() {
     process.exit(1);
   }
 
-  logging.debug(`=== Config ===`);
-  logging.debug(`Hostname: ${proxyHostname}`);
-  logging.debug(`SB_METRICS_URL: ${metricsCollectorUrl}`);
-  logging.debug(`==============`);
-
-  logging.info('Starting...');
+  logging.info(`Hostname: ${proxyHostname}`);
+  logging.info(`SB_METRICS_URL: ${metricsCollectorUrl}`);
 
   const prometheusPort = await portProvider.reserveFirstFreePort(9090);
   // Use 127.0.0.1 instead of localhost for Prometheus because it's resolving incorrectly for some users.

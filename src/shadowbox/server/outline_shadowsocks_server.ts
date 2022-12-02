@@ -98,6 +98,8 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
     if (this.isReplayProtectionEnabled) {
       commandArguments.push('--replay_history=10000');
     }
+    logging.info('======== Starting Outline Shadowsocks Service ========');
+    logging.info(`${this.binaryFilename} ${commandArguments.map(a => `"${a}"`).join(' ')}`); 
     this.ssProcess = child_process.spawn(this.binaryFilename, commandArguments);
     this.ssProcess.on('error', (error) => {
       logging.error(`Error spawning outline-ss-server: ${error}`);
