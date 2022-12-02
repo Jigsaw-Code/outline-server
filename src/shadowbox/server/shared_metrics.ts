@@ -50,8 +50,8 @@ export interface HourlyServerMetricsReportJson {
 // JSON format for the published report.
 // Field renames will break backwards-compatibility.
 export interface HourlyUserMetricsReportJson {
-  userId: string;
-  countries: string[];
+  userId?: string;
+  countries?: string[];
   bytesTransferred: number;
 }
 
@@ -245,7 +245,6 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       userReports.push({
         userId,
         bytesTransferred: keyUsage.inboundBytes,
-        countries: [],
       });
     }
     for (const countryUsage of countryUsageMetrics) {
@@ -259,7 +258,6 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       // from key usage rows.
       const country = countryUsage.country || 'ZZ';
       userReports.push({
-        userId: '',
         bytesTransferred: countryUsage.inboundBytes,
         countries: [country],
       });

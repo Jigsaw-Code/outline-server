@@ -41,6 +41,16 @@ describe('postConnectionMetrics', () => {
         countries: ['EC'],
         bytesTransferred: 456,
       },
+      {
+        userId: '',
+        countries: ['BR'],
+        bytesTransferred: 789,
+      },
+      {
+        userId: 'uid1',
+        countries: [],
+        bytesTransferred: 555,
+      },
     ];
     const report = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports};
     await postConnectionMetrics(table, report);
@@ -61,6 +71,22 @@ describe('postConnectionMetrics', () => {
         bytesTransferred: userReports[1].bytesTransferred,
         countries: userReports[1].countries,
       },
+      {
+        serverId: report.serverId,
+        startTimestamp: new Date(report.startUtcMs).toISOString(),
+        endTimestamp: new Date(report.endUtcMs).toISOString(),
+        userId: undefined,
+        bytesTransferred: userReports[2].bytesTransferred,
+        countries: userReports[2].countries,
+      },
+      {
+        serverId: report.serverId,
+        startTimestamp: new Date(report.startUtcMs).toISOString(),
+        endTimestamp: new Date(report.endUtcMs).toISOString(),
+        userId: userReports[3].userId,
+        bytesTransferred: userReports[3].bytesTransferred,
+        countries: userReports[3].countries,
+      },
     ];
     expect(table.rows).toEqual(rows);
   });
@@ -69,8 +95,11 @@ describe('postConnectionMetrics', () => {
 describe('isValidConnectionMetricsReport', () => {
   it('returns true for valid report', () => {
     const userReports = [
-      {userId: 'uid0', countries: ['US', 'UK'], bytesTransferred: 123},
-      {userId: 'uid1', countries: ['EC'], bytesTransferred: 456},
+      {userId: 'uid0', countries: ['AA'], bytesTransferred: 111},
+      {userId: 'uid1', bytesTransferred: 222},
+      {userId: 'uid2', countries: [], bytesTransferred: 333},
+      {countries: ['BB'], bytesTransferred: 444},
+      {userId: '', countries: ['CC'], bytesTransferred: 555},
     ];
     const report = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports};
     expect(isValidConnectionMetricsReport(report)).toBeTruthy();
@@ -160,36 +189,20 @@ describe('isValidConnectionMetricsReport', () => {
     expect(isValidConnectionMetricsReport(invalidReport5)).toBeFalsy();
   });
   it('returns false for missing user report fields', () => {
-    const userReports = [
+    const invalidReport1 = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports: [
       {
-        // Missing `userId`
-        countries: ['US', 'UK'],
+        // Missing `userId` and `countries`
         bytesTransferred: 123,
       },
-      {userId: 'uid1', countries: ['EC'], bytesTransferred: 456},
-    ];
-    const invalidReport = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports};
-    expect(isValidConnectionMetricsReport(invalidReport)).toBeFalsy();
+    ]};
+    expect(isValidConnectionMetricsReport(invalidReport1)).toBeFalsy();
 
-    const userReports2 = [
-      {
-        // Missing `countries`
-        userId: 'uid0',
-        bytesTransferred: 123,
-      },
-    ];
-    const invalidReport2 = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports: userReports2};
+    const invalidReport2 = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports: {
+      // Missing `bytesTransferred`
+      userId: 'uid0',
+      countries: ['US', 'UK'],
+    }};
     expect(isValidConnectionMetricsReport(invalidReport2)).toBeFalsy();
-
-    const userReports3 = [
-      {
-        // Missing `bytesTransferred`
-        userId: 'uid0',
-        countries: ['US', 'UK'],
-      },
-    ];
-    const invalidReport3 = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports: userReports3};
-    expect(isValidConnectionMetricsReport(invalidReport3)).toBeFalsy();
   });
   it('returns false for incorrect report field types', () => {
     const invalidReport = {

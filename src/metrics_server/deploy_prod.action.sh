@@ -24,5 +24,6 @@ npm run action metrics_server/build
 cp "${SRC_DIR}/app_prod.yaml" "${BUILD_DIR}/app.yaml"
 cp "${SRC_DIR}/config_prod.json" "${BUILD_DIR}/config.json"
 cp "${SRC_DIR}/package.json" "${BUILD_DIR}/"
+cp "./package-lock.json" "${BUILD_DIR}/"
 
 gcloud app deploy "${SRC_DIR}/dispatch.yaml" "${BUILD_DIR}" --project uproxysite --verbosity info --no-promote --no-stop-previous-version
