@@ -20,6 +20,7 @@ import {AccessKeyConfigJson} from './server_access_key';
 
 import {ServerConfigJson} from './server_config';
 import {
+  CountryUsage,
   DailyFeatureMetricsReportJson,
   HourlyServerMetricsReportJson,
   KeyUsage,
@@ -82,10 +83,17 @@ describe('OutlineSharedMetricsPublisher', () => {
       );
 
       publisher.startSharing();
-      usageMetrics.usage = [
-        {accessKeyId: 'user-0', inboundBytes: 11, countries: ['AA', 'BB']},
-        {accessKeyId: 'user-1', inboundBytes: 22, countries: ['CC']},
-        {accessKeyId: 'user-0', inboundBytes: 33, countries: ['AA', 'DD']},
+      usageMetrics.keyUsage = [
+        {accessKeyId: 'user-0', inboundBytes: 11},
+        {accessKeyId: 'user-1', inboundBytes: 22},
+        {accessKeyId: 'user-0', inboundBytes: 33},
+      ];
+      usageMetrics.countryUsage = [
+        {country: 'AA', inboundBytes: 11},
+        {country: 'BB', inboundBytes: 11},
+        {country: 'CC', inboundBytes: 22},
+        {country: 'AA', inboundBytes: 33},
+        {country: 'DD', inboundBytes: 33},
       ];
 
       clock.nowMs += 60 * 60 * 1000;
@@ -95,16 +103,25 @@ describe('OutlineSharedMetricsPublisher', () => {
         startUtcMs: startTime,
         endUtcMs: clock.nowMs,
         userReports: [
-          {userId: 'M(user-0)', bytesTransferred: 11, countries: ['AA', 'BB']},
-          {userId: 'M(user-1)', bytesTransferred: 22, countries: ['CC']},
-          {userId: 'M(user-0)', bytesTransferred: 33, countries: ['AA', 'DD']},
+          {userId: 'M(user-0)', bytesTransferred: 11},
+          {userId: 'M(user-1)', bytesTransferred: 22},
+          {userId: 'M(user-0)', bytesTransferred: 33},
+          {bytesTransferred: 11, countries: ['AA']},
+          {bytesTransferred: 11, countries: ['BB']},
+          {bytesTransferred: 22, countries: ['CC']},
+          {bytesTransferred: 33, countries: ['AA']},
+          {bytesTransferred: 33, countries: ['DD']},
         ],
       });
 
       startTime = clock.nowMs;
-      usageMetrics.usage = [
-        {accessKeyId: 'user-0', inboundBytes: 44, countries: ['EE']},
-        {accessKeyId: 'user-2', inboundBytes: 55, countries: ['FF']},
+      usageMetrics.keyUsage = [
+        {accessKeyId: 'user-0', inboundBytes: 44},
+        {accessKeyId: 'user-2', inboundBytes: 55},
+      ];
+      usageMetrics.countryUsage = [
+        {country: 'EE', inboundBytes: 44},
+        {country: 'FF', inboundBytes: 55},
       ];
 
       clock.nowMs += 60 * 60 * 1000;
@@ -114,8 +131,10 @@ describe('OutlineSharedMetricsPublisher', () => {
         startUtcMs: startTime,
         endUtcMs: clock.nowMs,
         userReports: [
-          {userId: 'M(user-0)', bytesTransferred: 44, countries: ['EE']},
-          {userId: 'M(user-2)', bytesTransferred: 55, countries: ['FF']},
+          {userId: 'M(user-0)', bytesTransferred: 44},
+          {userId: 'M(user-2)', bytesTransferred: 55},
+          {bytesTransferred: 44, countries: ['EE']},
+          {bytesTransferred: 55, countries: ['FF']},
         ],
       });
 
@@ -138,10 +157,17 @@ describe('OutlineSharedMetricsPublisher', () => {
       );
 
       publisher.startSharing();
-      usageMetrics.usage = [
-        {accessKeyId: 'user-0', inboundBytes: 11, countries: ['AA', 'SY']},
-        {accessKeyId: 'user-1', inboundBytes: 22, countries: ['CC']},
-        {accessKeyId: 'user-0', inboundBytes: 33, countries: ['AA', 'DD']},
+      usageMetrics.keyUsage = [
+        {accessKeyId: 'user-0', inboundBytes: 11},
+        {accessKeyId: 'user-1', inboundBytes: 22},
+        {accessKeyId: 'user-0', inboundBytes: 33},
+      ];
+      usageMetrics.countryUsage = [
+        {country: 'AA', inboundBytes: 11},
+        {country: 'SY', inboundBytes: 11},
+        {country: 'CC', inboundBytes: 22},
+        {country: 'AA', inboundBytes: 33},
+        {country: 'DD', inboundBytes: 33},
       ];
 
       clock.nowMs += 60 * 60 * 1000;
@@ -151,8 +177,13 @@ describe('OutlineSharedMetricsPublisher', () => {
         startUtcMs: startTime,
         endUtcMs: clock.nowMs,
         userReports: [
-          {userId: 'M(user-1)', bytesTransferred: 22, countries: ['CC']},
-          {userId: 'M(user-0)', bytesTransferred: 33, countries: ['AA', 'DD']},
+          {userId: 'M(user-0)', bytesTransferred: 11},
+          {userId: 'M(user-1)', bytesTransferred: 22},
+          {userId: 'M(user-0)', bytesTransferred: 33},
+          {bytesTransferred: 11, countries: ['AA']},
+          {bytesTransferred: 22, countries: ['CC']},
+          {bytesTransferred: 33, countries: ['AA']},
+          {bytesTransferred: 33, countries: ['DD']},
         ],
       });
       publisher.stopSharing();
@@ -258,11 +289,19 @@ class FakeMetricsCollector implements MetricsCollectorClient {
 }
 
 class ManualUsageMetrics implements UsageMetrics {
-  public usage = [] as KeyUsage[];
-  getUsage(): Promise<KeyUsage[]> {
-    return Promise.resolve(this.usage);
+  public keyUsage = [] as KeyUsage[];
+  public countryUsage = [] as CountryUsage[];
+  
+  getKeyUsage(): Promise<KeyUsage[]> {
+    return Promise.resolve(this.keyUsage);
   }
+
+  getCountryUsage(): Promise<CountryUsage[]> {
+    return Promise.resolve(this.countryUsage)
+  }
+
   reset() {
-    this.usage = [] as KeyUsage[];
+    this.keyUsage = [] as KeyUsage[];
+    this.countryUsage = [] as CountryUsage[];
   }
 }

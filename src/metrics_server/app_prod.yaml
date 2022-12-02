@@ -1,4 +1,4 @@
-runtime: nodejs10
+runtime: nodejs16
 service: prod
 handlers:
 - url: /.*

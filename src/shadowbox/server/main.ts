@@ -27,6 +27,7 @@ import * as logging from '../infrastructure/logging';
 import {PrometheusClient, startPrometheus} from '../infrastructure/prometheus_scraper';
 import {RolloutTracker} from '../infrastructure/rollout';
 import {AccessKeyId} from '../model/access_key';
+import {version} from '../package.json';
 
 import {PrometheusManagerMetrics} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
@@ -80,6 +81,9 @@ function createRolloutTracker(
 
 async function main() {
   const verbose = process.env.LOG_LEVEL === 'debug';
+  logging.info('======== Outline Server main() ========');
+  logging.info(`Version is ${version}`);
+
   const portProvider = new PortProvider();
   const accessKeyConfig = json_config.loadFileConfig<AccessKeyConfigJson>(
     getPersistentFilename('shadowbox_config.json')
@@ -113,12 +117,8 @@ async function main() {
     process.exit(1);
   }
 
-  logging.debug(`=== Config ===`);
-  logging.debug(`Hostname: ${proxyHostname}`);
-  logging.debug(`SB_METRICS_URL: ${metricsCollectorUrl}`);
-  logging.debug(`==============`);
-
-  logging.info('Starting...');
+  logging.info(`Hostname: ${proxyHostname}`);
+  logging.info(`SB_METRICS_URL: ${metricsCollectorUrl}`);
 
   const prometheusPort = await portProvider.reserveFirstFreePort(9090);
   // Use 127.0.0.1 instead of localhost for Prometheus because it's resolving incorrectly for some users.
