@@ -392,7 +392,6 @@ export class AppRoot extends polymerElementWithLocalize {
           <!-- Links section -->
           <paper-listbox>
             <span on-tap="maybeCloseDrawer"><a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection">[[localize('nav-data-collection')]]</a></span>
-            <span on-tap="submitFeedbackTapped">[[localize('nav-feedback')]]</span>
             <span on-tap="maybeCloseDrawer"><a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">[[localize('nav-help')]]</a></span>
             <span on-tap="aboutTapped">[[localize('nav-about')]]</span>
             <div id="links-footer">
