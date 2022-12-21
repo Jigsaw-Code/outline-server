@@ -304,6 +304,7 @@ function start_shadowbox() {
   local -ar docker_shadowbox_flags=(
     --name "${CONTAINER_NAME}" --restart always --net host
     --label 'com.centurylinklabs.watchtower.enable=true'
+    --label 'com.centurylinklabs.watchtower.scope=outline'
     -v "${STATE_DIR}:${STATE_DIR}"
     -e "SB_STATE_DIR=${STATE_DIR}"
     -e "SB_API_PORT=${API_PORT}"
@@ -333,10 +334,12 @@ function start_watchtower() {
   # testing).  Otherwise refresh every hour.
   local -ir WATCHTOWER_REFRESH_SECONDS="${WATCHTOWER_REFRESH_SECONDS:-3600}"
   local -ar docker_watchtower_flags=(--name watchtower --restart always \
+      --label 'com.centurylinklabs.watchtower.enable=true' \
+      --label 'com.centurylinklabs.watchtower.scope=outline' \
       -v /var/run/docker.sock:/var/run/docker.sock)
   # By itself, local messes up the return code.
   local STDERR_OUTPUT
-  STDERR_OUTPUT="$(docker run -d "${docker_watchtower_flags[@]}" containrrr/watchtower --cleanup --label-enable --tlsverify --interval "${WATCHTOWER_REFRESH_SECONDS}" 2>&1 >/dev/null)" && return
+  STDERR_OUTPUT="$(docker run -d "${docker_watchtower_flags[@]}" containrrr/watchtower --cleanup --label-enable --scope=outline --tlsverify --interval "${WATCHTOWER_REFRESH_SECONDS}" 2>&1 >/dev/null)" && return
   readonly STDERR_OUTPUT
   log_error "FAILED"
   if docker_container_exists watchtower; then
