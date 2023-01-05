@@ -27,7 +27,11 @@
           {
             "target": "./src/shadowbox/infrastructure",
             "from": ".",
-            "except": ["./src/shadowbox/infrastructure", "./node_modules"]
+            "except": [
+              "./src/shadowbox/infrastructure",
+              "./node_modules",
+              "./src/shadowbox/node_modules"
+            ]
           },
           {
             "target": "./src/server_manager/infrastructure",
