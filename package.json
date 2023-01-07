@@ -1,9 +1,13 @@
 {
   "name": "outline-server",
   "private": true,
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  },
   "devDependencies": {
     "@commitlint/config-conventional": "^17.0.0",
     "@types/jasmine": "^3.5.10",
+    "@types/node-fetch": "^2.6.2",
     "@typescript-eslint/eslint-plugin": "^5.14.0",
     "@typescript-eslint/parser": "^5.14.0",
     "@webpack-cli/serve": "^1.6.1",
@@ -27,7 +31,7 @@
     "action": "bash ./scripts/run_action.sh",
     "action:help": "npm run action",
     "action:list": "npm run action",
-    "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts src/server_manager/install_scripts/gcp_install_script.ts third_party/shellcheck/download/ third_party/*/bin",
+    "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts src/server_manager/install_scripts/gcp_install_script.ts third_party/shellcheck/download/ third_party/*/bin third_party/jsign/*.jar",
     "format": "pretty-quick --staged --pattern \"**/*.{cjs,html,js,json,md,ts}\"",
     "format:all": "prettier --write \"**/*.{cjs,html,js,json,md,ts}\"",
     "lint": "npm run lint:sh && npm run lint:ts",
