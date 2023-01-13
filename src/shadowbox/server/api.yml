@@ -139,6 +139,18 @@ paths:
       description: Creates a new access key
       tags:
         - Access Key
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                method:
+                  type: string
+            examples:
+              '0':
+                value: '{"method":"aes-192-gcm"}'
       responses:
         '201':
           description: The newly created access key

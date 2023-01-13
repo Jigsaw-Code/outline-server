@@ -20,9 +20,9 @@ export interface ConnectionRow {
   serverId: string;
   startTimestamp: string; // ISO formatted string.
   endTimestamp: string; // ISO formatted string.
-  userId: string;
+  userId?: string;
   bytesTransferred: number;
-  countries: string[];
+  countries?: string[];
 }
 
 export class BigQueryConnectionsTable implements InsertableTable<ConnectionRow> {
@@ -49,9 +49,9 @@ function getConnectionRowsFromReport(report: HourlyConnectionMetricsReport): Con
       serverId: report.serverId,
       startTimestamp: startTimestampStr,
       endTimestamp: endTimestampStr,
-      userId: userReport.userId,
+      userId: userReport.userId || undefined,
       bytesTransferred: userReport.bytesTransferred,
-      countries: userReport.countries,
+      countries: userReport.countries || [],
     });
   }
   return rows;
@@ -93,18 +93,15 @@ export function isValidConnectionMetricsReport(
     return false;
   }
 
-  const requiredUserReportFields = ['userId', 'countries', 'bytesTransferred'];
   const MIN_BYTES_TRANSFERRED = 0;
   const MAX_BYTES_TRANSFERRED = 1 * Math.pow(2, 40); // 1 TB.
   for (const userReport of testObject.userReports) {
-    // Test that each `userReport` contains the required fields.
-    for (const fieldName of requiredUserReportFields) {
-      if (!userReport[fieldName]) {
-        return false;
-      }
+    // We require at least the userId or the country to be set.
+    if (!userReport.userId && (userReport.countries?.length ?? 0) === 0) {
+      return false;
     }
     // Check that `userId` is a string.
-    if (typeof userReport.userId !== 'string') {
+    if (userReport.userId && typeof userReport.userId !== 'string') {
       return false;
     }
 
@@ -118,9 +115,11 @@ export function isValidConnectionMetricsReport(
     }
 
     // Check that `countries` are strings.
-    for (const country of userReport.countries) {
-      if (typeof country !== 'string') {
-        return false;
+    if (userReport.countries) {
+      for (const country of userReport.countries) {
+        if (typeof country !== 'string') {
+          return false;
+        }
       }
     }
   }

@@ -25,6 +25,8 @@ const REGISTERED_REDIRECTS: Array<{clientId: string; port: number}> = [
   {clientId: '706928a1c91cbd646c4e0d744c8cbdfbf555a944b821ac7812a7314a4649683a', port: 61437},
 ];
 
+const CALLBACK_SERVER_CLOSE_TIMEOUT = 30000;  // 30 seconds
+
 function randomValueHex(len: number): string {
   return crypto
     .randomBytes(Math.ceil(len / 2))
@@ -109,6 +111,8 @@ export function runOauth(): OauthSession {
   const app = express();
   const server = http.createServer(app);
   server.on('close', () => console.log('Oauth server closed'));
+  // Automatically close the server after waiting some time.
+  setTimeout(server.close, CALLBACK_SERVER_CLOSE_TIMEOUT);
 
   let isCancelled = false;
   // Disable caching.
@@ -151,8 +155,6 @@ export function runOauth(): OauthSession {
     // This is the POST endpoint that receives the access token and redirects to either DigitalOcean
     // for the user to complete their account creation, or to a page that closes the window.
     app.post('/', express.urlencoded({type: '*/*', extended: false}), (request, response) => {
-      server.close();
-
       const params = new URLSearchParams(request.body.params);
       if (params.get('error')) {
         response.status(400).send(closeWindowHtml('Authentication failed'));
@@ -174,6 +176,8 @@ export function runOauth(): OauthSession {
             } else {
               response.redirect('https://cloud.digitalocean.com');
             }
+            // OAuth token exchange with DigitalOcean is now done.
+            server.close();
             resolve(accessToken);
           })
           .catch(reject);

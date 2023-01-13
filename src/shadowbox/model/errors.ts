@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// TODO(fortuna): Reuse CustomError from server_manager.
 class OutlineError extends Error {
   constructor(message: string) {
     super(message);
@@ -36,5 +37,11 @@ export class PortUnavailable extends OutlineError {
 export class AccessKeyNotFound extends OutlineError {
   constructor(accessKeyId?: string) {
     super(`Access key "${accessKeyId}" not found`);
+  }
+}
+
+export class InvalidCipher extends OutlineError {
+  constructor(public cipher: string) {
+    super(`cipher "${cipher}" is not valid`);
   }
 }

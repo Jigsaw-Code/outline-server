@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import {DigitalOceanSession, DropletInfo} from '../cloud/digitalocean_api';
-import * as errors from '../infrastructure/errors';
 import {hexToString} from '../infrastructure/hex_encoding';
 import {sleep} from '../infrastructure/sleep';
 import {ValueStream} from '../infrastructure/value_stream';
@@ -114,9 +113,9 @@ export class DigitalOceanServer extends ShadowboxServer implements server.Manage
     }
 
     if (this.installState.get() === InstallState.FAILED) {
-      throw new errors.ServerInstallFailedError();
+      throw new server.ServerInstallFailedError();
     } else if (this.installState.get() === InstallState.CANCELED) {
-      throw new errors.ServerInstallCanceledError();
+      throw new server.ServerInstallCanceledError();
     }
   }
 

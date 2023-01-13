@@ -21,7 +21,7 @@ import {html} from '@polymer/polymer/lib/utils/html-tag';
 import * as clipboard from 'clipboard-polyfill';
 
 export interface OutlineShareDialog extends Element {
-  open(accessKey: string): void;
+  open(accessKey: string, s3url: string): void;
 }
 
 // TODO(alalama): add a language selector. This should be a separate instance of
@@ -62,8 +62,11 @@ Polymer({
         max-width: 85%;
         margin: 0;
       }
-      #selectableText {
+      #selectableInviteText {
         height: 144px;
+      }
+      #selectableInviteText,
+      #selectableAccessKey {
         overflow: auto;
         background-color: #eceff1;
         border-radius: 2px;
@@ -72,24 +75,28 @@ Polymer({
         font-size: 12px;
         line-height: 18px;
       }
-      #selectableText p {
+      #selectableInviteText p {
         color: black;
         padding: 0;
         margin-top: 0;
         margin-bottom: 14px;
       }
-      #selectableText a {
+      #selectableInviteText a {
         text-decoration: underline;
         color: #009485;
         font-weight: 500;
         border: none;
       }
-      #copyText {
+      #selectableAccessKey pre {
+        white-space: normal;
+      }
+      #copyInvitationIndicator,
+      #copyAccessKeyIndicator {
         text-align: center;
         color: rgba(0, 0, 0, 0.54);
         margin: 0;
       }
-      #button-row {
+      .button-row {
         margin: 24px 0;
         padding: 0;
         letter-spacing: 0.62px;
@@ -108,22 +115,34 @@ Polymer({
       <div id="dialog-header">
         <h3>[[localize('share-title')]]</h3>
         <p
-          inner-h-t-m-l="[[localize('share-description-html', 'openLink', '<a href=https://securityplanner.org/#/all-recommendations>', 'closeLink', '</a>')]]"
+          inner-h-t-m-l="[[localize('share-description', 'openLink', '<a href=https://securityplanner.org/#/all-recommendations>', 'closeLink', '</a>')]]"
         ></p>
       </div>
       <div
         contenteditable=""
-        id="selectableText"
-        style="-webkit-text-size-adjust: 100%; white-space: pre-wrap;"
-        inner-h-t-m-l="[[localize('share-invite-html', 'openLink', '<a href=[[accessKey]]>', 'accessKey', accessKey, 'closeLink', '</a>')]]"
+        id="selectableInviteText"
+        style="-webkit-text-size-adjust: 100%;"
+        inner-h-t-m-l="[[localize('share-invite-html')]]"
       ></div>
-      <div id="button-row">
-        <paper-button id="copyButton" on-tap="copyClicked"
+      <div id="copyInvitationIndicator" hidden="">[[localize('share-invite-copied')]]</div>
+      <div class="button-row">
+        <paper-button id="copyButton" on-tap="copyInvite"
           >[[localize('share-invite-copy')]]</paper-button
+        >
+      </div>
+
+      <div contenteditable="" id="selectableAccessKey" style="-webkit-text-size-adjust: 100%;">
+        <pre><a href="[[accessKey]]">[[accessKey]]</a></pre>
+      </div>
+      <div id="copyAccessKeyIndicator" hidden="">
+        [[localize('share-invite-access-key-copied')]]
+      </div>
+      <div class="button-row">
+        <paper-button id="copyButton" on-tap="copyAccessKey"
+          >[[localize('share-invite-copy-access-key')]]</paper-button
         >
         <paper-button id="doneButton" dialog-confirm="">[[localize('done')]]</paper-button>
       </div>
-      <div id="copyText" hidden="">[[localize('share-invite-copied')]]</div>
     </paper-dialog>
   `,
 
@@ -133,16 +152,27 @@ Polymer({
     localize: {type: Function},
   },
 
-  open(accessKey: string) {
+  open(accessKey: string, s3Url: string) {
     this.accessKey = accessKey;
-    this.$.copyText.setAttribute('hidden', true);
+    this.s3Url = s3Url;
+    this.$.copyInvitationIndicator.setAttribute('hidden', true);
+    this.$.copyAccessKeyIndicator.setAttribute('hidden', true);
     this.$.dialog.open();
   },
 
-  copyClicked() {
+  copyInvite() {
     const dt = new clipboard.DT();
-    dt.setData('text/plain', this.$.selectableText.innerText);
+    dt.setData('text/plain', this.$.selectableInviteText.innerText);
+    dt.setData('text/html', this.$.selectableInviteText.innerHTML);
     clipboard.write(dt);
-    this.$.copyText.removeAttribute('hidden');
+    this.$.copyInvitationIndicator.removeAttribute('hidden');
+  },
+
+  copyAccessKey() {
+    const dt = new clipboard.DT();
+    dt.setData('text/plain', this.$.selectableAccessKey.innerText);
+    dt.setData('text/html', this.$.selectableAccessKey.innerHTML);
+    clipboard.write(dt);
+    this.$.copyAccessKeyIndicator.removeAttribute('hidden');
   },
 });

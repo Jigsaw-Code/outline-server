@@ -100,7 +100,8 @@ async function spawnPrometheusSubprocess(
   processArgs: string[],
   prometheusEndpoint: string
 ): Promise<child_process.ChildProcess> {
-  logging.info(`Starting Prometheus with args [${processArgs}]`);
+  logging.info('======== Starting Prometheus ========');
+  logging.info(`${binaryFilename} ${processArgs.map(a => `"${a}"`).join(' ')}`);
   const runProcess = child_process.spawn(binaryFilename, processArgs);
   runProcess.on('error', (error) => {
     logging.error(`Error spawning Prometheus: ${error}`);

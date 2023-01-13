@@ -194,6 +194,20 @@ function cleanup() {
     fi
   }
 
+  function test_encryption_for_new_keys() {
+    # Verify that we can create news keys with custom encryption.
+    client_curl --insecure -X POST -H "Content-Type: application/json" -d '{"method":"aes-256-gcm"}' "${SB_API_URL}/access-keys" \
+    || fail "Couldn't create a new access key with a custom method"
+
+    local ACCESS_KEY_JSON
+    ACCESS_KEY_JSON="$(client_curl --insecure -X GET "${SB_API_URL}/access-keys" \
+      || fail "Couldn't get a new access key after changing hostname")"
+
+    if [[ "${ACCESS_KEY_JSON}" != *'"method":"aes-256-gcm"'* ]]; then
+      fail "Custom encryption key not taken by new access key: ${ACCESS_KEY_JSON}"
+    fi
+  }
+
   function test_default_data_limit() {
     # Verify that we can create default data limits
     client_curl --insecure -X PUT -H 'Content-Type: application/json' -d '{"limit": {"bytes": 1000}}' \
@@ -231,6 +245,7 @@ function cleanup() {
   test_networking
   test_port_for_new_keys
   test_hostname_for_new_keys
+  test_encryption_for_new_keys
   test_default_data_limit
   test_per_key_data_limits
 

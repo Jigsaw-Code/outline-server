@@ -18,7 +18,8 @@ ARG NODE_IMAGE
 # Run `npm ci` and build inside the container to package the right dependencies for the image.
 FROM ${NODE_IMAGE} AS build
 
-RUN apk add --no-cache --upgrade bash
+# make for building third_party/prometheus and perl-utils for shasum.
+RUN apk add --no-cache --upgrade bash make perl-utils
 WORKDIR /
 
 # Don't copy node_modules and other things not needed for install.
@@ -37,7 +38,7 @@ RUN ROOT_DIR=/ npm run action shadowbox/server/build
 FROM ${NODE_IMAGE}
 
 # Save metadata on the software versions we are using.
-LABEL shadowbox.node_version=16.14.0
+LABEL shadowbox.node_version=16.18.0
 
 ARG GITHUB_RELEASE
 LABEL shadowbox.github.release="${GITHUB_RELEASE}"
