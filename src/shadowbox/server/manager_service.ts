@@ -131,6 +131,7 @@ export function bindService(
   apiServer.post(`${apiPrefix}/access-keys`, service.createNewAccessKey.bind(service));
   apiServer.get(`${apiPrefix}/access-keys`, service.listAccessKeys.bind(service));
 
+  apiServer.get(`${apiPrefix}/access-keys/:id`, service.getAccessKey.bind(service));
   apiServer.del(`${apiPrefix}/access-keys/:id`, service.removeAccessKey.bind(service));
   apiServer.put(`${apiPrefix}/access-keys/:id/name`, service.renameAccessKey.bind(service));
   apiServer.put(
@@ -275,6 +276,26 @@ export class ShadowsocksManagerService {
     this.accessKeys.setHostname(hostname);
     res.send(HttpSuccess.NO_CONTENT);
     next();
+  }
+
+  // Get a access key
+  public getAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
+    try {
+      logging.debug(`getAccessKey request ${JSON.stringify(req.params)}`);
+      const accessKeyId = validateAccessKeyId(req.params.id);
+      const accessKey = this.accessKeys.getAccessKey(accessKeyId);
+      const accessKeyJson = accessKeyToApiJson(accessKey);
+
+      logging.debug(`getAccessKey response ${JSON.stringify(accessKeyJson)}`);
+      res.send(HttpSuccess.OK, accessKeyJson);
+      return next();
+    } catch (error) {
+      logging.error(error);
+      if (error instanceof errors.AccessKeyNotFound) {
+        return next(new restifyErrors.NotFoundError(error.message));
+      }
+      return next(error);
+    }
   }
 
   // Lists all access keys

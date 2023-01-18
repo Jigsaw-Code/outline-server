@@ -127,6 +127,9 @@ export class FakeServer implements server.Server {
   getVersion() {
     return '1.2.3';
   }
+  getAccessKey(accessKeyId: server.AccessKeyId) {
+    return Promise.reject(new Error(`Access key "${accessKeyId}" not found`));
+  }
   listAccessKeys() {
     return Promise.resolve([]);
   }

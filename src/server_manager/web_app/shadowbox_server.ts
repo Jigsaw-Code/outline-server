@@ -64,6 +64,12 @@ export class ShadowboxServer implements server.Server {
     return this.id;
   }
 
+  getAccessKey(accessKeyId: server.AccessKeyId): Promise<server.AccessKey> {
+    return this.api.request<AccessKeyJson>('access-keys/' + accessKeyId).then((response) => {
+      return makeAccessKeyModel(response);
+    });
+  }
+
   listAccessKeys(): Promise<server.AccessKey[]> {
     console.info('Listing access keys');
     return this.api.request<{accessKeys: AccessKeyJson[]}>('access-keys').then((response) => {
