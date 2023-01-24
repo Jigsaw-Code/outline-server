@@ -363,6 +363,12 @@ export class ShadowsocksManagerService {
       if (error instanceof errors.InvalidCipher) {
         return next(new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message));
       }
+      if (
+        error instanceof restifyErrors.InvalidArgumentError ||
+        error instanceof restifyErrors.MissingParameterError
+      ) {
+        return next(error);
+      }
       return next(new restifyErrors.InternalServerError());
     }
   }
