@@ -311,7 +311,11 @@ export class ShadowsocksManagerService {
   }
 
   // Creates a new access key
-  public async createNewAccessKey(req: RequestType, res: ResponseType, next: restify.Next): Promise<void> {
+  public async createNewAccessKey(
+    req: RequestType,
+    res: ResponseType,
+    next: restify.Next
+  ): Promise<void> {
     try {
       logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
       let encryptionMethod = req.params.method;
@@ -319,16 +323,42 @@ export class ShadowsocksManagerService {
         encryptionMethod = '';
       }
       if (typeof encryptionMethod !== 'string') {
-        return next(new restifyErrors.InvalidArgumentError(
+        return next(
+          new restifyErrors.InvalidArgumentError(
             {statusCode: 400},
-            `Expected a string encryptionMethod, instead got ${encryptionMethod} of type ${
-                typeof encryptionMethod}`));
+            `Expected a string encryptionMethod, instead got ${encryptionMethod} of type ${typeof encryptionMethod}`
+          )
+        );
       }
-      const accessKeyJson = accessKeyToApiJson(await this.accessKeys.createNewAccessKey(encryptionMethod));
+
+      let name = req.params.name;
+      if (!name) {
+        name = '';
+      }
+      if (typeof name !== 'string') {
+        return next(
+          new restifyErrors.InvalidArgumentError(
+            {statusCode: 400},
+            `Expected a string name, instead got ${name} of type ${typeof name}`
+          )
+        );
+      }
+
+      let limit = req.params.limit as DataLimit;
+      if (limit) {
+        limit = validateDataLimit(limit);
+      }
+      if (!limit) {
+        limit = undefined;
+      }
+
+      const accessKeyJson = accessKeyToApiJson(
+        await this.accessKeys.createNewAccessKey(encryptionMethod, name, limit)
+      );
       res.send(201, accessKeyJson);
       logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);
       return next();
-    } catch(error) {
+    } catch (error) {
       logging.error(error);
       if (error instanceof errors.InvalidCipher) {
         return next(new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message));

@@ -97,10 +97,12 @@ function accessKeyToStorageJson(accessKey: AccessKey): AccessKeyStorageJson {
 }
 
 function isValidCipher(cipher: string): boolean {
-    if (["aes-256-gcm", "aes-192-gcm", "aes-128-gcm", "chacha20-ietf-poly1305"].indexOf(cipher) === -1) {
-      return false;
-    }
-    return true;
+  if (
+    ['aes-256-gcm', 'aes-192-gcm', 'aes-128-gcm', 'chacha20-ietf-poly1305'].indexOf(cipher) === -1
+  ) {
+    return false;
+  }
+  return true;
 }
 
 // AccessKeyRepository that keeps its state in a config file and uses ShadowsocksServer
@@ -166,7 +168,11 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.portForNewAccessKeys = port;
   }
 
-  async createNewAccessKey(encryptionMethod?: string): Promise<AccessKey> {
+  async createNewAccessKey(
+    encryptionMethod?: string,
+    name?: string,
+    limit?: DataLimit
+  ): Promise<AccessKey> {
     const id = this.keyConfig.data().nextId.toString();
     this.keyConfig.data().nextId += 1;
     const metricsId = uuidv4();
@@ -182,7 +188,9 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       encryptionMethod,
       password,
     };
-    const accessKey = new ServerAccessKey(id, '', metricsId, proxyParams);
+    name = name || '';
+    limit = undefined || limit;
+    const accessKey = new ServerAccessKey(id, name, metricsId, proxyParams, limit);
     this.accessKeys.push(accessKey);
     this.saveAccessKeys();
     await this.updateServer();
