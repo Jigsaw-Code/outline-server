@@ -318,10 +318,7 @@ export class ShadowsocksManagerService {
   ): Promise<void> {
     try {
       logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
-      let encryptionMethod = req.params.method;
-      if (!encryptionMethod) {
-        encryptionMethod = '';
-      }
+      const encryptionMethod = req.params.method || '';
       if (typeof encryptionMethod !== 'string') {
         return next(
           new restifyErrors.InvalidArgumentError(
@@ -331,10 +328,7 @@ export class ShadowsocksManagerService {
         );
       }
 
-      let name = req.params.name;
-      if (!name) {
-        name = '';
-      }
+      const name = req.params.name || '';
       if (typeof name !== 'string') {
         return next(
           new restifyErrors.InvalidArgumentError(
@@ -344,16 +338,11 @@ export class ShadowsocksManagerService {
         );
       }
 
-      let limit = req.params.limit as DataLimit;
-      if (limit) {
-        limit = validateDataLimit(limit);
-      }
-      if (!limit) {
-        limit = undefined;
-      }
+      const limit = (req.params.limit as DataLimit) || undefined;
+      const dataLimit = validateDataLimit(limit);
 
       const accessKeyJson = accessKeyToApiJson(
-        await this.accessKeys.createNewAccessKey(encryptionMethod, name, limit)
+        await this.accessKeys.createNewAccessKey({encryptionMethod, name, dataLimit})
       );
       res.send(201, accessKeyJson);
       logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);

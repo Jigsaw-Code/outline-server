@@ -22,6 +22,7 @@ import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {
   AccessKey,
+  AccessKeyCreateParams,
   AccessKeyId,
   AccessKeyMetricsId,
   AccessKeyRepository,
@@ -111,6 +112,8 @@ function isValidCipher(cipher: string): boolean {
 export class ServerAccessKeyRepository implements AccessKeyRepository {
   private static DATA_LIMITS_ENFORCEMENT_INTERVAL_MS = 60 * 60 * 1000; // 1h
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
+  private NEW_USER_DEFAULT_NAME = '';
+  private NEW_USER_DEFAULT_DATA_LIMIT = undefined;
   private accessKeys: ServerAccessKey[];
 
   constructor(
@@ -168,16 +171,12 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.portForNewAccessKeys = port;
   }
 
-  async createNewAccessKey(
-    encryptionMethod?: string,
-    name?: string,
-    limit?: DataLimit
-  ): Promise<AccessKey> {
+  async createNewAccessKey(params?: AccessKeyCreateParams): Promise<AccessKey> {
     const id = this.keyConfig.data().nextId.toString();
     this.keyConfig.data().nextId += 1;
     const metricsId = uuidv4();
     const password = generatePassword();
-    encryptionMethod = encryptionMethod || this.NEW_USER_ENCRYPTION_METHOD;
+    const encryptionMethod = params.encryptionMethod || this.NEW_USER_ENCRYPTION_METHOD;
     // Validate encryption method.
     if (!isValidCipher(encryptionMethod)) {
       throw new errors.InvalidCipher(encryptionMethod);
@@ -188,9 +187,9 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       encryptionMethod,
       password,
     };
-    name = name || '';
-    limit = undefined || limit;
-    const accessKey = new ServerAccessKey(id, name, metricsId, proxyParams, limit);
+    const name = params.name || this.NEW_USER_DEFAULT_NAME;
+    const dataLimit = this.NEW_USER_DEFAULT_DATA_LIMIT || params.dataLimit;
+    const accessKey = new ServerAccessKey(id, name, metricsId, proxyParams, dataLimit);
     this.accessKeys.push(accessKey);
     this.saveAccessKeys();
     await this.updateServer();
