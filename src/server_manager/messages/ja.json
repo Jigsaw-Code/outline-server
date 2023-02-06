@@ -85,7 +85,7 @@
   "feedback-title-install": "Outline サーバーをインストールできませんでした",
   "gcp-billing-action": "次へ",
   "gcp-billing-body": "{openLink}Google Cloud に請求先アカウントを追加{closeLink}してください",
-  "gcp-billing-description": "続行するには、{openLink}Cloud Console のお支払いとご請求ページを開いて{closeLink}アカウントを追加します。",
+  "gcp-billing-description": "続行するには、{openLink}Cloud コンソールのお支払いとご請求ページを開いて{closeLink}アカウントを追加します。",
   "gcp-billing-error": "お支払い情報を取得できません",
   "gcp-billing-error-zero": "続行する前に請求先アカウントを追加する必要があります。",
   "gcp-click-create": "[作成（Create）] をクリックします。",
