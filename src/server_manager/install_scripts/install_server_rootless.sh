@@ -292,33 +292,25 @@ function write_config() {
 }
 
 function start_shadowbox() {
-  echo "
-  ---
-  version: '3.6'
-  services:
-    shadowbox:
-      image: '${SB_IMAGE}'
-      container_name: '${CONTAINER_NAME}'
-      restart: always
-      net: host
-      environment:
-        SB_STATE_DIR: '${STATE_DIR}'
-        SB_API_PORT: '${API_PORT}'
-        SB_API_PREFIX: '${SB_API_PREFIX}'
-        SB_CERTIFICATE_FILE: '${SB_CERTIFICATE_FILE}'
-        SB_PRIVATE_KEY_FILE: '${SB_PRIVATE_KEY_FILE}'
-        SB_METRICS_URL: '${SB_METRICS_URL:-}'
-        SB_DEFAULT_SERVER_NAME: '${SB_DEFAULT_SERVER_NAME:-}'
-      volumes:
-        - '${STATE_DIR}:${STATE_DIR}'
-      ports:
-        - '${FLAGS_API_PORT}:${FLAGS_API_PORT}/tcp'
-        - '${FLAGS_KEYS_PORT}:${FLAGS_KEYS_PORT}/tcp'
-        - '${FLAGS_KEYS_PORT}:${FLAGS_KEYS_PORT}/udp'
-  " > ./docker-compose.yml
+  # TODO(fortuna): Write API_PORT to config file,
+  # rather than pass in the environment.
+  local -ar docker_shadowbox_flags=(
+    --name "${CONTAINER_NAME}" --restart always
+    -p "${FLAGS_API_PORT}:${FLAGS_API_PORT}/tcp"
+    -p "${FLAGS_KEYS_PORT}:${FLAGS_KEYS_PORT}/tcp"
+    -p "${FLAGS_KEYS_PORT}:${FLAGS_KEYS_PORT}/udp"
+    -v "${STATE_DIR}:${STATE_DIR}"
+    -e "SB_STATE_DIR=${STATE_DIR}"
+    -e "SB_API_PORT=${API_PORT}"
+    -e "SB_API_PREFIX=${SB_API_PREFIX}"
+    -e "SB_CERTIFICATE_FILE=${SB_CERTIFICATE_FILE}"
+    -e "SB_PRIVATE_KEY_FILE=${SB_PRIVATE_KEY_FILE}"
+    -e "SB_METRICS_URL=${SB_METRICS_URL:-}"
+    -e "SB_DEFAULT_SERVER_NAME=${SB_DEFAULT_SERVER_NAME:-}"
+  )
   # By itself, local messes up the return code.
   local STDERR_OUTPUT
-  STDERR_OUTPUT="$(docker compose up -d 2>&1 >/dev/null)" && return
+  STDERR_OUTPUT="$(docker run -d "${docker_shadowbox_flags[@]}" "${SB_IMAGE}" 2>&1 >/dev/null)" && return
   readonly STDERR_OUTPUT
   log_error "FAILED"
   if docker_container_exists "${CONTAINER_NAME}"; then
