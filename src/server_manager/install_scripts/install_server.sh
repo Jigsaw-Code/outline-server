@@ -168,7 +168,9 @@ function install_docker() {
 }
 
 function start_docker() {
-  systemctl enable --now docker.service >&2
+  #systemctl enable --now docker.service >&2
+  rc-update add docker default
+  service docker start
 }
 
 function docker_container_exists() {
