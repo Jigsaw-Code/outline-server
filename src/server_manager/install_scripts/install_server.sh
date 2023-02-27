@@ -172,8 +172,8 @@ function start_docker() {
     systemctl enable --now docker.service >&2
     service docker start
   else #dirty hack to support Alpine Linux
-    rc-update add docker default
-    rc-update add docker boot && rc-service docker start
+    rc-update add docker boot
+    rc-service docker start
   fi
 }
 
