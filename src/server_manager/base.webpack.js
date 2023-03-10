@@ -63,15 +63,9 @@ exports.makeConfig = (options) => {
     plugins: [
       new webpack.DefinePlugin({
         'outline.gcpAuthEnabled': JSON.stringify(process.env.GCP_AUTH_ENABLED !== 'false'),
-        // Hack to protect against @sentry/electron not having process.type defined.
-        'process.type': JSON.stringify('renderer'),
         // Statically link the Roboto font, rather than link to fonts.googleapis.com
         'window.polymerSkipLoadingFontRoboto': JSON.stringify(true),
       }),
-      // @sentry/electron depends on electron code, even though it's never activated
-      // in the browser. Webpack still tries to build it, but fails with missing APIs.
-      // The IgnorePlugin prevents the compilation of the electron dependency.
-      new webpack.IgnorePlugin({resourceRegExp: /^electron$/, contextRegExp: /@sentry\/electron/}),
       new CopyPlugin(
         [
           {from: 'index.html', to: '.'},
