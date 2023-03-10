@@ -67,7 +67,7 @@
     }
   },
   "config": {
-    "PUPPETEER_CHROMIUM_REVISION": "1086"
+    "PUPPETEER_CHROMIUM_REVISION": "992738"
   },
   "devDependencies": {
     "@types/node": "^16.11.29",
@@ -82,7 +82,7 @@
     "electron-builder": "^23.6.0",
     "electron-icon-maker": "^0.0.4",
     "electron-notarize": "^1.2.1",
-    "electron-to-chromium": "^1.4.122",
+    "electron-to-chromium": "^1.4.328",
     "gulp": "^4.0.0",
     "gulp-posthtml": "^3.0.4",
     "gulp-replace": "^1.0.0",
