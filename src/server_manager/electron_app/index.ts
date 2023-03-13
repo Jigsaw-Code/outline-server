@@ -24,7 +24,7 @@ import {fetchWithPin} from './fetch';
 import * as menu from './menu';
 
 // Injected by esbuild/webpack during build
-declare const SENTRY_DSN_: string | undefined;
+declare const SENTRY_DSN: string | undefined;
 
 const app = electron.app;
 const ipcMain = electron.ipcMain;
@@ -41,9 +41,9 @@ const IMAGES_BASENAME = `${path.join(
   'web_app'
 )}`;
 
-if (typeof SENTRY_DSN_ !== 'undefined' && SENTRY_DSN_) {
+if (typeof SENTRY_DSN !== 'undefined' && SENTRY_DSN) {
   Sentry.init({
-    dsn: SENTRY_DSN_,
+    dsn: SENTRY_DSN,
     // Sentry provides a sensible default but we would prefer without the leading
     // "outline-manager@".
     release: electron.app.getVersion(),
@@ -130,8 +130,8 @@ function getWebAppUrl() {
     queryParams.set('metricsUrl', process.env.SB_METRICS_URL);
     console.log(`Will use metrics url ${process.env.SB_METRICS_URL}`);
   }
-  if (typeof SENTRY_DSN_ !== 'undefined' && SENTRY_DSN_) {
-    queryParams.set('sentryDsn', SENTRY_DSN_);
+  if (typeof SENTRY_DSN !== 'undefined' && SENTRY_DSN) {
+    queryParams.set('sentryDsn', SENTRY_DSN);
   }
   if (debugMode) {
     queryParams.set('outlineDebugMode', 'true');

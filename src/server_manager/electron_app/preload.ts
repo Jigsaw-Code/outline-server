@@ -25,8 +25,8 @@ import {redactManagerUrl} from './util';
 //
 // Use it for main/renderer process communication.
 
-// Calling Sentry.init in preload won't work any more due to electron's new
-// sandbox model, all renderers must call Sentry.init() by themselves.
+// Calling Sentry.init in preload won't work due to electron's new sandbox
+// model, all renderers must call Sentry.init() by themselves.
 //
 // Redact PII from the renderer process requests.
 // We are importing `node:url` package in `redactManagerUrl`, which is only

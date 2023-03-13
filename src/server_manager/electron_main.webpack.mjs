@@ -46,7 +46,7 @@ export default {
   },
   plugins: [
     new webpack.DefinePlugin({
-      SENTRY_DSN_: JSON.stringify(process.env.SENTRY_DSN),
+      SENTRY_DSN: JSON.stringify(process.env.SENTRY_DSN),
     }),
   ],
   // don't bundle packages in node_modules
