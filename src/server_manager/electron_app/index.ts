@@ -23,7 +23,7 @@ import type {HttpRequest, HttpResponse} from '../infrastructure/path_api';
 import {fetchWithPin} from './fetch';
 import * as menu from './menu';
 
-// Injected by esbuild/webpack during build
+// Injected by webpack during build
 declare const SENTRY_DSN: string | undefined;
 
 const app = electron.app;

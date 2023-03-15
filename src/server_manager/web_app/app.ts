@@ -46,10 +46,11 @@ const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * 10 ** 9; // 50GB
 const CANCELLED_ERROR = new Error('Cancelled');
 export const LAST_DISPLAYED_SERVER_STORAGE_KEY = 'lastDisplayedServer';
 
-// todo: we are referencing `@sentry/electron` which won't work for web_app.
-//       It's ok for now cuz we don't need to enable Sentry in web_app, but
-//       a better solution is to have separate two entry points: electron_main
-//       (uses `@sentry/electron`) and web_main (uses `@sentry/browser`).
+// todo (#1311): we are referencing `@sentry/electron` which won't work for
+//               web_app. It's ok for now cuz we don't need to enable Sentry in
+//               web_app, but a better solution is to have separate two entry
+//               points: electron_main (uses `@sentry/electron`) and web_main
+//               (uses `@sentry/browser`).
 // For all other Sentry config see the main process.
 Sentry.init({
   beforeBreadcrumb:
