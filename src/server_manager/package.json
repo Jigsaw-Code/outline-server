@@ -39,7 +39,7 @@
     "@polymer/paper-tabs": "^3.0.0",
     "@polymer/paper-toast": "^3.0.0",
     "@polymer/paper-tooltip": "^3.0.0",
-    "@sentry/electron": "^2",
+    "@sentry/electron": "^4.3.0",
     "@webcomponents/webcomponentsjs": "^2.0.0",
     "circle-flags": "https://github.com/HatScripts/circle-flags",
     "clipboard-polyfill": "^2.4.6",
@@ -67,7 +67,7 @@
     }
   },
   "config": {
-    "PUPPETEER_CHROMIUM_REVISION": "1086"
+    "PUPPETEER_CHROMIUM_REVISION": "992738"
   },
   "devDependencies": {
     "@types/node": "^16.11.29",
@@ -78,11 +78,11 @@
     "@types/semver": "^5.5.0",
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.5.3",
-    "electron": "18.1.0",
+    "electron": "19.1.9",
     "electron-builder": "^23.6.0",
     "electron-icon-maker": "^0.0.4",
     "electron-notarize": "^1.2.1",
-    "electron-to-chromium": "^1.4.122",
+    "electron-to-chromium": "^1.4.328",
     "gulp": "^4.0.0",
     "gulp-posthtml": "^3.0.4",
     "gulp-replace": "^1.0.0",
@@ -100,7 +100,8 @@
     "ts-loader": "^7.0.1",
     "webpack": "^4.43.0",
     "webpack-cli": "^4.9.2",
-    "webpack-dev-server": "^4.9.0"
+    "webpack-dev-server": "^4.9.0",
+    "webpack-node-externals": "^3.0.0"
   },
   "resolutions": {
     "inherits": "2.0.3",

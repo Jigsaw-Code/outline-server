@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as sentry from '@sentry/electron';
+import * as Sentry from '@sentry/electron';
 import * as dotenv from 'dotenv';
 import * as electron from 'electron';
 import {autoUpdater} from 'electron-updater';
@@ -22,6 +22,9 @@ import {URL, URLSearchParams} from 'url';
 import type {HttpRequest, HttpResponse} from '../infrastructure/path_api';
 import {fetchWithPin} from './fetch';
 import * as menu from './menu';
+
+// Injected by webpack during build
+declare const SENTRY_DSN: string | undefined;
 
 const app = electron.app;
 const ipcMain = electron.ipcMain;
@@ -38,20 +41,17 @@ const IMAGES_BASENAME = `${path.join(
   'web_app'
 )}`;
 
-const sentryDsn = process.env.SENTRY_DSN;
-if (sentryDsn) {
-  sentry.init({
-    dsn: sentryDsn,
+if (typeof SENTRY_DSN !== 'undefined' && SENTRY_DSN) {
+  Sentry.init({
+    dsn: SENTRY_DSN,
     // Sentry provides a sensible default but we would prefer without the leading
     // "outline-manager@".
     release: electron.app.getVersion(),
     maxBreadcrumbs: 100,
-    beforeBreadcrumb: (breadcrumb: sentry.Breadcrumb) => {
+    beforeBreadcrumb: (breadcrumb: Sentry.Breadcrumb) => {
       // Don't submit breadcrumbs for console.debug.
-      if (breadcrumb.category === 'console') {
-        if (breadcrumb.level === sentry.Severity.Debug) {
-          return null;
-        }
+      if (breadcrumb.category === 'console' && breadcrumb.level === 'debug') {
+        return null;
       }
       return breadcrumb;
     },
@@ -76,14 +76,14 @@ function createMainWindow() {
     webPreferences: {
       devTools: debugMode,
       nodeIntegration: false,
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, './preload.js'),
       webviewTag: false,
     },
   });
   const webAppUrl = getWebAppUrl();
   win.loadURL(webAppUrl);
 
-  const handleNavigation = (event: Event, url: string) => {
+  const handleNavigation = (url: string) => {
     try {
       const parsed: URL = new URL(url);
       if (
@@ -98,13 +98,14 @@ function createMainWindow() {
     } catch (e) {
       console.warn('Could not parse URL: ' + url);
     }
-    event.preventDefault();
   };
   win.webContents.on('will-navigate', (event: Event, url: string) => {
-    handleNavigation(event, url);
+    handleNavigation(url);
+    event.preventDefault();
   });
-  win.webContents.on('new-window', (event: Event, url: string) => {
-    handleNavigation(event, url);
+  win.webContents.setWindowOpenHandler((details) => {
+    handleNavigation(details.url);
+    return {action: 'deny'};
   });
   win.webContents.on('did-finish-load', () => {
     // Wait until now to check for updates now so that the UI won't miss the event.
@@ -129,8 +130,8 @@ function getWebAppUrl() {
     queryParams.set('metricsUrl', process.env.SB_METRICS_URL);
     console.log(`Will use metrics url ${process.env.SB_METRICS_URL}`);
   }
-  if (sentryDsn) {
-    queryParams.set('sentryDsn', sentryDsn);
+  if (typeof SENTRY_DSN !== 'undefined' && SENTRY_DSN) {
+    queryParams.set('sentryDsn', SENTRY_DSN);
   }
   if (debugMode) {
     queryParams.set('outlineDebugMode', 'true');
