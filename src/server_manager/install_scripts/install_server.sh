@@ -171,7 +171,8 @@ function start_docker() {
   if command -v systemctl &> /dev/null; then
     systemctl enable --now docker.service >&2
     service docker start
-  else #dirty hack to support Alpine Linux
+  else
+    # Hack to support Alpine Linux
     rc-update add docker boot
     rc-service docker start
   fi
