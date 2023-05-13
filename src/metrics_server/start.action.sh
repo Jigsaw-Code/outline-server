@@ -1,25 +1,36 @@
 #!/bin/bash -eu
-#
-# Copyright 2020 The Outline Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
-readonly SRC_DIR="src/metrics_server"
-readonly BUILD_DIR="build/metrics_server"
+# This script builds and runs the metrics server.
 
+# The target directory for the compiled code.
+readonly BUILD_DIR=./build
+
+# The directory for the metrics server source code.
+readonly ROOT_DIR=./src
+
+# The directory for the Jasmine tests.
+readonly TEST_DIR=${BUILD_DIR}/js/metrics_server/
+
+# Remove the test directory if it exists.
+rm -rf ${TEST_DIR}
+
+# Compile the metrics server.
+tsc -p ${ROOT_DIR}/metrics_server --outDir ${TEST_DIR}
+
+# Run the Jasmine tests.
+jasmine --config=${ROOT_DIR}/jasmine.json
+
+# Remove the test directory.
+rm -rf ${TEST_DIR}
+
+# Build the metrics server.
 npm run action metrics_server/build
 
-cp "${SRC_DIR}/config_dev.json" "${BUILD_DIR}/config.json"
-cp "${SRC_DIR}/package.json" "${BUILD_DIR}/"
+# Copy the config file to the build directory.
+cp ${SRC_DIR}/config_dev.json ${BUILD_DIR}/config.json
 
-npx node "${BUILD_DIR}/index.js"
+# Copy the package file to the build directory.
+cp ${SRC_DIR}/package.json ${BUILD_DIR}/
+
+# Run the metrics server.
+npx node ${BUILD_DIR}/index.js
