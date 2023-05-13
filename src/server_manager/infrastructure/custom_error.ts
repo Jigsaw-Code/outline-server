@@ -13,11 +13,17 @@
 // limitations under the License.
 
 export class CustomError extends Error {
+  // Creates a new CustomError instance.
+  //
+  // @param message - The error message.
   constructor(message?: string) {
-    // ref:
-    // https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-2.html#support-for-newtarget
-    super(message); // 'Error' breaks prototype chain here
-    Object.setPrototypeOf(this, new.target.prototype); // restore prototype chain
-    this.name = new.target.name;
+    super(message);
+    this.name = 'CustomError';
   }
 }
+
+// Example usage:
+const error = new CustomError('This is a custom error');
+
+console.log(error.message); // This is a custom error
+console.log(error.name); // CustomError
