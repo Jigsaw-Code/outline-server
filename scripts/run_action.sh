@@ -1,5 +1,7 @@
 #!/bin/bash
 #
+# This script is used to run Outline actions.
+#
 # Copyright 2018 The Outline Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,54 +16,52 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -eu
+# Set the default values for the ROOT_DIR and BUILD_DIR variables.
+ROOT_DIR=${ROOT_DIR:-$(pwd)/$(git rev-parse --show-cdup)}
+BUILD_DIR=${BUILD_DIR:-${ROOT_DIR}/build}
 
-# TODO: Because Node.js on Cygwin doesn't handle absolute paths very
-#       well, it would be worth pushd-ing to ROOT_DIR before invoking
-#       them and making BUILD_DIR a relative path, viz. just "build".
-
-readonly ROOT_DIR=${ROOT_DIR:-$(pwd)/$(git rev-parse --show-cdup)}
-readonly BUILD_DIR=${BUILD_DIR:-${ROOT_DIR}/build}
-
+# Export the ROOT_DIR and BUILD_DIR variables.
 export ROOT_DIR
 export BUILD_DIR
 
-export run_action_indent=''
-
+# Define a function to run an action.
 function run_action() {
-  local -r STYLE_BOLD_WHITE='\033[1;37m'
-  local -r STYLE_BOLD_GREEN='\033[1;32m'
-  local -r STYLE_BOLD_RED='\033[1;31m'
-  local -r STYLE_RESET='\033[0m'
+  # Get the action name and the arguments.
+  local action=$1
+  shift
 
-  local -r action="${1:-""}"
-  local -r old_indent="${run_action_indent}"
+  # Set the indent string.
+  local indent="=> "
 
-  run_action_indent="=> ${run_action_indent}"
-
+  # If the action name is empty, print a list of valid actions.
   if [[ -z "${action}" ]]; then
-    echo -e "Please provide an action to run. ${STYLE_BOLD_WHITE}List of valid actions:${STYLE_RESET}\n"
+    echo "Please provide an action to run. Valid actions:"
     find . -name '*.action.sh' | sed -E 's:\./src/(.*)\.action\.sh:\1:'
     exit 0
   fi
 
-  echo -e "${old_indent}${STYLE_BOLD_WHITE}[Running ${action}]${STYLE_RESET}"
-  shift
+  # Print a message indicating that the action is running.
+  echo "${indent}[Running ${action}]"
 
+  # Run the action.
   "${ROOT_DIR}/src/${action}.action.sh" "$@"
 
-  local -ir status="$?"
-  if (( status == 0 )); then
-    echo -e "${old_indent}${STYLE_BOLD_GREEN}[${action}: Finished]${STYLE_RESET}"
+  # Get the status of the action.
+  local status=$?
+
+  # If the status is 0, print a message indicating that the action succeeded.
+  if [[ $status == 0 ]]; then
+    echo "${indent}[${action}: Finished]"
+  # Otherwise, print a message indicating that the action failed.
   else
-    echo -e "${old_indent}${STYLE_BOLD_RED}[${action}: Failed]${STYLE_RESET}"
+    echo "${indent}[${action}: Failed]"
   fi
 
-  run_action_indent="${old_indent}"
-
-  return "${status}"
+  return $status
 }
 
+# Export the run_action function.
 export -f run_action
 
+# Run the action specified by the user.
 run_action "$@"
