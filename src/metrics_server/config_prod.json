@@ -1,5 +1,32 @@
-{
-  "datasetName": "uproxy_metrics",
-  "connectionMetricsTableName": "connections_v1",
-  "featureMetricsTableName": "feature_metrics"
+const config = {
+  datasetName: "uproxy_metrics",
+  connectionMetricsTableName: "connections_v1",
+  featureMetricsTableName: "feature_metrics",
+};
+
+/**
+ * Gets the dataset name.
+ *
+ * @returns The dataset name.
+ */
+export function getDatasetName(): string {
+  return config.datasetName;
+}
+
+/**
+ * Gets the connection metrics table name.
+ *
+ * @returns The connection metrics table name.
+ */
+export function getConnectionMetricsTableName(): string {
+  return config.connectionMetricsTableName;
+}
+
+/**
+ * Gets the feature metrics table name.
+ *
+ * @returns The feature metrics table name.
+ */
+export function getFeatureMetricsTableName(): string {
+  return config.featureMetricsTableName;
 }
