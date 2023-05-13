@@ -1,10 +1,30 @@
-{
-  "compilerOptions": {
-    "target": "es2016",
-    "removeComments": false,
-    "strict": true,
-    "module": "commonjs",
-    "outDir": "../../build/metrics_server"
+// This file contains the compiler options for the metrics server.
+
+// The target version of ECMAScript to compile to.
+const target = 'es2016';
+
+// Whether to remove comments from the compiled code.
+const removeComments = false;
+
+// Whether to enable strict mode.
+const strict = true;
+
+// The module format to use.
+const module = 'commonjs';
+
+// The output directory for the compiled code.
+const outDir = '../../build/metrics_server';
+
+// The files to include in the compilation.
+const include = ['**/*.ts'];
+
+module.exports = {
+  compilerOptions: {
+    target,
+    removeComments,
+    strict,
+    module,
+    outDir
   },
-  "include": ["**/*.ts"]
-}
+  include
+};
