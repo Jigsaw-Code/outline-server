@@ -70,7 +70,7 @@ cp -r "${BUILD_DIR}/server_manager/web_app/static" "${STATIC_DIR}/server_manager
 # is loaded via a custom protocol.
 cp src/server_manager/package.json package-lock.json "${STATIC_DIR}"
 cd "${STATIC_DIR}"
-sed -i '' "s/0.0.0-debug/${VERSION_NAME}/g" package.json
+sed -i '' "s/0.0.0-debug/${VERSION_NAME}/g" src/server_manager/package.json
 npm ci --prod --ignore-scripts
 
 # Icons.
