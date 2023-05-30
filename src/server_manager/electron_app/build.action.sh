@@ -17,6 +17,7 @@ set -eux
 
 PLATFORM=$1
 STAGING_PERCENTAGE=100
+VERSION_NAME='0.0.0-debug'
 BUILD_MODE=debug
 for i in "$@"; do
   case ${i} in
