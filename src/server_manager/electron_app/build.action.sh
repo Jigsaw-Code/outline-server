@@ -68,12 +68,11 @@ cp -r "${BUILD_DIR}/server_manager/web_app/static" "${STATIC_DIR}/server_manager
 # We also need to install NPMs at this location for require()
 # in order for require() to work right in the renderer process, which
 # is loaded via a custom protocol.
-cp src/server_manager/package.json package-lock.json "${STATIC_DIR}"
-cd "${STATIC_DIR}"
+cp package-lock.json "${STATIC_DIR}"
 if [[ "${OSTYPE}" == "darwin"* ]]; then
-  sed -i '' "s/0.0.0-debug/${VERSION_NAME}/g" package.json
+  sed -i '' "s/0.0.0-debug/${VERSION_NAME}/g" src/server_manager/package.json > "${STATIC_DIR}/package.json"
 else
-  sed -i "s/0.0.0-debug/${VERSION_NAME}/g" package.json
+  sed -i "s/0.0.0-debug/${VERSION_NAME}/g" src/server_manager/package.json > "${STATIC_DIR}/package.json"
 fi
 npm ci --prod --ignore-scripts
 
