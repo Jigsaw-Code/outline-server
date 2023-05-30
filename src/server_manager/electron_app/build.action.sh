@@ -69,7 +69,8 @@ cp -r "${BUILD_DIR}/server_manager/web_app/static" "${STATIC_DIR}/server_manager
 # in order for require() to work right in the renderer process, which
 # is loaded via a custom protocol.
 cp src/server_manager/package.json package-lock.json "${STATIC_DIR}"
-sed -i '' "s/0.0.0-debug/${VERSION_NAME}/g" "${STATIC_DIR}/package.json"
+cd "${STATIC_DIR}"
+sed -i "s/0.0.0-debug/${VERSION_NAME}/g" package.json
 npm ci --prod --ignore-scripts
 
 # Icons.
