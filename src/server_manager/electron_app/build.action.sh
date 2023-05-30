@@ -74,6 +74,7 @@ if [[ "${OSTYPE}" == "darwin"* ]]; then
 else
   sed "s/0.0.0-debug/${VERSION_NAME}/g" src/server_manager/package.json > "${STATIC_DIR}/package.json"
 fi
+cd "${STATIC_DIR}"
 npm ci --prod --ignore-scripts
 
 # Icons.
