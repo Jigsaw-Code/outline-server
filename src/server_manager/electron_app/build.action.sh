@@ -70,9 +70,9 @@ cp -r "${BUILD_DIR}/server_manager/web_app/static" "${STATIC_DIR}/server_manager
 # is loaded via a custom protocol.
 cp package-lock.json "${STATIC_DIR}"
 if [[ "${OSTYPE}" == "darwin"* ]]; then
-  sed -i '' "s/0.0.0-debug/${VERSION_NAME}/g" src/server_manager/package.json > "${STATIC_DIR}/package.json"
+  sed '' "s/0.0.0-debug/${VERSION_NAME}/g" src/server_manager/package.json > "${STATIC_DIR}/package.json"
 else
-  sed -i "s/0.0.0-debug/${VERSION_NAME}/g" src/server_manager/package.json > "${STATIC_DIR}/package.json"
+  sed "s/0.0.0-debug/${VERSION_NAME}/g" src/server_manager/package.json > "${STATIC_DIR}/package.json"
 fi
 npm ci --prod --ignore-scripts
 
