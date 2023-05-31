@@ -17,11 +17,16 @@ set -eux
 
 PLATFORM=$1
 STAGING_PERCENTAGE=100
+VERSION_NAME='0.0.0-debug'
 BUILD_MODE=debug
 for i in "$@"; do
   case ${i} in
   --buildMode=*)
     BUILD_MODE="${i#*=}"
+    shift
+    ;;
+  --versionName=*)
+    VERSION_NAME="${i#*=}"
     shift
     ;;
   --stagingPercentage=*)
@@ -63,7 +68,8 @@ cp -r "${BUILD_DIR}/server_manager/web_app/static" "${STATIC_DIR}/server_manager
 # We also need to install NPMs at this location for require()
 # in order for require() to work right in the renderer process, which
 # is loaded via a custom protocol.
-cp src/server_manager/package.json package-lock.json "${STATIC_DIR}"
+cp package-lock.json "${STATIC_DIR}"
+sed "s/0.0.0-debug/${VERSION_NAME}/g" src/server_manager/package.json > "${STATIC_DIR}/package.json"
 cd "${STATIC_DIR}"
 npm ci --prod --ignore-scripts
 
