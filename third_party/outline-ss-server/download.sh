@@ -18,8 +18,7 @@
 # Requires VERSION, OUTPUT and BASENAME to be defined.
 
 declare -r ARCHIVE="${BASENAME}.tar.gz"
-# We use wget instead of curl because it's already available on Alpine distros.
-wget --quiet "https://github.com/Jigsaw-Code/outline-ss-server/releases/download/v${VERSION}/${ARCHIVE}" -O "${ARCHIVE}"
+curl -L --silent "https://github.com/Jigsaw-Code/outline-ss-server/releases/download/v${VERSION}/${ARCHIVE}" -o "${ARCHIVE}"
 shasum -a 256 --check --ignore-missing checksums.txt
 mkdir -p $(dirname "${OUTPUT}")
 tar -zx -f "${BASENAME}.tar.gz" -C $(dirname "${OUTPUT}") "outline-ss-server"
