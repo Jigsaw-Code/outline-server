@@ -25,6 +25,7 @@ import {ShadowsocksAccessKey, ShadowsocksServer} from '../model/shadowsocks_serv
 export class OutlineShadowsocksServer implements ShadowsocksServer {
   private ssProcess: child_process.ChildProcess;
   private ipCountryFilename = '';
+  private ipAsnFilename = '';
   private isReplayProtectionEnabled = false;
 
   // binaryFilename is the location for the outline-ss-server binary.
@@ -40,6 +41,13 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
   // ipCountryFilename is the location of the ip-country.mmdb IP-to-country database file.
   enableCountryMetrics(ipCountryFilename: string): OutlineShadowsocksServer {
     this.ipCountryFilename = ipCountryFilename;
+    return this;
+  }
+
+  // Annotates the Prometheus data metrics with ASes.
+  // ipAsnFilename is the location of the ip-asn.mmdb IP-to-ASN database file.
+  enableAsMetrics(ipAsnFilename: string): OutlineShadowsocksServer {
+    this.ipAsnFilename = ipAsnFilename;
     return this;
   }
 
@@ -92,6 +100,9 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
     if (this.ipCountryFilename) {
       commandArguments.push('-ip_country_db', this.ipCountryFilename);
     }
+    if (this.ipAsnFilename) {
+      commandArguments.push('-ip_asn_db', this.ipAsnFilename);
+    }
     if (this.verbose) {
       commandArguments.push('-verbose');
     }
@@ -99,7 +110,7 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
       commandArguments.push('--replay_history=10000');
     }
     logging.info('======== Starting Outline Shadowsocks Service ========');
-    logging.info(`${this.binaryFilename} ${commandArguments.map(a => `"${a}"`).join(' ')}`); 
+    logging.info(`${this.binaryFilename} ${commandArguments.map((a) => `"${a}"`).join(' ')}`);
     this.ssProcess = child_process.spawn(this.binaryFilename, commandArguments);
     this.ssProcess.on('error', (error) => {
       logging.error(`Error spawning outline-ss-server: ${error}`);
