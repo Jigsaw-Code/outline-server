@@ -33,7 +33,7 @@ readonly file cmd
 if [[ ! -s "${cmd}" ]]; then
   mkdir -p "${DOWNLOAD_DIR}"
 
-  node ../../src/build/download_file.mjs --url="https://github.com/koalaman/shellcheck/releases/download/${VERSION}/${file}" --out="${DOWNLOAD_DIR}/${file}" --sha256="${sha256}"
+  node "$(dirname "$0")/../../src/build/download_file.mjs" --url="https://github.com/koalaman/shellcheck/releases/download/${VERSION}/${file}" --out="${DOWNLOAD_DIR}/${file}" --sha256="${sha256}"
 
   pushd "${DOWNLOAD_DIR}"
   if [[ "${file}" == *'.tar.xz' ]]; then
