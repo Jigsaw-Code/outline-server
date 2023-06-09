@@ -31,8 +31,8 @@ import {getFileChecksum} from './get_file_checksum.mjs'
  * @param {string} sha256Checksum The SHA256 checksum of the file to use for verification.
  * @returns {Promise<void>} A task that will be completed once the download is completed.
  */
-export async function downloadHttpsFile(fileUrl, filepath, sha256Checksum) {
-  await mkdir(path.dirname(filepath), { recursive: true })
+export async function downloadFile(fileUrl, filepath, sha256Checksum) {
+  await mkdir(path.dirname(filepath), { recursive: true });
 
   const response = await fetch(fileUrl);
   if (!response.ok) {
@@ -50,7 +50,7 @@ export async function downloadHttpsFile(fileUrl, filepath, sha256Checksum) {
 
 async function main(...args) {
   const {url, sha256, out} = minimist(args);
-  await downloadHttpsFile(url, out, sha256)
+  await downloadFile(url, out, sha256)
 }
 
 if (import.meta.url === url.pathToFileURL(process.argv[1]).href) {

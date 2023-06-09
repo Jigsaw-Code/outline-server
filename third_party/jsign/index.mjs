@@ -15,7 +15,7 @@
 import {spawn} from 'node:child_process';
 import {resolve} from 'node:path';
 
-import {downloadHttpsFile} from '../../src/build/download_file.mjs';
+import {downloadFile} from '../../src/build/download_file.mjs';
 import {getFileChecksum} from '../../src/build/get_file_checksum.mjs';
 import {getRootDir} from '../../src/build/get_root_dir.mjs';
 
@@ -58,7 +58,7 @@ async function ensureJsignJar() {
   }
 
   console.debug(`downloading jsign from "${JSIGN_DOWNLOAD_URL}" to "${jsignPath}"`);
-  await downloadHttpsFile(JSIGN_DOWNLOAD_URL, jsignPath, JSIGN_SHA256_CHECKSUM);
+  await downloadFile(JSIGN_DOWNLOAD_URL, jsignPath, JSIGN_SHA256_CHECKSUM);
 
   console.debug(`successfully downloaded "${jsignPath}"`);
   return jsignPath;
