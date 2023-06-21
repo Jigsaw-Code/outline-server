@@ -37,7 +37,7 @@ export async function getElectronBuildFlags(platform, buildMode) {
         '--ia32',
         '--config.win.icon=icons/win/icon.ico',
         '--config.win.sign=src/server_manager/electron_app/windows/electron_builder_signing_plugin.cjs',
-        `--config.win.signingHashAlgorithms=[sha256]`,
+        `--config.win.signingHashAlgorithms=sha256`,
         ...buildFlags,
       ];
       break;
