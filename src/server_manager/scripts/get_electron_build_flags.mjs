@@ -19,7 +19,7 @@ export async function getElectronBuildFlags(platform, buildMode) {
     '--projectDir=build/server_manager/electron_app/static',
     '--config.asarUnpack=server_manager/web_app/images',
     '--publish=never',
-    '--config.artifactName="Outline-Manager.${ext}"',
+    '--config.artifactName=Outline-Manager.${ext}',
   ];
 
   switch (platform) {
@@ -37,7 +37,7 @@ export async function getElectronBuildFlags(platform, buildMode) {
         '--ia32',
         '--config.win.icon=icons/win/icon.ico',
         '--config.win.sign=src/server_manager/electron_app/windows/electron_builder_signing_plugin.cjs',
-        `--config.win.signingHashAlgorithms='["sha256"]'`,
+        "--config.win.signingHashAlgorithms=['sha256']",
         ...buildFlags,
       ];
       break;
