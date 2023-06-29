@@ -17,32 +17,19 @@ import url from 'url';
 export async function getElectronBuildFlags(platform, buildMode) {
   let buildFlags = [
     '--projectDir=build/server_manager/electron_app/static',
-    '--config.asarUnpack=server_manager/web_app/images',
+    '--config=../../../../src/server_manager/electron_app/electron_builder.json',
     '--publish=never',
-    '--config.artifactName=Outline-Manager.${ext}',
   ];
 
   switch (platform) {
     case 'linux':
-      buildFlags = [
-        '--linux',
-        '--config.linux.icon=icons/png',
-        '--config.linux.category=Network',
-        ...buildFlags,
-      ];
+      buildFlags = ['--linux', ...buildFlags];
       break;
     case 'windows':
-      buildFlags = [
-        '--win',
-        '--ia32',
-        '--config.win.icon=icons/win/icon.ico',
-        '--config.win.sign=src/server_manager/electron_app/windows/electron_builder_signing_plugin.cjs',
-        '--config.win.signingHashAlgorithms=["sha256"]',
-        ...buildFlags,
-      ];
+      buildFlags = ['--win', '--ia32', ...buildFlags];
       break;
     case 'macos':
-      buildFlags = ['--mac', '--config.mac.icon=icons/mac/icon.icns', ...buildFlags];
+      buildFlags = ['--mac', ...buildFlags];
   }
 
   if (buildMode === 'release') {
