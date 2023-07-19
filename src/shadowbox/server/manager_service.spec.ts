@@ -337,6 +337,84 @@ describe('ShadowsocksManagerService', () => {
       };
       service.createNewAccessKey({params: {method: 'aes-256-gcm'}}, res, done);
     });
+    it('use default name is params is not defined', (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+
+      const res = {
+        send: (httpCode, data) => {
+          expect(httpCode).toEqual(201);
+          expect(data.name).toEqual('');
+          responseProcessed = true; // required for afterEach to pass.
+        },
+      };
+      service.createNewAccessKey({params: {}}, res, done);
+    });
+    it('rejects non-string name', (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+
+      const res = {send: (_httpCode, _data) => {}};
+      service.createNewAccessKey({params: {name: Number('9876')}}, res, (error) => {
+        expect(error.statusCode).toEqual(400);
+        responseProcessed = true; // required for afterEach to pass.
+        done();
+      });
+    });
+    it('defined name is equal to stored', (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+
+      const ACCESSKEY_NAME = 'accesskeyname';
+      const res = {
+        send: (httpCode, data) => {
+          expect(httpCode).toEqual(201);
+          expect(data.name).toEqual(ACCESSKEY_NAME);
+          responseProcessed = true; // required for afterEach to pass.
+        },
+      };
+      service.createNewAccessKey({params: {name: ACCESSKEY_NAME}}, res, done);
+    });
+    it('limit can be undefined', (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+
+      const res = {
+        send: (httpCode, data) => {
+          expect(httpCode).toEqual(201);
+          expect(data.limit).toBeUndefined();
+          responseProcessed = true; // required for afterEach to pass.
+        },
+      };
+      service.createNewAccessKey({params: {}}, res, done);
+    });
+    it('rejects non-numeric limits', (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+
+      const ACCESSKEY_LIMIT = {bytes: '9876'};
+
+      const res = {send: (_httpCode, _data) => {}};
+      service.createNewAccessKey({params: {limit: ACCESSKEY_LIMIT}}, res, (error) => {
+        expect(error.statusCode).toEqual(400);
+        responseProcessed = true; // required for afterEach to pass.
+        done();
+      });
+    });
+    it('defined limit is equal to stored', (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+
+      const ACCESSKEY_LIMIT = {bytes: 9876};
+      const res = {
+        send: (httpCode, data) => {
+          expect(httpCode).toEqual(201);
+          expect(data.dataLimit).toEqual(ACCESSKEY_LIMIT);
+          responseProcessed = true; // required for afterEach to pass.
+        },
+      };
+      service.createNewAccessKey({params: {limit: ACCESSKEY_LIMIT}}, res, done);
+    });
     it('method must be of type string', (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
