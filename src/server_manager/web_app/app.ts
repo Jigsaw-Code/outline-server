@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as sentry from '@sentry/electron';
+import * as Sentry from '@sentry/electron';
 import * as semver from 'semver';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
@@ -45,6 +45,17 @@ const KEY_SETTINGS_VERSION = '1.6.0';
 const MAX_ACCESS_KEY_DATA_LIMIT_BYTES = 50 * 10 ** 9; // 50GB
 const CANCELLED_ERROR = new Error('Cancelled');
 export const LAST_DISPLAYED_SERVER_STORAGE_KEY = 'lastDisplayedServer';
+
+// todo (#1311): we are referencing `@sentry/electron` which won't work for
+//               web_app. It's ok for now cuz we don't need to enable Sentry in
+//               web_app, but a better solution is to have separate two entry
+//               points: electron_main (uses `@sentry/electron`) and web_main
+//               (uses `@sentry/browser`).
+// For all other Sentry config see the main process.
+Sentry.init({
+  beforeBreadcrumb:
+    typeof redactSentryBreadcrumbUrl === 'function' ? redactSentryBreadcrumbUrl : null,
+});
 
 function displayDataAmountToDataLimit(
   dataAmount: DisplayDataAmount
@@ -272,7 +283,7 @@ export class App {
     appRoot.addEventListener('SubmitFeedback', (event: CustomEvent) => {
       const detail: FeedbackDetail = event.detail;
       try {
-        sentry.captureEvent({
+        Sentry.captureEvent({
           message: detail.userFeedback,
           user: {email: detail.userEmail},
           tags: {category: detail.feedbackCategory, cloudProvider: detail.cloudProvider},

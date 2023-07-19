@@ -14,6 +14,9 @@
 
 // Functions made available to the renderer process via preload.ts.
 
+type SentryBreadcrumb = import('@sentry/electron').Breadcrumb;
+declare function redactSentryBreadcrumbUrl(breadcrumb: SentryBreadcrumb): SentryBreadcrumb;
+
 type HttpRequest = import('../infrastructure/path_api').HttpRequest;
 type HttpResponse = import('../infrastructure/path_api').HttpResponse;
 
