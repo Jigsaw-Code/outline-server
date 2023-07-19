@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as sentry from '@sentry/electron';
 import {contextBridge, ipcRenderer} from 'electron';
-import {URL} from 'url';
+import '@sentry/electron/preload';
+import {Breadcrumb} from '@sentry/electron';
 
 import * as digitalocean_oauth from './digitalocean_oauth';
 import * as gcp_oauth from './gcp_oauth';
@@ -23,30 +23,26 @@ import {redactManagerUrl} from './util';
 
 // This file is run in the renderer process *before* nodeIntegration is disabled.
 //
-// Use it for main/renderer process communication and configuring Sentry (which works via
-// main/renderer process messages).
+// Use it for main/renderer process communication.
 
-// Configure Sentry to redact PII from the renderer process requests.
-// For all other config see the main process.
-const params = new URL(document.URL).searchParams;
-const sentryDsn = params.get('sentryDsn');
-if (sentryDsn) {
-  sentry.init({
-    dsn: sentryDsn,
-    beforeBreadcrumb: (breadcrumb: sentry.Breadcrumb) => {
-      // Redact PII from fetch requests.
-      if (breadcrumb.category === 'fetch' && breadcrumb.data && breadcrumb.data.url) {
-        try {
-          breadcrumb.data.url = `(redacted)/${redactManagerUrl(breadcrumb.data.url)}`;
-        } catch (e) {
-          // NOTE: cannot log this failure to console if console breadcrumbs are enabled
-          breadcrumb.data.url = `(error redacting)`;
-        }
-      }
-      return breadcrumb;
-    },
-  });
-}
+// Calling Sentry.init in preload won't work due to electron's new sandbox
+// model, all renderers must call Sentry.init() by themselves.
+//
+// Redact PII from the renderer process requests.
+// We are importing `node:url` package in `redactManagerUrl`, which is only
+// available in preload or main process.
+contextBridge.exposeInMainWorld('redactSentryBreadcrumbUrl', (breadcrumb: Breadcrumb) => {
+  // Redact PII from fetch requests.
+  if (breadcrumb.category === 'fetch' && breadcrumb.data && breadcrumb.data.url) {
+    try {
+      breadcrumb.data.url = `(redacted)/${redactManagerUrl(breadcrumb.data.url)}`;
+    } catch (e) {
+      // NOTE: cannot log this failure to console if console breadcrumbs are enabled
+      breadcrumb.data.url = `(error redacting)`;
+    }
+  }
+  return breadcrumb;
+});
 
 contextBridge.exposeInMainWorld(
   'fetchWithPin',

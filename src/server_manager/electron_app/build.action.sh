@@ -17,11 +17,16 @@ set -eux
 
 PLATFORM=$1
 STAGING_PERCENTAGE=100
+VERSION_NAME='0.0.0-debug'
 BUILD_MODE=debug
 for i in "$@"; do
   case ${i} in
   --buildMode=*)
     BUILD_MODE="${i#*=}"
+    shift
+    ;;
+  --versionName=*)
+    VERSION_NAME="${i#*=}"
     shift
     ;;
   --stagingPercentage=*)
@@ -39,19 +44,21 @@ done
 readonly OUT_DIR="${BUILD_DIR}/server_manager/electron_app"
 rm -rf "${OUT_DIR}"
 
+# Electron app root folder
+readonly STATIC_DIR="${OUT_DIR}/static"
+mkdir -p "${STATIC_DIR}"
+
 # Build the Web App.
 run_action server_manager/web_app/build
 
-# Compile the Electron app source.
+# Compile the Electron main process and preload to the app root folder.
 # Since Node.js on Cygwin doesn't like absolute Unix-style paths,
 # we'll use relative paths here.
-tsc -p src/server_manager/electron_app/tsconfig.json --outDir build/server_manager/electron_app/js
+webpack --config=src/server_manager/electron_main.webpack.mjs ${BUILD_ENV:+--mode=${BUILD_ENV}}
+webpack --config=src/server_manager/electron_preload.webpack.mjs ${BUILD_ENV:+--mode=${BUILD_ENV}}
 
 # Assemble everything together.
-readonly STATIC_DIR="${OUT_DIR}/static"
-mkdir -p "${STATIC_DIR}"
 mkdir -p "${STATIC_DIR}/server_manager"
-cp -r "${OUT_DIR}/js/electron_app/"* "${STATIC_DIR}"
 cp -r "${BUILD_DIR}/server_manager/web_app/static" "${STATIC_DIR}/server_manager/web_app/"
 
 # TODO(fortuna): Separate the build of Electron main and the Electron package.
@@ -61,7 +68,8 @@ cp -r "${BUILD_DIR}/server_manager/web_app/static" "${STATIC_DIR}/server_manager
 # We also need to install NPMs at this location for require()
 # in order for require() to work right in the renderer process, which
 # is loaded via a custom protocol.
-cp src/server_manager/package.json package-lock.json "${STATIC_DIR}"
+cp package-lock.json "${STATIC_DIR}"
+sed "s/0.0.0-debug/${VERSION_NAME}/g" src/server_manager/package.json > "${STATIC_DIR}/package.json"
 cd "${STATIC_DIR}"
 npm ci --prod --ignore-scripts
 

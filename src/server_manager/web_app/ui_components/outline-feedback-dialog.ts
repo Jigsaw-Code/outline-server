@@ -107,7 +107,6 @@ Polymer({
             id="feedbackCategoryListbox"
             slot="dropdown-content"
             class="dropdown-content"
-            selected="0"
           >
             <paper-item>[[localize('feedback-general')]]</paper-item>
             <paper-item>[[localize('feedback-install')]]</paper-item>
@@ -150,7 +149,7 @@ Polymer({
           on-value-changed="userFeedbackValueChanged"
         ></paper-textarea>
         <p
-          inner-h-t-m-l="[[localize('feedback-privacy', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"
+          inner-h-t-m-l="[[localize('feedback-privacy', 'openLink', '<a href=https://support.getoutline.org/s/article/Data-collection>', 'closeLink', '</a>')]]"
         ></p>
       </div>
       <!-- end of #feedbackWrapper -->
@@ -199,6 +198,13 @@ Polymer({
   },
 
   open(prepopulatedMessage: string, showInstallationFailed: boolean) {
+    // The localized category doesn't get displayed the first time opening the
+    // dialog (or after updating language) because the selected list item won't
+    // notice the localization change.
+    // This is a known issue and here is a workaround (force the selected item change):
+    //   https://github.com/PolymerElements/paper-dropdown-menu/issues/159#issuecomment-229958448
+    this.$.feedbackCategoryListbox.selected = undefined;
+
     // Clear all fields, in case feedback had already been entered.
     if (showInstallationFailed) {
       this.title = this.localize('feedback-title-install');
@@ -209,8 +215,6 @@ Polymer({
       this.title = this.localize('feedback-title-generic');
       this.feedbackExplanation = '';
       this.$.dialog.classList.remove('installationFailed');
-      // TODO(alalama): figure out why the localized category doesn't get displayed the first
-      // time opening the dialog.
       this.$.feedbackCategoryListbox.selected = this.feedbackCategories.GENERAL;
     }
     this.$.userFeedback.invalid = false;

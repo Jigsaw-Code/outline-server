@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as fs from 'fs';
-import {TextFile} from '../model/text_file';
+import {TextFile} from './text_file';
 
 // Reads a text file if it exists, or null if the file is not found.
 // Throws any other error except file not found.

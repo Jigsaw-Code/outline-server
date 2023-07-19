@@ -1,0 +1,5 @@
+query-filters:
+  - exclude:
+      id: js/disabling-certificate-validation
+  - exclude:
+      id: js/missing-rate-limiting

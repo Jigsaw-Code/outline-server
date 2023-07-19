@@ -308,7 +308,7 @@ Polymer({
             >
               <iron-icon icon="icons:error-outline"></iron-icon>
               <p
-                inner-h-t-m-l="[[localize('data-limits-disclaimer', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"
+                inner-h-t-m-l="[[localize('data-limits-disclaimer', 'openLink', '<a href=https://support.getoutline.org/s/article/Data-collection>', 'closeLink', '</a>')]]"
               ></p>
             </div>
             <div class="data-limits-input" hidden$="[[!isDefaultDataLimitEnabled]]">
@@ -352,7 +352,7 @@ Polymer({
             <div class="sub-section">
               <iron-icon icon="icons:error-outline"></iron-icon>
               <p
-                inner-h-t-m-l="[[localize('experiments-disclaimer', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"
+                inner-h-t-m-l="[[localize('experiments-disclaimer', 'openLink', '<a href=https://support.getoutline.org/s/article/Data-collection>', 'closeLink', '</a>')]]"
               ></p>
             </div>
           </div>
@@ -369,7 +369,7 @@ Polymer({
               <h3>[[localize('settings-metrics-header')]]</h3>
             </div>
             <p
-              inner-h-t-m-l="[[localize('metrics-description', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html#/en/support/dataCollection>', 'closeLink', '</a>')]]"
+              inner-h-t-m-l="[[localize('metrics-description', 'openLink', '<a href=https://support.getoutline.org/s/article/Data-collection>', 'closeLink', '</a>')]]"
             ></p>
           </div>
         </div>
