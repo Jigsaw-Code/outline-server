@@ -166,11 +166,11 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.portForNewAccessKeys = port;
   }
 
-  async createNewAccessKey(encryptionMethod?: string): Promise<AccessKey> {
+  async createNewAccessKey(encryptionMethod?: string, userPassword?: string): Promise<AccessKey> {
     const id = this.keyConfig.data().nextId.toString();
     this.keyConfig.data().nextId += 1;
     const metricsId = uuidv4();
-    const password = generatePassword();
+    const password = userPassword ? userPassword : generatePassword();
     encryptionMethod = encryptionMethod || this.NEW_USER_ENCRYPTION_METHOD;
     // Validate encryption method.
     if (!isValidCipher(encryptionMethod)) {

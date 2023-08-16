@@ -321,10 +321,19 @@ export class ShadowsocksManagerService {
       if (typeof encryptionMethod !== 'string') {
         return next(new restifyErrors.InvalidArgumentError(
             {statusCode: 400},
-            `Expected a string encryptionMethod, instead got ${encryptionMethod} of type ${
-                typeof encryptionMethod}`));
+            `Expected a string encryptionMethod, instead got ${encryptionMethod} of type ${typeof encryptionMethod}`)
+        );
       }
-      const accessKeyJson = accessKeyToApiJson(await this.accessKeys.createNewAccessKey(encryptionMethod));
+      let password = req.params.password;
+      if (typeof password !== 'string' || password == '') {
+        return next(new restifyErrors.InvalidArgumentError(
+          {statusCode: 400},
+          `Expected a non-empty string password, instead got ${password} of type ${typeof encryptionMethod}`)
+        );
+      }
+      const accessKeyJson = accessKeyToApiJson(
+        await this.accessKeys.createNewAccessKey(encryptionMethod, password)
+      );
       res.send(201, accessKeyJson);
       logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);
       return next();
