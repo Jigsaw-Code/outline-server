@@ -21,7 +21,16 @@ export DOCKER_BUILDKIT=1
 # Newer node images have no valid content trust data.
 # Pin the image node:16.18.0-alpine3.16 by hash.
 # See image at https://hub.docker.com/_/node/tags?page=1&name=16.18.0-alpine3.16
-readonly NODE_IMAGE="node@sha256:264861cd2f785a2b727e9f908065e8d9e9358fcc1308da3cb207d9cba69afee2"
+readonly NODE_IMAGE=$(
+    if [[ "$(uname -m)" == "x86_64" ]]; then
+        echo "node@sha256:264861cd2f785a2b727e9f908065e8d9e9358fcc1308da3cb207d9cba69afee2" 
+    elif [[ "$(uname -m)" == "aarch64" ]]; then
+        echo "node@sha256:e2aff82eea79469af43ddd121f1c8f8c91a501e838534bd3991e225401b2c38d" 
+    else
+        echo "Unsupported architecture"
+        exit 1
+    fi
+)
 
 # Doing an explicit `docker pull` of the container base image to work around an issue where
 # Travis fails to pull the base image when using BuildKit. Seems to be related to:
