@@ -74,7 +74,7 @@ const SALESFORCE_FORM_VALUES_PROD: SalesforceFormValues = {
 // Returns whether a Sentry event should be sent to Salesforce by checking that it contains an
 // email address.
 export function shouldPostEventToSalesforce(event: sentry.SentryEvent): boolean {
-  return !!event.user && !!event.user.email;
+  return !!event.user && !!event.user.email && event.user.email !== "[undefined]";
 }
 
 // Posts a Sentry event to Salesforce using predefined form data. Assumes
