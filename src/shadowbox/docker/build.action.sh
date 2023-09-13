@@ -18,13 +18,16 @@ export DOCKER_CONTENT_TRUST="${DOCKER_CONTENT_TRUST:-1}"
 # Enable Docker BuildKit (https://docs.docker.com/develop/develop-images/build_enhancements)
 export DOCKER_BUILDKIT=1
 
+# Docker image build architecture. Supported architectures: x86_64, arm64
+export ARCH=${ARCH:-x86_64}
+
 # Newer node images have no valid content trust data.
 # Pin the image node:16.18.0-alpine3.16 by hash.
 # See image at https://hub.docker.com/_/node/tags?page=1&name=16.18.0-alpine3.16
 readonly NODE_IMAGE=$(
-    if [[ "$(uname -m)" == "x86_64" ]]; then
+    if [[ "${ARCH}" == "x86_64" ]]; then
         echo "node@sha256:264861cd2f785a2b727e9f908065e8d9e9358fcc1308da3cb207d9cba69afee2" 
-    elif [[ "$(uname -m)" == "aarch64" ]]; then
+    elif [[ "${ARCH}" == "arm64" ]]; then
         echo "node@sha256:e2aff82eea79469af43ddd121f1c8f8c91a501e838534bd3991e225401b2c38d" 
     else
         echo "Unsupported architecture"
@@ -37,6 +40,7 @@ readonly NODE_IMAGE=$(
 # https://github.com/moby/buildkit/issues/606 and https://github.com/moby/buildkit/issues/1397
 docker pull "${NODE_IMAGE}"
 docker build --force-rm \
+    --build-arg ARCH="${ARCH}" \
     --build-arg NODE_IMAGE="${NODE_IMAGE}" \
     --build-arg GITHUB_RELEASE="${TRAVIS_TAG:-none}" \
     -f src/shadowbox/docker/Dockerfile \
