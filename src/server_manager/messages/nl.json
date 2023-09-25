@@ -183,7 +183,7 @@
   "oauth-verify": "Zoek in je inbox de e-mail van DigitalOcean en klik op de link in de e-mail om je account te bevestigen.",
   "oauth-verify-tag": "Bevestig je e-mailadres ...",
   "okay": "OK",
-  "per-key-data-limit-dialog-set-custom": "Een aangepaste gegevenslimiet instellen",
+  "per-key-data-limit-dialog-set-custom": "Een aangepaste datalimiet instellen",
   "per-key-data-limit-dialog-title": "Gegevenslimiet: {keyName}",
   "region-best-value": "Beste prijs-kwaliteitsverhouding",
   "region-description": "Vanaf hier ben je verbonden met het internet.",
