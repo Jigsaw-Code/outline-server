@@ -22,6 +22,7 @@ webpack --config=src/shadowbox/webpack.config.js ${BUILD_ENV:+--mode="${BUILD_EN
 
 # Install third_party dependencies
 readonly OS="$([[ "$(uname)" == "Darwin" ]] && echo "macos" || echo "linux")"
+export ARCH=${ARCH:-x86_64}
 readonly BIN_DIR="${OUT_DIR}/bin"
 mkdir -p "${BIN_DIR}"
 {
