@@ -51,7 +51,7 @@ jobs:
         run: npm ci
 
       - name: Shadowbox Debug Build
-        run: npm run action shadowbox/server/build
+        run: NODE_OPTIONS=--openssl-legacy-provider npm run action shadowbox/server/build
 
       - name: Shadowbox Unit Test
         run: npm run action shadowbox/test
