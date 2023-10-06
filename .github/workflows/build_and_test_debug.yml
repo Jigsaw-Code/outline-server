@@ -172,7 +172,7 @@ jobs:
         run: npm run action server_manager/electron_app/build macos
 
   sentry-webhook:
-    name: Semtru Webhook
+    name: Sentry Webhook
     runs-on: ubuntu-latest
     needs: lint
     steps:
