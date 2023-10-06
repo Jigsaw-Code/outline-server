@@ -48,7 +48,7 @@ function run_action() {
   echo -e "${old_indent}${STYLE_BOLD_WHITE}[Running ${action}]${STYLE_RESET}"
   shift
 
-  "${ROOT_DIR}/src/${action}.action.sh" "$@"
+  "${ROOT_DIR}src/${action}.action.sh" "$@"
 
   local -ir status="$?"
   if (( status == 0 )); then
