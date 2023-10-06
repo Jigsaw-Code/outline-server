@@ -66,7 +66,7 @@ describe('postSentryEventToSalesforce', () => {
     postSentryEventToSalesforce(BASIC_EVENT, 'outline-clients-dev');
 
     const expectedOptions = {
-      host: 'google-jigsaw--uat.my.salesforce.com',
+      host: 'google-jigsaw--jigsawuat.sandbox.my.salesforce.com',
       path: '/servlet/servlet.WebToCase',
       protocol: 'https:',
       method: 'post',
@@ -76,7 +76,7 @@ describe('postSentryEventToSalesforce', () => {
     expectToHaveBeenCalledWith(requestSpy, expectedOptions);
     expectToHaveBeenCalledWith(
       mockRequest.write,
-      'orgid=00D3F000000DDDH' +
+      'orgid=00D750000004dFg' +
         '&recordType=0123F000000MWTS' +
         '&email=foo%40bar.com' +
         '&00N3F000002Rqhq=' +
@@ -108,9 +108,9 @@ describe('postSentryEventToSalesforce', () => {
         '&00N0b00000BqOA4=' +
         '&description=my%20message' +
         '&type=Outline%20client' +
-        '&00N0b00000BqOA2=test%20category' +
-        '&00N0b00000BqOfW=test%20os' +
-        '&00N0b00000BqOfR=test%20version'
+        '&00N5a00000DXy19=test%20category' +
+        '&00N5a00000DXxmo=test%20os' +
+        '&00N5a00000DXxmq=test%20version'
     );
     expect(mockRequest.end).toHaveBeenCalled();
   });
