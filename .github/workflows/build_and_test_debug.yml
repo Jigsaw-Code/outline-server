@@ -189,7 +189,7 @@ jobs:
         run: npm ci
 
       - name: Sentry Webhook Debug Build
-        run: npm run action metrics_server/build
+        run: npm run action sentry_webhook/build
 
       - name: Sentry Webhook Test
-        run: npm run action sentry_webook/test
+        run: npm run action sentry_webhook/test
