@@ -5,9 +5,10 @@
   "description": "Outline Sentry Webhook",
   "author": "Outline",
   "license": "Apache",
-  "dependencies": {},
   "devDependencies": {
     "@sentry/types": "^4.4.1",
-    "@types/express": "^4.17.12"
+    "@types/express": "^4.17.12",
+    "@types/jasmine": "^5.1.0",
+    "jasmine": "^5.1.0"
   }
 }

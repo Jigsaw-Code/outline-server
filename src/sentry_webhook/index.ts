@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as sentry from '@sentry/types';
 import * as express from 'express';
 
 import {
   postSentryEventToSalesforce,
   shouldPostEventToSalesforce,
 } from './post_sentry_event_to_salesforce';
+import {SentryEvent} from './event';
 
 exports.postSentryEventToSalesforce = (req: express.Request, res: express.Response<string>) => {
   if (req.method !== 'POST') {
@@ -28,7 +28,7 @@ exports.postSentryEventToSalesforce = (req: express.Request, res: express.Respon
     return res.status(400).send('Missing request body');
   }
 
-  const sentryEvent: sentry.SentryEvent = req.body.event;
+  const sentryEvent: SentryEvent = req.body.event;
   if (!sentryEvent) {
     return res.status(400).send('Missing Sentry event');
   }

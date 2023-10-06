@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as sentry from '@sentry/types';
 import * as https from 'https';
+import {SentryEvent} from './event';
 
 // Defines the Salesforce form field names.
 interface SalesforceFormFields {
@@ -73,16 +73,13 @@ const SALESFORCE_FORM_VALUES_PROD: SalesforceFormValues = {
 
 // Returns whether a Sentry event should be sent to Salesforce by checking that it contains an
 // email address.
-export function shouldPostEventToSalesforce(event: sentry.SentryEvent): boolean {
-  return !!event.user && !!event.user.email && event.user.email !== "[undefined]";
+export function shouldPostEventToSalesforce(event: SentryEvent): boolean {
+  return !!event.user && !!event.user.email && event.user.email !== '[undefined]';
 }
 
 // Posts a Sentry event to Salesforce using predefined form data. Assumes
 // `shouldPostEventToSalesforce` has returned true for `event`.
-export function postSentryEventToSalesforce(
-  event: sentry.SentryEvent,
-  project: string
-): Promise<void> {
+export function postSentryEventToSalesforce(event: SentryEvent, project: string): Promise<void> {
   return new Promise((resolve, reject) => {
     // Sentry development projects are marked with 'dev', i.e. outline-client-dev.
     const isProd = project.indexOf('-dev') === -1;
@@ -129,7 +126,7 @@ export function postSentryEventToSalesforce(
 function getSalesforceFormData(
   formFields: SalesforceFormFields,
   formValues: SalesforceFormValues,
-  event: sentry.SentryEvent,
+  event: SentryEvent,
   email: string,
   isClient: boolean,
   project: string
@@ -142,7 +139,7 @@ function getSalesforceFormData(
   form.push(encodeFormData(formFields.description, event.message));
   form.push(encodeFormData(formFields.type, isClient ? 'Outline client' : 'Outline manager'));
   if (event.tags) {
-    const tags = getTagsMap(event.tags);
+    const tags = new Map<string, string>(event.tags);
     form.push(encodeFormData(formFields.category, tags.get('category')));
     form.push(encodeFormData(formFields.os, tags.get('os.name')));
     form.push(encodeFormData(formFields.version, tags.get('sentry:release')));
@@ -155,21 +152,6 @@ function getSalesforceFormData(
 
 function encodeFormData(field: string, value?: string) {
   return `${encodeURIComponent(field)}=${encodeURIComponent(value || '')}`;
-}
-
-// Although SentryEvent.tags is declared as an index signature object, it is actually an array of
-// arrays i.e. [['key0': 'value0'], ['key1': 'value1']]. Converts the tags to a Map of strings.
-function getTagsMap(tags: {[key: string]: string}) {
-  const tagsMap = new Map<string, string>();
-  for (const i of Object.keys(tags)) {
-    try {
-      const tagEntry = tags[i];
-      tagsMap.set(tagEntry[0], tagEntry[1]);
-    } catch (e) {
-      console.error('Failed to process tag entry');
-    }
-  }
-  return tagsMap;
 }
 
 function getSentryEventUrl(project: string, eventId?: string) {
