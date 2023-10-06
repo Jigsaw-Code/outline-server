@@ -2,9 +2,7 @@
   "name": "outline-server",
   "private": true,
   "dependencies": {
-    "node-fetch": "^2.6.7",
-    "restify": "^11.1.0",
-    "restify-errors": "^8.0.2"
+    "node-fetch": "^2.6.7"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^17.0.0",
