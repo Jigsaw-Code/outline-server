@@ -20,13 +20,17 @@ interface SalesforceFormFields {
   orgId: string;
   recordType: string;
   email: string;
+  subject: string;
   description: string;
   category: string;
+  accessKeySource: string;
   cloudProvider: string;
   sentryEventUrl: string;
   os: string;
   version: string;
+  build: string;
   type: string;
+  isUpdatedForm: string;
 }
 
 // Defines the Salesforce form values.
@@ -38,29 +42,21 @@ interface SalesforceFormValues {
 const SALESFORCE_DEV_HOST = 'google-jigsaw--jigsawuat.sandbox.my.salesforce.com';
 const SALESFORCE_PROD_HOST = 'webto.salesforce.com';
 const SALESFORCE_PATH = '/servlet/servlet.WebToCase';
-const SALESFORCE_FORM_FIELDS_DEV: SalesforceFormFields = {
+const SALESFORCE_FORM_FIELDS: SalesforceFormFields = {
   orgId: 'orgid',
   recordType: 'recordType',
   email: 'email',
+  subject: 'subject',
   description: 'description',
-  category: '00N3F000002Rqho',
-  cloudProvider: '00N3F000002Rqhs',
-  sentryEventUrl: '00N3F000002Rqhq',
-  os: '00N3F000002cLcN',
-  version: '00N3F000002cLcI',
-  type: 'type',
-};
-const SALESFORCE_FORM_FIELDS_PROD: SalesforceFormFields = {
-  orgId: 'orgid',
-  recordType: 'recordType',
-  email: 'email',
-  description: 'description',
-  category: '00N5a00000DXy19',
-  cloudProvider: '00N5a00000DXxmn',
+  category: 'OC_Outline_Issue_v2__c',
+  accessKeySource: 'OC_Where_did_you_get_your_access_key__c',
+  cloudProvider: 'OC_Cloud_Provider__c',
   sentryEventUrl: '00N0b00000BqOA4',
-  os: '00N5a00000DXxmo',
-  version: '00N5a00000DXxmq',
+  os: 'OC_Operating_System__c',
+  version: 'OC_Outline_Manager_Client_Version__c',
+  build: 'Build__c',
   type: 'type',
+  isUpdatedForm: 'Updated_App_Contact_Form__c',
 };
 const SALESFORCE_FORM_VALUES_DEV: SalesforceFormValues = {
   orgId: '00D750000004dFg',
@@ -84,11 +80,10 @@ export function postSentryEventToSalesforce(event: SentryEvent, project: string)
     // Sentry development projects are marked with 'dev', i.e. outline-client-dev.
     const isProd = project.indexOf('-dev') === -1;
     const salesforceHost = isProd ? SALESFORCE_PROD_HOST : SALESFORCE_DEV_HOST;
-    const formFields = isProd ? SALESFORCE_FORM_FIELDS_PROD : SALESFORCE_FORM_FIELDS_DEV;
     const formValues = isProd ? SALESFORCE_FORM_VALUES_PROD : SALESFORCE_FORM_VALUES_DEV;
     const isClient = project.indexOf('client') !== -1;
     const formData = getSalesforceFormData(
-      formFields,
+      SALESFORCE_FORM_FIELDS,
       formValues,
       event,
       event.user!.email!,
@@ -141,9 +136,14 @@ function getSalesforceFormData(
   if (event.tags) {
     const tags = new Map<string, string>(event.tags);
     form.push(encodeFormData(formFields.category, tags.get('category')));
+    form.push(encodeFormData(formFields.subject, tags.get('subject')));
     form.push(encodeFormData(formFields.os, tags.get('os.name')));
     form.push(encodeFormData(formFields.version, tags.get('sentry:release')));
-    if (!isClient) {
+    form.push(encodeFormData(formFields.build, tags.get('build.number')));
+    form.push(encodeFormData(formFields.isUpdatedForm, tags.get('isUpdatedForm')));
+    if (isClient) {
+      form.push(encodeFormData(formFields.accessKeySource, tags.get('accessKeySource')));
+    } else {
       form.push(encodeFormData(formFields.cloudProvider, tags.get('cloudProvider')));
     }
   }

@@ -79,7 +79,7 @@ describe('postSentryEventToSalesforce', () => {
       'orgid=00D750000004dFg' +
         '&recordType=0123F000000MWTS' +
         '&email=foo%40bar.com' +
-        '&00N3F000002Rqhq=' +
+        '&00N0b00000BqOA4=' +
         '&description=my%20message' +
         '&type=Outline%20client'
     );
@@ -108,9 +108,13 @@ describe('postSentryEventToSalesforce', () => {
         '&00N0b00000BqOA4=' +
         '&description=my%20message' +
         '&type=Outline%20client' +
-        '&00N5a00000DXy19=test%20category' +
-        '&00N5a00000DXxmo=test%20os' +
-        '&00N5a00000DXxmq=test%20version'
+        '&OC_Outline_Issue_v2__c=test%20category' +
+        '&subject=' +
+        '&OC_Operating_System__c=test%20os' +
+        '&OC_Outline_Manager_Client_Version__c=test%20version' +
+        '&Build__c=' +
+        '&Updated_App_Contact_Form__c=' +
+        '&OC_Where_did_you_get_your_access_key__c='
     );
     expect(mockRequest.end).toHaveBeenCalled();
   });
