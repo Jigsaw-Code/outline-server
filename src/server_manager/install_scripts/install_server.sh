@@ -172,7 +172,7 @@ function start_docker() {
 }
 
 function docker_container_exists() {
-  docker ps | grep --quiet "$1"
+  docker ps -a --format '{{.Names}}'| grep --quiet "^$1$"
 }
 
 function remove_shadowbox_container() {
