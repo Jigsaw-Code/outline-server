@@ -18,6 +18,7 @@ readonly OUT_DIR="${BUILD_DIR}/shadowbox"
 rm -rf "${OUT_DIR}"
 mkdir -p "${OUT_DIR}"
 
+export NODE_OPTIONS=--openssl-legacy-provider
 webpack --config=src/shadowbox/webpack.config.js ${BUILD_ENV:+--mode="${BUILD_ENV}"}
 
 # Install third_party dependencies
