@@ -92,8 +92,10 @@ describe('postSentryEventToSalesforce', () => {
       message: 'my message',
       tags: [
         ['category', 'test category'],
+        ['subject', 'test subject'],
         ['os.name', 'test os'],
         ['sentry:release', 'test version'],
+        ['build.number', 'test build'],
         ['unknown:tag', 'foo'],
       ],
     };
@@ -109,13 +111,24 @@ describe('postSentryEventToSalesforce', () => {
         '&description=my%20message' +
         '&type=Outline%20client' +
         '&OC_Outline_Issue_v2__c=test%20category' +
-        '&subject=' +
+        '&subject=test%20subject' +
         '&OC_Operating_System__c=test%20os' +
         '&OC_Outline_Manager_Client_Version__c=test%20version' +
-        '&Build__c=' +
-        '&Updated_App_Contact_Form__c=' +
+        '&Build__c=test%20build' +
         '&OC_Where_did_you_get_your_access_key__c='
     );
     expect(mockRequest.end).toHaveBeenCalled();
+  });
+
+  it('sets the correct form version tag', () => {
+    const event: SentryEvent = {
+      user: {email: 'foo@bar.com'},
+      message: 'my message',
+      tags: [['formVersion', '2']],
+    };
+
+    postSentryEventToSalesforce(event, 'outline-clients');
+
+    expect(mockRequest.write.calls.argsFor(0)[0]).toContain('&Updated_App_Contact_Form__c=true');
   });
 });

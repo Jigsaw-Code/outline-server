@@ -140,7 +140,10 @@ function getSalesforceFormData(
     form.push(encodeFormData(formFields.os, tags.get('os.name')));
     form.push(encodeFormData(formFields.version, tags.get('sentry:release')));
     form.push(encodeFormData(formFields.build, tags.get('build.number')));
-    form.push(encodeFormData(formFields.isUpdatedForm, tags.get('isUpdatedForm')));
+    const formVersion = Number(tags.get('formVersion') ?? 1);
+    if (formVersion === 2) {
+      form.push(encodeFormData(formFields.isUpdatedForm, 'true'));
+    }
     if (isClient) {
       form.push(encodeFormData(formFields.accessKeySource, tags.get('accessKeySource')));
     } else {
