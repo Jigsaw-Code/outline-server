@@ -18,7 +18,7 @@ import * as path from 'path';
 import * as process from 'process';
 import * as prometheus from 'prom-client';
 import * as restify from 'restify';
-import * as corsMiddleware from 'restify-cors-middleware2';
+import * as corsMiddleware from 'restify-cors-middleware';
 
 import {RealClock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
