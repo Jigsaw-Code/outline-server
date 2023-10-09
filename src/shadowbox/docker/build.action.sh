@@ -23,12 +23,12 @@ export ARCH=${ARCH:-x86_64}
 
 # Newer node images have no valid content trust data.
 # Pin the image node:16.18.0-alpine3.16 by hash.
-# See image at https://hub.docker.com/_/node/tags?page=1&name=16.18.0-alpine3.16
+# See image at https://hub.docker.com/_/node/tags?page=1&name=18.18.0-alpine3.18
 readonly NODE_IMAGE=$(
     if [[ "${ARCH}" == "x86_64" ]]; then
         echo "node@sha256:264861cd2f785a2b727e9f908065e8d9e9358fcc1308da3cb207d9cba69afee2" 
     elif [[ "${ARCH}" == "arm64" ]]; then
-        echo "node@sha256:e2aff82eea79469af43ddd121f1c8f8c91a501e838534bd3991e225401b2c38d" 
+        echo "node@sha256:a0b787b0d53feacfa6d606fb555e0dbfebab30573277f1fe25148b05b66fa097" 
     else
         echo "Unsupported architecture"
         exit 1
