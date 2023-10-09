@@ -24,7 +24,12 @@ const config = {
     filename: 'main.js',
     path: path.resolve(__dirname, '../../build/shadowbox/app'),
   },
-  module: {rules: [{test: /\.ts(x)?$/, use: 'ts-loader'}]},
+  module: {
+    rules: [
+      {test: /\.ts(x)?$/, use: 'ts-loader'},
+      {test: /\.js$/, use: 'babel-loader?{plugins: ["@babel/plugin-transform-optional-chaining"]}'},
+    ],
+  },
   node: {
     // Use the regular node behavior, the directory name of the output file when run.
     __dirname: false,
