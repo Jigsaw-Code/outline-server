@@ -21,6 +21,8 @@ npm run action server_manager/web_app/build_install_script
 
 # Use commonjs modules, jasmine runs in node.
 tsc -p "${ROOT_DIR}/src/server_manager" --outDir "${TEST_DIR}" --module commonjs
+
+export NODE_OPTIONS=--openssl-legacy-provider
 jasmine --config="${ROOT_DIR}/jasmine.json"
 
 npm run action server_manager/web_app/test

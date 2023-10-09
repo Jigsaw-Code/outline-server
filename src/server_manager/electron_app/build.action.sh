@@ -41,6 +41,8 @@ for i in "$@"; do
   esac
 done
 
+export NODE_OPTIONS=--openssl-legacy-provider
+
 readonly OUT_DIR="${BUILD_DIR}/server_manager/electron_app"
 rm -rf "${OUT_DIR}"
 
