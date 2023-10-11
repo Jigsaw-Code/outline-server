@@ -58,8 +58,8 @@ readonly SENTRY_LOG_FILE=${SENTRY_LOG_FILE:-}
 # - STDERR is only used in the event of a fatal error
 # - Detailed logs are recorded to this FULL_LOG, which is preserved if an error occurred.
 # - The most recent error is stored in LAST_ERROR, which is never preserved.
-FULL_LOG="$(mktemp -t outline_logXXX)"
-LAST_ERROR="$(mktemp -t outline_last_errorXXX)"
+FULL_LOG="$(mktemp -t outline_logXXXXXX)"
+LAST_ERROR="$(mktemp -t outline_last_errorXXXXXX)"
 readonly FULL_LOG LAST_ERROR
 
 function log_command() {
@@ -168,7 +168,14 @@ function install_docker() {
 }
 
 function start_docker() {
-  systemctl enable --now docker.service >&2
+  if command -v systemctl &> /dev/null; then
+    systemctl enable --now docker.service >&2
+    service docker start
+  else
+    # Hack to support Alpine Linux
+    rc-update add docker boot
+    rc-service docker start
+  fi
 }
 
 function docker_container_exists() {
