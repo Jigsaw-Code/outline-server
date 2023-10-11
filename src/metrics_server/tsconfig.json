@@ -4,7 +4,8 @@
     "removeComments": false,
     "strict": true,
     "module": "commonjs",
-    "outDir": "../../build/metrics_server"
+    "outDir": "../../build/metrics_server",
+    "skipLibCheck": true
   },
   "include": ["**/*.ts"]
 }
