@@ -68,7 +68,6 @@ exports.makeConfig = (options) => {
       }),
       new CopyPlugin({
         patterns: [
-          {from: 'index.html', to: '.', context: __dirname},
           {from: `${CIRCLE_FLAGS_PATH}/flags`, to: 'images/flags', context: __dirname},
           {from: 'images', to: 'images', context: __dirname}, // Overwrite any colliding flags.
           {from: 'messages', to: 'messages', context: __dirname},
@@ -76,6 +75,7 @@ exports.makeConfig = (options) => {
       }),
       new HtmlWebpackPlugin({
         template: options.template || path.resolve(__dirname, './index.html'),
+        filename: 'index.html',
       }),
     ],
   };
