@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const {webpack} = require('webpack');
+const webpack = require('webpack');
 const {makeConfig} = require('../base.webpack.js');
 process.env.CHROMIUM_BIN = require('puppeteer').executablePath();
 

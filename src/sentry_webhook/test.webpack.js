@@ -28,7 +28,7 @@ exports.makeConfig = (options) => {
     },
     resolve: {
       extensions: ['.tsx', '.ts', '.js'],
-      fallback: {https: require.resolve('https-browserify')},
+      fallback: {https: require.resolve('https-browserify'), url: require.resolve('url/')},
     },
   };
 };
