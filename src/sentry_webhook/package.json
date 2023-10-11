@@ -9,6 +9,7 @@
     "@sentry/types": "^4.4.1",
     "@types/express": "^4.17.12",
     "@types/jasmine": "^5.1.0",
+    "https-browserify": "^1.0.0",
     "jasmine": "^5.1.0"
   }
 }
