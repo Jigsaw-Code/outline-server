@@ -26,9 +26,9 @@ export ARCH=${ARCH:-x86_64}
 # See image at https://hub.docker.com/_/node/tags?page=1&name=18.18.0-alpine3.18
 readonly NODE_IMAGE=$(
     if [[ "${ARCH}" == "x86_64" ]]; then
-        echo "node@sha256:264861cd2f785a2b727e9f908065e8d9e9358fcc1308da3cb207d9cba69afee2" 
-    elif [[ "${ARCH}" == "arm64" ]]; then
         echo "node@sha256:a0b787b0d53feacfa6d606fb555e0dbfebab30573277f1fe25148b05b66fa097" 
+    elif [[ "${ARCH}" == "arm64" ]]; then
+        echo "node@sha256:b4b7a1dd149c65ee6025956ac065a843b4409a62068bd2b0cbafbb30ca2fab3b" 
     else
         echo "Unsupported architecture"
         exit 1
