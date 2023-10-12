@@ -19,8 +19,6 @@ rm -rf "${TEST_DIR}"
 
 # Use commonjs modules, jasmine runs in node.
 tsc -p "${ROOT_DIR}/src/sentry_webhook" --outDir "${TEST_DIR}" --module commonjs
-
-export NODE_OPTIONS=--openssl-legacy-provider
 jasmine --config="${ROOT_DIR}/jasmine.json"
 
 karma start "${ROOT_DIR}/src/sentry_webhook/karma.conf.js"
