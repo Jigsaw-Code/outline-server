@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+const webpack = require('webpack');
 const {makeConfig} = require('../base.webpack.js');
 process.env.CHROMIUM_BIN = require('puppeteer').executablePath();
 
@@ -45,7 +46,12 @@ module.exports = function (config) {
     webpack: {
       module: baseConfig.module,
       resolve: baseConfig.resolve,
-      plugins: baseConfig.plugins,
+      plugins: [
+        ...baseConfig.plugins,
+        new webpack.ProvidePlugin({
+          process: 'process/browser',
+        }),
+      ],
       mode: baseConfig.mode,
     },
   });
