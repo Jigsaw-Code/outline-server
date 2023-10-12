@@ -21,15 +21,12 @@
     "uuid": "^3.1.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.23.0",
-    "@babel/plugin-transform-optional-chaining": "^7.23.0",
     "@types/js-yaml": "^3.11.2",
     "@types/node": "^12",
     "@types/randomstring": "^1.1.6",
     "@types/restify": "^8.4.2",
     "@types/restify-cors-middleware": "^1.0.1",
     "@types/tmp": "^0.2.1",
-    "babel-loader": "^8.3.0",
     "tmp": "^0.2.1",
     "ts-loader": "^9.5.0",
     "webpack": "^5.88.2",
