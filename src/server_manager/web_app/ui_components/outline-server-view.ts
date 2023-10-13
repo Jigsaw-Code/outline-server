@@ -86,6 +86,12 @@ export type DisplayAccessKey = {
   id: string;
   placeholderName: string;
   name: string;
+  tgLogin: string;
+  tgFirst: string;
+  tgLast: string;
+  createdAt: Date;
+  updatedAt: Date;
+  paidBefore: Date;
   accessUrl: string;
   transferredBytes: number;
   /** The data limit assigned to the key, if it exists. */
@@ -564,6 +570,16 @@ export class ServerView extends DirMixin(PolymerElement) {
                 [[localize('server-access-keys')]]
               </outline-sort-span>
               <outline-sort-span
+                class="access-key-container"
+              >
+                Оплатил до
+              </outline-sort-span>
+              <outline-sort-span
+                class="access-key-container"
+              >
+                Телеграм Логин, Имя, Фамилия
+              </outline-sort-span>
+              <outline-sort-span
                 class="measurement-container"
                 direction="[[_computeColumnDirection('usage', accessKeySortBy, accessKeySortDirection)]]"
                 on-tap="_setSortByOrToggleDirection"
@@ -583,17 +599,16 @@ export class ServerView extends DirMixin(PolymerElement) {
               >
                 <!-- TODO(alalama): why is observe not responding to rename? -->
                 <div class="access-key-row">
+                  </span>
                   <span class="access-key-container">
                     <img class="access-key-icon" src="images/key-avatar.svg" />
-                    <input
-                      type="text"
-                      class="access-key-name"
-                      id$="access-key-[[item.id]]"
-                      placeholder="{{item.placeholderName}}"
-                      value="[[item.name]]"
-                      on-blur="_handleNameInputBlur"
-                      on-keydown="_handleNameInputKeyDown"
-                    />
+                    [[item.id]], [[item.name]]
+                  </span>
+                  <span class="access-key-container">
+                    [[item.paidBefore]]
+                  </span>
+                  <span class="access-key-container">
+                    [[item.tgLogin]], [[item.tgFirst]], [[item.tgLast]]
                   </span>
                   <span class="measurement-container">
                     <span class="measurement">
@@ -1075,11 +1090,11 @@ export class ServerView extends DirMixin(PolymerElement) {
     }
     // Default to sorting by name.
     return (a: DisplayAccessKey, b: DisplayAccessKey) => {
-      if (a.name && b.name) {
-        return compare(a.name.toUpperCase(), b.name.toUpperCase()) * accessKeySortDirection;
-      } else if (a.name) {
+      if (Number(a.id) && Number(b.id)) {
+        return compare(Number(a.id), Number(b.id)) * accessKeySortDirection;
+      } else if (Number(a.id)) {
         return -1;
-      } else if (b.name) {
+      } else if (Number(b.id)) {
         return 1;
       } else {
         return 0;

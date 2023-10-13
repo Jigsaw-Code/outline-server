@@ -87,6 +87,40 @@ export class ShadowboxServer implements server.Server {
     return this.api.requestForm<void>('access-keys/' + accessKeyId + '/name', 'PUT', {name});
   }
 
+  updateAccessKeyPaidBefore(accessKeyId: server.AccessKeyId, paidBefore: Date): Promise<void> {
+    console.info('Updating access key paidBefore');
+    return this.api.requestJson<void>('access-keys/' + accessKeyId + '/paidBefore', 'PUT', {
+      paidBefore,
+    });
+  }
+
+  updateAccessKeyCreatedAtAndUpdatedAt(
+    accessKeyId: server.AccessKeyId,
+    createdAt: Date,
+    updatedAt: Date
+  ): Promise<void> {
+    console.info('Updating access key createdAt and updatedAt');
+    return this.api.requestJson<void>(
+      'access-keys/' + accessKeyId + '/createdAtAndUpdatedAt',
+      'PUT',
+      {createdAt, updatedAt}
+    );
+  }
+
+  updateAccessKeyTgData(
+    accessKeyId: server.AccessKeyId,
+    tgLogin: string,
+    tgFirst: string,
+    tgLast: string
+  ): Promise<void> {
+    console.info('Updating access key Telegram data');
+    return this.api.requestJson<void>('access-keys/' + accessKeyId + '/tgData', 'PUT', {
+      tgLogin,
+      tgFirst,
+      tgLast,
+    });
+  }
+
   removeAccessKey(accessKeyId: server.AccessKeyId): Promise<void> {
     console.info('Removing access key');
     return this.api.request<void>('access-keys/' + accessKeyId, 'DELETE');

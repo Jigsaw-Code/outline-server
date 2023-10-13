@@ -37,6 +37,12 @@ interface AccessKeyStorageJson {
   id: AccessKeyId;
   metricsId: AccessKeyId;
   name: string;
+  tgLogin: string;
+  tgFirst: string;
+  tgLast: string;
+  createdAt: Date;
+  updatedAt: Date;
+  paidBefore: Date;
   password: string;
   port: number;
   encryptionMethod?: string;
@@ -56,6 +62,12 @@ class ServerAccessKey implements AccessKey {
   constructor(
     readonly id: AccessKeyId,
     public name: string,
+    public tgLogin: string,
+    public tgFirst: string,
+    public tgLast: string,
+    public createdAt: Date,
+    public updatedAt: Date,
+    public paidBefore: Date,
     public metricsId: AccessKeyMetricsId,
     readonly proxyParams: ProxyParams,
     public dataLimit?: DataLimit
@@ -74,10 +86,22 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyStorageJson): A
     portNumber: accessKeyJson.port,
     encryptionMethod: accessKeyJson.encryptionMethod,
     password: accessKeyJson.password,
+    tgLogin: accessKeyJson.tgLogin,
+    tgFirst: accessKeyJson.tgFirst,
+    tgLast: accessKeyJson.tgLast,
+    createdAt: accessKeyJson.createdAt,
+    updatedAt: accessKeyJson.updatedAt,
+    paidBefore: accessKeyJson.paidBefore,
   };
   return new ServerAccessKey(
     accessKeyJson.id,
     accessKeyJson.name,
+    accessKeyJson.tgLogin,
+    accessKeyJson.tgFirst,
+    accessKeyJson.tgLast,
+    accessKeyJson.createdAt,
+    accessKeyJson.updatedAt,
+    accessKeyJson.paidBefore,
     accessKeyJson.metricsId,
     proxyParams,
     accessKeyJson.dataLimit
@@ -89,6 +113,12 @@ function accessKeyToStorageJson(accessKey: AccessKey): AccessKeyStorageJson {
     id: accessKey.id,
     metricsId: accessKey.metricsId,
     name: accessKey.name,
+    tgLogin: accessKey.tgLogin,
+    tgFirst: accessKey.tgFirst,
+    tgLast: accessKey.tgLast,
+    createdAt: accessKey.createdAt,
+    updatedAt: accessKey.updatedAt,
+    paidBefore: accessKey.paidBefore,
     password: accessKey.proxyParams.password,
     port: accessKey.proxyParams.portNumber,
     encryptionMethod: accessKey.proxyParams.encryptionMethod,
@@ -97,10 +127,12 @@ function accessKeyToStorageJson(accessKey: AccessKey): AccessKeyStorageJson {
 }
 
 function isValidCipher(cipher: string): boolean {
-    if (["aes-256-gcm", "aes-192-gcm", "aes-128-gcm", "chacha20-ietf-poly1305"].indexOf(cipher) === -1) {
-      return false;
-    }
-    return true;
+  if (
+    ['aes-256-gcm', 'aes-192-gcm', 'aes-128-gcm', 'chacha20-ietf-poly1305'].indexOf(cipher) === -1
+  ) {
+    return false;
+  }
+  return true;
 }
 
 // AccessKeyRepository that keeps its state in a config file and uses ShadowsocksServer
@@ -182,7 +214,18 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       encryptionMethod,
       password,
     };
-    const accessKey = new ServerAccessKey(id, '', metricsId, proxyParams);
+    const accessKey = new ServerAccessKey(
+      id,
+      'createdFromAPIName',
+      'createdFromAPItgLogin',
+      'createdFromAPItgFirst',
+      'createdFromAPItgLast',
+      new Date(),
+      new Date(),
+      new Date(),
+      metricsId,
+      proxyParams
+    );
     this.accessKeys.push(accessKey);
     this.saveAccessKeys();
     await this.updateServer();
@@ -218,6 +261,30 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   renameAccessKey(id: AccessKeyId, name: string) {
     const accessKey = this.getAccessKey(id);
     accessKey.name = name;
+    accessKey.updatedAt = new Date();
+    this.saveAccessKeys();
+  }
+
+  updateAccessKeyPaidBefore(id: AccessKeyId, paidBefore: Date) {
+    const accessKey = this.getAccessKey(id);
+    accessKey.updatedAt = new Date();
+    accessKey.paidBefore = paidBefore;
+    this.saveAccessKeys();
+  }
+
+  updateAccessKeyCreatedAtAndUpdatedAt(id: AccessKeyId, createdAt: Date, updatedAt: Date) {
+    const accessKey = this.getAccessKey(id);
+    accessKey.createdAt = createdAt;
+    accessKey.updatedAt = updatedAt;
+    this.saveAccessKeys();
+  }
+
+  updateAccessKeyTgData(id: AccessKeyId, tgLogin: string, tgFirst: string, tgLast: string) {
+    const accessKey = this.getAccessKey(id);
+    accessKey.updatedAt = new Date();
+    accessKey.tgLogin = tgLogin;
+    accessKey.tgFirst = tgFirst;
+    accessKey.tgLast = tgLast;
     this.saveAccessKeys();
   }
 

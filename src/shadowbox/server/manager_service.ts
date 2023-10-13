@@ -35,6 +35,12 @@ function accessKeyToApiJson(accessKey: AccessKey) {
     id: accessKey.id,
     // Admin-controlled, editable name for this access key.
     name: accessKey.name,
+    tgLogin: accessKey.tgLogin,
+    tgFirst: accessKey.tgFirst,
+    tgLast: accessKey.tgLast,
+    createdAt: accessKey.createdAt,
+    updatedAt: accessKey.updatedAt,
+    paidBefore: accessKey.paidBefore,
     // Shadowsocks-specific details and credentials.
     password: accessKey.proxyParams.password,
     port: accessKey.proxyParams.portNumber,
@@ -134,6 +140,15 @@ export function bindService(
   apiServer.get(`${apiPrefix}/access-keys/:id`, service.getAccessKey.bind(service));
   apiServer.del(`${apiPrefix}/access-keys/:id`, service.removeAccessKey.bind(service));
   apiServer.put(`${apiPrefix}/access-keys/:id/name`, service.renameAccessKey.bind(service));
+  apiServer.put(
+    `${apiPrefix}/access-keys/:id/paidBefore`,
+    service.updateAccessKeyPaidBefore.bind(service)
+  );
+  apiServer.put(
+    `${apiPrefix}/access-keys/:id/createdAtAndUpdatedAt`,
+    service.updateAccessKeyCreatedAtAndUpdatedAt.bind(service)
+  );
+  apiServer.put(`${apiPrefix}/access-keys/:id/tgData`, service.updateAccessKeyTgData.bind(service));
   apiServer.put(
     `${apiPrefix}/access-keys/:id/data-limit`,
     service.setAccessKeyDataLimit.bind(service)
@@ -311,7 +326,11 @@ export class ShadowsocksManagerService {
   }
 
   // Creates a new access key
-  public async createNewAccessKey(req: RequestType, res: ResponseType, next: restify.Next): Promise<void> {
+  public async createNewAccessKey(
+    req: RequestType,
+    res: ResponseType,
+    next: restify.Next
+  ): Promise<void> {
     try {
       logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
       let encryptionMethod = req.params.method;
@@ -319,16 +338,20 @@ export class ShadowsocksManagerService {
         encryptionMethod = '';
       }
       if (typeof encryptionMethod !== 'string') {
-        return next(new restifyErrors.InvalidArgumentError(
+        return next(
+          new restifyErrors.InvalidArgumentError(
             {statusCode: 400},
-            `Expected a string encryptionMethod, instead got ${encryptionMethod} of type ${
-                typeof encryptionMethod}`));
+            `Expected a string encryptionMethod, instead got ${encryptionMethod} of type ${typeof encryptionMethod}`
+          )
+        );
       }
-      const accessKeyJson = accessKeyToApiJson(await this.accessKeys.createNewAccessKey(encryptionMethod));
+      const accessKeyJson = accessKeyToApiJson(
+        await this.accessKeys.createNewAccessKey(encryptionMethod)
+      );
       res.send(201, accessKeyJson);
       logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);
       return next();
-    } catch(error) {
+    } catch (error) {
       logging.error(error);
       if (error instanceof errors.InvalidCipher) {
         return next(new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message));
@@ -411,6 +434,125 @@ export class ShadowsocksManagerService {
         );
       }
       this.accessKeys.renameAccessKey(accessKeyId, name);
+      res.send(HttpSuccess.NO_CONTENT);
+      return next();
+    } catch (error) {
+      logging.error(error);
+      if (error instanceof errors.AccessKeyNotFound) {
+        return next(new restifyErrors.NotFoundError(error.message));
+      } else if (error instanceof restifyErrors.HttpError) {
+        return next(error);
+      }
+      return next(new restifyErrors.InternalServerError());
+    }
+  }
+
+  public updateAccessKeyPaidBefore(req: RequestType, res: ResponseType, next: restify.Next): void {
+    try {
+      logging.debug(`updateAccessKeyPaidBefore request ${JSON.stringify(req.params)}`);
+      const accessKeyId = validateAccessKeyId(req.params.id);
+      const paidBefore = new Date(req.params.paidBefore.toString());
+
+      if (!paidBefore) {
+        return next(
+          new restifyErrors.MissingParameterError(
+            {statusCode: 400},
+            'Parameter `paidBefore` is missing'
+          )
+        );
+      } else if (Number.isNaN(Date.parse(paidBefore.toString()))) {
+        return next(
+          new restifyErrors.InvalidArgumentError(
+            {statusCode: 400},
+            'Parameter `paidBefore` must be of type Date '
+          )
+        );
+      }
+      this.accessKeys.updateAccessKeyPaidBefore(accessKeyId, paidBefore);
+      res.send(HttpSuccess.NO_CONTENT);
+      return next();
+    } catch (error) {
+      logging.error(error);
+      if (error instanceof errors.AccessKeyNotFound) {
+        return next(new restifyErrors.NotFoundError(error.message));
+      } else if (error instanceof restifyErrors.HttpError) {
+        return next(error);
+      }
+      return next(new restifyErrors.InternalServerError());
+    }
+  }
+
+  public updateAccessKeyCreatedAtAndUpdatedAt(
+    req: RequestType,
+    res: ResponseType,
+    next: restify.Next
+  ): void {
+    try {
+      logging.debug(`updateAccessKeyCreatedAtAndUpdatedAt request ${JSON.stringify(req.params)}`);
+      const accessKeyId = validateAccessKeyId(req.params.id);
+      const createdAt = new Date(req.params.createdAt.toString());
+      const updatedAt = new Date(req.params.updatedAt.toString());
+
+      if (!createdAt || !updatedAt) {
+        return next(
+          new restifyErrors.MissingParameterError(
+            {statusCode: 400},
+            'Parameter `createdAt` or `updatedAt` is missing'
+          )
+        );
+      } else if (
+        Number.isNaN(Date.parse(createdAt.toString())) ||
+        Number.isNaN(Date.parse(updatedAt.toString()))
+      ) {
+        return next(
+          new restifyErrors.InvalidArgumentError(
+            {statusCode: 400},
+            'Parameter `createdAt` or `updatedAt` must be of type Date '
+          )
+        );
+      }
+      this.accessKeys.updateAccessKeyCreatedAtAndUpdatedAt(accessKeyId, createdAt, updatedAt);
+      res.send(HttpSuccess.NO_CONTENT);
+      return next();
+    } catch (error) {
+      logging.error(error);
+      if (error instanceof errors.AccessKeyNotFound) {
+        return next(new restifyErrors.NotFoundError(error.message));
+      } else if (error instanceof restifyErrors.HttpError) {
+        return next(error);
+      }
+      return next(new restifyErrors.InternalServerError());
+    }
+  }
+
+  public updateAccessKeyTgData(req: RequestType, res: ResponseType, next: restify.Next): void {
+    try {
+      logging.debug(`updateAccessKeyTgData request ${JSON.stringify(req.params)}`);
+      const accessKeyId = validateAccessKeyId(req.params.id);
+      const tgLogin = req.params.tgLogin;
+      const tgFirst = req.params.tgFirst;
+      const tgLast = req.params.tgLast;
+
+      if (!tgLogin || !tgFirst || !tgLast) {
+        return next(
+          new restifyErrors.MissingParameterError(
+            {statusCode: 400},
+            'One of parameters `tgData` is missing'
+          )
+        );
+      } else if (
+        typeof tgLogin !== 'string' ||
+        typeof tgFirst !== 'string' ||
+        typeof tgLast !== 'string'
+      ) {
+        return next(
+          new restifyErrors.InvalidArgumentError(
+            {statusCode: 400},
+            'One of parameters `tgData` is not of type string'
+          )
+        );
+      }
+      this.accessKeys.updateAccessKeyTgData(accessKeyId, tgLogin, tgFirst, tgLast);
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {

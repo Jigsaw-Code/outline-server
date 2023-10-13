@@ -44,6 +44,21 @@ export interface Server {
   // Renames the access key given by id.
   renameAccessKey(accessKeyId: AccessKeyId, name: string): Promise<void>;
 
+  updateAccessKeyPaidBefore(accessKeyId: AccessKeyId, paidBefore: Date): Promise<void>;
+
+  updateAccessKeyCreatedAtAndUpdatedAt(
+    accessKeyId: AccessKeyId,
+    createdAt: Date,
+    updatedAt: Date
+  ): Promise<void>;
+
+  updateAccessKeyTgData(
+    accessKeyId: AccessKeyId,
+    tgLogin: string,
+    tgFirst: string,
+    tgLast: string
+  ): Promise<void>;
+
   // Removes the access key given by id.
   removeAccessKey(accessKeyId: AccessKeyId): Promise<void>;
 
@@ -178,6 +193,12 @@ export type AccessKeyId = string;
 export interface AccessKey {
   id: AccessKeyId;
   name: string;
+  tgLogin: string;
+  tgFirst: string;
+  tgLast: string;
+  createdAt: Date;
+  updatedAt: Date;
+  paidBefore: Date;
   accessUrl: string;
   dataLimit?: DataLimit;
 }

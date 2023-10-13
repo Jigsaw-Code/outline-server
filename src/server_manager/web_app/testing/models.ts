@@ -158,6 +158,26 @@ export class FakeServer implements server.Server {
   renameAccessKey(_accessKeyId: server.AccessKeyId, _name: string) {
     return Promise.reject(new Error('FakeServer.renameAccessKey not implemented'));
   }
+  updateAccessKeyPaidBefore(_accessKeyId: server.AccessKeyId, _paidBefore: Date) {
+    return Promise.reject(new Error('FakeServer.updateAccessKeyPaidBefore not implemented'));
+  }
+  updateAccessKeyCreatedAtAndUpdatedAt(
+    _accessKeyId: server.AccessKeyId,
+    _createdAt: Date,
+    _updatedAt: Date
+  ) {
+    return Promise.reject(
+      new Error('FakeServer.updateAccessKeyCreatedAtAndUpdateAt not implemented')
+    );
+  }
+  updateAccessKeyTgData(
+    _accessKeyId: server.AccessKeyId,
+    _tgLogin: string,
+    _tgFirst: string,
+    _tgLast: string
+  ) {
+    return Promise.reject(new Error('FakeServer.updateAccessKeyTgData not implemented'));
+  }
   removeAccessKey(_accessKeyId: server.AccessKeyId) {
     return Promise.reject(new Error('FakeServer.removeAccessKey not implemented'));
   }

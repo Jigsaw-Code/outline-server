@@ -38,6 +38,13 @@ export interface AccessKey {
   readonly id: AccessKeyId;
   // Admin-controlled, editable name for this access key.
   readonly name: string;
+  //Telegram and bot integration
+  readonly tgLogin: string;
+  readonly tgFirst: string;
+  readonly tgLast: string;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+  readonly paidBefore: Date;
   // Used in metrics reporting to decouple from the real id. Can change.
   readonly metricsId: AccessKeyMetricsId;
   // Parameters to access the proxy
@@ -63,6 +70,12 @@ export interface AccessKeyRepository {
   setHostname(hostname: string): void;
   // Apply the specified update to the specified access key. Throws on failure.
   renameAccessKey(id: AccessKeyId, name: string): void;
+  // Update key paid before
+  updateAccessKeyPaidBefore(id: AccessKeyId, paidBefore: Date): void;
+  // Update key creatAt and updatedAt for migration from WireGuard
+  updateAccessKeyCreatedAtAndUpdatedAt(id: AccessKeyId, createdAt: Date, updateAt: Date): void;
+  // Update access key Telegram data
+  updateAccessKeyTgData(id: AccessKeyId, tgLogin: string, tgFirst: string, tgLast: string): void;
   // Gets the metrics id for a given Access Key.
   getMetricsId(id: AccessKeyId): AccessKeyMetricsId | undefined;
   // Sets a data transfer limit for all access keys.

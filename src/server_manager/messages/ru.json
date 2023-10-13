@@ -197,7 +197,7 @@
   "server-access": "Доступ к серверу",
   "server-access-key-new": "Добавить новый ключ",
   "server-access-key-rename": "Переименовать",
-  "server-access-keys": "Ключи доступа",
+  "server-access-keys": "Id ключа, tgId",
   "server-connections": "Подключения",
   "server-data-transfer": "Переданные данные/последние 30 дней",
   "server-data-used": "Использованный объем данных/последние 30 дней",
