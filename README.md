@@ -33,8 +33,8 @@ The system comprises the following components:
 
 In order to build and run the code, you need the following installed:
 
-- [Node](https://nodejs.org/en/download/) LTS (`lts/gallium`, version `16.13.0`)
-- [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (version `8.1.0`)
+- [Node](https://nodejs.org/en/download/) LTS (`lts/hydrogen`, version `18.16.0`)
+- [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (version `9.5.1`)
 - Manager-specific
   - [Wine](https://www.winehq.org/download), if you would like to generate binaries for Windows.
 - Server-specific
