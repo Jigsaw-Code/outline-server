@@ -265,6 +265,7 @@ function generate_certificate() {
   declare -a openssl_req_flags=(
     -x509 -nodes -days 36500 -newkey rsa:4096
     -subj "/CN=${PUBLIC_HOSTNAME}"
+    -addext "subjectAltName = IP.1:${PUBLIC_HOSTNAME}"
     -keyout "${SB_PRIVATE_KEY_FILE}" -out "${SB_CERTIFICATE_FILE}"
   )
   openssl req "${openssl_req_flags[@]}" >&2
