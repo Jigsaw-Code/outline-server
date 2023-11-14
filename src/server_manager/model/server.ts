@@ -103,7 +103,7 @@ export interface Server {
 // Manual servers are servers which the user has independently setup to run
 // shadowbox, and can be on any cloud provider.
 export interface ManualServer extends Server {
-  getCertificateFingerprint(): string;
+  getCertificateFingerprint(): string | undefined;
 
   forget(): void;
 }
@@ -159,7 +159,7 @@ export class MonetaryCost {
 // shadowbox.
 export interface ManualServerConfig {
   apiUrl: string;
-  certSha256: string;
+  certSha256?: string;
 }
 
 // Repository of ManualServer objects.  These are servers the user has setup

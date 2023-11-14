@@ -25,7 +25,7 @@ class ManualServer extends ShadowboxServer implements server.ManualServer {
     private forgetCallback: Function
   ) {
     super(id);
-    const fingerprint = hexToString(manualServerConfig.certSha256);
+    const fingerprint = hexToString(manualServerConfig.certSha256 || '');
     this.setManagementApi(makePathApiClient(manualServerConfig.apiUrl, fingerprint));
   }
 
