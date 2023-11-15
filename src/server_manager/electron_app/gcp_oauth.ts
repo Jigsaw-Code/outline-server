@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as electron from 'electron';
-import * as express from 'express';
+import express from 'express';
 import {OAuth2Client} from 'google-auth-library';
 import {AddressInfo} from 'net';
 

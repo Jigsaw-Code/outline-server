@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as jsonic from 'jsonic';
+import jsonic from 'jsonic';
 
 import {ManualServerConfig} from '../model/server';
 

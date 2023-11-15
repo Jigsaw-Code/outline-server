@@ -14,10 +14,10 @@
 
 import * as crypto from 'crypto';
 import * as electron from 'electron';
-import * as express from 'express';
+import express from 'express';
 import * as http from 'http';
 import {AddressInfo} from 'net';
-import * as request from 'request';
+import request from 'request';
 
 const REGISTERED_REDIRECTS: Array<{clientId: string; port: number}> = [
   {clientId: '7f84935771d49c2331e1cfb60c7827e20eaf128103435d82ad20b3c53253b721', port: 55189},
@@ -25,7 +25,7 @@ const REGISTERED_REDIRECTS: Array<{clientId: string; port: number}> = [
   {clientId: '706928a1c91cbd646c4e0d744c8cbdfbf555a944b821ac7812a7314a4649683a', port: 61437},
 ];
 
-const CALLBACK_SERVER_CLOSE_TIMEOUT = 30000;  // 30 seconds
+const CALLBACK_SERVER_CLOSE_TIMEOUT = 30000; // 30 seconds
 
 function randomValueHex(len: number): string {
   return crypto

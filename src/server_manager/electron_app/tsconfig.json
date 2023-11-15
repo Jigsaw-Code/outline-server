@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
     "target": "es2021",
     "removeComments": false,
-    "noImplicitAny": true,
+    // "noImplicitAny": true,
+    "esModuleInterop": true,
     "module": "commonjs",
     "rootDir": "..",
     "lib": ["dom", "es2021"]
