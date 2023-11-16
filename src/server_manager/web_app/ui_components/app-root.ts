@@ -927,8 +927,6 @@ export class AppRoot extends polymerElementWithLocalize {
       const manualEntry = this.$.manualEntry as OutlineManualServerEntry;
       if (clickedButtonIndex === 1) {
         manualEntry.retryTapped();
-      } else {
-        manualEntry.cancelTapped();
       }
     });
   }

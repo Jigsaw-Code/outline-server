@@ -193,6 +193,8 @@ function main() {
   // prevent window being garbage collected
   let mainWindow: Electron.BrowserWindow;
 
+  app.userAgentFallback = `OutlineManager/${electron.app.getVersion()} ${app.userAgentFallback}`;
+
   // Mark secure to avoid mixed content warnings when loading DigitalOcean pages via https://.
   electron.protocol.registerSchemesAsPrivileged([
     {scheme: 'outline', privileges: {standard: true, secure: true}},
