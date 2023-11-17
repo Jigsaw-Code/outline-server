@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as Sentry from '@sentry/electron';
+import * as Sentry from '@sentry/electron/main';
 import * as dotenv from 'dotenv';
 import * as electron from 'electron';
 import {autoUpdater} from 'electron-updater';
