@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as Sentry from '@sentry/electron';
+import * as Sentry from '@sentry/electron/renderer';
 import * as semver from 'semver';
 
 import * as digitalocean_api from '../cloud/digitalocean_api';
