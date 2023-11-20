@@ -32,7 +32,7 @@ exports.postSentryEventToSalesforce = (req: express.Request, res: express.Respon
   if (!sentryEvent) {
     return res.status(400).send('Missing Sentry event');
   }
-  const eventId = sentryEvent.event_id;
+  const eventId = sentryEvent.event_id?.replace(/\n|\r/g, '');
   if (!shouldPostEventToSalesforce(sentryEvent)) {
     console.log('Not posting event:', eventId);
     return res.status(200).send();
