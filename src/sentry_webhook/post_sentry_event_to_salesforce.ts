@@ -108,7 +108,7 @@ export function postSentryEventToSalesforce(event: SentryEvent, project: string)
       },
       (res) => {
         if (res.statusCode === 200) {
-          console.log('Salesforce `is-processed`:', res.headers['is-processed']);
+          console.debug('Salesforce `is-processed`:', res.headers['is-processed']);
           resolve();
         } else {
           reject(new Error(`Failed to post form data, response status: ${res.statusCode}`));
