@@ -17,4 +17,9 @@
 npm run action sentry_webhook/build
 
 cp src/sentry_webhook/package.json build/sentry_webhook/
-gcloud --project=uproxysite functions deploy postSentryEventToSalesforce --runtime=nodejs12 --trigger-http --source=build/sentry_webhook --entry-point=postSentryEventToSalesforce
+gcloud functions deploy postSentryEventToSalesforce \
+  --project=uproxysite \
+  --runtime=nodejs18 \
+  --trigger-http \
+  --source=build/sentry_webhook \
+  --entry-point=postSentryEventToSalesforce
