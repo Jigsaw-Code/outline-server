@@ -316,7 +316,7 @@ describe('ShadowsocksManagerService', () => {
         send: (httpCode, data) => {
           expect(httpCode).toEqual(201);
           expect(Object.keys(data).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
-          expect(data.method).toEqual('chacha20-ietf-poly1305');
+          expect(data.method).toEqual('aes-256-gcm');
           responseProcessed = true; // required for afterEach to pass.
         },
       };
