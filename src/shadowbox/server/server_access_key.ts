@@ -108,7 +108,7 @@ function isValidCipher(cipher: string): boolean {
 // that portForNewAccessKeys is valid.
 export class ServerAccessKeyRepository implements AccessKeyRepository {
   private static DATA_LIMITS_ENFORCEMENT_INTERVAL_MS = 60 * 60 * 1000; // 1h
-  private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
+  private NEW_USER_ENCRYPTION_METHOD = 'aes-256-gcm';
   private accessKeys: ServerAccessKey[];
 
   constructor(
