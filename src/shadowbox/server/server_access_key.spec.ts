@@ -53,7 +53,7 @@ describe('ServerAccessKeyRepository', () => {
     const repo = new RepoBuilder().build();
     repo.createNewAccessKey().then((accessKey) => {
       expect(accessKey).toBeDefined();
-      expect(accessKey.proxyParams.encryptionMethod).toEqual('chacha20-ietf-poly1305');
+      expect(accessKey.proxyParams.encryptionMethod).toEqual('aes-256-gcm');
       done();
     });
   });
