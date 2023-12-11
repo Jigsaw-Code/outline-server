@@ -24,8 +24,7 @@
     "typescript": "^4"
   },
   "engines": {
-    "node": "^18.16.0",
-    "npm": "^9.5.1"
+    "node": "18.x.x"
   },
   "scripts": {
     "action": "bash ./scripts/run_action.sh",
