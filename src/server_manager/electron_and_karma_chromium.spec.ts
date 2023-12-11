@@ -22,7 +22,7 @@ import {config} from './package.json';
 
 describe('Karma', () => {
   it('uses the correct Chromium version', async (done) => {
-    const electronChromiumVersionInfo = <{chromium_main_branch_position?: string}>(
+    const electronChromiumVersionInfo = <{chromium_main_branch_position?: number}>(
       await (
         await fetch(
           `https://chromiumdash.appspot.com/fetch_version?version=${electronToChromium(
