@@ -22,6 +22,8 @@ import {config} from './package.json';
 
 describe('Karma', () => {
   it('uses the correct Chromium version', async (done) => {
+    // ChromiumDash is a service maintained by the Chrome team which serves metadata about current
+    // and legacy Chrome versions.
     const electronChromiumVersionInfo = <{chromium_main_branch_position?: number}>(
       await (
         await fetch(
