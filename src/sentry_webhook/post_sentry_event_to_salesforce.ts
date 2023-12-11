@@ -55,11 +55,11 @@ const SALESFORCE_FORM_FIELDS_PROD: SalesforceFormFields = {
   recordType: 'recordType',
   email: 'email',
   description: 'description',
-  category: '00N5a00000DXy19',
-  cloudProvider: '00N5a00000DXxmn',
+  category: '00N0b00000BqOA2',
+  cloudProvider: '00N0b00000BqOA7',
   sentryEventUrl: '00N0b00000BqOA4',
-  os: '00N5a00000DXxmo',
-  version: '00N5a00000DXxmq',
+  os: '00N0b00000BqOfW',
+  version: '00N0b00000BqOfR',
   type: 'type',
 };
 const SALESFORCE_FORM_VALUES_DEV: SalesforceFormValues = {

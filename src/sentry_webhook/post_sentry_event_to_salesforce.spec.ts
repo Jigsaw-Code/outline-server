@@ -108,9 +108,9 @@ describe('postSentryEventToSalesforce', () => {
         '&00N0b00000BqOA4=' +
         '&description=my%20message' +
         '&type=Outline%20client' +
-        '&00N5a00000DXy19=test%20category' +
-        '&00N5a00000DXxmo=test%20os' +
-        '&00N5a00000DXxmq=test%20version'
+        '&00N0b00000BqOA2=test%20category' +
+        '&00N0b00000BqOfW=test%20os' +
+        '&00N0b00000BqOfR=test%20version'
     );
     expect(mockRequest.end).toHaveBeenCalled();
   });
