@@ -35,7 +35,7 @@ interface SalesforceFormValues {
   recordType: string;
 }
 
-const SALESFORCE_DEV_HOST = 'google-jigsaw--uat.my.salesforce.com';
+const SALESFORCE_DEV_HOST = 'google-jigsaw--jigsawuat.sandbox.my.salesforce.com';
 const SALESFORCE_PROD_HOST = 'webto.salesforce.com';
 const SALESFORCE_PATH = '/servlet/servlet.WebToCase';
 const SALESFORCE_FORM_FIELDS_DEV: SalesforceFormFields = {
@@ -63,7 +63,7 @@ const SALESFORCE_FORM_FIELDS_PROD: SalesforceFormFields = {
   type: 'type',
 };
 const SALESFORCE_FORM_VALUES_DEV: SalesforceFormValues = {
-  orgId: '00D3F000000DDDH',
+  orgId: '00D750000004dFg',
   recordType: '0123F000000MWTS',
 };
 const SALESFORCE_FORM_VALUES_PROD: SalesforceFormValues = {
