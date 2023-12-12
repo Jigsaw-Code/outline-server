@@ -71,6 +71,10 @@ Polymer({
         width: 60%;
         color: var(--medium-gray);
       }
+      .documentation-link {
+        color: var(--primary-green);
+        display: flex;
+      }
       #experiments p {
         width: 80%;
       }
@@ -253,6 +257,13 @@ Polymer({
               always-float-label=""
               maxlength="100"
             ></paper-input>
+            <a
+              class="documentation-link"
+              href="https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/shadowbox/server/api.yml"
+            >
+              <span>[[localize('server-management-api-documentation')]]</span>
+              <img src="images/open_in_newlink.svg" />
+            </a>
             <paper-input
               readonly=""
               value="[[_formatDate(language, serverCreationDate)]]"
