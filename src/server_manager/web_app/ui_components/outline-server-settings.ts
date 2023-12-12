@@ -74,6 +74,9 @@ Polymer({
       .documentation-link {
         color: var(--primary-green);
         display: flex;
+        align-items: center;
+        margin-top: -1.5rem;
+        margin-bottom: 1rem;
       }
       #experiments p {
         width: 80%;
