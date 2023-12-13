@@ -70,12 +70,8 @@
     "description": "This string appears across the application as a button. Clicking it aborts the current flow."
   },
   "outline_documentation": {
-    "message": "Outline Documentation",
+    "message": "Manager Resources",
     "description": "This string appears within the manager sidebar as a link to the manager documentation."
-  },
-  "server_managment_api_documentation": {
-    "message": "Management API Documentation",
-    "description": "This string appears within the server settings as a link to the serner management API documentation."
   },
   "geo_amsterdam": {
     "message": "Amsterdam",
