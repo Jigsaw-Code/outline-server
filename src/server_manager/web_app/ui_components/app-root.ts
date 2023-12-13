@@ -785,8 +785,16 @@ export class AppRoot extends polymerElementWithLocalize {
   }
 
   hasTranslation(key: string) {
-    const msg = this.localize(key);
-    return msg !== key && msg !== '';
+    let message;
+
+    try {
+      message = this.localize(key);
+    } catch (e) {
+      // failed to find translation
+      message = '';
+    }
+
+    return message !== key && message !== '';
   }
 
   showIntro() {
