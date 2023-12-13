@@ -397,12 +397,13 @@ export class AppRoot extends polymerElementWithLocalize {
 
           <!-- Links section -->
           <paper-listbox>
-            <a
-              class="documentation-link"
-              href="https://www.reddit.com/r/outlinevpn/wiki/index/">
-                <span>[[localize('outline-documentation')]]</span>
-                <iron-icon icon="open-in-new" />
-            </a>
+              <a
+                class="documentation-link"
+                hidden$="[[!shouldShowDocumentationLink]]"
+                href="https://www.reddit.com/r/outlinevpn/wiki/index/">
+                  <span>[[localize('outline-documentation')]]</span>
+                  <iron-icon icon="open-in-new" />
+              </a>
             <span on-tap="maybeCloseDrawer"><a href="https://support.getoutline.org/s/article/Data-collection">[[localize('nav-data-collection')]]</a></span>
             <span on-tap="submitFeedbackTapped">[[localize('nav-feedback')]]</span>
             <span on-tap="maybeCloseDrawer"><a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">[[localize('nav-help')]]</a></span>
@@ -709,10 +710,7 @@ export class AppRoot extends polymerElementWithLocalize {
         observer: '_currentPageChanged',
       },
       shouldShowSideBar: {type: Boolean},
-      sideBarMarginClass: {
-        type: String,
-        computed: '_computeSideBarMarginClass(shouldShowSideBar)',
-      },
+      shouldShowDocumentationLink: {type: Boolean},
     };
   }
 
@@ -726,6 +724,7 @@ export class AppRoot extends polymerElementWithLocalize {
   outlineVersion = '';
   currentPage = 'intro';
   shouldShowSideBar = false;
+  shouldShowDocumentationLink = false;
 
   constructor() {
     super();
@@ -781,6 +780,12 @@ export class AppRoot extends polymerElementWithLocalize {
     (this.$.appDrawer as AppDrawerElement).align = alignDir;
     (this.$.sideBar as AppDrawerElement).align = alignDir;
     this.language = language;
+
+    this.shouldShowDocumentationLink = this.hasTranslation('outline-documentation');
+  }
+
+  hasTranslation(key: string) {
+    return this.localize(key) !== key;
   }
 
   showIntro() {
