@@ -714,6 +714,10 @@
       }
     }
   },
+  "manager_resources": {
+    "message": "Manager Resources",
+    "description": "This string appears within the manager sidebar as a link to the manager documentation."
+  },
   "manual_server_assign_firewall": {
     "message": "Assign firewall rule",
     "description": "This string appears in the server setup view as a sub-header of a section that provides instructions to configure the server's firewall."
