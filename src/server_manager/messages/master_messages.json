@@ -69,10 +69,6 @@
     "message": "Cancel",
     "description": "This string appears across the application as a button. Clicking it aborts the current flow."
   },
-  "outline_documentation": {
-    "message": "Manager Resources",
-    "description": "This string appears within the manager sidebar as a link to the manager documentation."
-  },
   "geo_amsterdam": {
     "message": "Amsterdam",
     "description": "Name of the city in the Netherlands."
@@ -717,6 +713,10 @@
         "example": "1"
       }
     }
+  },
+  "manager_resources": {
+    "message": "Manager Resources",
+    "description": "This string appears within the manager sidebar as a link to the manager documentation."
   },
   "manual_server_assign_firewall": {
     "message": "Assign firewall rule",

@@ -274,7 +274,7 @@ export class AppRoot extends polymerElementWithLocalize {
       #links-footer {
         margin-top: 36px;
       }
-      #appDrawer .documentation-link {
+      #appDrawer .manager-resources-link {
         color: var(--primary-green);
         display: flex;
         align-items: center;
@@ -397,13 +397,13 @@ export class AppRoot extends polymerElementWithLocalize {
 
           <!-- Links section -->
           <paper-listbox>
-              <a
-                class="documentation-link"
-                hidden$="[[!shouldShowDocumentationLink]]"
-                href="https://www.reddit.com/r/outlinevpn/wiki/index/">
-                  <span>[[localize('outline-documentation')]]</span>
-                  <iron-icon icon="open-in-new" />
-              </a>
+            <a
+              class="manager-resources-link"
+              hidden$="[[!showManagerResourcesLink]]"
+              href="https://www.reddit.com/r/outlinevpn/wiki/index/">
+                <span>[[localize('manager-resources')]]</span>
+                <iron-icon icon="open-in-new" />
+            </a>
             <span on-tap="maybeCloseDrawer"><a href="https://support.getoutline.org/s/article/Data-collection">[[localize('nav-data-collection')]]</a></span>
             <span on-tap="submitFeedbackTapped">[[localize('nav-feedback')]]</span>
             <span on-tap="maybeCloseDrawer"><a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">[[localize('nav-help')]]</a></span>
@@ -710,7 +710,7 @@ export class AppRoot extends polymerElementWithLocalize {
         observer: '_currentPageChanged',
       },
       shouldShowSideBar: {type: Boolean},
-      shouldShowDocumentationLink: {type: Boolean},
+      showManagerResourcesLink: {type: Boolean},
     };
   }
 
@@ -724,7 +724,7 @@ export class AppRoot extends polymerElementWithLocalize {
   outlineVersion = '';
   currentPage = 'intro';
   shouldShowSideBar = false;
-  shouldShowDocumentationLink = false;
+  showManagerResourcesLink = false;
 
   constructor() {
     super();
@@ -781,7 +781,7 @@ export class AppRoot extends polymerElementWithLocalize {
     (this.$.sideBar as AppDrawerElement).align = alignDir;
     this.language = language;
 
-    this.shouldShowDocumentationLink = this.hasTranslation('outline-documentation');
+    this.showManagerResourcesLink = this.hasTranslation('manager-resources');
   }
 
   hasTranslation(key: string) {
