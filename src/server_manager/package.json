@@ -39,7 +39,7 @@
     "@polymer/paper-tabs": "^3.0.0",
     "@polymer/paper-toast": "^3.0.0",
     "@polymer/paper-tooltip": "^3.0.0",
-    "@sentry/electron": "^4.3.0",
+    "@sentry/electron": "^4.14.0",
     "@webcomponents/webcomponentsjs": "^2.0.0",
     "circle-flags": "https://github.com/HatScripts/circle-flags",
     "clipboard-polyfill": "^2.4.6",
@@ -59,7 +59,7 @@
       "PUPPETEER_CHROMIUM_REVISION": [
         "The Chromium revision number used by Karma.  This should always be the revision number of",
         "the bundled Chromium in our version of Electron.  Whenever upgrading Electron, run the",
-        "server_manager tests.  You'll get a failure that looks like <Expected '812852' to equal '693954>.",
+        "server_manager tests.  You'll get a failure that looks like <Expected 812852 to equal 693954>.",
         "Set PUPPETEER_CHROMIUM_REVISION to the first of those numbers to get the correct revision",
         "and `npm ci` to re-install puppeteer, causing it to download the new",
         "Chromium version."
@@ -67,7 +67,7 @@
     }
   },
   "config": {
-    "PUPPETEER_CHROMIUM_REVISION": "992738"
+    "PUPPETEER_CHROMIUM_REVISION": 992738
   },
   "devDependencies": {
     "@types/node": "^16.11.29",
@@ -76,8 +76,8 @@
     "@types/puppeteer": "^5.4.2",
     "@types/request": "^2.47.1",
     "@types/semver": "^5.5.0",
-    "copy-webpack-plugin": "^5.1.1",
-    "css-loader": "^3.5.3",
+    "copy-webpack-plugin": "^11.0.0",
+    "css-loader": "^6.8.1",
     "electron": "19.1.9",
     "electron-builder": "^23.6.0",
     "electron-icon-maker": "^0.0.4",
@@ -86,21 +86,21 @@
     "gulp": "^4.0.0",
     "gulp-posthtml": "^3.0.4",
     "gulp-replace": "^1.0.0",
-    "html-webpack-plugin": "^4.2.1",
+    "html-webpack-plugin": "^5.5.3",
     "karma": "^6.3.16",
     "karma-chrome-launcher": "^3.1.0",
     "karma-jasmine": "^4.0.1",
-    "karma-webpack": "^4.0.2",
+    "karma-webpack": "^5.0.0",
     "node-jq": "^1.11.2",
     "postcss": "^7.0.29",
     "postcss-rtl": "^1.7.3",
     "posthtml-postcss": "^0.2.6",
     "puppeteer": "^13.6.0",
-    "style-loader": "^1.2.1",
-    "ts-loader": "^7.0.1",
-    "webpack": "^4.43.0",
-    "webpack-cli": "^4.9.2",
-    "webpack-dev-server": "^4.9.0",
+    "style-loader": "^3.3.3",
+    "ts-loader": "^9.5.0",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1",
     "webpack-node-externals": "^3.0.0"
   },
   "resolutions": {

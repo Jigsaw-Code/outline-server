@@ -66,17 +66,16 @@ exports.makeConfig = (options) => {
         // Statically link the Roboto font, rather than link to fonts.googleapis.com
         'window.polymerSkipLoadingFontRoboto': JSON.stringify(true),
       }),
-      new CopyPlugin(
-        [
-          {from: 'index.html', to: '.'},
-          {from: `${CIRCLE_FLAGS_PATH}/flags`, to: 'images/flags'},
-          {from: 'images', to: 'images'}, // Overwrite any colliding flags.
-          {from: 'messages', to: 'messages'},
+      new CopyPlugin({
+        patterns: [
+          {from: `${CIRCLE_FLAGS_PATH}/flags`, to: 'images/flags', context: __dirname},
+          {from: 'images', to: 'images', context: __dirname}, // Overwrite any colliding flags.
+          {from: 'messages', to: 'messages', context: __dirname},
         ],
-        {context: __dirname}
-      ),
+      }),
       new HtmlWebpackPlugin({
         template: options.template || path.resolve(__dirname, './index.html'),
+        filename: 'index.html',
       }),
     ],
   };

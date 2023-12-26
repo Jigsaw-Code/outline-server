@@ -15,7 +15,7 @@
   "confirmation-server-remove-title": "要移除伺服器嗎？",
   "data-limit": "數據用量上限",
   "data-limit-per-key": "每組金鑰的數據用量上限",
-  "data-limits": "資料傳輸上限",
+  "data-limits": "數據用量上限",
   "data-limits-description": "為這個伺服器上的存取金鑰設定 30 天追蹤資料傳輸上限。",
   "data-limits-dialog-text": "前往「設定」分頁為這個伺服器上的存取金鑰設定資料傳輸上限。",
   "data-limits-dialog-title": "避免超量傳輸資料",
