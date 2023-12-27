@@ -81,7 +81,7 @@
   "feedback-privacy": "سيتم إرسال تعليقاتك وعنوان بريدك الإلكتروني (في حال تقديمه) والمعلومات الإضافية المُشار إليها في {openLink}سياسة الخصوصية{closeLink} إلى فريق عمل Outline.",
   "feedback-submit": "إرسال",
   "feedback-suggestion": "اقتراحات",
-  "feedback-title-generic": "إرسال تعليقات",
+  "feedback-title-generic": "إرسال ملاحظات",
   "feedback-title-install": "تعذَّر تثبيت خادم Outline",
   "gcp-billing-action": "التالي",
   "gcp-billing-body": "نحن في انتظار {openLink}إضافة حساب فوترة على Google Cloud{closeLink}.",

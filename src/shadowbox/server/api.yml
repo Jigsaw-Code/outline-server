@@ -150,7 +150,7 @@ paths:
                   type: string
             examples:
               '0':
-                value: '{"method":"aes-192-gcm","name":"First","limit":{"bytes":10000}}'
+                value: '{"method":"aes-192-gcm","name":"First","password":"8iu8V8EeoFVpwQvQeS9wiD","limit":{"bytes":10000}}'
       responses:
         '201':
           description: The newly created access key

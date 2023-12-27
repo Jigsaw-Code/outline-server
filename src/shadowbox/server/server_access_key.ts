@@ -175,7 +175,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     const id = this.keyConfig.data().nextId.toString();
     this.keyConfig.data().nextId += 1;
     const metricsId = uuidv4();
-    const password = generatePassword();
+    const password = params?.password ?? generatePassword();
     const encryptionMethod = params?.encryptionMethod || this.NEW_USER_ENCRYPTION_METHOD;
 
     // Validate encryption method.

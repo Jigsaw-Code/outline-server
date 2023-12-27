@@ -449,6 +449,47 @@ describe('ShadowsocksManagerService', () => {
         done();
       });
     });
+
+    it('generates a new password when no password is provided', async (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+
+      const res = {
+        send: (httpCode, data) => {
+          expect(httpCode).toEqual(201);
+          expect(data.password).toBeDefined();
+          responseProcessed = true; // required for afterEach to pass.
+        },
+      };
+      await service.createNewAccessKey({params: {}}, res, done);
+    });
+
+    it('uses the provided password when one is provided', async (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+
+      const PASSWORD = '8iu8V8EeoFVpwQvQeS9wiD';
+      const res = {
+        send: (httpCode, data) => {
+          expect(httpCode).toEqual(201);
+          expect(data.password).toEqual(PASSWORD);
+          responseProcessed = true; // required for afterEach to pass.
+        },
+      };
+      await service.createNewAccessKey({params: {password: PASSWORD}}, res, done);
+    });
+
+    it('rejects a password that is less than 22 bytes', async (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+      const PASSWORD = 'password';
+      const res = {send: SEND_NOTHING};
+      await service.createNewAccessKey({params: {password: PASSWORD}}, res, (error) => {
+        expect(error.statusCode).toEqual(400);
+        responseProcessed = true; // required for afterEach to pass.
+        done();
+      });
+    });
   });
   describe('setPortForNewAccessKeys', () => {
     it('changes ports for new access keys', async (done) => {

@@ -38,9 +38,6 @@ export function parseManualServerConfig(userInput: string): ManualServerConfig {
   if (!config.apiUrl) {
     throw new Error('no apiUrl field');
   }
-  if (!config.certSha256) {
-    throw new Error('no certSha256 field');
-  }
 
   return config;
 }

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as Sentry from '@sentry/electron';
+import * as Sentry from '@sentry/electron/main';
 import * as dotenv from 'dotenv';
 import * as electron from 'electron';
 import {autoUpdater} from 'electron-updater';
@@ -192,6 +192,8 @@ function workaroundDigitalOceanApiCors() {
 function main() {
   // prevent window being garbage collected
   let mainWindow: Electron.BrowserWindow;
+
+  app.userAgentFallback = `OutlineManager/${electron.app.getVersion()} ${app.userAgentFallback}`;
 
   // Mark secure to avoid mixed content warnings when loading DigitalOcean pages via https://.
   electron.protocol.registerSchemesAsPrivileged([
