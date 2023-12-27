@@ -58,8 +58,8 @@ readonly SENTRY_LOG_FILE=${SENTRY_LOG_FILE:-}
 # - STDERR is only used in the event of a fatal error
 # - Detailed logs are recorded to this FULL_LOG, which is preserved if an error occurred.
 # - The most recent error is stored in LAST_ERROR, which is never preserved.
-FULL_LOG="$(mktemp -t outline_logXXX)"
-LAST_ERROR="$(mktemp -t outline_last_errorXXX)"
+FULL_LOG="$(mktemp -t outline_logXXXXXXXXXX)"
+LAST_ERROR="$(mktemp -t outline_last_errorXXXXXXXXXX)"
 readonly FULL_LOG LAST_ERROR
 
 function log_command() {
