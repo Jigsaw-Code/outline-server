@@ -192,6 +192,24 @@ function validateDataLimit(limit: unknown): DataLimit {
   return limit as DataLimit;
 }
 
+function validatePassword(password: string): string {
+  if (!password) {
+    throw new restifyErrors.MissingParameterError(
+      {statusCode: 400},
+      'Missing `password` parameter'
+    );
+  }
+
+  const bytesOfPassword = Buffer.byteLength(password as string, 'utf8');
+  if (bytesOfPassword < 22) {
+    throw new restifyErrors.InvalidArgumentError(
+      {statusCode: 400},
+      'password must be at least 22 bytes'
+    );
+  }
+  return password;
+}
+
 // The ShadowsocksManagerService manages the access keys that can use the server
 // as a proxy using Shadowsocks. It runs an instance of the Shadowsocks server
 // for each existing access key, with the port and password assigned for that access key.
@@ -344,8 +362,13 @@ export class ShadowsocksManagerService {
         validateDataLimit(dataLimit);
       }
 
+      const password = (req.params.password as string) || undefined;
+      if (password) {
+        validatePassword(password);
+      }
+
       const accessKeyJson = accessKeyToApiJson(
-        await this.accessKeys.createNewAccessKey({encryptionMethod, name, dataLimit})
+        await this.accessKeys.createNewAccessKey({encryptionMethod, name, dataLimit, password})
       );
       res.send(201, accessKeyJson);
       logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);

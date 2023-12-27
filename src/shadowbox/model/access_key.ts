@@ -53,6 +53,8 @@ export interface AccessKeyCreateParams {
   readonly encryptionMethod?: string;
   // The name to give the access key.
   readonly name?: string;
+  // The password to use for the access key.
+  readonly password?: string;
   // The data transfer limit to apply to the access key.
   readonly dataLimit?: DataLimit;
 }
