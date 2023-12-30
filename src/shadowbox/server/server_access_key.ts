@@ -187,7 +187,8 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       password,
     };
     const name = params?.name ?? '';
-    const accessKey = new ServerAccessKey(id, name, metricsId, proxyParams, params.dataLimit);
+    const dataLimit = params?.dataLimit;
+    const accessKey = new ServerAccessKey(id, name, metricsId, proxyParams, dataLimit);
     this.accessKeys.push(accessKey);
     this.saveAccessKeys();
     await this.updateServer();
