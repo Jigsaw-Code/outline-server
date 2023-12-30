@@ -112,8 +112,6 @@ function isValidCipher(cipher: string): boolean {
 export class ServerAccessKeyRepository implements AccessKeyRepository {
   private static DATA_LIMITS_ENFORCEMENT_INTERVAL_MS = 60 * 60 * 1000; // 1h
   private NEW_USER_ENCRYPTION_METHOD = 'chacha20-ietf-poly1305';
-  private NEW_USER_DEFAULT_NAME = '';
-  private NEW_USER_DEFAULT_DATA_LIMIT = undefined;
   private accessKeys: ServerAccessKey[];
 
   constructor(
@@ -188,9 +186,8 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       encryptionMethod,
       password,
     };
-    const name = params?.name ?? this.NEW_USER_DEFAULT_NAME;
-    const dataLimit = params?.dataLimit ?? this.NEW_USER_DEFAULT_DATA_LIMIT;
-    const accessKey = new ServerAccessKey(id, name, metricsId, proxyParams, dataLimit);
+    const name = params?.name ?? '';
+    const accessKey = new ServerAccessKey(id, name, metricsId, proxyParams);
     this.accessKeys.push(accessKey);
     this.saveAccessKeys();
     await this.updateServer();
