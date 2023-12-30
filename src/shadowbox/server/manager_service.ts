@@ -356,10 +356,9 @@ export class ShadowsocksManagerService {
         );
       }
 
-      const dataLimit = (req.params.limit as DataLimit) || undefined;
-
-      if (dataLimit) {
-        validateDataLimit(dataLimit);
+      let dataLimit: DataLimit = undefined;
+      if (req.params.limit) {
+        dataLimit = validateDataLimit(req.params.limit);
       }
 
       const password = (req.params.password as string) || undefined;
