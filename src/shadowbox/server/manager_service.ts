@@ -200,7 +200,7 @@ function validatePassword(password: string): string {
     );
   }
 
-  const bytesOfPassword = Buffer.byteLength(password as string, 'utf8');
+  const bytesOfPassword = Buffer.byteLength(password, 'utf8');
   if (bytesOfPassword < 22) {
     throw new restifyErrors.InvalidArgumentError(
       {statusCode: 400},
