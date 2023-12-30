@@ -363,18 +363,16 @@ export class ShadowsocksManagerService {
         );
       }
 
-      let dataLimit: DataLimit = undefined;
-      if (req.params.limit) {
-        dataLimit = validateDataLimit(req.params.limit);
-      }
-
-      const password = (req.params.password as string) || undefined;
-      if (password) {
-        validatePassword(password);
-      }
+      const dataLimit = req.params.limit ? validateDataLimit(req.params.limit) : undefined;
+      const password = req.params.password ? validatePassword(req.params.password) : undefined;
 
       const accessKeyJson = accessKeyToApiJson(
-        await this.accessKeys.createNewAccessKey({encryptionMethod, name, dataLimit, password})
+        await this.accessKeys.createNewAccessKey({
+          encryptionMethod,
+          name,
+          dataLimit,
+          password,
+        })
       );
       res.send(201, accessKeyJson);
       logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);
