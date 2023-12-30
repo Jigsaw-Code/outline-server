@@ -204,7 +204,7 @@ function validatePassword(password: string): string {
   if (bytesOfPassword < 22) {
     throw new restifyErrors.InvalidArgumentError(
       {statusCode: 400},
-      'password must be at least 22 bytes'
+      'Password must be at least 22 bytes'
     );
   }
   return password;
