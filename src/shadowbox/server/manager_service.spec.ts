@@ -490,6 +490,18 @@ describe('ShadowsocksManagerService', () => {
         done();
       });
     });
+
+    it('rejects a password that is not a string', async (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+      const PASSWORD = Number.MAX_SAFE_INTEGER;
+      const res = {send: SEND_NOTHING};
+      await service.createNewAccessKey({params: {password: PASSWORD}}, res, (error) => {
+        expect(error.statusCode).toEqual(400);
+        responseProcessed = true; // required for afterEach to pass.
+        done();
+      });
+    });
   });
   describe('setPortForNewAccessKeys', () => {
     it('changes ports for new access keys', async (done) => {

@@ -192,11 +192,18 @@ function validateDataLimit(limit: unknown): DataLimit {
   return limit as DataLimit;
 }
 
-function validatePassword(password: string): string {
+function validatePassword(password: unknown): string {
   if (!password) {
     throw new restifyErrors.MissingParameterError(
       {statusCode: 400},
       'Missing `password` parameter'
+    );
+  }
+
+  if (typeof password !== 'string') {
+    throw new restifyErrors.InvalidArgumentError(
+      {statusCode: 400},
+      'Parameter `password` must be of type string'
     );
   }
 
