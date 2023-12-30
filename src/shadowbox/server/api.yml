@@ -146,8 +146,16 @@ paths:
             schema:
               type: object
               properties:
+                name:
+                  type: string
                 method:
                   type: string
+                password:
+                  type: string
+                port:
+                  type: integer
+                dataLimit:
+                  $ref: "#/components/schemas/DataLimit"
             examples:
               '0':
                 value: '{"method":"aes-192-gcm","name":"First","password":"8iu8V8EeoFVpwQvQeS9wiD","limit":{"bytes":10000}}'
