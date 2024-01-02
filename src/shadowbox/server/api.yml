@@ -47,7 +47,7 @@ paths:
                   type: string
             examples:
               'hostname':
-                value: '{"hostname": www.example.org}'
+                value: '{"hostname": "www.example.org"}'
               'IP address':
                 value: '{"hostname": "127.0.0.1"}'
       responses:
@@ -278,7 +278,7 @@ paths:
                   type: string
             examples:
               '0':
-                value: '{name: "New Key Name"}'
+                value: '{"name": "New Key Name"}'
       responses:
         '204':
           description: Access key renamed successfully
