@@ -356,8 +356,8 @@ export class ShadowsocksManagerService {
         );
       }
 
-      const dataLimit = req.params.limit ? validateDataLimit(req.params.limit) : undefined;
-      const password = req.params.password ? validatePassword(req.params.password) : undefined;
+      const dataLimit = req.params.limit ?? validateDataLimit(req.params.limit);
+      const password = req.params.password ?? validatePassword(req.params.password);
 
       const accessKeyJson = accessKeyToApiJson(
         await this.accessKeys.createNewAccessKey({
