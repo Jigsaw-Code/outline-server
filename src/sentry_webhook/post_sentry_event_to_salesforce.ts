@@ -159,9 +159,6 @@ function toOSPicklistValue(value: string | undefined): string | undefined {
   }
 
   const normalizedValue = value.toLowerCase();
-  if (normalizedValue.includes('linux') || normalizedValue.includes('fedora')) {
-    return 'Linux';
-  }
   if (normalizedValue.includes('android')) {
     return 'Android';
   }
@@ -174,8 +171,7 @@ function toOSPicklistValue(value: string | undefined): string | undefined {
   if (normalizedValue.includes('mac')) {
     return 'macOs';
   }
-  console.warn('Unexpected OS:', value);
-  return value;
+  return 'Linux';
 }
 
 function encodeFormData(field: string, value?: string) {
