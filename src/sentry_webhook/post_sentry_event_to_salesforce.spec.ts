@@ -92,7 +92,7 @@ describe('postSentryEventToSalesforce', () => {
       message: 'my message',
       tags: [
         ['category', 'test category'],
-        ['os.name', 'test os'],
+        ['os.name', 'Mac OS X'],
         ['sentry:release', 'test version'],
         ['unknown:tag', 'foo'],
       ],
@@ -109,7 +109,7 @@ describe('postSentryEventToSalesforce', () => {
         '&description=my%20message' +
         '&type=Outline%20client' +
         '&00N0b00000BqOA2=test%20category' +
-        '&00N0b00000BqOfW=test%20os' +
+        '&00N0b00000BqOfW=macOs' +
         '&00N0b00000BqOfR=test%20version'
     );
     expect(mockRequest.end).toHaveBeenCalled();

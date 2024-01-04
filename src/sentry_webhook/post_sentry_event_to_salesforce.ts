@@ -142,13 +142,36 @@ function getSalesforceFormData(
   if (event.tags) {
     const tags = new Map<string, string>(event.tags);
     form.push(encodeFormData(formFields.category, tags.get('category')));
-    form.push(encodeFormData(formFields.os, tags.get('os.name')));
+    form.push(encodeFormData(formFields.os, toOSPicklistValue(tags.get('os.name'))));
     form.push(encodeFormData(formFields.version, tags.get('sentry:release')));
     if (!isClient) {
       form.push(encodeFormData(formFields.cloudProvider, tags.get('cloudProvider')));
     }
   }
   return form.join('&');
+}
+
+// Returns a picklist value that is allowed by SalesForce for the OS record.
+function toOSPicklistValue(value: string | undefined): string | undefined {
+  if (!value) {
+    console.warn('No OS found');
+    return undefined;
+  }
+
+  const normalizedValue = value.toLowerCase();
+  if (normalizedValue.includes('android')) {
+    return 'Android';
+  }
+  if (normalizedValue.includes('ios')) {
+    return 'iOS';
+  }
+  if (normalizedValue.includes('windows')) {
+    return 'Windows';
+  }
+  if (normalizedValue.includes('mac')) {
+    return 'macOs';
+  }
+  return 'Linux';
 }
 
 function encodeFormData(field: string, value?: string) {
