@@ -1094,10 +1094,6 @@ export class AppRoot extends polymerElementWithLocalize {
     }
   }
 
-  _computeSideBarMarginClass(shouldShowSideBar: boolean) {
-    return shouldShowSideBar ? 'side-bar-margin' : '';
-  }
-
   _accountServerFilter(account: AccountListEntry) {
     return (server: ServerListEntry) => account && server.accountId === account.id;
   }
