@@ -22,6 +22,7 @@ import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {
   AccessKey,
+  AccessKeyCreateParams,
   AccessKeyId,
   AccessKeyMetricsId,
   AccessKeyRepository,
@@ -97,10 +98,12 @@ function accessKeyToStorageJson(accessKey: AccessKey): AccessKeyStorageJson {
 }
 
 function isValidCipher(cipher: string): boolean {
-    if (["aes-256-gcm", "aes-192-gcm", "aes-128-gcm", "chacha20-ietf-poly1305"].indexOf(cipher) === -1) {
-      return false;
-    }
-    return true;
+  if (
+    ['aes-256-gcm', 'aes-192-gcm', 'aes-128-gcm', 'chacha20-ietf-poly1305'].indexOf(cipher) === -1
+  ) {
+    return false;
+  }
+  return true;
 }
 
 // AccessKeyRepository that keeps its state in a config file and uses ShadowsocksServer
@@ -146,6 +149,12 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     );
   }
 
+  private isExistingAccessKeyId(id: AccessKeyId): boolean {
+    return this.accessKeys.some((key) => {
+      return key.id === id;
+    });
+  }
+
   private isExistingAccessKeyPort(port: number): boolean {
     return this.accessKeys.some((key) => {
       return key.proxyParams.portNumber === port;
@@ -166,12 +175,30 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.portForNewAccessKeys = port;
   }
 
-  async createNewAccessKey(encryptionMethod?: string): Promise<AccessKey> {
-    const id = this.keyConfig.data().nextId.toString();
+  private generateId(): string {
+    let id: AccessKeyId = this.keyConfig.data().nextId.toString();
     this.keyConfig.data().nextId += 1;
+    // Users can supply their own access key IDs. This means we always need to
+    // verify that any auto-generated key ID hasn't already been used.
+    while (this.isExistingAccessKeyId(id)) {
+      id = this.keyConfig.data().nextId.toString();
+      this.keyConfig.data().nextId += 1;
+    }
+    return id;
+  }
+
+  async createNewAccessKey(params?: AccessKeyCreateParams): Promise<AccessKey> {
+    let id = params?.id;
+    if (id) {
+      if (this.isExistingAccessKeyId(params?.id)) {
+        throw new errors.AccessKeyConflict(id);
+      }
+    } else {
+      id = this.generateId();
+    }
     const metricsId = uuidv4();
     const password = generatePassword();
-    encryptionMethod = encryptionMethod || this.NEW_USER_ENCRYPTION_METHOD;
+    const encryptionMethod = params?.encryptionMethod || this.NEW_USER_ENCRYPTION_METHOD;
     // Validate encryption method.
     if (!isValidCipher(encryptionMethod)) {
       throw new errors.InvalidCipher(encryptionMethod);

@@ -45,3 +45,9 @@ export class InvalidCipher extends OutlineError {
     super(`cipher "${cipher}" is not valid`);
   }
 }
+
+export class AccessKeyConflict extends OutlineError {
+  constructor(accessKeyId?: string) {
+    super(`Access key "${accessKeyId}" conflict`);
+  }
+}

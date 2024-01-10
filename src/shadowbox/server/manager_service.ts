@@ -129,6 +129,7 @@ export function bindService(
   );
 
   apiServer.post(`${apiPrefix}/access-keys`, service.createNewAccessKey.bind(service));
+  apiServer.post(`${apiPrefix}/access-keys/:id`, service.createNewAccessKey.bind(service));
   apiServer.get(`${apiPrefix}/access-keys`, service.listAccessKeys.bind(service));
 
   apiServer.get(`${apiPrefix}/access-keys/:id`, service.getAccessKey.bind(service));
@@ -311,27 +312,39 @@ export class ShadowsocksManagerService {
   }
 
   // Creates a new access key
-  public async createNewAccessKey(req: RequestType, res: ResponseType, next: restify.Next): Promise<void> {
+  public async createNewAccessKey(
+    req: RequestType,
+    res: ResponseType,
+    next: restify.Next
+  ): Promise<void> {
     try {
       logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
-      let encryptionMethod = req.params.method;
-      if (!encryptionMethod) {
-        encryptionMethod = '';
-      }
+      const accessKeyId = req.params.id ? validateAccessKeyId(req.params.id) : '';
+      const encryptionMethod = req.params.method || '';
       if (typeof encryptionMethod !== 'string') {
-        return next(new restifyErrors.InvalidArgumentError(
+        return next(
+          new restifyErrors.InvalidArgumentError(
             {statusCode: 400},
-            `Expected a string encryptionMethod, instead got ${encryptionMethod} of type ${
-                typeof encryptionMethod}`));
+            `Expected a string encryptionMethod, instead got ${encryptionMethod} of type ${typeof encryptionMethod}`
+          )
+        );
       }
-      const accessKeyJson = accessKeyToApiJson(await this.accessKeys.createNewAccessKey(encryptionMethod));
+      const accessKeyJson = accessKeyToApiJson(
+        await this.accessKeys.createNewAccessKey({
+          encryptionMethod,
+          id: accessKeyId,
+        })
+      );
       res.send(201, accessKeyJson);
       logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);
       return next();
-    } catch(error) {
+    } catch (error) {
       logging.error(error);
-      if (error instanceof errors.InvalidCipher) {
+      if (error instanceof errors.InvalidCipher || error instanceof errors.AccessKeyConflict) {
         return next(new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message));
+      }
+      if (error instanceof restifyErrors.InvalidArgumentError) {
+        return next(error);
       }
       return next(new restifyErrors.InternalServerError());
     }

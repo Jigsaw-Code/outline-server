@@ -37,7 +37,7 @@ paths:
         - Server
       description: Changes the hostname for access keys.  Must be a valid hostname or IP address.  If it's a hostname, DNS must be set up independently of this API.
       requestBody:
-        required: true 
+        required: true
         content:
           application/json:
             schema:
@@ -51,7 +51,7 @@ paths:
               'IP address':
                 value: '{"hostname": "127.0.0.1"}'
       responses:
-        '204': 
+        '204':
           description: The hostname was successfully changed.
         '400':
           description: An invalid hostname or IP address was provided.
@@ -82,7 +82,7 @@ paths:
           description: The requested port wasn't an integer from 1 through 65535, or the request had no port parameter.
         '409':
           description: The requested port was already in use by another service.
-          
+
   /server/access-key-data-limit:
     put:
       description: Sets a data transfer limit for all access keys
@@ -146,11 +146,13 @@ paths:
             schema:
               type: object
               properties:
+                id:
+                  type: string
                 method:
                   type: string
             examples:
               '0':
-                value: '{"method":"aes-192-gcm"}'
+                value: '{"id":"123","method":"aes-192-gcm"}'
       responses:
         '201':
           description: The newly created access key
@@ -419,7 +421,7 @@ paths:
       responses:
         '204':
           description: Access key limit deleted successfully.
- 
+
 components:
   schemas:
     Server:

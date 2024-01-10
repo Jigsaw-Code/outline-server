@@ -307,6 +307,43 @@ describe('ShadowsocksManagerService', () => {
   });
 
   describe('createNewAccessKey', () => {
+    it('generates a unique ID by default', (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+
+      const res = {
+        send: (httpCode, data) => {
+          expect(httpCode).toEqual(201);
+          expect(data.id).toEqual('0');
+          responseProcessed = true; // required for afterEach to pass.
+        },
+      };
+      service.createNewAccessKey({params: {}}, res, done);
+    });
+    it('uses provided ID if params is defined', (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+
+      const res = {
+        send: (httpCode, data) => {
+          expect(httpCode).toEqual(201);
+          expect(data.id).toEqual('myKeyId');
+          responseProcessed = true; // required for afterEach to pass.
+        },
+      };
+      service.createNewAccessKey({params: {id: 'myKeyId'}}, res, done);
+    });
+    it('rejects non-string ID', (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+
+      const res = {send: (_httpCode, _data) => {}};
+      service.createNewAccessKey({params: {id: Number('9876')}}, res, (error) => {
+        expect(error.statusCode).toEqual(400);
+        responseProcessed = true; // required for afterEach to pass.
+        done();
+      });
+    });
     it('verify default method', (done) => {
       const repo = getAccessKeyRepository();
       const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
