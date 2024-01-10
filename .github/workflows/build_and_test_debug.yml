@@ -70,7 +70,7 @@ jobs:
         run: ./src/server_manager/install_scripts/install_server.sh --api-port 8080
       
       - name: Test API
-        run: 'curl --fail --insecure $(grep "apiUrl" /opt/outline/access.txt)/server | cut -d: -f 2-)/server'
+        run: 'curl --fail --insecure $(grep "apiUrl" /opt/outline/access.txt | cut -d: -f 2-)/server'
 
   metrics-server:
     name: Metrics Server
