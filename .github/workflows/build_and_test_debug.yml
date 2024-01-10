@@ -70,7 +70,7 @@ jobs:
         run: ./src/server_manager/install_scripts/install_server.sh --hostname localhost
       
       - name: Test API
-        run: 'curl --fail --insecure $(grep "apiUrl" /opt/outline/access.txt | cut -d: -f 2-)/server'
+        run: 'curl --silent --fail --insecure $(grep "apiUrl" /opt/outline/access.txt | cut -d: -f 2-)/server'
 
   metrics-server:
     name: Metrics Server
