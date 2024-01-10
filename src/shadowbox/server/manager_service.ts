@@ -129,7 +129,7 @@ export function bindService(
   );
 
   apiServer.post(`${apiPrefix}/access-keys`, service.createNewAccessKey.bind(service));
-  apiServer.post(`${apiPrefix}/access-keys/:id`, service.createNewAccessKey.bind(service));
+  apiServer.put(`${apiPrefix}/access-keys/:id`, service.createNewAccessKey.bind(service));
   apiServer.get(`${apiPrefix}/access-keys`, service.listAccessKeys.bind(service));
 
   apiServer.get(`${apiPrefix}/access-keys/:id`, service.getAccessKey.bind(service));
