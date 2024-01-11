@@ -179,9 +179,10 @@ function validateAccessKeyId(accessKeyId: unknown): string {
 }
 
 function validateDataLimit(limit: unknown): DataLimit {
-  if (!limit) {
-    throw new restifyErrors.MissingParameterError({statusCode: 400}, 'Missing `limit` parameter');
+  if (typeof limit === 'undefined') {
+    return undefined;
   }
+
   const bytes = (limit as DataLimit).bytes;
   if (!(Number.isInteger(bytes) && bytes >= 0)) {
     throw new restifyErrors.InvalidArgumentError(
@@ -192,15 +193,18 @@ function validateDataLimit(limit: unknown): DataLimit {
   return limit as DataLimit;
 }
 
-function validatePassword(password: unknown): string {
-  if (typeof password !== 'string') {
-    throw new restifyErrors.InvalidArgumentError(
-      {statusCode: 400},
-      'Parameter `password` must be of type string'
-    );
+function validateIsString(value: unknown): string {
+  if (typeof value === 'undefined') {
+    return undefined;
   }
 
-  return password;
+  if (typeof value !== 'string') {
+    throw new restifyErrors.InvalidArgumentError(
+      {statusCode: 400},
+      `Expected a string, instead got ${value} of type ${typeof value}`
+    );
+  }
+  return value;
 }
 
 // The ShadowsocksManagerService manages the access keys that can use the server
@@ -350,7 +354,7 @@ export class ShadowsocksManagerService {
       }
 
       const dataLimit = validateDataLimit(req.params.limit);
-      const password = validatePassword(req.params.password);
+      const password = validateIsString(req.params.password);
 
       const accessKeyJson = accessKeyToApiJson(
         await this.accessKeys.createNewAccessKey({
