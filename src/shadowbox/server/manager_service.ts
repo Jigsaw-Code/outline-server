@@ -200,13 +200,6 @@ function validatePassword(password: unknown): string {
     );
   }
 
-  const bytesOfPassword = Buffer.byteLength(password, 'utf8');
-  if (bytesOfPassword < 22) {
-    throw new restifyErrors.InvalidArgumentError(
-      {statusCode: 400},
-      'Password must be at least 22 bytes'
-    );
-  }
   return password;
 }
 
