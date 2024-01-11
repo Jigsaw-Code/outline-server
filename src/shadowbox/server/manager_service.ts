@@ -193,18 +193,14 @@ function validateDataLimit(limit: unknown): DataLimit {
   return limit as DataLimit;
 }
 
-function validateIsString(value: unknown): string {
-  if (typeof value === 'undefined') {
-    return undefined;
-  }
-
-  if (typeof value !== 'string') {
+function validateStringParam(param: unknown, paramName: string): string {
+  if (typeof param !== 'string') {
     throw new restifyErrors.InvalidArgumentError(
       {statusCode: 400},
-      `Expected a string, instead got ${value} of type ${typeof value}`
+      `Expected a string for ${paramName}, instead got ${param} of type ${typeof param}`
     );
   }
-  return value;
+  return param;
 }
 
 // The ShadowsocksManagerService manages the access keys that can use the server
@@ -333,28 +329,10 @@ export class ShadowsocksManagerService {
   ): Promise<void> {
     try {
       logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
-      const encryptionMethod = req.params.method || '';
-      if (typeof encryptionMethod !== 'string') {
-        return next(
-          new restifyErrors.InvalidArgumentError(
-            {statusCode: 400},
-            `Expected a string encryptionMethod, instead got ${encryptionMethod} of type ${typeof encryptionMethod}`
-          )
-        );
-      }
-
-      const name = req.params.name || '';
-      if (typeof name !== 'string') {
-        return next(
-          new restifyErrors.InvalidArgumentError(
-            {statusCode: 400},
-            `Expected a string name, instead got ${name} of type ${typeof name}`
-          )
-        );
-      }
-
+      const encryptionMethod = validateStringParam(req.params.method || '', 'encryptionMethod');
+      const name = validateStringParam(req.params.name || '', 'name');
       const dataLimit = validateDataLimit(req.params.limit);
-      const password = validateIsString(req.params.password);
+      const password = validateStringParam(req.params.password, 'password');
 
       const accessKeyJson = accessKeyToApiJson(
         await this.accessKeys.createNewAccessKey({
