@@ -194,6 +194,10 @@ function validateDataLimit(limit: unknown): DataLimit {
 }
 
 function validateStringParam(param: unknown, paramName: string): string {
+  if (typeof param === 'undefined') {
+    return undefined;
+  }
+
   if (typeof param !== 'string') {
     throw new restifyErrors.InvalidArgumentError(
       {statusCode: 400},
