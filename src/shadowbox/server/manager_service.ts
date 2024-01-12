@@ -179,9 +179,10 @@ function validateAccessKeyId(accessKeyId: unknown): string {
 }
 
 function validateDataLimit(limit: unknown): DataLimit {
-  if (!limit) {
-    throw new restifyErrors.MissingParameterError({statusCode: 400}, 'Missing `limit` parameter');
+  if (typeof limit === 'undefined') {
+    return undefined;
   }
+
   const bytes = (limit as DataLimit).bytes;
   if (!(Number.isInteger(bytes) && bytes >= 0)) {
     throw new restifyErrors.InvalidArgumentError(
@@ -190,6 +191,20 @@ function validateDataLimit(limit: unknown): DataLimit {
     );
   }
   return limit as DataLimit;
+}
+
+function validateStringParam(param: unknown, paramName: string): string {
+  if (typeof param === 'undefined') {
+    return undefined;
+  }
+
+  if (typeof param !== 'string') {
+    throw new restifyErrors.InvalidArgumentError(
+      {statusCode: 400},
+      `Expected a string for ${paramName}, instead got ${param} of type ${typeof param}`
+    );
+  }
+  return param;
 }
 
 // The ShadowsocksManagerService manages the access keys that can use the server
@@ -311,27 +326,39 @@ export class ShadowsocksManagerService {
   }
 
   // Creates a new access key
-  public async createNewAccessKey(req: RequestType, res: ResponseType, next: restify.Next): Promise<void> {
+  public async createNewAccessKey(
+    req: RequestType,
+    res: ResponseType,
+    next: restify.Next
+  ): Promise<void> {
     try {
       logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
-      let encryptionMethod = req.params.method;
-      if (!encryptionMethod) {
-        encryptionMethod = '';
-      }
-      if (typeof encryptionMethod !== 'string') {
-        return next(new restifyErrors.InvalidArgumentError(
-            {statusCode: 400},
-            `Expected a string encryptionMethod, instead got ${encryptionMethod} of type ${
-                typeof encryptionMethod}`));
-      }
-      const accessKeyJson = accessKeyToApiJson(await this.accessKeys.createNewAccessKey(encryptionMethod));
+      const encryptionMethod = validateStringParam(req.params.method || '', 'encryptionMethod');
+      const name = validateStringParam(req.params.name || '', 'name');
+      const dataLimit = validateDataLimit(req.params.limit);
+      const password = validateStringParam(req.params.password, 'password');
+
+      const accessKeyJson = accessKeyToApiJson(
+        await this.accessKeys.createNewAccessKey({
+          encryptionMethod,
+          name,
+          dataLimit,
+          password,
+        })
+      );
       res.send(201, accessKeyJson);
       logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);
       return next();
-    } catch(error) {
+    } catch (error) {
       logging.error(error);
       if (error instanceof errors.InvalidCipher) {
         return next(new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message));
+      }
+      if (
+        error instanceof restifyErrors.InvalidArgumentError ||
+        error instanceof restifyErrors.MissingParameterError
+      ) {
+        return next(error);
       }
       return next(new restifyErrors.InternalServerError());
     }

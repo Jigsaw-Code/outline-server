@@ -60,7 +60,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('New access keys sees the encryption method correctly', (done) => {
     const repo = new RepoBuilder().build();
-    repo.createNewAccessKey('aes-256-gcm').then((accessKey) => {
+    repo.createNewAccessKey({encryptionMethod: 'aes-256-gcm'}).then((accessKey) => {
       expect(accessKey).toBeDefined();
       expect(accessKey.proxyParams.encryptionMethod).toEqual('aes-256-gcm');
       done();
