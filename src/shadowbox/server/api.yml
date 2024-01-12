@@ -151,7 +151,9 @@ paths:
                 method:
                   type: string
             examples:
-              '0':
+              'No ID specified':
+                value: '{"method":"aes-192-gcm"}'
+              'Provide an ID':
                 value: '{"id":"123","method":"aes-192-gcm"}'
       responses:
         '201':
