@@ -148,13 +148,21 @@ paths:
               properties:
                 id:
                   type: string
+                name:
+                  type: string
                 method:
                   type: string
+                password:
+                  type: string
+                port:
+                  type: integer
+                dataLimit:
+                  $ref: "#/components/schemas/DataLimit"
             examples:
-              'No ID specified':
+              'No params specified':
                 value: '{"method":"aes-192-gcm"}'
-              'Provide an ID':
-                value: '{"id":"123","method":"aes-192-gcm"}'
+              'Provide params':
+                value: '{"id":"123","method":"aes-192-gcm","name":"First","password":"8iu8V8EeoFVpwQvQeS9wiD","limit":{"bytes":10000}}'
       responses:
         '201':
           description: The newly created access key

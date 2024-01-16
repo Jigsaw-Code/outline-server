@@ -180,9 +180,10 @@ function validateAccessKeyId(accessKeyId: unknown): string {
 }
 
 function validateDataLimit(limit: unknown): DataLimit {
-  if (!limit) {
-    throw new restifyErrors.MissingParameterError({statusCode: 400}, 'Missing `limit` parameter');
+  if (typeof limit === 'undefined') {
+    return undefined;
   }
+
   const bytes = (limit as DataLimit).bytes;
   if (!(Number.isInteger(bytes) && bytes >= 0)) {
     throw new restifyErrors.InvalidArgumentError(
@@ -191,6 +192,20 @@ function validateDataLimit(limit: unknown): DataLimit {
     );
   }
   return limit as DataLimit;
+}
+
+function validateStringParam(param: unknown, paramName: string): string {
+  if (typeof param === 'undefined') {
+    return undefined;
+  }
+
+  if (typeof param !== 'string') {
+    throw new restifyErrors.InvalidArgumentError(
+      {statusCode: 400},
+      `Expected a string for ${paramName}, instead got ${param} of type ${typeof param}`
+    );
+  }
+  return param;
 }
 
 // The ShadowsocksManagerService manages the access keys that can use the server
@@ -319,20 +334,19 @@ export class ShadowsocksManagerService {
   ): Promise<void> {
     try {
       logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
+      const encryptionMethod = validateStringParam(req.params.method || '', 'encryptionMethod');
       const accessKeyId = req.params.id ? validateAccessKeyId(req.params.id) : '';
-      const encryptionMethod = req.params.method || '';
-      if (typeof encryptionMethod !== 'string') {
-        return next(
-          new restifyErrors.InvalidArgumentError(
-            {statusCode: 400},
-            `Expected a string encryptionMethod, instead got ${encryptionMethod} of type ${typeof encryptionMethod}`
-          )
-        );
-      }
+      const name = validateStringParam(req.params.name || '', 'name');
+      const dataLimit = validateDataLimit(req.params.limit);
+      const password = validateStringParam(req.params.password, 'password');
+
       const accessKeyJson = accessKeyToApiJson(
         await this.accessKeys.createNewAccessKey({
           encryptionMethod,
           id: accessKeyId,
+          name,
+          dataLimit,
+          password,
         })
       );
       res.send(201, accessKeyJson);
@@ -343,7 +357,10 @@ export class ShadowsocksManagerService {
       if (error instanceof errors.InvalidCipher || error instanceof errors.AccessKeyConflict) {
         return next(new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message));
       }
-      if (error instanceof restifyErrors.InvalidArgumentError) {
+      if (
+        error instanceof restifyErrors.InvalidArgumentError ||
+        error instanceof restifyErrors.MissingParameterError
+      ) {
         return next(error);
       }
       return next(new restifyErrors.InternalServerError());

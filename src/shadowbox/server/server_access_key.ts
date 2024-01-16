@@ -197,8 +197,9 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       id = this.generateId();
     }
     const metricsId = uuidv4();
-    const password = generatePassword();
+    const password = params?.password ?? generatePassword();
     const encryptionMethod = params?.encryptionMethod || this.NEW_USER_ENCRYPTION_METHOD;
+
     // Validate encryption method.
     if (!isValidCipher(encryptionMethod)) {
       throw new errors.InvalidCipher(encryptionMethod);
@@ -209,7 +210,9 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       encryptionMethod,
       password,
     };
-    const accessKey = new ServerAccessKey(id, '', metricsId, proxyParams);
+    const name = params?.name ?? '';
+    const dataLimit = params?.dataLimit;
+    const accessKey = new ServerAccessKey(id, name, metricsId, proxyParams, dataLimit);
     this.accessKeys.push(accessKey);
     this.saveAccessKeys();
     await this.updateServer();
