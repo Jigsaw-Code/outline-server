@@ -356,6 +356,15 @@ describe('ShadowsocksManagerService', () => {
             done();
           });
         });
+        it('rejects if key exists', async (done) => {
+          const accessKey = await repo.createNewAccessKey();
+          const res = {send: (_httpCode, _data) => {}};
+          service.createAccessKey({params: {id: accessKey.id}}, res, (error) => {
+            expect(error.statusCode).toEqual(409);
+            responseProcessed = true; // required for afterEach to pass.
+            done();
+          });
+        });
         it('creates key with provided ID', (done) => {
           const res = {
             send: (httpCode, data) => {
