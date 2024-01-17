@@ -24,7 +24,6 @@ import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
 import {ServerConfigJson} from './server_config';
 import {SharedMetricsPublisher} from './shared_metrics';
-import {customMatchers} from './testing/matchers';
 
 interface ServerInfo {
   name: string;
@@ -51,7 +50,6 @@ describe('ShadowsocksManagerService', () => {
   // callback is invoked, followed by the next (done) callback.
   let responseProcessed = false;
   beforeEach(() => {
-    jasmine.addMatchers(customMatchers);
     responseProcessed = false;
   });
   afterEach(() => {
@@ -298,8 +296,8 @@ describe('ShadowsocksManagerService', () => {
           expect(data.accessKeys.length).toEqual(2);
           const serviceAccessKey1 = data.accessKeys[0];
           const serviceAccessKey2 = data.accessKeys[1];
-          expect(serviceAccessKey1).toHavePropertiesOf(EXPECTED_ACCESS_KEY_PROPERTIES);
-          expect(serviceAccessKey2).toHavePropertiesOf(EXPECTED_ACCESS_KEY_PROPERTIES);
+          expect(Object.keys(serviceAccessKey1).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
+          expect(Object.keys(serviceAccessKey2).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
           expect(serviceAccessKey1.name).toEqual(accessKeyName);
           responseProcessed = true; // required for afterEach to pass.
         },
@@ -396,7 +394,7 @@ describe('ShadowsocksManagerService', () => {
           const res = {
             send: (httpCode, data) => {
               expect(httpCode).toEqual(201);
-              expect(data).toHavePropertiesOf(EXPECTED_ACCESS_KEY_PROPERTIES);
+              expect(Object.keys(data).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
               expect(data.method).toEqual('chacha20-ietf-poly1305');
               responseProcessed = true; // required for afterEach to pass.
             },
@@ -408,7 +406,7 @@ describe('ShadowsocksManagerService', () => {
           const res = {
             send: (httpCode, data) => {
               expect(httpCode).toEqual(201);
-              expect(data).toHavePropertiesOf(EXPECTED_ACCESS_KEY_PROPERTIES);
+              expect(Object.keys(data).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
               expect(data.method).toEqual('aes-256-gcm');
               responseProcessed = true; // required for afterEach to pass.
             },
