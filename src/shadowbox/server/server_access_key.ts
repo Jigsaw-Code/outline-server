@@ -149,6 +149,12 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     );
   }
 
+  private isExistingAccessKeyId(id: AccessKeyId): boolean {
+    return this.accessKeys.some((key) => {
+      return key.id === id;
+    });
+  }
+
   private isExistingAccessKeyPort(port: number): boolean {
     return this.accessKeys.some((key) => {
       return key.proxyParams.portNumber === port;
@@ -169,9 +175,27 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.portForNewAccessKeys = port;
   }
 
-  async createNewAccessKey(params?: AccessKeyCreateParams): Promise<AccessKey> {
-    const id = this.keyConfig.data().nextId.toString();
+  private generateId(): string {
+    let id: AccessKeyId = this.keyConfig.data().nextId.toString();
     this.keyConfig.data().nextId += 1;
+    // Users can supply their own access key IDs. This means we always need to
+    // verify that any auto-generated key ID hasn't already been used.
+    while (this.isExistingAccessKeyId(id)) {
+      id = this.keyConfig.data().nextId.toString();
+      this.keyConfig.data().nextId += 1;
+    }
+    return id;
+  }
+
+  async createNewAccessKey(params?: AccessKeyCreateParams): Promise<AccessKey> {
+    let id = params?.id;
+    if (id) {
+      if (this.isExistingAccessKeyId(params?.id)) {
+        throw new errors.AccessKeyConflict(id);
+      }
+    } else {
+      id = this.generateId();
+    }
     const metricsId = uuidv4();
     const password = params?.password ?? generatePassword();
     const encryptionMethod = params?.encryptionMethod || this.NEW_USER_ENCRYPTION_METHOD;

@@ -28,14 +28,24 @@ import {ManagerMetrics} from './manager_metrics';
 import {ServerConfigJson} from './server_config';
 import {SharedMetricsPublisher} from './shared_metrics';
 
+interface AccessKeyJson {
+  // The unique identifier of this access key.
+  id: string;
+  // Admin-controlled, editable name for this access key.
+  name: string;
+  // Shadowsocks-specific details and credentials.
+  password: string;
+  port: number;
+  method: string;
+  dataLimit: DataLimit;
+  accessUrl: string;
+}
+
 // Creates a AccessKey response.
-function accessKeyToApiJson(accessKey: AccessKey) {
+function accessKeyToApiJson(accessKey: AccessKey): AccessKeyJson {
   return {
-    // The unique identifier of this access key.
     id: accessKey.id,
-    // Admin-controlled, editable name for this access key.
     name: accessKey.name,
-    // Shadowsocks-specific details and credentials.
     password: accessKey.proxyParams.password,
     port: accessKey.proxyParams.portNumber,
     method: accessKey.proxyParams.encryptionMethod,
@@ -129,6 +139,7 @@ export function bindService(
   );
 
   apiServer.post(`${apiPrefix}/access-keys`, service.createNewAccessKey.bind(service));
+  apiServer.put(`${apiPrefix}/access-keys/:id`, service.createAccessKey.bind(service));
   apiServer.get(`${apiPrefix}/access-keys`, service.listAccessKeys.bind(service));
 
   apiServer.get(`${apiPrefix}/access-keys/:id`, service.getAccessKey.bind(service));
@@ -325,14 +336,8 @@ export class ShadowsocksManagerService {
     return next();
   }
 
-  // Creates a new access key
-  public async createNewAccessKey(
-    req: RequestType,
-    res: ResponseType,
-    next: restify.Next
-  ): Promise<void> {
+  private async createAccessKeyFromRequest(req: RequestType, id?: string): Promise<AccessKeyJson> {
     try {
-      logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
       const encryptionMethod = validateStringParam(req.params.method || '', 'encryptionMethod');
       const name = validateStringParam(req.params.name || '', 'name');
       const dataLimit = validateDataLimit(req.params.limit);
@@ -341,18 +346,68 @@ export class ShadowsocksManagerService {
       const accessKeyJson = accessKeyToApiJson(
         await this.accessKeys.createNewAccessKey({
           encryptionMethod,
+          id,
           name,
           dataLimit,
           password,
         })
       );
+      return accessKeyJson;
+    } catch (error) {
+      logging.error(error);
+      if (error instanceof errors.InvalidCipher) {
+        throw new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message);
+      }
+      throw error;
+    }
+  }
+
+  // Creates a new access key
+  public async createNewAccessKey(
+    req: RequestType,
+    res: ResponseType,
+    next: restify.Next
+  ): Promise<void> {
+    try {
+      logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
+      if (req.params.id) {
+        return next(
+          new restifyErrors.InvalidArgumentError({statusCode: 400}, 'Parameter `id` is not allowed')
+        );
+      }
+      const accessKeyJson = await this.createAccessKeyFromRequest(req);
       res.send(201, accessKeyJson);
       logging.debug(`createNewAccessKey response ${JSON.stringify(accessKeyJson)}`);
       return next();
     } catch (error) {
       logging.error(error);
-      if (error instanceof errors.InvalidCipher) {
-        return next(new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message));
+      if (
+        error instanceof restifyErrors.InvalidArgumentError ||
+        error instanceof restifyErrors.MissingParameterError
+      ) {
+        return next(error);
+      }
+      return next(new restifyErrors.InternalServerError());
+    }
+  }
+
+  // Creates an access key with a specific identifier
+  public async createAccessKey(
+    req: RequestType,
+    res: ResponseType,
+    next: restify.Next
+  ): Promise<void> {
+    try {
+      logging.debug(`createAccessKey request ${JSON.stringify(req.params)}`);
+      const accessKeyId = validateAccessKeyId(req.params.id);
+      const accessKeyJson = await this.createAccessKeyFromRequest(req, accessKeyId);
+      res.send(201, accessKeyJson);
+      logging.debug(`createAccessKey response ${JSON.stringify(accessKeyJson)}`);
+      return next();
+    } catch (error) {
+      logging.error(error);
+      if (error instanceof errors.AccessKeyConflict) {
+        return next(new restifyErrors.ConflictError(error.message));
       }
       if (
         error instanceof restifyErrors.InvalidArgumentError ||

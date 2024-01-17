@@ -49,6 +49,8 @@ export interface AccessKey {
 }
 
 export interface AccessKeyCreateParams {
+  // The unique identifier to give the access key. Throws if it exists.
+  readonly id?: AccessKeyId;
   // The encryption method to use for the access key.
   readonly encryptionMethod?: string;
   // The name to give the access key.
@@ -60,7 +62,7 @@ export interface AccessKeyCreateParams {
 }
 
 export interface AccessKeyRepository {
-  // Creates a new access key. Parameters are chosen automatically.
+  // Creates a new access key. Parameters are chosen automatically if not provided.
   createNewAccessKey(params?: AccessKeyCreateParams): Promise<AccessKey>;
   // Removes the access key given its id. Throws on failure.
   removeAccessKey(id: AccessKeyId);

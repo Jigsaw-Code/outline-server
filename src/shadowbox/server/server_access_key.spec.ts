@@ -49,6 +49,38 @@ describe('ServerAccessKeyRepository', () => {
     });
   });
 
+  it('Generates unique access key IDs by default', async (done) => {
+    const repo = new RepoBuilder().build();
+    const accessKey1 = await repo.createNewAccessKey();
+    const accessKey2 = await repo.createNewAccessKey();
+    const accessKey3 = await repo.createNewAccessKey();
+    expect(accessKey1.id).not.toEqual(accessKey2.id);
+    expect(accessKey2.id).not.toEqual(accessKey3.id);
+    expect(accessKey3.id).not.toEqual(accessKey1.id);
+    done();
+  });
+
+  it('Can create new access keys with a given ID', async (done) => {
+    const repo = new RepoBuilder().build();
+    const accessKey1 = await repo.createNewAccessKey();
+    const accessKey2 = await repo.createNewAccessKey({id: 'myKeyId'});
+    const accessKey3 = await repo.createNewAccessKey();
+    expect(accessKey1.id).toEqual('0');
+    expect(accessKey2.id).toEqual('myKeyId');
+    expect(accessKey3.id).toEqual('1');
+    done();
+  });
+
+  it('createNewAccessKey throws on creating keys with existing IDs', async (done) => {
+    const repo = new RepoBuilder().build();
+    await repo.createNewAccessKey({id: 'myKeyId'});
+    await expectAsyncThrow(
+      repo.createNewAccessKey.bind(repo, {id: 'myKeyId'}),
+      errors.AccessKeyConflict
+    );
+    done();
+  });
+
   it('New access keys have the correct default encryption method', (done) => {
     const repo = new RepoBuilder().build();
     repo.createNewAccessKey().then((accessKey) => {

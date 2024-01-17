@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {AccessKeyId} from './access_key';
+
 // TODO(fortuna): Reuse CustomError from server_manager.
 class OutlineError extends Error {
   constructor(message: string) {
@@ -35,7 +37,7 @@ export class PortUnavailable extends OutlineError {
 }
 
 export class AccessKeyNotFound extends OutlineError {
-  constructor(accessKeyId?: string) {
+  constructor(accessKeyId?: AccessKeyId) {
     super(`Access key "${accessKeyId}" not found`);
   }
 }
@@ -43,5 +45,11 @@ export class AccessKeyNotFound extends OutlineError {
 export class InvalidCipher extends OutlineError {
   constructor(public cipher: string) {
     super(`cipher "${cipher}" is not valid`);
+  }
+}
+
+export class AccessKeyConflict extends OutlineError {
+  constructor(accessKeyId?: AccessKeyId) {
+    super(`Access key "${accessKeyId}" conflict`);
   }
 }
