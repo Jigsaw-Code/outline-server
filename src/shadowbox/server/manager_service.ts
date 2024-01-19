@@ -20,7 +20,7 @@ import {makeConfig, SIP002_URI} from 'outline-shadowsocksconfig';
 
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {AccessKey, AccessKeyRepository, DataLimit} from '../model/access_key';
+import {AccessKey, AccessKeyRepository, AccessKeyState, DataLimit} from '../model/access_key';
 import * as errors from '../model/errors';
 import {version} from '../package.json';
 
@@ -31,6 +31,8 @@ import {SharedMetricsPublisher} from './shared_metrics';
 interface AccessKeyJson {
   // The unique identifier of this access key.
   id: string;
+  // The state of this access key.
+  state: AccessKeyState;
   // Admin-controlled, editable name for this access key.
   name: string;
   // Shadowsocks-specific details and credentials.
@@ -45,6 +47,7 @@ interface AccessKeyJson {
 function accessKeyToApiJson(accessKey: AccessKey): AccessKeyJson {
   return {
     id: accessKey.id,
+    state: accessKey.state,
     name: accessKey.name,
     password: accessKey.proxyParams.password,
     port: accessKey.proxyParams.portNumber,

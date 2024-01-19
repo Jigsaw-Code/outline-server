@@ -15,6 +15,16 @@
 export type AccessKeyId = string;
 export type AccessKeyMetricsId = string;
 
+// The state of an access key, indicating the place in its life cycle.
+export enum AccessKeyState {
+  // The default value if the state is missing or omitted.
+  UNSPECIFIED = 'UNSPECIFIED',
+  // The key can receive traffic.
+  ACTIVE = 'ACTIVE',
+  // The key has exceeded its quota threshold.
+  QUOTA_THRESHOLD_EXCEEDED = 'QUOTA_THRESHOLD_EXCEEDED',
+}
+
 // Parameters needed to access a Shadowsocks proxy.
 export interface ProxyParams {
   // Hostname of the proxy
@@ -36,6 +46,8 @@ export interface DataLimit {
 export interface AccessKey {
   // The unique identifier for this access key.
   readonly id: AccessKeyId;
+  // The state of an access key, indicating the place in its life cycle.
+  readonly state: AccessKeyState;
   // Admin-controlled, editable name for this access key.
   readonly name: string;
   // Used in metrics reporting to decouple from the real id. Can change.

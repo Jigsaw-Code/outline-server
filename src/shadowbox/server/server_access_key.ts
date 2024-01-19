@@ -26,6 +26,7 @@ import {
   AccessKeyId,
   AccessKeyMetricsId,
   AccessKeyRepository,
+  AccessKeyState,
   DataLimit,
   ProxyParams,
 } from '../model/access_key';
@@ -61,6 +62,13 @@ class ServerAccessKey implements AccessKey {
     readonly proxyParams: ProxyParams,
     public dataLimit?: DataLimit
   ) {}
+
+  get state(): AccessKeyState {
+    if (this.isOverDataLimit) {
+      return AccessKeyState.QUOTA_THRESHOLD_EXCEEDED;
+    }
+    return AccessKeyState.ACTIVE;
+  }
 }
 
 // Generates a random password for Shadowsocks access keys.
@@ -306,7 +314,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
 
   private updateServer(): Promise<void> {
     const serverAccessKeys = this.accessKeys
-      .filter((key) => !key.isOverDataLimit)
+      .filter((key) => key.state == AccessKeyState.ACTIVE)
       .map((key) => {
         return {
           id: key.id,
