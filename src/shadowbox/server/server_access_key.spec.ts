@@ -17,7 +17,7 @@ import * as net from 'net';
 import {ManualClock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
 import {InMemoryConfig} from '../infrastructure/json_config';
-import {AccessKeyId, AccessKeyRepository, DataLimit} from '../model/access_key';
+import {AccessKeyId, AccessKeyRepository, AccessKeyState, DataLimit} from '../model/access_key';
 import * as errors from '../model/errors';
 
 import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
@@ -102,7 +102,7 @@ describe('ServerAccessKeyRepository', () => {
   it('Creates access keys under limit', async (done) => {
     const repo = new RepoBuilder().build();
     const accessKey = await repo.createNewAccessKey();
-    expect(accessKey.isOverDataLimit).toBeFalsy();
+    expect(accessKey.state).toBe(AccessKeyState.ACTIVE);
     done();
   });
 
@@ -265,13 +265,13 @@ describe('ServerAccessKeyRepository', () => {
     const key = await repo.createNewAccessKey();
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 0});
 
-    expect(key.isOverDataLimit).toBeTruthy();
+    expect(key.state).toBe(AccessKeyState.QUOTA_THRESHOLD_EXCEEDED);
     let serverKeys = server.getAccessKeys();
     expect(serverKeys.length).toEqual(0);
 
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 1000});
 
-    expect(key.isOverDataLimit).toBeFalsy();
+    expect(key.state).toBe(AccessKeyState.ACTIVE);
     serverKeys = server.getAccessKeys();
     expect(serverKeys.length).toEqual(1);
     expect(serverKeys[0].id).toEqual(key.id);
@@ -290,13 +290,13 @@ describe('ServerAccessKeyRepository', () => {
     const higherLimitThanDefault = await repo.createNewAccessKey();
     await repo.setDefaultDataLimit({bytes: 1000});
 
-    expect(lowerLimitThanDefault.isOverDataLimit).toBeFalsy();
+    expect(lowerLimitThanDefault.state).toBe(AccessKeyState.ACTIVE);
     await setKeyLimitAndEnforce(repo, lowerLimitThanDefault.id, {bytes: 500});
-    expect(lowerLimitThanDefault.isOverDataLimit).toBeTruthy();
+    expect(lowerLimitThanDefault.state).toBe(AccessKeyState.QUOTA_THRESHOLD_EXCEEDED);
 
-    expect(higherLimitThanDefault.isOverDataLimit).toBeTruthy();
+    expect(higherLimitThanDefault.state).toBe(AccessKeyState.QUOTA_THRESHOLD_EXCEEDED);
     await setKeyLimitAndEnforce(repo, higherLimitThanDefault.id, {bytes: 1500});
-    expect(higherLimitThanDefault.isOverDataLimit).toBeFalsy();
+    expect(higherLimitThanDefault.state).toBe(AccessKeyState.ACTIVE);
     done();
   });
 
@@ -323,10 +323,10 @@ describe('ServerAccessKeyRepository', () => {
     await repo.start(new ManualClock());
     await repo.setDefaultDataLimit({bytes: 0});
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 1000});
-    expect(key.isOverDataLimit).toBeFalsy();
+    expect(key.state).toBe(AccessKeyState.ACTIVE);
 
     await removeKeyLimitAndEnforce(repo, key.id);
-    expect(key.isOverDataLimit).toBeTruthy();
+    expect(key.state).toBe(AccessKeyState.QUOTA_THRESHOLD_EXCEEDED);
     done();
   });
 
@@ -341,13 +341,13 @@ describe('ServerAccessKeyRepository', () => {
     const key = await repo.createNewAccessKey();
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 0});
 
-    expect(key.isOverDataLimit).toBeTruthy();
+    expect(key.state).toBe(AccessKeyState.QUOTA_THRESHOLD_EXCEEDED);
     let serverKeys = server.getAccessKeys();
     expect(serverKeys.length).toEqual(0);
 
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 1000});
 
-    expect(key.isOverDataLimit).toBeFalsy();
+    expect(key.state).toBe(AccessKeyState.ACTIVE);
     serverKeys = server.getAccessKeys();
     expect(serverKeys.length).toEqual(1);
     expect(serverKeys[0].id).toEqual(key.id);
@@ -366,13 +366,13 @@ describe('ServerAccessKeyRepository', () => {
     const higherLimitThanDefault = await repo.createNewAccessKey();
     await repo.setDefaultDataLimit({bytes: 1000});
 
-    expect(lowerLimitThanDefault.isOverDataLimit).toBeFalsy();
+    expect(lowerLimitThanDefault.state).toBe(AccessKeyState.ACTIVE);
     await setKeyLimitAndEnforce(repo, lowerLimitThanDefault.id, {bytes: 500});
-    expect(lowerLimitThanDefault.isOverDataLimit).toBeTruthy();
+    expect(lowerLimitThanDefault.state).toBe(AccessKeyState.QUOTA_THRESHOLD_EXCEEDED);
 
-    expect(higherLimitThanDefault.isOverDataLimit).toBeTruthy();
+    expect(higherLimitThanDefault.state).toBe(AccessKeyState.QUOTA_THRESHOLD_EXCEEDED);
     await setKeyLimitAndEnforce(repo, higherLimitThanDefault.id, {bytes: 1500});
-    expect(higherLimitThanDefault.isOverDataLimit).toBeFalsy();
+    expect(higherLimitThanDefault.state).toBe(AccessKeyState.ACTIVE);
     done();
   });
 
@@ -406,10 +406,10 @@ describe('ServerAccessKeyRepository', () => {
     await repo.start(new ManualClock());
     await repo.setDefaultDataLimit({bytes: 0});
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 1000});
-    expect(key.isOverDataLimit).toBeFalsy();
+    expect(key.state).toBe(AccessKeyState.ACTIVE);
 
     await removeKeyLimitAndEnforce(repo, key.id);
-    expect(key.isOverDataLimit).toBeTruthy();
+    expect(key.state).toBe(AccessKeyState.QUOTA_THRESHOLD_EXCEEDED);
     done();
   });
 
@@ -424,11 +424,11 @@ describe('ServerAccessKeyRepository', () => {
     await repo.start(new ManualClock());
 
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 0});
-    expect(key.isOverDataLimit).toBeTruthy();
+    expect(key.state).toBe(AccessKeyState.QUOTA_THRESHOLD_EXCEEDED);
     expect(server.getAccessKeys().length).toEqual(0);
 
     await removeKeyLimitAndEnforce(repo, key.id);
-    expect(key.isOverDataLimit).toBeFalsy();
+    expect(key.state).toBe(AccessKeyState.ACTIVE);
     expect(server.getAccessKeys().length).toEqual(1);
     done();
   });
@@ -456,8 +456,8 @@ describe('ServerAccessKeyRepository', () => {
     // We enforce asynchronously, in setAccessKeyDataLimit, so explicitly call it here to make sure
     // enforcement is done before we make assertions.
     await repo.enforceAccessKeyDataLimits();
-    expect(accessKey1.isOverDataLimit).toBeTruthy();
-    expect(accessKey2.isOverDataLimit).toBeFalsy();
+    expect(accessKey1.state).toBe(AccessKeyState.QUOTA_THRESHOLD_EXCEEDED);
+    expect(accessKey2.state).toBe(AccessKeyState.ACTIVE);
     // We determine which access keys have been enabled/disabled by accessing them from
     // the server's perspective, ensuring `server.update` has been called.
     let serverAccessKeys = server.getAccessKeys();
@@ -468,8 +468,8 @@ describe('ServerAccessKeyRepository', () => {
     prometheusClient.bytesTransferredById = {'0': 500, '1': 1000};
     repo.setDefaultDataLimit({bytes: 700});
     await repo.enforceAccessKeyDataLimits();
-    expect(accessKey1.isOverDataLimit).toBeFalsy();
-    expect(accessKey2.isOverDataLimit).toBeTruthy();
+    expect(accessKey1.state).toBe(AccessKeyState.ACTIVE);
+    expect(accessKey2.state).toBe(AccessKeyState.QUOTA_THRESHOLD_EXCEEDED);
     serverAccessKeys = server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(1);
     expect(serverAccessKeys[0].id).toEqual(accessKey1.id);
@@ -505,8 +505,8 @@ describe('ServerAccessKeyRepository', () => {
     // enforcement is done before we make assertions.
     await repo.enforceAccessKeyDataLimits();
     expect(server.getAccessKeys().length).toEqual(2);
-    expect(accessKey1.isOverDataLimit).toBeFalsy();
-    expect(accessKey2.isOverDataLimit).toBeFalsy();
+    expect(accessKey1.state).toBe(AccessKeyState.ACTIVE);
+    expect(accessKey2.state).toBe(AccessKeyState.ACTIVE);
     done();
   });
 
@@ -555,14 +555,14 @@ describe('ServerAccessKeyRepository', () => {
     await setKeyLimitAndEnforce(repo, perKeyLimited.id, {bytes: 100});
 
     await repo.enforceAccessKeyDataLimits();
-    expect(perKeyLimited.isOverDataLimit).toBeTruthy();
-    expect(defaultLimited.isOverDataLimit).toBeFalsy();
+    expect(perKeyLimited.state).toBe(AccessKeyState.QUOTA_THRESHOLD_EXCEEDED);
+    expect(defaultLimited.state).toBe(AccessKeyState.ACTIVE);
 
     prometheusClient.bytesTransferredById[perKeyLimited.id] = 50;
     prometheusClient.bytesTransferredById[defaultLimited.id] = 600;
     await repo.enforceAccessKeyDataLimits();
-    expect(perKeyLimited.isOverDataLimit).toBeFalsy();
-    expect(defaultLimited.isOverDataLimit).toBeTruthy();
+    expect(perKeyLimited.state).toBe(AccessKeyState.ACTIVE);
+    expect(defaultLimited.state).toBe(AccessKeyState.QUOTA_THRESHOLD_EXCEEDED);
 
     done();
   });
@@ -660,9 +660,9 @@ describe('ServerAccessKeyRepository', () => {
     await repo.start(clock);
     await clock.runCallbacks();
 
-    expect(accessKey1.isOverDataLimit).toBeTruthy();
-    expect(accessKey2.isOverDataLimit).toBeFalsy();
-    expect(accessKey3.isOverDataLimit).toBeTruthy();
+    expect(accessKey1.state).toBe(AccessKeyState.QUOTA_THRESHOLD_EXCEEDED);
+    expect(accessKey2.state).toBe(AccessKeyState.ACTIVE);
+    expect(accessKey3.state).toBe(AccessKeyState.QUOTA_THRESHOLD_EXCEEDED);
     let serverAccessKeys = await server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(1);
     expect(serverAccessKeys[0].id).toEqual(accessKey2.id);
@@ -670,9 +670,9 @@ describe('ServerAccessKeyRepository', () => {
     // Simulate a change in usage.
     prometheusClient.bytesTransferredById = {'0': 100, '1': 200, '2': 1000};
     await clock.runCallbacks();
-    expect(accessKey1.isOverDataLimit).toBeFalsy();
-    expect(accessKey2.isOverDataLimit).toBeFalsy();
-    expect(accessKey3.isOverDataLimit).toBeTruthy();
+    expect(accessKey1.state).toBe(AccessKeyState.ACTIVE);
+    expect(accessKey2.state).toBe(AccessKeyState.ACTIVE);
+    expect(accessKey3.state).toBe(AccessKeyState.QUOTA_THRESHOLD_EXCEEDED);
     serverAccessKeys = await server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(2);
     expect(serverAccessKeys[0].id).toEqual(accessKey1.id);

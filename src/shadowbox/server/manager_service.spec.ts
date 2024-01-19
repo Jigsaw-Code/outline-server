@@ -34,6 +34,7 @@ const NEW_PORT = 12345;
 const OLD_PORT = 54321;
 const EXPECTED_ACCESS_KEY_PROPERTIES = [
   'id',
+  'state',
   'name',
   'password',
   'port',
