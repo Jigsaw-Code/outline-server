@@ -171,10 +171,10 @@ paths:
               examples:
                 '0':
                   value: >-
-                    {"id":"0","name":"First","password":"XxXxXx","port":9795,"method":"chacha20-ietf-poly1305","accessUrl":"ss://SADFJSKADFJAKSD@0.0.0.0:9795/?outline=1"}
+                    {"id":"0","state": "ACTIVE","name":"First","password":"XxXxXx","port":9795,"method":"chacha20-ietf-poly1305","accessUrl":"ss://SADFJSKADFJAKSD@0.0.0.0:9795/?outline=1"}
                 '1':
                   value: >-
-                    {"id":"1","name":"Second","password":"xXxXxX","port":9795,"method":"chacha20-ietf-poly1305","accessUrl":"ss://ASDFHAKSDFSDAKFJ@0.0.0.0:9795/?outline=1"}
+                    {"id":"1","state": "ACTIVE","name":"Second","password":"xXxXxX","port":9795,"method":"chacha20-ietf-poly1305","accessUrl":"ss://ASDFHAKSDFSDAKFJ@0.0.0.0:9795/?outline=1"}
     put:
       description: Creates a new access key with a specific identifer
       tags:
@@ -211,7 +211,7 @@ paths:
               examples:
                 '0':
                   value: >-
-                    {"id":"my-identifier","name":"First","password":"XxXxXx","port":9795,"method":"chacha20-ietf-poly1305","accessUrl":"ss://SADFJSKADFJAKSD@0.0.0.0:9795/?outline=1"}
+                    {"id":"my-identifier","state": "ACTIVE","name":"First","password":"XxXxXx","port":9795,"method":"chacha20-ietf-poly1305","accessUrl":"ss://SADFJSKADFJAKSD@0.0.0.0:9795/?outline=1"}
     get:
       description: Lists the access keys
       tags:
@@ -232,9 +232,9 @@ paths:
                 '0':
                   value: >-
                     {"accessKeys":[
-                      {"id":"0","name":"Admin","password":"XxXxXx","port":18162,"method":"chacha20-ietf-poly1305","accessUrl":"ss://SADFJSKADFJAKSD@0.0.0.0:18162/?outline=1"},
-                      {"id":"1","name":"First","password":"xXxXxX","port":4410,"method":"chacha20-ietf-poly1305","accessUrl":"ss://ASDFSADJFKAS=@0.0.0.0:4410/?outline=1"},
-                      {"id":"2","name":"SecondWithCustomDataLimit","password":"XxXxXx","port":25424,"method":"chacha20-ietf-poly1305","dataLimit":{"bytes":8589934592},"accessUrl":"ss://ASDFHAKSDFSDAKFJ@0.0.0.0:25424/?outline=1"}]}
+                      {"id":"0","state": "ACTIVE","name":"Admin","password":"XxXxXx","port":18162,"method":"chacha20-ietf-poly1305","accessUrl":"ss://SADFJSKADFJAKSD@0.0.0.0:18162/?outline=1"},
+                      {"id":"1","state": "ACTIVE","name":"First","password":"xXxXxX","port":4410,"method":"chacha20-ietf-poly1305","accessUrl":"ss://ASDFSADJFKAS=@0.0.0.0:4410/?outline=1"},
+                      {"id":"2","state": "ACTIVE","name":"SecondWithCustomDataLimit","password":"XxXxXx","port":25424,"method":"chacha20-ietf-poly1305","dataLimit":{"bytes":8589934592},"accessUrl":"ss://ASDFHAKSDFSDAKFJ@0.0.0.0:25424/?outline=1"}]}
   /access-keys/{id}:
     get:
       description: Get an access key
@@ -256,7 +256,7 @@ paths:
                 $ref: "#/components/schemas/AccessKey"
               examples:
                 '0':
-                  value: '{"id":"0","name":"Admin","password":"XxXxXx","port":18162,"method":"chacha20-ietf-poly1305","accessUrl":"ss://SADFJSKADFJAKSD@0.0.0.0:18162/?outline=1"}'
+                  value: '{"id":"0","state": "ACTIVE","name":"Admin","password":"XxXxXx","port":18162,"method":"chacha20-ietf-poly1305","accessUrl":"ss://SADFJSKADFJAKSD@0.0.0.0:18162/?outline=1"}'
         '404':
           description: Access key inexistent
           content:
@@ -488,12 +488,21 @@ components:
           type: integer
           minimum: 0
 
+    State:
+      type: string
+      enum:
+        - UNSPECIFIED
+        - ACTIVE
+        - QUOTA_THRESHOLD_EXCEEDED
+
     AccessKey:
       required:
         - id
       properties:
         id:
           type: string
+        state:
+          $ref: "#/components/schemas/DataLimit"
         name:
           type: string
         password:
