@@ -441,7 +441,7 @@ Polymer({
   _defaultDataLimitEnabledChanged(e: CustomEvent) {
     const wasDataLimitEnabled = this.isDefaultDataLimitEnabled;
     const isDataLimitEnabled = e.detail.value === 'enabled';
-    if (isDataLimitEnabled === undefined || wasDataLimitEnabled === undefined) {
+    if (typeof isDataLimitEnabled === undefined || typeof wasDataLimitEnabled === undefined) {
       return;
     } else if (isDataLimitEnabled === wasDataLimitEnabled) {
       return;
