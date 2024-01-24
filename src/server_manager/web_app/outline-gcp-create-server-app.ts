@@ -20,8 +20,9 @@ import '@polymer/paper-item/paper-item';
 import './ui_components/outline-step-view';
 import './ui_components/outline-region-picker-step';
 
-import {css, customElement, html, internalProperty, LitElement, property} from 'lit-element';
-import {unsafeHTML} from 'lit-html/directives/unsafe-html';
+import {css, html, LitElement} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
+import {unsafeHTML} from 'lit/directives/unsafe-html.js';
 
 import {AppRoot} from './ui_components/app-root';
 import {BillingAccount, Project, Zone, Account} from '../model/gcp';
@@ -35,10 +36,10 @@ import {CloudLocation} from '../model/location';
 export class GcpCreateServerApp extends LitElement {
   @property({type: Function}) localize: (msgId: string, ...params: string[]) => string;
   @property({type: String}) language: string;
-  @internalProperty() private currentPage = '';
-  @internalProperty() private selectedProjectId = '';
-  @internalProperty() private selectedBillingAccountId = '';
-  @internalProperty() private isProjectBeingCreated = false;
+  @property() private currentPage = '';
+  @property() private selectedProjectId = '';
+  @property() private selectedBillingAccountId = '';
+  @property() private isProjectBeingCreated = false;
 
   private account: GcpAccount;
   private project: Project;
@@ -46,7 +47,7 @@ export class GcpCreateServerApp extends LitElement {
   private regionPicker: OutlineRegionPicker;
   private billingAccountsRefreshLoop: number = null;
 
-  static get styles() {
+  static get css() {
     return [
       COMMON_STYLES,
       css`

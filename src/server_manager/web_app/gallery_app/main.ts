@@ -26,7 +26,8 @@ import '@polymer/paper-checkbox/paper-checkbox';
 
 import {PaperCheckboxElement} from '@polymer/paper-checkbox/paper-checkbox';
 import IntlMessageFormat from 'intl-messageformat';
-import {css, customElement, html, LitElement, property} from 'lit-element';
+import {css, html, LitElement} from 'lit';
+import {customElement, property} from 'lit/decorators.js';
 
 import * as gcp from '../../model/gcp';
 import {FakeManagedServer, FakeGcpAccount} from '../testing/models';
@@ -101,7 +102,7 @@ export class TestApp extends LitElement {
   @property({type: String}) gcpRefreshToken = '';
   @property({type: Boolean}) gcpAccountHasBillingAccounts = false;
 
-  static get styles() {
+  static get css() {
     return [
       COMMON_STYLES,
       css`
