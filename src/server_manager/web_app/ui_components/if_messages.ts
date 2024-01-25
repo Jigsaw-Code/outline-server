@@ -22,7 +22,7 @@ export class IfMessages extends LitElement {
   @property({
     type: Array,
     attribute: 'message-ids',
-    converter: (value) => value.split(/,\s*/),
+    converter: (value: string) => value.split(/,\s*/),
   })
   messageIDs: string[] = [];
   @property({type: Function, attribute: 'localize'}) localize: (
