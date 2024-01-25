@@ -21,7 +21,7 @@
     "jasmine": "^3.5.0",
     "prettier": "^2.4.1",
     "pretty-quick": "^3.1.1",
-    "typescript": "^4"
+    "typescript": "^4.9.5"
   },
   "engines": {
     "node": "18.x.x"

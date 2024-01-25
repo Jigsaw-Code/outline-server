@@ -22,19 +22,22 @@ export class IfMessages extends LitElement {
   @property({
     type: Array,
     attribute: 'message-ids',
-    converter: value => value.split(/,\s*/)
-  }) messageIDs = '';
+    converter: (value) => value.split(/,\s*/),
+  })
+  messageIDs: string[] = [];
   @property({type: Function, attribute: 'localize'}) localize: (
     msgId: string,
     ...params: string[]
   ) => string;
 
   render() {
-    if (this.messageIDs.some((id) => {
-      const result = this.localize(id);
-      
-      return result === id || result === undefined || result === '';
-    }) {
+    if (
+      this.messageIDs.some((id) => {
+        const result = this.localize(id);
+
+        return result === id || result === undefined || result === '';
+      })
+    ) {
       return nothing;
     }
 
