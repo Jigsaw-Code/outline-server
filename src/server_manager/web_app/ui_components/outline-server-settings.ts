@@ -439,11 +439,11 @@ Polymer({
   },
 
   _defaultDataLimitEnabledChanged(e: CustomEvent) {
-    const wasDataLimitEnabled = this.isDefaultDataLimitEnabled;
-    const isDataLimitEnabled = e.detail.value === 'enabled';
-    if (typeof isDataLimitEnabled === undefined || typeof wasDataLimitEnabled === undefined) {
+    if (e.detail?.value === undefined) {
       return;
-    } else if (isDataLimitEnabled === wasDataLimitEnabled) {
+    }
+    const isDataLimitEnabled = e.detail.value === 'enabled';
+    if (isDataLimitEnabled === this.isDefaultDataLimitEnabled) {
       return;
     }
     this.isDefaultDataLimitEnabled = isDataLimitEnabled;
