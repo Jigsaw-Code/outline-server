@@ -42,6 +42,8 @@ import './outline-region-picker-step';
 import './outline-server-list';
 import './outline-tos-view';
 
+import './if_messages';
+
 import {AppLocalizeBehavior} from '@polymer/app-localize-behavior/app-localize-behavior';
 import {mixinBehaviors} from '@polymer/polymer/lib/legacy/class';
 import {html} from '@polymer/polymer/lib/utils/html-tag';
@@ -397,13 +399,14 @@ export class AppRoot extends polymerElementWithLocalize {
 
           <!-- Links section -->
           <paper-listbox>
-            <a
-              class="manager-resources-link"
-              hidden$="[[!showManagerResourcesLink]]"
-              href="https://www.reddit.com/r/outlinevpn/wiki/index/">
-                <span>[[localize('manager-resources')]]</span>
-                <iron-icon icon="open-in-new" />
-            </a>
+            <if-messages message-ids="manager-resources" localize="[[localize]]">
+              <a
+                class="manager-resources-link"
+                href="https://www.reddit.com/r/outlinevpn/wiki/index/">
+                  <span>[[localize('manager-resources')]]</span>
+                  <iron-icon icon="open-in-new" />
+              </a>
+            </if-messages>
             <span on-tap="maybeCloseDrawer"><a href="https://support.getoutline.org/s/article/Data-collection">[[localize('nav-data-collection')]]</a></span>
             <span on-tap="submitFeedbackTapped">[[localize('nav-feedback')]]</span>
             <span on-tap="maybeCloseDrawer"><a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">[[localize('nav-help')]]</a></span>
