@@ -1,12 +1,16 @@
-# 1.7.3
-- Features
+# 1.8.0
+This release is about empowering developers and administrators with more sophisticated tools for automating key management and distribution, ensuring a more customizable service experience.
+
+Features
   - API extensions
-    - Added `/access-keys/{id}` endpoint to look up a single access key. By @murka in https://github.com/Jigsaw-Code/outline-server/pull/1142 and https://github.com/Jigsaw-Code/outline-server/pull/1278.
-    - Add name, limit and password properties to access key creation method. By @murka in https://github.com/Jigsaw-Code/outline-server/pull/1273
-    - Add new `PUT` method to create a key with a specific identifier. Together with the change to specify other properties on key creation, this enables export and import of keys. It also enables the
-creation of on-demand keys by key distribution systems in a way that preserves the user ID for usage tracking, or to use custom id schemes (like a encoding a user id + device).
-  - Removed ulimit from image, so you can set the ulimit externally without further contraining the container. By @fortuna in https://github.com/Jigsaw-Code/outline-server/pull/1447.
-  - Make temp file names longer, fixing https://github.com/Jigsaw-Code/outline-server/issues/1234 and making the server run on more platforms, including OpenBSD. By @fortuna in https://github.com/Jigsaw-Code/outline-server/pull/1464.
+    - **Single Access Key Retrieval**: Added `/access-keys/{id}` endpoint to look up a single access key. By @murka in https://github.com/Jigsaw-Code/outline-server/pull/1142 and https://github.com/Jigsaw-Code/outline-server/pull/1278.
+    - **Rich Access Key Creation Options**: Add name, limit and password properties to access key creation method. By @murka in https://github.com/Jigsaw-Code/outline-server/pull/1273
+    - **Key ID Customization**: Add new `PUT` method to create a key with a specific identifier. Together with the change to specify other properties on key creation, this enables export and import of keys. It also enables the
+creation of on-demand keys by key distribution systems in a way that preserves the user ID for usage tracking, or to use custom id schemes (like a encoding a user id + device). By @sbruens in https://github.com/Jigsaw-Code/outline-server/pull/1473
+  - Performance and Compatibility Enhancements
+    - **Flexible Ulimit Settings**: We've removed the ulimit setting from our Docker image. This change grants you the freedom to adjust the ulimit externally, optimizing the performance of the Outline VPN container without unnecessary constraints.
+By @fortuna in https://github.com/Jigsaw-Code/outline-server/pull/1447.
+
 
 # 1.7.2
 - Fixes
