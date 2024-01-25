@@ -1,18 +1,12 @@
 # 1.7.3
 - Features
-  - Added `/access-keys/{id}` endpoint to look up a single access key. By @murka in https://github.com/Jigsaw-Code/outline-server/pull/1142 and https://github.com/Jigsaw-Code/outline-server/pull/1278.
+  - API extensions
+    - Added `/access-keys/{id}` endpoint to look up a single access key. By @murka in https://github.com/Jigsaw-Code/outline-server/pull/1142 and https://github.com/Jigsaw-Code/outline-server/pull/1278.
+    - Add name, limit and password properties to access key creation method. By @murka in https://github.com/Jigsaw-Code/outline-server/pull/1273
+    - Add new `PUT` method to create a key with a specific identifier. Together with the change to specify other properties on key creation, this enables export and import of keys. It also enables the
+creation of on-demand keys by key distribution systems in a way that preserves the user ID for usage tracking, or to use custom id schemes (like a encoding a user id + device).
   - Removed ulimit from image, so you can set the ulimit externally without further contraining the container. By @fortuna in https://github.com/Jigsaw-Code/outline-server/pull/1447.
   - Make temp file names longer, fixing https://github.com/Jigsaw-Code/outline-server/issues/1234 and making the server run on more platforms, including OpenBSD. By @fortuna in https://github.com/Jigsaw-Code/outline-server/pull/1464.
-
-
-
-f5ac42c 1/17/2024 feat(server): add a new `PUT` method to create a key with a specific identifier (#1473)
-57a30a2 1/12/2024 feat(server): add optional name/limit/password props for createNewAccessKey method (#1273)
-4537fdd 1/10/2024 fix(server): make temp file names longer (#1464)
-3d2c3db 11/15/2023 feat(server): remove ulimit (#1447)
-e2b446d 3/29/2023 feat(server): add codeql security and quality queries and fix config (#1307)
-508a5a2 2/28/2023 feat(server): add vulnerability analysis by CodeQL (#1271)
-f7d15ac 1/27/2023 fix(server): use right TextFile interface path on FilesystemTextFile class (#1275)
 
 # 1.7.2
 - Fixes
