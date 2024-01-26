@@ -82,7 +82,7 @@ function fail() {
 function cleanup() {
   local -i status=$?
   if ((DEBUG != 1)); then
-    docker-compose --project-name=integrationtest down
+    podman compose --project-name=integrationtest down
     rm -rf "${TMP_STATE_DIR}" || echo "Failed to cleanup files at ${TMP_STATE_DIR}"
   fi
   return "${status}"
@@ -105,7 +105,7 @@ function cleanup() {
   TMP_STATE_DIR="$(mktemp -d)"
   export TMP_STATE_DIR
   echo '{"hostname": "shadowbox"}' > "${TMP_STATE_DIR}/shadowbox_server_config.json"
-  docker-compose --project-name=integrationtest up --build -d
+  podman compose --project-name=integrationtest up --build -d
 
   # Wait for target to come up.
   wait_for_resource localhost:10080

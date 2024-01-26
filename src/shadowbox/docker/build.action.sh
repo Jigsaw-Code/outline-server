@@ -38,8 +38,9 @@ readonly NODE_IMAGE=$(
 # Doing an explicit `docker pull` of the container base image to work around an issue where
 # Travis fails to pull the base image when using BuildKit. Seems to be related to:
 # https://github.com/moby/buildkit/issues/606 and https://github.com/moby/buildkit/issues/1397
-docker pull "${NODE_IMAGE}"
-docker build --force-rm \
+podman build --force-rm \
+    --os "linux" \
+    --arch "${ARCH}" \
     --build-arg ARCH="${ARCH}" \
     --build-arg NODE_IMAGE="${NODE_IMAGE}" \
     --build-arg GITHUB_RELEASE="${TRAVIS_TAG:-none}" \
