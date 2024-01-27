@@ -38,10 +38,19 @@ OUTPUT_DIR="$(mktemp -d)"
 readonly OUTPUT_DIR
 # TODO(fortuna): Make it possible to run multiple tests in parallel by adding a
 # run id to the container names.
-readonly TARGET_CONTAINER='integrationtest_target_1'
-readonly SHADOWBOX_CONTAINER='integrationtest_shadowbox_1'
-readonly CLIENT_CONTAINER='integrationtest_client_1'
-readonly UTIL_CONTAINER='integrationtest_util_1'
+readonly NAMESPACE='integrationtest'
+readonly TARGET_CONTAINER="${NAMESPACE}_target"
+readonly TARGET_IMAGE="${TARGET_CONTAINER}"
+readonly SHADOWBOX_CONTAINER="${NAMESPACE}_shadowbox"
+readonly CLIENT_CONTAINER="${NAMESPACE}_client"
+readonly CLIENT_IMAGE="${CLIENT_CONTAINER}"
+readonly UTIL_CONTAINER="${NAMESPACE}_util"
+readonly UTIL_IMAGE="${UTIL_CONTAINER}"
+
+readonly NET_OPEN="${NAMESPACE}_open"
+readonly NET_BLOCKED="${NAMESPACE}_blocked"
+
+
 readonly INTERNET_TARGET_URL="http://www.gstatic.com/generate_204"
 echo "Test output at ${OUTPUT_DIR}"
 # Set DEBUG=1 to not kill the stack when the test is finished so you can query
@@ -55,7 +64,7 @@ function wait_for_resource() {
 }
 
 function util_jq() {
-  docker exec -i "${UTIL_CONTAINER}" jq "$@"
+  podman exec -i "${UTIL_CONTAINER}" jq "$@"
 }
 
 # Takes the JSON from a /access-keys POST request and returns the appropriate
@@ -71,7 +80,7 @@ function ss_arguments_for_user() {
 
 # Runs curl on the client container.
 function client_curl() {
-  docker exec "${CLIENT_CONTAINER}" curl --silent --show-error --connect-timeout 5 --retry 5 "$@"
+  podman exec "${CLIENT_CONTAINER}" curl --silent --show-error --connect-timeout 5 --retry 5 "$@"
 }
 
 function fail() {
@@ -79,10 +88,64 @@ function fail() {
   exit 1
 }
 
+function setup() {
+  shutdown_containers
+
+  podman network create "${NET_OPEN}"
+  podman network create --internal "${NET_BLOCKED}"
+
+  # Target service.
+  podman build --force-rm -t "${TARGET_IMAGE}" ./target
+  # The python SimpleHTTPServer doesn't quit with SIGTERM, so we use SIGKILL.
+  podman run -d --rm -p "10080:80" --network "${NET_OPEN}" --network-alias target --stop-signal SIGKILL --name "${TARGET_CONTAINER}" "${TARGET_IMAGE}"
+  
+  # Shadowsocks service.
+  declare -ar shadowbox_flags=(
+    -d
+    --rm
+    --network "${NET_BLOCKED}"
+    --network-alias shadowbox
+    # The user management service doesn't quit with SIGTERM, so we use SIGKILL.
+    --stop-signal SIGKILL
+    -p "20443:443"
+    -e "SB_API_PORT=443"
+    -e "SB_API_PREFIX=${SB_API_PREFIX}"
+    -e "LOG_LEVEL=debug"
+    -e "SB_CERTIFICATE_FILE=/root/shadowbox/test.crt"
+    -e "SB_PRIVATE_KEY_FILE=/root/shadowbox/test.key"
+    -v "${SB_CERTIFICATE_FILE}:/root/shadowbox/test.crt"
+    -v "${SB_PRIVATE_KEY_FILE}:/root/shadowbox/test.key"
+    -v "${TMP_STATE_DIR}:/root/shadowbox/persisted-state"
+    --name "${SHADOWBOX_CONTAINER}"
+    "${SB_IMAGE:-localhost/outline/shadowbox:latest}"
+  )
+  podman run "${shadowbox_flags[@]}"
+  podman network connect "${NET_OPEN}" "${SHADOWBOX_CONTAINER}"
+
+  # Client service.
+  podman build --force-rm -t "${CLIENT_IMAGE}" ./client
+  # Use -i to keep the container running.
+  podman run -d --rm -it -p "30555:555" --network "${NET_BLOCKED}" --stop-signal SIGKILL --name "${CLIENT_CONTAINER}" "${CLIENT_IMAGE}"
+
+  # Util service.
+  podman build --force-rm -t "${UTIL_IMAGE}" ./util
+  # Use -i to keep the container running.
+  podman run -d --rm -it --network none --name "${UTIL_CONTAINER}" "${UTIL_IMAGE}"
+}
+
+function shutdown_containers() {
+    podman rm -f -i -t 2 -v "${TARGET_CONTAINER}" 
+    podman rm -f -i -t 2 -v "${SHADOWBOX_CONTAINER}" 
+    podman rm -f -i -t 2 -v "${CLIENT_CONTAINER}" 
+    podman rm -f -i -t 2 -v "${UTIL_CONTAINER}" 
+    podman network rm -f -t 2 "${NET_OPEN}"
+    podman network rm -f -t 2 "${NET_BLOCKED}"
+}
+
 function cleanup() {
   local -i status=$?
   if ((DEBUG != 1)); then
-    podman compose --project-name=integrationtest down
+    shutdown_containers
     rm -rf "${TMP_STATE_DIR}" || echo "Failed to cleanup files at ${TMP_STATE_DIR}"
   fi
   return "${status}"
@@ -105,27 +168,27 @@ function cleanup() {
   TMP_STATE_DIR="$(mktemp -d)"
   export TMP_STATE_DIR
   echo '{"hostname": "shadowbox"}' > "${TMP_STATE_DIR}/shadowbox_server_config.json"
-  podman compose --project-name=integrationtest up --build -d
+  setup
 
   # Wait for target to come up.
   wait_for_resource localhost:10080
-  TARGET_IP="$(docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${TARGET_CONTAINER}")"
+  TARGET_IP="$(podman inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${TARGET_CONTAINER}")"
   readonly TARGET_IP
 
   # Verify that the client cannot access or even resolve the target
-  # Exit code 28 for "Connection timed out".
-  (docker exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 "${TARGET_IP}" > /dev/null && \
-    fail "Client should not have access to target IP") || (($? == 28))
+  # Exit code 7 is "Failed to connect to host" and 28 is "Connection timed out".
+  (podman exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 http://"${TARGET_IP}" > /dev/null && \
+    fail "Client should not have access to target IP") || (($? == 7 || $? == 28))
 
   # Exit code 6 for "Could not resolve host".  In some environments, curl reports a timeout
   # error (28) instead, which is surprising.  TODO: Investigate and fix.
-  (docker exec "${CLIENT_CONTAINER}" curl --connect-timeout 5 http://target > /dev/null && \
+  (podman exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 http://target > /dev/null && \
     fail "Client should not have access to target host") || (($? == 6 || $? == 28))
 
   # Wait for shadowbox to come up.
   wait_for_resource https://localhost:20443/access-keys
   # Verify that the shadowbox can access the target
-  docker exec "${SHADOWBOX_CONTAINER}" wget --spider http://target
+  podman exec "${SHADOWBOX_CONTAINER}" wget --spider http://target
 
   # Create new shadowbox user.
   # TODO(bemasc): Verify that the server is using the right certificate
@@ -141,10 +204,10 @@ function cleanup() {
 
   # Start Shadowsocks client and wait for it to be ready
   declare -ir LOCAL_SOCKS_PORT=5555
-  docker exec -d "${CLIENT_CONTAINER}" \
+  podman exec -d "${CLIENT_CONTAINER}" \
     /go/bin/go-shadowsocks2 "${SS_USER_ARGUMENTS[@]}" -socks "localhost:${LOCAL_SOCKS_PORT}" -verbose \
     || fail "Could not start shadowsocks client"
-  while ! docker exec "${CLIENT_CONTAINER}" nc -z localhost "${LOCAL_SOCKS_PORT}"; do
+  while ! podman exec "${CLIENT_CONTAINER}" nc -z localhost "${LOCAL_SOCKS_PORT}"; do
     sleep 0.1
   done
 
@@ -251,7 +314,7 @@ function cleanup() {
 
   # Verify no errors occurred.
   readonly SHADOWBOX_LOG="${OUTPUT_DIR}/shadowbox-log.txt"
-  if docker logs "${SHADOWBOX_CONTAINER}" 2>&1 | tee "${SHADOWBOX_LOG}" | grep -Eq "^E|level=error|ERROR:"; then
+  if podman logs "${SHADOWBOX_CONTAINER}" 2>&1 | tee "${SHADOWBOX_LOG}" | grep -Eq "^E|level=error|ERROR:"; then
     cat "${SHADOWBOX_LOG}"
     fail "Found errors in Shadowbox logs (see above, also saved to ${SHADOWBOX_LOG})"
   fi
