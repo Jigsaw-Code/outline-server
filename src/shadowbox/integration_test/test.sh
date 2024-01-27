@@ -95,7 +95,7 @@ function setup() {
   podman network create -d bridge --internal "${NET_BLOCKED}"
 
   # Target service.
-  podman build --force-rm -t "${TARGET_IMAGE}" ./target
+  buildah build --force-rm -t "${TARGET_IMAGE}" ./target
   podman run -d --rm -p "10080:80" --network="${NET_OPEN}" --network-alias="target" --name="${TARGET_CONTAINER}" "${TARGET_IMAGE}"
   
   # Shadowsocks service.
@@ -121,12 +121,12 @@ function setup() {
   podman network connect "${NET_OPEN}" "${SHADOWBOX_CONTAINER}"
 
   # Client service.
-  podman build --force-rm -t "${CLIENT_IMAGE}" ./client
+  buildah build --force-rm -t "${CLIENT_IMAGE}" ./client
   # Use -i to keep the container running.
   podman run -d --rm -it -p "30555:555" --network "${NET_BLOCKED}" --name "${CLIENT_CONTAINER}" "${CLIENT_IMAGE}"
 
   # Util service.
-  podman build --force-rm -t "${UTIL_IMAGE}" ./util
+  buildah build --force-rm -t "${UTIL_IMAGE}" ./util
   # Use -i to keep the container running.
   podman run -d --rm -it --network none --name "${UTIL_CONTAINER}" "${UTIL_IMAGE}"
 }

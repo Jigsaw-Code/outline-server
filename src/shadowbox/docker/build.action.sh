@@ -35,7 +35,7 @@ readonly NODE_IMAGE=$(
     fi
 )
 
-podman build --force-rm \
+buildah build --force-rm \
     --os "linux" \
     --arch "${ARCH}" \
     --build-arg ARCH="${ARCH}" \
