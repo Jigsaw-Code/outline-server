@@ -38,6 +38,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: lint
     steps:
+      - name Set up Podman
+        run: sudo apt-get update && sudo apt-get -y install podman
+
+      - name: Podman Version
+        run: podman version
+
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
@@ -50,17 +56,14 @@ jobs:
       - name: Install NPM Dependencies
         run: npm ci
 
-      - name: Setup Podman
-        run: |
-          TEMPFILE=mktemp
-          node ./src/build/download_file.mjs --url=https://github.com/containers/podman/releases/download/v4.9.0/podman-remote-static-linux_amd64.tar.gz --out="${TEMPFILE}" --sha256=3fbc2df10691063b844346b27a3b463e84d480c51b586912a875140fb764b409
-          mkdir -p build/bin
-          tar -zx -f ${TEMPFILE} --strip-components=1 -C build/bin
-          mv ./build/bin/podman-remote-static-linux_amd64 ./build/bin/podman
-          echo "$(pwd)/build/bin" >> $GITHUB_PATH
-
-      - name: Podman Version
-        run: podman version
+      # - name: Setup Podman
+      #   run: |
+      #     TEMPFILE=mktemp
+      #     node ./src/build/download_file.mjs --url=https://github.com/containers/podman/releases/download/v4.9.0/podman-remote-static-linux_amd64.tar.gz --out="${TEMPFILE}" --sha256=3fbc2df10691063b844346b27a3b463e84d480c51b586912a875140fb764b409
+      #     mkdir -p build/bin
+      #     tar -zx -f ${TEMPFILE} --strip-components=1 -C build/bin
+      #     mv ./build/bin/podman-remote-static-linux_amd64 ./build/bin/podman
+      #     echo "$(pwd)/build/bin" >> $GITHUB_PATH
 
       - name: Shadowbox Debug Build
         run: npm run action shadowbox/server/build
