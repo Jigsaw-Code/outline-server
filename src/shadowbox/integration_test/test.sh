@@ -44,8 +44,7 @@ readonly TARGET_IMAGE="${TARGET_CONTAINER}"
 readonly SHADOWBOX_CONTAINER="${NAMESPACE}_shadowbox"
 readonly CLIENT_CONTAINER="${NAMESPACE}_client"
 readonly CLIENT_IMAGE="${CLIENT_CONTAINER}"
-readonly UTIL_CONTAINER="${NAMESPACE}_util"
-readonly UTIL_IMAGE="${UTIL_CONTAINER}"
+readonly UTIL_IMAGE="${NAMESPACE}_util"
 
 readonly NET_OPEN="${NAMESPACE}_open"
 readonly NET_BLOCKED="${NAMESPACE}_blocked"
@@ -64,7 +63,7 @@ function wait_for_resource() {
 }
 
 function util_jq() {
-  podman exec -i "${UTIL_CONTAINER}" jq "$@"
+  podman run --rm -i --entrypoint jq "${UTIL_IMAGE}" "$@"
 }
 
 # Takes the JSON from a /access-keys POST request and returns the appropriate
@@ -124,18 +123,12 @@ function setup() {
   podman build --force-rm -t "${CLIENT_IMAGE}" ./client
   # Use -i to keep the container running.
   podman run -d --rm -it -p "30555:555" --network "${NET_BLOCKED}" --name "${CLIENT_CONTAINER}" "${CLIENT_IMAGE}"
-
-  # Util service.
-  podman build --force-rm -t "${UTIL_IMAGE}" ./util
-  # Use -i to keep the container running.
-  podman run -d --rm -it --network none --name "${UTIL_CONTAINER}" "${UTIL_IMAGE}"
 }
 
 function shutdown_containers() {
     podman rm -f -v "${TARGET_CONTAINER}" || true
     podman rm -f -v "${SHADOWBOX_CONTAINER}" || true
     podman rm -f -v "${CLIENT_CONTAINER}" || true
-    podman rm -f -v "${UTIL_CONTAINER}" || true
     podman network rm -f "${NET_OPEN}" || true
     podman network rm -f "${NET_BLOCKED}" || true
 }
