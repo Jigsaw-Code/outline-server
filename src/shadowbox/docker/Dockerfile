@@ -25,6 +25,8 @@ WORKDIR /
 # Don't copy node_modules and other things not needed for install.
 COPY package.json package-lock.json ./
 COPY src/shadowbox/package.json src/shadowbox/
+# Enable cache when the Github action Ubuntu runner supports podman 4.
+# RUN --mount=type=cache,target=/root/.npm npm ci
 RUN --mount=type=cache,target=/root/.npm npm ci
 
 # We copy the source code only after npm ci, so that source code changes don't trigger re-installs.
