@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# run_action shadowbox/docker/build
+run_action shadowbox/docker/build
 
 LOGFILE="$(mktemp)"
 readonly LOGFILE
