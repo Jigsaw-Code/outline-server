@@ -58,8 +58,8 @@ jobs:
 
       - name: Shadowbox Integration Test
         run: |
-        alias podman=docker
-        npm run action shadowbox/integration_test/run
+          alias podman=docker
+          npm run action shadowbox/integration_test/run
 
   manual-install-script:
     name: Manual Install Script
