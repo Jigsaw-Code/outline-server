@@ -31,8 +31,7 @@ Shadowbox supports running on linux and macOS hosts.
 
 Besides [Node](https://nodejs.org/en/download/) you will also need:
 
-1. [Podman](https://podman-desktop.io/docs/installation)
-2. [Podman Compose](https://podman-desktop.io/docs/compose/setting-up-compose)
+1. [Podman 4+](https://podman-desktop.io/docs/installation)
 
 ### Running Shadowbox as a Node.js app
 
