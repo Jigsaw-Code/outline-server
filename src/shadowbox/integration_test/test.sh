@@ -91,22 +91,19 @@ function fail() {
 function setup() {
   shutdown_containers
 
-  podman network create "${NET_OPEN}"
-  podman network create --internal "${NET_BLOCKED}"
+  podman network create -d bridge "${NET_OPEN}"
+  podman network create -d bridge --internal "${NET_BLOCKED}"
 
   # Target service.
   podman build --force-rm -t "${TARGET_IMAGE}" ./target
-  # The python SimpleHTTPServer doesn't quit with SIGTERM, so we use SIGKILL.
-  podman run -d --rm -p "10080:80" --network "${NET_OPEN}" --network-alias target --stop-signal SIGKILL --name "${TARGET_CONTAINER}" "${TARGET_IMAGE}"
+  podman run -d --rm -p "10080:80" --network="${NET_OPEN}" --network-alias="target" --name="${TARGET_CONTAINER}" "${TARGET_IMAGE}"
   
   # Shadowsocks service.
   declare -ar shadowbox_flags=(
     -d
     --rm
-    --network "${NET_BLOCKED}"
-    --network-alias shadowbox
-    # The user management service doesn't quit with SIGTERM, so we use SIGKILL.
-    --stop-signal SIGKILL
+    --network="${NET_BLOCKED}"
+    --network-alias="shadowbox"
     -p "20443:443"
     -e "SB_API_PORT=443"
     -e "SB_API_PREFIX=${SB_API_PREFIX}"
@@ -120,12 +117,13 @@ function setup() {
     "${SB_IMAGE:-localhost/outline/shadowbox:latest}"
   )
   podman run "${shadowbox_flags[@]}"
+  # podman network connect --alias shadowbox "${NET_BLOCKED}" "${SHADOWBOX_CONTAINER}"
   podman network connect "${NET_OPEN}" "${SHADOWBOX_CONTAINER}"
 
   # Client service.
   podman build --force-rm -t "${CLIENT_IMAGE}" ./client
   # Use -i to keep the container running.
-  podman run -d --rm -it -p "30555:555" --network "${NET_BLOCKED}" --stop-signal SIGKILL --name "${CLIENT_CONTAINER}" "${CLIENT_IMAGE}"
+  podman run -d --rm -it -p "30555:555" --network "${NET_BLOCKED}" --name "${CLIENT_CONTAINER}" "${CLIENT_IMAGE}"
 
   # Util service.
   podman build --force-rm -t "${UTIL_IMAGE}" ./util
@@ -177,18 +175,18 @@ function cleanup() {
 
   # Verify that the client cannot access or even resolve the target
   # Exit code 7 is "Failed to connect to host" and 28 is "Connection timed out".
-  (podman exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 http://"${TARGET_IP}" > /dev/null && \
+  (podman exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 "http://${TARGET_IP}" > /dev/null && \
     fail "Client should not have access to target IP") || (($? == 7 || $? == 28))
 
   # Exit code 6 for "Could not resolve host".  In some environments, curl reports a timeout
   # error (28) instead, which is surprising.  TODO: Investigate and fix.
-  (podman exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 http://target > /dev/null && \
+  (podman exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 http://${TARGET_CONTAINER} > /dev/null && \
     fail "Client should not have access to target host") || (($? == 6 || $? == 28))
 
   # Wait for shadowbox to come up.
   wait_for_resource https://localhost:20443/access-keys
   # Verify that the shadowbox can access the target
-  podman exec "${SHADOWBOX_CONTAINER}" wget --spider http://target
+  podman exec "${SHADOWBOX_CONTAINER}" wget --spider "http://${TARGET_CONTAINER}"
 
   # Create new shadowbox user.
   # TODO(bemasc): Verify that the server is using the right certificate
@@ -205,26 +203,26 @@ function cleanup() {
   # Start Shadowsocks client and wait for it to be ready
   declare -ir LOCAL_SOCKS_PORT=5555
   podman exec -d "${CLIENT_CONTAINER}" \
-    /go/bin/go-shadowsocks2 "${SS_USER_ARGUMENTS[@]}" -socks "localhost:${LOCAL_SOCKS_PORT}" -verbose \
+    /go/bin/go-shadowsocks2 "${SS_USER_ARGUMENTS[@]}" -socks "[::1]:${LOCAL_SOCKS_PORT}" -verbose \
     || fail "Could not start shadowsocks client"
-  while ! podman exec "${CLIENT_CONTAINER}" nc -z localhost "${LOCAL_SOCKS_PORT}"; do
+  while ! podman exec "${CLIENT_CONTAINER}" nc -z ::1 "${LOCAL_SOCKS_PORT}"; do
     sleep 0.1
   done
 
   function test_networking() {
     # Verify the server blocks requests to hosts on private addresses.
     # Exit code 52 is "Empty server response".
-    (client_curl -x "socks5h://localhost:${LOCAL_SOCKS_PORT}" "${TARGET_IP}" &> /dev/null \
+    (client_curl -x "socks5h://[::1]:${LOCAL_SOCKS_PORT}" "${TARGET_IP}" &> /dev/null \
       && fail "Target host in a private network accessible through shadowbox") || (($? == 52))
 
     # Verify we can retrieve the internet target URL.
-    client_curl -x "socks5h://localhost:${LOCAL_SOCKS_PORT}" "${INTERNET_TARGET_URL}" \
+    client_curl -x "socks5h://[::1]:${LOCAL_SOCKS_PORT}" "${INTERNET_TARGET_URL}" \
       || fail "Could not fetch ${INTERNET_TARGET_URL} through shadowbox."
 
     # Verify we can't access the URL anymore after the key is deleted
     client_curl --insecure -X DELETE "${SB_API_URL}/access-keys/0" > /dev/null
     # Exit code 56 is "Connection reset by peer".
-    (client_curl -x "socks5h://localhost:${LOCAL_SOCKS_PORT}" "${INTERNET_TARGET_URL}" &> /dev/null \
+    (client_curl -x "socks5h://[::1]:${LOCAL_SOCKS_PORT}" "${INTERNET_TARGET_URL}" &> /dev/null \
       && fail "Deleted access key is still active") || (($? == 56))
   }
 

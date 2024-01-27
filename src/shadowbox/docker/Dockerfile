@@ -46,6 +46,9 @@ LABEL shadowbox.node_version=16.18.0
 ARG GITHUB_RELEASE
 LABEL shadowbox.github.release="${GITHUB_RELEASE}"
 
+# The user management service doesn't quit with SIGTERM
+STOPSIGNAL SIGKILL
+
 # We use curl to detect the server's public IP. We need to use the --date option in `date` to
 # safely grab the ip-to-country database
 RUN apk add --no-cache --upgrade coreutils curl
