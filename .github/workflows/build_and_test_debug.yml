@@ -38,12 +38,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: lint
     steps:
-      - name: Setup Podman
-        run: alias podman=docker
-
-      - name: Podman Version
-        run: podman version
-
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
@@ -63,7 +57,9 @@ jobs:
         run: npm run action shadowbox/test
 
       - name: Shadowbox Integration Test
-        run: npm run action shadowbox/integration_test/run
+        run: |
+        alias podman=docker
+        npm run action shadowbox/integration_test/run
 
   manual-install-script:
     name: Manual Install Script
