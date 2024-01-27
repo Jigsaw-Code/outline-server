@@ -132,12 +132,12 @@ function setup() {
 }
 
 function shutdown_containers() {
-    podman rm -f -i -t 2 -v "${TARGET_CONTAINER}" 
-    podman rm -f -i -t 2 -v "${SHADOWBOX_CONTAINER}" 
-    podman rm -f -i -t 2 -v "${CLIENT_CONTAINER}" 
-    podman rm -f -i -t 2 -v "${UTIL_CONTAINER}" 
-    podman network rm -f -t 2 "${NET_OPEN}"
-    podman network rm -f -t 2 "${NET_BLOCKED}"
+    podman rm -f -v "${TARGET_CONTAINER}" 
+    podman rm -f -v "${SHADOWBOX_CONTAINER}" 
+    podman rm -f -v "${CLIENT_CONTAINER}" 
+    podman rm -f -v "${UTIL_CONTAINER}" 
+    podman network rm -f "${NET_OPEN}"
+    podman network rm -f "${NET_BLOCKED}"
 }
 
 function cleanup() {
