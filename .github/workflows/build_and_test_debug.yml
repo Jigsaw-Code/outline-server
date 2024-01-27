@@ -57,7 +57,10 @@ jobs:
           mkdir -p build/bin
           tar -zx -f ${TEMPFILE} --strip-components=1 -C build/bin
           mv ./build/bin/podman-remote-static-linux_amd64 ./build/bin/podman
-          export PATH="$(pwd)/build/bin:$PATH"
+          echo "$(pwd)/build/bin" >> $GITHUB_PATH
+
+      - name: Podman Version
+        run: podman version
 
       - name: Shadowbox Debug Build
         run: npm run action shadowbox/server/build
