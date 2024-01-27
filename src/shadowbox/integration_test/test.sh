@@ -180,7 +180,7 @@ function cleanup() {
 
   # Exit code 6 for "Could not resolve host".  In some environments, curl reports a timeout
   # error (28) instead, which is surprising.  TODO: Investigate and fix.
-  (podman exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 http://${TARGET_CONTAINER} > /dev/null && \
+  (podman exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 "http://${TARGET_CONTAINER}" > /dev/null && \
     fail "Client should not have access to target host") || (($? == 6 || $? == 28))
 
   # Wait for shadowbox to come up.
