@@ -35,7 +35,7 @@ readonly NODE_IMAGE=$(
     fi
 )
 
-buildah build --force-rm \
+buildah build --layers --force-rm \
     --os "linux" \
     --arch "${ARCH}" \
     --build-arg ARCH="${ARCH}" \
