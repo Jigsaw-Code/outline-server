@@ -64,7 +64,7 @@ function wait_for_resource() {
 }
 
 function util_jq() {
-  podman run --rm -i --entrypoint jq "${UTIL_IMAGE}" "$@"
+  docker run --rm -i --entrypoint jq "${UTIL_IMAGE}" "$@"
 }
 
 # Takes the JSON from a /access-keys POST request and returns the appropriate
@@ -80,7 +80,7 @@ function ss_arguments_for_user() {
 
 # Runs curl on the client container.
 function client_curl() {
-  podman exec "${CLIENT_CONTAINER}" curl --silent --show-error --connect-timeout 5 --retry 5 "$@"
+  docker exec "${CLIENT_CONTAINER}" curl --silent --show-error --connect-timeout 5 --retry 5 "$@"
 }
 
 function fail() {
@@ -91,12 +91,12 @@ function fail() {
 function setup() {
   shutdown_containers
 
-  podman network create -d bridge "${NET_OPEN}"
-  podman network create -d bridge --internal "${NET_BLOCKED}"
+  docker network create -d bridge "${NET_OPEN}"
+  docker network create -d bridge --internal "${NET_BLOCKED}"
 
   # Target service.
-  podman build --force-rm -t "${TARGET_IMAGE}" "$(dirname "$0")/target"
-  podman run -d --rm -p "10080:80" --network="${NET_OPEN}" --network-alias="target" --name="${TARGET_CONTAINER}" "${TARGET_IMAGE}"
+  docker build --force-rm -t "${TARGET_IMAGE}" "$(dirname "$0")/target"
+  docker run -d --rm -p "10080:80" --network="${NET_OPEN}" --network-alias="target" --name="${TARGET_CONTAINER}" "${TARGET_IMAGE}"
   
   # Shadowsocks service.
   declare -ar shadowbox_flags=(
@@ -116,25 +116,25 @@ function setup() {
     --name "${SHADOWBOX_CONTAINER}"
     "${SHADOWBOX_IMAGE}"
   )
-  podman run "${shadowbox_flags[@]}"
-  # podman network connect --alias shadowbox "${NET_BLOCKED}" "${SHADOWBOX_CONTAINER}"
-  podman network connect "${NET_OPEN}" "${SHADOWBOX_CONTAINER}"
+  docker run "${shadowbox_flags[@]}"
+  # docker network connect --alias shadowbox "${NET_BLOCKED}" "${SHADOWBOX_CONTAINER}"
+  docker network connect "${NET_OPEN}" "${SHADOWBOX_CONTAINER}"
 
   # Client service.
-  podman build --force-rm -t "${CLIENT_IMAGE}" "$(dirname "$0")/client"
+  docker build --force-rm -t "${CLIENT_IMAGE}" "$(dirname "$0")/client"
   # Use -i to keep the container running.
-  podman run -d --rm -it -p "30555:555" --network "${NET_BLOCKED}" --name "${CLIENT_CONTAINER}" "${CLIENT_IMAGE}"
+  docker run -d --rm -it -p "30555:555" --network "${NET_BLOCKED}" --name "${CLIENT_CONTAINER}" "${CLIENT_IMAGE}"
 
   # Utilities
-  podman build --force-rm -t "${UTIL_IMAGE}" "$(dirname "$0")/util"
+  docker build --force-rm -t "${UTIL_IMAGE}" "$(dirname "$0")/util"
 }
 
 function shutdown_containers() {
-    podman rm -f -v "${TARGET_CONTAINER}" || true
-    podman rm -f -v "${SHADOWBOX_CONTAINER}" || true
-    podman rm -f -v "${CLIENT_CONTAINER}" || true
-    podman network rm -f "${NET_OPEN}" || true
-    podman network rm -f "${NET_BLOCKED}" || true
+    docker rm -f -v "${TARGET_CONTAINER}" || true
+    docker rm -f -v "${SHADOWBOX_CONTAINER}" || true
+    docker rm -f -v "${CLIENT_CONTAINER}" || true
+    docker network rm "${NET_OPEN}" || true
+    docker network rm "${NET_BLOCKED}" || true
 }
 
 function cleanup() {
@@ -167,23 +167,23 @@ function cleanup() {
 
   # Wait for target to come up.
   wait_for_resource localhost:10080
-  TARGET_IP="$(podman inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${TARGET_CONTAINER}")"
+  TARGET_IP="$(docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${TARGET_CONTAINER}")"
   readonly TARGET_IP
 
   # Verify that the client cannot access or even resolve the target
   # Exit code 7 is "Failed to connect to host" and 28 is "Connection timed out".
-  (podman exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 "http://${TARGET_IP}" > /dev/null && \
+  (docker exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 "http://${TARGET_IP}" > /dev/null && \
     fail "Client should not have access to target IP") || (($? == 7 || $? == 28))
 
   # Exit code 6 for "Could not resolve host".  In some environments, curl reports a timeout
   # error (28) instead, which is surprising.  TODO: Investigate and fix.
-  (podman exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 "http://${TARGET_CONTAINER}" > /dev/null && \
+  (docker exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 "http://${TARGET_CONTAINER}" > /dev/null && \
     fail "Client should not have access to target host") || (($? == 6 || $? == 28))
 
   # Wait for shadowbox to come up.
   wait_for_resource https://localhost:20443/access-keys
   # Verify that the shadowbox can access the target
-  podman exec "${SHADOWBOX_CONTAINER}" wget --spider "http://${TARGET_CONTAINER}"
+  docker exec "${SHADOWBOX_CONTAINER}" wget --spider "http://${TARGET_CONTAINER}"
 
   # Create new shadowbox user.
   # TODO(bemasc): Verify that the server is using the right certificate
@@ -199,10 +199,10 @@ function cleanup() {
 
   # Start Shadowsocks client and wait for it to be ready
   declare -ir LOCAL_SOCKS_PORT=5555
-  podman exec -d "${CLIENT_CONTAINER}" \
+  docker exec -d "${CLIENT_CONTAINER}" \
     /go/bin/go-shadowsocks2 "${SS_USER_ARGUMENTS[@]}" -socks "[::1]:${LOCAL_SOCKS_PORT}" -verbose \
     || fail "Could not start shadowsocks client"
-  while ! podman exec "${CLIENT_CONTAINER}" nc -z ::1 "${LOCAL_SOCKS_PORT}"; do
+  while ! docker exec "${CLIENT_CONTAINER}" nc -z ::1 "${LOCAL_SOCKS_PORT}"; do
     sleep 0.1
   done
 
@@ -309,7 +309,7 @@ function cleanup() {
 
   # Verify no errors occurred.
   readonly SHADOWBOX_LOG="${OUTPUT_DIR}/shadowbox-log.txt"
-  if podman logs "${SHADOWBOX_CONTAINER}" 2>&1 | tee "${SHADOWBOX_LOG}" | grep -Eq "^E|level=error|ERROR:"; then
+  if docker logs "${SHADOWBOX_CONTAINER}" 2>&1 | tee "${SHADOWBOX_LOG}" | grep -Eq "^E|level=error|ERROR:"; then
     cat "${SHADOWBOX_LOG}"
     fail "Found errors in Shadowbox logs (see above, also saved to ${SHADOWBOX_LOG})"
   fi
