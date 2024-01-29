@@ -32,8 +32,6 @@
 
 set -x
 
-export DOCKER_CONTENT_TRUST="${DOCKER_CONTENT_TRUST:-1}"
-
 OUTPUT_DIR="$(mktemp -d)"
 readonly OUTPUT_DIR
 # TODO(fortuna): Make it possible to run multiple tests in parallel by adding a
