@@ -175,13 +175,13 @@ function cleanup() {
 
   # Exit code 6 for "Could not resolve host".  In some environments, curl reports a timeout
   # error (28) instead, which is surprising.  TODO: Investigate and fix.
-  (docker exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 "http://target" > /dev/null && \
+  (docker exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 http://target > /dev/null && \
     fail "Client should not have access to target host") || (($? == 6 || $? == 28))
 
   # Wait for shadowbox to come up.
   wait_for_resource https://localhost:20443/access-keys
   # Verify that the shadowbox can access the target
-  docker exec "${SHADOWBOX_CONTAINER}" wget --spider "http://target"
+  docker exec "${SHADOWBOX_CONTAINER}" wget --spider http://target
 
   # Create new shadowbox user.
   # TODO(bemasc): Verify that the server is using the right certificate
