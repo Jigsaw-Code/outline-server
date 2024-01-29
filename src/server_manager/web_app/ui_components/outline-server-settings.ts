@@ -119,6 +119,14 @@ Polymer({
         margin-top: 0px;
         font-size: 12px;
       }
+      .management-api-documentation-link {
+        align-items: center;
+        color: var(--primary-green);
+        display: flex;
+        gap: 0.25rem;
+        margin-bottom: 1rem;
+        margin-top: -1rem;
+      }
       paper-input:not([readonly]) {
         width: 60%;
       }
@@ -253,6 +261,15 @@ Polymer({
               always-float-label=""
               maxlength="100"
             ></paper-input>
+            <if-messages message-ids="management-api-documentation" localize="[[localize]]">
+              <a
+                class="management-api-documentation-link"
+                href="https://github.com/Jigsaw-Code/outline-server/tree/master/src/shadowbox#access-keys-management-api"
+              >
+                <span>[[localize('management-api-documentation')]]</span>
+                <iron-icon icon="open-in-new" />
+              </a>
+            </if-messages>
             <paper-input
               readonly=""
               value="[[_formatDate(language, serverCreationDate)]]"

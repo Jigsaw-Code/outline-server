@@ -144,6 +144,7 @@
   "gcp-type-outline-server": "Type 'outline-server' in the 'Name' field.",
   "key": "Key {keyId}",
   "manager-resources": "Manager Resources",
+  "management-api-documentation": "Server Management API Documentation",
   "manual-server-assign-firewall": "Assign firewall rule",
   "manual-server-assign-group": "Assign Security Group",
   "manual-server-create-firewall": "Create a firewall rule",
