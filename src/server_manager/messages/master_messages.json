@@ -718,6 +718,10 @@
     "message": "Manager Resources",
     "description": "This string appears within the manager sidebar as a link to the manager documentation."
   },
+  "management_api_documentation": {
+    "message": "Server Management API Documentation",
+    "description": "This string appears next to the management API url, pointing to the API documentation."
+  },
   "manual_server_assign_firewall": {
     "message": "Assign firewall rule",
     "description": "This string appears in the server setup view as a sub-header of a section that provides instructions to configure the server's firewall."
