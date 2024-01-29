@@ -24,7 +24,7 @@ cd src/shadowbox/integration_test
 
 declare -i result=0
 
-if ./test.sh "${SB_IMAGE:-localhost/outline/shadowbox:latest}" > "${LOGFILE}" 2>&1 ; then
+if ./test.sh "${SB_IMAGE:-outline/shadowbox:latest}" > "${LOGFILE}" 2>&1 ; then
   echo "Test Passed!"
   # Removing the log file sometimes fails on Travis.  There's no point in us cleaning it up
   # on a CI build anyways.

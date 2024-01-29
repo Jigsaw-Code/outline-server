@@ -68,7 +68,7 @@ npm run action shadowbox/docker/build
 Debug image:
 
 ```
-docker run --rm -it --entrypoint=sh localhost/outline/shadowbox
+docker run --rm -it --entrypoint=sh outline/shadowbox
 ```
 
 Or a running container:

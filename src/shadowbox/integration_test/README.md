@@ -11,5 +11,5 @@ npm run action shadowbox/integration_test/run
 For development of the test, or to test a specific image, you may prefer calling the test directly, without the build step:
 
 ```sh
-./src/shadowbox/integration_test/test.sh localhost/outline/shadowbox:latest
+./src/shadowbox/integration_test/test.sh outline/shadowbox:latest
 ```
