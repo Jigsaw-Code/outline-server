@@ -175,13 +175,13 @@ function cleanup() {
 
   # Exit code 6 for "Could not resolve host".  In some environments, curl reports a timeout
   # error (28) instead, which is surprising.  TODO: Investigate and fix.
-  (docker exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 "http://${TARGET_CONTAINER}" > /dev/null && \
+  (docker exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 "http://target" > /dev/null && \
     fail "Client should not have access to target host") || (($? == 6 || $? == 28))
 
   # Wait for shadowbox to come up.
   wait_for_resource https://localhost:20443/access-keys
   # Verify that the shadowbox can access the target
-  docker exec "${SHADOWBOX_CONTAINER}" wget --spider "http://${TARGET_CONTAINER}"
+  docker exec "${SHADOWBOX_CONTAINER}" wget --spider "http://target"
 
   # Create new shadowbox user.
   # TODO(bemasc): Verify that the server is using the right certificate
@@ -198,7 +198,7 @@ function cleanup() {
   # Start Shadowsocks client and wait for it to be ready
   declare -ir LOCAL_SOCKS_PORT=5555
   docker exec -d "${CLIENT_CONTAINER}" \
-    /go/bin/go-shadowsocks2 "${SS_USER_ARGUMENTS[@]}" -socks "[::1]:${LOCAL_SOCKS_PORT}" -verbose \
+    /go/bin/go-shadowsocks2 "${SS_USER_ARGUMENTS[@]}" -socks "localhost:${LOCAL_SOCKS_PORT}" -verbose \
     || fail "Could not start shadowsocks client"
   while ! docker exec "${CLIENT_CONTAINER}" nc -z ::1 "${LOCAL_SOCKS_PORT}"; do
     sleep 0.1
@@ -207,17 +207,17 @@ function cleanup() {
   function test_networking() {
     # Verify the server blocks requests to hosts on private addresses.
     # Exit code 52 is "Empty server response".
-    (client_curl -x "socks5h://[::1]:${LOCAL_SOCKS_PORT}" "${TARGET_IP}" &> /dev/null \
+    (client_curl -x "socks5h://localhost:${LOCAL_SOCKS_PORT}" "${TARGET_IP}" &> /dev/null \
       && fail "Target host in a private network accessible through shadowbox") || (($? == 52))
 
     # Verify we can retrieve the internet target URL.
-    client_curl -x "socks5h://[::1]:${LOCAL_SOCKS_PORT}" "${INTERNET_TARGET_URL}" \
+    client_curl -x "socks5h://localhost:${LOCAL_SOCKS_PORT}" "${INTERNET_TARGET_URL}" \
       || fail "Could not fetch ${INTERNET_TARGET_URL} through shadowbox."
 
     # Verify we can't access the URL anymore after the key is deleted
     client_curl --insecure -X DELETE "${SB_API_URL}/access-keys/0" > /dev/null
     # Exit code 56 is "Connection reset by peer".
-    (client_curl -x "socks5h://[::1]:${LOCAL_SOCKS_PORT}" "${INTERNET_TARGET_URL}" &> /dev/null \
+    (client_curl -x "socks5h://localhost:${LOCAL_SOCKS_PORT}" "${INTERNET_TARGET_URL}" &> /dev/null \
       && fail "Deleted access key is still active") || (($? == 56))
   }
 
