@@ -94,7 +94,7 @@ function setup() {
   podman network create -d bridge --internal "${NET_BLOCKED}"
 
   # Target service.
-  podman build --force-rm -t "${TARGET_IMAGE}" ./target
+  podman build --force-rm -t "${TARGET_IMAGE}" $(dirname $0)/target
   podman run -d --rm -p "10080:80" --network="${NET_OPEN}" --network-alias="target" --name="${TARGET_CONTAINER}" "${TARGET_IMAGE}"
   
   # Shadowsocks service.
@@ -120,9 +120,12 @@ function setup() {
   podman network connect "${NET_OPEN}" "${SHADOWBOX_CONTAINER}"
 
   # Client service.
-  podman build --force-rm -t "${CLIENT_IMAGE}" ./client
+  podman build --force-rm -t "${CLIENT_IMAGE}" $(dirname $0)/client
   # Use -i to keep the container running.
   podman run -d --rm -it -p "30555:555" --network "${NET_BLOCKED}" --name "${CLIENT_CONTAINER}" "${CLIENT_IMAGE}"
+
+  # Utilities
+  podman build --force-rm -t "${UTIL_IMAGE}" $(dirname $0)/util
 }
 
 function shutdown_containers() {
@@ -151,7 +154,7 @@ function cleanup() {
   trap "cleanup" EXIT
 
   # Make the certificate
-  source ../scripts/make_test_certificate.sh /tmp
+  source $(dirname $0)/../scripts/make_test_certificate.sh /tmp
 
   # Sets everything up
   export SB_API_PREFIX='TestApiPrefix'
