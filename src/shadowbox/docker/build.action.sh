@@ -36,11 +36,9 @@ readonly NODE_IMAGE=$(
 )
 
 docker build --force-rm \
-    --os "linux" \
-    --arch "${ARCH}" \
     --build-arg ARCH="${ARCH}" \
     --build-arg NODE_IMAGE="${NODE_IMAGE}" \
     --build-arg GITHUB_RELEASE="${TRAVIS_TAG:-none}" \
     -f src/shadowbox/docker/Dockerfile \
-    -t "${SB_IMAGE:-outline/shadowbox}" \
+    -t "${SB_IMAGE:-localhost/outline/shadowbox}" \
     "${ROOT_DIR}"

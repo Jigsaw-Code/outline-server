@@ -47,7 +47,7 @@ declare -ar docker_bindings=(
   -e "SB_METRICS_URL=${SB_METRICS_URL:-https://dev.metrics.getoutline.org}"
 )
 
-readonly IMAGE="${SB_IMAGE:-outline/shadowbox}"
+readonly IMAGE="${SB_IMAGE:-localhost/outline/shadowbox}"
 echo "Running image ${IMAGE}"
 
 declare -a NET_BINDINGS=("--network=host")
