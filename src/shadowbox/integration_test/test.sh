@@ -41,6 +41,7 @@ readonly OUTPUT_DIR
 readonly NAMESPACE='integrationtest'
 readonly TARGET_CONTAINER="${NAMESPACE}_target"
 readonly TARGET_IMAGE="${TARGET_CONTAINER}"
+readonly SHADOWBOX_IMAGE="${1?Must pass image name in the command line}"
 readonly SHADOWBOX_CONTAINER="${NAMESPACE}_shadowbox"
 readonly CLIENT_CONTAINER="${NAMESPACE}_client"
 readonly CLIENT_IMAGE="${CLIENT_CONTAINER}"
@@ -113,7 +114,7 @@ function setup() {
     -v "${SB_PRIVATE_KEY_FILE}:/root/shadowbox/test.key"
     -v "${TMP_STATE_DIR}:/root/shadowbox/persisted-state"
     --name "${SHADOWBOX_CONTAINER}"
-    "${SB_IMAGE:-localhost/outline/shadowbox:latest}"
+    "${SHADOWBOX_IMAGE}"
   )
   podman run "${shadowbox_flags[@]}"
   # podman network connect --alias shadowbox "${NET_BLOCKED}" "${SHADOWBOX_CONTAINER}"
@@ -153,15 +154,14 @@ function cleanup() {
   # Ensure proper shut down on exit if not in debug mode
   trap "cleanup" EXIT
 
-  # Make the certificate
-  source $(dirname $0)/../scripts/make_test_certificate.sh /tmp
-
   # Sets everything up
   export SB_API_PREFIX='TestApiPrefix'
   readonly SB_API_URL="https://shadowbox/${SB_API_PREFIX}"
   TMP_STATE_DIR="$(mktemp -d)"
   export TMP_STATE_DIR
   echo '{"hostname": "shadowbox"}' > "${TMP_STATE_DIR}/shadowbox_server_config.json"
+  # Make the certificates. This exports SB_CERTIFICATE_FILE and SB_PRIVATE_KEY_FILE.
+  source $(dirname $0)/../scripts/make_test_certificate.sh "${TMP_STATE_DIR}"
   setup
 
   # Wait for target to come up.
