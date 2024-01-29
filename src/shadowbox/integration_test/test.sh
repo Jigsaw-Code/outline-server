@@ -200,7 +200,7 @@ function cleanup() {
   docker exec -d "${CLIENT_CONTAINER}" \
     /go/bin/go-shadowsocks2 "${SS_USER_ARGUMENTS[@]}" -socks "localhost:${LOCAL_SOCKS_PORT}" -verbose \
     || fail "Could not start shadowsocks client"
-  while ! docker exec "${CLIENT_CONTAINER}" nc -z ::1 "${LOCAL_SOCKS_PORT}"; do
+  while ! docker exec "${CLIENT_CONTAINER}" nc -z localhost "${LOCAL_SOCKS_PORT}"; do
     sleep 0.1
   done
 
