@@ -120,10 +120,12 @@ Polymer({
         font-size: 12px;
       }
       .management-api-documentation-link {
+        align-items: center;
         color: var(--primary-green);
         display: flex;
-        align-items: center;
         gap: 0.25rem;
+        margin-bottom: 1rem;
+        margin-top: -1rem;
       }
       paper-input:not([readonly]) {
         width: 60%;
