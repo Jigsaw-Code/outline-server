@@ -95,7 +95,7 @@ function setup() {
   podman network create -d bridge --internal "${NET_BLOCKED}"
 
   # Target service.
-  podman build --force-rm -t "${TARGET_IMAGE}" $(dirname $0)/target
+  podman build --force-rm -t "${TARGET_IMAGE}" "$(dirname "$0")/target"
   podman run -d --rm -p "10080:80" --network="${NET_OPEN}" --network-alias="target" --name="${TARGET_CONTAINER}" "${TARGET_IMAGE}"
   
   # Shadowsocks service.
@@ -121,12 +121,12 @@ function setup() {
   podman network connect "${NET_OPEN}" "${SHADOWBOX_CONTAINER}"
 
   # Client service.
-  podman build --force-rm -t "${CLIENT_IMAGE}" $(dirname $0)/client
+  podman build --force-rm -t "${CLIENT_IMAGE}" "$(dirname "$0")/client"
   # Use -i to keep the container running.
   podman run -d --rm -it -p "30555:555" --network "${NET_BLOCKED}" --name "${CLIENT_CONTAINER}" "${CLIENT_IMAGE}"
 
   # Utilities
-  podman build --force-rm -t "${UTIL_IMAGE}" $(dirname $0)/util
+  podman build --force-rm -t "${UTIL_IMAGE}" "$(dirname "$0")/util"
 }
 
 function shutdown_containers() {
@@ -161,7 +161,8 @@ function cleanup() {
   export TMP_STATE_DIR
   echo '{"hostname": "shadowbox"}' > "${TMP_STATE_DIR}/shadowbox_server_config.json"
   # Make the certificates. This exports SB_CERTIFICATE_FILE and SB_PRIVATE_KEY_FILE.
-  source $(dirname $0)/../scripts/make_test_certificate.sh "${TMP_STATE_DIR}"
+  # shellcheck source=../scripts/make_test_certificate.sh
+  source "$(dirname "$0")/../scripts/make_test_certificate.sh" "${TMP_STATE_DIR}"
   setup
 
   # Wait for target to come up.
