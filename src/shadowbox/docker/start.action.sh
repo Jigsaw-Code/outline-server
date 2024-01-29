@@ -57,4 +57,4 @@ if [[ "$(uname)" == "Darwin" ]]; then
   NET_BINDINGS=(-p "${SB_API_PORT}:${SB_API_PORT}" -p "${ACCESS_KEY_PORT}:${ACCESS_KEY_PORT}" -p "${ACCESS_KEY_PORT}:${ACCESS_KEY_PORT}/udp")
 fi;
 
-podman run --rm -it "${NET_BINDINGS[@]}" --name shadowbox "${docker_bindings[@]}" "${IMAGE}"
+docker run --rm -it "${NET_BINDINGS[@]}" --name shadowbox "${docker_bindings[@]}" "${IMAGE}"
