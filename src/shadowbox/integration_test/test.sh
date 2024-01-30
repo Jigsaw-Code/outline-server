@@ -87,7 +87,7 @@ function fail() {
 }
 
 function setup() {
-  shutdown_containers
+  remove_containers
 
   docker network create -d bridge "${NET_OPEN}"
   docker network create -d bridge --internal "${NET_BLOCKED}"
@@ -127,18 +127,20 @@ function setup() {
   docker build --force-rm -t "${UTIL_IMAGE}" "$(dirname "$0")/util"
 }
 
-function shutdown_containers() {
-    docker rm -f -v "${TARGET_CONTAINER}" || true
-    docker rm -f -v "${SHADOWBOX_CONTAINER}" || true
-    docker rm -f -v "${CLIENT_CONTAINER}" || true
-    docker network rm "${NET_OPEN}" || true
-    docker network rm "${NET_BLOCKED}" || true
+function remove_containers() {
+  # Force remove (-f) running containers and `|| true` to not trigger a shell error
+  # in case the container or network don't exist.
+  docker rm -f -v "${TARGET_CONTAINER}" || true
+  docker rm -f -v "${SHADOWBOX_CONTAINER}" || true
+  docker rm -f -v "${CLIENT_CONTAINER}" || true
+  docker network rm "${NET_OPEN}" || true
+  docker network rm "${NET_BLOCKED}" || true
 }
 
 function cleanup() {
   local -i status=$?
   if ((DEBUG != 1)); then
-    shutdown_containers
+    remove_containers
     rm -rf "${TMP_STATE_DIR}" || echo "Failed to cleanup files at ${TMP_STATE_DIR}"
   fi
   return "${status}"
