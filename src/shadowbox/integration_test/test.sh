@@ -129,7 +129,7 @@ function setup() {
 
 function remove_containers() {
   # Force remove (-f) running containers and `|| true` to not trigger a shell error
-  # in case the container or network don't exist.
+  # in case the container or network doesn't exist.
   docker rm -f -v "${TARGET_CONTAINER}" || true
   docker rm -f -v "${SHADOWBOX_CONTAINER}" || true
   docker rm -f -v "${CLIENT_CONTAINER}" || true
