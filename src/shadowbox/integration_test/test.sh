@@ -32,16 +32,23 @@
 
 set -x
 
-export DOCKER_CONTENT_TRUST="${DOCKER_CONTENT_TRUST:-1}"
-
 OUTPUT_DIR="$(mktemp -d)"
 readonly OUTPUT_DIR
 # TODO(fortuna): Make it possible to run multiple tests in parallel by adding a
 # run id to the container names.
-readonly TARGET_CONTAINER='integrationtest_target_1'
-readonly SHADOWBOX_CONTAINER='integrationtest_shadowbox_1'
-readonly CLIENT_CONTAINER='integrationtest_client_1'
-readonly UTIL_CONTAINER='integrationtest_util_1'
+readonly NAMESPACE='integrationtest'
+readonly TARGET_CONTAINER="${NAMESPACE}_target"
+readonly TARGET_IMAGE="${TARGET_CONTAINER}"
+readonly SHADOWBOX_IMAGE="${1?Must pass image name in the command line}"
+readonly SHADOWBOX_CONTAINER="${NAMESPACE}_shadowbox"
+readonly CLIENT_CONTAINER="${NAMESPACE}_client"
+readonly CLIENT_IMAGE="${CLIENT_CONTAINER}"
+readonly UTIL_IMAGE="${NAMESPACE}_util"
+
+readonly NET_OPEN="${NAMESPACE}_open"
+readonly NET_BLOCKED="${NAMESPACE}_blocked"
+
+
 readonly INTERNET_TARGET_URL="http://www.gstatic.com/generate_204"
 echo "Test output at ${OUTPUT_DIR}"
 # Set DEBUG=1 to not kill the stack when the test is finished so you can query
@@ -55,7 +62,7 @@ function wait_for_resource() {
 }
 
 function util_jq() {
-  docker exec -i "${UTIL_CONTAINER}" jq "$@"
+  docker run --rm -i --entrypoint jq "${UTIL_IMAGE}" "$@"
 }
 
 # Takes the JSON from a /access-keys POST request and returns the appropriate
@@ -79,10 +86,61 @@ function fail() {
   exit 1
 }
 
+function setup() {
+  remove_containers
+
+  docker network create -d bridge "${NET_OPEN}"
+  docker network create -d bridge --internal "${NET_BLOCKED}"
+
+  # Target service.
+  docker build --force-rm -t "${TARGET_IMAGE}" "$(dirname "$0")/target"
+  docker run -d --rm -p "10080:80" --network="${NET_OPEN}" --network-alias="target" --name="${TARGET_CONTAINER}" "${TARGET_IMAGE}"
+  
+  # Shadowsocks service.
+  declare -ar shadowbox_flags=(
+    -d
+    --rm
+    --network="${NET_BLOCKED}"
+    --network-alias="shadowbox"
+    -p "20443:443"
+    -e "SB_API_PORT=443"
+    -e "SB_API_PREFIX=${SB_API_PREFIX}"
+    -e "LOG_LEVEL=debug"
+    -e "SB_CERTIFICATE_FILE=/root/shadowbox/test.crt"
+    -e "SB_PRIVATE_KEY_FILE=/root/shadowbox/test.key"
+    -v "${SB_CERTIFICATE_FILE}:/root/shadowbox/test.crt"
+    -v "${SB_PRIVATE_KEY_FILE}:/root/shadowbox/test.key"
+    -v "${TMP_STATE_DIR}:/root/shadowbox/persisted-state"
+    --name "${SHADOWBOX_CONTAINER}"
+    "${SHADOWBOX_IMAGE}"
+  )
+  docker run "${shadowbox_flags[@]}"
+  # docker network connect --alias shadowbox "${NET_BLOCKED}" "${SHADOWBOX_CONTAINER}"
+  docker network connect "${NET_OPEN}" "${SHADOWBOX_CONTAINER}"
+
+  # Client service.
+  docker build --force-rm -t "${CLIENT_IMAGE}" "$(dirname "$0")/client"
+  # Use -i to keep the container running.
+  docker run -d --rm -it -p "30555:555" --network "${NET_BLOCKED}" --name "${CLIENT_CONTAINER}" "${CLIENT_IMAGE}"
+
+  # Utilities
+  docker build --force-rm -t "${UTIL_IMAGE}" "$(dirname "$0")/util"
+}
+
+function remove_containers() {
+  # Force remove (-f) running containers and `|| true` to not trigger a shell error
+  # in case the container or network doesn't exist.
+  docker rm -f -v "${TARGET_CONTAINER}" || true
+  docker rm -f -v "${SHADOWBOX_CONTAINER}" || true
+  docker rm -f -v "${CLIENT_CONTAINER}" || true
+  docker network rm "${NET_OPEN}" || true
+  docker network rm "${NET_BLOCKED}" || true
+}
+
 function cleanup() {
   local -i status=$?
   if ((DEBUG != 1)); then
-    docker-compose --project-name=integrationtest down
+    remove_containers
     rm -rf "${TMP_STATE_DIR}" || echo "Failed to cleanup files at ${TMP_STATE_DIR}"
   fi
   return "${status}"
@@ -96,16 +154,16 @@ function cleanup() {
   # Ensure proper shut down on exit if not in debug mode
   trap "cleanup" EXIT
 
-  # Make the certificate
-  source ../scripts/make_test_certificate.sh /tmp
-
   # Sets everything up
   export SB_API_PREFIX='TestApiPrefix'
   readonly SB_API_URL="https://shadowbox/${SB_API_PREFIX}"
   TMP_STATE_DIR="$(mktemp -d)"
   export TMP_STATE_DIR
   echo '{"hostname": "shadowbox"}' > "${TMP_STATE_DIR}/shadowbox_server_config.json"
-  docker-compose --project-name=integrationtest up --build -d
+  # Make the certificates. This exports SB_CERTIFICATE_FILE and SB_PRIVATE_KEY_FILE.
+  # shellcheck source=../scripts/make_test_certificate.sh
+  source "$(dirname "$0")/../scripts/make_test_certificate.sh" "${TMP_STATE_DIR}"
+  setup
 
   # Wait for target to come up.
   wait_for_resource localhost:10080
@@ -113,13 +171,13 @@ function cleanup() {
   readonly TARGET_IP
 
   # Verify that the client cannot access or even resolve the target
-  # Exit code 28 for "Connection timed out".
-  (docker exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 "${TARGET_IP}" > /dev/null && \
-    fail "Client should not have access to target IP") || (($? == 28))
+  # Exit code 7 is "Failed to connect to host" and 28 is "Connection timed out".
+  (docker exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 "http://${TARGET_IP}" > /dev/null && \
+    fail "Client should not have access to target IP") || (($? == 7 || $? == 28))
 
   # Exit code 6 for "Could not resolve host".  In some environments, curl reports a timeout
   # error (28) instead, which is surprising.  TODO: Investigate and fix.
-  (docker exec "${CLIENT_CONTAINER}" curl --connect-timeout 5 http://target > /dev/null && \
+  (docker exec "${CLIENT_CONTAINER}" curl --silent --connect-timeout 5 http://target > /dev/null && \
     fail "Client should not have access to target host") || (($? == 6 || $? == 28))
 
   # Wait for shadowbox to come up.

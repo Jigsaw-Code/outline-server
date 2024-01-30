@@ -25,7 +25,7 @@ WORKDIR /
 # Don't copy node_modules and other things not needed for install.
 COPY package.json package-lock.json ./
 COPY src/shadowbox/package.json src/shadowbox/
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci
 
 # We copy the source code only after npm ci, so that source code changes don't trigger re-installs.
 COPY scripts scripts/
@@ -46,8 +46,11 @@ LABEL shadowbox.node_version=16.18.0
 ARG GITHUB_RELEASE
 LABEL shadowbox.github.release="${GITHUB_RELEASE}"
 
+# The user management service doesn't quit with SIGTERM.
+STOPSIGNAL SIGKILL
+
 # We use curl to detect the server's public IP. We need to use the --date option in `date` to
-# safely grab the ip-to-country database
+# safely grab the ip-to-country database.
 RUN apk add --no-cache --upgrade coreutils curl
 
 COPY src/shadowbox/scripts scripts/

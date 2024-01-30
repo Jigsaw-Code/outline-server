@@ -31,8 +31,7 @@ Shadowbox supports running on linux and macOS hosts.
 
 Besides [Node](https://nodejs.org/en/download/) you will also need:
 
-1. [Docker 1.13+](https://docs.docker.com/engine/installation/)
-2. [docker-compose 1.11+](https://docs.docker.com/compose/install/)
+1. [Docker Engine](https://docs.docker.com/engine/installation/)
 
 ### Running Shadowbox as a Node.js app
 
@@ -69,7 +68,7 @@ npm run action shadowbox/docker/build
 Debug image:
 
 ```
-docker run --rm -it --entrypoint=sh outline/shadowbox
+docker run --rm -it --entrypoint=sh localhost/outline/shadowbox
 ```
 
 Or a running container:
