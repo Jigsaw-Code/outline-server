@@ -34,8 +34,9 @@ COPY tsconfig.json ./
 COPY third_party third_party
 
 ARG ARCH
+ARG VERSION
 
-RUN ARCH=${ARCH} ROOT_DIR=/ npm run action shadowbox/server/build
+RUN ARCH=${ARCH} ROOT_DIR=/ SB_VERSION=${VERSION} npm run action shadowbox/server/build
 
 # shadowbox image
 FROM ${NODE_IMAGE}
@@ -43,8 +44,7 @@ FROM ${NODE_IMAGE}
 # Save metadata on the software versions we are using.
 LABEL shadowbox.node_version=16.18.0
 
-ARG GITHUB_RELEASE
-LABEL shadowbox.github.release="${GITHUB_RELEASE}"
+LABEL shadowbox.github.release=${VERSION}
 
 # The user management service doesn't quit with SIGTERM.
 STOPSIGNAL SIGKILL

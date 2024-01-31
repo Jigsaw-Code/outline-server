@@ -22,7 +22,7 @@ import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {AccessKey, AccessKeyRepository, DataLimit} from '../model/access_key';
 import * as errors from '../model/errors';
-import {version} from '../package.json';
+import * as version from './version';
 
 import {ManagerMetrics} from './manager_metrics';
 import {ServerConfigJson} from './server_config';
@@ -258,7 +258,7 @@ export class ShadowsocksManagerService {
       serverId: this.serverConfig.data().serverId,
       metricsEnabled: this.serverConfig.data().metricsEnabled || false,
       createdTimestampMs: this.serverConfig.data().createdTimestampMs,
-      version,
+      version: version.getPackageVersion(),
       accessKeyDataLimit: this.serverConfig.data().accessKeyDataLimit,
       portForNewAccessKeys: this.serverConfig.data().portForNewAccessKeys,
       hostnameForAccessKeys: this.serverConfig.data().hostname,

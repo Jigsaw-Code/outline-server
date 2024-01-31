@@ -18,7 +18,7 @@ import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {AccessKeyId, AccessKeyMetricsId} from '../model/access_key';
-import {version} from '../package.json';
+import * as version from './version';
 import {AccessKeyConfigJson} from './server_access_key';
 
 import {ServerConfigJson} from './server_config';
@@ -280,7 +280,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
     const keys = this.keyConfig.data().accessKeys;
     const featureMetricsReport = {
       serverId: this.serverConfig.data().serverId,
-      serverVersion: version,
+      serverVersion: version.getPackageVersion(),
       timestampUtcMs: this.clock.now(),
       dataLimit: {
         enabled: !!this.serverConfig.data().accessKeyDataLimit,
