@@ -189,13 +189,16 @@ function cleanup() {
   # TODO(bemasc): Verify that the server is using the right certificate
   NEW_USER_JSON="$(client_curl --insecure -X POST "${SB_API_URL}/access-keys")"
   readonly NEW_USER_JSON
-  [[ "${NEW_USER_JSON}" == '{"id":"0"'* ]] || fail "Fail to create user"
+  readonly NEW_USER_JSON_ID="$(echo "${NEW_USER_JSON}" | util_jq -re .id)"
+  [[ "${NEW_USER_JSON}" == "{\"id\":\"${NEW_USER_JSON_ID}\""* ]] || fail "Fail to create user"
   read -r -a SS_USER_ARGUMENTS < <(ss_arguments_for_user "${NEW_USER_JSON}")
   readonly SS_USER_ARGUMENTS
 
   # Verify that we handle deletions well
-  client_curl --insecure -X POST "${SB_API_URL}/access-keys" > /dev/null
-  client_curl --insecure -X DELETE "${SB_API_URL}/access-keys/1" > /dev/null
+  ANOTHER_NEW_USER_JSON="$(client_curl --insecure -X POST "${SB_API_URL}/access-keys")"
+  readonly ANOTHER_NEW_USER_JSON
+  readonly ANOTHER_NEW_USER_JSON_ID="$(echo "${ANOTHER_NEW_USER_JSON}" | util_jq -re .id)"
+  client_curl --insecure -X DELETE "${SB_API_URL}/access-keys/${ANOTHER_NEW_USER_JSON_ID}" > /dev/null
 
   # Start Shadowsocks client and wait for it to be ready
   declare -ir LOCAL_SOCKS_PORT=5555
@@ -217,7 +220,7 @@ function cleanup() {
       || fail "Could not fetch ${INTERNET_TARGET_URL} through shadowbox."
 
     # Verify we can't access the URL anymore after the key is deleted
-    client_curl --insecure -X DELETE "${SB_API_URL}/access-keys/0" > /dev/null
+    client_curl --insecure -X DELETE "${SB_API_URL}/access-keys/${NEW_USER_JSON_ID}" > /dev/null
     # Exit code 56 is "Connection reset by peer".
     (client_curl -x "socks5h://localhost:${LOCAL_SOCKS_PORT}" "${INTERNET_TARGET_URL}" &> /dev/null \
       && fail "Deleted access key is still active") || (($? == 56))
