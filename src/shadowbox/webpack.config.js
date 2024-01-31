@@ -31,7 +31,7 @@ const config = {
   },
   plugins: [
     // Used by server/version.ts.
-    new webpack.DefinePlugin({'__VERSION__': JSON.stringify(process.env.SB_VERSION || 'dev')}),
+    process.env.SB_VERSION ? new webpack.DefinePlugin({'__VERSION__': JSON.stringify(process.env.SB_VERSION)}): undefined,
     // WORKAROUND: some of our (transitive) dependencies use node-gently, which hijacks `require`.
     // Setting global.GENTLY to false makes these dependencies use standard require.
     new webpack.DefinePlugin({'global.GENTLY': false}),

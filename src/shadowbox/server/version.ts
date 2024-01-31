@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Injected by WebPack with webpack.DefinePlugin. 
 declare const __VERSION__: string;
 
 export function getPackageVersion(): string {
