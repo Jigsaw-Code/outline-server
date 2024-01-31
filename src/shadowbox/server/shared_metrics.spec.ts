@@ -15,7 +15,7 @@
 import {ManualClock} from '../infrastructure/clock';
 import {InMemoryConfig} from '../infrastructure/json_config';
 import {AccessKeyId, DataLimit} from '../model/access_key';
-import {version} from '../package.json';
+import * as version from './version';
 import {AccessKeyConfigJson} from './server_access_key';
 
 import {ServerConfigJson} from './server_config';
@@ -224,7 +224,7 @@ describe('OutlineSharedMetricsPublisher', () => {
     await clock.runCallbacks();
     expect(metricsCollector.collectedFeatureMetricsReport).toEqual({
       serverId: 'server-id',
-      serverVersion: version,
+      serverVersion: version.getPackageVersion(),
       timestampUtcMs: timestamp,
       dataLimit: {
         enabled: true,
@@ -238,7 +238,7 @@ describe('OutlineSharedMetricsPublisher', () => {
     await clock.runCallbacks();
     expect(metricsCollector.collectedFeatureMetricsReport).toEqual({
       serverId: 'server-id',
-      serverVersion: version,
+      serverVersion: version.getPackageVersion(),
       timestampUtcMs: timestamp,
       dataLimit: {
         enabled: false,
