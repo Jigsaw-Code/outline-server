@@ -409,7 +409,7 @@ export class AppRoot extends polymerElementWithLocalize {
             </if-messages>
             <span on-tap="maybeCloseDrawer"><a href="https://support.getoutline.org/s/article/Data-collection">[[localize('nav-data-collection')]]</a></span>
             <span on-tap="submitFeedbackTapped">[[localize('nav-feedback')]]</span>
-            <span on-tap="maybeCloseDrawer"><a href="https://s3.amazonaws.com/outline-vpn/index.html#/en/support/">[[localize('nav-help')]]</a></span>
+            <span on-tap="maybeCloseDrawer"><a href="https://support.getoutline.org/">[[localize('nav-help')]]</a></span>
             <span on-tap="aboutTapped">[[localize('nav-about')]]</span>
             <div id="links-footer">
               <paper-icon-item id="language-row">
