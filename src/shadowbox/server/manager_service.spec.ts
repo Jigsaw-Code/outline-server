@@ -243,7 +243,7 @@ describe('ShadowsocksManagerService', () => {
         {
           send: (httpCode, data: AccessKey) => {
             expect(httpCode).toEqual(200);
-            expect(data.id).toEqual('0');
+            expect(data.id).toEqual(key1.id);
             responseProcessed = true;
           },
         },
@@ -321,7 +321,7 @@ describe('ShadowsocksManagerService', () => {
           const res = {
             send: (httpCode, data) => {
               expect(httpCode).toEqual(201);
-              expect(data.id).toEqual('0');
+              expect(data.id).not.toBeUndefined();
               responseProcessed = true; // required for afterEach to pass.
             },
           };
@@ -1211,7 +1211,7 @@ function getAccessKeyRepository(): ServerAccessKeyRepository {
   return new ServerAccessKeyRepository(
     OLD_PORT,
     'hostname',
-    new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}),
+    new InMemoryConfig<AccessKeyConfigJson>({accessKeys: []}),
     new FakeShadowsocksServer(),
     new FakePrometheusClient({})
   );

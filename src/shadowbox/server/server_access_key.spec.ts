@@ -65,9 +65,9 @@ describe('ServerAccessKeyRepository', () => {
     const accessKey1 = await repo.createNewAccessKey();
     const accessKey2 = await repo.createNewAccessKey({id: 'myKeyId'});
     const accessKey3 = await repo.createNewAccessKey();
-    expect(accessKey1.id).toEqual('0');
+    expect(accessKey1.id).not.toBeUndefined();
     expect(accessKey2.id).toEqual('myKeyId');
-    expect(accessKey3.id).toEqual('1');
+    expect(accessKey3.id).not.toBeUndefined();
     done();
   });
 
@@ -233,7 +233,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('setAccessKeyDataLimit can set a custom data limit', async (done) => {
     const server = new FakeShadowsocksServer();
-    const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
+    const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: []});
     const repo = new RepoBuilder().shadowsocksServer(server).keyConfig(config).build();
     const key = await repo.createNewAccessKey();
     const limit = {bytes: 5000};
@@ -262,7 +262,7 @@ describe('ServerAccessKeyRepository', () => {
       .shadowsocksServer(server)
       .build();
     await repo.start(new ManualClock());
-    const key = await repo.createNewAccessKey();
+    const key = await repo.createNewAccessKey({id: '0'});
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 0});
 
     expect(key.isOverDataLimit).toBeTruthy();
@@ -286,8 +286,8 @@ describe('ServerAccessKeyRepository', () => {
       .shadowsocksServer(server)
       .build();
     await repo.start(new ManualClock());
-    const lowerLimitThanDefault = await repo.createNewAccessKey();
-    const higherLimitThanDefault = await repo.createNewAccessKey();
+    const lowerLimitThanDefault = await repo.createNewAccessKey({id: '0'});
+    const higherLimitThanDefault = await repo.createNewAccessKey({id: '1'});
     await repo.setDefaultDataLimit({bytes: 1000});
 
     expect(lowerLimitThanDefault.isOverDataLimit).toBeFalsy();
@@ -302,7 +302,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('removeAccessKeyDataLimit can remove a custom data limit', async (done) => {
     const server = new FakeShadowsocksServer();
-    const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
+    const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: []});
     const repo = new RepoBuilder().shadowsocksServer(server).keyConfig(config).build();
     const key = await repo.createNewAccessKey();
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 1});
@@ -319,7 +319,7 @@ describe('ServerAccessKeyRepository', () => {
       .prometheusClient(prometheusClient)
       .shadowsocksServer(server)
       .build();
-    const key = await repo.createNewAccessKey();
+    const key = await repo.createNewAccessKey({id: '0'});
     await repo.start(new ManualClock());
     await repo.setDefaultDataLimit({bytes: 0});
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 1000});
@@ -338,7 +338,7 @@ describe('ServerAccessKeyRepository', () => {
       .shadowsocksServer(server)
       .build();
     await repo.start(new ManualClock());
-    const key = await repo.createNewAccessKey();
+    const key = await repo.createNewAccessKey({id: '0'});
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 0});
 
     expect(key.isOverDataLimit).toBeTruthy();
@@ -362,8 +362,8 @@ describe('ServerAccessKeyRepository', () => {
       .shadowsocksServer(server)
       .build();
     await repo.start(new ManualClock());
-    const lowerLimitThanDefault = await repo.createNewAccessKey();
-    const higherLimitThanDefault = await repo.createNewAccessKey();
+    const lowerLimitThanDefault = await repo.createNewAccessKey({id: '0'});
+    const higherLimitThanDefault = await repo.createNewAccessKey({id: '1'});
     await repo.setDefaultDataLimit({bytes: 1000});
 
     expect(lowerLimitThanDefault.isOverDataLimit).toBeFalsy();
@@ -385,7 +385,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('removeAccessKeyDataLimit can remove a custom data limit', async (done) => {
     const server = new FakeShadowsocksServer();
-    const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
+    const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: []});
     const repo = new RepoBuilder().shadowsocksServer(server).keyConfig(config).build();
     const key = await repo.createNewAccessKey();
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 1});
@@ -402,7 +402,7 @@ describe('ServerAccessKeyRepository', () => {
       .prometheusClient(prometheusClient)
       .shadowsocksServer(server)
       .build();
-    const key = await repo.createNewAccessKey();
+    const key = await repo.createNewAccessKey({id: '0'});
     await repo.start(new ManualClock());
     await repo.setDefaultDataLimit({bytes: 0});
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 1000});
@@ -420,7 +420,7 @@ describe('ServerAccessKeyRepository', () => {
       .prometheusClient(prometheusClient)
       .shadowsocksServer(server)
       .build();
-    const key = await repo.createNewAccessKey();
+    const key = await repo.createNewAccessKey({id: '0'});
     await repo.start(new ManualClock());
 
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 0});
@@ -448,8 +448,8 @@ describe('ServerAccessKeyRepository', () => {
       .prometheusClient(prometheusClient)
       .shadowsocksServer(server)
       .build();
-    const accessKey1 = await repo.createNewAccessKey();
-    const accessKey2 = await repo.createNewAccessKey();
+    const accessKey1 = await repo.createNewAccessKey({id: '0'});
+    const accessKey2 = await repo.createNewAccessKey({id: '1'});
     await repo.start(new ManualClock());
 
     repo.setDefaultDataLimit({bytes: 250});
@@ -494,8 +494,8 @@ describe('ServerAccessKeyRepository', () => {
       .defaultDataLimit({bytes: 200})
       .build();
 
-    const accessKey1 = await repo.createNewAccessKey();
-    const accessKey2 = await repo.createNewAccessKey();
+    const accessKey1 = await repo.createNewAccessKey({id: '0'});
+    const accessKey2 = await repo.createNewAccessKey({id: '1'});
     await repo.start(new ManualClock());
     expect(server.getAccessKeys().length).toEqual(1);
 
@@ -550,8 +550,8 @@ describe('ServerAccessKeyRepository', () => {
       .prometheusClient(prometheusClient)
       .defaultDataLimit({bytes: 500})
       .build();
-    const perKeyLimited = await repo.createNewAccessKey();
-    const defaultLimited = await repo.createNewAccessKey();
+    const perKeyLimited = await repo.createNewAccessKey({id: '0'});
+    const defaultLimited = await repo.createNewAccessKey({id: '1'});
     await setKeyLimitAndEnforce(repo, perKeyLimited.id, {bytes: 100});
 
     await repo.enforceAccessKeyDataLimits();
@@ -576,8 +576,8 @@ describe('ServerAccessKeyRepository', () => {
       .defaultDataLimit({bytes: 200})
       .build();
 
-    await repo.createNewAccessKey();
-    const accessKey2 = await repo.createNewAccessKey();
+    await repo.createNewAccessKey({id: '0'});
+    const accessKey2 = await repo.createNewAccessKey({id: '1'});
 
     await repo.enforceAccessKeyDataLimits();
     await repo.listAccessKeys();
@@ -593,10 +593,10 @@ describe('ServerAccessKeyRepository', () => {
   });
 
   it('Repos created with an existing file restore access keys', async (done) => {
-    const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
+    const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: []});
     const repo1 = new RepoBuilder().keyConfig(config).build();
     // Create 2 new access keys
-    await Promise.all([repo1.createNewAccessKey(), repo1.createNewAccessKey()]);
+    await Promise.all([repo1.createNewAccessKey({id: '0'}), repo1.createNewAccessKey({id: '1'})]);
     // Modify properties
     repo1.renameAccessKey('1', 'name');
     repo1.setAccessKeyDataLimit('0', {bytes: 1});
@@ -610,7 +610,7 @@ describe('ServerAccessKeyRepository', () => {
   });
 
   it('Does not re-use ids when using the same config file', (done) => {
-    const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
+    const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: []});
     // Create a repo with 1 access key, then delete that access key.
     const repo1 = new RepoBuilder().keyConfig(config).build();
     repo1.createNewAccessKey().then((accessKey1) => {
@@ -627,7 +627,7 @@ describe('ServerAccessKeyRepository', () => {
   });
 
   it('start exposes the access keys to the server', async (done) => {
-    const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
+    const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: []});
     const repo = new RepoBuilder().keyConfig(config).build();
 
     const accessKey1 = await repo.createNewAccessKey();
@@ -652,9 +652,9 @@ describe('ServerAccessKeyRepository', () => {
       .prometheusClient(prometheusClient)
       .shadowsocksServer(server)
       .build();
-    const accessKey1 = await repo.createNewAccessKey();
-    const accessKey2 = await repo.createNewAccessKey();
-    const accessKey3 = await repo.createNewAccessKey();
+    const accessKey1 = await repo.createNewAccessKey({id: '0'});
+    const accessKey2 = await repo.createNewAccessKey({id: '1'});
+    const accessKey3 = await repo.createNewAccessKey({id: '2'});
     await repo.setDefaultDataLimit({bytes: 300});
     const clock = new ManualClock();
     await repo.start(clock);
@@ -720,7 +720,7 @@ function countAccessKeys(repo: AccessKeyRepository) {
 
 class RepoBuilder {
   private port_ = 12345;
-  private keyConfig_ = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
+  private keyConfig_ = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: []});
   private shadowsocksServer_ = new FakeShadowsocksServer();
   private prometheusClient_ = new FakePrometheusClient({});
   private defaultDataLimit_;

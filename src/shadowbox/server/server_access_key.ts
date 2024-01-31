@@ -47,8 +47,6 @@ interface AccessKeyStorageJson {
 // The configuration file format as json.
 export interface AccessKeyConfigJson {
   accessKeys?: AccessKeyStorageJson[];
-  // Next AccessKeyId to use.
-  nextId?: number;
 }
 
 // AccessKey implementation with write access enabled on properties that may change.
@@ -125,9 +123,6 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     if (this.keyConfig.data().accessKeys === undefined) {
       this.keyConfig.data().accessKeys = [];
     }
-    if (this.keyConfig.data().nextId === undefined) {
-      this.keyConfig.data().nextId = 0;
-    }
     this.accessKeys = this.loadAccessKeys();
   }
 
@@ -176,15 +171,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private generateId(): string {
-    let id: AccessKeyId = this.keyConfig.data().nextId.toString();
-    this.keyConfig.data().nextId += 1;
-    // Users can supply their own access key IDs. This means we always need to
-    // verify that any auto-generated key ID hasn't already been used.
-    while (this.isExistingAccessKeyId(id)) {
-      id = this.keyConfig.data().nextId.toString();
-      this.keyConfig.data().nextId += 1;
-    }
-    return id;
+    return uuidv4() as AccessKeyId;
   }
 
   async createNewAccessKey(params?: AccessKeyCreateParams): Promise<AccessKey> {
