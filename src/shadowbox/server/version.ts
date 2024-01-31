@@ -15,5 +15,10 @@
 declare const __VERSION__: string;
 
 export function getPackageVersion(): string {
-    return __VERSION__;
+    try {
+        return __VERSION__;
+    } catch {
+        // Catch the ReferenceError if __VERSION__ is not injected.
+        return "dev"
+    }
 }
