@@ -447,7 +447,7 @@ Polymer({
       return;
     }
     this.isDefaultDataLimitEnabled = enableDataLimit;
-    if (isDataLimitEnabled) {
+    if (enableDataLimit) {
       this._requestSetDefaultDataLimit();
     } else {
       this.fire('RemoveDefaultDataLimitRequested');
