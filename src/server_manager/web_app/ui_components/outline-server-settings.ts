@@ -442,11 +442,11 @@ Polymer({
     if (e.detail?.value === undefined) {
       return;
     }
-    const isDataLimitEnabled = e.detail.value === 'enabled';
-    if (isDataLimitEnabled === this.isDefaultDataLimitEnabled) {
+    const enableDataLimit = e.detail.value === 'enabled';
+    if (this.isDefaultDataLimitEnabled === enableDataLimit) {
       return;
     }
-    this.isDefaultDataLimitEnabled = isDataLimitEnabled;
+    this.isDefaultDataLimitEnabled = enableDataLimit;
     if (isDataLimitEnabled) {
       this._requestSetDefaultDataLimit();
     } else {
