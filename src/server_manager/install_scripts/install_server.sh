@@ -290,6 +290,9 @@ function join() {
 
 function write_config() {
   local -a config=()
+  if [[ "${SB_DEFAULT_SERVER_NAME:-}" != "" ]]; then
+    config+=("\"name\": ${SB_DEFAULT_SERVER_NAME}")
+  fi
   if (( FLAGS_KEYS_PORT != 0 )); then
     config+=("\"portForNewAccessKeys\": ${FLAGS_KEYS_PORT}")
   fi
@@ -337,9 +340,6 @@ docker_command=(
 
   # Where to report metrics to, if opted-in.
   -e "SB_METRICS_URL=${SB_METRICS_URL:-}"
-
-  # The default server name, if not set in the config.
-  -e "SB_DEFAULT_SERVER_NAME=${SB_DEFAULT_SERVER_NAME:-}"
 
   # The Outline server image to run.
   "${SB_IMAGE}"
