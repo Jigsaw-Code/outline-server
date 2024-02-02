@@ -94,7 +94,7 @@ function main() {
     esac
   done
   PLATFORM="${1?Platform missing}"
-  run_action server_manager/electron_app/build --buildMode="${BUILD_MODE}", --versionName="${version_name}"
+  run_action server_manager/electron_app/build --buildMode="${BUILD_MODE}" --versionName="${version_name}"
   package_electron
   finish_yaml_files "${staging_percentage}"
 }
