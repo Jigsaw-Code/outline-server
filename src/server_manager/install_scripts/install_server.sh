@@ -290,10 +290,6 @@ function join() {
 
 function write_config() {
   local -a config=()
-  if [[ "${SB_DEFAULT_SERVER_NAME:-}" != "" ]]; then
-    # Use printf to escape (%q) the server name.
-    config+=("$(printf '"name": "%q"' "${SB_DEFAULT_SERVER_NAME}")")
-  fi
   if (( FLAGS_KEYS_PORT != 0 )); then
     config+=("\"portForNewAccessKeys\": ${FLAGS_KEYS_PORT}")
   fi
@@ -308,10 +304,14 @@ function start_shadowbox() {
   local -r START_SCRIPT="${STATE_DIR}/start_container.sh"
   cat <<-EOF > "${START_SCRIPT}"
 # This script starts the Outline server container ("Shadowbox").
-# If you need to customize how the server is run, you can edit this script, then:
+# If you need to customize how the server is run, you can edit this script, then restart with:
 #
-#     docker stop "${CONTAINER_NAME}" && docker rm "${CONTAINER_NAME}"
 #     "${START_SCRIPT}"
+
+set -eu
+
+docker stop "${CONTAINER_NAME}" 2> /dev/null || true
+docker rm "${CONTAINER_NAME}" 2> /dev/null || true
 
 docker_command=(
   docker
@@ -341,6 +341,9 @@ docker_command=(
 
   # Where to report metrics to, if opted-in.
   -e "SB_METRICS_URL=${SB_METRICS_URL:-}"
+
+  # The default server name, if not set in the config.
+  -e "SB_DEFAULT_SERVER_NAME=${SB_DEFAULT_SERVER_NAME:-}"
 
   # The Outline server image to run.
   "${SB_IMAGE}"
