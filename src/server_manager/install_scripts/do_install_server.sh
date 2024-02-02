@@ -54,7 +54,7 @@ function post_sentry_report() {
     SENTRY_PAYLOAD="{\"message\": \"Install error:\n$(awk '{printf "%s\\n", $0}' < "${SENTRY_LOG_FILE}" | tail --bytes "${SENTRY_PAYLOAD_BYTE_LIMIT}")\"}"
     # See Sentry documentation at:
     # https://media.readthedocs.org/pdf/sentry/7.1.0/sentry.pdf
-    curl "${SENTRY_API_URL}" -H "Origin: shadowbox" --data-binary "${SENTRY_PAYLOAD}"
+    curl -sSL "${SENTRY_API_URL}" -H "Origin: shadowbox" --data-binary "${SENTRY_PAYLOAD}"
   fi
 }
 
@@ -73,7 +73,7 @@ fi
 readonly DO_METADATA_URL="http://169.254.169.254/metadata/v1"
 
 function cloud::public_ip() {
-  curl "${DO_METADATA_URL}/interfaces/public/0/ipv4/address"
+  curl -sSL "${DO_METADATA_URL}/interfaces/public/0/ipv4/address"
 }
 
 # Applies a tag to this droplet.
@@ -83,9 +83,9 @@ function cloud::add_tag() {
                         -H "Authorization: Bearer ${DO_ACCESS_TOKEN}")
   local -r TAGS_URL='https://api.digitalocean.com/v2/tags'
   # Create the tag
-  curl "${base_flags[@]}" -d "{\"name\":\"${tag}\"}" "${TAGS_URL}"
+  curl -sSL "${base_flags[@]}" -d "{\"name\":\"${tag}\"}" "${TAGS_URL}"
   local droplet_id
-  droplet_id="$(curl "${DO_METADATA_URL}/id")"
+  droplet_id="$(curl -sSL "${DO_METADATA_URL}/id")"
   printf -v droplet_obj '
 {
   "resources": [{
@@ -94,7 +94,7 @@ function cloud::add_tag() {
   }]
 }' "${droplet_id}"
   # Link the tag to this droplet
-  curl "${base_flags[@]}" -d "${droplet_obj}" "${TAGS_URL}/${tag}/resources"
+  curl -sSL "${base_flags[@]}" -d "${droplet_obj}" "${TAGS_URL}/${tag}/resources"
 }
 
 # Adds a key-value tag to the droplet.
