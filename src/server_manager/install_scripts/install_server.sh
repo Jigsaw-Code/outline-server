@@ -51,8 +51,6 @@ Usage: install_server.sh [--hostname <hostname>] [--api-port <port>] [--keys-por
 EOF
 }
 
-readonly SENTRY_LOG_FILE=${SENTRY_LOG_FILE:-}
-
 # I/O conventions for this script:
 # - Ordinary status messages are printed to STDOUT
 # - STDERR is only used in the event of a fatal error
@@ -117,10 +115,36 @@ function command_exists {
 }
 
 function log_for_sentry() {
-  if [[ -n "${SENTRY_LOG_FILE}" ]]; then
+  # Used to report install failures to Sentry. Usually "${SHADOWBOX_DIR}/sentry-log-file.txt"
+  if [[ -n "${SENTRY_LOG_FILE:-}" ]]; then
     echo "[$(date "+%Y-%m-%d@%H:%M:%S")] install_server.sh" "$@" >> "${SENTRY_LOG_FILE}"
   fi
   echo "$@" >> "${FULL_LOG}"
+}
+
+function setup_file_paths() {
+  # The base directory for all the files.
+  local -r OUTLINE_DIR="${SHADOWBOX_DIR:-/opt/outline}"
+  log_for_sentry "Creating Outline directory"
+  mkdir -p "${OUTLINE_DIR}"
+  chmod u+s,ug+rwx,o-rwx "${OUTLINE_DIR}"
+
+  # Holds the information on how to access the management API.
+  declare -rg ACCESS_CONFIG_FILE="${ACCESS_CONFIG:-${OUTLINE_DIR}/access.txt}"
+
+  # Directory for data to be peristed across container restarts. Mounted on `docker run`.
+  declare -rg STATE_DIR="${OUTLINE_DIR}/persisted-state"
+  mkdir -p "${STATE_DIR}"
+  chmod g+s,ug+rwx,o-rwx "${STATE_DIR}"
+
+  # The TLS certificate for the management API.
+  local -r CERTIFICATE_NAME="shadowbox-selfsigned"
+  declare -rg CERTIFICATE_FILE="${STATE_DIR}/${CERTIFICATE_NAME}.crt"
+  declare -rg PRIVATE_KEY_FILE="${STATE_DIR}/${CERTIFICATE_NAME}.key"
+
+  # The server-level configuration (doesn't include the access keys).
+  declare -rg SERVER_CONFIG_FILE="${STATE_DIR}/shadowbox_server_config.json"
+  # NOTE: The access keys are in "${STATE_DIR}/shadowbox_config.json", a different file.
 }
 
 # Check to see if docker is installed.
@@ -233,12 +257,6 @@ function get_random_port {
   echo "${num}";
 }
 
-function create_persisted_state_dir() {
-  readonly STATE_DIR="${SHADOWBOX_DIR}/persisted-state"
-  mkdir -p "${STATE_DIR}"
-  chmod ug+rwx,g+s,o-rwx "${STATE_DIR}"
-}
-
 # Generate a secret key for access to the Management API and store it in a tag.
 # 16 bytes = 128 bits of entropy should be plenty for this use.
 function safe_base64() {
@@ -259,13 +277,10 @@ function generate_secret_key() {
 
 function generate_certificate() {
   # Generate self-signed cert and store it in the persistent state directory.
-  local -r CERTIFICATE_NAME="${STATE_DIR}/shadowbox-selfsigned"
-  readonly SB_CERTIFICATE_FILE="${CERTIFICATE_NAME}.crt"
-  readonly SB_PRIVATE_KEY_FILE="${CERTIFICATE_NAME}.key"
   declare -a openssl_req_flags=(
     -x509 -nodes -days 36500 -newkey rsa:4096
     -subj "/CN=${PUBLIC_HOSTNAME}"
-    -keyout "${SB_PRIVATE_KEY_FILE}" -out "${SB_CERTIFICATE_FILE}"
+    -keyout "${PRIVATE_KEY_FILE}" -out "${CERTIFICATE_FILE}"
   )
   openssl req "${openssl_req_flags[@]}" >&2
 }
@@ -275,7 +290,7 @@ function generate_certificate_fingerprint() {
   # (Electron uses SHA-256 fingerprints: https://github.com/electron/electron/blob/9624bc140353b3771bd07c55371f6db65fd1b67e/atom/common/native_mate_converters/net_converter.cc#L60)
   # Example format: "SHA256 Fingerprint=BD:DB:C9:A4:39:5C:B3:4E:6E:CF:18:43:61:9F:07:A2:09:07:37:35:63:67"
   local CERT_OPENSSL_FINGERPRINT
-  CERT_OPENSSL_FINGERPRINT="$(openssl x509 -in "${SB_CERTIFICATE_FILE}" -noout -sha256 -fingerprint)" || return
+  CERT_OPENSSL_FINGERPRINT="$(openssl x509 -in "${CERTIFICATE_FILE}" -noout -sha256 -fingerprint)" || return
   # Example format: "BDDBC9A4395CB34E6ECF1843619F07A2090737356367"
   local CERT_HEX_FINGERPRINT
   CERT_HEX_FINGERPRINT="$(echo "${CERT_OPENSSL_FINGERPRINT#*=}" | tr -d :)" || return
@@ -295,12 +310,10 @@ function write_config() {
   fi
   # printf is needed to escape the hostname.
   config+=("$(printf '"hostname": "%q"' "${PUBLIC_HOSTNAME}")")
-  echo "{$(join , "${config[@]}")}" > "${STATE_DIR}/shadowbox_server_config.json"
+  echo "{$(join , "${config[@]}")}" > "${SERVER_CONFIG_FILE}"
 }
 
 function start_shadowbox() {
-  # TODO(fortuna): Write API_PORT to config file,
-  # rather than pass in the environment.
   local -ar docker_shadowbox_flags=(
     --name "${CONTAINER_NAME}" --restart always --net host
     --label 'com.centurylinklabs.watchtower.enable=true'
@@ -308,8 +321,8 @@ function start_shadowbox() {
     -e "SB_STATE_DIR=${STATE_DIR}"
     -e "SB_API_PORT=${API_PORT}"
     -e "SB_API_PREFIX=${SB_API_PREFIX}"
-    -e "SB_CERTIFICATE_FILE=${SB_CERTIFICATE_FILE}"
-    -e "SB_PRIVATE_KEY_FILE=${SB_PRIVATE_KEY_FILE}"
+    -e "SB_CERTIFICATE_FILE=${CERTIFICATE_FILE}"
+    -e "SB_PRIVATE_KEY_FILE=${PRIVATE_KEY_FILE}"
     -e "SB_METRICS_URL=${SB_METRICS_URL:-}"
     -e "SB_DEFAULT_SERVER_NAME=${SB_DEFAULT_SERVER_NAME:-}"
   )
@@ -360,7 +373,7 @@ function create_first_user() {
 }
 
 function output_config() {
-  echo "$@" >> "${ACCESS_CONFIG}"
+  echo "$@" >> "${ACCESS_CONFIG_FILE}"
 }
 
 function add_api_url_to_config() {
@@ -377,7 +390,7 @@ function check_firewall() {
           console.log(accessKeys["accessKeys"][0]["port"]);
       ') || return
   readonly ACCESS_KEY_PORT
-  if ! fetch --max-time 5 --cacert "${SB_CERTIFICATE_FILE}" "${PUBLIC_API_URL}/access-keys" >/dev/null; then
+  if ! fetch --max-time 5 --cacert "${CERTIFICATE_FILE}" "${PUBLIC_API_URL}/access-keys" >/dev/null; then
      log_error "BLOCKED"
      FIREWALL_STATUS="\
 You won’t be able to access it externally, despite your server being correctly
@@ -424,15 +437,12 @@ install_shadowbox() {
   # Make sure we don't leak readable files to other users.
   umask 0007
 
+  run_step "Setting up Outline directories" setup_file_paths
+
   export CONTAINER_NAME="${CONTAINER_NAME:-shadowbox}"
 
   run_step "Verifying that Docker is installed" verify_docker_installed
   run_step "Verifying that Docker daemon is running" verify_docker_running
-
-  log_for_sentry "Creating Outline directory"
-  export SHADOWBOX_DIR="${SHADOWBOX_DIR:-/opt/outline}"
-  mkdir -p "${SHADOWBOX_DIR}"
-  chmod u+s,ug+rwx,o-rwx "${SHADOWBOX_DIR}"
 
   log_for_sentry "Setting API port"
   API_PORT="${FLAGS_API_PORT}"
@@ -440,7 +450,6 @@ install_shadowbox() {
     API_PORT=${SB_API_PORT:-$(get_random_port)}
   fi
   readonly API_PORT
-  readonly ACCESS_CONFIG="${ACCESS_CONFIG:-${SHADOWBOX_DIR}/access.txt}"
   readonly SB_IMAGE="${SB_IMAGE:-quay.io/outline/shadowbox:stable}"
 
   PUBLIC_HOSTNAME="${FLAGS_HOSTNAME:-${SB_PUBLIC_IP:-}}"
@@ -449,16 +458,15 @@ install_shadowbox() {
   fi
   readonly PUBLIC_HOSTNAME
 
-  # If $ACCESS_CONFIG is already populated, make a backup before clearing it.
-  log_for_sentry "Initializing ACCESS_CONFIG"
-  if [[ -s "${ACCESS_CONFIG}" ]]; then
+  # If $ACCESS_CONFIG_FILE is already populated, make a backup before clearing it.
+  log_for_sentry "Initializing ACCESS_CONFIG_FILE"
+  if [[ -s "${ACCESS_CONFIG_FILE}" ]]; then
     # Note we can't do "mv" here as do_install_server.sh may already be tailing
     # this file.
-    cp "${ACCESS_CONFIG}" "${ACCESS_CONFIG}.bak" && true > "${ACCESS_CONFIG}"
+    cp "${ACCESS_CONFIG_FILE}" "${ACCESS_CONFIG_FILE}.bak" && true > "${ACCESS_CONFIG_FILE}"
   fi
 
   # Make a directory for persistent state
-  run_step "Creating persistent state dir" create_persisted_state_dir
   run_step "Generating secret key" generate_secret_key
   run_step "Generating TLS certificate" generate_certificate
   run_step "Generating SHA-256 certificate fingerprint" generate_certificate_fingerprint
@@ -485,7 +493,7 @@ install_shadowbox() {
   # e.g. if ACCESS_CONFIG contains the line "certSha256:1234",
   # calling $(get_field_value certSha256) will echo 1234.
   function get_field_value {
-    grep "$1" "${ACCESS_CONFIG}" | sed "s/$1://"
+    grep "$1" "${ACCESS_CONFIG_FILE}" | sed "s/$1://"
   }
 
   # Output JSON.  This relies on apiUrl and certSha256 (hex characters) requiring
