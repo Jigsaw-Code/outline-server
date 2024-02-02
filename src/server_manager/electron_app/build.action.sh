@@ -40,8 +40,13 @@ for i in "$@"; do
   esac
 done
 
-if [[ "${BUILD_MODE}" == "release" ]]; then
-  export WEBPACK_MODE="production"
+if [[ -z "${WEBPACK_MODE:-}" ]]; then
+  case "${BUILD_MODE}" in
+    release)
+      export WEBPACK_MODE="production";;
+    *)
+      export WEBPACK_MODE="development";;
+  esac
 fi
 
 # Build the Web App.
