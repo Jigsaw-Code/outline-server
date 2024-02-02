@@ -55,6 +55,8 @@ The per-platform standalone apps will be at `build/electron_app/static/dist`.
 - Linux: tar.gz files.
 - macOS: dmg files if built from macOS, zip files otherwise.
 
+> NOTE: If you are building for macOS, you may need to run `security unlock-keychain login.keychain` so electron-builder has access to your certificates.
+
 ## Error reporting
 
 To enable error reporting through [Sentry](https://sentry.io/) for local builds, run:
