@@ -56,11 +56,6 @@ Polymer({
         justify-content: flex-end;
         flex: 1;
       }
-      @media (max-width: 887px) {
-        .step-container {
-          margin-left: 50px;
-        }
-      }
     </style>
     <div class="step-container">
       <div class="step-header">
