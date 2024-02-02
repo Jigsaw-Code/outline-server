@@ -51,18 +51,19 @@ function package_electron() {
 }
 
 function finish_yaml_files() {
-  declare -r STAGING_PERCENTAGE="${1?Staging percentage missing}"
+  declare -r staging_percentage="${1?Staging percentage missing}"
 
-  RELEASE_CHANNEL=$(node_modules/node-jq/bin/jq -r '.version' src/server_manager/package.json | cut -s -d'-' -f2)
+  local release_channel
+  release_channel=$(node_modules/node-jq/bin/jq -r '.version' src/server_manager/package.json | cut -s -d'-' -f2)
   # If this isn't an alpha or beta build, `cut -s` will return an empty string
-  if [[ -z "${RELEASE_CHANNEL}" ]]; then
-    RELEASE_CHANNEL=latest
+  if [[ -z "${release_channel}" ]]; then
+    release_channel=latest
   fi
-  echo "stagingPercentage: ${STAGING_PERCENTAGE}" >> "${PROJECT_DIR}/dist/${RELEASE_CHANNEL}${PLATFORM}.yml"
+  echo "stagingPercentage: ${staging_percentage}" >> "${PROJECT_DIR}/dist/${release_channel}${PLATFORM}.yml"
 
   # If we cut a staged mainline release, beta testers will take the update as well.
-  if [[ "${RELEASE_CHANNEL}" == "latest" ]]; then
-    echo "stagingPercentage: ${STAGING_PERCENTAGE}" >> "${PROJECT_DIR}/dist/beta${PLATFORM}.yml"
+  if [[ "${release_channel}" == "latest" ]]; then
+    echo "stagingPercentage: ${staging_percentage}" >> "${PROJECT_DIR}/dist/beta${PLATFORM}.yml"
   fi
 
   # We don't support alpha releases
