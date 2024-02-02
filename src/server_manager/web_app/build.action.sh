@@ -25,5 +25,5 @@ run_action server_manager/web_app/build_install_script
 # So, we use a relative path as input to webpack.
 pushd "${ROOT_DIR}" > /dev/null
 # Notice that we forward the build environment if defined.
-webpack --config=src/server_manager/electron_renderer.webpack.js ${BUILD_ENV:+--mode=${BUILD_ENV}}
+webpack --config=src/server_manager/electron_renderer.webpack.js ${WEBPACK_MODE:+--mode=${WEBPACK_MODE}}
 popd > /dev/null
