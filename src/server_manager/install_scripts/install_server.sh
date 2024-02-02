@@ -291,12 +291,13 @@ function join() {
 function write_config() {
   local -a config=()
   if [[ "${SB_DEFAULT_SERVER_NAME:-}" != "" ]]; then
-    config+=("\"name\": ${SB_DEFAULT_SERVER_NAME}")
+    # Use printf to escape (%q) the server name.
+    config+=("$(printf '"name": "%q"' "${SB_DEFAULT_SERVER_NAME}")")
   fi
   if (( FLAGS_KEYS_PORT != 0 )); then
     config+=("\"portForNewAccessKeys\": ${FLAGS_KEYS_PORT}")
   fi
-  # printf is needed to escape the hostname.
+  # Use printf to escape (%q) the hostname.
   config+=("$(printf '"hostname": "%q"' "${PUBLIC_HOSTNAME}")")
   echo "{$(join , "${config[@]}")}" > "${STATE_DIR}/shadowbox_server_config.json"
 }
