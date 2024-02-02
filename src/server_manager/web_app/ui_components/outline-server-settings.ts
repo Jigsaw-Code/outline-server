@@ -456,15 +456,15 @@ Polymer({
   },
 
   _defaultDataLimitEnabledChanged(e: CustomEvent) {
-    const wasDataLimitEnabled = this.isDefaultDataLimitEnabled;
-    const isDataLimitEnabled = e.detail.value === 'enabled';
-    if (isDataLimitEnabled === undefined || wasDataLimitEnabled === undefined) {
-      return;
-    } else if (isDataLimitEnabled === wasDataLimitEnabled) {
+    if (e.detail?.value === undefined) {
       return;
     }
-    this.isDefaultDataLimitEnabled = isDataLimitEnabled;
-    if (isDataLimitEnabled) {
+    const enableDataLimit = e.detail.value === 'enabled';
+    if (this.isDefaultDataLimitEnabled === enableDataLimit) {
+      return;
+    }
+    this.isDefaultDataLimitEnabled = enableDataLimit;
+    if (enableDataLimit) {
       this._requestSetDefaultDataLimit();
     } else {
       this.fire('RemoveDefaultDataLimitRequested');
