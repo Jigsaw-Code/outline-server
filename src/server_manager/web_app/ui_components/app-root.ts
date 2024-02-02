@@ -372,6 +372,11 @@ export class AppRoot extends polymerElementWithLocalize {
       #getConnectedDialog .buttons {
         margin-top: -5px; /* undo spacing added after iframe */
       }
+      @media (max-width: 887px) {
+        .app-container {
+          margin-left: 50px;
+        }
+      }
     </style>
 
     <outline-tos-view id="tosView" has-accepted-terms-of-service="{{userAcceptedTos}}" hidden\$="{{hasAcceptedTos}}" localize="[[localize]]"></outline-tos-view>
