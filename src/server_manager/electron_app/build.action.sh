@@ -41,7 +41,7 @@ for i in "$@"; do
 done
 
 if [[ "${BUILD_MODE}" == "release" ]]; then
-  export WEBPACK_MODE="prod"
+  export WEBPACK_MODE="production"
 fi
 
 # Build the Web App.
