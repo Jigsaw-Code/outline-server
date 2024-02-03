@@ -551,7 +551,7 @@ function escape_json_string() {
     local char="${input:i:1}"
     local escaped="${char}"
     case "${char}" in
-        # List from https://www.json.org/json-en.html.
+        # List from https://www.json.org/.
         $'"' ) escaped="\\\"";;
         $'\\') escaped="\\\\";;
         $'/' ) escaped="\\/";;
