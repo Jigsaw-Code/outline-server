@@ -550,8 +550,7 @@ function escape_json_string() {
   for ((i = 0; i < ${#input}; i++)); do
     local char="${input:i:1}"
     local escaped="${char}"
-    if [[ "${char}" < $'\x20' ]]; then
-      case "${char}" in
+    case "${char}" in
         # List from https://www.json.org/json-en.html.
         $'"' ) escaped="\\\"";;
         $'\\') escaped="\\\\";;
@@ -561,9 +560,12 @@ function escape_json_string() {
         $'\n') escaped="\\n";;
         $'\r') escaped="\\r";;
         $'\t') escaped="\\t";;
-        *) escaped=$(printf "\u%04X" "'${char}")
-      esac
-    fi
+        *) 
+          if [[ "${char}" < $'\x20' ]]; then
+            escaped=$(printf "\u%04X" "'${char}")
+          fi
+          ;;
+    esac
     echo -n "${escaped}"
   done
 }
