@@ -293,8 +293,10 @@ function write_config() {
   if (( FLAGS_KEYS_PORT != 0 )); then
     config+=("\"portForNewAccessKeys\": ${FLAGS_KEYS_PORT}")
   fi
-  # Use printf to escape (%q) the hostname.
-  config+=("$(printf '"hostname": "%q"' "${PUBLIC_HOSTNAME}")")
+  if [[ -n "${SB_DEFAULT_SERVER_NAME:-}" ]]; then
+    config+=("\"name\": \"$(escape_json_string "${SB_DEFAULT_SERVER_NAME}")\"")   
+  fi
+  config+=("\"hostname\": \"$(escape_json_string "${PUBLIC_HOSTNAME}")\"")
   echo "{$(join , "${config[@]}")}" > "${STATE_DIR}/shadowbox_server_config.json"
 }
 
@@ -341,9 +343,6 @@ docker_command=(
 
   # Where to report metrics to, if opted-in.
   -e "SB_METRICS_URL=${SB_METRICS_URL:-}"
-
-  # The default server name, if not set in the config.
-  -e "SB_DEFAULT_SERVER_NAME=${SB_DEFAULT_SERVER_NAME:-}"
 
   # The Outline server image to run.
   "${SB_IMAGE}"
@@ -544,6 +543,30 @@ END_OF_SERVER_OUTPUT
 
 function is_valid_port() {
   (( 0 < "$1" && "$1" <= 65535 ))
+}
+
+function escape_json_string() {
+  local input=$1
+  for ((i = 0; i < ${#input}; i++)); do
+    local char="${input:i:1}"
+    local escaped="${char}"
+    case "${char}" in
+      $'"' ) escaped="\\\"";;
+      $'\\') escaped="\\\\";;
+      *)
+        if [[ "${char}" < $'\x20' ]]; then
+          case "${char}" in 
+            $'\b') escaped="\\b";;
+            $'\f') escaped="\\f";;
+            $'\n') escaped="\\n";;
+            $'\r') escaped="\\r";;
+            $'\t') escaped="\\t";;
+            *) escaped=$(printf "\u%04X" "'${char}")
+          esac
+        fi;;
+    esac
+    echo -n "${escaped}"
+  done
 }
 
 function parse_flags() {
