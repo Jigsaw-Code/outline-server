@@ -579,6 +579,7 @@ describe('ShadowsocksManagerService', () => {
             await serviceMethod({params: {id: accessKeyId, port: NEW_PORT}}, res, (error) => {
               expect(error.statusCode).toEqual(409);
               responseProcessed = true; // required for afterEach to pass.
+              server.close();
               done();
             });
           });
@@ -681,6 +682,7 @@ describe('ShadowsocksManagerService', () => {
       const server = new net.Server();
       server.listen(NEW_PORT, async () => {
         await service.setPortForNewAccessKeys({params: {port: NEW_PORT}}, res, next);
+        server.close();
       });
     });
 

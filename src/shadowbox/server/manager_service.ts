@@ -456,6 +456,8 @@ export class ShadowsocksManagerService {
         return next(new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message));
       } else if (error instanceof errors.PortUnavailable) {
         return next(new restifyErrors.ConflictError(error.message));
+      } else if (error instanceof restifyErrors.HttpError) {
+        return next(error);
       }
       return next(new restifyErrors.InternalServerError(error));
     }
