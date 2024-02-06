@@ -73,6 +73,9 @@ function finish_yaml_files() {
 function main() {
   declare staging_percentage=100
   declare version_name='0.0.0-debug'
+
+  PLATFORM="${1?Platform missing}"
+
   for i in "$@"; do
     case "${i}" in
     --buildMode=*)
@@ -94,7 +97,6 @@ function main() {
     *) ;;
     esac
   done
-  PLATFORM="${1?Platform missing}"
   run_action server_manager/electron_app/build --buildMode="${BUILD_MODE}" --versionName="${version_name}"
   package_electron
   finish_yaml_files "${staging_percentage}"
