@@ -218,6 +218,20 @@ function validateStringParam(param: unknown, paramName: string): string {
   return param;
 }
 
+function validateNumberParam(param: unknown, paramName: string): number {
+  if (typeof param === 'undefined') {
+    return undefined;
+  }
+
+  if (typeof param !== 'number') {
+    throw new restifyErrors.InvalidArgumentError(
+      {statusCode: 400},
+      `Expected a number for ${paramName}, instead got ${param} of type ${typeof param}`
+    );
+  }
+  return param;
+}
+
 // The ShadowsocksManagerService manages the access keys that can use the server
 // as a proxy using Shadowsocks. It runs an instance of the Shadowsocks server
 // for each existing access key, with the port and password assigned for that access key.
@@ -342,6 +356,7 @@ export class ShadowsocksManagerService {
       const name = validateStringParam(req.params.name || '', 'name');
       const dataLimit = validateDataLimit(req.params.limit);
       const password = validateStringParam(req.params.password, 'password');
+      const portNumber = validateNumberParam(req.params.port, 'port');
 
       const accessKeyJson = accessKeyToApiJson(
         await this.accessKeys.createNewAccessKey({
@@ -350,13 +365,16 @@ export class ShadowsocksManagerService {
           name,
           dataLimit,
           password,
+          portNumber,
         })
       );
       return accessKeyJson;
     } catch (error) {
       logging.error(error);
-      if (error instanceof errors.InvalidCipher) {
+      if (error instanceof errors.InvalidCipher || error instanceof errors.InvalidPortNumber) {
         throw new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message);
+      } else if (error instanceof errors.PortUnavailable) {
+        throw new restifyErrors.ConflictError(error.message);
       }
       throw error;
     }
@@ -381,10 +399,7 @@ export class ShadowsocksManagerService {
       return next();
     } catch (error) {
       logging.error(error);
-      if (
-        error instanceof restifyErrors.InvalidArgumentError ||
-        error instanceof restifyErrors.MissingParameterError
-      ) {
+      if (error instanceof restifyErrors.HttpError) {
         return next(error);
       }
       return next(new restifyErrors.InternalServerError());
@@ -409,10 +424,7 @@ export class ShadowsocksManagerService {
       if (error instanceof errors.AccessKeyConflict) {
         return next(new restifyErrors.ConflictError(error.message));
       }
-      if (
-        error instanceof restifyErrors.InvalidArgumentError ||
-        error instanceof restifyErrors.MissingParameterError
-      ) {
+      if (error instanceof restifyErrors.HttpError) {
         return next(error);
       }
       return next(new restifyErrors.InternalServerError());
@@ -556,10 +568,7 @@ export class ShadowsocksManagerService {
       return next();
     } catch (error) {
       logging.error(error);
-      if (
-        error instanceof restifyErrors.InvalidArgumentError ||
-        error instanceof restifyErrors.MissingParameterError
-      ) {
+      if (error instanceof restifyErrors.HttpError) {
         return next(error);
       }
       return next(new restifyErrors.InternalServerError());

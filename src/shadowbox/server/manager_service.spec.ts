@@ -531,6 +531,58 @@ describe('ShadowsocksManagerService', () => {
             done();
           });
         });
+
+        it('uses the default port for new keys when no port is provided', async (done) => {
+          const res = {
+            send: (httpCode, data) => {
+              expect(httpCode).toEqual(201);
+              expect(data.port).toBeDefined();
+              responseProcessed = true; // required for afterEach to pass.
+            },
+          };
+          await serviceMethod({params: {id: accessKeyId}}, res, done);
+        });
+
+        it('uses the provided port when one is provided', async (done) => {
+          const res = {
+            send: (httpCode, data) => {
+              expect(httpCode).toEqual(201);
+              expect(data.port).toEqual(NEW_PORT);
+              responseProcessed = true; // required for afterEach to pass.
+            },
+          };
+          await serviceMethod({params: {id: accessKeyId, port: NEW_PORT}}, res, done);
+        });
+
+        it('rejects ports that are not numbers', async (done) => {
+          const res = {send: SEND_NOTHING};
+          await serviceMethod({params: {id: accessKeyId, port: '1234'}}, res, (error) => {
+            expect(error.statusCode).toEqual(400);
+            responseProcessed = true; // required for afterEach to pass.
+            done();
+          });
+        });
+
+        it('rejects invalid port numbers', async (done) => {
+          const res = {send: SEND_NOTHING};
+          await serviceMethod({params: {id: accessKeyId, port: 1.4}}, res, (error) => {
+            expect(error.statusCode).toEqual(400);
+            responseProcessed = true; // required for afterEach to pass.
+            done();
+          });
+        });
+
+        it('rejects port numbers already in use', async (done) => {
+          const server = new net.Server();
+          server.listen(NEW_PORT, async () => {
+            const res = {send: SEND_NOTHING};
+            await serviceMethod({params: {id: accessKeyId, port: NEW_PORT}}, res, (error) => {
+              expect(error.statusCode).toEqual(409);
+              responseProcessed = true; // required for afterEach to pass.
+              done();
+            });
+          });
+        });
       });
     }
   });
