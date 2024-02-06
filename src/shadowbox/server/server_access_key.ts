@@ -206,18 +206,22 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     }
     const metricsId = uuidv4();
     const password = params?.password ?? generatePassword();
-    const encryptionMethod = params?.encryptionMethod || this.NEW_USER_ENCRYPTION_METHOD;
-    const portNumber = params?.portNumber ?? this.portForNewAccessKeys;
 
-    // Validate encryption method and port number.
-    if (!isValidCipher(encryptionMethod)) {
-      throw new errors.InvalidCipher(encryptionMethod);
+    const encryptionMethod = params?.encryptionMethod || this.NEW_USER_ENCRYPTION_METHOD;
+    if (encryptionMethod !== this.NEW_USER_ENCRYPTION_METHOD) {
+      if (!isValidCipher(encryptionMethod)) {
+        throw new errors.InvalidCipher(encryptionMethod);
+      }
     }
-    if (!isValidPort(portNumber)) {
-      throw new errors.InvalidPortNumber(portNumber);
-    }
-    if (portNumber !== this.portForNewAccessKeys && !(await this.isPortAvailable(portNumber))) {
-      throw new errors.PortUnavailable(portNumber);
+
+    const portNumber = params?.portNumber ?? this.portForNewAccessKeys;
+    if (portNumber !== this.portForNewAccessKeys) {
+      if (!isValidPort(portNumber)) {
+        throw new errors.InvalidPortNumber(portNumber);
+      }
+      if (!(await this.isPortAvailable(portNumber))) {
+        throw new errors.PortUnavailable(portNumber);
+      }
     }
 
     const proxyParams = {
