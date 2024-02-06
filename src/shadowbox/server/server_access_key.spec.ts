@@ -667,7 +667,7 @@ describe('ServerAccessKeyRepository', () => {
     const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
     const repo1 = new RepoBuilder().keyConfig(config).build();
     // Create 2 new access keys
-    await repo1.createNewAccessKey().then(() => repo1.createNewAccessKey());
+    await Promise.all([repo1.createNewAccessKey(), repo1.createNewAccessKey()]);
     // Modify properties
     repo1.renameAccessKey('1', 'name');
     repo1.setAccessKeyDataLimit('0', {bytes: 1});
