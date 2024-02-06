@@ -74,8 +74,6 @@ function main() {
   declare staging_percentage=100
   declare version_name='0.0.0-debug'
 
-  PLATFORM="${1?Platform missing}"
-
   for i in "$@"; do
     case "${i}" in
     --buildMode=*)
@@ -94,7 +92,9 @@ function main() {
       echo "Unknown option: ${i}"
       exit 1
       ;;
-    *) ;;
+    *) # only supports having one platform
+      PLATFORM="${i?Platform missing}"
+      ;;
     esac
   done
   run_action server_manager/electron_app/build --buildMode="${BUILD_MODE}" --versionName="${version_name}"
