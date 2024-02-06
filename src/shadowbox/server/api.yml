@@ -175,43 +175,6 @@ paths:
                 '1':
                   value: >-
                     {"id":"1","name":"Second","password":"xXxXxX","port":9795,"method":"chacha20-ietf-poly1305","accessUrl":"ss://ASDFHAKSDFSDAKFJ@0.0.0.0:9795/?outline=1"}
-    put:
-      description: Creates a new access key with a specific identifer
-      tags:
-        - Access Key
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                id:
-                  type: string
-                name:
-                  type: string
-                method:
-                  type: string
-                password:
-                  type: string
-                port:
-                  type: integer
-                dataLimit:
-                  $ref: "#/components/schemas/DataLimit"
-            examples:
-              '0':
-                value: '{"id":"123","method":"aes-192-gcm","name":"First","password":"8iu8V8EeoFVpwQvQeS9wiD","limit":{"bytes":10000}}'
-      responses:
-        '201':
-          description: The newly created access key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AccessKey"
-              examples:
-                '0':
-                  value: >-
-                    {"id":"my-identifier","name":"First","password":"XxXxXx","port":9795,"method":"chacha20-ietf-poly1305","accessUrl":"ss://SADFJSKADFJAKSD@0.0.0.0:9795/?outline=1"}
     get:
       description: Lists the access keys
       tags:
@@ -236,6 +199,41 @@ paths:
                       {"id":"1","name":"First","password":"xXxXxX","port":4410,"method":"chacha20-ietf-poly1305","accessUrl":"ss://ASDFSADJFKAS=@0.0.0.0:4410/?outline=1"},
                       {"id":"2","name":"SecondWithCustomDataLimit","password":"XxXxXx","port":25424,"method":"chacha20-ietf-poly1305","dataLimit":{"bytes":8589934592},"accessUrl":"ss://ASDFHAKSDFSDAKFJ@0.0.0.0:25424/?outline=1"}]}
   /access-keys/{id}:
+    put:
+      description: Creates a new access key with a specific identifer
+      tags:
+        - Access Key
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                method:
+                  type: string
+                password:
+                  type: string
+                port:
+                  type: integer
+                dataLimit:
+                  $ref: "#/components/schemas/DataLimit"
+            examples:
+              '0':
+                value: '{"method":"aes-192-gcm","name":"First","password":"8iu8V8EeoFVpwQvQeS9wiD","limit":{"bytes":10000}}'
+      responses:
+        '201':
+          description: The newly created access key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessKey"
+              examples:
+                '0':
+                  value: >-
+                    {"id":"my-identifier","name":"First","password":"XxXxXx","port":9795,"method":"chacha20-ietf-poly1305","accessUrl":"ss://SADFJSKADFJAKSD@0.0.0.0:9795/?outline=1"}
     get:
       description: Get an access key
       tags:
