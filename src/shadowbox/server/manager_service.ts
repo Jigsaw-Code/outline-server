@@ -439,17 +439,10 @@ export class ShadowsocksManagerService {
   ): Promise<void> {
     try {
       logging.debug(`setPortForNewAccessKeys request ${JSON.stringify(req.params)}`);
-      const port = req.params.port;
-      if (!port) {
+      const port = validateNumberParam(req.params.port, 'port');
+      if (port === undefined) {
         return next(
           new restifyErrors.MissingParameterError({statusCode: 400}, 'Parameter `port` is missing')
-        );
-      } else if (typeof port !== 'number') {
-        return next(
-          new restifyErrors.InvalidArgumentError(
-            {statusCode: 400},
-            `Expected a numeric port, instead got ${port} of type ${typeof port}`
-          )
         );
       }
       await this.accessKeys.setPortForNewAccessKeys(port);
