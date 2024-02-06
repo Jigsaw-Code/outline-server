@@ -129,7 +129,7 @@ describe('ServerAccessKeyRepository', () => {
     done();
   });
 
-  it('createNewAccessKey rejects ports in use', async (done) => {
+  it('createNewAccessKey rejects specified ports in use', async (done) => {
     const portProvider = new PortProvider();
     const port = await portProvider.reserveNewPort();
     const repo = new RepoBuilder().build();

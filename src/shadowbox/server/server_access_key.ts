@@ -216,7 +216,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     if (!isValidPort(portNumber)) {
       throw new errors.InvalidPortNumber(portNumber);
     }
-    if (!(await this.isPortAvailable(portNumber))) {
+    if (portNumber !== this.portForNewAccessKeys && !(await this.isPortAvailable(portNumber))) {
       throw new errors.PortUnavailable(portNumber);
     }
 
