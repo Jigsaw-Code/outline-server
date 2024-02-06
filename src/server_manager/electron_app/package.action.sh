@@ -93,7 +93,7 @@ function main() {
       exit 1
       ;;
     *)  # Only supports having one positional argument.
-      PLATFORM="${i?Platform missing}"
+      PLATFORM="${i}"
       ;;
     esac
   done
