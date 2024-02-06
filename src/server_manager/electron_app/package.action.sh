@@ -92,7 +92,7 @@ function main() {
       echo "Unknown option: ${i}"
       exit 1
       ;;
-    *) # only supports having one platform
+    *)  # Only supports having one positional argument.
       PLATFORM="${i?Platform missing}"
       ;;
     esac
