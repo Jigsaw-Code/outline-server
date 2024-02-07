@@ -189,7 +189,7 @@ function validateAccessKeyId(accessKeyId: unknown): string {
   return accessKeyId;
 }
 
-function validateDataLimit(limit: unknown): DataLimit {
+function validateDataLimit(limit: unknown): DataLimit | undefined {
   if (typeof limit === 'undefined') {
     return undefined;
   }
@@ -204,7 +204,7 @@ function validateDataLimit(limit: unknown): DataLimit {
   return limit as DataLimit;
 }
 
-function validateStringParam(param: unknown, paramName: string): string {
+function validateStringParam(param: unknown, paramName: string): string | undefined {
   if (typeof param === 'undefined') {
     return undefined;
   }
@@ -218,7 +218,7 @@ function validateStringParam(param: unknown, paramName: string): string {
   return param;
 }
 
-function validateNumberParam(param: unknown, paramName: string): number {
+function validateNumberParam(param: unknown, paramName: string): number | undefined {
   if (typeof param === 'undefined') {
     return undefined;
   }
