@@ -99,6 +99,77 @@ describe('ServerAccessKeyRepository', () => {
     });
   });
 
+  it('createNewAccessKey throws on creating keys with invalid port', async (done) => {
+    const repo = new RepoBuilder().build();
+    await expectAsyncThrow(
+      repo.createNewAccessKey.bind(repo, {portNumber: -123}),
+      errors.InvalidPortNumber
+    );
+    done();
+  });
+
+  it('createNewAccessKey rejects invalid port numbers', async (done) => {
+    const repo = new RepoBuilder().build();
+    await expectAsyncThrow(
+      repo.createNewAccessKey.bind(repo, {portNumber: 0}),
+      errors.InvalidPortNumber
+    );
+    await expectAsyncThrow(
+      repo.createNewAccessKey.bind(repo, {portNumber: -1}),
+      errors.InvalidPortNumber
+    );
+    await expectAsyncThrow(
+      repo.createNewAccessKey.bind(repo, {portNumber: 100.1}),
+      errors.InvalidPortNumber
+    );
+    await expectAsyncThrow(
+      repo.createNewAccessKey.bind(repo, {portNumber: 65536}),
+      errors.InvalidPortNumber
+    );
+    done();
+  });
+
+  it('createNewAccessKey rejects specified ports in use', async (done) => {
+    const portProvider = new PortProvider();
+    const port = await portProvider.reserveNewPort();
+    const repo = new RepoBuilder().build();
+    const server = new net.Server();
+    server.listen(port, async () => {
+      try {
+        await repo.createNewAccessKey({portNumber: port});
+        fail(`createNewAccessKey should reject already used port ${port}.`);
+      } catch (error) {
+        expect(error instanceof errors.PortUnavailable);
+      }
+      server.close();
+      done();
+    });
+  });
+
+  it('createNewAccessKey creates keys with the correct default port', async (done) => {
+    const portProvider = new PortProvider();
+    const defaultPort = await portProvider.reserveNewPort();
+    const repo = new RepoBuilder().port(defaultPort).build();
+    repo.createNewAccessKey().then((accessKey) => {
+      expect(accessKey).toBeDefined();
+      expect(accessKey.proxyParams.portNumber).toEqual(defaultPort);
+      done();
+    });
+  });
+
+  it('createNewAccessKey creates keys with the port correctly', async (done) => {
+    const portProvider = new PortProvider();
+    const defaultPort = await portProvider.reserveNewPort();
+    const newPort = await portProvider.reserveNewPort();
+    const repo = new RepoBuilder().port(defaultPort).build();
+    repo.createNewAccessKey({portNumber: newPort}).then((accessKey) => {
+      expect(accessKey).toBeDefined();
+      expect(accessKey.proxyParams.portNumber).not.toEqual(defaultPort);
+      expect(accessKey.proxyParams.portNumber).toEqual(newPort);
+      done();
+    });
+  });
+
   it('Creates access keys under limit', async (done) => {
     const repo = new RepoBuilder().build();
     const accessKey = await repo.createNewAccessKey();

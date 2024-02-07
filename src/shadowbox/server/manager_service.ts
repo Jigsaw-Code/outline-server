@@ -189,7 +189,7 @@ function validateAccessKeyId(accessKeyId: unknown): string {
   return accessKeyId;
 }
 
-function validateDataLimit(limit: unknown): DataLimit {
+function validateDataLimit(limit: unknown): DataLimit | undefined {
   if (typeof limit === 'undefined') {
     return undefined;
   }
@@ -204,7 +204,7 @@ function validateDataLimit(limit: unknown): DataLimit {
   return limit as DataLimit;
 }
 
-function validateStringParam(param: unknown, paramName: string): string {
+function validateStringParam(param: unknown, paramName: string): string | undefined {
   if (typeof param === 'undefined') {
     return undefined;
   }
@@ -213,6 +213,20 @@ function validateStringParam(param: unknown, paramName: string): string {
     throw new restifyErrors.InvalidArgumentError(
       {statusCode: 400},
       `Expected a string for ${paramName}, instead got ${param} of type ${typeof param}`
+    );
+  }
+  return param;
+}
+
+function validateNumberParam(param: unknown, paramName: string): number | undefined {
+  if (typeof param === 'undefined') {
+    return undefined;
+  }
+
+  if (typeof param !== 'number') {
+    throw new restifyErrors.InvalidArgumentError(
+      {statusCode: 400},
+      `Expected a number for ${paramName}, instead got ${param} of type ${typeof param}`
     );
   }
   return param;
@@ -342,6 +356,7 @@ export class ShadowsocksManagerService {
       const name = validateStringParam(req.params.name || '', 'name');
       const dataLimit = validateDataLimit(req.params.limit);
       const password = validateStringParam(req.params.password, 'password');
+      const portNumber = validateNumberParam(req.params.port, 'port');
 
       const accessKeyJson = accessKeyToApiJson(
         await this.accessKeys.createNewAccessKey({
@@ -350,13 +365,16 @@ export class ShadowsocksManagerService {
           name,
           dataLimit,
           password,
+          portNumber,
         })
       );
       return accessKeyJson;
     } catch (error) {
       logging.error(error);
-      if (error instanceof errors.InvalidCipher) {
+      if (error instanceof errors.InvalidCipher || error instanceof errors.InvalidPortNumber) {
         throw new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message);
+      } else if (error instanceof errors.PortUnavailable) {
+        throw new restifyErrors.ConflictError(error.message);
       }
       throw error;
     }
@@ -381,10 +399,7 @@ export class ShadowsocksManagerService {
       return next();
     } catch (error) {
       logging.error(error);
-      if (
-        error instanceof restifyErrors.InvalidArgumentError ||
-        error instanceof restifyErrors.MissingParameterError
-      ) {
+      if (error instanceof restifyErrors.HttpError) {
         return next(error);
       }
       return next(new restifyErrors.InternalServerError());
@@ -409,10 +424,7 @@ export class ShadowsocksManagerService {
       if (error instanceof errors.AccessKeyConflict) {
         return next(new restifyErrors.ConflictError(error.message));
       }
-      if (
-        error instanceof restifyErrors.InvalidArgumentError ||
-        error instanceof restifyErrors.MissingParameterError
-      ) {
+      if (error instanceof restifyErrors.HttpError) {
         return next(error);
       }
       return next(new restifyErrors.InternalServerError());
@@ -427,17 +439,10 @@ export class ShadowsocksManagerService {
   ): Promise<void> {
     try {
       logging.debug(`setPortForNewAccessKeys request ${JSON.stringify(req.params)}`);
-      const port = req.params.port;
-      if (!port) {
+      const port = validateNumberParam(req.params.port, 'port');
+      if (port === undefined) {
         return next(
           new restifyErrors.MissingParameterError({statusCode: 400}, 'Parameter `port` is missing')
-        );
-      } else if (typeof port !== 'number') {
-        return next(
-          new restifyErrors.InvalidArgumentError(
-            {statusCode: 400},
-            `Expected a numeric port, instead got ${port} of type ${typeof port}`
-          )
         );
       }
       await this.accessKeys.setPortForNewAccessKeys(port);
@@ -451,6 +456,8 @@ export class ShadowsocksManagerService {
         return next(new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message));
       } else if (error instanceof errors.PortUnavailable) {
         return next(new restifyErrors.ConflictError(error.message));
+      } else if (error instanceof restifyErrors.HttpError) {
+        return next(error);
       }
       return next(new restifyErrors.InternalServerError(error));
     }
@@ -556,10 +563,7 @@ export class ShadowsocksManagerService {
       return next();
     } catch (error) {
       logging.error(error);
-      if (
-        error instanceof restifyErrors.InvalidArgumentError ||
-        error instanceof restifyErrors.MissingParameterError
-      ) {
+      if (error instanceof restifyErrors.HttpError) {
         return next(error);
       }
       return next(new restifyErrors.InternalServerError());
