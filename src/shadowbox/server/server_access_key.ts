@@ -196,6 +196,16 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     } else {
       id = this.generateId();
     }
+
+    const accessKeys = this.listAccessKeys();
+    const isPasswordConflict = accessKeys.some(
+      (accessKey) => accessKey.proxyParams.password == params?.password
+    );
+
+    if (isPasswordConflict) {
+      throw new errors.PasswordConflict();
+    }
+
     const metricsId = uuidv4();
     const password = params?.password ?? generatePassword();
     const encryptionMethod = params?.encryptionMethod || this.NEW_USER_ENCRYPTION_METHOD;

@@ -81,6 +81,16 @@ describe('ServerAccessKeyRepository', () => {
     done();
   });
 
+  it('createNewAccessKey throws on creating keys with existing passwords', async (done) => {
+    const repo = new RepoBuilder().build();
+    await repo.createNewAccessKey({password: 'P@$$w0rd'});
+    await expectAsyncThrow(
+      repo.createNewAccessKey.bind(repo, {password: 'P@$$w0rd'}),
+      errors.PasswordConflict
+    );
+    done();
+  });
+
   it('New access keys have the correct default encryption method', (done) => {
     const repo = new RepoBuilder().build();
     repo.createNewAccessKey().then((accessKey) => {

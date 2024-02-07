@@ -53,3 +53,9 @@ export class AccessKeyConflict extends OutlineError {
     super(`Access key "${accessKeyId}" conflict`);
   }
 }
+
+export class PasswordConflict extends OutlineError {
+  constructor() {
+    super('Some access key have same password');
+  }
+}
