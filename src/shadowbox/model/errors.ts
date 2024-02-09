@@ -55,7 +55,9 @@ export class AccessKeyConflict extends OutlineError {
 }
 
 export class PasswordConflict extends OutlineError {
-  constructor() {
-    super('Some access key have same password');
+  constructor(accessKeyId?: AccessKeyId) {
+    super(
+      `Access key ${accessKeyId} has the same password. Please specify a unique password for each access key`
+    );
   }
 }

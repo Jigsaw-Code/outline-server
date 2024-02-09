@@ -202,7 +202,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     );
 
     if (isPasswordConflict) {
-      throw new errors.PasswordConflict();
+      throw new errors.PasswordConflict(id);
     }
 
     const metricsId = uuidv4();
