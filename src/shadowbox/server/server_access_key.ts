@@ -197,8 +197,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       id = this.generateId();
     }
 
-    const accessKeys = this.listAccessKeys();
-    const isPasswordConflict = accessKeys.some(
+    const isPasswordConflict = this.listAccessKeys().some(
       (accessKey) => accessKey.proxyParams.password == params?.password
     );
 
