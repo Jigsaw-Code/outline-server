@@ -73,6 +73,7 @@ function finish_yaml_files() {
 function main() {
   declare staging_percentage=100
   declare version_name='0.0.0-debug'
+
   for i in "$@"; do
     case "${i}" in
     --buildMode=*)
@@ -91,10 +92,11 @@ function main() {
       echo "Unknown option: ${i}"
       exit 1
       ;;
-    *) ;;
+    *)  # Only supports having one positional argument.
+      PLATFORM="${i}"
+      ;;
     esac
   done
-  PLATFORM="${1?Platform missing}"
   run_action server_manager/electron_app/build --buildMode="${BUILD_MODE}" --versionName="${version_name}"
   package_electron
   finish_yaml_files "${staging_percentage}"

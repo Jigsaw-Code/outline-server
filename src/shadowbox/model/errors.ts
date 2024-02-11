@@ -24,15 +24,14 @@ class OutlineError extends Error {
 }
 
 export class InvalidPortNumber extends OutlineError {
-  // Since this is the error when a non-numeric value is passed to `port`, it takes type `string`.
-  constructor(public port: string) {
-    super(port);
+  constructor(public port: number) {
+    super(`Port ${port} is invalid: must be an integer in range [0, 65353]`);
   }
 }
 
 export class PortUnavailable extends OutlineError {
   constructor(public port: number) {
-    super(port.toString());
+    super(`Port ${port} is unavailable`);
   }
 }
 

@@ -106,6 +106,10 @@ function isValidCipher(cipher: string): boolean {
   return true;
 }
 
+function isValidPort(port: number): boolean {
+  return Number.isInteger(port) && port > 0 && port <= 65535;
+}
+
 // AccessKeyRepository that keeps its state in a config file and uses ShadowsocksServer
 // to start and stop per-access-key Shadowsocks instances.  Requires external validation
 // that portForNewAccessKeys is valid.
@@ -161,15 +165,19 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     });
   }
 
+  private async isPortAvailable(port: number): Promise<boolean> {
+    return this.isExistingAccessKeyPort(port) || !(await isPortUsed(port));
+  }
+
   setHostname(hostname: string): void {
     this.proxyHostname = hostname;
   }
 
   async setPortForNewAccessKeys(port: number): Promise<void> {
-    if (!Number.isInteger(port) || port < 1 || port > 65535) {
-      throw new errors.InvalidPortNumber(port.toString());
+    if (!isValidPort(port)) {
+      throw new errors.InvalidPortNumber(port);
     }
-    if (!this.isExistingAccessKeyPort(port) && (await isPortUsed(port))) {
+    if (!(await this.isPortAvailable(port))) {
       throw new errors.PortUnavailable(port);
     }
     this.portForNewAccessKeys = port;
@@ -198,15 +206,27 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     }
     const metricsId = uuidv4();
     const password = params?.password ?? generatePassword();
-    const encryptionMethod = params?.encryptionMethod || this.NEW_USER_ENCRYPTION_METHOD;
 
-    // Validate encryption method.
-    if (!isValidCipher(encryptionMethod)) {
-      throw new errors.InvalidCipher(encryptionMethod);
+    const encryptionMethod = params?.encryptionMethod || this.NEW_USER_ENCRYPTION_METHOD;
+    if (encryptionMethod !== this.NEW_USER_ENCRYPTION_METHOD) {
+      if (!isValidCipher(encryptionMethod)) {
+        throw new errors.InvalidCipher(encryptionMethod);
+      }
     }
+
+    const portNumber = params?.portNumber ?? this.portForNewAccessKeys;
+    if (portNumber !== this.portForNewAccessKeys) {
+      if (!isValidPort(portNumber)) {
+        throw new errors.InvalidPortNumber(portNumber);
+      }
+      if (!(await this.isPortAvailable(portNumber))) {
+        throw new errors.PortUnavailable(portNumber);
+      }
+    }
+
     const proxyParams = {
       hostname: this.proxyHostname,
-      portNumber: this.portForNewAccessKeys,
+      portNumber,
       encryptionMethod,
       password,
     };
