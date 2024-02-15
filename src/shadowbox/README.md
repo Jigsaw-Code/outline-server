@@ -165,7 +165,7 @@ modified image.
 To run the integration test:
 
 ```
-npm run action shadowbox/integration_test/start
+npm run action shadowbox/integration_test/run
 ```
 
 This will set up three containers and two networks:
@@ -186,7 +186,7 @@ npm run action shadowbox/docker/build && docker tag quay.io/outline/shadowbox $U
 If you need to test an unsigned image (e.g. your dev one):
 
 ```
-DOCKER_CONTENT_TRUST=0 SB_IMAGE=$USER/shadowbox npm run action shadowbox/integration_test/start
+DOCKER_CONTENT_TRUST=0 SB_IMAGE=$USER/shadowbox npm run action shadowbox/integration_test/run
 ```
 
 You can add tags if you need different versions in different clients.

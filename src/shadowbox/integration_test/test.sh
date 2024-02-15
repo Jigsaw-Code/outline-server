@@ -95,7 +95,7 @@ function setup() {
   # Target service.
   docker build --force-rm -t "${TARGET_IMAGE}" "$(dirname "$0")/target"
   docker run -d --rm -p "10080:80" --network="${NET_OPEN}" --network-alias="target" --name="${TARGET_CONTAINER}" "${TARGET_IMAGE}"
-  
+
   # Shadowsocks service.
   declare -ar shadowbox_flags=(
     -d
@@ -223,6 +223,15 @@ function cleanup() {
       && fail "Deleted access key is still active") || (($? == 56))
   }
 
+  function test_create_key_with_id() {
+    # Verify that we can create key with a given key ID.
+    local ACCESS_KEY_JSON
+    ACCESS_KEY_JSON="$(client_curl --insecure -X PUT "${SB_API_URL}/access-keys/myKeyId")"
+    if [[ "${ACCESS_KEY_JSON}" != *'"id":"myKeyId"'* ]]; then
+      fail "Could not create new access key with ID 'myKeyId'"
+    fi
+  }
+
   function test_port_for_new_keys() {
     # Verify that we can change the port for new access keys
     client_curl --insecure -X PUT -H "Content-Type: application/json" -d '{"port": 12345}' "${SB_API_URL}/server/port-for-new-access-keys" \
@@ -301,6 +310,7 @@ function cleanup() {
   }
 
   test_networking
+  test_create_key_with_id
   test_port_for_new_keys
   test_hostname_for_new_keys
   test_encryption_for_new_keys
