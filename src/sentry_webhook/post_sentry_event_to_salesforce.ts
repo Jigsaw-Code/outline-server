@@ -29,7 +29,7 @@ interface SalesforceFormFields {
   os: string;
   version: string;
   build: string;
-  type: string;
+  role: string;
   isUpdatedForm: string;
 }
 
@@ -55,7 +55,7 @@ const SALESFORCE_FORM_FIELDS_DEV: SalesforceFormFields = {
   os: '00N3F000002cLcN',
   version: '00N3F000002cLcI',
   build: '00N75000000wmdC',
-  type: 'type',
+  role: 'UNKNOWN',
   isUpdatedForm: '00N75000000wmd7',
 };
 const SALESFORCE_FORM_FIELDS_PROD: SalesforceFormFields = {
@@ -71,7 +71,7 @@ const SALESFORCE_FORM_FIELDS_PROD: SalesforceFormFields = {
   os: '00N5a00000DXxmo',
   version: '00N5a00000DXxmq',
   build: '00N5a00000DXy64',
-  type: 'type',
+  role: '00N5a00000DXxmr',
   isUpdatedForm: '00N5a00000DXy5a',
 };
 const SALESFORCE_FORM_VALUES_DEV: SalesforceFormValues = {
@@ -159,7 +159,14 @@ function getSalesforceFormData(
   form.push(encodeFormData(formFields.email, email));
   form.push(encodeFormData(formFields.sentryEventUrl, getSentryEventUrl(project, event.event_id)));
   form.push(encodeFormData(formFields.description, event.message));
-  form.push(encodeFormData(formFields.type, isClient ? 'Outline client' : 'Outline manager'));
+  form.push(
+    encodeFormData(
+      formFields.role,
+      isClient
+        ? 'I am using the Outline client application on my mobile or desktop device'
+        : 'I am an Outline server manager'
+    )
+  );
   if (event.tags) {
     const tags = new Map<string, string>(event.tags);
     form.push(encodeFormData(formFields.issue, toIssuePicklistValue(tags.get('category'))));
@@ -203,6 +210,7 @@ function toOSPicklistValue(value: string | undefined): string | undefined {
   return 'Linux';
 }
 
+// Returns a picklist value that is allowed by SalesForce for the issue record.
 function toIssuePicklistValue(value: string | undefined): string | undefined {
   if (!value) {
     console.warn('No issue type found');
