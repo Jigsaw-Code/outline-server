@@ -20,6 +20,7 @@ interface SalesforceFormFields {
   orgId: string;
   recordType: string;
   email: string;
+  subject: string;
   description: string;
   issue: string;
   accessKeySource: string;
@@ -29,6 +30,7 @@ interface SalesforceFormFields {
   version: string;
   build: string;
   type: string;
+  isUpdatedForm: string;
 }
 
 // Defines the Salesforce form values.
@@ -44,6 +46,7 @@ const SALESFORCE_FORM_FIELDS_DEV: SalesforceFormFields = {
   orgId: 'orgid',
   recordType: 'recordType',
   email: 'email',
+  subject: 'subject',
   description: 'description',
   issue: '00N3F000002Rqho',
   accessKeySource: '00N75000000wYiY',
@@ -53,11 +56,13 @@ const SALESFORCE_FORM_FIELDS_DEV: SalesforceFormFields = {
   version: '00N3F000002cLcI',
   build: '00N75000000wmdC',
   type: 'type',
+  isUpdatedForm: '00N75000000wmd7',
 };
 const SALESFORCE_FORM_FIELDS_PROD: SalesforceFormFields = {
   orgId: 'orgid',
   recordType: 'recordType',
   email: 'email',
+  subject: 'subject',
   description: 'description',
   issue: '00N5a00000DXy19',
   accessKeySource: '00N5a00000DXxms',
@@ -67,6 +72,7 @@ const SALESFORCE_FORM_FIELDS_PROD: SalesforceFormFields = {
   version: '00N5a00000DXxmq',
   build: '00N5a00000DXy64',
   type: 'type',
+  isUpdatedForm: '00N5a00000DXy5a',
 };
 const SALESFORCE_FORM_VALUES_DEV: SalesforceFormValues = {
   orgId: '00D750000004dFg',
@@ -157,9 +163,14 @@ function getSalesforceFormData(
   if (event.tags) {
     const tags = new Map<string, string>(event.tags);
     form.push(encodeFormData(formFields.issue, toIssuePicklistValue(tags.get('category'))));
+    form.push(encodeFormData(formFields.subject, tags.get('subject')));
     form.push(encodeFormData(formFields.os, toOSPicklistValue(tags.get('os.name'))));
     form.push(encodeFormData(formFields.version, tags.get('sentry:release')));
     form.push(encodeFormData(formFields.build, tags.get('build.number')));
+    const formVersion = Number(tags.get('formVersion') ?? 1);
+    if (formVersion === 2) {
+      form.push(encodeFormData(formFields.isUpdatedForm, 'true'));
+    }
     if (isClient) {
       form.push(encodeFormData(formFields.accessKeySource, tags.get('accessKeySource')));
     } else {
