@@ -91,7 +91,7 @@ describe('postSentryEventToSalesforce', () => {
       user: {email: 'foo@bar.com'},
       message: 'my message',
       tags: [
-        ['category', 'test category'],
+        ['category', 'no-server'],
         ['os.name', 'Mac OS X'],
         ['sentry:release', 'test version'],
         ['unknown:tag', 'foo'],
@@ -108,9 +108,9 @@ describe('postSentryEventToSalesforce', () => {
         '&00N0b00000BqOA4=' +
         '&description=my%20message' +
         '&type=Outline%20client' +
-        '&00N0b00000BqOA2=test%20category' +
-        '&00N0b00000BqOfW=macOs' +
-        '&00N0b00000BqOfR=test%20version'
+        '&00N5a00000DXy19=I%20need%20an%20access%20key' +
+        '&00N5a00000DXxmo=MacOS' +
+        '&00N5a00000DXxmq=test%20version'
     );
     expect(mockRequest.end).toHaveBeenCalled();
   });

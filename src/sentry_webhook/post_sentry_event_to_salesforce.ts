@@ -21,7 +21,7 @@ interface SalesforceFormFields {
   recordType: string;
   email: string;
   description: string;
-  category: string;
+  issue: string;
   cloudProvider: string;
   sentryEventUrl: string;
   os: string;
@@ -43,7 +43,7 @@ const SALESFORCE_FORM_FIELDS_DEV: SalesforceFormFields = {
   recordType: 'recordType',
   email: 'email',
   description: 'description',
-  category: '00N3F000002Rqho',
+  issue: '00N3F000002Rqho',
   cloudProvider: '00N3F000002Rqhs',
   sentryEventUrl: '00N3F000002Rqhq',
   os: '00N3F000002cLcN',
@@ -55,11 +55,11 @@ const SALESFORCE_FORM_FIELDS_PROD: SalesforceFormFields = {
   recordType: 'recordType',
   email: 'email',
   description: 'description',
-  category: '00N0b00000BqOA2',
-  cloudProvider: '00N0b00000BqOA7',
+  issue: '00N5a00000DXy19',
+  cloudProvider: '00N5a00000DXxmn',
   sentryEventUrl: '00N0b00000BqOA4',
-  os: '00N0b00000BqOfW',
-  version: '00N0b00000BqOfR',
+  os: '00N5a00000DXxmo',
+  version: '00N5a00000DXxmq',
   type: 'type',
 };
 const SALESFORCE_FORM_VALUES_DEV: SalesforceFormValues = {
@@ -69,6 +69,15 @@ const SALESFORCE_FORM_VALUES_DEV: SalesforceFormValues = {
 const SALESFORCE_FORM_VALUES_PROD: SalesforceFormValues = {
   orgId: '00D0b000000BrsN',
   recordType: '0120b0000006e8i',
+};
+
+const ISSUE_TYPE_TO_PICKLIST_VALUE: {[key: string]: string} = {
+  'cannot-add-server': 'I am having trouble adding a server using my access key',
+  connection: 'I am having trouble connecting to my Outline VPN server',
+  general: 'General feedback & suggestions',
+  managing: 'I need assistance managing my Outline VPN server or helping others connect to it',
+  'no-server': 'I need an access key',
+  performance: 'My internet access is slow while connected to my Outline VPN server',
 };
 
 // Returns whether a Sentry event should be sent to Salesforce by checking that it contains an
@@ -141,7 +150,7 @@ function getSalesforceFormData(
   form.push(encodeFormData(formFields.type, isClient ? 'Outline client' : 'Outline manager'));
   if (event.tags) {
     const tags = new Map<string, string>(event.tags);
-    form.push(encodeFormData(formFields.category, tags.get('category')));
+    form.push(encodeFormData(formFields.issue, toIssuePicklistValue(tags.get('category'))));
     form.push(encodeFormData(formFields.os, toOSPicklistValue(tags.get('os.name'))));
     form.push(encodeFormData(formFields.version, tags.get('sentry:release')));
     if (!isClient) {
@@ -169,9 +178,17 @@ function toOSPicklistValue(value: string | undefined): string | undefined {
     return 'Windows';
   }
   if (normalizedValue.includes('mac')) {
-    return 'macOs';
+    return 'MacOS';
   }
   return 'Linux';
+}
+
+function toIssuePicklistValue(value: string | undefined): string | undefined {
+  if (!value) {
+    console.warn('No issue type found');
+    return undefined;
+  }
+  return ISSUE_TYPE_TO_PICKLIST_VALUE[value];
 }
 
 function encodeFormData(field: string, value?: string) {
