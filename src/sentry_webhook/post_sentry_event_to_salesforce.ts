@@ -22,10 +22,12 @@ interface SalesforceFormFields {
   email: string;
   description: string;
   issue: string;
+  accessKeySource: string;
   cloudProvider: string;
   sentryEventUrl: string;
   os: string;
   version: string;
+  build: string;
   type: string;
 }
 
@@ -44,10 +46,12 @@ const SALESFORCE_FORM_FIELDS_DEV: SalesforceFormFields = {
   email: 'email',
   description: 'description',
   issue: '00N3F000002Rqho',
+  accessKeySource: '00N75000000wYiY',
   cloudProvider: '00N3F000002Rqhs',
   sentryEventUrl: '00N3F000002Rqhq',
   os: '00N3F000002cLcN',
   version: '00N3F000002cLcI',
+  build: '00N75000000wmdC',
   type: 'type',
 };
 const SALESFORCE_FORM_FIELDS_PROD: SalesforceFormFields = {
@@ -56,10 +60,12 @@ const SALESFORCE_FORM_FIELDS_PROD: SalesforceFormFields = {
   email: 'email',
   description: 'description',
   issue: '00N5a00000DXy19',
+  accessKeySource: '00N5a00000DXxms',
   cloudProvider: '00N5a00000DXxmn',
   sentryEventUrl: '00N0b00000BqOA4',
   os: '00N5a00000DXxmo',
   version: '00N5a00000DXxmq',
+  build: '00N5a00000DXy64',
   type: 'type',
 };
 const SALESFORCE_FORM_VALUES_DEV: SalesforceFormValues = {
@@ -153,7 +159,10 @@ function getSalesforceFormData(
     form.push(encodeFormData(formFields.issue, toIssuePicklistValue(tags.get('category'))));
     form.push(encodeFormData(formFields.os, toOSPicklistValue(tags.get('os.name'))));
     form.push(encodeFormData(formFields.version, tags.get('sentry:release')));
-    if (!isClient) {
+    form.push(encodeFormData(formFields.build, tags.get('build.number')));
+    if (isClient) {
+      form.push(encodeFormData(formFields.accessKeySource, tags.get('accessKeySource')));
+    } else {
       form.push(encodeFormData(formFields.cloudProvider, tags.get('cloudProvider')));
     }
   }
