@@ -1,3 +1,3 @@
 # Outline Manager
 
-> THIS PROJECT HAS MOVED TO A NEW LOCATION: Outline Manager is now part of the [Outline Apps](https://github.com/Jigsaw-Code/outline-apps/tree/master/server_manager) repository.
+> THIS PROJECT HAS MOVED TO A [NEW LOCATION](https://github.com/Jigsaw-Code/outline-apps/tree/master/): Outline Manager is now part of the [Outline Apps repository](https://github.com/Jigsaw-Code/outline-apps).
