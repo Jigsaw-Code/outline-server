@@ -12,13 +12,13 @@ client apps. Shadowbox is also compatible with standard Shadowsocks clients.
 To install and run Shadowbox on your own server, run
 
 ```
-sudo bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"
+sudo bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-apps/master/server_manager/install_scripts/install_server.sh)"
 ```
 
 You can specify flags to customize the installation. For example, to use hostname `myserver.com` and the port 443 for access keys, you can run:
 
 ```
-sudo bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)" install_server.sh --hostname=myserver.com --keys-port=443
+sudo bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-apps/master/server_manager/install_scripts/install_server.sh)" install_server.sh --hostname=myserver.com --keys-port=443
 ```
 
 Use `sudo --preserve-env` if you need to pass environment variables. Use `bash -x` if you need to debug the installation.
