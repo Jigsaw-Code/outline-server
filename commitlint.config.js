@@ -4,17 +4,7 @@ module.exports = {
     'scope-enum': [
       2,
       'always',
-      [
-        'devtools',
-        'devtools/build',
-        'docs',
-        'manager',
-        'manager/electron',
-        'manager/web',
-        'metrics_server',
-        'sentry_webhook',
-        'server',
-      ],
+      ['devtools', 'devtools/build', 'docs', 'metrics_server', 'sentry_webhook', 'server'],
     ],
   },
 };
