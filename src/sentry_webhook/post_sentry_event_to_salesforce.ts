@@ -92,6 +92,13 @@ const ISSUE_TYPE_TO_PICKLIST_VALUE: {[key: string]: string} = {
   performance: 'My internet access is slow while connected to my Outline VPN server',
 };
 
+const CLOUD_PROVIDER_TO_PICKLIST_VALUE: {[key: string]: string} = {
+  aws: 'Amazon Web Services',
+  digitalocean: 'DigitalOcean',
+  gcloud: 'Google Cloud',
+  other: 'Other',
+};
+
 // Returns whether a Sentry event should be sent to Salesforce by checking that it contains an
 // email address.
 export function shouldPostEventToSalesforce(event: SentryEvent): boolean {
@@ -181,7 +188,12 @@ function getSalesforceFormData(
     if (isClient) {
       form.push(encodeFormData(formFields.accessKeySource, tags.get('accessKeySource')));
     } else {
-      form.push(encodeFormData(formFields.cloudProvider, tags.get('cloudProvider')));
+      form.push(
+        encodeFormData(
+          formFields.cloudProvider,
+          toCloudProviderPicklistValue(tags.get('cloudProvider'))
+        )
+      );
     }
   }
   return form.join('&');
@@ -217,6 +229,15 @@ function toIssuePicklistValue(value: string | undefined): string | undefined {
     return undefined;
   }
   return ISSUE_TYPE_TO_PICKLIST_VALUE[value];
+}
+
+// Returns a picklist value that is allowed by SalesForce for the cloud provider record.
+function toCloudProviderPicklistValue(value: string | undefined): string | undefined {
+  if (!value) {
+    console.warn('No cloud provider found');
+    return undefined;
+  }
+  return CLOUD_PROVIDER_TO_PICKLIST_VALUE[value];
 }
 
 function encodeFormData(field: string, value?: string) {
