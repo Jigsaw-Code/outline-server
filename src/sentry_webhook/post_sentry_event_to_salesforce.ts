@@ -55,7 +55,7 @@ const SALESFORCE_FORM_FIELDS_DEV: SalesforceFormFields = {
   os: '00N3F000002cLcN',
   version: '00N3F000002cLcI',
   build: '00N75000000wmdC',
-  role: 'UNKNOWN',
+  role: '00N75000000wYiX',
   isUpdatedForm: '00N75000000wmd7',
 };
 const SALESFORCE_FORM_FIELDS_PROD: SalesforceFormFields = {

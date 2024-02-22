@@ -81,7 +81,7 @@ describe('postSentryEventToSalesforce', () => {
         '&email=foo%40bar.com' +
         '&00N3F000002Rqhq=' +
         '&description=my%20message' +
-        '&UNKNOWN=I%20am%20using%20the%20Outline%20client%20application%20on%20my%20mobile%20or%20desktop%20device'
+        '&00N75000000wYiX=I%20am%20using%20the%20Outline%20client%20application%20on%20my%20mobile%20or%20desktop%20device'
     );
     expect(mockRequest.end).toHaveBeenCalled();
   });
