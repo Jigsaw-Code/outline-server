@@ -23,6 +23,18 @@ sudo bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-
 
 Use `sudo --preserve-env` if you need to pass environment variables. Use `bash -x` if you need to debug the installation.
 
+You can retrieve access key in following location of docker container
+```
+# legacy
+cat /opt/outline/access.txt
+# current
+# access key config
+cat /root/shadowbox/persisted-state/shadowbox_config.json
+# server configuration
+cat /root/shadowbox/persisted-state/shadowbox_server_config.json
+```
+
+
 ## Running from source code
 
 ### Prerequisites
