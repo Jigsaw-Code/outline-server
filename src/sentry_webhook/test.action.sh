@@ -21,6 +21,6 @@ rm -rf "${TEST_DIR}"
 tsc -p "${ROOT_DIR}/src/sentry_webhook" --outDir "${TEST_DIR}" --module commonjs
 jasmine --config="${ROOT_DIR}/jasmine.json"
 
-karma start "${ROOT_DIR}/src/sentry_webhook/karma.conf.js"
+npx karma start "${ROOT_DIR}/src/sentry_webhook/karma.conf.js"
 
 rm -rf "${TEST_DIR}"
