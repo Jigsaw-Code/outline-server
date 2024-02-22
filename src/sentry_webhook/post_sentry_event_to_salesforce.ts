@@ -20,13 +20,17 @@ interface SalesforceFormFields {
   orgId: string;
   recordType: string;
   email: string;
+  subject: string;
   description: string;
-  category: string;
+  issue: string;
+  accessKeySource: string;
   cloudProvider: string;
   sentryEventUrl: string;
   os: string;
   version: string;
-  type: string;
+  build: string;
+  role: string;
+  isUpdatedForm: string;
 }
 
 // Defines the Salesforce form values.
@@ -42,25 +46,33 @@ const SALESFORCE_FORM_FIELDS_DEV: SalesforceFormFields = {
   orgId: 'orgid',
   recordType: 'recordType',
   email: 'email',
+  subject: 'subject',
   description: 'description',
-  category: '00N3F000002Rqho',
+  issue: '00N3F000002Rqho',
+  accessKeySource: '00N75000000wYiY',
   cloudProvider: '00N3F000002Rqhs',
   sentryEventUrl: '00N3F000002Rqhq',
   os: '00N3F000002cLcN',
   version: '00N3F000002cLcI',
-  type: 'type',
+  build: '00N75000000wmdC',
+  role: 'UNKNOWN',
+  isUpdatedForm: '00N75000000wmd7',
 };
 const SALESFORCE_FORM_FIELDS_PROD: SalesforceFormFields = {
   orgId: 'orgid',
   recordType: 'recordType',
   email: 'email',
+  subject: 'subject',
   description: 'description',
-  category: '00N0b00000BqOA2',
-  cloudProvider: '00N0b00000BqOA7',
+  issue: '00N5a00000DXy19',
+  accessKeySource: '00N5a00000DXxms',
+  cloudProvider: '00N5a00000DXxmn',
   sentryEventUrl: '00N0b00000BqOA4',
-  os: '00N0b00000BqOfW',
-  version: '00N0b00000BqOfR',
-  type: 'type',
+  os: '00N5a00000DXxmo',
+  version: '00N5a00000DXxmq',
+  build: '00N5a00000DXy64',
+  role: '00N5a00000DXxmr',
+  isUpdatedForm: '00N5a00000DXy5a',
 };
 const SALESFORCE_FORM_VALUES_DEV: SalesforceFormValues = {
   orgId: '00D750000004dFg',
@@ -69,6 +81,22 @@ const SALESFORCE_FORM_VALUES_DEV: SalesforceFormValues = {
 const SALESFORCE_FORM_VALUES_PROD: SalesforceFormValues = {
   orgId: '00D0b000000BrsN',
   recordType: '0120b0000006e8i',
+};
+
+const ISSUE_TYPE_TO_PICKLIST_VALUE: {[key: string]: string} = {
+  'cannot-add-server': 'I am having trouble adding a server using my access key',
+  connection: 'I am having trouble connecting to my Outline VPN server',
+  general: 'General feedback & suggestions',
+  managing: 'I need assistance managing my Outline VPN server or helping others connect to it',
+  'no-server': 'I need an access key',
+  performance: 'My internet access is slow while connected to my Outline VPN server',
+};
+
+const CLOUD_PROVIDER_TO_PICKLIST_VALUE: {[key: string]: string} = {
+  aws: 'Amazon Web Services',
+  digitalocean: 'DigitalOcean',
+  gcloud: 'Google Cloud',
+  other: 'Other',
 };
 
 // Returns whether a Sentry event should be sent to Salesforce by checking that it contains an
@@ -138,14 +166,34 @@ function getSalesforceFormData(
   form.push(encodeFormData(formFields.email, email));
   form.push(encodeFormData(formFields.sentryEventUrl, getSentryEventUrl(project, event.event_id)));
   form.push(encodeFormData(formFields.description, event.message));
-  form.push(encodeFormData(formFields.type, isClient ? 'Outline client' : 'Outline manager'));
+  form.push(
+    encodeFormData(
+      formFields.role,
+      isClient
+        ? 'I am using the Outline client application on my mobile or desktop device'
+        : 'I am an Outline server manager'
+    )
+  );
   if (event.tags) {
     const tags = new Map<string, string>(event.tags);
-    form.push(encodeFormData(formFields.category, tags.get('category')));
+    form.push(encodeFormData(formFields.issue, toIssuePicklistValue(tags.get('category'))));
+    form.push(encodeFormData(formFields.subject, tags.get('subject')));
     form.push(encodeFormData(formFields.os, toOSPicklistValue(tags.get('os.name'))));
     form.push(encodeFormData(formFields.version, tags.get('sentry:release')));
-    if (!isClient) {
-      form.push(encodeFormData(formFields.cloudProvider, tags.get('cloudProvider')));
+    form.push(encodeFormData(formFields.build, tags.get('build.number')));
+    const formVersion = Number(tags.get('formVersion') ?? 1);
+    if (formVersion === 2) {
+      form.push(encodeFormData(formFields.isUpdatedForm, 'true'));
+    }
+    if (isClient) {
+      form.push(encodeFormData(formFields.accessKeySource, tags.get('accessKeySource')));
+    } else {
+      form.push(
+        encodeFormData(
+          formFields.cloudProvider,
+          toCloudProviderPicklistValue(tags.get('cloudProvider'))
+        )
+      );
     }
   }
   return form.join('&');
@@ -169,9 +217,27 @@ function toOSPicklistValue(value: string | undefined): string | undefined {
     return 'Windows';
   }
   if (normalizedValue.includes('mac')) {
-    return 'macOs';
+    return 'MacOS';
   }
   return 'Linux';
+}
+
+// Returns a picklist value that is allowed by SalesForce for the issue record.
+function toIssuePicklistValue(value: string | undefined): string | undefined {
+  if (!value) {
+    console.warn('No issue type found');
+    return undefined;
+  }
+  return ISSUE_TYPE_TO_PICKLIST_VALUE[value];
+}
+
+// Returns a picklist value that is allowed by SalesForce for the cloud provider record.
+function toCloudProviderPicklistValue(value: string | undefined): string | undefined {
+  if (!value) {
+    console.warn('No cloud provider found');
+    return undefined;
+  }
+  return CLOUD_PROVIDER_TO_PICKLIST_VALUE[value];
 }
 
 function encodeFormData(field: string, value?: string) {

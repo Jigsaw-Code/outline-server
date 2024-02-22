@@ -57,7 +57,7 @@ describe('postSentryEventToSalesforce', () => {
         '&email=foo%40bar.com' +
         '&00N0b00000BqOA4=' +
         '&description=my%20message' +
-        '&type=Outline%20client'
+        '&00N5a00000DXxmr=I%20am%20using%20the%20Outline%20client%20application%20on%20my%20mobile%20or%20desktop%20device'
     );
     expect(mockRequest.end).toHaveBeenCalled();
   });
@@ -81,7 +81,7 @@ describe('postSentryEventToSalesforce', () => {
         '&email=foo%40bar.com' +
         '&00N3F000002Rqhq=' +
         '&description=my%20message' +
-        '&type=Outline%20client'
+        '&UNKNOWN=I%20am%20using%20the%20Outline%20client%20application%20on%20my%20mobile%20or%20desktop%20device'
     );
     expect(mockRequest.end).toHaveBeenCalled();
   });
@@ -91,9 +91,12 @@ describe('postSentryEventToSalesforce', () => {
       user: {email: 'foo@bar.com'},
       message: 'my message',
       tags: [
-        ['category', 'test category'],
+        ['category', 'no-server'],
+        ['subject', 'test subject'],
         ['os.name', 'Mac OS X'],
         ['sentry:release', 'test version'],
+        ['build.number', '0.0.0-debug'],
+        ['accessKeySource', 'test source'],
         ['unknown:tag', 'foo'],
       ],
     };
@@ -107,10 +110,13 @@ describe('postSentryEventToSalesforce', () => {
         '&email=foo%40bar.com' +
         '&00N0b00000BqOA4=' +
         '&description=my%20message' +
-        '&type=Outline%20client' +
-        '&00N0b00000BqOA2=test%20category' +
-        '&00N0b00000BqOfW=macOs' +
-        '&00N0b00000BqOfR=test%20version'
+        '&00N5a00000DXxmr=I%20am%20using%20the%20Outline%20client%20application%20on%20my%20mobile%20or%20desktop%20device' +
+        '&00N5a00000DXy19=I%20need%20an%20access%20key' +
+        '&subject=test%20subject' +
+        '&00N5a00000DXxmo=MacOS' +
+        '&00N5a00000DXxmq=test%20version' +
+        '&00N5a00000DXy64=0.0.0-debug' +
+        '&00N5a00000DXxms=test%20source'
     );
     expect(mockRequest.end).toHaveBeenCalled();
   });
