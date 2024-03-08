@@ -27,8 +27,6 @@ The Outline Server, codenamed "Shadowbox," is designed to streamline the setup a
 
 ### Running from Source Code
 
-Shadowbox supports running on linux and macOS hosts.
-
 **Prerequisites**
 
 - [Docker](https://docs.docker.com/engine/install/)
@@ -38,38 +36,47 @@ Shadowbox supports running on linux and macOS hosts.
 > [!TIP]
 > If you use `nvm`, switch to the correct Node version with `nvm use`.
 
-1. **Build and Run in Docker container:**
+1. **Build and Run:**
 
-   ```sh
-   npm run action shadowbox/docker/start
-   ```
+   Shadowbox supports running on linux and macOS hosts.
 
-   To run as a Node.js App, run: `npm run action shadowbox/server/start`
+   - **Node.js App**
+
+     ```sh
+     npm run action shadowbox/server/start
+     ```
+
+   - **Docker Container**
+
+     ```sh
+     npm run action shadowbox/docker/start
+     ```
+
+     > [!TIP]
+     > Some useful commands when working with Docker images and containers:
+     >
+     > - **Debug Image:**
+     >
+     >   ```sh
+     >   docker run --rm -it --entrypoint=sh localhost/outline/shadowbox
+     >   ```
+     >
+     > - **Debug Running Container:**
+     >
+     >   ```sh
+     >   docker exec -it shadowbox sh
+     >   ```
+     >
+     > - **Cleanup Dangling Images:**
+     >
+     >   ```sh
+     >   docker rmi $(docker images -f dangling=true -q)
+     >   ```
 
 1. **Send a Test Request**
 
    ```sh
    curl --insecure https://[::]:8081/TestApiPrefix/server
-   ```
-
-1. **Debug:**
-
-   - Docker Image:
-
-     ```sh
-     docker run --rm -it --entrypoint=sh localhost/outline/shadowbox
-     ```
-
-   - Running Container:
-
-     ```sh
-     docker exec -it shadowbox sh
-     ```
-
-1. **Cleanup dangling images:**
-
-   ```sh
-   docker rmi $(docker images -f dangling=true -q)
    ```
 
 ## Access Keys Management API

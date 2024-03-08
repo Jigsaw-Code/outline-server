@@ -29,7 +29,6 @@ Outline's use of Shadowsocks means it benefits from ongoing improvements that st
 
 **Prerequisites**
 
-- [Docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docs.docker.com/compose/install/)
 - [Node](https://nodejs.org/en/download/) LTS (`lts/hydrogen`, version `18.16.0`)
 - [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (version `9.5.1`)
 
