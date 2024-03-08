@@ -8,7 +8,7 @@ Outline Server is a tool to create and manage your own VPN servers using Shadows
 
 - **Outline Server** ([`src/shadowbox`](src/shadowbox)): The core proxy server that runs a Shadowsocks instance. It provides a REST API for access key management.
 
-- **Metrics Server** ([`src/metrics_server`](src/metrics_server)): A REST service for optional, anonymous metrics sharing.)
+- **Metrics Server** ([`src/metrics_server`](src/metrics_server)): A REST service for optional, anonymous metrics sharing.
 
 **Join the Outline Community** by signing up for the [IFF Mattermost](https://wiki.digitalrights.community/index.php?title=IFF_Mattermost)!
 
@@ -48,7 +48,10 @@ Outline's use of Shadowsocks means it benefits from ongoing improvements that st
    npm run action shadowbox/server/start
    ```
 
-   (For more build system details, see [docs/build.md](docs/build.md).)
+   Exploring further options:
+
+   - **Refer to the README:** Find additional configuration and usage options in the core server's [`README`](src/shadowbox/README.md).
+   - **Learn about the build system:** For in-depth build system information, consult the [build documentation](docs/build.md).
 
 1. **To clean up**
 
