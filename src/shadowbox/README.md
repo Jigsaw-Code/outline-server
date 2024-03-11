@@ -1,6 +1,6 @@
 # Outline Server (Shadowbox)
 
-The Outline Server, internal name "Shadowbox," is designed to streamline the setup and sharing of Shadowsocks servers. It includes a user management API and creates Shadowsocks instances when needed. The [Outline Manager](https://github.com/Jigsaw-Code/outline-apps/) manages the server. The [Outline Client](https://github.com/Jigsaw-Code/outline-apps/), as well as any standard Shadowsocks client, can use the server as proxy.
+The Outline Server, internal name "Shadowbox," is designed to streamline the setup and sharing of Shadowsocks servers. It includes a user management API and creates Shadowsocks instances when needed. It's managed by the [Outline Manager](https://github.com/Jigsaw-Code/outline-apps/) and used as proxy by the [Outline Client](https://github.com/Jigsaw-Code/outline-apps/) apps. Shadowbox is also compatible with standard Shadowsocks clients.
 
 ## Installation
 
