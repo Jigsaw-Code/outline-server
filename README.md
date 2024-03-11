@@ -6,7 +6,7 @@ Outline Server is a tool to create and manage your own VPN servers using Shadows
 
 **Components:**
 
-- **Outline Server** ([`src/shadowbox`](src/shadowbox)): The core proxy server that runs a Shadowsocks instance. It provides a REST API for access key management.
+- **Outline Server** ([`src/shadowbox`](src/shadowbox)): The core proxy server that runs and manages [outline-ss-server](https://github.com/Jigsaw-Code/outline-ss-server/), a Shadowsocks backend. It provides a REST API for access key management.
 
 - **Metrics Server** ([`src/metrics_server`](src/metrics_server)): A REST service for optional, anonymous metrics sharing.
 

@@ -1,6 +1,6 @@
 # Outline Server (Shadowbox)
 
-The Outline Server, codenamed "Shadowbox," is designed to streamline the setup and sharing of Shadowsocks servers. It includes a user management API and creates Shadowsocks instances when needed. The [Outline Manager](https://github.com/Jigsaw-Code/outline-apps/) manages the server, and can be used as proxy by the [Outline Client](https://github.com/Jigsaw-Code/outline-apps/) or any standard Shadowsocks client.
+The Outline Server, internal name "Shadowbox," is designed to streamline the setup and sharing of Shadowsocks servers. It includes a user management API and creates Shadowsocks instances when needed. The [Outline Manager](https://github.com/Jigsaw-Code/outline-apps/) manages the server. The [Outline Client](https://github.com/Jigsaw-Code/outline-apps/), as well as any standard Shadowsocks client, can use the server as proxy.
 
 ## Installation
 
@@ -81,7 +81,9 @@ The Outline Server, codenamed "Shadowbox," is designed to streamline the setup a
 
 ## Access Keys Management API
 
-1. **Find your `apiUrl`:** (e.g. `https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z`)
+The Outline Server provides a REST API for access key management. If you know the `apiUrl` of your Outline Server (e.g. `https://1.2.3.4:1234/3pQ4jf6qSr5WVeMO0XOo4z`), you can directly manage the server's access keys using HTTP requests:
+
+1. **Find the Server's `apiUrl`:**
 
    - **Deployed with the Installation Script:** Run `grep "apiUrl" /opt/outline/access.txt | cut -d: -f 2-`
 
@@ -100,6 +102,12 @@ The Outline Server, codenamed "Shadowbox," is designed to streamline the setup a
    - **Get an access key (e.g. ID 1):** `curl --insecure $API_URL/access-keys/1`
 
    - **Rename an access key:** `curl --insecure -X PUT -F 'name=albion' $API_URL/access-keys/2/name`
+
+   - **Remove an access key:** `curl --insecure -X DELETE $API_URL/access-keys/1`
+
+   - **Set a data limit for all access keys:** (e.g. limit outbound data transfer access keys to 1MB over 30 days) `curl --insecure -X PUT -H "Content-Type: application/json" -d '{"limit": {"bytes": 1000}}' $API_URL/experimental/access-key-data-limit`
+
+   - **Remove the access key data limit:** `curl --insecure -X DELETE $API_URL/experimental/access-key-data-limit`
 
    - **And more...**
 
@@ -144,26 +152,10 @@ The Outline Server, codenamed "Shadowbox," is designed to streamline the setup a
    - Creates a user on `shadowbox`.
    - Connects to `target` through `shadowbox` using a Shadowsocks `client`: `client <-> shadowbox <-> target`
 
-1. **Testing Client Modifications:**
+1. **Testing Changes to the Server Config:**
 
-   - **Build Your Image:**
+If your change includes new fields in the server config which are needed at server start-up time, then you mey need to remove the pre-existing test config:
 
-     ```sh
-     npm run action shadowbox/docker/build && docker tag quay.io/outline/shadowbox $USER/shadowbox && docker push $USER/shadowbox
-     ```
+- **Delete Existing Config:** `rm /tmp/outline/persisted-state/shadowbox_server_config.json`
 
-   - **Test Unsigned Images:** For development images, disable Docker contant trust:
-
-     ```sh
-     DOCKER_CONTENT_TRUST=0 SB_IMAGE=$USER/shadowbox npm run action shadowbox/integration_test/run
-     ```
-
-1. **Testing Server Config Changes:**
-
-   - **Delete Existing Config:** If your changes modify server startup config, remove the old test config:
-
-     ```sh
-     rm /tmp/outline/persisted-state/shadowbox_server_config.json
-     ```
-
-   - **Manually Edit:** You'll need to edit the JSON string within [`src/shadowbox/docker/start.action.sh`](src/shadowbox/docker/start.action.sh).
+- **Manually Edit:** You'll need to edit the JSON string within [`src/shadowbox/docker/start.action.sh`](src/shadowbox/docker/start.action.sh).
