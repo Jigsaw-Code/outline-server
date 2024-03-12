@@ -2,7 +2,7 @@
 
 ![Build and Test](https://github.com/Jigsaw-Code/outline-server/actions/workflows/build_and_test_debug.yml/badge.svg?branch=master) [![Mattermost](https://badgen.net/badge/Mattermost/Outline%20Community/blue)](https://community.internetfreedomfestival.org/community/channels/outline-community) [![Reddit](https://badgen.net/badge/Reddit/r%2Foutlinevpn/orange)](https://www.reddit.com/r/outlinevpn/)
 
-Outline Server is a tool to create and manage your own VPN servers using Shadowsocks proxies. If you prefer a graphical interface, you can use the [Outline Manager](https://github.com/Jigsaw-Code/outline-apps/).
+Outline Server is the component that provides the Shadowsocks service (via [outline-ss-server](https://github.com/Jigsaw-Code/outline-ss-server/)) and a service management API. You can deploy this server directly following simple instructions in this repository, or if you prefer a ready-to-use graphical interface you can use the [Outline Manager](https://github.com/Jigsaw-Code/outline-apps/).
 
 **Components:**
 
@@ -23,7 +23,7 @@ Outline's use of Shadowsocks means it benefits from ongoing improvements that st
 - **Protection against replayed data.**
 - **Variable packet sizes** to hinder identification.
 
-[Read more](docs/shadowsocks.md) about Shadowsocks resistance against detection and blocking.
+See [Shadowsocks resistance against detection and blocking](docs/shadowsocks.md).
 
 ## Installation
 
@@ -47,7 +47,7 @@ Outline's use of Shadowsocks means it benefits from ongoing improvements that st
    Exploring further options:
 
    - **Refer to the README:** Find additional configuration and usage options in the core server's [`README`](src/shadowbox/README.md).
-   - **Learn about the build system:** For in-depth build system information, consult the [build documentation](docs/build.md).
+   - **Learn about the build system:** For in-depth build system information, consult the [contributing guide](CONTRIBUTING.md).
 
 1. **To clean up**
 
