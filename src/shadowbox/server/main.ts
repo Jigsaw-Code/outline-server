@@ -154,14 +154,11 @@ async function main() {
     getBinaryFilename('outline-ss-server'),
     getPersistentFilename('outline-ss-server/config.yml'),
     verbose,
-    ssMetricsLocation
+    ssMetricsLocation,
+    fs.existsSync(MMDB_LOCATION_COUNTRY) ? MMDB_LOCATION_COUNTRY : undefined,
+    fs.existsSync(MMDB_LOCATION_ASN) ? MMDB_LOCATION_ASN : undefined
   );
-  if (fs.existsSync(MMDB_LOCATION_COUNTRY)) {
-    shadowsocksServer.enableCountryMetrics(MMDB_LOCATION_COUNTRY);
-  }
-  if (fs.existsSync(MMDB_LOCATION_ASN)) {
-    shadowsocksServer.enableASNMetrics(MMDB_LOCATION_ASN);
-  }
+  shadowsocksServer.isCountryMetricsEnabled = true;
 
   const isReplayProtectionEnabled = createRolloutTracker(serverConfig).isRolloutEnabled(
     'replay-protection',
@@ -234,6 +231,7 @@ async function main() {
     process.env.SB_DEFAULT_SERVER_NAME || 'Outline Server',
     serverConfig,
     accessKeyRepository,
+    shadowsocksServer,
     managerMetrics,
     metricsPublisher
   );

@@ -24,31 +24,59 @@ import {ShadowsocksAccessKey, ShadowsocksServer} from '../model/shadowsocks_serv
 // Runs outline-ss-server.
 export class OutlineShadowsocksServer implements ShadowsocksServer {
   private ssProcess: child_process.ChildProcess;
-  private ipCountryFilename = '';
-  private ipASNFilename = '';
+  private isCountryMetricsEnabled_ = false;
+  private isAsnMetricsEnabled_ = false;
   private isReplayProtectionEnabled = false;
 
-  // binaryFilename is the location for the outline-ss-server binary.
-  // configFilename is the location for the outline-ss-server config.
+  /**
+   * @param binaryFilename The location for the outline-ss-server binary.
+   * @param configFilename The location for the outline-ss-server config.
+   * @param metricsLocation The location from where to serve the Prometheus data metrics.
+   * @param verbose Whether to run the server in verbose mode.
+   * @param ipCountryFilename The location of IP-to-country database file.
+   * @param ipAsnFilename The location of IP-to-ASN database file.
+   */
   constructor(
     private readonly binaryFilename: string,
     private readonly configFilename: string,
     private readonly verbose: boolean,
-    private readonly metricsLocation: string
+    private readonly metricsLocation: string,
+    private readonly ipCountryFilename?: string,
+    private readonly ipAsnFilename?: string
   ) {}
 
-  // Annotates the Prometheus data metrics with countries.
-  // ipCountryFilename is the location of the ip-country.mmdb IP-to-country database file.
-  enableCountryMetrics(ipCountryFilename: string): OutlineShadowsocksServer {
-    this.ipCountryFilename = ipCountryFilename;
-    return this;
+  // Annotates the Prometheus data metrics with countries. This restarts the
+  // server if needed.
+  get isCountryMetricsEnabled(): boolean {
+    return this.isCountryMetricsEnabled_;
   }
 
-  // Annotates the Prometheus data metrics with ASN.
-  // ipASNFilename is the location of the ip-asn.mmdb IP-to-ASN database file.
-  enableASNMetrics(ipASNFilename: string): OutlineShadowsocksServer {
-    this.ipASNFilename = ipASNFilename;
-    return this;
+  set isCountryMetricsEnabled(enable: boolean) {
+    if (enable && !this.ipCountryFilename) {
+      throw new Error('Cannot enable country metrics: no country database filename set');
+    }
+    const valueChanged = this.isAsnMetricsEnabled_ != enable;
+    this.isCountryMetricsEnabled_ = enable;
+    if (valueChanged && this.ssProcess) {
+      this.ssProcess.kill('SIGTERM');
+    }
+  }
+
+  // Annotates the Prometheus data metrics with autonomous system numbers (ASN).
+  // This restarts the server if needed.
+  get isAsnMetricsEnabled(): boolean {
+    return this.isAsnMetricsEnabled_;
+  }
+
+  set isAsnMetricsEnabled(enable: boolean) {
+    if (enable && !this.ipAsnFilename) {
+      throw new Error('Cannot enable ASN metrics: no ASN database filename set');
+    }
+    const valueChanged = this.isAsnMetricsEnabled_ != enable;
+    this.isAsnMetricsEnabled_ = enable;
+    if (valueChanged && this.ssProcess) {
+      this.ssProcess.kill('SIGTERM');
+    }
   }
 
   enableReplayProtection(): OutlineShadowsocksServer {
@@ -97,11 +125,11 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
 
   private start() {
     const commandArguments = ['-config', this.configFilename, '-metrics', this.metricsLocation];
-    if (this.ipCountryFilename) {
+    if (this.isCountryMetricsEnabled_ && this.ipCountryFilename) {
       commandArguments.push('-ip_country_db', this.ipCountryFilename);
     }
-    if (this.ipASNFilename) {
-      commandArguments.push('-ip_asn_db', this.ipASNFilename);
+    if (this.isAsnMetricsEnabled_ && this.ipAsnFilename) {
+      commandArguments.push('-ip_asn_db', this.ipAsnFilename);
     }
     if (this.verbose) {
       commandArguments.push('-verbose');
@@ -117,7 +145,7 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
     });
     this.ssProcess.on('exit', (code, signal) => {
       logging.info(`outline-ss-server has exited with error. Code: ${code}, Signal: ${signal}`);
-      logging.info(`Restarting`);
+      logging.info('Restarting');
       this.start();
     });
     // This exposes the outline-ss-server output on the docker logs.
