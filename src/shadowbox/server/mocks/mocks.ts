@@ -38,7 +38,7 @@ export class InMemoryFile implements TextFile {
 export class FakeShadowsocksServer implements ShadowsocksServer {
   private accessKeys: ShadowsocksAccessKey[] = [];
 
-  enableAsnMetrics(enable: boolean) {}
+  enableAsnMetrics(_: boolean) {}
 
   update(keys: ShadowsocksAccessKey[]) {
     this.accessKeys = keys;
