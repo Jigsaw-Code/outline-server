@@ -28,7 +28,7 @@ readonly LIBDIR="/var/lib/libmaxminddb"
 # Downloads a given MMDB database and writes it to the temporary directory.
 # @param {string} The database to download.
 download_ip_mmdb() {
-    db=$1
+    db="$1"
 
     for monthdelta in $(seq 0 9); do
         newdate="$(date --date="-${monthdelta} months" +%Y-%m)"
@@ -39,10 +39,18 @@ download_ip_mmdb() {
 }
 
 main() {
-    # We need to make sure that we grab an existing database at install-time
-    if ! { download_ip_mmdb "ip-country" && download_ip_mmdb "ip-asn"; }; then
-        # A weird exit code on purpose -- we should catch this long before it triggers
-        exit 2
+    status_code=0
+    # We need to make sure that we grab existing databases at install-time. If
+    # any fail, we continue to try to fetch other databases and will return a
+    # weird exit code at the end -- we should catch these failures long before
+    # they trigger.
+    if ! download_ip_mmdb "ip-country" ; then
+        echo "Failed to download IP-country database"
+        status_code=2
+    fi
+    if ! download_ip_mmdb "ip-asn" ; then
+        echo "Failed to download IP-ASN database"
+        status_code=2
     fi
 
     for filename in "${TMPDIR}"/*; do
@@ -52,6 +60,8 @@ main() {
     mkdir -p "${LIBDIR}"
     mv -f "${TMPDIR}"/* "${LIBDIR}"
     rmdir "${TMPDIR}"
+
+    exit "${status_code}"
 }
 
 main "$@"
