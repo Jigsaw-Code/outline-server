@@ -285,6 +285,7 @@ export class ShadowsocksManagerService {
       accessKeyDataLimit: this.serverConfig.data().accessKeyDataLimit,
       portForNewAccessKeys: this.serverConfig.data().portForNewAccessKeys,
       hostnameForAccessKeys: this.serverConfig.data().hostname,
+      experimental: this.serverConfig.data().experimental,
     });
     next();
   }
@@ -662,7 +663,12 @@ export class ShadowsocksManagerService {
           )
         );
       }
-      this.shadowsocksServer.isAsnMetricsEnabled = asnMetricsEnabled;
+      this.shadowsocksServer.enableAsnMetrics(asnMetricsEnabled);
+      if (this.serverConfig.data().experimental === undefined) {
+        this.serverConfig.data().experimental = {};
+      }
+      this.serverConfig.data().experimental.asnMetricsEnabled = asnMetricsEnabled;
+      this.serverConfig.write();
       res.send(HttpSuccess.NO_CONTENT);
       return next();
     } catch (error) {

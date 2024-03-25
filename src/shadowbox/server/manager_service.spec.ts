@@ -1070,8 +1070,11 @@ describe('ShadowsocksManagerService', () => {
   });
   describe('enableAsnMetrics', () => {
     it('Enables ASN metrics on the Shadowsocks Server', (done) => {
+      const serverConfig = new InMemoryConfig({} as ServerConfigJson);
       const shadowsocksServer = new FakeShadowsocksServer();
+      spyOn(shadowsocksServer, 'enableAsnMetrics');
       const service = new ShadowsocksManagerServiceBuilder()
+        .serverConfig(serverConfig)
         .shadowsocksServer(shadowsocksServer)
         .build();
       service.enableAsnMetrics(
@@ -1079,7 +1082,26 @@ describe('ShadowsocksManagerService', () => {
         {
           send: (httpCode, _) => {
             expect(httpCode).toEqual(204);
-            expect(shadowsocksServer.isAsnMetricsEnabled).toEqual(true);
+            expect(shadowsocksServer.enableAsnMetrics).toHaveBeenCalledWith(true);
+            responseProcessed = true;
+          },
+        },
+        done
+      );
+    });
+    it('Sets value in the config', (done) => {
+      const serverConfig = new InMemoryConfig({} as ServerConfigJson);
+      const shadowsocksServer = new FakeShadowsocksServer();
+      const service = new ShadowsocksManagerServiceBuilder()
+        .serverConfig(serverConfig)
+        .shadowsocksServer(shadowsocksServer)
+        .build();
+      service.enableAsnMetrics(
+        {params: {asnMetricsEnabled: true}},
+        {
+          send: (httpCode, _) => {
+            expect(httpCode).toEqual(204);
+            expect(serverConfig.mostRecentWrite.experimental.asnMetricsEnabled).toBeTrue();
             responseProcessed = true;
           },
         },

@@ -154,11 +154,17 @@ async function main() {
     getBinaryFilename('outline-ss-server'),
     getPersistentFilename('outline-ss-server/config.yml'),
     verbose,
-    ssMetricsLocation,
-    fs.existsSync(MMDB_LOCATION_COUNTRY) ? MMDB_LOCATION_COUNTRY : undefined,
-    fs.existsSync(MMDB_LOCATION_ASN) ? MMDB_LOCATION_ASN : undefined
+    ssMetricsLocation
   );
-  shadowsocksServer.isCountryMetricsEnabled = true;
+  if (fs.existsSync(MMDB_LOCATION_COUNTRY)) {
+    shadowsocksServer.configureCountryMetrics(MMDB_LOCATION_COUNTRY);
+  }
+  if (fs.existsSync(MMDB_LOCATION_ASN)) {
+    shadowsocksServer.configureAsnMetrics(MMDB_LOCATION_ASN);
+    if (serverConfig.data().experimental?.asnMetricsEnabled) {
+      shadowsocksServer.enableAsnMetrics(true);
+    }
+  }
 
   const isReplayProtectionEnabled = createRolloutTracker(serverConfig).isRolloutEnabled(
     'replay-protection',

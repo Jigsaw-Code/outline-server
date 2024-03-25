@@ -24,56 +24,49 @@ import {ShadowsocksAccessKey, ShadowsocksServer} from '../model/shadowsocks_serv
 // Runs outline-ss-server.
 export class OutlineShadowsocksServer implements ShadowsocksServer {
   private ssProcess: child_process.ChildProcess;
-  private isCountryMetricsEnabled_ = false;
-  private isAsnMetricsEnabled_ = false;
+  private ipCountryFilename?: string;
+  private ipAsnFilename?: string;
+  private isAsnMetricsEnabled = false;
   private isReplayProtectionEnabled = false;
 
   /**
    * @param binaryFilename The location for the outline-ss-server binary.
    * @param configFilename The location for the outline-ss-server config.
-   * @param metricsLocation The location from where to serve the Prometheus data metrics.
    * @param verbose Whether to run the server in verbose mode.
-   * @param ipCountryFilename The location of IP-to-country database file.
-   * @param ipAsnFilename The location of IP-to-ASN database file.
+   * @param metricsLocation The location from where to serve the Prometheus data metrics.
    */
   constructor(
     private readonly binaryFilename: string,
     private readonly configFilename: string,
     private readonly verbose: boolean,
-    private readonly metricsLocation: string,
-    private readonly ipCountryFilename?: string,
-    private readonly ipAsnFilename?: string
+    private readonly metricsLocation: string
   ) {}
 
-  // Annotates the Prometheus data metrics with countries. This restarts the
-  // server if needed.
-  get isCountryMetricsEnabled(): boolean {
-    return this.isCountryMetricsEnabled_;
+  /**
+   * Configures the Shadowsocks Server with country data to annotate Prometheus data metrics.
+   * @param ipCountryFilename The location of the ip-country.mmdb IP-to-country database file.
+   */
+  configureCountryMetrics(ipCountryFilename: string): OutlineShadowsocksServer {
+    this.ipCountryFilename = ipCountryFilename;
+    return this;
   }
 
-  set isCountryMetricsEnabled(enable: boolean) {
-    if (enable && !this.ipCountryFilename) {
-      throw new Error('Cannot enable country metrics: no country database filename set');
-    }
-    const valueChanged = this.isAsnMetricsEnabled_ != enable;
-    this.isCountryMetricsEnabled_ = enable;
-    if (valueChanged && this.ssProcess) {
-      this.ssProcess.kill('SIGTERM');
-    }
+  /**
+   * Configures the Shadowsocks Server with ASN data to annotate Prometheus data metrics.
+   * @param ipAsnFilename The location  of the ip-asn.mmdb IP-to-ASN database file.
+   */
+  configureAsnMetrics(ipAsnFilename: string): OutlineShadowsocksServer {
+    this.ipAsnFilename = ipAsnFilename;
+    return this;
   }
 
-  // Annotates the Prometheus data metrics with autonomous system numbers (ASN).
-  // This restarts the server if needed.
-  get isAsnMetricsEnabled(): boolean {
-    return this.isAsnMetricsEnabled_;
-  }
-
-  set isAsnMetricsEnabled(enable: boolean) {
+  /** Annotates the Prometheus data metrics with ASN. */
+  enableAsnMetrics(enable: boolean) {
     if (enable && !this.ipAsnFilename) {
       throw new Error('Cannot enable ASN metrics: no ASN database filename set');
     }
-    const valueChanged = this.isAsnMetricsEnabled_ != enable;
-    this.isAsnMetricsEnabled_ = enable;
+    const valueChanged = this.isAsnMetricsEnabled != enable;
+    this.isAsnMetricsEnabled = enable;
     if (valueChanged && this.ssProcess) {
       this.ssProcess.kill('SIGTERM');
     }
@@ -125,10 +118,10 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
 
   private start() {
     const commandArguments = ['-config', this.configFilename, '-metrics', this.metricsLocation];
-    if (this.isCountryMetricsEnabled_ && this.ipCountryFilename) {
+    if (this.ipCountryFilename) {
       commandArguments.push('-ip_country_db', this.ipCountryFilename);
     }
-    if (this.isAsnMetricsEnabled_ && this.ipAsnFilename) {
+    if (this.isAsnMetricsEnabled && this.ipAsnFilename) {
       commandArguments.push('-ip_asn_db', this.ipAsnFilename);
     }
     if (this.verbose) {

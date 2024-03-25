@@ -21,10 +21,9 @@ export interface ShadowsocksAccessKey {
 }
 
 export interface ShadowsocksServer {
-  // Annotates the Prometheus data metrics with countries.
-  isCountryMetricsEnabled: boolean;
   // Annotates the Prometheus data metrics with ASN.
-  isAsnMetricsEnabled: boolean;
+  enableAsnMetrics(enable: boolean);
+
   // Updates the server to accept only the given access keys.
   update(keys: ShadowsocksAccessKey[]): Promise<void>;
 }
