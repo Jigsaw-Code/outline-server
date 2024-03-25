@@ -27,6 +27,7 @@ import * as version from './version';
 import {ManagerMetrics} from './manager_metrics';
 import {ServerConfigJson} from './server_config';
 import {SharedMetricsPublisher} from './shared_metrics';
+import {ShadowsocksServer} from '../model/shadowsocks_server';
 
 interface AccessKeyJson {
   // The unique identifier of this access key.
@@ -158,6 +159,13 @@ export function bindService(
   apiServer.get(`${apiPrefix}/metrics/enabled`, service.getShareMetrics.bind(service));
   apiServer.put(`${apiPrefix}/metrics/enabled`, service.setShareMetrics.bind(service));
 
+  // Experimental APIs.
+
+  apiServer.put(
+    `${apiPrefix}/experimental/asn-metrics/enabled`,
+    service.enableAsnMetrics.bind(service)
+  );
+
   // Redirect former experimental APIs
   apiServer.put(
     `${apiPrefix}/experimental/access-key-data-limit`,
@@ -240,6 +248,7 @@ export class ShadowsocksManagerService {
     private defaultServerName: string,
     private serverConfig: JsonConfig<ServerConfigJson>,
     private accessKeys: AccessKeyRepository,
+    private shadowsocksServer: ShadowsocksServer,
     private managerMetrics: ManagerMetrics,
     private metricsPublisher: SharedMetricsPublisher
   ) {}
@@ -276,6 +285,7 @@ export class ShadowsocksManagerService {
       accessKeyDataLimit: this.serverConfig.data().accessKeyDataLimit,
       portForNewAccessKeys: this.serverConfig.data().portForNewAccessKeys,
       hostnameForAccessKeys: this.serverConfig.data().hostname,
+      experimental: this.serverConfig.data().experimental,
     });
     next();
   }
@@ -621,7 +631,7 @@ export class ShadowsocksManagerService {
       return next(
         new restifyErrors.InvalidArgumentError(
           {statusCode: 400},
-          'Parameter `hours` must be an integer'
+          'Parameter `metricsEnabled` must be a boolean'
         )
       );
     }
@@ -632,5 +642,38 @@ export class ShadowsocksManagerService {
     }
     res.send(HttpSuccess.NO_CONTENT);
     next();
+  }
+
+  public enableAsnMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
+    try {
+      logging.debug(`enableAsnMetrics request ${JSON.stringify(req.params)}`);
+      const asnMetricsEnabled = req.params.asnMetricsEnabled;
+      if (asnMetricsEnabled === undefined || asnMetricsEnabled === null) {
+        return next(
+          new restifyErrors.MissingParameterError(
+            {statusCode: 400},
+            'Parameter `asnMetricsEnabled` is missing'
+          )
+        );
+      } else if (typeof asnMetricsEnabled !== 'boolean') {
+        return next(
+          new restifyErrors.InvalidArgumentError(
+            {statusCode: 400},
+            'Parameter `asnMetricsEnabled` must be a boolean'
+          )
+        );
+      }
+      this.shadowsocksServer.enableAsnMetrics(asnMetricsEnabled);
+      if (this.serverConfig.data().experimental === undefined) {
+        this.serverConfig.data().experimental = {};
+      }
+      this.serverConfig.data().experimental.asnMetricsEnabled = asnMetricsEnabled;
+      this.serverConfig.write();
+      res.send(HttpSuccess.NO_CONTENT);
+      return next();
+    } catch (error) {
+      logging.error(error);
+      return next(new restifyErrors.InternalServerError());
+    }
   }
 }
