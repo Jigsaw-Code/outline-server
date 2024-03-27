@@ -207,7 +207,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: The id to get the access key
+          description: The id for which to create an access key
           schema:
             type: string
       requestBody:
