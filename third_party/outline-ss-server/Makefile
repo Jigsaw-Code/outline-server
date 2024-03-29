@@ -1,19 +1,19 @@
-VERSION=1.5.0-beta.2
+VERSION=1.5.0
 
 .PHONY: all
 all: bin/linux-x86_64/outline-ss-server bin/linux-arm64/outline-ss-server bin/macos-x86_64/outline-ss-server bin/macos-arm64/outline-ss-server
 
 bin/linux-x86_64/outline-ss-server: OS=linux
-bin/linux-x86_64/outline-ss-server: SHA256=4a720d8febb3d9cadfc175f31028ff2f22a2001ebeeeee269ec9ce302aff6d61
+bin/linux-x86_64/outline-ss-server: SHA256=0c6439242afbea191281404f08ef33490b01d6d0413ccca00004c8a1927de49a
 
 bin/linux-arm64/outline-ss-server: OS=linux
-bin/linux-arm64/outline-ss-server: SHA256=769fe32f43e45d990cd65374ed73db00fc8fff6bc356e1b4c62074900e54ddc6
+bin/linux-arm64/outline-ss-server: SHA256=a643b28c2a894af6ceb1d309bf742092719877ede85ead6e8cbbc7b64b35a7ab
 
 bin/macos-x86_64/outline-ss-server: OS=macos
-bin/macos-x86_64/outline-ss-server: SHA256=9c8f89394c7f0bc7043c456501655443c57364406ba09f69f74bf913980ebec5
+bin/macos-x86_64/outline-ss-server: SHA256=f4b034f74701e9dae52bc7c8660e875f81473ef6d535a1470967e887f5beb9c6
 
 bin/macos-arm64/outline-ss-server: OS=macos
-bin/macos-arm64/outline-ss-server: SHA256=8f77803e3dc8c95c2120545b64bc3060ba45bdfa3c09fc5b2536baa9a0840461
+bin/macos-arm64/outline-ss-server: SHA256=1f1d1833935ba363a8c468cd61e90d42de7f16e7332346b3c80f389c914192d3
 
 TEMPFILE := $(shell mktemp)
 bin/%/outline-ss-server:
