@@ -43,7 +43,8 @@ import {
 
 const APP_BASE_DIR = path.join(__dirname, '..');
 const DEFAULT_STATE_DIR = '/root/shadowbox/persisted-state';
-const MMDB_LOCATION = '/var/lib/libmaxminddb/ip-country.mmdb';
+const MMDB_LOCATION_COUNTRY = '/var/lib/libmaxminddb/ip-country.mmdb';
+const MMDB_LOCATION_ASN = '/var/lib/libmaxminddb/ip-asn.mmdb';
 
 async function exportPrometheusMetrics(registry: prometheus.Registry, port): Promise<http.Server> {
   return new Promise<http.Server>((resolve, _) => {
@@ -155,8 +156,14 @@ async function main() {
     verbose,
     ssMetricsLocation
   );
-  if (fs.existsSync(MMDB_LOCATION)) {
-    shadowsocksServer.enableCountryMetrics(MMDB_LOCATION);
+  if (fs.existsSync(MMDB_LOCATION_COUNTRY)) {
+    shadowsocksServer.configureCountryMetrics(MMDB_LOCATION_COUNTRY);
+  }
+  if (fs.existsSync(MMDB_LOCATION_ASN)) {
+    shadowsocksServer.configureAsnMetrics(MMDB_LOCATION_ASN);
+    if (serverConfig.data().experimental?.asnMetricsEnabled) {
+      shadowsocksServer.enableAsnMetrics(true);
+    }
   }
 
   const isReplayProtectionEnabled = createRolloutTracker(serverConfig).isRolloutEnabled(
@@ -230,6 +237,7 @@ async function main() {
     process.env.SB_DEFAULT_SERVER_NAME || 'Outline Server',
     serverConfig,
     accessKeyRepository,
+    shadowsocksServer,
     managerMetrics,
     metricsPublisher
   );

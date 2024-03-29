@@ -24,6 +24,7 @@ import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
 import {ServerConfigJson} from './server_config';
 import {SharedMetricsPublisher} from './shared_metrics';
+import {ShadowsocksServer} from '../model/shadowsocks_server';
 
 interface ServerInfo {
   name: string;
@@ -1067,6 +1068,47 @@ describe('ShadowsocksManagerService', () => {
       );
     });
   });
+  describe('enableAsnMetrics', () => {
+    it('Enables ASN metrics on the Shadowsocks Server', (done) => {
+      const serverConfig = new InMemoryConfig({} as ServerConfigJson);
+      const shadowsocksServer = new FakeShadowsocksServer();
+      spyOn(shadowsocksServer, 'enableAsnMetrics');
+      const service = new ShadowsocksManagerServiceBuilder()
+        .serverConfig(serverConfig)
+        .shadowsocksServer(shadowsocksServer)
+        .build();
+      service.enableAsnMetrics(
+        {params: {asnMetricsEnabled: true}},
+        {
+          send: (httpCode, _) => {
+            expect(httpCode).toEqual(204);
+            expect(shadowsocksServer.enableAsnMetrics).toHaveBeenCalledWith(true);
+            responseProcessed = true;
+          },
+        },
+        done
+      );
+    });
+    it('Sets value in the config', (done) => {
+      const serverConfig = new InMemoryConfig({} as ServerConfigJson);
+      const shadowsocksServer = new FakeShadowsocksServer();
+      const service = new ShadowsocksManagerServiceBuilder()
+        .serverConfig(serverConfig)
+        .shadowsocksServer(shadowsocksServer)
+        .build();
+      service.enableAsnMetrics(
+        {params: {asnMetricsEnabled: true}},
+        {
+          send: (httpCode, _) => {
+            expect(httpCode).toEqual(204);
+            expect(serverConfig.mostRecentWrite.experimental.asnMetricsEnabled).toBeTrue();
+            responseProcessed = true;
+          },
+        },
+        done
+      );
+    });
+  });
 });
 
 describe('bindService', () => {
@@ -1194,6 +1236,7 @@ class ShadowsocksManagerServiceBuilder {
   private defaultServerName_ = 'default name';
   private serverConfig_: JsonConfig<ServerConfigJson> = null;
   private accessKeys_: AccessKeyRepository = null;
+  private shadowsocksServer_: ShadowsocksServer = null;
   private managerMetrics_: ManagerMetrics = null;
   private metricsPublisher_: SharedMetricsPublisher = null;
 
@@ -1212,6 +1255,11 @@ class ShadowsocksManagerServiceBuilder {
     return this;
   }
 
+  shadowsocksServer(server: ShadowsocksServer) {
+    this.shadowsocksServer_ = server;
+    return this;
+  }
+
   managerMetrics(metrics: ManagerMetrics): ShadowsocksManagerServiceBuilder {
     this.managerMetrics_ = metrics;
     return this;
@@ -1227,6 +1275,7 @@ class ShadowsocksManagerServiceBuilder {
       this.defaultServerName_,
       this.serverConfig_,
       this.accessKeys_,
+      this.shadowsocksServer_,
       this.managerMetrics_,
       this.metricsPublisher_
     );

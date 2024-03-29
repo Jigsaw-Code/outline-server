@@ -37,6 +37,12 @@ export interface ServerConfigJson {
   hostname?: string;
   // Default data transfer limit applied to all access keys.
   accessKeyDataLimit?: DataLimit;
+
+  // Experimental configuration options that are expected to be short-lived.
+  experimental?: {
+    // Whether ASN metric annotation for Prometheus is enabled.
+    asnMetricsEnabled?: boolean;
+  };
 }
 
 // Serialized format for rollouts.
