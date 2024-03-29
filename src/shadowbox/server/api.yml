@@ -205,6 +205,13 @@ paths:
       description: Creates a new access key with a specific identifer
       tags:
         - Access Key
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id for which to create an access key
+          schema:
+            type: string
       requestBody:
         required: false
         content:
