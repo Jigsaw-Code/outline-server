@@ -18,6 +18,21 @@ import {
   postConnectionMetrics,
 } from './connection_metrics';
 import {InsertableTable} from './infrastructure/table';
+import {HourlyConnectionMetricsReport, HourlyUserConnectionMetricsReport} from './model';
+
+const VALID_USER_REPORT = {
+  userId: 'uid0',
+  countries: ['US', 'UK'],
+  bytesTransferred: 123,
+  tunnelTimeMs: 789,
+};
+
+const VALID_REPORT: HourlyConnectionMetricsReport = {
+  serverId: 'id',
+  startUtcMs: 1,
+  endUtcMs: 2,
+  userReports: [structuredClone(VALID_USER_REPORT)],
+};
 
 class FakeConnectionsTable implements InsertableTable<ConnectionRow> {
   public rows: ConnectionRow[] | undefined;
@@ -35,21 +50,25 @@ describe('postConnectionMetrics', () => {
         userId: 'uid0',
         countries: ['US', 'UK'],
         bytesTransferred: 123,
+        tunnelTimeMs: 987,
       },
       {
         userId: 'uid1',
         countries: ['EC'],
         bytesTransferred: 456,
+        tunnelTimeMs: 654,
       },
       {
         userId: '',
         countries: ['BR'],
         bytesTransferred: 789,
+        tunnelTimeMs: 321,
       },
       {
         userId: 'uid1',
         countries: [],
         bytesTransferred: 555,
+        tunnelTimeMs: 444,
       },
     ];
     const report = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports};
@@ -61,6 +80,7 @@ describe('postConnectionMetrics', () => {
         endTimestamp: new Date(report.endUtcMs).toISOString(),
         userId: userReports[0].userId,
         bytesTransferred: userReports[0].bytesTransferred,
+        tunnelTimeMs: userReports[0].tunnelTimeMs,
         countries: userReports[0].countries,
       },
       {
@@ -69,6 +89,7 @@ describe('postConnectionMetrics', () => {
         endTimestamp: new Date(report.endUtcMs).toISOString(),
         userId: userReports[1].userId,
         bytesTransferred: userReports[1].bytesTransferred,
+        tunnelTimeMs: userReports[1].tunnelTimeMs,
         countries: userReports[1].countries,
       },
       {
@@ -77,6 +98,7 @@ describe('postConnectionMetrics', () => {
         endTimestamp: new Date(report.endUtcMs).toISOString(),
         userId: undefined,
         bytesTransferred: userReports[2].bytesTransferred,
+        tunnelTimeMs: userReports[2].tunnelTimeMs,
         countries: userReports[2].countries,
       },
       {
@@ -85,6 +107,7 @@ describe('postConnectionMetrics', () => {
         endTimestamp: new Date(report.endUtcMs).toISOString(),
         userId: userReports[3].userId,
         bytesTransferred: userReports[3].bytesTransferred,
+        tunnelTimeMs: userReports[3].tunnelTimeMs,
         countries: userReports[3].countries,
       },
     ];
@@ -95,183 +118,126 @@ describe('postConnectionMetrics', () => {
 describe('isValidConnectionMetricsReport', () => {
   it('returns true for valid report', () => {
     const userReports = [
-      {userId: 'uid0', countries: ['AA'], bytesTransferred: 111},
-      {userId: 'uid1', bytesTransferred: 222},
-      {userId: 'uid2', countries: [], bytesTransferred: 333},
-      {countries: ['BB'], bytesTransferred: 444},
-      {userId: '', countries: ['CC'], bytesTransferred: 555},
+      {userId: 'uid0', countries: ['AA'], bytesTransferred: 111, tunnelTimeMs: 1},
+      {userId: 'uid1', bytesTransferred: 222, tunnelTimeMs: 2},
+      {userId: 'uid2', countries: [], bytesTransferred: 333, tunnelTimeMs: 3},
+      {countries: ['BB'], bytesTransferred: 444, tunnelTimeMs: 4},
+      {userId: '', countries: ['CC'], bytesTransferred: 555, tunnelTimeMs: 5},
     ];
     const report = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports};
     expect(isValidConnectionMetricsReport(report)).toBeTruthy();
   });
   it('returns false for missing report', () => {
-    expect(isValidConnectionMetricsReport(undefined)).toBeFalsy();
+    expect(isValidConnectionMetricsReport(undefined)).toBeFalse();
   });
   it('returns false for inconsistent timestamp values', () => {
-    const userReports = [
-      {userId: 'uid0', countries: ['US', 'UK'], bytesTransferred: 123},
-      {userId: 'uid1', countries: ['EC'], bytesTransferred: 456},
-    ];
-    const invalidReport = {
-      serverId: 'id',
-      startUtcMs: 999, // startUtcMs > endUtcMs
-      endUtcMs: 1,
-      userReports,
-    };
-    expect(isValidConnectionMetricsReport(invalidReport)).toBeFalsy();
+    const report = structuredClone(VALID_REPORT);
+    // startUtcMs > endUtcMs
+    report.startUtcMs = 999;
+    report.endUtcMs = 1;
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
   it('returns false for out-of-bounds transferred bytes', () => {
-    const userReports = [
-      {
-        userId: 'uid0',
-        countries: ['US', 'UK'],
-        bytesTransferred: -123, // Should not be negative
-      },
-      {userId: 'uid1', countries: ['EC'], bytesTransferred: 456},
-    ];
-    const invalidReport = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports};
-    expect(isValidConnectionMetricsReport(invalidReport)).toBeFalsy();
+    const report = structuredClone(VALID_REPORT);
+    report.userReports[0].bytesTransferred = -123;
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
 
-    const userReports2 = [
-      {userId: 'uid0', countries: ['US', 'UK'], bytesTransferred: 123},
-      {
-        userId: 'uid1',
-        countries: ['EC'],
-        bytesTransferred: 2 * Math.pow(2, 40), // 2TB is above the server capacity
-      },
-    ];
-    const invalidReport2 = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports: userReports2};
-    expect(isValidConnectionMetricsReport(invalidReport2)).toBeFalsy();
+    // 2TB is above the server capacity
+    report.userReports[0].bytesTransferred = 2 * Math.pow(2, 40);
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
-  it('returns false for missing report fields', () => {
-    const invalidReport = {
-      // Missing `userReports`
-      serverId: 'id',
-      startUtcMs: 1,
-      endUtcMs: 2,
-    };
-    expect(isValidConnectionMetricsReport(invalidReport)).toBeFalsy();
-
-    const invalidReport2 = {
-      serverId: 'id',
-      startUtcMs: 1,
-      endUtcMs: 2,
-      userReports: [], // Should not be empty
-    };
-    expect(isValidConnectionMetricsReport(invalidReport2)).toBeFalsy();
-
-    const userReports = [
-      {userId: 'uid0', countries: ['US', 'UK'], bytesTransferred: 123},
-      {userId: 'uid1', countries: ['EC'], bytesTransferred: 456},
-    ];
-    const invalidReport3 = {
-      // Missing `serverId`
-      startUtcMs: 1,
-      endUtcMs: 2,
-      userReports,
-    };
-    expect(isValidConnectionMetricsReport(invalidReport3)).toBeFalsy();
-
-    const invalidReport4 = {
-      // Missing `startUtcMs`
-      serverId: 'id',
-      endUtcMs: 2,
-      userReports,
-    };
-    expect(isValidConnectionMetricsReport(invalidReport4)).toBeFalsy();
-
-    const invalidReport5 = {
-      // Missing `endUtcMs`
-      serverId: 'id',
-      startUtcMs: 2,
-      userReports,
-    };
-    expect(isValidConnectionMetricsReport(invalidReport5)).toBeFalsy();
+  it('returns false for out-of-bounds tunnel time', () => {
+    const report = structuredClone(VALID_REPORT);
+    report.userReports[0].tunnelTimeMs = -123;
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
-  it('returns false for missing user report fields', () => {
-    const invalidReport1 = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports: [
-      {
-        // Missing `userId` and `countries`
-        bytesTransferred: 123,
-      },
-    ]};
-    expect(isValidConnectionMetricsReport(invalidReport1)).toBeFalsy();
-
-    const invalidReport2 = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports: {
-      // Missing `bytesTransferred`
-      userId: 'uid0',
-      countries: ['US', 'UK'],
-    }};
-    expect(isValidConnectionMetricsReport(invalidReport2)).toBeFalsy();
+  it('returns false for missing user reports', () => {
+    const report: Partial<HourlyConnectionMetricsReport> = structuredClone(VALID_REPORT);
+    delete report['userReports'];
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
-  it('returns false for incorrect report field types', () => {
-    const invalidReport = {
-      serverId: 'id',
-      startUtcMs: 1,
-      endUtcMs: 2,
-      userReports: [1, 2, 3], // Should be `HourlyUserConnectionMetricsReport[]`
-    };
-    expect(isValidConnectionMetricsReport(invalidReport)).toBeFalsy();
-
-    const userReports = [
-      {userId: 'uid0', countries: ['US', 'UK'], bytesTransferred: 123},
-      {userId: 'uid1', countries: ['EC'], bytesTransferred: 456},
-    ];
-    const invalidReport2 = {
-      serverId: 987, // Should be a string
-      startUtcMs: 1,
-      endUtcMs: 2,
-      userReports,
-    };
-    expect(isValidConnectionMetricsReport(invalidReport2)).toBeFalsy();
-
-    const invalidReport3 = {
-      serverId: 'id',
-      startUtcMs: '100', // Should be a number
-      endUtcMs: 200,
-      userReports,
-    };
-    expect(isValidConnectionMetricsReport(invalidReport3)).toBeFalsy();
-
-    const invalidReport4 = {
-      // Missing `startUtcMs`
-      serverId: 'id',
-      startUtcMs: 1,
-      endUtcMs: '200', // Should be a number
-      userReports,
-    };
-    expect(isValidConnectionMetricsReport(invalidReport4)).toBeFalsy();
+  it('returns false for empty user reports', () => {
+    const report = structuredClone(VALID_REPORT);
+    report.userReports = [];
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
-  it('returns false for incorrect user report field types ', () => {
-    const userReports = [
-      {
-        userId: 1234, // Should be a string
-        countries: ['US', 'UK'],
-        bytesTransferred: 123,
-      },
-      {userId: 'uid1', countries: ['EC'], bytesTransferred: 456},
-    ];
-    const invalidReport = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports};
-    expect(isValidConnectionMetricsReport(invalidReport)).toBeFalsy();
-
-    const userReports2 = [
-      {
-        userId: 'uid0',
-        countries: [1, 2, 3], // Should be string[]
-        bytesTransferred: 123,
-      },
-    ];
-    const invalidReport2 = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports: userReports2};
-    expect(isValidConnectionMetricsReport(invalidReport2)).toBeFalsy();
-
-    const userReports3 = [
-      {
-        userId: 'uid0',
-        countries: ['US', 'UK'],
-        bytesTransferred: '1234', // Should be a number
-      },
-    ];
-    const invalidReport3 = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports: userReports3};
-    expect(isValidConnectionMetricsReport(invalidReport3)).toBeFalsy();
+  it('returns false for missing `serverId`', () => {
+    const report: Partial<HourlyConnectionMetricsReport> = structuredClone(VALID_REPORT);
+    delete report['serverId'];
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
+  });
+  it('returns false for missing `startUtcMs`', () => {
+    const report: Partial<HourlyConnectionMetricsReport> = structuredClone(VALID_REPORT);
+    delete report['startUtcMs'];
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
+  });
+  it('returns false for missing `endUtcMs`', () => {
+    const report: Partial<HourlyConnectionMetricsReport> = structuredClone(VALID_REPORT);
+    delete report['endUtcMs'];
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
+  });
+  it('returns false for user report missing both `userId` and `countries`', () => {
+    const userReport: Partial<HourlyUserConnectionMetricsReport> =
+      structuredClone(VALID_USER_REPORT);
+    delete userReport['userId'];
+    delete userReport['countries'];
+    const report = structuredClone(VALID_REPORT);
+    report.userReports[0] = userReport as HourlyUserConnectionMetricsReport;
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
+  });
+  it('returns false for missing user report field `bytesTransferred`', () => {
+    const report = structuredClone(VALID_REPORT);
+    const userReport: Partial<HourlyUserConnectionMetricsReport> =
+      structuredClone(VALID_USER_REPORT);
+    delete userReport['bytesTransferred'];
+    report.userReports[0] = userReport as HourlyUserConnectionMetricsReport;
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
+  });
+  it('returns false for missing user report field `tunnelTimeMs`', () => {
+    const userReport: Partial<HourlyUserConnectionMetricsReport> = VALID_USER_REPORT;
+    delete userReport['tunnelTimeMs'];
+    const report = structuredClone(VALID_REPORT);
+    report.userReports[0] = userReport as HourlyUserConnectionMetricsReport;
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
+  });
+  it('returns false for incorrect user report field type', () => {
+    const report = structuredClone(VALID_REPORT);
+    report.userReports = [1, 2, 3] as unknown as HourlyUserConnectionMetricsReport[];
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
+  });
+  it('returns false for incorrect `serverId` field type', () => {
+    const report = structuredClone(VALID_REPORT);
+    report.serverId = 987 as unknown as string;
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
+  });
+  it('returns false for incorrect `startUtcMs` field type', () => {
+    const report = structuredClone(VALID_REPORT);
+    report.startUtcMs = '100' as unknown as number;
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
+  });
+  it('returns false for incorrect `endUtcMs` field type', () => {
+    const report = structuredClone(VALID_REPORT);
+    report.endUtcMs = '100' as unknown as number;
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
+  });
+  it('returns false for incorrect `userId` field type', () => {
+    const report = structuredClone(VALID_REPORT);
+    report.userReports[0].userId = 1234 as unknown as string;
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
+  });
+  it('returns false for incorrect `countries` field type', () => {
+    const report = structuredClone(VALID_REPORT);
+    report.userReports[0].countries = [1, 2, 3] as unknown as string[];
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
+  });
+  it('returns false for incorrect `bytesTransferred` field type', () => {
+    const report = structuredClone(VALID_REPORT);
+    report.userReports[0].bytesTransferred = '1234' as unknown as number;
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
+  });
+  it('returns false for incorrect `tunnelTimeMs` field type', () => {
+    const report = structuredClone(VALID_REPORT);
+    report.userReports[0].tunnelTimeMs = '789' as unknown as number;
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
 });
