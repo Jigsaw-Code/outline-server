@@ -32,7 +32,7 @@ readonly FEATURES_REQUEST="${TMPDIR}/features_req.json"
 readonly FEATURES_RESPONSE="${TMPDIR}/features_res.json"
 readonly FEATURES_EXPECTED_RESPONSE="${TMPDIR}/features_expected_res.json"
 
-TIMESTAMP="$(gdate +%s%3N)"
+TIMESTAMP="$(date +%s%3N)"
 SERVER_ID="$(uuidgen)"
 SERVER_VERSION="$(uuidgen)"
 USER_ID1="$(uuidgen)"
@@ -90,7 +90,7 @@ cat << EOF > "${CONNECTIONS_EXPECTED_RESPONSE}"
       "NL"
     ],
     "serverId": "${SERVER_ID}",
-    "tunnelTimeMs": null,
+    "tunnelTimeMs": "${TUNNEL_TIME1}",
     "userId": "${USER_ID1}"
   },
   {
@@ -99,7 +99,7 @@ cat << EOF > "${CONNECTIONS_EXPECTED_RESPONSE}"
       "UK"
     ],
     "serverId": "${SERVER_ID}",
-    "tunnelTimeMs": null,
+    "tunnelTimeMs": "${TUNNEL_TIME2}",
     "userId": "${USER_ID2}"
   }
 ]
