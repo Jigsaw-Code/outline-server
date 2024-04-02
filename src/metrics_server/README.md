@@ -23,6 +23,7 @@ The metrics server supports two URL paths:
         userId: string,
         countries: string[],
         bytesTransferred: number,
+        tunnelTimeMs: number,
     }]
   }
   ```

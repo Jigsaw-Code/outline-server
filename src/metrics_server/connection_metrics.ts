@@ -22,6 +22,7 @@ export interface ConnectionRow {
   endTimestamp: string; // ISO formatted string.
   userId?: string;
   bytesTransferred: number;
+  tunnelTimeMs: number;
   countries?: string[];
 }
 
@@ -51,6 +52,7 @@ function getConnectionRowsFromReport(report: HourlyConnectionMetricsReport): Con
       endTimestamp: endTimestampStr,
       userId: userReport.userId || undefined,
       bytesTransferred: userReport.bytesTransferred,
+      tunnelTimeMs: userReport.tunnelTimeMs,
       countries: userReport.countries || [],
     });
   }
@@ -95,6 +97,7 @@ export function isValidConnectionMetricsReport(
 
   const MIN_BYTES_TRANSFERRED = 0;
   const MAX_BYTES_TRANSFERRED = 1 * Math.pow(2, 40); // 1 TB.
+  const MIN_TUNNEL_TIME = 0;
   for (const userReport of testObject.userReports) {
     // We require at least the userId or the country to be set.
     if (!userReport.userId && (userReport.countries?.length ?? 0) === 0) {
@@ -111,6 +114,11 @@ export function isValidConnectionMetricsReport(
       userReport.bytesTransferred < MIN_BYTES_TRANSFERRED ||
       userReport.bytesTransferred > MAX_BYTES_TRANSFERRED
     ) {
+      return false;
+    }
+
+    // Check that `tunnelTime` is a number larger than min tunnel time.
+    if (typeof userReport.tunnelTimeMs !== 'number' || userReport.tunnelTimeMs < MIN_TUNNEL_TIME) {
       return false;
     }
 
