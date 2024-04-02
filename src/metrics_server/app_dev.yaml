@@ -1,4 +1,4 @@
-runtime: nodejs16
+runtime: nodejs18
 service: dev
 handlers:
 - url: /.*
