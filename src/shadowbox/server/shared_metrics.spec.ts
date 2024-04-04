@@ -23,7 +23,6 @@ import {
   CountryUsage,
   DailyFeatureMetricsReportJson,
   HourlyServerMetricsReportJson,
-  KeyUsage,
   MetricsCollectorClient,
   OutlineSharedMetricsPublisher,
   UsageMetrics,
@@ -83,11 +82,6 @@ describe('OutlineSharedMetricsPublisher', () => {
       );
 
       publisher.startSharing();
-      usageMetrics.keyUsage = [
-        {accessKeyId: 'user-0', inboundBytes: 11},
-        {accessKeyId: 'user-1', inboundBytes: 22},
-        {accessKeyId: 'user-0', inboundBytes: 33},
-      ];
       usageMetrics.countryUsage = [
         {country: 'AA', inboundBytes: 11},
         {country: 'BB', inboundBytes: 11},
@@ -103,9 +97,6 @@ describe('OutlineSharedMetricsPublisher', () => {
         startUtcMs: startTime,
         endUtcMs: clock.nowMs,
         userReports: [
-          {userId: 'M(user-0)', bytesTransferred: 11},
-          {userId: 'M(user-1)', bytesTransferred: 22},
-          {userId: 'M(user-0)', bytesTransferred: 33},
           {bytesTransferred: 11, countries: ['AA']},
           {bytesTransferred: 11, countries: ['BB']},
           {bytesTransferred: 22, countries: ['CC']},
@@ -115,10 +106,6 @@ describe('OutlineSharedMetricsPublisher', () => {
       });
 
       startTime = clock.nowMs;
-      usageMetrics.keyUsage = [
-        {accessKeyId: 'user-0', inboundBytes: 44},
-        {accessKeyId: 'user-2', inboundBytes: 55},
-      ];
       usageMetrics.countryUsage = [
         {country: 'EE', inboundBytes: 44},
         {country: 'FF', inboundBytes: 55},
@@ -131,8 +118,6 @@ describe('OutlineSharedMetricsPublisher', () => {
         startUtcMs: startTime,
         endUtcMs: clock.nowMs,
         userReports: [
-          {userId: 'M(user-0)', bytesTransferred: 44},
-          {userId: 'M(user-2)', bytesTransferred: 55},
           {bytesTransferred: 44, countries: ['EE']},
           {bytesTransferred: 55, countries: ['FF']},
         ],
@@ -157,11 +142,6 @@ describe('OutlineSharedMetricsPublisher', () => {
       );
 
       publisher.startSharing();
-      usageMetrics.keyUsage = [
-        {accessKeyId: 'user-0', inboundBytes: 11},
-        {accessKeyId: 'user-1', inboundBytes: 22},
-        {accessKeyId: 'user-0', inboundBytes: 33},
-      ];
       usageMetrics.countryUsage = [
         {country: 'AA', inboundBytes: 11},
         {country: 'SY', inboundBytes: 11},
@@ -177,9 +157,6 @@ describe('OutlineSharedMetricsPublisher', () => {
         startUtcMs: startTime,
         endUtcMs: clock.nowMs,
         userReports: [
-          {userId: 'M(user-0)', bytesTransferred: 11},
-          {userId: 'M(user-1)', bytesTransferred: 22},
-          {userId: 'M(user-0)', bytesTransferred: 33},
           {bytesTransferred: 11, countries: ['AA']},
           {bytesTransferred: 22, countries: ['CC']},
           {bytesTransferred: 33, countries: ['AA']},
@@ -289,19 +266,13 @@ class FakeMetricsCollector implements MetricsCollectorClient {
 }
 
 class ManualUsageMetrics implements UsageMetrics {
-  public keyUsage = [] as KeyUsage[];
   public countryUsage = [] as CountryUsage[];
-  
-  getKeyUsage(): Promise<KeyUsage[]> {
-    return Promise.resolve(this.keyUsage);
-  }
 
   getCountryUsage(): Promise<CountryUsage[]> {
-    return Promise.resolve(this.countryUsage)
+    return Promise.resolve(this.countryUsage);
   }
 
   reset() {
-    this.keyUsage = [] as KeyUsage[];
     this.countryUsage = [] as CountryUsage[];
   }
 }
