@@ -21,7 +21,7 @@ import {InsertableTable} from './infrastructure/table';
 import {HourlyConnectionMetricsReport, HourlyUserConnectionMetricsReport} from './model';
 
 const VALID_USER_REPORT = {
-  countries: ['US', 'UK'],
+  countries: ['US'],
   bytesTransferred: 123,
   tunnelTimeSec: 789,
 };
@@ -66,7 +66,7 @@ describe('postConnectionMetrics', () => {
     const table = new FakeConnectionsTable();
     const userReports = [
       {
-        countries: ['US', 'UK'],
+        countries: ['US'],
         bytesTransferred: 123,
         tunnelTimeSec: 987,
       },
