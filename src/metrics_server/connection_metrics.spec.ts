@@ -125,7 +125,7 @@ describe('isValidConnectionMetricsReport', () => {
       {userId: '', countries: ['CC'], bytesTransferred: 555, tunnelTimeSec: 5},
     ];
     const report = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports};
-    expect(isValidConnectionMetricsReport(report)).toBeTruthy();
+    expect(isValidConnectionMetricsReport(report)).toBeTrue();
   });
   it('returns false for missing report', () => {
     expect(isValidConnectionMetricsReport(undefined)).toBeFalse();
@@ -200,42 +200,42 @@ describe('isValidConnectionMetricsReport', () => {
     report.userReports[0] = userReport as HourlyUserConnectionMetricsReport;
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
-  it('returns false for incorrect user report field type', () => {
+  it('returns false for user report field types that is not `HourlyUserConnectionMetricsReport`', () => {
     const report = structuredClone(VALID_REPORT);
     report.userReports = [1, 2, 3] as unknown as HourlyUserConnectionMetricsReport[];
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
-  it('returns false for incorrect `serverId` field type', () => {
+  it('returns false for `serverId` field type that is not a string', () => {
     const report = structuredClone(VALID_REPORT);
     report.serverId = 987 as unknown as string;
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
-  it('returns false for incorrect `startUtcMs` field type', () => {
+  it('returns false for `startUtcMs` field type that is not a number', () => {
     const report = structuredClone(VALID_REPORT);
     report.startUtcMs = '100' as unknown as number;
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
-  it('returns false for incorrect `endUtcMs` field type', () => {
+  it('returns false for `endUtcMs` field type that is not a number', () => {
     const report = structuredClone(VALID_REPORT);
     report.endUtcMs = '100' as unknown as number;
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
-  it('returns false for incorrect `userId` field type', () => {
+  it('returns false for `userId` field type that is not a string', () => {
     const report = structuredClone(VALID_REPORT);
     report.userReports[0].userId = 1234 as unknown as string;
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
-  it('returns false for incorrect `countries` field type', () => {
+  it('returns false for `countries` field type that is not a string', () => {
     const report = structuredClone(VALID_REPORT);
     report.userReports[0].countries = [1, 2, 3] as unknown as string[];
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
-  it('returns false for incorrect `bytesTransferred` field type', () => {
+  it('returns false for `bytesTransferred` field type that is not a number', () => {
     const report = structuredClone(VALID_REPORT);
     report.userReports[0].bytesTransferred = '1234' as unknown as number;
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
-  it('returns false for incorrect `tunnelTimeSec` field type', () => {
+  it('returns false for `tunnelTimeSec` field type that is not a number', () => {
     const report = structuredClone(VALID_REPORT);
     report.userReports[0].tunnelTimeSec = '789' as unknown as number;
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
