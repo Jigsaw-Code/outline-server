@@ -57,12 +57,12 @@ cat << EOF > "${CONNECTIONS_REQUEST}"
   "userReports": [{
     "userId": "${USER_ID1}",
     "bytesTransferred": ${BYTES_TRANSFERRED1},
-    "tunnelTimeMs": ${TUNNEL_TIME1},
+    "tunnelTimeSec": ${TUNNEL_TIME1},
     "countries": ["US", "NL"]
   }, {
     "userId": "${USER_ID2}",
     "bytesTransferred": ${BYTES_TRANSFERRED2},
-    "tunnelTimeMs": ${TUNNEL_TIME2},
+    "tunnelTimeSec": ${TUNNEL_TIME2},
     "countries": ["UK"]
   }]
 }
@@ -90,7 +90,7 @@ cat << EOF > "${CONNECTIONS_EXPECTED_RESPONSE}"
       "NL"
     ],
     "serverId": "${SERVER_ID}",
-    "tunnelTimeMs": "${TUNNEL_TIME1}",
+    "tunnelTimeSec": "${TUNNEL_TIME1}",
     "userId": "${USER_ID1}"
   },
   {
@@ -99,7 +99,7 @@ cat << EOF > "${CONNECTIONS_EXPECTED_RESPONSE}"
       "UK"
     ],
     "serverId": "${SERVER_ID}",
-    "tunnelTimeMs": "${TUNNEL_TIME2}",
+    "tunnelTimeSec": "${TUNNEL_TIME2}",
     "userId": "${USER_ID2}"
   }
 ]
@@ -121,7 +121,7 @@ echo "Connections request:"
 cat "${CONNECTIONS_REQUEST}"
 curl -X POST -H "Content-Type: application/json" -d "@${CONNECTIONS_REQUEST}" "${METRICS_URL}/connections" && echo
 sleep 5
-bq --project_id "${BIGQUERY_PROJECT}" --format json query --nouse_legacy_sql "SELECT serverId, userId, bytesTransferred, tunnelTimeMs, countries FROM \`${BIGQUERY_DATASET}.${CONNECTIONS_TABLE}\` WHERE serverId = \"${SERVER_ID}\" ORDER BY bytesTransferred DESC LIMIT 2" | jq > "${CONNECTIONS_RESPONSE}"
+bq --project_id "${BIGQUERY_PROJECT}" --format json query --nouse_legacy_sql "SELECT serverId, userId, bytesTransferred, tunnelTimeSec, countries FROM \`${BIGQUERY_DATASET}.${CONNECTIONS_TABLE}\` WHERE serverId = \"${SERVER_ID}\" ORDER BY bytesTransferred DESC LIMIT 2" | jq > "${CONNECTIONS_RESPONSE}"
 diff "${CONNECTIONS_RESPONSE}" "${CONNECTIONS_EXPECTED_RESPONSE}"
 
 echo "Features request:"
