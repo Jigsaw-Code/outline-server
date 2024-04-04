@@ -97,7 +97,6 @@ export function isValidConnectionMetricsReport(
 
   const MIN_BYTES_TRANSFERRED = 0;
   const MAX_BYTES_TRANSFERRED = 1 * Math.pow(2, 40); // 1 TB.
-  const MIN_TUNNEL_TIME = 0;
   for (const userReport of testObject.userReports) {
     // We require at least the userId or the country to be set.
     if (!userReport.userId && (userReport.countries?.length ?? 0) === 0) {
@@ -117,11 +116,7 @@ export function isValidConnectionMetricsReport(
       return false;
     }
 
-    // Check that `tunnelTime` is a number larger than min tunnel time.
-    if (
-      typeof userReport.tunnelTimeSec !== 'number' ||
-      userReport.tunnelTimeSec < MIN_TUNNEL_TIME
-    ) {
+    if (typeof userReport.tunnelTimeSec !== 'number' || userReport.tunnelTimeSec < 0) {
       return false;
     }
 
