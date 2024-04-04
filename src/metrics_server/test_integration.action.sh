@@ -32,7 +32,7 @@ readonly FEATURES_REQUEST="${TMPDIR}/features_req.json"
 readonly FEATURES_RESPONSE="${TMPDIR}/features_res.json"
 readonly FEATURES_EXPECTED_RESPONSE="${TMPDIR}/features_expected_res.json"
 
-TIMESTAMP="$(date +%s%3N)"
+TIMESTAMP="$(gdate +%s%3N)"
 SERVER_ID="$(uuidgen)"
 SERVER_VERSION="$(uuidgen)"
 USER_ID1="$(uuidgen)"
@@ -41,10 +41,9 @@ readonly TIMESTAMP SERVER_ID SERVER_VERSION USER_ID1 USER_ID2
 # BYTES_TRANSFERRED2 < BYTES_TRANSFERRED1 so we can order the records before comparing them.
 BYTES_TRANSFERRED1=$((2 + RANDOM % 100))
 BYTES_TRANSFERRED2=$((BYTES_TRANSFERRED1 - 1))
-TUNNEL_TIME1=$((RANDOM))
-TUNNEL_TIME2=$((RANDOM))
+TUNNEL_TIME=$((RANDOM))
 PER_KEY_LIMIT_COUNT=$((RANDOM))
-declare -ir BYTES_TRANSFERRED1 BYTES_TRANSFERRED2 TUNNEL_TIME1 TUNNEL_TIME2 PER_KEY_LIMIT_COUNT
+declare -ir BYTES_TRANSFERRED1 BYTES_TRANSFERRED2 TUNNEL_TIME PER_KEY_LIMIT_COUNT
 
 echo "Using tmp directory ${TMPDIR}"
 
@@ -57,12 +56,11 @@ cat << EOF > "${CONNECTIONS_REQUEST}"
   "userReports": [{
     "userId": "${USER_ID1}",
     "bytesTransferred": ${BYTES_TRANSFERRED1},
-    "tunnelTimeSec": ${TUNNEL_TIME1},
+    "tunnelTimeSec": ${TUNNEL_TIME},
     "countries": ["US", "NL"]
   }, {
     "userId": "${USER_ID2}",
     "bytesTransferred": ${BYTES_TRANSFERRED2},
-    "tunnelTimeSec": ${TUNNEL_TIME2},
     "countries": ["UK"]
   }]
 }
@@ -90,7 +88,7 @@ cat << EOF > "${CONNECTIONS_EXPECTED_RESPONSE}"
       "NL"
     ],
     "serverId": "${SERVER_ID}",
-    "tunnelTimeSec": "${TUNNEL_TIME1}",
+    "tunnelTimeSec": "${TUNNEL_TIME}",
     "userId": "${USER_ID1}"
   },
   {
@@ -99,7 +97,7 @@ cat << EOF > "${CONNECTIONS_EXPECTED_RESPONSE}"
       "UK"
     ],
     "serverId": "${SERVER_ID}",
-    "tunnelTimeSec": "${TUNNEL_TIME2}",
+    "tunnelTimeSec": null,
     "userId": "${USER_ID2}"
   }
 ]

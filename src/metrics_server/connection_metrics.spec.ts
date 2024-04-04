@@ -62,13 +62,11 @@ describe('postConnectionMetrics', () => {
         userId: '',
         countries: ['BR'],
         bytesTransferred: 789,
-        tunnelTimeSec: 321,
       },
       {
         userId: 'uid1',
         countries: [],
         bytesTransferred: 555,
-        tunnelTimeSec: 444,
       },
     ];
     const report = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports};
@@ -98,7 +96,7 @@ describe('postConnectionMetrics', () => {
         endTimestamp: new Date(report.endUtcMs).toISOString(),
         userId: undefined,
         bytesTransferred: userReports[2].bytesTransferred,
-        tunnelTimeSec: userReports[2].tunnelTimeSec,
+        tunnelTimeSec: undefined,
         countries: userReports[2].countries,
       },
       {
@@ -107,7 +105,7 @@ describe('postConnectionMetrics', () => {
         endTimestamp: new Date(report.endUtcMs).toISOString(),
         userId: userReports[3].userId,
         bytesTransferred: userReports[3].bytesTransferred,
-        tunnelTimeSec: userReports[3].tunnelTimeSec,
+        tunnelTimeSec: undefined,
         countries: userReports[3].countries,
       },
     ];
@@ -120,9 +118,9 @@ describe('isValidConnectionMetricsReport', () => {
     const userReports = [
       {userId: 'uid0', countries: ['AA'], bytesTransferred: 111, tunnelTimeSec: 1},
       {userId: 'uid1', bytesTransferred: 222, tunnelTimeSec: 2},
-      {userId: 'uid2', countries: [], bytesTransferred: 333, tunnelTimeSec: 3},
-      {countries: ['BB'], bytesTransferred: 444, tunnelTimeSec: 4},
-      {userId: '', countries: ['CC'], bytesTransferred: 555, tunnelTimeSec: 5},
+      {userId: 'uid2', countries: [], bytesTransferred: 333},
+      {countries: ['BB'], bytesTransferred: 444},
+      {userId: '', countries: ['CC'], bytesTransferred: 555},
     ];
     const report = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports};
     expect(isValidConnectionMetricsReport(report)).toBeTrue();
@@ -190,13 +188,6 @@ describe('isValidConnectionMetricsReport', () => {
     const userReport: Partial<HourlyUserConnectionMetricsReport> =
       structuredClone(VALID_USER_REPORT);
     delete userReport['bytesTransferred'];
-    report.userReports[0] = userReport as HourlyUserConnectionMetricsReport;
-    expect(isValidConnectionMetricsReport(report)).toBeFalse();
-  });
-  it('returns false for missing user report field `tunnelTimeSec`', () => {
-    const userReport: Partial<HourlyUserConnectionMetricsReport> = VALID_USER_REPORT;
-    delete userReport['tunnelTimeSec'];
-    const report = structuredClone(VALID_REPORT);
     report.userReports[0] = userReport as HourlyUserConnectionMetricsReport;
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });

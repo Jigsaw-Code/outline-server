@@ -22,7 +22,7 @@ export interface ConnectionRow {
   endTimestamp: string; // ISO formatted string.
   userId?: string;
   bytesTransferred: number;
-  tunnelTimeSec: number;
+  tunnelTimeSec?: number;
   countries?: string[];
 }
 
@@ -52,7 +52,7 @@ function getConnectionRowsFromReport(report: HourlyConnectionMetricsReport): Con
       endTimestamp: endTimestampStr,
       userId: userReport.userId || undefined,
       bytesTransferred: userReport.bytesTransferred,
-      tunnelTimeSec: userReport.tunnelTimeSec,
+      tunnelTimeSec: userReport.tunnelTimeSec || undefined,
       countries: userReport.countries || [],
     });
   }
@@ -116,7 +116,10 @@ export function isValidConnectionMetricsReport(
       return false;
     }
 
-    if (typeof userReport.tunnelTimeSec !== 'number' || userReport.tunnelTimeSec < 0) {
+    if (
+      userReport.tunnelTimeSec &&
+      (typeof userReport.tunnelTimeSec !== 'number' || userReport.tunnelTimeSec < 0)
+    ) {
       return false;
     }
 
