@@ -35,9 +35,7 @@ readonly FEATURES_EXPECTED_RESPONSE="${TMPDIR}/features_expected_res.json"
 TIMESTAMP="$(date +%s%3N)"
 SERVER_ID="$(uuidgen)"
 SERVER_VERSION="$(uuidgen)"
-USER_ID1="$(uuidgen)"
-USER_ID2="$(uuidgen)"
-readonly TIMESTAMP SERVER_ID SERVER_VERSION USER_ID1 USER_ID2
+readonly TIMESTAMP SERVER_ID SERVER_VERSION
 # BYTES_TRANSFERRED2 < BYTES_TRANSFERRED1 so we can order the records before comparing them.
 BYTES_TRANSFERRED1=$((2 + RANDOM % 100))
 BYTES_TRANSFERRED2=$((BYTES_TRANSFERRED1 - 1))
@@ -54,12 +52,10 @@ cat << EOF > "${CONNECTIONS_REQUEST}"
   "startUtcMs": ${TIMESTAMP},
   "endUtcMs": $((TIMESTAMP+1)),
   "userReports": [{
-    "userId": "${USER_ID1}",
     "bytesTransferred": ${BYTES_TRANSFERRED1},
     "tunnelTimeSec": ${TUNNEL_TIME},
     "countries": ["US", "NL"]
   }, {
-    "userId": "${USER_ID2}",
     "bytesTransferred": ${BYTES_TRANSFERRED2},
     "countries": ["UK"]
   }]
@@ -88,8 +84,7 @@ cat << EOF > "${CONNECTIONS_EXPECTED_RESPONSE}"
       "NL"
     ],
     "serverId": "${SERVER_ID}",
-    "tunnelTimeSec": "${TUNNEL_TIME}",
-    "userId": "${USER_ID1}"
+    "tunnelTimeSec": "${TUNNEL_TIME}"
   },
   {
     "bytesTransferred": "${BYTES_TRANSFERRED2}",
@@ -97,8 +92,7 @@ cat << EOF > "${CONNECTIONS_EXPECTED_RESPONSE}"
       "UK"
     ],
     "serverId": "${SERVER_ID}",
-    "tunnelTimeSec": null,
-    "userId": "${USER_ID2}"
+    "tunnelTimeSec": null
   }
 ]
 EOF
@@ -119,7 +113,7 @@ echo "Connections request:"
 cat "${CONNECTIONS_REQUEST}"
 curl -X POST -H "Content-Type: application/json" -d "@${CONNECTIONS_REQUEST}" "${METRICS_URL}/connections" && echo
 sleep 5
-bq --project_id "${BIGQUERY_PROJECT}" --format json query --nouse_legacy_sql "SELECT serverId, userId, bytesTransferred, tunnelTimeSec, countries FROM \`${BIGQUERY_DATASET}.${CONNECTIONS_TABLE}\` WHERE serverId = \"${SERVER_ID}\" ORDER BY bytesTransferred DESC LIMIT 2" | jq > "${CONNECTIONS_RESPONSE}"
+bq --project_id "${BIGQUERY_PROJECT}" --format json query --nouse_legacy_sql "SELECT serverId, bytesTransferred, tunnelTimeSec, countries FROM \`${BIGQUERY_DATASET}.${CONNECTIONS_TABLE}\` WHERE serverId = \"${SERVER_ID}\" ORDER BY bytesTransferred DESC LIMIT 2" | jq > "${CONNECTIONS_RESPONSE}"
 diff "${CONNECTIONS_RESPONSE}" "${CONNECTIONS_EXPECTED_RESPONSE}"
 
 echo "Features request:"
