@@ -212,6 +212,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
         continue;
       }
       // Make sure to always set a country, which is required by the metrics server validation.
+      // It's used to differentiate the row from the legacy key usage rows.
       const country = countryUsage.country || 'ZZ';
       userReports.push({
         bytesTransferred: countryUsage.inboundBytes,
