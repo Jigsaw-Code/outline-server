@@ -107,16 +107,6 @@ cat << EOF > "${FEATURES_EXPECTED_RESPONSE}"
     "serverVersion": "${SERVER_VERSION}"
   }
 ]
-[
-  {
-    "dataLimit": {
-      "enabled": "false",
-      "perKeyLimitCount": "${PER_KEY_LIMIT_COUNT}"
-    },
-    "serverId": "${SERVER_ID}",
-    "serverVersion": "${SERVER_VERSION}"
-  }
-]
 EOF
 
 echo "Connections request:"
