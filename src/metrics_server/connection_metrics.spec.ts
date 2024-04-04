@@ -22,7 +22,7 @@ import {HourlyConnectionMetricsReport, HourlyUserConnectionMetricsReport} from '
 
 const VALID_USER_REPORT = {
   userId: 'uid0',
-  countries: ['US', 'UK'],
+  countries: ['US'],
   bytesTransferred: 123,
   tunnelTimeSec: 789,
 };
@@ -48,7 +48,7 @@ describe('postConnectionMetrics', () => {
     const userReports = [
       {
         userId: 'uid0',
-        countries: ['US', 'UK'],
+        countries: ['UK'],
         bytesTransferred: 123,
         tunnelTimeSec: 987,
       },
