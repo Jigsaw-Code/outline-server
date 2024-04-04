@@ -32,7 +32,7 @@ readonly FEATURES_REQUEST="${TMPDIR}/features_req.json"
 readonly FEATURES_RESPONSE="${TMPDIR}/features_res.json"
 readonly FEATURES_EXPECTED_RESPONSE="${TMPDIR}/features_expected_res.json"
 
-TIMESTAMP="$(gdate +%s%3N)"
+TIMESTAMP="$(date +%s%3N)"
 SERVER_ID="$(uuidgen)"
 SERVER_VERSION="$(uuidgen)"
 USER_ID1="$(uuidgen)"
