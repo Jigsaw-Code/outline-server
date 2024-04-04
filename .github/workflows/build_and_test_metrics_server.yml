@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build and Test - Metrics Server
 
 concurrency:
   group: ${{ github.head_ref || github.ref }}
