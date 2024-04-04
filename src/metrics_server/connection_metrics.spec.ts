@@ -20,13 +20,13 @@ import {
 import {InsertableTable} from './infrastructure/table';
 import {HourlyConnectionMetricsReport, HourlyUserConnectionMetricsReport} from './model';
 
-const VALID_USER_REPORT = {
+const VALID_USER_REPORT: HourlyUserConnectionMetricsReport = {
   countries: ['US'],
   bytesTransferred: 123,
   tunnelTimeSec: 789,
 };
 
-const VALID_USER_REPORT2 = {
+const VALID_USER_REPORT2: HourlyUserConnectionMetricsReport = {
   countries: ['UK'],
   bytesTransferred: 456,
 };
