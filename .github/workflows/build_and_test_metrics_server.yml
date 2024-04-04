@@ -1,0 +1,41 @@
+name: Build and Test
+
+concurrency:
+  group: ${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+    paths:
+      - 'src/metrics_server/**'
+  push:
+    branches:
+      - master
+    paths:
+      - 'src/metrics_server/**'
+
+jobs:
+  metrics-server:
+    name: Metrics Server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Install Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Install NPM Dependencies
+        run: npm ci
+
+      - name: Metrics Server Debug Build
+        run: npm run action metrics_server/build
+
+      - name: Metrics Server Test
+        run: npm run action metrics_server/test
