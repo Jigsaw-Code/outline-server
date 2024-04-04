@@ -20,7 +20,6 @@ export interface ConnectionRow {
   serverId: string;
   startTimestamp: string; // ISO formatted string.
   endTimestamp: string; // ISO formatted string.
-  userId?: string;
   bytesTransferred: number;
   tunnelTimeSec?: number;
   countries?: string[];
@@ -50,7 +49,6 @@ function getConnectionRowsFromReport(report: HourlyConnectionMetricsReport): Con
       serverId: report.serverId,
       startTimestamp: startTimestampStr,
       endTimestamp: endTimestampStr,
-      userId: userReport.userId || undefined,
       bytesTransferred: userReport.bytesTransferred,
       tunnelTimeSec: userReport.tunnelTimeSec || undefined,
       countries: userReport.countries || [],
@@ -90,24 +88,14 @@ export function isValidConnectionMetricsReport(
     return false;
   }
 
-  // Check that userReports is an array of 1 or more item.
-  if (!(testObject.userReports.length >= 1)) {
+  // Check that at least 1 user report has been provided.
+  if (testObject.userReports.length === 0) {
     return false;
   }
 
   const MIN_BYTES_TRANSFERRED = 0;
   const MAX_BYTES_TRANSFERRED = 1 * Math.pow(2, 40); // 1 TB.
   for (const userReport of testObject.userReports) {
-    // TODO(sbruens): Drop unused `userId`.
-    // We require at least the userId or the country to be set.
-    if (!userReport.userId && (userReport.countries?.length ?? 0) === 0) {
-      return false;
-    }
-    // Check that `userId` is a string.
-    if (userReport.userId && typeof userReport.userId !== 'string') {
-      return false;
-    }
-
     // Check that `bytesTransferred` is a number between min and max transfer limits
     if (
       typeof userReport.bytesTransferred !== 'number' ||
@@ -124,12 +112,15 @@ export function isValidConnectionMetricsReport(
       return false;
     }
 
-    // Check that `countries` are strings.
-    if (userReport.countries) {
-      for (const country of userReport.countries) {
-        if (typeof country !== 'string') {
-          return false;
-        }
+    // We require at least 1 country to be set
+    const countries = userReport.countries ?? [];
+    if (countries.length === 0) {
+      return false;
+    }
+    // Check that all `countries` are strings.
+    for (const country of countries) {
+      if (typeof country !== 'string') {
+        return false;
       }
     }
   }
