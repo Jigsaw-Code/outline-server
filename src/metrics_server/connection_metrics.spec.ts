@@ -66,7 +66,7 @@ describe('postConnectionMetrics', () => {
     const table = new FakeConnectionsTable();
     const userReports = [
       {
-        countries: ['US'],
+        countries: ['UK'],
         bytesTransferred: 123,
         tunnelTimeSec: 987,
       },
