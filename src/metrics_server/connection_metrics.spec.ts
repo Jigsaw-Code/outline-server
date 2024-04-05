@@ -39,7 +39,6 @@ const LEGACY_USER_REPORT = {
   userId: 'foo',
   countries: ['US', 'UK'],
   bytesTransferred: 123,
-  tunnelTimeSec: 789,
 };
 
 const VALID_REPORT: HourlyConnectionMetricsReport = {
@@ -62,50 +61,35 @@ class FakeConnectionsTable implements InsertableTable<ConnectionRow> {
 }
 
 describe('postConnectionMetrics', () => {
-  it('correctly inserts feature metrics rows', async () => {
+  it('correctly inserts connection metrics rows', async () => {
     const table = new FakeConnectionsTable();
-    const userReports = [
-      {
-        countries: ['UK'],
-        bytesTransferred: 123,
-        tunnelTimeSec: 987,
-      },
-      {
-        countries: ['EC'],
-        bytesTransferred: 456,
-        tunnelTimeSec: 654,
-      },
-      {
-        countries: ['BR'],
-        bytesTransferred: 789,
-      },
-    ];
-    const report = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports};
-    await postConnectionMetrics(table, report);
+
+    await postConnectionMetrics(table, VALID_REPORT);
+
     const rows: ConnectionRow[] = [
       {
-        serverId: report.serverId,
-        startTimestamp: new Date(report.startUtcMs).toISOString(),
-        endTimestamp: new Date(report.endUtcMs).toISOString(),
-        bytesTransferred: userReports[0].bytesTransferred,
-        tunnelTimeSec: userReports[0].tunnelTimeSec,
-        countries: userReports[0].countries,
+        serverId: VALID_REPORT.serverId,
+        startTimestamp: new Date(VALID_REPORT.startUtcMs).toISOString(),
+        endTimestamp: new Date(VALID_REPORT.endUtcMs).toISOString(),
+        bytesTransferred: VALID_REPORT.userReports[0].bytesTransferred,
+        tunnelTimeSec: VALID_REPORT.userReports[0].tunnelTimeSec,
+        countries: VALID_REPORT.userReports[0].countries,
       },
       {
-        serverId: report.serverId,
-        startTimestamp: new Date(report.startUtcMs).toISOString(),
-        endTimestamp: new Date(report.endUtcMs).toISOString(),
-        bytesTransferred: userReports[1].bytesTransferred,
-        tunnelTimeSec: userReports[1].tunnelTimeSec,
-        countries: userReports[1].countries,
+        serverId: VALID_REPORT.serverId,
+        startTimestamp: new Date(VALID_REPORT.startUtcMs).toISOString(),
+        endTimestamp: new Date(VALID_REPORT.endUtcMs).toISOString(),
+        bytesTransferred: VALID_REPORT.userReports[1].bytesTransferred,
+        tunnelTimeSec: VALID_REPORT.userReports[1].tunnelTimeSec,
+        countries: VALID_REPORT.userReports[1].countries,
       },
       {
-        serverId: report.serverId,
-        startTimestamp: new Date(report.startUtcMs).toISOString(),
-        endTimestamp: new Date(report.endUtcMs).toISOString(),
-        bytesTransferred: userReports[2].bytesTransferred,
+        serverId: VALID_REPORT.serverId,
+        startTimestamp: new Date(VALID_REPORT.startUtcMs).toISOString(),
+        endTimestamp: new Date(VALID_REPORT.endUtcMs).toISOString(),
+        bytesTransferred: VALID_REPORT.userReports[2].bytesTransferred,
         tunnelTimeSec: undefined,
-        countries: userReports[2].countries,
+        countries: VALID_REPORT.userReports[2].countries,
       },
     ];
     expect(table.rows).toEqual(rows);
