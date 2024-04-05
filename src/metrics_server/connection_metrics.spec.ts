@@ -55,8 +55,8 @@ const LEGACY_COUNTRIES_USER_REPORT: HourlyUserConnectionMetricsReport = {
 
 const VALID_REPORT: HourlyConnectionMetricsReport = {
   serverId: 'id',
-  startUtcMs: 3,
-  endUtcMs: 4,
+  startUtcMs: 1,
+  endUtcMs: 2,
   userReports: [
     structuredClone(VALID_USER_REPORT),
     structuredClone(VALID_USER_REPORT2),
@@ -66,8 +66,8 @@ const VALID_REPORT: HourlyConnectionMetricsReport = {
 
 const LEGACY_REPORT: HourlyConnectionMetricsReport = {
   serverId: 'legacy-id',
-  startUtcMs: 1,
-  endUtcMs: 2,
+  startUtcMs: 3,
+  endUtcMs: 4,
   userReports: [structuredClone(LEGACY_USER_ID_USER_REPORT)],
 };
 
