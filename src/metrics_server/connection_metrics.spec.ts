@@ -202,7 +202,12 @@ describe('isValidConnectionMetricsReport', () => {
     report.endUtcMs = '100' as unknown as number;
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
-  it('returns false for `countries` field type that is not a string', () => {
+  it('returns false for `countries` field type that is not an array', () => {
+    const report = structuredClone(VALID_REPORT);
+    report.userReports[0].countries = 'US' as unknown as string[];
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
+  });
+  it('returns false for `countries` arry items that are not strings', () => {
     const report = structuredClone(VALID_REPORT);
     report.userReports[0].countries = [1, 2, 3] as unknown as string[];
     expect(isValidConnectionMetricsReport(report)).toBeFalse();

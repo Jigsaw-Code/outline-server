@@ -14,8 +14,9 @@
 
 import {Table} from '@google-cloud/bigquery';
 import {InsertableTable} from './infrastructure/table';
-import {HourlyConnectionMetricsReport} from './model';
+import {HourlyConnectionMetricsReport, HourlyUserConnectionMetricsReport} from './model';
 
+const TERABYTE = Math.pow(2, 40);
 export interface ConnectionRow {
   serverId: string;
   startTimestamp: string; // ISO formatted string.
@@ -51,7 +52,7 @@ function getConnectionRowsFromReport(report: HourlyConnectionMetricsReport): Con
       endTimestamp: endTimestampStr,
       bytesTransferred: userReport.bytesTransferred,
       tunnelTimeSec: userReport.tunnelTimeSec || undefined,
-      countries: userReport.countries || [],
+      countries: userReport.countries,
     });
   }
   return rows;
@@ -93,38 +94,60 @@ export function isValidConnectionMetricsReport(
     return false;
   }
 
-  const MIN_BYTES_TRANSFERRED = 0;
-  const MAX_BYTES_TRANSFERRED = 1 * Math.pow(2, 40); // 1 TB.
   for (const userReport of testObject.userReports) {
-    // Check that `bytesTransferred` is a number between min and max transfer limits
-    if (
-      typeof userReport.bytesTransferred !== 'number' ||
-      userReport.bytesTransferred < MIN_BYTES_TRANSFERRED ||
-      userReport.bytesTransferred > MAX_BYTES_TRANSFERRED
-    ) {
+    if (!isValidUserConnectionMetricsReport(userReport)) {
       return false;
-    }
-
-    if (
-      userReport.tunnelTimeSec &&
-      (typeof userReport.tunnelTimeSec !== 'number' || userReport.tunnelTimeSec < 0)
-    ) {
-      return false;
-    }
-
-    // We require at least 1 country to be set
-    const countries = userReport.countries ?? [];
-    if (countries.length === 0) {
-      return false;
-    }
-    // Check that all `countries` are strings.
-    for (const country of countries) {
-      if (typeof country !== 'string') {
-        return false;
-      }
     }
   }
 
   // Request is a valid HourlyConnectionMetricsReport.
+  return true;
+}
+
+// Returns true iff testObject contains a valid HourlyUserConnectionMetricsReport.
+function isValidUserConnectionMetricsReport(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  testObject: any
+): testObject is HourlyUserConnectionMetricsReport {
+  if (!testObject) {
+    return false;
+  }
+
+  // Check that all required fields are present.
+  const requiredConnectionMetricsFields = ['countries', 'bytesTransferred'];
+  for (const fieldName of requiredConnectionMetricsFields) {
+    if (!testObject[fieldName]) {
+      return false;
+    }
+  }
+
+  // Check that `bytesTransferred` is a number between min and max transfer limits
+  if (
+    typeof testObject.bytesTransferred !== 'number' ||
+    testObject.bytesTransferred < 0 ||
+    testObject.bytesTransferred > TERABYTE
+  ) {
+    return false;
+  }
+
+  if (
+    testObject.tunnelTimeSec &&
+    (typeof testObject.tunnelTimeSec !== 'number' || testObject.tunnelTimeSec < 0)
+  ) {
+    return false;
+  }
+
+  // We require at least 1 country to be set
+  if (!Array.isArray(testObject.countries) || testObject.countries.length === 0) {
+    return false;
+  }
+  // Check that all `countries` are strings.
+  for (const country of testObject.countries) {
+    if (typeof country !== 'string') {
+      return false;
+    }
+  }
+
+  // Request is a valid HourlyUserConnectionMetricsReport.
   return true;
 }
