@@ -9,13 +9,9 @@ on:
     types:
       - opened
       - synchronize
-    paths:
-      - 'src/shadowbox/**'
   push:
     branches:
       - master
-    paths:
-      - 'src/shadowbox/**'
 
 jobs:
   shadowbox:
@@ -25,22 +21,35 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
+      - name: Check if Shadowbox was modified
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            src:
+              - 'src/shadowbox/**'
+
       - name: Install Node
+        if: steps.changes.outputs.src == 'true'
         uses: actions/setup-node@v3
         with:
           node-version: 18
           cache: npm
 
       - name: Install NPM Dependencies
+        if: steps.changes.outputs.src == 'true'
         run: npm ci
 
       - name: Shadowbox Debug Build
+        if: steps.changes.outputs.src == 'true'
         run: npm run action shadowbox/server/build
 
       - name: Shadowbox Unit Test
+        if: steps.changes.outputs.src == 'true'
         run: npm run action shadowbox/test
 
       - name: Shadowbox Integration Test
+        if: steps.changes.outputs.src == 'true'
         run: npm run action shadowbox/integration_test/run
 
   manual-install-script:
@@ -50,8 +59,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
+      - name: Check if Shadowbox or legacy install script was modified
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            src:
+              - 'src/server_manager/**'
+              - 'src/shadowbox/**'
+
       - name: Install Outline Server
+        if: steps.changes.outputs.src == 'true'
         run: ./src/server_manager/install_scripts/install_server.sh --hostname localhost
 
       - name: Test API
+        if: steps.changes.outputs.src == 'true'
         run: 'curl --silent --fail --insecure $(grep "apiUrl" /opt/outline/access.txt | cut -d: -f 2-)/server'

@@ -9,13 +9,9 @@ on:
     types:
       - opened
       - synchronize
-    paths:
-      - 'src/metrics_server/**'
   push:
     branches:
       - master
-    paths:
-      - 'src/metrics_server/**'
 
 jobs:
   metrics-server:
@@ -25,17 +21,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
+      - name: Check if Metrics Server was modified
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            src:
+              - 'src/metrics_server/**'
+
       - name: Install Node
+        if: steps.changes.outputs.src == 'true'
         uses: actions/setup-node@v3
         with:
           node-version: 18
           cache: npm
 
       - name: Install NPM Dependencies
+        if: steps.changes.outputs.src == 'true'
         run: npm ci
 
       - name: Metrics Server Debug Build
+        if: steps.changes.outputs.src == 'true'
         run: npm run action metrics_server/build
 
       - name: Metrics Server Test
+        if: steps.changes.outputs.src == 'true'
         run: npm run action metrics_server/test
