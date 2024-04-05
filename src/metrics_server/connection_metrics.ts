@@ -14,7 +14,11 @@
 
 import {Table} from '@google-cloud/bigquery';
 import {InsertableTable} from './infrastructure/table';
-import {HourlyConnectionMetricsReport, HourlyUserConnectionMetricsReport} from './model';
+import {
+  HourlyConnectionMetricsReport,
+  HourlyUserConnectionMetricsReport,
+  LegacyHourlyUserConnectionMetricsReport,
+} from './model';
 
 const TERABYTE = Math.pow(2, 40);
 export interface ConnectionRow {
@@ -46,6 +50,9 @@ function getConnectionRowsFromReport(report: HourlyConnectionMetricsReport): Con
   const endTimestampStr = new Date(report.endUtcMs).toISOString();
   const rows = [];
   for (const userReport of report.userReports) {
+    if (!isCurrentUserReport(userReport)) {
+      continue;
+    }
     rows.push({
       serverId: report.serverId,
       startTimestamp: startTimestampStr,
@@ -56,6 +63,13 @@ function getConnectionRowsFromReport(report: HourlyConnectionMetricsReport): Con
     });
   }
   return rows;
+}
+
+function isCurrentUserReport(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  userReport: LegacyHourlyUserConnectionMetricsReport
+): userReport is HourlyUserConnectionMetricsReport {
+  return userReport.userId === undefined;
 }
 
 // Returns true iff testObject contains a valid HourlyConnectionMetricsReport.
@@ -100,7 +114,7 @@ export function isValidConnectionMetricsReport(
 
     // For backwards compatibility, we do not want to invalidate legacy report
     // formats. Instead, we drop them silently.
-    if (userReport.userId !== undefined) {
+    if (!isCurrentUserReport(userReport)) {
       testObject.userReports.splice(i, 1);
       continue;
     }

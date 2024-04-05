@@ -18,13 +18,22 @@ export interface HourlyConnectionMetricsReport {
   serverId: string;
   startUtcMs: number;
   endUtcMs: number;
-  userReports: HourlyUserConnectionMetricsReport[];
+  userReports: (HourlyUserConnectionMetricsReport | LegacyHourlyUserConnectionMetricsReport)[];
 }
 
 export interface HourlyUserConnectionMetricsReport {
   countries: string[];
   bytesTransferred: number;
   tunnelTimeSec?: number;
+}
+
+/*
+ * Legacy reports used to test backwards compatibile reports that older servers
+ * may still send.
+ */
+export interface LegacyHourlyUserConnectionMetricsReport
+  extends Omit<HourlyUserConnectionMetricsReport, 'countries'> {
+  userId?: string;
 }
 
 export interface DailyFeatureMetricsReport {
