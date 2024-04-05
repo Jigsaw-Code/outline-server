@@ -32,11 +32,23 @@ const VALID_USER_REPORT2: HourlyUserConnectionMetricsReport = {
 };
 
 /*
- * A user report to test legacy fields to ensure backwards compatibility with
- * older servers that may still send reports like this.
+ * A user report to test legacy access key (`userId`) reports to ensure backwards
+ * compatibility with older servers (not synced past
+ * https://github.com/Jigsaw-Code/outline-server/pull/1529) that may still send
+ * reports like these.
  */
-const LEGACY_USER_REPORT = {
+const LEGACY_USER_ID_USER_REPORT: HourlyUserConnectionMetricsReport = {
   userId: 'foo',
+  bytesTransferred: 123,
+} as unknown as HourlyUserConnectionMetricsReport;
+
+/*
+ * A user report to test legacy multiple countries to ensure backwards
+ * compatibility with older servers (not synced past
+ * https://github.com/Jigsaw-Code/outline-server/pull/1242) that may still send
+ * reports like these.
+ */
+const LEGACY_COUNTRIES_USER_REPORT: HourlyUserConnectionMetricsReport = {
   countries: ['US', 'UK'],
   bytesTransferred: 123,
 };
@@ -48,7 +60,8 @@ const VALID_REPORT: HourlyConnectionMetricsReport = {
   userReports: [
     structuredClone(VALID_USER_REPORT),
     structuredClone(VALID_USER_REPORT2),
-    structuredClone(LEGACY_USER_REPORT),
+    structuredClone(LEGACY_USER_ID_USER_REPORT),
+    structuredClone(LEGACY_COUNTRIES_USER_REPORT),
   ],
 };
 
@@ -90,6 +103,14 @@ describe('postConnectionMetrics', () => {
         bytesTransferred: VALID_REPORT.userReports[2].bytesTransferred,
         tunnelTimeSec: undefined,
         countries: VALID_REPORT.userReports[2].countries,
+      },
+      {
+        serverId: VALID_REPORT.serverId,
+        startTimestamp: new Date(VALID_REPORT.startUtcMs).toISOString(),
+        endTimestamp: new Date(VALID_REPORT.endUtcMs).toISOString(),
+        bytesTransferred: VALID_REPORT.userReports[3].bytesTransferred,
+        tunnelTimeSec: undefined,
+        countries: VALID_REPORT.userReports[3].countries,
       },
     ];
     expect(table.rows).toEqual(rows);
@@ -148,14 +169,6 @@ describe('isValidConnectionMetricsReport', () => {
   it('returns false for missing `endUtcMs`', () => {
     const report: Partial<HourlyConnectionMetricsReport> = structuredClone(VALID_REPORT);
     delete report['endUtcMs'];
-    expect(isValidConnectionMetricsReport(report)).toBeFalse();
-  });
-  it('returns false for missing user report field `countries`', () => {
-    const report = structuredClone(VALID_REPORT);
-    const userReport: Partial<HourlyUserConnectionMetricsReport> =
-      structuredClone(VALID_USER_REPORT);
-    delete userReport['countries'];
-    report.userReports[0] = userReport as HourlyUserConnectionMetricsReport;
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
   it('returns false for missing user report field `bytesTransferred`', () => {

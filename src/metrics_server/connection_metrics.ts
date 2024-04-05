@@ -94,7 +94,17 @@ export function isValidConnectionMetricsReport(
     return false;
   }
 
-  for (const userReport of testObject.userReports) {
+  let i = testObject.userReports.length;
+  while (i--) {
+    const userReport = testObject.userReports[i];
+
+    // For backwards compatibility, we do not want to invalidate legacy report
+    // formats. Instead, we drop them silently.
+    if (userReport.userId !== undefined) {
+      testObject.userReports.splice(i, 1);
+      continue;
+    }
+
     if (!isValidUserConnectionMetricsReport(userReport)) {
       return false;
     }
