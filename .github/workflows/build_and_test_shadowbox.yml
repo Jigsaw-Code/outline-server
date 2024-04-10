@@ -28,6 +28,7 @@ jobs:
           filters: |
             src:
               - 'src/shadowbox/**'
+              - 'third_party/**'
 
       - name: Install Node
         if: steps.changes.outputs.src == 'true'
