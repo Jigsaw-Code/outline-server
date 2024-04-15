@@ -55,9 +55,6 @@ jobs:
           IGNORED: |
             LICENSE
             package-lock.json
-            resources/*
-            src/server_manager/messages/*
-            src/server_manager/images/*
             third_party/*
         with:
           sizes: >
