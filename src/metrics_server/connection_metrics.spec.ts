@@ -40,7 +40,7 @@ const VALID_USER_REPORT2: HourlyUserConnectionMetricsReportByLocation = {
  * Legacy access key user reports to ensure backwards compatibility with servers not
  * synced past https://github.com/Jigsaw-Code/outline-server/pull/1529).
  */
-const LEGACY_USER_ID_USER_REPORT: HourlyUserConnectionMetricsReportByKey = {
+const LEGACY_PER_KEY_USER_REPORT: HourlyUserConnectionMetricsReportByKey = {
   userId: 'foo',
   bytesTransferred: 123,
 };
@@ -49,7 +49,7 @@ const LEGACY_USER_ID_USER_REPORT: HourlyUserConnectionMetricsReportByKey = {
  * Legacy multiple countries user reports to ensure backwards compatibility with servers
  * not synced past https://github.com/Jigsaw-Code/outline-server/pull/1242.
  */
-const LEGACY_COUNTRIES_USER_REPORT: HourlyUserConnectionMetricsReportByLocation = {
+const LEGACY_PER_LOCATION_USER_REPORT: HourlyUserConnectionMetricsReportByLocation = {
   countries: ['US', 'UK'],
   bytesTransferred: 123,
 };
@@ -61,7 +61,7 @@ const VALID_REPORT: HourlyConnectionMetricsReport = {
   userReports: [
     structuredClone(VALID_USER_REPORT),
     structuredClone(VALID_USER_REPORT2),
-    structuredClone(LEGACY_COUNTRIES_USER_REPORT),
+    structuredClone(LEGACY_PER_LOCATION_USER_REPORT),
   ],
 };
 
@@ -69,7 +69,7 @@ const LEGACY_REPORT: HourlyConnectionMetricsReport = {
   serverId: 'legacy-id',
   startUtcMs: 3,
   endUtcMs: 4,
-  userReports: [structuredClone(LEGACY_USER_ID_USER_REPORT)],
+  userReports: [structuredClone(LEGACY_PER_KEY_USER_REPORT)],
 };
 
 class FakeConnectionsTable implements InsertableTable<ConnectionRow> {
@@ -107,9 +107,9 @@ describe('postConnectionMetrics', () => {
         serverId: VALID_REPORT.serverId,
         startTimestamp: new Date(VALID_REPORT.startUtcMs).toISOString(),
         endTimestamp: new Date(VALID_REPORT.endUtcMs).toISOString(),
-        bytesTransferred: LEGACY_COUNTRIES_USER_REPORT.bytesTransferred,
-        tunnelTimeSec: LEGACY_COUNTRIES_USER_REPORT.tunnelTimeSec,
-        countries: LEGACY_COUNTRIES_USER_REPORT.countries,
+        bytesTransferred: LEGACY_PER_LOCATION_USER_REPORT.bytesTransferred,
+        tunnelTimeSec: LEGACY_PER_LOCATION_USER_REPORT.tunnelTimeSec,
+        countries: LEGACY_PER_LOCATION_USER_REPORT.countries,
       },
     ];
     expect(table.rows).toEqual(rows);
