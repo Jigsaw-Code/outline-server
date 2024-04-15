@@ -17,10 +17,11 @@ import {InsertableTable} from './infrastructure/table';
 import {
   HourlyConnectionMetricsReport,
   HourlyUserConnectionMetricsReport,
-  LegacyHourlyUserConnectionMetricsReport,
+  HourlyUserConnectionMetricsReportByLocation,
 } from './model';
 
 const TERABYTE = Math.pow(2, 40);
+
 export interface ConnectionRow {
   serverId: string;
   startTimestamp: string; // ISO formatted string.
@@ -50,26 +51,27 @@ function getConnectionRowsFromReport(report: HourlyConnectionMetricsReport): Con
   const endTimestampStr = new Date(report.endUtcMs).toISOString();
   const rows = [];
   for (const userReport of report.userReports) {
-    if (!isCurrentUserReport(userReport)) {
-      continue;
+    // User reports come in 2 flavors: "per location" and "per key". We no longer store the
+    // "per key" reports.
+    if (isPerLocationUserReport(userReport)) {
+      rows.push({
+        serverId: report.serverId,
+        startTimestamp: startTimestampStr,
+        endTimestamp: endTimestampStr,
+        bytesTransferred: userReport.bytesTransferred,
+        tunnelTimeSec: userReport.tunnelTimeSec || undefined,
+        countries: userReport.countries,
+      });
     }
-    rows.push({
-      serverId: report.serverId,
-      startTimestamp: startTimestampStr,
-      endTimestamp: endTimestampStr,
-      bytesTransferred: userReport.bytesTransferred,
-      tunnelTimeSec: userReport.tunnelTimeSec || undefined,
-      countries: userReport.countries,
-    });
   }
   return rows;
 }
 
-function isCurrentUserReport(
+function isPerLocationUserReport(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  userReport: LegacyHourlyUserConnectionMetricsReport
-): userReport is HourlyUserConnectionMetricsReport {
-  return userReport.userId === undefined;
+  userReport: HourlyUserConnectionMetricsReport
+): userReport is HourlyUserConnectionMetricsReportByLocation {
+  return 'countries' in userReport;
 }
 
 // Returns true iff testObject contains a valid HourlyConnectionMetricsReport.
@@ -108,70 +110,49 @@ export function isValidConnectionMetricsReport(
     return false;
   }
 
-  let i = testObject.userReports.length;
-  while (i--) {
-    const userReport = testObject.userReports[i];
-
-    // For backwards compatibility, we do not want to invalidate legacy report
-    // formats. Instead, we drop them silently.
-    if (!isCurrentUserReport(userReport)) {
-      testObject.userReports.splice(i, 1);
-      continue;
+  for (const userReport of testObject.userReports) {
+    // We require at least the userId or the country to be set.
+    if (!userReport.userId && (userReport.countries?.length ?? 0) === 0) {
+      return false;
+    }
+    // Check that `userId` is a string.
+    if (userReport.userId && typeof userReport.userId !== 'string') {
+      return false;
     }
 
-    if (!isValidUserConnectionMetricsReport(userReport)) {
+    // We used to set a limit of 1TB per access key, then per location. We later
+    // realized that a server may use a single key, or all the traffic may come
+    // from a single location.
+    // However, as we report hourly, it's unlikely we hit 1TB, so we keep the
+    // check for now to try and prevent malicious reports.
+    if (
+      typeof userReport.bytesTransferred !== 'number' ||
+      userReport.bytesTransferred < 0 ||
+      userReport.bytesTransferred > TERABYTE
+    ) {
       return false;
+    }
+
+    if (
+      userReport.tunnelTimeSec &&
+      (typeof userReport.tunnelTimeSec !== 'number' || userReport.tunnelTimeSec < 0)
+    ) {
+      return false;
+    }
+
+    // Check that `countries` is an array of strings.
+    if (userReport.countries) {
+      if (!Array.isArray(userReport.countries)) {
+        return false;
+      }
+      for (const country of userReport.countries) {
+        if (typeof country !== 'string') {
+          return false;
+        }
+      }
     }
   }
 
   // Request is a valid HourlyConnectionMetricsReport.
-  return true;
-}
-
-// Returns true iff testObject contains a valid HourlyUserConnectionMetricsReport.
-function isValidUserConnectionMetricsReport(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  testObject: any
-): testObject is HourlyUserConnectionMetricsReport {
-  if (!testObject) {
-    return false;
-  }
-
-  // Check that all required fields are present.
-  const requiredConnectionMetricsFields = ['countries', 'bytesTransferred'];
-  for (const fieldName of requiredConnectionMetricsFields) {
-    if (!testObject[fieldName]) {
-      return false;
-    }
-  }
-
-  // Check that `bytesTransferred` is a number between min and max transfer limits
-  if (
-    typeof testObject.bytesTransferred !== 'number' ||
-    testObject.bytesTransferred < 0 ||
-    testObject.bytesTransferred > TERABYTE
-  ) {
-    return false;
-  }
-
-  if (
-    testObject.tunnelTimeSec &&
-    (typeof testObject.tunnelTimeSec !== 'number' || testObject.tunnelTimeSec < 0)
-  ) {
-    return false;
-  }
-
-  // We require at least 1 country to be set
-  if (!Array.isArray(testObject.countries) || testObject.countries.length === 0) {
-    return false;
-  }
-  // Check that all `countries` are strings.
-  for (const country of testObject.countries) {
-    if (typeof country !== 'string') {
-      return false;
-    }
-  }
-
-  // Request is a valid HourlyUserConnectionMetricsReport.
   return true;
 }

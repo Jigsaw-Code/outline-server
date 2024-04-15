@@ -21,25 +21,26 @@ import {InsertableTable} from './infrastructure/table';
 import {
   HourlyConnectionMetricsReport,
   HourlyUserConnectionMetricsReport,
-  LegacyHourlyUserConnectionMetricsReport,
+  HourlyUserConnectionMetricsReportByKey,
+  HourlyUserConnectionMetricsReportByLocation,
 } from './model';
 
-const VALID_USER_REPORT: HourlyUserConnectionMetricsReport = {
+const VALID_USER_REPORT: HourlyUserConnectionMetricsReportByLocation = {
   countries: ['US'],
   bytesTransferred: 123,
   tunnelTimeSec: 789,
 };
 
-const VALID_USER_REPORT2: HourlyUserConnectionMetricsReport = {
+const VALID_USER_REPORT2: HourlyUserConnectionMetricsReportByLocation = {
   countries: ['UK'],
   bytesTransferred: 456,
 };
 
 /*
- * Legacy access key (`userId`) user reports to ensure backwards compatibility with servers
- * not synced past https://github.com/Jigsaw-Code/outline-server/pull/1529).
+ * Legacy access key user reports to ensure backwards compatibility with servers not
+ * synced past https://github.com/Jigsaw-Code/outline-server/pull/1529).
  */
-const LEGACY_USER_ID_USER_REPORT: LegacyHourlyUserConnectionMetricsReport = {
+const LEGACY_USER_ID_USER_REPORT: HourlyUserConnectionMetricsReportByKey = {
   userId: 'foo',
   bytesTransferred: 123,
 };
@@ -48,7 +49,7 @@ const LEGACY_USER_ID_USER_REPORT: LegacyHourlyUserConnectionMetricsReport = {
  * Legacy multiple countries user reports to ensure backwards compatibility with servers
  * not synced past https://github.com/Jigsaw-Code/outline-server/pull/1242.
  */
-const LEGACY_COUNTRIES_USER_REPORT: HourlyUserConnectionMetricsReport = {
+const LEGACY_COUNTRIES_USER_REPORT: HourlyUserConnectionMetricsReportByLocation = {
   countries: ['US', 'UK'],
   bytesTransferred: 123,
 };
