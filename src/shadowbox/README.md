@@ -43,13 +43,13 @@ The Outline Server, internal name "Shadowbox," is designed to streamline the set
    - **Node.js App**
 
      ```sh
-     npm run action shadowbox/server/start
+     task shadowbox:start
      ```
 
    - **Docker Container**
 
      ```sh
-     npm run action shadowbox/docker/start
+     task shadowbox:docker:start
      ```
 
      > [!TIP]
@@ -135,7 +135,7 @@ The Outline Server provides a REST API for access key management. If you know th
    - **Start the Server:**
 
      ```sh
-     npm run action shadowbox/docker/start
+     task shadowbox:docker:start
      ```
 
 ### Automated
@@ -143,7 +143,7 @@ The Outline Server provides a REST API for access key management. If you know th
 1. **Build and Run:**
 
    ```sh
-   npm run action shadowbox/integration_test/run
+   task shadowbox:integration_test
    ```
 
    This does the following:

@@ -41,7 +41,7 @@ See [Shadowsocks resistance against detection and blocking](docs/shadowsocks.md)
 1. **Start the server**
 
    ```sh
-   npm run action shadowbox/server/start
+   task shadowbox:server:start
    ```
 
    Exploring further options:
@@ -52,5 +52,5 @@ See [Shadowsocks resistance against detection and blocking](docs/shadowsocks.md)
 1. **To clean up**
 
    ```sh
-   npm run clean
+   task clean
    ```

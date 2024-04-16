@@ -5,7 +5,7 @@ This folder contains the integration test for the Outline Server image.
 To build and test the image:
 
 ```sh
-npm run action shadowbox/integration_test/run
+task shadowbox:integration_test
 ```
 
 For development of the test, or to test a specific image, you may prefer calling the test directly, without the build step:

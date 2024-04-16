@@ -1,0 +1,119 @@
+version: '3'
+
+vars:
+  BUILD_DIR: '{{joinPath .USER_WORKING_DIR "build" "shadowbox"}}'
+
+tasks:
+  build:
+    desc: Build the Outline Server Node.js app
+    vars:
+      TARGET_OS: '{{.TARGET_OS | default "linux"}}'
+      TARGET_ARCH: '{{.TARGET_ARCH | default "x86_64"}}'
+      GOOS: '{{get (dict "macos" "darwin") .TARGET_OS | default .TARGET_OS}}'
+      GOARCH: '{{get (dict "x86_64" "arm64") .TARGET_ARCH | default .TARGET_ARCH}}'
+      TARGET_DIR: '{{.TARGET_DIR | default (joinPath .BUILD_DIR .TARGET_OS .TARGET_ARCH)}}'
+      NODE_DIR: '{{joinPath .TARGET_DIR "app"}}'
+      BIN_DIR: '{{joinPath .TARGET_DIR "bin"}}'
+    cmds:
+      - echo Target platform is {{.TARGET_OS}}/{{.TARGET_ARCH}}
+      - rm -rf '{{.TARGET_DIR}}'
+      - mkdir -p '{{.TARGET_DIR}}'
+      - cp '{{joinPath .TASKFILE_DIR "package.json"}}' '{{.TARGET_DIR}}'
+      # Build Node.js app
+      - npx webpack --config='{{joinPath .TASKFILE_DIR "webpack.config.js"}}' --output-path='{{.NODE_DIR}}' ${BUILD_ENV:+--mode="${BUILD_ENV}"}
+      # Copy third_party dependencies
+      - mkdir -p '{{.BIN_DIR}}'
+      - |
+        {
+          cd '{{joinPath .USER_WORKING_DIR "third_party" "prometheus"}}'
+          make 'bin/{{.TARGET_OS}}-{{.TARGET_ARCH}}/prometheus'
+          cp 'bin/{{.TARGET_OS}}-{{.TARGET_ARCH}}/prometheus' '{{.BIN_DIR}}/'
+        }
+      - GOOS={{.GOOS}} GOARCH={{.GOARCH}} go build -ldflags='-s -w -X main.version=embedded' -o '{{.BIN_DIR}}/' github.com/Jigsaw-Code/outline-ss-server/cmd/outline-ss-server
+
+  start:
+    desc: Run the Outline server locally
+    deps: [{task: build, vars: {TARGET_OS: '{{.TARGET_OS}}', TARGET_ARCH: '{{.TARGET_ARCH}}'}}]
+    vars:
+      UNAME_OS: {sh: 'uname -s'}
+      TARGET_OS: '{{get (dict "Linux" "linux" "Darwin" "macos") .UNAME_OS}}'
+      TARGET_ARCH: {sh: 'uname -m'}
+      RUN_ID: '{{.RUN_ID | default (now | date "2006-01-02-150405")}}'
+      RUN_DIR: '{{joinPath "/tmp/outline" .RUN_ID}}'
+      STATE_DIR: '{{joinPath .RUN_DIR "persisted-state"}}'
+      STATE_CONFIG: '{{joinPath .STATE_DIR "shadowbox_server_config.json"}}'
+      LOG_LEVEL: '{{.LOG_LEVEL | default "debug"}}'
+    env:
+      # WARNING: The SB_API_PREFIX should be kept secret!
+      SB_API_PREFIX: TestApiPrefix
+      SB_METRICS_URL: https://dev.metrics.getoutline.org
+      SB_STATE_DIR: '{{.STATE_DIR}}'
+      SB_PUBLIC_IP: localhost
+      SB_CERTIFICATE_FILE: '{{joinPath .RUN_DIR "/shadowbox-selfsigned-dev.crt"}}'
+      SB_PRIVATE_KEY_FILE: '{{joinPath .RUN_DIR "/shadowbox-selfsigned-dev.key"}}'
+    cmds:
+      - echo Target platform is {{.TARGET_OS}}/{{.TARGET_ARCH}}
+      - echo "Using directory {{.RUN_DIR}}"
+      - mkdir -p '{{.STATE_DIR}}'
+      - echo '{"hostname":"127.0.0.1"}' > "{{.STATE_CONFIG}}"
+      - source '{{joinPath .TASKFILE_DIR "scripts/make_test_certificate.sh"}}' '{{.RUN_DIR}}'
+      - node '{{joinPath .BUILD_DIR .TARGET_OS .TARGET_ARCH "app/main.js"}}'
+
+  docker:build:
+    desc: Build the Outline Server Docker image
+    vars:
+      VERSION: '{{.IMAGE_VERSION | default "dev"}}'
+      IMAGE_NAME: '{{.IMAGE_NAME | default "localhost/outline/shadowbox"}}'
+      TARGET_ARCH: '{{.TARGET_ARCH | default "x86_64"}}'
+      IMAGE_ROOT: '{{joinPath .BUILD_DIR "docker" .TARGET_ARCH}}'
+      # Newer node images have no valid content trust data.
+      # Pin the image node:16.18.0-alpine3.16 by hash.
+      # See image at https://hub.docker.com/_/node/tags?page=1&name=18.18.0-alpine3.18
+      NODE_IMAGE: '{{get
+          (dict
+            "x86_64" "node@sha256:a0b787b0d53feacfa6d606fb555e0dbfebab30573277f1fe25148b05b66fa097"
+            "arm64" "node@sha256:b4b7a1dd149c65ee6025956ac065a843b4409a62068bd2b0cbafbb30ca2fab3b"
+          ) .TARGET_ARCH                       
+        }}'
+    env:
+      DOCKER_CONTENT_TRUST: '{{.DOCKER_CONTENT_TRUST | default "1"}}'
+      # Enable Docker BuildKit (https://docs.docker.com/develop/develop-images/build_enhancements)
+      DOCKER_BUILDKIT: 1
+
+    cmds:
+      - rm -rf '{{.IMAGE_ROOT}}'
+      - mkdir -p '{{.IMAGE_ROOT}}'
+      - {task: build, vars: {TARGET_OS: linux, TARGET_ARCH: '{{.TARGET_ARCH}}', TARGET_DIR: '{{joinPath .IMAGE_ROOT "/opt/outline-server"}}'}}
+      - cp -R '{{joinPath .TASKFILE_DIR "scripts"}}' '{{.IMAGE_ROOT}}/scripts'
+      - mkdir -p '{{joinPath .IMAGE_ROOT "/etc/periodic/weekly"}}'
+      - cp '{{joinPath .TASKFILE_DIR "scripts" "update_mmdb.sh"}}' '{{joinPath .IMAGE_ROOT "/etc/periodic/weekly/"}}'
+      # Create default state directory
+      - mkdir -p '{{joinPath .IMAGE_ROOT "/root/shadowbox/persisted-state"}}'
+      # Copy entrypoint command
+      - cp '{{joinPath .TASKFILE_DIR "docker/cmd.sh"}}' '{{.IMAGE_ROOT}}/'
+      # Build image with given root
+      - podman build --force-rm
+          --build-arg NODE_IMAGE='{{.NODE_IMAGE}}'
+          --build-arg VERSION='{{.VERSION}}'
+          -f '{{joinPath .TASKFILE_DIR "docker" "Dockerfile"}}'
+          -t '{{.IMAGE_NAME}}'
+          '{{.IMAGE_ROOT}}'
+
+  integration_test:
+    desc: Run the integration test
+    vars:
+      SB_IMAGE: '{{.SB_IMAGE | default "localhost/outline/shadowbox:latest"}}'
+    deps: [docker:build]
+    cmds:
+      - cd '{{.TASKFILE_DIR}}'
+      - "'{{.TASKFILE_DIR}}/integration_test/test.sh' '{{.SB_IMAGE}}'"
+
+  test:
+    desc: Run the unit tests for the Outline Server
+    vars:
+      TEST_DIR:
+        sh: mktemp -d
+    cmds:
+      - defer: rm -rf "{{.TEST_DIR}}"
+      - npx tsc -p '{{.TASKFILE_DIR}}' --outDir '{{.TEST_DIR}}'
+      - npx jasmine '{{.TEST_DIR}}/**/*.spec.js'
