@@ -15,9 +15,11 @@ includes:
 
   sentry_webhook:
     taskfile: ./src/sentry_webhook/Taskfile.yml
-    vars: {OUTPUT_BASE: '{{joinPath .BUILD_ROOT "metrics_server"}}'}
+    vars: {OUTPUT_BASE: '{{joinPath .BUILD_ROOT "sentry_webhook"}}'}
 
-  shadowbox: ./src/shadowbox/Taskfile.yml
+  shadowbox:
+    taskfile: ./src/shadowbox/Taskfile.yml
+    vars: {OUTPUT_BASE: '{{joinPath .BUILD_ROOT "shadowbox"}}'}
 
 tasks:
   clean:
