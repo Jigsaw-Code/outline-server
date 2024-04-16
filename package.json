@@ -24,6 +24,9 @@
     "pretty-quick": "^3.1.1",
     "typescript": "^4.9.5"
   },
+  "scripts": {
+    "postinstall": "go build github.com/go-task/task/v3/cmd/task"
+  },
   "engines": {
     "node": "18.x.x"
   },
@@ -32,7 +35,7 @@
   ],
   "husky": {
     "hooks": {
-      "pre-commit": "./task.sh lint && ./task.sh format"
+      "pre-commit": "./task lint format"
     }
   }
 }
