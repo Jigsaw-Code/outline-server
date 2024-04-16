@@ -10,7 +10,7 @@ tasks:
       TARGET_OS: '{{.TARGET_OS | default "linux"}}'
       TARGET_ARCH: '{{.TARGET_ARCH | default "x86_64"}}'
       GOOS: '{{get (dict "macos" "darwin") .TARGET_OS | default .TARGET_OS}}'
-      GOARCH: '{{get (dict "x86_64" "arm64") .TARGET_ARCH | default .TARGET_ARCH}}'
+      GOARCH: '{{get (dict "x86_64" "amd64") .TARGET_ARCH | default .TARGET_ARCH}}'
       TARGET_DIR: '{{.TARGET_DIR | default (joinPath .OUTPUT_BASE .TARGET_OS .TARGET_ARCH)}}'
       NODE_DIR: '{{joinPath .TARGET_DIR "app"}}'
       BIN_DIR: '{{joinPath .TARGET_DIR "bin"}}'
@@ -62,6 +62,7 @@ tasks:
   docker:build:
     desc: Build the Outline Server Docker image
     vars:
+      DOCKER: '{{.DOCKER | default "docker"}}'
       VERSION: '{{.IMAGE_VERSION | default "dev"}}'
       IMAGE_NAME: '{{.IMAGE_NAME | default "localhost/outline/shadowbox"}}'
       TARGET_ARCH: '{{.TARGET_ARCH | default "x86_64"}}'
@@ -79,7 +80,6 @@ tasks:
       DOCKER_CONTENT_TRUST: '{{.DOCKER_CONTENT_TRUST | default "1"}}'
       # Enable Docker BuildKit (https://docs.docker.com/develop/develop-images/build_enhancements)
       DOCKER_BUILDKIT: 1
-
     cmds:
       - rm -rf '{{.IMAGE_ROOT}}'
       - mkdir -p '{{.IMAGE_ROOT}}'
@@ -92,11 +92,12 @@ tasks:
       # Copy entrypoint command
       - cp '{{joinPath .TASKFILE_DIR "docker/cmd.sh"}}' '{{.IMAGE_ROOT}}/'
       # Build image with given root
-      - podman build --force-rm
-          --build-arg NODE_IMAGE='{{.NODE_IMAGE}}'
-          --build-arg VERSION='{{.VERSION}}'
-          -f '{{joinPath .TASKFILE_DIR "docker" "Dockerfile"}}'
-          -t '{{.IMAGE_NAME}}'
+      - |
+        '{{.DOCKER}}' build --force-rm \
+          --build-arg NODE_IMAGE='{{.NODE_IMAGE}}' \
+          --build-arg VERSION='{{.VERSION}}' \
+          -f '{{joinPath .TASKFILE_DIR "docker" "Dockerfile"}}' \
+          -t '{{.IMAGE_NAME}}' \
           '{{.IMAGE_ROOT}}'
 
   integration_test:
