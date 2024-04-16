@@ -82,5 +82,5 @@ task metrics_server:start
   ```
 - Integration test
   ```sh
-  task metrics_server:integration:test
+  task metrics_server:integration_test
   ```

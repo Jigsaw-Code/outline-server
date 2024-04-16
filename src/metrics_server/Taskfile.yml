@@ -1,19 +1,19 @@
 version: '3'
 
-vars:
-  SERVER_DIR: '{{joinPath .USER_WORKING_DIR "build/metrics_server"}}'
+requires:
+  vars: [OUTPUT_BASE]
 
 tasks:
   clean:
     desc: Clean metrics server output
     cmds:
-      - rm -rf "{{.SERVER_DIR}}"
+      - rm -rf "{{.OUTPUT_BASE}}"
 
   build:
     desc: Build the metrics server
     vars:
       BUILD_MODE: '{{.BUILD_MODE | default "dev"}}'
-      TARGET_DIR: '{{joinPath .SERVER_DIR .BUILD_MODE}}'
+      TARGET_DIR: &default-target-dir '{{joinPath .OUTPUT_BASE .BUILD_MODE}}'
     cmds:
       - rm -rf '{{.TARGET_DIR}}'
       - npx tsc --project '{{.TASKFILE_DIR}}' --outDir '{{.TARGET_DIR}}'
@@ -24,24 +24,32 @@ tasks:
 
   deploy:dev:
     desc: Deploy the development metrics server
-    deps: [{task: build, vars: {BUILD_MODE: dev}}]
+    vars:
+      BUILD_MODE: "dev"
+      TARGET_DIR: *default-target-dir
+    deps: [{task: build, vars: {BUILD_MODE: "{{.BUILD_MODE}}", TARGET_DIR: "{{.TARGET_DIR}}"}}]
     cmds:
-      - gcloud app deploy '{{.TASKFILE_DIR}}/dispatch.yaml' '{{joinPath .SERVER_DIR "dev"}}' --project uproxysite --verbosity info --promote --stop-previous-version
+      - gcloud app deploy '{{.TASKFILE_DIR}}/dispatch.yaml' '{{.TARGET_DIR}}' --project uproxysite --verbosity info --promote --stop-previous-version
 
   deploy:prod:
     desc: Deploy the production metrics server
-    deps: [{task: build, vars: {BUILD_MODE: prod}}]
+    vars:
+      BUILD_MODE: "prod"
+      TARGET_DIR: *default-target-dir
+    deps: [{task: build, vars: {BUILD_MODE: "{{.BUILD_MODE}}", TARGET_DIR: "{{.TARGET_DIR}}"}}]
     cmds:
-      - gcloud app deploy '{{.TASKFILE_DIR}}/dispatch.yaml' '{{joinPath .SERVER_DIR "prod"}}' --project uproxysite --verbosity info --no-promote --no-stop-previous-version
+      - gcloud app deploy '{{.TASKFILE_DIR}}/dispatch.yaml' '{{joinPath .OUTPUT_BASE "prod"}}' --project uproxysite --verbosity info --no-promote --no-stop-previous-version
 
   start:
     desc: Start the metrics server locally
-    deps: [build]
+    vars:
+      BUILD_MODE: '{{.BUILD_MODE | default "dev"}}'
+      TARGET_DIR: *default-target-dir
+    deps: [{task: build, vars: {BUILD_MODE: "{{.BUILD_MODE}}", TARGET_DIR: "{{.TARGET_DIR}}"}}]
     cmds:
-      - cp '{{.TASKFILE_DIR}}/config_dev.json' '{{.SERVER_DIR}}/config.json'
-      - npx node '{{.SERVER_DIR}}/index.js'
+      - node '{{joinPath .TARGET_DIR "index.js"}}'
   
-  integration:test:
+  integration_test:
     desc: Test the deployed dev metrics server
     cmds:
       - '{{.TASKFILE_DIR}}/test_integration.sh'

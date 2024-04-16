@@ -1,19 +1,19 @@
 version: '3'
 
-vars:
-  WEBHOOK_DIR: '{{joinPath .USER_WORKING_DIR "build/sentry_webhook"}}'
-
+requires:
+  vars: [OUTPUT_BASE]
+ 
 tasks:
   clean:
     desc: Clean Sentry webhook output
     cmds:
-      - rm -rf "{{.WEBHOOK_DIR}}"
+      - rm -rf "{{.OUTPUT_BASE}}"
 
   build:
     desc: Build the Sentry webhook
     cmds:
-      - npx tsc --project '{{.TASKFILE_DIR}}/tsconfig.prod.json' --outDir '{{.WEBHOOK_DIR}}'
-      - cp '{{.TASKFILE_DIR}}/package.json' '{{.WEBHOOK_DIR}}'
+      - npx tsc --project '{{.TASKFILE_DIR}}/tsconfig.prod.json' --outDir '{{.OUTPUT_BASE}}'
+      - cp '{{.TASKFILE_DIR}}/package.json' '{{.OUTPUT_BASE}}'
 
   deploy:
     desc: Deploy the Sentry webhook to GCP Cloud Functions
@@ -23,7 +23,7 @@ tasks:
           --project=uproxysite
           --runtime=nodejs18
           --trigger-http
-          --source='{{.WEBHOOK_DIR}}'
+          --source='{{.OUTPUT_BASE}}'
           --entry-point=postSentryEventToSalesforce
   
   test:

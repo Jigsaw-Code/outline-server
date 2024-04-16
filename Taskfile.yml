@@ -4,21 +4,27 @@ set: [pipefail]
 
 run: when_changed
 
-includes:
-  metrics_server: ./src/metrics_server/Taskfile.yml
-  sentry_webhook: ./src/sentry_webhook/Taskfile.yml
-  shadowbox: ./src/shadowbox/Taskfile.yml
-
 vars:
-  ROOT_DIR: "{{.TASKFILE_DIR}}"
-  BUILD_DIR: "{{.TASKFILE_DIR}}/build"
+  REPO_ROOT: "{{.ROOT_DIR}}"
+  BUILD_ROOT: "{{.ROOT_DIR}}/build"
+
+includes:
+  metrics_server:
+    taskfile: ./src/metrics_server/Taskfile.yml
+    vars: {OUTPUT_BASE: '{{joinPath .BUILD_ROOT "metrics_server"}}'}
+
+  sentry_webhook:
+    taskfile: ./src/sentry_webhook/Taskfile.yml
+    vars: {OUTPUT_BASE: '{{joinPath .BUILD_ROOT "metrics_server"}}'}
+
+  shadowbox: ./src/shadowbox/Taskfile.yml
 
 tasks:
   clean:
     desc: Clean output files
     cmds:
       - rm -rf .task src/*/node_modules/ build/ node_modules/ third_party/shellcheck/download/ third_party/*/bin third_party/jsign/*.jar
-  
+
   format:
     desc: Format staged files
     cmds: ['npx pretty-quick --staged --pattern "**/*.{cjs,html,js,json,md,ts}"']
