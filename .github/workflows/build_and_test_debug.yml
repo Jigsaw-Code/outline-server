@@ -31,7 +31,7 @@ jobs:
         run: npm ci
 
       - name: Lint
-        run: task lint
+        run: ./task lint
 
   shadowbox:
     name: Shadowbox
@@ -51,13 +51,13 @@ jobs:
         run: npm ci
 
       - name: Shadowbox Debug Build
-        run: task shadowbox:build
+        run: ./task shadowbox:build
 
       - name: Shadowbox Unit Test
-        run: task shadowbox:test
+        run: ./task shadowbox:test
 
       - name: Shadowbox Integration Test
-        run: task shadowbox:integration_test:run
+        run: ./task shadowbox:integration_test:run
 
   manual-install-script:
     name: Manual Install Script
@@ -90,10 +90,10 @@ jobs:
         run: npm ci
 
       - name: Metrics Server Debug Build
-        run: task metrics_server:build
+        run: ./task metrics_server:build
 
       - name: Metrics Server Test
-        run: task metrics_server:test
+        run: ./task metrics_server:test
 
   sentry-webhook:
     name: Sentry Webhook
@@ -113,7 +113,7 @@ jobs:
         run: npm ci
 
       - name: Sentry Webhook Debug Build
-        run: task sentry_webhook:build
+        run: ./task sentry_webhook:build
 
       - name: Sentry Webhook Test
-        run: task sentry_webhook:test
+        run: ./task sentry_webhook:test
