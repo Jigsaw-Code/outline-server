@@ -57,7 +57,7 @@ jobs:
         run: ./task shadowbox:test
 
       - name: Shadowbox Integration Test
-        run: ./task shadowbox:integration_test:run
+        run: ./task shadowbox:integration_test
 
   manual-install-script:
     name: Manual Install Script
