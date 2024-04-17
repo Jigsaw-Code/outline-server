@@ -211,14 +211,14 @@ function cleanup() {
   done
 
   function test_networking() {
-    # Verify we can retrieve the internet target URL.
-    client_curl -x "socks5h://127.0.0.1:${LOCAL_SOCKS_PORT}" "${INTERNET_TARGET_URL}" \
-      || fail "Could not fetch ${INTERNET_TARGET_URL} through shadowbox."
-
     # Verify the server blocks requests to hosts on private addresses.
     # Exit code 52 is "Empty server response".
     (client_curl -x "socks5h://127.0.0.1:${LOCAL_SOCKS_PORT}" "${TARGET_IP}" \
       && fail "Target host in a private network accessible through shadowbox") || (($? == 52))
+
+    # Verify we can retrieve the internet target URL.
+    client_curl -x "socks5h://127.0.0.1:${LOCAL_SOCKS_PORT}" "${INTERNET_TARGET_URL}" \
+      || fail "Could not fetch ${INTERNET_TARGET_URL} through shadowbox."
 
     # Verify we can't access the URL anymore after the key is deleted
     client_curl --insecure -X DELETE "${SB_API_URL}/access-keys/0" > /dev/null
