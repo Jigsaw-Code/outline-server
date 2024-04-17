@@ -112,8 +112,7 @@ tasks:
   test:
     desc: Run the unit tests for the Outline Server
     vars:
-      TEST_DIR:
-        sh: mktemp -d
+      TEST_DIR: '{{joinPath .OUTPUT_BASE "test"}}'
     cmds:
       - defer: rm -rf "{{.TEST_DIR}}"
       - npx tsc -p '{{.TASKFILE_DIR}}' --outDir '{{.TEST_DIR}}'
