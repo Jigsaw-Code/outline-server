@@ -32,7 +32,7 @@
 
 set -x
 
-OUTPUT_DIR="$(mktemp -d)"
+OUTPUT_DIR="${OUTPUT_DIR:-$(mktemp -d)}"
 readonly OUTPUT_DIR
 
 # Set DOCKER=podman to use Podman instead of Docker.
@@ -114,7 +114,7 @@ function setup() {
     -e "SB_PRIVATE_KEY_FILE=/root/shadowbox/test.key"
     -v "${SB_CERTIFICATE_FILE}:/root/shadowbox/test.crt"
     -v "${SB_PRIVATE_KEY_FILE}:/root/shadowbox/test.key"
-    -v "${TMP_STATE_DIR}:/root/shadowbox/persisted-state"
+    -v "${STATE_DIR}:/root/shadowbox/persisted-state"
     --name "${SHADOWBOX_CONTAINER}"
     "${SHADOWBOX_IMAGE}"
   )
@@ -145,7 +145,7 @@ function cleanup() {
   local -i status=$?
   if ((DEBUG != 1)); then
     remove_containers
-    rm -rf "${TMP_STATE_DIR}" || echo "Failed to cleanup files at ${TMP_STATE_DIR}"
+    rm -rf "${STATE_DIR}" || echo "Failed to cleanup files at ${STATE_DIR}"
   fi
   return "${status}"
 }
@@ -161,12 +161,12 @@ function cleanup() {
   # Sets everything up
   export SB_API_PREFIX='TestApiPrefix'
   readonly SB_API_URL="https://shadowbox/${SB_API_PREFIX}"
-  TMP_STATE_DIR="$(mktemp -d)"
-  export TMP_STATE_DIR
-  echo '{"hostname": "shadowbox"}' > "${TMP_STATE_DIR}/shadowbox_server_config.json"
+  export STATE_DIR="${OUTPUT_DIR}/state"
+  mkdir -p "${STATE_DIR}"
+  echo '{"hostname": "shadowbox"}' > "${STATE_DIR}/shadowbox_server_config.json"
   # Make the certificates. This exports SB_CERTIFICATE_FILE and SB_PRIVATE_KEY_FILE.
   # shellcheck source=../scripts/make_test_certificate.sh
-  source "$(dirname "$0")/../scripts/make_test_certificate.sh" "${TMP_STATE_DIR}"
+  source "$(dirname "$0")/../scripts/make_test_certificate.sh" "${STATE_DIR}"
   setup
 
   # Wait for target to come up.

@@ -11,5 +11,11 @@ task shadowbox:integration_test
 For development of the test, or to test a specific image, you may prefer calling the test directly, without the build step:
 
 ```sh
-./src/shadowbox/integration_test/test.sh localhost/outline/shadowbox:latest
+./task shadowbox:test_image IMAGE_NAME=quay.io/outline/shadowbox:stable
+```
+
+If you prefer to use Podman instead of Docker, set the `DOCKER=podman` environment variable:
+
+```sh
+DOCKER=podman task shadowbox:integration_test
 ```

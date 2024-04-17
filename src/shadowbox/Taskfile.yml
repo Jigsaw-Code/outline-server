@@ -156,12 +156,23 @@ tasks:
 
   integration_test:
     desc: Run the integration test
-    vars:
-      SB_IMAGE: '{{.SB_IMAGE | default "localhost/outline/shadowbox:latest"}}'
-    deps: [docker:build]
     cmds:
-      - cd '{{.TASKFILE_DIR}}'
-      - "'{{.TASKFILE_DIR}}/integration_test/test.sh' '{{.SB_IMAGE}}'"
+      - task: docker:build
+      - task: test_image
+        vars:
+          IMAGE_NAME: localhost/outline/shadowbox:latest
+          OUTPUT_DIR: '{{joinPath .OUTPUT_BASE "integration_test"}}'
+
+  test_image:
+    desc: Test a specific image by name
+    requires:
+      vars: [IMAGE_NAME]
+    vars:
+      OUTPUT_DIR: '{{joinPath .OUTPUT_BASE "test_image"}}'
+    cmds:
+      - rm -rf '{{.OUTPUT_DIR}}'
+      - OUTPUT_DIR='{{.OUTPUT_DIR}}' '{{joinPath .TASKFILE_DIR "integration_test/test.sh"}}' '{{.IMAGE_NAME}}'
+
 
   test:
     desc: Run the unit tests for the Outline Server
