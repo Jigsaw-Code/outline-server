@@ -213,7 +213,7 @@ function cleanup() {
   function test_networking() {
     # Verify the server blocks requests to hosts on private addresses.
     # Exit code 52 is "Empty server response".
-    (client_curl -x "socks5h://127.0.0.1:${LOCAL_SOCKS_PORT}" "${TARGET_IP}" -v \
+    (client_curl -x "socks5h://127.0.0.1:${LOCAL_SOCKS_PORT}" -v "${TARGET_IP}" \
       && fail "Target host in a private network accessible through shadowbox") || (($? == 52))
 
     # Verify we can retrieve the internet target URL.
