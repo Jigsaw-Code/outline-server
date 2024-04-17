@@ -170,7 +170,7 @@ function cleanup() {
   setup
 
   # Wait for target to come up.
-  wait_for_resource localhost:10080
+  wait_for_resource 127.0.0.1:10080
   TARGET_IP="$("${DOCKER}" inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${TARGET_CONTAINER}")"
   readonly TARGET_IP
 
@@ -185,7 +185,7 @@ function cleanup() {
     fail "Client should not have access to target host") || (($? == 6 || $? == 28))
 
   # Wait for shadowbox to come up.
-  wait_for_resource https://localhost:20443/access-keys
+  wait_for_resource https://127.0.0.1:20443/access-keys
   # Verify that the shadowbox can access the target
   "${DOCKER}" exec "${SHADOWBOX_CONTAINER}" wget --spider http://target
 
@@ -213,17 +213,17 @@ function cleanup() {
   function test_networking() {
     # Verify the server blocks requests to hosts on private addresses.
     # Exit code 52 is "Empty server response".
-    (client_curl -x "socks5h://localhost:${LOCAL_SOCKS_PORT}" "${TARGET_IP}" &> /dev/null \
+    (client_curl -x "socks5h://127.0.0.1:${LOCAL_SOCKS_PORT}" "${TARGET_IP}" &> /dev/null \
       && fail "Target host in a private network accessible through shadowbox") || (($? == 52))
 
     # Verify we can retrieve the internet target URL.
-    client_curl -x "socks5h://localhost:${LOCAL_SOCKS_PORT}" "${INTERNET_TARGET_URL}" \
+    client_curl -x "socks5h://127.0.0.1:${LOCAL_SOCKS_PORT}" "${INTERNET_TARGET_URL}" \
       || fail "Could not fetch ${INTERNET_TARGET_URL} through shadowbox."
 
     # Verify we can't access the URL anymore after the key is deleted
     client_curl --insecure -X DELETE "${SB_API_URL}/access-keys/0" > /dev/null
     # Exit code 56 is "Connection reset by peer".
-    (client_curl -x "socks5h://localhost:${LOCAL_SOCKS_PORT}" "${INTERNET_TARGET_URL}" &> /dev/null \
+    (client_curl -x "socks5h://127.0.0.1:${LOCAL_SOCKS_PORT}" "${INTERNET_TARGET_URL}" &> /dev/null \
       && fail "Deleted access key is still active") || (($? == 56))
   }
 
