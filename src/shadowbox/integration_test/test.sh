@@ -35,6 +35,7 @@ set -x
 OUTPUT_DIR="$(mktemp -d)"
 readonly OUTPUT_DIR
 
+# Set DOCKER=podman to use Podman instead of Docker.
 readonly DOCKER="${DOCKER:-docker}"
 
 # TODO(fortuna): Make it possible to run multiple tests in parallel by adding a
@@ -124,7 +125,7 @@ function setup() {
   # Client service.
   "${DOCKER}" build --force-rm -t "${CLIENT_IMAGE}" "$(dirname "$0")/client"
   # Use -i to keep the container running.
-  "${DOCKER}" run -d --rm -it -p "30555:555" --network "${NET_BLOCKED}" --name "${CLIENT_CONTAINER}" "${CLIENT_IMAGE}"
+  "${DOCKER}" run -d --rm -it --network "${NET_BLOCKED}" --name "${CLIENT_CONTAINER}" "${CLIENT_IMAGE}"
 
   # Utilities
   "${DOCKER}" build --force-rm -t "${UTIL_IMAGE}" "$(dirname "$0")/util"
@@ -203,9 +204,9 @@ function cleanup() {
   # Start Shadowsocks client and wait for it to be ready
   declare -ir LOCAL_SOCKS_PORT=5555
   "${DOCKER}" exec -d "${CLIENT_CONTAINER}" \
-    /go/bin/go-shadowsocks2 "${SS_USER_ARGUMENTS[@]}" -socks "localhost:${LOCAL_SOCKS_PORT}" -verbose \
+    /go/bin/go-shadowsocks2 "${SS_USER_ARGUMENTS[@]}" -socks "127.0.0.1:${LOCAL_SOCKS_PORT}" -verbose \
     || fail "Could not start shadowsocks client"
-  while ! "${DOCKER}" exec "${CLIENT_CONTAINER}" nc -z localhost "${LOCAL_SOCKS_PORT}"; do
+  while ! "${DOCKER}" exec "${CLIENT_CONTAINER}" nc -z 127.0.0.1 "${LOCAL_SOCKS_PORT}"; do
     sleep 0.1
   done
 

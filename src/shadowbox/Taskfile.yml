@@ -56,7 +56,8 @@ tasks:
       - echo "Using directory {{.RUN_DIR}}"
       - mkdir -p '{{.STATE_DIR}}'
       - echo '{"hostname":"127.0.0.1"}' > "{{.STATE_CONFIG}}"
-      - source '{{joinPath .TASKFILE_DIR "scripts/make_test_certificate.sh"}}' '{{.RUN_DIR}}'
+      - task: make_test_certificate 
+        vars: {OUTPUT_DIR: '{{.RUN_DIR}}'}
       - node '{{joinPath .OUTPUT_BASE .TARGET_OS .TARGET_ARCH "app/main.js"}}'
 
   docker:build:
@@ -99,56 +100,59 @@ tasks:
           -t '{{.IMAGE_NAME}}' \
           '{{.IMAGE_ROOT}}'
 
-#   docker:start:
-#     desc: Build and run the Outline Server Docker image
-#     requires:
-#       vars: [DOCKER]
-#     deps: [docker:build]
-#     vars:
-#       RUN_ID: '{{.RUN_ID | default (now | date "2006-01-02-150405")}}'
-#       RUN_DIR: '{{joinPath "/tmp/outline" .RUN_ID}}'
-#       HOST_STATE_DIR: '{{joinPath .RUN_DIR "persisted-state"}}'
-#       STATE_CONFIG: '{{joinPath .HOST_STATE_DIR "shadowbox_server_config.json"}}'
-#       ACCESS_KEY_PORT: '{{.ACCESS_KEY_PORT | default "9999"}}'
-#       API_PORT: '{{.API_PORT | default "8081"}}'
-#       IMAGE_NAME: '{{.IMAGE_NAME | "localhost/outline/shadowbox"}}'
-#     cmds:
-#       - echo "Using directory {{.RUN_DIR}}"
-#       - mkdir -p '{{.HOST_STATE_DIR}}'
-#       - echo '{"hostname":"127.0.0.1"}' > "{{.STATE_CONFIG}}"
-#       - source '{{joinPath .TASKFILE_DIR "scripts/make_test_certificate.sh"}}' '{{.RUN_DIR}}'
-#       - |
-#         '{{.DOCKER}}' --rm -it
-#         --name shadowbox
+  docker:start:
+    desc: Build and run the Outline Server Docker image
+    interactive: true
+    requires:
+      vars: [DOCKER]
+    deps: [{task: docker:build, vars: {TARGET_ARCH: {sh: 'uname -m'}}}]
+    vars:
+      RUN_DIR: '{{joinPath .OUTPUT_BASE "docker_start"}}'
+      IMAGE_NAME: '{{.IMAGE_NAME | default "localhost/outline/shadowbox"}}'
+      API_PORT: '8081'
+      ACCESS_KEY_PORT: '9999'
+      CERTIFICATE_FILE: 'shadowbox-selfsigned-dev.crt'
+      PRIVATE_KEY_FILE: 'shadowbox-selfsigned-dev.key'
+      HOST_STATE_DIR: '{{joinPath .RUN_DIR "persisted-state"}}'
+      CONTAINER_STATE_DIR: '/opt/outline/pesisted-state'
+      STATE_CONFIG: '{{joinPath .HOST_STATE_DIR "shadowbox_server_config.json"}}'
+    cmds:
+      - rm -rf '{{.RUN_DIR}}'
+      - mkdir -p '{{.HOST_STATE_DIR}}'
+      - echo '{"hostname":"127.0.0.1"}' > "{{.STATE_CONFIG}}"
+      - task: make_test_certificate 
+        vars: {OUTPUT_DIR: '{{.HOST_STATE_DIR}}'}
+      - |
+        docker_command=(
+          '{{.DOCKER}}' run -it --rm --name 'shadowbox'
+          {{if eq OS "linux" -}}
+          --net host
+          {{else}}
+          -p '{{.API_PORT}}:{{.API_PORT}}'
+          -p '{{.ACCESS_KEY_PORT}}:{{.ACCESS_KEY_PORT}}'
+          -p '{{.ACCESS_KEY_PORT}}:{{.ACCESS_KEY_PORT}}/udp'
+          -p '9090-9092:9090-9092'
+          {{- end}}
 
+          # Where the container keeps its persistent state.
+          -v "{{.HOST_STATE_DIR}}:{{.CONTAINER_STATE_DIR}}"            
+          -e "SB_STATE_DIR={{.CONTAINER_STATE_DIR}}"
 
+          # Port number and path prefix used by the server manager API.
+          -e "SB_API_PORT={{.API_PORT}}"
+          -e "SB_API_PREFIX=TestApiPrefix"
 
-# readonly CONTAINER_STATE_DIR='/root/shadowbox/persisted-state'
+          # Location of the API TLS certificate and key.
+          -e "SB_CERTIFICATE_FILE={{joinPath .CONTAINER_STATE_DIR .CERTIFICATE_FILE}}"
+          -e "SB_PRIVATE_KEY_FILE={{joinPath .CONTAINER_STATE_DIR .PRIVATE_KEY_FILE}}"
 
-# # TODO: mount a folder rather than individual files.
-# declare -ar docker_bindings=(
-#   -v "${HOST_STATE_DIR}:${CONTAINER_STATE_DIR}"
-#   -e "SB_STATE_DIR=${CONTAINER_STATE_DIR}"
-#   -v "${SB_CERTIFICATE_FILE}:${SB_CERTIFICATE_FILE}"
-#   -v "${SB_PRIVATE_KEY_FILE}:${SB_PRIVATE_KEY_FILE}"
-#   -e "LOG_LEVEL=${LOG_LEVEL:-debug}"
-#   -e "SB_API_PORT=${SB_API_PORT}"
-#   -e "SB_API_PREFIX=TestApiPrefix"
-#   -e "SB_CERTIFICATE_FILE=${SB_CERTIFICATE_FILE}"
-#   -e "SB_PRIVATE_KEY_FILE=${SB_PRIVATE_KEY_FILE}"
-#   -e "SB_METRICS_URL=${SB_METRICS_URL:-https://dev.metrics.getoutline.org}"
-# )
+          # Where to report metrics to, if opted-in.
+          -e "SB_METRICS_URL={{.METRICS_URL | default "https://dev.metrics.getoutline.org"}}"
 
-# declare -a NET_BINDINGS=("--network=host")
-# if [[ "$(uname)" == "Darwin" ]]; then
-#   # Docker does not support the --network=host option on macOS. Instead, publish the management API
-#   # and access key ports to the host.
-#   NET_BINDINGS=(-p "${SB_API_PORT}:${SB_API_PORT}" -p "${ACCESS_KEY_PORT}:${ACCESS_KEY_PORT}" -p "${ACCESS_KEY_PORT}:${ACCESS_KEY_PORT}/udp")
-# fi;
-
-# docker run --rm -it "${NET_BINDINGS[@]}" --name shadowbox "${docker_bindings[@]}" "${IMAGE}"
-
-
+          # The Outline server image to run.
+          '{{.IMAGE_NAME}}'
+        )
+        "${docker_command[@]}"
 
   integration_test:
     desc: Run the integration test
@@ -167,3 +171,16 @@ tasks:
       - defer: rm -rf "{{.TEST_DIR}}"
       - npx tsc -p '{{.TASKFILE_DIR}}' --outDir '{{.TEST_DIR}}'
       - npx jasmine '{{.TEST_DIR}}/**/*.spec.js'
+
+  make_test_certificate:
+    internal: true
+    requires: {vars: [OUTPUT_DIR]}
+    vars:
+      CERTIFICATE_FILE: '{{joinPath .OUTPUT_DIR "shadowbox-selfsigned-dev.crt"}}'
+      PRIVATE_KEY_FILE: '{{joinPath .OUTPUT_DIR "shadowbox-selfsigned-dev.key"}}'
+    cmds:
+      - mkdir -p '{{.OUTPUT_DIR}}'
+      - >
+        openssl req -x509 -nodes -days 36500 -newkey rsa:4096
+        -subj "/CN=localhost"
+        -keyout "{{.PRIVATE_KEY_FILE}}" -out "{{.CERTIFICATE_FILE}}"
