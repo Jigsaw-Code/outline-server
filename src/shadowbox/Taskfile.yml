@@ -67,7 +67,7 @@ tasks:
       VERSION: '{{.IMAGE_VERSION | default "dev"}}'
       IMAGE_NAME: '{{.IMAGE_NAME | default "localhost/outline/shadowbox"}}'
       TARGET_ARCH: '{{.TARGET_ARCH | default "x86_64"}}'
-      IMAGE_ROOT: '{{joinPath .OUTPUT_BASE "docker" .TARGET_ARCH}}'
+      IMAGE_ROOT: '{{joinPath .OUTPUT_BASE "image_root" .TARGET_ARCH}}'
       # Newer node images have no valid content trust data.
       # Pin the image node:16.18.0-alpine3.16 by hash.
       # See image at https://hub.docker.com/_/node/tags?page=1&name=18.18.0-alpine3.18
@@ -169,7 +169,7 @@ tasks:
     requires:
       vars: [IMAGE_NAME]
     vars:
-      OUTPUT_DIR: '{{joinPath .OUTPUT_BASE "test_image"}}'
+      OUTPUT_DIR: '{{joinPath .OUTPUT_BASE "image_test"}}'
     cmds:
       - rm -rf '{{.OUTPUT_DIR}}'
       - OUTPUT_DIR='{{.OUTPUT_DIR}}' '{{joinPath .TASKFILE_DIR "integration_test/test.sh"}}' '{{.IMAGE_NAME}}'

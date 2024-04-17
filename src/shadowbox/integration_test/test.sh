@@ -161,7 +161,7 @@ function cleanup() {
   # Sets everything up
   export SB_API_PREFIX='TestApiPrefix'
   readonly SB_API_URL="https://shadowbox/${SB_API_PREFIX}"
-  export STATE_DIR="${OUTPUT_DIR}/state"
+  export STATE_DIR="${OUTPUT_DIR}/container_state"
   mkdir -p "${STATE_DIR}"
   echo '{"hostname": "shadowbox"}' > "${STATE_DIR}/shadowbox_server_config.json"
   # Make the certificates. This exports SB_CERTIFICATE_FILE and SB_PRIVATE_KEY_FILE.
