@@ -1,0 +1,198 @@
+version: '3'
+
+requires:
+  vars: [OUTPUT_BASE]
+
+tasks:
+  build:
+    desc: Build the Outline Server Node.js app
+    vars:
+      TARGET_OS: '{{.TARGET_OS | default "linux"}}'
+      TARGET_ARCH: '{{.TARGET_ARCH | default "x86_64"}}'
+      GOOS: '{{get (dict "macos" "darwin") .TARGET_OS | default .TARGET_OS}}'
+      GOARCH: '{{get (dict "x86_64" "amd64") .TARGET_ARCH | default .TARGET_ARCH}}'
+      TARGET_DIR: '{{.TARGET_DIR | default (joinPath .OUTPUT_BASE .TARGET_OS .TARGET_ARCH)}}'
+      NODE_DIR: '{{joinPath .TARGET_DIR "app"}}'
+      BIN_DIR: '{{joinPath .TARGET_DIR "bin"}}'
+    cmds:
+      - echo Target platform is {{.TARGET_OS}}/{{.TARGET_ARCH}}
+      - rm -rf '{{.TARGET_DIR}}'
+      - mkdir -p '{{.TARGET_DIR}}'
+      - cp '{{joinPath .TASKFILE_DIR "package.json"}}' '{{.TARGET_DIR}}'
+      # Build Node.js app
+      - npx webpack --config='{{joinPath .TASKFILE_DIR "webpack.config.js"}}' --output-path='{{.NODE_DIR}}' ${BUILD_ENV:+--mode="${BUILD_ENV}"}
+      # Copy third_party dependencies
+      - mkdir -p '{{.BIN_DIR}}'
+      - |
+        {
+          cd '{{joinPath .USER_WORKING_DIR "third_party" "prometheus"}}'
+          make 'bin/{{.TARGET_OS}}-{{.TARGET_ARCH}}/prometheus'
+          cp 'bin/{{.TARGET_OS}}-{{.TARGET_ARCH}}/prometheus' '{{.BIN_DIR}}/'
+        }
+      # Set CGO_ENABLED=0 to force static linkage. See https://mt165.co.uk/blog/static-link-go/.
+      - GOOS={{.GOOS}} GOARCH={{.GOARCH}} CGO_ENABLED=0 go build -ldflags='-s -w -X main.version=embedded' -o '{{.BIN_DIR}}/' github.com/Jigsaw-Code/outline-ss-server/cmd/outline-ss-server
+
+  start:
+    desc: Run the Outline server locally
+    deps: [{task: build, vars: {TARGET_OS: '{{.TARGET_OS}}', TARGET_ARCH: '{{.TARGET_ARCH}}'}}]
+    vars:
+      UNAME_OS: {sh: 'uname -s'}
+      TARGET_OS: '{{get (dict "Linux" "linux" "Darwin" "macos") .UNAME_OS}}'
+      TARGET_ARCH: {sh: 'uname -m'}
+      RUN_ID: '{{.RUN_ID | default (now | date "2006-01-02-150405")}}'
+      RUN_DIR: '{{joinPath "/tmp/outline" .RUN_ID}}'
+      STATE_DIR: '{{joinPath .RUN_DIR "persisted-state"}}'
+      STATE_CONFIG: '{{joinPath .STATE_DIR "shadowbox_server_config.json"}}'
+      LOG_LEVEL: '{{.LOG_LEVEL | default "debug"}}'
+    env:
+      # WARNING: The SB_API_PREFIX should be kept secret!
+      SB_API_PREFIX: TestApiPrefix
+      SB_METRICS_URL: https://dev.metrics.getoutline.org
+      SB_STATE_DIR: '{{.STATE_DIR}}'
+      SB_PUBLIC_IP: localhost
+      SB_CERTIFICATE_FILE: '{{joinPath .RUN_DIR "/shadowbox-selfsigned-dev.crt"}}'
+      SB_PRIVATE_KEY_FILE: '{{joinPath .RUN_DIR "/shadowbox-selfsigned-dev.key"}}'
+    cmds:
+      - echo Target platform is {{.TARGET_OS}}/{{.TARGET_ARCH}}
+      - echo "Using directory {{.RUN_DIR}}"
+      - mkdir -p '{{.STATE_DIR}}'
+      - echo '{"hostname":"127.0.0.1"}' > "{{.STATE_CONFIG}}"
+      - task: make_test_certificate 
+        vars: {OUTPUT_DIR: '{{.RUN_DIR}}'}
+      - node '{{joinPath .OUTPUT_BASE .TARGET_OS .TARGET_ARCH "app/main.js"}}'
+
+  docker:build:
+    desc: Build the Outline Server Docker image
+    vars:
+      VERSION: '{{.IMAGE_VERSION | default "dev"}}'
+      IMAGE_NAME: '{{.IMAGE_NAME | default "localhost/outline/shadowbox"}}'
+      TARGET_ARCH: '{{.TARGET_ARCH | default "x86_64"}}'
+      IMAGE_ROOT: '{{joinPath .OUTPUT_BASE "image_root" .TARGET_ARCH}}'
+      # Newer node images have no valid content trust data.
+      # Pin the image node:16.18.0-alpine3.16 by hash.
+      # See image at https://hub.docker.com/_/node/tags?page=1&name=18.18.0-alpine3.18
+      NODE_IMAGE: '{{get
+          (dict
+            "x86_64" "node@sha256:a0b787b0d53feacfa6d606fb555e0dbfebab30573277f1fe25148b05b66fa097"
+            "arm64" "node@sha256:b4b7a1dd149c65ee6025956ac065a843b4409a62068bd2b0cbafbb30ca2fab3b"
+          ) .TARGET_ARCH                       
+        }}'
+    env:
+      DOCKER_CONTENT_TRUST: '{{.DOCKER_CONTENT_TRUST | default "1"}}'
+      # Enable Docker BuildKit (https://docs.docker.com/develop/develop-images/build_enhancements)
+      DOCKER_BUILDKIT: 1
+    cmds:
+      - rm -rf '{{.IMAGE_ROOT}}'
+      - mkdir -p '{{.IMAGE_ROOT}}'
+      - {task: build, vars: {TARGET_OS: linux, TARGET_ARCH: '{{.TARGET_ARCH}}', TARGET_DIR: '{{joinPath .IMAGE_ROOT "/opt/outline-server"}}'}}
+      - cp -R '{{joinPath .TASKFILE_DIR "scripts"}}' '{{.IMAGE_ROOT}}/scripts'
+      - mkdir -p '{{joinPath .IMAGE_ROOT "/etc/periodic/weekly"}}'
+      - cp '{{joinPath .TASKFILE_DIR "scripts" "update_mmdb.sh"}}' '{{joinPath .IMAGE_ROOT "/etc/periodic/weekly/"}}'
+      # Create default state directory
+      - mkdir -p '{{joinPath .IMAGE_ROOT "/root/shadowbox/persisted-state"}}'
+      # Copy entrypoint command
+      - cp '{{joinPath .TASKFILE_DIR "docker/cmd.sh"}}' '{{.IMAGE_ROOT}}/'
+      # Build image with given root
+      - |
+        "${DOCKER:-docker}" build --force-rm \
+          --build-arg NODE_IMAGE='{{.NODE_IMAGE}}' \
+          --build-arg VERSION='{{.VERSION}}' \
+          -f '{{joinPath .TASKFILE_DIR "docker" "Dockerfile"}}' \
+          -t '{{.IMAGE_NAME}}' \
+          '{{.IMAGE_ROOT}}'
+
+  docker:start:
+    desc: Build and run the Outline Server Docker image
+    interactive: true
+    requires:
+      vars: [DOCKER]
+    deps: [{task: docker:build, vars: {TARGET_ARCH: {sh: 'uname -m'}}}]
+    vars:
+      RUN_DIR: '{{joinPath .OUTPUT_BASE "docker_start"}}'
+      IMAGE_NAME: '{{.IMAGE_NAME | default "localhost/outline/shadowbox"}}'
+      API_PORT: '8081'
+      ACCESS_KEY_PORT: '9999'
+      CERTIFICATE_FILE: 'shadowbox-selfsigned-dev.crt'
+      PRIVATE_KEY_FILE: 'shadowbox-selfsigned-dev.key'
+      HOST_STATE_DIR: '{{joinPath .RUN_DIR "persisted-state"}}'
+      CONTAINER_STATE_DIR: '/opt/outline/pesisted-state'
+      STATE_CONFIG: '{{joinPath .HOST_STATE_DIR "shadowbox_server_config.json"}}'
+    cmds:
+      - rm -rf '{{.RUN_DIR}}'
+      - mkdir -p '{{.HOST_STATE_DIR}}'
+      - echo '{"hostname":"127.0.0.1"}' > "{{.STATE_CONFIG}}"
+      - task: make_test_certificate 
+        vars: {OUTPUT_DIR: '{{.HOST_STATE_DIR}}'}
+      - |
+        docker_command=(
+          '{{.DOCKER}}' run -it --rm --name 'shadowbox'
+          {{if eq OS "linux" -}}
+          --net host
+          {{else}}
+          -p '{{.API_PORT}}:{{.API_PORT}}'
+          -p '{{.ACCESS_KEY_PORT}}:{{.ACCESS_KEY_PORT}}'
+          -p '{{.ACCESS_KEY_PORT}}:{{.ACCESS_KEY_PORT}}/udp'
+          -p '9090-9092:9090-9092'
+          {{- end}}
+
+          # Where the container keeps its persistent state.
+          -v "{{.HOST_STATE_DIR}}:{{.CONTAINER_STATE_DIR}}"            
+          -e "SB_STATE_DIR={{.CONTAINER_STATE_DIR}}"
+
+          # Port number and path prefix used by the server manager API.
+          -e "SB_API_PORT={{.API_PORT}}"
+          -e "SB_API_PREFIX=TestApiPrefix"
+
+          # Location of the API TLS certificate and key.
+          -e "SB_CERTIFICATE_FILE={{joinPath .CONTAINER_STATE_DIR .CERTIFICATE_FILE}}"
+          -e "SB_PRIVATE_KEY_FILE={{joinPath .CONTAINER_STATE_DIR .PRIVATE_KEY_FILE}}"
+
+          # Where to report metrics to, if opted-in.
+          -e "SB_METRICS_URL={{.METRICS_URL | default "https://dev.metrics.getoutline.org"}}"
+
+          # The Outline server image to run.
+          '{{.IMAGE_NAME}}'
+        )
+        "${docker_command[@]}"
+
+  integration_test:
+    desc: Run the integration test
+    cmds:
+      - task: docker:build
+      - task: test_image
+        vars:
+          IMAGE_NAME: localhost/outline/shadowbox:latest
+          OUTPUT_DIR: '{{joinPath .OUTPUT_BASE "integration_test"}}'
+
+  test_image:
+    desc: Test a specific image by name
+    requires:
+      vars: [IMAGE_NAME]
+    vars:
+      OUTPUT_DIR: '{{joinPath .OUTPUT_BASE "image_test"}}'
+    cmds:
+      - rm -rf '{{.OUTPUT_DIR}}'
+      - OUTPUT_DIR='{{.OUTPUT_DIR}}' '{{joinPath .TASKFILE_DIR "integration_test/test.sh"}}' '{{.IMAGE_NAME}}'
+
+
+  test:
+    desc: Run the unit tests for the Outline Server
+    vars:
+      TEST_DIR: '{{joinPath .OUTPUT_BASE "test"}}'
+    cmds:
+      - defer: rm -rf "{{.TEST_DIR}}"
+      - npx tsc -p '{{.TASKFILE_DIR}}' --outDir '{{.TEST_DIR}}'
+      - npx jasmine '{{.TEST_DIR}}/**/*.spec.js'
+
+  make_test_certificate:
+    internal: true
+    requires: {vars: [OUTPUT_DIR]}
+    vars:
+      CERTIFICATE_FILE: '{{joinPath .OUTPUT_DIR "shadowbox-selfsigned-dev.crt"}}'
+      PRIVATE_KEY_FILE: '{{joinPath .OUTPUT_DIR "shadowbox-selfsigned-dev.key"}}'
+    cmds:
+      - mkdir -p '{{.OUTPUT_DIR}}'
+      - >
+        openssl req -x509 -nodes -days 36500 -newkey rsa:4096
+        -subj "/CN=localhost"
+        -keyout "{{.PRIVATE_KEY_FILE}}" -out "{{.CERTIFICATE_FILE}}"

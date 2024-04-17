@@ -1,0 +1,65 @@
+version: '3'
+
+requires:
+  vars: [OUTPUT_BASE]
+
+tasks:
+  clean:
+    desc: Clean metrics server output
+    cmds:
+      - rm -rf "{{.OUTPUT_BASE}}"
+
+  build:
+    desc: Build the metrics server
+    vars:
+      BUILD_MODE: '{{.BUILD_MODE | default "dev"}}'
+      TARGET_DIR: &default-target-dir '{{joinPath .OUTPUT_BASE .BUILD_MODE}}'
+    cmds:
+      - rm -rf '{{.TARGET_DIR}}'
+      - npx tsc --project '{{.TASKFILE_DIR}}' --outDir '{{.TARGET_DIR}}'
+      - cp '{{joinPath .TASKFILE_DIR "package.json"}}' '{{.TARGET_DIR}}'
+      - cp '{{joinPath .USER_WORKING_DIR "package-lock.json"}}' '{{.TARGET_DIR}}'
+      - cp '{{.TASKFILE_DIR}}/app_{{.BUILD_MODE}}.yaml' '{{.TARGET_DIR}}/app.yaml'
+      - cp '{{.TASKFILE_DIR}}/config_{{.BUILD_MODE}}.json' '{{.TARGET_DIR}}/config.json'
+
+  deploy:dev:
+    desc: Deploy the development metrics server
+    vars:
+      BUILD_MODE: "dev"
+      TARGET_DIR: *default-target-dir
+    deps: [{task: build, vars: {BUILD_MODE: "{{.BUILD_MODE}}", TARGET_DIR: "{{.TARGET_DIR}}"}}]
+    cmds:
+      - gcloud app deploy '{{.TASKFILE_DIR}}/dispatch.yaml' '{{.TARGET_DIR}}' --project uproxysite --verbosity info --promote --stop-previous-version
+
+  deploy:prod:
+    desc: Deploy the production metrics server
+    vars:
+      BUILD_MODE: "prod"
+      TARGET_DIR: *default-target-dir
+    deps: [{task: build, vars: {BUILD_MODE: "{{.BUILD_MODE}}", TARGET_DIR: "{{.TARGET_DIR}}"}}]
+    cmds:
+      - gcloud app deploy '{{.TASKFILE_DIR}}/dispatch.yaml' '{{joinPath .OUTPUT_BASE "prod"}}' --project uproxysite --verbosity info --no-promote --no-stop-previous-version
+
+  start:
+    desc: Start the metrics server locally
+    vars:
+      BUILD_MODE: '{{.BUILD_MODE | default "dev"}}'
+      TARGET_DIR: *default-target-dir
+    deps: [{task: build, vars: {BUILD_MODE: "{{.BUILD_MODE}}", TARGET_DIR: "{{.TARGET_DIR}}"}}]
+    cmds:
+      - node '{{joinPath .TARGET_DIR "index.js"}}'
+  
+  integration_test:
+    desc: Test the deployed dev metrics server
+    cmds:
+      - '{{.TASKFILE_DIR}}/test_integration.sh'
+
+  test:
+    desc: Run the unit tests for the metrics server
+    vars:
+      TEST_DIR:
+        sh: "mktemp -d"
+    cmds:
+      - defer: rm -rf "{{.TEST_DIR}}"
+      - npx tsc -p '{{.TASKFILE_DIR}}' --outDir '{{.TEST_DIR}}'
+      - npx jasmine '{{.TEST_DIR}}/**/*.spec.js'

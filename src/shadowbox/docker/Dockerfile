@@ -13,32 +13,8 @@
 # limitations under the License.
 
 ARG NODE_IMAGE
-
-# Multi-stage build: use a build image to prevent bloating the shadowbox image with dependencies.
-# Run `npm ci` and build inside the container to package the right dependencies for the image.
-FROM ${NODE_IMAGE} AS build
-
-# make for building third_party/prometheus and perl-utils for shasum.
-RUN apk add --no-cache --upgrade bash make perl-utils
-WORKDIR /
-
-# Don't copy node_modules and other things not needed for install.
-COPY package.json package-lock.json ./
-COPY src/shadowbox/package.json src/shadowbox/
-RUN --mount=type=cache,target=/root/.npm npm ci
-
-# We copy the source code only after npm ci, so that source code changes don't trigger re-installs.
-COPY scripts scripts/
-COPY src src/
-COPY tsconfig.json ./
-COPY third_party third_party
-
-ARG ARCH
 ARG VERSION
 
-RUN ARCH=${ARCH} ROOT_DIR=/ SB_VERSION=${VERSION} npm run action shadowbox/server/build
-
-# shadowbox image
 FROM ${NODE_IMAGE}
 
 # Save metadata on the software versions we are using.
@@ -53,22 +29,11 @@ STOPSIGNAL SIGKILL
 # safely grab the ip-to-country database.
 RUN apk add --no-cache --upgrade coreutils curl
 
-COPY src/shadowbox/scripts scripts/
-COPY src/shadowbox/scripts/update_mmdb.sh /etc/periodic/weekly/update_mmdb
+COPY . /
 
-RUN /etc/periodic/weekly/update_mmdb
-
-# Create default state directory.
-RUN mkdir -p /root/shadowbox/persisted-state
+RUN /etc/periodic/weekly/update_mmdb.sh
 
 # Install shadowbox.
 WORKDIR /opt/outline-server
 
-# The shadowbox build directory has the following structure:
-#   - app/          (bundled node app)
-#   - bin/          (binary dependencies)
-#   - package.json  (shadowbox package.json)
-COPY --from=build /build/shadowbox/ .
-
-COPY src/shadowbox/docker/cmd.sh /
 CMD /cmd.sh

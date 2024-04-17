@@ -31,6 +31,7 @@ See [Shadowsocks resistance against detection and blocking](docs/shadowsocks.md)
 
 - [Node](https://nodejs.org/en/download/) LTS (`lts/hydrogen`, version `18.16.0`)
 - [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (version `9.5.1`)
+- [Go](https://go.dev/dl/) 1.21+
 
 1. **Install dependencies**
 
@@ -41,7 +42,7 @@ See [Shadowsocks resistance against detection and blocking](docs/shadowsocks.md)
 1. **Start the server**
 
    ```sh
-   npm run action shadowbox/server/start
+   ./task shadowbox:start
    ```
 
    Exploring further options:
@@ -52,5 +53,5 @@ See [Shadowsocks resistance against detection and blocking](docs/shadowsocks.md)
 1. **To clean up**
 
    ```sh
-   npm run clean
+   ./task clean
    ```

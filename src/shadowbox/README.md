@@ -43,13 +43,13 @@ The Outline Server, internal name "Shadowbox," is designed to streamline the set
    - **Node.js App**
 
      ```sh
-     npm run action shadowbox/server/start
+     task shadowbox:start
      ```
 
    - **Docker Container**
 
      ```sh
-     npm run action shadowbox/docker/start
+     task shadowbox:docker:start
      ```
 
      > [!TIP]
@@ -119,38 +119,25 @@ The Outline Server provides a REST API for access key management. If you know th
 
 ### Manual
 
-1. Prerequisites
+Build and run your image with:
 
-   - A locally built Docker image containing your modifications.
-   - Your Docker image uploaded to a registry (e.g., Docker Hub, Quay.io).
+```sh
+task shadowbox:docker:start
+```
 
-1. Setup
+### Integration Test
 
-   - **Environment Variable:** Set `SB_IMAGE` to the uploaded image location. Example:
+The integration test will not only build and run your image, but also run a number of automated tests.
 
-     ```sh
-     export SB_IMAGE=yourdockerhubusername/shadowbox
-     ```
+```sh
+task shadowbox:integration_test
+```
 
-   - **Start the Server:**
+This does the following:
 
-     ```sh
-     npm run action shadowbox/docker/start
-     ```
-
-### Automated
-
-1. **Build and Run:**
-
-   ```sh
-   npm run action shadowbox/integration_test/run
-   ```
-
-   This does the following:
-
-   - Sets up three containers (`client`, `shadowbox`, `target`) and two networks.
-   - Creates a user on `shadowbox`.
-   - Connects to `target` through `shadowbox` using a Shadowsocks `client`: `client <-> shadowbox <-> target`
+- Sets up three containers (`client`, `shadowbox`, `target`) and two networks.
+- Creates a user on `shadowbox`.
+- Connects to `target` through `shadowbox` using a Shadowsocks `client`: `client <-> shadowbox <-> target`
 
 1. **Testing Changes to the Server Config:**
 
