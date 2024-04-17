@@ -62,7 +62,6 @@ tasks:
   docker:build:
     desc: Build the Outline Server Docker image
     vars:
-      DOCKER: '{{.DOCKER | default "docker"}}'
       VERSION: '{{.IMAGE_VERSION | default "dev"}}'
       IMAGE_NAME: '{{.IMAGE_NAME | default "localhost/outline/shadowbox"}}'
       TARGET_ARCH: '{{.TARGET_ARCH | default "x86_64"}}'
@@ -93,12 +92,63 @@ tasks:
       - cp '{{joinPath .TASKFILE_DIR "docker/cmd.sh"}}' '{{.IMAGE_ROOT}}/'
       # Build image with given root
       - |
-        '{{.DOCKER}}' build --force-rm \
+        "${DOCKER:-docker}" build --force-rm \
           --build-arg NODE_IMAGE='{{.NODE_IMAGE}}' \
           --build-arg VERSION='{{.VERSION}}' \
           -f '{{joinPath .TASKFILE_DIR "docker" "Dockerfile"}}' \
           -t '{{.IMAGE_NAME}}' \
           '{{.IMAGE_ROOT}}'
+
+#   docker:start:
+#     desc: Build and run the Outline Server Docker image
+#     requires:
+#       vars: [DOCKER]
+#     deps: [docker:build]
+#     vars:
+#       RUN_ID: '{{.RUN_ID | default (now | date "2006-01-02-150405")}}'
+#       RUN_DIR: '{{joinPath "/tmp/outline" .RUN_ID}}'
+#       HOST_STATE_DIR: '{{joinPath .RUN_DIR "persisted-state"}}'
+#       STATE_CONFIG: '{{joinPath .HOST_STATE_DIR "shadowbox_server_config.json"}}'
+#       ACCESS_KEY_PORT: '{{.ACCESS_KEY_PORT | default "9999"}}'
+#       API_PORT: '{{.API_PORT | default "8081"}}'
+#       IMAGE_NAME: '{{.IMAGE_NAME | "localhost/outline/shadowbox"}}'
+#     cmds:
+#       - echo "Using directory {{.RUN_DIR}}"
+#       - mkdir -p '{{.HOST_STATE_DIR}}'
+#       - echo '{"hostname":"127.0.0.1"}' > "{{.STATE_CONFIG}}"
+#       - source '{{joinPath .TASKFILE_DIR "scripts/make_test_certificate.sh"}}' '{{.RUN_DIR}}'
+#       - |
+#         '{{.DOCKER}}' --rm -it
+#         --name shadowbox
+
+
+
+# readonly CONTAINER_STATE_DIR='/root/shadowbox/persisted-state'
+
+# # TODO: mount a folder rather than individual files.
+# declare -ar docker_bindings=(
+#   -v "${HOST_STATE_DIR}:${CONTAINER_STATE_DIR}"
+#   -e "SB_STATE_DIR=${CONTAINER_STATE_DIR}"
+#   -v "${SB_CERTIFICATE_FILE}:${SB_CERTIFICATE_FILE}"
+#   -v "${SB_PRIVATE_KEY_FILE}:${SB_PRIVATE_KEY_FILE}"
+#   -e "LOG_LEVEL=${LOG_LEVEL:-debug}"
+#   -e "SB_API_PORT=${SB_API_PORT}"
+#   -e "SB_API_PREFIX=TestApiPrefix"
+#   -e "SB_CERTIFICATE_FILE=${SB_CERTIFICATE_FILE}"
+#   -e "SB_PRIVATE_KEY_FILE=${SB_PRIVATE_KEY_FILE}"
+#   -e "SB_METRICS_URL=${SB_METRICS_URL:-https://dev.metrics.getoutline.org}"
+# )
+
+# declare -a NET_BINDINGS=("--network=host")
+# if [[ "$(uname)" == "Darwin" ]]; then
+#   # Docker does not support the --network=host option on macOS. Instead, publish the management API
+#   # and access key ports to the host.
+#   NET_BINDINGS=(-p "${SB_API_PORT}:${SB_API_PORT}" -p "${ACCESS_KEY_PORT}:${ACCESS_KEY_PORT}" -p "${ACCESS_KEY_PORT}:${ACCESS_KEY_PORT}/udp")
+# fi;
+
+# docker run --rm -it "${NET_BINDINGS[@]}" --name shadowbox "${docker_bindings[@]}" "${IMAGE}"
+
+
 
   integration_test:
     desc: Run the integration test
