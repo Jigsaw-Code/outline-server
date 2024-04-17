@@ -38,3 +38,6 @@ mkdir -p "${BIN_DIR}"
 
 # Copy shadowbox package.json
 cp "${ROOT_DIR}/src/shadowbox/package.json" "${OUT_DIR}/"
+
+# Copy Prometheus Console files.
+cp -r "${ROOT_DIR}/src/shadowbox/prometheus" "${OUT_DIR}/prometheus/"
