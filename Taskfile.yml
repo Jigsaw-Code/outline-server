@@ -26,7 +26,7 @@ tasks:
   clean:
     desc: Clean output files
     cmds:
-      - rm -rf .task src/*/node_modules/ build/ node_modules/ third_party/shellcheck/download/ third_party/*/bin third_party/jsign/*.jar
+      - rm -rf .task task src/*/node_modules/ build/ node_modules/ third_party/shellcheck/download/ third_party/*/bin third_party/jsign/*.jar
 
   format:
     desc: Format staged files
