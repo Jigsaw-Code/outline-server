@@ -159,6 +159,7 @@ tasks:
     desc: Run the integration test
     cmds:
       - task: docker:build
+        vars: {TARGET_ARCH: {sh: 'uname -m'}}
       - task: test_image
         vars:
           IMAGE_NAME: localhost/outline/shadowbox:latest
