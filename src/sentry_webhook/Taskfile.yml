@@ -1,0 +1,39 @@
+version: '3'
+
+requires:
+  vars: [OUTPUT_BASE]
+ 
+tasks:
+  clean:
+    desc: Clean Sentry webhook output
+    cmds:
+      - rm -rf "{{.OUTPUT_BASE}}"
+
+  build:
+    desc: Build the Sentry webhook
+    cmds:
+      - npx tsc --project '{{.TASKFILE_DIR}}/tsconfig.prod.json' --outDir '{{.OUTPUT_BASE}}'
+      - cp '{{.TASKFILE_DIR}}/package.json' '{{.OUTPUT_BASE}}'
+
+  deploy:
+    desc: Deploy the Sentry webhook to GCP Cloud Functions
+    deps: [build]
+    cmds:
+      - gcloud functions deploy postSentryEventToSalesforce
+          --project=uproxysite
+          --runtime=nodejs18
+          --trigger-http
+          --source='{{.OUTPUT_BASE}}'
+          --entry-point=postSentryEventToSalesforce
+  
+  test:
+    desc: Run the unit tests for the Sentry webhook
+    vars:
+      TEST_DIR:
+        sh: "mktemp -d"
+    cmds:
+      - defer: rm -rf "{{.TEST_DIR}}"
+      # Use commonjs modules, jasmine runs in node.
+      - npx tsc -p '{{.TASKFILE_DIR}}' --outDir '{{.TEST_DIR}}' --module commonjs
+      - npx jasmine '{{.TEST_DIR}}/**/*.spec.js'
+      - npx karma start '{{.TASKFILE_DIR}}/karma.conf.js'
