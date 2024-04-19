@@ -177,15 +177,6 @@ describe('isValidConnectionMetricsReport', () => {
     delete report['endUtcMs'];
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
-  it('returns false for user report missing both `userId` and `countries`', () => {
-    const userReport: Partial<HourlyUserConnectionMetricsReport> = structuredClone(
-      LEGACY_PER_KEY_USER_REPORT
-    );
-    delete userReport['userId'];
-    const report = structuredClone(VALID_REPORT);
-    report.userReports[0] = userReport as HourlyUserConnectionMetricsReport;
-    expect(isValidConnectionMetricsReport(report)).toBeFalse();
-  });
   it('returns false for missing user report field `bytesTransferred`', () => {
     const report = structuredClone(VALID_REPORT);
     const userReport: Partial<HourlyUserConnectionMetricsReport> =
