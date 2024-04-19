@@ -32,14 +32,22 @@ const VALID_USER_REPORT2: HourlyUserConnectionMetricsReport = {
 };
 
 /*
- * A user report to test legacy fields to ensure backwards compatibility with
- * older servers that may still send reports like this.
+ * Legacy access key user reports to ensure backwards compatibility with servers not
+ * synced past https://github.com/Jigsaw-Code/outline-server/pull/1529).
  */
-const LEGACY_USER_REPORT = {
+const LEGACY_PER_KEY_USER_REPORT: HourlyUserConnectionMetricsReport = {
   userId: 'foo',
+  bytesTransferred: 123,
+};
+
+/*
+ * Legacy multiple countries user reports to ensure backwards compatibility with servers
+ * not synced past https://github.com/Jigsaw-Code/outline-server/pull/1242.
+ */
+const LEGACY_PER_LOCATION_USER_REPORT: HourlyUserConnectionMetricsReport = {
+  userId: 'foobar',
   countries: ['US', 'UK'],
   bytesTransferred: 123,
-  tunnelTimeSec: 789,
 };
 
 const VALID_REPORT: HourlyConnectionMetricsReport = {
@@ -49,8 +57,15 @@ const VALID_REPORT: HourlyConnectionMetricsReport = {
   userReports: [
     structuredClone(VALID_USER_REPORT),
     structuredClone(VALID_USER_REPORT2),
-    structuredClone(LEGACY_USER_REPORT),
+    structuredClone(LEGACY_PER_LOCATION_USER_REPORT),
   ],
+};
+
+const LEGACY_REPORT: HourlyConnectionMetricsReport = {
+  serverId: 'legacy-id',
+  startUtcMs: 3,
+  endUtcMs: 4,
+  userReports: [structuredClone(LEGACY_PER_KEY_USER_REPORT)],
 };
 
 class FakeConnectionsTable implements InsertableTable<ConnectionRow> {
@@ -62,59 +77,55 @@ class FakeConnectionsTable implements InsertableTable<ConnectionRow> {
 }
 
 describe('postConnectionMetrics', () => {
-  it('correctly inserts feature metrics rows', async () => {
+  it('correctly inserts connection metrics rows', async () => {
     const table = new FakeConnectionsTable();
-    const userReports = [
-      {
-        countries: ['UK'],
-        bytesTransferred: 123,
-        tunnelTimeSec: 987,
-      },
-      {
-        countries: ['EC'],
-        bytesTransferred: 456,
-        tunnelTimeSec: 654,
-      },
-      {
-        countries: ['BR'],
-        bytesTransferred: 789,
-      },
-    ];
-    const report = {serverId: 'id', startUtcMs: 1, endUtcMs: 2, userReports};
-    await postConnectionMetrics(table, report);
+
+    await postConnectionMetrics(table, VALID_REPORT);
+
     const rows: ConnectionRow[] = [
       {
-        serverId: report.serverId,
-        startTimestamp: new Date(report.startUtcMs).toISOString(),
-        endTimestamp: new Date(report.endUtcMs).toISOString(),
-        bytesTransferred: userReports[0].bytesTransferred,
-        tunnelTimeSec: userReports[0].tunnelTimeSec,
-        countries: userReports[0].countries,
+        serverId: VALID_REPORT.serverId,
+        startTimestamp: new Date(VALID_REPORT.startUtcMs).toISOString(),
+        endTimestamp: new Date(VALID_REPORT.endUtcMs).toISOString(),
+        bytesTransferred: VALID_USER_REPORT.bytesTransferred,
+        tunnelTimeSec: VALID_USER_REPORT.tunnelTimeSec,
+        countries: VALID_USER_REPORT.countries,
       },
       {
-        serverId: report.serverId,
-        startTimestamp: new Date(report.startUtcMs).toISOString(),
-        endTimestamp: new Date(report.endUtcMs).toISOString(),
-        bytesTransferred: userReports[1].bytesTransferred,
-        tunnelTimeSec: userReports[1].tunnelTimeSec,
-        countries: userReports[1].countries,
+        serverId: VALID_REPORT.serverId,
+        startTimestamp: new Date(VALID_REPORT.startUtcMs).toISOString(),
+        endTimestamp: new Date(VALID_REPORT.endUtcMs).toISOString(),
+        bytesTransferred: VALID_USER_REPORT2.bytesTransferred,
+        tunnelTimeSec: VALID_USER_REPORT2.tunnelTimeSec,
+        countries: VALID_USER_REPORT2.countries,
       },
       {
-        serverId: report.serverId,
-        startTimestamp: new Date(report.startUtcMs).toISOString(),
-        endTimestamp: new Date(report.endUtcMs).toISOString(),
-        bytesTransferred: userReports[2].bytesTransferred,
-        tunnelTimeSec: undefined,
-        countries: userReports[2].countries,
+        serverId: VALID_REPORT.serverId,
+        startTimestamp: new Date(VALID_REPORT.startUtcMs).toISOString(),
+        endTimestamp: new Date(VALID_REPORT.endUtcMs).toISOString(),
+        bytesTransferred: LEGACY_PER_LOCATION_USER_REPORT.bytesTransferred,
+        tunnelTimeSec: LEGACY_PER_LOCATION_USER_REPORT.tunnelTimeSec,
+        countries: LEGACY_PER_LOCATION_USER_REPORT.countries,
       },
     ];
     expect(table.rows).toEqual(rows);
+  });
+  it('correctly drops legacy connection metrics', async () => {
+    const table = new FakeConnectionsTable();
+
+    await postConnectionMetrics(table, LEGACY_REPORT);
+
+    expect(table.rows).toEqual([]);
   });
 });
 
 describe('isValidConnectionMetricsReport', () => {
   it('returns true for valid report', () => {
     const report = structuredClone(VALID_REPORT);
+    expect(isValidConnectionMetricsReport(report)).toBeTrue();
+  });
+  it('returns true for legacy report', () => {
+    const report = structuredClone(LEGACY_REPORT);
     expect(isValidConnectionMetricsReport(report)).toBeTrue();
   });
   it('returns false for missing report', () => {
@@ -166,14 +177,6 @@ describe('isValidConnectionMetricsReport', () => {
     delete report['endUtcMs'];
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
-  it('returns false for missing user report field `countries`', () => {
-    const report = structuredClone(VALID_REPORT);
-    const userReport: Partial<HourlyUserConnectionMetricsReport> =
-      structuredClone(VALID_USER_REPORT);
-    delete userReport['countries'];
-    report.userReports[0] = userReport as HourlyUserConnectionMetricsReport;
-    expect(isValidConnectionMetricsReport(report)).toBeFalse();
-  });
   it('returns false for missing user report field `bytesTransferred`', () => {
     const report = structuredClone(VALID_REPORT);
     const userReport: Partial<HourlyUserConnectionMetricsReport> =
@@ -202,7 +205,17 @@ describe('isValidConnectionMetricsReport', () => {
     report.endUtcMs = '100' as unknown as number;
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
-  it('returns false for `countries` field type that is not a string', () => {
+  it('returns false for `userId` field type that is not a string', () => {
+    const report = structuredClone(VALID_REPORT);
+    report.userReports[0].userId = 1234 as unknown as string;
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
+  });
+  it('returns false for `countries` field type that is not an array', () => {
+    const report = structuredClone(VALID_REPORT);
+    report.userReports[0].countries = 'US' as unknown as string[];
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
+  });
+  it('returns false for `countries` arry items that are not strings', () => {
     const report = structuredClone(VALID_REPORT);
     report.userReports[0].countries = [1, 2, 3] as unknown as string[];
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
