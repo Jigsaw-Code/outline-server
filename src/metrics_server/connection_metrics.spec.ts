@@ -18,20 +18,15 @@ import {
   postConnectionMetrics,
 } from './connection_metrics';
 import {InsertableTable} from './infrastructure/table';
-import {
-  HourlyConnectionMetricsReport,
-  HourlyUserConnectionMetricsReport,
-  HourlyUserConnectionMetricsReportByKey,
-  HourlyUserConnectionMetricsReportByLocation,
-} from './model';
+import {HourlyConnectionMetricsReport, HourlyUserConnectionMetricsReport} from './model';
 
-const VALID_USER_REPORT: HourlyUserConnectionMetricsReportByLocation = {
+const VALID_USER_REPORT: HourlyUserConnectionMetricsReport = {
   countries: ['US'],
   bytesTransferred: 123,
   tunnelTimeSec: 789,
 };
 
-const VALID_USER_REPORT2: HourlyUserConnectionMetricsReportByLocation = {
+const VALID_USER_REPORT2: HourlyUserConnectionMetricsReport = {
   countries: ['UK'],
   bytesTransferred: 456,
 };
@@ -40,7 +35,7 @@ const VALID_USER_REPORT2: HourlyUserConnectionMetricsReportByLocation = {
  * Legacy access key user reports to ensure backwards compatibility with servers not
  * synced past https://github.com/Jigsaw-Code/outline-server/pull/1529).
  */
-const LEGACY_PER_KEY_USER_REPORT: HourlyUserConnectionMetricsReportByKey = {
+const LEGACY_PER_KEY_USER_REPORT: HourlyUserConnectionMetricsReport = {
   userId: 'foo',
   bytesTransferred: 123,
 };
@@ -49,7 +44,8 @@ const LEGACY_PER_KEY_USER_REPORT: HourlyUserConnectionMetricsReportByKey = {
  * Legacy multiple countries user reports to ensure backwards compatibility with servers
  * not synced past https://github.com/Jigsaw-Code/outline-server/pull/1242.
  */
-const LEGACY_PER_LOCATION_USER_REPORT: HourlyUserConnectionMetricsReportByLocation = {
+const LEGACY_PER_LOCATION_USER_REPORT: HourlyUserConnectionMetricsReport = {
+  userId: 'foobar',
   countries: ['US', 'UK'],
   bytesTransferred: 123,
 };
@@ -182,7 +178,7 @@ describe('isValidConnectionMetricsReport', () => {
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
   it('returns false for user report missing both `userId` and `countries`', () => {
-    const userReport: Partial<HourlyUserConnectionMetricsReportByKey> = structuredClone(
+    const userReport: Partial<HourlyUserConnectionMetricsReport> = structuredClone(
       LEGACY_PER_KEY_USER_REPORT
     );
     delete userReport['userId'];

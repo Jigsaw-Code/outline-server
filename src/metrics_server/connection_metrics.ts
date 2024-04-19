@@ -111,10 +111,6 @@ export function isValidConnectionMetricsReport(
   }
 
   for (const userReport of testObject.userReports) {
-    // We require at least the userId or the country to be set.
-    if (!userReport.userId && (userReport.countries?.length ?? 0) === 0) {
-      return false;
-    }
     // Check that `userId` is a string.
     if (userReport.userId && typeof userReport.userId !== 'string') {
       return false;

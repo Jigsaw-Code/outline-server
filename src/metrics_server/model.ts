@@ -21,23 +21,17 @@ export interface HourlyConnectionMetricsReport {
   userReports: HourlyUserConnectionMetricsReport[];
 }
 
-interface _HourlyUserConnectionMetricsReport {
+export interface HourlyUserConnectionMetricsReport {
+  userId?: string;
+  countries?: string[];
   bytesTransferred: number;
   tunnelTimeSec?: number;
 }
 
 export interface HourlyUserConnectionMetricsReportByLocation
-  extends _HourlyUserConnectionMetricsReport {
+  extends Omit<HourlyUserConnectionMetricsReport, 'countries'> {
   countries: string[];
 }
-
-export interface HourlyUserConnectionMetricsReportByKey extends _HourlyUserConnectionMetricsReport {
-  userId: string;
-}
-
-export type HourlyUserConnectionMetricsReport =
-  | HourlyUserConnectionMetricsReportByLocation
-  | HourlyUserConnectionMetricsReportByKey;
 
 export interface DailyFeatureMetricsReport {
   serverId: string;
