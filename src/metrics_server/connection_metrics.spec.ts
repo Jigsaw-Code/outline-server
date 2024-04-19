@@ -181,6 +181,15 @@ describe('isValidConnectionMetricsReport', () => {
     delete report['endUtcMs'];
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
+  it('returns false for user report missing both `userId` and `countries`', () => {
+    const userReport: Partial<HourlyUserConnectionMetricsReportByKey> = structuredClone(
+      LEGACY_PER_KEY_USER_REPORT
+    );
+    delete userReport['userId'];
+    const report = structuredClone(VALID_REPORT);
+    report.userReports[0] = userReport as HourlyUserConnectionMetricsReport;
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
+  });
   it('returns false for missing user report field `bytesTransferred`', () => {
     const report = structuredClone(VALID_REPORT);
     const userReport: Partial<HourlyUserConnectionMetricsReport> =
@@ -207,6 +216,11 @@ describe('isValidConnectionMetricsReport', () => {
   it('returns false for `endUtcMs` field type that is not a number', () => {
     const report = structuredClone(VALID_REPORT);
     report.endUtcMs = '100' as unknown as number;
+    expect(isValidConnectionMetricsReport(report)).toBeFalse();
+  });
+  it('returns false for `userId` field type that is not a string', () => {
+    const report = structuredClone(VALID_REPORT);
+    report.userReports[0].userId = 1234 as unknown as string;
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
   it('returns false for `countries` field type that is not an array', () => {
