@@ -1,0 +1,53 @@
+version: '3'
+
+set: [pipefail]
+
+run: when_changed
+
+vars:
+  REPO_ROOT: "{{.ROOT_DIR}}"
+  BUILD_ROOT: "{{.ROOT_DIR}}/build"
+  DOCKER: '{{.DOCKER | default "docker"}}'
+
+includes:
+  metrics_server:
+    taskfile: ./src/metrics_server/Taskfile.yml
+    vars: {OUTPUT_BASE: '{{joinPath .BUILD_ROOT "metrics_server"}}'}
+
+  sentry_webhook:
+    taskfile: ./src/sentry_webhook/Taskfile.yml
+    vars: {OUTPUT_BASE: '{{joinPath .BUILD_ROOT "sentry_webhook"}}'}
+
+  shadowbox:
+    taskfile: ./src/shadowbox/Taskfile.yml
+    vars: {OUTPUT_BASE: '{{joinPath .BUILD_ROOT "shadowbox"}}'}
+
+tasks:
+  clean:
+    desc: Clean output files
+    cmds:
+      - rm -rf .task task src/*/node_modules/ build/ node_modules/ third_party/shellcheck/download/ third_party/*/bin third_party/jsign/*.jar
+
+  format:
+    desc: Format staged files
+    cmds: ['npx pretty-quick --staged --pattern "**/*.{cjs,html,js,json,md,ts}"']
+
+  format:all:
+    desc: Format all files in the repository
+    cmds: ['npx prettier --write "**/*.{cjs,html,js,json,md,ts}"']
+
+  lint:
+    desc: Lint all files
+    deps: [lint:sh, lint:ts]
+
+  lint:sh:
+    desc: Lint all shell files
+    cmds: [bash ./scripts/shellcheck.sh]
+  
+  lint:ts:
+    desc: Lint all .ts and .js files
+    cmds: ['npx eslint "**/*.{js,ts}"']
+  
+  test:
+    desc: Run all the repository tests
+    deps: [lint, metrics_server:test, sentry_webhook:test, shadowbox:test]

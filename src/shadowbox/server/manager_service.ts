@@ -383,7 +383,10 @@ export class ShadowsocksManagerService {
       logging.error(error);
       if (error instanceof errors.InvalidCipher || error instanceof errors.InvalidPortNumber) {
         throw new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message);
-      } else if (error instanceof errors.PortUnavailable) {
+      } else if (
+        error instanceof errors.PortUnavailable ||
+        error instanceof errors.PasswordConflict
+      ) {
         throw new restifyErrors.ConflictError(error.message);
       }
       throw error;

@@ -532,7 +532,16 @@ describe('ShadowsocksManagerService', () => {
             done();
           });
         });
-
+        it('rejects a password that is already in use', async (done) => {
+          const PASSWORD = 'foobar';
+          await repo.createNewAccessKey({password: PASSWORD});
+          const res = {send: SEND_NOTHING};
+          await serviceMethod({params: {id: accessKeyId, password: PASSWORD}}, res, (error) => {
+            expect(error.statusCode).toEqual(409);
+            responseProcessed = true; // required for afterEach to pass.
+            done();
+          });
+        });
         it('uses the default port for new keys when no port is provided', async (done) => {
           const res = {
             send: (httpCode, data) => {

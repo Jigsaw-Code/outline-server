@@ -24,27 +24,18 @@
     "pretty-quick": "^3.1.1",
     "typescript": "^4.9.5"
   },
+  "scripts": {
+    "postinstall": "go build github.com/go-task/task/v3/cmd/task"
+  },
   "engines": {
     "node": "18.x.x"
-  },
-  "scripts": {
-    "action": "bash ./scripts/run_action.sh",
-    "action:help": "npm run action",
-    "action:list": "npm run action",
-    "clean": "rm -rf src/*/node_modules/ build/ node_modules/ src/server_manager/install_scripts/do_install_script.ts src/server_manager/install_scripts/gcp_install_script.ts third_party/shellcheck/download/ third_party/*/bin third_party/jsign/*.jar",
-    "format": "pretty-quick --staged --pattern \"**/*.{cjs,html,js,json,md,ts}\"",
-    "format:all": "prettier --write \"**/*.{cjs,html,js,json,md,ts}\"",
-    "lint": "npm run lint:sh && npm run lint:ts",
-    "lint:sh": "bash ./scripts/shellcheck.sh",
-    "lint:ts": "eslint \"**/*.{js,ts}\"",
-    "test": "npm run lint && npm run action metrics_server/test && npm run action sentry_webhook/build && npm run action server_manager/test && npm run action shadowbox/test"
   },
   "workspaces": [
     "src/*"
   ],
   "husky": {
     "hooks": {
-      "pre-commit": "npm run lint && npm run format"
+      "pre-commit": "./task lint format"
     }
   }
 }

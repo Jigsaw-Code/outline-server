@@ -4,7 +4,6 @@
     "removeComments": false,
     "strict": true,
     "module": "commonjs",
-    "outDir": "../../build/sentry_webhook",
     "skipLibCheck": true
   },
   "include": ["**/*.ts"]
