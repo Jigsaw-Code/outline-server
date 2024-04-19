@@ -1,0 +1,50 @@
+version: '3'
+
+requires:
+  vars: [OUTPUT_BASE]
+
+tasks:
+  prometheus:debug:
+    cmds:
+      - echo {{.GOOS}}
+
+  prometheus:download-*-*:
+    desc: Download and extract prometheus binary
+    vars:
+      VERSION: '2.37.1'
+      GOOS: '{{index .MATCH 0}}'
+      GOARCH: '{{index .MATCH 1}}'
+      TEMPFILE: {sh: mktemp}
+      SHA256: '{{printf "%v/%v" .GOOS .GOARCH | get
+          (dict
+            "linux/amd64" "753f66437597cf52ada98c2f459aa8c03745475c249c9f2b40ac7b3919131ba6"
+            "linux/arm64" "b59a66fb5c7ec5acf6bf426793528a5789a1478a0dad8c64edc2843caf31b1b8"
+            "darwin/amd64" "e03a43d98955ac3500f57353ea74b5df829074205f195ea6b3b88f55c4575c79"
+            "darwin/arm64" "eb8a174c82a0fb6c84e81d9a73214318fb4a605115ad61505d7883d02e5a6f52"           
+          )                   
+        }}'
+      TARGET_DIR: '{{joinPath .OUTPUT_BASE "prometheus" .GOOS .GOARCH}}'
+      TARGET: '{{joinPath .TARGET_DIR "prometheus"}}'
+    generates: ['{{.TARGET}}']
+    sources: ['Taskfile.yml']
+    preconditions:
+      - {sh: "[[ '{{.GOOS}}' =~ 'linux|darwin' ]]", msg: "invalid GOOS {{.GOOS}}"}
+      - {sh: "[[ '{{.GOARCH}}' =~ 'amd64|arm64' ]]", msg: "invalid GOARCH {{.GOARCH}}"}
+    cmds:
+      - node '{{joinPath .ROOT_DIR "src/build/download_file.mjs"}}' --url='https://github.com/prometheus/prometheus/releases/download/v{{.VERSION}}/prometheus-{{.VERSION}}.{{.GOOS}}-{{.GOARCH}}.tar.gz' --out='{{.TEMPFILE}}' --sha256='{{.SHA256}}'
+      - defer: rm -f '{{.TEMPFILE}}'
+      - mkdir -p '{{.TARGET_DIR}}'
+      - tar -zx -f '{{.TEMPFILE}}' --strip-components=1 -C '{{.TARGET_DIR}}' 'prometheus-{{.VERSION}}.{{.GOOS}}-{{.GOARCH}}/prometheus'
+      - chmod +x '{{.TARGET}}'
+
+  prometheus:copy-*-*:
+    desc: Copy prometheus binary to target directory
+    requires:
+      vars: [TARGET_DIR]
+    vars:
+      GOOS: '{{index .MATCH 0}}'
+      GOARCH: '{{index .MATCH 1}}'
+    cmds:
+      - task: prometheus:download-{{.GOOS}}-{{.GOARCH}}
+      - mkdir -p '{{.TARGET_DIR}}'
+      - cp -R '{{joinPath .OUTPUT_BASE "prometheus" .GOOS .GOARCH}}'/* '{{.TARGET_DIR}}/'
