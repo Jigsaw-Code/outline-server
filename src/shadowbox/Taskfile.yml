@@ -9,7 +9,6 @@ tasks:
     vars:
       TARGET_OS: '{{.TARGET_OS | default "linux"}}'
       TARGET_ARCH: '{{.TARGET_ARCH | default "x86_64"}}'
-      GOOS: '{{get (dict "macos" "darwin") .TARGET_OS | default .TARGET_OS}}'
       GOARCH: '{{get (dict "x86_64" "amd64") .TARGET_ARCH | default .TARGET_ARCH}}'
       TARGET_DIR: '{{.TARGET_DIR | default (joinPath .OUTPUT_BASE .TARGET_OS .TARGET_ARCH)}}'
       NODE_DIR: '{{joinPath .TARGET_DIR "app"}}'
@@ -21,25 +20,19 @@ tasks:
       - cp '{{joinPath .TASKFILE_DIR "package.json"}}' '{{.TARGET_DIR}}'
       # Build Node.js app
       - npx webpack --config='{{joinPath .TASKFILE_DIR "webpack.config.js"}}' --output-path='{{.NODE_DIR}}' ${BUILD_ENV:+--mode="${BUILD_ENV}"}
-      # Copy third_party dependencies
-      - mkdir -p '{{.BIN_DIR}}'
-      - |
-        {
-          cd '{{joinPath .USER_WORKING_DIR "third_party" "prometheus"}}'
-          make 'bin/{{.TARGET_OS}}-{{.TARGET_ARCH}}/prometheus'
-          cp 'bin/{{.TARGET_OS}}-{{.TARGET_ARCH}}/prometheus' '{{.BIN_DIR}}/'
-        }
       # Copy Prometheus Console files.
       - cp -r '{{joinPath .TASKFILE_DIR "prometheus"}}' '{{.TARGET_DIR}}'
+      # Copy third_party dependencies
+      - task: ':third_party:prometheus:copy-{{.TARGET_OS}}-{{.GOARCH}}'
+        vars: {TARGET_DIR: '{{.BIN_DIR}}'}
       # Set CGO_ENABLED=0 to force static linkage. See https://mt165.co.uk/blog/static-link-go/.
-      - GOOS={{.GOOS}} GOARCH={{.GOARCH}} CGO_ENABLED=0 go build -ldflags='-s -w -X main.version=embedded' -o '{{.BIN_DIR}}/' github.com/Jigsaw-Code/outline-ss-server/cmd/outline-ss-server
+      - GOOS={{.TARGET_OS}} GOARCH={{.GOARCH}} CGO_ENABLED=0 go build -ldflags='-s -w -X main.version=embedded' -o '{{.BIN_DIR}}/' github.com/Jigsaw-Code/outline-ss-server/cmd/outline-ss-server
 
   start:
     desc: Run the Outline server locally
     deps: [{task: build, vars: {TARGET_OS: '{{.TARGET_OS}}', TARGET_ARCH: '{{.TARGET_ARCH}}'}}]
     vars:
-      UNAME_OS: {sh: 'uname -s'}
-      TARGET_OS: '{{get (dict "Linux" "linux" "Darwin" "macos") .UNAME_OS}}'
+      TARGET_OS: {sh: "uname -s | tr '[:upper:]' '[:lower:]'"}
       TARGET_ARCH: {sh: 'uname -m'}
       RUN_ID: '{{.RUN_ID | default (now | date "2006-01-02-150405")}}'
       RUN_DIR: '{{joinPath "/tmp/outline" .RUN_ID}}'

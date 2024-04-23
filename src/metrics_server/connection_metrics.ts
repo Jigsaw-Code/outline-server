@@ -14,7 +14,13 @@
 
 import {Table} from '@google-cloud/bigquery';
 import {InsertableTable} from './infrastructure/table';
-import {HourlyConnectionMetricsReport} from './model';
+import {
+  HourlyConnectionMetricsReport,
+  HourlyUserConnectionMetricsReport,
+  HourlyUserConnectionMetricsReportByLocation,
+} from './model';
+
+const TERABYTE = Math.pow(2, 40);
 
 export interface ConnectionRow {
   serverId: string;
@@ -45,16 +51,27 @@ function getConnectionRowsFromReport(report: HourlyConnectionMetricsReport): Con
   const endTimestampStr = new Date(report.endUtcMs).toISOString();
   const rows = [];
   for (const userReport of report.userReports) {
-    rows.push({
-      serverId: report.serverId,
-      startTimestamp: startTimestampStr,
-      endTimestamp: endTimestampStr,
-      bytesTransferred: userReport.bytesTransferred,
-      tunnelTimeSec: userReport.tunnelTimeSec || undefined,
-      countries: userReport.countries || [],
-    });
+    // User reports come in 2 flavors: "per location" and "per key". We no longer store the
+    // "per key" reports.
+    if (isPerLocationUserReport(userReport)) {
+      rows.push({
+        serverId: report.serverId,
+        startTimestamp: startTimestampStr,
+        endTimestamp: endTimestampStr,
+        bytesTransferred: userReport.bytesTransferred,
+        tunnelTimeSec: userReport.tunnelTimeSec || undefined,
+        countries: userReport.countries,
+      });
+    }
   }
   return rows;
+}
+
+function isPerLocationUserReport(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  userReport: HourlyUserConnectionMetricsReport
+): userReport is HourlyUserConnectionMetricsReportByLocation {
+  return 'countries' in userReport;
 }
 
 // Returns true iff testObject contains a valid HourlyConnectionMetricsReport.
@@ -93,14 +110,21 @@ export function isValidConnectionMetricsReport(
     return false;
   }
 
-  const MIN_BYTES_TRANSFERRED = 0;
-  const MAX_BYTES_TRANSFERRED = 1 * Math.pow(2, 40); // 1 TB.
   for (const userReport of testObject.userReports) {
-    // Check that `bytesTransferred` is a number between min and max transfer limits
+    // Check that `userId` is a string.
+    if (userReport.userId && typeof userReport.userId !== 'string') {
+      return false;
+    }
+
+    // We used to set a limit of 1TB per access key, then per location. We later
+    // realized that a server may use a single key, or all the traffic may come
+    // from a single location.
+    // However, as we report hourly, it's unlikely we hit 1TB, so we keep the
+    // check for now to try and prevent malicious reports.
     if (
       typeof userReport.bytesTransferred !== 'number' ||
-      userReport.bytesTransferred < MIN_BYTES_TRANSFERRED ||
-      userReport.bytesTransferred > MAX_BYTES_TRANSFERRED
+      userReport.bytesTransferred < 0 ||
+      userReport.bytesTransferred > TERABYTE
     ) {
       return false;
     }
@@ -112,15 +136,15 @@ export function isValidConnectionMetricsReport(
       return false;
     }
 
-    // We require at least 1 country to be set
-    const countries = userReport.countries ?? [];
-    if (countries.length === 0) {
-      return false;
-    }
-    // Check that all `countries` are strings.
-    for (const country of countries) {
-      if (typeof country !== 'string') {
+    // Check that `countries` is an array of strings.
+    if (userReport.countries) {
+      if (!Array.isArray(userReport.countries)) {
         return false;
+      }
+      for (const country of userReport.countries) {
+        if (typeof country !== 'string') {
+          return false;
+        }
       }
     }
   }
