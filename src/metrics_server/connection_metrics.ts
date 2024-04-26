@@ -143,10 +143,12 @@ export function isValidConnectionMetricsReport(
 
     if (userReport.countries) {
       if (!Array.isArray(userReport.countries)) {
+        console.debug('Invalid `countries`');
         return false;
       }
       for (const country of userReport.countries) {
         if (typeof country !== 'string') {
+          console.debug('Invalid `countries`');
           return false;
         }
       }
