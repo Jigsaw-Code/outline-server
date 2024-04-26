@@ -28,7 +28,7 @@ const VALID_USER_REPORT: HourlyUserConnectionMetricsReport = {
 
 const VALID_USER_REPORT2: HourlyUserConnectionMetricsReport = {
   countries: ['UK'],
-  asn: [123, 456],
+  asn: 54321,
   bytesTransferred: 456,
 };
 
@@ -91,7 +91,7 @@ describe('postConnectionMetrics', () => {
         bytesTransferred: VALID_USER_REPORT.bytesTransferred,
         tunnelTimeSec: VALID_USER_REPORT.tunnelTimeSec,
         countries: VALID_USER_REPORT.countries,
-        asn: [],
+        asn: undefined,
       },
       {
         serverId: VALID_REPORT.serverId,
@@ -109,7 +109,7 @@ describe('postConnectionMetrics', () => {
         bytesTransferred: LEGACY_PER_LOCATION_USER_REPORT.bytesTransferred,
         tunnelTimeSec: LEGACY_PER_LOCATION_USER_REPORT.tunnelTimeSec,
         countries: LEGACY_PER_LOCATION_USER_REPORT.countries,
-        asn: [],
+        asn: undefined,
       },
     ];
     expect(table.rows).toEqual(rows);
@@ -224,14 +224,9 @@ describe('isValidConnectionMetricsReport', () => {
     report.userReports[0].countries = [1, 2, 3] as unknown as string[];
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
-  it('returns false for `asn` field type that is not an array', () => {
+  it('returns false for `asn` field type that is not a number', () => {
     const report = structuredClone(VALID_REPORT);
-    report.userReports[0].asn = 123 as unknown as number[];
-    expect(isValidConnectionMetricsReport(report)).toBeFalse();
-  });
-  it('returns false for `asn` array items that are not numbers', () => {
-    const report = structuredClone(VALID_REPORT);
-    report.userReports[0].asn = ['1', '2', '3'] as unknown as number[];
+    report.userReports[0].asn = '123' as unknown as number;
     expect(isValidConnectionMetricsReport(report)).toBeFalse();
   });
   it('returns false for `bytesTransferred` field type that is not a number', () => {

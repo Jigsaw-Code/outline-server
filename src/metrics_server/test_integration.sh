@@ -58,7 +58,7 @@ cat << EOF > "${CONNECTIONS_REQUEST}"
   }, {
     "bytesTransferred": ${BYTES_TRANSFERRED2},
     "countries": ["UK"],
-    "asn": [123, 456]
+    "asn": 123
   }]
 }
 EOF
@@ -79,7 +79,7 @@ EOF
 cat << EOF > "${CONNECTIONS_EXPECTED_RESPONSE}"
 [
   {
-    "asn": [],
+    "asn": null,
     "bytesTransferred": "${BYTES_TRANSFERRED1}",
     "countries": [
       "US",
@@ -89,10 +89,7 @@ cat << EOF > "${CONNECTIONS_EXPECTED_RESPONSE}"
     "tunnelTimeSec": "${TUNNEL_TIME}"
   },
   {
-    "asn": [
-      "123",
-      "456"
-    ],
+    "asn": "123",
     "bytesTransferred": "${BYTES_TRANSFERRED2}",
     "countries": [
       "UK"

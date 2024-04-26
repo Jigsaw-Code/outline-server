@@ -24,7 +24,7 @@ export interface HourlyConnectionMetricsReport {
 export interface HourlyUserConnectionMetricsReport {
   userId?: string;
   countries?: string[];
-  asn?: number[];
+  asn?: number;
   bytesTransferred: number;
   tunnelTimeSec?: number;
 }

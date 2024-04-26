@@ -29,7 +29,7 @@ export interface ConnectionRow {
   bytesTransferred: number;
   tunnelTimeSec?: number;
   countries?: string[];
-  asn?: number[];
+  asn?: number;
 }
 
 export class BigQueryConnectionsTable implements InsertableTable<ConnectionRow> {
@@ -62,7 +62,7 @@ function getConnectionRowsFromReport(report: HourlyConnectionMetricsReport): Con
         bytesTransferred: userReport.bytesTransferred,
         tunnelTimeSec: userReport.tunnelTimeSec || undefined,
         countries: userReport.countries,
-        asn: userReport.asn || [],
+        asn: userReport.asn || undefined,
       });
     }
   }
@@ -141,12 +141,18 @@ export function isValidConnectionMetricsReport(
       return false;
     }
 
-    if (userReport.countries && !isArrayOf<string>(userReport.countries, 'string')) {
-      console.debug('Invalid `countries`');
-      return false;
+    if (userReport.countries) {
+      if (!Array.isArray(userReport.countries)) {
+        return false;
+      }
+      for (const country of userReport.countries) {
+        if (typeof country !== 'string') {
+          return false;
+        }
+      }
     }
 
-    if (userReport.asn && !isArrayOf<number>(userReport.asn, 'number')) {
+    if (userReport.asn && typeof userReport.asn !== 'number') {
       console.debug('Invalid `asn`');
       return false;
     }
@@ -154,21 +160,4 @@ export function isValidConnectionMetricsReport(
 
   // Request is a valid HourlyConnectionMetricsReport.
   return true;
-}
-
-/**
- * Returns whether a given object is an array where all values are of a given
- * type.
- * @param testObject The object to test.
- * @param type The expected type of all values in the array.
- */
-function isArrayOf<T>(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  testObject: any,
-  type: string
-): testObject is T[] {
-  if (!Array.isArray(testObject)) {
-    return false;
-  }
-  return testObject.every((value) => typeof value === type);
 }
