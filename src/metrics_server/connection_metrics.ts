@@ -29,6 +29,7 @@ export interface ConnectionRow {
   bytesTransferred: number;
   tunnelTimeSec?: number;
   countries?: string[];
+  asn?: number;
 }
 
 export class BigQueryConnectionsTable implements InsertableTable<ConnectionRow> {
@@ -61,6 +62,7 @@ function getConnectionRowsFromReport(report: HourlyConnectionMetricsReport): Con
         bytesTransferred: userReport.bytesTransferred,
         tunnelTimeSec: userReport.tunnelTimeSec || undefined,
         countries: userReport.countries,
+        asn: userReport.asn || undefined,
       });
     }
   }
@@ -80,39 +82,40 @@ export function isValidConnectionMetricsReport(
   testObject: any
 ): testObject is HourlyConnectionMetricsReport {
   if (!testObject) {
+    console.debug('Missing test object');
     return false;
   }
 
-  // Check that all required fields are present.
   const requiredConnectionMetricsFields = ['serverId', 'startUtcMs', 'endUtcMs', 'userReports'];
   for (const fieldName of requiredConnectionMetricsFields) {
     if (!testObject[fieldName]) {
+      console.debug(`Missing required field \`${fieldName}\``);
       return false;
     }
   }
 
-  // Check that `serverId` is a string.
   if (typeof testObject.serverId !== 'string') {
+    console.debug('Invalid `serverId`');
     return false;
   }
 
-  // Check timestamp types and that startUtcMs is not after endUtcMs.
   if (
     typeof testObject.startUtcMs !== 'number' ||
     typeof testObject.endUtcMs !== 'number' ||
     testObject.startUtcMs >= testObject.endUtcMs
   ) {
+    console.debug('Invalid `startUtcMs` and/or `endUtcMs`');
     return false;
   }
 
-  // Check that at least 1 user report has been provided.
   if (testObject.userReports.length === 0) {
+    console.debug('At least 1 user report must be provided');
     return false;
   }
 
   for (const userReport of testObject.userReports) {
-    // Check that `userId` is a string.
     if (userReport.userId && typeof userReport.userId !== 'string') {
+      console.debug('Invalid `serverId`');
       return false;
     }
 
@@ -126,6 +129,7 @@ export function isValidConnectionMetricsReport(
       userReport.bytesTransferred < 0 ||
       userReport.bytesTransferred > TERABYTE
     ) {
+      console.debug('Invalid `bytesTransferred`');
       return false;
     }
 
@@ -133,19 +137,26 @@ export function isValidConnectionMetricsReport(
       userReport.tunnelTimeSec &&
       (typeof userReport.tunnelTimeSec !== 'number' || userReport.tunnelTimeSec < 0)
     ) {
+      console.debug('Invalid `tunnelTimeSec`');
       return false;
     }
 
-    // Check that `countries` is an array of strings.
     if (userReport.countries) {
       if (!Array.isArray(userReport.countries)) {
+        console.debug('Invalid `countries`');
         return false;
       }
       for (const country of userReport.countries) {
         if (typeof country !== 'string') {
+          console.debug('Invalid `countries`');
           return false;
         }
       }
+    }
+
+    if (userReport.asn && typeof userReport.asn !== 'number') {
+      console.debug('Invalid `asn`');
+      return false;
     }
   }
 

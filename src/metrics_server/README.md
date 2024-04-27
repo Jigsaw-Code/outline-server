@@ -21,6 +21,7 @@ The metrics server supports two URL paths:
     endUtcMs: number,
     userReports: [{
         countries: string[],
+        asn: number,
         bytesTransferred: number,
         tunnelTimeSec: number,
     }]
