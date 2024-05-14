@@ -74,6 +74,7 @@ task metrics_server:start
   ```sh
   task metrics_server:deploy:prod
   ```
+  Once deployed, you will need to manually migrate all traffic to the new version via the Google Cloud console.
 
 ## Test
 
