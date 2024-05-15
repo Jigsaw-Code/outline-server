@@ -58,7 +58,6 @@ describe('OutlineSharedMetricsPublisher', () => {
         serverConfig,
         null,
         null,
-        null,
         null
       );
       expect(publisher.isSharingEnabled()).toBeTruthy();
@@ -70,14 +69,12 @@ describe('OutlineSharedMetricsPublisher', () => {
       let startTime = clock.nowMs;
       const serverConfig = new InMemoryConfig<ServerConfigJson>({serverId: 'server-id'});
       const usageMetrics = new ManualUsageMetrics();
-      const toMetricsId = (id: AccessKeyId) => `M(${id})`;
       const metricsCollector = new FakeMetricsCollector();
       const publisher = new OutlineSharedMetricsPublisher(
         clock,
         serverConfig,
         null,
         usageMetrics,
-        toMetricsId,
         metricsCollector
       );
 
@@ -130,14 +127,12 @@ describe('OutlineSharedMetricsPublisher', () => {
       const startTime = clock.nowMs;
       const serverConfig = new InMemoryConfig<ServerConfigJson>({serverId: 'server-id'});
       const usageMetrics = new ManualUsageMetrics();
-      const toMetricsId = (id: AccessKeyId) => `M(${id})`;
       const metricsCollector = new FakeMetricsCollector();
       const publisher = new OutlineSharedMetricsPublisher(
         clock,
         serverConfig,
         null,
         usageMetrics,
-        toMetricsId,
         metricsCollector
       );
 
@@ -177,7 +172,6 @@ describe('OutlineSharedMetricsPublisher', () => {
     const makeKeyJson = (dataLimit?: DataLimit) => {
       return {
         id: (keyId++).toString(),
-        metricsId: 'id',
         name: 'name',
         password: 'pass',
         port: 12345,
@@ -193,7 +187,6 @@ describe('OutlineSharedMetricsPublisher', () => {
       serverConfig,
       keyConfig,
       new ManualUsageMetrics(),
-      (_id: AccessKeyId) => '',
       metricsCollector
     );
 

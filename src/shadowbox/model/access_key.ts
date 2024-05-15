@@ -13,7 +13,6 @@
 // limitations under the License.
 
 export type AccessKeyId = string;
-export type AccessKeyMetricsId = string;
 
 // Parameters needed to access a Shadowsocks proxy.
 export interface ProxyParams {
@@ -38,8 +37,6 @@ export interface AccessKey {
   readonly id: AccessKeyId;
   // Admin-controlled, editable name for this access key.
   readonly name: string;
-  // Used in metrics reporting to decouple from the real id. Can change.
-  readonly metricsId: AccessKeyMetricsId;
   // Parameters to access the proxy
   readonly proxyParams: ProxyParams;
   // Whether the access key has exceeded the data transfer limit.
@@ -78,8 +75,6 @@ export interface AccessKeyRepository {
   setHostname(hostname: string): void;
   // Apply the specified update to the specified access key. Throws on failure.
   renameAccessKey(id: AccessKeyId, name: string): void;
-  // Gets the metrics id for a given Access Key.
-  getMetricsId(id: AccessKeyId): AccessKeyMetricsId | undefined;
   // Sets a data transfer limit for all access keys.
   setDefaultDataLimit(limit: DataLimit): void;
   // Removes the access key data transfer limit.
