@@ -38,7 +38,6 @@ describe('OutlineSharedMetricsPublisher', () => {
         serverConfig,
         null,
         null,
-        null,
         null
       );
       expect(publisher.isSharingEnabled()).toBeFalsy();
@@ -235,7 +234,6 @@ describe('OutlineSharedMetricsPublisher', () => {
       serverConfig,
       new InMemoryConfig<AccessKeyConfigJson>({}),
       new ManualUsageMetrics(),
-      (_id: AccessKeyId) => '',
       metricsCollector
     );
 
