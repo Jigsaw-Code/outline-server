@@ -26,7 +26,6 @@ import * as json_config from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient, startPrometheus} from '../infrastructure/prometheus_scraper';
 import {RolloutTracker} from '../infrastructure/rollout';
-import {AccessKeyId} from '../model/access_key';
 import * as version from './version';
 
 import {PrometheusManagerMetrics} from './manager_metrics';

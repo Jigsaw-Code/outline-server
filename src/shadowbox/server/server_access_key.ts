@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import * as randomstring from 'randomstring';
-import * as uuidv4 from 'uuid/v4';
 
 import {Clock} from '../infrastructure/clock';
 import {isPortUsed} from '../infrastructure/get_port';

@@ -14,7 +14,7 @@
 
 import {ManualClock} from '../infrastructure/clock';
 import {InMemoryConfig} from '../infrastructure/json_config';
-import {AccessKeyId, DataLimit} from '../model/access_key';
+import {DataLimit} from '../model/access_key';
 import * as version from './version';
 import {AccessKeyConfigJson} from './server_access_key';
 
