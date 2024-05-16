@@ -22,7 +22,7 @@ import {AccessKeyConfigJson} from './server_access_key';
 
 import {ServerConfigJson} from './server_config';
 import {
-  CountryUsage,
+  LocationUsage,
   DailyFeatureMetricsReportJson,
   HourlyServerMetricsReportJson,
   MetricsCollectorClient,
@@ -222,14 +222,14 @@ class FakeMetricsCollector implements MetricsCollectorClient {
 }
 
 class ManualUsageMetrics implements UsageMetrics {
-  public countryUsage = [] as CountryUsage[];
+  public countryUsage = [] as LocationUsage[];
 
-  getCountryUsage(): Promise<CountryUsage[]> {
+  getLocationUsage(): Promise<LocationUsage[]> {
     return Promise.resolve(this.countryUsage);
   }
 
   reset() {
-    this.countryUsage = [] as CountryUsage[];
+    this.countryUsage = [] as LocationUsage[];
   }
 }
 
