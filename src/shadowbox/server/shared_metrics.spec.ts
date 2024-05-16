@@ -170,8 +170,8 @@ describe('OutlineSharedMetricsPublisher', () => {
       });
     });
 
-    describe('feature metrics', () => {
-      it('reports correctly', async () => {
+    describe('for feature metrics', () => {
+      it('is sending correct reports', async () => {
         await clock.runCallbacks();
 
         expect(metricsCollector.collectFeatureMetrics).toHaveBeenCalledOnceWith({
