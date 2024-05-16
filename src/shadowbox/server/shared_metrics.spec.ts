@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as uuidv4 from 'uuid/v4';
+
 import {ManualClock} from '../infrastructure/clock';
 import {InMemoryConfig} from '../infrastructure/json_config';
 import {DataLimit} from '../model/access_key';
@@ -21,25 +23,44 @@ import {AccessKeyConfigJson} from './server_access_key';
 import {ServerConfigJson} from './server_config';
 import {
   CountryUsage,
-  DailyFeatureMetricsReportJson,
-  HourlyServerMetricsReportJson,
   MetricsCollectorClient,
   OutlineSharedMetricsPublisher,
+  SharedMetricsPublisher,
   UsageMetrics,
 } from './shared_metrics';
 
 describe('OutlineSharedMetricsPublisher', () => {
+  let clock: ManualClock;
+  let startTime: number;
+  let serverConfig: InMemoryConfig<ServerConfigJson>;
+  let keyConfig: InMemoryConfig<AccessKeyConfigJson>;
+  let usageMetrics: ManualUsageMetrics;
+  let metricsCollector: jasmine.SpyObj<MetricsCollectorClient>;
+  let publisher: SharedMetricsPublisher;
+
+  beforeEach(() => {
+    clock = new ManualClock();
+    startTime = clock.nowMs;
+    serverConfig = new InMemoryConfig({serverId: 'server-id'});
+    keyConfig = new InMemoryConfig<AccessKeyConfigJson>({
+      accessKeys: [makeKeyJson({bytes: 2}), makeKeyJson()],
+    });
+    usageMetrics = new ManualUsageMetrics();
+    metricsCollector = jasmine.createSpyObj('MetricsCollectorClient', [
+      'collectServerUsageMetrics',
+      'collectFeatureMetrics',
+    ]);
+    publisher = new OutlineSharedMetricsPublisher(
+      clock,
+      serverConfig,
+      keyConfig,
+      usageMetrics,
+      metricsCollector
+    );
+  });
+
   describe('Enable/Disable', () => {
     it('Mirrors config', () => {
-      const serverConfig = new InMemoryConfig<ServerConfigJson>({});
-
-      const publisher = new OutlineSharedMetricsPublisher(
-        new ManualClock(),
-        serverConfig,
-        null,
-        null,
-        null
-      );
       expect(publisher.isSharingEnabled()).toBeFalsy();
 
       publisher.startSharing();
@@ -50,211 +71,160 @@ describe('OutlineSharedMetricsPublisher', () => {
       expect(publisher.isSharingEnabled()).toBeFalsy();
       expect(serverConfig.mostRecentWrite.metricsEnabled).toBeFalsy();
     });
+
     it('Reads from config', () => {
-      const serverConfig = new InMemoryConfig<ServerConfigJson>({metricsEnabled: true});
-      const publisher = new OutlineSharedMetricsPublisher(
-        new ManualClock(),
-        serverConfig,
-        null,
-        null,
-        null
-      );
+      serverConfig.data().metricsEnabled = true;
+
       expect(publisher.isSharingEnabled()).toBeTruthy();
     });
   });
-  describe('Metrics Reporting', () => {
-    it('reports server usage metrics correctly', async () => {
-      const clock = new ManualClock();
-      let startTime = clock.nowMs;
-      const serverConfig = new InMemoryConfig<ServerConfigJson>({serverId: 'server-id'});
-      const usageMetrics = new ManualUsageMetrics();
-      const metricsCollector = new FakeMetricsCollector();
-      const publisher = new OutlineSharedMetricsPublisher(
-        clock,
-        serverConfig,
-        null,
-        usageMetrics,
-        metricsCollector
-      );
 
+  describe('reporting', () => {
+    beforeEach(() => {
       publisher.startSharing();
-      usageMetrics.countryUsage = [
-        {country: 'AA', inboundBytes: 11},
-        {country: 'BB', inboundBytes: 11},
-        {country: 'CC', inboundBytes: 22},
-        {country: 'AA', inboundBytes: 33},
-        {country: 'DD', inboundBytes: 33},
-      ];
+    });
 
-      clock.nowMs += 60 * 60 * 1000;
-      await clock.runCallbacks();
-      expect(metricsCollector.collectedServerUsageReport).toEqual({
-        serverId: 'server-id',
-        startUtcMs: startTime,
-        endUtcMs: clock.nowMs,
-        userReports: [
-          {bytesTransferred: 11, countries: ['AA']},
-          {bytesTransferred: 11, countries: ['BB']},
-          {bytesTransferred: 22, countries: ['CC']},
-          {bytesTransferred: 33, countries: ['AA']},
-          {bytesTransferred: 33, countries: ['DD']},
-        ],
-      });
-
-      startTime = clock.nowMs;
-      usageMetrics.countryUsage = [
-        {country: 'EE', inboundBytes: 44},
-        {country: 'FF', inboundBytes: 55},
-      ];
-
-      clock.nowMs += 60 * 60 * 1000;
-      await clock.runCallbacks();
-      expect(metricsCollector.collectedServerUsageReport).toEqual({
-        serverId: 'server-id',
-        startUtcMs: startTime,
-        endUtcMs: clock.nowMs,
-        userReports: [
-          {bytesTransferred: 44, countries: ['EE']},
-          {bytesTransferred: 55, countries: ['FF']},
-        ],
-      });
-
+    afterEach(() => {
       publisher.stopSharing();
     });
-    it('ignores sanctioned countries', async () => {
-      const clock = new ManualClock();
-      const startTime = clock.nowMs;
-      const serverConfig = new InMemoryConfig<ServerConfigJson>({serverId: 'server-id'});
-      const usageMetrics = new ManualUsageMetrics();
-      const metricsCollector = new FakeMetricsCollector();
-      const publisher = new OutlineSharedMetricsPublisher(
-        clock,
-        serverConfig,
-        null,
-        usageMetrics,
-        metricsCollector
-      );
 
-      publisher.startSharing();
-      usageMetrics.countryUsage = [
-        {country: 'AA', inboundBytes: 11},
-        {country: 'SY', inboundBytes: 11},
-        {country: 'CC', inboundBytes: 22},
-        {country: 'AA', inboundBytes: 33},
-        {country: 'DD', inboundBytes: 33},
-      ];
+    describe('for server usage', () => {
+      it('is sending correct reports', async () => {
+        usageMetrics.countryUsage = [
+          {country: 'AA', inboundBytes: 11},
+          {country: 'BB', inboundBytes: 11},
+          {country: 'CC', inboundBytes: 22},
+          {country: 'AA', inboundBytes: 33},
+          {country: 'DD', inboundBytes: 33},
+        ];
+        clock.nowMs += 60 * 60 * 1000;
 
-      clock.nowMs += 60 * 60 * 1000;
-      await clock.runCallbacks();
-      expect(metricsCollector.collectedServerUsageReport).toEqual({
-        serverId: 'server-id',
-        startUtcMs: startTime,
-        endUtcMs: clock.nowMs,
-        userReports: [
-          {bytesTransferred: 11, countries: ['AA']},
-          {bytesTransferred: 22, countries: ['CC']},
-          {bytesTransferred: 33, countries: ['AA']},
-          {bytesTransferred: 33, countries: ['DD']},
-        ],
+        await clock.runCallbacks();
+
+        expect(metricsCollector.collectServerUsageMetrics).toHaveBeenCalledOnceWith({
+          serverId: 'server-id',
+          startUtcMs: startTime,
+          endUtcMs: clock.nowMs,
+          userReports: [
+            {bytesTransferred: 11, countries: ['AA']},
+            {bytesTransferred: 11, countries: ['BB']},
+            {bytesTransferred: 22, countries: ['CC']},
+            {bytesTransferred: 33, countries: ['AA']},
+            {bytesTransferred: 33, countries: ['DD']},
+          ],
+        });
       });
-      publisher.stopSharing();
+
+      it('resets metrics to avoid double reporting', async () => {
+        usageMetrics.countryUsage = [
+          {country: 'AA', inboundBytes: 11},
+          {country: 'BB', inboundBytes: 11},
+        ];
+        clock.nowMs += 60 * 60 * 1000;
+        startTime = clock.nowMs;
+        await clock.runCallbacks();
+        metricsCollector.collectServerUsageMetrics.calls.reset();
+        usageMetrics.countryUsage = [
+          ...usageMetrics.countryUsage,
+          {country: 'CC', inboundBytes: 22},
+          {country: 'DD', inboundBytes: 22},
+        ];
+        clock.nowMs += 60 * 60 * 1000;
+
+        await clock.runCallbacks();
+
+        expect(metricsCollector.collectServerUsageMetrics).toHaveBeenCalledOnceWith({
+          serverId: 'server-id',
+          startUtcMs: startTime,
+          endUtcMs: clock.nowMs,
+          userReports: [
+            {bytesTransferred: 22, countries: ['CC']},
+            {bytesTransferred: 22, countries: ['DD']},
+          ],
+        });
+      });
+
+      it('ignores sanctioned countries', async () => {
+        usageMetrics.countryUsage = [
+          {country: 'AA', inboundBytes: 11},
+          {country: 'SY', inboundBytes: 11},
+          {country: 'CC', inboundBytes: 22},
+          {country: 'AA', inboundBytes: 33},
+          {country: 'DD', inboundBytes: 33},
+        ];
+        clock.nowMs += 60 * 60 * 1000;
+
+        await clock.runCallbacks();
+
+        expect(metricsCollector.collectServerUsageMetrics).toHaveBeenCalledOnceWith({
+          serverId: 'server-id',
+          startUtcMs: startTime,
+          endUtcMs: clock.nowMs,
+          userReports: [
+            {bytesTransferred: 11, countries: ['AA']},
+            {bytesTransferred: 22, countries: ['CC']},
+            {bytesTransferred: 33, countries: ['AA']},
+            {bytesTransferred: 33, countries: ['DD']},
+          ],
+        });
+      });
+    });
+
+    describe('feature metrics', () => {
+      it('reports correctly', async () => {
+        await clock.runCallbacks();
+
+        expect(metricsCollector.collectFeatureMetrics).toHaveBeenCalledOnceWith({
+          serverId: 'server-id',
+          serverVersion: version.getPackageVersion(),
+          timestampUtcMs: startTime,
+          dataLimit: {
+            enabled: false,
+            perKeyLimitCount: 1,
+          },
+        });
+      });
+
+      it('reports global data limits', async () => {
+        serverConfig.data().accessKeyDataLimit = {bytes: 123};
+
+        await clock.runCallbacks();
+
+        expect(metricsCollector.collectFeatureMetrics).toHaveBeenCalledOnceWith(
+          jasmine.objectContaining({
+            dataLimit: {
+              enabled: true,
+              perKeyLimitCount: 1,
+            },
+          })
+        );
+      });
+
+      it('reports per-key data limit count', async () => {
+        delete keyConfig.data().accessKeys[0].dataLimit;
+
+        await clock.runCallbacks();
+
+        expect(metricsCollector.collectFeatureMetrics).toHaveBeenCalledOnceWith(
+          jasmine.objectContaining({
+            dataLimit: jasmine.objectContaining({
+              perKeyLimitCount: 0,
+            }),
+          })
+        );
+      });
     });
   });
-  it('reports feature metrics correctly', async () => {
-    const clock = new ManualClock();
-    let timestamp = clock.nowMs;
-    const serverConfig = new InMemoryConfig<ServerConfigJson>({
-      serverId: 'server-id',
-      accessKeyDataLimit: {bytes: 123},
-    });
-    let keyId = 0;
-    const makeKeyJson = (dataLimit?: DataLimit) => {
-      return {
-        id: (keyId++).toString(),
-        name: 'name',
-        password: 'pass',
-        port: 12345,
-        dataLimit,
-      };
-    };
-    const keyConfig = new InMemoryConfig<AccessKeyConfigJson>({
-      accessKeys: [makeKeyJson({bytes: 2}), makeKeyJson()],
-    });
-    const metricsCollector = new FakeMetricsCollector();
-    const publisher = new OutlineSharedMetricsPublisher(
-      clock,
-      serverConfig,
-      keyConfig,
-      new ManualUsageMetrics(),
-      metricsCollector
-    );
 
-    publisher.startSharing();
-    await clock.runCallbacks();
-    expect(metricsCollector.collectedFeatureMetricsReport).toEqual({
-      serverId: 'server-id',
-      serverVersion: version.getPackageVersion(),
-      timestampUtcMs: timestamp,
-      dataLimit: {
-        enabled: true,
-        perKeyLimitCount: 1,
-      },
-    });
-    clock.nowMs += 24 * 60 * 60 * 1000;
-    timestamp = clock.nowMs;
-
-    delete serverConfig.data().accessKeyDataLimit;
-    await clock.runCallbacks();
-    expect(metricsCollector.collectedFeatureMetricsReport).toEqual({
-      serverId: 'server-id',
-      serverVersion: version.getPackageVersion(),
-      timestampUtcMs: timestamp,
-      dataLimit: {
-        enabled: false,
-        perKeyLimitCount: 1,
-      },
-    });
-
-    clock.nowMs += 24 * 60 * 60 * 1000;
-    delete keyConfig.data().accessKeys[0].dataLimit;
-    await clock.runCallbacks();
-    expect(metricsCollector.collectedFeatureMetricsReport.dataLimit.perKeyLimitCount).toEqual(0);
-  });
   it('does not report metrics when sharing is disabled', async () => {
-    const clock = new ManualClock();
-    const serverConfig = new InMemoryConfig<ServerConfigJson>({
-      serverId: 'server-id',
-      metricsEnabled: false,
-    });
-    const metricsCollector = new FakeMetricsCollector();
-    spyOn(metricsCollector, 'collectServerUsageMetrics').and.callThrough();
-    spyOn(metricsCollector, 'collectFeatureMetrics').and.callThrough();
-    new OutlineSharedMetricsPublisher(
-      clock,
-      serverConfig,
-      new InMemoryConfig<AccessKeyConfigJson>({}),
-      new ManualUsageMetrics(),
-      metricsCollector
-    );
+    serverConfig.data().metricsEnabled = false;
 
     await clock.runCallbacks();
+
     expect(metricsCollector.collectServerUsageMetrics).not.toHaveBeenCalled();
     expect(metricsCollector.collectFeatureMetrics).not.toHaveBeenCalled();
   });
 });
-
-class FakeMetricsCollector implements MetricsCollectorClient {
-  public collectedServerUsageReport: HourlyServerMetricsReportJson;
-  public collectedFeatureMetricsReport: DailyFeatureMetricsReportJson;
-
-  async collectServerUsageMetrics(report) {
-    this.collectedServerUsageReport = report;
-  }
-
-  async collectFeatureMetrics(report) {
-    this.collectedFeatureMetricsReport = report;
-  }
-}
 
 class ManualUsageMetrics implements UsageMetrics {
   public countryUsage = [] as CountryUsage[];
@@ -266,4 +236,14 @@ class ManualUsageMetrics implements UsageMetrics {
   reset() {
     this.countryUsage = [] as CountryUsage[];
   }
+}
+
+function makeKeyJson(dataLimit?: DataLimit) {
+  return {
+    id: uuidv4(),
+    name: 'name',
+    password: 'pass',
+    port: 12345,
+    dataLimit,
+  };
 }
