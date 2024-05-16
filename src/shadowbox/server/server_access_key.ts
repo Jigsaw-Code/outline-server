@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import * as randomstring from 'randomstring';
-import * as uuidv4 from 'uuid/v4';
 
 import {Clock} from '../infrastructure/clock';
 import {isPortUsed} from '../infrastructure/get_port';
@@ -24,7 +23,6 @@ import {
   AccessKey,
   AccessKeyCreateParams,
   AccessKeyId,
-  AccessKeyMetricsId,
   AccessKeyRepository,
   DataLimit,
   ProxyParams,
@@ -36,7 +34,6 @@ import {PrometheusManagerMetrics} from './manager_metrics';
 // The format as json of access keys in the config file.
 interface AccessKeyStorageJson {
   id: AccessKeyId;
-  metricsId: AccessKeyId;
   name: string;
   password: string;
   port: number;
@@ -57,7 +54,6 @@ class ServerAccessKey implements AccessKey {
   constructor(
     readonly id: AccessKeyId,
     public name: string,
-    public metricsId: AccessKeyMetricsId,
     readonly proxyParams: ProxyParams,
     public dataLimit?: DataLimit
   ) {}
@@ -79,7 +75,6 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyStorageJson): A
   return new ServerAccessKey(
     accessKeyJson.id,
     accessKeyJson.name,
-    accessKeyJson.metricsId,
     proxyParams,
     accessKeyJson.dataLimit
   );
@@ -88,7 +83,6 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyStorageJson): A
 function accessKeyToStorageJson(accessKey: AccessKey): AccessKeyStorageJson {
   return {
     id: accessKey.id,
-    metricsId: accessKey.metricsId,
     name: accessKey.name,
     password: accessKey.proxyParams.password,
     port: accessKey.proxyParams.portNumber,
@@ -213,7 +207,6 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       throw new errors.PasswordConflict(id);
     }
 
-    const metricsId = uuidv4();
     const password = params?.password ?? generatePassword();
 
     const encryptionMethod = params?.encryptionMethod || this.NEW_USER_ENCRYPTION_METHOD;
@@ -241,7 +234,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     };
     const name = params?.name ?? '';
     const dataLimit = params?.dataLimit;
-    const accessKey = new ServerAccessKey(id, name, metricsId, proxyParams, dataLimit);
+    const accessKey = new ServerAccessKey(id, name, proxyParams, dataLimit);
     this.accessKeys.push(accessKey);
     this.saveAccessKeys();
     await this.updateServer();
@@ -304,11 +297,6 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   removeDefaultDataLimit(): void {
     delete this._defaultDataLimit;
     this.enforceAccessKeyDataLimits();
-  }
-
-  getMetricsId(id: AccessKeyId): AccessKeyMetricsId | undefined {
-    const accessKey = this.getAccessKey(id);
-    return accessKey ? accessKey.metricsId : undefined;
   }
 
   // Compares access key usage with collected metrics, marking them as under or over limit.

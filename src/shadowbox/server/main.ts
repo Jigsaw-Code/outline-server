@@ -26,7 +26,6 @@ import * as json_config from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient, startPrometheus} from '../infrastructure/prometheus_scraper';
 import {RolloutTracker} from '../infrastructure/rollout';
-import {AccessKeyId} from '../model/access_key';
 import * as version from './version';
 
 import {PrometheusManagerMetrics} from './manager_metrics';
@@ -216,13 +215,6 @@ async function main() {
   );
 
   const metricsReader = new PrometheusUsageMetrics(prometheusClient);
-  const toMetricsId = (id: AccessKeyId) => {
-    try {
-      return accessKeyRepository.getMetricsId(id);
-    } catch (e) {
-      logging.warn(`Failed to get metrics id for access key ${id}: ${e}`);
-    }
-  };
   const managerMetrics = new PrometheusManagerMetrics(prometheusClient);
   const metricsCollector = new RestMetricsCollectorClient(metricsCollectorUrl);
   const metricsPublisher: SharedMetricsPublisher = new OutlineSharedMetricsPublisher(
@@ -230,7 +222,6 @@ async function main() {
     serverConfig,
     accessKeyConfig,
     metricsReader,
-    toMetricsId,
     metricsCollector
   );
   const managerService = new ShadowsocksManagerService(

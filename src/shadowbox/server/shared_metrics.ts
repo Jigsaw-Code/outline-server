@@ -17,7 +17,6 @@ import * as follow_redirects from '../infrastructure/follow_redirects';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
-import {AccessKeyId, AccessKeyMetricsId} from '../model/access_key';
 import * as version from './version';
 import {AccessKeyConfigJson} from './server_access_key';
 
@@ -148,14 +147,12 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
   // serverConfig: where the enabled/disable setting is persisted
   // keyConfig: where access keys are persisted
   // usageMetrics: where we get the metrics from
-  // toMetricsId: maps Access key ids to metric ids
   // metricsUrl: where to post the metrics
   constructor(
     private clock: Clock,
     private serverConfig: JsonConfig<ServerConfigJson>,
     private keyConfig: JsonConfig<AccessKeyConfigJson>,
     usageMetrics: UsageMetrics,
-    private toMetricsId: (accessKeyId: AccessKeyId) => AccessKeyMetricsId,
     private metricsCollector: MetricsCollectorClient
   ) {
     // Start timer
