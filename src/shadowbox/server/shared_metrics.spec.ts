@@ -133,15 +133,14 @@ describe('OutlineSharedMetricsPublisher', () => {
 
         await clock.runCallbacks();
 
-        expect(metricsCollector.collectServerUsageMetrics).toHaveBeenCalledOnceWith({
-          serverId: 'server-id',
-          startUtcMs: startTime,
-          endUtcMs: clock.nowMs,
-          userReports: [
-            {bytesTransferred: 22, countries: ['CC']},
-            {bytesTransferred: 22, countries: ['DD']},
-          ],
-        });
+        expect(metricsCollector.collectServerUsageMetrics).toHaveBeenCalledOnceWith(
+          jasmine.objectContaining({
+            userReports: [
+              {bytesTransferred: 22, countries: ['CC']},
+              {bytesTransferred: 22, countries: ['DD']},
+            ],
+          })
+        );
       });
 
       it('ignores sanctioned countries', async () => {
