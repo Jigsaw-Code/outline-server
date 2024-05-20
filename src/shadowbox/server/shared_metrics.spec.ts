@@ -60,21 +60,21 @@ describe('OutlineSharedMetricsPublisher', () => {
 
   describe('Enable/Disable', () => {
     it('Mirrors config', () => {
-      expect(publisher.isSharingEnabled()).toBeFalsy();
+      expect(publisher.isSharingEnabled()).toBeFalse();
 
       publisher.startSharing();
-      expect(publisher.isSharingEnabled()).toBeTruthy();
-      expect(serverConfig.mostRecentWrite.metricsEnabled).toBeTruthy();
+      expect(publisher.isSharingEnabled()).toBeTrue();
+      expect(serverConfig.mostRecentWrite.metricsEnabled).toBeTrue();
 
       publisher.stopSharing();
-      expect(publisher.isSharingEnabled()).toBeFalsy();
-      expect(serverConfig.mostRecentWrite.metricsEnabled).toBeFalsy();
+      expect(publisher.isSharingEnabled()).toBeFalse();
+      expect(serverConfig.mostRecentWrite.metricsEnabled).toBeFalse();
     });
 
     it('Reads from config', () => {
       serverConfig.data().metricsEnabled = true;
 
-      expect(publisher.isSharingEnabled()).toBeTruthy();
+      expect(publisher.isSharingEnabled()).toBeTrue();
     });
   });
 
