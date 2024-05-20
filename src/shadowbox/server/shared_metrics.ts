@@ -105,7 +105,7 @@ export interface MetricsCollectorClient {
   collectFeatureMetrics(reportJson: DailyFeatureMetricsReportJson): Promise<void>;
 }
 
-export class RestMetricsCollectorClient {
+export class RestMetricsCollectorClient implements MetricsCollectorClient {
   constructor(private serviceUrl: string) {}
 
   collectServerUsageMetrics(reportJson: HourlyServerMetricsReportJson): Promise<void> {
