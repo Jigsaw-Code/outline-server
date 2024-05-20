@@ -28,6 +28,7 @@ const SANCTIONED_COUNTRIES = new Set(['CU', 'KP', 'SY']);
 
 export interface LocationUsage {
   country: string;
+  asn?: number;
   inboundBytes: number;
 }
 
@@ -44,6 +45,7 @@ export interface HourlyServerMetricsReportJson {
 // Field renames will break backwards-compatibility.
 export interface HourlyUserMetricsReportJson {
   countries: string[];
+  asn?: number;
   bytesTransferred: number;
 }
 
@@ -84,13 +86,14 @@ export class PrometheusUsageMetrics implements UsageMetrics {
     const timeDeltaSecs = Math.round((Date.now() - this.resetTimeMs) / 1000);
     // We measure the traffic to and from the target, since that's what we are protecting.
     const result = await this.prometheusClient.query(
-      `sum(increase(shadowsocks_data_bytes_per_location{dir=~"p>t|p<t"}[${timeDeltaSecs}s])) by (location)`
+      `sum(increase(shadowsocks_data_bytes_per_location{dir=~"p>t|p<t"}[${timeDeltaSecs}s])) by (location, asn)`
     );
     const usage = [] as LocationUsage[];
     for (const entry of result.result) {
       const country = entry.metric['location'] || '';
+      const asn = entry.metric['asn'] ? Number(entry.metric['asn']) : undefined;
       const inboundBytes = Math.round(parseFloat(entry.value[1]));
-      usage.push({country, inboundBytes});
+      usage.push({country, inboundBytes, asn});
     }
     return usage;
   }
@@ -200,7 +203,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
   private async reportServerUsageMetrics(locationUsageMetrics: LocationUsage[]): Promise<void> {
     const reportEndTimestampMs = this.clock.now();
 
-    const userReports = [] as HourlyUserMetricsReportJson[];
+    const userReports: HourlyUserMetricsReportJson[] = [];
     for (const locationUsage of locationUsageMetrics) {
       if (locationUsage.inboundBytes === 0) {
         continue;
@@ -211,10 +214,14 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       // Make sure to always set a country, which is required by the metrics server validation.
       // It's used to differentiate the row from the legacy key usage rows.
       const country = locationUsage.country || 'ZZ';
-      userReports.push({
+      const report: HourlyUserMetricsReportJson = {
         bytesTransferred: locationUsage.inboundBytes,
         countries: [country],
-      });
+      };
+      if (locationUsage.asn) {
+        report.asn = locationUsage.asn;
+      }
+      userReports.push(report);
     }
     const report = {
       serverId: this.serverConfig.data().serverId,

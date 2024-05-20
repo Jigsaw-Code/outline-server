@@ -114,6 +114,21 @@ describe('OutlineSharedMetricsPublisher', () => {
         });
       });
 
+      it('sends ASN data if present', async () => {
+        usageMetrics.countryUsage = [
+          {country: 'DD', asn: 999, inboundBytes: 44},
+          {country: 'EE', inboundBytes: 55},
+        ];
+        clock.nowMs += 60 * 60 * 1000;
+
+        await clock.runCallbacks();
+
+        expect(metricsCollector.collectedServerUsageReport.userReports).toEqual([
+          {bytesTransferred: 44, countries: ['DD'], asn: 999},
+          {bytesTransferred: 55, countries: ['EE']},
+        ]);
+      });
+
       it('resets metrics to avoid double reporting', async () => {
         usageMetrics.countryUsage = [
           {country: 'AA', inboundBytes: 11},
