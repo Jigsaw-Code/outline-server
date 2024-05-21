@@ -89,7 +89,7 @@ describe('OutlineSharedMetricsPublisher', () => {
 
     describe('for server usage', () => {
       it('is sending correct reports', async () => {
-        usageMetrics.countryUsage = [
+        usageMetrics.locationUsage = [
           {country: 'AA', inboundBytes: 11},
           {country: 'BB', inboundBytes: 11},
           {country: 'CC', inboundBytes: 22},
@@ -115,7 +115,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       });
 
       it('sends ASN data if present', async () => {
-        usageMetrics.countryUsage = [
+        usageMetrics.locationUsage = [
           {country: 'DD', asn: 999, inboundBytes: 44},
           {country: 'EE', inboundBytes: 55},
         ];
@@ -130,15 +130,15 @@ describe('OutlineSharedMetricsPublisher', () => {
       });
 
       it('resets metrics to avoid double reporting', async () => {
-        usageMetrics.countryUsage = [
+        usageMetrics.locationUsage = [
           {country: 'AA', inboundBytes: 11},
           {country: 'BB', inboundBytes: 11},
         ];
         clock.nowMs += 60 * 60 * 1000;
         startTime = clock.nowMs;
         await clock.runCallbacks();
-        usageMetrics.countryUsage = [
-          ...usageMetrics.countryUsage,
+        usageMetrics.locationUsage = [
+          ...usageMetrics.locationUsage,
           {country: 'CC', inboundBytes: 22},
           {country: 'DD', inboundBytes: 22},
         ];
@@ -153,7 +153,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       });
 
       it('ignores sanctioned countries', async () => {
-        usageMetrics.countryUsage = [
+        usageMetrics.locationUsage = [
           {country: 'AA', inboundBytes: 11},
           {country: 'SY', inboundBytes: 11},
           {country: 'CC', inboundBytes: 22},
@@ -237,14 +237,14 @@ class FakeMetricsCollector implements MetricsCollectorClient {
 }
 
 class ManualUsageMetrics implements UsageMetrics {
-  public countryUsage = [] as LocationUsage[];
+  public locationUsage = [] as LocationUsage[];
 
   getLocationUsage(): Promise<LocationUsage[]> {
-    return Promise.resolve(this.countryUsage);
+    return Promise.resolve(this.locationUsage);
   }
 
   reset() {
-    this.countryUsage = [] as LocationUsage[];
+    this.locationUsage = [] as LocationUsage[];
   }
 }
 
