@@ -313,7 +313,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
       if (limitBytes === undefined) {
         limitBytes = Number.POSITIVE_INFINITY;
       }
-      accessKey.isOverDataLimit = usageBytes > limitBytes;
+      accessKey.isOverDataLimit = usageBytes >= limitBytes;
       limitStatusChanged = accessKey.isOverDataLimit !== wasOverDataLimit || limitStatusChanged;
     }
     if (limitStatusChanged) {
