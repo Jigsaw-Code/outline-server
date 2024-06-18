@@ -806,28 +806,28 @@ class RepoBuilder {
   private prometheusClient_ = new FakePrometheusClient({});
   private defaultDataLimit_;
 
-  public port(port: number): RepoBuilder {
+  port(port: number): RepoBuilder {
     this.port_ = port;
     return this;
   }
-  public keyConfig(keyConfig: InMemoryConfig<AccessKeyConfigJson>): RepoBuilder {
+  keyConfig(keyConfig: InMemoryConfig<AccessKeyConfigJson>): RepoBuilder {
     this.keyConfig_ = keyConfig;
     return this;
   }
-  public shadowsocksServer(shadowsocksServer: FakeShadowsocksServer): RepoBuilder {
+  shadowsocksServer(shadowsocksServer: FakeShadowsocksServer): RepoBuilder {
     this.shadowsocksServer_ = shadowsocksServer;
     return this;
   }
-  public prometheusClient(prometheusClient: FakePrometheusClient): RepoBuilder {
+  prometheusClient(prometheusClient: FakePrometheusClient): RepoBuilder {
     this.prometheusClient_ = prometheusClient;
     return this;
   }
-  public defaultDataLimit(limit: DataLimit): RepoBuilder {
+  defaultDataLimit(limit: DataLimit): RepoBuilder {
     this.defaultDataLimit_ = limit;
     return this;
   }
 
-  public build(): ServerAccessKeyRepository {
+  build(): ServerAccessKeyRepository {
     return new ServerAccessKeyRepository(
       this.port_,
       'hostname',

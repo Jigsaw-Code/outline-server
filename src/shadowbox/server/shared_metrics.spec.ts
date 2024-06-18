@@ -244,8 +244,8 @@ describe('OutlineSharedMetricsPublisher', () => {
 });
 
 class FakeMetricsCollector implements MetricsCollectorClient {
-  public collectedServerUsageReport: HourlyServerMetricsReportJson;
-  public collectedFeatureMetricsReport: DailyFeatureMetricsReportJson;
+  collectedServerUsageReport: HourlyServerMetricsReportJson;
+  collectedFeatureMetricsReport: DailyFeatureMetricsReportJson;
 
   async collectServerUsageMetrics(report) {
     this.collectedServerUsageReport = report;
@@ -257,7 +257,7 @@ class FakeMetricsCollector implements MetricsCollectorClient {
 }
 
 class ManualUsageMetrics implements UsageMetrics {
-  public countryUsage = [] as CountryUsage[];
+  countryUsage = [] as CountryUsage[];
 
   getCountryUsage(): Promise<CountryUsage[]> {
     return Promise.resolve(this.countryUsage);

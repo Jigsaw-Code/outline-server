@@ -17,7 +17,7 @@ import {InsertableTable} from './infrastructure/table';
 import {DailyFeatureMetricsReport} from './model';
 
 class FakeFeaturesTable implements InsertableTable<FeatureRow> {
-  public rows: FeatureRow[] | undefined;
+  rows: FeatureRow[] | undefined;
 
   async insert(rows: FeatureRow[]) {
     this.rows = rows;

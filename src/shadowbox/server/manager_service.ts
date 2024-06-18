@@ -253,7 +253,7 @@ export class ShadowsocksManagerService {
     private metricsPublisher: SharedMetricsPublisher
   ) {}
 
-  public renameServer(req: RequestType, res: ResponseType, next: restify.Next): void {
+  renameServer(req: RequestType, res: ResponseType, next: restify.Next): void {
     logging.debug(`renameServer request ${JSON.stringify(req.params)}`);
     const name = req.params.name;
     if (!name) {
@@ -275,7 +275,7 @@ export class ShadowsocksManagerService {
     next();
   }
 
-  public getServer(req: RequestType, res: ResponseType, next: restify.Next): void {
+  getServer(req: RequestType, res: ResponseType, next: restify.Next): void {
     res.send(HttpSuccess.OK, {
       name: this.serverConfig.data().name || this.defaultServerName,
       serverId: this.serverConfig.data().serverId,
@@ -291,7 +291,7 @@ export class ShadowsocksManagerService {
   }
 
   // Changes the server's hostname.  Hostname must be a valid domain or IP address
-  public setHostnameForAccessKeys(req: RequestType, res: ResponseType, next: restify.Next): void {
+  setHostnameForAccessKeys(req: RequestType, res: ResponseType, next: restify.Next): void {
     logging.debug(`changeHostname request: ${JSON.stringify(req.params)}`);
 
     const hostname = req.params.hostname;
@@ -329,7 +329,7 @@ export class ShadowsocksManagerService {
   }
 
   // Get a access key
-  public getAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
+  getAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
     try {
       logging.debug(`getAccessKey request ${JSON.stringify(req.params)}`);
       const accessKeyId = validateAccessKeyId(req.params.id);
@@ -349,7 +349,7 @@ export class ShadowsocksManagerService {
   }
 
   // Lists all access keys
-  public listAccessKeys(req: RequestType, res: ResponseType, next: restify.Next): void {
+  listAccessKeys(req: RequestType, res: ResponseType, next: restify.Next): void {
     logging.debug(`listAccessKeys request ${JSON.stringify(req.params)}`);
     const response = {accessKeys: []};
     for (const accessKey of this.accessKeys.listAccessKeys()) {
@@ -394,11 +394,7 @@ export class ShadowsocksManagerService {
   }
 
   // Creates a new access key
-  public async createNewAccessKey(
-    req: RequestType,
-    res: ResponseType,
-    next: restify.Next
-  ): Promise<void> {
+  async createNewAccessKey(req: RequestType, res: ResponseType, next: restify.Next): Promise<void> {
     try {
       logging.debug(`createNewAccessKey request ${JSON.stringify(req.params)}`);
       if (req.params.id) {
@@ -420,11 +416,7 @@ export class ShadowsocksManagerService {
   }
 
   // Creates an access key with a specific identifier
-  public async createAccessKey(
-    req: RequestType,
-    res: ResponseType,
-    next: restify.Next
-  ): Promise<void> {
+  async createAccessKey(req: RequestType, res: ResponseType, next: restify.Next): Promise<void> {
     try {
       logging.debug(`createAccessKey request ${JSON.stringify(req.params)}`);
       const accessKeyId = validateAccessKeyId(req.params.id);
@@ -445,7 +437,7 @@ export class ShadowsocksManagerService {
   }
 
   // Sets the default ports for new access keys
-  public async setPortForNewAccessKeys(
+  async setPortForNewAccessKeys(
     req: RequestType,
     res: ResponseType,
     next: restify.Next
@@ -477,7 +469,7 @@ export class ShadowsocksManagerService {
   }
 
   // Removes an existing access key
-  public removeAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
+  removeAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
     try {
       logging.debug(`removeAccessKey request ${JSON.stringify(req.params)}`);
       const accessKeyId = validateAccessKeyId(req.params.id);
@@ -495,7 +487,7 @@ export class ShadowsocksManagerService {
     }
   }
 
-  public renameAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
+  renameAccessKey(req: RequestType, res: ResponseType, next: restify.Next): void {
     try {
       logging.debug(`renameAccessKey request ${JSON.stringify(req.params)}`);
       const accessKeyId = validateAccessKeyId(req.params.id);
@@ -526,7 +518,7 @@ export class ShadowsocksManagerService {
     }
   }
 
-  public async setAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
+  async setAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`setAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
       const accessKeyId = validateAccessKeyId(req.params.id);
@@ -545,7 +537,7 @@ export class ShadowsocksManagerService {
     }
   }
 
-  public async removeAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
+  async removeAccessKeyDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`removeAccessKeyDataLimit request ${JSON.stringify(req.params)}`);
       const accessKeyId = validateAccessKeyId(req.params.id);
@@ -563,7 +555,7 @@ export class ShadowsocksManagerService {
     }
   }
 
-  public async setDefaultDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
+  async setDefaultDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`setDefaultDataLimit request ${JSON.stringify(req.params)}`);
       const limit = validateDataLimit(req.params.limit);
@@ -583,7 +575,7 @@ export class ShadowsocksManagerService {
     }
   }
 
-  public async removeDefaultDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
+  async removeDefaultDataLimit(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`removeDefaultDataLimit request ${JSON.stringify(req.params)}`);
       // Enforcement is done asynchronously in the proxy server.  This is transparent to the manager
@@ -599,7 +591,7 @@ export class ShadowsocksManagerService {
     }
   }
 
-  public async getDataUsage(req: RequestType, res: ResponseType, next: restify.Next) {
+  async getDataUsage(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`getDataUsage request ${JSON.stringify(req.params)}`);
       const response = await this.managerMetrics.getOutboundByteTransfer({hours: 30 * 24});
@@ -612,7 +604,7 @@ export class ShadowsocksManagerService {
     }
   }
 
-  public getShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
+  getShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
     logging.debug(`getShareMetrics request ${JSON.stringify(req.params)}`);
     const response = {metricsEnabled: this.metricsPublisher.isSharingEnabled()};
     res.send(HttpSuccess.OK, response);
@@ -620,7 +612,7 @@ export class ShadowsocksManagerService {
     next();
   }
 
-  public setShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
+  setShareMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
     logging.debug(`setShareMetrics request ${JSON.stringify(req.params)}`);
     const metricsEnabled = req.params.metricsEnabled;
     if (metricsEnabled === undefined || metricsEnabled === null) {
@@ -647,7 +639,7 @@ export class ShadowsocksManagerService {
     next();
   }
 
-  public enableAsnMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
+  enableAsnMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
     try {
       logging.debug(`enableAsnMetrics request ${JSON.stringify(req.params)}`);
       const asnMetricsEnabled = req.params.asnMetricsEnabled;
