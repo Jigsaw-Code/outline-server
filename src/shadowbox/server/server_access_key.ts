@@ -308,13 +308,13 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     let limitStatusChanged = false;
     for (const accessKey of this.accessKeys) {
       const usageBytes = bytesTransferredById[accessKey.id] ?? 0;
-      const wasOverDataLimit = accessKey.reachedDataLimit;
+      const oldReachedDataLimit = accessKey.reachedDataLimit;
       let limitBytes = (accessKey.dataLimit ?? this._defaultDataLimit)?.bytes;
       if (limitBytes === undefined) {
         limitBytes = Number.POSITIVE_INFINITY;
       }
       accessKey.reachedDataLimit = usageBytes >= limitBytes;
-      limitStatusChanged = accessKey.reachedDataLimit !== wasOverDataLimit || limitStatusChanged;
+      limitStatusChanged = accessKey.reachedDataLimit !== oldReachedDataLimit || limitStatusChanged;
     }
     if (limitStatusChanged) {
       await this.updateServer();
