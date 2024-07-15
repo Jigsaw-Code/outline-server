@@ -39,7 +39,7 @@ export interface AccessKey {
   readonly name: string;
   // Parameters to access the proxy
   readonly proxyParams: ProxyParams;
-  // Whether the access key has exceeded the data transfer limit.
+  // Whether the access key has reached the data transfer limit.
   readonly reachedDataLimit: boolean;
   // The key's current data limit.  If it exists, it overrides the server default data limit.
   readonly dataLimit?: DataLimit;
