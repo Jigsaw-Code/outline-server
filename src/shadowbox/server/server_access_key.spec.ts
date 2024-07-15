@@ -673,6 +673,21 @@ describe('ServerAccessKeyRepository', () => {
     done();
   });
 
+  it('enforceAccessKeyDataLimits disables on exact data limit', async (done) => {
+    const server = new FakeShadowsocksServer();
+    const prometheusClient = new FakePrometheusClient({'0': 0});
+    const repo = new RepoBuilder()
+      .prometheusClient(prometheusClient)
+      .shadowsocksServer(server)
+      .build();
+    await repo.createNewAccessKey({dataLimit: {bytes: 0}});
+
+    await repo.enforceAccessKeyDataLimits();
+
+    expect(server.getAccessKeys().length).toEqual(0);
+    done();
+  });
+
   it('Repos created with an existing file restore access keys', async (done) => {
     const config = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
     const repo1 = new RepoBuilder().keyConfig(config).build();
