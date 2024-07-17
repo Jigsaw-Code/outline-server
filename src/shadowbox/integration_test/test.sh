@@ -40,18 +40,12 @@ readonly DOCKER="${DOCKER:-docker}"
 
 # TODO(fortuna): Make it possible to run multiple tests in parallel by adding a
 # run id to the container names.
-readonly NAMESPACE='integrationtest'
-readonly TARGET_CONTAINER="${NAMESPACE}_target"
-readonly TARGET_IMAGE="${TARGET_CONTAINER}"
-readonly SHADOWBOX_IMAGE="${1?Must pass image name in the command line}"
-readonly SHADOWBOX_CONTAINER="${NAMESPACE}_shadowbox"
-readonly CLIENT_CONTAINER="${NAMESPACE}_client"
-readonly CLIENT_IMAGE="${CLIENT_CONTAINER}"
-readonly UTIL_IMAGE="${NAMESPACE}_util"
-
-readonly NET_OPEN="${NAMESPACE}_open"
-readonly NET_BLOCKED="${NAMESPACE}_blocked"
-
+export readonly NAMESPACE='integrationtest'
+export readonly TARGET_CONTAINER="${NAMESPACE}-target"
+export readonly SHADOWBOX_IMAGE="${1?Must pass image name in the command line}"
+export readonly SHADOWBOX_CONTAINER="${NAMESPACE}-shadowbox"
+export readonly CLIENT_CONTAINER="${NAMESPACE}-client"
+export readonly UTIL_CONTAINER="${NAMESPACE}-util"
 
 readonly INTERNET_TARGET_URL="http://www.gstatic.com/generate_204"
 echo "Test output at ${OUTPUT_DIR}"
@@ -66,7 +60,7 @@ function wait_for_resource() {
 }
 
 function util_jq() {
-  "${DOCKER}" run --rm -i --entrypoint jq "${UTIL_IMAGE}" "$@"
+  "${DOCKER}" exec "${UTIL_CONTAINER}" jq "$@"
 }
 
 # Takes the JSON from a /access-keys POST request and returns the appropriate
@@ -90,55 +84,9 @@ function fail() {
   exit 1
 }
 
-function setup() {
-  remove_containers
-
-  "${DOCKER}" network create -d bridge "${NET_OPEN}"
-  "${DOCKER}" network create -d bridge --internal "${NET_BLOCKED}"
-
-  # Target service.
-  "${DOCKER}" build --force-rm -t "${TARGET_IMAGE}" "$(dirname "$0")/target"
-  "${DOCKER}" run -d --rm -p "10080:80" --network="${NET_OPEN}" --network-alias="target" --name="${TARGET_CONTAINER}" "${TARGET_IMAGE}"
-
-  # Shadowsocks service.
-  declare -ar shadowbox_flags=(
-    -d
-    --rm
-    --network="${NET_BLOCKED}"
-    --network-alias="shadowbox"
-    -p "20443:443"
-    -e "SB_API_PORT=443"
-    -e "SB_API_PREFIX=${SB_API_PREFIX}"
-    -e "LOG_LEVEL=debug"
-    -e "SB_CERTIFICATE_FILE=/root/shadowbox/test.crt"
-    -e "SB_PRIVATE_KEY_FILE=/root/shadowbox/test.key"
-    -v "${SB_CERTIFICATE_FILE}:/root/shadowbox/test.crt"
-    -v "${SB_PRIVATE_KEY_FILE}:/root/shadowbox/test.key"
-    -v "${STATE_DIR}:/root/shadowbox/persisted-state"
-    --name "${SHADOWBOX_CONTAINER}"
-    "${SHADOWBOX_IMAGE}"
-  )
-  "${DOCKER}" run "${shadowbox_flags[@]}"
-  # "${DOCKER}" network connect --alias shadowbox "${NET_BLOCKED}" "${SHADOWBOX_CONTAINER}"
-  "${DOCKER}" network connect "${NET_OPEN}" "${SHADOWBOX_CONTAINER}"
-
-  # Client service.
-  "${DOCKER}" build --force-rm -t "${CLIENT_IMAGE}" "$(dirname "$0")/client"
-  # Use -i to keep the container running.
-  "${DOCKER}" run -d --rm -it --network "${NET_BLOCKED}" --name "${CLIENT_CONTAINER}" "${CLIENT_IMAGE}"
-
-  # Utilities
-  "${DOCKER}" build --force-rm -t "${UTIL_IMAGE}" "$(dirname "$0")/util"
-}
-
 function remove_containers() {
-  # Force remove (-f) running containers and `|| true` to not trigger a shell error
-  # in case the container or network doesn't exist.
-  "${DOCKER}" rm -f -v "${TARGET_CONTAINER}" || true
-  "${DOCKER}" rm -f -v "${SHADOWBOX_CONTAINER}" || true
-  "${DOCKER}" rm -f -v "${CLIENT_CONTAINER}" || true
-  "${DOCKER}" network rm "${NET_OPEN}" || true
-  "${DOCKER}" network rm "${NET_BLOCKED}" || true
+  "${DOCKER}" compose -f "$(dirname "$0")/compose.yaml" rm -f -s -v || true
+  docker network ls -q --filter "label=org.getoutline.integration_test=true" | xargs docker network rm || true
 }
 
 function cleanup() {
@@ -167,11 +115,12 @@ function cleanup() {
   # Make the certificates. This exports SB_CERTIFICATE_FILE and SB_PRIVATE_KEY_FILE.
   # shellcheck source=../scripts/make_test_certificate.sh
   source "$(dirname "$0")/../scripts/make_test_certificate.sh" "${STATE_DIR}"
-  setup
+  remove_containers
+  "${DOCKER}" compose -f "$(dirname "$0")/compose.yaml" up --build -d
 
   # Wait for target to come up.
   wait_for_resource localhost:10080
-  TARGET_IP="$("${DOCKER}" inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${TARGET_CONTAINER}")"
+  TARGET_IP="$("${DOCKER}" inspect --type container --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${TARGET_CONTAINER}")"
   readonly TARGET_IP
 
   # Verify that the client cannot access or even resolve the target

@@ -1,0 +1,60 @@
+
+services:
+  client:
+    build: ./client
+    container_name: ${CLIENT_CONTAINER:-client}
+    tty: true
+    networks:
+      - blocked
+    depends_on:
+      - shadowbox
+
+  shadowbox:
+    image: ${SHADOWBOX_IMAGE:-localhost/outline/shadowbox:latest}
+    container_name: ${SHADOWBOX_CONTAINER:-shadowbox}
+    tty: true
+    ports:
+      - 20443:443
+    environment:
+      SB_API_PORT: 443
+      SB_API_PREFIX: ${SB_API_PREFIX:-TestApiPrefix}
+      LOG_LEVEL: debug
+      SB_CERTIFICATE_FILE: /root/shadowbox/test.crt
+      SB_PRIVATE_KEY_FILE: /root/shadowbox/test.key
+    volumes:
+      - ${SB_CERTIFICATE_FILE:-/tmp/shadowbox/persisted-state/shadowbox-selfsigned-dev.crt}:/root/shadowbox/test.crt
+      - ${SB_PRIVATE_KEY_FILE:-/tmp/shadowbox/persisted-state/shadowbox-selfsigned-dev.key}:/root/shadowbox/test.key
+      - ${STATE_DIR:-/tmp/shadowbox/persisted-state}:/root/shadowbox/persisted-state
+    networks:
+      - blocked
+      - open
+    depends_on:
+      - target
+
+  target:
+    build: ./target
+    container_name: ${TARGET_CONTAINER:-target}
+    tty: true
+    ports:
+      - 10080:80
+    networks:
+      - open
+
+  util:
+    build: ./util
+    container_name: ${UTIL_CONTAINER:-util}
+    tty: true
+
+networks:
+  default:
+    labels:
+      org.getoutline.integration_test: true
+  open:
+    driver: bridge
+    labels:
+      org.getoutline.integration_test: true
+  blocked:
+    driver: bridge
+    internal: true
+    labels:
+      org.getoutline.integration_test: true
