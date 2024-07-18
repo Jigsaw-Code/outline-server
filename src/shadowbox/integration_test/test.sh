@@ -30,8 +30,6 @@
 #
 # Each node runs on a different Docker container.
 
-set -x
-
 OUTPUT_DIR="${OUTPUT_DIR:-$(mktemp -d)}"
 readonly OUTPUT_DIR
 
