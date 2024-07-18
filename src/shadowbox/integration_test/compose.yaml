@@ -40,11 +40,6 @@ services:
     networks:
       - open
 
-  util:
-    build: ./util
-    container_name: ${UTIL_CONTAINER:-util}
-    tty: true
-
 networks:
   default:
     labels:

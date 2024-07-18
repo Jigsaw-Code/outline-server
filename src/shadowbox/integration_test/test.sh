@@ -60,7 +60,7 @@ function wait_for_resource() {
 }
 
 function util_jq() {
-  "${DOCKER}" exec "${UTIL_CONTAINER}" jq "$@"
+  "${DOCKER}" run -i --rm ghcr.io/jqlang/jq "$@"
 }
 
 # Takes the JSON from a /access-keys POST request and returns the appropriate
