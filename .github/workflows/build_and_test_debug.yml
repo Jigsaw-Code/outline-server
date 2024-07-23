@@ -14,10 +14,9 @@ on:
       - master
 
 jobs:
-
-  shadowbox:
-    name: Shadowbox
-    runs-on: ubuntu-24.04
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2.3.4
@@ -31,7 +30,90 @@ jobs:
       - name: Install NPM Dependencies
         run: npm ci
 
+      - name: Lint
+        run: ./task lint
+
+  shadowbox:
+    name: Shadowbox
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Install Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Install NPM Dependencies
+        run: npm ci
+
+      - name: Shadowbox Debug Build
+        run: ./task shadowbox:build
+
+      - name: Shadowbox Unit Test
+        run: ./task shadowbox:test
 
       - name: Shadowbox Integration Test
-        run: docker version && ./task shadowbox:integration_test
+        run: ./task shadowbox:integration_test
 
+  manual-install-script:
+    name: Manual Install Script
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+      
+      - name: Install Outline Server
+        run: ./src/server_manager/install_scripts/install_server.sh --hostname localhost
+      
+      - name: Test API
+        run: 'curl --silent --fail --insecure $(grep "apiUrl" /opt/outline/access.txt | cut -d: -f 2-)/server'
+
+  metrics-server:
+    name: Metrics Server
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Install Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Install NPM Dependencies
+        run: npm ci
+
+      - name: Metrics Server Debug Build
+        run: ./task metrics_server:build
+
+      - name: Metrics Server Test
+        run: ./task metrics_server:test
+
+  sentry-webhook:
+    name: Sentry Webhook
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Install Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Install NPM Dependencies
+        run: npm ci
+
+      - name: Sentry Webhook Debug Build
+        run: ./task sentry_webhook:build
+
+      - name: Sentry Webhook Test
+        run: ./task sentry_webhook:test
