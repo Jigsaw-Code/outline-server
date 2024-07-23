@@ -12,6 +12,8 @@ on:
   push:
     branches:
       - master
+  schedule:
+    - cron: "0 13 * * *"  # Run daily at 1PM UTC.
 
 jobs:
   lint:
@@ -65,10 +67,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2.3.4
-      
+
       - name: Install Outline Server
         run: ./src/server_manager/install_scripts/install_server.sh --hostname localhost
-      
+
       - name: Test API
         run: 'curl --silent --fail --insecure $(grep "apiUrl" /opt/outline/access.txt | cut -d: -f 2-)/server'
 
