@@ -70,7 +70,7 @@ const LEGACY_REPORT: HourlyConnectionMetricsReport = {
 };
 
 class FakeConnectionsTable implements InsertableTable<ConnectionRow> {
-  public rows: ConnectionRow[] | undefined;
+  rows: ConnectionRow[] | undefined;
 
   async insert(rows: ConnectionRow[]) {
     this.rows = rows;
