@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM docker.io/golang:1-alpine
+FROM docker.io/golang:1-alpine3.18
 
 # curl for fetching pages using the local proxy
 RUN apk add --no-cache curl git
