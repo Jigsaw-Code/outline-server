@@ -47,7 +47,6 @@ readonly SHADOWBOX_IMAGE="${1?Must pass image name in the command line}"
 readonly SHADOWBOX_CONTAINER="${NAMESPACE}_shadowbox"
 readonly CLIENT_CONTAINER="${NAMESPACE}_client"
 readonly CLIENT_IMAGE="${CLIENT_CONTAINER}"
-readonly UTIL_IMAGE="${NAMESPACE}_util"
 
 readonly NET_OPEN="${NAMESPACE}_open"
 readonly NET_BLOCKED="${NAMESPACE}_blocked"
@@ -66,7 +65,7 @@ function wait_for_resource() {
 }
 
 function util_jq() {
-  "${DOCKER}" run --rm -i --entrypoint jq "${UTIL_IMAGE}" "$@"
+  "${DOCKER}" run --rm -i ghcr.io/jqlang/jq "$@"
 }
 
 # Takes the JSON from a /access-keys POST request and returns the appropriate
@@ -126,9 +125,6 @@ function setup() {
   "${DOCKER}" build --force-rm -t "${CLIENT_IMAGE}" "$(dirname "$0")/client"
   # Use -i to keep the container running.
   "${DOCKER}" run -d --rm -it --network "${NET_BLOCKED}" --name "${CLIENT_CONTAINER}" "${CLIENT_IMAGE}"
-
-  # Utilities
-  "${DOCKER}" build --force-rm -t "${UTIL_IMAGE}" "$(dirname "$0")/util"
 }
 
 function remove_containers() {

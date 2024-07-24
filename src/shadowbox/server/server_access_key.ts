@@ -50,7 +50,7 @@ export interface AccessKeyConfigJson {
 
 // AccessKey implementation with write access enabled on properties that may change.
 class ServerAccessKey implements AccessKey {
-  public reachedDataLimit = false;
+  reachedDataLimit = false;
   constructor(
     readonly id: AccessKeyId,
     public name: string,

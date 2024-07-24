@@ -145,4 +145,4 @@ If your change includes new fields in the server config which are needed at serv
 
 - **Delete Existing Config:** `rm /tmp/outline/persisted-state/shadowbox_server_config.json`
 
-- **Manually Edit:** You'll need to edit the JSON string within [`src/shadowbox/docker/start.action.sh`](src/shadowbox/docker/start.action.sh).
+- **Manually Edit:** You'll need to edit the JSON string within [`src/shadowbox/Taskfile.yml`](src/shadowbox/Taskfile.yml).

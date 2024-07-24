@@ -89,7 +89,7 @@ export class DelayedConfig<T> implements JsonConfig<T> {
 // InMemoryConfig is a JsonConfig backed by an internal member variable. Useful for testing.
 export class InMemoryConfig<T> implements JsonConfig<T> {
   // Holds the data JSON as it was when `write()` was called.
-  public mostRecentWrite: T;
+  mostRecentWrite: T;
   constructor(private dataJson: T) {
     this.mostRecentWrite = this.dataJson;
   }
