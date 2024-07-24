@@ -50,7 +50,7 @@ export interface AccessKeyConfigJson {
 
 // AccessKey implementation with write access enabled on properties that may change.
 class ServerAccessKey implements AccessKey {
-  isOverDataLimit = false;
+  reachedDataLimit = false;
   constructor(
     readonly id: AccessKeyId,
     public name: string,
@@ -308,13 +308,13 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     let limitStatusChanged = false;
     for (const accessKey of this.accessKeys) {
       const usageBytes = bytesTransferredById[accessKey.id] ?? 0;
-      const wasOverDataLimit = accessKey.isOverDataLimit;
+      const oldReachedDataLimit = accessKey.reachedDataLimit;
       let limitBytes = (accessKey.dataLimit ?? this._defaultDataLimit)?.bytes;
       if (limitBytes === undefined) {
         limitBytes = Number.POSITIVE_INFINITY;
       }
-      accessKey.isOverDataLimit = usageBytes > limitBytes;
-      limitStatusChanged = accessKey.isOverDataLimit !== wasOverDataLimit || limitStatusChanged;
+      accessKey.reachedDataLimit = usageBytes >= limitBytes;
+      limitStatusChanged = accessKey.reachedDataLimit !== oldReachedDataLimit || limitStatusChanged;
     }
     if (limitStatusChanged) {
       await this.updateServer();
@@ -323,7 +323,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
 
   private updateServer(): Promise<void> {
     const serverAccessKeys = this.accessKeys
-      .filter((key) => !key.isOverDataLimit)
+      .filter((key) => !key.reachedDataLimit)
       .map((key) => {
         return {
           id: key.id,

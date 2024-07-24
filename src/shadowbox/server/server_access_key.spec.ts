@@ -183,7 +183,7 @@ describe('ServerAccessKeyRepository', () => {
   it('Creates access keys under limit', async (done) => {
     const repo = new RepoBuilder().build();
     const accessKey = await repo.createNewAccessKey();
-    expect(accessKey.isOverDataLimit).toBeFalsy();
+    expect(accessKey.reachedDataLimit).toBeFalsy();
     done();
   });
 
@@ -346,13 +346,13 @@ describe('ServerAccessKeyRepository', () => {
     const key = await repo.createNewAccessKey();
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 0});
 
-    expect(key.isOverDataLimit).toBeTruthy();
+    expect(key.reachedDataLimit).toBeTruthy();
     let serverKeys = server.getAccessKeys();
     expect(serverKeys.length).toEqual(0);
 
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 1000});
 
-    expect(key.isOverDataLimit).toBeFalsy();
+    expect(key.reachedDataLimit).toBeFalsy();
     serverKeys = server.getAccessKeys();
     expect(serverKeys.length).toEqual(1);
     expect(serverKeys[0].id).toEqual(key.id);
@@ -371,13 +371,13 @@ describe('ServerAccessKeyRepository', () => {
     const higherLimitThanDefault = await repo.createNewAccessKey();
     await repo.setDefaultDataLimit({bytes: 1000});
 
-    expect(lowerLimitThanDefault.isOverDataLimit).toBeFalsy();
+    expect(lowerLimitThanDefault.reachedDataLimit).toBeFalsy();
     await setKeyLimitAndEnforce(repo, lowerLimitThanDefault.id, {bytes: 500});
-    expect(lowerLimitThanDefault.isOverDataLimit).toBeTruthy();
+    expect(lowerLimitThanDefault.reachedDataLimit).toBeTruthy();
 
-    expect(higherLimitThanDefault.isOverDataLimit).toBeTruthy();
+    expect(higherLimitThanDefault.reachedDataLimit).toBeTruthy();
     await setKeyLimitAndEnforce(repo, higherLimitThanDefault.id, {bytes: 1500});
-    expect(higherLimitThanDefault.isOverDataLimit).toBeFalsy();
+    expect(higherLimitThanDefault.reachedDataLimit).toBeFalsy();
     done();
   });
 
@@ -404,10 +404,10 @@ describe('ServerAccessKeyRepository', () => {
     await repo.start(new ManualClock());
     await repo.setDefaultDataLimit({bytes: 0});
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 1000});
-    expect(key.isOverDataLimit).toBeFalsy();
+    expect(key.reachedDataLimit).toBeFalsy();
 
     await removeKeyLimitAndEnforce(repo, key.id);
-    expect(key.isOverDataLimit).toBeTruthy();
+    expect(key.reachedDataLimit).toBeTruthy();
     done();
   });
 
@@ -422,13 +422,13 @@ describe('ServerAccessKeyRepository', () => {
     const key = await repo.createNewAccessKey();
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 0});
 
-    expect(key.isOverDataLimit).toBeTruthy();
+    expect(key.reachedDataLimit).toBeTruthy();
     let serverKeys = server.getAccessKeys();
     expect(serverKeys.length).toEqual(0);
 
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 1000});
 
-    expect(key.isOverDataLimit).toBeFalsy();
+    expect(key.reachedDataLimit).toBeFalsy();
     serverKeys = server.getAccessKeys();
     expect(serverKeys.length).toEqual(1);
     expect(serverKeys[0].id).toEqual(key.id);
@@ -447,13 +447,13 @@ describe('ServerAccessKeyRepository', () => {
     const higherLimitThanDefault = await repo.createNewAccessKey();
     await repo.setDefaultDataLimit({bytes: 1000});
 
-    expect(lowerLimitThanDefault.isOverDataLimit).toBeFalsy();
+    expect(lowerLimitThanDefault.reachedDataLimit).toBeFalsy();
     await setKeyLimitAndEnforce(repo, lowerLimitThanDefault.id, {bytes: 500});
-    expect(lowerLimitThanDefault.isOverDataLimit).toBeTruthy();
+    expect(lowerLimitThanDefault.reachedDataLimit).toBeTruthy();
 
-    expect(higherLimitThanDefault.isOverDataLimit).toBeTruthy();
+    expect(higherLimitThanDefault.reachedDataLimit).toBeTruthy();
     await setKeyLimitAndEnforce(repo, higherLimitThanDefault.id, {bytes: 1500});
-    expect(higherLimitThanDefault.isOverDataLimit).toBeFalsy();
+    expect(higherLimitThanDefault.reachedDataLimit).toBeFalsy();
     done();
   });
 
@@ -487,10 +487,10 @@ describe('ServerAccessKeyRepository', () => {
     await repo.start(new ManualClock());
     await repo.setDefaultDataLimit({bytes: 0});
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 1000});
-    expect(key.isOverDataLimit).toBeFalsy();
+    expect(key.reachedDataLimit).toBeFalsy();
 
     await removeKeyLimitAndEnforce(repo, key.id);
-    expect(key.isOverDataLimit).toBeTruthy();
+    expect(key.reachedDataLimit).toBeTruthy();
     done();
   });
 
@@ -505,11 +505,11 @@ describe('ServerAccessKeyRepository', () => {
     await repo.start(new ManualClock());
 
     await setKeyLimitAndEnforce(repo, key.id, {bytes: 0});
-    expect(key.isOverDataLimit).toBeTruthy();
+    expect(key.reachedDataLimit).toBeTruthy();
     expect(server.getAccessKeys().length).toEqual(0);
 
     await removeKeyLimitAndEnforce(repo, key.id);
-    expect(key.isOverDataLimit).toBeFalsy();
+    expect(key.reachedDataLimit).toBeFalsy();
     expect(server.getAccessKeys().length).toEqual(1);
     done();
   });
@@ -537,8 +537,8 @@ describe('ServerAccessKeyRepository', () => {
     // We enforce asynchronously, in setAccessKeyDataLimit, so explicitly call it here to make sure
     // enforcement is done before we make assertions.
     await repo.enforceAccessKeyDataLimits();
-    expect(accessKey1.isOverDataLimit).toBeTruthy();
-    expect(accessKey2.isOverDataLimit).toBeFalsy();
+    expect(accessKey1.reachedDataLimit).toBeTruthy();
+    expect(accessKey2.reachedDataLimit).toBeFalsy();
     // We determine which access keys have been enabled/disabled by accessing them from
     // the server's perspective, ensuring `server.update` has been called.
     let serverAccessKeys = server.getAccessKeys();
@@ -549,8 +549,8 @@ describe('ServerAccessKeyRepository', () => {
     prometheusClient.bytesTransferredById = {'0': 500, '1': 1000};
     repo.setDefaultDataLimit({bytes: 700});
     await repo.enforceAccessKeyDataLimits();
-    expect(accessKey1.isOverDataLimit).toBeFalsy();
-    expect(accessKey2.isOverDataLimit).toBeTruthy();
+    expect(accessKey1.reachedDataLimit).toBeFalsy();
+    expect(accessKey2.reachedDataLimit).toBeTruthy();
     serverAccessKeys = server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(1);
     expect(serverAccessKeys[0].id).toEqual(accessKey1.id);
@@ -586,8 +586,8 @@ describe('ServerAccessKeyRepository', () => {
     // enforcement is done before we make assertions.
     await repo.enforceAccessKeyDataLimits();
     expect(server.getAccessKeys().length).toEqual(2);
-    expect(accessKey1.isOverDataLimit).toBeFalsy();
-    expect(accessKey2.isOverDataLimit).toBeFalsy();
+    expect(accessKey1.reachedDataLimit).toBeFalsy();
+    expect(accessKey2.reachedDataLimit).toBeFalsy();
     done();
   });
 
@@ -609,7 +609,7 @@ describe('ServerAccessKeyRepository', () => {
     }
     await repo.enforceAccessKeyDataLimits();
     for (const key of repo.listAccessKeys()) {
-      expect(key.isOverDataLimit).toEqual(
+      expect(key.reachedDataLimit).toEqual(
         prometheusClient.bytesTransferredById[key.id] > limit.bytes
       );
     }
@@ -618,7 +618,7 @@ describe('ServerAccessKeyRepository', () => {
 
     await repo.enforceAccessKeyDataLimits();
     for (const key of repo.listAccessKeys()) {
-      expect(key.isOverDataLimit).toEqual(
+      expect(key.reachedDataLimit).toEqual(
         prometheusClient.bytesTransferredById[key.id] > limit.bytes
       );
     }
@@ -636,14 +636,14 @@ describe('ServerAccessKeyRepository', () => {
     await setKeyLimitAndEnforce(repo, perKeyLimited.id, {bytes: 100});
 
     await repo.enforceAccessKeyDataLimits();
-    expect(perKeyLimited.isOverDataLimit).toBeTruthy();
-    expect(defaultLimited.isOverDataLimit).toBeFalsy();
+    expect(perKeyLimited.reachedDataLimit).toBeTruthy();
+    expect(defaultLimited.reachedDataLimit).toBeFalsy();
 
     prometheusClient.bytesTransferredById[perKeyLimited.id] = 50;
     prometheusClient.bytesTransferredById[defaultLimited.id] = 600;
     await repo.enforceAccessKeyDataLimits();
-    expect(perKeyLimited.isOverDataLimit).toBeFalsy();
-    expect(defaultLimited.isOverDataLimit).toBeTruthy();
+    expect(perKeyLimited.reachedDataLimit).toBeFalsy();
+    expect(defaultLimited.reachedDataLimit).toBeTruthy();
 
     done();
   });
@@ -670,6 +670,21 @@ describe('ServerAccessKeyRepository', () => {
     await repo.enforceAccessKeyDataLimits();
     serverAccessKeys = server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(2);
+    done();
+  });
+
+  it('enforceAccessKeyDataLimits disables on exact data limit', async (done) => {
+    const server = new FakeShadowsocksServer();
+    const prometheusClient = new FakePrometheusClient({'0': 0});
+    const repo = new RepoBuilder()
+      .prometheusClient(prometheusClient)
+      .shadowsocksServer(server)
+      .build();
+    await repo.createNewAccessKey({dataLimit: {bytes: 0}});
+
+    await repo.enforceAccessKeyDataLimits();
+
+    expect(server.getAccessKeys().length).toEqual(0);
     done();
   });
 
@@ -741,9 +756,9 @@ describe('ServerAccessKeyRepository', () => {
     await repo.start(clock);
     await clock.runCallbacks();
 
-    expect(accessKey1.isOverDataLimit).toBeTruthy();
-    expect(accessKey2.isOverDataLimit).toBeFalsy();
-    expect(accessKey3.isOverDataLimit).toBeTruthy();
+    expect(accessKey1.reachedDataLimit).toBeTruthy();
+    expect(accessKey2.reachedDataLimit).toBeFalsy();
+    expect(accessKey3.reachedDataLimit).toBeTruthy();
     let serverAccessKeys = await server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(1);
     expect(serverAccessKeys[0].id).toEqual(accessKey2.id);
@@ -751,9 +766,9 @@ describe('ServerAccessKeyRepository', () => {
     // Simulate a change in usage.
     prometheusClient.bytesTransferredById = {'0': 100, '1': 200, '2': 1000};
     await clock.runCallbacks();
-    expect(accessKey1.isOverDataLimit).toBeFalsy();
-    expect(accessKey2.isOverDataLimit).toBeFalsy();
-    expect(accessKey3.isOverDataLimit).toBeTruthy();
+    expect(accessKey1.reachedDataLimit).toBeFalsy();
+    expect(accessKey2.reachedDataLimit).toBeFalsy();
+    expect(accessKey3.reachedDataLimit).toBeTruthy();
     serverAccessKeys = await server.getAccessKeys();
     expect(serverAccessKeys.length).toEqual(2);
     expect(serverAccessKeys[0].id).toEqual(accessKey1.id);
