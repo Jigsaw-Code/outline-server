@@ -30,7 +30,7 @@ tasks:
   clean:
     desc: Clean output files
     cmds:
-      - rm -rf .task task src/*/node_modules/ build/ node_modules/ third_party/shellcheck/download/ third_party/*/bin third_party/jsign/*.jar
+      - rm -rf .task task src/*/node_modules/ build/ node_modules/ third_party/shellcheck/download/ third_party/*/bin
 
   format:
     desc: Format staged files
@@ -47,11 +47,11 @@ tasks:
   lint:sh:
     desc: Lint all shell files
     cmds: [bash ./scripts/shellcheck.sh]
-  
+
   lint:ts:
     desc: Lint all .ts and .js files
     cmds: ['npx eslint "**/*.{js,ts}"']
-  
+
   test:
     desc: Run all the repository tests
     deps: [lint, metrics_server:test, sentry_webhook:test, shadowbox:test]
