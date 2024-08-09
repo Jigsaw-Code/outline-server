@@ -5,12 +5,14 @@ go 1.21
 require (
 	github.com/Jigsaw-Code/outline-ss-server v1.5.0
 	github.com/go-task/task/v3 v3.36.0
+	github.com/google/addlicense v1.1.1
 )
 
 require (
 	github.com/Jigsaw-Code/outline-sdk v0.0.14 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/bmatcuk/doublestar/v4 v4.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect

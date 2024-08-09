@@ -12,42 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: "CodeQL analysis"
+name: License checks
+
+concurrency:
+  group: ${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 
 on:
   pull_request:
     types:
       - opened
-      - edited
       - synchronize
   push:
     branches:
       - master
-  schedule:
-    - cron: '0 0 * * *'
 
 jobs:
-  analyze:
-    name: Analyze
+  license-check:
     runs-on: ubuntu-latest
-
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-
-    strategy:
-      fail-fast: false
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v3
 
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
+    - name: Set up Go
+      uses: actions/setup-go@v4
       with:
-        languages: javascript
-        queries: +security-and-quality
-        config-file: ./.github/codeql/config.yml
+        go-version-file: '${{ github.workspace }}/go.mod'
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+    - name: Check license headers
+      run: go run github.com/google/addlicense -check -l apache -c 'The Outline Authors' -ignore "third_party/**" -v .
