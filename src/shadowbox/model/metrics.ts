@@ -28,3 +28,15 @@ export interface DataUsageByUser {
 export interface DataUsageTimeframe {
   hours: number;
 }
+
+
+export interface TunneltimeMetrics {
+  access_key?: Map<string, number>;
+  country?: Map<string, number>;
+  asn?: Map<string, number>;
+}
+
+export interface TunneltimeQuery {
+  hours?: number;
+  groupName?: 'access_key' | 'country' | 'asn';
+}

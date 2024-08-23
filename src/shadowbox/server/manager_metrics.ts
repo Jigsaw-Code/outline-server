@@ -13,10 +13,11 @@
 // limitations under the License.
 
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
-import {DataUsageByUser, DataUsageTimeframe} from '../model/metrics';
+import {DataUsageByUser, DataUsageTimeframe, TunneltimeMetrics, TunneltimeQuery} from '../model/metrics';
 
 export interface ManagerMetrics {
   getOutboundByteTransfer(timeframe: DataUsageTimeframe): Promise<DataUsageByUser>;
+  getTunneltime(query: TunneltimeQuery): Promise<TunneltimeMetrics>;
 }
 
 // Reads manager metrics from a Prometheus instance.
@@ -39,5 +40,22 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       usage[entry.metric['access_key'] || ''] = bytes;
     }
     return {bytesTransferredByUserId: usage};
+  }
+
+  async getTunneltime({ hours = 24 * 30, groupName = 'access_key' }: TunneltimeQuery): Promise<TunneltimeMetrics> {
+    const { result } = await this.prometheusClient.query(
+      `sum(increase(shadowsocks_tunnel_time_seconds[${hours}h])) by (${groupName})`
+    );
+
+    return {[groupName]: result.reduce((groupMap, { metric, value: [, rawValue] }) => {
+      const groupValue = Math.round(parseFloat(rawValue));
+      const groupKey = metric[groupName];
+      if (groupValue === 0 || !groupKey) {
+        return groupMap;
+      }
+
+      groupMap.set(groupKey, groupValue);
+      return groupMap;
+    }, new Map())};
   }
 }
