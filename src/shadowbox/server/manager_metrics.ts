@@ -19,7 +19,7 @@ type TunnelTimeDimension = 'access_key' | 'country' | 'asn';
 
 interface TunneTimeRequest {
   params: {
-    sinceIsoTimestamp?: number;
+    sinceIsoTimestamp: number;
     dimensions?: TunnelTimeDimension[];
   }
 }
@@ -63,8 +63,8 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
   }
 
   async getTunnelTime({ params: { dimensions, sinceIsoTimestamp }}: TunneTimeRequest): Promise<TunnelTimeResponse> {
-    const timeExpression = sinceIsoTimestamp ? `[${Math.round((Date.now() - sinceIsoTimestamp) / 1000)}s]` : '';
-    const dimensionsExpression = dimensions ? ` by (${dimensions.join()})` : '';
+    const timeExpression = `[${Math.round((Date.now() - sinceIsoTimestamp) / 1000)}s]`;
+    const dimensionsExpression = dimensions && dimensions.length ? ` by (${dimensions.join()})` : '';
     const prometheusQuery = `sum(increase(shadowsocks_tunnel_time_seconds${timeExpression}))${dimensionsExpression}`;
 
     const { result } = await this.prometheusClient.query(prometheusQuery);
