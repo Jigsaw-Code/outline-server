@@ -24,6 +24,7 @@ import {AccessKey, AccessKeyRepository, DataLimit} from '../model/access_key';
 import * as errors from '../model/errors';
 import * as version from './version';
 
+import type {TunnelTimeDimension} from './manager_metrics';
 import {ManagerMetrics} from './manager_metrics';
 import {ServerConfigJson} from './server_config';
 import {SharedMetricsPublisher} from './shared_metrics';
@@ -608,11 +609,11 @@ export class ShadowsocksManagerService {
         return next(
           new restifyErrors.InvalidArgumentError(
             {statusCode: 400},
-            'Parameter `sinceIsoTimestamp` must be a number'
+            'Parameter `since` must be a number'
           )
         );
       }
-      const dimensions = req.params.dimensions;
+      const dimensions = (req.params.dimensions as String).split(/\s*,/);
       if (dimensions && !Array.isArray(dimensions)) {
         return next(
           new restifyErrors.InvalidArgumentError(
@@ -621,7 +622,17 @@ export class ShadowsocksManagerService {
           )
         );
       }
-      const response = await this.managerMetrics.getTunnelTime({params: {sinceIsoTimestamp, dimensions}});
+
+      if (dimensions.some((d) => d !== 'access_key' && d !== 'country' && d !== 'asn')) {
+        return next(
+          new restifyErrors.InvalidArgumentError(
+            {statusCode: 400},
+            'Parameter `dimensions` must be an array containing only "access_key", "country" and "asn"'
+          )
+        );
+      }
+
+      const response = await this.managerMetrics.getTunnelTime({params: {sinceIsoTimestamp, dimensions: dimensions as TunnelTimeDimension[]}});
       res.send(HttpSuccess.OK, response);
       logging.debug(`getTunnelTime response ${JSON.stringify(response)}`);
       return next();

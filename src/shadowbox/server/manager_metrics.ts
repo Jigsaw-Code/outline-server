@@ -15,7 +15,7 @@
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {DataUsageByUser, DataUsageTimeframe} from '../model/metrics';
 
-type TunnelTimeDimension = 'access_key' | 'country' | 'asn';
+export type TunnelTimeDimension = 'access_key' | 'country' | 'asn';
 
 interface TunneTimeRequest {
   params: {
