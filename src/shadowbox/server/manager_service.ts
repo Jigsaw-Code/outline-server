@@ -156,6 +156,7 @@ export function bindService(
   );
 
   apiServer.get(`${apiPrefix}/metrics/transfer`, service.getDataUsage.bind(service));
+  apiServer.get(`${apiPrefix}/metrics/tunnel`, service.getTunnelTime.bind(service));
   apiServer.get(`${apiPrefix}/metrics/enabled`, service.getShareMetrics.bind(service));
   apiServer.put(`${apiPrefix}/metrics/enabled`, service.setShareMetrics.bind(service));
 
@@ -596,6 +597,37 @@ export class ShadowsocksManagerService {
     } catch (error) {
       logging.error(error);
       return next(new restifyErrors.InternalServerError());
+    }
+  }
+
+  async getTunnelTime(req: RequestType, res: ResponseType, next: restify.Next) {
+    try {
+      logging.debug(`getTunnelTime request ${JSON.stringify(req.params)}`);
+      const sinceIsoTimestamp = req.params.since;
+      if (typeof sinceIsoTimestamp !== 'number') {
+        return next(
+          new restifyErrors.InvalidArgumentError(
+            {statusCode: 400},
+            'Parameter `sinceIsoTimestamp` must be a number'
+          )
+        );
+      }
+      const dimensions = req.params.dimensions;
+      if (dimensions && !Array.isArray(dimensions)) {
+        return next(
+          new restifyErrors.InvalidArgumentError(
+            {statusCode: 400},
+            'Parameter `dimensions` must be an array'
+          )
+        );
+      }
+      const response = await this.managerMetrics.getTunnelTime({params: {sinceIsoTimestamp, dimensions}});
+      res.send(HttpSuccess.OK, response);
+      logging.debug(`getTunnelTime response ${JSON.stringify(response)}`);
+      return next();
+    } catch (error) {
+      logging.error(error);
+      return next(new restifyErrors.InternalServerError);
     }
   }
 
