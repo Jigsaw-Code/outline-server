@@ -89,7 +89,7 @@ The Outline Server provides a REST API for access key management. If you know th
 
    - **Deployed with the Outline Manager:** Check the "Settings" tab.
 
-   - **Local Deployments from Source:** `https://[::]:8081/TestApiPrefix`
+   - **Local Deployments from Source:** The `apiUrl` is simply `https://[::]:8081/TestApiPrefix`
 
 1. **API Examples:**
 
