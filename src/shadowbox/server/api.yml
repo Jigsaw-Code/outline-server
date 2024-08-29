@@ -457,29 +457,6 @@ paths:
           description: Setting successful
         '400':
           description: Invalid request
-  /experimental/asn-metrics/enabled:
-    put:
-      description: Annotates Prometheus data metrics with autonomous system numbers (ASN).
-      tags:
-        - Server
-        - Experimental
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                asnMetricsEnabled:
-                  type: boolean
-            examples:
-              '0':
-                value: '{"asnMetricsEnabled": true}'
-      responses:
-        '204':
-          description: Setting successful
-        '400':
-          description: Invalid request
   /experimental/access-key-data-limit:
     put:
       deprecated: true

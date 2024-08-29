@@ -41,7 +41,7 @@ export interface ServerConfigJson {
   // Experimental configuration options that are expected to be short-lived.
   experimental?: {
     // Whether ASN metric annotation for Prometheus is enabled.
-    asnMetricsEnabled?: boolean;
+    asnMetricsEnabled?: boolean;  // DEPRECATED
   };
 }
 
