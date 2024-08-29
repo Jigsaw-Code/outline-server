@@ -19,9 +19,9 @@ export type TunnelTimeDimension = 'access_key' | 'country' | 'asn';
 
 interface TunneTimeRequest {
   params: {
-    sinceIsoTimestamp: number;
+    sinceUnixTimestamp: number;
     dimensions?: TunnelTimeDimension[];
-  }
+  };
 }
 
 interface TunnelTimeResponse {
@@ -31,8 +31,8 @@ interface TunnelTimeResponse {
     asn?: number;
     tunnel_time: {
       hours: number;
-    }
-  }[]
+    };
+  }[];
 }
 
 export interface ManagerMetrics {
@@ -62,19 +62,22 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     return {bytesTransferredByUserId: usage};
   }
 
-  async getTunnelTime({ params: { dimensions, sinceIsoTimestamp }}: TunneTimeRequest): Promise<TunnelTimeResponse> {
-    const timeExpression = `[${Math.round((Date.now() - sinceIsoTimestamp) / 1000)}s]`;
-    const dimensionsExpression = dimensions && dimensions.length ? ` by (${dimensions.join()})` : '';
+  async getTunnelTime({
+    params: {dimensions, sinceUnixTimestamp},
+  }: TunneTimeRequest): Promise<TunnelTimeResponse> {
+    const timeExpression = `[${Math.round((Date.now() - sinceUnixTimestamp) / 1000)}s]`;
+    const dimensionsExpression =
+      dimensions && dimensions.length ? ` by (${dimensions.join()})` : '';
     const prometheusQuery = `sum(increase(shadowsocks_tunnel_time_seconds${timeExpression}))${dimensionsExpression}`;
 
-    const { result } = await this.prometheusClient.query(prometheusQuery);
+    const {result} = await this.prometheusClient.query(prometheusQuery);
 
     return {
       data: result.map((entry) => ({
         access_key: entry.metric['access_key'],
         country: entry.metric['country'],
         asn: entry.metric['asn'] ? parseInt(entry.metric['asn']) : undefined,
-        tunnel_time: { hours: Math.round(parseFloat(entry.value[1]) / 60 / 60) },
+        tunnel_time: {hours: Math.round(parseFloat(entry.value[1]) / 60 / 60)},
       })),
     };
   }

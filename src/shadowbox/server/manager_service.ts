@@ -604,8 +604,8 @@ export class ShadowsocksManagerService {
   async getTunnelTime(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`getTunnelTime request ${JSON.stringify(req.params)}`);
-      const sinceIsoTimestamp = req.params.since;
-      if (typeof sinceIsoTimestamp !== 'number') {
+      const sinceUnixTimestamp = parseInt(req.params.since as string, 10);
+      if (typeof sinceUnixTimestamp !== 'number' && sinceUnixTimestamp < 0) {
         return next(
           new restifyErrors.InvalidArgumentError(
             {statusCode: 400},
@@ -613,8 +613,8 @@ export class ShadowsocksManagerService {
           )
         );
       }
-      const dimensions = (req.params.dimensions as String).split(/\s*,/);
-      if (dimensions && !Array.isArray(dimensions)) {
+      const dimensions = (req.params.dimensions as string)?.split(',');
+      if (!Array.isArray(dimensions)) {
         return next(
           new restifyErrors.InvalidArgumentError(
             {statusCode: 400},
@@ -632,13 +632,15 @@ export class ShadowsocksManagerService {
         );
       }
 
-      const response = await this.managerMetrics.getTunnelTime({params: {sinceIsoTimestamp, dimensions: dimensions as TunnelTimeDimension[]}});
+      const response = await this.managerMetrics.getTunnelTime({
+        params: {sinceUnixTimestamp, dimensions: dimensions as TunnelTimeDimension[]},
+      });
       res.send(HttpSuccess.OK, response);
       logging.debug(`getTunnelTime response ${JSON.stringify(response)}`);
       return next();
     } catch (error) {
       logging.error(error);
-      return next(new restifyErrors.InternalServerError);
+      return next(new restifyErrors.InternalServerError());
     }
   }
 
