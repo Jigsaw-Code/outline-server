@@ -120,7 +120,7 @@ async function main() {
   logging.info(`Hostname: ${proxyHostname}`);
   logging.info(`SB_METRICS_URL: ${metricsCollectorUrl}`);
 
-  const prometheusPort = await portProvider.reserveFirstFreePort(9080);
+  const prometheusPort = await portProvider.reserveFirstFreePort(9090);
   // Use 127.0.0.1 instead of localhost for Prometheus because it's resolving incorrectly for some users.
   // See https://github.com/Jigsaw-Code/outline-server/issues/341
   const prometheusLocation = `127.0.0.1:${prometheusPort}`;
