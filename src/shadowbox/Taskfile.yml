@@ -27,6 +27,9 @@ tasks:
       TARGET_DIR: '{{.TARGET_DIR | default (joinPath .OUTPUT_BASE .TARGET_OS .TARGET_ARCH)}}'
       NODE_DIR: '{{joinPath .TARGET_DIR "app"}}'
       BIN_DIR: '{{joinPath .TARGET_DIR "bin"}}'
+      SB_VERSION: '{{.SB_VERSION}}'
+    env:
+      SB_VERSION: '{{.SB_VERSION}}'
     cmds:
       - echo Target platform is {{.TARGET_OS}}/{{.TARGET_ARCH}}
       - rm -rf '{{.TARGET_DIR}}'
@@ -64,7 +67,7 @@ tasks:
       - echo "Using directory {{.RUN_DIR}}"
       - mkdir -p '{{.STATE_DIR}}'
       - echo '{"hostname":"127.0.0.1"}' > "{{.STATE_CONFIG}}"
-      - task: make_test_certificate 
+      - task: make_test_certificate
         vars: {OUTPUT_DIR: '{{.RUN_DIR}}'}
       - node '{{joinPath .OUTPUT_BASE .TARGET_OS .TARGET_ARCH "app/main.js"}}'
 
@@ -82,7 +85,7 @@ tasks:
           (dict
             "x86_64" "node@sha256:a0b787b0d53feacfa6d606fb555e0dbfebab30573277f1fe25148b05b66fa097"
             "arm64" "node@sha256:b4b7a1dd149c65ee6025956ac065a843b4409a62068bd2b0cbafbb30ca2fab3b"
-          ) .TARGET_ARCH                       
+          ) .TARGET_ARCH
         }}'
     env:
       DOCKER_CONTENT_TRUST: '{{.DOCKER_CONTENT_TRUST | default "1"}}'
@@ -91,7 +94,7 @@ tasks:
     cmds:
       - rm -rf '{{.IMAGE_ROOT}}'
       - mkdir -p '{{.IMAGE_ROOT}}'
-      - {task: build, vars: {TARGET_OS: linux, TARGET_ARCH: '{{.TARGET_ARCH}}', TARGET_DIR: '{{joinPath .IMAGE_ROOT "/opt/outline-server"}}'}}
+      - {task: build, vars: {SB_VERSION: '{{.VERSION}}', TARGET_OS: linux, TARGET_ARCH: '{{.TARGET_ARCH}}', TARGET_DIR: '{{joinPath .IMAGE_ROOT "/opt/outline-server"}}'}}
       - cp -R '{{joinPath .TASKFILE_DIR "scripts"}}' '{{.IMAGE_ROOT}}/scripts'
       - mkdir -p '{{joinPath .IMAGE_ROOT "/etc/periodic/weekly"}}'
       - cp '{{joinPath .TASKFILE_DIR "scripts" "update_mmdb.sh"}}' '{{joinPath .IMAGE_ROOT "/etc/periodic/weekly/"}}'
@@ -128,7 +131,7 @@ tasks:
       - rm -rf '{{.RUN_DIR}}'
       - mkdir -p '{{.HOST_STATE_DIR}}'
       - echo '{"hostname":"127.0.0.1"}' > "{{.STATE_CONFIG}}"
-      - task: make_test_certificate 
+      - task: make_test_certificate
         vars: {OUTPUT_DIR: '{{.HOST_STATE_DIR}}'}
       - |
         docker_command=(
@@ -143,7 +146,7 @@ tasks:
           {{- end}}
 
           # Where the container keeps its persistent state.
-          -v "{{.HOST_STATE_DIR}}:{{.CONTAINER_STATE_DIR}}"            
+          -v "{{.HOST_STATE_DIR}}:{{.CONTAINER_STATE_DIR}}"
           -e "SB_STATE_DIR={{.CONTAINER_STATE_DIR}}"
 
           # Port number and path prefix used by the server manager API.
