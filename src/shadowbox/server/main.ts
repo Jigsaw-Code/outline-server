@@ -160,9 +160,6 @@ async function main() {
   }
   if (fs.existsSync(MMDB_LOCATION_ASN)) {
     shadowsocksServer.configureAsnMetrics(MMDB_LOCATION_ASN);
-    if (serverConfig.data().experimental?.asnMetricsEnabled) {
-      shadowsocksServer.enableAsnMetrics(true);
-    }
   }
 
   const isReplayProtectionEnabled = createRolloutTracker(serverConfig).isRolloutEnabled(

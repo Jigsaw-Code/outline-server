@@ -60,18 +60,6 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
     return this;
   }
 
-  /** Annotates the Prometheus data metrics with ASN. */
-  enableAsnMetrics(enable: boolean) {
-    if (enable && !this.ipAsnFilename) {
-      throw new Error('Cannot enable ASN metrics: no ASN database filename set');
-    }
-    const valueChanged = this.isAsnMetricsEnabled != enable;
-    this.isAsnMetricsEnabled = enable;
-    if (valueChanged && this.ssProcess) {
-      this.ssProcess.kill('SIGTERM');
-    }
-  }
-
   enableReplayProtection(): OutlineShadowsocksServer {
     this.isReplayProtectionEnabled = true;
     return this;
@@ -121,7 +109,7 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
     if (this.ipCountryFilename) {
       commandArguments.push('-ip_country_db', this.ipCountryFilename);
     }
-    if (this.isAsnMetricsEnabled && this.ipAsnFilename) {
+    if (this.ipAsnFilename) {
       commandArguments.push('-ip_asn_db', this.ipAsnFilename);
     }
     if (this.verbose) {

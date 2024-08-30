@@ -161,11 +161,6 @@ export function bindService(
 
   // Experimental APIs.
 
-  apiServer.put(
-    `${apiPrefix}/experimental/asn-metrics/enabled`,
-    service.enableAsnMetrics.bind(service)
-  );
-
   // Redirect former experimental APIs
   apiServer.put(
     `${apiPrefix}/experimental/access-key-data-limit`,
@@ -637,38 +632,5 @@ export class ShadowsocksManagerService {
     }
     res.send(HttpSuccess.NO_CONTENT);
     next();
-  }
-
-  enableAsnMetrics(req: RequestType, res: ResponseType, next: restify.Next): void {
-    try {
-      logging.debug(`enableAsnMetrics request ${JSON.stringify(req.params)}`);
-      const asnMetricsEnabled = req.params.asnMetricsEnabled;
-      if (asnMetricsEnabled === undefined || asnMetricsEnabled === null) {
-        return next(
-          new restifyErrors.MissingParameterError(
-            {statusCode: 400},
-            'Parameter `asnMetricsEnabled` is missing'
-          )
-        );
-      } else if (typeof asnMetricsEnabled !== 'boolean') {
-        return next(
-          new restifyErrors.InvalidArgumentError(
-            {statusCode: 400},
-            'Parameter `asnMetricsEnabled` must be a boolean'
-          )
-        );
-      }
-      this.shadowsocksServer.enableAsnMetrics(asnMetricsEnabled);
-      if (this.serverConfig.data().experimental === undefined) {
-        this.serverConfig.data().experimental = {};
-      }
-      this.serverConfig.data().experimental.asnMetricsEnabled = asnMetricsEnabled;
-      this.serverConfig.write();
-      res.send(HttpSuccess.NO_CONTENT);
-      return next();
-    } catch (error) {
-      logging.error(error);
-      return next(new restifyErrors.InternalServerError());
-    }
   }
 }
