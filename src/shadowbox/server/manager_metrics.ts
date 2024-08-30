@@ -25,19 +25,17 @@ interface TunneTimeRequest {
 }
 
 interface TunnelTimeResponse {
-  data: {
-    access_key?: string;
-    country?: string;
-    asn?: number;
-    tunnel_time: {
-      hours: number;
-    };
-  }[];
+  access_key?: string;
+  country?: string;
+  asn?: number;
+  tunnel_time: {
+    hours: number;
+  };
 }
 
 export interface ManagerMetrics {
   getOutboundByteTransfer(timeframe: DataUsageTimeframe): Promise<DataUsageByUser>;
-  getTunnelTime(request: TunneTimeRequest): Promise<TunnelTimeResponse>;
+  getTunnelTime(request: TunneTimeRequest): Promise<TunnelTimeResponse[]>;
 }
 
 // Reads manager metrics from a Prometheus instance.
@@ -64,21 +62,18 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
 
   async getTunnelTime({
     params: {dimensions, sinceUnixTimestamp},
-  }: TunneTimeRequest): Promise<TunnelTimeResponse> {
-    const timeExpression = `[${Math.round((Date.now() - sinceUnixTimestamp) / 1000)}s]`;
+  }: TunneTimeRequest): Promise<TunnelTimeResponse[]> {
+    const timeExpression = `[${Math.round(Date.now() / 1000) - sinceUnixTimestamp}s]`;
     const dimensionsExpression =
       dimensions && dimensions.length ? ` by (${dimensions.join()})` : '';
     const prometheusQuery = `sum(increase(shadowsocks_tunnel_time_seconds${timeExpression}))${dimensionsExpression}`;
-
     const {result} = await this.prometheusClient.query(prometheusQuery);
 
-    return {
-      data: result.map((entry) => ({
-        access_key: entry.metric['access_key'],
-        country: entry.metric['country'],
-        asn: entry.metric['asn'] ? parseInt(entry.metric['asn']) : undefined,
-        tunnel_time: {hours: Math.round(parseFloat(entry.value[1]) / 60 / 60)},
-      })),
-    };
+    return result.map((entry) => ({
+      access_key: entry.metric['access_key'],
+      country: entry.metric['country'],
+      asn: entry.metric['asn'] ? parseInt(entry.metric['asn']) : undefined,
+      tunnel_time: {hours: Math.round(parseFloat(entry.value[1]) / 60 / 60)},
+    }));
   }
 }

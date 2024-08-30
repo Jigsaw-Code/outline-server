@@ -76,10 +76,16 @@ interface RequestParams {
   //   method: string
   [param: string]: unknown;
 }
+
+interface RequestQuery {
+  [param: string]: unknown;
+}
+
 // Simplified request and response type interfaces containing only the
 // properties we actually use, to make testing easier.
 interface RequestType {
   params: RequestParams;
+  query?: RequestQuery;
 }
 interface ResponseType {
   send(code: number, data?: {}): void;
@@ -603,22 +609,27 @@ export class ShadowsocksManagerService {
 
   async getTunnelTime(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      logging.debug(`getTunnelTime request ${JSON.stringify(req.params)}`);
-      const sinceUnixTimestamp = parseInt(req.params.since as string, 10);
-      if (typeof sinceUnixTimestamp !== 'number' && sinceUnixTimestamp < 0) {
+      logging.debug(`getTunnelTime request ${JSON.stringify(req.query)}`);
+      const sinceUnixTimestamp = parseInt(req.query.since as string, 10);
+      if (
+        typeof sinceUnixTimestamp !== 'number' ||
+        sinceUnixTimestamp <= 0 ||
+        isNaN(sinceUnixTimestamp) ||
+        sinceUnixTimestamp > Date.now() / 1000
+      ) {
         return next(
           new restifyErrors.InvalidArgumentError(
             {statusCode: 400},
-            'Parameter `since` must be a number'
+            'Parameter `since` must be a unix timestamp in the past. Got: ' + req.query.since
           )
         );
       }
-      const dimensions = (req.params.dimensions as string)?.split(',');
+      const dimensions = (req.query.dimensions as string)?.split(',');
       if (!Array.isArray(dimensions)) {
         return next(
           new restifyErrors.InvalidArgumentError(
             {statusCode: 400},
-            'Parameter `dimensions` must be an array'
+            'Parameter `dimensions` must be an array. Got: ' + req.query.dimensions
           )
         );
       }
@@ -627,7 +638,8 @@ export class ShadowsocksManagerService {
         return next(
           new restifyErrors.InvalidArgumentError(
             {statusCode: 400},
-            'Parameter `dimensions` must be an array containing only "access_key", "country" and "asn"'
+            'Parameter `dimensions` must be an array containing only "access_key", "country" and "asn". Got: ' +
+              req.query.dimensions
           )
         );
       }
