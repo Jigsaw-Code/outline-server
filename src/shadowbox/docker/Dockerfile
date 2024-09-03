@@ -13,9 +13,9 @@
 # limitations under the License.
 
 ARG NODE_IMAGE
-ARG VERSION
 
 FROM ${NODE_IMAGE}
+ARG VERSION
 
 # Save metadata on the software versions we are using.
 LABEL shadowbox.node_version=16.18.0
@@ -36,4 +36,4 @@ RUN /etc/periodic/weekly/update_mmdb.sh
 # Install shadowbox.
 WORKDIR /opt/outline-server
 
-CMD /cmd.sh
+CMD ["/cmd.sh"]
