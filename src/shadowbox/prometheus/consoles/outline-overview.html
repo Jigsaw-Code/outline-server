@@ -1,0 +1,91 @@
+{{ template "head" . }}
+
+{{ template "prom_right_table_head" }}
+  <tr>
+    <th colspan="2">Overview</th>
+  </tr>
+  <tr>
+    <td>CPU</td>
+    <td>{{ template "prom_query_drilldown" (args (printf "irate(process_cpu_seconds_total{job='outline-server-ss',instance='%s'}[5m])" .Params.instance) "s/s" "humanizeNoSmallPrefix") }}</td>
+  </tr>
+  <tr>
+    <td>Memory</td>
+    <td>{{ template "prom_query_drilldown" (args (printf "process_resident_memory_bytes{job='outline-server-ss',instance='%s'}" .Params.instance) "B" "humanize1024") }}</td>
+  </tr>
+  <tr>
+    <td>Version</td>
+    <td>
+      <a href='https://github.com/Jigsaw-Code/outline-ss-server/releases/tag/v{{ with query (printf "shadowsocks_build_info{job='outline-server-ss',instance='%s'}" .Params.instance) }}{{. | first | label "version"}}{{end}}' target="_blank">
+        {{ with query (printf "shadowsocks_build_info{job='outline-server-ss',instance='%s'}" .Params.instance) }}{{. | first | label "version"}}{{end}}
+      </a>
+    </td>
+  </tr>
+
+  <tr>
+    <th colspan="2">Shadowsocks</th>
+  </tr>
+  <tr>
+    <td>Keys</td>
+    <td>{{ template "prom_query_drilldown" (args (printf "shadowsocks_keys{job='outline-server-ss',instance='%s'}" .Params.instance) "" "humanize") }}</td>
+  </tr>
+  <tr>
+    <td>Ports</td>
+    <td>{{ template "prom_query_drilldown" (args (printf "shadowsocks_ports{job='outline-server-ss',instance='%s'}" .Params.instance) "" "humanize") }}</td>
+  </tr>
+  <tr>
+    <td>Bytes transferred</td>
+    <td>{{ template "prom_query_drilldown" (args (printf "sum by (instance) (shadowsocks_data_bytes{job='outline-server-ss',instance='%s'})" .Params.instance) "B" "humanize1024") }}</td>
+  </tr>
+{{ template "prom_right_table_tail" }}
+
+{{ template "prom_content_head" . }}
+ <div class="prom_content_div">
+  <h1>Outline Overview - {{ .Params.instance }}</h1>
+
+  <h3>Data Bytes per Access Key</h3>
+  <div id="dataBytes"></div>
+  <script>
+  new PromConsole.Graph({
+    node: document.querySelector("#dataBytes"),
+    expr: "sum(increase(shadowsocks_data_bytes{job='outline-server-ss',instance='{{ .Params.instance }}'}[1d])) by (access_key)",
+    name: '[[access_key]]',
+    yAxisFormatter: PromConsole.NumberFormatter.humanize1024,
+    yHoverFormatter: PromConsole.NumberFormatter.humanize1024,
+    yTitle: "Bytes",
+    yUnits: "B",
+  })
+  </script>
+
+  <h3>TCP Connections by Location</h3>
+  <div id="tcpConnections"></div>
+  <script>
+  new PromConsole.Graph({
+    node: document.querySelector("#tcpConnections"),
+    expr: "increase(shadowsocks_tcp_connections_closed{job='outline-server-ss',instance='{{ .Params.instance }}'}[1d])",
+    name: '[[location]]',
+    yAxisFormatter: PromConsole.NumberFormatter.humanizeNoSmallPrefix,
+    yHoverFormatter: PromConsole.NumberFormatter.humanizeNoSmallPrefix,
+    yTitle: "Connections",
+    yUnits: "",
+    colorScheme: "classic9",
+  })
+  </script>
+
+  <h3>UDP Packets by Location</h3>
+  <div id="tcpConnections"></div>
+  <script>
+  new PromConsole.Graph({
+    node: document.querySelector("#tcpConnections"),
+    expr: "increase(shadowsocks_udp_packets_from_client_per_location{job='outline-server-ss',instance='{{ .Params.instance }}'}[1d])",
+    name: '[[location]]',
+    yAxisFormatter: PromConsole.NumberFormatter.humanizeNoSmallPrefix,
+    yHoverFormatter: PromConsole.NumberFormatter.humanizeNoSmallPrefix,
+    yTitle: "Connections",
+    yUnits: "",
+    colorScheme: "cool",
+  })
+  </script>
+ </div>
+{{ template "prom_content_tail" . }}
+
+{{ template "tail" }}

@@ -34,6 +34,8 @@ tasks:
       - cp '{{joinPath .TASKFILE_DIR "package.json"}}' '{{.TARGET_DIR}}'
       # Build Node.js app
       - npx webpack --config='{{joinPath .TASKFILE_DIR "webpack.config.js"}}' --output-path='{{.NODE_DIR}}' ${BUILD_ENV:+--mode="${BUILD_ENV}"}
+      # Copy Prometheus Console files.
+      - cp -r '{{joinPath .TASKFILE_DIR "prometheus"}}' '{{.TARGET_DIR}}'
       # Copy third_party dependencies
       - task: ':third_party:prometheus:copy-{{.TARGET_OS}}-{{.GOARCH}}'
         vars: {TARGET_DIR: '{{.BIN_DIR}}'}

@@ -186,6 +186,10 @@ async function main() {
     prometheusTsdbFilename,
     '--web.listen-address',
     prometheusLocation,
+    '--web.console.libraries',
+    path.join(APP_BASE_DIR, 'prometheus', 'console_libraries'),
+    '--web.console.templates',
+    path.join(APP_BASE_DIR, 'prometheus', 'consoles'),
     '--log.level',
     verbose ? 'debug' : 'info',
   ];
