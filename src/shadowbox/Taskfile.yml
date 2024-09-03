@@ -27,16 +27,14 @@ tasks:
       TARGET_DIR: '{{.TARGET_DIR | default (joinPath .OUTPUT_BASE .TARGET_OS .TARGET_ARCH)}}'
       NODE_DIR: '{{joinPath .TARGET_DIR "app"}}'
       BIN_DIR: '{{joinPath .TARGET_DIR "bin"}}'
-      SB_VERSION: '{{.SB_VERSION}}'
-    env:
-      SB_VERSION: '{{.SB_VERSION}}'
+      VERSION: '{{.VERSION}}'
     cmds:
       - echo Target platform is {{.TARGET_OS}}/{{.TARGET_ARCH}}
       - rm -rf '{{.TARGET_DIR}}'
       - mkdir -p '{{.TARGET_DIR}}'
       - cp '{{joinPath .TASKFILE_DIR "package.json"}}' '{{.TARGET_DIR}}'
       # Build Node.js app
-      - npx webpack --config='{{joinPath .TASKFILE_DIR "webpack.config.js"}}' --output-path='{{.NODE_DIR}}' ${BUILD_ENV:+--mode="${BUILD_ENV}"}
+      - SB_VERSION={{.VERSION}} npx webpack --config='{{joinPath .TASKFILE_DIR "webpack.config.js"}}' --output-path='{{.NODE_DIR}}' ${BUILD_ENV:+--mode="${BUILD_ENV}"}
       # Copy third_party dependencies
       - task: ':third_party:prometheus:copy-{{.TARGET_OS}}-{{.GOARCH}}'
         vars: {TARGET_DIR: '{{.BIN_DIR}}'}
@@ -94,7 +92,7 @@ tasks:
     cmds:
       - rm -rf '{{.IMAGE_ROOT}}'
       - mkdir -p '{{.IMAGE_ROOT}}'
-      - {task: build, vars: {SB_VERSION: '{{.VERSION}}', TARGET_OS: linux, TARGET_ARCH: '{{.TARGET_ARCH}}', TARGET_DIR: '{{joinPath .IMAGE_ROOT "/opt/outline-server"}}'}}
+      - {task: build, vars: {VERSION: '{{.VERSION}}', TARGET_OS: linux, TARGET_ARCH: '{{.TARGET_ARCH}}', TARGET_DIR: '{{joinPath .IMAGE_ROOT "/opt/outline-server"}}'}}
       - cp -R '{{joinPath .TASKFILE_DIR "scripts"}}' '{{.IMAGE_ROOT}}/scripts'
       - mkdir -p '{{joinPath .IMAGE_ROOT "/etc/periodic/weekly"}}'
       - cp '{{joinPath .TASKFILE_DIR "scripts" "update_mmdb.sh"}}' '{{joinPath .IMAGE_ROOT "/etc/periodic/weekly/"}}'
