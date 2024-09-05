@@ -17,11 +17,8 @@ import {DataUsageByUser, DataUsageTimeframe} from '../model/metrics';
 
 export type TunnelTimeDimension = 'access_key' | 'country' | 'asn';
 
-interface TunneTimeRequest {
-  params: {
-    sinceUnixTimestamp: number;
-    dimensions?: TunnelTimeDimension[];
-  };
+interface TunnelTimeRequest {
+  hours: number;
 }
 
 interface TunnelTimeResponse {
@@ -35,7 +32,7 @@ interface TunnelTimeResponse {
 
 export interface ManagerMetrics {
   getOutboundByteTransfer(timeframe: DataUsageTimeframe): Promise<DataUsageByUser>;
-  getTunnelTime(request: TunneTimeRequest): Promise<TunnelTimeResponse[]>;
+  getTunnelTimeByLocation(request: TunnelTimeRequest): Promise<TunnelTimeResponse[]>;
 }
 
 // Reads manager metrics from a Prometheus instance.
@@ -60,19 +57,14 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     return {bytesTransferredByUserId: usage};
   }
 
-  async getTunnelTime({
-    params: {dimensions, sinceUnixTimestamp},
-  }: TunneTimeRequest): Promise<TunnelTimeResponse[]> {
-    const timeExpression = `[${Math.round(Date.now() / 1000) - sinceUnixTimestamp}s]`;
-    const dimensionsExpression =
-      dimensions && dimensions.length ? ` by (${dimensions.join()})` : '';
-    const prometheusQuery = `sum(increase(shadowsocks_tunnel_time_seconds${timeExpression}))${dimensionsExpression}`;
-    const {result} = await this.prometheusClient.query(prometheusQuery);
+  async getTunnelTimeByLocation({hours}: TunnelTimeRequest): Promise<TunnelTimeResponse[]> {
+    const {result} = await this.prometheusClient.query(
+      `sum(increase(shadowsocks_tunnel_time_seconds_per_location[${hours}h])) by (location, asn, asorg)`
+    );
 
     return result.map((entry) => ({
-      access_key: entry.metric['access_key'],
-      country: entry.metric['country'],
-      asn: entry.metric['asn'] ? parseInt(entry.metric['asn']) : undefined,
+      location: entry.metric['location'],
+      asn: entry.metric['asn'] ? parseInt(entry.metric['asn'], 10) : undefined,
       tunnel_time: {hours: Math.round(parseFloat(entry.value[1]) / 60 / 60)},
     }));
   }

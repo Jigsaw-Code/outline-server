@@ -163,7 +163,10 @@ export function bindService(
   );
 
   apiServer.get(`${apiPrefix}/metrics/transfer`, service.getDataUsage.bind(service));
-  apiServer.get(`${apiPrefix}/metrics/tunnel`, service.getTunnelTime.bind(service));
+  apiServer.get(
+    `${apiPrefix}/metrics/tunnel/location`,
+    service.getTunnelTimeByLocation.bind(service)
+  );
   apiServer.get(`${apiPrefix}/metrics/enabled`, service.getShareMetrics.bind(service));
   apiServer.put(`${apiPrefix}/metrics/enabled`, service.setShareMetrics.bind(service));
 
@@ -607,46 +610,10 @@ export class ShadowsocksManagerService {
     }
   }
 
-  async getTunnelTime(req: RequestType, res: ResponseType, next: restify.Next) {
+  async getTunnelTimeByLocation(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`getTunnelTime request ${JSON.stringify(req.query)}`);
-      const sinceUnixTimestamp = parseInt(req.query.since as string, 10);
-      if (
-        typeof sinceUnixTimestamp !== 'number' ||
-        sinceUnixTimestamp <= 0 ||
-        isNaN(sinceUnixTimestamp) ||
-        sinceUnixTimestamp > Date.now() / 1000
-      ) {
-        return next(
-          new restifyErrors.InvalidArgumentError(
-            {statusCode: 400},
-            'Parameter `since` must be a unix timestamp in the past. Got: ' + req.query.since
-          )
-        );
-      }
-      const dimensions = (req.query.dimensions as string)?.split(',');
-      if (!Array.isArray(dimensions)) {
-        return next(
-          new restifyErrors.InvalidArgumentError(
-            {statusCode: 400},
-            'Parameter `dimensions` must be an array. Got: ' + req.query.dimensions
-          )
-        );
-      }
-
-      if (dimensions.some((d) => d !== 'access_key' && d !== 'country' && d !== 'asn')) {
-        return next(
-          new restifyErrors.InvalidArgumentError(
-            {statusCode: 400},
-            'Parameter `dimensions` must be an array containing only "access_key", "country" and "asn". Got: ' +
-              req.query.dimensions
-          )
-        );
-      }
-
-      const response = await this.managerMetrics.getTunnelTime({
-        params: {sinceUnixTimestamp, dimensions: dimensions as TunnelTimeDimension[]},
-      });
+      const response = await this.managerMetrics.getTunnelTimeByLocation({hours: 30 * 24});
       res.send(HttpSuccess.OK, response);
       logging.debug(`getTunnelTime response ${JSON.stringify(response)}`);
       return next();
