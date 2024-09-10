@@ -62,6 +62,8 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       `sum(increase(shadowsocks_tunnel_time_seconds_per_location[${hours}h])) by (location, asn, asorg)`
     );
 
+    console.log(JSON.stringify(result));
+
     return result.map((entry) => ({
       location: entry.metric['location'],
       asn: entry.metric['asn'] !== undefined ? parseInt(entry.metric['asn'], 10) : undefined,
