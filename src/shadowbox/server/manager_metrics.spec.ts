@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {PrometheusManagerMetrics} from './manager_metrics';
-import {FakePrometheusClient} from './mocks/mocks';
+import {FakePrometheusClient, FakeTunnelTimePrometheusClient} from './mocks/mocks';
 
 describe('PrometheusManagerMetrics', () => {
   it('getOutboundByteTransfer', async (done) => {
@@ -25,6 +25,18 @@ describe('PrometheusManagerMetrics', () => {
     expect(Object.keys(bytesTransferredByUserId).length).toEqual(2);
     expect(bytesTransferredByUserId['access-key-1']).toEqual(1000);
     expect(bytesTransferredByUserId['access-key-2']).toEqual(10000);
+    done();
+  });
+
+  it('getTunnelTimeByLocation', async (done) => {
+    const managerMetrics = new PrometheusManagerMetrics(
+      new FakeTunnelTimePrometheusClient({US: 1000, CA: 2000})
+    );
+    const tunnelTime = await managerMetrics.getTunnelTimeByLocation({hours: 0});
+    expect(tunnelTime).toEqual([
+      {location: 'US', tunnel_time: {hours: 1000}},
+      {location: 'CA', tunnel_time: {hours: 2000}},
+    ]);
     done();
   });
 });

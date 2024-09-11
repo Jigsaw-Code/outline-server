@@ -65,3 +65,21 @@ export class FakePrometheusClient extends PrometheusClient {
     return queryResultData;
   }
 }
+
+export class FakeTunnelTimePrometheusClient extends PrometheusClient {
+  constructor(public tunnelTimeByLocation: {[location: string]: number}) {
+    super('');
+  }
+
+  async query(_query: string): Promise<QueryResultData> {
+    const queryResultData = {result: []} as QueryResultData;
+    for (const location of Object.keys(this.tunnelTimeByLocation)) {
+      const tunnelTime = this.tunnelTimeByLocation[location] || 0;
+      queryResultData.result.push({
+        metric: {location},
+        value: [tunnelTime, `${tunnelTime}`],
+      });
+    }
+    return queryResultData;
+  }
+}

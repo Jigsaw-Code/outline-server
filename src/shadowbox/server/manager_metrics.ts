@@ -22,8 +22,7 @@ interface TunnelTimeRequest {
 }
 
 interface TunnelTimeResponse {
-  access_key?: string;
-  country?: string;
+  location?: string;
   asn?: number;
   tunnel_time: {
     hours: number;
@@ -61,8 +60,6 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     const {result} = await this.prometheusClient.query(
       `sum(increase(shadowsocks_tunnel_time_seconds_per_location[${hours}h])) by (location, asn, asorg)`
     );
-
-    console.log(JSON.stringify(result));
 
     return result.map((entry) => ({
       location: entry.metric['location'],
