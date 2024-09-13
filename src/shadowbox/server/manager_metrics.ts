@@ -24,9 +24,7 @@ interface TunnelTimeRequest {
 interface TunnelTimeResponse {
   location?: string;
   asn?: number;
-  tunnel_time: {
-    hours: number;
-  };
+  tunnel_time: number;
 }
 
 export interface ManagerMetrics {
@@ -64,9 +62,7 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     return result.map((entry) => ({
       location: entry.metric['location'],
       asn: entry.metric['asn'] !== undefined ? parseInt(entry.metric['asn'], 10) : undefined,
-      tunnel_time: {
-        hours: Number((parseFloat(entry.value[1]) / 60 / 60).toFixed(2)),
-      },
+      tunnel_time: Number((parseFloat(entry.value[1]) / 60 / 60).toFixed(2)),
     }));
   }
 }
