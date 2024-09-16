@@ -48,7 +48,7 @@ export class FakeShadowsocksServer implements ShadowsocksServer {
   }
 }
 
-export class FakePrometheusClient extends PrometheusClient {
+export class FakeDataBytesTransferredPrometheusClient extends PrometheusClient {
   constructor(public bytesTransferredById: {[accessKeyId: string]: number}) {
     super('');
   }

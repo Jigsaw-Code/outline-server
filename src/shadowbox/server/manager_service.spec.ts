@@ -20,7 +20,7 @@ import {InMemoryConfig, JsonConfig} from '../infrastructure/json_config';
 import {AccessKey, AccessKeyRepository, DataLimit} from '../model/access_key';
 import {ManagerMetrics} from './manager_metrics';
 import {bindService, ShadowsocksManagerService} from './manager_service';
-import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
+import {FakeDataBytesTransferredPrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
 import {ServerConfigJson} from './server_config';
 import {SharedMetricsPublisher} from './shared_metrics';
@@ -1284,6 +1284,6 @@ function getAccessKeyRepository(): ServerAccessKeyRepository {
     'hostname',
     new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0}),
     new FakeShadowsocksServer(),
-    new FakePrometheusClient({})
+    new FakeDataBytesTransferredPrometheusClient({})
   );
 }
