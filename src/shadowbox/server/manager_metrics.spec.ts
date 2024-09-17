@@ -37,8 +37,8 @@ describe('PrometheusManagerMetrics', () => {
     );
     const tunnelTime = await managerMetrics.getTunnelTimeByLocation({hours: 0});
     expect(tunnelTime).toEqual([
-      {location: 'US', asn: undefined, tunnel_time_seconds: 1000},
-      {location: 'CA', asn: undefined, tunnel_time_seconds: 2000},
+      {location: 'US', asn: undefined, as_org: undefined, tunnel_time_seconds: 1000},
+      {location: 'CA', asn: undefined, as_org: undefined, tunnel_time_seconds: 2000},
     ]);
     done();
   });

@@ -24,6 +24,7 @@ interface TunnelTimeRequest {
 interface TunnelTimeResponse {
   location?: string;
   asn?: number;
+  as_org?: string;
   tunnel_time_seconds: number;
 }
 
