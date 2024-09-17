@@ -62,6 +62,7 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     return result.map((entry) => ({
       location: entry.metric['location'],
       asn: entry.metric['asn'] !== undefined ? parseInt(entry.metric['asn'], 10) : undefined,
+      as_org: entry.metric['asorg'],
       tunnel_time_seconds: Math.round(parseFloat(entry.value[1])),
     }));
   }

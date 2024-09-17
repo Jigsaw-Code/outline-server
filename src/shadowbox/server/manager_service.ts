@@ -24,7 +24,6 @@ import {AccessKey, AccessKeyRepository, DataLimit} from '../model/access_key';
 import * as errors from '../model/errors';
 import * as version from './version';
 
-import type {TunnelTimeDimension} from './manager_metrics';
 import {ManagerMetrics} from './manager_metrics';
 import {ServerConfigJson} from './server_config';
 import {SharedMetricsPublisher} from './shared_metrics';
@@ -77,15 +76,10 @@ interface RequestParams {
   [param: string]: unknown;
 }
 
-interface RequestQuery {
-  [param: string]: unknown;
-}
-
 // Simplified request and response type interfaces containing only the
 // properties we actually use, to make testing easier.
 interface RequestType {
   params: RequestParams;
-  query?: RequestQuery;
 }
 interface ResponseType {
   send(code: number, data?: {}): void;
@@ -163,10 +157,7 @@ export function bindService(
   );
 
   apiServer.get(`${apiPrefix}/metrics/transfer`, service.getDataUsage.bind(service));
-  apiServer.get(
-    `${apiPrefix}/metrics/tunnel/location`,
-    service.getTunnelTimeByLocation.bind(service)
-  );
+  apiServer.get(`${apiPrefix}/metrics/tunnel-time`, service.getTunnelTimeByLocation.bind(service));
   apiServer.get(`${apiPrefix}/metrics/enabled`, service.getShareMetrics.bind(service));
   apiServer.put(`${apiPrefix}/metrics/enabled`, service.setShareMetrics.bind(service));
 
@@ -612,7 +603,7 @@ export class ShadowsocksManagerService {
 
   async getTunnelTimeByLocation(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
-      logging.debug(`getTunnelTime request ${JSON.stringify(req.query)}`);
+      logging.debug(`getTunnelTime request ${JSON.stringify(req.params)}`);
       const response = await this.managerMetrics.getTunnelTimeByLocation({hours: 30 * 24});
       res.send(HttpSuccess.OK, response);
       logging.debug(`getTunnelTime response ${JSON.stringify(response)}`);
