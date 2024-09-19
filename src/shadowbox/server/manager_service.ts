@@ -604,7 +604,9 @@ export class ShadowsocksManagerService {
   async getTunnelTimeByLocation(req: RequestType, res: ResponseType, next: restify.Next) {
     try {
       logging.debug(`getTunnelTime request ${JSON.stringify(req.params)}`);
-      const response = await this.managerMetrics.getTunnelTimeByLocation({hours: 30 * 24});
+      const response = await this.managerMetrics.getTunnelTimeByLocation({
+        seconds: 30 * 24 * 60 * 60,
+      });
       res.send(HttpSuccess.OK, response);
       logging.debug(`getTunnelTime response ${JSON.stringify(response)}`);
       return next();

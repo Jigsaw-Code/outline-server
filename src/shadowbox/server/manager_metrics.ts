@@ -18,14 +18,16 @@ import {DataUsageByUser, DataUsageTimeframe} from '../model/metrics';
 export type TunnelTimeDimension = 'access_key' | 'country' | 'asn';
 
 interface TunnelTimeRequest {
-  hours: number;
+  seconds: number;
 }
 
 interface TunnelTimeResponse {
   location?: string;
   asn?: number;
   as_org?: string;
-  tunnel_time_seconds: number;
+  tunnel_time: {
+    seconds: number;
+  };
 }
 
 export interface ManagerMetrics {
@@ -55,16 +57,18 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     return {bytesTransferredByUserId: usage};
   }
 
-  async getTunnelTimeByLocation({hours}: TunnelTimeRequest): Promise<TunnelTimeResponse[]> {
+  async getTunnelTimeByLocation({seconds}: TunnelTimeRequest): Promise<TunnelTimeResponse[]> {
     const {result} = await this.prometheusClient.query(
-      `sum(increase(shadowsocks_tunnel_time_seconds_per_location[${hours}h])) by (location, asn, asorg)`
+      `sum(increase(shadowsocks_tunnel_time_seconds_per_location[${seconds}s])) by (location, asn, asorg)`
     );
 
     return result.map((entry) => ({
       location: entry.metric['location'],
       asn: entry.metric['asn'] !== undefined ? parseInt(entry.metric['asn'], 10) : undefined,
       as_org: entry.metric['asorg'],
-      tunnel_time_seconds: Math.round(parseFloat(entry.value[1])),
+      tunnel_time: {
+        seconds: Math.round(parseFloat(entry.value[1])),
+      },
     }));
   }
 }
