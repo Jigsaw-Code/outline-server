@@ -22,7 +22,8 @@
     "minimist": "^1.2.8",
     "prettier": "^2.4.1",
     "pretty-quick": "^3.1.1",
-    "typescript": "^4.9.5"
+    "typescript": "^4.9.5",
+    "webpack-cli": "^5.1.4"
   },
   "scripts": {
     "postinstall": "go build github.com/go-task/task/v3/cmd/task"

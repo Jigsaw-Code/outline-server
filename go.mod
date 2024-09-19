@@ -3,7 +3,7 @@ module localhost
 go 1.21
 
 require (
-	github.com/Jigsaw-Code/outline-ss-server v1.5.0
+	github.com/Jigsaw-Code/outline-ss-server v1.7.1
 	github.com/go-task/task/v3 v3.36.0
 	github.com/google/addlicense v1.1.1
 )
@@ -20,6 +20,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
+	github.com/lmittmann/tint v1.0.5 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-zglob v0.0.4 // indirect
