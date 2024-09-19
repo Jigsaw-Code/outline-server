@@ -4,6 +4,8 @@ github.com/Jigsaw-Code/outline-ss-server v1.5.0 h1:Vz+iS0xR7i3PrLD82pzFFwZ9fsh6z
 github.com/Jigsaw-Code/outline-ss-server v1.5.0/go.mod h1:KaebwBiCWDSkgsJrJIbGH0szON8CZq4LgQaFV8v3RM4=
 github.com/Jigsaw-Code/outline-ss-server v1.7.0 h1:XMo6mCg8M6kS6BcgsZatVuvuXOR05koKlz1raofSSlg=
 github.com/Jigsaw-Code/outline-ss-server v1.7.0/go.mod h1:cKPicPWlLWZKJfkQ3CBpQm8a3gXrA2+dpQvsECqBVz8=
+github.com/Jigsaw-Code/outline-ss-server v1.7.1 h1:KLrolmZZfuBx48GM4XblH0XoTK+wMWsEbx/QDZOuibs=
+github.com/Jigsaw-Code/outline-ss-server v1.7.1/go.mod h1:cKPicPWlLWZKJfkQ3CBpQm8a3gXrA2+dpQvsECqBVz8=
 github.com/Masterminds/semver/v3 v3.2.1 h1:RN9w6+7QoMeJVGyfmbcgs28Br8cvmnucEXnY0rYXWg0=
 github.com/Masterminds/semver/v3 v3.2.1/go.mod h1:qvl/7zhW3nngYb5+80sSMF+FG2BjYrf8m9wsX0PNOMQ=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
