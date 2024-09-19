@@ -605,7 +605,9 @@ export class ShadowsocksManagerService {
     try {
       logging.debug(`getTunnelTime request ${JSON.stringify(req.params)}`);
       const response = await this.managerMetrics.getTunnelTimeByLocation({
-        seconds: 30 * 24 * 60 * 60,
+        time_window: {
+          seconds: 30 * 24 * 60 * 60,
+        },
       });
       res.send(HttpSuccess.OK, response);
       logging.debug(`getTunnelTime response ${JSON.stringify(response)}`);
