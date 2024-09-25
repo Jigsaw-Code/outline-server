@@ -33,12 +33,13 @@ describe('PrometheusManagerMetrics', () => {
 
   it('getTunnelTimeByLocation', async (done) => {
     const managerMetrics = new PrometheusManagerMetrics(
-      new FakeTunnelTimePrometheusClient({US: 1000, CA: 2000})
+      new FakeTunnelTimePrometheusClient({US: {1: 1000, 2: 1000}, CA: {3: 2000}})
     );
     const tunnelTime = await managerMetrics.getTunnelTimeByLocation({time_window: {seconds: 0}});
     expect(tunnelTime).toEqual([
-      {location: 'US', asn: undefined, as_org: undefined, tunnel_time: {seconds: 1000}},
-      {location: 'CA', asn: undefined, as_org: undefined, tunnel_time: {seconds: 2000}},
+      {location: 'US', asn: 1, as_org: undefined, tunnel_time: {seconds: 1000}},
+      {location: 'US', asn: 2, as_org: undefined, tunnel_time: {seconds: 1000}},
+      {location: 'CA', asn: 3, as_org: undefined, tunnel_time: {seconds: 2000}},
     ]);
     done();
   });

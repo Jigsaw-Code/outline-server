@@ -67,18 +67,23 @@ export class FakeDataBytesTransferredPrometheusClient extends PrometheusClient {
 }
 
 export class FakeTunnelTimePrometheusClient extends PrometheusClient {
-  constructor(public tunnelTimeByLocation: {[location: string]: number}) {
+  constructor(public tunnelTimeByLocation: {[location: string]: {[as: number]: number}}) {
     super('');
   }
 
   async query(_query: string): Promise<QueryResultData> {
     const queryResultData = {result: []} as QueryResultData;
     for (const location of Object.keys(this.tunnelTimeByLocation)) {
-      const tunnelTime = this.tunnelTimeByLocation[location] || 0;
-      queryResultData.result.push({
-        metric: {location},
-        value: [tunnelTime, `${tunnelTime}`],
-      });
+      const tunnelTimeByAsn = this.tunnelTimeByLocation[location] || {};
+
+      for (const asn of Object.keys(tunnelTimeByAsn)) {
+        const tunnelTime = tunnelTimeByAsn[asn] || 0;
+
+        queryResultData.result.push({
+          metric: {location, asn},
+          value: [tunnelTime, `${tunnelTime}`],
+        });
+      }
     }
     return queryResultData;
   }

@@ -71,7 +71,7 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       asn: entry.metric['asn'] !== undefined ? parseInt(entry.metric['asn'], 10) : undefined,
       as_org: entry.metric['asorg'],
       tunnel_time: {
-        seconds: Math.round(parseFloat(entry.value[1])),
+        seconds: parseFloat(entry.value[1]),
       },
     }));
   }
