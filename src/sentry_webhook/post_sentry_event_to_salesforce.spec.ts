@@ -98,6 +98,7 @@ describe('postSentryEventToSalesforce', () => {
         ['build.number', '0.0.0-debug'],
         ['accessKeySource', 'test source'],
         ['unknown:tag', 'foo'],
+        ['outreachConsent', 'True'],
       ],
     };
 
@@ -116,8 +117,22 @@ describe('postSentryEventToSalesforce', () => {
         '&00N5a00000DXxmo=MacOS' +
         '&00N5a00000DXxmq=test%20version' +
         '&00N5a00000DXy64=0.0.0-debug' +
+        '&00N5a00000DbyEw=true' +
         '&00N5a00000DXxms=test%20source'
     );
+    expect(mockRequest.end).toHaveBeenCalled();
+  });
+
+  it('drops "False" values for `outreachConsent`', () => {
+    const event: SentryEvent = {
+      user: {email: 'foo@bar.com'},
+      message: 'my message',
+      tags: [['outreachConsent', 'False']],
+    };
+
+    postSentryEventToSalesforce(event, 'outline-clients');
+
+    expect(mockRequest.write.calls.argsFor(0)[0]).not.toContain('00N5a00000DbyEw');
     expect(mockRequest.end).toHaveBeenCalled();
   });
 });

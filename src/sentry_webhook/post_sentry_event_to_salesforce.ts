@@ -31,6 +31,7 @@ interface SalesforceFormFields {
   build: string;
   role: string;
   isUpdatedForm: string;
+  outreachConsent: string;
 }
 
 // Defines the Salesforce form values.
@@ -57,6 +58,7 @@ const SALESFORCE_FORM_FIELDS_DEV: SalesforceFormFields = {
   build: '00N75000000wmdC',
   role: '00N75000000wYiX',
   isUpdatedForm: '00N75000000wmd7',
+  outreachConsent: '',
 };
 const SALESFORCE_FORM_FIELDS_PROD: SalesforceFormFields = {
   orgId: 'orgid',
@@ -73,6 +75,7 @@ const SALESFORCE_FORM_FIELDS_PROD: SalesforceFormFields = {
   build: '00N5a00000DXy64',
   role: '00N5a00000DXxmr',
   isUpdatedForm: '00N5a00000DXy5a',
+  outreachConsent: '00N5a00000DbyEw',
 };
 const SALESFORCE_FORM_VALUES_DEV: SalesforceFormValues = {
   orgId: '00D750000004dFg',
@@ -181,6 +184,10 @@ function getSalesforceFormData(
     form.push(encodeFormData(formFields.os, toOSPicklistValue(tags.get('os.name'))));
     form.push(encodeFormData(formFields.version, tags.get('sentry:release')));
     form.push(encodeFormData(formFields.build, tags.get('build.number')));
+    const outreachConsent = (tags.get('outreachConsent') ?? 'False').toLowerCase();
+    if (outreachConsent === 'true') {
+      form.push(encodeFormData(formFields.outreachConsent, outreachConsent));
+    }
     const formVersion = Number(tags.get('formVersion') ?? 1);
     if (formVersion === 2) {
       form.push(encodeFormData(formFields.isUpdatedForm, 'true'));
