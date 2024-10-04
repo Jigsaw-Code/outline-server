@@ -185,7 +185,7 @@ function getSalesforceFormData(
     form.push(encodeFormData(formFields.version, tags.get('sentry:release')));
     form.push(encodeFormData(formFields.build, tags.get('build.number')));
     const outreachConsent = (tags.get('outreachConsent') ?? 'False').toLowerCase();
-    if (outreachConsent == 'true') {
+    if (outreachConsent === 'true') {
       form.push(encodeFormData(formFields.outreachConsent, outreachConsent));
     }
     const formVersion = Number(tags.get('formVersion') ?? 1);
