@@ -15,8 +15,26 @@
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {DataUsageByUser, DataUsageTimeframe} from '../model/metrics';
 
+export type TunnelTimeDimension = 'access_key' | 'country' | 'asn';
+
+interface TunnelTimeRequest {
+  time_window: {
+    seconds: number;
+  };
+}
+
+interface TunnelTimeResponse {
+  location?: string;
+  asn?: number;
+  as_org?: string;
+  tunnel_time: {
+    seconds: number;
+  };
+}
+
 export interface ManagerMetrics {
   getOutboundByteTransfer(timeframe: DataUsageTimeframe): Promise<DataUsageByUser>;
+  getTunnelTimeByLocation(request: TunnelTimeRequest): Promise<TunnelTimeResponse[]>;
 }
 
 // Reads manager metrics from a Prometheus instance.
@@ -39,5 +57,22 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       usage[entry.metric['access_key'] || ''] = bytes;
     }
     return {bytesTransferredByUserId: usage};
+  }
+
+  async getTunnelTimeByLocation({
+    time_window: {seconds},
+  }: TunnelTimeRequest): Promise<TunnelTimeResponse[]> {
+    const {result} = await this.prometheusClient.query(
+      `sum(increase(shadowsocks_tunnel_time_seconds_per_location[${seconds}s])) by (location, asn, asorg)`
+    );
+
+    return result.map((entry) => ({
+      location: entry.metric['location'],
+      asn: entry.metric['asn'] !== undefined ? parseInt(entry.metric['asn'], 10) : undefined,
+      as_org: entry.metric['asorg'],
+      tunnel_time: {
+        seconds: parseFloat(entry.value[1]),
+      },
+    }));
   }
 }

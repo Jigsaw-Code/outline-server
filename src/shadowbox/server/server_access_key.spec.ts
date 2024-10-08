@@ -20,7 +20,7 @@ import {InMemoryConfig} from '../infrastructure/json_config';
 import {AccessKeyId, AccessKeyRepository, DataLimit} from '../model/access_key';
 import * as errors from '../model/errors';
 
-import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
+import {FakeDataBytesTransferredPrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
 
 describe('ServerAccessKeyRepository', () => {
@@ -337,7 +337,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it("setAccessKeyDataLimit can change a key's limit status", async (done) => {
     const server = new FakeShadowsocksServer();
-    const prometheusClient = new FakePrometheusClient({'0': 500});
+    const prometheusClient = new FakeDataBytesTransferredPrometheusClient({'0': 500});
     const repo = new RepoBuilder()
       .prometheusClient(prometheusClient)
       .shadowsocksServer(server)
@@ -361,7 +361,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('setAccessKeyDataLimit overrides default data limit', async (done) => {
     const server = new FakeShadowsocksServer();
-    const prometheusClient = new FakePrometheusClient({'0': 750, '1': 1250});
+    const prometheusClient = new FakeDataBytesTransferredPrometheusClient({'0': 750, '1': 1250});
     const repo = new RepoBuilder()
       .prometheusClient(prometheusClient)
       .shadowsocksServer(server)
@@ -395,7 +395,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('removeAccessKeyDataLimit restores a key to the default data limit', async (done) => {
     const server = new FakeShadowsocksServer();
-    const prometheusClient = new FakePrometheusClient({'0': 500});
+    const prometheusClient = new FakeDataBytesTransferredPrometheusClient({'0': 500});
     const repo = new RepoBuilder()
       .prometheusClient(prometheusClient)
       .shadowsocksServer(server)
@@ -413,7 +413,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it("setAccessKeyDataLimit can change a key's limit status", async (done) => {
     const server = new FakeShadowsocksServer();
-    const prometheusClient = new FakePrometheusClient({'0': 500});
+    const prometheusClient = new FakeDataBytesTransferredPrometheusClient({'0': 500});
     const repo = new RepoBuilder()
       .prometheusClient(prometheusClient)
       .shadowsocksServer(server)
@@ -437,7 +437,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('setAccessKeyDataLimit overrides default data limit', async (done) => {
     const server = new FakeShadowsocksServer();
-    const prometheusClient = new FakePrometheusClient({'0': 750, '1': 1250});
+    const prometheusClient = new FakeDataBytesTransferredPrometheusClient({'0': 750, '1': 1250});
     const repo = new RepoBuilder()
       .prometheusClient(prometheusClient)
       .shadowsocksServer(server)
@@ -478,7 +478,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('removeAccessKeyDataLimit restores a key to the default data limit', async (done) => {
     const server = new FakeShadowsocksServer();
-    const prometheusClient = new FakePrometheusClient({'0': 500});
+    const prometheusClient = new FakeDataBytesTransferredPrometheusClient({'0': 500});
     const repo = new RepoBuilder()
       .prometheusClient(prometheusClient)
       .shadowsocksServer(server)
@@ -496,7 +496,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('removeAccessKeyDataLimit can restore an over-limit access key', async (done) => {
     const server = new FakeShadowsocksServer();
-    const prometheusClient = new FakePrometheusClient({'0': 500});
+    const prometheusClient = new FakeDataBytesTransferredPrometheusClient({'0': 500});
     const repo = new RepoBuilder()
       .prometheusClient(prometheusClient)
       .shadowsocksServer(server)
@@ -524,7 +524,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('setDefaultDataLimit updates keys limit status', async (done) => {
     const server = new FakeShadowsocksServer();
-    const prometheusClient = new FakePrometheusClient({'0': 500, '1': 200});
+    const prometheusClient = new FakeDataBytesTransferredPrometheusClient({'0': 500, '1': 200});
     const repo = new RepoBuilder()
       .prometheusClient(prometheusClient)
       .shadowsocksServer(server)
@@ -568,7 +568,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('removeDefaultDataLimit restores over-limit access keys', async (done) => {
     const server = new FakeShadowsocksServer();
-    const prometheusClient = new FakePrometheusClient({'0': 500, '1': 100});
+    const prometheusClient = new FakeDataBytesTransferredPrometheusClient({'0': 500, '1': 100});
     const repo = new RepoBuilder()
       .prometheusClient(prometheusClient)
       .shadowsocksServer(server)
@@ -592,7 +592,7 @@ describe('ServerAccessKeyRepository', () => {
   });
 
   it('enforceAccessKeyDataLimits updates keys limit status', async (done) => {
-    const prometheusClient = new FakePrometheusClient({
+    const prometheusClient = new FakeDataBytesTransferredPrometheusClient({
       '0': 100,
       '1': 200,
       '2': 300,
@@ -626,7 +626,7 @@ describe('ServerAccessKeyRepository', () => {
   });
 
   it('enforceAccessKeyDataLimits respects both default and per-key limits', async (done) => {
-    const prometheusClient = new FakePrometheusClient({'0': 200, '1': 300});
+    const prometheusClient = new FakeDataBytesTransferredPrometheusClient({'0': 200, '1': 300});
     const repo = new RepoBuilder()
       .prometheusClient(prometheusClient)
       .defaultDataLimit({bytes: 500})
@@ -650,7 +650,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('enforceAccessKeyDataLimits enables and disables keys', async (done) => {
     const server = new FakeShadowsocksServer();
-    const prometheusClient = new FakePrometheusClient({'0': 500, '1': 100});
+    const prometheusClient = new FakeDataBytesTransferredPrometheusClient({'0': 500, '1': 100});
     const repo = new RepoBuilder()
       .prometheusClient(prometheusClient)
       .shadowsocksServer(server)
@@ -675,7 +675,7 @@ describe('ServerAccessKeyRepository', () => {
 
   it('enforceAccessKeyDataLimits disables on exact data limit', async (done) => {
     const server = new FakeShadowsocksServer();
-    const prometheusClient = new FakePrometheusClient({'0': 0});
+    const prometheusClient = new FakeDataBytesTransferredPrometheusClient({'0': 0});
     const repo = new RepoBuilder()
       .prometheusClient(prometheusClient)
       .shadowsocksServer(server)
@@ -743,7 +743,11 @@ describe('ServerAccessKeyRepository', () => {
 
   it('start periodically enforces access key data limits', async (done) => {
     const server = new FakeShadowsocksServer();
-    const prometheusClient = new FakePrometheusClient({'0': 500, '1': 200, '2': 400});
+    const prometheusClient = new FakeDataBytesTransferredPrometheusClient({
+      '0': 500,
+      '1': 200,
+      '2': 400,
+    });
     const repo = new RepoBuilder()
       .prometheusClient(prometheusClient)
       .shadowsocksServer(server)
@@ -818,7 +822,7 @@ class RepoBuilder {
   private port_ = 12345;
   private keyConfig_ = new InMemoryConfig<AccessKeyConfigJson>({accessKeys: [], nextId: 0});
   private shadowsocksServer_ = new FakeShadowsocksServer();
-  private prometheusClient_ = new FakePrometheusClient({});
+  private prometheusClient_ = new FakeDataBytesTransferredPrometheusClient({});
   private defaultDataLimit_;
 
   port(port: number): RepoBuilder {
@@ -833,7 +837,7 @@ class RepoBuilder {
     this.shadowsocksServer_ = shadowsocksServer;
     return this;
   }
-  prometheusClient(prometheusClient: FakePrometheusClient): RepoBuilder {
+  prometheusClient(prometheusClient: FakeDataBytesTransferredPrometheusClient): RepoBuilder {
     this.prometheusClient_ = prometheusClient;
     return this;
   }
