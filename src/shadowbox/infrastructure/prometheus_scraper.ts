@@ -21,10 +21,14 @@ import * as path from 'path';
 
 import * as logging from '../infrastructure/logging';
 
+export interface QueryResultMetric {
+  [labelValue: string]: string;
+}
+
 export interface QueryResultData {
   resultType: 'matrix' | 'vector' | 'scalar' | 'string';
   result: Array<{
-    metric: {[labelValue: string]: string};
+    metric: QueryResultMetric;
     value: [number, string];
   }>;
 }
@@ -101,7 +105,7 @@ async function spawnPrometheusSubprocess(
   prometheusEndpoint: string
 ): Promise<child_process.ChildProcess> {
   logging.info('======== Starting Prometheus ========');
-  logging.info(`${binaryFilename} ${processArgs.map(a => `"${a}"`).join(' ')}`);
+  logging.info(`${binaryFilename} ${processArgs.map((a) => `"${a}"`).join(' ')}`);
   const runProcess = child_process.spawn(binaryFilename, processArgs);
   runProcess.on('error', (error) => {
     logging.error(`Error spawning Prometheus: ${error}`);

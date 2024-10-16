@@ -16,7 +16,7 @@ import {Clock} from '../infrastructure/clock';
 import * as follow_redirects from '../infrastructure/follow_redirects';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {PrometheusClient} from '../infrastructure/prometheus_scraper';
+import {PrometheusClient, QueryResultMetric} from '../infrastructure/prometheus_scraper';
 import * as version from './version';
 import {AccessKeyConfigJson} from './server_access_key';
 
@@ -26,10 +26,21 @@ const MS_PER_HOUR = 60 * 60 * 1000;
 const MS_PER_DAY = 24 * MS_PER_HOUR;
 const SANCTIONED_COUNTRIES = new Set(['CU', 'KP', 'SY']);
 
+const PROMETHEUS_COUNTRY_LABEL = 'location';
+const PROMETHEUS_ASN_LABEL = 'asn';
+
+type PrometheusQueryResult = {
+  [metricKey: string]: {
+    metric: QueryResultMetric;
+    value: number;
+  };
+};
+
 export interface LocationUsage {
   country: string;
   asn?: number;
   inboundBytes: number;
+  tunnelTimeSec: number;
 }
 
 // JSON format for the published report.
@@ -47,6 +58,7 @@ export interface HourlyUserMetricsReportJson {
   countries: string[];
   asn?: number;
   bytesTransferred: number;
+  tunnelTimeSec: number;
 }
 
 // JSON format for the feature metrics report.
@@ -82,18 +94,58 @@ export class PrometheusUsageMetrics implements UsageMetrics {
 
   constructor(private prometheusClient: PrometheusClient) {}
 
+  private async queryUsage(metric: string, deltaSecs: number): Promise<PrometheusQueryResult> {
+    const query = `
+      sum(increase(${metric}[${deltaSecs}s]))
+      by (${PROMETHEUS_COUNTRY_LABEL}, ${PROMETHEUS_ASN_LABEL})
+    `;
+    const queryResponse = await this.prometheusClient.query(query);
+    const result: PrometheusQueryResult = {};
+    for (const entry of queryResponse.result) {
+      const serializedKey = JSON.stringify(entry.metric, Object.keys(entry.metric).sort());
+      result[serializedKey] = {
+        metric: entry.metric,
+        value: Math.round(parseFloat(entry.value[1])),
+      };
+    }
+    return result;
+  }
+
   async getLocationUsage(): Promise<LocationUsage[]> {
     const timeDeltaSecs = Math.round((Date.now() - this.resetTimeMs) / 1000);
-    // We measure the traffic to and from the target, since that's what we are protecting.
-    const result = await this.prometheusClient.query(
-      `sum(increase(shadowsocks_data_bytes_per_location{dir=~"p>t|p<t"}[${timeDeltaSecs}s])) by (location, asn)`
-    );
-    const usage = [] as LocationUsage[];
-    for (const entry of result.result) {
-      const country = entry.metric['location'] || '';
-      const asn = entry.metric['asn'] ? Number(entry.metric['asn']) : undefined;
-      const inboundBytes = Math.round(parseFloat(entry.value[1]));
-      usage.push({country, inboundBytes, asn});
+    const [dataBytesResult, tunnelTimeResult] = await Promise.all([
+      // We measure the traffic to and from the target, since that's what we are protecting.
+      this.queryUsage('shadowsocks_data_bytes_per_location{dir=~"p>t|p<t"}', timeDeltaSecs),
+      this.queryUsage('shadowsocks_tunnel_time_seconds_per_location', timeDeltaSecs),
+    ]);
+
+    // We join the bytes and tunneltime metrics together by location (i.e. country and ASN).
+    const mergedResult: {
+      [metricKey: string]: {
+        metric: QueryResultMetric;
+        inboundBytes?: number;
+        tunnelTimeSec?: number;
+      };
+    } = {};
+    for (const [key, entry] of Object.entries(dataBytesResult)) {
+      mergedResult[key] = {...mergedResult[key], metric: entry.metric, inboundBytes: entry.value};
+    }
+    for (const [key, entry] of Object.entries(tunnelTimeResult)) {
+      mergedResult[key] = {...mergedResult[key], metric: entry.metric, tunnelTimeSec: entry.value};
+    }
+
+    const usage: LocationUsage[] = [];
+    for (const entry of Object.values(mergedResult)) {
+      const country = entry.metric[PROMETHEUS_COUNTRY_LABEL] || '';
+      const asn = entry.metric[PROMETHEUS_ASN_LABEL]
+        ? Number(entry.metric[PROMETHEUS_ASN_LABEL])
+        : undefined;
+      usage.push({
+        country,
+        asn,
+        inboundBytes: entry.inboundBytes || 0,
+        tunnelTimeSec: entry.tunnelTimeSec || 0,
+      });
     }
     return usage;
   }
@@ -205,7 +257,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
 
     const userReports: HourlyUserMetricsReportJson[] = [];
     for (const locationUsage of locationUsageMetrics) {
-      if (locationUsage.inboundBytes === 0) {
+      if (locationUsage.inboundBytes === 0 && locationUsage.tunnelTimeSec === 0) {
         continue;
       }
       if (isSanctionedCountry(locationUsage.country)) {
@@ -215,8 +267,9 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       // It's used to differentiate the row from the legacy key usage rows.
       const country = locationUsage.country || 'ZZ';
       const report: HourlyUserMetricsReportJson = {
-        bytesTransferred: locationUsage.inboundBytes,
         countries: [country],
+        bytesTransferred: locationUsage.inboundBytes,
+        tunnelTimeSec: locationUsage.tunnelTimeSec,
       };
       if (locationUsage.asn) {
         report.asn = locationUsage.asn;
