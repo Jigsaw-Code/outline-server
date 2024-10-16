@@ -20,7 +20,7 @@ import {AccessKeyConfigJson} from './server_access_key';
 
 import {ServerConfigJson} from './server_config';
 import {
-  CountryUsage,
+  LocationUsage,
   DailyFeatureMetricsReportJson,
   HourlyServerMetricsReportJson,
   MetricsCollectorClient,
@@ -78,7 +78,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       );
 
       publisher.startSharing();
-      usageMetrics.countryUsage = [
+      usageMetrics.locationUsage = [
         {country: 'AA', inboundBytes: 11},
         {country: 'BB', inboundBytes: 11},
         {country: 'CC', inboundBytes: 22},
@@ -102,7 +102,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       });
 
       startTime = clock.nowMs;
-      usageMetrics.countryUsage = [
+      usageMetrics.locationUsage = [
         {country: 'EE', inboundBytes: 44},
         {country: 'FF', inboundBytes: 55},
       ];
@@ -121,6 +121,35 @@ describe('OutlineSharedMetricsPublisher', () => {
 
       publisher.stopSharing();
     });
+
+    it('reports ASN metrics correctly', async () => {
+      const clock = new ManualClock();
+      const serverConfig = new InMemoryConfig<ServerConfigJson>({serverId: 'server-id'});
+      const usageMetrics = new ManualUsageMetrics();
+      const metricsCollector = new FakeMetricsCollector();
+      const publisher = new OutlineSharedMetricsPublisher(
+        clock,
+        serverConfig,
+        null,
+        usageMetrics,
+        metricsCollector
+      );
+      publisher.startSharing();
+
+      usageMetrics.locationUsage = [
+        {country: 'DD', asn: 999, inboundBytes: 44},
+        {country: 'EE', inboundBytes: 55},
+      ];
+      clock.nowMs += 60 * 60 * 1000;
+      await clock.runCallbacks();
+
+      expect(metricsCollector.collectedServerUsageReport.userReports).toEqual([
+        {bytesTransferred: 44, countries: ['DD'], asn: 999},
+        {bytesTransferred: 55, countries: ['EE']},
+      ]);
+      publisher.stopSharing();
+    });
+
     it('ignores sanctioned countries', async () => {
       const clock = new ManualClock();
       const startTime = clock.nowMs;
@@ -136,7 +165,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       );
 
       publisher.startSharing();
-      usageMetrics.countryUsage = [
+      usageMetrics.locationUsage = [
         {country: 'AA', inboundBytes: 11},
         {country: 'SY', inboundBytes: 11},
         {country: 'CC', inboundBytes: 22},
@@ -257,13 +286,13 @@ class FakeMetricsCollector implements MetricsCollectorClient {
 }
 
 class ManualUsageMetrics implements UsageMetrics {
-  countryUsage = [] as CountryUsage[];
+  locationUsage = [] as LocationUsage[];
 
-  getCountryUsage(): Promise<CountryUsage[]> {
-    return Promise.resolve(this.countryUsage);
+  getLocationUsage(): Promise<LocationUsage[]> {
+    return Promise.resolve(this.locationUsage);
   }
 
   reset() {
-    this.countryUsage = [] as CountryUsage[];
+    this.locationUsage = [] as LocationUsage[];
   }
 }
