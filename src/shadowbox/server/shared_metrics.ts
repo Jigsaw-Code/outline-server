@@ -94,9 +94,12 @@ export class PrometheusUsageMetrics implements UsageMetrics {
 
   constructor(private prometheusClient: PrometheusClient) {}
 
-  private async queryUsage(metric: string, deltaSecs: number): Promise<PrometheusQueryResult> {
+  private async queryUsage(
+    timeSeriesSelector: string,
+    deltaSecs: number
+  ): Promise<PrometheusQueryResult> {
     const query = `
-      sum(increase(${metric}[${deltaSecs}s]))
+      sum(increase(${timeSeriesSelector}[${deltaSecs}s]))
       by (${PROMETHEUS_COUNTRY_LABEL}, ${PROMETHEUS_ASN_LABEL})
     `;
     const queryResponse = await this.prometheusClient.query(query);
