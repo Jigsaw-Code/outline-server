@@ -16,7 +16,7 @@ import {Clock} from '../infrastructure/clock';
 import * as follow_redirects from '../infrastructure/follow_redirects';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {PrometheusClient, QueryResultMetric} from '../infrastructure/prometheus_scraper';
+import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import * as version from './version';
 import {AccessKeyConfigJson} from './server_access_key';
 
@@ -25,16 +25,6 @@ import {ServerConfigJson} from './server_config';
 const MS_PER_HOUR = 60 * 60 * 1000;
 const MS_PER_DAY = 24 * MS_PER_HOUR;
 const SANCTIONED_COUNTRIES = new Set(['CU', 'KP', 'SY']);
-
-const PROMETHEUS_COUNTRY_LABEL = 'location';
-const PROMETHEUS_ASN_LABEL = 'asn';
-
-type PrometheusQueryResult = {
-  [metricKey: string]: {
-    metric: QueryResultMetric;
-    value: number;
-  };
-};
 
 export interface LocationUsage {
   country: string;
@@ -94,63 +84,44 @@ export class PrometheusUsageMetrics implements UsageMetrics {
 
   constructor(private prometheusClient: PrometheusClient) {}
 
-  private async queryUsage(
-    timeSeriesSelector: string,
-    deltaSecs: number
-  ): Promise<PrometheusQueryResult> {
-    const query = `
-      sum(increase(${timeSeriesSelector}[${deltaSecs}s]))
-      by (${PROMETHEUS_COUNTRY_LABEL}, ${PROMETHEUS_ASN_LABEL})
-    `;
-    const queryResponse = await this.prometheusClient.query(query);
-    const result: PrometheusQueryResult = {};
-    for (const entry of queryResponse.result) {
-      const serializedKey = JSON.stringify(entry.metric, Object.keys(entry.metric).sort());
-      result[serializedKey] = {
-        metric: entry.metric,
-        value: Math.round(parseFloat(entry.value[1])),
-      };
-    }
-    return result;
-  }
-
   async getLocationUsage(): Promise<LocationUsage[]> {
     const timeDeltaSecs = Math.round((Date.now() - this.resetTimeMs) / 1000);
-    const [dataBytesResult, tunnelTimeResult] = await Promise.all([
-      // We measure the traffic to and from the target, since that's what we are protecting.
-      this.queryUsage('shadowsocks_data_bytes_per_location{dir=~"p>t|p<t"}', timeDeltaSecs),
-      this.queryUsage('shadowsocks_tunnel_time_seconds_per_location', timeDeltaSecs),
-    ]);
+    // Return both data bytes and tunnel time information with a single
+    // Prometheus query, by using a custom "metric_type" label.
+    const queryResponse = await this.prometheusClient.query(`
+      label_replace(
+          sum(increase(shadowsocks_data_bytes_per_location{dir=~"p>t|p<t"}[${timeDeltaSecs}s]))
+          by (location, asn),
+          "metric_type", "inbound_bytes", "", ""
+      ) or
+      label_replace(
+          sum(increase(shadowsocks_tunnel_time_seconds_per_location[${timeDeltaSecs}s]))
+          by (location, asn),
+          "metric_type", "tunnel_time", "", ""
+      )
+    `);
 
-    // We join the bytes and tunneltime metrics together by location (i.e. country and ASN).
-    const mergedResult: {
-      [metricKey: string]: {
-        metric: QueryResultMetric;
-        inboundBytes?: number;
-        tunnelTimeSec?: number;
-      };
-    } = {};
-    for (const [key, entry] of Object.entries(dataBytesResult)) {
-      mergedResult[key] = {...mergedResult[key], metric: entry.metric, inboundBytes: entry.value};
-    }
-    for (const [key, entry] of Object.entries(tunnelTimeResult)) {
-      mergedResult[key] = {...mergedResult[key], metric: entry.metric, tunnelTimeSec: entry.value};
-    }
+    const usage: {[key: string]: LocationUsage} = {};
+    for (const entry of queryResponse.result) {
+      const country = entry.metric['location'] || '';
+      const asn = entry.metric['asn'] ? Number(entry.metric['asn']) : undefined;
 
-    const usage: LocationUsage[] = [];
-    for (const entry of Object.values(mergedResult)) {
-      const country = entry.metric[PROMETHEUS_COUNTRY_LABEL] || '';
-      const asn = entry.metric[PROMETHEUS_ASN_LABEL]
-        ? Number(entry.metric[PROMETHEUS_ASN_LABEL])
-        : undefined;
-      usage.push({
+      // Create or update the entry for the country+ASN combination.
+      const key = `${country}-${asn}`;
+      usage[key] = {
         country,
         asn,
-        inboundBytes: entry.inboundBytes || 0,
-        tunnelTimeSec: entry.tunnelTimeSec || 0,
-      });
+        inboundBytes: usage[key]?.inboundBytes || 0,
+        tunnelTimeSec: usage[key]?.tunnelTimeSec || 0,
+      };
+
+      if (entry.metric['metric_type'] === 'inbound_bytes') {
+        usage[key].inboundBytes = Math.round(parseFloat(entry.value[1]));
+      } else if (entry.metric['metric_type'] === 'tunnel_time') {
+        usage[key].tunnelTimeSec = Math.round(parseFloat(entry.value[1]));
+      }
     }
-    return usage;
+    return Object.values(usage);
   }
 
   reset() {
