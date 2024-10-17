@@ -150,6 +150,62 @@ describe('OutlineSharedMetricsPublisher', () => {
       publisher.stopSharing();
     });
 
+    it('reports different ASNs in the same country correctly', async () => {
+      const clock = new ManualClock();
+      const serverConfig = new InMemoryConfig<ServerConfigJson>({serverId: 'server-id'});
+      const usageMetrics = new ManualUsageMetrics();
+      const metricsCollector = new FakeMetricsCollector();
+      const publisher = new OutlineSharedMetricsPublisher(
+        clock,
+        serverConfig,
+        null,
+        usageMetrics,
+        metricsCollector
+      );
+      publisher.startSharing();
+
+      usageMetrics.reportedUsage = [
+        {country: 'DD', asn: 999, inboundBytes: 44},
+        {country: 'DD', asn: 888, inboundBytes: 55},
+      ];
+      clock.nowMs += 60 * 60 * 1000;
+      await clock.runCallbacks();
+
+      expect(metricsCollector.collectedServerUsageReport.userReports).toEqual([
+        {bytesTransferred: 44, countries: ['DD'], asn: 999},
+        {bytesTransferred: 55, countries: ['DD'], asn: 888},
+      ]);
+      publisher.stopSharing();
+    });
+
+    it('reports the same ASNs across different countries correctly', async () => {
+      const clock = new ManualClock();
+      const serverConfig = new InMemoryConfig<ServerConfigJson>({serverId: 'server-id'});
+      const usageMetrics = new ManualUsageMetrics();
+      const metricsCollector = new FakeMetricsCollector();
+      const publisher = new OutlineSharedMetricsPublisher(
+        clock,
+        serverConfig,
+        null,
+        usageMetrics,
+        metricsCollector
+      );
+      publisher.startSharing();
+
+      usageMetrics.reportedUsage = [
+        {country: 'DD', asn: 999, inboundBytes: 44},
+        {country: 'EE', asn: 999, inboundBytes: 66},
+      ];
+      clock.nowMs += 60 * 60 * 1000;
+      await clock.runCallbacks();
+
+      expect(metricsCollector.collectedServerUsageReport.userReports).toEqual([
+        {bytesTransferred: 44, countries: ['DD'], asn: 999},
+        {bytesTransferred: 66, countries: ['EE'], asn: 999},
+      ]);
+      publisher.stopSharing();
+    });
+
     it('ignores sanctioned countries', async () => {
       const clock = new ManualClock();
       const startTime = clock.nowMs;
