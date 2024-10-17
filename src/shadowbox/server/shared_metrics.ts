@@ -101,27 +101,33 @@ export class PrometheusUsageMetrics implements UsageMetrics {
       )
     `);
 
-    const usage: {[key: string]: LocationUsage} = {};
-    for (const entry of queryResponse.result) {
-      const country = entry.metric['location'] || '';
-      const asn = entry.metric['asn'] ? Number(entry.metric['asn']) : undefined;
+    const usage = new Map<string, LocationUsage>();
+    for (const result of queryResponse.result) {
+      const country = result.metric['location'] || '';
+      const asn = result.metric['asn'] ? Number(result.metric['asn']) : undefined;
 
-      // Create or update the entry for the country+ASN combination.
+      // Get or create an entry for the country+ASN combination.
       const key = `${country}-${asn}`;
-      usage[key] = {
-        country,
-        asn,
-        inboundBytes: usage[key]?.inboundBytes || 0,
-        tunnelTimeSec: usage[key]?.tunnelTimeSec || 0,
-      };
-
-      if (entry.metric['metric_type'] === 'inbound_bytes') {
-        usage[key].inboundBytes = Math.round(parseFloat(entry.value[1]));
-      } else if (entry.metric['metric_type'] === 'tunnel_time') {
-        usage[key].tunnelTimeSec = Math.round(parseFloat(entry.value[1]));
+      let entry: LocationUsage;
+      if (usage.has(key)) {
+        entry = usage.get(key);
+      } else {
+        entry = {
+          country,
+          asn,
+          inboundBytes: 0,
+          tunnelTimeSec: 0,
+        };
       }
+
+      if (result.metric['metric_type'] === 'inbound_bytes') {
+        entry.inboundBytes = Math.round(parseFloat(result.value[1]));
+      } else if (result.metric['metric_type'] === 'tunnel_time') {
+        entry.tunnelTimeSec = Math.round(parseFloat(result.value[1]));
+      }
+      usage.set(key, entry);
     }
-    return Object.values(usage);
+    return Array.from(usage.values());
   }
 
   reset() {
