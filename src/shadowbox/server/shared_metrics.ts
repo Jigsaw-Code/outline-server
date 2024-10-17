@@ -26,7 +26,7 @@ const MS_PER_HOUR = 60 * 60 * 1000;
 const MS_PER_DAY = 24 * MS_PER_HOUR;
 const SANCTIONED_COUNTRIES = new Set(['CU', 'KP', 'SY']);
 
-export interface LocationUsage {
+export interface ReportedUsage {
   country: string;
   asn?: number;
   inboundBytes: number;
@@ -74,7 +74,7 @@ export interface SharedMetricsPublisher {
 }
 
 export interface UsageMetrics {
-  getLocationUsage(): Promise<LocationUsage[]>;
+  getReportedUsage(): Promise<ReportedUsage[]>;
   reset();
 }
 
@@ -84,7 +84,7 @@ export class PrometheusUsageMetrics implements UsageMetrics {
 
   constructor(private prometheusClient: PrometheusClient) {}
 
-  async getLocationUsage(): Promise<LocationUsage[]> {
+  async getReportedUsage(): Promise<ReportedUsage[]> {
     const timeDeltaSecs = Math.round((Date.now() - this.resetTimeMs) / 1000);
     // Return both data bytes and tunnel time information with a single
     // Prometheus query, by using a custom "metric_type" label.
@@ -101,14 +101,14 @@ export class PrometheusUsageMetrics implements UsageMetrics {
       )
     `);
 
-    const usage = new Map<string, LocationUsage>();
+    const usage = new Map<string, ReportedUsage>();
     for (const result of queryResponse.result) {
       const country = result.metric['location'] || '';
       const asn = result.metric['asn'] ? Number(result.metric['asn']) : undefined;
 
       // Get or create an entry for the country+ASN combination.
       const key = `${country}-${asn}`;
-      let entry: LocationUsage;
+      let entry: ReportedUsage;
       if (usage.has(key)) {
         entry = usage.get(key);
       } else {
@@ -198,7 +198,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
         return;
       }
       try {
-        await this.reportServerUsageMetrics(await usageMetrics.getLocationUsage());
+        await this.reportServerUsageMetrics(await usageMetrics.getReportedUsage());
         usageMetrics.reset();
       } catch (err) {
         logging.error(`Failed to report server usage metrics: ${err}`);
@@ -232,7 +232,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
     return this.serverConfig.data().metricsEnabled || false;
   }
 
-  private async reportServerUsageMetrics(locationUsageMetrics: LocationUsage[]): Promise<void> {
+  private async reportServerUsageMetrics(locationUsageMetrics: ReportedUsage[]): Promise<void> {
     const reportEndTimestampMs = this.clock.now();
 
     const userReports: HourlyUserMetricsReportJson[] = [];
