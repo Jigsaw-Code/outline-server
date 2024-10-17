@@ -75,6 +75,7 @@ interface RequestParams {
   //   method: string
   [param: string]: unknown;
 }
+
 // Simplified request and response type interfaces containing only the
 // properties we actually use, to make testing easier.
 interface RequestType {
@@ -156,6 +157,7 @@ export function bindService(
   );
 
   apiServer.get(`${apiPrefix}/metrics/transfer`, service.getDataUsage.bind(service));
+  apiServer.get(`${apiPrefix}/metrics/tunnel-time`, service.getTunnelTimeByLocation.bind(service));
   apiServer.get(`${apiPrefix}/metrics/enabled`, service.getShareMetrics.bind(service));
   apiServer.put(`${apiPrefix}/metrics/enabled`, service.setShareMetrics.bind(service));
 
@@ -592,6 +594,23 @@ export class ShadowsocksManagerService {
       const response = await this.managerMetrics.getOutboundByteTransfer({hours: 30 * 24});
       res.send(HttpSuccess.OK, response);
       logging.debug(`getDataUsage response ${JSON.stringify(response)}`);
+      return next();
+    } catch (error) {
+      logging.error(error);
+      return next(new restifyErrors.InternalServerError());
+    }
+  }
+
+  async getTunnelTimeByLocation(req: RequestType, res: ResponseType, next: restify.Next) {
+    try {
+      logging.debug(`getTunnelTime request ${JSON.stringify(req.params)}`);
+      const response = await this.managerMetrics.getTunnelTimeByLocation({
+        time_window: {
+          seconds: 30 * 24 * 60 * 60,
+        },
+      });
+      res.send(HttpSuccess.OK, response);
+      logging.debug(`getTunnelTime response ${JSON.stringify(response)}`);
       return next();
     } catch (error) {
       logging.error(error);

@@ -48,7 +48,7 @@ export class FakeShadowsocksServer implements ShadowsocksServer {
   }
 }
 
-export class FakePrometheusClient extends PrometheusClient {
+export class FakeDataBytesTransferredPrometheusClient extends PrometheusClient {
   constructor(public bytesTransferredById: {[accessKeyId: string]: number}) {
     super('');
   }
@@ -61,6 +61,29 @@ export class FakePrometheusClient extends PrometheusClient {
         metric: {access_key: accessKeyId},
         value: [bytesTransferred, `${bytesTransferred}`],
       });
+    }
+    return queryResultData;
+  }
+}
+
+export class FakeTunnelTimePrometheusClient extends PrometheusClient {
+  constructor(public tunnelTimeByLocation: {[location: string]: {[as: number]: number}}) {
+    super('');
+  }
+
+  async query(_query: string): Promise<QueryResultData> {
+    const queryResultData = {result: []} as QueryResultData;
+    for (const location of Object.keys(this.tunnelTimeByLocation)) {
+      const tunnelTimeByAsn = this.tunnelTimeByLocation[location] || {};
+
+      for (const asn of Object.keys(tunnelTimeByAsn)) {
+        const tunnelTime = tunnelTimeByAsn[asn] || 0;
+
+        queryResultData.result.push({
+          metric: {location, asn},
+          value: [tunnelTime, `${tunnelTime}`],
+        });
+      }
     }
     return queryResultData;
   }

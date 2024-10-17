@@ -13,18 +13,34 @@
 // limitations under the License.
 
 import {PrometheusManagerMetrics} from './manager_metrics';
-import {FakePrometheusClient} from './mocks/mocks';
+import {
+  FakeDataBytesTransferredPrometheusClient,
+  FakeTunnelTimePrometheusClient,
+} from './mocks/mocks';
 
 describe('PrometheusManagerMetrics', () => {
   it('getOutboundByteTransfer', async (done) => {
     const managerMetrics = new PrometheusManagerMetrics(
-      new FakePrometheusClient({'access-key-1': 1000, 'access-key-2': 10000})
+      new FakeDataBytesTransferredPrometheusClient({'access-key-1': 1000, 'access-key-2': 10000})
     );
     const dataUsage = await managerMetrics.getOutboundByteTransfer({hours: 0});
     const bytesTransferredByUserId = dataUsage.bytesTransferredByUserId;
     expect(Object.keys(bytesTransferredByUserId).length).toEqual(2);
     expect(bytesTransferredByUserId['access-key-1']).toEqual(1000);
     expect(bytesTransferredByUserId['access-key-2']).toEqual(10000);
+    done();
+  });
+
+  it('getTunnelTimeByLocation', async (done) => {
+    const managerMetrics = new PrometheusManagerMetrics(
+      new FakeTunnelTimePrometheusClient({US: {1: 1000, 2: 1000}, CA: {3: 2000}})
+    );
+    const tunnelTime = await managerMetrics.getTunnelTimeByLocation({time_window: {seconds: 0}});
+    expect(tunnelTime).toEqual([
+      {location: 'US', asn: 1, as_org: undefined, tunnel_time: {seconds: 1000}},
+      {location: 'US', asn: 2, as_org: undefined, tunnel_time: {seconds: 1000}},
+      {location: 'CA', asn: 3, as_org: undefined, tunnel_time: {seconds: 2000}},
+    ]);
     done();
   });
 });
