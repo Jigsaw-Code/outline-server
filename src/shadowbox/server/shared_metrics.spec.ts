@@ -20,7 +20,7 @@ import {AccessKeyConfigJson} from './server_access_key';
 
 import {ServerConfigJson} from './server_config';
 import {
-  LocationUsage,
+  ReportedUsage,
   DailyFeatureMetricsReportJson,
   HourlyServerMetricsReportJson,
   MetricsCollectorClient,
@@ -78,7 +78,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       );
 
       publisher.startSharing();
-      usageMetrics.locationUsage = [
+      usageMetrics.reportedUsage = [
         {country: 'AA', inboundBytes: 11},
         {country: 'BB', inboundBytes: 11},
         {country: 'CC', inboundBytes: 22},
@@ -102,7 +102,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       });
 
       startTime = clock.nowMs;
-      usageMetrics.locationUsage = [
+      usageMetrics.reportedUsage = [
         {country: 'EE', inboundBytes: 44},
         {country: 'FF', inboundBytes: 55},
       ];
@@ -136,7 +136,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       );
       publisher.startSharing();
 
-      usageMetrics.locationUsage = [
+      usageMetrics.reportedUsage = [
         {country: 'DD', asn: 999, inboundBytes: 44},
         {country: 'EE', inboundBytes: 55},
       ];
@@ -165,7 +165,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       );
 
       publisher.startSharing();
-      usageMetrics.locationUsage = [
+      usageMetrics.reportedUsage = [
         {country: 'AA', inboundBytes: 11},
         {country: 'SY', inboundBytes: 11},
         {country: 'CC', inboundBytes: 22},
@@ -286,13 +286,13 @@ class FakeMetricsCollector implements MetricsCollectorClient {
 }
 
 class ManualUsageMetrics implements UsageMetrics {
-  locationUsage = [] as LocationUsage[];
+  reportedUsage = [] as ReportedUsage[];
 
-  getLocationUsage(): Promise<LocationUsage[]> {
-    return Promise.resolve(this.locationUsage);
+  getReportedUsage(): Promise<ReportedUsage[]> {
+    return Promise.resolve(this.reportedUsage);
   }
 
   reset() {
-    this.locationUsage = [] as LocationUsage[];
+    this.reportedUsage = [] as ReportedUsage[];
   }
 }

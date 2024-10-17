@@ -26,7 +26,7 @@ const MS_PER_HOUR = 60 * 60 * 1000;
 const MS_PER_DAY = 24 * MS_PER_HOUR;
 const SANCTIONED_COUNTRIES = new Set(['CU', 'KP', 'SY']);
 
-export interface LocationUsage {
+export interface ReportedUsage {
   country: string;
   asn?: number;
   inboundBytes: number;
@@ -72,7 +72,7 @@ export interface SharedMetricsPublisher {
 }
 
 export interface UsageMetrics {
-  getLocationUsage(): Promise<LocationUsage[]>;
+  getReportedUsage(): Promise<ReportedUsage[]>;
   reset();
 }
 
@@ -82,13 +82,13 @@ export class PrometheusUsageMetrics implements UsageMetrics {
 
   constructor(private prometheusClient: PrometheusClient) {}
 
-  async getLocationUsage(): Promise<LocationUsage[]> {
+  async getReportedUsage(): Promise<ReportedUsage[]> {
     const timeDeltaSecs = Math.round((Date.now() - this.resetTimeMs) / 1000);
     // We measure the traffic to and from the target, since that's what we are protecting.
     const result = await this.prometheusClient.query(
       `sum(increase(shadowsocks_data_bytes_per_location{dir=~"p>t|p<t"}[${timeDeltaSecs}s])) by (location, asn)`
     );
-    const usage = [] as LocationUsage[];
+    const usage = [] as ReportedUsage[];
     for (const entry of result.result) {
       const country = entry.metric['location'] || '';
       const asn = entry.metric['asn'] ? Number(entry.metric['asn']) : undefined;
@@ -166,7 +166,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
         return;
       }
       try {
-        await this.reportServerUsageMetrics(await usageMetrics.getLocationUsage());
+        await this.reportServerUsageMetrics(await usageMetrics.getReportedUsage());
         usageMetrics.reset();
       } catch (err) {
         logging.error(`Failed to report server usage metrics: ${err}`);
@@ -200,7 +200,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
     return this.serverConfig.data().metricsEnabled || false;
   }
 
-  private async reportServerUsageMetrics(locationUsageMetrics: LocationUsage[]): Promise<void> {
+  private async reportServerUsageMetrics(locationUsageMetrics: ReportedUsage[]): Promise<void> {
     const reportEndTimestampMs = this.clock.now();
 
     const userReports: HourlyUserMetricsReportJson[] = [];
