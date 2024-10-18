@@ -16,7 +16,7 @@ import {Clock} from '../infrastructure/clock';
 import * as follow_redirects from '../infrastructure/follow_redirects';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {PrometheusClient} from '../infrastructure/prometheus_scraper';
+import {PrometheusClient, QueryResultData} from '../infrastructure/prometheus_scraper';
 import * as version from './version';
 import {AccessKeyConfigJson} from './server_access_key';
 
@@ -30,6 +30,7 @@ export interface ReportedUsage {
   country: string;
   asn?: number;
   inboundBytes: number;
+  tunnelTimeSec: number;
 }
 
 // JSON format for the published report.
@@ -47,6 +48,7 @@ export interface HourlyUserMetricsReportJson {
   countries: string[];
   asn?: number;
   bytesTransferred: number;
+  tunnelTimeSec: number;
 }
 
 // JSON format for the feature metrics report.
@@ -84,18 +86,46 @@ export class PrometheusUsageMetrics implements UsageMetrics {
 
   async getReportedUsage(): Promise<ReportedUsage[]> {
     const timeDeltaSecs = Math.round((Date.now() - this.resetTimeMs) / 1000);
-    // We measure the traffic to and from the target, since that's what we are protecting.
-    const result = await this.prometheusClient.query(
+
+    const usage = new Map<string, ReportedUsage>();
+    const processResults = (
+      data: QueryResultData,
+      setValue: (entry: ReportedUsage, value: string) => void
+    ) => {
+      for (const result of data.result) {
+        const country = result.metric['location'] || '';
+        const asn = result.metric['asn'] ? Number(result.metric['asn']) : undefined;
+        const key = `${country}-${asn}`;
+        const entry = usage.get(key) || {
+          country,
+          asn,
+          inboundBytes: 0,
+          tunnelTimeSec: 0,
+        };
+        setValue(entry, result.value[1]);
+        if (!usage.has(key)) {
+          usage.set(key, entry);
+        }
+      }
+    };
+
+    // Query and process inbound data bytes by country+ASN.
+    const dataBytesQueryResponse = await this.prometheusClient.query(
       `sum(increase(shadowsocks_data_bytes_per_location{dir=~"p>t|p<t"}[${timeDeltaSecs}s])) by (location, asn)`
     );
-    const usage = [] as ReportedUsage[];
-    for (const entry of result.result) {
-      const country = entry.metric['location'] || '';
-      const asn = entry.metric['asn'] ? Number(entry.metric['asn']) : undefined;
-      const inboundBytes = Math.round(parseFloat(entry.value[1]));
-      usage.push({country, inboundBytes, asn});
-    }
-    return usage;
+    processResults(dataBytesQueryResponse, (entry, value) => {
+      entry.inboundBytes = Math.round(parseFloat(value));
+    });
+
+    // Query and process tunneltime by country+ASN.
+    const tunnelTimeQueryResponse = await this.prometheusClient.query(
+      `sum(increase(shadowsocks_tunnel_time_seconds_per_location[${timeDeltaSecs}s])) by (location, asn)`
+    );
+    processResults(tunnelTimeQueryResponse, (entry, value) => {
+      entry.tunnelTimeSec = Math.round(parseFloat(value));
+    });
+
+    return Array.from(usage.values());
   }
 
   reset() {
@@ -205,7 +235,7 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
 
     const userReports: HourlyUserMetricsReportJson[] = [];
     for (const locationUsage of locationUsageMetrics) {
-      if (locationUsage.inboundBytes === 0) {
+      if (locationUsage.inboundBytes === 0 && locationUsage.tunnelTimeSec === 0) {
         continue;
       }
       if (isSanctionedCountry(locationUsage.country)) {
@@ -215,8 +245,9 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       // It's used to differentiate the row from the legacy key usage rows.
       const country = locationUsage.country || 'ZZ';
       const report: HourlyUserMetricsReportJson = {
-        bytesTransferred: locationUsage.inboundBytes,
         countries: [country],
+        bytesTransferred: locationUsage.inboundBytes,
+        tunnelTimeSec: locationUsage.tunnelTimeSec,
       };
       if (locationUsage.asn) {
         report.asn = locationUsage.asn;
