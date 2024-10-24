@@ -15,21 +15,19 @@
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {DataUsageByUser, DataUsageTimeframe} from '../model/metrics';
 
-export type TunnelTimeDimension = 'access_key' | 'country' | 'asn';
+interface TunnelTimeDuration {
+  seconds: number;
+}
 
 interface TunnelTimeRequest {
-  time_window: {
-    seconds: number;
-  };
+  time_window: TunnelTimeDuration;
 }
 
 interface TunnelTimeResponse {
   location?: string;
   asn?: number;
   as_org?: string;
-  tunnel_time: {
-    seconds: number;
-  };
+  tunnel_time: TunnelTimeDuration;
 }
 
 export interface ManagerMetrics {
