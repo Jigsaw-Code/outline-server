@@ -157,7 +157,10 @@ export function bindService(
   );
 
   apiServer.get(`${apiPrefix}/metrics/transfer`, service.getDataUsage.bind(service));
-  apiServer.get(`${apiPrefix}/metrics/tunnel-time`, service.getTunnelTimeByLocation.bind(service));
+  apiServer.get(
+    `${apiPrefix}/metrics/tunnel-time-location`,
+    service.getTunnelTimeByLocation.bind(service)
+  );
   apiServer.get(`${apiPrefix}/metrics/enabled`, service.getShareMetrics.bind(service));
   apiServer.put(`${apiPrefix}/metrics/enabled`, service.setShareMetrics.bind(service));
 

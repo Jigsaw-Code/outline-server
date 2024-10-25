@@ -418,6 +418,35 @@ paths:
               examples:
                 '0':
                   value: '{"bytesTransferredByUserId":{"1":1008040941,"2":5958113497,"3":752221577}}'
+  /metrics/tunnel-time-location
+    get:
+      description: Returns the tunnel time per location
+      tags:
+        - Tunnel time
+      responses:
+        '200':
+          description: The tunnel time per location
+          content: 
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    location:
+                      type: string
+                    asn: 
+                      type: number
+                    as_org:
+                      type: string
+                    tunnel_time:
+                      type: object
+                      properties:
+                        seconds:
+                          type: number
+              examples:
+                '0':
+                  value: '[{"location":"US","asn":7922,"as_org":"Comcast Cable Communications, LLC","tunnel_time":{"seconds":2523432}]'
   /metrics/enabled:
     get:
       description: Returns whether metrics is being shared
