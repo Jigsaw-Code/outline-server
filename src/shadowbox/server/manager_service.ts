@@ -75,10 +75,18 @@ interface RequestParams {
   //   method: string
   [param: string]: unknown;
 }
+
+interface RequestQuery {
+  // Supported parameters:
+  //  since: string
+  [param: string]: unknown;
+}
+
 // Simplified request and response type interfaces containing only the
 // properties we actually use, to make testing easier.
 interface RequestType {
   params: RequestParams;
+  query?: RequestQuery;
 }
 interface ResponseType {
   send(code: number, data?: {}): void;
@@ -122,6 +130,7 @@ export function bindService(
 
   apiServer.put(`${apiPrefix}/name`, service.renameServer.bind(service));
   apiServer.get(`${apiPrefix}/server`, service.getServer.bind(service));
+  apiServer.get(`${apiPrefix}/server/metrics`, service.getServerMetrics.bind(service));
   apiServer.put(
     `${apiPrefix}/server/access-key-data-limit`,
     service.setDefaultDataLimit.bind(service)
@@ -592,6 +601,34 @@ export class ShadowsocksManagerService {
       const response = await this.managerMetrics.getOutboundByteTransfer({hours: 30 * 24});
       res.send(HttpSuccess.OK, response);
       logging.debug(`getDataUsage response ${JSON.stringify(response)}`);
+      return next();
+    } catch (error) {
+      logging.error(error);
+      return next(new restifyErrors.InternalServerError());
+    }
+  }
+
+  async getServerMetrics(req: RequestType, res: ResponseType, next: restify.Next) {
+    try {
+      logging.debug(`getServerMetrics request ${JSON.stringify(req.params)}`);
+
+      if (!req.query?.since) {
+        throw new TypeError("Missing 'since' parameter. Must be an ISO timestamp");
+      }
+
+      const timestamp = new Date(req.query.since as string);
+      const isIsoTimestamp =
+        !isNaN(timestamp.getTime()) && timestamp.toISOString() === req.query.since;
+
+      if (!isIsoTimestamp) {
+        throw new TypeError(`'since' parameter must be an ISO timestamp. Got ${req.query.since}`);
+      }
+
+      const hours = Math.floor(new Date().getTime() - timestamp.getTime() / (1000 * 60 * 60));
+
+      const response = await this.managerMetrics.getServerMetrics({hours});
+      res.send(HttpSuccess.OK, response);
+      logging.debug(`getServerMetrics response ${JSON.stringify(response)}`);
       return next();
     } catch (error) {
       logging.error(error);

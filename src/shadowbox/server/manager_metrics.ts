@@ -15,8 +15,36 @@
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {DataUsageByUser, DataUsageTimeframe} from '../model/metrics';
 
+interface ServerMetricsTimeframe {
+  hours: number;
+}
+
+interface ServerMetrics {
+  server: {
+    location: string;
+    asn: number;
+    asOrg: string;
+    tunnelTime: {
+      seconds: number;
+    };
+    dataTransferred: {
+      bytes: number;
+    };
+  }[];
+  accessKeys: {
+    accessKeyId: number;
+    tunnelTime: {
+      seconds: number;
+    };
+    dataTransferred: {
+      bytes: number;
+    };
+  }[];
+}
+
 export interface ManagerMetrics {
   getOutboundByteTransfer(timeframe: DataUsageTimeframe): Promise<DataUsageByUser>;
+  getServerMetrics(timeframe: ServerMetricsTimeframe): Promise<ServerMetrics>;
 }
 
 // Reads manager metrics from a Prometheus instance.
@@ -39,5 +67,61 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       usage[entry.metric['access_key'] || ''] = bytes;
     }
     return {bytesTransferredByUserId: usage};
+  }
+
+  async getServerMetrics({hours}: ServerMetricsTimeframe): Promise<ServerMetrics> {
+    const dataTransferredByLocation = await this.prometheusClient.query(
+      `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t"}[${hours}h])) by (location, asn, asorg)`
+    );
+    const tunnelTimeByLocation = await this.prometheusClient.query(
+      `sum(increase(shadowsocks_tunnel_time_seconds_per_location[${hours}h])) by (location, asn, asorg)`
+    );
+    const dataTransferredByAccessKey = await this.prometheusClient.query(
+      `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t"}[${hours}h])) by (access_key)`
+    );
+    const tunnelTimeByAccessKey = await this.prometheusClient.query(
+      `sum(increase(shadowsocks_tunnel_time_seconds[${hours}h])) by (access_key)`
+    );
+
+    const server = [];
+    for (const entry of dataTransferredByLocation.result) {
+      server.push({
+        location: entry.metric['location'],
+        asn: parseInt(entry.metric['asn']),
+        asOrg: entry.metric['asorg'],
+        tunnelTime: {
+          seconds: tunnelTimeByLocation.result.find((entry) => {
+            return (
+              entry.metric['location'] === entry.metric['location'] &&
+              entry.metric['asn'] === entry.metric['asn'] &&
+              entry.metric['asorg'] === entry.metric['asorg']
+            );
+          }),
+        },
+        dataTransferred: {
+          bytes: Math.round(parseFloat(entry.value[1])),
+        },
+      });
+    }
+
+    const accessKeys = [];
+    for (const entry of dataTransferredByAccessKey.result) {
+      accessKeys.push({
+        accessKeyId: parseInt(entry.metric['access_key']),
+        tunnelTime: {
+          seconds: tunnelTimeByAccessKey.result.find((entry) => {
+            return entry.metric['access_key'] === entry.metric['access_key'];
+          }),
+        },
+        dataTransferred: {
+          bytes: Math.round(parseFloat(entry.value[1])),
+        },
+      });
+    }
+
+    return {
+      server,
+      accessKeys,
+    };
   }
 }
