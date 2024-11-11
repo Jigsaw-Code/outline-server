@@ -20,34 +20,22 @@ readonly VERSION='v0.7.1'
 DOWNLOAD_DIR="$(dirname "$0")/download"
 readonly DOWNLOAD_DIR
 
-# `sha256sum` is part of GNU coreutils but is not available in macOS.
-# macOS does have `shasum` (a Perl script designed to match the behavior
-# of `sha256sum`) in the default install.
-function sha256wrapper() {
-  if command -v sha256sum &> /dev/null; then
-    sha256sum "$@"
-  else
-    shasum -a 256 "$@"
-  fi
-}
-
 declare file="shellcheck-${VERSION}" # Name of the file to download
 declare cmd="${DOWNLOAD_DIR}/shellcheck-${VERSION}" # Path to the executable
+declare sha256='' # SHA256 checksum
 case "$(uname -s)" in
-  Linux) file+='.linux.x86_64.tar.xz'; cmd+='/shellcheck';;
-  Darwin) file+='.darwin.x86_64.tar.xz'; cmd+='/shellcheck';;
-  *) file+='.zip'; cmd+='.exe';; # Presume Windows/Cygwin
+  Linux) file+='.linux.x86_64.tar.xz'; cmd+='/shellcheck'; sha256='64f17152d96d7ec261ad3086ed42d18232fcb65148b44571b564d688269d36c8';;
+  Darwin) file+='.darwin.x86_64.tar.xz'; cmd+='/shellcheck'; sha256='b080c3b659f7286e27004aa33759664d91e15ef2498ac709a452445d47e3ac23' ;;
+  *) file+='.zip'; cmd+='.exe'; sha256='1763f8f4a639d39e341798c7787d360ed79c3d68a1cdbad0549c9c0767a75e98';; # Presume Windows/Cygwin
 esac
 readonly file cmd
 
 if [[ ! -s "${cmd}" ]]; then
   mkdir -p "${DOWNLOAD_DIR}"
 
-  readonly url="https://github.com/koalaman/shellcheck/releases/download/${VERSION}/${file}"
-  curl --location --fail --output "${DOWNLOAD_DIR}/${file}" "${url}"
+  node "$(dirname "$0")/../../src/build/download_file.mjs" --url="https://github.com/koalaman/shellcheck/releases/download/${VERSION}/${file}" --out="${DOWNLOAD_DIR}/${file}" --sha256="${sha256}"
 
   pushd "${DOWNLOAD_DIR}"
-  sha256wrapper --check --ignore-missing ../hashes.sha256
   if [[ "${file}" == *'.tar.xz' ]]; then
     tar xf "${file}"
   else

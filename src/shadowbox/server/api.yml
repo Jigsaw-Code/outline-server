@@ -1,3 +1,17 @@
+# Copyright 2024 The Outline Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 openapi: 3.0.1
 info:
   title: Outline Server Management
@@ -8,6 +22,8 @@ tags:
     description: Server-level functions
   - name: Access Key
     description: Access key functions
+  - name: Experimental
+    description: Experimental functions. These are unstable and may disappear. Use with care.
 servers:
   - url: https://myserver/SecretPath
     description: Example URL. Change to your own server.
@@ -37,7 +53,7 @@ paths:
         - Server
       description: Changes the hostname for access keys.  Must be a valid hostname or IP address.  If it's a hostname, DNS must be set up independently of this API.
       requestBody:
-        required: true 
+        required: true
         content:
           application/json:
             schema:
@@ -47,11 +63,11 @@ paths:
                   type: string
             examples:
               'hostname':
-                value: '{"hostname": www.example.org}'
+                value: '{"hostname": "www.example.org"}'
               'IP address':
                 value: '{"hostname": "127.0.0.1"}'
       responses:
-        '204': 
+        '204':
           description: The hostname was successfully changed.
         '400':
           description: An invalid hostname or IP address was provided.
@@ -82,7 +98,7 @@ paths:
           description: The requested port wasn't an integer from 1 through 65535, or the request had no port parameter.
         '409':
           description: The requested port was already in use by another service.
-          
+
   /server/access-key-data-limit:
     put:
       description: Sets a data transfer limit for all access keys
@@ -146,11 +162,21 @@ paths:
             schema:
               type: object
               properties:
+                name:
+                  type: string
                 method:
                   type: string
+                password:
+                  type: string
+                port:
+                  type: integer
+                limit:
+                  $ref: "#/components/schemas/DataLimit"
             examples:
-              '0':
+              'No params specified':
                 value: '{"method":"aes-192-gcm"}'
+              'Provide params':
+                value: '{"method":"aes-192-gcm","name":"First","password":"8iu8V8EeoFVpwQvQeS9wiD","port": 12345,"limit":{"bytes":10000}}'
       responses:
         '201':
           description: The newly created access key
@@ -189,6 +215,84 @@ paths:
                       {"id":"1","name":"First","password":"xXxXxX","port":4410,"method":"chacha20-ietf-poly1305","accessUrl":"ss://ASDFSADJFKAS=@0.0.0.0:4410/?outline=1"},
                       {"id":"2","name":"SecondWithCustomDataLimit","password":"XxXxXx","port":25424,"method":"chacha20-ietf-poly1305","dataLimit":{"bytes":8589934592},"accessUrl":"ss://ASDFHAKSDFSDAKFJ@0.0.0.0:25424/?outline=1"}]}
   /access-keys/{id}:
+    put:
+      description: Creates a new access key with a specific identifer
+      tags:
+        - Access Key
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id for which to create an access key
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                method:
+                  type: string
+                password:
+                  type: string
+                port:
+                  type: integer
+                limit:
+                  $ref: "#/components/schemas/DataLimit"
+            examples:
+              '0':
+                value: '{"method":"aes-192-gcm","name":"First","password":"8iu8V8EeoFVpwQvQeS9wiD","port": 12345,"limit":{"bytes":10000}}'
+      responses:
+        '201':
+          description: The newly created access key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessKey"
+              examples:
+                '0':
+                  value: >-
+                    {"id":"my-identifier","name":"First","password":"XxXxXx","port":9795,"method":"chacha20-ietf-poly1305","accessUrl":"ss://SADFJSKADFJAKSD@0.0.0.0:9795/?outline=1"}
+    get:
+      description: Get an access key
+      tags:
+        - Access Key
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id to get the access key
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The access key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessKey"
+              examples:
+                '0':
+                  value: '{"id":"0","name":"Admin","password":"XxXxXx","port":18162,"method":"chacha20-ietf-poly1305","accessUrl":"ss://SADFJSKADFJAKSD@0.0.0.0:18162/?outline=1"}'
+        '404':
+          description: Access key inexistent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"NotFoundError","message":"No access key found"}
     delete:
       description: Deletes an access key
       tags:
@@ -242,7 +346,7 @@ paths:
                   type: string
             examples:
               '0':
-                value: '{name: "New Key Name"}'
+                value: '{"name": "New Key Name"}'
       responses:
         '204':
           description: Access key renamed successfully
@@ -360,6 +464,7 @@ paths:
       tags:
         - Access Key
         - Limit
+        - Experimental
       requestBody:
         required: true
         content:
@@ -380,10 +485,11 @@ paths:
       tags:
         - Access Key
         - Limit
+        - Experimental
       responses:
         '204':
           description: Access key limit deleted successfully.
- 
+
 components:
   schemas:
     Server:

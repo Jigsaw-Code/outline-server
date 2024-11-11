@@ -20,9 +20,10 @@ The metrics server supports two URL paths:
     startUtcMs: number,
     endUtcMs: number,
     userReports: [{
-        userId: string,
         countries: string[],
+        asn: number,
         bytesTransferred: number,
+        tunnelTimeSec: number,
     }]
   }
   ```
@@ -48,7 +49,7 @@ The metrics server supports two URL paths:
 ## Build
 
 ```sh
-npm run action metrics_server/build
+task metrics_server:build
 ```
 
 ## Run
@@ -56,7 +57,7 @@ npm run action metrics_server/build
 Run a local development metrics server:
 
 ```sh
-npm run action metrics_server/start
+task metrics_server:start
 ```
 
 ## Deploy
@@ -67,20 +68,21 @@ npm run action metrics_server/start
   ```
 - To deploy to dev:
   ```sh
-  npm run action metrics_server/deploy_dev
+  task metrics_server:deploy:dev
   ```
 - To deploy to prod:
   ```sh
-  npm run action metrics_server/deploy_prod
+  task metrics_server:deploy:prod
   ```
+  Once deployed, you will need to manually migrate all traffic to the new version via the Google Cloud console.
 
 ## Test
 
 - Unit test
   ```sh
-  npm run action metrics_server/test
+  task metrics_server:test
   ```
 - Integration test
   ```sh
-  npm run action metrics_server/test_integration
+  task metrics_server:integration_test
   ```

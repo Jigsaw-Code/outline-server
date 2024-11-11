@@ -59,7 +59,7 @@ export class FakePrometheusClient extends PrometheusClient {
       const bytesTransferred = this.bytesTransferredById[accessKeyId] || 0;
       queryResultData.result.push({
         metric: {access_key: accessKeyId},
-        value: [bytesTransferred, `${bytesTransferred}`],
+        value: [Date.now() / 1000, `${bytesTransferred}`],
       });
     }
     return queryResultData;

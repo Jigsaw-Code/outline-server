@@ -22,9 +22,16 @@ export interface HourlyConnectionMetricsReport {
 }
 
 export interface HourlyUserConnectionMetricsReport {
-  userId: string;
-  countries: string[];
+  userId?: string;
+  countries?: string[];
+  asn?: number;
   bytesTransferred: number;
+  tunnelTimeSec?: number;
+}
+
+export interface HourlyUserConnectionMetricsReportByLocation
+  extends Omit<HourlyUserConnectionMetricsReport, 'countries'> {
+  countries: string[];
 }
 
 export interface DailyFeatureMetricsReport {

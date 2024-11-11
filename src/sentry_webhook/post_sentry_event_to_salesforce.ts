@@ -12,21 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as sentry from '@sentry/types';
 import * as https from 'https';
+import {SentryEvent} from './event';
 
 // Defines the Salesforce form field names.
 interface SalesforceFormFields {
   orgId: string;
   recordType: string;
   email: string;
+  subject: string;
   description: string;
-  category: string;
+  issue: string;
+  accessKeySource: string;
   cloudProvider: string;
   sentryEventUrl: string;
   os: string;
   version: string;
-  type: string;
+  build: string;
+  role: string;
+  isUpdatedForm: string;
+  outreachConsent: string;
 }
 
 // Defines the Salesforce form values.
@@ -35,35 +40,45 @@ interface SalesforceFormValues {
   recordType: string;
 }
 
-const SALESFORCE_DEV_HOST = 'google-jigsaw--uat.my.salesforce.com';
+const SALESFORCE_DEV_HOST = 'google-jigsaw--jigsawuat.sandbox.my.salesforce.com';
 const SALESFORCE_PROD_HOST = 'webto.salesforce.com';
 const SALESFORCE_PATH = '/servlet/servlet.WebToCase';
 const SALESFORCE_FORM_FIELDS_DEV: SalesforceFormFields = {
   orgId: 'orgid',
   recordType: 'recordType',
   email: 'email',
+  subject: 'subject',
   description: 'description',
-  category: '00N3F000002Rqho',
+  issue: '00N3F000002Rqho',
+  accessKeySource: '00N75000000wYiY',
   cloudProvider: '00N3F000002Rqhs',
   sentryEventUrl: '00N3F000002Rqhq',
   os: '00N3F000002cLcN',
   version: '00N3F000002cLcI',
-  type: 'type',
+  build: '00N75000000wmdC',
+  role: '00N75000000wYiX',
+  isUpdatedForm: '00N75000000wmd7',
+  outreachConsent: '',
 };
 const SALESFORCE_FORM_FIELDS_PROD: SalesforceFormFields = {
   orgId: 'orgid',
   recordType: 'recordType',
   email: 'email',
+  subject: 'subject',
   description: 'description',
-  category: '00N0b00000BqOA2',
-  cloudProvider: '00N0b00000BqOA7',
+  issue: '00N5a00000DXy19',
+  accessKeySource: '00N5a00000DXxms',
+  cloudProvider: '00N5a00000DXxmn',
   sentryEventUrl: '00N0b00000BqOA4',
-  os: '00N0b00000BqOfW',
-  version: '00N0b00000BqOfR',
-  type: 'type',
+  os: '00N5a00000DXxmo',
+  version: '00N5a00000DXxmq',
+  build: '00N5a00000DXy64',
+  role: '00N5a00000DXxmr',
+  isUpdatedForm: '00N5a00000DXy5a',
+  outreachConsent: '00N5a00000DbyEw',
 };
 const SALESFORCE_FORM_VALUES_DEV: SalesforceFormValues = {
-  orgId: '00D3F000000DDDH',
+  orgId: '00D750000004dFg',
   recordType: '0123F000000MWTS',
 };
 const SALESFORCE_FORM_VALUES_PROD: SalesforceFormValues = {
@@ -71,18 +86,31 @@ const SALESFORCE_FORM_VALUES_PROD: SalesforceFormValues = {
   recordType: '0120b0000006e8i',
 };
 
+const ISSUE_TYPE_TO_PICKLIST_VALUE: {[key: string]: string} = {
+  'cannot-add-server': 'I am having trouble adding a server using my access key',
+  connection: 'I am having trouble connecting to my Outline VPN server',
+  general: 'General feedback & suggestions',
+  managing: 'I need assistance managing my Outline VPN server or helping others connect to it',
+  'no-server': 'I need an access key',
+  performance: 'My internet access is slow while connected to my Outline VPN server',
+};
+
+const CLOUD_PROVIDER_TO_PICKLIST_VALUE: {[key: string]: string} = {
+  aws: 'Amazon Web Services',
+  digitalocean: 'DigitalOcean',
+  gcloud: 'Google Cloud',
+  other: 'Other',
+};
+
 // Returns whether a Sentry event should be sent to Salesforce by checking that it contains an
 // email address.
-export function shouldPostEventToSalesforce(event: sentry.SentryEvent): boolean {
-  return !!event.user && !!event.user.email;
+export function shouldPostEventToSalesforce(event: SentryEvent): boolean {
+  return !!event.user && !!event.user.email && event.user.email !== '[undefined]';
 }
 
 // Posts a Sentry event to Salesforce using predefined form data. Assumes
 // `shouldPostEventToSalesforce` has returned true for `event`.
-export function postSentryEventToSalesforce(
-  event: sentry.SentryEvent,
-  project: string
-): Promise<void> {
+export function postSentryEventToSalesforce(event: SentryEvent, project: string): Promise<void> {
   return new Promise((resolve, reject) => {
     // Sentry development projects are marked with 'dev', i.e. outline-client-dev.
     const isProd = project.indexOf('-dev') === -1;
@@ -111,6 +139,7 @@ export function postSentryEventToSalesforce(
       },
       (res) => {
         if (res.statusCode === 200) {
+          console.debug('Salesforce `is-processed`:', res.headers['is-processed']);
           resolve();
         } else {
           reject(new Error(`Failed to post form data, response status: ${res.statusCode}`));
@@ -129,7 +158,7 @@ export function postSentryEventToSalesforce(
 function getSalesforceFormData(
   formFields: SalesforceFormFields,
   formValues: SalesforceFormValues,
-  event: sentry.SentryEvent,
+  event: SentryEvent,
   email: string,
   isClient: boolean,
   project: string
@@ -140,36 +169,86 @@ function getSalesforceFormData(
   form.push(encodeFormData(formFields.email, email));
   form.push(encodeFormData(formFields.sentryEventUrl, getSentryEventUrl(project, event.event_id)));
   form.push(encodeFormData(formFields.description, event.message));
-  form.push(encodeFormData(formFields.type, isClient ? 'Outline client' : 'Outline manager'));
+  form.push(
+    encodeFormData(
+      formFields.role,
+      isClient
+        ? 'I am using the Outline client application on my mobile or desktop device'
+        : 'I am an Outline server manager'
+    )
+  );
   if (event.tags) {
-    const tags = getTagsMap(event.tags);
-    form.push(encodeFormData(formFields.category, tags.get('category')));
-    form.push(encodeFormData(formFields.os, tags.get('os.name')));
+    const tags = new Map<string, string>(event.tags);
+    form.push(encodeFormData(formFields.issue, toIssuePicklistValue(tags.get('category'))));
+    form.push(encodeFormData(formFields.subject, tags.get('subject')));
+    form.push(encodeFormData(formFields.os, toOSPicklistValue(tags.get('os.name'))));
     form.push(encodeFormData(formFields.version, tags.get('sentry:release')));
-    if (!isClient) {
-      form.push(encodeFormData(formFields.cloudProvider, tags.get('cloudProvider')));
+    form.push(encodeFormData(formFields.build, tags.get('build.number')));
+    const outreachConsent = (tags.get('outreachConsent') ?? 'False').toLowerCase();
+    if (outreachConsent === 'true') {
+      form.push(encodeFormData(formFields.outreachConsent, outreachConsent));
+    }
+    const formVersion = Number(tags.get('formVersion') ?? 1);
+    if (formVersion === 2) {
+      form.push(encodeFormData(formFields.isUpdatedForm, 'true'));
+    }
+    if (isClient) {
+      form.push(encodeFormData(formFields.accessKeySource, tags.get('accessKeySource')));
+    } else {
+      form.push(
+        encodeFormData(
+          formFields.cloudProvider,
+          toCloudProviderPicklistValue(tags.get('cloudProvider'))
+        )
+      );
     }
   }
   return form.join('&');
 }
 
-function encodeFormData(field: string, value?: string) {
-  return `${encodeURIComponent(field)}=${encodeURIComponent(value || '')}`;
+// Returns a picklist value that is allowed by SalesForce for the OS record.
+function toOSPicklistValue(value: string | undefined): string | undefined {
+  if (!value) {
+    console.warn('No OS found');
+    return undefined;
+  }
+
+  const normalizedValue = value.toLowerCase();
+  if (normalizedValue.includes('android')) {
+    return 'Android';
+  }
+  if (normalizedValue.includes('ios')) {
+    return 'iOS';
+  }
+  if (normalizedValue.includes('windows')) {
+    return 'Windows';
+  }
+  if (normalizedValue.includes('mac')) {
+    return 'MacOS';
+  }
+  return 'Linux';
 }
 
-// Although SentryEvent.tags is declared as an index signature object, it is actually an array of
-// arrays i.e. [['key0': 'value0'], ['key1': 'value1']]. Converts the tags to a Map of strings.
-function getTagsMap(tags: {[key: string]: string}) {
-  const tagsMap = new Map<string, string>();
-  for (const i of Object.keys(tags)) {
-    try {
-      const tagEntry = tags[i];
-      tagsMap.set(tagEntry[0], tagEntry[1]);
-    } catch (e) {
-      console.error('Failed to process tag entry');
-    }
+// Returns a picklist value that is allowed by SalesForce for the issue record.
+function toIssuePicklistValue(value: string | undefined): string | undefined {
+  if (!value) {
+    console.warn('No issue type found');
+    return undefined;
   }
-  return tagsMap;
+  return ISSUE_TYPE_TO_PICKLIST_VALUE[value];
+}
+
+// Returns a picklist value that is allowed by SalesForce for the cloud provider record.
+function toCloudProviderPicklistValue(value: string | undefined): string | undefined {
+  if (!value) {
+    console.warn('No cloud provider found');
+    return undefined;
+  }
+  return CLOUD_PROVIDER_TO_PICKLIST_VALUE[value];
+}
+
+function encodeFormData(field: string, value?: string) {
+  return `${encodeURIComponent(field)}=${encodeURIComponent(value || '')}`;
 }
 
 function getSentryEventUrl(project: string, eventId?: string) {

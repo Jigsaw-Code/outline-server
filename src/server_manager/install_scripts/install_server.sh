@@ -58,8 +58,8 @@ readonly SENTRY_LOG_FILE=${SENTRY_LOG_FILE:-}
 # - STDERR is only used in the event of a fatal error
 # - Detailed logs are recorded to this FULL_LOG, which is preserved if an error occurred.
 # - The most recent error is stored in LAST_ERROR, which is never preserved.
-FULL_LOG="$(mktemp -t outline_logXXX)"
-LAST_ERROR="$(mktemp -t outline_last_errorXXX)"
+FULL_LOG="$(mktemp -t outline_logXXXXXXXXXX)"
+LAST_ERROR="$(mktemp -t outline_last_errorXXXXXXXXXX)"
 readonly FULL_LOG LAST_ERROR
 
 function log_command() {
@@ -172,7 +172,7 @@ function start_docker() {
 }
 
 function docker_container_exists() {
-  docker ps | grep --quiet "$1"
+  docker ps -a --format '{{.Names}}'| grep --quiet "^$1$"
 }
 
 function remove_shadowbox_container() {
@@ -293,30 +293,67 @@ function write_config() {
   if (( FLAGS_KEYS_PORT != 0 )); then
     config+=("\"portForNewAccessKeys\": ${FLAGS_KEYS_PORT}")
   fi
-  # printf is needed to escape the hostname.
-  config+=("$(printf '"hostname": "%q"' "${PUBLIC_HOSTNAME}")")
+  if [[ -n "${SB_DEFAULT_SERVER_NAME:-}" ]]; then
+    config+=("\"name\": \"$(escape_json_string "${SB_DEFAULT_SERVER_NAME}")\"")
+  fi
+  config+=("\"hostname\": \"$(escape_json_string "${PUBLIC_HOSTNAME}")\"")
   echo "{$(join , "${config[@]}")}" > "${STATE_DIR}/shadowbox_server_config.json"
 }
 
 function start_shadowbox() {
   # TODO(fortuna): Write API_PORT to config file,
   # rather than pass in the environment.
-  local -ar docker_shadowbox_flags=(
-    --name "${CONTAINER_NAME}" --restart always --net host
-    --label 'com.centurylinklabs.watchtower.enable=true'
-    --label 'com.centurylinklabs.watchtower.scope=outline'
-    -v "${STATE_DIR}:${STATE_DIR}"
-    -e "SB_STATE_DIR=${STATE_DIR}"
-    -e "SB_API_PORT=${API_PORT}"
-    -e "SB_API_PREFIX=${SB_API_PREFIX}"
-    -e "SB_CERTIFICATE_FILE=${SB_CERTIFICATE_FILE}"
-    -e "SB_PRIVATE_KEY_FILE=${SB_PRIVATE_KEY_FILE}"
-    -e "SB_METRICS_URL=${SB_METRICS_URL:-}"
-    -e "SB_DEFAULT_SERVER_NAME=${SB_DEFAULT_SERVER_NAME:-}"
-  )
-  # By itself, local messes up the return code.
+  local -r START_SCRIPT="${STATE_DIR}/start_container.sh"
+  cat <<-EOF > "${START_SCRIPT}"
+# This script starts the Outline server container ("Shadowbox").
+# If you need to customize how the server is run, you can edit this script, then restart with:
+#
+#     "${START_SCRIPT}"
+
+set -eu
+
+docker stop "${CONTAINER_NAME}" 2> /dev/null || true
+docker rm -f "${CONTAINER_NAME}" 2> /dev/null || true
+
+docker_command=(
+  docker
+  run
+  -d
+  --name "${CONTAINER_NAME}" --restart always --net host
+
+  # Used by Watchtower to know which containers to monitor.
+  --label 'com.centurylinklabs.watchtower.enable=true'
+  --label 'com.centurylinklabs.watchtower.scope=outline'
+
+  # Use log rotation. See https://docs.docker.com/config/containers/logging/configure/.
+  --log-driver local
+
+  # The state that is persisted across restarts.
+  -v "${STATE_DIR}:${STATE_DIR}"
+
+  # Where the container keeps its persistent state.
+  -e "SB_STATE_DIR=${STATE_DIR}"
+
+  # Port number and path prefix used by the server manager API.
+  -e "SB_API_PORT=${API_PORT}"
+  -e "SB_API_PREFIX=${SB_API_PREFIX}"
+
+  # Location of the API TLS certificate and key.
+  -e "SB_CERTIFICATE_FILE=${SB_CERTIFICATE_FILE}"
+  -e "SB_PRIVATE_KEY_FILE=${SB_PRIVATE_KEY_FILE}"
+
+  # Where to report metrics to, if opted-in.
+  -e "SB_METRICS_URL=${SB_METRICS_URL:-}"
+
+  # The Outline server image to run.
+  "${SB_IMAGE}"
+)
+"\${docker_command[@]}"
+EOF
+  chmod +x "${START_SCRIPT}"
+  # Declare then assign. Assigning on declaration messes up the return code.
   local STDERR_OUTPUT
-  STDERR_OUTPUT="$(docker run -d "${docker_shadowbox_flags[@]}" "${SB_IMAGE}" 2>&1 >/dev/null)" && return
+  STDERR_OUTPUT="$({ "${START_SCRIPT}" >/dev/null; } 2>&1)" && return
   readonly STDERR_OUTPUT
   log_error "FAILED"
   if docker_container_exists "${CONTAINER_NAME}"; then
@@ -333,7 +370,7 @@ function start_watchtower() {
   # Set watchtower to refresh every 30 seconds if a custom SB_IMAGE is used (for
   # testing).  Otherwise refresh every hour.
   local -ir WATCHTOWER_REFRESH_SECONDS="${WATCHTOWER_REFRESH_SECONDS:-3600}"
-  local -ar docker_watchtower_flags=(--name watchtower --restart always \
+  local -ar docker_watchtower_flags=(--name watchtower --log-driver local --restart always \
       --label 'com.centurylinklabs.watchtower.enable=true' \
       --label 'com.centurylinklabs.watchtower.scope=outline' \
       -v /var/run/docker.sock:/var/run/docker.sock)
@@ -509,6 +546,30 @@ END_OF_SERVER_OUTPUT
 
 function is_valid_port() {
   (( 0 < "$1" && "$1" <= 65535 ))
+}
+
+function escape_json_string() {
+  local input=$1
+  for ((i = 0; i < ${#input}; i++)); do
+    local char="${input:i:1}"
+    local escaped="${char}"
+    case "${char}" in
+      $'"' ) escaped="\\\"";;
+      $'\\') escaped="\\\\";;
+      *)
+        if [[ "${char}" < $'\x20' ]]; then
+          case "${char}" in
+            $'\b') escaped="\\b";;
+            $'\f') escaped="\\f";;
+            $'\n') escaped="\\n";;
+            $'\r') escaped="\\r";;
+            $'\t') escaped="\\t";;
+            *) escaped=$(printf "\u%04X" "'${char}")
+          esac
+        fi;;
+    esac
+    echo -n "${escaped}"
+  done
 }
 
 function parse_flags() {

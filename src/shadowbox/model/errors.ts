@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {AccessKeyId} from './access_key';
+
 // TODO(fortuna): Reuse CustomError from server_manager.
 class OutlineError extends Error {
   constructor(message: string) {
@@ -22,20 +24,19 @@ class OutlineError extends Error {
 }
 
 export class InvalidPortNumber extends OutlineError {
-  // Since this is the error when a non-numeric value is passed to `port`, it takes type `string`.
-  constructor(public port: string) {
-    super(port);
+  constructor(public port: number) {
+    super(`Port ${port} is invalid: must be an integer in range [0, 65353]`);
   }
 }
 
 export class PortUnavailable extends OutlineError {
   constructor(public port: number) {
-    super(port.toString());
+    super(`Port ${port} is unavailable`);
   }
 }
 
 export class AccessKeyNotFound extends OutlineError {
-  constructor(accessKeyId?: string) {
+  constructor(accessKeyId?: AccessKeyId) {
     super(`Access key "${accessKeyId}" not found`);
   }
 }
@@ -43,5 +44,19 @@ export class AccessKeyNotFound extends OutlineError {
 export class InvalidCipher extends OutlineError {
   constructor(public cipher: string) {
     super(`cipher "${cipher}" is not valid`);
+  }
+}
+
+export class AccessKeyConflict extends OutlineError {
+  constructor(accessKeyId?: AccessKeyId) {
+    super(`Access key "${accessKeyId}" conflict`);
+  }
+}
+
+export class PasswordConflict extends OutlineError {
+  constructor(accessKeyId?: AccessKeyId) {
+    super(
+      `Access key ${accessKeyId} has the same password. Please specify a unique password for each access key`
+    );
   }
 }

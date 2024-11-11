@@ -1,6 +1,6 @@
 # Outline Sentry Webhook
 
-The Outline Sentry webhook is a [Google Cloud Function](https://cloud.google.com/functions/) that receives a Sentry event and posts it to Salesforce.
+The Outline Sentry webhook is a [Google Cloud Run functions](https://cloud.google.com/functions/) that receives a Sentry event and posts it to Salesforce.
 
 ## Requirements
 
@@ -10,7 +10,7 @@ The Outline Sentry webhook is a [Google Cloud Function](https://cloud.google.com
 ## Build
 
 ```sh
-npm run action sentry_webhook/build
+task sentry_webhook:build
 ```
 
 ## Deploy
@@ -24,7 +24,7 @@ gcloud auth login
 To deploy:
 
 ```sh
-npm run action sentry_webhook/deploy
+task sentry_webhook:deploy
 ```
 
 ## Configure Sentry Webhooks

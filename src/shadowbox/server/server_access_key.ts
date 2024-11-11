@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import * as randomstring from 'randomstring';
-import * as uuidv4 from 'uuid/v4';
 
 import {Clock} from '../infrastructure/clock';
 import {isPortUsed} from '../infrastructure/get_port';
@@ -22,8 +21,8 @@ import * as logging from '../infrastructure/logging';
 import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {
   AccessKey,
+  AccessKeyCreateParams,
   AccessKeyId,
-  AccessKeyMetricsId,
   AccessKeyRepository,
   DataLimit,
   ProxyParams,
@@ -35,7 +34,6 @@ import {PrometheusManagerMetrics} from './manager_metrics';
 // The format as json of access keys in the config file.
 interface AccessKeyStorageJson {
   id: AccessKeyId;
-  metricsId: AccessKeyId;
   name: string;
   password: string;
   port: number;
@@ -52,11 +50,10 @@ export interface AccessKeyConfigJson {
 
 // AccessKey implementation with write access enabled on properties that may change.
 class ServerAccessKey implements AccessKey {
-  public isOverDataLimit = false;
+  reachedDataLimit = false;
   constructor(
     readonly id: AccessKeyId,
     public name: string,
-    public metricsId: AccessKeyMetricsId,
     readonly proxyParams: ProxyParams,
     public dataLimit?: DataLimit
   ) {}
@@ -78,7 +75,6 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyStorageJson): A
   return new ServerAccessKey(
     accessKeyJson.id,
     accessKeyJson.name,
-    accessKeyJson.metricsId,
     proxyParams,
     accessKeyJson.dataLimit
   );
@@ -87,7 +83,6 @@ function makeAccessKey(hostname: string, accessKeyJson: AccessKeyStorageJson): A
 function accessKeyToStorageJson(accessKey: AccessKey): AccessKeyStorageJson {
   return {
     id: accessKey.id,
-    metricsId: accessKey.metricsId,
     name: accessKey.name,
     password: accessKey.proxyParams.password,
     port: accessKey.proxyParams.portNumber,
@@ -97,10 +92,16 @@ function accessKeyToStorageJson(accessKey: AccessKey): AccessKeyStorageJson {
 }
 
 function isValidCipher(cipher: string): boolean {
-    if (["aes-256-gcm", "aes-192-gcm", "aes-128-gcm", "chacha20-ietf-poly1305"].indexOf(cipher) === -1) {
-      return false;
-    }
-    return true;
+  if (
+    ['aes-256-gcm', 'aes-192-gcm', 'aes-128-gcm', 'chacha20-ietf-poly1305'].indexOf(cipher) === -1
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function isValidPort(port: number): boolean {
+  return Number.isInteger(port) && port > 0 && port <= 65535;
 }
 
 // AccessKeyRepository that keeps its state in a config file and uses ShadowsocksServer
@@ -146,10 +147,20 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     );
   }
 
+  private isExistingAccessKeyId(id: AccessKeyId): boolean {
+    return this.accessKeys.some((key) => {
+      return key.id === id;
+    });
+  }
+
   private isExistingAccessKeyPort(port: number): boolean {
     return this.accessKeys.some((key) => {
       return key.proxyParams.portNumber === port;
     });
+  }
+
+  private async isPortAvailable(port: number): Promise<boolean> {
+    return this.isExistingAccessKeyPort(port) || !(await isPortUsed(port));
   }
 
   setHostname(hostname: string): void {
@@ -157,32 +168,73 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   async setPortForNewAccessKeys(port: number): Promise<void> {
-    if (!Number.isInteger(port) || port < 1 || port > 65535) {
-      throw new errors.InvalidPortNumber(port.toString());
+    if (!isValidPort(port)) {
+      throw new errors.InvalidPortNumber(port);
     }
-    if (!this.isExistingAccessKeyPort(port) && (await isPortUsed(port))) {
+    if (!(await this.isPortAvailable(port))) {
       throw new errors.PortUnavailable(port);
     }
     this.portForNewAccessKeys = port;
   }
 
-  async createNewAccessKey(encryptionMethod?: string): Promise<AccessKey> {
-    const id = this.keyConfig.data().nextId.toString();
+  private generateId(): string {
+    let id: AccessKeyId = this.keyConfig.data().nextId.toString();
     this.keyConfig.data().nextId += 1;
-    const metricsId = uuidv4();
-    const password = generatePassword();
-    encryptionMethod = encryptionMethod || this.NEW_USER_ENCRYPTION_METHOD;
-    // Validate encryption method.
-    if (!isValidCipher(encryptionMethod)) {
-      throw new errors.InvalidCipher(encryptionMethod);
+    // Users can supply their own access key IDs. This means we always need to
+    // verify that any auto-generated key ID hasn't already been used.
+    while (this.isExistingAccessKeyId(id)) {
+      id = this.keyConfig.data().nextId.toString();
+      this.keyConfig.data().nextId += 1;
     }
+    return id;
+  }
+
+  async createNewAccessKey(params?: AccessKeyCreateParams): Promise<AccessKey> {
+    let id = params?.id;
+    if (id) {
+      if (this.isExistingAccessKeyId(params?.id)) {
+        throw new errors.AccessKeyConflict(id);
+      }
+    } else {
+      id = this.generateId();
+    }
+
+    const isPasswordConflict = this.listAccessKeys().some(
+      (accessKey) => accessKey.proxyParams.password == params?.password
+    );
+
+    if (isPasswordConflict) {
+      throw new errors.PasswordConflict(id);
+    }
+
+    const password = params?.password ?? generatePassword();
+
+    const encryptionMethod = params?.encryptionMethod || this.NEW_USER_ENCRYPTION_METHOD;
+    if (encryptionMethod !== this.NEW_USER_ENCRYPTION_METHOD) {
+      if (!isValidCipher(encryptionMethod)) {
+        throw new errors.InvalidCipher(encryptionMethod);
+      }
+    }
+
+    const portNumber = params?.portNumber ?? this.portForNewAccessKeys;
+    if (portNumber !== this.portForNewAccessKeys) {
+      if (!isValidPort(portNumber)) {
+        throw new errors.InvalidPortNumber(portNumber);
+      }
+      if (!(await this.isPortAvailable(portNumber))) {
+        throw new errors.PortUnavailable(portNumber);
+      }
+    }
+
     const proxyParams = {
       hostname: this.proxyHostname,
-      portNumber: this.portForNewAccessKeys,
+      portNumber,
       encryptionMethod,
       password,
     };
-    const accessKey = new ServerAccessKey(id, '', metricsId, proxyParams);
+    const name = params?.name ?? '';
+    const dataLimit = params?.dataLimit;
+    const accessKey = new ServerAccessKey(id, name, proxyParams, dataLimit);
     this.accessKeys.push(accessKey);
     this.saveAccessKeys();
     await this.updateServer();
@@ -197,6 +249,15 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
         this.saveAccessKeys();
         this.updateServer();
         return;
+      }
+    }
+    throw new errors.AccessKeyNotFound(id);
+  }
+
+  getAccessKey(id: AccessKeyId): ServerAccessKey {
+    for (const accessKey of this.accessKeys) {
+      if (accessKey.id === id) {
+        return accessKey;
       }
     }
     throw new errors.AccessKeyNotFound(id);
@@ -238,11 +299,6 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     this.enforceAccessKeyDataLimits();
   }
 
-  getMetricsId(id: AccessKeyId): AccessKeyMetricsId | undefined {
-    const accessKey = this.getAccessKey(id);
-    return accessKey ? accessKey.metricsId : undefined;
-  }
-
   // Compares access key usage with collected metrics, marking them as under or over limit.
   // Updates access key data usage.
   async enforceAccessKeyDataLimits() {
@@ -252,13 +308,13 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     let limitStatusChanged = false;
     for (const accessKey of this.accessKeys) {
       const usageBytes = bytesTransferredById[accessKey.id] ?? 0;
-      const wasOverDataLimit = accessKey.isOverDataLimit;
+      const oldReachedDataLimit = accessKey.reachedDataLimit;
       let limitBytes = (accessKey.dataLimit ?? this._defaultDataLimit)?.bytes;
       if (limitBytes === undefined) {
         limitBytes = Number.POSITIVE_INFINITY;
       }
-      accessKey.isOverDataLimit = usageBytes > limitBytes;
-      limitStatusChanged = accessKey.isOverDataLimit !== wasOverDataLimit || limitStatusChanged;
+      accessKey.reachedDataLimit = usageBytes >= limitBytes;
+      limitStatusChanged = accessKey.reachedDataLimit !== oldReachedDataLimit || limitStatusChanged;
     }
     if (limitStatusChanged) {
       await this.updateServer();
@@ -267,7 +323,7 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
 
   private updateServer(): Promise<void> {
     const serverAccessKeys = this.accessKeys
-      .filter((key) => !key.isOverDataLimit)
+      .filter((key) => !key.reachedDataLimit)
       .map((key) => {
         return {
           id: key.id,
@@ -286,15 +342,5 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   private saveAccessKeys() {
     this.keyConfig.data().accessKeys = this.accessKeys.map((key) => accessKeyToStorageJson(key));
     this.keyConfig.write();
-  }
-
-  // Returns a reference to the access key with `id`, or throws if the key is not found.
-  private getAccessKey(id: AccessKeyId): ServerAccessKey {
-    for (const accessKey of this.accessKeys) {
-      if (accessKey.id === id) {
-        return accessKey;
-      }
-    }
-    throw new errors.AccessKeyNotFound(id);
   }
 }

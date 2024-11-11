@@ -1,3 +1,17 @@
+# Copyright 2024 The Outline Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 name: Build and Test
 
 concurrency:
@@ -12,6 +26,8 @@ on:
   push:
     branches:
       - master
+  schedule:
+    - cron: "0 13 * * *"  # Run daily at 1PM UTC.
 
 jobs:
   lint:
@@ -24,14 +40,14 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
           cache: npm
 
       - name: Install NPM Dependencies
         run: npm ci
 
       - name: Lint
-        run: npm run lint
+        run: ./task lint
 
   shadowbox:
     name: Shadowbox
@@ -44,20 +60,33 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
           cache: npm
 
       - name: Install NPM Dependencies
         run: npm ci
 
       - name: Shadowbox Debug Build
-        run: npm run action shadowbox/server/build
+        run: ./task shadowbox:build
 
       - name: Shadowbox Unit Test
-        run: npm run action shadowbox/test
+        run: ./task shadowbox:test
 
       - name: Shadowbox Integration Test
-        run: npm run action shadowbox/integration_test/run
+        run: ./task shadowbox:integration_test
+
+  manual-install-script:
+    name: Manual Install Script
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Install Outline Server
+        run: ./src/server_manager/install_scripts/install_server.sh --hostname localhost
+
+      - name: Test API
+        run: 'curl --silent --fail --insecure $(grep "apiUrl" /opt/outline/access.txt | cut -d: -f 2-)/server'
 
   metrics-server:
     name: Metrics Server
@@ -70,20 +99,20 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
           cache: npm
 
       - name: Install NPM Dependencies
         run: npm ci
 
       - name: Metrics Server Debug Build
-        run: npm run action metrics_server/build
+        run: ./task metrics_server:build
 
       - name: Metrics Server Test
-        run: npm run action metrics_server/test
+        run: ./task metrics_server:test
 
-  manager-web-test:
-    name: Manager Web Test
+  sentry-webhook:
+    name: Sentry Webhook
     runs-on: ubuntu-latest
     needs: lint
     steps:
@@ -93,80 +122,14 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
           cache: npm
 
       - name: Install NPM Dependencies
         run: npm ci
 
-      - name: Manager Web Test
-        run: npm run action server_manager/test
+      - name: Sentry Webhook Debug Build
+        run: ./task sentry_webhook:build
 
-  manager-linux-debug-build:
-    name: Manager Linux Debug Build
-    runs-on: ubuntu-latest
-    needs: manager-web-test
-    env:
-      SENTRY_DSN: debug
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2.3.4
-
-      - name: Install Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: npm
-
-      - name: Install NPM Dependencies
-        run: npm ci
-
-      - name: Build Linux Manager
-        run: npm run action server_manager/electron_app/build linux
-
-  manager-windows-debug-build:
-    name: Manager Windows Debug Build
-    runs-on: windows-2019
-    needs: manager-web-test
-    env:
-      SENTRY_DSN: debug
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2.3.4
-
-      - name: Install Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: npm
-
-      - name: Install NPM Dependencies
-        run: npm ci
-
-      - name: Build Windows Manager
-        run: npm run action server_manager/electron_app/build windows
-
-  manager-mac-debug-build:
-    name: Manager MacOS Debug Build
-    runs-on: macos-11
-    needs: manager-web-test
-    env:
-      SENTRY_DSN: debug
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2.3.4
-
-      - name: Install Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: npm
-
-      - name: Install NPM Dependencies
-        run: npm ci
-
-      - name: Set XCode Version
-        run: sudo xcode-select -switch /Applications/Xcode_13.2.app
-
-      - name: Build MacOS Manager
-        run: npm run action server_manager/electron_app/build macos
+      - name: Sentry Webhook Test
+        run: ./task sentry_webhook:test

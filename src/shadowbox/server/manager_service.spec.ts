@@ -24,6 +24,7 @@ import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
 import {ServerConfigJson} from './server_config';
 import {SharedMetricsPublisher} from './shared_metrics';
+import {ShadowsocksServer} from '../model/shadowsocks_server';
 
 interface ServerInfo {
   name: string;
@@ -233,6 +234,35 @@ describe('ShadowsocksManagerService', () => {
     });
   });
 
+  describe('getAccessKey', () => {
+    it('Returns an access key', async (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+      const key1 = await createNewAccessKeyWithName(repo, 'keyName1');
+      service.getAccessKey(
+        {params: {id: key1.id}},
+        {
+          send: (httpCode, data: AccessKey) => {
+            expect(httpCode).toEqual(200);
+            expect(data.id).toEqual('0');
+            responseProcessed = true;
+          },
+        },
+        done
+      );
+    });
+
+    it('Returns 404 if the access key does not exist', (done) => {
+      const repo = getAccessKeyRepository();
+      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+      service.getAccessKey({params: {id: '1'}}, {send: () => {}}, (error) => {
+        expect(error.statusCode).toEqual(404);
+        responseProcessed = true;
+        done();
+      });
+    });
+  });
+
   describe('listAccessKeys', () => {
     it('lists access keys in order', async (done) => {
       const repo = getAccessKeyRepository();
@@ -277,71 +307,295 @@ describe('ShadowsocksManagerService', () => {
     });
   });
 
-  describe('createNewAccessKey', () => {
-    it('verify default method', (done) => {
-      const repo = getAccessKeyRepository();
-      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+  describe('creating new access key', () => {
+    let repo: ServerAccessKeyRepository;
+    let service: ShadowsocksManagerService;
 
-      // Verify that response returns a key with the expected properties.
-      const res = {
-        send: (httpCode, data) => {
-          expect(httpCode).toEqual(201);
-          expect(Object.keys(data).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
-          expect(data.method).toEqual('chacha20-ietf-poly1305');
-          responseProcessed = true; // required for afterEach to pass.
-        },
-      };
-      service.createNewAccessKey({params: {}}, res, done);
+    beforeEach(() => {
+      repo = getAccessKeyRepository();
+      service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
     });
-    it('non-default method gets set', (done) => {
-      const repo = getAccessKeyRepository();
-      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
 
-      // Verify that response returns a key with the expected properties.
-      const res = {
-        send: (httpCode, data) => {
-          expect(httpCode).toEqual(201);
-          expect(Object.keys(data).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
-          expect(data.method).toEqual('aes-256-gcm');
-          responseProcessed = true; // required for afterEach to pass.
-        },
-      };
-      service.createNewAccessKey({params: {method: 'aes-256-gcm'}}, res, done);
-    });
-    it('method must be of type string', (done) => {
-      const repo = getAccessKeyRepository();
-      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+    describe('handling the access key identifier', () => {
+      describe("with 'createNewAccessKey'", () => {
+        it('generates a unique ID', (done) => {
+          const res = {
+            send: (httpCode, data) => {
+              expect(httpCode).toEqual(201);
+              expect(data.id).toEqual('0');
+              responseProcessed = true; // required for afterEach to pass.
+            },
+          };
+          service.createNewAccessKey({params: {}}, res, done);
+        });
+        it('rejects requests with ID parameter set', (done) => {
+          const res = {send: (_httpCode, _data) => {}};
+          service.createNewAccessKey({params: {id: 'foobar'}}, res, (error) => {
+            expect(error.statusCode).toEqual(400);
+            responseProcessed = true; // required for afterEach to pass.
+            done();
+          });
+        });
+      });
 
-      const res = {send: (_httpCode, _data) => {}};
-      service.createNewAccessKey({params: {method: Number('9876')}}, res, (error) => {
-        expect(error.statusCode).toEqual(400);
-        responseProcessed = true; // required for afterEach to pass.
-        done();
+      describe("with 'createAccessKey'", () => {
+        it('rejects requests without ID parameter set', (done) => {
+          const res = {send: (_httpCode, _data) => {}};
+          service.createAccessKey({params: {}}, res, (error) => {
+            expect(error.statusCode).toEqual(400);
+            responseProcessed = true; // required for afterEach to pass.
+            done();
+          });
+        });
+        it('rejects non-string ID', (done) => {
+          const res = {send: (_httpCode, _data) => {}};
+          service.createAccessKey({params: {id: Number('9876')}}, res, (error) => {
+            expect(error.statusCode).toEqual(400);
+            responseProcessed = true; // required for afterEach to pass.
+            done();
+          });
+        });
+        it('rejects if key exists', async (done) => {
+          const accessKey = await repo.createNewAccessKey();
+          const res = {send: (_httpCode, _data) => {}};
+          service.createAccessKey({params: {id: accessKey.id}}, res, (error) => {
+            expect(error.statusCode).toEqual(409);
+            responseProcessed = true; // required for afterEach to pass.
+            done();
+          });
+        });
+        it('creates key with provided ID', (done) => {
+          const res = {
+            send: (httpCode, data) => {
+              expect(httpCode).toEqual(201);
+              expect(data.id).toEqual('myKeyId');
+              responseProcessed = true; // required for afterEach to pass.
+            },
+          };
+          service.createAccessKey({params: {id: 'myKeyId'}}, res, done);
+        });
       });
     });
-    it('method must be valid', (done) => {
-      const repo = getAccessKeyRepository();
-      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
 
-      const res = {send: (_httpCode, _data) => {}};
-      service.createNewAccessKey({params: {method: 'abcdef'}}, res, (error) => {
-        expect(error.statusCode).toEqual(400);
-        responseProcessed = true; // required for afterEach to pass.
-        done();
-      });
-    });
-    it('Create returns a 500 when the repository throws an exception', (done) => {
-      const repo = getAccessKeyRepository();
-      spyOn(repo, 'createNewAccessKey').and.throwError('cannot write to disk');
-      const service = new ShadowsocksManagerServiceBuilder().accessKeys(repo).build();
+    const conditions = [
+      {methodName: 'createNewAccessKey', accessKeyId: undefined},
+      {methodName: 'createAccessKey', accessKeyId: 'myKeyId'},
+    ];
 
-      const res = {send: (_httpCode, _data) => {}};
-      service.createNewAccessKey({params: {method: 'aes-192-gcm'}}, res, (error) => {
-        expect(error.statusCode).toEqual(500);
-        responseProcessed = true; // required for afterEach to pass.
-        done();
+    for (const {methodName, accessKeyId} of conditions) {
+      describe(`with '${methodName}'`, () => {
+        let serviceMethod: (req, res, next) => Promise<void>;
+
+        beforeEach(() => {
+          serviceMethod = service[methodName].bind(service);
+        });
+
+        it('verify default method', (done) => {
+          // Verify that response returns a key with the expected properties.
+          const res = {
+            send: (httpCode, data) => {
+              expect(httpCode).toEqual(201);
+              expect(Object.keys(data).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
+              expect(data.method).toEqual('chacha20-ietf-poly1305');
+              responseProcessed = true; // required for afterEach to pass.
+            },
+          };
+          serviceMethod({params: {id: accessKeyId}}, res, done);
+        });
+        it('non-default method gets set', (done) => {
+          // Verify that response returns a key with the expected properties.
+          const res = {
+            send: (httpCode, data) => {
+              expect(httpCode).toEqual(201);
+              expect(Object.keys(data).sort()).toEqual(EXPECTED_ACCESS_KEY_PROPERTIES);
+              expect(data.method).toEqual('aes-256-gcm');
+              responseProcessed = true; // required for afterEach to pass.
+            },
+          };
+          serviceMethod({params: {id: accessKeyId, method: 'aes-256-gcm'}}, res, done);
+        });
+        it('use default name is params is not defined', (done) => {
+          const res = {
+            send: (httpCode, data) => {
+              expect(httpCode).toEqual(201);
+              expect(data.name).toEqual('');
+              responseProcessed = true; // required for afterEach to pass.
+            },
+          };
+          serviceMethod({params: {id: accessKeyId}}, res, done);
+        });
+        it('rejects non-string name', (done) => {
+          const res = {send: (_httpCode, _data) => {}};
+          serviceMethod({params: {id: accessKeyId, name: Number('9876')}}, res, (error) => {
+            expect(error.statusCode).toEqual(400);
+            responseProcessed = true; // required for afterEach to pass.
+            done();
+          });
+        });
+        it('defined name is equal to stored', (done) => {
+          const ACCESSKEY_NAME = 'accesskeyname';
+          const res = {
+            send: (httpCode, data) => {
+              expect(httpCode).toEqual(201);
+              expect(data.name).toEqual(ACCESSKEY_NAME);
+              responseProcessed = true; // required for afterEach to pass.
+            },
+          };
+          serviceMethod({params: {id: accessKeyId, name: ACCESSKEY_NAME}}, res, done);
+        });
+        it('limit can be undefined', (done) => {
+          const res = {
+            send: (httpCode, data) => {
+              expect(httpCode).toEqual(201);
+              expect(data.limit).toBeUndefined();
+              responseProcessed = true; // required for afterEach to pass.
+            },
+          };
+          serviceMethod({params: {id: accessKeyId}}, res, done);
+        });
+        it('rejects non-numeric limits', (done) => {
+          const ACCESSKEY_LIMIT = {bytes: '9876'};
+
+          const res = {send: (_httpCode, _data) => {}};
+          serviceMethod({params: {id: accessKeyId, limit: ACCESSKEY_LIMIT}}, res, (error) => {
+            expect(error.statusCode).toEqual(400);
+            responseProcessed = true; // required for afterEach to pass.
+            done();
+          });
+        });
+        it('defined limit is equal to stored', (done) => {
+          const ACCESSKEY_LIMIT = {bytes: 9876};
+          const res = {
+            send: (httpCode, data) => {
+              expect(httpCode).toEqual(201);
+              expect(data.dataLimit).toEqual(ACCESSKEY_LIMIT);
+              responseProcessed = true; // required for afterEach to pass.
+            },
+          };
+          serviceMethod({params: {id: accessKeyId, limit: ACCESSKEY_LIMIT}}, res, done);
+        });
+        it('method must be of type string', (done) => {
+          const res = {send: (_httpCode, _data) => {}};
+          serviceMethod({params: {id: accessKeyId, method: Number('9876')}}, res, (error) => {
+            expect(error.statusCode).toEqual(400);
+            responseProcessed = true; // required for afterEach to pass.
+            done();
+          });
+        });
+        it('method must be valid', (done) => {
+          const res = {send: (_httpCode, _data) => {}};
+          serviceMethod({params: {id: accessKeyId, method: 'abcdef'}}, res, (error) => {
+            expect(error.statusCode).toEqual(400);
+            responseProcessed = true; // required for afterEach to pass.
+            done();
+          });
+        });
+        it('Create returns a 500 when the repository throws an exception', (done) => {
+          spyOn(repo, 'createNewAccessKey').and.throwError('cannot write to disk');
+          const res = {send: (_httpCode, _data) => {}};
+          serviceMethod({params: {id: accessKeyId, method: 'aes-192-gcm'}}, res, (error) => {
+            expect(error.statusCode).toEqual(500);
+            responseProcessed = true; // required for afterEach to pass.
+            done();
+          });
+        });
+
+        it('generates a new password when no password is provided', async (done) => {
+          const res = {
+            send: (httpCode, data) => {
+              expect(httpCode).toEqual(201);
+              expect(data.password).toBeDefined();
+              responseProcessed = true; // required for afterEach to pass.
+            },
+          };
+          await serviceMethod({params: {id: accessKeyId}}, res, done);
+        });
+
+        it('uses the provided password when one is provided', async (done) => {
+          const PASSWORD = '8iu8V8EeoFVpwQvQeS9wiD';
+          const res = {
+            send: (httpCode, data) => {
+              expect(httpCode).toEqual(201);
+              expect(data.password).toEqual(PASSWORD);
+              responseProcessed = true; // required for afterEach to pass.
+            },
+          };
+          await serviceMethod({params: {id: accessKeyId, password: PASSWORD}}, res, done);
+        });
+
+        it('rejects a password that is not a string', async (done) => {
+          const PASSWORD = Number.MAX_SAFE_INTEGER;
+          const res = {send: SEND_NOTHING};
+          await serviceMethod({params: {id: accessKeyId, password: PASSWORD}}, res, (error) => {
+            expect(error.statusCode).toEqual(400);
+            responseProcessed = true; // required for afterEach to pass.
+            done();
+          });
+        });
+        it('rejects a password that is already in use', async (done) => {
+          const PASSWORD = 'foobar';
+          await repo.createNewAccessKey({password: PASSWORD});
+          const res = {send: SEND_NOTHING};
+          await serviceMethod({params: {id: accessKeyId, password: PASSWORD}}, res, (error) => {
+            expect(error.statusCode).toEqual(409);
+            responseProcessed = true; // required for afterEach to pass.
+            done();
+          });
+        });
+        it('uses the default port for new keys when no port is provided', async (done) => {
+          const res = {
+            send: (httpCode, data) => {
+              expect(httpCode).toEqual(201);
+              expect(data.port).toBeDefined();
+              responseProcessed = true; // required for afterEach to pass.
+            },
+          };
+          await serviceMethod({params: {id: accessKeyId}}, res, done);
+        });
+
+        it('uses the provided port when one is provided', async (done) => {
+          const res = {
+            send: (httpCode, data) => {
+              expect(httpCode).toEqual(201);
+              expect(data.port).toEqual(NEW_PORT);
+              responseProcessed = true; // required for afterEach to pass.
+            },
+          };
+          await serviceMethod({params: {id: accessKeyId, port: NEW_PORT}}, res, done);
+        });
+
+        it('rejects ports that are not numbers', async (done) => {
+          const res = {send: SEND_NOTHING};
+          await serviceMethod({params: {id: accessKeyId, port: '1234'}}, res, (error) => {
+            expect(error.statusCode).toEqual(400);
+            responseProcessed = true; // required for afterEach to pass.
+            done();
+          });
+        });
+
+        it('rejects invalid port numbers', async (done) => {
+          const res = {send: SEND_NOTHING};
+          await serviceMethod({params: {id: accessKeyId, port: 1.4}}, res, (error) => {
+            expect(error.statusCode).toEqual(400);
+            responseProcessed = true; // required for afterEach to pass.
+            done();
+          });
+        });
+
+        it('rejects port numbers already in use', async (done) => {
+          const server = new net.Server();
+          server.listen(NEW_PORT, async () => {
+            const res = {send: SEND_NOTHING};
+            await serviceMethod({params: {id: accessKeyId, port: NEW_PORT}}, res, (error) => {
+              expect(error.statusCode).toEqual(409);
+              responseProcessed = true; // required for afterEach to pass.
+              server.close();
+              done();
+            });
+          });
+        });
       });
-    });
+    }
   });
   describe('setPortForNewAccessKeys', () => {
     it('changes ports for new access keys', async (done) => {
@@ -438,6 +692,7 @@ describe('ShadowsocksManagerService', () => {
       const server = new net.Server();
       server.listen(NEW_PORT, async () => {
         await service.setPortForNewAccessKeys({params: {port: NEW_PORT}}, res, next);
+        server.close();
       });
     });
 
@@ -949,6 +1204,7 @@ class ShadowsocksManagerServiceBuilder {
   private defaultServerName_ = 'default name';
   private serverConfig_: JsonConfig<ServerConfigJson> = null;
   private accessKeys_: AccessKeyRepository = null;
+  private shadowsocksServer_: ShadowsocksServer = null;
   private managerMetrics_: ManagerMetrics = null;
   private metricsPublisher_: SharedMetricsPublisher = null;
 
@@ -967,6 +1223,11 @@ class ShadowsocksManagerServiceBuilder {
     return this;
   }
 
+  shadowsocksServer(server: ShadowsocksServer) {
+    this.shadowsocksServer_ = server;
+    return this;
+  }
+
   managerMetrics(metrics: ManagerMetrics): ShadowsocksManagerServiceBuilder {
     this.managerMetrics_ = metrics;
     return this;
@@ -982,6 +1243,7 @@ class ShadowsocksManagerServiceBuilder {
       this.defaultServerName_,
       this.serverConfig_,
       this.accessKeys_,
+      this.shadowsocksServer_,
       this.managerMetrics_,
       this.metricsPublisher_
     );
