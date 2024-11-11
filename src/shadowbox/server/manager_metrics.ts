@@ -90,11 +90,11 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
         asn: parseInt(entry.metric['asn']),
         asOrg: entry.metric['asorg'],
         tunnelTime: {
-          seconds: tunnelTimeByLocation.result.find((entry) => {
+          seconds: tunnelTimeByLocation.result.find((target) => {
             return (
-              entry.metric['location'] === entry.metric['location'] &&
-              entry.metric['asn'] === entry.metric['asn'] &&
-              entry.metric['asorg'] === entry.metric['asorg']
+              entry.metric['location'] === target.metric['location'] &&
+              entry.metric['asn'] === target.metric['asn'] &&
+              entry.metric['asorg'] === target.metric['asorg']
             );
           }),
         },
@@ -109,8 +109,8 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       accessKeys.push({
         accessKeyId: parseInt(entry.metric['access_key']),
         tunnelTime: {
-          seconds: tunnelTimeByAccessKey.result.find((entry) => {
-            return entry.metric['access_key'] === entry.metric['access_key'];
+          seconds: tunnelTimeByAccessKey.result.find((target) => {
+            return entry.metric['access_key'] === target.metric['access_key'];
           }),
         },
         dataTransferred: {

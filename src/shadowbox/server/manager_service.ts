@@ -613,7 +613,9 @@ export class ShadowsocksManagerService {
       logging.debug(`getServerMetrics request ${JSON.stringify(req.params)}`);
 
       if (!req.query?.since) {
-        throw new TypeError("Missing 'since' parameter. Must be an ISO timestamp");
+        return next(
+          new restifyErrors.MissingParameterError({statusCode: 400}, 'Parameter `since` is missing')
+        );
       }
 
       const timestamp = new Date(req.query.since as string);
@@ -621,10 +623,15 @@ export class ShadowsocksManagerService {
         !isNaN(timestamp.getTime()) && timestamp.toISOString() === req.query.since;
 
       if (!isIsoTimestamp) {
-        throw new TypeError(`'since' parameter must be an ISO timestamp. Got ${req.query.since}`);
+        return next(
+          new restifyErrors.InvalidArgumentError(
+            {statusCode: 400},
+            `'since' parameter must be an ISO timestamp. Got ${req.query.since}`
+          )
+        );
       }
 
-      const hours = Math.floor(new Date().getTime() - timestamp.getTime() / (1000 * 60 * 60));
+      const hours = Math.floor((new Date().getTime() - timestamp.getTime()) / (1000 * 60 * 60));
 
       const response = await this.managerMetrics.getServerMetrics({hours});
       res.send(HttpSuccess.OK, response);
