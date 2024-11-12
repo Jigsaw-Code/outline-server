@@ -13,12 +13,133 @@
 // limitations under the License.
 
 import {PrometheusManagerMetrics} from './manager_metrics';
-import {FakePrometheusClient} from './mocks/mocks';
+import {FakeAccessKeyPrometheusClient} from './mocks/mocks';
 
 describe('PrometheusManagerMetrics', () => {
+  it('getServerMetrics', async (done) => {
+    const managerMetrics = new PrometheusManagerMetrics(
+      new FakeAccessKeyPrometheusClient([
+        {
+          accessKeyId: 0,
+          location: 'US',
+          asn: 49490,
+          asOrg: null,
+          dataTransferred: {
+            bytes: 50000,
+          },
+          tunnelTime: {
+            seconds: 10000,
+          },
+        },
+        {
+          accessKeyId: 1,
+          location: 'US',
+          asn: 49490,
+          asOrg: null,
+          dataTransferred: {
+            bytes: 50000,
+          },
+          tunnelTime: {
+            seconds: 5000,
+          },
+        },
+        {
+          accessKeyId: 2,
+          location: 'CA',
+          asn: null,
+          asOrg: null,
+          dataTransferred: {
+            bytes: 40000,
+          },
+          tunnelTime: {
+            seconds: 7500,
+          },
+        },
+      ])
+    );
+
+    const serverMetrics = await managerMetrics.getServerMetrics({hours: 0});
+
+    expect(JSON.stringify(serverMetrics, null, 2)).toEqual(`{
+  "server": [
+    {
+      "location": "US",
+      "asn": 49490,
+      "asOrg": "null",
+      "dataTransferred": {
+        "bytes": 100000
+      },
+      "tunnelTime": {
+        "seconds": 15000
+      }
+    },
+    {
+      "location": "CA",
+      "asn": null,
+      "asOrg": "null",
+      "dataTransferred": {
+        "bytes": 40000
+      },
+      "tunnelTime": {
+        "seconds": 7500
+      }
+    }
+  ],
+  "accessKeys": [
+    {
+      "accessKeyId": 0,
+      "dataTransferred": {
+        "bytes": 50000
+      },
+      "tunnelTime": {
+        "seconds": 10000
+      }
+    },
+    {
+      "accessKeyId": 1,
+      "dataTransferred": {
+        "bytes": 50000
+      },
+      "tunnelTime": {
+        "seconds": 5000
+      }
+    },
+    {
+      "accessKeyId": 2,
+      "dataTransferred": {
+        "bytes": 40000
+      },
+      "tunnelTime": {
+        "seconds": 7500
+      }
+    }
+  ]
+}`);
+    done();
+  });
+
   it('getOutboundByteTransfer', async (done) => {
     const managerMetrics = new PrometheusManagerMetrics(
-      new FakePrometheusClient({'access-key-1': 1000, 'access-key-2': 10000})
+      new FakeAccessKeyPrometheusClient([
+        {
+          accessKeyId: 'access-key-1',
+          asn: null,
+          asOrg: null,
+          location: null,
+          dataTransferred: {
+            bytes: 1000,
+          },
+        },
+        {
+          accessKeyId: 'access-key-2',
+          asn: null,
+          asOrg: null,
+          location: null,
+          dataTransferred: {
+            bytes: 10000,
+          },
+        },
+      ])
     );
     const dataUsage = await managerMetrics.getOutboundByteTransfer({hours: 0});
     const bytesTransferredByUserId = dataUsage.bytesTransferredByUserId;
