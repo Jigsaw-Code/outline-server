@@ -66,7 +66,7 @@ export class FakePrometheusClient extends PrometheusClient {
   }
 }
 
-interface AccessKeyPrometheusClientMetric {
+interface FakeAccessKeyPrometheusClientMetric {
   accessKeyId: number | string;
   location?: string;
   asn?: number;
@@ -80,7 +80,7 @@ interface AccessKeyPrometheusClientMetric {
 }
 
 export class FakeAccessKeyPrometheusClient extends PrometheusClient {
-  constructor(public rawAccessKeyMetrics: AccessKeyPrometheusClientMetric[]) {
+  constructor(public rawAccessKeyMetrics: FakeAccessKeyPrometheusClientMetric[]) {
     super('');
   }
 
