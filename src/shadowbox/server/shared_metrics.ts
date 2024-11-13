@@ -16,7 +16,7 @@ import {Clock} from '../infrastructure/clock';
 import * as follow_redirects from '../infrastructure/follow_redirects';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {PrometheusClient, QueryResultData} from '../infrastructure/prometheus_scraper';
+import {ApiPrometheusClient, QueryResultData} from '../infrastructure/prometheus_scraper';
 import * as version from './version';
 import {AccessKeyConfigJson} from './server_access_key';
 
@@ -82,7 +82,7 @@ export interface UsageMetrics {
 export class PrometheusUsageMetrics implements UsageMetrics {
   private resetTimeMs: number = Date.now();
 
-  constructor(private prometheusClient: PrometheusClient) {}
+  constructor(private prometheusClient: ApiPrometheusClient) {}
 
   async getReportedUsage(): Promise<ReportedUsage[]> {
     const timeDeltaSecs = Math.round((Date.now() - this.resetTimeMs) / 1000);

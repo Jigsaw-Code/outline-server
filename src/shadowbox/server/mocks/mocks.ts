@@ -48,10 +48,8 @@ export class FakeShadowsocksServer implements ShadowsocksServer {
   }
 }
 
-export class FakePrometheusClient extends PrometheusClient {
-  constructor(public bytesTransferredById: {[accessKeyId: string]: number}) {
-    super('');
-  }
+export class FakePrometheusClient implements PrometheusClient {
+  constructor(public bytesTransferredById: {[accessKeyId: string]: number}) {}
 
   async query(_query: string): Promise<QueryResultData> {
     const queryResultData = {result: []} as QueryResultData;
@@ -62,81 +60,6 @@ export class FakePrometheusClient extends PrometheusClient {
         value: [Date.now() / 1000, `${bytesTransferred}`],
       });
     }
-    return queryResultData;
-  }
-}
-
-interface FakeAccessKeyPrometheusClientMetric {
-  accessKeyId: number | string;
-  location?: string;
-  asn?: number;
-  asOrg?: string;
-  tunnelTime?: {
-    seconds: number;
-  };
-  dataTransferred: {
-    bytes: number;
-  };
-}
-
-export class FakeAccessKeyPrometheusClient extends PrometheusClient {
-  constructor(public rawAccessKeyMetrics: FakeAccessKeyPrometheusClientMetric[]) {
-    super('');
-  }
-
-  async query(_query: string): Promise<QueryResultData> {
-    const queryResultData = {result: []} as QueryResultData;
-
-    if (_query.startsWith('sum(increase(shadowsocks_data_bytes_per_location')) {
-      const locations = {};
-
-      for (const {location, asn, asOrg, dataTransferred} of this.rawAccessKeyMetrics) {
-        const locationKey = `${location},${asn},${asOrg}`;
-
-        locations[locationKey] ??= 0;
-        locations[locationKey] += dataTransferred.bytes;
-      }
-
-      for (const [locationKey, bytes] of Object.entries(locations)) {
-        const [location, asn, asorg] = locationKey.split(',');
-        queryResultData.result.push({
-          metric: {location, asn, asorg},
-          value: [Date.now() / 1000, `${bytes}`],
-        });
-      }
-    } else if (_query.startsWith('sum(increase(shadowsocks_tunnel_time_seconds_per_location')) {
-      const locations = {};
-
-      for (const {location, asn, asOrg, tunnelTime} of this.rawAccessKeyMetrics) {
-        const locationKey = `${location},${asn},${asOrg}`;
-
-        locations[locationKey] ??= 0;
-        locations[locationKey] += tunnelTime.seconds;
-      }
-
-      for (const [locationKey, seconds] of Object.entries(locations)) {
-        const [location, asn, asorg] = locationKey.split(',');
-        queryResultData.result.push({
-          metric: {location, asn, asorg},
-          value: [Date.now() / 1000, `${seconds}`],
-        });
-      }
-    } else if (_query.startsWith('sum(increase(shadowsocks_data_bytes')) {
-      for (const {accessKeyId, dataTransferred} of this.rawAccessKeyMetrics) {
-        queryResultData.result.push({
-          metric: {access_key: `${accessKeyId}`},
-          value: [Date.now() / 1000, `${dataTransferred.bytes}`],
-        });
-      }
-    } else if (_query.startsWith('sum(increase(shadowsocks_tunnel_time_seconds')) {
-      for (const {accessKeyId, tunnelTime} of this.rawAccessKeyMetrics) {
-        queryResultData.result.push({
-          metric: {access_key: `${accessKeyId}`},
-          value: [Date.now() / 1000, `${tunnelTime.seconds}`],
-        });
-      }
-    }
-
     return queryResultData;
   }
 }

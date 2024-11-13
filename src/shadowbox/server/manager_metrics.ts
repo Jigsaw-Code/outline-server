@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {PrometheusClient} from '../infrastructure/prometheus_scraper';
+import {ApiPrometheusClient, PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {DataUsageByUser, DataUsageTimeframe} from '../model/metrics';
 
 interface ServerMetricsTimeframe {

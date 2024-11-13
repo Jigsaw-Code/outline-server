@@ -37,7 +37,11 @@ interface QueryResult {
   error: string;
 }
 
-export class PrometheusClient {
+export interface PrometheusClient {
+  query(query: string): Promise<QueryResultData>;
+}
+
+export class ApiPrometheusClient implements PrometheusClient {
   constructor(private address: string) {}
 
   query(query: string): Promise<QueryResultData> {
@@ -101,7 +105,7 @@ async function spawnPrometheusSubprocess(
   prometheusEndpoint: string
 ): Promise<child_process.ChildProcess> {
   logging.info('======== Starting Prometheus ========');
-  logging.info(`${binaryFilename} ${processArgs.map(a => `"${a}"`).join(' ')}`);
+  logging.info(`${binaryFilename} ${processArgs.map((a) => `"${a}"`).join(' ')}`);
   const runProcess = child_process.spawn(binaryFilename, processArgs);
   runProcess.on('error', (error) => {
     logging.error(`Error spawning Prometheus: ${error}`);
