@@ -127,7 +127,60 @@ paths:
       responses:
         '204':
           description: Access key limit deleted successfully.
-
+  /server/metrics:
+    get:
+      tags: Server
+      parameters:
+        - in: query
+          name: since
+          description: the range of time to return data for
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Display server metric information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  server:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        location:
+                          type: string
+                        asn:
+                          type: number
+                        asOrg:
+                          type: string
+                        tunnelTime:
+                          type: object
+                          properties:
+                            seconds: number
+                        dataTransferred:
+                          type: object
+                          properties:
+                            bytes: number
+                  accessKeys:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        accessKeyId:
+                          type: string
+                        tunnelTime:
+                          type: object
+                          properties:
+                            seconds: number
+                        dataTransferred:
+                          type: object
+                          properties:
+                            bytes: number
+              examples:
+                '0':
+                  value: '{"server":[{"location":"US","asn":null,"asOrg":null,"tunnelTime":{"seconds":100},"dataTransferred":{"bytes":100}}],"accessKeys":[{"accessKeyId":"0","tunnelTime":{"seconds":100},"dataTransferred":{"bytes":100}}]}'
   /name:
     put:
       description: Renames the server

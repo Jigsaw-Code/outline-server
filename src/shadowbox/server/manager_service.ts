@@ -610,6 +610,12 @@ export class ShadowsocksManagerService {
   }
 
   async getServerMetrics(req: RequestType, res: ResponseType, next: restify.Next) {
+    const TIME_RANGE_UNIT_TO_HOURS_MULTIPLYER = {
+      h: 1,
+      d: 24,
+      w: 7 * 24,
+    };
+
     try {
       logging.debug(`getServerMetrics request ${JSON.stringify(req.params)}`);
 
@@ -619,22 +625,32 @@ export class ShadowsocksManagerService {
         );
       }
 
-      const timestamp = new Date(req.query.since as string);
-      const isIsoTimestamp =
-        !isNaN(timestamp.getTime()) && timestamp.toISOString() === req.query.since;
+      const timeRange = req.query.since as string;
+      const timeRangeValue = Number(timeRange.slice(0, -1));
 
-      if (!isIsoTimestamp) {
+      if (isNaN(timeRangeValue)) {
         return next(
           new restifyErrors.InvalidArgumentError(
             {statusCode: 400},
-            `'since' parameter must be an ISO timestamp. Got ${req.query.since}`
+            `'since' parameter must be a time range in <number><unit> format. Got ${req.query.since}`
           )
         );
       }
 
-      const hours = Math.floor((new Date().getTime() - timestamp.getTime()) / (1000 * 60 * 60));
+      const timeRangeUnit = timeRange.slice(-1);
 
-      const response = await this.managerMetrics.getServerMetrics({hours});
+      if (!(timeRangeUnit in TIME_RANGE_UNIT_TO_HOURS_MULTIPLYER)) {
+        return next(
+          new restifyErrors.InvalidArgumentError(
+            {statusCode: 400},
+            `'since' parameter must be a time range with units in hours, days or weeks. Got ${req.query.since}`
+          )
+        );
+      }
+
+      const response = await this.managerMetrics.getServerMetrics({
+        hours: timeRangeValue * TIME_RANGE_UNIT_TO_HOURS_MULTIPLYER[timeRangeUnit],
+      });
       res.send(HttpSuccess.OK, response);
       logging.debug(`getServerMetrics response ${JSON.stringify(response)}`);
       return next();
