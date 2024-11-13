@@ -19,26 +19,26 @@ interface ServerMetricsTimeframe {
   hours: number;
 }
 
+interface Duration {
+  seconds: number;
+}
+
+interface Data {
+  bytes: number;
+}
+
 interface ServerMetricsServerEntry {
   location: string;
   asn: number;
   asOrg: string;
-  tunnelTime?: {
-    seconds: number;
-  };
-  dataTransferred: {
-    bytes: number;
-  };
+  tunnelTime: Duration;
+  dataTransferred: Data;
 }
 
 interface ServerMetricsAccessKeyEntry {
   accessKeyId: number;
-  tunnelTime?: {
-    seconds: number;
-  };
-  dataTransferred: {
-    bytes: number;
-  };
+  tunnelTime: Duration;
+  dataTransferred: Data;
 }
 
 interface ServerMetrics {
@@ -88,6 +88,14 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     );
 
     const server = [];
+    const tunnelTimeByLocationMap = tunnelTimeByLocation.result.reduce((map, entry) => {
+      map.set(
+        `${entry.metric['location']},${entry.metric['asn']},${entry.metric['asorg']}`,
+        parseFloat(entry.value[1])
+      );
+
+      return map;
+    }, new Map());
     for (const entry of dataTransferredByLocation.result) {
       const result: ServerMetricsServerEntry = {
         location: entry.metric['location'],
@@ -96,43 +104,32 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
         dataTransferred: {
           bytes: parseFloat(entry.value[1]),
         },
+        tunnelTime: {
+          seconds: tunnelTimeByLocationMap.get(
+            `${entry.metric['location']},${entry.metric['asn']},${entry.metric['asorg']}`
+          ),
+        },
       };
-
-      const matchingTunnelTimeResult = tunnelTimeByLocation.result.find((target) => {
-        return (
-          entry.metric['location'] === target.metric['location'] &&
-          entry.metric['asn'] === target.metric['asn'] &&
-          entry.metric['asorg'] === target.metric['asorg']
-        );
-      });
-
-      if (matchingTunnelTimeResult) {
-        result.tunnelTime = {
-          seconds: parseFloat(matchingTunnelTimeResult.value[1]),
-        };
-      }
 
       server.push(result);
     }
 
     const accessKeys = [];
+    const tunnelTimeByAccessKeyMap = tunnelTimeByAccessKey.result.reduce((map, entry) => {
+      map.set(entry.metric['access_key'], parseFloat(entry.value[1]));
+
+      return map;
+    }, new Map());
     for (const entry of dataTransferredByAccessKey.result) {
       const result: ServerMetricsAccessKeyEntry = {
         accessKeyId: parseInt(entry.metric['access_key']),
         dataTransferred: {
           bytes: parseFloat(entry.value[1]),
         },
+        tunnelTime: {
+          seconds: tunnelTimeByAccessKeyMap.get(entry.metric['access_key']),
+        },
       };
-
-      const matchingTunnelTimeResult = tunnelTimeByAccessKey.result.find((target) => {
-        return entry.metric['access_key'] === target.metric['access_key'];
-      });
-
-      if (matchingTunnelTimeResult) {
-        result.tunnelTime = {
-          seconds: parseFloat(matchingTunnelTimeResult.value[1]),
-        };
-      }
 
       accessKeys.push(result);
     }

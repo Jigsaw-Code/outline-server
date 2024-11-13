@@ -76,6 +76,7 @@ interface RequestParams {
   [param: string]: unknown;
 }
 
+// Type to reflect that we recive an untyped query string
 interface RequestQuery {
   // Supported parameters:
   //  since: string
