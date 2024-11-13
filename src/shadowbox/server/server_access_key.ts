@@ -18,7 +18,7 @@ import {Clock} from '../infrastructure/clock';
 import {isPortUsed} from '../infrastructure/get_port';
 import {JsonConfig} from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {ApiPrometheusClient, PrometheusClient} from '../infrastructure/prometheus_scraper';
+import {PrometheusClient} from '../infrastructure/prometheus_scraper';
 import {
   AccessKey,
   AccessKeyCreateParams,
