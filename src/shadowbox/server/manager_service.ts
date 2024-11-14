@@ -190,6 +190,23 @@ function redirect(url: string): restify.RequestHandlerType {
   };
 }
 
+export function convertTimeRangeToHours(timeRange: string): number {
+  const TIME_RANGE_UNIT_TO_HOURS_MULTIPLYER = {
+    h: 1,
+    d: 24,
+    w: 7 * 24,
+  };
+
+  const timeRangeValue = Number(timeRange.slice(0, -1));
+  const timeRangeUnit = timeRange.slice(-1);
+
+  if (isNaN(timeRangeValue) || !TIME_RANGE_UNIT_TO_HOURS_MULTIPLYER[timeRangeUnit]) {
+    throw new TypeError(`Invalid time range: ${timeRange}`);
+  }
+
+  return timeRangeValue * TIME_RANGE_UNIT_TO_HOURS_MULTIPLYER[timeRangeUnit];
+}
+
 function validateAccessKeyId(accessKeyId: unknown): string {
   if (!accessKeyId) {
     throw new restifyErrors.MissingParameterError({statusCode: 400}, 'Parameter `id` is missing');
@@ -610,47 +627,24 @@ export class ShadowsocksManagerService {
   }
 
   async getServerMetrics(req: RequestType, res: ResponseType, next: restify.Next) {
-    const TIME_RANGE_UNIT_TO_HOURS_MULTIPLYER = {
-      h: 1,
-      d: 24,
-      w: 7 * 24,
-    };
+    logging.debug(`getServerMetrics request ${JSON.stringify(req.params)}`);
 
+    let hours;
     try {
-      logging.debug(`getServerMetrics request ${JSON.stringify(req.params)}`);
-
       if (!req.query?.since) {
         return next(
           new restifyErrors.MissingParameterError({statusCode: 400}, 'Parameter `since` is missing')
         );
       }
 
-      const timeRange = req.query.since as string;
-      const timeRangeValue = Number(timeRange.slice(0, -1));
+      hours = convertTimeRangeToHours(req.query.since as string);
+    } catch (error) {
+      logging.error(error);
+      return next(new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message));
+    }
 
-      if (isNaN(timeRangeValue)) {
-        return next(
-          new restifyErrors.InvalidArgumentError(
-            {statusCode: 400},
-            `'since' parameter must be a time range in <number><unit> format. Got ${req.query.since}`
-          )
-        );
-      }
-
-      const timeRangeUnit = timeRange.slice(-1);
-
-      if (!(timeRangeUnit in TIME_RANGE_UNIT_TO_HOURS_MULTIPLYER)) {
-        return next(
-          new restifyErrors.InvalidArgumentError(
-            {statusCode: 400},
-            `'since' parameter must be a time range with units in hours, days or weeks. Got ${req.query.since}`
-          )
-        );
-      }
-
-      const response = await this.managerMetrics.getServerMetrics({
-        hours: timeRangeValue * TIME_RANGE_UNIT_TO_HOURS_MULTIPLYER[timeRangeUnit],
-      });
+    try {
+      const response = await this.managerMetrics.getServerMetrics({hours});
       res.send(HttpSuccess.OK, response);
       logging.debug(`getServerMetrics response ${JSON.stringify(response)}`);
       return next();
