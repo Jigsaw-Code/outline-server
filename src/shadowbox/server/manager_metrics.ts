@@ -87,15 +87,15 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       `sum(increase(shadowsocks_tunnel_time_seconds[${hours}h])) by (access_key)`
     );
 
-    const server = [];
-    const tunnelTimeByLocationMap = tunnelTimeByLocation.result.reduce((map, entry) => {
-      map.set(
+    const tunnelTimeByLocationMap = new Map();
+    for (const entry of tunnelTimeByLocation.result) {
+      tunnelTimeByLocationMap.set(
         `${entry.metric['location']},${entry.metric['asn']},${entry.metric['asorg']}`,
         parseFloat(entry.value[1])
       );
+    }
 
-      return map;
-    }, new Map());
+    const server = [];
     for (const entry of dataTransferredByLocation.result) {
       const result: ServerMetricsServerEntry = {
         location: entry.metric['location'],
@@ -114,12 +114,12 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       server.push(result);
     }
 
-    const accessKeys = [];
-    const tunnelTimeByAccessKeyMap = tunnelTimeByAccessKey.result.reduce((map, entry) => {
-      map.set(entry.metric['access_key'], parseFloat(entry.value[1]));
+    const tunnelTimeByAccessKeyMap = new Map();
+    for (const entry of tunnelTimeByAccessKey.result) {
+      tunnelTimeByAccessKeyMap.set(entry.metric['access_key'], parseFloat(entry.value[1]));
+    }
 
-      return map;
-    }, new Map());
+    const accessKeys = [];
     for (const entry of dataTransferredByAccessKey.result) {
       const result: ServerMetricsAccessKeyEntry = {
         accessKeyId: parseInt(entry.metric['access_key']),

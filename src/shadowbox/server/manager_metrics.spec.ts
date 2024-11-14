@@ -36,7 +36,7 @@ describe('PrometheusManagerMetrics', () => {
                 metric: {
                   location: 'US',
                   asn: '49490',
-                  asorg: 'null',
+                  asorg: null,
                 },
                 value: [null, '1000'],
               },
@@ -50,7 +50,7 @@ describe('PrometheusManagerMetrics', () => {
                 metric: {
                   location: 'US',
                   asn: '49490',
-                  asorg: 'null',
+                  asorg: null,
                 },
                 value: [null, '1000'],
               },
@@ -88,7 +88,7 @@ describe('PrometheusManagerMetrics', () => {
     {
       "location": "US",
       "asn": 49490,
-      "asOrg": "null",
+      "asOrg": null,
       "dataTransferred": {
         "bytes": 1000
       },
