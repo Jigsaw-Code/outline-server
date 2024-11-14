@@ -294,7 +294,7 @@ function write_config() {
     config+=("\"portForNewAccessKeys\": ${FLAGS_KEYS_PORT}")
   fi
   if [[ -n "${SB_DEFAULT_SERVER_NAME:-}" ]]; then
-    config+=("\"name\": \"$(escape_json_string "${SB_DEFAULT_SERVER_NAME}")\"")   
+    config+=("\"name\": \"$(escape_json_string "${SB_DEFAULT_SERVER_NAME}")\"")
   fi
   config+=("\"hostname\": \"$(escape_json_string "${PUBLIC_HOSTNAME}")\"")
   echo "{$(join , "${config[@]}")}" > "${STATE_DIR}/shadowbox_server_config.json"
@@ -323,13 +323,14 @@ docker_command=(
 
   # Used by Watchtower to know which containers to monitor.
   --label 'com.centurylinklabs.watchtower.enable=true'
-  
+  --label 'com.centurylinklabs.watchtower.scope=outline'
+
   # Use log rotation. See https://docs.docker.com/config/containers/logging/configure/.
   --log-driver local
 
   # The state that is persisted across restarts.
   -v "${STATE_DIR}:${STATE_DIR}"
-    
+
   # Where the container keeps its persistent state.
   -e "SB_STATE_DIR=${STATE_DIR}"
 
@@ -370,10 +371,12 @@ function start_watchtower() {
   # testing).  Otherwise refresh every hour.
   local -ir WATCHTOWER_REFRESH_SECONDS="${WATCHTOWER_REFRESH_SECONDS:-3600}"
   local -ar docker_watchtower_flags=(--name watchtower --log-driver local --restart always \
+      --label 'com.centurylinklabs.watchtower.enable=true' \
+      --label 'com.centurylinklabs.watchtower.scope=outline' \
       -v /var/run/docker.sock:/var/run/docker.sock)
   # By itself, local messes up the return code.
   local STDERR_OUTPUT
-  STDERR_OUTPUT="$(docker run -d "${docker_watchtower_flags[@]}" containrrr/watchtower --cleanup --label-enable --tlsverify --interval "${WATCHTOWER_REFRESH_SECONDS}" 2>&1 >/dev/null)" && return
+  STDERR_OUTPUT="$(docker run -d "${docker_watchtower_flags[@]}" containrrr/watchtower --cleanup --label-enable --scope=outline --tlsverify --interval "${WATCHTOWER_REFRESH_SECONDS}" 2>&1 >/dev/null)" && return
   readonly STDERR_OUTPUT
   log_error "FAILED"
   if docker_container_exists watchtower; then
@@ -555,7 +558,7 @@ function escape_json_string() {
       $'\\') escaped="\\\\";;
       *)
         if [[ "${char}" < $'\x20' ]]; then
-          case "${char}" in 
+          case "${char}" in
             $'\b') escaped="\\b";;
             $'\f') escaped="\\f";;
             $'\n') escaped="\\n";;
