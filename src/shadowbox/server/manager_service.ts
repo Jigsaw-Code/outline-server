@@ -644,7 +644,7 @@ export class ShadowsocksManagerService {
     }
 
     try {
-      const response = await this.managerMetrics.getServerMetrics({hours});
+      const response = await this.managerMetrics.getServerMetrics({seconds: hours * 60 * 60});
       res.send(HttpSuccess.OK, response);
       logging.debug(`getServerMetrics response ${JSON.stringify(response)}`);
       return next();
