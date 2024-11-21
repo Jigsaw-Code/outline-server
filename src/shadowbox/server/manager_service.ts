@@ -131,7 +131,7 @@ export function bindService(
 
   apiServer.put(`${apiPrefix}/name`, service.renameServer.bind(service));
   apiServer.get(`${apiPrefix}/server`, service.getServer.bind(service));
-  apiServer.get(`${apiPrefix}/server/metrics`, service.getServerMetrics.bind(service));
+  apiServer.get(`${apiPrefix}/experimental/server/metrics`, service.getServerMetrics.bind(service));
   apiServer.put(
     `${apiPrefix}/server/access-key-data-limit`,
     service.setDefaultDataLimit.bind(service)
@@ -190,21 +190,22 @@ function redirect(url: string): restify.RequestHandlerType {
   };
 }
 
-export function convertTimeRangeToHours(timeRange: string): number {
-  const TIME_RANGE_UNIT_TO_HOURS_MULTIPLYER = {
-    h: 1,
-    d: 24,
-    w: 7 * 24,
+export function convertTimeRangeToSeconds(timeRange: string): number {
+  const TIME_RANGE_UNIT_TO_SECONDS_MULTIPLYER = {
+    s: 1,
+    h: 60 * 60,
+    d: 24 * 60 * 60,
+    w: 7 * 24 * 60 * 60,
   };
 
   const timeRangeValue = Number(timeRange.slice(0, -1));
   const timeRangeUnit = timeRange.slice(-1);
 
-  if (isNaN(timeRangeValue) || !TIME_RANGE_UNIT_TO_HOURS_MULTIPLYER[timeRangeUnit]) {
+  if (isNaN(timeRangeValue) || !TIME_RANGE_UNIT_TO_SECONDS_MULTIPLYER[timeRangeUnit]) {
     throw new TypeError(`Invalid time range: ${timeRange}`);
   }
 
-  return timeRangeValue * TIME_RANGE_UNIT_TO_HOURS_MULTIPLYER[timeRangeUnit];
+  return timeRangeValue * TIME_RANGE_UNIT_TO_SECONDS_MULTIPLYER[timeRangeUnit];
 }
 
 function validateAccessKeyId(accessKeyId: unknown): string {
@@ -629,7 +630,7 @@ export class ShadowsocksManagerService {
   async getServerMetrics(req: RequestType, res: ResponseType, next: restify.Next) {
     logging.debug(`getServerMetrics request ${JSON.stringify(req.params)}`);
 
-    let hours;
+    let seconds;
     try {
       if (!req.query?.since) {
         return next(
@@ -637,14 +638,14 @@ export class ShadowsocksManagerService {
         );
       }
 
-      hours = convertTimeRangeToHours(req.query.since as string);
+      seconds = convertTimeRangeToSeconds(req.query.since as string);
     } catch (error) {
       logging.error(error);
       return next(new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message));
     }
 
     try {
-      const response = await this.managerMetrics.getServerMetrics({seconds: hours * 60 * 60});
+      const response = await this.managerMetrics.getServerMetrics({seconds});
       res.send(HttpSuccess.OK, response);
       logging.debug(`getServerMetrics response ${JSON.stringify(response)}`);
       return next();

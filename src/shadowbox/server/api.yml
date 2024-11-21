@@ -127,7 +127,7 @@ paths:
       responses:
         '204':
           description: Access key limit deleted successfully.
-  /server/metrics:
+  /experimental/server/metrics:
     get:
       tags: Server
       parameters:
