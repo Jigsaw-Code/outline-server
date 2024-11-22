@@ -48,10 +48,8 @@ export class FakeShadowsocksServer implements ShadowsocksServer {
   }
 }
 
-export class FakePrometheusClient extends PrometheusClient {
-  constructor(public bytesTransferredById: {[accessKeyId: string]: number}) {
-    super('');
-  }
+export class FakePrometheusClient implements PrometheusClient {
+  constructor(public bytesTransferredById: {[accessKeyId: string]: number}) {}
 
   async query(_query: string): Promise<QueryResultData> {
     const queryResultData = {result: []} as QueryResultData;

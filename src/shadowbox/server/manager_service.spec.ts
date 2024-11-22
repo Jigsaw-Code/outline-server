@@ -19,7 +19,7 @@ import * as restify from 'restify';
 import {InMemoryConfig, JsonConfig} from '../infrastructure/json_config';
 import {AccessKey, AccessKeyRepository, DataLimit} from '../model/access_key';
 import {ManagerMetrics} from './manager_metrics';
-import {bindService, ShadowsocksManagerService} from './manager_service';
+import {bindService, ShadowsocksManagerService, convertTimeRangeToSeconds} from './manager_service';
 import {FakePrometheusClient, FakeShadowsocksServer} from './mocks/mocks';
 import {AccessKeyConfigJson, ServerAccessKeyRepository} from './server_access_key';
 import {ServerConfigJson} from './server_config';
@@ -1197,6 +1197,20 @@ describe('bindService', () => {
       expect(response3.status).toEqual(404);
       await response3.json();
     });
+  });
+});
+
+describe('convertTimeRangeToHours', () => {
+  it('properly parses time ranges', () => {
+    expect(convertTimeRangeToSeconds('30d')).toEqual(30 * 24 * 60 * 60);
+    expect(convertTimeRangeToSeconds('20h')).toEqual(20 * 60 * 60);
+    expect(convertTimeRangeToSeconds('3w')).toEqual(7 * 3 * 24 * 60 * 60);
+  });
+
+  it('throws when an invalid time range is provided', () => {
+    expect(() => convertTimeRangeToSeconds('30dd')).toThrow();
+    expect(() => convertTimeRangeToSeconds('hi mom')).toThrow();
+    expect(() => convertTimeRangeToSeconds('1j')).toThrow();
   });
 });
 

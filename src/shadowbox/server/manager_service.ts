@@ -75,10 +75,19 @@ interface RequestParams {
   //   method: string
   [param: string]: unknown;
 }
+
+// Type to reflect that we recive an untyped query string
+interface RequestQuery {
+  // Supported parameters:
+  //  since: string
+  [param: string]: unknown;
+}
+
 // Simplified request and response type interfaces containing only the
 // properties we actually use, to make testing easier.
 interface RequestType {
   params: RequestParams;
+  query?: RequestQuery;
 }
 interface ResponseType {
   send(code: number, data?: {}): void;
@@ -122,6 +131,7 @@ export function bindService(
 
   apiServer.put(`${apiPrefix}/name`, service.renameServer.bind(service));
   apiServer.get(`${apiPrefix}/server`, service.getServer.bind(service));
+  apiServer.get(`${apiPrefix}/experimental/server/metrics`, service.getServerMetrics.bind(service));
   apiServer.put(
     `${apiPrefix}/server/access-key-data-limit`,
     service.setDefaultDataLimit.bind(service)
@@ -178,6 +188,24 @@ function redirect(url: string): restify.RequestHandlerType {
     logging.debug(`Redirecting ${req.url} => ${url}`);
     res.redirect(308, url, next);
   };
+}
+
+export function convertTimeRangeToSeconds(timeRange: string): number {
+  const TIME_RANGE_UNIT_TO_SECONDS_MULTIPLYER = {
+    s: 1,
+    h: 60 * 60,
+    d: 24 * 60 * 60,
+    w: 7 * 24 * 60 * 60,
+  };
+
+  const timeRangeValue = Number(timeRange.slice(0, -1));
+  const timeRangeUnit = timeRange.slice(-1);
+
+  if (isNaN(timeRangeValue) || !TIME_RANGE_UNIT_TO_SECONDS_MULTIPLYER[timeRangeUnit]) {
+    throw new TypeError(`Invalid time range: ${timeRange}`);
+  }
+
+  return timeRangeValue * TIME_RANGE_UNIT_TO_SECONDS_MULTIPLYER[timeRangeUnit];
 }
 
 function validateAccessKeyId(accessKeyId: unknown): string {
@@ -592,6 +620,34 @@ export class ShadowsocksManagerService {
       const response = await this.managerMetrics.getOutboundByteTransfer({hours: 30 * 24});
       res.send(HttpSuccess.OK, response);
       logging.debug(`getDataUsage response ${JSON.stringify(response)}`);
+      return next();
+    } catch (error) {
+      logging.error(error);
+      return next(new restifyErrors.InternalServerError());
+    }
+  }
+
+  async getServerMetrics(req: RequestType, res: ResponseType, next: restify.Next) {
+    logging.debug(`getServerMetrics request ${JSON.stringify(req.params)}`);
+
+    let seconds;
+    try {
+      if (!req.query?.since) {
+        return next(
+          new restifyErrors.MissingParameterError({statusCode: 400}, 'Parameter `since` is missing')
+        );
+      }
+
+      seconds = convertTimeRangeToSeconds(req.query.since as string);
+    } catch (error) {
+      logging.error(error);
+      return next(new restifyErrors.InvalidArgumentError({statusCode: 400}, error.message));
+    }
+
+    try {
+      const response = await this.managerMetrics.getServerMetrics({seconds});
+      res.send(HttpSuccess.OK, response);
+      logging.debug(`getServerMetrics response ${JSON.stringify(response)}`);
       return next();
     } catch (error) {
       logging.error(error);

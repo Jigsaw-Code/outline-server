@@ -13,9 +13,200 @@
 // limitations under the License.
 
 import {PrometheusManagerMetrics} from './manager_metrics';
+import {PrometheusClient, QueryResultData} from '../infrastructure/prometheus_scraper';
 import {FakePrometheusClient} from './mocks/mocks';
 
+export class QueryMapPrometheusClient implements PrometheusClient {
+  constructor(private queryMap: {[query: string]: QueryResultData}) {}
+
+  async query(_query: string): Promise<QueryResultData> {
+    return this.queryMap[_query];
+  }
+}
+
 describe('PrometheusManagerMetrics', () => {
+  it('getServerMetrics', async (done) => {
+    const managerMetrics = new PrometheusManagerMetrics(
+      new QueryMapPrometheusClient({
+        'sum(increase(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[0s])) by (location, asn, asorg)':
+          {
+            resultType: 'vector',
+            result: [
+              {
+                metric: {
+                  location: 'US',
+                  asn: '49490',
+                  asorg: null,
+                },
+                value: [null, '1000'],
+              },
+            ],
+          },
+        'sum(increase(shadowsocks_tunnel_time_seconds_per_location[0s])) by (location, asn, asorg)':
+          {
+            resultType: 'vector',
+            result: [
+              {
+                metric: {
+                  location: 'US',
+                  asn: '49490',
+                  asorg: null,
+                },
+                value: [null, '1000'],
+              },
+            ],
+          },
+        'sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t"}[0s])) by (access_key)': {
+          resultType: 'vector',
+          result: [
+            {
+              metric: {
+                access_key: '0',
+              },
+              value: [null, '1000'],
+            },
+          ],
+        },
+        'sum(increase(shadowsocks_tunnel_time_seconds[0s])) by (access_key)': {
+          resultType: 'vector',
+          result: [
+            {
+              metric: {
+                access_key: '0',
+              },
+              value: [null, '1000'],
+            },
+          ],
+        },
+      })
+    );
+
+    const serverMetrics = await managerMetrics.getServerMetrics({seconds: 0});
+
+    expect(JSON.stringify(serverMetrics, null, 2)).toEqual(`{
+  "server": [
+    {
+      "location": "US",
+      "asn": 49490,
+      "asOrg": "null",
+      "tunnelTime": {
+        "seconds": 1000
+      },
+      "dataTransferred": {
+        "bytes": 1000
+      }
+    }
+  ],
+  "accessKeys": [
+    {
+      "accessKeyId": 0,
+      "tunnelTime": {
+        "seconds": 1000
+      },
+      "dataTransferred": {
+        "bytes": 1000
+      }
+    }
+  ]
+}`);
+    done();
+  });
+
+  it('getServerMetrics - does a full outer join on metric data', async (done) => {
+    const managerMetrics = new PrometheusManagerMetrics(
+      new QueryMapPrometheusClient({
+        'sum(increase(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[0s])) by (location, asn, asorg)':
+          {
+            resultType: 'vector',
+            result: [
+              {
+                metric: {
+                  location: 'US',
+                  asn: '49490',
+                  asorg: null,
+                },
+                value: [null, '1000'],
+              },
+            ],
+          },
+        'sum(increase(shadowsocks_tunnel_time_seconds_per_location[0s])) by (location, asn, asorg)':
+          {
+            resultType: 'vector',
+            result: [
+              {
+                metric: {
+                  location: 'CA',
+                  asn: '53520',
+                  asorg: null,
+                },
+                value: [null, '1000'],
+              },
+            ],
+          },
+        'sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t"}[0s])) by (access_key)': {
+          resultType: 'vector',
+          result: [
+            {
+              metric: {
+                access_key: '0',
+              },
+              value: [null, '1000'],
+            },
+          ],
+        },
+        'sum(increase(shadowsocks_tunnel_time_seconds[0s])) by (access_key)': {
+          resultType: 'vector',
+          result: [
+            {
+              metric: {
+                access_key: '1',
+              },
+              value: [null, '1000'],
+            },
+          ],
+        },
+      })
+    );
+
+    const serverMetrics = await managerMetrics.getServerMetrics({seconds: 0});
+
+    expect(JSON.stringify(serverMetrics, null, 2)).toEqual(`{
+  "server": [
+    {
+      "location": "CA",
+      "asn": 53520,
+      "asOrg": "null",
+      "tunnelTime": {
+        "seconds": 1000
+      }
+    },
+    {
+      "location": "US",
+      "asn": 49490,
+      "asOrg": "null",
+      "dataTransferred": {
+        "bytes": 1000
+      }
+    }
+  ],
+  "accessKeys": [
+    {
+      "accessKeyId": 1,
+      "tunnelTime": {
+        "seconds": 1000
+      }
+    },
+    {
+      "accessKeyId": 0,
+      "dataTransferred": {
+        "bytes": 1000
+      }
+    }
+  ]
+}`);
+    done();
+  });
+
   it('getOutboundByteTransfer', async (done) => {
     const managerMetrics = new PrometheusManagerMetrics(
       new FakePrometheusClient({'access-key-1': 1000, 'access-key-2': 10000})

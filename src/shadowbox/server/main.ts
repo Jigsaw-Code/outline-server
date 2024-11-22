@@ -24,7 +24,7 @@ import {RealClock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
 import * as json_config from '../infrastructure/json_config';
 import * as logging from '../infrastructure/logging';
-import {PrometheusClient, startPrometheus} from '../infrastructure/prometheus_scraper';
+import {ApiPrometheusClient, startPrometheus} from '../infrastructure/prometheus_scraper';
 import {RolloutTracker} from '../infrastructure/rollout';
 import * as version from './version';
 
@@ -197,7 +197,7 @@ async function main() {
     prometheusEndpoint
   );
 
-  const prometheusClient = new PrometheusClient(prometheusEndpoint);
+  const prometheusClient = new ApiPrometheusClient(prometheusEndpoint);
   if (!serverConfig.data().portForNewAccessKeys) {
     serverConfig.data().portForNewAccessKeys = await portProvider.reserveNewPort();
     serverConfig.write();
