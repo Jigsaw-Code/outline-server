@@ -129,8 +129,8 @@ paths:
           description: Access key limit deleted successfully.
   /experimental/server/metrics:
     get:
-      tags: 
-        - Server
+      tags:
+        - Experimental
       parameters:
         - in: query
           name: since
