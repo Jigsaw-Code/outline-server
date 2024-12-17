@@ -75,6 +75,12 @@ jobs:
       - name: Shadowbox Integration Test
         run: ./task shadowbox:integration_test
 
+      - name: Verify Open API Spec
+        uses: mbowman100/swagger-validator-action@master
+        with:
+          files: |
+            src/shadowbox/server/api.yml
+
   manual-install-script:
     name: Manual Install Script
     runs-on: ubuntu-latest
