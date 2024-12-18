@@ -129,7 +129,8 @@ paths:
           description: Access key limit deleted successfully.
   /experimental/server/metrics:
     get:
-      tags: Server
+      tags:
+        - Experimental
       parameters:
         - in: query
           name: since
@@ -158,11 +159,13 @@ paths:
                         tunnelTime:
                           type: object
                           properties:
-                            seconds: number
+                            seconds: 
+                              type: number
                         dataTransferred:
                           type: object
                           properties:
-                            bytes: number
+                            bytes:
+                              type: number
                   accessKeys:
                     type: array
                     items:
@@ -173,11 +176,13 @@ paths:
                         tunnelTime:
                           type: object
                           properties:
-                            seconds: number
+                            seconds: 
+                              type: number
                         dataTransferred:
                           type: object
                           properties:
-                            bytes: number
+                            bytes: 
+                              type: number
               examples:
                 '0':
                   value: '{"server":[{"location":"US","asn":null,"asOrg":null,"tunnelTime":{"seconds":100},"dataTransferred":{"bytes":100}}],"accessKeys":[{"accessKeyId":"0","tunnelTime":{"seconds":100},"dataTransferred":{"bytes":100}}]}'
