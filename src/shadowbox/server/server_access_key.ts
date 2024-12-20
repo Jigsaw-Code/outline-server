@@ -28,7 +28,7 @@ import {
   ProxyParams,
 } from '../model/access_key';
 import * as errors from '../model/errors';
-import {ShadowsocksServer} from '../model/shadowsocks_server';
+import {ShadowsocksConfig, ShadowsocksServer, ShadowsocksService} from '../model/shadowsocks_server';
 import {PrometheusManagerMetrics} from './manager_metrics';
 
 // The format as json of access keys in the config file.
@@ -322,17 +322,34 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
   }
 
   private updateServer(): Promise<void> {
-    const serverAccessKeys = this.accessKeys
-      .filter((key) => !key.reachedDataLimit)
-      .map((key) => {
-        return {
+    const config: ShadowsocksConfig = {services: []}
+
+    // Group access keys by port.
+    const keysByPort = this.accessKeys.reduce((acc, key) => {
+      if (!key.reachedDataLimit) {
+        const port = key.proxyParams.portNumber;
+        (acc[port] ??= []).push(key);
+      }
+      return acc;
+    }, {} as Record<number, typeof this.accessKeys>);
+
+    // Create services for each port.
+    for (const port in keysByPort) {
+      const service: ShadowsocksService = {
+        listeners: [
+          { type: 'tcp', address: `[::]:${port}` },
+          { type: 'udp', address: `[::]:${port}` },
+        ],
+        keys: keysByPort[port].map((key) => ({
           id: key.id,
-          port: key.proxyParams.portNumber,
           cipher: key.proxyParams.encryptionMethod,
           secret: key.proxyParams.password,
-        };
-      });
-    return this.shadowsocksServer.update(serverAccessKeys);
+        })),
+      };
+      config.services.push(service);
+    }
+
+    return this.shadowsocksServer.update(config);
   }
 
   private loadAccessKeys(): AccessKey[] {

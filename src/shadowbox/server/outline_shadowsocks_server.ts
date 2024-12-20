@@ -19,14 +19,13 @@ import * as path from 'path';
 
 import * as file from '../infrastructure/file';
 import * as logging from '../infrastructure/logging';
-import {ShadowsocksAccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
+import {ShadowsocksAccessKey, ShadowsocksServer, ShadowsocksConfig} from '../model/shadowsocks_server';
 
 // Runs outline-ss-server.
 export class OutlineShadowsocksServer implements ShadowsocksServer {
   private ssProcess: child_process.ChildProcess;
   private ipCountryFilename?: string;
   private ipAsnFilename?: string;
-  private isAsnMetricsEnabled = false;
   private isReplayProtectionEnabled = false;
 
   /**
@@ -66,10 +65,10 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
   }
 
   // Promise is resolved after the outline-ss-config config is updated and the SIGHUP sent.
-  // Keys may not be active yet.
+  // Listeners and keys may not be active yet.
   // TODO(fortuna): Make promise resolve when keys are ready.
-  update(keys: ShadowsocksAccessKey[]): Promise<void> {
-    return this.writeConfigFile(keys).then(() => {
+  update(config: ShadowsocksConfig): Promise<void> {
+    return this.writeConfigFile(config).then(() => {
       if (!this.ssProcess) {
         this.start();
         return Promise.resolve();
@@ -79,24 +78,26 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
     });
   }
 
-  private writeConfigFile(keys: ShadowsocksAccessKey[]): Promise<void> {
+  private writeConfigFile(config: ShadowsocksConfig): Promise<void> {
     return new Promise((resolve, reject) => {
-      const keysJson = {keys: [] as ShadowsocksAccessKey[]};
-      for (const key of keys) {
-        if (!isAeadCipher(key.cipher)) {
-          logging.error(
-            `Cipher ${key.cipher} for access key ${key.id} is not supported: use an AEAD cipher instead.`
-          );
-          continue;
+      for (const service of config.services) {
+        const filteredKeys: ShadowsocksAccessKey[] = [];
+        for (const key of service.keys) {
+          if (!isAeadCipher(key.cipher)) {
+            logging.error(
+              `Cipher ${key.cipher} for access key ${key.id} is not supported: use an AEAD cipher instead.`
+            );
+            continue;
+          }
+          filteredKeys.push(key);
         }
-
-        keysJson.keys.push(key);
+        service.keys = filteredKeys;
       }
 
       mkdirp.sync(path.dirname(this.configFilename));
 
       try {
-        file.atomicWriteFileSync(this.configFilename, jsyaml.safeDump(keysJson, {sortKeys: true}));
+        file.atomicWriteFileSync(this.configFilename, jsyaml.safeDump(config, {sortKeys: true}));
         resolve();
       } catch (error) {
         reject(error);
