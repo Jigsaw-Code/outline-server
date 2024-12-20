@@ -325,13 +325,13 @@ export class ServerAccessKeyRepository implements AccessKeyRepository {
     const config: ShadowsocksConfig = {services: []}
 
     // Group access keys by port.
-    const keysByPort = this.accessKeys.reduce((acc, key) => {
-      if (!key.reachedDataLimit) {
+    const keysByPort = this.accessKeys
+      .filter((key) => !key.reachedDataLimit)
+      .reduce((acc, key) => {
         const port = key.proxyParams.portNumber;
         (acc[port] ??= []).push(key);
-      }
-      return acc;
-    }, {} as Record<number, typeof this.accessKeys>);
+        return acc;
+      }, {} as Record<number, typeof this.accessKeys>);
 
     // Create services for each port.
     for (const port in keysByPort) {
