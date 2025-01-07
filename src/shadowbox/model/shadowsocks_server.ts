@@ -13,31 +13,14 @@
 // limitations under the License.
 
 // Parameters required to identify and authenticate connections to a Shadowsocks server.
-export interface ShadowsocksServer {
-  // Updates the server to accept only the given service configs.
-  update(config: ShadowsocksConfig): Promise<void>;
-}
-
-/** Represents the overall Shadowsocks configuration with multiple services. */
-export interface ShadowsocksConfig {
-  services: ShadowsocksService[];
-}
-
-/* Represents a Shadowsocks service with its listeners and keys. */
-export interface ShadowsocksService {
-  listeners: ShadowsocksListener[];
-  keys: ShadowsocksAccessKey[];
-}
-
-/* Represents a single listener for a Shadowsocks service. */
-export interface ShadowsocksListener {
-  type: string;
-  address: string;
-}
-
-/* Represents an access key for a Shadowsocks service. */
 export interface ShadowsocksAccessKey {
   id: string;
+  port: number;
   cipher: string;
   secret: string;
+}
+
+export interface ShadowsocksServer {
+  // Updates the server to accept only the given access keys.
+  update(keys: ShadowsocksAccessKey[]): Promise<void>;
 }

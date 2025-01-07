@@ -19,7 +19,22 @@ import * as path from 'path';
 
 import * as file from '../infrastructure/file';
 import * as logging from '../infrastructure/logging';
-import {ShadowsocksAccessKey, ShadowsocksServer, ShadowsocksConfig} from '../model/shadowsocks_server';
+import {ShadowsocksAccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
+
+/** Represents an outline-ss-server configuration with multiple services. */
+export interface OutlineSSServerConfig {
+  services: {
+    listeners: {
+      type: string;
+      address: string;
+    }[];
+    keys: {
+      id: string;
+      cipher: string;
+      secret: string;
+    }[];
+  }[];
+}
 
 // Runs outline-ss-server.
 export class OutlineShadowsocksServer implements ShadowsocksServer {
@@ -65,10 +80,10 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
   }
 
   // Promise is resolved after the outline-ss-config config is updated and the SIGHUP sent.
-  // Listeners and keys may not be active yet.
+  // Keys may not be active yet.
   // TODO(fortuna): Make promise resolve when keys are ready.
-  update(config: ShadowsocksConfig): Promise<void> {
-    return this.writeConfigFile(config).then(() => {
+  update(keys: ShadowsocksAccessKey[]): Promise<void> {
+    return this.writeConfigFile(keys).then(() => {
       if (!this.ssProcess) {
         this.start();
         return Promise.resolve();
@@ -78,24 +93,39 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
     });
   }
 
-  private writeConfigFile(config: ShadowsocksConfig): Promise<void> {
+  private writeConfigFile(keys: ShadowsocksAccessKey[]): Promise<void> {
     return new Promise((resolve, reject) => {
-      for (const service of config.services) {
-        const filteredKeys: ShadowsocksAccessKey[] = [];
-        for (const key of service.keys) {
-          if (!isAeadCipher(key.cipher)) {
-            logging.error(
-              `Cipher ${key.cipher} for access key ${key.id} is not supported: use an AEAD cipher instead.`
-            );
-            continue;
-          }
-          filteredKeys.push(key);
+      const validKeys: ShadowsocksAccessKey[] = keys.filter((key) => {
+        if (!isAeadCipher(key.cipher)) {
+          logging.error(
+            `Cipher ${key.cipher} for access key ${key.id} is not supported: use an AEAD cipher instead.`
+          );
+          return false;
         }
-        service.keys = filteredKeys;
+        return true;
+      });
+
+      const config: OutlineSSServerConfig = {services: []};
+      const keysByPort: Record<number, ShadowsocksAccessKey[]> = {};
+      for (const key of validKeys) {
+        (keysByPort[key.port] ??= []).push(key);
+      }
+      for (const port in keysByPort) {
+        const service = {
+          listeners: [
+            {type: 'tcp', address: `[::]:${port}`},
+            {type: 'udp', address: `[::]:${port}`},
+          ],
+          keys: keysByPort[port].map((key) => ({
+            id: key.id,
+            cipher: key.cipher,
+            secret: key.secret,
+          })),
+        };
+        config.services.push(service);
       }
 
       mkdirp.sync(path.dirname(this.configFilename));
-
       try {
         file.atomicWriteFileSync(this.configFilename, jsyaml.safeDump(config, {sortKeys: true}));
         resolve();
