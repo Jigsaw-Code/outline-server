@@ -21,11 +21,13 @@ import * as path from 'path';
 
 import * as logging from '../infrastructure/logging';
 
+type Timestamp = number;
+
 export interface QueryResultData {
   resultType: 'matrix' | 'vector' | 'scalar' | 'string';
   result: Array<{
     metric: {[labelValue: string]: string};
-    value: [number, string];
+    value: [Timestamp, string];
   }>;
 }
 
