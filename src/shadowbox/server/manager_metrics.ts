@@ -204,8 +204,8 @@ function getServerMetricsServerEntry(
       location: location,
       asn: asn ? parseInt(asn) : null,
       asOrg: asorg ?? null,
-      tunnelTime: {seconds: 0},
       dataTransferred: {bytes: 0},
+      tunnelTime: {seconds: 0},
     };
     map.set(key, entry);
   }
@@ -221,8 +221,8 @@ function getServerMetricsAccessKeyEntry(
   if (entry === undefined) {
     entry = {
       accessKeyId: parseInt(accessKey),
-      tunnelTime: {seconds: 0},
       dataTransferred: {bytes: 0},
+      tunnelTime: {seconds: 0},
       connection: {
         lastConnected: null,
         lastTrafficSeen: null,
