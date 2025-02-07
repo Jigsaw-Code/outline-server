@@ -12,8 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {PrometheusClient, PrometheusValue} from '../infrastructure/prometheus_scraper';
+import {
+  PrometheusClient,
+  PrometheusValue,
+  QueryResultData,
+} from '../infrastructure/prometheus_scraper';
 import {DataUsageByUser, DataUsageTimeframe} from '../model/metrics';
+import {Comparator, Heap} from 'heap-js';
 
 const PROMETHEUS_RANGE_QUERY_STEP_SECONDS = 5 * 60;
 
@@ -25,9 +30,15 @@ interface Data {
   bytes: number;
 }
 
+interface PeakDevices {
+  count: number;
+  timestamp: Date | null;
+}
+
 interface ConnectionStats {
   lastConnected: Date | null;
   lastTrafficSeen: Date | null;
+  peakDevices: PeakDevices;
 }
 
 interface ServerMetricsServerEntry {
@@ -113,13 +124,13 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
         `sum(increase(shadowsocks_tunnel_time_seconds[${timeframe.seconds}s])) by (access_key)`
       ),
       this.prometheusClient.queryRange(
-        `sum(rate(shadowsocks_data_bytes{dir=~"c<p|p>t"}[5m])) by (access_key)`,
+        `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t"}[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s])) by (access_key)`,
         start,
         end,
         `${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s`
       ),
       this.prometheusClient.queryRange(
-        `sum(rate(shadowsocks_tunnel_time_seconds[5m])) by (access_key)`,
+        `sum(increase(shadowsocks_tunnel_time_seconds[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s])) by (access_key)`,
         start,
         end,
         `${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s`
@@ -149,6 +160,7 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
 
     const server = [];
     for (const [key, metrics] of serverMap.entries()) {
+      // TODO: Fix undefined values for asOrg.
       const [location, asn, asOrg] = key.split(',');
       server.push({
         location,
@@ -175,6 +187,16 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       entry.connection.lastConnected = lastConnected
         ? minDate(now, new Date(lastConnected[0] * 1000))
         : null;
+      const peakTunnelTimeSec = findPeak(result.values ?? []);
+      if (peakTunnelTimeSec !== null) {
+        const peakTunnelTimeOverTime =
+          parseFloat(peakTunnelTimeSec[1]) / PROMETHEUS_RANGE_QUERY_STEP_SECONDS;
+        entry.connection.peakDevices.count = Math.ceil(peakTunnelTimeOverTime);
+        entry.connection.peakDevices.timestamp = minDate(
+          now,
+          new Date(peakTunnelTimeSec[0] * 1000)
+        );
+      }
     }
 
     for (const result of dataTransferredByAccessKeyRange.result) {
@@ -205,6 +227,10 @@ function getServerMetricsAccessKeyEntry(
       connection: {
         lastConnected: null,
         lastTrafficSeen: null,
+        peakDevices: {
+          count: 0,
+          timestamp: null,
+        },
       },
     };
     map.set(accessKey, entry);
@@ -214,6 +240,26 @@ function getServerMetricsAccessKeyEntry(
 
 function minDate(date1: Date, date2: Date): Date {
   return date1 < date2 ? date1 : date2;
+}
+
+function findPeak(values: PrometheusValue[]): PrometheusValue | null {
+  // Ordering is determined by the values (max-heap). If the values are equal,
+  // we determine order by the timestamps (later timestamp comes first).
+  const comparator: Comparator<PrometheusValue> = (a, b) => {
+    const [timestampA, valueA] = [a[0], parseFloat(a[1])];
+    const [timestampB, valueB] = [b[0], parseFloat(b[1])];
+    if (valueB !== valueA) {
+      return valueB - valueA;
+    }
+    return timestampB - timestampA;
+  };
+  const heap = new Heap(comparator);
+  heap.init(values);
+  const peak = heap.peek();
+  if (peak === undefined) {
+    return null;
+  }
+  return parseFloat(peak[1]) > 0 ? peak : null;
 }
 
 function findLastNonZero(values: PrometheusValue[]): PrometheusValue | null {
