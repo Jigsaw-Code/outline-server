@@ -70,18 +70,25 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
   }
 
   async getServerMetrics(timeframe: Duration): Promise<ServerMetrics> {
-    const dataTransferredByLocation = await this.prometheusClient.query(
-      `sum(increase(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[${timeframe.seconds}s])) by (location, asn, asorg)`
-    );
-    const tunnelTimeByLocation = await this.prometheusClient.query(
-      `sum(increase(shadowsocks_tunnel_time_seconds_per_location[${timeframe.seconds}s])) by (location, asn, asorg)`
-    );
-    const dataTransferredByAccessKey = await this.prometheusClient.query(
-      `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t"}[${timeframe.seconds}s])) by (access_key)`
-    );
-    const tunnelTimeByAccessKey = await this.prometheusClient.query(
-      `sum(increase(shadowsocks_tunnel_time_seconds[${timeframe.seconds}s])) by (access_key)`
-    );
+    const [
+      dataTransferredByLocation,
+      tunnelTimeByLocation,
+      dataTransferredByAccessKey,
+      tunnelTimeByAccessKey,
+    ] = await Promise.all([
+      this.prometheusClient.query(
+        `sum(increase(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[${timeframe.seconds}s])) by (location, asn, asorg)`
+      ),
+      this.prometheusClient.query(
+        `sum(increase(shadowsocks_tunnel_time_seconds_per_location[${timeframe.seconds}s])) by (location, asn, asorg)`
+      ),
+      this.prometheusClient.query(
+        `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t"}[${timeframe.seconds}s])) by (access_key)`
+      ),
+      this.prometheusClient.query(
+        `sum(increase(shadowsocks_tunnel_time_seconds[${timeframe.seconds}s])) by (access_key)`
+      ),
+    ]);
 
     const serverMap = new Map();
     const serverMapKey = (entry) =>
