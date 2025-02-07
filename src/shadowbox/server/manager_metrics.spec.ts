@@ -22,6 +22,15 @@ export class QueryMapPrometheusClient implements PrometheusClient {
   async query(_query: string): Promise<QueryResultData> {
     return this.queryMap[_query];
   }
+
+  async queryRange(
+    _query: string,
+    _start: Date,
+    _end: Date,
+    _step: string
+  ): Promise<QueryResultData> {
+    throw new Error('unsupported');
+  }
 }
 
 describe('PrometheusManagerMetrics', () => {

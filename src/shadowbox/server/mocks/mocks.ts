@@ -62,4 +62,8 @@ export class FakePrometheusClient implements PrometheusClient {
     }
     return queryResultData;
   }
+
+  queryRange(_query: string, _start: Date, _end: Date, _step: string): Promise<QueryResultData> {
+    throw new Error('unsupported');
+  }
 }

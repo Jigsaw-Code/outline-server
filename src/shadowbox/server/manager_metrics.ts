@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {PrometheusClient} from '../infrastructure/prometheus_scraper';
+import {PrometheusClient, PrometheusValue} from '../infrastructure/prometheus_scraper';
 import {DataUsageByUser, DataUsageTimeframe} from '../model/metrics';
+
+const PROMETHEUS_RANGE_QUERY_STEP_SECONDS = 5 * 60;
 
 interface Duration {
   seconds: number;
@@ -21,6 +23,11 @@ interface Duration {
 
 interface Data {
   bytes: number;
+}
+
+interface ConnectionStats {
+  lastConnected: Date | null;
+  lastTrafficSeen: Date | null;
 }
 
 interface ServerMetricsServerEntry {
@@ -35,6 +42,7 @@ interface ServerMetricsAccessKeyEntry {
   accessKeyId: number;
   tunnelTime: Duration;
   dataTransferred: Data;
+  connection: ConnectionStats;
 }
 
 interface ServerMetrics {
@@ -70,11 +78,27 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
   }
 
   async getServerMetrics(timeframe: Duration): Promise<ServerMetrics> {
+    const now = new Date();
+    // We need to calculate consistent start and end times for Prometheus range
+    // queries. Rounding the end time *down* to the nearest multiple of the step
+    // prevents time "drift" between queries, which is crucial for reliable step
+    // alignment and consistent data retrieval, especially when using
+    // aggregations like increase() or rate(). This ensures that the same time
+    // windows are queried each time, leading to more stable and predictable
+    // results.
+    const endEpochSeconds =
+      Math.ceil(now.getTime() / (PROMETHEUS_RANGE_QUERY_STEP_SECONDS * 1000)) *
+      PROMETHEUS_RANGE_QUERY_STEP_SECONDS;
+    const end = new Date(endEpochSeconds * 1000);
+    const start = new Date(end.getTime() - timeframe.seconds * 1000);
+
     const [
       dataTransferredByLocation,
       tunnelTimeByLocation,
       dataTransferredByAccessKey,
       tunnelTimeByAccessKey,
+      dataTransferredByAccessKeyRange,
+      tunnelTimeByAccessKeyRange,
     ] = await Promise.all([
       this.prometheusClient.query(
         `sum(increase(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[${timeframe.seconds}s])) by (location, asn, asorg)`
@@ -87,6 +111,18 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       ),
       this.prometheusClient.query(
         `sum(increase(shadowsocks_tunnel_time_seconds[${timeframe.seconds}s])) by (access_key)`
+      ),
+      this.prometheusClient.queryRange(
+        `sum(rate(shadowsocks_data_bytes{dir=~"c<p|p>t"}[5m])) by (access_key)`,
+        start,
+        end,
+        `${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s`
+      ),
+      this.prometheusClient.queryRange(
+        `sum(rate(shadowsocks_tunnel_time_seconds[5m])) by (access_key)`,
+        start,
+        end,
+        `${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s`
       ),
     ]);
 
@@ -122,36 +158,70 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       });
     }
 
-    const accessKeyMap = new Map();
-    for (const entry of tunnelTimeByAccessKey.result) {
-      accessKeyMap.set(entry.metric['access_key'], {
-        tunnelTime: {
-          seconds: parseFloat(entry.value[1]),
-        },
-      });
+    const accessKeyMap = new Map<string, ServerMetricsAccessKeyEntry>();
+    for (const result of tunnelTimeByAccessKey.result) {
+      const entry = getServerMetricsAccessKeyEntry(accessKeyMap, result.metric['access_key']);
+      entry.tunnelTime.seconds = result.value ? parseFloat(result.value[1]) : 0;
     }
 
-    for (const entry of dataTransferredByAccessKey.result) {
-      if (!accessKeyMap.has(entry.metric['access_key'])) {
-        accessKeyMap.set(entry.metric['access_key'], {});
-      }
-
-      accessKeyMap.get(entry.metric['access_key']).dataTransferred = {
-        bytes: parseFloat(entry.value[1]),
-      };
+    for (const result of dataTransferredByAccessKey.result) {
+      const entry = getServerMetricsAccessKeyEntry(accessKeyMap, result.metric['access_key']);
+      entry.dataTransferred.bytes = result.value ? parseFloat(result.value[1]) : 0;
     }
 
-    const accessKeys = [];
-    for (const [key, metrics] of accessKeyMap.entries()) {
-      accessKeys.push({
-        accessKeyId: parseInt(key),
-        ...metrics,
-      });
+    for (const result of tunnelTimeByAccessKeyRange.result) {
+      const entry = getServerMetricsAccessKeyEntry(accessKeyMap, result.metric['access_key']);
+      const lastConnected = findLastNonZero(result.values ?? []);
+      entry.connection.lastConnected = lastConnected
+        ? minDate(now, new Date(lastConnected[0] * 1000))
+        : null;
+    }
+
+    for (const result of dataTransferredByAccessKeyRange.result) {
+      const entry = getServerMetricsAccessKeyEntry(accessKeyMap, result.metric['access_key']);
+      const lastTrafficSeen = findLastNonZero(result.values ?? []);
+      entry.connection.lastTrafficSeen = lastTrafficSeen
+        ? minDate(now, new Date(lastTrafficSeen[0] * 1000))
+        : null;
     }
 
     return {
       server,
-      accessKeys,
+      accessKeys: Array.from(accessKeyMap.values()),
     };
   }
+}
+
+function getServerMetricsAccessKeyEntry(
+  map: Map<string, ServerMetricsAccessKeyEntry>,
+  accessKey: string
+): ServerMetricsAccessKeyEntry {
+  let entry = map.get(accessKey);
+  if (entry === undefined) {
+    entry = {
+      accessKeyId: parseInt(accessKey),
+      tunnelTime: {seconds: 0},
+      dataTransferred: {bytes: 0},
+      connection: {
+        lastConnected: null,
+        lastTrafficSeen: null,
+      },
+    };
+    map.set(accessKey, entry);
+  }
+  return entry;
+}
+
+function minDate(date1: Date, date2: Date): Date {
+  return date1 < date2 ? date1 : date2;
+}
+
+function findLastNonZero(values: PrometheusValue[]): PrometheusValue | null {
+  for (let i = values.length - 1; i >= 0; i--) {
+    const value = values[i];
+    if (parseFloat(value[1]) > 0) {
+      return value;
+    }
+  }
+  return null;
 }
