@@ -91,7 +91,7 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
   async getServerMetrics(timeframe: Duration): Promise<ServerMetrics> {
     const now = new Date();
     // We need to calculate consistent start and end times for Prometheus range
-    // queries. Rounding the end time *down* to the nearest multiple of the step
+    // queries. Rounding the end time *up* to the nearest multiple of the step
     // prevents time "drift" between queries, which is crucial for reliable step
     // alignment and consistent data retrieval, especially when using
     // aggregations like increase() or rate(). This ensures that the same time
