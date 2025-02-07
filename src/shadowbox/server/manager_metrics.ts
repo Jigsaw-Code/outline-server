@@ -150,17 +150,17 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
 
     const accessKeyMap = new Map<string, ServerMetricsAccessKeyEntry>();
     for (const result of tunnelTimeByAccessKey.result) {
-      const entry = getServerMetricsAccessKeyEntry(accessKeyMap, result.metric['access_key']);
+      const entry = getServerMetricsAccessKeyEntry(accessKeyMap, result.metric);
       entry.tunnelTime.seconds = result.value ? parseFloat(result.value[1]) : 0;
     }
 
     for (const result of dataTransferredByAccessKey.result) {
-      const entry = getServerMetricsAccessKeyEntry(accessKeyMap, result.metric['access_key']);
+      const entry = getServerMetricsAccessKeyEntry(accessKeyMap, result.metric);
       entry.dataTransferred.bytes = result.value ? parseFloat(result.value[1]) : 0;
     }
 
     for (const result of tunnelTimeByAccessKeyRange.result) {
-      const entry = getServerMetricsAccessKeyEntry(accessKeyMap, result.metric['access_key']);
+      const entry = getServerMetricsAccessKeyEntry(accessKeyMap, result.metric);
       const lastConnected = findLastNonZero(result.values ?? []);
       entry.connection.lastConnected = lastConnected
         ? minDate(now, new Date(lastConnected[0] * 1000))
@@ -178,7 +178,7 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     }
 
     for (const result of dataTransferredByAccessKeyRange.result) {
-      const entry = getServerMetricsAccessKeyEntry(accessKeyMap, result.metric['access_key']);
+      const entry = getServerMetricsAccessKeyEntry(accessKeyMap, result.metric);
       const lastTrafficSeen = findLastNonZero(result.values ?? []);
       entry.connection.lastTrafficSeen = lastTrafficSeen
         ? minDate(now, new Date(lastTrafficSeen[0] * 1000))
@@ -214,8 +214,9 @@ function getServerMetricsServerEntry(
 
 function getServerMetricsAccessKeyEntry(
   map: Map<string, ServerMetricsAccessKeyEntry>,
-  accessKey: string
+  metric: PrometheusMetric
 ): ServerMetricsAccessKeyEntry {
+  const accessKey = metric['access_key'];
   let entry = map.get(accessKey);
   if (entry === undefined) {
     entry = {
