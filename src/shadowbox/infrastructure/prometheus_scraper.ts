@@ -28,6 +28,14 @@ import * as logging from '../infrastructure/logging';
 type Timestamp = number;
 
 /**
+ * Represents a Prometheus metric's labels.
+ * Each key in the object is a label name, and the corresponding value is the label's value.
+ *
+ * @typedef {Object<string, string>} PrometheusMetric
+ */
+export type PrometheusMetric = {[labelValue: string]: string};
+
+/**
  * Represents a Prometheus value, which is a tuple of a timestamp and a string value.
  * @typedef {[Timestamp, string]} PrometheusValue
  */
@@ -41,7 +49,7 @@ export type PrometheusValue = [Timestamp, string];
  * @property {PrometheusValue} [value] - Single value (for instant queries).
  */
 export type PrometheusResult = {
-  metric: {[labelValue: string]: string};
+  metric: PrometheusMetric;
   values?: PrometheusValue[];
   value?: PrometheusValue;
 };
@@ -128,7 +136,9 @@ export class ApiPrometheusClient implements PrometheusClient {
 
   queryRange(query: string, start: Date, end: Date, step: string): Promise<QueryResultData> {
     return new Promise<QueryResultData>((fulfill, reject) => {
-      const url = `${this.address}/api/v1/query_range?query=${encodeURIComponent(query)}&start=${start.toISOString()}&end=${end.toISOString()}&step=${step}`;
+      const url = `${this.address}/api/v1/query_range?query=${encodeURIComponent(
+        query
+      )}&start=${start.toISOString()}&end=${end.toISOString()}&step=${step}`;
       http
         .get(url, (response) => {
           if (response.statusCode < 200 || response.statusCode > 299) {

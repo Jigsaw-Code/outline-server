@@ -14,8 +14,8 @@
 
 import {
   PrometheusClient,
+  PrometheusMetric,
   PrometheusValue,
-  QueryResultData,
 } from '../infrastructure/prometheus_scraper';
 import {DataUsageByUser, DataUsageTimeframe} from '../model/metrics';
 import {Comparator, Heap} from 'heap-js';
@@ -43,8 +43,8 @@ interface ConnectionStats {
 
 interface ServerMetricsServerEntry {
   location: string;
-  asn: number;
-  asOrg: string;
+  asn: number | null;
+  asOrg: string | null;
   tunnelTime: Duration;
   dataTransferred: Data;
 }
@@ -137,37 +137,15 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       ),
     ]);
 
-    const serverMap = new Map();
-    const serverMapKey = (entry) =>
-      `${entry.metric['location']},${entry.metric['asn']},${entry.metric['asorg']}`;
-    for (const entry of tunnelTimeByLocation.result) {
-      serverMap.set(serverMapKey(entry), {
-        tunnelTime: {
-          seconds: parseFloat(entry.value[1]),
-        },
-      });
+    const serverMap = new Map<string, ServerMetricsServerEntry>();
+    for (const result of tunnelTimeByLocation.result) {
+      const entry = getServerMetricsServerEntry(serverMap, result.metric);
+      entry.tunnelTime.seconds = result.value ? parseFloat(result.value[1]) : 0;
     }
 
-    for (const entry of dataTransferredByLocation.result) {
-      if (!serverMap.has(serverMapKey(entry))) {
-        serverMap.set(serverMapKey(entry), {});
-      }
-
-      serverMap.get(serverMapKey(entry)).dataTransferred = {
-        bytes: parseFloat(entry.value[1]),
-      };
-    }
-
-    const server = [];
-    for (const [key, metrics] of serverMap.entries()) {
-      // TODO: Fix undefined values for asOrg.
-      const [location, asn, asOrg] = key.split(',');
-      server.push({
-        location,
-        asn: parseInt(asn),
-        asOrg,
-        ...metrics,
-      });
+    for (const result of dataTransferredByLocation.result) {
+      const entry = getServerMetricsServerEntry(serverMap, result.metric);
+      entry.dataTransferred.bytes = result.value ? parseFloat(result.value[1]) : 0;
     }
 
     const accessKeyMap = new Map<string, ServerMetricsAccessKeyEntry>();
@@ -208,10 +186,30 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     }
 
     return {
-      server,
+      server: Array.from(serverMap.values()),
       accessKeys: Array.from(accessKeyMap.values()),
     };
   }
+}
+
+function getServerMetricsServerEntry(
+  map: Map<string, ServerMetricsServerEntry>,
+  metric: PrometheusMetric
+): ServerMetricsServerEntry {
+  const {location, asn, asorg} = metric;
+  const key = `${location},${asn},${asorg}`;
+  let entry = map.get(key);
+  if (entry === undefined) {
+    entry = {
+      location: location,
+      asn: asn ? parseInt(asn) : null,
+      asOrg: asorg ?? null,
+      tunnelTime: {seconds: 0},
+      dataTransferred: {bytes: 0},
+    };
+    map.set(key, entry);
+  }
+  return entry;
 }
 
 function getServerMetricsAccessKeyEntry(
