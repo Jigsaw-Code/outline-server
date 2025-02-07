@@ -86,7 +86,6 @@ export interface PrometheusClient {
    * @function query
    * @param {string} query - The PromQL query string.
    * @returns {Promise<QueryResultData>} A Promise that resolves to the query result data.
-   * @throws {Error} If the query fails.
    */
   query(query: string): Promise<QueryResultData>;
 
@@ -98,7 +97,6 @@ export interface PrometheusClient {
    * @param {Date} end - The end time for the query range.
    * @param {string} step - The step size for the query range (e.g., "1m", "5m").  This controls the resolution of the returned data.
    * @returns {Promise<QueryResultData>} A Promise that resolves to the query result data.
-   * @throws {Error} If the query fails.
    */
   queryRange(query: string, start: Date, end: Date, step: string): Promise<QueryResultData>;
 }
