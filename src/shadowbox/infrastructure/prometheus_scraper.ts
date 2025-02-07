@@ -93,12 +93,12 @@ export interface PrometheusClient {
    * Performs a range query against the Prometheus API.
    * @function queryRange
    * @param {string} query - The PromQL query string.
-   * @param {Date} start - The start time for the query range.
-   * @param {Date} end - The end time for the query range.
+   * @param {number} start - The start time for the query range.
+   * @param {number} end - The end time for the query range.
    * @param {string} step - The step size for the query range (e.g., "1m", "5m").  This controls the resolution of the returned data.
    * @returns {Promise<QueryResultData>} A Promise that resolves to the query result data.
    */
-  queryRange(query: string, start: Date, end: Date, step: string): Promise<QueryResultData>;
+  queryRange(query: string, start: number, end: number, step: string): Promise<QueryResultData>;
 }
 
 export class ApiPrometheusClient implements PrometheusClient {
@@ -131,16 +131,15 @@ export class ApiPrometheusClient implements PrometheusClient {
     });
   }
 
-
   query(query: string): Promise<QueryResultData> {
     const url = `${this.address}/api/v1/query?query=${encodeURIComponent(query)}`;
     return this.request(url);
   }
 
-  queryRange(query: string, start: Date, end: Date, step: string): Promise<QueryResultData> {
+  queryRange(query: string, start: number, end: number, step: string): Promise<QueryResultData> {
     const url = `${this.address}/api/v1/query_range?query=${encodeURIComponent(
       query
-    )}&start=${start.toISOString()}&end=${end.toISOString()}&step=${step}`;
+    )}&start=${start}&end=${end}&step=${step}`;
     return this.request(url);
   }
 }

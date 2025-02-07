@@ -32,12 +32,12 @@ interface Data {
 
 interface PeakDevices {
   count: number;
-  timestamp: Date | null;
+  timestamp: number | null;
 }
 
 interface ConnectionStats {
-  lastConnected: Date | null;
-  lastTrafficSeen: Date | null;
+  lastConnected: number | null;
+  lastTrafficSeen: number | null;
   peakDevices: PeakDevices;
 }
 
@@ -89,7 +89,7 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
   }
 
   async getServerMetrics(timeframe: Duration): Promise<ServerMetrics> {
-    const now = new Date();
+    const now = new Date().getTime();
     // We need to calculate consistent start and end times for Prometheus range
     // queries. Rounding the end time *up* to the nearest multiple of the step
     // prevents time "drift" between queries, which is crucial for reliable step
@@ -97,11 +97,10 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     // aggregations like increase() or rate(). This ensures that the same time
     // windows are queried each time, leading to more stable and predictable
     // results.
-    const endEpochSeconds =
-      Math.ceil(now.getTime() / (PROMETHEUS_RANGE_QUERY_STEP_SECONDS * 1000)) *
+    const end =
+      Math.ceil(now / (PROMETHEUS_RANGE_QUERY_STEP_SECONDS * 1000)) *
       PROMETHEUS_RANGE_QUERY_STEP_SECONDS;
-    const end = new Date(endEpochSeconds * 1000);
-    const start = new Date(end.getTime() - timeframe.seconds * 1000);
+    const start = end - timeframe.seconds;
 
     const [
       dataTransferredByLocation,
@@ -162,27 +161,20 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     for (const result of tunnelTimeByAccessKeyRange.result) {
       const entry = getServerMetricsAccessKeyEntry(accessKeyMap, result.metric);
       const lastConnected = findLastNonZero(result.values ?? []);
-      entry.connection.lastConnected = lastConnected
-        ? minDate(now, new Date(lastConnected[0] * 1000))
-        : null;
+      entry.connection.lastConnected = lastConnected ? Math.min(now, lastConnected[0]) : null;
       const peakTunnelTimeSec = findPeak(result.values ?? []);
       if (peakTunnelTimeSec !== null) {
         const peakTunnelTimeOverTime =
           parseFloat(peakTunnelTimeSec[1]) / PROMETHEUS_RANGE_QUERY_STEP_SECONDS;
         entry.connection.peakDevices.count = Math.ceil(peakTunnelTimeOverTime);
-        entry.connection.peakDevices.timestamp = minDate(
-          now,
-          new Date(peakTunnelTimeSec[0] * 1000)
-        );
+        entry.connection.peakDevices.timestamp = Math.min(now, peakTunnelTimeSec[0]);
       }
     }
 
     for (const result of dataTransferredByAccessKeyRange.result) {
       const entry = getServerMetricsAccessKeyEntry(accessKeyMap, result.metric);
       const lastTrafficSeen = findLastNonZero(result.values ?? []);
-      entry.connection.lastTrafficSeen = lastTrafficSeen
-        ? minDate(now, new Date(lastTrafficSeen[0] * 1000))
-        : null;
+      entry.connection.lastTrafficSeen = lastTrafficSeen ? Math.min(now, lastTrafficSeen[0]) : null;
     }
 
     return {
@@ -235,10 +227,6 @@ function getServerMetricsAccessKeyEntry(
     map.set(accessKey, entry);
   }
   return entry;
-}
-
-function minDate(date1: Date, date2: Date): Date {
-  return date1 < date2 ? date1 : date2;
 }
 
 function findPeak(values: PrometheusValue[]): PrometheusValue | null {

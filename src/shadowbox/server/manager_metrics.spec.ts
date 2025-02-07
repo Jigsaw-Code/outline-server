@@ -28,8 +28,8 @@ export class QueryMapPrometheusClient implements PrometheusClient {
 
   async queryRange(
     query: string,
-    _start: Date,
-    _end: Date,
+    _start: number,
+    _end: number,
     _step: string
   ): Promise<QueryResultData> {
     return this.queryRangeMap[query];
@@ -151,11 +151,11 @@ describe('PrometheusManagerMetrics', () => {
         "seconds": 1000
       },
       "connection": {
-        "lastConnected": "2025-02-07T20:16:38.000Z",
-        "lastTrafficSeen": "2025-02-07T20:16:38.000Z",
+        "lastConnected": 1738959398,
+        "lastTrafficSeen": 1738959398,
         "peakDevices": {
           "count": 4,
-          "timestamp": "2025-02-07T20:16:38.000Z"
+          "timestamp": 1738959398
         }
       }
     }
@@ -252,7 +252,6 @@ describe('PrometheusManagerMetrics', () => {
 
     const serverMetrics = await managerMetrics.getServerMetrics({seconds: 0});
 
-    console.log(JSON.stringify(serverMetrics, null, 2));
     expect(JSON.stringify(serverMetrics, null, 2)).toEqual(`{
   "server": [
     {
@@ -305,11 +304,11 @@ describe('PrometheusManagerMetrics', () => {
         "seconds": 0
       },
       "connection": {
-        "lastConnected": "2025-02-07T20:16:38.000Z",
-        "lastTrafficSeen": "2025-02-07T20:16:38.000Z",
+        "lastConnected": 1738959398,
+        "lastTrafficSeen": 1738959398,
         "peakDevices": {
           "count": 4,
-          "timestamp": "2025-02-07T20:16:38.000Z"
+          "timestamp": 1738959398
         }
       }
     }
