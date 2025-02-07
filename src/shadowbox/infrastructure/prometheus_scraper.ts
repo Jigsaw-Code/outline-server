@@ -104,9 +104,8 @@ export interface PrometheusClient {
 export class ApiPrometheusClient implements PrometheusClient {
   constructor(private address: string) {}
 
-  query(query: string): Promise<QueryResultData> {
+  private request(url: string): Promise<QueryResultData> {
     return new Promise<QueryResultData>((fulfill, reject) => {
-      const url = `${this.address}/api/v1/query?query=${encodeURIComponent(query)}`;
       http
         .get(url, (response) => {
           if (response.statusCode < 200 || response.statusCode > 299) {
@@ -132,35 +131,17 @@ export class ApiPrometheusClient implements PrometheusClient {
     });
   }
 
+
+  query(query: string): Promise<QueryResultData> {
+    const url = `${this.address}/api/v1/query?query=${encodeURIComponent(query)}`;
+    return this.request(url);
+  }
+
   queryRange(query: string, start: Date, end: Date, step: string): Promise<QueryResultData> {
-    return new Promise<QueryResultData>((fulfill, reject) => {
-      const url = `${this.address}/api/v1/query_range?query=${encodeURIComponent(
-        query
-      )}&start=${start.toISOString()}&end=${end.toISOString()}&step=${step}`;
-      http
-        .get(url, (response) => {
-          if (response.statusCode < 200 || response.statusCode > 299) {
-            reject(new Error(`Got error ${response.statusCode}`));
-            response.resume();
-            return;
-          }
-          let body = '';
-          response.on('data', (data) => {
-            body += data;
-          });
-          response.on('end', () => {
-            const result = JSON.parse(body) as QueryResult;
-            if (result.status !== 'success') {
-              console.log(result);
-              return reject(new Error(`Error ${result.errorType}: ${result.error}`));
-            }
-            fulfill(result.data);
-          });
-        })
-        .on('error', (e) => {
-          reject(new Error(`Failed to query prometheus API: ${e}`));
-        });
-    });
+    const url = `${this.address}/api/v1/query_range?query=${encodeURIComponent(
+      query
+    )}&start=${start.toISOString()}&end=${end.toISOString()}&step=${step}`;
+    return this.request(url);
   }
 }
 
