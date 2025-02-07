@@ -21,17 +21,46 @@ import * as path from 'path';
 
 import * as logging from '../infrastructure/logging';
 
+/**
+ * Represents a Unix timestamp in seconds.
+ * @typedef {number} Timestamp
+ */
 type Timestamp = number;
 
+/**
+ * Represents a Prometheus value, which is a tuple of a timestamp and a string value.
+ * @typedef {[Timestamp, string]} PrometheusValue
+ */
+export type PrometheusValue = [Timestamp, string];
+
+/**
+ * Represents a Prometheus result, which can be a time series (values) or a single value.
+ * @typedef {Object} PrometheusResult
+ * @property {Object.<string, string>} metric - Labels associated with the metric.
+ * @property {Array<PrometheusValue>} [values] - Time series data (for range queries).
+ * @property {PrometheusValue} [value] - Single value (for instant queries).
+ */
+export type PrometheusResult = {
+  metric: {[labelValue: string]: string};
+  values?: PrometheusValue[];
+  value?: PrometheusValue;
+};
+
+/**
+ * Represents the data part of a Prometheus query result.
+ * @interface QueryResultData
+ */
 export interface QueryResultData {
   resultType: 'matrix' | 'vector' | 'scalar' | 'string';
-  result: Array<{
-    metric: {[labelValue: string]: string};
-    value: [Timestamp, string];
-  }>;
+  result: PrometheusResult[];
 }
 
-// From https://prometheus.io/docs/prometheus/latest/querying/api/
+/**
+ * Represents the full JSON response from a Prometheus query.  This interface
+ * is based on the Prometheus API documentation:
+ * https://prometheus.io/docs/prometheus/latest/querying/api/
+ * @interface QueryResult
+ */
 interface QueryResult {
   status: 'success' | 'error';
   data: QueryResultData;
@@ -39,8 +68,31 @@ interface QueryResult {
   error: string;
 }
 
+/**
+ * Interface for a Prometheus client.
+ * @interface PrometheusClient
+ */
 export interface PrometheusClient {
+  /**
+   * Performs an instant query against the Prometheus API.
+   * @function query
+   * @param {string} query - The PromQL query string.
+   * @returns {Promise<QueryResultData>} A Promise that resolves to the query result data.
+   * @throws {Error} If the query fails.
+   */
   query(query: string): Promise<QueryResultData>;
+
+  /**
+   * Performs a range query against the Prometheus API.
+   * @function queryRange
+   * @param {string} query - The PromQL query string.
+   * @param {Date} start - The start time for the query range.
+   * @param {Date} end - The end time for the query range.
+   * @param {string} step - The step size for the query range (e.g., "1m", "5m").  This controls the resolution of the returned data.
+   * @returns {Promise<QueryResultData>} A Promise that resolves to the query result data.
+   * @throws {Error} If the query fails.
+   */
+  queryRange(query: string, start: Date, end: Date, step: string): Promise<QueryResultData>;
 }
 
 export class ApiPrometheusClient implements PrometheusClient {
@@ -63,6 +115,35 @@ export class ApiPrometheusClient implements PrometheusClient {
           response.on('end', () => {
             const result = JSON.parse(body) as QueryResult;
             if (result.status !== 'success') {
+              return reject(new Error(`Error ${result.errorType}: ${result.error}`));
+            }
+            fulfill(result.data);
+          });
+        })
+        .on('error', (e) => {
+          reject(new Error(`Failed to query prometheus API: ${e}`));
+        });
+    });
+  }
+
+  queryRange(query: string, start: Date, end: Date, step: string): Promise<QueryResultData> {
+    return new Promise<QueryResultData>((fulfill, reject) => {
+      const url = `${this.address}/api/v1/query_range?query=${encodeURIComponent(query)}&start=${start.toISOString()}&end=${end.toISOString()}&step=${step}`;
+      http
+        .get(url, (response) => {
+          if (response.statusCode < 200 || response.statusCode > 299) {
+            reject(new Error(`Got error ${response.statusCode}`));
+            response.resume();
+            return;
+          }
+          let body = '';
+          response.on('data', (data) => {
+            body += data;
+          });
+          response.on('end', () => {
+            const result = JSON.parse(body) as QueryResult;
+            if (result.status !== 'success') {
+              console.log(result);
               return reject(new Error(`Error ${result.errorType}: ${result.error}`));
             }
             fulfill(result.data);
