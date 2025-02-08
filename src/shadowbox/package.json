@@ -9,7 +9,6 @@
     "Using https:// for ShadowsocksConfig to avoid adding git in the Docker image"
   ],
   "dependencies": {
-    "heap-js": "^2.6.0",
     "ip-regex": "^4.1.0",
     "js-yaml": "^3.12.0",
     "outline-shadowsocksconfig": "github:Jigsaw-Code/outline-shadowsocksconfig#v0.2.0",

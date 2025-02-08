@@ -18,7 +18,6 @@ import {
   PrometheusValue,
 } from '../infrastructure/prometheus_scraper';
 import {DataUsageByUser, DataUsageTimeframe} from '../model/metrics';
-import {Comparator, Heap} from 'heap-js';
 
 const PROMETHEUS_RANGE_QUERY_STEP_SECONDS = 5 * 60;
 
@@ -164,10 +163,12 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       entry.connection.lastConnected = lastConnected ? Math.min(now, lastConnected[0]) : null;
       const peakTunnelTimeSec = findPeak(result.values ?? []);
       if (peakTunnelTimeSec !== null) {
-        const peakTunnelTimeOverTime =
-          parseFloat(peakTunnelTimeSec[1]) / PROMETHEUS_RANGE_QUERY_STEP_SECONDS;
-        entry.connection.peakDevices.count = Math.ceil(peakTunnelTimeOverTime);
-        entry.connection.peakDevices.timestamp = Math.min(now, peakTunnelTimeSec[0]);
+        const peakValue = parseFloat(peakTunnelTimeSec[1]);
+        if (peakValue > 0) {
+          const peakTunnelTimeOverTime = peakValue / PROMETHEUS_RANGE_QUERY_STEP_SECONDS;
+          entry.connection.peakDevices.count = Math.ceil(peakTunnelTimeOverTime);
+          entry.connection.peakDevices.timestamp = Math.min(now, peakTunnelTimeSec[0]);
+        }
       }
     }
 
@@ -229,26 +230,32 @@ function getServerMetricsAccessKeyEntry(
   return entry;
 }
 
+/**
+ * Finds the peak PrometheusValue in an array of PrometheusValues.
+ *
+ * The peak is determined by the highest value. If values are equal, the
+ * PrometheusValue with the latest timestamp is considered the peak.
+ */
 function findPeak(values: PrometheusValue[]): PrometheusValue | null {
-  // Ordering is determined by the values (max-heap). If the values are equal,
-  // we determine order by the timestamps (later timestamp comes first).
-  const comparator: Comparator<PrometheusValue> = (a, b) => {
-    const [timestampA, valueA] = [a[0], parseFloat(a[1])];
-    const [timestampB, valueB] = [b[0], parseFloat(b[1])];
-    if (valueB !== valueA) {
-      return valueB - valueA;
+  let peak: PrometheusValue | null = null;
+  let maxValue = -Infinity;
+
+  for (const value of values) {
+    const currentValue = parseFloat(value[1]);
+    if (currentValue > maxValue) {
+      maxValue = currentValue;
+      peak = value;
+    } else if (currentValue === maxValue && value[0] > peak[0]) {
+      peak = value;
     }
-    return timestampB - timestampA;
-  };
-  const heap = new Heap(comparator);
-  heap.init(values);
-  const peak = heap.peek();
-  if (peak === undefined) {
-    return null;
   }
-  return parseFloat(peak[1]) > 0 ? peak : null;
+
+  return peak;
 }
 
+/**
+ * Finds the last PrometheusValue in an array that has a value greater than zero.
+ */
 function findLastNonZero(values: PrometheusValue[]): PrometheusValue | null {
   for (let i = values.length - 1; i >= 0; i--) {
     const value = values[i];
