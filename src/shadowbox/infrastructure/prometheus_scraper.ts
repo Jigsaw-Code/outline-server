@@ -21,15 +21,54 @@ import * as path from 'path';
 
 import * as logging from '../infrastructure/logging';
 
+/**
+ * Represents a Unix timestamp in seconds.
+ * @typedef {number} Timestamp
+ */
+type Timestamp = number;
+
+/**
+ * Represents a Prometheus metric's labels.
+ * Each key in the object is a label name, and the corresponding value is the label's value.
+ *
+ * @typedef {Object<string, string>} PrometheusMetric
+ */
+export type PrometheusMetric = {[labelValue: string]: string};
+
+/**
+ * Represents a Prometheus value, which is a tuple of a timestamp and a string value.
+ * @typedef {[Timestamp, string]} PrometheusValue
+ */
+export type PrometheusValue = [Timestamp, string];
+
+/**
+ * Represents a Prometheus result, which can be a time series (values) or a single value.
+ * @typedef {Object} PrometheusResult
+ * @property {Object.<string, string>} metric - Labels associated with the metric.
+ * @property {Array<PrometheusValue>} [values] - Time series data (for range queries).
+ * @property {PrometheusValue} [value] - Single value (for instant queries).
+ */
+export type PrometheusResult = {
+  metric: PrometheusMetric;
+  values?: PrometheusValue[];
+  value?: PrometheusValue;
+};
+
+/**
+ * Represents the data part of a Prometheus query result.
+ * @interface QueryResultData
+ */
 export interface QueryResultData {
   resultType: 'matrix' | 'vector' | 'scalar' | 'string';
-  result: Array<{
-    metric: {[labelValue: string]: string};
-    value: [number, string];
-  }>;
+  result: PrometheusResult[];
 }
 
-// From https://prometheus.io/docs/prometheus/latest/querying/api/
+/**
+ * Represents the full JSON response from a Prometheus query.  This interface
+ * is based on the Prometheus API documentation:
+ * https://prometheus.io/docs/prometheus/latest/querying/api/
+ * @interface QueryResult
+ */
 interface QueryResult {
   status: 'success' | 'error';
   data: QueryResultData;
@@ -37,16 +76,36 @@ interface QueryResult {
   error: string;
 }
 
+/**
+ * Interface for a Prometheus client.
+ * @interface PrometheusClient
+ */
 export interface PrometheusClient {
+  /**
+   * Performs an instant query against the Prometheus API.
+   * @function query
+   * @param {string} query - The PromQL query string.
+   * @returns {Promise<QueryResultData>} A Promise that resolves to the query result data.
+   */
   query(query: string): Promise<QueryResultData>;
+
+  /**
+   * Performs a range query against the Prometheus API.
+   * @function queryRange
+   * @param {string} query - The PromQL query string.
+   * @param {number} start - The start time for the query range.
+   * @param {number} end - The end time for the query range.
+   * @param {string} step - The step size for the query range (e.g., "1m", "5m").  This controls the resolution of the returned data.
+   * @returns {Promise<QueryResultData>} A Promise that resolves to the query result data.
+   */
+  queryRange(query: string, start: number, end: number, step: string): Promise<QueryResultData>;
 }
 
 export class ApiPrometheusClient implements PrometheusClient {
   constructor(private address: string) {}
 
-  query(query: string): Promise<QueryResultData> {
+  private request(url: string): Promise<QueryResultData> {
     return new Promise<QueryResultData>((fulfill, reject) => {
-      const url = `${this.address}/api/v1/query?query=${encodeURIComponent(query)}`;
       http
         .get(url, (response) => {
           if (response.statusCode < 200 || response.statusCode > 299) {
@@ -70,6 +129,18 @@ export class ApiPrometheusClient implements PrometheusClient {
           reject(new Error(`Failed to query prometheus API: ${e}`));
         });
     });
+  }
+
+  query(query: string): Promise<QueryResultData> {
+    const url = `${this.address}/api/v1/query?query=${encodeURIComponent(query)}`;
+    return this.request(url);
+  }
+
+  queryRange(query: string, start: number, end: number, step: string): Promise<QueryResultData> {
+    const url = `${this.address}/api/v1/query_range?query=${encodeURIComponent(
+      query
+    )}&start=${start}&end=${end}&step=${step}`;
+    return this.request(url);
   }
 }
 
