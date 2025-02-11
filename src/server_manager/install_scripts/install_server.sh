@@ -475,7 +475,7 @@ install_shadowbox() {
   chmod u+s,ug+rwx,o-rwx "${SHADOWBOX_DIR}"
 
   log_for_sentry "Setting API port"
-  API_PORT="443"
+  API_PORT=443
   if (( API_PORT == 0 )); then
     API_PORT=${SB_API_PORT:-$(get_random_port)}
   fi
