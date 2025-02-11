@@ -586,6 +586,7 @@ function parse_flags() {
         shift
         ;;
       --api-port)
+        log_error $1
         FLAGS_API_PORT=$1
         shift
         if ! is_valid_port "${FLAGS_API_PORT}"; then
@@ -594,6 +595,7 @@ function parse_flags() {
         fi
         ;;
       --keys-port)
+        log_error $1
         FLAGS_KEYS_PORT=$1
         shift
         if ! is_valid_port "${FLAGS_KEYS_PORT}"; then
