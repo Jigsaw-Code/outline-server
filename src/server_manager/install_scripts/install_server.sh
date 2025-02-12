@@ -336,7 +336,7 @@ docker_command=(
 
   # Port number and path prefix used by the server manager API.
   -e "SB_API_PORT=${API_PORT}"
-  log_error "${API_PORT}"
+  log_error "API 1 ${API_PORT}"
   -e "SB_API_PREFIX=${SB_API_PREFIX}"
 
   # Location of the API TLS certificate and key.
