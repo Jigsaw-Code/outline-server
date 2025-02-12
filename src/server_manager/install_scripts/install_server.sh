@@ -480,6 +480,7 @@ install_shadowbox() {
     API_PORT=${SB_API_PORT:-$(get_random_port)}
   fi
   readonly API_PORT
+  log_error(API_PORT)
   readonly ACCESS_CONFIG="${ACCESS_CONFIG:-${SHADOWBOX_DIR}/access.txt}"
   readonly SB_IMAGE="${SB_IMAGE:-quay.io/outline/shadowbox:stable}"
 
