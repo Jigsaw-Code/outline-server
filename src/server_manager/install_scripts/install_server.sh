@@ -601,7 +601,7 @@ function parse_flags() {
         ;;
       --keys-port)
         FLAGS_KEYS_PORT=$1
-        log_error "2 ${FLAGS_KEYS_PORT}"
+        log_error "2KP ${FLAGS_KEYS_PORT}"
         shift
         if ! is_valid_port "${FLAGS_KEYS_PORT}"; then
           log_error "Invalid value for ${flag}: ${FLAGS_KEYS_PORT}" >&2
