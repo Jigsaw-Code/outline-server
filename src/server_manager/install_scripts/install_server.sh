@@ -336,6 +336,7 @@ docker_command=(
 
   # Port number and path prefix used by the server manager API.
   -e "SB_API_PORT=${API_PORT}"
+  log_error "${API_PORT}"
   -e "SB_API_PREFIX=${SB_API_PREFIX}"
 
   # Location of the API TLS certificate and key.
@@ -476,10 +477,12 @@ install_shadowbox() {
 
   log_for_sentry "Setting API port"
   API_PORT="${FLAGS_API_PORT}"
+  log_error "2 ${API_PORT}"
   if (( API_PORT == 0 )); then
     API_PORT=${SB_API_PORT:-$(get_random_port)}
   fi
   readonly API_PORT
+  log_error "3 ${API_PORT}"
   readonly ACCESS_CONFIG="${ACCESS_CONFIG:-${SHADOWBOX_DIR}/access.txt}"
   readonly SB_IMAGE="${SB_IMAGE:-quay.io/outline/shadowbox:stable}"
 
@@ -512,6 +515,7 @@ install_shadowbox() {
   # TODO(fortuna): Don't wait for Shadowbox to run this.
   run_step "Starting Watchtower" start_watchtower
 
+  log_error "4 ${API_PORT}"
   readonly PUBLIC_API_URL="https://${PUBLIC_HOSTNAME}:${API_PORT}/${SB_API_PREFIX}"
   readonly LOCAL_API_URL="https://localhost:${API_PORT}/${SB_API_PREFIX}"
   run_step "Waiting for Outline server to be healthy" wait_shadowbox
@@ -587,11 +591,13 @@ function parse_flags() {
         ;;
       --api-port)
         FLAGS_API_PORT=$1
+        log_error "1 ${FLAGS_API_PORT}"
         shift
         if ! is_valid_port "${FLAGS_API_PORT}"; then
           log_error "Invalid value for ${flag}: ${FLAGS_API_PORT}" >&2
           exit 1
         fi
+        log_error "2 ${FLAGS_API_PORT}"
         ;;
       --keys-port)
         FLAGS_KEYS_PORT=$1
