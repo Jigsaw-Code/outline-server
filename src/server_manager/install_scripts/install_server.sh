@@ -591,7 +591,7 @@ function parse_flags() {
         ;;
       --api-port)
         FLAGS_API_PORT=$1
-        log_error "1 ${FLAGS_API_PORT}"
+        log_error "1F ${FLAGS_API_PORT}"
         shift
         if ! is_valid_port "${FLAGS_API_PORT}"; then
           log_error "Invalid value for ${flag}: ${FLAGS_API_PORT}" >&2
