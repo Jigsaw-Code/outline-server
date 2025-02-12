@@ -41,14 +41,13 @@ interface ConnectionStats {
 }
 
 interface BandwidthStats {
-  total: Data;
-  current: Data;
+  current: TimedData<Data>;
   peak: TimedData<Data>;
 }
 
 interface ServerMetricsServerEntry {
   tunnelTime: Duration;
-  dataTransferred: BandwidthStats;
+  bandwidth: BandwidthStats;
   locations: ServerMetricsLocationEntry[];
 }
 
@@ -113,8 +112,8 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     const start = end - timeframe.seconds;
 
     const [
-      totalDataTransferred,
-      totalDataTransferredRange,
+      bandwidth,
+      bandwidthRange,
       dataTransferredByLocation,
       tunnelTimeByLocation,
       dataTransferredByAccessKey,
@@ -123,10 +122,10 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       tunnelTimeByAccessKeyRange,
     ] = await Promise.all([
       this.prometheusClient.query(
-        `sum(increase(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s]))`
+        `sum(rate(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s]))`
       ),
       this.prometheusClient.queryRange(
-        `sum(increase(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s]))`,
+        `sum(rate(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s]))`,
         start,
         end,
         `${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s`
@@ -159,25 +158,26 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
 
     const serverMetrics: ServerMetricsServerEntry = {
       tunnelTime: {seconds: 0},
-      dataTransferred: {
-        total: {bytes: 0},
-        current: {bytes: 0},
+      bandwidth: {
+        current: {data: {bytes: 0}, timestamp: null},
         peak: {data: {bytes: 0}, timestamp: null},
       },
       locations: [],
     };
-    for (const result of totalDataTransferred.result) {
-      const bytes = result.value ? parseFloat(result.value[1]) : 0;
-      serverMetrics.dataTransferred.current.bytes = bytes;
+    for (const result of bandwidth.result) {
+      if (result.value) {
+        serverMetrics.bandwidth.current.data.bytes = parseFloat(result.value[1]);
+        serverMetrics.bandwidth.current.timestamp = result.value[0];
+      }
       break; // There should only be one result.
     }
-    for (const result of totalDataTransferredRange.result) {
+    for (const result of bandwidthRange.result) {
       const peakDataTransferred = findPeak(result.values ?? []);
       if (peakDataTransferred !== null) {
         const peakValue = parseFloat(peakDataTransferred[1]);
         if (peakValue > 0) {
-          serverMetrics.dataTransferred.peak.data.bytes = peakValue;
-          serverMetrics.dataTransferred.peak.timestamp = Math.min(now, peakDataTransferred[0]);
+          serverMetrics.bandwidth.peak.data.bytes = peakValue;
+          serverMetrics.bandwidth.peak.timestamp = Math.min(now, peakDataTransferred[0]);
         }
       }
       break; // There should only be one result.
@@ -192,9 +192,7 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     }
     for (const result of dataTransferredByLocation.result) {
       const entry = getServerMetricsLocationEntry(locationMap, result.metric);
-      const bytes = result.value ? parseFloat(result.value[1]) : 0;
-      entry.dataTransferred.bytes = bytes;
-      serverMetrics.dataTransferred.total.bytes += bytes;
+      entry.dataTransferred.bytes = result.value ? parseFloat(result.value[1]) : 0;
     }
     serverMetrics.locations = Array.from(locationMap.values());
 

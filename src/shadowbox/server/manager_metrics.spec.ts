@@ -41,7 +41,7 @@ describe('PrometheusManagerMetrics', () => {
     const managerMetrics = new PrometheusManagerMetrics(
       new QueryMapPrometheusClient(
         {
-          'sum(increase(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[300s]))': {
+          'sum(rate(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[300s]))': {
             resultType: 'vector',
             result: [
               {
@@ -106,7 +106,7 @@ describe('PrometheusManagerMetrics', () => {
           },
         },
         {
-          'sum(increase(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[300s]))': {
+          'sum(rate(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[300s]))': {
             resultType: 'matrix',
             result: [
               {
@@ -161,12 +161,12 @@ describe('PrometheusManagerMetrics', () => {
     "tunnelTime": {
       "seconds": 1000
     },
-    "dataTransferred": {
-      "total": {
-        "bytes": 1000
-      },
+    "bandwidth": {
       "current": {
-        "bytes": 1234
+        "data": {
+          "bytes": 1234
+        },
+        "timestamp": 1739284734
       },
       "peak": {
         "data": {
@@ -216,7 +216,7 @@ describe('PrometheusManagerMetrics', () => {
     const managerMetrics = new PrometheusManagerMetrics(
       new QueryMapPrometheusClient(
         {
-          'sum(increase(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[300s]))': {
+          'sum(rate(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[300s]))': {
             resultType: 'vector',
             result: [
               {
@@ -279,7 +279,7 @@ describe('PrometheusManagerMetrics', () => {
           },
         },
         {
-          'sum(increase(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[300s]))': {
+          'sum(rate(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[300s]))': {
             resultType: 'matrix',
             result: [
               {
@@ -334,12 +334,12 @@ describe('PrometheusManagerMetrics', () => {
     "tunnelTime": {
       "seconds": 1000
     },
-    "dataTransferred": {
-      "total": {
-        "bytes": 1000
-      },
+    "bandwidth": {
       "current": {
-        "bytes": 1234
+        "data": {
+          "bytes": 1234
+        },
+        "timestamp": 1739284734
       },
       "peak": {
         "data": {
