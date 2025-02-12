@@ -438,7 +438,6 @@ Make sure to open the following ports on your firewall, router or cloud provider
 - Access key port ${ACCESS_KEY_PORT}, for TCP and UDP
 "
 }
-
 function set_hostname() {
   # These are URLs that return the client's apparent IP address.
   # We have more than one to try in case one starts failing
