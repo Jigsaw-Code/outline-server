@@ -301,6 +301,7 @@ function write_config() {
 }
 
 function start_shadowbox() {
+  log_error "shawdow ${API_PORT}"
   # TODO(fortuna): Write API_PORT to config file,
   # rather than pass in the environment.
   local -r START_SCRIPT="${STATE_DIR}/start_container.sh"
@@ -336,7 +337,6 @@ docker_command=(
 
   # Port number and path prefix used by the server manager API.
   -e "SB_API_PORT=${API_PORT}"
-  log_error "API 1 ${API_PORT}"
   -e "SB_API_PREFIX=${SB_API_PREFIX}"
 
   # Location of the API TLS certificate and key.
@@ -601,6 +601,7 @@ function parse_flags() {
         ;;
       --keys-port)
         FLAGS_KEYS_PORT=$1
+        log_error "2 ${FLAGS_KEYS_PORT}"
         shift
         if ! is_valid_port "${FLAGS_KEYS_PORT}"; then
           log_error "Invalid value for ${flag}: ${FLAGS_KEYS_PORT}" >&2
