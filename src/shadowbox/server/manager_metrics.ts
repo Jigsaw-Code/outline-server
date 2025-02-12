@@ -47,6 +47,7 @@ interface BandwidthStats {
 
 interface ServerMetricsServerEntry {
   tunnelTime: Duration;
+  dataTransferred: Data;
   bandwidth: BandwidthStats;
   locations: ServerMetricsLocationEntry[];
 }
@@ -158,6 +159,7 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
 
     const serverMetrics: ServerMetricsServerEntry = {
       tunnelTime: {seconds: 0},
+      dataTransferred: {bytes: 0},
       bandwidth: {
         current: {data: {bytes: 0}, timestamp: null},
         peak: {data: {bytes: 0}, timestamp: null},
@@ -192,7 +194,9 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     }
     for (const result of dataTransferredByLocation.result) {
       const entry = getServerMetricsLocationEntry(locationMap, result.metric);
-      entry.dataTransferred.bytes = result.value ? parseFloat(result.value[1]) : 0;
+      const bytes = result.value ? parseFloat(result.value[1]) : 0;
+      entry.dataTransferred.bytes = bytes;
+      serverMetrics.dataTransferred.bytes += bytes;
     }
     serverMetrics.locations = Array.from(locationMap.values());
 

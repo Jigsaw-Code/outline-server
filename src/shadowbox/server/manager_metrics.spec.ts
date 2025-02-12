@@ -161,6 +161,9 @@ describe('PrometheusManagerMetrics', () => {
     "tunnelTime": {
       "seconds": 1000
     },
+    "dataTransferred": {
+      "bytes": 1000
+    },
     "bandwidth": {
       "current": {
         "data": {
@@ -333,6 +336,9 @@ describe('PrometheusManagerMetrics', () => {
   "server": {
     "tunnelTime": {
       "seconds": 1000
+    },
+    "dataTransferred": {
+      "bytes": 1000
     },
     "bandwidth": {
       "current": {
