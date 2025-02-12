@@ -475,14 +475,14 @@ install_shadowbox() {
   chmod u+s,ug+rwx,o-rwx "${SHADOWBOX_DIR}"
 
   log_for_sentry "Setting API port"
-  API_PORT=443
+  API_PORT="${FLAGS_API_PORT}"
   if (( API_PORT == 0 )); then
     API_PORT=${SB_API_PORT:-$(get_random_port)}
   fi
   readonly API_PORT
   readonly ACCESS_CONFIG="${ACCESS_CONFIG:-${SHADOWBOX_DIR}/access.txt}"
   readonly SB_IMAGE="${SB_IMAGE:-quay.io/outline/shadowbox:stable}"
-  log_error API_PORT
+
   PUBLIC_HOSTNAME="${FLAGS_HOSTNAME:-${SB_PUBLIC_IP:-}}"
   if [[ -z "${PUBLIC_HOSTNAME}" ]]; then
     run_step "Setting PUBLIC_HOSTNAME to external IP" set_hostname
@@ -586,7 +586,6 @@ function parse_flags() {
         shift
         ;;
       --api-port)
-        log_error $1
         FLAGS_API_PORT=$1
         shift
         if ! is_valid_port "${FLAGS_API_PORT}"; then
@@ -595,7 +594,6 @@ function parse_flags() {
         fi
         ;;
       --keys-port)
-        log_error $1
         FLAGS_KEYS_PORT=$1
         shift
         if ! is_valid_port "${FLAGS_KEYS_PORT}"; then
