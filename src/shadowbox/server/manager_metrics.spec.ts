@@ -202,7 +202,6 @@ describe('PrometheusManagerMetrics', () => {
         "seconds": 1000
       },
       "connection": {
-        "lastConnected": 1738959398,
         "lastTrafficSeen": 1739284734,
         "peakDeviceCount": {
           "data": 4,
@@ -389,7 +388,6 @@ describe('PrometheusManagerMetrics', () => {
         "seconds": 1000
       },
       "connection": {
-        "lastConnected": null,
         "lastTrafficSeen": null,
         "peakDeviceCount": {
           "data": 0,
@@ -406,7 +404,6 @@ describe('PrometheusManagerMetrics', () => {
         "seconds": 0
       },
       "connection": {
-        "lastConnected": 1738959398,
         "lastTrafficSeen": 1738959398,
         "peakDeviceCount": {
           "data": 4,
