@@ -35,7 +35,6 @@ interface TimedData<T> {
 }
 
 interface ConnectionStats {
-  lastConnected: number | null;
   lastTrafficSeen: number | null;
   peakDeviceCount: TimedData<number>;
 }
@@ -211,8 +210,6 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     }
     for (const result of tunnelTimeByAccessKeyRange.result) {
       const entry = getServerMetricsAccessKeyEntry(accessKeyMap, result.metric);
-      const lastConnected = findLastNonZero(result.values ?? []);
-      entry.connection.lastConnected = lastConnected ? Math.min(now, lastConnected[0]) : null;
       const peakTunnelTimeSec = findPeak(result.values ?? []);
       if (peakTunnelTimeSec !== null) {
         const peakValue = parseFloat(peakTunnelTimeSec[1]);
@@ -268,7 +265,6 @@ function getServerMetricsAccessKeyEntry(
       dataTransferred: {bytes: 0},
       tunnelTime: {seconds: 0},
       connection: {
-        lastConnected: null,
         lastTrafficSeen: null,
         peakDeviceCount: {
           data: 0,
