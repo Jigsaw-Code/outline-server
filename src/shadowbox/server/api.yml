@@ -146,46 +146,94 @@ paths:
                 type: object
                 properties:
                   server:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        location:
-                          type: string
-                        asn:
-                          type: number
-                        asOrg:
-                          type: string
-                        tunnelTime:
+                    type: object
+                    properties:
+                      tunnelTime:
+                        type: object
+                        properties:
+                          seconds:
+                            type: number
+                      dataTransferred:
+                        type: object
+                        properties:
+                          bytes:
+                            type: number
+                      bandwidth:
+                        type: object
+                        properties:
+                          current:
+                            type: object
+                            properties:
+                              data:
+                                type: object
+                                properties:
+                                  bytes:
+                                    type: number
+                              timestamp:
+                                type: integer
+                          peak:
+                            type: object
+                            properties:
+                              data:
+                                type: object
+                                properties:
+                                  bytes:
+                                    type: number
+                              timestamp:
+                                type: integer
+                      locations:
+                        type: array
+                        items:
                           type: object
                           properties:
-                            seconds: 
+                            location:
+                              type: string
+                            asn:
                               type: number
-                        dataTransferred:
-                          type: object
-                          properties:
-                            bytes:
-                              type: number
+                            asOrg:
+                              type: string
+                            tunnelTime:
+                              type: object
+                              properties:
+                                seconds:
+                                  type: number
+                            dataTransferred:
+                              type: object
+                              properties:
+                                bytes:
+                                  type: number
                   accessKeys:
                     type: array
                     items:
                       type: object
                       properties:
                         accessKeyId:
-                          type: string
+                          type: integer
                         tunnelTime:
                           type: object
                           properties:
-                            seconds: 
+                            seconds:
                               type: number
                         dataTransferred:
                           type: object
                           properties:
-                            bytes: 
+                            bytes:
                               type: number
+                        connection:
+                          type: object
+                          properties:
+                            lastTrafficSeen:
+                              type: number
+                            peakDeviceCount:
+                              type: object
+                              properties:
+                                data:
+                                  type: integer
+                                timestamp:
+                                  type: integer
               examples:
                 '0':
-                  value: '{"server":[{"location":"US","asn":null,"asOrg":null,"tunnelTime":{"seconds":100},"dataTransferred":{"bytes":100}}],"accessKeys":[{"accessKeyId":"0","tunnelTime":{"seconds":100},"dataTransferred":{"bytes":100}}]}'
+                  value: '{"server":{"tunnelTime":{"seconds":100},"dataTransferred":{"bytes":100},"bandwidth": {"current": {"data": {"bytes": 10},"timestamp": 1739284734},"peak": {"data": {"bytes": 80},"timestamp": 1738959398}},"locations": [{"location": "US","asn": null,"asOrg": null,"dataTransferred": {"bytes": 100},"tunnelTime": {"seconds": 100}}]},"accessKeys":[{"accessKeyId":0,"tunnelTime":{"seconds":100},"dataTransferred":{"bytes":100},"connection": {"lastTrafficSeen": 1739284734,"peakDeviceCount": {"data": 4,"timestamp": 1738959398}}}]}'
   /name:
     put:
       description: Renames the server
