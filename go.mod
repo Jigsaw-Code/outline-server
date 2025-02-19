@@ -20,7 +20,7 @@ require (
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/gorilla/handlers v0.0.0-20150720190736-60c7bfde3e33 // indirect
+	github.com/gorilla/handlers v1.3.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
