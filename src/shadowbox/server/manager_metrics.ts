@@ -98,6 +98,31 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     return {bytesTransferredByUserId: usage};
   }
 
+  private async promethusClientTimedQuery(query: string) {
+    console.time(query);
+
+    const result = await this.prometheusClient.query(query);
+
+    console.timeEnd(query);
+
+    return result;
+  }
+
+  private async promethusClientTimedRangeQuery(
+    query: string,
+    start: number,
+    end: number,
+    step: string
+  ) {
+    console.time(`[range] ${query}`);
+
+    const result = await this.prometheusClient.queryRange(query, start, end, step);
+
+    console.timeEnd(`[range] ${query}`);
+
+    return result;
+  }
+
   async getServerMetrics(timeframe: Duration): Promise<ServerMetrics> {
     const now = new Date().getTime() / 1000;
     // We need to calculate consistent start and end times for Prometheus range
@@ -121,34 +146,34 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       dataTransferredByAccessKeyRange,
       tunnelTimeByAccessKeyRange,
     ] = await Promise.all([
-      this.prometheusClient.query(
+      this.promethusClientTimedQuery(
         `sum(rate(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s]))`
       ),
-      this.prometheusClient.queryRange(
+      this.promethusClientTimedRangeQuery(
         `sum(rate(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s]))`,
         start,
         end,
         `${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s`
       ),
-      this.prometheusClient.query(
+      this.promethusClientTimedQuery(
         `sum(increase(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[${timeframe.seconds}s])) by (location, asn, asorg)`
       ),
-      this.prometheusClient.query(
+      this.promethusClientTimedQuery(
         `sum(increase(shadowsocks_tunnel_time_seconds_per_location[${timeframe.seconds}s])) by (location, asn, asorg)`
       ),
-      this.prometheusClient.query(
+      this.promethusClientTimedQuery(
         `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t"}[${timeframe.seconds}s])) by (access_key)`
       ),
-      this.prometheusClient.query(
+      this.promethusClientTimedQuery(
         `sum(increase(shadowsocks_tunnel_time_seconds[${timeframe.seconds}s])) by (access_key)`
       ),
-      this.prometheusClient.queryRange(
+      this.promethusClientTimedRangeQuery(
         `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t"}[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s])) by (access_key)`,
         start,
         end,
         `${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s`
       ),
-      this.prometheusClient.queryRange(
+      this.promethusClientTimedRangeQuery(
         `sum(increase(shadowsocks_tunnel_time_seconds[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s])) by (access_key)`,
         start,
         end,
