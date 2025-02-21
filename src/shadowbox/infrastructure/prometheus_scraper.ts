@@ -102,12 +102,17 @@ export interface PrometheusClient {
 }
 
 export class ApiPrometheusClient implements PrometheusClient {
-  constructor(private address: string) {}
+  private readonly agent: http.Agent;
+
+  constructor(private address: string) {
+    this.agent = new http.Agent({ keepAlive: true });
+  }
 
   private request(url: string): Promise<QueryResultData> {
     return new Promise<QueryResultData>((fulfill, reject) => {
+      const options = {agent: this.agent};
       http
-        .get(url, (response) => {
+        .get(url, options, (response) => {
           if (response.statusCode < 200 || response.statusCode > 299) {
             reject(new Error(`Got error ${response.statusCode}`));
             response.resume();
