@@ -16,6 +16,7 @@ import {
   PrometheusClient,
   PrometheusMetric,
   PrometheusValue,
+  QueryResultData,
 } from '../infrastructure/prometheus_scraper';
 import {DataUsageByUser, DataUsageTimeframe} from '../model/metrics';
 
@@ -98,7 +99,7 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     return {bytesTransferredByUserId: usage};
   }
 
-  private queryCache = new Map<string, {timestamp: number; result: {}}>();
+  private queryCache = new Map<string, {timestamp: number; result: QueryResultData}>();
 
   private async promethusClientTimedQuery(query: string) {
     const cacheId = query;
