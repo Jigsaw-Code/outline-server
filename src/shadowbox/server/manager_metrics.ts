@@ -98,10 +98,26 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     return {bytesTransferredByUserId: usage};
   }
 
+  private queryCache = new Map<string, {timestamp: number; result: {}}>();
+
   private async promethusClientTimedQuery(query: string) {
+    const cacheId = query;
+
+    if (this.queryCache.has(cacheId)) {
+      const cached = this.queryCache.get(cacheId);
+
+      if (cached && cached.timestamp + PROMETHEUS_RANGE_QUERY_STEP_SECONDS * 1000 > Date.now()) {
+        console.log(cacheId, 'cache hit');
+
+        return cached.result;
+      }
+    }
+
     console.time(query);
 
     const result = await this.prometheusClient.query(query);
+
+    this.queryCache.set(cacheId, {timestamp: Date.now(), result});
 
     console.timeEnd(query);
 
@@ -114,11 +130,25 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
     end: number,
     step: string
   ) {
-    console.time(`[range] ${query}`);
+    const cacheId = `${query}-${start}-${end}-${step}`;
+
+    if (this.queryCache.has(cacheId)) {
+      const cached = this.queryCache.get(cacheId);
+
+      if (cached && cached.timestamp + PROMETHEUS_RANGE_QUERY_STEP_SECONDS * 1000 > Date.now()) {
+        console.log(cacheId, 'cache hit');
+
+        return cached.result;
+      }
+    }
+
+    console.time(cacheId);
 
     const result = await this.prometheusClient.queryRange(query, start, end, step);
 
-    console.timeEnd(`[range] ${query}`);
+    this.queryCache.set(cacheId, {timestamp: Date.now(), result});
+
+    console.timeEnd(cacheId);
 
     return result;
   }
