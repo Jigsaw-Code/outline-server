@@ -16,6 +16,7 @@ import {
   PrometheusClient,
   PrometheusMetric,
   PrometheusValue,
+  QueryResultData,
 } from '../infrastructure/prometheus_scraper';
 import {DataUsageByUser, DataUsageTimeframe} from '../model/metrics';
 
@@ -111,6 +112,8 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       Math.ceil(now / PROMETHEUS_RANGE_QUERY_STEP_SECONDS) * PROMETHEUS_RANGE_QUERY_STEP_SECONDS;
     const start = end - timeframe.seconds;
 
+    this.prunePrometheusCache();
+
     const [
       bandwidth,
       bandwidthRange,
@@ -121,34 +124,34 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       dataTransferredByAccessKeyRange,
       tunnelTimeByAccessKeyRange,
     ] = await Promise.all([
-      this.prometheusClient.query(
+      this.cachedPrometheusClient.query(
         `sum(rate(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s]))`
       ),
-      this.prometheusClient.queryRange(
+      this.cachedPrometheusClient.queryRange(
         `sum(rate(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s]))`,
         start,
         end,
         `${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s`
       ),
-      this.prometheusClient.query(
+      this.cachedPrometheusClient.query(
         `sum(increase(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[${timeframe.seconds}s])) by (location, asn, asorg)`
       ),
-      this.prometheusClient.query(
+      this.cachedPrometheusClient.query(
         `sum(increase(shadowsocks_tunnel_time_seconds_per_location[${timeframe.seconds}s])) by (location, asn, asorg)`
       ),
-      this.prometheusClient.query(
+      this.cachedPrometheusClient.query(
         `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t"}[${timeframe.seconds}s])) by (access_key)`
       ),
-      this.prometheusClient.query(
+      this.cachedPrometheusClient.query(
         `sum(increase(shadowsocks_tunnel_time_seconds[${timeframe.seconds}s])) by (access_key)`
       ),
-      this.prometheusClient.queryRange(
+      this.cachedPrometheusClient.queryRange(
         `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t"}[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s])) by (access_key)`,
         start,
         end,
         `${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s`
       ),
-      this.prometheusClient.queryRange(
+      this.cachedPrometheusClient.queryRange(
         `sum(increase(shadowsocks_tunnel_time_seconds[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s])) by (access_key)`,
         start,
         end,
@@ -230,6 +233,41 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       server: serverMetrics,
       accessKeys: Array.from(accessKeyMap.values()),
     };
+  }
+
+  private prometheusCache = new Map<string, {timestamp: number; result: QueryResultData}>();
+
+  private get cachedPrometheusClient() {
+    return new Proxy(this.prometheusClient, {
+      get: (target, prop) => {
+        if (typeof target[prop] !== 'function') {
+          return target[prop];
+        }
+
+        return async (query, ...args) => {
+          const cacheId = `${String(prop)}: ${query} (args: ${args.join(', ')}))`;
+
+          if (this.prometheusCache.has(cacheId)) {
+            return this.prometheusCache.get(cacheId).result;
+          }
+
+          const result = await (target[prop] as Function)(query, ...args);
+
+          this.prometheusCache.set(cacheId, {timestamp: Date.now(), result});
+
+          return result;
+        };
+      },
+    });
+  }
+
+  private prunePrometheusCache() {
+    const now = Date.now();
+    for (const [key, value] of this.prometheusCache) {
+      if (now - value.timestamp > PROMETHEUS_RANGE_QUERY_STEP_SECONDS * 1000) {
+        this.prometheusCache.delete(key);
+      }
+    }
   }
 }
 
