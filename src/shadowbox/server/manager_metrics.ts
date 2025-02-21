@@ -19,7 +19,6 @@ import {
   QueryResultData,
 } from '../infrastructure/prometheus_scraper';
 import {DataUsageByUser, DataUsageTimeframe} from '../model/metrics';
-import * as logging from '../infrastructure/logging';
 
 const PROMETHEUS_RANGE_QUERY_STEP_SECONDS = 5 * 60;
 
