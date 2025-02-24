@@ -21,26 +21,12 @@ import * as file from '../infrastructure/file';
 import * as logging from '../infrastructure/logging';
 import {ShadowsocksAccessKey, ShadowsocksServer} from '../model/shadowsocks_server';
 
-/** Represents an outline-ss-server configuration with multiple services. */
-export interface OutlineSSServerConfig {
-  services: {
-    listeners: {
-      type: string;
-      address: string;
-    }[];
-    keys: {
-      id: string;
-      cipher: string;
-      secret: string;
-    }[];
-  }[];
-}
-
 // Runs outline-ss-server.
 export class OutlineShadowsocksServer implements ShadowsocksServer {
   private ssProcess: child_process.ChildProcess;
   private ipCountryFilename?: string;
   private ipAsnFilename?: string;
+  private isAsnMetricsEnabled = false;
   private isReplayProtectionEnabled = false;
 
   /**
@@ -95,39 +81,22 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
 
   private writeConfigFile(keys: ShadowsocksAccessKey[]): Promise<void> {
     return new Promise((resolve, reject) => {
-      const validKeys: ShadowsocksAccessKey[] = keys.filter((key) => {
+      const keysJson = {keys: [] as ShadowsocksAccessKey[]};
+      for (const key of keys) {
         if (!isAeadCipher(key.cipher)) {
           logging.error(
             `Cipher ${key.cipher} for access key ${key.id} is not supported: use an AEAD cipher instead.`
           );
-          return false;
+          continue;
         }
-        return true;
-      });
 
-      const config: OutlineSSServerConfig = {services: []};
-      const keysByPort: Record<number, ShadowsocksAccessKey[]> = {};
-      for (const key of validKeys) {
-        (keysByPort[key.port] ??= []).push(key);
-      }
-      for (const port in keysByPort) {
-        const service = {
-          listeners: [
-            {type: 'tcp', address: `[::]:${port}`},
-            {type: 'udp', address: `[::]:${port}`},
-          ],
-          keys: keysByPort[port].map((key) => ({
-            id: key.id,
-            cipher: key.cipher,
-            secret: key.secret,
-          })),
-        };
-        config.services.push(service);
+        keysJson.keys.push(key);
       }
 
       mkdirp.sync(path.dirname(this.configFilename));
+
       try {
-        file.atomicWriteFileSync(this.configFilename, jsyaml.safeDump(config, {sortKeys: true}));
+        file.atomicWriteFileSync(this.configFilename, jsyaml.safeDump(keysJson, {sortKeys: true}));
         resolve();
       } catch (error) {
         reject(error);
