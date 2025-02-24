@@ -113,11 +113,8 @@ export class OutlineShadowsocksServer implements ShadowsocksServer {
       for (const port in keysByPort) {
         const service = {
           listeners: [
-            // NOTE: We explicitly specify the address string with only the port
-            // number. This will result in an address that listens on all
-            // available network interfaces (both IPv4 and IPv6).
-            {type: 'tcp', address: `:${port}`},
-            {type: 'udp', address: `:${port}`},
+            {type: 'tcp', address: `[::]:${port}`},
+            {type: 'udp', address: `[::]:${port}`},
           ],
           keys: keysByPort[port].map((key) => ({
             id: key.id,
