@@ -10,6 +10,7 @@
   ],
   "dependencies": {
     "@hey-api/client-fetch": "^0.8.1",
+    "@ngrok/ngrok": "^1.4.1",
     "ip-regex": "^4.1.0",
     "js-yaml": "^3.12.0",
     "outline-shadowsocksconfig": "github:Jigsaw-Code/outline-shadowsocksconfig#v0.2.0",
@@ -27,6 +28,7 @@
     "@types/restify": "^8.4.2",
     "@types/restify-cors-middleware": "^1.0.1",
     "@types/tmp": "^0.2.1",
+    "node-loader": "^2.1.0",
     "tmp": "^0.2.1",
     "ts-loader": "^9.5.0",
     "webpack": "^5.88.2",

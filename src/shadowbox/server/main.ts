@@ -19,6 +19,7 @@ import * as process from 'process';
 import * as prometheus from 'prom-client';
 import * as restify from 'restify';
 import * as corsMiddleware from 'restify-cors-middleware2';
+import * as ngrok from '@ngrok/ngrok';
 
 import {RealClock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
@@ -275,7 +276,18 @@ process.on('unhandledRejection', (error: Error) => {
   logging.error(`unhandledRejection: ${error.stack}`);
 });
 
-main().catch((error) => {
-  logging.error(error.stack);
-  process.exit(1);
-});
+main()
+  .then(() =>
+    ngrok.forward({
+      domain: 'apt-wired-wombat.ngrok-free.app',
+      addr: Number(process.env.SB_API_PORT || 8081),
+      authtoken_from_env: true,
+    })
+  )
+  .then((listener) => {
+    console.log(`Ingress established at: ${listener.url()}`);
+  })
+  .catch((error) => {
+    logging.error(error.stack);
+    process.exit(1);
+  });
