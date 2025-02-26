@@ -172,31 +172,36 @@ async function main() {
     shadowsocksServer.enableReplayProtection();
   }
 
-  // Start Prometheus subprocess and wait for it to be up and running.
-  const prometheusConfigFilename = getPersistentFilename('prometheus/config.yml');
-  const prometheusTsdbFilename = getPersistentFilename('prometheus/data');
+  // TODO: Figure out why prometheus crashes infinitely.
+
   const prometheusEndpoint = `http://${prometheusLocation}`;
-  const prometheusBinary = getBinaryFilename('prometheus');
-  const prometheusArgs = [
-    '--config.file',
-    prometheusConfigFilename,
-    '--web.enable-admin-api',
-    '--storage.tsdb.retention.time',
-    '31d',
-    '--storage.tsdb.path',
-    prometheusTsdbFilename,
-    '--web.listen-address',
-    prometheusLocation,
-    '--log.level',
-    verbose ? 'debug' : 'info',
-  ];
-  await startPrometheus(
-    prometheusBinary,
-    prometheusConfigFilename,
-    prometheusConfigJson,
-    prometheusArgs,
-    prometheusEndpoint
-  );
+  /*
+    // Start Prometheus subprocess and wait for it to be up and running.
+
+    const prometheusConfigFilename = getPersistentFilename('prometheus/config.yml');
+    const prometheusTsdbFilename = getPersistentFilename('prometheus/data');
+    const prometheusBinary = getBinaryFilename('prometheus');
+    const prometheusArgs = [
+      '--config.file',
+      prometheusConfigFilename,
+      '--web.enable-admin-api',
+      '--storage.tsdb.retention.time',
+      '31d',
+      '--storage.tsdb.path',
+      prometheusTsdbFilename,
+      '--web.listen-address',
+      prometheusLocation,
+      '--log.level',
+      verbose ? 'debug' : 'info',
+    ];
+    await startPrometheus(
+      prometheusBinary,
+      prometheusConfigFilename,
+      prometheusConfigJson,
+      prometheusArgs,
+      prometheusEndpoint
+    );
+  */
 
   const prometheusClient = new ApiPrometheusClient(prometheusEndpoint);
   if (!serverConfig.data().portForNewAccessKeys) {
@@ -277,15 +282,17 @@ process.on('unhandledRejection', (error: Error) => {
 });
 
 main()
-  .then(() =>
-    ngrok.forward({
-      domain: 'apt-wired-wombat.ngrok-free.app',
-      addr: Number(process.env.SB_API_PORT || 8081),
+  .then(async () => {
+    process.env.SSL_CERT_FILE = process.env.SB_CERTIFICATE_FILE;
+    process.env.SSL_KEY_FILE = process.env.SB_PRIVATE_KEY_FILE;
+
+    const listener = await ngrok.forward({
+      addr: `https://127.0.0.1:8081`,
       authtoken_from_env: true,
-    })
-  )
-  .then((listener) => {
-    console.log(`Ingress established at: ${listener.url()}`);
+      verify_upstream_tls: false,
+    });
+
+    console.log(listener.url());
   })
   .catch((error) => {
     logging.error(error.stack);
