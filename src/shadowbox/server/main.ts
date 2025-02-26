@@ -283,17 +283,26 @@ process.on('unhandledRejection', (error: Error) => {
 
 main()
   .then(async () => {
+    if (!process.env.NGROK_TOKEN || !process.env.NGROK_DOMAIN) {
+      return;
+    }
+
     process.env.SSL_CERT_FILE = process.env.SB_CERTIFICATE_FILE;
     process.env.SSL_KEY_FILE = process.env.SB_PRIVATE_KEY_FILE;
 
     const listener = await ngrok.forward({
       domain: process.env.NGROK_DOMAIN,
+      // ipv6 loopback address doesn't work
       addr: `https://127.0.0.1:${process.env.SB_API_PORT || 8081}`,
       authtoken_from_env: true,
       verify_upstream_tls: false,
+      response_header_add: [
+        'Allow-Access-Control-Origin: *',
+        'Access-Control-Allow-Headers: *'
+      ],
     });
 
-    console.log(`Listening to the Manager API on ${listener.url()}`);
+    console.log(`Listening to the Manager API on '${listener.url()}'`);
   })
   .catch((error) => {
     logging.error(error.stack);
