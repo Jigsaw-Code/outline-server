@@ -287,12 +287,13 @@ main()
     process.env.SSL_KEY_FILE = process.env.SB_PRIVATE_KEY_FILE;
 
     const listener = await ngrok.forward({
-      addr: `https://127.0.0.1:8081`,
+      domain: process.env.NGROK_DOMAIN,
+      addr: `https://127.0.0.1:${process.env.SB_API_PORT || 8081}`,
       authtoken_from_env: true,
       verify_upstream_tls: false,
     });
 
-    console.log(listener.url());
+    console.log(`Listening to the Manager API on ${listener.url()}`);
   })
   .catch((error) => {
     logging.error(error.stack);
