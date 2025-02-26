@@ -48,4 +48,5 @@ Intellisense example:
 - [ ] Investigate why Prometheus continuously crashes (had to comment it out)
 - [ ] Generate library on API change
 - [ ] Improve/refactor `api.yml`?
+- [ ] Use ngrok api to generate domains.
 - [ ] Where do we actually want to start the ngrok service?
