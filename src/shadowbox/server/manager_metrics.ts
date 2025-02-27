@@ -120,25 +120,25 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       tunnelTimeByAccessKeyRange,
       tunnelTimeByLocation,
     ] = await Promise.all([
-      this.cachedPrometheusClient.queryRange(
-        `increase(shadowsocks_data_bytes{dir=~"c<p|p>t"}[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s]) by (access_key)`,
+      this.prometheusClient.queryRange(
+        `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t"}[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s])) by (access_key)`,
         start,
         end,
         `${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s`
       ),
-      this.cachedPrometheusClient.queryRange(
-        `increase(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s]) by (location, asn, asorg)`,
+      this.prometheusClient.queryRange(
+        `sum(increase(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s])) by (location, asn, asorg)`,
         start,
         end,
         `${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s`
       ),
-      this.cachedPrometheusClient.queryRange(
-        `increase(shadowsocks_tunnel_time_seconds[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s]) by (access_key)`,
+      this.prometheusClient.queryRange(
+        `sum(increase(shadowsocks_tunnel_time_seconds[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s])) by (access_key)`,
         start,
         end,
         `${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s`
       ),
-      this.cachedPrometheusClient.query(
+      this.prometheusClient.query(
         `sum(increase(shadowsocks_tunnel_time_seconds_per_location[${timeframe.seconds}s])) by (location, asn, asorg)`
       ),
     ]);
@@ -153,7 +153,7 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       locations: [],
     };
 
-    const bandwidthRangeValues = [];
+    const bandwidthRangeValues: [number, string][] = [];
 
     const accessKeyMap = new Map<string, ServerMetricsAccessKeyEntry>();
     for (const result of dataTransferredByAccessKeyRange.result) {
@@ -163,20 +163,21 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       entry.connection.lastTrafficSeen = lastTrafficSeen ? Math.min(now, lastTrafficSeen[0]) : null;
       entry.dataTransferred.bytes = findSum(result.values ?? []);
 
-      // does this... actually work? can we assume the every row has the same amound of data and similar enough timestamps?
       for (const entryIndex in result.values) {
         const [currentTimestamp, nextValue] = result.values[entryIndex];
         const [previousTimestamp, currentValue] = bandwidthRangeValues[entryIndex] ?? [0, 0];
 
         bandwidthRangeValues[entryIndex] = [
           Math.min(previousTimestamp, currentTimestamp),
-          currentValue + (nextValue ? parseFloat(nextValue) : 0),
+          String(parseFloat(currentValue as string) + (nextValue ? parseFloat(nextValue) : 0)),
         ];
       }
     }
 
-    [serverMetrics.bandwidth.current.timestamp, serverMetrics.bandwidth.current.data.bytes] =
-      bandwidthRangeValues[bandwidthRangeValues.length - 1];
+    const currentBandwidth = bandwidthRangeValues[bandwidthRangeValues.length - 1] ?? [];
+
+    serverMetrics.bandwidth.current.timestamp = currentBandwidth[0];
+    serverMetrics.bandwidth.current.data.bytes = parseFloat(currentBandwidth[1]);
 
     const peakDataTransferred = findPeak(bandwidthRangeValues);
     if (peakDataTransferred !== null) {
