@@ -174,7 +174,7 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       }
     }
 
-    const currentBandwidth = bandwidthRangeValues[bandwidthRangeValues.length - 1] ?? [];
+    const currentBandwidth = bandwidthRangeValues[bandwidthRangeValues.length - 1] ?? [0, '0'];
 
     // convert increase() into rate()
     serverMetrics.bandwidth.current.data.bytes =
