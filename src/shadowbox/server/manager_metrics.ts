@@ -165,7 +165,7 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
 
       for (const entryIndex in result.values) {
         const [currentTimestamp, nextValue] = result.values[entryIndex];
-        const [previousTimestamp, currentValue] = bandwidthRangeValues[entryIndex] ?? [0, 0];
+        const [previousTimestamp, currentValue] = bandwidthRangeValues[entryIndex] ?? [Infinity, 0];
 
         bandwidthRangeValues[entryIndex] = [
           Math.min(previousTimestamp, currentTimestamp),
@@ -176,15 +176,18 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
 
     const currentBandwidth = bandwidthRangeValues[bandwidthRangeValues.length - 1] ?? [];
 
+    // convert increase() into rate()
+    serverMetrics.bandwidth.current.data.bytes =
+      parseFloat(currentBandwidth[1]) / PROMETHEUS_RANGE_QUERY_STEP_SECONDS;
     serverMetrics.bandwidth.current.timestamp = currentBandwidth[0];
-    serverMetrics.bandwidth.current.data.bytes = parseFloat(currentBandwidth[1]);
 
     const peakDataTransferred = findPeak(bandwidthRangeValues);
     if (peakDataTransferred !== null) {
       const peakValue = parseFloat(peakDataTransferred[1]);
 
       if (peakValue > 0) {
-        serverMetrics.bandwidth.peak.data.bytes = peakValue;
+        // convert increase() into rate()
+        serverMetrics.bandwidth.peak.data.bytes = peakValue / PROMETHEUS_RANGE_QUERY_STEP_SECONDS;
         serverMetrics.bandwidth.peak.timestamp = Math.min(now, peakDataTransferred[0]);
       }
     }
