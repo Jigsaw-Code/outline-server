@@ -174,7 +174,7 @@ async function main() {
   // Start Prometheus subprocess and wait for it to be up and running.
   const prometheusConfigFilename = getPersistentFilename('prometheus/config.yml');
   const prometheusTsdbFilename = getPersistentFilename('prometheus/data');
-  const prometheusEndpoint = `http://localhost:9095`;
+  const prometheusEndpoint = `http://${prometheusLocation}`;
   const prometheusBinary = getBinaryFilename('prometheus');
   const prometheusArgs = [
     '--config.file',
