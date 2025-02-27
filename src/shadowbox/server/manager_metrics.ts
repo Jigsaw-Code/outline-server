@@ -350,7 +350,7 @@ function findLastNonZero(values: PrometheusValue[]): PrometheusValue | null {
 }
 
 /**
- *
+ * Finds the sum of the values in an array of PrometheusValues.
  */
 function findSum(values: PrometheusValue[]): number {
   let sum = 0;
