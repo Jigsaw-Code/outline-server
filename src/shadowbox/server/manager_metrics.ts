@@ -165,7 +165,10 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
 
       for (const entryIndex in result.values) {
         const [currentTimestamp, nextValue] = result.values[entryIndex];
-        const [previousTimestamp, currentValue] = bandwidthRangeValues[entryIndex] ?? [Infinity, 0];
+        const [previousTimestamp, currentValue] = bandwidthRangeValues[entryIndex] ?? [
+          Infinity,
+          '0',
+        ];
 
         bandwidthRangeValues[entryIndex] = [
           Math.min(previousTimestamp, currentTimestamp),
