@@ -120,25 +120,25 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       tunnelTimeByAccessKeyRange,
       tunnelTimeByLocation,
     ] = await Promise.all([
-      this.prometheusClient.queryRange(
+      this.cachedPrometheusClient.queryRange(
         `sum(increase(shadowsocks_data_bytes{dir=~"c<p|p>t"}[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s])) by (access_key)`,
         start,
         end,
         `${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s`
       ),
-      this.prometheusClient.queryRange(
+      this.cachedPrometheusClient.queryRange(
         `sum(increase(shadowsocks_data_bytes_per_location{dir=~"c<p|p>t"}[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s])) by (location, asn, asorg)`,
         start,
         end,
         `${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s`
       ),
-      this.prometheusClient.queryRange(
+      this.cachedPrometheusClient.queryRange(
         `sum(increase(shadowsocks_tunnel_time_seconds[${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s])) by (access_key)`,
         start,
         end,
         `${PROMETHEUS_RANGE_QUERY_STEP_SECONDS}s`
       ),
-      this.prometheusClient.query(
+      this.cachedPrometheusClient.query(
         `sum(increase(shadowsocks_tunnel_time_seconds_per_location[${timeframe.seconds}s])) by (location, asn, asorg)`
       ),
     ]);
