@@ -235,8 +235,6 @@ describe('PrometheusManagerMetrics', () => {
 
     const serverMetrics = await managerMetrics.getServerMetrics({seconds: 0});
 
-    console.log(JSON.stringify(serverMetrics, null, 2));
-
     expect(JSON.stringify(serverMetrics, null, 2)).toEqual(`{
   "server": {
     "tunnelTime": {
@@ -301,7 +299,7 @@ describe('PrometheusManagerMetrics', () => {
         }
       }
     },
-     {
+    {
       "accessKeyId": 1,
       "dataTransferred": {
         "bytes": 0
