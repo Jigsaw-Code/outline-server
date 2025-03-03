@@ -153,7 +153,7 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       locations: [],
     };
 
-    const bandwidthRangeValues: [number, string][] = [];
+    const bandwidthTimeseriesIndex = new Map<number, string>();
 
     const accessKeyMap = new Map<string, ServerMetricsAccessKeyEntry>();
     for (const result of dataTransferredByAccessKeyRange.result) {
@@ -164,18 +164,22 @@ export class PrometheusManagerMetrics implements ManagerMetrics {
       entry.dataTransferred.bytes = findSum(result.values ?? []);
 
       for (const entryIndex in result.values) {
-        const [currentTimestamp, nextValue] = result.values[entryIndex];
-        const [previousTimestamp, currentValue] = bandwidthRangeValues[entryIndex] ?? [
-          Infinity,
-          '0',
-        ];
+        const [timestamp, value] = result.values[entryIndex];
 
-        bandwidthRangeValues[entryIndex] = [
-          Math.min(previousTimestamp, currentTimestamp),
-          String(parseFloat(currentValue as string) + (nextValue ? parseFloat(nextValue) : 0)),
-        ];
+        bandwidthTimeseriesIndex.set(
+          timestamp,
+          bandwidthTimeseriesIndex.has(timestamp)
+            ? String(
+                parseFloat(bandwidthTimeseriesIndex.get(timestamp) as string) + parseFloat(value)
+              )
+            : value
+        );
       }
     }
+
+    const bandwidthRangeValues = [...bandwidthTimeseriesIndex.entries()].sort(
+      (a, b) => a[0] - b[0]
+    );
 
     const currentBandwidth = bandwidthRangeValues[bandwidthRangeValues.length - 1] ?? [0, '0'];
 
