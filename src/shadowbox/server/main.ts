@@ -48,6 +48,7 @@ const MMDB_LOCATION_ASN = '/var/lib/libmaxminddb/ip-asn.mmdb';
 async function exportPrometheusMetrics(registry: prometheus.Registry, port): Promise<http.Server> {
   return new Promise<http.Server>((resolve, _) => {
     const server = http.createServer((_, res) => {
+      res.setHeader('Content-Type', registry.contentType);
       res.write(registry.metrics());
       res.end();
     });
