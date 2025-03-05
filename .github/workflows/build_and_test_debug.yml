@@ -119,7 +119,8 @@ jobs:
 
   sentry-webhook:
     name: Sentry Webhook
-    runs-on: ubuntu-latest
+    # TODO(puppeteer/puppeteer#12818): Update when chromium bug is resolved.
+    runs-on: ubuntu-22.04
     needs: lint
     steps:
       - name: Checkout
