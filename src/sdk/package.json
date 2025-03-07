@@ -1,0 +1,16 @@
+{
+  "name": "sdk",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "example": "VITE_SERVER_DETAIL_URL=https://${NGROK_DOMAIN}/TestApiPrefix vite example"
+  },
+  "dependencies": {
+    "lit": "^3.2.1"
+  },
+  "devDependencies": {
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0"
+  }
+}

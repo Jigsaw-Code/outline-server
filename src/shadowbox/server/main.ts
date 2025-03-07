@@ -19,6 +19,7 @@ import * as process from 'process';
 import * as prometheus from 'prom-client';
 import * as restify from 'restify';
 import * as corsMiddleware from 'restify-cors-middleware2';
+import * as ngrok from '@ngrok/ngrok';
 
 import {RealClock} from '../infrastructure/clock';
 import {PortProvider} from '../infrastructure/get_port';
@@ -171,31 +172,36 @@ async function main() {
     shadowsocksServer.enableReplayProtection();
   }
 
-  // Start Prometheus subprocess and wait for it to be up and running.
-  const prometheusConfigFilename = getPersistentFilename('prometheus/config.yml');
-  const prometheusTsdbFilename = getPersistentFilename('prometheus/data');
+  // TODO: Figure out why prometheus crashes infinitely.
+
   const prometheusEndpoint = `http://${prometheusLocation}`;
-  const prometheusBinary = getBinaryFilename('prometheus');
-  const prometheusArgs = [
-    '--config.file',
-    prometheusConfigFilename,
-    '--web.enable-admin-api',
-    '--storage.tsdb.retention.time',
-    '31d',
-    '--storage.tsdb.path',
-    prometheusTsdbFilename,
-    '--web.listen-address',
-    prometheusLocation,
-    '--log.level',
-    verbose ? 'debug' : 'info',
-  ];
-  await startPrometheus(
-    prometheusBinary,
-    prometheusConfigFilename,
-    prometheusConfigJson,
-    prometheusArgs,
-    prometheusEndpoint
-  );
+  /*
+    // Start Prometheus subprocess and wait for it to be up and running.
+
+    const prometheusConfigFilename = getPersistentFilename('prometheus/config.yml');
+    const prometheusTsdbFilename = getPersistentFilename('prometheus/data');
+    const prometheusBinary = getBinaryFilename('prometheus');
+    const prometheusArgs = [
+      '--config.file',
+      prometheusConfigFilename,
+      '--web.enable-admin-api',
+      '--storage.tsdb.retention.time',
+      '31d',
+      '--storage.tsdb.path',
+      prometheusTsdbFilename,
+      '--web.listen-address',
+      prometheusLocation,
+      '--log.level',
+      verbose ? 'debug' : 'info',
+    ];
+    await startPrometheus(
+      prometheusBinary,
+      prometheusConfigFilename,
+      prometheusConfigJson,
+      prometheusArgs,
+      prometheusEndpoint
+    );
+  */
 
   const prometheusClient = new ApiPrometheusClient(prometheusEndpoint);
   if (!serverConfig.data().portForNewAccessKeys) {
@@ -275,7 +281,30 @@ process.on('unhandledRejection', (error: Error) => {
   logging.error(`unhandledRejection: ${error.stack}`);
 });
 
-main().catch((error) => {
-  logging.error(error.stack);
-  process.exit(1);
-});
+main()
+  .then(async () => {
+    if (!process.env.NGROK_TOKEN || !process.env.NGROK_DOMAIN) {
+      return;
+    }
+
+    process.env.SSL_CERT_FILE = process.env.SB_CERTIFICATE_FILE;
+    process.env.SSL_KEY_FILE = process.env.SB_PRIVATE_KEY_FILE;
+
+    const listener = await ngrok.forward({
+      domain: process.env.NGROK_DOMAIN,
+      // ipv6 loopback address doesn't work
+      addr: `https://127.0.0.1:${process.env.SB_API_PORT || 8081}`,
+      authtoken_from_env: true,
+      verify_upstream_tls: false,
+      response_header_add: [
+        'Allow-Access-Control-Origin: *',
+        'Access-Control-Allow-Headers: *'
+      ],
+    });
+
+    console.log(`Listening to the Manager API on '${listener.url()}'`);
+  })
+  .catch((error) => {
+    logging.error(error.stack);
+    process.exit(1);
+  });
