@@ -58,6 +58,22 @@ readonly SENTRY_LOG_FILE=${SENTRY_LOG_FILE:-}
 # - STDERR is only used in the event of a fatal error
 # - Detailed logs are recorded to this FULL_LOG, which is preserved if an error occurred.
 # - The most recent error is stored in LAST_ERROR, which is never preserved.
+
+# Ensure curl is available
+if ! command -v curl >/dev/null 2>&1; then
+  if command -v apt-get >/dev/null 2>&1; then
+    apt-get update -qq
+    apt-get install -y curl
+  else
+    echo "Error: 'curl' is required but not installed, and 'apt-get' is not available." >&2
+    echo "Please install curl manually and re-run this script. For example:" >&2
+    echo "  Debian/Ubuntu:   sudo apt update && sudo apt install -y curl" >&2
+    echo "  CentOS/RHEL:     sudo yum install -y curl" >&2
+    echo "  Alpine:          sudo apk add --no-cache curl" >&2
+    exit 1
+  fi
+fi
+
 FULL_LOG="$(mktemp -t outline_logXXXXXXXXXX)"
 LAST_ERROR="$(mktemp -t outline_last_errorXXXXXXXXXX)"
 readonly FULL_LOG LAST_ERROR
