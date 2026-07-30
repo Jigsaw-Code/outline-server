@@ -59,20 +59,15 @@ readonly SENTRY_LOG_FILE=${SENTRY_LOG_FILE:-}
 # - Detailed logs are recorded to this FULL_LOG, which is preserved if an error occurred.
 # - The most recent error is stored in LAST_ERROR, which is never preserved.
 
-# Ensure curl is available
-if ! command -v curl >/dev/null 2>&1; then
-  if command -v apt-get >/dev/null 2>&1; then
-    apt-get update -qq
-    apt-get install -y curl
-  else
-    echo "Error: 'curl' is required but not installed, and 'apt-get' is not available." >&2
-    echo "Please install curl manually and re-run this script. For example:" >&2
-    echo "  Debian/Ubuntu:   sudo apt update && sudo apt install -y curl" >&2
-    echo "  CentOS/RHEL:     sudo yum install -y curl" >&2
-    echo "  Alpine:          sudo apk add --no-cache curl" >&2
-    exit 1
+
+# Warn the user if curl is not available.
+# flags the issue so the user can install curl themselves if needed.
+function verify_download_tool() {
+   if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
+    log_error "Warning: neither 'curl' nor 'wget' was found on this system."
+    log_error "This script needs one of them to download files. Please install one using your package manager and re-run this script."
   fi
-fi
+}
 
 FULL_LOG="$(mktemp -t outline_logXXXXXXXXXX)"
 LAST_ERROR="$(mktemp -t outline_last_errorXXXXXXXXXX)"
@@ -481,7 +476,7 @@ install_shadowbox() {
   umask 0007
 
   export CONTAINER_NAME="${CONTAINER_NAME:-shadowbox}"
-
+  verify_download_tool
   run_step "Verifying that Docker is installed" verify_docker_installed
   run_step "Verifying that Docker daemon is running" verify_docker_running
 
