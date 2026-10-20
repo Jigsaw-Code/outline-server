@@ -223,7 +223,7 @@ describe('OutlineSharedMetricsPublisher', () => {
       publisher.startSharing();
       usageMetrics.reportedUsage = [
         {country: 'AA', tunnelTimeSec: 99, inboundBytes: 11},
-        {country: 'SY', tunnelTimeSec: 88, inboundBytes: 11},
+        {country: 'CU', tunnelTimeSec: 88, inboundBytes: 11},
         {country: 'CC', tunnelTimeSec: 77, inboundBytes: 22},
         {country: 'AA', tunnelTimeSec: 66, inboundBytes: 33},
         {country: 'DD', tunnelTimeSec: 55, inboundBytes: 33},
