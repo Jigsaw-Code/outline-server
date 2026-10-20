@@ -227,6 +227,7 @@ describe('OutlineSharedMetricsPublisher', () => {
         {country: 'CC', tunnelTimeSec: 77, inboundBytes: 22},
         {country: 'AA', tunnelTimeSec: 66, inboundBytes: 33},
         {country: 'DD', tunnelTimeSec: 55, inboundBytes: 33},
+        {country: 'SY', tunnelTimeSec: 44, inboundBytes: 44},
       ];
 
       clock.nowMs += 60 * 60 * 1000;
@@ -240,6 +241,7 @@ describe('OutlineSharedMetricsPublisher', () => {
           {bytesTransferred: 22, tunnelTimeSec: 77, countries: ['CC']},
           {bytesTransferred: 33, tunnelTimeSec: 66, countries: ['AA']},
           {bytesTransferred: 33, tunnelTimeSec: 55, countries: ['DD']},
+          {bytesTransferred: 44, tunnelTimeSec: 44, countries: ['SY']},
         ],
       });
       publisher.stopSharing();
