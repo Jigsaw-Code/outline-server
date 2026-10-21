@@ -104,10 +104,8 @@ describe('OutlineSharedMetricsPublisher', () => {
       startTime = clock.nowMs;
       usageMetrics.reportedUsage = [
         {country: 'EE', inboundBytes: 44, tunnelTimeSec: 11},
-        {country: 'CU', inboundBytes: 55, tunnelTimeSec: 22},
+        {country: 'SY', inboundBytes: 55, tunnelTimeSec: 22},
         {country: 'FF', inboundBytes: 66, tunnelTimeSec: 33},
-        {country: 'KP', inboundBytes: 77, tunnelTimeSec: 44},
-        {country: 'SY', inboundBytes: 88, tunnelTimeSec: 55},
       ];
 
       clock.nowMs += 60 * 60 * 1000;
@@ -118,10 +116,8 @@ describe('OutlineSharedMetricsPublisher', () => {
         endUtcMs: clock.nowMs,
         userReports: [
           {bytesTransferred: 44, countries: ['EE'], tunnelTimeSec: 11},
-          {bytesTransferred: 55, countries: ['CU'], tunnelTimeSec: 22},
+          {bytesTransferred: 55, countries: ['SY'], tunnelTimeSec: 22},
           {bytesTransferred: 66, countries: ['FF'], tunnelTimeSec: 33},
-          {bytesTransferred: 77, countries: ['KP'], tunnelTimeSec: 44},
-          {bytesTransferred: 88, countries: ['SY'], tunnelTimeSec: 55},
         ],
       });
 
