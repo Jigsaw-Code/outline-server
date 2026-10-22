@@ -24,7 +24,6 @@ import {ServerConfigJson} from './server_config';
 
 const MS_PER_HOUR = 60 * 60 * 1000;
 const MS_PER_DAY = 24 * MS_PER_HOUR;
-const SANCTIONED_COUNTRIES = new Set(['CU', 'KP', 'SY']);
 
 export interface ReportedUsage {
   country: string;
@@ -238,9 +237,6 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
       if (locationUsage.inboundBytes === 0 && locationUsage.tunnelTimeSec === 0) {
         continue;
       }
-      if (isSanctionedCountry(locationUsage.country)) {
-        continue;
-      }
       // Make sure to always set a country, which is required by the metrics server validation.
       // It's used to differentiate the row from the legacy key usage rows.
       const country = locationUsage.country || 'ZZ';
@@ -281,8 +277,4 @@ export class OutlineSharedMetricsPublisher implements SharedMetricsPublisher {
     };
     await this.metricsCollector.collectFeatureMetrics(featureMetricsReport);
   }
-}
-
-function isSanctionedCountry(country: string) {
-  return SANCTIONED_COUNTRIES.has(country);
 }

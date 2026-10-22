@@ -104,7 +104,8 @@ describe('OutlineSharedMetricsPublisher', () => {
       startTime = clock.nowMs;
       usageMetrics.reportedUsage = [
         {country: 'EE', inboundBytes: 44, tunnelTimeSec: 11},
-        {country: 'FF', inboundBytes: 55, tunnelTimeSec: 22},
+        {country: 'SY', inboundBytes: 55, tunnelTimeSec: 22},
+        {country: 'FF', inboundBytes: 66, tunnelTimeSec: 33},
       ];
 
       clock.nowMs += 60 * 60 * 1000;
@@ -115,7 +116,8 @@ describe('OutlineSharedMetricsPublisher', () => {
         endUtcMs: clock.nowMs,
         userReports: [
           {bytesTransferred: 44, countries: ['EE'], tunnelTimeSec: 11},
-          {bytesTransferred: 55, countries: ['FF'], tunnelTimeSec: 22},
+          {bytesTransferred: 55, countries: ['SY'], tunnelTimeSec: 22},
+          {bytesTransferred: 66, countries: ['FF'], tunnelTimeSec: 33},
         ],
       });
 
@@ -203,45 +205,6 @@ describe('OutlineSharedMetricsPublisher', () => {
         {bytesTransferred: 44, tunnelTimeSec: 11, countries: ['DD'], asn: 999},
         {bytesTransferred: 55, tunnelTimeSec: 22, countries: ['EE'], asn: 999},
       ]);
-      publisher.stopSharing();
-    });
-
-    it('ignores sanctioned countries', async () => {
-      const clock = new ManualClock();
-      const startTime = clock.nowMs;
-      const serverConfig = new InMemoryConfig<ServerConfigJson>({serverId: 'server-id'});
-      const usageMetrics = new ManualUsageMetrics();
-      const metricsCollector = new FakeMetricsCollector();
-      const publisher = new OutlineSharedMetricsPublisher(
-        clock,
-        serverConfig,
-        null,
-        usageMetrics,
-        metricsCollector
-      );
-
-      publisher.startSharing();
-      usageMetrics.reportedUsage = [
-        {country: 'AA', tunnelTimeSec: 99, inboundBytes: 11},
-        {country: 'SY', tunnelTimeSec: 88, inboundBytes: 11},
-        {country: 'CC', tunnelTimeSec: 77, inboundBytes: 22},
-        {country: 'AA', tunnelTimeSec: 66, inboundBytes: 33},
-        {country: 'DD', tunnelTimeSec: 55, inboundBytes: 33},
-      ];
-
-      clock.nowMs += 60 * 60 * 1000;
-      await clock.runCallbacks();
-      expect(metricsCollector.collectedServerUsageReport).toEqual({
-        serverId: 'server-id',
-        startUtcMs: startTime,
-        endUtcMs: clock.nowMs,
-        userReports: [
-          {bytesTransferred: 11, tunnelTimeSec: 99, countries: ['AA']},
-          {bytesTransferred: 22, tunnelTimeSec: 77, countries: ['CC']},
-          {bytesTransferred: 33, tunnelTimeSec: 66, countries: ['AA']},
-          {bytesTransferred: 33, tunnelTimeSec: 55, countries: ['DD']},
-        ],
-      });
       publisher.stopSharing();
     });
   });
