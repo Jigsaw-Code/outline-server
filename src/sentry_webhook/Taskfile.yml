@@ -35,7 +35,7 @@ tasks:
     cmds:
       - gcloud functions deploy postSentryEventToSalesforce
           --project=uproxysite
-          --runtime=nodejs18
+          --runtime=nodejs22
           --trigger-http
           --source='{{.OUTPUT_BASE}}'
           --entry-point=postSentryEventToSalesforce

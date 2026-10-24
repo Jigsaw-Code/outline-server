@@ -29,8 +29,8 @@ See [Shadowsocks resistance against detection and blocking](docs/shadowsocks.md)
 
 **Prerequisites**
 
-- [Node](https://nodejs.org/en/download/) LTS (`lts/hydrogen`, version `18.16.0`)
-- [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (version `9.5.1`)
+- [Node](https://nodejs.org/en/download/) LTS (`lts/jod`, version `22.23.2`)
+- [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (version `10`, bundled with Node.js 22)
 - [Go](https://go.dev/dl/) 1.21+
 
 1. **Install dependencies**
